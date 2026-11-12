@@ -36,6 +36,19 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
 - Backlog: `COMPETITOR_GAPS.md` (what other job sites have that we do not, with priorities). Take the highest-priority item that
   is not built yet, build it properly, tick it off in that file.
 
+## Free tools (`tools_pages.py`, `assets/tools.js`, `assets/tools.css`)
+
+- `/tools/` and 13 tool pages (resume match, salary checker, pay converter, raise, offer comparison, stock options, time zones,
+  cover letter, negotiation email, contractor rate, job description checker, JobPosting markup, boolean search). Everything runs
+  in the browser; the only embedded data is salary aggregates built from the day's jobs.
+- Pure logic in `assets/tools.js` is covered by `node tools_test.js assets/tools.js` (must end with "0 failed").
+- New tools go into the `TOOLS` list inside `build_tools()`; ideas with search demand are in `ROADMAP.md` section 8.
+
+## Search demand
+
+`python3 keywords.py` collects Google search suggestions into `keywords.json`. Compare the phrases with the pages we have
+(`ROADMAP.md` section 8) and build pages or tools for real gaps; skip phrases outside tech hiring.
+
 ## Speed (keep it this way)
 
 - Fonts are self-hosted in `assets/fonts/` (latin + latin-ext, variable woff2); Inter and Bricolage are preloaded. No third-party

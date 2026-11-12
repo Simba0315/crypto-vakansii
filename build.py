@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
+import tools_pages                      # the free tools section: /tools/ and one page per tool
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -108,7 +109,7 @@ PLACES = [
 ]
 URLS = []
 ORG_LD = [""]
-V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js"))).hexdigest()[:8]   # cache-busting version
+V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css"))).hexdigest()[:8]   # cache-busting version
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
              f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a></p></div></footer>')
 SAL_BAD = re.compile(r"CA\$|C\$|A\$|AU\$|S\$|SG\$|HK\$|NZ\$|CAD|AUD|SGD|EUR|GBP|CHF|JPY|INR|€|£|¥|₹", re.I)
@@ -239,7 +240,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="preload" href="{P}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon" id="palbtn" type="button" aria-label="Quick search (Ctrl K)">{ICON_SEARCH}</button><button class="icon" id="theme" type="button" aria-label="Switch between light and dark">{ICON_THEME}</button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon burger" id="menu" type="button" aria-label="Menu" aria-expanded="false">{ICON_MENU}</button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
@@ -250,7 +251,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -643,6 +644,7 @@ def main():
     # Home
     ROLE_TOP = sorted(((nm, s_, sum(1 for j in active if re.search(rx, j["title"], re.I))) for nm, s_, rx in ROLES), key=lambda x: -x[2])
     ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
+    TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT)       # [(path, name, one line)]
     cats = "".join(tile(f"jobs/{s}/", CAT[s], len(by_cat[s])) for s in CAT if by_cat[s])
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
     comp_top = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items[:12])
@@ -684,6 +686,8 @@ def main():
             + section("Tech companies hiring the most", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("Tech jobs by location", f'<ul class="tiles">{place_html}</ul>', ("locations/", "All locations")) + band
             + section("More new tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:32])}</ul>', ("jobs/", f"Browse all {n:,}"))
+            + section("Free tools for your job search", '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h2 class="fh">{e(nm)}</h2><p>{e(d_)}</p></a>' for u, nm, d_ in TOOLS[:6]) + "</div>",
+                      ("tools/", f"All {len(TOOLS)} free tools"))
             + section("Put live tech jobs on your site", '<div class="feats">'
                       f'<a class="feat" href="{P}/widgets/"><h2 class="fh">Jobs widget</h2><p>Your readers keep asking who is hiring. One snippet answers with fresh jobs for any skill, city or company, and updates itself.</p></a>'
                       f'<a class="feat" href="{P}/widgets/"><h2 class="fh">Live badges</h2><p>A “we’re hiring” banner says nothing. A badge shows today’s real number of open roles in a README, a footer or a post.</p></a>'
@@ -1465,6 +1469,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          'A figure is shown only when at least 15 roles are available (30 for skill and category pages). These are advertised ranges, not what people are actually paid, and they lean towards companies and regions that publish pay.</p>'
          '<h2 class="h2s">Why is a job listed once when it is open in several cities?</h2><p>Lists show a role once and add “+N more locations”. Each posting still has its own page. Counts on the site are counts of postings.</p>'
          f'<h2 class="h2s">How to report a mistake</h2><p>' + (f"Write to us: {contact}." if contact else "A contact address will be published on the About page shortly.") + "</p>")
+    tools_md = "; ".join(f"[{nm}]({FULL}/{u})" for u, nm, _ in TOOLS)
     write("llms.txt", f"""# {SITE}
 
 > {SITE} is a daily-updated index of {n:,} open tech jobs at {m} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
@@ -1501,6 +1506,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - The feeds list every address that exists: {FULL}/api/v1/index.json
 
 ## Tools
+- [Free tools]({FULL}/tools/): {tools_md}
 - [Jobs matched to your skills]({FULL}/for-you/)
 - [Resume builder]({FULL}/resume/)
 - [Job widget and live badges for other sites]({FULL}/widgets/)
@@ -1592,6 +1598,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
+    (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
+    shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
     # service worker: keeps versioned scripts and styles, fonts and logos in the browser, so repeat views skip the network for them
     (OUT / "sw.js").write_text(f"""var V='{V}',C='hrn-assets-'+V;

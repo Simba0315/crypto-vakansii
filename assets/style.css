@@ -68,7 +68,7 @@ nav a.only-m{display:none}
 .btn.ghost[aria-pressed=true]{background:var(--hl);color:var(--hl-ink);border-color:var(--hl)}
 .btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 .hact .btn{padding:8px 14px}
-@media(max-width:980px){
+@media(max-width:1080px){
   .burger{display:inline-flex}
   nav{display:none;position:absolute;left:0;right:0;top:100%;margin:0;padding:8px 16px 16px;flex-direction:column;align-items:stretch;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
   header.site.open nav{display:flex}

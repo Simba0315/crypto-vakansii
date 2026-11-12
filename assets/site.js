@@ -173,7 +173,7 @@
       pal.innerHTML = '<div class="pal-box" role="dialog" aria-label="Quick search"><form action="' + P + '/jobs/" method="get"><input type="search" name="q" placeholder="Search jobs, skills, companies…" aria-label="Search" autocomplete="off"></form>' +
         '<div class="pal-links">' + recent +
         '<a href="' + P + '/remote/">Remote jobs<span>list</span></a><a href="' + P + '/new/">New in the last 3 days<span>list</span></a><a href="' + P + '/for-you/">Jobs for you<span>match</span></a>' +
-        '<a href="' + P + '/salaries/">Salaries<span>data</span></a><a href="' + P + '/companies/">Companies<span>directory</span></a><a href="' + P + '/my-jobs/">My jobs<span>tracker</span></a></div>' +
+        '<a href="' + P + '/salaries/">Salaries<span>data</span></a><a href="' + P + '/tools/">Free tools<span>calculators</span></a><a href="' + P + '/companies/">Companies<span>directory</span></a><a href="' + P + '/my-jobs/">My jobs<span>tracker</span></a></div>' +
         '<p class="pal-hint">Enter to search · Esc to close</p></div>';
       document.body.appendChild(pal);
       pal.addEventListener('click', function (ev) { if (ev.target === pal) pal.hidden = true; });
