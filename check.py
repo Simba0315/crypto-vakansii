@@ -2,7 +2,7 @@
 
 Run after build.py. Checks every listing-type page and a random sample of job pages; prints a table by template.
 """
-import json, random, re, sys
+import html, json, random, re, sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -45,7 +45,7 @@ for f in sample:
     canon = re.search(r'<link rel="canonical" href="([^"]*)"', h)
     h1 = re.findall(r"<h1[\s>]", h)
     if len(h1) != 1: fails[t][f"h1 count {len(h1)}"] += 1
-    if not title or not (10 <= len(title.group(1)) <= 75): fails[t]["title length outside 10-75"] += 1
+    if not title or not (10 <= len(html.unescape(title.group(1))) <= 75): fails[t]["title length outside 10-75"] += 1
     if not desc or not (70 <= len(desc.group(1)) <= 170): fails[t]["description length outside 70-170"] += 1
     want = FULL + "/" + ("" if rel == "index.html" else rel[:-len("index.html")])
     if not canon or canon.group(1) != want: fails[t]["canonical is not self"] += 1

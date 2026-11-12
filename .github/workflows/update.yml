@@ -35,6 +35,7 @@ jobs:
           mkdir -p data
           if git fetch --depth=1 origin data 2>/dev/null; then
             git show FETCH_HEAD:jobs.json.gz | gunzip > data/jobs.json
+            git show FETCH_HEAD:reports.json > data/reports.json 2>/dev/null || rm -f data/reports.json
             echo "restored $(wc -c < data/jobs.json) bytes"
           else
             echo "no data branch yet, starting empty"
@@ -47,15 +48,31 @@ jobs:
         run: |
           tmp="$(mktemp -d)"
           gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           cd "$tmp"
           git init -q -b data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add jobs.json.gz
+          git add -A
           git commit -q -m "Jobs database"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
       - name: Build site
         run: python3 build.py
+      # The build adds this month's figures to data/reports.json; past months in it must never be lost, so it is saved again.
+      - name: Save monthly report snapshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tmp="$(mktemp -d)"
+          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          cp data/reports.json "$tmp/reports.json"
+          cd "$tmp"
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Jobs database and monthly reports"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

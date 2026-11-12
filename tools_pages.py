@@ -193,7 +193,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Tech Salary Checker — Is Your Pay Fair?",
          f"Compare your salary with what open tech job postings advertise: median and range by category, level and skill, from {n_paid:,} postings with a published range.",
          "Is your tech salary in line with what companies advertise?",
-         f"Only {sal_pct}% of the {n_jobs:,} open roles here say what they pay, so it is hard to tell whether your salary or an offer is fair. "
+         f"{100 - sal_pct}% of the {n_jobs:,} open roles here do not state a salary, so it is hard to tell whether your salary or an offer is fair. "
          f"This checker uses the {n_paid:,} postings that do publish a yearly US-dollar range. Pick a category and a level, add a skill if you like, enter your number, and see the median, the typical range and where you sit.",
          wrap("salary-checker",
               '<div class="card tl-form"><div class="tl-grid">'
@@ -550,7 +550,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Job Description Checker: Bias & Clarity Score",
          "Paste a job description and get a score with fixes: missing salary, too many must-haves, gender-coded and exclusionary words, jargon, readability. Free.",
          "Find what is putting candidates off your job description",
-         f"A posting with no salary, fifteen “requirements” and a wall of jargon gets skipped by the people you want to hear from. Only {sal_pct}% of the {n_jobs:,} open tech roles we track state what they pay. "
+         f"A posting with no salary, fifteen “requirements” and a wall of jargon gets skipped by the people you want to hear from. {100 - sal_pct}% of the {n_jobs:,} open tech roles we track do not state a salary. "
          "Paste your text and the checker scores it and lists what to fix: length, missing salary, must-have overload, gender-coded and exclusionary wording, jargon and readability. The text stays in your browser.",
          wrap("job-description-checker",
               '<div class="card tl-form">'

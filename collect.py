@@ -125,6 +125,48 @@ def level(title):
     return ""
 
 
+PAY_SYM = {"US$": "$", "USD": "$", "$": "$", "CA$": "CA$", "C$": "CA$", "CAD": "CA$", "A$": "A$", "AUD": "A$", "£": "£", "GBP": "£", "€": "€", "EUR": "€"}
+_CUR = r"US\$|CA\$|C\$|A\$|\$|£|€|USD|CAD|AUD|GBP|EUR"
+_AMT = r"\d{2,3}(?:,\d{3})+(?:\.\d+)?|\d{2,3}(?:\.\d+)?\s?[kK]\b"
+PAY_RNG = re.compile(rf"({_CUR})\s?({_AMT})\s?(?:USD|CAD|AUD|GBP|EUR)?\s?(?:-|–|—|to|and)\s?(?:{_CUR})?\s?({_AMT})(\s?(?:USD|CAD|AUD|GBP|EUR))?", re.I)
+PAY_CTX = re.compile(r"salary|compensation|pay range|base pay|pay scale|base range|annual base|\bpay\b|\bOTE\b|on[- ]target earnings|wage", re.I)
+PAY_NOT_YEARLY = re.compile(r"per hour|an hour|/ ?hour|hourly|/ ?hr\b|per month|a month|/ ?month|monthly|per day|/ ?day|daily|per week|weekly", re.I)
+
+
+def pay_k(sym, lo, hi):
+    return f"{sym}{lo / 1000:,.0f}K - {sym}{hi / 1000:,.0f}K"
+
+
+def pay_from_text(text, location=""):
+    """A yearly pay range written in the posting's own text ("The salary range for this role is $180,000 - $240,000"), or "".
+    Deliberately strict: the range must sit next to a word about pay, be yearly, and look like a salary."""
+    for m in PAY_RNG.finditer(text or ""):
+        if not PAY_CTX.search(text[max(0, m.start() - 220):m.end() + 60]) or PAY_NOT_YEARLY.search(text[max(0, m.start() - 50):m.start()] + text[m.end():m.end() + 40]):
+            continue
+        num = lambda s: float(re.sub(r"[kK\s,]", "", s)) * (1000 if s.strip()[-1] in "kK" else 1)
+        lo, hi = num(m.group(2)), num(m.group(3))
+        if not (20000 <= lo <= hi <= 2000000 and hi <= 4 * lo): continue
+        sym, tail = PAY_SYM[m.group(1).upper()], (m.group(4) or "").strip().upper()
+        if sym == "$" and tail in ("CAD", "AUD"): sym = PAY_SYM[tail]
+        if sym == "$":                                   # a bare dollar sign outside the US is usually the local dollar
+            if re.search(r"canada|toronto|vancouver|montr[eé]al|ontario|ottawa|calgary", location, re.I): sym = "CA$"
+            elif re.search(r"australia|sydney|melbourne|brisbane", location, re.I): sym = "A$"
+            elif re.search(r"singapore|hong kong|new zealand|auckland", location, re.I): continue
+        return pay_k(sym, lo, hi)
+    return ""
+
+
+def pay_from_greenhouse(ranges):
+    """Greenhouse's structured pay ranges (several zones are merged into one overall range)."""
+    ok = [r for r in (ranges or []) if isinstance(r, dict) and r.get("min_cents") and r.get("max_cents")]
+    if not ok: return ""
+    cur = ok[0].get("currency_type") or "USD"
+    same = [r for r in ok if (r.get("currency_type") or "USD") == cur]
+    lo, hi = min(r["min_cents"] for r in same) / 100, max(r["max_cents"] for r in same) / 100
+    if lo < 1000: return ""                              # hourly or daily figures are not yearly salaries
+    return pay_k("$", lo, hi) if cur == "USD" else f"{cur} {lo / 1000:,.0f}K - {hi / 1000:,.0f}K"
+
+
 def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint=""):
     title = re.sub(r"\s+", " ", title or "").strip()
     location = re.sub(r"\s+", " ", location or "").strip()
@@ -138,7 +180,7 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
         "excerpt": excerpt(text), "cat": classify(title), "level": level(title),
         "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I)][:8],
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
-        "salary": salary or "",
+        "salary": salary or pay_from_text(text, location),
         "perks": perks(text), "etype": etype(title, hint),
         "anywhere": bool(re.search(r"worldwide|world-wide|anywhere|global|any location", location, re.I)),
         "_crypto": bool(CRYPTO_RE.search(blob)),
@@ -149,12 +191,12 @@ def fetch(src):
     name, ats, tok = src["name"], src["ats"], src["token"]
     out = []
     if ats == "greenhouse":
-        d = get_json(f"https://boards-api.greenhouse.io/v1/boards/{tok}/jobs?content=true", 60)
+        d = get_json(f"https://boards-api.greenhouse.io/v1/boards/{tok}/jobs?content=true&pay_transparency=true", 60)
         if not d or "jobs" not in d: return name, None
         for j in d["jobs"]:
             dept = ", ".join(x.get("name", "") for x in (j.get("departments") or []))
             out.append(norm(name, ats, j["id"], j.get("title"), j.get("absolute_url"), (j.get("location") or {}).get("name"),
-                            False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content"))))
+                            False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges"))))
     elif ats == "lever":
         d = get_json(f"https://api.lever.co/v0/postings/{tok}?mode=json", 60)
         if not isinstance(d, list): return name, None
@@ -273,6 +315,9 @@ def main():
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
+    # what this run did, shown on the site's data status page
+    (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
+                                                          "failed": stats["failed"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
     print("failed:", ", ".join(stats["failed"]) or "-")
     print("dropped as not crypto:", ", ".join(stats["dropped"]) or "-")
 

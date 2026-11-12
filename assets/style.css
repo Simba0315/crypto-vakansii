@@ -481,3 +481,6 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 .swatch{border:1px solid var(--line2);border-radius:var(--radius);padding:44px 14px 12px;display:flex;flex-direction:column;gap:2px}
 .swatch b{font-family:var(--display);font-size:16px}
 .swatch span{font:500 12px var(--mono)}
+
+/* a posting that has been up unusually long */
+.pill.warn{background:var(--amber-soft);color:var(--amber);border-color:color-mix(in srgb,var(--amber) 25%,transparent)}

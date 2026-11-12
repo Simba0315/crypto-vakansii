@@ -149,6 +149,9 @@ PERK_SLUG = {name: slug for name, slug, _ in PERKS}
 PERK_OK = set()    # perks with enough jobs to have their own page
 PULSE = {}         # company -> (opened in 7 days, closed in 7 days, label)
 CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from closed roles)
+REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
+SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}     # hiring systems the listings are read from
+LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 ETYPE_LD = {"Full-time": "FULL_TIME", "Part-time": "PART_TIME", "Contract": "CONTRACTOR", "Internship": "INTERN"}
 MARK = '<rect width="32" height="32" rx="8" fill="#0e0e0c"/><circle cx="16" cy="16" r="6.5" fill="#c8f560"/>'
 GRAD = ""
@@ -251,7 +254,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/status/">Data status</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -449,15 +452,27 @@ def job_page(j, active_by_cat):
         try:
             days_open = max(0, (datetime.date.today() - datetime.date.fromisoformat(j["posted"][:10])).days)
             hint = (f'<br><span class="note">Similar {e(CAT[j["cat"]])} roles stayed open for a median of {CLOSE_DAYS[j["cat"]]} days</span>' if j["cat"] in CLOSE_DAYS else "")
+            if days_open >= LONG_OPEN:
+                hint = ('<br><span class="note">Open much longer than most roles. Some employers keep a posting up all year to collect applications: '
+                        "it is fair to ask the recruiter whether this seat is being filled now.</span>")
             rows.append(("Open for", ("Posted today" if days_open == 0 else f"{days_open} day{'s' if days_open != 1 else ''}") + hint))
         except Exception:
-            pass
+            days_open = 0
+    else:
+        days_open = 0
+    again = REPOST.get((j["company"], j["title"].lower(), j["location"].lower())) if j["active"] else None
+    if again and again < (j.get("first_seen") or ""): rows.append(("History", f"Posted again: an earlier posting of this role closed on {fdate(again)}"))
     if j["active"] and j.get("last_seen"): rows.append(("Last checked", fdate(j["last_seen"])))
+    ats = j["id"].split("-", 1)[0]
+    if j["active"]:
+        rows.append(("Source", (f"{e(j['company'])}’s own posting on {SOURCE_NAME[ats]}" if ats in SOURCE_NAME else "Posted here by the employer; the link was checked" if j.get("direct")
+                                else f"{e(j['company'])}’s own posting")))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
     if j["remote"]: pills.append('<span class="pill ok">Remote</span>')
     if j["salary"]: pills.append(f'<span class="pill sal">{e(j["salary"])}</span>')
+    if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
     pills += [(f'<a class="pill perk" href="{P}/perks/{PERK_SLUG[x]}/">{e(x)}</a>' if x in PERK_OK else f'<span class="pill perk">{e(x)}</span>') for x in j.get("perks", []) if x in PERK_SLUG]
     if j["level"]: pills.append(f'<span class="pill">{e(j["level"])}</span>')
     pills += [f'<a class="pill" href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a>' for t in j["tags"]]
@@ -883,6 +898,7 @@ def main():
         sal_mid = [(lo + hi) / 2 for j in act if j["usd"] for lo, hi in [j["usd"]]]
         top_cats = Counter(CAT[j["cat"]] for j in act).most_common(3)
         chips = [f"<span class='chip'><b>{len(act):,}</b> open roles</span>", f"<span class='chip'><b>{sum(j['remote'] for j in act):,}</b> remote</span>"]
+        if len(act) >= 10: chips.append(f"<span class='chip'><b>{100 * sum(bool(j['salary']) for j in act) / len(act):.0f}%</b> show pay</span>")
         if len(sal_mid) >= 3: chips.append(f"<span class='chip'><b>{money(median(sal_mid))}</b> median advertised salary</span>")
         chips += [f"<span class='chip'><b>{k}</b> {e(name)}</span>" for name, k in top_cats]
         op_, cl_, mood = PULSE.get(c, (0, 0, "Steady"))
@@ -927,6 +943,10 @@ def main():
                    + (f" The median advertised salary across its roles with a published range is {money(median(mids))}." if len(mids) >= 3 else ""))
 
     # Job pages + archive
+    for j in archived:
+        if j.get("closed"):
+            key = (j["company"], j["title"].lower(), j["location"].lower())
+            REPOST[key] = max(REPOST.get(key, ""), j["closed"])
     for j in jobs: job_page(j, by_cat)
     listing("archive/", "Closed tech jobs archive", f"Closed Tech Jobs Archive ({len(archived):,}) | {SITE}",
             "Closed jobs at tech companies: see which roles teams were hiring for and when.", archived,
@@ -955,7 +975,7 @@ def main():
     page("salaries/", f"Tech Salaries From Live Job Postings ({len(paid):,} roles) | {SITE}",
          "Median salaries in tech by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
          crumbs(("Salaries", "")) + "<h1>Tech salaries from live job postings</h1>"
-         f'<p class="lead">Only {SALPCT}% of tech job postings say what they pay, which leaves most candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
+         f'<p class="lead">{100 - SALPCT}% of open tech postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
          'Each figure is the median of the range midpoints. These are advertised ranges, not verified pay.</p>'
          + section("By category", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10))
          + section("By skill", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"))
@@ -1164,6 +1184,26 @@ def main():
                 "Skills ranked by postings published in the last seven days.", ["#", "Skill", "Posted this week", "Open roles in total"],
                 [trow([rank(i), tl(t), f"{k:,}", f"{a_:,}"]) for i, (t, k, a_) in enumerate(x for x in week_tag[:30] if x[1])], ("new/", "See new jobs")),
     ]
+    def age_days(j):
+        try: return (datetime.date.today() - datetime.date.fromisoformat((j["posted"] or j["first_seen"])[:10])).days
+        except Exception: return 0
+    co_act = {c: [j for j in js if j["active"]] for c, js in companies.items()}
+    big = {c: js for c, js in co_act.items() if len(js) >= 20}
+    pay_rank = sorted(((c, len(js), sum(bool(j["salary"]) for j in js)) for c, js in big.items()), key=lambda x: (-x[2] / x[1], -x[1]))
+    INS.append(insight("pay-transparency", "Pay transparency: which tech companies publish salaries", "Which tech employers state the salary in their job postings and which never do, counted from live openings.",
+                       f"{SALPCT}% of open tech roles state a salary where our reader can find it: in the hiring system's pay field or next to a word such as “salary” in the text. "
+                       f"These are the employers, among {len(pay_rank)} with 20 or more open roles, that state it most often. A missing salary here can also mean a wording our rules do not recognise.",
+                       ["#", "Company", "Open roles", "With a salary", "Share"],
+                       [trow([rank(i), cl(c), f"{k_:,}", f"{s_:,}", barc(s_, k_, pctf(s_, k_))]) for i, (c, k_, s_) in enumerate(pay_rank[:50]) if s_],
+                       ("with-salary/", "Jobs with the salary listed")))
+    linger = sorted(((c, len(js), sum(age_days(j) >= LONG_OPEN for j in js), int(median([age_days(j) for j in js]))) for c, js in big.items()), key=lambda x: (-x[2] / x[1], -x[1]))
+    long_all = sum(age_days(j) >= LONG_OPEN for j in active)
+    INS.append(insight("long-open-roles", f"Tech roles open {LONG_OPEN} days or more: where postings linger", "How many tech job postings have been open for three months or longer, and at which companies they pile up.",
+                       f"{long_all:,} of {n:,} open roles ({pctf(long_all, n)}) were posted {LONG_OPEN} or more days ago. A posting that stays up for months proves nothing by itself, since some employers hire for the same title all year, "
+                       "but it is worth knowing before you spend an evening on an application.",
+                       ["#", "Company", "Open roles", f"Open {LONG_OPEN}+ days", "Share", "Median days open"],
+                       [trow([rank(i), cl(c), f"{k_:,}", f"{l_:,}", barc(l_, k_, pctf(l_, k_)), f"{md_:,}"]) for i, (c, k_, l_, md_) in enumerate(linger[:50]) if l_],
+                       ("new/", "Jobs posted in the last 3 days")))
     pulse_rank = sorted(((c, *PULSE[c]) for c in PULSE if PULSE[c][0] or PULSE[c][1]), key=lambda x: -(x[1] - x[2]))
     INS.append(insight("hiring-pulse", "Hiring pulse: who is ramping up and who is slowing down", "Which tech companies opened and closed the most roles in the last seven days, from daily snapshots of their careers pages.",
                        "Roles each company opened and closed in the last seven days. Closed counts are tracked from the day we started watching a company.",
@@ -1173,6 +1213,89 @@ def main():
          crumbs(("Insights", "")) + f'<h1>Tech hiring insights</h1><p class="lead">Rankings recalculated every day from {n:,} open roles at {m} companies.</p>'
          + '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h2 class="fh">{e(t)}</h2><p>{e(d)}</p></a>' for u, t, d in INS)
          + f'<a class="feat" href="{P}/trends/"><h2 class="fh">Hiring trends dashboard</h2><p>All the headline numbers on one page: skills, companies, categories and locations.</p></a></div>')
+
+    # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
+    stats_file = ROOT / "data" / "stats.json"
+    ST = json.loads(stats_file.read_text()) if stats_file.exists() else {}
+    if ST.get("date") != TODAY: ST = {}
+    rechecked = sum(1 for j in active if j.get("last_seen") == TODAY)
+    new_today, closed_today = sum(1 for j in active if j.get("first_seen") == TODAY), sum(1 for j in archived if j.get("closed") == TODAY)
+    ages = sorted(age_days(j) for j in active)
+    feeds = (f'<div class="stat"><b>{ST["sources"] - len(ST["failed"]):,} of {ST["sources"]:,}</b><span>employer feeds answered</span></div>' if ST else "")
+    failed_html = (section("Feeds that did not answer in the last run", "<p>" + ", ".join(e(x) for x in ST["failed"]) + ".</p>"
+                           '<p class="note">Their listings are left exactly as they were and are read again in the next run. Nothing is marked closed on a failed read.</p>') if ST.get("failed") else "")
+    page("status/", f"Data Status — how fresh the job listings are today | {SITE}",
+         f"What the latest update of {SITE} did: employer feeds read, roles re-checked, new and closed jobs today, and how old the open listings are.",
+         crumbs(("Data status", "")) + "<h1>Data status: how fresh the listings are today</h1>"
+         '<p class="lead">“Updated daily” is easy to write and hard to check. This page shows what the latest run actually did, so you do not have to take our word for it.</p>'
+         f'<div class="statrow"><div class="stat"><b>{fdate(TODAY)}</b><span>last update{", " + e(ST["time"]) if ST else ""}</span></div>{feeds}'
+         f'<div class="stat"><b>{pctf(rechecked, n)}</b><span>of open roles re-checked today</span></div><div class="stat"><b>+{new_today:,}</b><span>new today</span></div>'
+         f'<div class="stat"><b>−{closed_today:,}</b><span>closed today</span></div></div>'
+         + failed_html
+         + section("How old the open listings are", ttable(["Measure", "Value"], [
+             trow(["Open roles", f"{n:,}"]), trow(["Posted in the last 7 days", f"{sum(a <= 7 for a in ages):,} ({pctf(sum(a <= 7 for a in ages), n)})"]),
+             trow(["Posted in the last 30 days", f"{sum(a <= 30 for a in ages):,} ({pctf(sum(a <= 30 for a in ages), n)})"]),
+             trow([f'Open {LONG_OPEN} days or more (<a href="{P}/insights/long-open-roles/">by company</a>)', f"{long_all:,} ({pctf(long_all, n)})"]),
+             trow(["Median days since posting", f"{ages[len(ages) // 2] if ages else 0}"])])
+             + '<p class="note">The posting date is the one the employer’s hiring system reports. We do not reset it when we re-check a job.</p>')
+         + section("What happens when a role closes", f'<p>When a posting disappears from the employer’s careers page, it is marked closed on the same day and moved to the <a href="{P}/archive/">archive</a>, '
+                   f'which holds {len(archived):,} closed roles. A closed job keeps its page and says so at the top. How everything is collected: <a href="{P}/methodology/">methodology</a>.</p>')
+         + cite("status/", "Data status"))
+
+    # Monthly hiring report: one snapshot per month, updated daily while the month runs and left untouched afterwards.
+    # The snapshots live in data/reports.json, which the workflow keeps on the data branch next to the jobs database.
+    rep_file = ROOT / "data" / "reports.json"
+    REPORTS = json.loads(rep_file.read_text()) if rep_file.exists() else {}
+    ym = TODAY[:7]
+    paid_mid = sorted((lo + hi) / 2 for j in active if j["usd"] for lo, hi in [j["usd"]])
+    REPORTS[ym] = {"date": TODAY, "open": n, "companies": m, "remote": len(remote), "with_salary": sum(bool(j["salary"]) for j in active), "median_salary": int(median(paid_mid)) if paid_mid else 0,
+                   "posted": sum(1 for j in active if (j["posted"] or "")[:7] == ym), "closed": sum(1 for j in archived if (j.get("closed") or "")[:7] == ym), "long_open": long_all,
+                   "skills": [[t, len(js)] for t, js in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:15]],
+                   "categories": [[CAT[s], len(by_cat[s])] for s in sorted(by_cat, key=lambda s: -len(by_cat[s])) if s != OTHER[0]][:12],
+                   "employers": [[c, len(js)] for c, js in sorted(co_act.items(), key=lambda kv: -len(kv[1]))[:15]],
+                   "places": [[PLACE_NAME[slug], len(js)] for _, slug, js in sorted(places, key=lambda x: -len(x[2]))[:12]],
+                   "pay": [[k, int(median([(lo + hi) / 2 for _, (lo, hi) in v])), len(v)] for k, v in sorted(g_cat.items(), key=lambda kv: -len(kv[1])) if len(v) >= 30 and k != OTHER[1]][:10]}
+    rep_file.write_text(json.dumps(REPORTS, ensure_ascii=False))
+    MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    mlabel = lambda k: f"{MONTH_NAMES[int(k[5:7]) - 1]} {k[:4]}"
+    rep_months = sorted(REPORTS, reverse=True)
+    for i, k in enumerate(rep_months):
+        R, prev_k = REPORTS[k], rep_months[i + 1] if i + 1 < len(rep_months) else None
+        prev = REPORTS[prev_k] if prev_k else None
+        vs = lambda key: (f' <span class="note">({R[key] - prev[key]:+,} against {mlabel(prev_k)})</span>' if prev and key in prev else "")
+        two = lambda rows_, head: ttable(head, [trow([e(str(a)), f"{b:,}", pctf(b, R["open"])]) for a, b in rows_])
+        top_skill, top_emp = R["skills"][0], R["employers"][0]
+        findings = (f'<ul><li>{R["open"]:,} tech roles were open at {R["companies"]:,} companies{vs("open")}.</li>'
+                    f'<li>{pctf(R["remote"], R["open"])} of them were remote and {pctf(R["with_salary"], R["open"])} stated a salary.</li>'
+                    + (f'<li>The median advertised salary was {money(R["median_salary"])}.</li>' if R["median_salary"] else "")
+                    + f'<li>The most requested skill was {e(top_skill[0])}, named in {top_skill[1]:,} postings ({pctf(top_skill[1], R["open"])}).</li>'
+                    f'<li>{e(top_emp[0])} had the most open roles: {top_emp[1]:,}.</li>'
+                    f'<li>{pctf(R["long_open"], R["open"])} of open roles had been up for {LONG_OPEN} days or more.</li></ul>')
+        state = ("This month is still running: the page is recounted every day and stops changing after the last day of the month." if k == ym
+                 else "This report is final: the figures are the last count of that month and will not change.")
+        page(f"reports/{k}/", f"Tech Hiring Report, {mlabel(k)}: jobs, pay, skills | {SITE}",
+             f"Tech hiring in {mlabel(k)}: {R['open']:,} open roles at {R['companies']:,} companies, remote share, advertised pay, most requested skills and biggest employers.",
+             crumbs(("Hiring reports", "reports/"), (mlabel(k), "")) + f"<h1>Tech hiring report: {mlabel(k)}</h1>"
+             '<p class="lead">Headlines about the tech job market contradict each other every week. This report counts what employers actually posted on their own careers pages, nothing else.</p>'
+             f'<div class="statrow"><div class="stat"><b>{R["open"]:,}</b><span>open roles</span></div><div class="stat"><b>{R["companies"]:,}</b><span>companies</span></div>'
+             f'<div class="stat"><b>{pctf(R["remote"], R["open"])}</b><span>remote</span></div><div class="stat"><b>{pctf(R["with_salary"], R["open"])}</b><span>state a salary</span></div>'
+             + (f'<div class="stat"><b>{money(R["median_salary"])}</b><span>median advertised salary</span></div>' if R["median_salary"] else "") + "</div>"
+             f'<p class="note">Counted on {fdate(R["date"])}. {state}</p>'
+             + section(f"What {mlabel(k)} looked like", findings)
+             + section("Most requested skills", two(R["skills"], ["Skill", "Open roles", "Share of all roles"]))
+             + section("Open roles by category", two(R["categories"], ["Category", "Open roles", "Share of all roles"]))
+             + section("Employers with the most open roles", two(R["employers"], ["Company", "Open roles", "Share of all roles"]))
+             + section("Where the roles are", two(R["places"], ["Location", "Open roles", "Share of all roles"]) + '<p class="note">A role that lists several places is counted in each of them.</p>')
+             + (section("Median advertised salary by category", ttable(["Category", "Median salary", "Roles counted"], [trow([e(a), f"<strong>{money(b)}</strong>", f"{c_:,}"]) for a, b, c_ in R["pay"]])
+                        + '<p class="note">Medians of the midpoints of advertised yearly US-dollar ranges. Advertised, not verified pay.</p>') if R["pay"] else "")
+             + f'<p class="cta2"><a class="btn" href="{P}/trends/">Today’s live numbers</a> <a class="btn ghost" style="margin-top:0" href="{P}/reports/">All monthly reports</a></p>'
+             + cite(f"reports/{k}/", f"Tech hiring report, {mlabel(k)}"))
+    page("reports/", f"Tech Hiring Reports by Month — jobs, pay, skills | {SITE}",
+         "Monthly tech hiring reports built from live job postings: open roles, remote share, advertised pay, most requested skills and biggest employers. Free to quote.",
+         crumbs(("Hiring reports", "")) + "<h1>Tech hiring reports, month by month</h1>"
+         '<p class="lead">Need a number about tech hiring you can put in an article or a slide? Each month gets one page that stops changing when the month ends, so a figure you quote stays where you found it.</p>'
+         '<ul class="tiles">' + "".join(tile(f"reports/{k}/", mlabel(k), REPORTS[k]["open"]) for k in rep_months) + "</ul>"
+         '<p class="note">The number on each tile is the count of open roles in that month’s report.</p>')
 
     # Privacy and terms
     page("privacy/", f"Privacy | {SITE}", "What this site stores and what it does not: no accounts, no tracking cookies, your saved jobs stay in your browser.",
@@ -1376,7 +1499,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.'
                + (f" Questions in the meantime: {contact}." if contact else "") + "</div></section>")
     pains = [("New roles push yours down", f"{WEEKNEW:,} roles were posted here in the last 7 days. Lists are sorted by date, so an unpinned job leaves the first page within days."),
-             ("No salary, no shortlist", f"Only {SALPCT}% of postings show pay. Candidates who filter or sort by salary never see the rest. Adding a range costs nothing."),
+             ("No salary, no shortlist", f"{100 - SALPCT}% of postings here show no pay. Candidates who filter or sort by salary never see them. Adding a range costs nothing."),
              ("Nobody knows your name yet", "Candidates click the logos they recognise. A company spotlight puts yours next to them on the home page.")]
     pain_html = '<div class="feats">' + "".join(f'<div class="feat"><h2 class="fh">{e(a)}</h2><p>{e(b)}</p></div>' for a, b in pains) + "</div>"
     page("post-a-job/", f"Post a Tech Job — pay in USDT, BTC or ETH | {SITE}",
@@ -1463,7 +1586,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read {m} company feeds once a day. We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
          '<h2 class="h2s">How do you know a job is still open?</h2><p>A job stays listed as open only while it is present in the employer\'s feed. When it disappears from the feed, it is marked as closed the same day and moved to the archive. '
          'If a company\'s feed cannot be read on a given day, its jobs are left unchanged rather than closed by mistake.</p>'
-         '<h2 class="h2s">How are salary, skills, perks and remote status detected?</h2><p>Salary is shown only when the employer publishes a range. Skills, perks such as visa sponsorship, seniority and employment type are read from the title and text of the posting by fixed rules, not guessed. '
+         '<h2 class="h2s">How are salary, skills, perks and remote status detected?</h2><p>Salary is shown only when the employer publishes a range. We read it from the pay field of the employer\'s hiring system or, failing that, from the posting text when a yearly range stands next to a word such as “salary” or “compensation”. '
+         'Hourly and monthly figures are left out, and a salary written in an unusual way can be missed, so “not listed” on this site does not prove the employer hides it. Skills, perks such as visa sponsorship, seniority and employment type are read from the title and text of the posting by fixed rules, not guessed. '
          'A perk is listed only when the posting mentions it, and statements such as “we cannot sponsor visas” are excluded. Rules can miss or misread a posting, so confirm the details on the employer\'s page.</p>'
          '<h2 class="h2s">How are salary medians calculated?</h2><p>From open roles that publish a yearly range in US dollars. For each role we take the midpoint of the range; the median is the middle value of those midpoints. '
          'A figure is shown only when at least 15 roles are available (30 for skill and category pages). These are advertised ranges, not what people are actually paid, and they lean towards companies and regions that publish pay.</p>'
@@ -1488,6 +1612,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Tech hiring trends]({FULL}/trends/)
 - [Insights and rankings]({FULL}/insights/)
 - [Free JSON API]({FULL}/api/): {FULL}/api/v1/index.json
+- [Monthly hiring reports]({FULL}/reports/): one dated page per month that stops changing when the month ends
+- [Data status]({FULL}/status/): what the latest update did and how old the open listings are
+- [Pay transparency ranking]({FULL}/insights/pay-transparency/) and [long-open roles]({FULL}/insights/long-open-roles/)
 - [Methodology]({FULL}/methodology/): how listings are collected and how figures are calculated
 
 - [Skill comparisons]({FULL}/compare/): two skills head to head on open roles, pay and remote share
