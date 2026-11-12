@@ -16,29 +16,29 @@ EXCLUDE = {"Casa", "Swan", "Sei", "Safe", "Circle", "Compound", "Ramp", "Robinho
 CRYPTO_RE = re.compile(r"crypto|blockchain|bitcoin|web3|defi\b|token|ethereum|stablecoin|digital asset|on-chain|onchain|wallet", re.I)
 
 CATS = [
-    ("razrabotka", "Разработка", r"engineer|developer|devops|sre\b|architect|programmer|\bqa\b|sdet|frontend|backend|full.?stack|solidity|rust\b|tech lead|cto\b|开发|工程师"),
-    ("bezopasnost", "Безопасность", r"security|auditor|pentest|soc\b|threat|infosec"),
-    ("produkt", "Продукт", r"product manager|product owner|product lead|head of product|product director|产品"),
-    ("dizajn", "Дизайн", r"design|\bux\b|\bui\b|creative|illustrat|motion"),
-    ("marketing", "Маркетинг и комьюнити", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|seo\b|copywrit|kol\b|运营"),
-    ("prodazhi", "Продажи и развитие бизнеса", r"sales|business development|\bbd\b|partnership|account (executive|manager)|institutional|relationship manager|listing"),
-    ("analitika", "Аналитика и данные", r"analyst|data\b|research|quant|scientist|economist|strategy"),
-    ("podderzhka", "Поддержка", r"support|customer (service|success|experience)|client service|helpdesk"),
-    ("komplaens", "Комплаенс и право", r"compliance|legal|\baml\b|\bkyc\b|counsel|risk|regulatory|fraud|investigat|mlro|audit"),
-    ("finansy", "Финансы", r"finance|financial|account(ant|ing)|treasury|controller|tax\b|payroll|trader|trading"),
-    ("hr", "HR и рекрутинг", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
-    ("operacii", "Операции и управление", r"operations|project manager|program manager|chief of staff|executive assistant|office|administrat"),
+    ("engineering", "Engineering", r"engineer|developer|devops|sre\b|architect|programmer|\bqa\b|sdet|frontend|backend|full.?stack|solidity|rust\b|tech lead|cto\b|开发|工程师"),
+    ("security", "Security", r"security|auditor|pentest|soc\b|threat|infosec"),
+    ("product", "Product", r"product manager|product owner|product lead|head of product|product director|产品"),
+    ("design", "Design", r"design|\bux\b|\bui\b|creative|illustrat|motion"),
+    ("marketing", "Marketing & Community", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|seo\b|copywrit|kol\b|运营"),
+    ("sales-bd", "Sales & Business Development", r"sales|business development|\bbd\b|partnership|account (executive|manager)|institutional|relationship manager|listing"),
+    ("data-research", "Data & Research", r"analyst|data\b|research|quant|scientist|economist|strategy"),
+    ("support", "Customer Support", r"support|customer (service|success|experience)|client service|helpdesk"),
+    ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel|risk|regulatory|fraud|investigat|mlro|audit"),
+    ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|treasury|controller|tax\b|payroll|trader|trading"),
+    ("people", "People & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
+    ("operations", "Operations", r"operations|project manager|program manager|chief of staff|executive assistant|office|administrat"),
 ]
-OTHER = ("drugoe", "Другое")
+OTHER = ("other", "Other")
 
 SKILLS = [
     ("Solidity", r"solidity"), ("Rust", r"\brust\b"), ("Go", r"golang|\bgo[,/)]|[,/(] ?go\b"), ("Python", r"python"),
     ("TypeScript", r"typescript"), ("JavaScript", r"javascript"), ("React", r"\breact\b"), ("Node.js", r"node\.?js"),
     ("Java", r"\bjava\b"), ("C++", r"c\+\+"), ("Kotlin", r"kotlin"), ("Swift", r"\bswift\b"), ("SQL", r"\bsql\b"),
-    ("Kubernetes", r"kubernetes|\bk8s\b"), ("AWS", r"\baws\b"), ("DeFi", r"\bdefi\b"), ("Смарт-контракты", r"smart contract"),
-    ("NFT", r"\bnfts?\b"), ("Трейдинг", r"\btrading\b"), ("AML/KYC", r"\baml\b|\bkyc\b"), ("ИИ", r"\bai\b|machine learning|\bllm"),
+    ("Kubernetes", r"kubernetes|\bk8s\b"), ("AWS", r"\baws\b"), ("DeFi", r"\bdefi\b"), ("Smart contracts", r"smart contract"),
+    ("NFT", r"\bnfts?\b"), ("Trading", r"\btrading\b"), ("AML/KYC", r"\baml\b|\bkyc\b"), ("AI", r"\bai\b|machine learning|\bllm"),
 ]
-TITLE_ONLY = {"DeFi", "NFT", "Трейдинг", "AML/KYC", "ИИ"}  # too common in company boilerplate
+TITLE_ONLY = {"DeFi", "NFT", "Trading", "AML/KYC", "AI"}  # too common in company boilerplate
 ROLE_MARKERS = re.compile(
     r"(what you.ll (do|be doing)|responsibilities|about the (role|job|position|opportunity)|the role|role overview|"
     r"job description|your mission|in this role|what you will do|position overview|the opportunity|key duties|job summary)\s*:?",
@@ -77,7 +77,7 @@ def classify(title):
 
 def level(title):
     t = title.lower()
-    if re.search(r"intern|trainee|graduate|стаж", t): return "Стажёр"
+    if re.search(r"intern|trainee|graduate", t): return "Intern"
     if re.search(r"junior|\bjr\b|associate|entry", t): return "Junior"
     if re.search(r"head of|director|\bvp\b|chief|principal|staff\b|lead\b", t): return "Lead"
     if re.search(r"senior|\bsr\b", t): return "Senior"
@@ -91,11 +91,11 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
     return {
         "id": f"{ats}-{slugify(company)}-{jid}",
         "company": company, "title": title, "url": url, "location": location,
-        "remote": bool(remote) or bool(re.search(r"remote|удал", location, re.I)),
+        "remote": bool(remote) or bool(re.search(r"remote", location, re.I)),
         "dept": (dept or "").strip(), "posted": (posted or "")[:10],
         "excerpt": excerpt(text), "cat": classify(title), "level": level(title),
         "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I)][:6],
-        "russian": bool(re.search(r"\brussian\b|русск", blob, re.I)),
+        "russian": bool(re.search(r"\brussian\b", blob, re.I)),
         "salary": salary or "",
         "_crypto": bool(CRYPTO_RE.search(blob)),
     }

@@ -1,29 +1,29 @@
 {
-  "site_name": "КриптоВакансии",
+  "site_name": "Crypto Jobs Index",
   "base_url": "https://simba0315.github.io",
   "base_path": "/crypto-vakansii",
   "contact_telegram": "",
   "contact_email": "",
   "prices": [
     {
-      "name": "Обычное размещение",
-      "price": "Бесплатно",
-      "what": "Вакансия в общем списке на 30 дней, затем в архиве."
+      "name": "Standard listing",
+      "price": "Free",
+      "what": "Listed for 30 days in the main feed, then moved to the archive."
     },
     {
-      "name": "Выделение",
-      "price": "30 USDT",
-      "what": "Цветная метка и место над обычными вакансиями в своей категории на 14 дней."
+      "name": "Featured",
+      "price": "$99 in USDT",
+      "what": "Highlighted and shown above regular listings in its category for 14 days."
     },
     {
-      "name": "Закреп",
-      "price": "80 USDT",
-      "what": "Первое место на главной и в категории на 7 дней, пост в Telegram-канале."
+      "name": "Pinned",
+      "price": "$199 in USDT",
+      "what": "Top spot on the homepage and in its category for 7 days."
     },
     {
-      "name": "Пакет: 5 вакансий",
-      "price": "250 USDT",
-      "what": "Пять выделенных вакансий в течение 3 месяцев."
+      "name": "5-job pack",
+      "price": "$399 in USDT",
+      "what": "Five featured listings to use within 3 months."
     }
   ],
   "wallets": [
