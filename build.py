@@ -127,7 +127,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/new/">New</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/new/">New</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon" id="theme" type="button" aria-label="Switch between light and dark">{ICON_THEME}</button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon burger" id="menu" type="button" aria-label="Menu" aria-expanded="false">{ICON_MENU}</button></div></div></header>
 {hero}<main class="wrap">{body}</main>
@@ -138,7 +138,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Every open role at tech companies, pulled from their official careers pages and refreshed daily.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/hiring-badge/">Hiring badge &amp; widget</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li></ul></div>
 </div><p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -272,7 +272,7 @@ def job_page(j, active_by_cat):
         banner = ""
     else:
         apply_btn = f'<a class="btn lg" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs</a>'
-        banner = f'<div class="banner">This job is closed{" as of " + fdate(j["closed"]) if j.get("closed") else ""}. The company is no longer accepting applications. Similar open roles are listed below.</div>'
+        banner = f'<div class="banner">This job is closed{" as of " + fdate(j["closed"]) if j.get("closed") else ""}. The company is no longer accepting applications. Use the button on this page to see open roles in the same category.</div>'
     same = [x for x in SIM["comp"].get((j["company"], j["cat"]), []) if x["id"] != j["id"]][:2]
     rest = [x for x in SIM["cat"].get(j["cat"], []) if x["id"] != j["id"] and x["company"] != j["company"]][:4 - len(same)]
     similar = same + rest if j["active"] else []   # closed jobs stay light: the archive only grows
@@ -319,6 +319,7 @@ def main():
                      "active": p.get("expires", "9999") >= TODAY, **p})
     for j in jobs:
         j["featured"] = bool(j.get("featured_until", "") >= TODAY and j["active"])
+        if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["usd"] = usd_range(j["salary"])
         j["places"] = [slug for _, slug, rx in PLACES if re.search(rx, j["location"], re.I)] if j["active"] else []
@@ -355,11 +356,13 @@ def main():
             f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/with-salary/">Salary listed</a></div>'
             f'<dl class="stats"><div><dt>{n:,}</dt><dd>open roles</dd></div><div><dt>{m}</dt><dd>companies</dd></div>'
             f'<div><dt>{len(remote):,}</dt><dd>remote</dd></div><div><dt>{sum(bool(j["salary"]) for j in active):,}</dt><dd>with salary</dd></div></dl></div></section>')
+    plus_band = (f'<div class="band alt"><div><h2>Looking for a job right now?</h2><p>Plus will show you new roles 48 hours early, email you matches instantly and review your résumé. One payment, no subscription.</p></div>'
+                 f'<a class="btn lg" href="{P}/plus/">See Plus</a></div>')
     band = (f'<div class="band"><div><h2>Hiring for your team?</h2><p>Standard listings are free. Featured placement starts at $99, paid in USDT, BTC or ETH.</p></div>'
             f'<a class="btn lg" href="{P}/post-a-job/">Post a job</a></div>')
     home = (section("Latest jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"Browse all {n:,}"))
             + section("Browse by category", f'<ul class="tiles">{cats}</ul>')
-            + section("Top companies hiring", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies"))
+            + section("Top companies hiring", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("Jobs by location", f'<ul class="tiles">{place_html}</ul>', ("locations/", "All locations")) + band
             + section("More recent jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:40])}</ul>', ("jobs/", f"Browse all {n:,}")))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
@@ -538,6 +541,34 @@ def main():
          f'<div class="empty" id="ss-empty">No saved searches. Set filters on the <a class="inl" href="{P}/jobs/">search page</a> and press “Save this search”.</div></section>'
          '<section class="sec"><div class="sec-head"><h2>Recently viewed</h2></div><ul class="jobs" id="seen-list"></ul><div class="empty" id="seen-empty">No jobs viewed yet.</div></section></div>', sitemap=False)
 
+    # Plus (paid plan for job seekers; one-time payments, no subscription)
+    plus = CFG.get("plus", {"live": False, "plans": []})
+    cta = ('<a class="btn primary lg" href="#pay">Get Plus</a>' if plus.get("live") else '<button class="btn primary lg" type="button" disabled>Available soon</button>')
+    plans = "".join(
+        f'<div class="plan{" best" if pl.get("best") else ""}">' + (f'<span class="pill acc">{e(pl["note"])}</span>' if pl.get("note") else '<span class="pill">&nbsp;</span>')
+        + f'<h3>{e(pl["name"])}</h3><p class="price">{e(pl["price"])}</p><p class="note">{e(pl["per"])}</p>{cta}</div>' for pl in plus["plans"])
+    feats = [("See jobs 48 hours early", "New roles reach Plus members two days before they appear on the public site. Recruiters fill their shortlists from the first applicants."),
+             ("Instant email alerts", "Save a search and get an email the moment a matching job is posted, instead of checking back."),
+             ("AI résumé review", "Line-by-line feedback on your résumé against the roles you are aiming for, with wording you can paste in."),
+             ("Tailored cover letters", "A draft cover letter for any job in one click, built from your résumé and the posting."),
+             ("My jobs on every device", "Your saved jobs, application statuses and notes follow you from laptop to phone.")]
+    feat_html = "".join(f'<div class="feat"><h3>{e(a)}</h3><p>{e(b)}</p></div>' for a, b in feats)
+    rows_cmp = [("Search, filters and salary data", "✓", "✓"), ("Save jobs and track applications", "This device", "Every device"), ("New jobs", "After 48 hours", "Immediately"),
+                ("Alerts for saved searches", "On the site", "By email, instantly"), ("AI résumé review", "—", "✓"), ("Cover letter drafts", "—", "✓")]
+    cmp_html = "".join(f"<tr><td>{e(a)}</td><td>{e(b)}</td><td><strong>{e(c_)}</strong></td></tr>" for a, b, c_ in rows_cmp)
+    soon = "" if plus.get("live") else '<div class="banner">Plus is not available yet. This page shows what we are building and what it will cost. Nothing can be bought today.</div>'
+    page("plus/", f"{SITE} Plus — get to new jobs first | {SITE}",
+         "Plus gives job seekers early access to new tech jobs, instant email alerts, AI résumé review and cover letters. One payment, no subscription.",
+         crumbs(("Plus", "")) + f'<h1>Get to new jobs before everyone else</h1>'
+         f'<p class="lead">{e(SITE)} Plus is for people who are actively looking. One payment, no subscription, nothing renews by itself.</p>{soon}'
+         f'<div class="feats">{feat_html}</div>'
+         + section("Pick how long you need it", f'<div class="plans">{plans}</div><p class="note">One-time payment in USDT, BTC or ETH. Card payments will follow. Searching and applying stay free for everyone.</p>')
+         + section("Free and Plus side by side", f'<div class="tablewrap"><table><tr><th>Feature</th><th>Free</th><th>Plus</th></tr>{cmp_html}</table></div>')
+         + '<section class="sec"><div class="sec-head"><h2>Questions</h2></div>'
+         "<h3>Is this a subscription?</h3><p>No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel.</p>"
+         "<h3>Do I have to pay to apply for jobs?</h3><p>Never. Every job on the site is free to view and apply to. Plus adds speed and tools.</p>"
+         "<h3>How do I pay?</h3><p>With crypto: USDT, BTC or ETH. Card payments are planned.</p>"
+         "<h3>When does it launch?</h3><p>We are finishing it now. Until then every feature of the free site keeps working as it does today.</p></section>")
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}</td></tr>" for p in CFG["prices"])
     wallets = [w for w in CFG["wallets"] if w["address"]]

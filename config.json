@@ -42,5 +42,29 @@
       "network": "Ethereum (ERC-20)",
       "address": ""
     }
-  ]
+  ],
+  "plus": {
+    "live": false,
+    "plans": [
+      {
+        "name": "1 month",
+        "price": "$9",
+        "per": "one payment",
+        "note": ""
+      },
+      {
+        "name": "3 months",
+        "price": "$19",
+        "per": "about $6.30 a month",
+        "note": "Save 30%",
+        "best": true
+      },
+      {
+        "name": "12 months",
+        "price": "$39",
+        "per": "about $3.25 a month",
+        "note": "Save 64%"
+      }
+    ]
+  }
 }

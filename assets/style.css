@@ -232,3 +232,19 @@ footer.mini a{color:var(--muted)}footer.mini a:hover{color:var(--text)}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
 .stat b{display:block;font-size:26px;letter-spacing:-.02em}
 .stat span{font-size:13px;color:var(--muted)}
+
+/* Plus */
+nav a.nl.plus{color:var(--accent);font-weight:700}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:26px 0 0}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.feat h3{margin:0 0 6px;font-size:17px}
+.feat p{margin:0;color:var(--muted);font-size:15px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.plan.best{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+.plan h3{margin:8px 0 0;font-size:16px;color:var(--muted);font-weight:600}
+.plan .price{margin:0;font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.plan .note{margin:0 0 12px}
+.plan .btn{width:100%;margin-top:auto}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.band.alt{margin-top:56px;background:radial-gradient(600px 240px at 10% 0%,rgba(79,70,229,.6),transparent 70%),linear-gradient(135deg,#0b0d12,#1b1440)}

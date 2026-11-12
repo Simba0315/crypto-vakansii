@@ -92,6 +92,7 @@ def level(title):
 def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary=""):
     title = re.sub(r"\s+", " ", title or "").strip()
     location = re.sub(r"\s+", " ", location or "").strip()
+    if location.lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: location = ""
     blob = title + "\n" + text
     return {
         "id": f"{ats}-{slugify(company)}-{jid}",
@@ -151,6 +152,13 @@ def main():
     stats = {"new": 0, "closed": 0, "failed": [], "dropped": []}
     with cf.ThreadPoolExecutor(12) as ex:
         results = list(ex.map(fetch, sources))
+    # second, gentler pass for feeds that timed out or were rate-limited the first time
+    by_name = {s["name"]: s for s in sources}
+    retry = [by_name[name] for name, jobs in results if jobs is None]
+    if retry:
+        with cf.ThreadPoolExecutor(3) as ex:
+            again = dict(ex.map(fetch, retry))
+        results = [(name, again.get(name) if jobs is None else jobs) for name, jobs in results]
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
