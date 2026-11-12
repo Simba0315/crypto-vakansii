@@ -129,6 +129,19 @@ def write(path, content, sitemap=True):
         URLS.append(path)
 
 
+def mincss(s):
+    """Small, safe stylesheet minifier: comments and layout whitespace go, quoted strings are left untouched."""
+    keep = []
+    def stash(m_):
+        keep.append(m_.group(0)); return f"\x00{len(keep) - 1}\x00"
+    s = re.sub(r"/\*.*?\*/", "", s, flags=re.S)
+    s = re.sub(r'"[^"]*"', stash, s)
+    s = re.sub(r"\s+", " ", s)
+    s = re.sub(r"\s*([{};,>])\s*", r"\1", s)
+    s = re.sub(r";}", "}", s).strip()
+    return re.sub(r"\x00(\d+)\x00", lambda m_: keep[int(m_.group(1))], s)
+
+
 def fit_title(t):
     """Keep the key at the start and the brand at the end, but never let a title run long."""
     if len(t) <= 65: return t
@@ -157,8 +170,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#0e0e0c">
 <link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="manifest" href="{P}/manifest.json">
 <link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preload" href="{P}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
 <a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
@@ -622,7 +634,8 @@ def main():
               + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in top_skills + [c for c, _ in comp_items[:200]]) + "</datalist>"
               + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"Search {roles(n, 'Tech Job')} | {SITE}",
-         "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search)
+         "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search,
+         head=f'<link rel="preload" href="{P}/data/head.json" as="fetch" crossorigin><link rel="preload" href="{P}/data/index.json" as="fetch" crossorigin>')
 
     # Long-tail landing pages: skill x remote, skill x place, category x place, place x remote, category x level
     by_tag = defaultdict(list)
@@ -1032,8 +1045,9 @@ el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js
     write("board/", f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Board — live tech jobs wall | {e(SITE)}</title><meta name="description" content="A full-screen live board of the freshest tech jobs, rotating automatically. Put it on a second monitor, an office screen or a classroom wall.">
 <link rel="canonical" href="{FULL}/board/"><link rel="icon" type="image/svg+xml" href="{P}/favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<style>html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;overflow:hidden}}
+<style>@font-face{{font-family:"Inter";font-weight:400 700;font-display:swap;src:url({P}/fonts/inter-latin.woff2) format("woff2")}}
+@font-face{{font-family:"JetBrains Mono";font-weight:500 700;font-display:swap;src:url({P}/fonts/jbmono-latin.woff2) format("woff2")}}
+html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;overflow:hidden}}
 .top{{display:flex;justify-content:space-between;align-items:center;padding:2.2vh 3vw;border-bottom:1px solid #2b2b27;font-size:clamp(12px,1.5vw,20px);letter-spacing:.08em;text-transform:uppercase;color:#a5a399}}
 .top a{{color:#f3f2ec;text-decoration:none;font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;text-transform:none;font-size:clamp(16px,2vw,28px)}}
 .top b{{color:#c8f560;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#3ecf5f;margin-right:.6em}}
@@ -1231,11 +1245,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     place_list = [slug for _, slug, _ in PLACES]; pi = {p_: i for i, p_ in enumerate(place_list)}
     cat_list = list(CAT); lvl_list = ["", "Intern", "Junior", "Senior", "Lead"]
     perk_list = [nm for nm, _, _ in PERKS]; et_list = ["", "Full-time", "Contract", "Part-time", "Internship"]
-    rows_ = [[j["slug"], j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))),
+    def slug_ref(j):
+        base = f"{slugify(j['title'])}-{slugify(j['company'])}"
+        if j["slug"] == base: return 0
+        tail = j["slug"][len(base) + 1:]
+        return int(tail) if j["slug"].startswith(base + "-") and tail.isdigit() and tail[0] != "0" else j["slug"]
+    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))),
               cat_list.index(j["cat"]), lvl_list.index(j["level"]) if j["level"] in lvl_list else 0, [ti[t] for t in j["tags"] if t in ti], j["salary"],
               int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0), int(j["usd"][1]) if j["usd"] else 0, [pi[p_] for p_ in j["places"]],
               [perk_list.index(x) for x in j.get("perks", []) if x in perk_list], et_list.index(j.get("etype", "")) if j.get("etype", "") in et_list else 0] for j in order(active)]
-    write("data/index.json", json.dumps({"c": comp_list, "t": tag_list, "p": place_list, "k": cat_list, "l": lvl_list, "x": perk_list, "e": et_list, "g": [int(slugify(c) in LOGOS) for c in comp_list], "r": rows_}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    idx = {"c": comp_list, "t": tag_list, "p": place_list, "k": cat_list, "l": lvl_list, "x": perk_list, "e": et_list, "g": [int(slugify(c) in LOGOS) for c in comp_list]}
+    write("data/index.json", json.dumps({**idx, "r": rows_}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    # the newest rows on their own: the search page paints from this small file while the full index is still loading
+    write("data/head.json", json.dumps({**idx, "n": len(rows_), "r": rows_[:300]}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     shutil.copy(ROOT / "assets" / "og.jpg", OUT / "og.jpg")
     if LOGOS: shutil.copytree(ROOT / "assets" / "logos", OUT / "logos")
 
@@ -1275,8 +1297,18 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("style.css", "app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
+    (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
+    shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
+    # service worker: keeps versioned scripts and styles, fonts and logos in the browser, so repeat views skip the network for them
+    (OUT / "sw.js").write_text(f"""var V='{V}',C='hrn-assets-'+V;
+self.addEventListener('install',function(){{self.skipWaiting();}});
+self.addEventListener('activate',function(e){{e.waitUntil(caches.keys().then(function(ks){{return Promise.all(ks.map(function(k){{return k.indexOf('hrn-assets-')===0&&k!==C?caches.delete(k):null;}}));}}).then(function(){{return self.clients.claim();}}));}});
+self.addEventListener('fetch',function(e){{var r=e.request;if(r.method!=='GET')return;var u=new URL(r.url);if(u.origin!==location.origin)return;
+if(!(/\\/(fonts|logos)\\//.test(u.pathname)||/[?&]v=/.test(u.search)))return;
+e.respondWith(caches.open(C).then(function(c){{return c.match(r).then(function(hit){{return hit||fetch(r).then(function(res){{if(res.ok)c.put(r,res.clone());return res;}});}});}}).catch(function(){{return fetch(r);}}));}});
+""", encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
           f'<rect width="220" height="48" rx="10" fill="#0e0e0c"/><circle cx="26" cy="24" r="7" fill="#c8f560"/>'

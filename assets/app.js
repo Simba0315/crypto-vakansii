@@ -7,7 +7,7 @@
   var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), age = $('age'), sort = $('sort');
   var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
   var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
-  var ftoggle = $('ftoggle'), fwrap = $('fwrap');
+  var ftoggle = $('ftoggle'), fwrap = $('fwrap'), keepShown = false;
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
     var open = fwrap.classList.toggle('open'); ftoggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
@@ -21,10 +21,8 @@
   var paintChips = function () { chips.forEach(function (c) { c.setAttribute('aria-pressed', skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); };
   paintChips();
 
-  var jobs = [];
-  try { jobs = await H.load(); }
-  catch (e) { count.textContent = 'Could not load the list. Please reload the page.'; return; }
-
+  // First paint comes from a small file with the newest jobs; the full index replaces it as soon as it has arrived.
+  var jobs = [], full = false, allTotal = 0, waiting = false;
   var shown = 50, found = [], extra = new Map(), total = 0;
   var query = function () {
     var p = new URLSearchParams();
@@ -63,20 +61,26 @@
   };
   var run = function () {
     var qs = query(), f = H.parse(qs);
+    if (!full && qs) { waiting = true; count.textContent = 'Searching all jobs…'; return; }   // filters need the whole index
     var rows = jobs.filter(function (j) { return H.match(j, f); });
     if (f.sort === 'sal') rows = rows.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
     else if (f.sort === 'rel' && f.words.length) {                 // title matches first, then the rest, newest first inside each group
       var score = function (j) { var t = j[1].toLowerCase(), n = 0; f.words.forEach(function (w) { if (t.indexOf(w) >= 0) n++; }); return n === f.words.length ? 2 : n ? 1 : 0; };
       rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
     }
-    total = rows.length; extra = new Map(); found = H.collapse(rows, extra);
+    total = full ? rows.length : Math.max(allTotal, rows.length); extra = new Map(); found = H.collapse(rows, extra);
     var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto, fAny].filter(function (el) { return el.checked; }).length + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
-    shown = 50; render();
+    if (!keepShown) shown = 50;
+    render();
     if (pane && wide.matches) {                      // show the first result next to the list
-      var firstRow = list.querySelector('.job > a');
-      current = '';
-      if (firstRow) preview(firstRow); else pane.innerHTML = '<p class="pane-empty">No job selected.</p>';
+      var open = keepShown && current ? Array.prototype.filter.call(list.querySelectorAll('.job > a'), function (a) { return a.getAttribute('href') === current; })[0] : null;
+      if (open) open.parentNode.classList.add('sel');   // the full index arrived: leave the job the visitor is reading alone
+      else {
+        var firstRow = list.querySelector('.job > a');
+        current = '';
+        if (firstRow) preview(firstRow); else pane.innerHTML = '<p class="pane-empty">No job selected.</p>';
+      }
     }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
@@ -129,5 +133,16 @@
     saveBtn.textContent = 'Saved to My jobs ✓'; saveBtn.disabled = true;
   });
   if (!sortTouched && q.value.trim()) sort.value = 'rel';
-  run();
+  var whole = H.load();
+  whole.catch(function () {});
+  var headP = H.loadHead();
+  headP.catch(function () {});
+  if (!query()) {
+    try { var hd = await headP; if (!full) { jobs = hd.rows; allTotal = hd.total; run(); } } catch (e) {}
+  } else count.textContent = 'Searching all jobs…';
+  try { jobs = await whole; }
+  catch (e) { if (!jobs.length) count.textContent = 'Could not load the list. Please reload the page.'; return; }
+  full = true;
+  // keep the visitor's place: same order, same number of rows, unless they were waiting for results
+  keepShown = !waiting && !query(); run(); keepShown = false;
 })();

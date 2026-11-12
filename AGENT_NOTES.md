@@ -15,6 +15,17 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
 - `logos.py` finds each company's own site and saves its icon to `assets/logos/`. Only trusted addresses are used
   (hand-checked `OVERRIDE` list or `<name>.com`); a wrong logo is worse than none. Never draw or invent logos.
 
+## Speed (keep it this way)
+
+- Fonts are self-hosted in `assets/fonts/` (latin + latin-ext, variable woff2); Inter and Bricolage are preloaded. No third-party
+  requests on any page: do not add external fonts, scripts or trackers.
+- `data/index.json` stores a job's address as `0` (derived from title + company), a number (`-N` suffix) or the full string; `site.js`
+  `expand()` rebuilds it. `data/head.json` holds the newest 300 rows so the search page paints before the full index arrives.
+- `site.js` adds speculation rules (pages are prerendered when a link is hovered; the search page and For you are only prefetched)
+  and registers `sw.js`, which caches fonts, logos and `?v=` assets. Anything that changes state on page load must wait for
+  `prerenderingchange` (see `markSeen`).
+- The stylesheet is minified at build time by `mincss()`; double-quoted strings are safe, do not use single-quoted CSS strings.
+
 ## Local work
 
 ```

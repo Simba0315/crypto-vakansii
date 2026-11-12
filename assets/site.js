@@ -24,18 +24,26 @@
   /* ---------- job index: compact file expanded into rows ---------- */
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
   //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere]
-  var cache;
-  function load() {
-    if (!cache) cache = fetch(P + '/data/index.json').then(function (r) { return r.json(); }).then(function (d) {
-      return d.r.map(function (r) {
-        var c = d.c[r[2]], li = r[6], pi = r[9];
-        return [r[0], r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
+  var cache, headCache;
+  function expand(d) {
+    var cslug = d.c.map(function (c) { return slugOf(c) || 'job'; });
+    return d.r.map(function (r) {
+        var c = d.c[r[2]], li = r[6], pi = r[9], s = r[0];
+        if (typeof s !== 'string') { var b = (slugOf(r[1]) || 'job') + '-' + cslug[r[2]]; s = s ? b + '-' + s : b; }   // slug rebuilt from title and company
+        return [s, r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
           (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : ''];
-      });
     });
+  }
+  function load() {
+    if (!cache) cache = fetch(P + '/data/index.json').then(function (r) { return r.json(); }).then(expand);
     return cache;
+  }
+  // the newest rows only (a small file), so a list can be painted before the full index arrives
+  function loadHead() {
+    if (!headCache) headCache = fetch(P + '/data/head.json').then(function (r) { return r.json(); }).then(function (d) { return { rows: expand(d), total: d.n }; });
+    return headCache;
   }
   function parse(qs) {
     var p = new URLSearchParams(qs || '');
@@ -109,7 +117,7 @@
       else if (seen[slug]) a.parentNode.classList.add('seen');
     });
   }
-  window.HRN = { parse: parse, match: match, load: load, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  window.HRN = { parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- theme + mobile menu + shortcuts ---------- */
   var themeBtn = $('theme');
@@ -245,8 +253,11 @@
         if (to) window.open(to, '_blank', 'noopener');
       });
     });
-    var seen = get('hrn_seen', []).filter(function (x) { return x.s !== me.s; });
-    seen.unshift(me); set('hrn_seen', seen.slice(0, 30));
+    var markSeen = function () {
+      var seen = get('hrn_seen', []).filter(function (x) { return x.s !== me.s; });
+      seen.unshift(me); set('hrn_seen', seen.slice(0, 30));
+    };
+    if (document.prerendering) document.addEventListener('prerenderingchange', markSeen, { once: true }); else markSeen();
     var fit = q1('#match');
     if (fit && profile.skills.length) {
       var tags = (fit.getAttribute('data-tags') || '').split('|').filter(Boolean);
@@ -268,8 +279,22 @@
 
   /* ---------- lists: saved / applied / viewed marks, faster navigation ---------- */
   decorate(document);
+  /* instant navigation: the browser prepares a page while the pointer rests on its link (Chrome and Edge);
+     other browsers fall back to fetching the job page on hover */
+  var specOk = window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules');
+  if (specOk) {
+    var no = function (p) { return { not: { href_matches: P + p } }; };
+    var spec = document.createElement('script'); spec.type = 'speculationrules';
+    spec.textContent = JSON.stringify({
+      prerender: [{ where: { and: [{ href_matches: P + '/*' }, no('/jobs/'), no('/for-you/'), no('/*.json'), no('/*.xml'), no('/*.csv'), no('/*.svg'), no('/*.txt'),
+        { not: { selector_matches: '[target=_blank],[download],[rel~=nofollow]' } }] }, eagerness: 'moderate' }],
+      prefetch: [{ where: { or: [{ href_matches: P + '/jobs/' }, { href_matches: P + '/for-you/' }] }, eagerness: 'moderate' }]
+    });
+    document.head.appendChild(spec);
+  }
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register(P + '/sw.js').catch(function () {});
   var warmed = {};
-  document.addEventListener('mouseover', function (ev) {
+  if (!specOk) document.addEventListener('mouseover', function (ev) {
     var a = ev.target.closest && ev.target.closest('.job > a');
     if (!a || warmed[a.href] || !a.href || a.href.indexOf('/job/') < 0) return;
     warmed[a.href] = 1;
