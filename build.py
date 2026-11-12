@@ -112,7 +112,7 @@ def ava(name, cls=""):
 
 
 def write(path, content, sitemap=True):
-    f = OUT / path / "index.html" if not path.endswith((".html", ".xml", ".txt", ".json", ".svg")) else OUT / path
+    f = OUT / path / "index.html" if not path.endswith((".html", ".xml", ".txt", ".json", ".svg", ".csv")) else OUT / path
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(content, encoding="utf-8")
     if sitemap:
@@ -147,7 +147,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Every open role at tech companies, pulled from their official careers pages and refreshed daily.</p></div>
 <div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
-<div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/hiring-badge/">Hiring badge &amp; widget</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -356,6 +356,9 @@ def job_page(j, active_by_cat):
                  f'<a class="linkbtn" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url={quote(canonical, safe="")}">LinkedIn</a>'
                  f'<a class="linkbtn" target="_blank" rel="noopener" href="https://x.com/intent/post?text={quote(j["title"] + " at " + j["company"])}&amp;url={quote(canonical, safe="")}">X</a>'
                  f'<a class="linkbtn" href="mailto:?subject={quote(j["title"] + " at " + j["company"])}&amp;body={quote(canonical, safe="")}">Email</a>'
+                 f'<a class="linkbtn" target="_blank" rel="noopener" href="https://t.me/share/url?url={quote(canonical, safe="")}&amp;text={quote(j["title"] + " at " + j["company"])}">Telegram</a>'
+                 f'<a class="linkbtn" target="_blank" rel="noopener" href="https://wa.me/?text={quote(j["title"] + " at " + j["company"] + " " + canonical)}">WhatsApp</a>'
+                 f'<a class="linkbtn" target="_blank" rel="noopener" href="https://www.reddit.com/submit?url={quote(canonical, safe="")}&amp;title={quote(j["title"] + " at " + j["company"])}">Reddit</a>'
                  f'<button class="linkbtn" id="hide" type="button">Not interested</button></p>') if j["active"] else "") + glance
     loc = f" · {e(j['location'])}" if j["location"] else ""
     body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
@@ -370,13 +373,32 @@ def job_page(j, active_by_cat):
     page(f"job/{j['slug']}/", title, desc, body, head, compact=True)
 
 
-def embed_code(slug):
-    return e(f'<script src="{FULL}/embed.js" data-company="{slug}" async></script>')
+def embed_code(spec, label, page_path, limit=6):
+    """Copy-paste widget code. The link inside the div is a normal HTML link, so it works without scripts too."""
+    return e(f'<div data-hrn-jobs="{spec}" data-limit="{limit}"><a href="{FULL}/{page_path}">{label} on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
 
 
-def badge_code(slug=None):
-    url = f"{FULL}/companies/{slug}/" if slug else f"{FULL}/"
-    return e(f'<a href="{url}"><img src="{FULL}/hiring-badge.svg" alt="We\'re hiring — see our open roles on {SITE}" width="220" height="48"></a>')
+def badge_code(badge_path, label, page_path, markdown=False):
+    if markdown:
+        return e(f"[![{label} on {SITE}]({FULL}/{badge_path})]({FULL}/{page_path})")
+    return e(f'<a href="{FULL}/{page_path}"><img src="{FULL}/{badge_path}" alt="{label} on {SITE}" height="28"></a>')
+
+
+def cite(path, title):
+    url = f"{FULL}/{path}"
+    link_html = f'<a href="{url}">{title} — {SITE}</a>'
+    return ('<details class="embed"><summary>Cite or link to this page</summary><p class="note">Free to quote with a link back. Pick a format:</p>'
+            f'<pre><code>{e(link_html)}</code></pre><pre><code>{e(f"[{title} — {SITE}]({url})")}</code></pre>'
+            f'<pre><code>{e(f"Source: {SITE}, “{title}”, {url}")}</code></pre></details>')
+
+
+def badge_svg(label, value):
+    lw, vw = int(34 + 7.7 * len(label)), int(18 + 7.7 * len(value))
+    w = lw + vw
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="28" viewBox="0 0 {w} 28" role="img" aria-label="{e(label)}: {e(value)}">'
+            f'<rect width="{w}" height="28" rx="6" fill="#0e0e0c"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#c8f560"/><rect x="{lw}" width="8" height="28" fill="#c8f560"/>'
+            f'<circle cx="14" cy="14" r="4" fill="#3ecf5f"/><text x="25" y="18.5" fill="#fff" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(label)}</text>'
+            f'<text x="{lw + 9}" y="18.5" fill="#172400" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(value)}</text></svg>')
 
 
 def main():
@@ -464,6 +486,10 @@ def main():
             + section("Top companies hiring", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("Jobs by location", f'<ul class="tiles">{place_html}</ul>', ("locations/", "All locations")) + band
             + section("More recent jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:32])}</ul>', ("jobs/", f"Browse all {n:,}"))
+            + section("Put live tech jobs on your site", '<div class="feats">'
+                      f'<a class="feat" href="{P}/widgets/"><h3>Jobs widget</h3><p>One snippet shows fresh jobs for any skill, city or company on your blog or community site.</p></a>'
+                      f'<a class="feat" href="{P}/widgets/"><h3>Live badges</h3><p>A badge with today’s number of open roles for a README, a footer or a post.</p></a>'
+                      f'<a class="feat" href="{P}/api/"><h3>Free jobs API</h3><p>JSON feeds with no key and no sign-up, refreshed every day.</p></a></div>')
             + section("Questions", faq_html))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
          f"{roles(n)} at tech companies: engineering, marketing, compliance, support and more. Remote filters, salary data, updated daily.", home, hero=hero,
@@ -618,9 +644,11 @@ def main():
         chips += [f"<span class='chip'><b>{k}</b> {e(name)}</span>" for name, k in top_cats]
         lead = (f"{roles(len(act), 'open role')} at {e(c)}, updated daily." if act else "No open roles right now. Past openings are below.")
         closed = section(f"Closed jobs at {c}", f'<ul class="jobs">{"".join(card(j) for j in arc[:200])}</ul>') if arc else ""
-        embed = (f'<details class="embed"><summary>Work at {e(c)}? Show these jobs on your own site</summary>'
-                 f'<p class="note">Paste this where the list should appear. It stays in sync automatically.</p><pre><code>{embed_code(slug)}</code></pre>'
-                 f'<p class="note">Or add a hiring badge that links here:</p><pre><code>{badge_code(slug)}</code></pre></details>')
+        embed = (f'<details class="embed"><summary>Work at {e(c)}? Show these jobs and a live hiring badge on your own site</summary>'
+                 f'<p class="note">Jobs widget: paste where the list should appear. It stays in sync automatically.</p><pre><code>{embed_code("company:" + slug, "Jobs at " + c, f"companies/{slug}/")}</code></pre>'
+                 f'<p class="note">Live badge with your current number of open roles:</p><p><img src="{P}/badge/companies/{slug}.svg" alt="{e(c)} is hiring" height="28"></p>'
+                 f'<pre><code>{badge_code(f"badge/companies/{slug}.svg", c + " is hiring", f"companies/{slug}/")}</code></pre>'
+                 f'<p class="note"><a href="{P}/widgets/">More widgets and badges →</a></p></details>')
         stack = [t for t, _ in Counter(t for j in act for t in j["tags"]).most_common(10)]
         where = Counter(p_ for j in act for p_ in j["places"]).most_common(6)
         sim = sorted(((len(set(stack) & set(STACK[o])), OPEN[o], o) for o in STACK if o != c and len(set(stack) & set(STACK[o])) >= 4), reverse=True)[:6]
@@ -684,7 +712,7 @@ def main():
          + section("By category", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10))
          + section("By skill", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"))
          + section("By company", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8))
-         + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary")))
+         + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary")) + cite("salaries/", "Tech salaries from live job postings"))
 
     def salary_page(slug, label, group, back):
         mids = sorted((lo + hi) / 2 for _, (lo, hi) in group)
@@ -700,7 +728,8 @@ def main():
              crumbs(("Salaries", "salaries/"), (label, "")) + f"<h1>{e(label)} salaries in tech</h1>"
              f'<p class="lead">From {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>{stats}'
              + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
-             + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back))
+             + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
+             + cite(f"salaries/{slug}/", f"{label} salaries in tech"))
     for t, group in g_tag.items():
         if len(group) >= 30:
             salary_page(TAG_SLUG.get(t, slugify(t)), t, group, (f"skills/{TAG_SLUG.get(t, slugify(t))}/", f"All {t} jobs"))
@@ -733,7 +762,9 @@ def main():
          + section("Companies hiring the most", ttable(["Company", "Open roles", "Remote", "Posted this week"], comp_rows), ("companies/", "All companies"))
          + section("Roles by category", ttable(["Category", "Open roles", "Share", "Remote", "Median salary"], cat_rows))
          + section("Roles by location", ttable(["Location", "Open roles", "Share"], place_rows), ("locations/", "All locations"))
-         + '<p class="note">Salary figures are medians of advertised US-dollar ranges and are shown only where at least 15 roles publish one. A role that lists several locations is counted in each.</p>')
+         + '<p class="note">Salary figures are medians of advertised US-dollar ranges and are shown only where at least 15 roles publish one. A role that lists several locations is counted in each.</p>'
+         + f'<p class="note">Download the numbers: <a href="{P}/data/open/skills.csv">skills.csv</a>, <a href="{P}/data/open/companies.csv">companies.csv</a>, '
+           f'<a href="{P}/data/open/categories.csv">categories.csv</a>, <a href="{P}/data/open/locations.csv">locations.csv</a>.</p>' + cite("trends/", "Tech hiring trends"))
 
     # My jobs: tracker kept in the visitor's browser, no account needed
     page("my-jobs/", f"My jobs — saved jobs and application tracker | {SITE}", "Track the jobs you saved and applied to, add notes, and keep your saved searches.",
@@ -772,7 +803,7 @@ def main():
     def insight(slug, h1, desc, lead, head, rows_html, more):
         page(f"insights/{slug}/", f"{h1} — {month} | {SITE}", desc,
              crumbs(("Insights", "insights/"), (h1, "")) + f"<h1>{e(h1)}</h1><p class=\"lead\">{lead} Recalculated every day from {n:,} open roles; this is the picture for {month}.</p>"
-             + ttable(head, rows_html) + f'<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p><p><a class="btn" href="{P}/{more[0]}">{e(more[1])}</a></p>')
+             + ttable(head, rows_html) + f'<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p><p><a class="btn" href="{P}/{more[0]}">{e(more[1])}</a></p>' + cite(f"insights/{slug}/", f"{h1}, {month}"))
         return (f"insights/{slug}/", h1, desc)
     sal_by_tag = sorted(((t, median([(lo + hi) / 2 for _, (lo, hi) in g]), len(g)) for t, g in g_tag.items() if len(g) >= 30), key=lambda x: -x[1])
     remote_co = sorted(((c, sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js)) for c, js in companies.items()), key=lambda x: -x[1])
@@ -850,6 +881,46 @@ def main():
     page("skills/", f"Tech Jobs by Skill — {len(skill_counts)} skills | {SITE}", "Browse open tech jobs by skill: languages, frameworks, cloud platforms and tools.",
          crumbs(("Skills", "")) + f'<h1>Tech jobs by skill</h1><p class="lead">Open roles that mention each skill. Each skill page also links to its salary data and to remote and city versions.</p><ul class="tiles">{skill_tiles}</ul>')
 
+    # Widgets, badges, API: ways for other sites to show our jobs and link back
+    wb_data = {"site": SITE, "skills": [[tslug(t), t] for t, _ in skill_counts.most_common()], "categories": [[cs, CAT[cs]] for cs in CAT if by_cat[cs]],
+               "locations": [[slug, name.removeprefix("the ")] for name, slug, _ in places], "companies": [[slugify(c), c] for c, _ in comp_items if OPEN[c]]}
+    page("widgets/", f"Free Jobs Widget & Live Hiring Badges for Your Site | {SITE}",
+         "Put live tech jobs on your blog, community or company site in one line of code. Free jobs widget and live badges for any skill, category, city or company.",
+         crumbs(("Widgets", "")) + '<h1>Live tech jobs on your site</h1>'
+         '<p class="lead">A free jobs widget and live badges for blogs, communities, bootcamps, newsletters and company sites. Pick what to show, copy one snippet, done. It updates itself every day.</p>'
+         f'<div id="wb" data-full="{FULL}" data-base="{P}"><div class="card"><div class="fbar" style="margin:0">'
+         '<label class="wl">Show<select id="wb-type"><option value="skill">Jobs by skill</option><option value="category">Jobs by category</option><option value="location">Jobs by location</option>'
+         '<option value="company">Jobs at a company</option><option value="remote">Remote jobs</option><option value="latest">Latest jobs</option></select></label>'
+         '<label class="wl">Which one<select id="wb-val"></select></label>'
+         '<label class="wl">Rows<select id="wb-limit"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>15</option></select></label>'
+         '<label class="wl">Theme<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div></div>'
+         + section("Jobs widget", '<div id="wb-preview" style="margin-bottom:16px"></div><textarea id="wb-code" rows="4" readonly aria-label="Widget code"></textarea>'
+                   '<p><button class="btn sm" type="button" data-copy="wb-code">Copy widget code</button> <span class="note">Works in WordPress (Custom HTML block), Webflow, Ghost, Notion embeds and plain HTML.</span></p>')
+         + section("Live badge", '<p><img id="wb-badge" alt="Live badge preview" height="28"></p><p class="note">The number on the badge is recalculated every day. Good for a README, a footer or a blog post.</p>'
+                   '<span class="flabel">HTML</span><textarea id="wb-badge-html" rows="2" readonly aria-label="Badge HTML"></textarea><p><button class="btn sm" type="button" data-copy="wb-badge-html">Copy HTML</button></p>'
+                   '<span class="flabel">Markdown (GitHub README)</span><textarea id="wb-badge-md" rows="2" readonly aria-label="Badge Markdown"></textarea><p><button class="btn sm" type="button" data-copy="wb-badge-md">Copy Markdown</button></p>')
+         + "</div>"
+         + section("More for developers and writers", '<div class="feats">'
+                   f'<a class="feat" href="{P}/api/"><h3>Free jobs API</h3><p>JSON feeds for every skill, category, city and company. No key, no sign-up.</p></a>'
+                   f'<a class="feat" href="{P}/trends/"><h3>Hiring data to quote</h3><p>Live numbers on skills, salaries and companies, with ready-made citations and CSV downloads.</p></a>'
+                   f'<a class="feat" href="{P}/feed.xml"><h3>RSS feeds</h3><p>Plug any category or skill feed into Slack, Discord or a reader.</p></a></div>')
+         + '<script type="application/json" id="wb-data">' + json.dumps(wb_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>')
+    sample = json.dumps({"name": "Rust jobs", "url": f"{FULL}/skills/rust/", "site": SITE, "updated": TODAY, "total": 1100,
+                         "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
+    js_example = f'const feed = await fetch("{FULL}/api/v1/skills/python.json").then(r => r.json());\nconsole.log(feed.total, feed.jobs[0].title);'
+    page("api/", f"Free Tech Jobs API — JSON feeds, no key | {SITE}",
+         "A free JSON API of open tech jobs by skill, category, location and company. No API key, CORS enabled, updated daily.",
+         crumbs(("API", "")) + '<h1>Free tech jobs API</h1><p class="lead">Plain JSON files you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every day.</p>'
+         + section("Endpoints", ttable(["Feed", "Address"], [
+             trow(["Everything available", f"<code>{FULL}/api/v1/index.json</code>"]), trow(["Latest jobs", f"<code>{FULL}/api/v1/latest.json</code>"]),
+             trow(["Remote jobs", f"<code>{FULL}/api/v1/remote.json</code>"]), trow(["By skill", f"<code>{FULL}/api/v1/skills/rust.json</code>"]),
+             trow(["By category", f"<code>{FULL}/api/v1/categories/engineering.json</code>"]), trow(["By location", f"<code>{FULL}/api/v1/locations/europe.json</code>"]),
+             trow(["By company", f"<code>{FULL}/api/v1/companies/stripe.json</code>"])]))
+         + section("Response", f'<pre><code>{e(sample)}</code></pre><p class="note">Each feed holds the 30 newest matching jobs and the total count. The slugs are the same as in the page addresses.</p>')
+         + section("Example", f"<pre><code>{e(js_example)}</code></pre>")
+         + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than a few times a day (it only changes once a day).</p>'
+                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>'))
+
     # Plus (paid plan for job seekers; one-time payments, no subscription)
     plus = CFG.get("plus", {"live": False, "plans": []})
     cta = ('<a class="btn primary lg" href="#pay">Get Plus</a>' if plus.get("live") else '<button class="btn primary lg" type="button" disabled>Available soon</button>')
@@ -903,19 +974,12 @@ def main():
          '<section class="sec"><div class="sec-head"><h2>Questions</h2></div>'
          "<h3>How do I pay?</h3><p>Crypto only: USDT, BTC or ETH. We do not take cards or bank transfers.</p>"
          "<h3>No careers page of your own?</h3><p>Use your company page here as one. Link your site's Careers button to it, or embed the list with one line of code: "
-         f'<a href="{P}/hiring-badge/">badge and widget</a>.</p>'
+         f'<a href="{P}/widgets/">badge and widget</a>.</p>'
          "<h3>What happens when the job closes?</h3><p>It moves to the archive and is marked as closed. The page stays online.</p>"
          "<h3>Can I get a refund?</h3><p>Yes, if the job has not been published yet. Published listings are not refundable.</p></section>")
-    page("hiring-badge/", f"Hiring Badge & Jobs Widget for Your Site | {SITE}",
-         "Free hiring badge and embeddable jobs widget for tech companies. One line of code, always in sync with your open roles.",
-         crumbs(("Hiring badge & widget", "")) + "<h1>Hiring badge &amp; jobs widget</h1>"
-         '<p class="lead">Two free ways to show your open roles on your own site. Both stay in sync with your careers feed, so there is nothing to maintain.</p>'
-         f'<section class="sec"><div class="sec-head"><h2>Hiring badge</h2></div><p><img src="{P}/hiring-badge.svg" alt="We\'re hiring badge" width="220" height="48"></p>'
-         f'<p>Put it in your footer or on your About page. Replace the link with your company page from the <a href="{P}/companies/">companies list</a>.</p><pre><code>{badge_code()}</code></pre></section>'
-         '<section class="sec"><div class="sec-head"><h2>Jobs widget</h2></div><p>A live list of your open roles. Open your company page, expand “Show these jobs on your own site”, and copy the snippet. It looks like this:</p>'
-         f'<pre><code>{embed_code("your-company")}</code></pre><p class="note">Optional: add <code>data-limit="5"</code> to change how many jobs are shown.</p></section>'
-         f'<section class="sec"><div class="sec-head"><h2>RSS feeds</h2></div><p>Every category has a feed you can plug into Telegram, Discord or a reader: '
-         f'<a href="{P}/feed.xml">all jobs</a>, <a href="{P}/remote/feed.xml">remote jobs</a>, or add <code>feed.xml</code> to any category address.</p></section>')
+    page("hiring-badge/", f"Hiring Badge & Jobs Widget | {SITE}", "Free live hiring badges and an embeddable jobs widget for any site.",
+         crumbs(("Widgets", "widgets/"), ("Hiring badge", "")) + f'<h1>Hiring badge &amp; jobs widget</h1><p class="lead">Badges and widgets now live on one page with a builder: '
+         f'<a href="{P}/widgets/">open the widget builder</a>.</p>', sitemap=False)
     page("about/", f"About | {SITE}", "Where the listings come from, how often the site updates and how to get in touch.",
          crumbs(("About", "")) + "<h1>About</h1>"
          f'<p class="lead">{e(SITE)} collects open roles from the official careers pages of tech companies and puts them in one searchable list.</p>'
@@ -940,7 +1004,44 @@ def main():
               [perk_list.index(x) for x in j.get("perks", []) if x in perk_list], et_list.index(j.get("etype", "")) if j.get("etype", "") in et_list else 0] for j in order(active)]
     write("data/index.json", json.dumps({"c": comp_list, "t": tag_list, "p": place_list, "k": cat_list, "l": lvl_list, "x": perk_list, "e": et_list, "r": rows_}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     shutil.copy(ROOT / "assets" / "og.jpg", OUT / "og.jpg")
-    for f in ("style.css", "app.js", "embed.js", "site.js"):
+
+    # Public JSON feeds (used by the widget and documented on /api/)
+    api_index = []
+    def api(path, name, page_path, js):
+        jobs_ = [{"title": j["title"], "company": j["company"], "location": j["location"], "remote": bool(j["remote"]), "salary": j["salary"], "posted": j["posted"],
+                  "url": f"{FULL}/job/{j['slug']}/"} for j in order(js)[:30]]
+        write(f"api/v1/{path}.json", json.dumps({"name": name, "url": f"{FULL}/{page_path}", "site": SITE, "site_url": FULL + "/", "updated": TODAY, "total": len(js), "jobs": jobs_},
+                                                ensure_ascii=False, separators=(",", ":")), sitemap=False)
+        api_index.append({"name": name, "feed": f"{FULL}/api/v1/{path}.json", "page": f"{FULL}/{page_path}", "total": len(js)})
+    api("latest", "Tech jobs", "jobs/", active); write("badge/jobs.svg", badge_svg("Tech jobs", f"{n:,} open"), sitemap=False)
+    api("remote", "Remote tech jobs", "remote/", remote); write("badge/remote.svg", badge_svg("Remote tech jobs", f"{len(remote):,} open"), sitemap=False)
+    for t, js in by_tag.items():
+        api(f"skills/{tslug(t)}", f"{t} jobs", f"skills/{tslug(t)}/", js); write(f"badge/skills/{tslug(t)}.svg", badge_svg(f"{t} jobs", f"{len(js):,} open"), sitemap=False)
+    for cs in CAT:
+        if by_cat[cs]:
+            api(f"categories/{cs}", f"{CAT[cs]} jobs", f"jobs/{cs}/", by_cat[cs]); write(f"badge/categories/{cs}.svg", badge_svg(f"{CAT[cs]} jobs", f"{len(by_cat[cs]):,} open"), sitemap=False)
+    for name, slug, js in places:
+        short = name.removeprefix("the ")
+        api(f"locations/{slug}", f"Tech jobs in {short}", f"locations/{slug}/", js); write(f"badge/locations/{slug}.svg", badge_svg(f"Tech jobs in {short}", f"{len(js):,} open"), sitemap=False)
+    for c, js in companies.items():
+        act = [j for j in js if j["active"]]
+        api(f"companies/{slugify(c)}", f"Jobs at {c}", f"companies/{slugify(c)}/", act)
+        write(f"badge/companies/{slugify(c)}.svg", badge_svg(f"{c} is hiring", roles(len(act), "role")), sitemap=False)
+    write("api/v1/index.json", json.dumps({"site": SITE, "updated": TODAY, "feeds": api_index}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+
+    # Open data as CSV
+    csvq = lambda v: '"' + str(v).replace('"', '""') + '"'
+    def csv_out(name, header, rows):
+        write(f"data/open/{name}.csv", "\n".join([",".join(header)] + [",".join(csvq(v) for v in r) for r in rows]) + "\n", sitemap=False)
+    medn = lambda js: (int(median([(lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]]])) if sum(1 for j in js if j["usd"]) >= 15 else "")
+    csv_out("skills", ["skill", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
+            [[t, len(js), sum(j["remote"] for j in js), medn(js), f"{FULL}/skills/{tslug(t)}/"] for t, js in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))])
+    csv_out("companies", ["company", "open_roles", "remote_roles", "source"],
+            [[c, sum(j["active"] for j in js), sum(j["remote"] for j in js if j["active"]), f"{FULL}/companies/{slugify(c)}/"] for c, js in comp_items])
+    csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
+            [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
+    csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
+    for f in ("style.css", "app.js", "embed.js", "site.js", "widget.js", "widgets.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'

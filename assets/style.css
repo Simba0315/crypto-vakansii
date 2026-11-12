@@ -327,3 +327,9 @@ footer.mini a{color:#b9b7ad}footer.mini a:hover{color:#c8f560}
   .sgrid.haspane .ava{width:36px;height:36px;font-size:15px}
   .sgrid.haspane .jt{font-size:15px}
 }
+
+/* Widget builder */
+label.wl{display:flex;flex-direction:column;gap:5px;font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+label.wl select{font:500 14.5px "Inter",system-ui,sans-serif;text-transform:none;letter-spacing:0;color:var(--text);max-width:260px}
+#wb textarea{font-family:var(--mono);font-size:12.5px;background:var(--bg2)}
+#wb-preview{min-height:120px}
