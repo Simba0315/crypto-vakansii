@@ -41,6 +41,35 @@ PLACES = [
     ("Africa", "africa", r"africa|nigeria|kenya|lagos|nairobi"),
 ]
 URLS = []
+MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
+             f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a></p></div></footer>')
+SAL_BAD = re.compile(r"CA\$|C\$|A\$|AU\$|S\$|SG\$|HK\$|NZ\$|CAD|AUD|SGD|EUR|GBP|CHF|JPY|INR|€|£|¥|₹", re.I)
+SAL_NUM = re.compile(r"(\d[\d,\. ]*\d|\d)\s?([kK])?")
+
+
+def usd_range(s):
+    """Annual USD (low, high) from a salary string, or None if it is not a plain US-dollar yearly range."""
+    if not s or SAL_BAD.search(s) or ("$" not in s and "USD" not in s.upper()) or re.search(r"hour|/hr|per hr|hourly", s, re.I):
+        return None
+    vals = []
+    for num, k in SAL_NUM.findall(s):
+        try:
+            v = float(num.replace(",", "").replace(" ", ""))
+        except ValueError:
+            continue
+        vals.append(v * 1000 if k else v)
+    if len(vals) < 2: return None
+    lo, hi = vals[0], vals[1]
+    return (lo, hi) if 30000 <= lo <= hi <= 1500000 else None
+
+
+def money(v):
+    return f"${v / 1000:,.0f}K"
+
+
+def median(xs):
+    xs = sorted(xs); n = len(xs)
+    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
 FOOT = {"cats": ""}
 SIM = {"cat": {}, "comp": {}}
 MARK = ('<rect width="32" height="32" rx="9" fill="url(#lg)"/><rect x="8" y="9" width="16" height="3" rx="1.5" fill="#fff"/>'
@@ -79,10 +108,10 @@ def write(path, content, sitemap=True):
         URLS.append(path)
 
 
-def page(path, title, desc, body, head="", sitemap=True, hero=""):
+def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False):
     url = f"{FULL}/{path}"
     write(path, f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en" data-base="{P}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
@@ -94,16 +123,21 @@ def page(path, title, desc, body, head="", sitemap=True, hero=""):
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{P}/style.css">{head}</head><body>
 <header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav>
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl rm" href="{P}/remote/">Remote</a><a class="nl opt" href="{P}/companies/">Companies</a><a class="nl opt" href="{P}/locations/">Locations</a>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl rm" href="{P}/remote/">Remote</a><a class="nl opt" href="{P}/new/">New</a><a class="nl opt" href="{P}/companies/">Companies</a><a class="nl opt" href="{P}/saved/">Saved<span id="saved-n"></span></a>
 <a class="btn" href="{P}/post-a-job/">Post a job</a></nav></div></header>
 {hero}<main class="wrap">{body}</main>
-<footer><div class="wrap"><div class="fcols">
+{MINI_FOOT if compact else FULL_FOOT()}
+<script src="{P}/site.js" defer></script>
+</body></html>""", sitemap)
+
+
+def FULL_FOOT():
+    return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Every open role at tech companies, pulled from their official careers pages and refreshed daily.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/hiring-badge/">Hiring badge &amp; widget</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li></ul></div>
-</div><p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>
-</body></html>""", sitemap)
+</div><p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
 def card(j):
@@ -140,6 +174,15 @@ def diverse(jobs, k, per=2):
     for j in jobs:
         if seen[j["company"]] < per:
             seen[j["company"]] += 1; out.append(j)
+            if len(out) == k: break
+    return out
+
+
+def diverse_pairs(pairs, k, per=2):
+    seen, out = Counter(), []
+    for j, r in pairs:
+        if seen[j["company"]] < per:
+            seen[j["company"]] += 1; out.append((j, r))
             if len(out) == k: break
     return out
 
@@ -216,22 +259,24 @@ def job_page(j, active_by_cat):
     else:
         apply_btn = f'<a class="btn lg" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs</a>'
         banner = f'<div class="banner">This job is closed{" as of " + fdate(j["closed"]) if j.get("closed") else ""}. The company is no longer accepting applications. Similar open roles are listed below.</div>'
-    same = [x for x in SIM["comp"].get((j["company"], j["cat"]), []) if x["id"] != j["id"]][:3]
-    rest = [x for x in SIM["cat"].get(j["cat"], []) if x["id"] != j["id"] and x["company"] != j["company"]][:6 - len(same)]
-    similar = same + rest
+    same = [x for x in SIM["comp"].get((j["company"], j["cat"]), []) if x["id"] != j["id"]][:2]
+    rest = [x for x in SIM["cat"].get(j["cat"], []) if x["id"] != j["id"] and x["company"] != j["company"]][:4 - len(same)]
+    similar = same + rest if j["active"] else []   # closed jobs stay light: the archive only grows
     sim = section("Similar jobs", f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>', (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs")) if similar else ""
     about = (f'<h2>About the role</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">Excerpt from the original posting.</p>'
              if j["excerpt"] else "")
+    save_btn = (f'<button class="btn ghost" id="save" type="button" data-slug="{j["slug"]}" data-title="{e(j["title"])}" data-company="{e(j["company"])}">Save job</button>'
+                if j["active"] else "")
     loc = f" · {e(j['location'])}" if j["location"] else ""
     body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
             + f'<div class="pills">{"".join(pills)}</div></div></div>{banner}'
-            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card"><dl class="meta">{meta}</dl>{apply_btn}</aside></div>')
+            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card"><dl class="meta">{meta}</dl>{apply_btn}{save_btn}</aside></div>')
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = f"{j['title']} at {j['company']}" + (" (closed)" if not j["active"] else "")
     desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + f". {CAT[j['cat']]} role"
             + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply on the company site."))
-    page(f"job/{j['slug']}/", title, desc, body, head)
+    page(f"job/{j['slug']}/", title, desc, body, head, compact=True)
 
 
 def embed_code(slug):
@@ -397,6 +442,41 @@ def main():
             "Closed jobs at tech companies: see which roles teams were hiring for and when.", archived,
             "Closed jobs stay here so you can see which roles companies were hiring for in the past.")
 
+    # New jobs
+    cutoff = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
+    fresh = [j for j in active if (j["posted"] or "") >= cutoff]
+    listing("new/", "New tech jobs", f"New Tech Jobs — {roles(len(fresh), 'role')} posted in the last 3 days | {SITE}",
+            f"{roles(len(fresh), 'tech job')} posted in the last three days. Be among the first to apply.",
+            fresh, intro_for(fresh, "", " posted in the last three days"), feed=True)
+
+    # Salaries
+    paid = [(j, r) for j in active if (r := usd_range(j["salary"]))]
+    def table(groups, link=None, minimum=15, top=40):
+        rows_ = sorted(((k, median([(lo + hi) / 2 for _, (lo, hi) in v]), len(v)) for k, v in groups.items() if len(v) >= minimum), key=lambda r: -r[1])[:top]
+        name = lambda k: ('<a href="' + P + "/" + link(k) + '">' + e(k) + "</a>") if link else e(k)
+        body_ = "".join(f"<tr><td>{name(k)}</td><td><strong>{money(m_)}</strong></td><td>{c:,}</td></tr>" for k, m_, c in rows_)
+        return f'<div class="tablewrap"><table><tr><th>Name</th><th>Median salary</th><th>Roles counted</th></tr>{body_}</table></div>'
+    g_cat, g_tag, g_comp = defaultdict(list), defaultdict(list), defaultdict(list)
+    for j, r in paid:
+        g_cat[CAT[j["cat"]]].append((j, r)); g_comp[j["company"]].append((j, r))
+        for t in j["tags"]: g_tag[t].append((j, r))
+    cat_slug = {v: k for k, v in CAT.items()}
+    best = sorted(paid, key=lambda x: -x[1][1])
+    page("salaries/", f"Tech Salaries From Live Job Postings ({len(paid):,} roles) | {SITE}",
+         "Median salaries in tech by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
+         crumbs(("Salaries", "")) + "<h1>Tech salaries from live job postings</h1>"
+         f'<p class="lead">Based on {len(paid):,} open roles that publish a yearly US-dollar range. Each figure is the median of the range midpoints. These are advertised ranges, not verified pay.</p>'
+         + section("By category", table(g_cat, lambda k: f"jobs/{cat_slug[k]}/", 10))
+         + section("By skill", table(g_tag, lambda k: f"skills/{TAG_SLUG.get(k, slugify(k))}/"))
+         + section("By company", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8))
+         + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary")))
+
+    # Saved jobs (kept in the visitor's browser, no account needed)
+    page("saved/", f"Saved jobs | {SITE}", "Jobs you saved and recently viewed on this device.",
+         crumbs(("Saved jobs", "")) + '<h1>Saved jobs</h1><p class="lead">Saved on this device, no account needed. Open a job and press “Save job” to add it here.</p>'
+         '<div id="saved-root"><section class="sec"><div class="sec-head"><h2>Saved</h2></div><ul class="jobs" id="saved-list"></ul><p class="note" id="saved-empty">Nothing saved yet.</p></section>'
+         '<section class="sec"><div class="sec-head"><h2>Recently viewed</h2></div><ul class="jobs" id="seen-list"></ul><p class="note" id="seen-empty">No jobs viewed yet.</p></section></div>', sitemap=False)
+
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}</td></tr>" for p in CFG["prices"])
     wallets = [w for w in CFG["wallets"] if w["address"]]
@@ -445,7 +525,7 @@ def main():
     idx = [[j["slug"], j["title"], j["company"], j["location"], int(j["remote"]), j["cat"], j["level"], j["tags"], j["salary"], fdate(j["posted"], False),
             int(j["entry"]), int(j["featured"]), hue(j["company"])] for j in order(active)]
     write("data/index.json", json.dumps(idx, ensure_ascii=False, separators=(",", ":")), sitemap=False)
-    for f in ("style.css", "app.js", "embed.js"):
+    for f in ("style.css", "app.js", "embed.js", "site.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{GRAD}{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
