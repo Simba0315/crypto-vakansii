@@ -11,13 +11,18 @@
   let jobs = [];
   try { jobs = await (await fetch(P + '/data/index.json')).json(); }
   catch (e) { count.textContent = 'Could not load the list. Please reload the page.'; return; }
-  // row: [slug, title, company, location, remote, cat, level, tags, salary, posted, entry, featured]
+  // row: [slug, title, company, location, remote, cat, level, tags, salary, posted, entry, featured, avatarHue]
   let shown = 100, found = [];
-  const card = (j) => '<li class="job' + (j[11] ? ' feat' : '') + '"><a class="t" href="' + P + '/job/' + j[0] + '/">' + esc(j[1]) + '</a>' +
-    '<div class="m">' + esc(j[2]) + (j[3] ? ' · ' + esc(j[3]) : '') + '</div><div class="b">' +
-    (j[11] ? '<span class="tag acc">Featured</span>' : '') + (j[4] ? '<span class="tag ok">Remote</span>' : '') +
-    (j[8] ? '<span class="tag warn">' + esc(j[8]) + '</span>' : '') + (j[6] ? '<span class="tag">' + esc(j[6]) + '</span>' : '') +
-    j[7].map((t) => '<span class="tag">' + esc(t) + '</span>').join('') + '<time>' + esc(j[9]) + '</time></div></li>';
+  const card = (j) => {
+    const pills = (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') +
+      (j[8] ? '<span class="pill sal">' + esc(j[8].slice(0, 28)) + '</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
+      j[7].slice(0, 3).map((t) => '<span class="pill">' + esc(t) + '</span>').join('');
+    const loc = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
+    const letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
+    return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/"><span class="ava" style="--h:' + j[12] + '" aria-hidden="true">' + esc(letter) + '</span>' +
+      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (loc ? ' · ' + esc(loc) : '') + '</span></span>' +
+      '<span class="jr"><span class="pills">' + pills + '</span><time>' + esc(j[9]) + '</time></span></a></li>';
+  };
   const render = () => {
     list.innerHTML = found.slice(0, shown).map(card).join('');
     count.textContent = found.length ? found.length.toLocaleString('en-US') + ' ' + plural(found.length) + ' found' : 'No jobs match. Try removing some filters.';
