@@ -73,6 +73,11 @@
     var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto, fAny].filter(function (el) { return el.checked; }).length + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     shown = 50; render();
+    if (pane && wide.matches) {                      // show the first result next to the list
+      var firstRow = list.querySelector('.job > a');
+      current = '';
+      if (firstRow) preview(firstRow); else pane.innerHTML = '<p class="pane-empty">No job selected.</p>';
+    }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
   };
@@ -88,6 +93,34 @@
     paintChips(); run();
   });
   more.addEventListener('click', function () { shown += 50; render(); });
+  var clearBtn = $('fclear');
+  if (clearBtn) clearBtn.addEventListener('click', function () {
+    [cat, lvl, loc, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
+    [fRemote, fEntry, fCrypto, fAny].forEach(function (el) { el.checked = false; });
+    skills = []; paintChips(); run();
+  });
+
+  /* preview pane: on wide screens a click shows the job next to the list instead of leaving the page */
+  var pane = $('pane'), wide = window.matchMedia('(min-width: 1240px)'), current = '';
+  var preview = function (a) {
+    var href = a.getAttribute('href');
+    if (!pane || !href || href === current) return;
+    current = href;
+    list.querySelectorAll('.job.sel').forEach(function (li) { li.classList.remove('sel'); });
+    a.parentNode.classList.add('sel');
+    fetch(href).then(function (r) { return r.text(); }).then(function (html) {
+      if (current !== href) return;
+      var main = new DOMParser().parseFromString(html, 'text/html').querySelector('main');
+      if (!main) return;
+      pane.innerHTML = '<p><a class="pane-open" href="' + href + '">Open full page ↗</a></p>' + main.innerHTML;
+      pane.scrollTop = 0; H.bindJob(pane); H.decorate(list);
+    }).catch(function () { pane.innerHTML = '<p class="pane-empty">Could not load this job. <a href="' + href + '">Open it in a new page</a>.</p>'; });
+  };
+  list.addEventListener('click', function (ev) {
+    var a = ev.target.closest('.job > a');
+    if (!a || !wide.matches || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
+    ev.preventDefault(); preview(a);
+  });
   var form = $('qform'); if (form) form.addEventListener('submit', function (ev) { ev.preventDefault(); run(); });
   saveBtn.addEventListener('click', function () {
     var all = H.get('hrn_searches', []), qs = query();

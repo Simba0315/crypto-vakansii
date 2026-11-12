@@ -80,10 +80,9 @@ CATMED = {}        # median advertised salary per category slug
 EST = {}           # median advertised salary per (category slug, level)
 PERK_SLUG = {name: slug for name, slug, _ in PERKS}
 ETYPE_LD = {"Full-time": "FULL_TIME", "Part-time": "PART_TIME", "Contract": "CONTRACTOR", "Internship": "INTERN"}
-MARK = ('<rect width="32" height="32" rx="9" fill="url(#lg)"/><rect x="8" y="9" width="16" height="3" rx="1.5" fill="#fff"/>'
-        '<rect x="8" y="14.5" width="11" height="3" rx="1.5" fill="#fff" opacity=".85"/><rect x="8" y="20" width="7" height="3" rx="1.5" fill="#fff" opacity=".7"/>')
-GRAD = '<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs>'
-LOGO = f'<svg viewBox="0 0 32 32" aria-hidden="true">{GRAD}{MARK}</svg>'
+MARK = '<rect width="32" height="32" rx="8" fill="#0e0e0c"/><circle cx="16" cy="16" r="6.5" fill="#c8f560"/>'
+GRAD = ""
+LOGO = '<i class="live" aria-hidden="true"></i>'
 ICON_THEME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg>'
 ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
 ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
@@ -128,11 +127,11 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="canonical" href="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:type" content="website"><meta property="og:url" content="{e(url)}"><meta property="og:site_name" content="{e(SITE)}">
-<meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#4f46e5">
+<meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#0e0e0c">
 <link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="manifest" href="{P}/manifest.json">
 <link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
 <a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
@@ -152,19 +151,31 @@ def FULL_FOOT():
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
+def age(iso):
+    """Short age label for a posting date: Today, 3d, 2w, 4mo. Second value: is it fresh (2 days or less)?"""
+    try:
+        days = (datetime.date.today() - datetime.date.fromisoformat(iso[:10])).days
+    except Exception:
+        return "", False
+    days = max(days, 0)
+    label = "Today" if days == 0 else f"{days}d" if days < 14 else f"{days // 7}w" if days < 60 else f"{days // 30}mo"
+    return label, days <= 2
+
+
 def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
-    if j["remote"]: b.append('<span class="pill ok">Remote</span>')
     if j["salary"]: b.append(f'<span class="pill sal">{e(j["salary"][:28])}</span>')
+    if j["remote"]: b.append('<span class="pill ok">Remote</span>')
     if j["level"]: b.append(f'<span class="pill">{e(j["level"])}</span>')
     b += [f'<span class="pill">{e(t)}</span>' for t in j["tags"][:3]]
     loc = j["location"] if len(j["location"]) <= 60 else j["location"][:57].rstrip(" ,;") + "…"
     sub = e(j["company"]) + (f" · {e(loc)}" if loc else "") + (f" · +{extra} more location{'s' if extra > 1 else ''}" if extra else "")
+    label, fresh = age(j["posted"])
     return (f'<li class="job{" feat" if j["featured"] else ""}"><a href="{P}/job/{j["slug"]}/">{ava(j["company"])}'
             f'<span><span class="jt">{e(j["title"])}</span><span class="js">{sub}</span></span>'
-            f'<span class="jr"><span class="pills">{"".join(b)}</span><time datetime="{j["posted"]}">{fdate(j["posted"], False)}</time></span></a></li>')
+            f'<span class="jr"><span class="pills">{"".join(b)}</span><time datetime="{j["posted"]}"{" class=\"new\"" if fresh and j["active"] else ""}>{label}</time></span></a></li>')
 
 
 def tile(url, name, count, avatar=False):
@@ -419,15 +430,20 @@ def main():
     cats = "".join(tile(f"jobs/{s}/", CAT[s], len(by_cat[s])) for s in CAT if by_cat[s])
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
     comp_top = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items[:12])
-    hero = (f'<section class="hero"><div class="wrap"><p class="eyebrow"><i></i>Updated daily from official careers pages</p>'
-            f'<h1>Find your next role in <span class="grad">tech</span></h1>'
-            f'<p class="sub">{roles(n, "open role")} at {m} companies — software, AI, fintech, crypto and more. Straight from company career pages, no sign-up.</p>'
-            f'<form class="searchbar" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search jobs</button></form>'
+    fresh3 = sum(1 for j in active if age(j["posted"])[1])
+    board_rows = "".join(
+        f'<a href="{P}/job/{j["slug"]}/"><span class="ba">{age(j["posted"])[0].upper()}</span><span><span class="bt">{e(j["title"])}</span>'
+        f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span></a>' for j in diverse(order(active), 6, 1))
+    hero = (f'<section class="hero"><div class="wrap"><div><p class="kicker">Updated {fdate(TODAY, False)} · straight from company career pages</p>'
+            f'<h1>See who’s hiring <span class="grad">right now</span></h1>'
+            f'<p class="sub">{n:,} open roles at {m} tech companies — software, AI, fintech, crypto and more. No sign-up, no recruiters in the middle.</p>'
+            f'<form class="searchbar" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
             f'<p class="heroalt"><a href="{P}/for-you/">Or match jobs to your skills and résumé →</a></p>'
-            f'<div class="popular"><span>Popular:</span><a href="{P}/remote/">Remote</a><a href="{P}/new/">New</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a><a href="{P}/crypto/">Crypto</a>'
-            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/with-salary/">Salary listed</a></div>'
+            f'<div class="popular"><span>Popular:</span><a href="{P}/remote/">Remote</a><a href="{P}/new/">New</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a>'
+            f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/entry-level/">Entry-level</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/crypto/">Crypto</a></div>'
             f'<dl class="stats"><div><dt>{n:,}</dt><dd>open roles</dd></div><div><dt>{m}</dt><dd>companies</dd></div>'
-            f'<div><dt>{len(remote):,}</dt><dd>remote</dd></div><div><dt>{sum(bool(j["salary"]) for j in active):,}</dt><dd>with salary</dd></div></dl></div></section>')
+            f'<div><dt>{len(remote):,}</dt><dd>remote</dd></div><div><dt>{fresh3:,}</dt><dd>new in 3 days</dd></div></dl></div>'
+            f'<div class="board" aria-label="Freshest roles"><div class="board-h"><span>Fresh on the board</span><b>Live</b></div>{board_rows}</div></div></section>')
     plus_band = (f'<div class="band alt"><div><h2>Looking for a job right now?</h2><p>Plus will show you new roles 48 hours early, email you matches instantly and review your résumé. One payment, no subscription.</p></div>'
                  f'<a class="btn lg" href="{P}/plus/">See Plus</a></div>')
     band = (f'<div class="band"><div><h2>Hiring for your team?</h2><p>Standard listings are free. Featured placement starts at $99, paid in USDT, BTC or ETH.</p></div>'
@@ -461,25 +477,30 @@ def main():
     skill_counts = Counter(t for j in active for t in j["tags"])
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
+    group = lambda label, inner: f'<div class="fgroup"><span class="flabel">{label}</span>{inner}</div>'
     search = (crumbs(("All jobs", "")) + "<h1>Search tech jobs</h1>"
-              f'<div id="search"><form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
-              f'<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button><div id="fwrap"><div class="fbar"><select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
-              '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>'
-              f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
-              '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
-              '<option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>'
-              '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option>'
-              '<option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>'
-              '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + '</select>'
-              '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>'
-              '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select></div>'
-              '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-entry"> Entry-level</label>'
-              '<label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label><label><input type="checkbox" id="f-any"> Work from anywhere</label></div>'
-              f'<div class="skillbar" id="skills">{skill_chips}</div></div>'
-              '<div class="rbar"><p class="note" id="count">Loading…</p><button class="btn ghost sm" id="save-search" type="button">Save this search</button></div>'
+              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
+              '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
+              '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
+              + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>')
+              + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
+              + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>')
+              + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>')
+              + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
+                                '<option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>')
+              + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
+                                    '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>')
+              + group("Perk", '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + "</select>")
+              + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
+              + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
+              + '<div class="fgroup"><button class="linkbtn" id="fclear" type="button">Clear all filters</button></div></aside>'
+              '<div><div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
+              '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select>'
+              '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'
               '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'
+              '<aside class="pane" id="pane" aria-label="Job preview"><p class="pane-empty">Select a job to preview it here.</p></aside></div>'
               + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in top_skills + [c for c, _ in comp_items[:200]]) + "</datalist>"
-              f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
+              + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"Search {roles(n, 'Tech Job')} | {SITE}",
          "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search)
 
@@ -921,13 +942,13 @@ def main():
     shutil.copy(ROOT / "assets" / "og.jpg", OUT / "og.jpg")
     for f in ("style.css", "app.js", "embed.js", "site.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
-    write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{GRAD}{MARK}</svg>', sitemap=False)
+    write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
-          f'{GRAD}<rect width="220" height="48" rx="12" fill="#0b0d12"/><g transform="translate(10 8)">{MARK}</g>'
-          '<text x="52" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
-          f'<text x="52" y="37" fill="#aab1c5" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
+          f'<rect width="220" height="48" rx="10" fill="#0e0e0c"/><circle cx="26" cy="24" r="7" fill="#c8f560"/>'
+          '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
+          f'<text x="46" y="37" fill="#b9b7ad" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")
-    write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#0b0d12", "theme_color": "#4f46e5",
+    write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#0b0d12", "theme_color": "#0e0e0c",
                                        "icons": [{"src": P + "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}), sitemap=False)
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                            + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{TODAY}</lastmod></url>" for u in urls) + "</urlset>")

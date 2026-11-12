@@ -71,16 +71,22 @@
     });
     return out;
   }
+  function ageOf(pi) {            // [label, fresh] from a yyyymmdd number
+    if (!pi) return ['', false];
+    var d = new Date(Math.floor(pi / 10000), Math.floor(pi / 100) % 100 - 1, pi % 100), now = new Date();
+    var days = Math.max(0, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - d) / 864e5));
+    return [days === 0 ? 'Today' : days < 14 ? days + 'd' : days < 60 ? Math.floor(days / 7) + 'w' : Math.floor(days / 30) + 'mo', days <= 2];
+  }
   function card(j, more, badge) {
-    var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') +
-      (j[8] ? '<span class="pill sal">' + esc(j[8].slice(0, 28)) + '</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
+    var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
+      (j[8] ? '<span class="pill sal">' + esc(j[8].slice(0, 28)) + '</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
       j[7].slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
-    var letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
+    var letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase(), ag = ageOf(j[16]);
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/"><span class="ava" style="--h:' + j[12] + '" aria-hidden="true">' + esc(letter) + '</span>' +
       '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
-      '<span class="jr"><span class="pills">' + pills + '</span><time>' + esc(j[9]) + '</time></span></a></li>';
+      '<span class="jr"><span class="pills">' + pills + '</span><time' + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
   }
   // mark cards of jobs the visitor already saved, applied to or opened (works for static and script-built lists)
   function decorate(scope) {
@@ -144,8 +150,11 @@
   paint();
   var profile = get('hrn_profile', { skills: [], lvl: '', cat: '', sal: 0, remote: false });
 
-  var saveBtn = $('save'), appliedBtn = $('applied');
-  if (saveBtn) {
+  /* job page controls; also used for the preview pane on the search page */
+  function bindJob(root) {
+    var q1 = function (sel) { return root.querySelector(sel); };
+    var saveBtn = q1('#save'), appliedBtn = q1('#applied');
+    if (!saveBtn) return;
     var me = { s: saveBtn.getAttribute('data-slug'), t: saveBtn.getAttribute('data-title'), c: saveBtn.getAttribute('data-company') };
     var label = function () {
       var rec = jobs[me.s];
@@ -168,34 +177,34 @@
       else jobs[me.s] = { t: me.t, c: me.c, st: 'applied', at: Date.now(), note: rec ? rec.note : '' };
       store(); label();
     });
-    var applyLink = $('apply'), hint = $('apply-hint');
+    var applyLink = q1('#apply'), hint = q1('#apply-hint');
     if (applyLink && hint) applyLink.addEventListener('click', function () { hint.hidden = false; });
-    var copy = $('copy');
+    var copy = q1('#copy');
     if (copy) copy.addEventListener('click', function () {
+      var link = root === document ? location.href : location.origin + P + '/job/' + me.s + '/';
       var done = function () { copy.textContent = 'Link copied'; setTimeout(function () { copy.textContent = 'Copy link'; }, 1600); };
-      if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, function () {}); else done();
+      if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, function () {}); else done();
     });
     var seen = get('hrn_seen', []).filter(function (x) { return x.s !== me.s; });
     seen.unshift(me); set('hrn_seen', seen.slice(0, 30));
-  }
-  /* how this job fits the visitor's saved skills */
-  var fit = $('match');
-  if (fit && profile.skills.length) {
-    var tags = (fit.getAttribute('data-tags') || '').split('|').filter(Boolean);
-    var hit = tags.filter(function (t) { return profile.skills.indexOf(t) >= 0; });
-    if (tags.length) {
-      fit.textContent = hit.length ? 'You match ' + hit.length + ' of ' + tags.length + ' listed skills: ' + hit.join(', ') + '.' : 'None of your saved skills are listed for this role.';
-      fit.hidden = false;
+    var fit = q1('#match');
+    if (fit && profile.skills.length) {
+      var tags = (fit.getAttribute('data-tags') || '').split('|').filter(Boolean);
+      var hit = tags.filter(function (t) { return profile.skills.indexOf(t) >= 0; });
+      if (tags.length) {
+        fit.textContent = hit.length ? 'You match ' + hit.length + ' of ' + tags.length + ' listed skills: ' + hit.join(', ') + '.' : 'None of your saved skills are listed for this role.';
+        fit.hidden = false;
+      }
+    }
+    var hideBtn = q1('#hide');
+    if (hideBtn) {
+      var paintHide = function () { hideBtn.textContent = hidden[me.s] ? 'Hidden from your searches · undo' : 'Not interested'; };
+      paintHide();
+      hideBtn.addEventListener('click', function () { if (hidden[me.s]) delete hidden[me.s]; else hidden[me.s] = 1; set('hrn_hidden', hidden); paintHide(); });
     }
   }
-
-  var hideBtn = $('hide');
-  if (hideBtn && saveBtn) {
-    var slugH = saveBtn.getAttribute('data-slug');
-    var paintHide = function () { hideBtn.textContent = hidden[slugH] ? 'Hidden from your searches · undo' : 'Not interested'; };
-    paintHide();
-    hideBtn.addEventListener('click', function () { if (hidden[slugH]) delete hidden[slugH]; else hidden[slugH] = 1; set('hrn_hidden', hidden); paintHide(); });
-  }
+  HRN.bindJob = bindJob;
+  bindJob(document);
 
   /* ---------- lists: saved / applied / viewed marks, faster navigation ---------- */
   decorate(document);
