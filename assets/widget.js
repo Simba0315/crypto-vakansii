@@ -1,7 +1,9 @@
 /* Hiring Right Now — embeddable jobs widget.
-   <div data-hrn-jobs="skill:python" data-limit="6" data-theme="auto"><a href="…">Python jobs on Hiring Right Now</a></div>
+   <div data-hrn-jobs="skill:python" data-limit="6" data-layout="list" data-theme="auto" data-accent="#c8f560">
+     <a href="…">Python jobs on Hiring Right Now</a>
+   </div>
    <script src="…/widget.js" async></script>
-   The link inside the div stays visible as the widget's footer and works even if scripts are blocked. */
+   Layouts: list (default), cards, compact, ticker. The link inside the div stays visible as the footer and works even if scripts are blocked. */
 (function () {
   var S = document.currentScript;
   var base = (S && S.src ? S.src : '').replace(/\/widget\.js.*$/, '');
@@ -12,25 +14,49 @@
     var days = Math.max(0, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - d) / 864e5));
     return days === 0 ? 'Today' : days < 14 ? days + 'd' : days < 60 ? Math.floor(days / 7) + 'w' : Math.floor(days / 30) + 'mo';
   }
+  var MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,monospace';
   var CSS =
     ':host{all:initial;display:block}' +
-    '.w{--bg:#fff;--ink:#0e0e0c;--mut:#5d5b54;--line:#e2dfd5;--hov:#eef9cf;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;max-width:680px;box-shadow:5px 5px 0 #c8f560}' +
-    '.w.dark{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#222c0c}' +
-    '@media(prefers-color-scheme:dark){.w.auto{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#222c0c}}' +
+    '.w{--bg:#fff;--ink:#0e0e0c;--mut:#5d5b54;--line:#e2dfd5;--hov:#f3f2ec;--acc:#c8f560;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:5px 5px 0 var(--acc)}' +
+    '.w.dark{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#1d1d1a}' +
+    '@media(prefers-color-scheme:dark){.w.auto{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#1d1d1a}}' +
     '.h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}' +
     '.ht{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:-.01em}' +
     '.dot{width:8px;height:8px;border-radius:50%;background:#3ecf5f;flex:none}' +
-    '.n{font:500 11.5px ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);white-space:nowrap}' +
-    '.r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;position:relative}' +
-    '.r:hover{background:var(--hov)}.r:hover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#c8f560}' +
-    '.t{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-    '.c{grid-column:1;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-    '.m{grid-row:1/3;grid-column:2;text-align:right;font:500 11.5px ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);white-space:nowrap}' +
+    '.n,.by{font:500 11.5px ' + MONO + ';letter-spacing:.05em;text-transform:uppercase;color:var(--mut);white-space:nowrap}' +
+    'a{color:inherit;text-decoration:none}' +
+    '.r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);position:relative}' +
+    '.r:hover{background:var(--hov)}.r:hover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}' +
+    '.lg{grid-row:1/3;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;object-fit:contain;padding:2px}' +
+    '.lt{grid-row:1/3;width:34px;height:34px;border-radius:8px;background:var(--hov);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--mut)}' +
+    '.t{grid-column:2;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.c{grid-column:2;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.m{grid-row:1/3;grid-column:3;text-align:right;font:500 11.5px ' + MONO + ';letter-spacing:.04em;text-transform:uppercase;color:var(--mut);white-space:nowrap}' +
     '.m b{display:block;color:var(--ink);font-weight:500;text-transform:none;letter-spacing:0;font-size:12.5px}' +
     '.e{padding:18px 16px;color:var(--mut)}' +
     '.f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 16px;font-size:13px;font-weight:600}' +
-    '::slotted(a),.f a{color:var(--ink);text-decoration:underline;text-decoration-color:#c8f560;text-decoration-thickness:2px;text-underline-offset:3px}' +
-    '.by{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);white-space:nowrap}';
+    '::slotted(a),.f a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--acc);text-decoration-thickness:2px;text-underline-offset:3px}' +
+    /* cards */
+    '.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}' +
+    '.cards .r{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:var(--bg);border:0;padding:14px 16px}' +
+    '.cards .r:hover{background:var(--hov)}.cards .t{white-space:normal}.cards .m{text-align:left}' +
+    /* compact */
+    '.compact .r{grid-template-columns:minmax(0,1fr) auto;padding:8px 14px}.compact .lg,.compact .lt,.compact .c{display:none}.compact .t{grid-column:1;font-size:14px}.compact .m{grid-column:2;grid-row:1}.compact .m b{display:none}' +
+    /* ticker */
+    '.tick{overflow:hidden;border-bottom:1px solid var(--line);padding:10px 0}' +
+    '.tick .run{display:flex;gap:28px;width:max-content;animation:hrn 60s linear infinite}.tick:hover .run{animation-play-state:paused}' +
+    '.tick a{display:flex;gap:8px;align-items:baseline;white-space:nowrap;font-size:14px}.tick a b{font-weight:650}.tick a span{color:var(--mut);font-size:13px}' +
+    '@keyframes hrn{from{transform:translateX(0)}to{transform:translateX(-50%)}}' +
+    '.cs{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}' +
+    '.cs input,.cs select{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}.cs input{flex:1;min-width:150px}' +
+    '.more{display:block;width:100%;padding:11px;border:0;border-bottom:1px solid var(--line);background:var(--hov);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
+    '@media(prefers-reduced-motion:reduce){.tick .run{animation:none;flex-wrap:wrap;width:auto;padding:0 14px}}';
+  function row(j, logos) {
+    var mark = j.logo && logos ? '<img class="lg" src="' + esc(j.logo) + '" alt="" loading="lazy">' : '<span class="lt">' + esc((String(j.company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span>';
+    return '<a class="r" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + mark + '<span class="t">' + esc(j.title) + '</span>' +
+      '<span class="c">' + esc(j.company) + (j.location ? ' · ' + esc(j.location) : j.remote ? ' · Remote' : '') + '</span>' +
+      '<span class="m">' + (j.salary ? '<b>' + esc(j.salary) + '</b>' : '') + esc(age(j.posted)) + '</span></a>';
+  }
   function render(el) {
     if (!el || el.getAttribute('data-hrn-ready')) return;
     el.setAttribute('data-hrn-ready', '1');
@@ -38,19 +64,41 @@
     var path = { latest: 'latest', remote: 'remote', skill: 'skills/' + slug, category: 'categories/' + slug, location: 'locations/' + slug, company: 'companies/' + slug }[type] || 'latest';
     var limit = Math.max(1, Math.min(20, parseInt(el.getAttribute('data-limit') || '6', 10) || 6));
     var theme = { light: 'light', dark: 'dark' }[el.getAttribute('data-theme')] || 'auto';
+    var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
+    var accent = /^#[0-9a-fA-F]{3,8}$/.test(el.getAttribute('data-accent') || '') ? el.getAttribute('data-accent') : '';
     var src = el.getAttribute('data-hrn-base') || base;
     fetch(src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); }).then(function (d) {
-      var rows = d.jobs.slice(0, limit).map(function (j) {
-        return '<a class="r" href="' + esc(j.url) + '" target="_blank" rel="noopener"><span class="t">' + esc(j.title) + '</span>' +
-          '<span class="c">' + esc(j.company) + (j.location ? ' · ' + esc(j.location) : j.remote ? ' · Remote' : '') + '</span>' +
-          '<span class="m">' + (j.salary ? '<b>' + esc(j.salary) + '</b>' : '') + esc(age(j.posted)) + '</span></a>';
-      }).join('');
+      var jobs = layout === 'careers' ? d.jobs : d.jobs.slice(0, limit), body;
+      if (!jobs.length) body = '<div class="e">No open roles right now.</div>';
+      else if (layout === 'ticker') {
+        var items = jobs.map(function (j) { return '<a href="' + esc(j.url) + '" target="_blank" rel="noopener"><b>' + esc(j.title) + '</b><span>' + esc(j.company) + '</span></a>'; }).join('');
+        body = '<div class="tick"><div class="run">' + items + items + '</div></div>';
+      } else if (layout === 'careers') {
+        body = '<div class="cs"><input type="search" placeholder="Search ' + jobs.length + ' open roles" aria-label="Search roles"><select aria-label="Team"><option value="">All teams</option></select></div>' +
+          '<div class="rows"></div><button class="more" type="button" hidden>Show more</button>';
+      } else body = '<div class="' + (layout === 'list' ? 'rows' : layout) + '">' + jobs.map(function (j) { return row(j, layout !== 'compact'); }).join('') + '</div>';
       var root = el.shadowRoot || (el.attachShadow ? el.attachShadow({ mode: 'open' }) : null);
-      var html = '<style>' + CSS + '</style><div class="w ' + theme + '"><div class="h"><span class="ht"><span class="dot"></span>' + esc(el.getAttribute('data-title') || d.name) + '</span>' +
-        '<span class="n">' + Number(d.total).toLocaleString('en-US') + ' open</span></div>' + (rows || '<div class="e">No open roles right now.</div>') +
+      var html = '<style>' + CSS + '</style><div class="w ' + theme + '"' + (accent ? ' style="--acc:' + accent + '"' : '') + '><div class="h"><span class="ht"><span class="dot"></span>' + esc(el.getAttribute('data-title') || d.name) + '</span>' +
+        '<span class="n">' + Number(d.total).toLocaleString('en-US') + ' open</span></div>' + body +
         '<div class="f">' + (root ? '<slot><a href="' + esc(d.url) + '" target="_blank" rel="noopener">See all on ' + esc(d.site) + '</a></slot>' :
           '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">See all on ' + esc(d.site) + '</a>') + '<span class="by">Updated daily</span></div></div>';
       if (root) root.innerHTML = html; else el.innerHTML = html;
+      if (layout === 'careers') {                      // a whole careers page: filter by text and team, 20 rows at a time
+        var scope = root || el, box = scope.querySelector('.cs input'), team = scope.querySelector('.cs select'), rowsEl = scope.querySelector('.rows'), moreBtn = scope.querySelector('.more'), shown = 20;
+        var teams = {}; jobs.forEach(function (j) { if (j.category) teams[j.category] = (teams[j.category] || 0) + 1; });
+        team.innerHTML += Object.keys(teams).sort(function (a, b) { return teams[b] - teams[a]; }).map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + ' (' + teams[t] + ')</option>'; }).join('');
+        var paint = function () {
+          var q = box.value.trim().toLowerCase(), list = jobs.filter(function (j) {
+            return (!team.value || j.category === team.value) && (!q || (j.title + ' ' + j.location).toLowerCase().indexOf(q) >= 0);
+          });
+          rowsEl.innerHTML = list.slice(0, shown).map(function (j) { return row(j, false); }).join('') || '<div class="e">No roles match.</div>';
+          moreBtn.hidden = list.length <= shown; moreBtn.textContent = 'Show more (' + (list.length - shown) + ')';
+        };
+        box.addEventListener('input', function () { shown = 20; paint(); });
+        team.addEventListener('change', function () { shown = 20; paint(); });
+        moreBtn.addEventListener('click', function () { shown += 20; paint(); });
+        paint();
+      }
     }).catch(function () {});          // on failure the plain link inside the element stays as it is
   }
   function all() { Array.prototype.forEach.call(document.querySelectorAll('[data-hrn-jobs]'), render); }

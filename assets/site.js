@@ -8,6 +8,13 @@
   function dateInt(d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
   function today() { return dateInt(new Date()); }
   function since(days) { var d = new Date(); d.setDate(d.getDate() - days); return dateInt(d); }
+  function slugOf(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, ''); }
+  // avatar markup: initial on a tinted square, with the company logo on top when there is one
+  function avatar(company, logo, guess) {
+    var letter = (String(company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
+    var img = logo ? '<img src="' + P + '/logos/' + logo + '.png" alt="" loading="lazy">' : guess ? '<img src="' + P + '/logos/' + slugOf(company) + '.png" alt="" loading="lazy" onerror="this.remove()">' : '';
+    return '<span class="ava' + (logo ? ' has' : '') + '" style="--h:' + hue(company) + '" aria-hidden="true">' + esc(letter) + img + '</span>';
+  }
   function hue(name) { var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360; return h; }
   var $ = function (id) { return document.getElementById(id); };
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -25,7 +32,7 @@
         return [r[0], r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
-          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0];
+          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : ''];
       });
     });
     return cache;
@@ -82,8 +89,8 @@
       (j[8] ? '<span class="pill sal">' + esc(j[8].slice(0, 28)) + '</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
       j[7].slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
-    var letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase(), ag = ageOf(j[16]);
-    return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/"><span class="ava" style="--h:' + j[12] + '" aria-hidden="true">' + esc(letter) + '</span>' +
+    var ag = ageOf(j[16]);
+    return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
       '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
       '<span class="jr"><span class="pills">' + pills + '</span><time' + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
@@ -125,6 +132,49 @@
     }
   });
 
+  /* ---------- current section in the menu ---------- */
+  var here = location.pathname.replace(P, '');
+  document.querySelectorAll('#nav a.nl').forEach(function (a) {
+    var path = (a.getAttribute('href') || '').replace(P, '');
+    if (path.length > 1 && here.indexOf(path) === 0) a.setAttribute('aria-current', 'page');
+  });
+
+  /* ---------- follow a company ---------- */
+  var followBtn = $('follow');
+  if (followBtn) {
+    var follows = get('hrn_follow', {}), fs = followBtn.getAttribute('data-slug'), fname = followBtn.getAttribute('data-name');
+    var paintFollow = function () { followBtn.textContent = follows[fs] ? 'Following ✓' : 'Follow ' + fname; followBtn.setAttribute('aria-pressed', follows[fs] ? 'true' : 'false'); };
+    if (follows[fs]) { follows[fs].seen = today(); set('hrn_follow', follows); }      // visiting the page counts as "seen"
+    paintFollow();
+    followBtn.addEventListener('click', function () {
+      if (follows[fs]) delete follows[fs]; else follows[fs] = { name: fname, seen: today() };
+      set('hrn_follow', follows); paintFollow();
+    });
+  }
+
+  /* ---------- quick search: Ctrl/Cmd+K or the search icon ---------- */
+  var pal;
+  function palette() {
+    if (!pal) {
+      pal = document.createElement('div'); pal.className = 'pal'; pal.hidden = true;
+      var recent = get('hrn_searches', []).slice(0, 4).map(function (x) { return '<a href="' + P + '/jobs/?' + esc(x.qs) + '">' + esc(x.label) + '<span>saved search</span></a>'; }).join('');
+      pal.innerHTML = '<div class="pal-box" role="dialog" aria-label="Quick search"><form action="' + P + '/jobs/" method="get"><input type="search" name="q" placeholder="Search jobs, skills, companies…" aria-label="Search" autocomplete="off"></form>' +
+        '<div class="pal-links">' + recent +
+        '<a href="' + P + '/remote/">Remote jobs<span>list</span></a><a href="' + P + '/new/">New in the last 3 days<span>list</span></a><a href="' + P + '/for-you/">Jobs for you<span>match</span></a>' +
+        '<a href="' + P + '/salaries/">Salaries<span>data</span></a><a href="' + P + '/companies/">Companies<span>directory</span></a><a href="' + P + '/my-jobs/">My jobs<span>tracker</span></a></div>' +
+        '<p class="pal-hint">Enter to search · Esc to close</p></div>';
+      document.body.appendChild(pal);
+      pal.addEventListener('click', function (ev) { if (ev.target === pal) pal.hidden = true; });
+    }
+    pal.hidden = !pal.hidden;
+    if (!pal.hidden) pal.querySelector('input').focus();
+  }
+  document.addEventListener('keydown', function (ev) {
+    if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'k') { ev.preventDefault(); palette(); }
+    else if (ev.key === 'Escape' && pal && !pal.hidden) pal.hidden = true;
+  });
+  var palBtn = $('palbtn'); if (palBtn) palBtn.addEventListener('click', palette);
+
   /* ---------- companies page: quick filter ---------- */
   var cfilter = $('cfilter');
   if (cfilter) cfilter.addEventListener('input', function () {
@@ -155,7 +205,7 @@
     var q1 = function (sel) { return root.querySelector(sel); };
     var saveBtn = q1('#save'), appliedBtn = q1('#applied');
     if (!saveBtn) return;
-    var me = { s: saveBtn.getAttribute('data-slug'), t: saveBtn.getAttribute('data-title'), c: saveBtn.getAttribute('data-company') };
+    var me = { s: saveBtn.getAttribute('data-slug'), t: saveBtn.getAttribute('data-title'), c: saveBtn.getAttribute('data-company'), l: root.querySelector('.jhead .ava.has') ? 1 : 0 };
     var label = function () {
       var rec = jobs[me.s];
       saveBtn.textContent = rec ? 'Saved ✓' : 'Save job';
@@ -168,13 +218,13 @@
     };
     label();
     saveBtn.addEventListener('click', function () {
-      if (jobs[me.s]) delete jobs[me.s]; else jobs[me.s] = { t: me.t, c: me.c, st: 'saved', at: Date.now(), note: '' };
+      if (jobs[me.s]) delete jobs[me.s]; else jobs[me.s] = { t: me.t, c: me.c, l: me.l, st: 'saved', at: Date.now(), note: '' };
       store(); label();
     });
     if (appliedBtn) appliedBtn.addEventListener('click', function () {
       var rec = jobs[me.s];
       if (rec && rec.st !== 'saved') rec.st = 'saved';
-      else jobs[me.s] = { t: me.t, c: me.c, st: 'applied', at: Date.now(), note: rec ? rec.note : '' };
+      else jobs[me.s] = { t: me.t, c: me.c, l: me.l, st: 'applied', at: Date.now(), note: rec ? rec.note : '' };
       store(); label();
     });
     var applyLink = q1('#apply'), hint = q1('#apply-hint');
@@ -184,6 +234,16 @@
       var link = root === document ? location.href : location.origin + P + '/job/' + me.s + '/';
       var done = function () { copy.textContent = 'Link copied'; setTimeout(function () { copy.textContent = 'Copy link'; }, 1600); };
       if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, function () {}); else done();
+    });
+    // share links are built on click, so pages do not carry five long addresses each
+    Array.prototype.forEach.call(root.querySelectorAll('[data-share]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var link = location.origin + P + '/job/' + me.s + '/', text = me.t + ' at ' + me.c, u = encodeURIComponent(link), t = encodeURIComponent(text);
+        var to = { linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=' + u, x: 'https://x.com/intent/post?text=' + t + '&url=' + u,
+          telegram: 'https://t.me/share/url?url=' + u + '&text=' + t, whatsapp: 'https://wa.me/?text=' + t + '%20' + u,
+          reddit: 'https://www.reddit.com/submit?url=' + u + '&title=' + t, email: 'mailto:?subject=' + t + '&body=' + u }[btn.getAttribute('data-share')];
+        if (to) window.open(to, '_blank', 'noopener');
+      });
     });
     var seen = get('hrn_seen', []).filter(function (x) { return x.s !== me.s; });
     seen.unshift(me); set('hrn_seen', seen.slice(0, 30));
@@ -222,8 +282,7 @@
     var seenList = get('hrn_seen', []).slice(0, 3), lastSearch = get('hrn_searches', [])[0];
     if (seenList.length || lastSearch) {
       var html = seenList.map(function (j) {
-        return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/"><span class="ava" style="--h:' + hue(j.c) + '" aria-hidden="true">' +
-          esc((String(j.c).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span><span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + ' · viewed recently</span></span></a></li>';
+        return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/">' + avatar(j.c, j.l ? slugOf(j.c) : '', false) + '<span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + ' · viewed recently</span></span></a></li>';
       }).join('');
       if (lastSearch) html += '<li class="job"><a href="' + P + '/jobs/?' + esc(lastSearch.qs) + '"><span class="ava" aria-hidden="true">⌕</span><span><span class="jt">' + esc(lastSearch.label) + '</span><span class="js">Your saved search</span></span></a></li>';
       $('home-recent-list').innerHTML = html; recent.hidden = false;
@@ -263,12 +322,26 @@
         extra = new Map(); found = collapse(rows, extra); shown = 40;
         count.textContent = rows.length.toLocaleString('en-US') + (rows.length === 1 ? ' job matches' : ' jobs match') + ' your skills, best matches first.';
         render();
+        // which single skill would open up the most roles you do not match yet
+        var gain = {}, gap = $('fy-gap');
+        all.forEach(function (j) {
+          if (scores.has(j[0]) || !match(j, f)) return;
+          j[7].forEach(function (t) { if (profile.skills.indexOf(t) < 0) gain[t] = (gain[t] || 0) + 1; });
+        });
+        var best = Object.keys(gain).sort(function (a, b) { return gain[b] - gain[a]; }).slice(0, 6);
+        if (gap) {
+          gap.hidden = !best.length;
+          gap.innerHTML = best.length ? '<p class="flabel" style="margin:16px 0 8px">One more skill would open up</p><div class="skillbar">' + best.map(function (t) {
+            return '<button class="chipbtn gapbtn" type="button" data-add="' + esc(t) + '">+ ' + esc(t) + ' · ' + gain[t].toLocaleString('en-US') + ' more roles</button>';
+          }).join('') + '</div>' : '';
+        }
       }).catch(function () { count.textContent = 'Could not load jobs. Please reload the page.'; });
     };
     fy.addEventListener('click', function (ev) {
       var c = ev.target.closest && ev.target.closest('#fy-skills .chipbtn');
       if (c) { var s = c.getAttribute('data-skill'), i = profile.skills.indexOf(s); if (i >= 0) profile.skills.splice(i, 1); else profile.skills.push(s); run(); return; }
       if (ev.target.id === 'fy-more') { shown += 40; render(); return; }
+      if (ev.target.getAttribute('data-add')) { var add = ev.target.getAttribute('data-add'); if (profile.skills.indexOf(add) < 0) profile.skills.push(add); run(); return; }
       if (ev.target.id === 'fy-clear') { profile = { skills: [], lvl: '', cat: '', sal: 0, remote: false }; lvl.value = cat.value = sal.value = ''; rem.checked = false; run(); return; }
       if (ev.target.id === 'fy-scan') {
         var text = $('fy-text').value, note = $('fy-scan-note');
@@ -306,7 +379,7 @@
       var shownKeys = keys.filter(function (k) { return tab === 'all' || jobs[k].st === tab; });
       $('mj-list').innerHTML = shownKeys.map(function (k) {
         var r = jobs[k];
-        return '<li class="trow" data-s="' + esc(k) + '"><span class="ava" style="--h:' + hue(r.c) + '" aria-hidden="true">' + esc(letter(r.c)) + '</span>' +
+        return '<li class="trow" data-s="' + esc(k) + '">' + avatar(r.c, r.l ? slugOf(r.c) : '', false) +
           '<div class="main"><a class="tt" href="' + P + '/job/' + encodeURIComponent(k) + '/">' + esc(r.t) + '</a><span class="js">' + esc(r.c) + ' · added ' + esc(when(r.at)) + '</span>' +
           '<input class="nt" type="text" placeholder="Add a note: contact, next step, salary discussed…" value="' + esc(r.note || '') + '" aria-label="Note"></div>' +
           '<div class="ctl"><select aria-label="Status">' + STATUS.map(function (s) { return '<option value="' + s[0] + '"' + (r.st === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') +
@@ -315,7 +388,7 @@
       $('mj-empty').hidden = shownKeys.length > 0;
       var seen = get('hrn_seen', []);
       $('seen-list').innerHTML = seen.map(function (j) {
-        return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/"><span class="ava" style="--h:' + hue(j.c) + '" aria-hidden="true">' + esc(letter(j.c)) + '</span><span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + '</span></span></a></li>';
+        return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/">' + avatar(j.c, j.l ? slugOf(j.c) : '', false) + '<span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + '</span></span></a></li>';
       }).join('');
       $('seen-empty').hidden = seen.length > 0;
     };
@@ -368,6 +441,26 @@
       if (ev.target.classList.contains('ss-del')) { searches.splice(i, 1); set('hrn_searches', searches); drawSearches(null); }
       else if (ev.target.classList.contains('ss-open')) { searches[i].seen = today(); set('hrn_searches', searches); }
     });
-    if (searches.length) load().then(drawSearches).catch(function () {});
+    var follows = get('hrn_follow', {}), fkeys = Object.keys(follows);
+    var drawFollows = function (index) {
+      $('fc-empty').hidden = fkeys.length > 0;
+      $('fc-list').innerHTML = fkeys.map(function (k) {
+        var fresh = '';
+        if (index) {
+          var n = 0, total = 0;
+          for (var i = 0; i < index.length; i++) if (slugOf(index[i][2]) === k) { total++; if (index[i][16] > follows[k].seen) n++; }
+          fresh = (n ? '<span class="pill ok">' + n + ' new</span>' : '') + '<span class="pill">' + total + ' open</span>';
+        }
+        return '<li class="trow" data-k="' + esc(k) + '">' + avatar(follows[k].name, '', true) + '<div class="main"><a class="tt" href="' + P + '/companies/' + esc(k) + '/">' + esc(follows[k].name) + '</a>' +
+          '<span class="js">Company you follow</span></div><div class="ctl">' + fresh + '<button class="unsave fc-del" type="button">Unfollow</button></div></li>';
+      }).join('');
+    };
+    drawFollows(null);
+    $('fc-list').addEventListener('click', function (ev) {
+      if (!ev.target.classList.contains('fc-del')) return;
+      var k = ev.target.closest('.trow').getAttribute('data-k');
+      delete follows[k]; fkeys = Object.keys(follows); set('hrn_follow', follows); drawFollows(null);
+    });
+    if (searches.length || fkeys.length) load().then(function (index) { if (searches.length) drawSearches(index); if (fkeys.length) drawFollows(index); }).catch(function () {});
   }
 })();

@@ -8,22 +8,37 @@
     {
       "name": "Standard listing",
       "price": "Free",
-      "what": "Listed for 30 days in the main feed, then moved to the archive."
+      "what": "Your job in the main feed for 30 days, then in the archive."
     },
     {
-      "name": "Featured",
-      "price": "$99 in USDT",
-      "what": "Highlighted and shown above regular listings in its category for 14 days."
+      "name": "Featured job",
+      "price": "$99",
+      "what": "Highlighted row and a place above regular listings in its category for 14 days."
     },
     {
-      "name": "Pinned",
-      "price": "$199 in USDT",
-      "what": "Top spot on the homepage and in its category for 7 days."
+      "name": "Pinned job",
+      "price": "$199",
+      "what": "Top of the home page and of its category for 7 days."
     },
     {
       "name": "5-job pack",
-      "price": "$399 in USDT",
-      "what": "Five featured listings to use within 3 months."
+      "price": "$399",
+      "what": "Five featured jobs to use within 3 months."
+    },
+    {
+      "name": "Company spotlight",
+      "price": "$499 / month",
+      "what": "Your company in “Featured employers” on the home page and at the top of the companies list, plus a badge on your company page."
+    },
+    {
+      "name": "Category or skill sponsor",
+      "price": "$299 / month",
+      "what": "Your company named at the top of one category or skill page, for example “Engineering jobs · supported by you”."
+    },
+    {
+      "name": "Branded listing",
+      "price": "$149",
+      "what": "A featured job with a cover image and a longer description written by you."
     }
   ],
   "wallets": [
@@ -66,5 +81,6 @@
         "note": "Save 64%"
       }
     ]
-  }
+  },
+  "sponsors": []
 }
