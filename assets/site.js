@@ -17,6 +17,10 @@
   }
   function hue(name) { var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360; return h; }
   var $ = function (id) { return document.getElementById(id); };
+  // a logo that fails to load must never leave an empty square: fall back to the company's initial
+  function dropLogo(img) { var box = img.parentNode; if (box && box.classList && box.classList.contains('ava')) { box.classList.remove('has'); img.remove(); } }
+  document.addEventListener('error', function (ev) { if (ev.target && ev.target.tagName === 'IMG') dropLogo(ev.target); }, true);
+  Array.prototype.forEach.call(document.querySelectorAll('.ava img'), function (img) { if (img.complete && !img.naturalWidth) dropLogo(img); });
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   var hidden = get('hrn_hidden', {});   // jobs the visitor marked "Not interested"
@@ -314,7 +318,7 @@
     }
   }
 
-  /* ---------- For you: skill profile and résumé scan ---------- */
+  /* ---------- For you: skill profile and resume scan ---------- */
   var fy = $('fy-root');
   if (fy) {
     var chips = Array.prototype.slice.call(fy.querySelectorAll('#fy-skills .chipbtn'));

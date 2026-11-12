@@ -19,6 +19,57 @@ TODAY = datetime.date.today().isoformat()
 e = html.escape
 CAT = {s: n for s, n, _ in CATS} | {OTHER[0]: OTHER[1]}
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+COUNTRIES = [   # (ISO code, name, pattern in the location line): used for the country Google's job markup requires
+    ("GB", "United Kingdom", r"united kingdom|\buk\b|london|england|scotland|manchester|edinburgh|cambridge, uk"), ("CA", "Canada", r"canada|toronto|vancouver|montr[eé]al|ottawa|ontario|british columbia|quebec|alberta"),
+    ("DE", "Germany", r"germany|berlin|munich|münchen|frankfurt|hamburg|cologne"), ("FR", "France", r"france|paris"), ("IE", "Ireland", r"ireland|dublin"),
+    ("NL", "Netherlands", r"netherlands|amsterdam|rotterdam|utrecht"), ("ES", "Spain", r"spain|barcelona|madrid"), ("PT", "Portugal", r"portugal|lisbon"),
+    ("PL", "Poland", r"poland|warsaw|krak[oó]w|wroc"), ("SE", "Sweden", r"sweden|stockholm"), ("CH", "Switzerland", r"switzerland|zurich|zürich|geneva|\bzug\b"),
+    ("AT", "Austria", r"austria|vienna"), ("IT", "Italy", r"italy|milan|\brome\b"), ("DK", "Denmark", r"denmark|copenhagen"), ("NO", "Norway", r"norway|oslo"),
+    ("FI", "Finland", r"finland|helsinki"), ("BE", "Belgium", r"belgium|brussels"), ("CZ", "Czechia", r"czech|prague"), ("RO", "Romania", r"romania|bucharest"),
+    ("UA", "Ukraine", r"ukraine|kyiv"), ("EE", "Estonia", r"estonia|tallinn"), ("LT", "Lithuania", r"lithuania|vilnius"), ("IN", "India", r"\bindia\b|bangalore|bengaluru|mumbai|hyderabad|pune|delhi|gurgaon|gurugram|chennai|noida"),
+    ("SG", "Singapore", r"singapore"), ("HK", "Hong Kong", r"hong kong"), ("JP", "Japan", r"japan|tokyo"), ("KR", "South Korea", r"korea|seoul"), ("TW", "Taiwan", r"taiwan|taipei"),
+    ("CN", "China", r"china|shanghai|beijing|shenzhen"), ("AU", "Australia", r"australia|sydney|melbourne|brisbane"), ("NZ", "New Zealand", r"new zealand|auckland"),
+    ("BR", "Brazil", r"brazil|s[ãa]o paulo"), ("MX", "Mexico", r"m[eé]xico"), ("SA", "Saudi Arabia", r"saudi|riyadh|king abdullah|jeddah"), ("RS", "Serbia", r"serbia|belgrade"),
+    ("GR", "Greece", r"greece|athens"), ("BG", "Bulgaria", r"bulgaria|sofia"), ("HU", "Hungary", r"hungary|budapest"), ("AR", "Argentina", r"argentina|buenos aires"), ("CO", "Colombia", r"colombia|bogot"),
+    ("IL", "Israel", r"israel|tel aviv"), ("AE", "United Arab Emirates", r"dubai|abu dhabi|\buae\b|united arab emirates"), ("TR", "Türkiye", r"turkey|türkiye|istanbul"),
+    ("MY", "Malaysia", r"malaysia|kuala lumpur"), ("PH", "Philippines", r"philippines|manila"), ("ID", "Indonesia", r"indonesia|jakarta"), ("TH", "Thailand", r"thailand|bangkok"),
+    ("VN", "Vietnam", r"vietnam|ho chi minh|hanoi|da nang"), ("ZA", "South Africa", r"south africa|cape town|johannesburg"), ("NG", "Nigeria", r"nigeria|lagos"), ("KE", "Kenya", r"kenya|nairobi"),
+]
+US_RX = (r"united states|\busa\b|\bnyc\b|\bsf\b|new york|san francisco|bay area|california|texas|seattle|boston|chicago|austin|denver|atlanta|los angeles|washington|miami|dallas|houston|"
+         r"san diego|palo alto|mountain view|san jose|sunnyvale|philadelphia|pittsburgh|phoenix|portland|raleigh|salt lake|florida|colorado")
+US_STATE = re.compile(r"(,|-|–|\|)\s?(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|US)\b")
+_country_cache = {}
+def country_of(loc):
+    """(ISO code, name) for a location line, or None when it names no single country we recognise."""
+    if loc not in _country_cache:
+        hit = next(((c, nm) for c, nm, rx in COUNTRIES if re.search(rx, loc, re.I)), None)
+        if not hit and (re.search(US_RX, loc, re.I) or US_STATE.search(loc) or re.search(r"\bU\.?S\.?\b", loc)): hit = ("US", "United States")
+        _country_cache[loc] = hit
+    return _country_cache[loc]
+
+
+ROLES = [   # (name, slug, pattern matched against the job title)
+    ("Software engineer", "software-engineer", r"software (engineer|developer)|\bswe\b|\bsde\b|member of technical staff"),
+    ("Backend engineer", "backend-engineer", r"back[- ]?end"), ("Frontend engineer", "frontend-engineer", r"front[- ]?end|\bui (engineer|developer)"),
+    ("Full-stack engineer", "full-stack-engineer", r"full[- ]?stack"), ("Mobile engineer", "mobile-engineer", r"\bios\b|android|mobile (engineer|developer|software)|react native|flutter"),
+    ("DevOps engineer", "devops-engineer", r"devops|dev ops|platform engineer|infrastructure engineer|cloud (engineer|architect)"),
+    ("Site reliability engineer", "site-reliability-engineer", r"site reliability|\bsre\b|reliability engineer"),
+    ("Data engineer", "data-engineer", r"data engineer|analytics engineer|data platform"), ("Data scientist", "data-scientist", r"data scien"),
+    ("Data analyst", "data-analyst", r"data analyst|business intelligence|\bbi (analyst|developer|engineer)|analytics analyst|product analyst"),
+    ("Machine learning engineer", "machine-learning-engineer", r"machine learning|\bml\b|deep learning|\bmle\b|\bai (engineer|researcher|scientist)|research (scientist|engineer)"),
+    ("Cybersecurity", "cybersecurity", r"security (engineer|analyst|architect|researcher|operations)|appsec|infosec|penetration|cyber|threat|detection (and|&) response"),
+    ("QA engineer", "qa-engineer", r"\bqa\b|quality assurance|test (engineer|automation)|\bsdet\b|software engineer in test"),
+    ("Embedded engineer", "embedded-engineer", r"embedded|firmware"), ("Blockchain engineer", "blockchain-engineer", r"blockchain|smart contract|solidity|protocol engineer"),
+    ("Engineering manager", "engineering-manager", r"engineering manager|head of engineering|director,? (of )?engineering|vp,? (of )?engineering"),
+    ("Product manager", "product-manager", r"product manager|product owner|head of product|director,? (of )?product|vp,? (of )?product|product lead"),
+    ("Product designer", "product-designer", r"product designer|ux designer|ui designer|ux/ui|ui/ux|user experience|design lead|interaction designer"),
+    ("Technical program manager", "technical-program-manager", r"program manager|\btpm\b|project manager"),
+    ("Solutions engineer", "solutions-engineer", r"solutions? (engineer|architect|consultant)|sales engineer|forward deployed|customer engineer"),
+    ("IT support", "it-support", r"\bit (support|specialist|technician|administrator|engineer|manager|operations)|help ?desk|desktop support|systems? administrator|sysadmin"),
+    ("Account executive", "account-executive", r"account executive|\bae\b|account manager"), ("Customer success manager", "customer-success-manager", r"customer success"),
+    ("Marketing manager", "marketing-manager", r"marketing manager|growth (manager|marketer|lead)|head of marketing|product marketing|demand generation"),
+    ("Recruiter", "recruiter", r"recruiter|talent acquisition|sourcer|talent partner"),
+]
 TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc"}
 EUROPE = (r"europe|\bemea\b|\beu\b|london|united kingdom|\buk\b|paris|france|berlin|germany|vienna|austria|zurich|switzerland|\bzug\b|amsterdam|"
           r"netherlands|lisbon|portugal|madrid|barcelona|spain|dublin|ireland|warsaw|poland|vilnius|lithuania|malta|cyprus|italy|milan|prague|"
@@ -29,7 +80,7 @@ PLACES = [
     ("London & the UK", "united-kingdom", r"london|united kingdom|\buk\b|england"),
     ("New York", "new-york", r"new york|\bnyc\b"),
     ("San Francisco Bay Area", "san-francisco", r"san francisco|bay area|palo alto|san jose|mountain view"),
-    ("the United States", "united-states", r"united states|\busa?\b|new york|san francisco|california|chicago|miami|texas|boston|seattle"),
+    ("the United States", "united-states", r"united states|\busa?\b|new york|san francisco|california|chicago|miami|texas|boston|seattle|austin|denver|atlanta|dallas|los angeles|washington|san diego|pittsburgh|portland|phoenix|raleigh|houston|philadelphia|salt lake|florida|colorado"),
     ("Canada", "canada", r"canada|toronto|vancouver"), ("Europe", "europe", EUROPE),
     ("Germany", "germany", r"germany|berlin|munich|frankfurt|hamburg"), ("France", "france", r"france|paris"),
     ("Switzerland", "switzerland", r"switzerland|zurich|\bzug\b|geneva"), ("Austria", "austria", r"austria|vienna"),
@@ -41,6 +92,19 @@ PLACES = [
     ("Latin America", "latin-america", r"latam|latin america|brazil|mexico|argentina|colombia|chile"),
     ("Brazil", "brazil", r"brazil|s[ãa]o paulo"), ("Turkey", "turkey", r"turkey|türkiye|istanbul"),
     ("Africa", "africa", r"africa|nigeria|kenya|lagos|nairobi"),
+    # cities and states people search for by name ("tech jobs seattle", "tech jobs in austin")
+    ("Seattle", "seattle", r"seattle|bellevue, wa|redmond, wa|kirkland, wa"), ("Austin", "austin", r"\baustin\b"), ("Chicago", "chicago", r"\bchicago\b"),
+    ("Boston", "boston", r"\bboston\b|cambridge, ma"), ("Washington, DC", "washington-dc", r"washington,? ?d\.?c\.?|\bdc\b|arlington, va|mclean, va|reston, va"),
+    ("Denver", "denver", r"\bdenver\b|boulder, co"), ("Los Angeles", "los-angeles", r"los angeles|santa monica|culver city|el segundo|hawthorne, ca|irvine"),
+    ("Dallas", "dallas", r"\bdallas\b|plano, tx|fort worth"), ("Atlanta", "atlanta", r"\batlanta\b"), ("San Diego", "san-diego", r"san diego"),
+    ("Pittsburgh", "pittsburgh", r"pittsburgh"), ("Portland", "portland", r"portland, or|portland, oregon|\bportland\b"), ("Miami", "miami", r"\bmiami\b"),
+    ("Phoenix", "phoenix", r"\bphoenix\b|scottsdale|tempe, az"), ("Raleigh-Durham", "raleigh-durham", r"raleigh|durham, nc|research triangle"), ("Houston", "houston", r"\bhouston\b"),
+    ("California", "california", r"california|, ca\b|san francisco|bay area|palo alto|san jose|mountain view|los angeles|san diego|sunnyvale|santa clara|irvine"),
+    ("Texas", "texas", r"texas|, tx\b|\baustin\b|\bdallas\b|\bhouston\b|san antonio"), ("Florida", "florida", r"florida|, fl\b|\bmiami\b|orlando|tampa"),
+    ("Toronto", "toronto", r"toronto"), ("Vancouver", "vancouver", r"vancouver"), ("Berlin", "berlin", r"\bberlin\b"), ("Munich", "munich", r"munich|münchen"),
+    ("Bangalore", "bangalore", r"bangalore|bengaluru"), ("Sydney", "sydney", r"sydney"), ("Ireland", "ireland", r"ireland|dublin"),
+    ("the Netherlands", "netherlands", r"netherlands|amsterdam|rotterdam|utrecht"), ("Spain", "spain", r"spain|barcelona|madrid"), ("Mexico", "mexico", r"mexico"),
+    ("Israel", "israel", r"israel|tel aviv"), ("Sweden", "sweden", r"sweden|stockholm"), ("Portugal", "portugal", r"portugal|lisbon|porto\b"),
 ]
 URLS = []
 ORG_LD = [""]
@@ -112,6 +176,7 @@ def hue(name):
 
 
 LOGOS = {f.stem for f in (ROOT / "assets" / "logos").glob("*.png")} if (ROOT / "assets" / "logos").exists() else set()
+LOGO_SITE = json.loads((ROOT / "logos.json").read_text()) if (ROOT / "logos.json").exists() else {}     # company -> its own site (checked by hand or by name)
 
 
 def ava(name, cls=""):
@@ -185,9 +250,9 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Résumé builder</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
-<div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -397,16 +462,21 @@ def job_page(j, active_by_cat):
     pills += [f'<a class="pill" href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a>' for t in j["tags"]]
     head = ""
     if j["active"]:
+        org = {"@type": "Organization", "name": j["company"]}
+        if LOGO_SITE.get(j["company"]): org["sameAs"] = "https://" + LOGO_SITE[j["company"]]
+        if slugify(j["company"]) in LOGOS: org["logo"] = f'{FULL}/logos/{slugify(j["company"])}.png'
         ld = {"@context": "https://schema.org", "@type": "JobPosting", "title": j["title"], "description": j["excerpt"] or j["title"],
-              "datePosted": j["posted"] or j["first_seen"], "hiringOrganization": {"@type": "Organization", "name": j["company"]},
+              "datePosted": j["posted"] or j["first_seen"], "hiringOrganization": org, "identifier": {"@type": "PropertyValue", "name": j["company"], "value": j["id"]},
               "directApply": False, "url": canonical}
+        land = country_of(j["location"]) if j["location"] else None
         if j.get("usd"):
             ld["baseSalary"] = {"@type": "MonetaryAmount", "currency": "USD",
                                 "value": {"@type": "QuantitativeValue", "minValue": int(j["usd"][0]), "maxValue": int(j["usd"][1]), "unitText": "YEAR"}}
         if j["location"]:
-            ld["jobLocation"] = {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": j["location"]}}
+            ld["jobLocation"] = {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": j["location"], **({"addressCountry": land[0]} if land else {})}}
         if j["remote"]:
             ld["jobLocationType"] = "TELECOMMUTE"
+            if land: ld["applicantLocationRequirements"] = {"@type": "Country", "name": land[1]}
         if j.get("etype") in ETYPE_LD:
             ld["employmentType"] = ETYPE_LD[j["etype"]]
         head = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>"
@@ -571,6 +641,8 @@ def main():
     latest = diverse(order(active), 40)
 
     # Home
+    ROLE_TOP = sorted(((nm, s_, sum(1 for j in active if re.search(rx, j["title"], re.I))) for nm, s_, rx in ROLES), key=lambda x: -x[2])
+    ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
     cats = "".join(tile(f"jobs/{s}/", CAT[s], len(by_cat[s])) for s in CAT if by_cat[s])
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
     comp_top = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items[:12])
@@ -583,13 +655,13 @@ def main():
             f'<p class="sub">Old listings stay online long after the seat is taken, and the real openings are scattered over {m} company career pages. '
             f'We check every one of them daily, so what you see here was open this morning: {n:,} roles. No sign-up, no recruiters in the middle.</p>'
             f'<form class="searchbar" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
-            f'<p class="heroalt"><a href="{P}/for-you/">Match jobs to your skills →</a> &nbsp; <a href="{P}/resume/">Build a résumé →</a></p>'
+            f'<p class="heroalt"><a href="{P}/for-you/">Match jobs to your skills →</a> &nbsp; <a href="{P}/resume/">Build a resume →</a></p>'
             f'<div class="popular"><span>Popular:</span><a href="{P}/remote/">Remote</a><a href="{P}/new/">New</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a>'
             f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/entry-level/">Entry-level</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/crypto/">Crypto</a></div>'
             f'<dl class="stats"><div><dt>{n:,}</dt><dd>open roles</dd></div><div><dt>{m}</dt><dd>companies</dd></div>'
             f'<div><dt>{len(remote):,}</dt><dd>remote</dd></div><div><dt>{fresh3:,}</dt><dd>new in 3 days</dd></div></dl></div>'
             f'<div class="board" aria-label="Freshest roles"><div class="board-h"><span>Fresh on the board</span><a href="{P}/board/"><b>Full screen ↗</b></a></div>{board_rows}</div></div></section>')
-    plus_band = (f'<div class="band alt"><div><h2>Applied everywhere and heard nothing?</h2><p>Timing and fit decide whether a résumé gets read. Plus will show you new roles 48 hours early, email you matches the moment they appear and review your résumé. One payment, no subscription.</p></div>'
+    plus_band = (f'<div class="band alt"><div><h2>Applied everywhere and heard nothing?</h2><p>Timing and fit decide whether a resume gets read. Plus will show you new roles 48 hours early, email you matches the moment they appear and review your resume. One payment, no subscription.</p></div>'
                  f'<a class="btn lg" href="{P}/plus/">See Plus</a></div>')
     band = (f'<div class="band"><div><h2>Is your open role getting lost?</h2><p>A candidate here chooses between {n:,} roles today. Featured placement puts yours on the first screen they see. Standard listings are free, featured starts at $99 in crypto.</p></div>'
             f'<a class="btn lg" href="{P}/post-a-job/">Post a job</a></div>')
@@ -608,6 +680,7 @@ def main():
             + section("Latest tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"Browse all {n:,}"))
             + section("Highest-paying tech jobs open now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data"))
             + section("Tech jobs by category", f'<ul class="tiles">{cats}</ul>')
+            + section("Tech jobs by role", '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + "</ul>", ("roles/", "All roles"))
             + section("Tech companies hiring the most", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("Tech jobs by location", f'<ul class="tiles">{place_html}</ul>', ("locations/", "All locations")) + band
             + section("More new tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:32])}</ul>', ("jobs/", f"Browse all {n:,}"))
@@ -686,6 +759,31 @@ def main():
             if cs == OTHER[0]: continue
             add(f"locations/{slug}/{cs}/", f"{cname} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
                 f"loc={slug}&cat={cs}", f"{e(cname)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
+    by_role = {slug: (name, [j for j in active if re.search(rx, j["title"], re.I)]) for name, slug, rx in ROLES}
+    by_role = {slug: v for slug, v in by_role.items() if len(v[1]) >= 20}
+    for slug_r, (rname, rj) in by_role.items():
+        trail_r, low = (("Roles", "roles/"), (rname, f"roles/{slug_r}/")), rname[0].lower() + rname[1:] if rname not in ("DevOps engineer", "QA engineer", "IT support") else rname
+        add(f"roles/{slug_r}/remote/", f"Remote {low} jobs", [j for j in rj if j["remote"]], trail_r, f"remote=1&q={quote(rname)}", "remote ", f" for {e(low)}s", [("role:" + slug_r, "Remote")])
+        add(f"roles/{slug_r}/entry-level/", f"Entry-level {low} jobs", [j for j in rj if j["entry"]], trail_r, f"entry=1&q={quote(rname)}", "entry-level ", f" for {e(low)}s", [("role:" + slug_r, "Entry-level")])
+        for name, slug, _ in places:
+            add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", [j for j in rj if slug in j["places"]], trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(low)}s in {e(name)}",
+                [("role:" + slug_r, name.removeprefix("the ")), ("place:" + slug, rname)])
+    add("remote/entry-level/", "Remote entry-level tech jobs", [j for j in remote if j["entry"]], (("Remote", "remote/"),), "remote=1&entry=1", "remote entry-level ", "", [("remote", "Entry-level")])
+    for t, js in by_tag.items():
+        add(f"skills/{tslug(t)}/entry-level/", f"Entry-level {t} jobs", [j for j in js if j["entry"]], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
+            f"entry=1&skills={quote(t)}", "entry-level ", f" mentioning {e(t)}", [("tag:" + t, "Entry-level")])
+    for perk_name, perk_slug in (("Visa sponsorship", "visa-sponsorship"), ("Relocation support", "relocation")):
+        pk = [j for j in active if perk_name in j.get("perks", [])]
+        add(f"perks/{perk_slug}/remote/", f"Remote tech jobs with {perk_name.lower()}", [j for j in pk if j["remote"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
+            f"remote=1&perk={quote(perk_name)}", "remote ", f" that mention {perk_name.lower()}", [])
+        for name, slug, _ in places:
+            add(f"perks/{perk_slug}/{slug}/", f"Tech jobs with {perk_name.lower()} in {name}", [j for j in pk if slug in j["places"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
+                f"loc={slug}&perk={quote(perk_name)}", "", f" in {e(name)} that mention {perk_name.lower()}", [("place:" + slug, perk_name)])
+    for k_ in (100, 150, 200, 250, 300):                       # "jobs that pay 100k": the low end of the advertised range is at least that much
+        rich = [j for j in active if j["usd"] and j["usd"][0] >= k_ * 1000]
+        add(f"salary/{k_}k/", f"Tech jobs that pay ${k_}K or more", rich, (("Salaries", "salaries/"),), f"sal={k_ * 1000}", "", f" whose advertised range starts at ${k_}K or more", [("pay", f"${k_}K+")])
+        add(f"salary/{k_}k/remote/", f"Remote tech jobs that pay ${k_}K or more", [j for j in rich if j["remote"]], (("Salaries", "salaries/"), (f"${k_}K+", f"salary/{k_}k/")),
+            f"sal={k_ * 1000}&remote=1", "remote ", f" whose advertised range starts at ${k_}K or more", [("pay", f"Remote ${k_}K+"), ("remote", f"${k_}K+")])
     for cs, cname in CAT.items():
         if cs == OTHER[0]: continue
         for lv, ls, ll in LEVELS:
@@ -742,6 +840,16 @@ def main():
                 trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t]) + cmp_links(t),
                 faq=f"{t} jobs", after=section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
+    for slug_r, (rname, rj) in by_role.items():
+        paid_r = sum(1 for j in rj if j["usd"])
+        listing(f"roles/{slug_r}/", f"{rname} jobs", f"{rname} Jobs ({len(rj):,} open) | {SITE}",
+                f"{roles(len(rj), 'open role')} for {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname}s at tech companies, straight from their careers pages. Remote filter, salary data, updated daily.",
+                rj, intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title"), trail=(("Roles", "roles/"),), feed=True, extra=rel(REL["role:" + slug_r]), faq=f"{rname} jobs",
+                after=section(f"Companies hiring {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname}s", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
+                              (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 30 else None))
+    page("roles/", f"Tech Jobs by Role — {len(by_role)} job titles | {SITE}", "Browse open tech jobs by role: software engineer, data engineer, product manager, DevOps, security and more, each with remote, city and salary pages.",
+         crumbs(("Roles", "")) + '<h1>Tech jobs by role</h1><p class="lead">Job titles differ from company to company, so each role here gathers the variants employers use. Every role page links to its remote, entry-level, city and salary versions.</p>'
+         '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, len(js_)) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: -len(kv[1][1]))) + "</ul>")
     for name, slug, js in places:
         short = name.removeprefix("the ")
         listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
@@ -760,6 +868,7 @@ def main():
          f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>')
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
+    PLACE_SLUG = {v: k for k, v in PLACE_NAME.items()}
     for c, js in companies.items():
         slug = slugify(c)
         act, arc = order([j for j in js if j["active"]]), order([j for j in js if not j["active"]])
@@ -850,6 +959,12 @@ def main():
          + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary")) + cite("salaries/", "Tech salaries from live job postings"))
 
     def salary_page(slug, label, group, back):
+        by_lvl, by_loc = defaultdict(list), defaultdict(list)
+        for j, r in group:
+            by_lvl[j["level"] or "Mid-level (no level in the title)"].append((j, r))
+            for ps in j["places"]: by_loc[PLACE_NAME[ps]].append((j, r))
+        cut = (section(f"{label} salary by level", table(by_lvl, None, 15, 6)) if sum(len(v) >= 15 for v in by_lvl.values()) >= 2 else "") + \
+              (section(f"{label} salary by location", table(by_loc, lambda k: f"locations/{PLACE_SLUG[k]}/", 15, 20)) if sum(len(v) >= 15 for v in by_loc.values()) >= 2 else "")
         mids = sorted((lo + hi) / 2 for _, (lo, hi) in group)
         pct = lambda q: mids[min(len(mids) - 1, int(len(mids) * q))]
         comp = defaultdict(list)
@@ -862,7 +977,7 @@ def main():
              f"What {label} roles pay at tech companies: median, typical range and top-paying employers, from {len(mids):,} open job postings.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f"<h1>{e(label)} salaries in tech</h1>"
              f'<p class="lead">From {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>{stats}'
-             + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
+             + cut + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
              + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
              + cite(f"salaries/{slug}/", f"{label} salaries in tech"))
     for t, group in g_tag.items():
@@ -871,6 +986,9 @@ def main():
     for name, group in g_cat.items():
         if len(group) >= 30 and name != OTHER[1]:
             salary_page(cat_slug[name], name, group, (f"jobs/{cat_slug[name]}/", f"All {name} jobs"))
+    for slug_r, (rname, rj) in by_role.items():
+        group = [(j, j["usd"]) for j in rj if j["usd"]]
+        if len(group) >= 30: salary_page(slug_r, rname, group, (f"roles/{slug_r}/", f"All {rname} jobs"))
 
     # Hiring trends: one page of live numbers
     week = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
@@ -890,7 +1008,7 @@ def main():
     cat_rows = [trow([f'<a href="{P}/jobs/{cs}/">{e(CAT[cs])}</a>', f"{len(by_cat[cs]):,}", barc(len(by_cat[cs]), top_cat, pctf(len(by_cat[cs]), n)), pctf(sum(j["remote"] for j in by_cat[cs]), len(by_cat[cs])), med(by_cat[cs])])
                 for cs in sorted(CAT, key=lambda k: -len(by_cat[k])) if by_cat[cs]]
     place_rows = [trow([f'<a href="{P}/locations/{slug}/">{e(name.removeprefix("the "))}</a>', f"{len(js):,}", barc(len(js), max(len(x[2]) for x in places), pctf(len(js), n))]) for name, slug, js in sorted(places, key=lambda x: -len(x[2]))]
-    page("trends/", f"Tech Hiring Trends — live data from {n:,} open roles | {SITE}",
+    page("trends/", f"Tech Job Market {TODAY[:4]}: hiring trends from {n:,} open roles | {SITE}",
          "Which skills, companies, roles and cities are hiring in tech right now. Live numbers from open job postings, updated daily.",
          crumbs(("Hiring trends", "")) + "<h1>Tech hiring trends</h1>"
          f'<p class="lead">Live numbers from {n:,} open roles at {m} tech companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
@@ -973,7 +1091,7 @@ def main():
            f'location.href="{P}/compare/"+p[0]+"-vs-"+p[1]+"/";}});}})();</script>')
 
     # My jobs: tracker kept in the visitor's browser, no account needed
-    page("my-jobs/", f"My jobs — saved jobs and application tracker | {SITE}", "Track the jobs you saved and applied to, add notes, and keep your saved searches.",
+    page("my-jobs/", f"Job Application Tracker — free, no sign-up, no spreadsheet | {SITE}", "A free job application tracker in your browser: save jobs, mark where you applied, add notes, export to CSV. No account and no spreadsheet to maintain.",
          crumbs(("My jobs", "")) + '<h1>My jobs</h1><p class="lead">Applied to twenty jobs and can’t remember who answered? Keep saved jobs, applications, notes and searches in one place. Kept in this browser only: no account, nothing is uploaded.</p>'
          '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
          '<ul class="jobs" id="mj-list"></ul><div class="empty" id="mj-empty">Nothing here yet. Open any job and press “Save job” or “Mark as applied”.</div><p class="note" id="mj-hidden" hidden></p>'
@@ -1057,7 +1175,7 @@ def main():
          crumbs(("Privacy", "")) + "<h1>Privacy</h1><p class=\"lead\">Short version: we do not ask for an account, we do not set tracking cookies, and your saved jobs never leave your browser.</p>"
          "<h2 class='h2s'>What is stored in your browser</h2><p>Saved jobs, application statuses and notes, saved searches, recently viewed jobs, your skill profile and the light or dark theme are kept in your browser's local storage on this device. "
          "They are not sent to us. Clearing your browser data removes them.</p>"
-         "<h2 class='h2s'>Your résumé</h2><p>If you paste a résumé on the “For you” page, the text is read by a script in your browser to find skills. It is not uploaded or saved.</p>"
+         "<h2 class='h2s'>Your resume</h2><p>If you paste a resume on the “For you” page, the text is read by a script in your browser to find skills. It is not uploaded or saved.</p>"
          "<h2 class='h2s'>What we do not do</h2><p>No advertising trackers, no analytics cookies, no selling of data.</p>"
          "<h2 class='h2s'>Third parties</h2><p>The site is served by a hosting provider that, like any web server, sees your IP address when you load a page. Fonts are loaded from Google Fonts. "
          "When you press “Apply”, you go to the employer's own site, which has its own privacy policy.</p>"
@@ -1071,15 +1189,15 @@ def main():
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
          "<h2 class='h2s'>Removing a listing</h2><p>Employers who want a listing or company page removed can ask through the contact details on the employers page once they are published there.</p>")
 
-    # For you: skill profile and résumé scan, all in the browser
+    # For you: skill profile and resume scan, all in the browser
     fy_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t, _ in skill_counts.most_common())
-    page("for-you/", f"Jobs for you — match tech jobs to your skills and résumé | {SITE}",
-         "Pick your skills or paste your résumé and see the open tech jobs that fit, best matches first. Runs in your browser: nothing is uploaded.",
-         crumbs(("For you", "")) + f'<h1>See only the tech jobs that fit you</h1><p class="lead">Reading {n:,} postings to find the twenty that fit is a second job. Pick your skills or paste your résumé, and every open role is ranked by how well it fits. '
-         'It all happens in your browser: your résumé is never uploaded.</p>'
+    page("for-you/", f"Jobs for you — match tech jobs to your skills and resume | {SITE}",
+         "Pick your skills or paste your resume and see the open tech jobs that fit, best matches first. Runs in your browser: nothing is uploaded.",
+         crumbs(("For you", "")) + f'<h1>See only the tech jobs that fit you</h1><p class="lead">Reading {n:,} postings to find the twenty that fit is a second job. Pick your skills or paste your resume, and every open role is ranked by how well it fits. '
+         'It all happens in your browser: your resume is never uploaded.</p>'
          f'<div id="fy-root"><div class="card"><h2>Your skills</h2><div class="skillbar" id="fy-skills" style="margin-top:12px">{fy_chips}</div>'
-         '<details class="scan"><summary>Or paste your résumé and let us find your skills</summary>'
-         '<textarea id="fy-text" rows="7" placeholder="Paste the text of your résumé here" aria-label="Résumé text"></textarea>'
+         '<details class="scan"><summary>Or paste your resume and let us find your skills</summary>'
+         '<textarea id="fy-text" rows="7" placeholder="Paste the text of your resume here" aria-label="Resume text"></textarea>'
          '<p><button class="btn sm" id="fy-scan" type="button">Find my skills</button> <span class="note" id="fy-scan-note"></span></p></details>'
          '<div class="fbar" style="margin:14px 0 0"><select id="fy-lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>'
          f'<select id="fy-cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
@@ -1095,16 +1213,16 @@ def main():
     page("skills/", f"Tech Jobs by Skill — {len(skill_counts)} skills | {SITE}", "Browse open tech jobs by skill: languages, frameworks, cloud platforms and tools.",
          crumbs(("Skills", "")) + f'<h1>Tech jobs by skill</h1><p class="lead">Open roles that mention each skill. Each skill page also links to its salary data and to remote and city versions.</p><ul class="tiles">{skill_tiles}</ul>')
 
-    # Résumé builder: stays in the browser, prints to PDF
-    page("resume/", f"Free Résumé Builder — no sign-up, private | {SITE}",
-         "Build a clean, ATS-friendly résumé in your browser and save it as PDF. No account, nothing is uploaded, and one click matches it to open tech jobs.",
-         crumbs(("Résumé builder", "")) + '<h1>Free résumé builder that screening software can read</h1><p class="lead">Two-column templates with icons look good to people and can turn into scrambled text in applicant tracking systems. '
+    # Resume builder: stays in the browser, prints to PDF
+    page("resume/", f"Free Resume Builder — no sign-up, private | {SITE}",
+         "Build a clean, ATS-friendly resume in your browser and save it as PDF. No account, nothing is uploaded, and one click matches it to open tech jobs.",
+         crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Two-column templates with icons look good to people and can turn into scrambled text in applicant tracking systems. '
          'This builder gives you a plain one-column page that parses cleanly. Fill in the left side, watch the page on the right, save it as PDF. '
          'Everything stays in this browser: no account, nothing is uploaded.</p>'
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Download PDF</button>'
-         '<button class="btn ghost" id="rb-match" type="button">Match jobs to this résumé</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
+         '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          '<div class="rgrid"><div id="rb-form"></div><div id="rb-preview" aria-live="polite"></div></div></div>'
-         + '<section class="sec no-print"><div class="sec-head"><h2>What makes a résumé get read</h2></div><div class="feats">'
+         + '<section class="sec no-print"><div class="sec-head"><h2>What makes a resume get read</h2></div><div class="feats">'
          '<div class="feat"><h2 class="fh">One page, plain layout</h2><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
          '<div class="feat"><h2 class="fh">Results, not duties</h2><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h2 class="fh">The posting’s own words</h2><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div></section>'
@@ -1119,7 +1237,7 @@ def main():
          f'<a class="feat" href="{P}/api/"><h2 class="fh">Developers and bots</h2><p>A free JSON API and RSS for Slack, Discord and Telegram bots or your own project.</p></a>'
          f'<a class="feat" href="{P}/post-a-job/"><h2 class="fh">Employers and recruiters</h2><p>Featured jobs, a company spotlight, or sponsorship of the page your candidates read.</p></a>'
          f'<a class="feat" href="{P}/trends/"><h2 class="fh">Writers and researchers</h2><p>Hiring and salary data you can quote, with CSV downloads and ready citations.</p></a>'
-         '<div class="feat"><h2 class="fh">Career services</h2><p>Résumé review, interview coaching, courses: we are planning a place to recommend services our visitors find useful.</p></div></div>'
+         '<div class="feat"><h2 class="fh">Career services</h2><p>Resume review, interview coaching, courses: we are planning a place to recommend services our visitors find useful.</p></div></div>'
          + ('<section class="sec"><div class="sec-head"><h2>Get in touch</h2></div><p>Write to us: ' + contact + ".</p></section>" if contact else
             '<div class="banner" style="margin-top:24px">Contact details will be published here shortly. The widgets, feeds and data above already work without asking anyone.</div>'))
 
@@ -1217,19 +1335,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         + f'<p class="pname">{e(pl["name"])}</p><p class="price">{e(pl["price"])}</p><p class="note">{e(pl["per"])}</p>{cta}</div>' for pl in plus["plans"])
     feats = [("You see the job too late", "See jobs 48 hours early", "New roles reach Plus members two days before the public site, while the pile of applications is still small."),
              (f"You can’t check {m} career pages a day", "Instant email alerts", "Save a search once and get an email the moment a matching job is posted, instead of checking back."),
-             ("Your résumé gets skipped", "AI résumé review", "Line-by-line feedback on your résumé against the roles you are aiming for, with wording you can paste in."),
-             ("Every cover letter eats an evening", "Tailored cover letters", "A draft for any job in one click, built from your résumé and the posting."),
+             ("Your resume gets skipped", "AI resume review", "Line-by-line feedback on your resume against the roles you are aiming for, with wording you can paste in."),
+             ("Every cover letter eats an evening", "Tailored cover letters", "A draft for any job in one click, built from your resume and the posting."),
              ("Your notes are stuck on one laptop", "My jobs on every device", "Saved jobs, application statuses and notes follow you from laptop to phone."),
-             ("Worried the free site will shrink?", "Everything free stays free", "Search, filters, salary data, the résumé builder and applying do not move behind Plus. It adds speed and tools on top.")]
+             ("Worried the free site will shrink?", "Everything free stays free", "Search, filters, salary data, the resume builder and applying do not move behind Plus. It adds speed and tools on top.")]
     feat_html = "".join(f'<div class="feat"><p class="pain">{e(pain)}</p><h2 class="fh">{e(a)}</h2><p>{e(b)}</p></div>' for pain, a, b in feats)
     rows_cmp = [("Search, filters and salary data", "✓", "✓"), ("Save jobs and track applications", "This device", "Every device"), ("New jobs", "After 48 hours", "Immediately"),
-                ("Alerts for saved searches", "On the site", "By email, instantly"), ("AI résumé review", "—", "✓"), ("Cover letter drafts", "—", "✓")]
+                ("Alerts for saved searches", "On the site", "By email, instantly"), ("AI resume review", "—", "✓"), ("Cover letter drafts", "—", "✓")]
     cmp_html = "".join(f"<tr><td>{e(a)}</td><td>{e(b)}</td><td><strong>{e(c_)}</strong></td></tr>" for a, b, c_ in rows_cmp)
     soon = "" if plus.get("live") else '<div class="banner">Plus is not available yet. This page shows what we are building and what it will cost. Nothing can be bought today.</div>'
     page("plus/", f"{SITE} Plus — get to new jobs first | {SITE}",
-         "Applying and hearing nothing back? Plus gets you to new tech jobs 48 hours early, with instant alerts and AI résumé review. One payment, no subscription.",
+         "Applying and hearing nothing back? Plus gets you to new tech jobs 48 hours early, with instant alerts and AI resume review. One payment, no subscription.",
          crumbs(("Plus", "")) + f'<h1>Tired of applying and hearing nothing back?</h1>'
-         f'<p class="lead">Two things you control decide whether a résumé gets read: how early it arrives and how closely it matches the posting. '
+         f'<p class="lead">Two things you control decide whether a resume gets read: how early it arrives and how closely it matches the posting. '
          f'{e(SITE)} Plus works on both. One payment, no subscription, nothing renews by itself.</p>{soon}'
          f'<div class="feats">{feat_html}</div>'
          + section("Pick how long you need it", f'<div class="plans">{plans}</div><p class="note">One-time payment in crypto at a checkout page; access switches on by itself the moment the payment is confirmed. Card payments will follow. Searching and applying stay free for everyone.</p>')
@@ -1286,6 +1404,40 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
              '<script type="application/json" id="acc-data">' + json.dumps(acc_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/account.js?v={V}" defer></script>',
              head='<meta name="robots" content="noindex">', sitemap=False)
+    # Media kit: what the site is, live numbers, brand assets and placements, for press and advertisers
+    wordmark = lambda ink, dot: (f'<svg xmlns="http://www.w3.org/2000/svg" width="420" height="80" viewBox="0 0 420 80" role="img" aria-label="{e(SITE)}">'
+                                 f'<circle cx="22" cy="40" r="10" fill="{dot}"/><text x="46" y="52" fill="{ink}" font-family="Bricolage Grotesque, Inter, Helvetica, Arial, sans-serif" '
+                                 f'font-size="38" font-weight="800" letter-spacing="-1">{e(SITE)}</text></svg>')
+    write("brand/logo-mark.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 32 32" role="img" aria-label="{e(SITE)}">{MARK}</svg>', sitemap=False)
+    write("brand/logo-wordmark.svg", wordmark("#0e0e0c", "#3ecf5f"), sitemap=False)
+    write("brand/logo-wordmark-dark.svg", wordmark("#f3f2ec", "#c8f560"), sitemap=False)
+    swatch = lambda hexv, name, ink="#0e0e0c": f'<div class="swatch" style="background:{hexv};color:{ink}"><b>{name}</b><span>{hexv}</span></div>'
+    short_bp = f"{SITE} is a daily-updated index of open tech jobs, collected from employers' own careers pages."
+    long_bp = (f"{SITE} lists {n:,} open tech jobs from {m} companies and re-checks every one of them against the employer's careers page each day. Each listing links to the original posting, "
+               "closed roles move to a public archive, and salary and hiring data from the postings is free to use with a link back.")
+    page("media-kit/", f"Media Kit — brand assets, live numbers, advertising | {SITE}",
+         f"{SITE} media kit: what the site is, live numbers, logos and colours to download, ready-to-paste descriptions, and placements for employers and sponsors.",
+         crumbs(("Media kit", "")) + f"<h1>{e(SITE)} media kit</h1>"
+         '<p class="lead">Writing about tech hiring, or planning where to put a role in front of candidates? Hunting for a logo and a correct number wastes an afternoon. Everything is on this page.</p>'
+         f'<div class="statrow"><div class="stat"><b>{n:,}</b><span>open roles today</span></div><div class="stat"><b>{m}</b><span>companies</span></div>'
+         f'<div class="stat"><b>{len(remote):,}</b><span>remote roles</span></div><div class="stat"><b>{WEEKNEW:,}</b><span>posted in the last 7 days</span></div></div>'
+         f'<p class="note">Counted on {fdate(TODAY)}; these numbers are rebuilt every day. Audience figures are not published yet: measurement starts when the site moves to its own domain, and we do not publish estimates.</p>'
+         + section(f"What {SITE} is", f'<p>{e(short_bp)}</p><p>{e(long_bp)}</p><p class="note">Both paragraphs may be quoted as they are. How the data is collected: <a href="{P}/methodology/">methodology</a>.</p>')
+         + section("Logos to download", '<div class="brandrow">'
+                   f'<a class="brandtile" href="{P}/brand/logo-wordmark.svg" download><img src="{P}/brand/logo-wordmark.svg" alt="{e(SITE)} wordmark on a light background" width="210" height="40"><span>Wordmark, light · SVG</span></a>'
+                   f'<a class="brandtile dark" href="{P}/brand/logo-wordmark-dark.svg" download><img src="{P}/brand/logo-wordmark-dark.svg" alt="{e(SITE)} wordmark on a dark background" width="210" height="40"><span>Wordmark, dark · SVG</span></a>'
+                   f'<a class="brandtile" href="{P}/brand/logo-mark.svg" download><img src="{P}/brand/logo-mark.svg" alt="{e(SITE)} mark" width="56" height="56"><span>Mark · SVG</span></a>'
+                   f'<a class="brandtile" href="{P}/og.jpg" download><img src="{P}/og.jpg" alt="{e(SITE)} share image" width="210" height="110" loading="lazy"><span>Share image · JPG 1200×630</span></a></div>'
+                   '<p class="note">Keep the mark and the name together, leave clear space around them, and do not recolour, stretch or redraw them. The wordmark is set in Bricolage Grotesque ExtraBold.</p>')
+         + section("Colours and type", '<div class="swatches">' + swatch("#f6f5f0", "Paper") + swatch("#0e0e0c", "Ink", "#f3f2ec") + swatch("#c8f560", "Signal lime") + swatch("#3ecf5f", "Live green") + swatch("#e2dfd5", "Line") + "</div>"
+                   '<p>Headlines: Bricolage Grotesque (700–800). Text: Inter (400–700). Labels and numbers: JetBrains Mono (500–700). All three are open-source typefaces.</p>')
+         + section("Placements for employers and sponsors", f'<div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What it is</th></tr>{rows}</table></div>'
+                   f'<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout. Details and examples: <a href="{P}/post-a-job/">for employers</a>.</p>')
+         + section("For journalists and researchers", f'<p>Numbers you can quote, each with its method and date: <a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from live postings</a>, '
+                   f'<a href="{P}/insights/">rankings</a>, <a href="{P}/compare/">skill comparisons</a>. Raw data: <a href="{P}/api/">free JSON API</a> and CSV files. Every data page has a “Cite or link to this page” box.</p>'
+                   + (f"<p>Questions: {contact}.</p>" if contact else "")),
+         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": f"{FULL}/brand/logo-mark.svg",
+               "description": short_bp}) + "</script>")
     page("hiring-badge/", f"Hiring Badge & Jobs Widget | {SITE}", "Free live hiring badges and an embeddable jobs widget for any site.",
          crumbs(("Widgets", "widgets/"), ("Hiring badge", "")) + f'<h1>Hiring badge &amp; jobs widget</h1><p class="lead">Badges and widgets now live on one page with a builder: '
          f'<a href="{P}/widgets/">open the widget builder</a>.</p>', sitemap=False)
@@ -1297,7 +1449,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>From the companies\' own careers systems, not from other job boards. Every listing links to the original posting, and you apply there. '
          f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p>'
          f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Once a day. The date of the last check is shown on every job page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p>'
-         f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the résumé builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p>'
+         f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p>'
          f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p>'
          f'<h2 class="h2s">How to contact {e(SITE)}</h2><p>' + (f"Write to us: {contact}." if contact else "Contact details will be published on this page shortly.")
          + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>.</p>', head=org_ld)
@@ -1350,7 +1502,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 
 ## Tools
 - [Jobs matched to your skills]({FULL}/for-you/)
-- [Résumé builder]({FULL}/resume/)
+- [Resume builder]({FULL}/resume/)
 - [Job widget and live badges for other sites]({FULL}/widgets/)
 
 ## About

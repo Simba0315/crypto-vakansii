@@ -1,4 +1,4 @@
-/* Résumé builder: everything stays in this browser (localStorage). "Download PDF" uses the browser's print dialog. */
+/* Resume builder: everything stays in this browser (localStorage). "Download PDF" uses the browser's print dialog. */
 (function () {
   var root = document.getElementById('rb'); if (!root) return;
   var H = window.HRN, esc = H.esc, $ = function (id) { return document.getElementById(id); };
@@ -45,7 +45,7 @@
       ? '<h2 class="pv-name">' + esc(data.name || 'Your name') + '</h2>' + (data.title ? '<p class="pv-title">' + esc(data.title) + '</p>' : '') +
         (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + (data.summary ? '<h3>Summary</h3><p>' + esc(data.summary) + '</p>' : '') +
         (exp ? '<h3>Experience</h3>' + exp : '') + (edu ? '<h3>Education</h3>' + edu : '') + (skills.length ? '<h3>Skills</h3><p>' + skills.map(esc).join(' · ') + '</p>' : '')
-      : '<p class="pane-empty">Start typing on the left. Your résumé appears here.</p>';
+      : '<p class="pane-empty">Start typing on the left. Your resume appears here.</p>';
   };
   root.addEventListener('input', function (ev) {
     var t = ev.target, blk = t.closest('.rblock');
@@ -59,7 +59,7 @@
     if (add) { data[add].push(add === 'exp' ? { role: '', org: '', dates: '', text: '' } : { what: '', org: '', dates: '' }); save(); drawForm(); drawPreview(); }
     else if (del) { data[del].splice(Number(t.closest('.rblock').getAttribute('data-i')), 1); if (!data[del].length) data[del] = JSON.parse(JSON.stringify(blank[del])); save(); drawForm(); drawPreview(); }
     else if (t.id === 'rb-print') window.print();
-    else if (t.id === 'rb-clear') { if (confirm('Erase this résumé from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
+    else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
     else if (t.id === 'rb-match') {
       var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');
       t.textContent = 'Matching…';

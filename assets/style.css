@@ -469,3 +469,15 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 /* one-paragraph summary at the top of a job */
 .tldr{margin:0 0 22px;padding:14px 16px;border-left:4px solid var(--hl);background:var(--card);border-radius:0 var(--radius) var(--radius) 0;color:var(--muted);font-size:15.5px}
 .tldr strong{color:var(--text)}
+
+/* media kit */
+.brandrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.brandtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:150px;padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:#f6f5f0;color:#55534c}
+.brandtile.dark{background:#0e0e0c;color:#b9b7ad;border-color:#0e0e0c}
+.brandtile img{max-width:100%;height:auto;border-radius:6px}
+.brandtile span{font:500 11.5px var(--mono);letter-spacing:.05em;text-transform:uppercase}
+.brandtile:hover{box-shadow:4px 4px 0 var(--hl)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.swatch{border:1px solid var(--line2);border-radius:var(--radius);padding:44px 14px 12px;display:flex;flex-direction:column;gap:2px}
+.swatch b{font-family:var(--display);font-size:16px}
+.swatch span{font:500 12px var(--mono)}

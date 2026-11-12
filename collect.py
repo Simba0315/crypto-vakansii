@@ -58,6 +58,7 @@ PERKS = [   # (name, page slug, pattern) detected in the posting text
     ("Unlimited PTO", "unlimited-pto", r"unlimited (pto|paid time off|vacation|holiday)|flexible (pto|paid time off)"),
     ("Parental leave", "parental-leave", r"parental leave|maternity leave|paternity leave"),
     ("Learning budget", "learning-budget", r"learning (budget|stipend|allowance)|education (budget|stipend|allowance)|professional development (budget|stipend|allowance)"),
+    ("No degree required", "no-degree", r"no (college |university |formal )?degree (is )?(required|needed|necessary)|degree (is )?not (required|needed|necessary)|(with or )?without a (college |university )?degree|or equivalent (practical |work |professional |relevant |industry )?experience|equivalent (practical|work|professional|industry) experience"),
     ("Home office stipend", "home-office-stipend", r"home office (stipend|budget|allowance|setup)|work[- ]from[- ]home (stipend|budget|allowance)|remote (work )?(stipend|allowance)"),
 ]
 NO_VISA = re.compile(r"(not|unable|cannot|can't|can not|no|won't|will not|don't|do not) (\w+ ){0,5}(sponsor|sponsorship)|without (\w+ ){0,3}sponsorship|sponsorship is(n't| not)", re.I)
