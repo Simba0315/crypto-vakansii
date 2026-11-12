@@ -1,0 +1,458 @@
+[
+ {
+  "name": "1inch",
+  "ats": "lever",
+  "token": "1inch",
+  "count": 5
+ },
+ {
+  "name": "Alchemy",
+  "ats": "ashby",
+  "token": "alchemy",
+  "count": 19
+ },
+ {
+  "name": "Amber Group",
+  "ats": "lever",
+  "token": "ambergroup",
+  "count": 3
+ },
+ {
+  "name": "Anchorage Digital",
+  "ats": "lever",
+  "token": "anchorage",
+  "count": 23
+ },
+ {
+  "name": "Animoca Brands",
+  "ats": "lever",
+  "token": "animocabrands",
+  "count": 12
+ },
+ {
+  "name": "Aptos Labs",
+  "ats": "greenhouse",
+  "token": "aptoslabs",
+  "count": 7
+ },
+ {
+  "name": "Arbitrum Foundation",
+  "ats": "lever",
+  "token": "arbitrumfoundation",
+  "count": 4
+ },
+ {
+  "name": "B2C2",
+  "ats": "greenhouse",
+  "token": "b2c2",
+  "count": 4
+ },
+ {
+  "name": "Binance",
+  "ats": "greenhouse",
+  "token": "binance",
+  "count": 221
+ },
+ {
+  "name": "BitGo",
+  "ats": "greenhouse",
+  "token": "bitgo",
+  "count": 55
+ },
+ {
+  "name": "Bitpanda",
+  "ats": "greenhouse",
+  "token": "bitpanda",
+  "count": 44
+ },
+ {
+  "name": "Bitvavo",
+  "ats": "ashby",
+  "token": "bitvavo",
+  "count": 15
+ },
+ {
+  "name": "Blockchain.com",
+  "ats": "greenhouse",
+  "token": "blockchain",
+  "count": 43
+ },
+ {
+  "name": "Blockdaemon",
+  "ats": "ashby",
+  "token": "blockdaemon",
+  "count": 2
+ },
+ {
+  "name": "Blockstream",
+  "ats": "ashby",
+  "token": "blockstream",
+  "count": 46
+ },
+ {
+  "name": "Bybit",
+  "ats": "greenhouse",
+  "token": "bybit",
+  "count": 151
+ },
+ {
+  "name": "Casa",
+  "ats": "ashby",
+  "token": "casa",
+  "count": 19
+ },
+ {
+  "name": "CertiK",
+  "ats": "lever",
+  "token": "certik",
+  "count": 34
+ },
+ {
+  "name": "Circle",
+  "ats": "ashby",
+  "token": "circle",
+  "count": 5
+ },
+ {
+  "name": "Coinbase",
+  "ats": "greenhouse",
+  "token": "coinbase",
+  "count": 278
+ },
+ {
+  "name": "Compound",
+  "ats": "ashby",
+  "token": "compound",
+  "count": 5
+ },
+ {
+  "name": "Consensys",
+  "ats": "greenhouse",
+  "token": "consensys",
+  "count": 11
+ },
+ {
+  "name": "Copper",
+  "ats": "greenhouse",
+  "token": "copperco",
+  "count": 1
+ },
+ {
+  "name": "Crypto.com",
+  "ats": "lever",
+  "token": "crypto",
+  "count": 84
+ },
+ {
+  "name": "Cumberland / DRW",
+  "ats": "greenhouse",
+  "token": "drweng",
+  "count": 159
+ },
+ {
+  "name": "Dune",
+  "ats": "ashby",
+  "token": "dune",
+  "count": 4
+ },
+ {
+  "name": "Eigen Labs",
+  "ats": "ashby",
+  "token": "eigen-labs",
+  "count": 1
+ },
+ {
+  "name": "Elliptic",
+  "ats": "ashby",
+  "token": "elliptic",
+  "count": 24
+ },
+ {
+  "name": "Fireblocks",
+  "ats": "greenhouse",
+  "token": "fireblocks",
+  "count": 22
+ },
+ {
+  "name": "Flow Traders",
+  "ats": "greenhouse",
+  "token": "flowtraders",
+  "count": 43
+ },
+ {
+  "name": "GSR",
+  "ats": "greenhouse",
+  "token": "gsrmarkets",
+  "count": 5
+ },
+ {
+  "name": "Galaxy",
+  "ats": "greenhouse",
+  "token": "galaxydigitalservices",
+  "count": 57
+ },
+ {
+  "name": "Gate",
+  "ats": "lever",
+  "token": "gate",
+  "count": 24
+ },
+ {
+  "name": "Gemini",
+  "ats": "greenhouse",
+  "token": "gemini",
+  "count": 29
+ },
+ {
+  "name": "Grayscale",
+  "ats": "greenhouse",
+  "token": "grayscaleinvestments",
+  "count": 6
+ },
+ {
+  "name": "Helius",
+  "ats": "ashby",
+  "token": "helius",
+  "count": 9
+ },
+ {
+  "name": "Immutable",
+  "ats": "lever",
+  "token": "immutable",
+  "count": 3
+ },
+ {
+  "name": "Injective",
+  "ats": "ashby",
+  "token": "injective",
+  "count": 8
+ },
+ {
+  "name": "Jito",
+  "ats": "ashby",
+  "token": "jito-labs",
+  "count": 4
+ },
+ {
+  "name": "Jump Crypto",
+  "ats": "greenhouse",
+  "token": "jumptrading",
+  "count": 91
+ },
+ {
+  "name": "Keyrock",
+  "ats": "ashby",
+  "token": "keyrock",
+  "count": 9
+ },
+ {
+  "name": "Kraken",
+  "ats": "ashby",
+  "token": "kraken.com",
+  "count": 93
+ },
+ {
+  "name": "LayerZero",
+  "ats": "greenhouse",
+  "token": "layerzerolabs",
+  "count": 3
+ },
+ {
+  "name": "Ledger",
+  "ats": "ashby",
+  "token": "ledger",
+  "count": 13
+ },
+ {
+  "name": "Lightning Labs",
+  "ats": "ashby",
+  "token": "lightning",
+  "count": 14
+ },
+ {
+  "name": "Luno",
+  "ats": "greenhouse",
+  "token": "luno",
+  "count": 4
+ },
+ {
+  "name": "Magic Eden",
+  "ats": "ashby",
+  "token": "magiceden",
+  "count": 4
+ },
+ {
+  "name": "Monad",
+  "ats": "ashby",
+  "token": "monad.foundation",
+  "count": 6
+ },
+ {
+  "name": "MoonPay",
+  "ats": "lever",
+  "token": "moonpay",
+  "count": 20
+ },
+ {
+  "name": "Morpho",
+  "ats": "ashby",
+  "token": "morpho",
+  "count": 12
+ },
+ {
+  "name": "Nethermind",
+  "ats": "ashby",
+  "token": "nethermind",
+  "count": 2
+ },
+ {
+  "name": "Notabene",
+  "ats": "ashby",
+  "token": "notabene",
+  "count": 7
+ },
+ {
+  "name": "OKX",
+  "ats": "greenhouse",
+  "token": "okx",
+  "count": 385
+ },
+ {
+  "name": "Offchain Labs",
+  "ats": "lever",
+  "token": "offchainlabs",
+  "count": 14
+ },
+ {
+  "name": "OpenZeppelin",
+  "ats": "greenhouse",
+  "token": "openzeppelin",
+  "count": 6
+ },
+ {
+  "name": "Optimism",
+  "ats": "ashby",
+  "token": "oplabs",
+  "count": 5
+ },
+ {
+  "name": "Paradigm",
+  "ats": "ashby",
+  "token": "paradigm",
+  "count": 7
+ },
+ {
+  "name": "Paxos",
+  "ats": "ashby",
+  "token": "paxos",
+  "count": 24
+ },
+ {
+  "name": "Phantom",
+  "ats": "ashby",
+  "token": "phantom",
+  "count": 16
+ },
+ {
+  "name": "Polygon Labs",
+  "ats": "ashby",
+  "token": "polygon-labs",
+  "count": 4
+ },
+ {
+  "name": "QuickNode",
+  "ats": "ashby",
+  "token": "quicknode",
+  "count": 2
+ },
+ {
+  "name": "Ramp",
+  "ats": "ashby",
+  "token": "ramp",
+  "count": 176
+ },
+ {
+  "name": "Ripple",
+  "ats": "greenhouse",
+  "token": "ripple",
+  "count": 119
+ },
+ {
+  "name": "River",
+  "ats": "ashby",
+  "token": "river",
+  "count": 3
+ },
+ {
+  "name": "Robinhood Crypto",
+  "ats": "greenhouse",
+  "token": "robinhood",
+  "count": 156
+ },
+ {
+  "name": "Safe",
+  "ats": "ashby",
+  "token": "safe",
+  "count": 23
+ },
+ {
+  "name": "Sei",
+  "ats": "greenhouse",
+  "token": "sei",
+  "count": 1
+ },
+ {
+  "name": "Strike",
+  "ats": "greenhouse",
+  "token": "strike",
+  "count": 6
+ },
+ {
+  "name": "Sui / Mysten Labs",
+  "ats": "ashby",
+  "token": "mystenlabs",
+  "count": 10
+ },
+ {
+  "name": "Swan",
+  "ats": "ashby",
+  "token": "swan",
+  "count": 7
+ },
+ {
+  "name": "Tenderly",
+  "ats": "ashby",
+  "token": "tenderly",
+  "count": 2
+ },
+ {
+  "name": "Trezor / SatoshiLabs",
+  "ats": "ashby",
+  "token": "satoshilabs",
+  "count": 3
+ },
+ {
+  "name": "Uniswap Labs",
+  "ats": "ashby",
+  "token": "uniswap",
+  "count": 9
+ },
+ {
+  "name": "Wintermute",
+  "ats": "lever",
+  "token": "wintermute-trading",
+  "count": 18
+ },
+ {
+  "name": "Zerion",
+  "ats": "lever",
+  "token": "zerion",
+  "count": 1
+ },
+ {
+  "name": "zkSync / Matter Labs",
+  "ats": "ashby",
+  "token": "matter-labs",
+  "count": 2
+ }
+]

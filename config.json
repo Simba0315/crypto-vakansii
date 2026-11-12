@@ -1,0 +1,46 @@
+{
+  "site_name": "КриптоВакансии",
+  "base_url": "https://simba0315.github.io",
+  "base_path": "/crypto-vakansii",
+  "contact_telegram": "",
+  "contact_email": "",
+  "prices": [
+    {
+      "name": "Обычное размещение",
+      "price": "Бесплатно",
+      "what": "Вакансия в общем списке на 30 дней, затем в архиве."
+    },
+    {
+      "name": "Выделение",
+      "price": "30 USDT",
+      "what": "Цветная метка и место над обычными вакансиями в своей категории на 14 дней."
+    },
+    {
+      "name": "Закреп",
+      "price": "80 USDT",
+      "what": "Первое место на главной и в категории на 7 дней, пост в Telegram-канале."
+    },
+    {
+      "name": "Пакет: 5 вакансий",
+      "price": "250 USDT",
+      "what": "Пять выделенных вакансий в течение 3 месяцев."
+    }
+  ],
+  "wallets": [
+    {
+      "coin": "USDT",
+      "network": "Tron (TRC-20)",
+      "address": ""
+    },
+    {
+      "coin": "BTC",
+      "network": "Bitcoin",
+      "address": ""
+    },
+    {
+      "coin": "ETH / USDT",
+      "network": "Ethereum (ERC-20)",
+      "address": ""
+    }
+  ]
+}
