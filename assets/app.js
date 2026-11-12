@@ -17,6 +17,10 @@
   var paintChips = function () { chips.forEach(function (c) { c.setAttribute('aria-pressed', skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); };
   paintChips();
 
+  var ftoggle = $('ftoggle'), fwrap = $('fwrap');
+  if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
+    var open = fwrap.classList.toggle('open'); ftoggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
   var jobs = [];
   try { jobs = await (await fetch(P + '/data/index.json')).json(); }
   catch (e) { count.textContent = 'Could not load the list. Please reload the page.'; return; }
@@ -29,7 +33,8 @@
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
     var letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/"><span class="ava" style="--h:' + j[12] + '" aria-hidden="true">' + esc(letter) + '</span>' +
-      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') + '</span></span>' +
+      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') +
+      (extra.get(j[0]) ? ' · +' + extra.get(j[0]) + ' more location' + (extra.get(j[0]) > 1 ? 's' : '') : '') + '</span></span>' +
       '<span class="jr"><span class="pills">' + pills + '</span><time>' + esc(j[9]) + '</time></span></a></li>';
   };
   var query = function () {
@@ -60,15 +65,30 @@
     if (skills.length) parts.push(skills.join(' + '));
     return parts.join(' · ') || 'All jobs';
   };
+  var extra = new Map();            // slug -> number of extra postings of the same role
+  var collapse = function (rows) {
+    var first = new Map(), out = [];
+    extra = new Map();
+    rows.forEach(function (j) {
+      var k = j[2] + '|' + j[1];
+      if (first.has(k)) extra.set(first.get(k), (extra.get(first.get(k)) || 0) + 1);
+      else { first.set(k, j[0]); out.push(j); }
+    });
+    return out;
+  };
+  var total = 0;
   var render = function () {
     list.innerHTML = found.slice(0, shown).map(card).join('');
-    count.textContent = found.length ? found.length.toLocaleString('en-US') + (found.length === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
+    count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
     more.hidden = found.length <= shown;
   };
   var run = function () {
     var qs = query(), f = H.parse(qs);
     found = jobs.filter(function (j) { return H.match(j, f); });
     if (f.sort === 'sal') found = found.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
+    total = found.length; found = collapse(found);
+    var active = [cat, lvl, loc, sal].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto].filter(function (el) { return el.checked; }).length + skills.length;
+    if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     shown = 50; render();
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;

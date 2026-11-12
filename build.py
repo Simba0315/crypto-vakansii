@@ -3,6 +3,7 @@
 Closed jobs keep their pages forever (archive); only the JobPosting markup and the apply button are removed.
 """
 import datetime, hashlib, html, json, re, shutil
+from urllib.parse import quote
 from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
@@ -74,6 +75,7 @@ def median(xs):
 FOOT = {"cats": ""}
 SIM = {"cat": {}, "comp": {}}
 OPEN = Counter()   # open roles per company
+FACT = {}          # one-paragraph hiring summary per company
 MARK = ('<rect width="32" height="32" rx="9" fill="url(#lg)"/><rect x="8" y="9" width="16" height="3" rx="1.5" fill="#fff"/>'
         '<rect x="8" y="14.5" width="11" height="3" rx="1.5" fill="#fff" opacity=".85"/><rect x="8" y="20" width="7" height="3" rx="1.5" fill="#fff" opacity=".7"/>')
 GRAD = '<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs>'
@@ -138,13 +140,13 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Every open role at tech companies, pulled from their official careers pages and refreshed daily.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/hiring-badge/">Hiring badge &amp; widget</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li></ul></div>
 </div><p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
-def card(j):
+def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
@@ -153,7 +155,7 @@ def card(j):
     if j["level"]: b.append(f'<span class="pill">{e(j["level"])}</span>')
     b += [f'<span class="pill">{e(t)}</span>' for t in j["tags"][:3]]
     loc = j["location"] if len(j["location"]) <= 60 else j["location"][:57].rstrip(" ,;") + "…"
-    sub = e(j["company"]) + (f" · {e(loc)}" if loc else "")
+    sub = e(j["company"]) + (f" · {e(loc)}" if loc else "") + (f" · +{extra} more location{'s' if extra > 1 else ''}" if extra else "")
     return (f'<li class="job{" feat" if j["featured"] else ""}"><a href="{P}/job/{j["slug"]}/">{ava(j["company"])}'
             f'<span><span class="jt">{e(j["title"])}</span><span class="js">{sub}</span></span>'
             f'<span class="jr"><span class="pills">{"".join(b)}</span><time datetime="{j["posted"]}">{fdate(j["posted"], False)}</time></span></a></li>')
@@ -191,6 +193,30 @@ def diverse_pairs(pairs, k, per=2):
     return out
 
 
+def collapse(jobs):
+    """The same role posted once per city becomes one row: [(job, number of extra postings)]."""
+    first, out = {}, []
+    for j in jobs:
+        k = (j["company"], j["title"])
+        if k in first: out[first[k]][1] += 1
+        else:
+            first[k] = len(out); out.append([j, 0])
+    return out
+
+
+def crumbs_ld(parts):
+    items = [{"@type": "ListItem", "position": 1, "name": "Home", "item": FULL + "/"}]
+    items += [{"@type": "ListItem", "position": i + 2, "name": n, **({"item": f"{FULL}/{u}"} if u else {})} for i, (n, u) in enumerate(parts)]
+    return ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": items},
+                                                                 ensure_ascii=False).replace("</", "<\\/") + "</script>")
+
+
+def rel(links):
+    """Row of related listing links: [(path, label, count)], biggest first."""
+    links = sorted(links, key=lambda x: -x[2])[:14]
+    return ('<div class="rel"><span>Related:</span>' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t, _ in links) + "</div>") if links else ""
+
+
 def crumbs(*parts):
     items = [f'<a href="{P}/">Home</a>'] + [f'<a href="{P}/{u}">{e(n)}</a>' if u else e(n) for n, u in parts]
     return f'<div class="crumbs">{" / ".join(items)}</div>'
@@ -219,17 +245,23 @@ def pager_html(path, n, pages):
     return f'<div class="pager">{"".join(out)}</div>'
 
 
-def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after=""):
+def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None):
     jobs = order(jobs)
-    pages = max(1, -(-len(jobs) // per))
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
+    rows = collapse(jobs)
+    total = len(rows)
+    if max_pages: rows = rows[:per * max_pages]
+    pages = max(1, -(-len(rows) // per))
+    note = (f'<p class="note">Showing the newest {len(rows):,}. <a href="{P}/jobs/?{more}">See all {len(jobs):,} in search →</a></p>'
+            if more and total > len(rows) else "")
+    ld = crumbs_ld(list(trail) + [(h1, "")]) if head_html is None else ""
     for n in range(1, pages + 1):
-        chunk = jobs[(n - 1) * per:n * per]
+        chunk = rows[(n - 1) * per:n * per]
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else ""))
         body = (top + (extra if n == 1 else "")
-                + (f'<ul class="jobs">{"".join(card(j) for j in chunk)}</ul>' if chunk else '<p class="lead">Nothing here right now. Check back soon: the list is updated every day.</p>')
-                + pager_html(path, n, pages) + (after if n == 1 else ""))
-        page(path if n == 1 else f"{path}{n}/", title if n == 1 else f"{title} — page {n}", desc, body)
+                + (f'<ul class="jobs">{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here right now. Check back soon: the list is updated every day.</p>')
+                + pager_html(path, n, pages) + note + (after if n == 1 else ""))
+        page(path if n == 1 else f"{path}{n}/", title if n == 1 else f"{title} — page {n}", desc, body, head=ld)
 
 
 def intro_for(jobs, pre="", post=""):
@@ -279,6 +311,8 @@ def job_page(j, active_by_cat):
     sim = section("Similar jobs", f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>', (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs")) if similar else ""
     about = (f'<h2>About the role</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">Excerpt from the original posting.</p>'
              if j["excerpt"] else "")
+    if FACT.get(j["company"]):
+        about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all roles →</a></p></div>'
     data = f'data-slug="{j["slug"]}" data-title="{e(j["title"])}" data-company="{e(j["company"])}"'
     more_roles = OPEN[j["company"]] - (1 if j["active"] else 0)
     glance = (f'<p class="note"><a href="{comp_url}">{roles(more_roles, "more open role")} at {e(j["company"])} →</a></p>' if more_roles > 0 else "")
@@ -366,7 +400,9 @@ def main():
             + section("Jobs by location", f'<ul class="tiles">{place_html}</ul>', ("locations/", "All locations")) + band
             + section("More recent jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:40])}</ul>', ("jobs/", f"Browse all {n:,}")))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
-         f"{roles(n)} at tech companies: engineering, marketing, compliance, support and more. Remote filters, salary data, updated daily.", home, hero=hero)
+         f"{roles(n)} at tech companies: engineering, marketing, compliance, support and more. Remote filters, salary data, updated daily.", home, hero=hero,
+         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
+               "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>")
     rss("feed.xml", f"{SITE} — latest tech jobs", "", active)
 
     # Search page
@@ -376,7 +412,7 @@ def main():
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     search = (crumbs(("All jobs", "")) + "<h1>Search tech jobs</h1>"
               f'<div id="search"><form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
-              f'<div class="fbar"><select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
+              f'<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button><div id="fwrap"><div class="fbar"><select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
               '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>'
               f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
               '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
@@ -384,12 +420,48 @@ def main():
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="sal">Highest salary</option></select></div>'
               '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-entry"> Entry-level</label>'
               '<label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>'
-              f'<div class="skillbar" id="skills">{skill_chips}</div>'
+              f'<div class="skillbar" id="skills">{skill_chips}</div></div>'
               '<div class="rbar"><p class="note" id="count">Loading…</p><button class="btn ghost sm" id="save-search" type="button">Save this search</button></div>'
               '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'
               f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"Search {roles(n, 'Tech Job')} | {SITE}",
          "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search)
+
+    # Long-tail landing pages: skill x remote, skill x place, category x place, place x remote, category x level
+    by_tag = defaultdict(list)
+    for j in active:
+        for t in j["tags"]: by_tag[t].append(j)
+    tslug = lambda t: TAG_SLUG.get(t, slugify(t))
+    LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead & principal")]
+    combos, REL = [], defaultdict(list)
+    def add(path, h1, js, trail, qs, pre, post, keys):
+        if len(js) < 8: return
+        combos.append((path, h1, js, trail, qs, pre, post))
+        for k, label in keys: REL[k].append((path, label, len(js)))
+    for t, js in by_tag.items():
+        add(f"remote/skills/{tslug(t)}/", f"Remote {t} jobs", [j for j in js if j["remote"]], (("Remote", "remote/"),),
+            f"remote=1&skills={quote(t)}", "remote ", f" mentioning {e(t)}", [("tag:" + t, f"Remote {t} jobs"), ("remote", f"Remote {t}")])
+        for name, slug, _ in places:
+            short = name.removeprefix("the ")
+            add(f"locations/{slug}/skills/{tslug(t)}/", f"{t} jobs in {name}", [j for j in js if slug in j["places"]],
+                (("Locations", "locations/"), (short, f"locations/{slug}/")), f"loc={slug}&skills={quote(t)}", "", f" mentioning {e(t)} in {e(name)}",
+                [("tag:" + t, f"{t} in {short}"), ("place:" + slug, f"{t} jobs")])
+    for name, slug, pj in places:
+        short = name.removeprefix("the ")
+        add(f"locations/{slug}/remote/", f"Remote tech jobs in {name}", [j for j in pj if j["remote"]], (("Locations", "locations/"), (short, f"locations/{slug}/")),
+            f"loc={slug}&remote=1", "remote ", f" in {e(name)}", [("place:" + slug, "Remote"), ("remote", f"Remote in {short}")])
+        for cs, cname in CAT.items():
+            if cs == OTHER[0]: continue
+            add(f"locations/{slug}/{cs}/", f"{cname} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
+                f"loc={slug}&cat={cs}", f"{e(cname)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
+    for cs, cname in CAT.items():
+        if cs == OTHER[0]: continue
+        for lv, ls, ll in LEVELS:
+            add(f"jobs/{cs}/{ls}/", f"{ll} {cname} jobs", [j for j in by_cat[cs] if j["level"] == lv], (("All jobs", "jobs/"), (cname, f"jobs/{cs}/")),
+                f"cat={cs}&lvl={lv}", f"{e(ll)} {e(cname)} ", "", [("cat:" + cs, ll)])
+    for path, h1, js, trail, qs, pre, post in combos:
+        listing(path, h1, f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at tech companies. Updated daily.",
+                js, intro_for(js, pre, post), trail=trail, per=50, max_pages=3, more=qs)
 
     # Listings
     for s, name in CAT.items():
@@ -397,7 +469,7 @@ def main():
         if not js: continue
         listing(f"jobs/{s}/", f"{name} jobs in tech", f"{name} Jobs in Tech ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), name + ' job')} at tech companies. Remote and on-site roles, updated daily.",
-                js, intro_for(js, f"{e(name)} "), trail=(("All jobs", "jobs/"),), feed=True)
+                js, intro_for(js, f"{e(name)} "), trail=(("All jobs", "jobs/"),), feed=True, extra=rel(REL["cat:" + s]))
         rj = [j for j in js if j["remote"]]
         if len(rj) >= 5:
             listing(f"remote/{s}/", f"Remote {name} jobs in tech", f"Remote {name} Jobs in Tech ({len(rj):,} open) | {SITE}",
@@ -406,7 +478,7 @@ def main():
     rcats = "".join(tile(f"remote/{s}/", CAT[s], c) for s in CAT if (c := sum(j["remote"] for j in by_cat[s])) >= 5)
     listing("remote/", "Remote tech jobs", f"Remote Tech Jobs — {roles(len(remote), 'open role')} | {SITE}",
             f"{roles(len(remote), 'remote job')} at tech companies: engineering, marketing, support, compliance and more.",
-            remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul><div class="sec"><div class="sec-head"><h2>All remote jobs</h2></div></div>', feed=True)
+            remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}<div class="sec"><div class="sec-head"><h2>All remote jobs</h2></div></div>', feed=True)
     crypto = [j for j in active if j.get("crypto")]
     if crypto:
         ccats = "".join(tile(f"crypto/{s}/", CAT[s], c) for s in CAT if (c := sum(1 for j in crypto if j["cat"] == s)) >= 5)
@@ -432,17 +504,15 @@ def main():
     listing("entry-level/", "Entry-level tech jobs & internships", f"Entry-Level Tech Jobs & Internships ({len(jr):,}) | {SITE}",
             "Internships and junior roles at tech companies: a way into the industry without years of experience.", jr,
             intro_for(jr, "entry-level "))
-    by_tag = defaultdict(list)
-    for j in active:
-        for t in j["tags"]: by_tag[t].append(j)
     for t, js in by_tag.items():
-        listing(f"skills/{TAG_SLUG.get(t, slugify(t))}/", f"{t} jobs in tech", f"{t} Jobs in Tech ({len(js):,} open) | {SITE}",
-                f"{roles(len(js))} at tech companies that ask for {t}.", js, intro_for(js, "", f" mentioning {e(t)}"))
+        listing(f"skills/{tslug(t)}/", f"{t} jobs in tech", f"{t} Jobs in Tech ({len(js):,} open) | {SITE}",
+                f"{roles(len(js))} at tech companies that ask for {t}.", js, intro_for(js, "", f" mentioning {e(t)}"),
+                trail=(("All jobs", "jobs/"),), feed=True, extra=rel(REL["tag:" + t]))
     for name, slug, js in places:
         short = name.removeprefix("the ")
         listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'tech job')} in {name}. Startups and established tech companies hiring now.",
-                js, intro_for(js, "", f" in {e(name)}"), trail=(("Locations", "locations/"),))
+                js, intro_for(js, "", f" in {e(name)}"), trail=(("Locations", "locations/"),), extra=rel(REL["place:" + slug]))
     page("locations/", f"Tech Jobs by Location | {SITE}", "Browse tech jobs by city, country and region.",
          crumbs(("Locations", "")) + f'<h1>Tech jobs by location</h1><p class="lead">Open roles per place. A job that lists several locations appears in each of them.</p><ul class="tiles">{place_html}</ul>')
 
@@ -474,6 +544,17 @@ def main():
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Jobs — {roles(len(act), 'open role')} | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + ". Categories, locations and remote roles.",
                 act, head_html=head_html, after=closed + embed)
+
+    # One-paragraph hiring summary per company, shown on each of its job pages
+    for c, js in companies.items():
+        act = [j for j in js if j["active"]]
+        if not act: continue
+        tops = [name for name, _ in Counter(CAT[j["cat"]] for j in act if j["cat"] != OTHER[0]).most_common(3)]
+        mids = [(lo + hi) / 2 for j in act if j["usd"] for lo, hi in [j["usd"]]]
+        rem = sum(j["remote"] for j in act)
+        FACT[c] = (f"{e(c)} has {roles(len(act), 'open role')} right now" + (f", {rem:,} of them remote" if rem else "") + "."
+                   + (f" Most are in {e(', '.join(tops[:-1]) + ' and ' + tops[-1] if len(tops) > 1 else tops[0])}." if tops else "")
+                   + (f" The median advertised salary across its roles with a published range is {money(median(mids))}." if len(mids) >= 3 else ""))
 
     # Job pages + archive
     for j in jobs: job_page(j, by_cat)
@@ -531,6 +612,33 @@ def main():
     for name, group in g_cat.items():
         if len(group) >= 30 and name != OTHER[1]:
             salary_page(cat_slug[name], name, group, (f"jobs/{cat_slug[name]}/", f"All {name} jobs"))
+
+    # Hiring trends: one page of live numbers
+    week = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    new7 = [j for j in active if (j["posted"] or "") >= week]
+    pctf = lambda a, b: f"{100 * a / b:.0f}%" if b else "—"
+    def trow(cells): return "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
+    def ttable(head, rows_): return ('<div class="tablewrap"><table><tr>' + "".join(f"<th>{h}</th>" for h in head) + "</tr>" + "".join(rows_) + "</table></div>")
+    med = lambda js: (money(median([(lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]]])) if sum(1 for j in js if j["usd"]) >= 15 else "—")
+    skills_rows = [trow([f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>', f"{len(js):,}", pctf(len(js), n), pctf(sum(j["remote"] for j in js), len(js)), med(js)])
+                   for t, js in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:25]]
+    comp_rows = [trow([f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a>', f"{sum(j['active'] for j in js):,}",
+                       pctf(sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js)), f"{sum(1 for j in js if j['active'] and (j['posted'] or '') >= week):,}"])
+                 for c, js in comp_items[:25]]
+    cat_rows = [trow([f'<a href="{P}/jobs/{cs}/">{e(CAT[cs])}</a>', f"{len(by_cat[cs]):,}", pctf(len(by_cat[cs]), n), pctf(sum(j["remote"] for j in by_cat[cs]), len(by_cat[cs])), med(by_cat[cs])])
+                for cs in sorted(CAT, key=lambda k: -len(by_cat[k])) if by_cat[cs]]
+    place_rows = [trow([f'<a href="{P}/locations/{slug}/">{e(name.removeprefix("the "))}</a>', f"{len(js):,}", pctf(len(js), n)]) for name, slug, js in sorted(places, key=lambda x: -len(x[2]))]
+    page("trends/", f"Tech Hiring Trends — live data from {n:,} open roles | {SITE}",
+         "Which skills, companies, roles and cities are hiring in tech right now. Live numbers from open job postings, updated daily.",
+         crumbs(("Hiring trends", "")) + "<h1>Tech hiring trends</h1>"
+         f'<p class="lead">Live numbers from {n:,} open roles at {m} tech companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
+         f'<div class="statrow"><div class="stat"><b>{n:,}</b><span>open roles</span></div><div class="stat"><b>{len(new7):,}</b><span>posted in the last 7 days</span></div>'
+         f'<div class="stat"><b>{pctf(len(remote), n)}</b><span>are remote</span></div><div class="stat"><b>{pctf(sum(bool(j["salary"]) for j in active), n)}</b><span>publish a salary</span></div></div>'
+         + section("Most in-demand skills", ttable(["Skill", "Open roles", "Share of all roles", "Remote", "Median salary"], skills_rows))
+         + section("Companies hiring the most", ttable(["Company", "Open roles", "Remote", "Posted this week"], comp_rows), ("companies/", "All companies"))
+         + section("Roles by category", ttable(["Category", "Open roles", "Share", "Remote", "Median salary"], cat_rows))
+         + section("Roles by location", ttable(["Location", "Open roles", "Share"], place_rows), ("locations/", "All locations"))
+         + '<p class="note">Salary figures are medians of advertised US-dollar ranges and are shown only where at least 15 roles publish one. A role that lists several locations is counted in each.</p>')
 
     # My jobs: tracker kept in the visitor's browser, no account needed
     page("my-jobs/", f"My jobs — saved jobs and application tracker | {SITE}", "Track the jobs you saved and applied to, add notes, and keep your saved searches.",
@@ -626,8 +734,14 @@ def main():
           '<text x="52" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
           f'<text x="52" y="37" fill="#aab1c5" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")
-    sm = "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{TODAY}</lastmod></url>" for u in URLS)
-    write("sitemap.xml", f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{sm}</urlset>', sitemap=False)
+    urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                           + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{TODAY}</lastmod></url>" for u in urls) + "</urlset>")
+    job_urls = [u for u in URLS if u.startswith("job/")]
+    parts = [("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/")])]
+    parts += [(f"sitemaps/jobs-{i // 20000 + 1}.xml", job_urls[i:i + 20000]) for i in range(0, len(job_urls), 20000)]
+    for name, urls in parts: write(name, urlset(urls), sitemap=False)
+    write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+          + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{TODAY}</lastmod></sitemap>" for name, _ in parts) + "</sitemapindex>", sitemap=False)
     write("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     print(f"built {len(URLS)} pages: {n} active jobs, {len(archived)} archived, {len(companies)} companies, {len(places)} locations")
 
