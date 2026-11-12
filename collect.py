@@ -167,6 +167,15 @@ def pay_from_greenhouse(ranges):
     return pay_k("$", lo, hi) if cur == "USD" else f"{cur} {lo / 1000:,.0f}K - {hi / 1000:,.0f}K"
 
 
+YEARS_RX = re.compile(r"(\d{1,2})\s?\+?\s?(?:(?:-|–|to)\s?\d{1,2}\s?\+?\s?)?years?[’']?\s+(?:of\s+)?(?:[\w/&-]+\s+){0,4}?experience", re.I)
+
+
+def years_asked(text):
+    """The lowest number of years of experience the posting asks for ("5+ years of experience"), or 0 when it names none."""
+    vals = [int(m.group(1)) for m in YEARS_RX.finditer(text or "") if 0 < int(m.group(1)) <= 20]
+    return min(vals) if vals else 0
+
+
 def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint=""):
     title = re.sub(r"\s+", " ", title or "").strip()
     location = re.sub(r"\s+", " ", location or "").strip()
@@ -181,7 +190,7 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
         "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I)][:8],
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
         "salary": salary or pay_from_text(text, location),
-        "perks": perks(text), "etype": etype(title, hint),
+        "perks": perks(text), "etype": etype(title, hint), "years": years_asked(text),
         "anywhere": bool(re.search(r"worldwide|world-wide|anywhere|global|any location", location, re.I)),
         "_crypto": bool(CRYPTO_RE.search(blob)),
     }

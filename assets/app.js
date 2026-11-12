@@ -6,6 +6,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), age = $('age'), sort = $('sort');
   var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
+  var fReal = $('f-real'), xwords = $('xwords'), xcos = $('xcos');
   var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
   var ftoggle = $('ftoggle'), fwrap = $('fwrap'), keepShown = false;
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
@@ -15,6 +16,8 @@
   var f0 = H.parse(location.search.slice(1));
   q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; sal.value = f0.sal ? String(f0.sal) : ''; age.value = f0.age ? String(f0.age) : ''; sort.value = f0.sort;
   fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto; fAny.checked = f0.any; perk.value = f0.perk; etype.value = f0.etype;
+  if (fReal) fReal.checked = f0.real;
+  if (xwords) xwords.value = H.mute.w.join(', ');
   var sortTouched = new URLSearchParams(location.search).has('sort');
   var skills = f0.skills.slice();
   var chips = Array.prototype.slice.call(skillbar.querySelectorAll('.chipbtn'));
@@ -36,6 +39,7 @@
     if (fEntry.checked) p.set('entry', '1');
     if (fCrypto.checked) p.set('crypto', '1');
     if (fAny.checked) p.set('any', '1');
+    if (fReal && fReal.checked) p.set('real', '1');
     if (perk.value) p.set('perk', perk.value);
     if (etype.value) p.set('etype', etype.value);
     if (skills.length) p.set('skills', skills.join(','));
@@ -48,6 +52,7 @@
     if (q.value.trim()) parts.push('“' + q.value.trim() + '”');
     [cat, lvl, loc, age, sal, perk, etype].forEach(function (el) { if (el.value) parts.push(text(el)); });
     if (fAny.checked) parts.push('Work from anywhere');
+    if (fReal && fReal.checked) parts.push('Fresh openings only');
     if (fRemote.checked) parts.push('Remote');
     if (fEntry.checked) parts.push('Entry-level');
     if (fCrypto.checked) parts.push('Crypto');
@@ -69,7 +74,7 @@
       rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
     }
     total = full ? rows.length : Math.max(allTotal, rows.length); extra = new Map(); found = H.collapse(rows, extra);
-    var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto, fAny].filter(function (el) { return el.checked; }).length + skills.length;
+    var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     if (!keepShown) shown = 50;
     render();
@@ -89,7 +94,26 @@
   // typing a query switches to "best match" unless the visitor picked a sort order themselves
   q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
   sort.addEventListener('change', function () { sortTouched = true; });
-  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fEntry, fCrypto, fAny].forEach(function (el) { el.addEventListener('change', run); });
+  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fEntry, fCrypto, fAny, fReal].forEach(function (el) { if (el) el.addEventListener('change', run); });
+  // words and companies the visitor never wants to see: remembered in this browser, applied to every list
+  var drawMuted = function () {
+    if (!xcos) return;
+    var cos = Object.keys(H.mute.c);
+    xcos.innerHTML = cos.length ? '<span class="flabel">Hidden companies</span>' + cos.map(function (c) { return '<button class="xchip" type="button" data-c="' + H.esc(c) + '" aria-label="Show ' + H.esc(c) + ' again">' + H.esc(c) + ' ×</button>'; }).join('') : '';
+  };
+  drawMuted();
+  if (xcos) xcos.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.xchip'); if (!b) return;
+    delete H.mute.c[b.getAttribute('data-c')]; H.saveMute(); drawMuted(); run();
+  });
+  var xtimer;
+  if (xwords) xwords.addEventListener('input', function () {
+    clearTimeout(xtimer);
+    xtimer = setTimeout(function () {
+      H.mute.w = xwords.value.toLowerCase().split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 1; }).slice(0, 20);
+      H.saveMute(); run();
+    }, 250);
+  });
   skillbar.addEventListener('click', function (ev) {
     var c = ev.target.closest('.chipbtn'); if (!c) return;
     var s = c.getAttribute('data-skill'), i = skills.indexOf(s);
@@ -100,7 +124,7 @@
   var clearBtn = $('fclear');
   if (clearBtn) clearBtn.addEventListener('click', function () {
     [cat, lvl, loc, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
-    [fRemote, fEntry, fCrypto, fAny].forEach(function (el) { el.checked = false; });
+    [fRemote, fEntry, fCrypto, fAny, fReal].forEach(function (el) { if (el) el.checked = false; });
     skills = []; paintChips(); run();
   });
 

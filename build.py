@@ -152,6 +152,10 @@ CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from close
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
 SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}     # hiring systems the listings are read from
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
+POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
+                     r"open application|speculative application|evergreen|don.?t see (a|your|the) (role|fit|position|job)|register your interest|join our talent|(^|\W)pipeline( role| req|:| -| –)|"
+                     r"always (hiring|looking)|spontaneous application|unsolicited application|open call", re.I)     # titles that are a standing invitation, not one specific opening
+REGION_WORDS = [("Europe", r"europe|\bemea\b|\beu\b"), ("Asia-Pacific", r"\bapac\b|asia"), ("Latin America", r"latam|latin america"), ("the Americas", r"americas"), ("North America", r"north america")]
 ETYPE_LD = {"Full-time": "FULL_TIME", "Part-time": "PART_TIME", "Contract": "CONTRACTOR", "Internship": "INTERN"}
 MARK = '<rect width="32" height="32" rx="8" fill="#0e0e0c"/><circle cx="16" cy="16" r="6.5" fill="#c8f560"/>'
 GRAD = ""
@@ -259,9 +263,9 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/status/">Data status</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/status/">Data status</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
-<div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -441,12 +445,21 @@ def job_page(j, active_by_cat):
     comp_url = f'{P}/companies/{slugify(j["company"])}/'
     rows = [("Company", f'<a href="{comp_url}">{e(j["company"])}</a>')]
     if j["location"]: rows.append(("Location", e(j["location"])))
-    if j["remote"]: rows.append(("Workplace", "Remote"))
+    if j["remote"]:
+        land_r = country_of(j["location"]) if j["location"] else None
+        scope = ("worldwide" if j.get("anywhere") else land_r[1] if land_r else next((nm for nm, rx in REGION_WORDS if re.search(rx, j["location"], re.I)), ""))
+        rows.append(("Workplace", f"Remote, {e(scope)}" if scope else 'Remote<br><span class="note">The posting does not say from which countries. Check before you apply.</span>'))
+    if j.get("years"):
+        odd = j["entry"] and j["years"] >= 3
+        rows.append(("Experience asked", f"{j['years']}+ years" + ('<br><span class="note">An entry-level title that asks for several years of experience.</span>' if odd else "")))
+    if j["pool"]: rows.append(("Kind of posting", 'Talent pool<br><span class="note">A standing invitation to apply, not one specific opening.</span>'))
     rows.append(("Category", f'<a href="{P}/jobs/{j["cat"]}/">{e(CAT[j["cat"]])}</a>'))
     if j["level"]: rows.append(("Level", e(j["level"])))
     if j.get("etype"): rows.append(("Type", e(j["etype"])))
     if j["salary"]:
         ctx = (f'<br><span class="note">Median for {e(CAT[j["cat"]])} roles: {money(CATMED[j["cat"]])}</span>' if j.get("usd") and j["cat"] in CATMED else "")
+        if j.get("usd") and j["usd"][1] >= 2 * j["usd"][0]:
+            ctx += f'<br><span class="note">A wide range: the top is {j["usd"][1] / j["usd"][0]:.1f} times the bottom. Ask early where this role sits in it.</span>'
         rows.append(("Salary", e(j["salary"]) + ctx))
     elif j["active"] and (EST.get((j["cat"], j["level"])) or CATMED.get(j["cat"])):
         est = EST.get((j["cat"], j["level"])) or CATMED[j["cat"]]
@@ -478,6 +491,7 @@ def job_page(j, active_by_cat):
     if j["remote"]: pills.append('<span class="pill ok">Remote</span>')
     if j["salary"]: pills.append(f'<span class="pill sal">{e(j["salary"])}</span>')
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
+    if j["pool"]: pills.append('<span class="pill warn">Talent pool</span>')
     pills += [(f'<a class="pill perk" href="{P}/perks/{PERK_SLUG[x]}/">{e(x)}</a>' if x in PERK_OK else f'<span class="pill perk">{e(x)}</span>') for x in j.get("perks", []) if x in PERK_SLUG]
     if j["level"]: pills.append(f'<span class="pill">{e(j["level"])}</span>')
     pills += [f'<a class="pill" href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a>' for t in j["tags"]]
@@ -536,7 +550,8 @@ def job_page(j, active_by_cat):
                  '<button class="linkbtn" type="button" data-share="linkedin">LinkedIn</button><button class="linkbtn" type="button" data-share="x">X</button>'
                  '<button class="linkbtn" type="button" data-share="telegram">Telegram</button><button class="linkbtn" type="button" data-share="whatsapp">WhatsApp</button>'
                  '<button class="linkbtn" type="button" data-share="reddit">Reddit</button><button class="linkbtn" type="button" data-share="email">Email</button>'
-                 f'<button class="linkbtn" id="hide" type="button">Not interested</button></p>') if j["active"] else "") + glance
+                 f'<button class="linkbtn" id="hide" type="button">Not interested</button><button class="linkbtn" id="mute" type="button">Hide this company</button></p>'
+                 f'<p class="note"><a href="{P}/safety/">How to check that a job offer is real</a></p>') if j["active"] else "") + glance
     loc = f" · {e(j['location'])}" if j["location"] else ""
     body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
@@ -602,6 +617,7 @@ def main():
         j["featured"] = bool(j["pinned"] or (j["active"] and max(j.get("featured_until", ""), bought.get("featured", "")) >= TODAY))
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
         j["entry"] = j["level"] in ("Junior", "Intern")
+        j["pool"] = bool(POOL_RX.search(j["title"]))
         j["usd"] = usd_range(j["salary"])
         j["places"] = [slug for _, slug, rx in PLACES if re.search(rx, j["location"], re.I)] if j["active"] else []
     active = [j for j in jobs if j["active"]]
@@ -659,7 +675,8 @@ def main():
     for j in order(active):
         if len(by_comp_cat[(j["company"], j["cat"])]) < 4: by_comp_cat[(j["company"], j["cat"])].append(j)
     SIM["comp"] = by_comp_cat
-    latest = diverse(order(active), 40)
+    specific = [j for j in active if not j["pool"]]
+    latest = diverse(order(specific), 40)
 
     # Home
     ROLE_TOP = sorted(((nm, s_, sum(1 for j in active if re.search(rx, j["title"], re.I))) for nm, s_, rx in ROLES), key=lambda x: -x[2])
@@ -671,7 +688,7 @@ def main():
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
     board_rows = "".join(
         f'<a href="{P}/job/{j["slug"]}/"><span class="ba">{age(j["posted"])[0].upper()}</span><span><span class="bt">{e(j["title"])}</span>'
-        f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span></a>' for j in diverse(order(active), 6, 1))
+        f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span></a>' for j in diverse(order(specific), 6, 1))
     hero = (f'<section class="hero"><div class="wrap"><div><p class="kicker">Updated {fdate(TODAY, False)} · straight from company career pages</p>'
             f'<h1>Stop applying to tech jobs that are <span class="grad">already gone</span></h1>'
             f'<p class="sub">Old listings stay online long after the seat is taken, and the real openings are scattered over {m} company career pages. '
@@ -730,7 +747,7 @@ def main():
               f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
-              + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>')
+              + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
               + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
               + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>')
               + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>')
@@ -738,6 +755,9 @@ def main():
                                 '<option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>')
               + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>')
+              + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'
+                                   '<input type="text" id="xwords" class="xin" placeholder="Words in the title, e.g. senior, sales" aria-label="Words to leave out of results" autocomplete="off">'
+                                   '<div id="xcos" class="xcos"></div>')
               + group("Perk", '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + "</select>")
               + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
               + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
@@ -886,7 +906,7 @@ def main():
         short = name.removeprefix("the ")
         listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'tech job')} in {name}. Startups and established tech companies hiring now.",
-                js, intro_for(js, "", f" in {e(name)}"), trail=(("Locations", "locations/"),), extra=rel(REL["place:" + slug]), faq=f"tech jobs in {name}")
+                js, intro_for(js, "", f" in {e(name)}"), trail=(("Locations", "locations/"),), extra=rel(REL["place:" + slug]), faq=f"tech jobs in {name}", feed=True)
     page("locations/", f"Tech Jobs by Location | {SITE}", "Browse tech jobs by city, country and region.",
          crumbs(("Locations", "")) + f'<h1>Tech jobs by location</h1><p class="lead">Open roles per place. A job that lists several locations appears in each of them.</p><ul class="tiles">{place_html}</ul>')
 
@@ -911,7 +931,10 @@ def main():
         sal_mid = [(lo + hi) / 2 for j in act if j["usd"] for lo, hi in [j["usd"]]]
         top_cats = Counter(CAT[j["cat"]] for j in act).most_common(3)
         chips = [f"<span class='chip'><b>{len(act):,}</b> open roles</span>", f"<span class='chip'><b>{sum(j['remote'] for j in act):,}</b> remote</span>"]
-        if len(act) >= 10: chips.append(f"<span class='chip'><b>{100 * sum(bool(j['salary']) for j in act) / len(act):.0f}%</b> show pay</span>")
+        if len(act) >= 10:
+            chips.append(f"<span class='chip'><b>{100 * sum(bool(j['salary']) for j in act) / len(act):.0f}%</b> show pay</span>")
+            old_ = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
+            chips.append(f"<span class='chip'><b>{100 * old_ / len(act):.0f}%</b> open {LONG_OPEN}+ days</span>")
         if len(sal_mid) >= 3: chips.append(f"<span class='chip'><b>{money(median(sal_mid))}</b> median advertised salary</span>")
         chips += [f"<span class='chip'><b>{k}</b> {e(name)}</span>" for name, k in top_cats]
         op_, cl_, mood = PULSE.get(c, (0, 0, "Steady"))
@@ -942,7 +965,7 @@ def main():
                        f'<span class="note">Get a “new roles” count for this company in My jobs.</span></p></div></div>')
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Jobs — {roles(len(act), 'open role')} | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + ". Categories, locations and remote roles.",
-                act, head_html=head_html, after=overview + closed + embed, faq=f"jobs at {c}")
+                act, head_html=head_html, after=overview + closed + embed, faq=f"jobs at {c}", feed=True)
 
     # One-paragraph hiring summary per company, shown on each of its job pages
     for c, js in companies.items():
@@ -1146,14 +1169,19 @@ def main():
 
     # My jobs: tracker kept in the visitor's browser, no account needed
     page("my-jobs/", f"Job Application Tracker — free, no sign-up, no spreadsheet | {SITE}", "A free job application tracker in your browser: save jobs, mark where you applied, add notes, export to CSV. No account and no spreadsheet to maintain.",
-         crumbs(("My jobs", "")) + '<h1>My jobs</h1><p class="lead">Applied to twenty jobs and can’t remember who answered? Keep saved jobs, applications, notes and searches in one place. Kept in this browser only: no account, nothing is uploaded.</p>'
+         crumbs(("My jobs", "")) + '<h1>My jobs: your application tracker</h1><p class="lead">Applied to twenty jobs and can’t remember who answered? Keep saved jobs, applications, notes and searches in one place. Kept in this browser only: no account, nothing is uploaded.</p>'
          '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
+         '<p class="note" id="mj-nudge" hidden></p>'
          '<ul class="jobs" id="mj-list"></ul><div class="empty" id="mj-empty">Nothing here yet. Open any job and press “Save job” or “Mark as applied”.</div><p class="note" id="mj-hidden" hidden></p>'
          '<section class="sec"><div class="sec-head"><h2>Companies you follow</h2></div><ul class="jobs" id="fc-list"></ul>'
          f'<div class="empty" id="fc-empty">You do not follow any company yet. Open a <a class="inl" href="{P}/companies/">company page</a> and press “Follow”.</div></section>'
          '<section class="sec"><div class="sec-head"><h2>Saved searches</h2></div><ul class="jobs" id="ss-list"></ul>'
          f'<div class="empty" id="ss-empty">No saved searches. Set filters on the <a class="inl" href="{P}/jobs/">search page</a> and press “Save this search”.</div></section>'
-         '<section class="sec"><div class="sec-head"><h2>Recently viewed</h2></div><ul class="jobs" id="seen-list"></ul><div class="empty" id="seen-empty">No jobs viewed yet.</div></section></div>', sitemap=False)
+         '<section class="sec"><div class="sec-head"><h2>Recently viewed</h2></div><ul class="jobs" id="seen-list"></ul><div class="empty" id="seen-empty">No jobs viewed yet.</div></section>'
+         '<section class="sec"><div class="sec-head"><h2>Your data</h2></div><p>Everything on this page is stored in this browser and nowhere else. Keep a copy, move it to another device, or wipe it.</p>'
+         '<p class="mjdata"><button class="btn ghost sm" id="mj-backup" type="button">Download a backup</button> <button class="btn ghost sm" id="mj-restore" type="button">Restore from a backup</button> '
+         '<button class="btn ghost sm" id="mj-erase" type="button">Erase everything</button><input type="file" id="mj-file" accept="application/json,.json" hidden></p>'
+         '<p class="note" id="mj-data-note" role="status"></p></section></div>', sitemap=False)
 
     # Perks, employment type, work from anywhere
     perk_tiles = ""
@@ -1251,7 +1279,8 @@ def main():
     ST = json.loads(stats_file.read_text()) if stats_file.exists() else {}
     if ST.get("date") != TODAY: ST = {}
     rechecked = sum(1 for j in active if j.get("last_seen") == TODAY)
-    new_today, closed_today = sum(1 for j in active if j.get("first_seen") == TODAY), sum(1 for j in archived if j.get("closed") == TODAY)
+    # "posted today" uses the employer's own date: the day we first saw a job says nothing on the day a company is added
+    new_today, closed_today = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY), sum(1 for j in archived if j.get("closed") == TODAY)
     ages = sorted(age_days(j) for j in active)
     feeds = (f'<div class="stat"><b>{ST["sources"] - len(ST["failed"]):,} of {ST["sources"]:,}</b><span>employer feeds answered</span></div>' if ST else "")
     failed_html = (section("Feeds that did not answer in the last run", "<p>" + ", ".join(e(x) for x in ST["failed"]) + ".</p>"
@@ -1261,7 +1290,7 @@ def main():
          crumbs(("Data status", "")) + "<h1>Data status: how fresh the listings are today</h1>"
          '<p class="lead">“Updated daily” is easy to write and hard to check. This page shows what the latest run actually did, so you do not have to take our word for it.</p>'
          f'<div class="statrow"><div class="stat"><b>{fdate(TODAY)}</b><span>last update{", " + e(ST["time"]) if ST else ""}</span></div>{feeds}'
-         f'<div class="stat"><b>{pctf(rechecked, n)}</b><span>of open roles re-checked today</span></div><div class="stat"><b>+{new_today:,}</b><span>new today</span></div>'
+         f'<div class="stat"><b>{pctf(rechecked, n)}</b><span>of open roles re-checked today</span></div><div class="stat"><b>+{new_today:,}</b><span>posted today</span></div>'
          f'<div class="stat"><b>−{closed_today:,}</b><span>closed today</span></div></div>'
          + failed_html
          + section("How old the open listings are", ttable(["Measure", "Value"], [
@@ -1328,6 +1357,64 @@ def main():
          '<p class="lead">Need a number about tech hiring you can put in an article or a slide? Each month gets one page that stops changing when the month ends, so a figure you quote stays where you found it.</p>'
          '<ul class="tiles">' + "".join(tile(f"reports/{k}/", mlabel(k), REPORTS[k]["open"]) for k in rep_months) + "</ul>"
          '<p class="note">The number on each tile is the count of open roles in that month’s report.</p>')
+
+    # Safety: how to tell a real job offer from a fake one, and what this site does about it
+    def qa_block(qa):
+        html_ = "".join(f"<details class='faq'><summary>{e(q_)}</summary><p>{e(a_)}</p></details>" for q_, a_ in qa)
+        return html_, ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    safety_qa = [("Will a real employer ever ask me to pay?", "No. A real employer does not charge for applying, training, equipment, a background check or a visa. A request for money at any stage of hiring is the clearest sign of a scam."),
+                 ("Is it safe to do a take-home test?", "Usually, if it comes through the company’s own hiring process. Do not run code or open files from someone you cannot tie to the company’s official site, and never on a machine that holds your wallets, keys or work credentials."),
+                 (f"Does {SITE} check employers?", f"Every listing on {SITE} is read from the employer’s own hiring system and links to that posting, and it is re-checked every day. We do not accept anonymous postings. We cannot vouch for what happens after you leave the site, so the checks on this page still apply."),
+                 ("What if the recruiter wants to continue in a messenger?", "Ask to continue by email from the company’s domain or through its hiring system. A recruiter who refuses, or whose address does not match the company’s site, is not acting for that company.")]
+    safety_faq, safety_ld = qa_block(safety_qa)
+    page("safety/", f"Is This Job Offer Real? A safety checklist for job seekers | {SITE}",
+         "How to tell a real job offer from a fake one: seven warning signs, how to check a recruiter and a posting, extra checks for crypto hiring, and what to do if you already paid.",
+         crumbs(("Safety", "")) + "<h1>How to check that a job offer is real</h1>"
+         '<p class="lead">Fake recruiters borrow the names of real companies, hold “interviews” in a chat app and ask for money, documents or wallet access before any contract exists. '
+         f'Ten minutes of checking catches nearly all of it. Last reviewed {fdate(TODAY)}.</p>'
+         + section("Seven signs that a job offer is a scam", '<ol class="steps">'
+                   "<li><b>You are asked to pay.</b> For training, equipment, “verification”, a visa or a deposit. Employers pay you, never the reverse.</li>"
+                   "<li><b>Everything happens in a messenger.</b> No video call, no email from the company’s domain, no page on its site.</li>"
+                   "<li><b>The address does not match.</b> The recruiter writes from a free mailbox or a look-alike domain.</li>"
+                   "<li><b>The offer comes too easily.</b> No real interview, or an offer within hours of the first message.</li>"
+                   "<li><b>They want access.</b> Bank login, card details, a seed phrase, or your help moving money or parcels.</li>"
+                   "<li><b>They send something to run.</b> A “test task”, an installer or a repository from a source you cannot verify.</li>"
+                   "<li><b>The pay is unreal and the deadline is today.</b> Far above the market for little work, with pressure to decide at once.</li></ol>")
+         + section("How do I check a recruiter and a posting?", "<ol><li>Find the same role on the company’s own careers page. If it is not there, ask the company through the contact on its site.</li>"
+                   "<li>Check the sender’s address against the company’s domain, letter by letter.</li>"
+                   "<li>Look the recruiter up: a profile with history at that company, colleagues, older posts.</li>"
+                   "<li>Keep the process inside the company’s hiring system or email. Decline to move to a private chat.</li>"
+                   "<li>Send no documents beyond a resume until there is a written offer you have verified with the company.</li></ol>")
+         + section("Crypto and web3 hiring: what else should I check?", "<ul><li>Never share a seed phrase or a private key, and never “connect a wallet to sign onboarding”. No employer needs either.</li>"
+                   "<li>Run test tasks, repositories and “audit this code” requests only in a disposable environment with no wallets or keys on it.</li>"
+                   "<li>If pay is in tokens, ask for the terms in writing: amount, vesting, and what happens if the token cannot be sold.</li>"
+                   "<li>Confirm the team through the project’s official site and channels, not through links the recruiter sends.</li></ul>")
+         + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever or Ashby), links straight to that posting and is checked again every day; "
+                   f"a role that disappears from the employer’s page is marked closed the same day. Each job page names its source and the date of the last check. We do not take anonymous postings, "
+                   f'and we never ask you for money, documents or an account. Details: <a href="{P}/methodology/">how listings are collected</a> and <a href="{P}/status/">today’s data status</a>.</p>')
+         + section("What should I do if I already sent money or data?", "<p>Act the same day. Call your bank or card issuer and ask to stop or dispute the payment. Change the passwords of any account you shared, starting with email. "
+                   "If a seed phrase or key was exposed, move the funds to a new wallet at once. Then report it: in the United States to "
+                   '<a href="https://reportfraud.ftc.gov/" rel="noopener">reportfraud.ftc.gov</a> and <a href="https://www.ic3.gov/" rel="noopener">ic3.gov</a>; elsewhere to your national consumer-protection body or police cyber unit. '
+                   "Tell the real company too, so it can warn other candidates.</p>")
+         + section("Job offer safety: questions and answers", safety_faq), head=safety_ld)
+
+    # Our side of the deal, in plain words and with a date
+    page("promise/", f"What Is Free Here and What We Will Never Do | {SITE}",
+         f"What {SITE} offers free with no account, what costs money and for whom, and the things this site will not do: no paid applying, no phone numbers, no data selling, no auto-renewal.",
+         crumbs(("Our promise", "")) + "<h1>What is free here, and what we will never do</h1>"
+         '<p class="lead">Job sites have taught people to expect the worst: a trial that becomes a yearly charge, a phone number that ends up with call centres, a “new” job that closed months ago. '
+         f'This page is our side of the deal, in plain words. Dated {fdate(TODAY)}; if any of it changes, the change will be stated here first.</p>'
+         + section("What is free, with no account?", "<ul><li>Searching, every filter, salary data and all rankings.</li><li>Opening any job and applying: you always go to the employer’s own page, and we take nothing for it.</li>"
+                   "<li>Saving jobs, tracking applications and saved searches, kept in your browser.</li><li>The resume builder and every tool in the tools section.</li><li>Widgets, badges, the data files and the API.</li></ul>")
+         + section("What will this site never do?", "<ul><li>Charge you to apply for a job.</li><li>Ask for your phone number, or call you.</li>"
+                   "<li>Sell or pass on personal data. Job seekers have no accounts here, so there is nothing to sell.</li><li>Send you email you did not ask for.</li>"
+                   "<li>Renew a payment by itself. Anything paid is a single payment for a stated period.</li><li>Show a job as open after we know it is closed, or hide where a listing came from.</li>"
+                   "<li>Publish invented reviews, numbers, partners or deadlines.</li></ul>")
+         + section("What costs money, and for whom?", f'<p>Employers can pay to place a job or a company more prominently; the prices are public on the <a href="{P}/post-a-job/">employers page</a>. '
+                   f'Job seekers pay nothing today. An optional paid set of extra tools, <a href="{P}/plus/">Plus</a>, is planned; what it includes and what it costs will be published in full before anything is sold.</p>')
+         + section("How can I check that you keep to this?", f'<p>The <a href="{P}/status/">data status page</a> shows what the latest update did. The <a href="{P}/methodology/">methodology</a> explains every label and number. '
+                   f'The <a href="{P}/privacy/">privacy page</a> lists what is stored and where. The site’s code is public.</p>'))
 
     # Privacy and terms
     page("privacy/", f"Privacy | {SITE}", "What this site stores and what it does not: no accounts, no tracking cookies, your saved jobs stay in your browser.",
@@ -1673,6 +1760,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Job widget and live badges for other sites]({FULL}/widgets/)
 
 ## About
+- [What is free and what we will never do]({FULL}/promise/) · [Job offer safety checklist]({FULL}/safety/)
 - [About]({FULL}/about/) · [Privacy]({FULL}/privacy/) · [Terms]({FULL}/terms/)
 """, sitemap=False)
     page("404.html", f"Page not found | {SITE}", "Page not found.",
@@ -1691,7 +1779,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if j["slug"] == base: return 0
         tail = j["slug"][len(base) + 1:]
         return int(tail) if j["slug"].startswith(base + "-") and tail.isdigit() and tail[0] != "0" else j["slug"]
-    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))),
+    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))) | 16 * int(j["pool"]),
               cat_list.index(j["cat"]), lvl_list.index(j["level"]) if j["level"] in lvl_list else 0, [ti[t] for t in j["tags"] if t in ti], j["salary"],
               int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0), int(j["usd"][1]) if j["usd"] else 0, [pi[p_] for p_ in j["places"]],
               [perk_list.index(x) for x in j.get("perks", []) if x in perk_list], et_list.index(j.get("etype", "")) if j.get("etype", "") in et_list else 0] for j in order(active)]

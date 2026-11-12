@@ -485,3 +485,14 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 
 /* a posting that has been up unusually long */
 .pill.warn{background:var(--amber-soft);color:var(--amber);border-color:color-mix(in srgb,var(--amber) 25%,transparent)}
+
+/* search: things to leave out; tracker data controls */
+.xin{font:inherit;font-size:14.5px;padding:9px 11px;border:1px solid var(--line2);border-radius:9px;background:var(--card);color:var(--text);width:100%;margin-top:8px}
+.xin:focus{outline:0;border-color:var(--text);box-shadow:3px 3px 0 var(--hl)}
+.xcos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.xcos .flabel{flex-basis:100%;margin:0}
+.xchip{font:inherit;font-size:13px;padding:5px 9px;min-height:32px;border-radius:7px;border:1px solid var(--line2);background:var(--bg2);color:var(--text);cursor:pointer}
+.xchip:hover{border-color:var(--text)}
+.mjdata{display:flex;flex-wrap:wrap;gap:8px}
+.mjdata .btn.ghost{margin-top:0}
+.trow .pill.warn{margin-left:6px;vertical-align:middle}

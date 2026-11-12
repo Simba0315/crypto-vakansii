@@ -44,6 +44,17 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
 - Pure logic in `assets/tools.js` is covered by `node tools_test.js assets/tools.js` (must end with "0 failed").
 - New tools go into the `TOOLS` list inside `build_tools()`; ideas with search demand are in `ROADMAP.md` section 8.
 
+## What users of job sites complain about (`USER_PAINS.md`)
+
+53 review sources read on 2026-11-13 (Hirify on Product Radar, Trustpilot, Hacker News and others). The top pains are dead and
+long-open listings, silence after applying, scams and spam, results that ignore what the person excluded, and paying to look
+for work. The file ends with a ranked list of 15 things to build; several are done (see `ROADMAP.md` section 11). Take the next
+one from that list when choosing work, and never build the patterns it lists as "do not copy".
+
+Before every push, try these by hand or by script, because broken basics were a top complaint about other sites: the back
+button returns to the same place in a list; the count above a list equals the rows it leads to; changing a filter resets
+paging; the search page works on a phone-width screen; no console errors on the home, search, job and tools pages.
+
 ## Search demand
 
 `python3 keywords.py` collects Google search suggestions into `keywords.json`. Compare the phrases with the pages we have

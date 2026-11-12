@@ -24,6 +24,8 @@
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   var hidden = get('hrn_hidden', {});   // jobs the visitor marked "Not interested"
+  var mute = get('hrn_mute', {});       // what the visitor never wants in lists: { c: {company: 1}, w: [words in the title] }
+  if (!mute.c) mute.c = {}; if (!mute.w) mute.w = [];
 
   /* ---------- job index: compact file expanded into rows ---------- */
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
@@ -37,7 +39,7 @@
         return [s, r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
-          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : ''];
+          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0];
     });
   }
   function load() {
@@ -56,10 +58,14 @@
       q: p.get('q') || '', words: (p.get('q') || '').toLowerCase().split(/\s+/).filter(Boolean),
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
       remote: p.has('remote'), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
-      skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new'
+      skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new',
+      real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
     };
   }
   function match(j, f) {
+    if (mute.c[j[2]]) return false;
+    if (f.real && (j[22] || !(j[16] >= f.realSince))) return false;
+    if (mute.w.length) { var low = j[1].toLowerCase(); for (var w = 0; w < mute.w.length; w++) if (low.indexOf(mute.w[w]) >= 0) return false; }
     if (f.cat && j[5] !== f.cat) return false;
     if (f.lvl && j[6] !== f.lvl) return false;
     if (f.loc && j[14].indexOf(f.loc) < 0) return false;
@@ -116,12 +122,14 @@
       var m = (a.getAttribute('href') || '').match(/\/job\/([^/]+)\/?$/);
       if (!m) return;
       a.setAttribute('data-d', '1');
+      var sub = a.querySelector('.js');                       // rows of a company the visitor chose to hide disappear from ready-made lists too
+      if (sub && mute.c[sub.textContent.split(' · ')[0]]) { a.parentNode.hidden = true; return; }
       var slug = decodeURIComponent(m[1]), rec = mine[slug], pills = a.querySelector('.pills');
       if (rec && pills) pills.insertAdjacentHTML('afterbegin', '<span class="pill acc">' + (rec.st === 'saved' ? 'Saved' : rec.st === 'closed' ? 'Closed out' : rec.st === 'offer' ? 'Offer' : rec.st === 'interview' ? 'Interviewing' : 'Applied') + '</span>');
       else if (seen[slug]) a.parentNode.classList.add('seen');
     });
   }
-  window.HRN = { parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  window.HRN = { mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- theme + mobile menu + shortcuts ---------- */
   var themeBtn = $('theme');
@@ -271,6 +279,12 @@
         fit.hidden = false;
       }
     }
+    var muteBtn = q1('#mute');
+    if (muteBtn) {
+      var paintMute = function () { muteBtn.textContent = mute.c[me.c] ? me.c + ' is hidden from your lists · undo' : 'Hide this company'; };
+      paintMute();
+      muteBtn.addEventListener('click', function () { if (mute.c[me.c]) delete mute.c[me.c]; else mute.c[me.c] = 1; set('hrn_mute', mute); paintMute(); });
+    }
     var hideBtn = q1('#hide');
     if (hideBtn) {
       var paintHide = function () { hideBtn.textContent = hidden[me.s] ? 'Hidden from your searches · undo' : 'Not interested'; };
@@ -394,7 +408,8 @@
   /* ---------- My jobs page ---------- */
   var root = $('mj-root');
   if (root) {
-    var tab = 'all';
+    var tab = 'all', openSet = null;
+    var daysSince = function (ts) { return Math.floor((Date.now() - ts) / 864e5); };
     var letter = function (c) { return (String(c).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase(); };
     var when = function (ts) { try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
     var draw = function () {
@@ -407,14 +422,21 @@
       }).join('');
       var shownKeys = keys.filter(function (k) { return tab === 'all' || jobs[k].st === tab; });
       $('mj-list').innerHTML = shownKeys.map(function (k) {
-        var r = jobs[k];
+        var r = jobs[k], d = daysSince(r.sa || r.at);
+        var since = r.st === 'applied' ? ' · applied ' + (d < 1 ? 'today' : d + (d === 1 ? ' day ago' : ' days ago')) : '';
+        var gone = openSet && !openSet[k] ? ' <span class="pill warn">Closed by the employer</span>' : '';
         return '<li class="trow" data-s="' + esc(k) + '">' + avatar(r.c, r.l ? slugOf(r.c) : '', false) +
-          '<div class="main"><a class="tt" href="' + P + '/job/' + encodeURIComponent(k) + '/">' + esc(r.t) + '</a><span class="js">' + esc(r.c) + ' · added ' + esc(when(r.at)) + '</span>' +
+          '<div class="main"><a class="tt" href="' + P + '/job/' + encodeURIComponent(k) + '/">' + esc(r.t) + '</a>' + gone + '<span class="js">' + esc(r.c) + ' · added ' + esc(when(r.at)) + since + '</span>' +
           '<input class="nt" type="text" placeholder="Add a note: contact, next step, salary discussed…" value="' + esc(r.note || '') + '" aria-label="Note"></div>' +
           '<div class="ctl"><select aria-label="Status">' + STATUS.map(function (s) { return '<option value="' + s[0] + '"' + (r.st === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') +
           '</select><button class="unsave" type="button">Remove</button></div></li>';
       }).join('');
       $('mj-empty').hidden = shownKeys.length > 0;
+      var quiet = keys.filter(function (k) { return jobs[k].st === 'applied' && daysSince(jobs[k].sa || jobs[k].at) >= 10 && !(openSet && !openSet[k]); }).length, nudge = $('mj-nudge');
+      if (nudge) {
+        nudge.hidden = !quiet;
+        nudge.textContent = quiet ? quiet + (quiet === 1 ? ' application has' : ' applications have') + ' had no reply for 10 days or more. One short, polite follow-up is reasonable. After about three weeks of silence, treat it as a no and move on.' : '';
+      }
       var seen = get('hrn_seen', []);
       $('seen-list').innerHTML = seen.map(function (j) {
         return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/">' + avatar(j.c, j.l ? slugOf(j.c) : '', false) + '<span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + '</span></span></a></li>';
@@ -438,15 +460,47 @@
     root.addEventListener('change', function (ev) {
       var row = ev.target.closest && ev.target.closest('.trow'); if (!row) return;
       var rec = jobs[row.getAttribute('data-s')]; if (!rec) return;
-      if (ev.target.tagName === 'SELECT') { rec.st = ev.target.value; store(); draw(); }
+      if (ev.target.tagName === 'SELECT') { rec.st = ev.target.value; rec.sa = Date.now(); store(); draw(); }
       else if (ev.target.classList.contains('nt')) { rec.note = ev.target.value; store(); }
     });
     draw();
-    var hiddenNote = $('mj-hidden'), hiddenCount = Object.keys(hidden).length;
-    if (hiddenNote && hiddenCount) {
-      hiddenNote.innerHTML = hiddenCount + (hiddenCount === 1 ? ' job is' : ' jobs are') + ' hidden from your searches. <button class="linkbtn" id="mj-unhide" type="button">Show them again</button>';
+    if (Object.keys(jobs).length) load().then(function (index) { openSet = {}; index.forEach(function (j) { openSet[j[0]] = 1; }); draw(); }).catch(function () {});
+    var hiddenNote = $('mj-hidden'), hiddenCount = Object.keys(hidden).length, mutedCos = Object.keys(mute.c);
+    if (hiddenNote && (hiddenCount || mutedCos.length || mute.w.length)) {
+      hiddenNote.innerHTML = [hiddenCount ? hiddenCount + (hiddenCount === 1 ? ' job' : ' jobs') : '', mutedCos.length ? 'these companies: ' + mutedCos.map(esc).join(', ') : '',
+        mute.w.length ? 'titles with: ' + mute.w.map(esc).join(', ') : ''].filter(Boolean).join('; ') + ' — hidden from your lists. <button class="linkbtn" id="mj-unhide" type="button">Show everything again</button>';
       hiddenNote.hidden = false;
-      $('mj-unhide').addEventListener('click', function () { hidden = {}; set('hrn_hidden', hidden); hiddenNote.hidden = true; });
+      $('mj-unhide').addEventListener('click', function () { hidden = {}; set('hrn_hidden', hidden); mute.c = {}; mute.w = []; set('hrn_mute', mute); hiddenNote.hidden = true; });
+    }
+    // your data: a copy to keep, a way to move it to another device, and a way to wipe it
+    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
+    if ($('mj-backup')) {
+      $('mj-backup').addEventListener('click', function () {
+        var data = {}; KEYS.forEach(function (k) { var v = get(k, null); if (v != null) data[k] = v; });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify({ app: 'hiring-right-now', version: 1, saved: new Date().toISOString(), data: data })], { type: 'application/json' }));
+        a.download = 'my-jobs-backup.json'; document.body.appendChild(a); a.click(); a.remove();
+        dataNote.textContent = 'Backup downloaded. Keep the file somewhere safe: it holds your notes.';
+      });
+      $('mj-restore').addEventListener('click', function () { fileIn.click(); });
+      fileIn.addEventListener('change', function () {
+        var file = fileIn.files && fileIn.files[0]; if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var b = JSON.parse(String(reader.result));
+            if (!b || b.app !== 'hiring-right-now' || !b.data || typeof b.data !== 'object') throw new Error('not a backup');
+            KEYS.forEach(function (k) { if (b.data[k] != null) set(k, b.data[k]); });
+            location.reload();
+          } catch (e) { dataNote.textContent = 'That file is not a backup from this site.'; }
+        };
+        reader.readAsText(file);
+      });
+      $('mj-erase').addEventListener('click', function () {
+        if (!window.confirm('Erase saved jobs, applications, notes, searches and hidden items from this browser? This cannot be undone.')) return;
+        KEYS.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+        location.reload();
+      });
     }
 
     var searches = get('hrn_searches', []);
