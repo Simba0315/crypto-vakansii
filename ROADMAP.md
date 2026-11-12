@@ -62,7 +62,9 @@
 
 ## 4. Ждёт владельца
 
-1. Домен (название «Hiring Right Now» нравится, адрес не выбран).
+1. Домен (название «Hiring Right Now» нравится, адрес не выбран). Свободные .com на 2026-11-13 (проверено по реестру):
+   `rolesnow.com`, `hiringmark.com`, `rolently.com`, `hirently.com`, `hyrboard.com`, `hyrmark.com`, `roleyra.com`, `taloxa.com`,
+   `roleuma.com`, `rightnowhiring.com`, `hrnhq.com`, `usehrn.com`, `hiringrightnow.com`. Обычная цена регистрации, не премиум-аукцион.
 2. Вход в Cloudflare и запуск сервера по шагам из `server/README.md` (или разрешение сделать это через браузер).
 3. Аккаунт мерчанта в Cryptomus и ключи (вводит сам владелец).
 4. Адрес почты, который можно показать на сайте.
