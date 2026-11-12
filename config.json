@@ -38,7 +38,8 @@
     {
       "name": "Branded listing",
       "price": "$149",
-      "what": "A featured job with a cover image and a longer description written by you."
+      "what": "A featured job with a cover image and a longer description written by you.",
+      "soon": true
     }
   ],
   "wallets": [

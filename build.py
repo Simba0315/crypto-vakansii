@@ -212,6 +212,11 @@ def mincss(s):
     return re.sub(r"\x00(\d+)\x00", lambda m_: keep[int(m_.group(1))], s)
 
 
+def tcase(s):
+    """Title case that leaves existing capitals alone: "DevOps engineer" -> "DevOps Engineer"."""
+    return " ".join(w[:1].upper() + w[1:] for w in s.split())
+
+
 def fit_title(t):
     """Keep the key at the start and the brand at the end, but never let a title run long."""
     if len(t) <= 65: return t
@@ -787,6 +792,14 @@ def main():
         for name, slug, _ in places:
             add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", [j for j in rj if slug in j["places"]], trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(low)}s in {e(name)}",
                 [("role:" + slug_r, name.removeprefix("the ")), ("place:" + slug, rname)])
+    cut3 = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
+    for t, js in by_tag.items():
+        add(f"skills/{tslug(t)}/new/", f"{t} jobs posted in the last 3 days", [j for j in js if (j["posted"] or "") >= cut3], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
+            f"age=3&skills={quote(t)}", "", f" mentioning {e(t)}, posted in the last three days", [("tag:" + t, "Last 3 days")])
+    for slug_r, (rname, rj) in by_role.items():
+        add(f"roles/{slug_r}/new/", f"{rname} jobs posted in the last 3 days", [j for j in rj if (j["posted"] or "") >= cut3], (("Roles", "roles/"), (rname, f"roles/{slug_r}/")),
+            f"age=3&q={quote(rname)}", "", " posted in the last three days", [("role:" + slug_r, "Last 3 days")])
+    add("remote/new/", "Remote tech jobs posted in the last 3 days", [j for j in remote if (j["posted"] or "") >= cut3], (("Remote", "remote/"),), "remote=1&age=3", "remote ", " posted in the last three days", [("remote", "Last 3 days")])
     add("remote/entry-level/", "Remote entry-level tech jobs", [j for j in remote if j["entry"]], (("Remote", "remote/"),), "remote=1&entry=1", "remote entry-level ", "", [("remote", "Entry-level")])
     for t, js in by_tag.items():
         add(f"skills/{tslug(t)}/entry-level/", f"Entry-level {t} jobs", [j for j in js if j["entry"]], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
@@ -861,7 +874,7 @@ def main():
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     for slug_r, (rname, rj) in by_role.items():
         paid_r = sum(1 for j in rj if j["usd"])
-        listing(f"roles/{slug_r}/", f"{rname} jobs", f"{rname} Jobs ({len(rj):,} open) | {SITE}",
+        listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open) | {SITE}",
                 f"{roles(len(rj), 'open role')} for {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname}s at tech companies, straight from their careers pages. Remote filter, salary data, updated daily.",
                 rj, intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title"), trail=(("Roles", "roles/"),), feed=True, extra=rel(REL["role:" + slug_r]), faq=f"{rname} jobs",
                 after=section(f"Companies hiring {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname}s", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
@@ -1012,7 +1025,7 @@ def main():
             salary_page(cat_slug[name], name, group, (f"jobs/{cat_slug[name]}/", f"All {name} jobs"))
     for slug_r, (rname, rj) in by_role.items():
         group = [(j, j["usd"]) for j in rj if j["usd"]]
-        if len(group) >= 30: salary_page(slug_r, rname, group, (f"roles/{slug_r}/", f"All {rname} jobs"))
+        if len(group) >= 30: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname} jobs"))
 
     # Hiring trends: one page of live numbers
     week = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
@@ -1141,7 +1154,9 @@ def main():
     for et, path, h1 in (("Contract", "contract/", "Contract tech jobs"), ("Part-time", "part-time/", "Part-time tech jobs"), ("Internship", "internships/", "Tech internships")):
         ej = [j for j in active if j.get("etype") == et]
         if len(ej) >= 8:
-            listing(path, h1, f"{h1} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()} at tech companies. Updated daily.", ej, intro_for(ej, f"{et.lower()} "), trail=(("All jobs", "jobs/"),))
+            yr = f" {TODAY[:4]}–{int(TODAY[:4]) + 1}" if et == "Internship" else ""
+            listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at tech companies, straight from their careers pages. Updated daily.", ej,
+                    intro_for(ej, f"{et.lower()} "), trail=(("All jobs", "jobs/"),))
     aw = [j for j in active if j.get("anywhere") and j["remote"]]
     if len(aw) >= 8:
         listing("work-from-anywhere/", "Work-from-anywhere tech jobs", f"Work From Anywhere Tech Jobs ({len(aw):,} open) | {SITE}",
@@ -1485,7 +1500,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          "<h3>How do I pay?</h3><p>With crypto (USDT, BTC, ETH and other coins) on a checkout page. Plus turns on in your account automatically once the network confirms the payment. Card payments are planned.</p>"
          "<h3>When does it launch?</h3><p>We are finishing it now. Until then every feature of the free site keeps working as it does today.</p></section>")
     # Employers
-    rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}</td></tr>" for p in CFG["prices"])
+    rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
     app_url = f"{P}/account/" if CFG["api_url"] else ""
     steps = ('<ol class="steps"><li><b>Create an employer account.</b> An email and a password, one minute.</li>'
              "<li><b>Paste the job and pick a plan.</b> Title, link to apply, location, description. Preview it exactly as candidates will see it.</li>"
@@ -1559,7 +1574,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Colours and type", '<div class="swatches">' + swatch("#f6f5f0", "Paper") + swatch("#0e0e0c", "Ink", "#f3f2ec") + swatch("#c8f560", "Signal lime") + swatch("#3ecf5f", "Live green") + swatch("#e2dfd5", "Line") + "</div>"
                    '<p>Headlines: Bricolage Grotesque (700–800). Text: Inter (400–700). Labels and numbers: JetBrains Mono (500–700). All three are open-source typefaces.</p>')
          + section("Placements for employers and sponsors", f'<div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What it is</th></tr>{rows}</table></div>'
-                   f'<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout. Details and examples: <a href="{P}/post-a-job/">for employers</a>.</p>')
+                   + ("<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout." if CFG["api_url"] else
+                      "<p>Placements will be bought and switched on in a self-serve employer account, paid in crypto at checkout. The account is not open yet, so nothing can be bought today.")
+                   + f' Details and examples: <a href="{P}/post-a-job/">for employers</a>.</p>')
          + section("For journalists and researchers", f'<p>Numbers you can quote, each with its method and date: <a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from live postings</a>, '
                    f'<a href="{P}/insights/">rankings</a>, <a href="{P}/compare/">skill comparisons</a>. Raw data: <a href="{P}/api/">free JSON API</a> and CSV files. Every data page has a “Cite or link to this page” box.</p>'
                    + (f"<p>Questions: {contact}.</p>" if contact else "")),
