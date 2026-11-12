@@ -1,47 +1,94 @@
+/* Job search page: filters, sorting, shareable URLs and saved searches. Uses HRN.match from site.js. */
 (async function () {
-  const root = document.getElementById('search');
-  if (!root) return;
-  const P = root.dataset.base, list = document.getElementById('results'), count = document.getElementById('count'), more = document.getElementById('more');
-  const q = document.getElementById('q'), cat = document.getElementById('cat'), fRemote = document.getElementById('f-remote'), fEntry = document.getElementById('f-entry'), fSal = document.getElementById('f-sal');
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const plural = (n) => (n === 1 ? 'job' : 'jobs');
-  const params = new URLSearchParams(location.search);
-  q.value = params.get('q') || ''; cat.value = params.get('cat') || '';
-  fRemote.checked = params.has('remote'); fEntry.checked = params.has('entry'); fSal.checked = params.has('salary');
-  let jobs = [];
+  var root = document.getElementById('search');
+  if (!root || !window.HRN) return;
+  var H = window.HRN, P = H.base, esc = H.esc;
+  var $ = function (id) { return document.getElementById(id); };
+  var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), sort = $('sort');
+  var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto');
+  var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
+
+  // restore the state from the URL
+  var f0 = H.parse(location.search.slice(1));
+  q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; sal.value = f0.sal ? String(f0.sal) : ''; sort.value = f0.sort;
+  fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto;
+  var skills = f0.skills.slice();
+  var chips = Array.prototype.slice.call(skillbar.querySelectorAll('.chipbtn'));
+  var paintChips = function () { chips.forEach(function (c) { c.setAttribute('aria-pressed', skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); };
+  paintChips();
+
+  var jobs = [];
   try { jobs = await (await fetch(P + '/data/index.json')).json(); }
   catch (e) { count.textContent = 'Could not load the list. Please reload the page.'; return; }
-  // row: [slug, title, company, location, remote, cat, level, tags, salary, posted, entry, featured, avatarHue]
-  let shown = 100, found = [];
-  const card = (j) => {
-    const pills = (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') +
+
+  var shown = 50, found = [];
+  var card = function (j) {
+    var pills = (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') +
       (j[8] ? '<span class="pill sal">' + esc(j[8].slice(0, 28)) + '</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
-      j[7].slice(0, 3).map((t) => '<span class="pill">' + esc(t) + '</span>').join('');
-    const loc = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
-    const letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
+      j[7].slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
+    var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
+    var letter = (j[2].match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/"><span class="ava" style="--h:' + j[12] + '" aria-hidden="true">' + esc(letter) + '</span>' +
-      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (loc ? ' · ' + esc(loc) : '') + '</span></span>' +
+      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') + '</span></span>' +
       '<span class="jr"><span class="pills">' + pills + '</span><time>' + esc(j[9]) + '</time></span></a></li>';
   };
-  const render = () => {
+  var query = function () {
+    var p = new URLSearchParams();
+    if (q.value.trim()) p.set('q', q.value.trim());
+    if (cat.value) p.set('cat', cat.value);
+    if (lvl.value) p.set('lvl', lvl.value);
+    if (loc.value) p.set('loc', loc.value);
+    if (sal.value) p.set('sal', sal.value);
+    if (fRemote.checked) p.set('remote', '1');
+    if (fEntry.checked) p.set('entry', '1');
+    if (fCrypto.checked) p.set('crypto', '1');
+    if (skills.length) p.set('skills', skills.join(','));
+    if (sort.value !== 'new') p.set('sort', sort.value);
+    return p.toString();
+  };
+  var text = function (el) { return el.options[el.selectedIndex].text; };
+  var describe = function () {
+    var parts = [];
+    if (q.value.trim()) parts.push('“' + q.value.trim() + '”');
+    if (cat.value) parts.push(text(cat));
+    if (lvl.value) parts.push(text(lvl));
+    if (loc.value) parts.push(text(loc));
+    if (fRemote.checked) parts.push('Remote');
+    if (fEntry.checked) parts.push('Entry-level');
+    if (fCrypto.checked) parts.push('Crypto');
+    if (sal.value) parts.push(text(sal));
+    if (skills.length) parts.push(skills.join(' + '));
+    return parts.join(' · ') || 'All jobs';
+  };
+  var render = function () {
     list.innerHTML = found.slice(0, shown).map(card).join('');
-    count.textContent = found.length ? found.length.toLocaleString('en-US') + ' ' + plural(found.length) + ' found' : 'No jobs match. Try removing some filters.';
+    count.textContent = found.length ? found.length.toLocaleString('en-US') + (found.length === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
     more.hidden = found.length <= shown;
   };
-  const run = () => {
-    const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
-    found = jobs.filter((j) => {
-      if (cat.value && j[5] !== cat.value) return false;
-      if (fRemote.checked && !j[4]) return false;
-      if (fEntry.checked && !j[10]) return false;
-      if (fSal.checked && !j[8]) return false;
-      if (!words.length) return true;
-      const hay = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase();
-      return words.every((w) => hay.includes(w));
-    });
-    shown = 100; render();
+  var run = function () {
+    var qs = query(), f = H.parse(qs);
+    found = jobs.filter(function (j) { return H.match(j, f); });
+    if (f.sort === 'sal') found = found.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
+    shown = 50; render();
+    history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
   };
-  [q, cat, fRemote, fEntry, fSal].forEach((el) => el.addEventListener('input', run));
-  more.addEventListener('click', () => { shown += 100; render(); });
+  var timer;
+  q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 140); });
+  [cat, lvl, loc, sal, sort, fRemote, fEntry, fCrypto].forEach(function (el) { el.addEventListener('change', run); });
+  skillbar.addEventListener('click', function (ev) {
+    var c = ev.target.closest('.chipbtn'); if (!c) return;
+    var s = c.getAttribute('data-skill'), i = skills.indexOf(s);
+    if (i >= 0) skills.splice(i, 1); else skills.push(s);
+    paintChips(); run();
+  });
+  more.addEventListener('click', function () { shown += 50; render(); });
+  var form = $('qform'); if (form) form.addEventListener('submit', function (ev) { ev.preventDefault(); run(); });
+  saveBtn.addEventListener('click', function () {
+    var all = H.get('hrn_searches', []), qs = query();
+    if (!all.some(function (s) { return s.qs === qs; })) all.unshift({ qs: qs, label: describe(), seen: H.today() });
+    H.set('hrn_searches', all.slice(0, 30));
+    saveBtn.textContent = 'Saved to My jobs ✓'; saveBtn.disabled = true;
+  });
   run();
 })();
