@@ -2,7 +2,7 @@
 
 Closed jobs keep their pages forever (archive); only the JobPosting markup and the apply button are removed.
 """
-import datetime, hashlib, html, json, re, shutil
+import datetime, hashlib, html, json, os, re, shutil
 from urllib.parse import quote
 from collections import Counter, defaultdict
 from email.utils import format_datetime
@@ -12,6 +12,7 @@ from collect import CATS, OTHER, PERKS, SKILLS, slugify
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
 CFG = json.loads((ROOT / "config.json").read_text())
+CFG["api_url"] = os.environ.get("HRN_API_URL", CFG.get("api_url", "")).rstrip("/")   # the accounts and checkout API; empty until it is deployed
 SITE, BASE, P = CFG["site_name"], CFG["base_url"].rstrip("/"), CFG.get("base_path", "").rstrip("/")
 FULL = BASE + P
 TODAY = datetime.date.today().isoformat()
@@ -43,7 +44,7 @@ PLACES = [
 ]
 URLS = []
 ORG_LD = [""]
-V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js"))).hexdigest()[:8]   # cache-busting version
+V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js"))).hexdigest()[:8]   # cache-busting version
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
              f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a></p></div></footer>')
 SAL_BAD = re.compile(r"CA\$|C\$|A\$|AU\$|S\$|SG\$|HK\$|NZ\$|CAD|AUD|SGD|EUR|GBP|CHF|JPY|INR|€|£|¥|₹", re.I)
@@ -227,7 +228,7 @@ def section(title, inner, link=None):
 
 
 def order(jobs):
-    return sorted(jobs, key=lambda j: (not j["featured"], -int((j["posted"] or j["first_seen"]).replace("-", "") or 0)))
+    return sorted(jobs, key=lambda j: (not j.get("pinned"), not j["featured"], -int((j["posted"] or j["first_seen"]).replace("-", "") or 0)))
 
 
 def diverse(jobs, k, per=2):
@@ -429,7 +430,7 @@ def job_page(j, active_by_cat):
     glance = (f'<p class="note"><a href="{comp_url}">{roles(more_roles, "more open role")} at {e(j["company"])} →</a></p>' if more_roles > 0 else "")
     save_btn = ((f'<div class="sideact"><button class="btn ghost" id="save" type="button" {data}>Save job</button>'
                  f'<button class="btn ghost" id="applied" type="button">Mark as applied</button></div>'
-                 f'<p class="note">Applying is free and happens on the employer\'s own page.</p>'
+                 f'<p class="note">Applying is free and happens on the employer\'s own page.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>'
                  '<p class="share"><span>Share:</span><button class="linkbtn" id="copy" type="button">Copy link</button>'
                  '<button class="linkbtn" type="button" data-share="linkedin">LinkedIn</button><button class="linkbtn" type="button" data-share="x">X</button>'
                  '<button class="linkbtn" type="button" data-share="telegram">Telegram</button><button class="linkbtn" type="button" data-share="whatsapp">WhatsApp</button>'
@@ -488,8 +489,16 @@ def main():
         jobs.append({"id": "paid-" + base, "slug": base, "location": "", "remote": False, "dept": "", "excerpt": "", "level": "", "tags": [],
                      "russian": False, "salary": "", "posted": TODAY, "first_seen": TODAY, "cat": OTHER[0],
                      "active": p.get("expires", "9999") >= TODAY, **p})
+    # paid placements bought in the account (written by collect.py from the API): promoted jobs and sponsors
+    place_file = ROOT / "data" / "placements.json"
+    PAID = json.loads(place_file.read_text()) if place_file.exists() else {}
+    boost = defaultdict(dict)
+    for b in PAID.get("boosts", []):
+        if b.get("until", "") >= TODAY: boost[b.get("slug")][b.get("kind")] = b["until"]
     for j in jobs:
-        j["featured"] = bool(j.get("featured_until", "") >= TODAY and j["active"])
+        bought = boost.get(j["slug"], {})
+        j["pinned"] = bool(j["active"] and max(j.get("pinned_until", ""), bought.get("pinned", "")) >= TODAY)
+        j["featured"] = bool(j["pinned"] or (j["active"] and max(j.get("featured_until", ""), bought.get("featured", "")) >= TODAY))
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["usd"] = usd_range(j["salary"])
@@ -536,7 +545,7 @@ def main():
     FOOT["pop"] = ('<p class="pop"><span>Popular searches:</span>' + "".join(f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} jobs</a>' for t in pop_sk)
                    + "".join(f'<a href="{P}/locations/{slug}/">Jobs in {e(name.removeprefix("the "))}</a>' for name, slug, _ in sorted(places, key=lambda x: -len(x[2]))[:6]) + "</p>")
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
-    SPONSORS = [sp for sp in CFG.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
+    SPONSORS = [sp for sp in CFG.get("sponsors", []) + PAID.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
     spot_cos = [sp["company"] for sp in SPONSORS if sp.get("slot") in ("home", "spotlight", "companies")]
     def spot_tiles(names):
         return '<div class="spot">' + "".join(f'<a href="{P}/companies/{slugify(c)}/">{ava(c)}<span><b>{e(c)}</b><span class="s">{roles(OPEN[c], "open role")} · featured</span></span></a>' for c in names) + "</div>"
@@ -1145,7 +1154,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          "<h3>When does it launch?</h3><p>We are finishing it now. Until then every feature of the free site keeps working as it does today.</p></section>")
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}</td></tr>" for p in CFG["prices"])
-    app_url = CFG.get("app_url", "")
+    app_url = f"{P}/account/" if CFG["api_url"] else ""
     steps = ('<ol class="steps"><li><b>Create an employer account.</b> An email and a password, one minute.</li>'
              "<li><b>Paste the job and pick a plan.</b> Title, link to apply, location, description. Preview it exactly as candidates will see it.</li>"
              "<li><b>Pay at the crypto checkout.</b> USDT, BTC, ETH and other coins. No invoices, no emails back and forth.</li>"
@@ -1179,6 +1188,17 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<a href="{P}/widgets/">badge and widget</a>.</p>'
          "<h3>What happens when the job closes?</h3><p>It moves to the archive and is marked as closed. The page stays online.</p>"
          "<h3>Can I get a refund?</h3><p>Yes, if the job has not been published yet. Published listings are not refundable.</p></section>")
+    # Employer account: only exists once the API is deployed, so the site never shows a form that goes nowhere
+    if CFG["api_url"]:
+        acc_data = {"site": FULL, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
+                    "what": {p["name"]: p["what"] for p in CFG["prices"]}}
+        page("account/", f"Employer Account — post and promote tech jobs | {SITE}",
+             "Post a tech job for free or put it in front of candidates. Pay in crypto at checkout: the placement switches on by itself once the payment is confirmed.",
+             crumbs(("For employers", "post-a-job/"), ("Account", "")) + "<h1>Employer account</h1>"
+             '<p class="lead">Post a job, promote it, or put your company in the spotlight. Nothing waits for a reply from us: what you buy here switches on by itself.</p>'
+             f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
+             '<script type="application/json" id="acc-data">' + json.dumps(acc_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/account.js?v={V}" defer></script>',
+             head='<meta name="robots" content="noindex">', sitemap=False)
     page("hiring-badge/", f"Hiring Badge & Jobs Widget | {SITE}", "Free live hiring badges and an embeddable jobs widget for any site.",
          crumbs(("Widgets", "widgets/"), ("Hiring badge", "")) + f'<h1>Hiring badge &amp; jobs widget</h1><p class="lead">Badges and widgets now live on one page with a builder: '
          f'<a href="{P}/widgets/">open the widget builder</a>.</p>', sitemap=False)
@@ -1297,7 +1317,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")

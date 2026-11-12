@@ -2,7 +2,7 @@
 
 Closed jobs are never deleted: they stay in the file with active=false (archive).
 """
-import datetime, html, json, re, sys, concurrent.futures as cf
+import datetime, html, json, os, re, sys, concurrent.futures as cf
 from pathlib import Path
 from net import get_json
 
@@ -176,6 +176,49 @@ def fetch(src):
     return name, out
 
 
+def direct_and_paid(db, used_slugs, indexed, stats):
+    """Jobs employers posted in their account, and paid placements, from our own API ("api_url" in config.json).
+    A failed call changes nothing: posted jobs stay as they were and the previous placements file is kept."""
+    api = (os.environ.get("HRN_API_URL") or json.loads((ROOT / "config.json").read_text()).get("api_url", "")).rstrip("/")
+    if not api: return
+    exp = None
+    for _ in range(3):
+        exp = get_json(api + "/api/public/export.json", 30)
+        if isinstance(exp, dict) and isinstance(exp.get("jobs"), list): break
+        exp = None
+    if exp is None:
+        print("placements: API did not answer, keeping what we have"); return
+    seen = set()
+    for d in exp["jobs"]:
+        if not isinstance(d, dict) or str(d.get("company", "")).strip().lower() in indexed: continue   # a posting may not pass itself off as an indexed company
+        j = norm(str(d.get("company", "")).strip(), "direct", d.get("id", ""), d.get("title"), d.get("url"), d.get("location"), bool(d.get("remote")), "",
+                 d.get("posted"), str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""))
+        j.pop("_crypto")
+        if not j["title"] or not j["company"] or not str(j["url"]).startswith("https://"): continue
+        j.update(crypto=False, direct=True, featured_until=str(d.get("featured_until") or ""), pinned_until=str(d.get("pinned_until") or ""))
+        seen.add(j["id"])
+        old = db.get(j["id"])
+        if old:
+            j.update(slug=old["slug"], first_seen=old["first_seen"])
+        else:
+            base = f"{slugify(j['title'])}-{slugify(j['company'])}"
+            slug, i = base, 2
+            while slug in used_slugs:
+                slug, i = f"{base}-{i}", i + 1
+            used_slugs.add(slug)
+            j.update(slug=slug, first_seen=TODAY)
+            stats["new"] += 1
+        j.update(last_seen=TODAY, active=True)
+        db[j["id"]] = j
+    for jid, old in db.items():
+        if old.get("direct") and old["active"] and jid not in seen:
+            old.update(active=False, closed=TODAY); stats["closed"] += 1
+    keep = lambda rows, keys: [{k: str(r.get(k, "")) for k in keys} for r in rows if isinstance(r, dict)]
+    (ROOT / "data" / "placements.json").write_text(json.dumps({"boosts": keep(exp.get("boosts") or [], ("slug", "kind", "until")),
+                                                               "sponsors": keep(exp.get("sponsors") or [], ("company", "slot", "until"))}, ensure_ascii=False))
+    print(f"placements: {len(seen)} posted jobs, {len(exp.get('boosts') or [])} promoted, {len(exp.get('sponsors') or [])} sponsors")
+
+
 def main():
     sources = [dict(s, crypto=True) for s in json.loads((ROOT / "sources.json").read_text()) if s["name"] not in EXCLUDE]
     tech_file = ROOT / "sources_tech.json"
@@ -225,6 +268,7 @@ def main():
             if old["company"] == name and old["active"] and jid not in seen:
                 old.update(active=False, closed=TODAY); stats["closed"] += 1
     DATA.parent.mkdir(exist_ok=True)
+    direct_and_paid(db, used_slugs, {s["name"].lower() for s in sources}, stats)
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")

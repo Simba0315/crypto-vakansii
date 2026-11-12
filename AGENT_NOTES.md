@@ -15,6 +15,27 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
 - `logos.py` finds each company's own site and saves its icon to `assets/logos/`. Only trusted addresses are used
   (hand-checked `OVERRIDE` list or `<name>.com`); a wrong logo is worse than none. Never draw or invent logos.
 
+## Accounts, checkout and automation (`server/`)
+
+- `server/src/worker.js` is the whole API (Cloudflare Worker + D1, no dependencies): accounts, orders, Cryptomus invoices and
+  webhooks, automatic activation, free job posting with an automatic link check, export for the build. `server/README.md` has the
+  local commands and the go-live steps; `node --no-warnings server/test/run.mjs` must end with "0 failed" before any push that
+  touches `server/`.
+- It is written and tested but NOT deployed (needs the owner's Cloudflare login and Cryptomus keys). Until `"api_url"` in
+  `config.json` is set, the site has no account page and says plainly that self-serve is not open yet.
+- When it is live: `collect.py` (`direct_and_paid`) pulls posted jobs and paid placements from `/api/public/export.json` into
+  `data/jobs.json` and `data/placements.json`; `build.py` applies them (pinned, featured, sponsors). A purchase asks GitHub to
+  rebuild the site.
+- Never sell what does not exist: Plus stays off (`PLUS_LIVE`) until its features are built.
+
+## Marketing (owner, 2026-11-12/13: "everything that exists in marketing must be on the site")
+
+- Problem first, proof from our own data, then the offer (rule 10). Free tools as lead magnets (`tools_pages.py`), sharing and
+  embeds as distribution, price anchors and a marked best plan, clear guarantees, comparison and landing pages per audience.
+- Hard limits: no invented reviews, logos of "customers", countdown timers, fake scarcity or popups that block reading.
+- Backlog: `COMPETITOR_GAPS.md` (what other job sites have that we do not, with priorities). Take the highest-priority item that
+  is not built yet, build it properly, tick it off in that file.
+
 ## Speed (keep it this way)
 
 - Fonts are self-hosted in `assets/fonts/` (latin + latin-ext, variable woff2); Inter and Bricolage are preloaded. No third-party
@@ -35,6 +56,11 @@ python3 -m http.server 8765 --directory <a folder that contains site/ as crypto-
 ```
 
 Push with the deploy key already configured in this clone (`core.sshCommand`). Always `git pull --rebase origin main` first.
+
+## The plan
+
+`ROADMAP.md` (in Russian, for the owner) lists every request he has made and where it stands. Any new request from him goes
+into it at once; when something ships, update its row. He asked for this on 2026-11-13: "add everything to the plan, always".
 
 ## Rules from the owner (do not break)
 
@@ -61,7 +87,7 @@ Push with the deploy key already configured in this clone (`core.sshCommand`). A
 
 ## Ideas not done yet
 
-- Server on Cloudflare (owner has an account; he said "later"): accounts, Plus payments, email alerts, 48-hour early access.
+- Deploy `server/` to Cloudflare (owner's logins needed). Then: Plus (email alerts need an email service, 48-hour early access, AI résumé tools, device sync endpoint already exists).
 - More sources: other applicant tracking systems (Workable, SmartRecruiters, Recruitee, Teamtailor).
 - Compare page (two skills or two companies side by side), salary by level tables, monthly hiring report page.
 - Mobile apps and a browser extension are planned by the owner after the site.
