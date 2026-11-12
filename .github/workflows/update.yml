@@ -19,6 +19,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -27,15 +28,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # The jobs database (with the archive of closed jobs) lives on a separate one-commit branch,
+      # so the main branch does not grow by tens of megabytes every day.
+      - name: Restore jobs database
+        run: |
+          mkdir -p data
+          if git fetch --depth=1 origin data 2>/dev/null; then
+            git show FETCH_HEAD:jobs.json.gz | gunzip > data/jobs.json
+            echo "restored $(wc -c < data/jobs.json) bytes"
+          else
+            echo "no data branch yet, starting empty"
+          fi
       - name: Collect jobs (closed ones move to the archive)
         run: python3 collect.py
-      - name: Save updated data back to the repository
+      - name: Save jobs database
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          tmp="$(mktemp -d)"
+          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          cd "$tmp"
+          git init -q -b data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/jobs.json
-          git diff --cached --quiet || git commit -m "Update jobs data [skip ci]"
-          git push
+          git add jobs.json.gz
+          git commit -q -m "Jobs database"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
       - name: Build site
         run: python3 build.py
       - uses: actions/configure-pages@v5

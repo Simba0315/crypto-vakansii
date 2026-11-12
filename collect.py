@@ -13,6 +13,7 @@ TODAY = datetime.date.today().isoformat()
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
 EXCLUDE = {"Casa", "Swan", "Sei", "Safe", "Circle", "Compound", "Ramp", "Robinhood Crypto",
            "Cumberland / DRW", "Jump Crypto", "Flow Traders"}
+EXCLUDE_TECH = set()  # tech-list names to skip (wrong company behind the feed)
 CRYPTO_RE = re.compile(r"crypto|blockchain|bitcoin|web3|defi\b|token|ethereum|stablecoin|digital asset|on-chain|onchain|wallet", re.I)
 
 CATS = [
@@ -35,10 +36,14 @@ SKILLS = [
     ("Solidity", r"solidity"), ("Rust", r"\brust\b"), ("Go", r"golang|\bgo[,/)]|[,/(] ?go\b"), ("Python", r"python"),
     ("TypeScript", r"typescript"), ("JavaScript", r"javascript"), ("React", r"\breact\b"), ("Node.js", r"node\.?js"),
     ("Java", r"\bjava\b"), ("C++", r"c\+\+"), ("Kotlin", r"kotlin"), ("Swift", r"\bswift\b"), ("SQL", r"\bsql\b"),
+    ("Ruby", r"\bruby\b"), ("PHP", r"\bphp\b"), ("C#", r"\bc#"), (".NET", r"\.net\b"), ("Scala", r"\bscala\b"), ("Elixir", r"\belixir\b"),
+    ("PostgreSQL", r"postgres"), ("Docker", r"\bdocker\b"), ("Terraform", r"terraform"), ("GCP", r"\bgcp\b|google cloud"), ("Azure", r"\bazure\b"),
+    ("Machine Learning", r"machine learning"), ("LLM", r"\bllms?\b|large language model"), ("iOS", r"\bios\b"), ("Android", r"\bandroid\b"),
+    ("Figma", r"\bfigma\b"), ("Salesforce", r"salesforce"),
     ("Kubernetes", r"kubernetes|\bk8s\b"), ("AWS", r"\baws\b"), ("DeFi", r"\bdefi\b"), ("Smart contracts", r"smart contract"),
     ("NFT", r"\bnfts?\b"), ("Trading", r"\btrading\b"), ("AML/KYC", r"\baml\b|\bkyc\b"), ("AI", r"\bai\b|machine learning|\bllm"),
 ]
-TITLE_ONLY = {"DeFi", "NFT", "Trading", "AML/KYC", "AI"}  # too common in company boilerplate
+TITLE_ONLY = {"DeFi", "NFT", "Trading", "AML/KYC", "AI", "iOS", "Android", "Salesforce"}  # too common in company boilerplate
 ROLE_MARKERS = re.compile(
     r"(what you.ll (do|be doing)|responsibilities|about the (role|job|position|opportunity)|the role|role overview|"
     r"job description|your mission|in this role|what you will do|position overview|the opportunity|key duties|job summary)\s*:?",
@@ -134,20 +139,27 @@ def fetch(src):
 
 
 def main():
-    sources = [s for s in json.loads((ROOT / "sources.json").read_text()) if s["name"] not in EXCLUDE]
+    sources = [dict(s, crypto=True) for s in json.loads((ROOT / "sources.json").read_text()) if s["name"] not in EXCLUDE]
+    tech_file = ROOT / "sources_tech.json"
+    taken = {(s["ats"], s["token"]) for s in sources} | {s["name"].lower() for s in sources}
+    for s in (json.loads(tech_file.read_text()) if tech_file.exists() else []):
+        if (s["ats"], s["token"]) not in taken and s["name"].lower() not in taken and s["name"] not in EXCLUDE_TECH:
+            sources.append(dict(s, crypto=False)); taken |= {(s["ats"], s["token"]), s["name"].lower()}
+    is_crypto = {s["name"]: s["crypto"] for s in sources}
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
     used_slugs = {j["slug"] for j in db.values()}
     stats = {"new": 0, "closed": 0, "failed": [], "dropped": []}
-    with cf.ThreadPoolExecutor(8) as ex:
+    with cf.ThreadPoolExecutor(12) as ex:
         results = list(ex.map(fetch, sources))
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
-        if jobs and sum(j["_crypto"] for j in jobs) / len(jobs) < 0.3:
+        if is_crypto[name] and jobs and sum(j["_crypto"] for j in jobs) / len(jobs) < 0.3:
             stats["dropped"].append(name); continue          # same-name company that is not crypto
         seen = set()
         for j in jobs:
             j.pop("_crypto")
+            j["crypto"] = is_crypto[name]
             if not j["title"] or not j["url"]: continue
             seen.add(j["id"])
             old = db.get(j["id"])
