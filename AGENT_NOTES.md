@@ -31,8 +31,9 @@ Push with the deploy key already configured in this clone (`core.sshCommand`). A
    characters. Unique description 110–160 characters. One H1. H2s carry the topic or a real question. Direct answers in the
    first 40–60 words under a question. FAQPage markup only where the FAQ is visible. Dates and sources visible. No invented
    people, credentials, reviews, numbers or partners.
-2. English-language market. Payments in crypto only for now (cards later). Never touch wallets; only public receiving addresses
-   from the owner go into `config.json`. Do not change prices, wallets or contacts in `config.json` on your own.
+2. English-language market. Payments in crypto only for now (cards later), through a payment gateway checkout (the owner named
+   Cryptomus, 2026-11-12), not by showing wallet addresses on the site. Never touch wallets, never ask for or enter keys. Do not
+   change prices or contacts in `config.json` on your own (the Telegram contact was given by the owner).
 3. Closed jobs stay as archive pages.
 4. Real company logos only, from the company's own site.
 5. Design: the "Signal" identity (warm paper, ink, one lime accent, mono numerals, the board). Keep it consistent, distinctive
@@ -40,6 +41,11 @@ Push with the deploy key already configured in this clone (`core.sshCommand`). A
 6. Do not copy text or designs from other sites. Original features are preferred over imitations.
 7. Nothing that needs a server exists yet (accounts, payments, email). Do not fake it: no forms that go nowhere.
 8. No spam, no fake accounts, no posting on third-party sites, no contacting companies or people on the owner's behalf.
+10. Copy sells the problem, not the product (owner, 2026-11-12). Headline and first lines name the visitor's pain, then proof
+    from our own data, then what we do about it. Real problems and real numbers only: nothing invented, no fake urgency.
+11. Everything must work by itself: no "write to us and we will set it up" flows. A purchase is made in the buyer's account and
+    takes effect at once. The contact is a fallback for questions, not a step in any process. Until the server exists, pages say
+    plainly that self-serve is not open yet.
 9. GitHub Pages limit is 1 GB. Check the built size (`du -sh site`) and do not add page types that push it past 800 MB.
 
 ## Ideas not done yet
