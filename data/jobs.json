@@ -4035,7 +4035,8 @@
 "slug": "join-binance-s-global-talent-network-binance",
 "first_seen": "2026-11-12",
 "last_seen": "2026-11-12",
-"active": true
+"active": false,
+"closed": "2026-11-12"
 },
 "greenhouse-binance-5013821101": {
 "id": "greenhouse-binance-5013821101",
@@ -44300,6 +44301,26 @@
 "russian": false,
 "salary": "",
 "slug": "solutions-engineer-institutional-zksync-matter-labs",
+"first_seen": "2026-11-12",
+"last_seen": "2026-11-12",
+"active": true
+},
+"lever-crypto-com-45f2e51a-19d5-4112-a036-fb199d74fa9c": {
+"id": "lever-crypto-com-45f2e51a-19d5-4112-a036-fb199d74fa9c",
+"company": "Crypto.com",
+"title": "Client Services Analyst",
+"url": "https://jobs.lever.co/crypto/45f2e51a-19d5-4112-a036-fb199d74fa9c",
+"location": "Bangalore",
+"remote": true,
+"dept": "Customer Experience",
+"posted": "2026-11-11",
+"excerpt": "Serve as the primary point of contact for client inquiries, including requests from Sales and Account Management; this role requires participation in rotational shifts, including weekends. Support clients with account and trading inquiries, consistently meeting service-level agreements and ensuring a seamless support experience. Collaborate with internal Support and Development teams to resolve client issues…",
+"cat": "data-research",
+"level": "",
+"tags": [],
+"russian": false,
+"salary": "",
+"slug": "client-services-analyst-crypto-com",
 "first_seen": "2026-11-12",
 "last_seen": "2026-11-12",
 "active": true
