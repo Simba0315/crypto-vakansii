@@ -12,8 +12,11 @@
   var $ = function (id) { return document.getElementById(id); };
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+  var hidden = get('hrn_hidden', {});   // jobs the visitor marked "Not interested"
+
   /* ---------- job index: compact file expanded into rows ---------- */
-  // row: [slug, title, company, location, remote, cat, level, tags, salary, postedText, entry, featured, hue, salaryHigh, places, crypto, postedInt]
+  // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
+  //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere]
   var cache;
   function load() {
     if (!cache) cache = fetch(P + '/data/index.json').then(function (r) { return r.json(); }).then(function (d) {
@@ -21,7 +24,8 @@
         var c = d.c[r[2]], li = r[6], pi = r[9];
         return [r[0], r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
-          r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi];
+          r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
+          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0];
       });
     });
     return cache;
@@ -32,7 +36,7 @@
     return {
       q: p.get('q') || '', words: (p.get('q') || '').toLowerCase().split(/\s+/).filter(Boolean),
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
-      remote: p.has('remote'), entry: p.has('entry'), crypto: p.has('crypto'),
+      remote: p.has('remote'), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
       skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new'
     };
   }
@@ -43,6 +47,10 @@
     if (f.remote && !j[4]) return false;
     if (f.entry && !j[10]) return false;
     if (f.crypto && !j[15]) return false;
+    if (f.any && !(j[20] && j[4])) return false;
+    if (f.perk && j[18].indexOf(f.perk) < 0) return false;
+    if (f.etype && j[19] !== f.etype) return false;
+    if (hidden[j[0]]) return false;
     if (f.since && !(j[16] >= f.since)) return false;
     if (f.sal === 1 && !j[8]) return false;
     if (f.sal > 1 && !(j[13] >= f.sal)) return false;
@@ -74,7 +82,21 @@
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
       '<span class="jr"><span class="pills">' + pills + '</span><time>' + esc(j[9]) + '</time></span></a></li>';
   }
-  window.HRN = { parse: parse, match: match, load: load, collapse: collapse, card: card, get: get, set: set, esc: esc, today: today, base: P };
+  // mark cards of jobs the visitor already saved, applied to or opened (works for static and script-built lists)
+  function decorate(scope) {
+    var mine = get('hrn_jobs', {}), seen = {};
+    get('hrn_seen', []).forEach(function (x) { seen[x.s] = 1; });
+    (scope || document).querySelectorAll('.job > a').forEach(function (a) {
+      if (a.getAttribute('data-d')) return;
+      var m = (a.getAttribute('href') || '').match(/\/job\/([^/]+)\/?$/);
+      if (!m) return;
+      a.setAttribute('data-d', '1');
+      var slug = decodeURIComponent(m[1]), rec = mine[slug], pills = a.querySelector('.pills');
+      if (rec && pills) pills.insertAdjacentHTML('afterbegin', '<span class="pill acc">' + (rec.st === 'saved' ? 'Saved' : rec.st === 'closed' ? 'Closed out' : rec.st === 'offer' ? 'Offer' : rec.st === 'interview' ? 'Interviewing' : 'Applied') + '</span>');
+      else if (seen[slug]) a.parentNode.classList.add('seen');
+    });
+  }
+  window.HRN = { parse: parse, match: match, load: load, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- theme + mobile menu + shortcuts ---------- */
   var themeBtn = $('theme');
@@ -167,6 +189,38 @@
     }
   }
 
+  var hideBtn = $('hide');
+  if (hideBtn && saveBtn) {
+    var slugH = saveBtn.getAttribute('data-slug');
+    var paintHide = function () { hideBtn.textContent = hidden[slugH] ? 'Hidden from your searches · undo' : 'Not interested'; };
+    paintHide();
+    hideBtn.addEventListener('click', function () { if (hidden[slugH]) delete hidden[slugH]; else hidden[slugH] = 1; set('hrn_hidden', hidden); paintHide(); });
+  }
+
+  /* ---------- lists: saved / applied / viewed marks, faster navigation ---------- */
+  decorate(document);
+  var warmed = {};
+  document.addEventListener('mouseover', function (ev) {
+    var a = ev.target.closest && ev.target.closest('.job > a');
+    if (!a || warmed[a.href] || !a.href || a.href.indexOf('/job/') < 0) return;
+    warmed[a.href] = 1;
+    var l = document.createElement('link'); l.rel = 'prefetch'; l.href = a.href; document.head.appendChild(l);
+  });
+
+  /* ---------- home: pick up where you left off ---------- */
+  var recent = $('home-recent');
+  if (recent) {
+    var seenList = get('hrn_seen', []).slice(0, 3), lastSearch = get('hrn_searches', [])[0];
+    if (seenList.length || lastSearch) {
+      var html = seenList.map(function (j) {
+        return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/"><span class="ava" style="--h:' + hue(j.c) + '" aria-hidden="true">' +
+          esc((String(j.c).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span><span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + ' · viewed recently</span></span></a></li>';
+      }).join('');
+      if (lastSearch) html += '<li class="job"><a href="' + P + '/jobs/?' + esc(lastSearch.qs) + '"><span class="ava" aria-hidden="true">⌕</span><span><span class="jt">' + esc(lastSearch.label) + '</span><span class="js">Your saved search</span></span></a></li>';
+      $('home-recent-list').innerHTML = html; recent.hidden = false;
+    }
+  }
+
   /* ---------- For you: skill profile and résumé scan ---------- */
   var fy = $('fy-root');
   if (fy) {
@@ -180,7 +234,7 @@
         var k = scores.get(j[0]);
         return card(j, extra.get(j[0]) || 0, k ? k + (k === 1 ? ' skill match' : ' skill matches') : '');
       }).join('');
-      more.hidden = found.length <= shown;
+      more.hidden = found.length <= shown; decorate(list);
     };
     var run = function () {
       profile.lvl = lvl.value; profile.cat = cat.value; profile.sal = Number(sal.value) || 0; profile.remote = rem.checked;
@@ -188,7 +242,7 @@
       if (!profile.skills.length) { list.innerHTML = ''; more.hidden = true; count.textContent = 'Pick at least one skill to see matching jobs.'; return; }
       count.textContent = 'Matching…';
       load().then(function (all) {
-        var f = { cat: profile.cat, lvl: profile.lvl, loc: '', remote: profile.remote, entry: false, crypto: false, since: 0, sal: profile.sal, skills: [], words: [] };
+        var f = { cat: profile.cat, lvl: profile.lvl, loc: '', remote: profile.remote, entry: false, crypto: false, any: false, perk: '', etype: '', since: 0, sal: profile.sal, skills: [], words: [] };
         scores = new Map();
         var rows = all.filter(function (j) {
           if (!match(j, f)) return false;
@@ -277,6 +331,12 @@
       else if (ev.target.classList.contains('nt')) { rec.note = ev.target.value; store(); }
     });
     draw();
+    var hiddenNote = $('mj-hidden'), hiddenCount = Object.keys(hidden).length;
+    if (hiddenNote && hiddenCount) {
+      hiddenNote.innerHTML = hiddenCount + (hiddenCount === 1 ? ' job is' : ' jobs are') + ' hidden from your searches. <button class="linkbtn" id="mj-unhide" type="button">Show them again</button>';
+      hiddenNote.hidden = false;
+      $('mj-unhide').addEventListener('click', function () { hidden = {}; set('hrn_hidden', hidden); hiddenNote.hidden = true; });
+    }
 
     var searches = get('hrn_searches', []);
     var drawSearches = function (index) {

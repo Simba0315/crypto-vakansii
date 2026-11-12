@@ -50,6 +50,35 @@ SKILLS = [
     ("NFT", r"\bnfts?\b"), ("Trading", r"\btrading\b"), ("AML/KYC", r"\baml\b|\bkyc\b"), ("AI", r"\bai\b|machine learning|\bllm"),
 ]
 TITLE_ONLY = {"DeFi", "NFT", "Trading", "AML/KYC", "AI", "iOS", "Android", "Salesforce"}  # too common in company boilerplate
+PERKS = [   # (name, page slug, pattern) detected in the posting text
+    ("Visa sponsorship", "visa-sponsorship", r"visa sponsorship|sponsor (a |your )?(work )?visas?|sponsorship (is )?available|we (can|will|do) sponsor"),
+    ("Relocation support", "relocation", r"relocation (assistance|support|package|bonus|allowance)|(help|support) (you )?(to |with )?relocat"),
+    ("Equity", "equity", r"stock options|\brsus?\b|equity (grant|package|compensation|awards?|stake|ownership)|(company|meaningful|generous|competitive|plus|salary (and|&)|bonus (and|&|,)) equity"),
+    ("4-day week", "4-day-week", r"4[- ]day (work ?)?week|four[- ]day (work ?)?week"),
+    ("Unlimited PTO", "unlimited-pto", r"unlimited (pto|paid time off|vacation|holiday)|flexible (pto|paid time off)"),
+    ("Parental leave", "parental-leave", r"parental leave|maternity leave|paternity leave"),
+    ("Learning budget", "learning-budget", r"learning (budget|stipend|allowance)|education (budget|stipend|allowance)|professional development (budget|stipend|allowance)"),
+    ("Home office stipend", "home-office-stipend", r"home office (stipend|budget|allowance|setup)|work[- ]from[- ]home (stipend|budget|allowance)|remote (work )?(stipend|allowance)"),
+]
+NO_VISA = re.compile(r"(not|unable|cannot|can't|can not|no|won't|will not|don't|do not) (\w+ ){0,5}(sponsor|sponsorship)|without (\w+ ){0,3}sponsorship|sponsorship is(n't| not)", re.I)
+
+
+def perks(text):
+    out = [name for name, _, rx in PERKS if re.search(rx, text, re.I)]
+    if "Visa sponsorship" in out and NO_VISA.search(text): out.remove("Visa sponsorship")
+    return out
+
+
+def etype(title, hint=""):
+    """Employment type when the feed or the title says so; empty when unknown."""
+    h, t = (hint or "").lower().replace(" ", "").replace("-", "").replace("_", ""), title.lower()
+    if "intern" in h or re.search(r"\bintern(ship)?\b", t): return "Internship"
+    if "contract" in h or "temporary" in h or re.search(r"\bcontract(or)?\b|\btemporary\b|\bfreelance\b|fixed[- ]term", t): return "Contract"
+    if "parttime" in h or re.search(r"part[- ]time", t): return "Part-time"
+    if "fulltime" in h or "permanent" in h: return "Full-time"
+    return ""
+
+
 ROLE_MARKERS = re.compile(
     r"(what you.ll (do|be doing)|responsibilities|about the (role|job|position|opportunity)|the role|role overview|"
     r"job description|your mission|in this role|what you will do|position overview|the opportunity|key duties|job summary)\s*:?",
@@ -88,14 +117,14 @@ def classify(title):
 
 def level(title):
     t = title.lower()
-    if re.search(r"intern|trainee|graduate", t): return "Intern"
-    if re.search(r"junior|\bjr\b|associate|entry", t): return "Junior"
-    if re.search(r"head of|director|\bvp\b|chief|principal|staff\b|lead\b", t): return "Lead"
-    if re.search(r"senior|\bsr\b", t): return "Senior"
+    if re.search(r"\bintern(ship)?s?\b|\btrainee\b|\bnew grad|\bgraduate program", t): return "Intern"
+    if re.search(r"head of|\bdirector\b|\bvp\b|vice president|\bchief\b|\bprincipal\b|\bstaff\b|\blead\b", t): return "Lead"
+    if re.search(r"\bsenior\b|\bsr\b\.?", t): return "Senior"
+    if re.search(r"\bjunior\b|\bjr\b\.?|entry[- ]level|\bassociate\b", t): return "Junior"
     return ""
 
 
-def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary=""):
+def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint=""):
     title = re.sub(r"\s+", " ", title or "").strip()
     location = re.sub(r"\s+", " ", location or "").strip()
     if location.lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: location = ""
@@ -109,6 +138,8 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
         "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I)][:8],
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
         "salary": salary or "",
+        "perks": perks(text), "etype": etype(title, hint),
+        "anywhere": bool(re.search(r"worldwide|world-wide|anywhere|global|any location", location, re.I)),
         "_crypto": bool(CRYPTO_RE.search(blob)),
     }
 
@@ -133,7 +164,7 @@ def fetch(src):
             sr = j.get("salaryRange") or {}
             sal = f"{sr.get('min'):,.0f}–{sr.get('max'):,.0f} {sr.get('currency','')}".replace(",", " ") if sr.get("min") and sr.get("max") else ""
             out.append(norm(name, ats, j["id"], j.get("text"), j.get("hostedUrl"), c.get("location"), j.get("workplaceType") == "remote",
-                            c.get("team") or c.get("department"), posted, text, sal))
+                            c.get("team") or c.get("department"), posted, text, sal, c.get("commitment") or ""))
     else:
         d = get_json(f"https://api.ashbyhq.com/posting-api/job-board/{tok}?includeCompensation=true", 60)
         if not d or "jobs" not in d: return name, None
@@ -141,7 +172,7 @@ def fetch(src):
             comp = (j.get("compensation") or {})
             sal = comp.get("scrapeableCompensationSalarySummary") or comp.get("compensationTierSummary") or ""
             out.append(norm(name, ats, j["id"], j.get("title"), j.get("jobUrl") or j.get("applyUrl"), j.get("location"), j.get("isRemote"),
-                            j.get("department") or j.get("team"), j.get("publishedAt"), j.get("descriptionPlain") or strip_html(j.get("descriptionHtml")), sal))
+                            j.get("department") or j.get("team"), j.get("publishedAt"), j.get("descriptionPlain") or strip_html(j.get("descriptionHtml")), sal, j.get("employmentType") or ""))
     return name, out
 
 

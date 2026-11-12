@@ -5,7 +5,7 @@
   var H = window.HRN;
   var $ = function (id) { return document.getElementById(id); };
   var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), age = $('age'), sort = $('sort');
-  var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto');
+  var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
   var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
   var ftoggle = $('ftoggle'), fwrap = $('fwrap');
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
@@ -14,7 +14,8 @@
 
   var f0 = H.parse(location.search.slice(1));
   q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; sal.value = f0.sal ? String(f0.sal) : ''; age.value = f0.age ? String(f0.age) : ''; sort.value = f0.sort;
-  fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto;
+  fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto; fAny.checked = f0.any; perk.value = f0.perk; etype.value = f0.etype;
+  var sortTouched = new URLSearchParams(location.search).has('sort');
   var skills = f0.skills.slice();
   var chips = Array.prototype.slice.call(skillbar.querySelectorAll('.chipbtn'));
   var paintChips = function () { chips.forEach(function (c) { c.setAttribute('aria-pressed', skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); };
@@ -36,6 +37,9 @@
     if (fRemote.checked) p.set('remote', '1');
     if (fEntry.checked) p.set('entry', '1');
     if (fCrypto.checked) p.set('crypto', '1');
+    if (fAny.checked) p.set('any', '1');
+    if (perk.value) p.set('perk', perk.value);
+    if (etype.value) p.set('etype', etype.value);
     if (skills.length) p.set('skills', skills.join(','));
     if (sort.value !== 'new') p.set('sort', sort.value);
     return p.toString();
@@ -44,7 +48,8 @@
   var describe = function () {
     var parts = [];
     if (q.value.trim()) parts.push('“' + q.value.trim() + '”');
-    [cat, lvl, loc, age, sal].forEach(function (el) { if (el.value) parts.push(text(el)); });
+    [cat, lvl, loc, age, sal, perk, etype].forEach(function (el) { if (el.value) parts.push(text(el)); });
+    if (fAny.checked) parts.push('Work from anywhere');
     if (fRemote.checked) parts.push('Remote');
     if (fEntry.checked) parts.push('Entry-level');
     if (fCrypto.checked) parts.push('Crypto');
@@ -54,22 +59,28 @@
   var render = function () {
     list.innerHTML = found.slice(0, shown).map(function (j) { return H.card(j, extra.get(j[0]) || 0); }).join('');
     count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
-    more.hidden = found.length <= shown;
+    more.hidden = found.length <= shown; H.decorate(list);
   };
   var run = function () {
     var qs = query(), f = H.parse(qs);
     var rows = jobs.filter(function (j) { return H.match(j, f); });
     if (f.sort === 'sal') rows = rows.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
+    else if (f.sort === 'rel' && f.words.length) {                 // title matches first, then the rest, newest first inside each group
+      var score = function (j) { var t = j[1].toLowerCase(), n = 0; f.words.forEach(function (w) { if (t.indexOf(w) >= 0) n++; }); return n === f.words.length ? 2 : n ? 1 : 0; };
+      rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
+    }
     total = rows.length; extra = new Map(); found = H.collapse(rows, extra);
-    var active = [cat, lvl, loc, sal, age].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto].filter(function (el) { return el.checked; }).length + skills.length;
+    var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto, fAny].filter(function (el) { return el.checked; }).length + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     shown = 50; render();
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
   };
   var timer;
-  q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 140); });
-  [cat, lvl, loc, sal, age, sort, fRemote, fEntry, fCrypto].forEach(function (el) { el.addEventListener('change', run); });
+  // typing a query switches to "best match" unless the visitor picked a sort order themselves
+  q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
+  sort.addEventListener('change', function () { sortTouched = true; });
+  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fEntry, fCrypto, fAny].forEach(function (el) { el.addEventListener('change', run); });
   skillbar.addEventListener('click', function (ev) {
     var c = ev.target.closest('.chipbtn'); if (!c) return;
     var s = c.getAttribute('data-skill'), i = skills.indexOf(s);
@@ -84,5 +95,6 @@
     H.set('hrn_searches', all.slice(0, 30));
     saveBtn.textContent = 'Saved to My jobs ✓'; saveBtn.disabled = true;
   });
+  if (!sortTouched && q.value.trim()) sort.value = 'rel';
   run();
 })();
