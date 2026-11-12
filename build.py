@@ -985,22 +985,39 @@ def main():
         for t in j["tags"]: g_tag[t].append((j, r))
     cat_slug = {v: k for k, v in CAT.items()}
     best = sorted(paid, key=lambda x: -x[1][1])
+    def level_table(group, minimum=15):  # pay ladder: median and middle half per seniority level; "" when there is too little data
+        rows_ = []
+        for lv, name in (("Intern", "Intern"), ("Junior", "Junior"), ("Senior", "Senior"), ("Lead", "Lead and above"), ("", "No level in title")):
+            ms = sorted((lo + hi) / 2 for j, (lo, hi) in group if j["level"] == lv)
+            if len(ms) >= minimum: rows_.append((lv, name, median(ms), ms[len(ms) // 4], ms[min(len(ms) - 1, len(ms) * 3 // 4)], len(ms)))
+        if sum(1 for r in rows_ if r[0]) < 2: return ""
+        med = {r[0]: r[2] for r in rows_}
+        lo_, hi_ = ("Junior", "Senior") if "Junior" in med and "Senior" in med else ("Senior", "Lead") if "Senior" in med and "Lead" in med else (None, None)
+        answer = ""
+        if lo_ and med[hi_] > med[lo_]:
+            answer = (f"<p>{hi_} roles advertise a median of {money(med[hi_])}, {round((med[hi_] / med[lo_] - 1) * 100)}% more than {lo_.lower()} roles ({money(med[lo_])}). "
+                      "The level comes from the job title; titles without a level word are counted separately.</p>")
+        body_ = "".join(f'<tr><td>{e(name)}</td><td><strong>{money(m_)}</strong></td><td style="white-space:nowrap">{money(q1)}–{money(q3)}</td><td>{c:,}</td></tr>' for _, name, m_, q1, q3, c in rows_)
+        return answer + f'<div class="tablewrap t4"><table><tr><th>Level</th><th>Median salary</th><th>Middle half</th><th>Roles</th></tr>{body_}</table></div>'
+    def level_section(title, group):
+        t_ = level_table(group)
+        return section(title, t_) if t_ else ""
     page("salaries/", f"Tech Salaries From Live Job Postings ({len(paid):,} roles) | {SITE}",
          "Median salaries in tech by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
          crumbs(("Salaries", "")) + "<h1>Tech salaries from live job postings</h1>"
          f'<p class="lead">{100 - SALPCT}% of open tech postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
          'Each figure is the median of the range midpoints. These are advertised ranges, not verified pay.</p>'
          + section("By category", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10))
+         + level_section("Tech salaries by level, intern to lead", paid)
          + section("By skill", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"))
          + section("By company", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8))
          + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary")) + cite("salaries/", "Tech salaries from live job postings"))
 
     def salary_page(slug, label, group, back):
-        by_lvl, by_loc = defaultdict(list), defaultdict(list)
+        by_loc = defaultdict(list)
         for j, r in group:
-            by_lvl[j["level"] or "Mid-level (no level in the title)"].append((j, r))
             for ps in j["places"]: by_loc[PLACE_NAME[ps]].append((j, r))
-        cut = (section(f"{label} salary by level", table(by_lvl, None, 15, 6)) if sum(len(v) >= 15 for v in by_lvl.values()) >= 2 else "") + \
+        cut = level_section(f"{label} salary by level", group) + \
               (section(f"{label} salary by location", table(by_loc, lambda k: f"locations/{PLACE_SLUG[k]}/", 15, 20)) if sum(len(v) >= 15 for v in by_loc.values()) >= 2 else "")
         mids = sorted((lo + hi) / 2 for _, (lo, hi) in group)
         pct = lambda q: mids[min(len(mids) - 1, int(len(mids) * q))]

@@ -248,6 +248,7 @@ table{border-collapse:collapse;width:100%;font-size:15px}
 th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font:500 11.5px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--faint);background:var(--bg2)}
 tr:last-child td{border-bottom:0}
+@media(max-width:560px){.t4 th,.t4 td{padding:12px 9px}.t4 th:first-child,.t4 td:first-child{padding-left:16px}}
 td strong{font-weight:650}
 td a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 td a:hover{text-decoration-color:var(--text)}

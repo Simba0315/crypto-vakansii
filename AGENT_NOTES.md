@@ -70,6 +70,10 @@ python3 -m http.server 8765 --directory <a folder that contains site/ as crypto-
 
 Push with the deploy key already configured in this clone (`core.sshCommand`). Always `git pull --rebase origin main` first.
 
+## Changelog
+
+`CHANGELOG.md` has one line per scheduled improvement run (newest first) and "Ideas for the owner". Read it before picking the next change.
+
 ## The plan
 
 `ROADMAP.md` (in Russian, for the owner) lists every request he has made and where it stands. Any new request from him goes
@@ -102,5 +106,5 @@ into it at once; when something ships, update its row. He asked for this on 2026
 
 - Deploy `server/` to Cloudflare (owner's logins needed). Then: Plus (email alerts need an email service, 48-hour early access, AI résumé tools, device sync endpoint already exists).
 - More sources: other applicant tracking systems (Workable, SmartRecruiters, Recruitee, Teamtailor).
-- Compare page (two skills or two companies side by side), salary by level tables, monthly hiring report page.
+- Compare page (two skills or two companies side by side), monthly hiring report page.
 - Mobile apps and a browser extension are planned by the owner after the site.
