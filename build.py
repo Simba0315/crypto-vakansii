@@ -7,7 +7,7 @@ from urllib.parse import quote
 from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
-from collect import CATS, OTHER, slugify
+from collect import CATS, OTHER, SKILLS, slugify
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -18,7 +18,7 @@ TODAY = datetime.date.today().isoformat()
 e = html.escape
 CAT = {s: n for s, n, _ in CATS} | {OTHER[0]: OTHER[1]}
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
-TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "AML/KYC": "aml-kyc"}
+TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc"}
 EUROPE = (r"europe|\bemea\b|\beu\b|london|united kingdom|\buk\b|paris|france|berlin|germany|vienna|austria|zurich|switzerland|\bzug\b|amsterdam|"
           r"netherlands|lisbon|portugal|madrid|barcelona|spain|dublin|ireland|warsaw|poland|vilnius|lithuania|malta|cyprus|italy|milan|prague|"
           r"czech|romania|bucharest|sweden|stockholm|luxembourg|belgium|brussels|estonia|tallinn|denmark|copenhagen")
@@ -76,6 +76,7 @@ FOOT = {"cats": ""}
 SIM = {"cat": {}, "comp": {}}
 OPEN = Counter()   # open roles per company
 FACT = {}          # one-paragraph hiring summary per company
+CATMED = {}        # median advertised salary per category slug
 MARK = ('<rect width="32" height="32" rx="9" fill="url(#lg)"/><rect x="8" y="9" width="16" height="3" rx="1.5" fill="#fff"/>'
         '<rect x="8" y="14.5" width="11" height="3" rx="1.5" fill="#fff" opacity=".85"/><rect x="8" y="20" width="7" height="3" rx="1.5" fill="#fff" opacity=".7"/>')
 GRAD = '<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs>'
@@ -98,7 +99,9 @@ def roles(n, word="job"):
 
 
 def hue(name):
-    return int(hashlib.md5(name.encode()).hexdigest()[:6], 16) % 360
+    h = 0                       # same simple hash as in site.js, so avatars get the same colour everywhere
+    for ch in name: h = (h * 31 + ord(ch)) % 360
+    return h
 
 
 def ava(name, cls=""):
@@ -122,14 +125,14 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="canonical" href="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:type" content="website"><meta property="og:url" content="{e(url)}"><meta property="og:site_name" content="{e(SITE)}">
-<meta name="twitter:card" content="summary"><meta name="theme-color" content="#4f46e5">
+<meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#4f46e5">
 <link rel="icon" type="image/svg+xml" href="{P}/favicon.svg">
 <link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/new/">New</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/remote/">Remote</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl plus" href="{P}/plus/">Plus</a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon" id="theme" type="button" aria-label="Switch between light and dark">{ICON_THEME}</button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon burger" id="menu" type="button" aria-label="Menu" aria-expanded="false">{ICON_MENU}</button></div></div></header>
 {hero}<main class="wrap">{body}</main>
@@ -140,10 +143,10 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Every open role at tech companies, pulled from their official careers pages and refreshed daily.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/hiring-badge/">Hiring badge &amp; widget</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li></ul></div>
-</div><p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
+</div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
 def card(j, extra=0):
@@ -280,8 +283,11 @@ def job_page(j, active_by_cat):
     if j["remote"]: rows.append(("Workplace", "Remote"))
     rows.append(("Category", f'<a href="{P}/jobs/{j["cat"]}/">{e(CAT[j["cat"]])}</a>'))
     if j["level"]: rows.append(("Level", e(j["level"])))
-    if j["salary"]: rows.append(("Salary", e(j["salary"])))
+    if j["salary"]:
+        ctx = (f'<br><span class="note">Median for {e(CAT[j["cat"]])} roles: {money(CATMED[j["cat"]])}</span>' if j.get("usd") and j["cat"] in CATMED else "")
+        rows.append(("Salary", e(j["salary"]) + ctx))
     if j["posted"]: rows.append(("Posted", fdate(j["posted"])))
+    if j["active"] and j.get("last_seen"): rows.append(("Last checked", fdate(j["last_seen"])))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
@@ -294,6 +300,9 @@ def job_page(j, active_by_cat):
         ld = {"@context": "https://schema.org", "@type": "JobPosting", "title": j["title"], "description": j["excerpt"] or j["title"],
               "datePosted": j["posted"] or j["first_seen"], "hiringOrganization": {"@type": "Organization", "name": j["company"]},
               "directApply": False, "url": canonical}
+        if j.get("usd"):
+            ld["baseSalary"] = {"@type": "MonetaryAmount", "currency": "USD",
+                                "value": {"@type": "QuantitativeValue", "minValue": int(j["usd"][0]), "maxValue": int(j["usd"][1]), "unitText": "YEAR"}}
         if j["location"]:
             ld["jobLocation"] = {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": j["location"]}}
         if j["remote"]:
@@ -322,7 +331,8 @@ def job_page(j, active_by_cat):
     loc = f" · {e(j['location'])}" if j["location"] else ""
     body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
-            + f'<div class="pills">{"".join(pills)}</div></div></div>{banner}'
+            + f'<div class="pills">{"".join(pills)}</div>'
+            + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card"><dl class="meta">{meta}</dl>{apply_btn}{save_btn}</aside></div>')
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = f"{j['title']} at {j['company']}" + (" (closed)" if not j["active"] else "")
@@ -367,8 +377,14 @@ def main():
     remote = [j for j in active if j["remote"]]
     places = [(name, slug, js) for name, slug, rx in PLACES if len(js := [j for j in active if slug in j["places"]]) >= 5]
     OPEN.update(Counter(j["company"] for j in active))
+    for cs in CAT:
+        mids = [(lo + hi) / 2 for j in by_cat[cs] if j["usd"] for lo, hi in [j["usd"]]]
+        if len(mids) >= 15: CATMED[cs] = median(mids)
     top_cats = sorted((s for s in CAT if by_cat[s] and s != OTHER[0]), key=lambda s: -len(by_cat[s]))
     FOOT["cats"] = "".join(f'<li><a href="{P}/jobs/{s}/">{e(CAT[s])}</a></li>' for s in top_cats[:6])
+    pop_sk = [t for t, _ in Counter(t for j in active for t in j["tags"]).most_common(10)]
+    FOOT["pop"] = ('<p class="pop"><span>Popular searches:</span>' + "".join(f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} jobs</a>' for t in pop_sk)
+                   + "".join(f'<a href="{P}/locations/{slug}/">Jobs in {e(name.removeprefix("the "))}</a>' for name, slug, _ in sorted(places, key=lambda x: -len(x[2]))[:6]) + "</p>")
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
     for s in CAT:
         SIM["cat"][s] = diverse(order(by_cat[s]), 12)
@@ -386,7 +402,8 @@ def main():
             f'<h1>Find your next role in <span class="grad">tech</span></h1>'
             f'<p class="sub">{roles(n, "open role")} at {m} companies — software, AI, fintech, crypto and more. Straight from company career pages, no sign-up.</p>'
             f'<form class="searchbar" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search jobs</button></form>'
-            f'<div class="popular"><span>Popular:</span><a href="{P}/remote/">Remote</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a><a href="{P}/crypto/">Crypto</a>'
+            f'<p class="heroalt"><a href="{P}/for-you/">Or match jobs to your skills and résumé →</a></p>'
+            f'<div class="popular"><span>Popular:</span><a href="{P}/remote/">Remote</a><a href="{P}/new/">New</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a><a href="{P}/crypto/">Crypto</a>'
             f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/with-salary/">Salary listed</a></div>'
             f'<dl class="stats"><div><dt>{n:,}</dt><dd>open roles</dd></div><div><dt>{m}</dt><dd>companies</dd></div>'
             f'<div><dt>{len(remote):,}</dt><dd>remote</dd></div><div><dt>{sum(bool(j["salary"]) for j in active):,}</dt><dd>with salary</dd></div></dl></div></section>')
@@ -394,35 +411,50 @@ def main():
                  f'<a class="btn lg" href="{P}/plus/">See Plus</a></div>')
     band = (f'<div class="band"><div><h2>Hiring for your team?</h2><p>Standard listings are free. Featured placement starts at $99, paid in USDT, BTC or ETH.</p></div>'
             f'<a class="btn lg" href="{P}/post-a-job/">Post a job</a></div>')
+    FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of tech companies. Every listing links to the original posting, and you apply on the employer's own site."),
+           ("How often is the site updated?", "Every day. New roles are added, and roles that companies have closed are moved to the archive and marked as closed."),
+           ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with early access and extra tools is on the way."),
+           ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
+           ("Can I see salaries?", "Where the employer publishes a range, we show it, let you filter and sort by it, and use it for the salary pages.")]
+    faq_html = "".join(f"<details class='faq'><summary>{e(q_)}</summary><p>{e(a_)}</p></details>" for q_, a_ in FAQ)
+    faq_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in FAQ]}) + "</script>")
+    top_paid = diverse_pairs(sorted(((j, j["usd"]) for j in active if j["usd"]), key=lambda x: -x[1][1]), 8)
     home = (section("Latest jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"Browse all {n:,}"))
+            + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data"))
             + section("Browse by category", f'<ul class="tiles">{cats}</ul>')
             + section("Top companies hiring", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("Jobs by location", f'<ul class="tiles">{place_html}</ul>', ("locations/", "All locations")) + band
-            + section("More recent jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:40])}</ul>', ("jobs/", f"Browse all {n:,}")))
+            + section("More recent jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:32])}</ul>', ("jobs/", f"Browse all {n:,}"))
+            + section("Questions", faq_html))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
          f"{roles(n)} at tech companies: engineering, marketing, compliance, support and more. Remote filters, salary data, updated daily.", home, hero=hero,
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
-               "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>")
+               "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>" + faq_ld)
     rss("feed.xml", f"{SITE} — latest tech jobs", "", active)
 
     # Search page
     opts = "".join(f'<option value="{s}">{e(CAT[s])}</option>' for s in CAT if by_cat[s])
     loc_opts = "".join(f'<option value="{slug}">{e(name.removeprefix("the "))}</option>' for name, slug, _ in places)
-    top_skills = [t for t, _ in Counter(t for j in active for t in j["tags"]).most_common(18)]
+    skill_counts = Counter(t for j in active for t in j["tags"])
+    top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     search = (crumbs(("All jobs", "")) + "<h1>Search tech jobs</h1>"
-              f'<div id="search"><form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
+              f'<div id="search"><form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               f'<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button><div id="fwrap"><div class="fbar"><select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
               '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>'
               f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
               '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
               '<option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>'
+              '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option>'
+              '<option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>'
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="sal">Highest salary</option></select></div>'
               '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-entry"> Entry-level</label>'
               '<label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>'
               f'<div class="skillbar" id="skills">{skill_chips}</div></div>'
               '<div class="rbar"><p class="note" id="count">Loading…</p><button class="btn ghost sm" id="save-search" type="button">Save this search</button></div>'
               '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'
+              + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in top_skills + [c for c, _ in comp_items[:200]]) + "</datalist>"
               f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"Search {roles(n, 'Tech Job')} | {SITE}",
          "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search)
@@ -517,10 +549,12 @@ def main():
          crumbs(("Locations", "")) + f'<h1>Tech jobs by location</h1><p class="lead">Open roles per place. A job that lists several locations appears in each of them.</p><ul class="tiles">{place_html}</ul>')
 
     # Companies (+ per-company data for the embeddable widget)
-    grid = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items)
+    grid = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True).replace("<li>", f'<li data-n="{e(c.lower())}">', 1) for c, js in comp_items)
     page("companies/", f"Tech Companies Hiring Now — {len(companies)} employers | {SITE}",
          "Tech companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
-         crumbs(("Companies", "")) + f'<h1>Tech companies hiring now</h1><p class="lead">{len(companies)} employers. The number is their current open roles.</p><ul class="tiles">{grid}</ul>')
+         crumbs(("Companies", "")) + f'<h1>Tech companies hiring now</h1><p class="lead">{len(companies)} employers. The number is their current open roles.</p>'
+         '<input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">'
+         f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>')
     for c, js in companies.items():
         slug = slugify(c)
         act, arc = order([j for j in js if j["active"]]), order([j for j in js if not j["active"]])
@@ -649,6 +683,29 @@ def main():
          f'<div class="empty" id="ss-empty">No saved searches. Set filters on the <a class="inl" href="{P}/jobs/">search page</a> and press “Save this search”.</div></section>'
          '<section class="sec"><div class="sec-head"><h2>Recently viewed</h2></div><ul class="jobs" id="seen-list"></ul><div class="empty" id="seen-empty">No jobs viewed yet.</div></section></div>', sitemap=False)
 
+    # For you: skill profile and résumé scan, all in the browser
+    fy_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t, _ in skill_counts.most_common())
+    page("for-you/", f"Jobs for you — match tech jobs to your skills and résumé | {SITE}",
+         "Pick your skills or paste your résumé and see the open tech jobs that fit, best matches first. Runs in your browser: nothing is uploaded.",
+         crumbs(("For you", "")) + '<h1>Jobs for you</h1><p class="lead">Pick your skills or paste your résumé, and we rank every open role by how well it fits. '
+         'It all happens in your browser: your résumé is never uploaded.</p>'
+         f'<div id="fy-root"><div class="card"><h2>Your skills</h2><div class="skillbar" id="fy-skills" style="margin-top:12px">{fy_chips}</div>'
+         '<details class="scan"><summary>Or paste your résumé and let us find your skills</summary>'
+         '<textarea id="fy-text" rows="7" placeholder="Paste the text of your résumé here" aria-label="Résumé text"></textarea>'
+         '<p><button class="btn sm" id="fy-scan" type="button">Find my skills</button> <span class="note" id="fy-scan-note"></span></p></details>'
+         '<div class="fbar" style="margin:14px 0 0"><select id="fy-lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>'
+         f'<select id="fy-cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
+         '<select id="fy-sal" aria-label="Salary"><option value="">Any salary</option><option value="100000">$100K+</option><option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>'
+         '<label class="check"><input type="checkbox" id="fy-remote"> Remote only</label></div></div>'
+         '<div class="rbar" style="margin-top:18px"><p class="note" id="fy-count"></p><button class="btn ghost sm" id="fy-clear" type="button">Clear my profile</button></div>'
+         '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p></div>')
+    write("data/skills.json", json.dumps([[n_, rx] for n_, rx in SKILLS if n_ in skill_counts], ensure_ascii=False), sitemap=False)
+
+    # Skills hub
+    skill_tiles = "".join(tile(f"skills/{tslug(t)}/", t, c) for t, c in skill_counts.most_common())
+    page("skills/", f"Tech Jobs by Skill — {len(skill_counts)} skills | {SITE}", "Browse open tech jobs by skill: languages, frameworks, cloud platforms and tools.",
+         crumbs(("Skills", "")) + f'<h1>Tech jobs by skill</h1><p class="lead">Open roles that mention each skill. Each skill page also links to its salary data and to remote and city versions.</p><ul class="tiles">{skill_tiles}</ul>')
+
     # Plus (paid plan for job seekers; one-time payments, no subscription)
     plus = CFG.get("plus", {"live": False, "plans": []})
     cta = ('<a class="btn primary lg" href="#pay">Get Plus</a>' if plus.get("live") else '<button class="btn primary lg" type="button" disabled>Available soon</button>')
@@ -694,7 +751,11 @@ def main():
          "Post jobs for tech and crypto companies. Standard listings are free, featured listings from $99. Pay with crypto.",
          crumbs(("For employers", "")) + "<h1>Post a job</h1>"
          f'<p class="lead">{roles(n)} from {m:,} tech companies are listed here. People come to this site for one thing: a job in tech.</p>'
-         f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>{pay}'
+         f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>'
+         + section("How a featured listing looks", '<ul class="jobs">' + card({"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior",
+                   "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company", "slug": "", "title": "Senior Backend Engineer", "posted": TODAY})
+                   .replace(f'href="{P}/job//"', 'href="#"') + "</ul>") + pay
+         + f''
          '<section class="sec"><div class="sec-head"><h2>Questions</h2></div>'
          "<h3>How do I pay?</h3><p>Crypto only: USDT, BTC or ETH. We do not take cards or bank transfers.</p>"
          "<h3>No careers page of your own?</h3><p>Use your company page here as one. Link your site's Careers button to it, or embed the list with one line of code: "
@@ -719,13 +780,20 @@ def main():
          "<h3>For job seekers</h3><p>The site is free. We never charge for applying and we do not collect résumés.</p>"
          f'<h3>For employers</h3><p>You can add and feature a job: see <a href="{P}/post-a-job/">posting options</a>.</p>')
     page("404.html", f"Page not found | {SITE}", "Page not found.",
-         f'<h1>Page not found</h1><p class="lead">The address may have changed. Try the <a href="{P}/jobs/">job search</a>.</p>', sitemap=False)
+         f'<h1>Page not found</h1><p class="lead">The address may have changed, or the job may have been renamed. Search for it here:</p>'
+         f'<form class="searchbar wide" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
+         f'<p class="note">Or browse <a href="{P}/jobs/">all jobs</a>, <a href="{P}/companies/">companies</a> and <a href="{P}/skills/">skills</a>.</p>', sitemap=False)
 
     # Data + static files
-    idx = [[j["slug"], j["title"], j["company"], j["location"], int(j["remote"]), j["cat"], j["level"], j["tags"], j["salary"], fdate(j["posted"], False),
-            int(j["entry"]), int(j["featured"]), hue(j["company"]), int(j["usd"][1]) if j["usd"] else 0, j["places"], int(bool(j.get("crypto"))),
-            int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0)] for j in order(active)]
-    write("data/index.json", json.dumps(idx, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    comp_list = sorted({j["company"] for j in active}); ci = {c: i for i, c in enumerate(comp_list)}
+    tag_list = [t for t, _ in SKILLS]; ti = {t: i for i, t in enumerate(tag_list)}
+    place_list = [slug for _, slug, _ in PLACES]; pi = {p_: i for i, p_ in enumerate(place_list)}
+    cat_list = list(CAT); lvl_list = ["", "Intern", "Junior", "Senior", "Lead"]
+    rows_ = [[j["slug"], j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))),
+              cat_list.index(j["cat"]), lvl_list.index(j["level"]) if j["level"] in lvl_list else 0, [ti[t] for t in j["tags"] if t in ti], j["salary"],
+              int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0), int(j["usd"][1]) if j["usd"] else 0, [pi[p_] for p_ in j["places"]]] for j in order(active)]
+    write("data/index.json", json.dumps({"c": comp_list, "t": tag_list, "p": place_list, "k": cat_list, "l": lvl_list, "r": rows_}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    shutil.copy(ROOT / "assets" / "og.jpg", OUT / "og.jpg")
     for f in ("style.css", "app.js", "embed.js", "site.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{GRAD}{MARK}</svg>', sitemap=False)

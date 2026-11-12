@@ -256,3 +256,20 @@ nav a.nl.plus{color:var(--accent);font-weight:700}
 .h2s{margin-top:28px}
 #ftoggle{display:none;margin:0 0 12px}
 @media(max-width:720px){#ftoggle{display:inline-flex}#fwrap{display:none}#fwrap.open{display:block}}
+
+/* For you, FAQ, footer popular links, misc */
+.heroalt{margin:14px 0 0;font-size:15px;font-weight:600}
+.heroalt a{color:var(--accent)}
+.heroalt a:hover{text-decoration:underline}
+details.scan{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+details.scan summary,details.faq summary{cursor:pointer;font-weight:600}
+textarea{display:block;width:100%;margin:12px 0;font:inherit;font-size:15px;padding:12px 14px;border:1px solid var(--line2);border-radius:12px;background:var(--bg);color:var(--text);resize:vertical}
+textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+label.check{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:500;padding:9px 4px;cursor:pointer}
+label.check input{accent-color:var(--accent)}
+details.faq{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:8px}
+details.faq p{margin:10px 0 0;color:var(--muted)}
+.pop{display:flex;gap:6px 14px;flex-wrap:wrap;margin:32px 0 0;font-size:13.5px}
+.pop span{color:var(--faint)}
+.pop a:hover{color:var(--text)}
+#cfilter{max-width:420px}
