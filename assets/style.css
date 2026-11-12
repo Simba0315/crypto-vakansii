@@ -457,3 +457,15 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 .state.live,.state.paid{background:var(--green-soft);color:var(--green)}
 .state.pending,.state.scheduled{background:var(--amber-soft);color:var(--amber)}
 .banner.ok{background:var(--green-soft);color:var(--green);border-color:color-mix(in srgb,var(--green) 25%,transparent)}
+
+/* skill comparisons */
+.verdict{display:grid;gap:10px;margin:6px 0 4px;border-left:4px solid var(--hl)}
+.verdict p{margin:0;color:var(--muted)}
+.verdict strong{color:var(--text);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-right:8px}
+.cta2{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0}
+.cmpl{margin:10px 0 0}
+.cmpl a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+
+/* one-paragraph summary at the top of a job */
+.tldr{margin:0 0 22px;padding:14px 16px;border-left:4px solid var(--hl);background:var(--card);border-radius:0 var(--radius) var(--radius) 0;color:var(--muted);font-size:15.5px}
+.tldr strong{color:var(--text)}

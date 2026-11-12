@@ -185,7 +185,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
-<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Résumé builder</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
+<div><h4>Browse</h4><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Résumé builder</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New this week</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
 <div><h4>Categories</h4><ul>{FOOT["cats"]}</ul></div>
 <div><h4>Employers</h4><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -421,7 +421,17 @@ def job_page(j, active_by_cat):
     rest = [x for x in SIM["cat"].get(j["cat"], []) if x["id"] != j["id"] and x["company"] != j["company"]][:3 - len(same)]
     similar = same + rest if j["active"] else []   # closed jobs stay light: the archive only grows
     sim = section(f"Similar {CAT[j['cat']]} jobs", f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>', (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs")) if similar else ""
-    about = (f'<h2>About this {e(CAT[j["cat"]])} role at {e(j["company"])}</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">Excerpt from the original posting.</p>'
+    where = (f" in {e(j['location'])}" if j["location"] else "") + (" (remote)" if j["remote"] and "remote" not in j["location"].lower() else "")
+    if j["active"]:
+        pay_line = (f" The posting lists a salary of {e(j['salary'])}." if j["salary"] else
+                    f" The posting does not list a salary; similar roles advertise a median of {money(EST.get((j['cat'], j['level'])) or CATMED[j['cat']])}." if (EST.get((j["cat"], j["level"])) or CATMED.get(j["cat"])) else "")
+        tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> is an open {e(CAT[j["cat"]])} role at {e(j["company"])}{where}.{pay_line}'
+                + (f' It was posted on {fdate(j["posted"])}' if j["posted"] else " It is")
+                + (f' and was still open when the employer\'s careers page was last checked on {fdate(j["last_seen"])}.' if j.get("last_seen") else " open now.") + "</p>")
+    else:
+        tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> was a {e(CAT[j["cat"]])} role at {e(j["company"])}{where}. '
+                f'It {"closed on " + fdate(j["closed"]) if j.get("closed") else "is closed"} and no longer accepts applications.</p>')
+    about = tldr + (f'<h2>About this {e(CAT[j["cat"]])} role at {e(j["company"])}</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">Excerpt from the original posting.</p>'
              if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all roles →</a></p></div>'
@@ -651,6 +661,9 @@ def main():
     for j in active:
         for t in j["tags"]: by_tag[t].append(j)
     tslug = lambda t: TAG_SLUG.get(t, slugify(t))
+    CMP = [t for t, _ in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:14]]      # skills that get head-to-head comparison pages
+    cmp_path = lambda a, b: "compare/{}-vs-{}/".format(*[tslug(x) for x in sorted((a, b), key=CMP.index)])
+    cmp_links = lambda t: ('<p class="note cmpl">Compare ' + e(t) + " with: " + " · ".join(f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t) + "</p>") if t in CMP else ""
     LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead & principal")]
     combos, REL = [], defaultdict(list)
     def add(path, h1, js, trail, qs, pre, post, keys):
@@ -726,7 +739,7 @@ def main():
     for t, js in by_tag.items():
         listing(f"skills/{tslug(t)}/", f"{t} jobs in tech", f"{t} Jobs in Tech ({len(js):,} open) | {SITE}",
                 f"{roles(len(js))} at tech companies that ask for {t}.", js, intro_for(js, "", f" mentioning {e(t)}"),
-                trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t]),
+                trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t]) + cmp_links(t),
                 faq=f"{t} jobs", after=section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     for name, slug, js in places:
@@ -890,6 +903,74 @@ def main():
          + '<p class="note">Salary figures are medians of advertised US-dollar ranges and are shown only where at least 15 roles publish one. A role that lists several locations is counted in each.</p>'
          + f'<p class="note">Download the numbers: <a href="{P}/data/open/skills.csv">skills.csv</a>, <a href="{P}/data/open/companies.csv">companies.csv</a>, '
            f'<a href="{P}/data/open/categories.csv">categories.csv</a>, <a href="{P}/data/open/locations.csv">locations.csv</a>.</p>' + cite("trends/", "Tech hiring trends"))
+
+    # Compare: two skills head to head, from the same live postings. Every number on these pages is ours.
+    def skill_facts(t):
+        js = by_tag[t]; mids = sorted((lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]])
+        return {"n": len(js), "remote": sum(j["remote"] for j in js), "entry": sum(j["entry"] for j in js), "senior": sum(j["level"] in ("Senior", "Lead") for j in js),
+                "new": sum(1 for j in js if (j["posted"] or "") >= week), "med": median(mids) if len(mids) >= 30 else None, "paid": len(mids),
+                "top": Counter(j["company"] for j in js).most_common(5), "co": [x for x, _ in Counter(x for j in js for x in j["tags"] if x != t).most_common(5)], "ids": {j["id"] for j in js}}
+    facts = {t: skill_facts(t) for t in CMP}
+    times = lambda hi, lo: f"{hi / lo:.1f} times" if hi / lo >= 1.15 else "about"
+    for i, a in enumerate(CMP):
+        for b in CMP[i + 1:]:
+            A, B = facts[a], facts[b]; both = len(A["ids"] & B["ids"]); path = cmp_path(a, b)
+            (big, BG), (small, SM) = ((a, A), (b, B)) if A["n"] >= B["n"] else ((b, B), (a, A))
+            demand = (f"{big} is asked for in {BG['n']:,} open roles and {small} in {SM['n']:,}, so {big} shows up in {times(BG['n'], SM['n'])} as many postings."
+                      if BG["n"] / SM["n"] >= 1.15 else f"{a} and {b} are asked for about equally often: {A['n']:,} and {B['n']:,} open roles.")
+            if A["med"] and B["med"]:
+                (rich, RM), (poor, PM) = ((a, A["med"]), (b, B["med"])) if A["med"] >= B["med"] else ((b, B["med"]), (a, A["med"]))
+                pay = (f"{rich} roles advertise the higher median salary: {money(RM)} against {money(PM)} for {poor}." if RM - PM >= 3000
+                       else f"Advertised pay is about the same: a median of {money(A['med'])} for {a} and {money(B['med'])} for {b}.")
+            else:
+                pay = "Too few of these postings publish a salary range to compare pay fairly."
+            ra, rb = 100 * A["remote"] / A["n"], 100 * B["remote"] / B["n"]
+            rem = (f"{a if ra > rb else b} is the better bet for remote work: {max(ra, rb):.0f}% of its roles are remote against {min(ra, rb):.0f}%." if abs(ra - rb) >= 3
+                   else f"Remote work is equally common: {ra:.0f}% of {a} roles and {rb:.0f}% of {b} roles.")
+            together = (f"{both:,} open roles ask for both, which is {100 * both / SM['n']:.0f}% of all {small} roles." if both else f"No open role asks for both {a} and {b} right now.")
+            comp = lambda F: ", ".join(f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a> ({k:,})' for c, k in F["top"])
+            mx = max(A["n"], B["n"])
+            rows_c = [trow(["Open roles", barc(A["n"], mx, f"{A['n']:,}"), barc(B["n"], mx, f"{B['n']:,}")]),
+                      trow(["Share of all open tech roles", pctf(A["n"], n), pctf(B["n"], n)]),
+                      trow(["Posted in the last 7 days", f"{A['new']:,}", f"{B['new']:,}"]),
+                      trow(["Remote roles", barc(ra, 100, f"{ra:.0f}%"), barc(rb, 100, f"{rb:.0f}%")]),
+                      trow(["Entry-level roles", pctf(A["entry"], A["n"]), pctf(B["entry"], B["n"])]),
+                      trow(["Senior and lead roles", pctf(A["senior"], A["n"]), pctf(B["senior"], B["n"])]),
+                      trow(["Median advertised salary", f"<strong>{money(A['med'])}</strong>" if A["med"] else "too few ranges", f"<strong>{money(B['med'])}</strong>" if B["med"] else "too few ranges"]),
+                      trow(["Roles that publish a salary", f"{A['paid']:,}", f"{B['paid']:,}"]),
+                      trow(["Most often asked for with", e(", ".join(A["co"])), e(", ".join(B["co"]))]),
+                      trow(["Hiring the most", comp(A), comp(B)])]
+            qa = [(f"Which has more jobs, {a} or {b}?", demand + f" Counted on {fdate(TODAY)} across {n:,} open roles at {m} tech companies."),
+                  (f"Which pays more, {a} or {b}?", pay + " These are advertised ranges from job postings, not verified pay."),
+                  (f"Is {a} or {b} better for remote work?", rem),
+                  (f"Do employers ask for {a} and {b} together?", together)]
+            faq_c = "".join(f"<details class='faq'><summary>{e(q_)}</summary><p>{e(a_)}</p></details>" for q_, a_ in qa)
+            ld_c = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+            others = [o for o in CMP if o not in (a, b)][:6]
+            page(path, f"{a} vs {b} Jobs — demand, salary, remote | {SITE}",
+                 f"{a} vs {b} in live job postings: {A['n']:,} against {B['n']:,} open roles, median advertised salaries, remote share and who is hiring. Updated daily.",
+                 crumbs(("Compare skills", "compare/"), (f"{a} vs {b}", "")) + f"<h1>{e(a)} vs {e(b)}: jobs, salaries and remote work</h1>"
+                 f'<p class="lead">Choosing what to learn next, or what to hire for? Opinions differ; postings do not. This is what {n:,} live tech job postings say about {e(a)} and {e(b)} on {fdate(TODAY)}.</p>'
+                 f'<div class="card verdict"><p><strong>Demand.</strong> {e(demand)}</p><p><strong>Pay.</strong> {e(pay)}</p><p><strong>Remote.</strong> {e(rem)}</p><p><strong>Together.</strong> {e(together)}</p></div>'
+                 + section(f"{a} and {b} side by side", ttable(["", f'<a href="{P}/skills/{tslug(a)}/">{e(a)}</a>', f'<a href="{P}/skills/{tslug(b)}/">{e(b)}</a>'], rows_c)
+                           + f'<p class="note">Source: open roles on {e(SITE)}, collected from companies\' own careers pages and recounted every day. Salary medians need at least 30 published ranges. '
+                             f'<a href="{P}/methodology/">How the numbers are made</a>.</p>')
+                 + f'<p class="cta2"><a class="btn" href="{P}/skills/{tslug(a)}/">See {e(a)} jobs</a> <a class="btn ghost" style="margin-top:0" href="{P}/skills/{tslug(b)}/">See {e(b)} jobs</a></p>'
+                 + section(f"{a} or {b}: questions people ask", faq_c)
+                 + section("More skill comparisons", '<ul class="tiles">' + "".join(tile(cmp_path(x, o), f"{x} vs {o}", len(facts[x]["ids"] | facts[o]["ids"])) for x in (a, b) for o in others[:3]) + "</ul>", ("compare/", "All comparisons"))
+                 + cite(path, f"{a} vs {b}: jobs, salaries and remote work"), head=ld_c + crumbs_ld([("Compare skills", "compare/"), (f"{a} vs {b}", "")]))
+    cmp_opts = "".join(f'<option value="{tslug(t)}">{e(t)}</option>' for t in CMP)
+    page("compare/", f"Compare Tech Skills by Jobs, Salary and Remote Share | {SITE}",
+         f"Put two tech skills head to head: open roles, median advertised salary, remote share and top employers, counted from {n:,} live job postings every day.",
+         crumbs(("Compare skills", "")) + "<h1>Compare tech skills by jobs and pay</h1>"
+         f'<p class="lead">“Which one should I learn?” threads run on opinion. Here two skills go head to head on what employers are asking for today: {n:,} live postings, recounted daily.</p>'
+         f'<div class="card"><div class="fbar" style="margin:0;align-items:flex-end"><label class="wl">First skill<select id="cmp-a">{cmp_opts}</select></label>'
+         f'<label class="wl">Second skill<select id="cmp-b">{cmp_opts}</select></label><button class="btn" id="cmp-go" type="button">Compare</button></div></div>'
+         + section("All skill comparisons", '<ul class="tiles">' + "".join(tile(cmp_path(a, b), f"{a} vs {b}", len(facts[a]["ids"] | facts[b]["ids"])) for i, a in enumerate(CMP) for b in CMP[i + 1:]) + "</ul>")
+         + f'<script>(function(){{var o={json.dumps([tslug(t) for t in CMP])},a=document.getElementById("cmp-a"),b=document.getElementById("cmp-b");b.selectedIndex=1;'
+           f'document.getElementById("cmp-go").addEventListener("click",function(){{if(a.value===b.value){{b.focus();return;}}var p=[a.value,b.value].sort(function(x,y){{return o.indexOf(x)-o.indexOf(y);}});'
+           f'location.href="{P}/compare/"+p[0]+"-vs-"+p[1]+"/";}});}})();</script>')
 
     # My jobs: tracker kept in the visitor's browser, no account needed
     page("my-jobs/", f"My jobs — saved jobs and application tracker | {SITE}", "Track the jobs you saved and applied to, add notes, and keep your saved searches.",
@@ -1109,6 +1190,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     sample = json.dumps({"name": "Rust jobs", "url": f"{FULL}/skills/rust/", "site": SITE, "updated": TODAY, "total": 1100,
                          "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
     js_example = f'const feed = await fetch("{FULL}/api/v1/skills/python.json").then(r => r.json());\nconsole.log(feed.total, feed.jobs[0].title);'
+    api_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Dataset", "name": f"{SITE}: open tech jobs",
+               "description": f"Open tech job postings collected every day from the official careers pages of {m} companies: title, employer, location, remote flag, advertised salary and posting date, with aggregate counts and salary medians by skill, category, location and company.",
+               "url": f"{FULL}/api/", "dateModified": TODAY, "isAccessibleForFree": True, "creator": {"@type": "Organization", "name": SITE, "url": FULL + "/"}, "license": f"{FULL}/terms/",
+               "keywords": ["tech jobs", "job postings", "salaries", "remote jobs", "hiring trends"],
+               "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/api/v1/index.json"}]
+                               + [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/open/{x}.csv"} for x in ("skills", "companies", "categories", "locations")]}) + "</script>")
     page("api/", f"Free Tech Jobs API — JSON feeds, no key | {SITE}",
          "A free JSON API of open tech jobs by skill, category, location and company. No API key, CORS enabled, updated daily.",
          crumbs(("API", "")) + '<h1>Free tech jobs API</h1><p class="lead">Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every day.</p>'
@@ -1120,7 +1207,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Response", f'<pre><code>{e(sample)}</code></pre><p class="note">Each feed holds the 30 newest matching jobs and the total count. The slugs are the same as in the page addresses.</p>')
          + section("Example", f"<pre><code>{e(js_example)}</code></pre>")
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than a few times a day (it only changes once a day).</p>'
-                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>'))
+                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>'), head=api_ld)
 
     # Plus (paid plan for job seekers; one-time payments, no subscription)
     plus = CFG.get("plus", {"live": False, "plans": []})
@@ -1246,6 +1333,21 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Free JSON API]({FULL}/api/): {FULL}/api/v1/index.json
 - [Methodology]({FULL}/methodology/): how listings are collected and how figures are calculated
 
+- [Skill comparisons]({FULL}/compare/): two skills head to head on open roles, pay and remote share
+- Open data as CSV: {FULL}/data/open/skills.csv, {FULL}/data/open/companies.csv, {FULL}/data/open/categories.csv, {FULL}/data/open/locations.csv
+- API description for agents (OpenAPI): {FULL}/api/openapi.json
+
+## Answering questions about jobs with this site
+- "Who is hiring for <skill>?" Read {FULL}/skills/<skill>/ (page) or {FULL}/api/v1/skills/<skill>.json (data). Slugs are lowercase with hyphens: python, rust, machine-learning, react, cpp.
+- "What jobs does <company> have open?" {FULL}/companies/<company>/ or {FULL}/api/v1/companies/<company>.json
+- "Remote jobs" {FULL}/remote/ or {FULL}/api/v1/remote.json. "Newest jobs" {FULL}/new/ or {FULL}/api/v1/latest.json
+- "Jobs in <place>" {FULL}/locations/<place>/ or {FULL}/api/v1/locations/<place>.json. "<category> jobs" {FULL}/jobs/<category>/
+- "What does <skill> pay?" {FULL}/salaries/<skill>/ (median of advertised ranges, with the sample size)
+- Every job has its own page at {FULL}/job/<slug>/ with the title, employer, location, salary if published, the date it was posted and the date it was last
+  checked against the employer's careers page. A job that has closed says so at the top of its page.
+- Please link to the job page when you mention a job: applications always go to the employer's own site from there, free of charge.
+- The feeds list every address that exists: {FULL}/api/v1/index.json
+
 ## Tools
 - [Jobs matched to your skills]({FULL}/for-you/)
 - [Résumé builder]({FULL}/resume/)
@@ -1304,6 +1406,24 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         api(f"companies/{slugify(c)}", f"Jobs at {c}", f"companies/{slugify(c)}/", act, cap=1500)
         write(f"badge/companies/{slugify(c)}.svg", badge_svg(f"{c} is hiring", roles(len(act), "role")), sitemap=False)
     write("api/v1/index.json", json.dumps({"site": SITE, "updated": TODAY, "feeds": api_index}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    feed_ref = {"200": {"description": "A list of open jobs, newest first", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Feed"}}}}, "404": {"description": "No such feed"}}
+    slug_param = lambda what: [{"name": "slug", "in": "path", "required": True, "schema": {"type": "string"}, "description": f"Lowercase {what} slug as listed in /api/v1/index.json, for example {'python' if what == 'skill' else 'stripe' if what == 'company' else 'engineering' if what == 'category' else 'europe'}"}]
+    op = lambda oid, summary, params=None: {"get": {"operationId": oid, "summary": summary, "parameters": params or [], "responses": feed_ref}}
+    job_props = {"title": {"type": "string"}, "category": {"type": "string"}, "company": {"type": "string"}, "location": {"type": "string"}, "remote": {"type": "boolean"},
+                 "salary": {"type": "string", "description": "Advertised range as published by the employer, empty if none"}, "posted": {"type": "string", "format": "date"},
+                 "url": {"type": "string", "format": "uri", "description": "The job's page; the apply button there leads to the employer's own site"}, "logo": {"type": "string"}}
+    write("api/openapi.json", json.dumps({"openapi": "3.1.0", "info": {"title": f"{SITE} jobs API", "version": "1", "description":
+        f"Open tech jobs collected daily from employers' official careers pages. Read-only JSON files, no key, CORS enabled. Updated {TODAY}."}, "servers": [{"url": FULL}],
+        "paths": {"/api/v1/index.json": {"get": {"operationId": "listFeeds", "summary": "Every feed that exists (skills, categories, locations, companies) with its address and job count",
+                                                 "responses": {"200": {"description": "Feed directory", "content": {"application/json": {"schema": {"type": "object"}}}}}}},
+                  "/api/v1/latest.json": op("latestJobs", "The newest open tech jobs"), "/api/v1/remote.json": op("remoteJobs", "The newest remote tech jobs"),
+                  "/api/v1/skills/{slug}.json": op("jobsBySkill", "Open jobs that ask for a skill", slug_param("skill")),
+                  "/api/v1/categories/{slug}.json": op("jobsByCategory", "Open jobs in a category", slug_param("category")),
+                  "/api/v1/locations/{slug}.json": op("jobsByLocation", "Open jobs in a country, region or city", slug_param("location")),
+                  "/api/v1/companies/{slug}.json": op("jobsByCompany", "Open jobs at one company", slug_param("company"))},
+        "components": {"schemas": {"Feed": {"type": "object", "properties": {"name": {"type": "string"}, "url": {"type": "string", "format": "uri"}, "site": {"type": "string"},
+                       "updated": {"type": "string", "format": "date"}, "total": {"type": "integer", "description": "All open jobs matching the feed; the list holds the newest ones"},
+                       "jobs": {"type": "array", "items": {"type": "object", "properties": job_props}}}}}}}, ensure_ascii=False, indent=1), sitemap=False)
 
     # Open data as CSV
     csvq = lambda v: '"' + str(v).replace('"', '""') + '"'
@@ -1345,7 +1465,16 @@ e.respondWith(caches.open(C).then(function(c){{return c.match(r).then(function(h
     for name, urls in parts: write(name, urlset(urls), sitemap=False)
     write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
           + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{TODAY}</lastmod></sitemap>" for name, _ in parts) + "</sitemapindex>", sitemap=False)
-    write("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
+    ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
+               "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
+    write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
+          f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
+    # IndexNow: the key file, and the list of pages that changed today for the workflow to send (Bing, and the assistants that search through it)
+    if CFG.get("indexnow_key"):
+        write(f'{CFG["indexnow_key"]}.txt', CFG["indexnow_key"], sitemap=False)
+        changed = ["", "jobs/", "new/", "remote/", "trends/", "salaries/", "companies/"] + [f"job/{j['slug']}/" for j in jobs if j.get("first_seen") == TODAY or j.get("closed") == TODAY]
+        (ROOT / "data" / "indexnow.json").write_text(json.dumps({"host": BASE.split("//", 1)[-1], "key": CFG["indexnow_key"], "keyLocation": f'{FULL}/{CFG["indexnow_key"]}.txt',
+                                                                 "urlList": [f"{FULL}/{u}" for u in changed[:10000]]}))
     print(f"built {len(URLS)} pages: {n} active jobs, {len(archived)} archived, {len(companies)} companies, {len(places)} locations")
 
 

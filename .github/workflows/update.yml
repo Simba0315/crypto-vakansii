@@ -62,3 +62,12 @@ jobs:
           path: site
       - id: deploy
         uses: actions/deploy-pages@v4
+      # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed today.
+      - name: Tell search engines which pages changed
+        if: steps.deploy.outcome == 'success'
+        continue-on-error: true
+        run: |
+          if [ -s data/indexnow.json ]; then
+            curl -s -o /dev/null -w "IndexNow answered %{http_code}\n" -X POST "https://api.indexnow.org/indexnow" \
+              -H "Content-Type: application/json; charset=utf-8" --data-binary @data/indexnow.json
+          fi
