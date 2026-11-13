@@ -922,3 +922,26 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .vsside p{margin:0 0 12px}
 .vspick{grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);max-width:900px}
 @media(max-width:620px){.vsh a{font-size:17px}.vsside{grid-template-columns:1fr}.vspick{grid-template-columns:1fr}}
+/* tariffs: three columns with ticks; the paid one is the dark one */
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin:8px 0 34px;align-items:start}
+.tier{background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:24px 24px 18px;display:flex;flex-direction:column;gap:8px}
+.tier .tn{margin:0;font-weight:650;font-size:15px;color:var(--muted)}
+.tier .tp{margin:0;font:800 44px/1.05 var(--display);letter-spacing:-.035em}
+.tier .tp small{font:500 13.5px "Inter","Inter Fallback",system-ui,sans-serif;letter-spacing:0;color:var(--muted);margin-left:8px}
+.tier .td{margin:0 0 8px;font-size:14.5px;color:var(--muted);min-height:66px}
+.tier .btn{width:100%;margin:0 0 6px}
+.tier.best{background:#0e0e0c;border-color:#0e0e0c;color:#f3f2ec;border-top:5px solid var(--pop)}
+.tier.best .tn,.tier.best .td,.tier.best .tp small{color:#b9b7ad}
+.tier.best .btn,.tier.best .btn[disabled],.tier.best .btn[disabled]:hover{background:var(--pop);border-color:var(--pop);color:#06361c;opacity:1}
+.ticks{list-style:none;margin:6px 0 0;padding:0}
+.ticks li{position:relative;padding:10px 0 10px 30px;border-top:1px solid var(--line);font-size:14.5px;line-height:1.4}
+.tier.best .ticks li{border-top-color:#2b2b27}
+.ticks li::before{content:"✓";position:absolute;left:0;top:9px;width:20px;height:20px;border-radius:50%;background:var(--hl);color:var(--hl-ink);font:700 12px/20px "Inter",system-ui,sans-serif;text-align:center}
+.tier.best .ticks li::before{background:var(--pop);color:#06361c}
+table.grid td.y{color:var(--green);font-weight:650}
+table.grid td.y::before{content:"✓ "}
+table.grid td.n{color:var(--line2)}
+table.grid tr.grp th{text-align:left;font:700 15px var(--display);letter-spacing:-.01em;padding-top:18px;background:transparent;border-bottom:1.5px solid var(--text)}
+.rb-plus{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 14px;padding:11px 14px;background:var(--accent-soft);border-left:3px solid var(--ac);font-size:14.5px}
+.rb-plus span{color:var(--muted)}
+.rb-plus a{margin-left:auto;font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}

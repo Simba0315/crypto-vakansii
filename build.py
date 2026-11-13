@@ -2248,6 +2248,7 @@ def main():
          '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
          '<option value="developer">Developer</option><option value="executive">Executive</option></select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
+         f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
          '<div class="rgrid"><div id="rb-form"></div><div id="rb-preview" aria-live="polite"></div></div></div>'
          + '<section class="sec no-print"><div class="sec-head"><h2>What makes a resume get read</h2></div><div class="feats">'
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
@@ -2588,6 +2589,31 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 ("Resume", "Builder and match check", "Reviewed, and reworded for each posting"), ("Cover letters", "Fill-in template", "Draft from your resume and the posting"),
                 ("Interview prep", "No", "Questions from the posting, with your answers"), ("Pay", "Salary checker", "Offer check with a script for negotiating"), ("LinkedIn profile", "No", "Reviewed, with fixes")]
     cmp_html = "".join(f"<tr><td>{e(a_)}</td><td>{e(b_)}</td><td><strong>{e(c_)}</strong></td></tr>" for a_, b_, c_ in rows_cmp)
+    low_plan = min(plus["plans"], key=lambda pl: int(re.search(r"\d+", per_day(pl) or "999").group(0))) if plus["plans"] else None
+    tick = lambda items: '<ul class="ticks">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
+    tiers = ('<div class="tiers">'
+             '<div class="tier"><p class="tn">Free</p><p class="tp">$0</p><p class="td">Everything you need to find a job and apply. No account, no card.</p>'
+             f'<a class="btn ghost" href="{P}/for-you/">Start with five questions</a>'
+             + tick(["Every job and the link to apply", "Search, 23 fields of work, salary data", "Matching by five answers, with reasons", "Resume builder: 5 templates, PDF and Word", "Resume review and resume match by rules",
+                     "Letter templates: cover, thank-you, resignation", "Application tracker on this device"]) + "</div>"
+             '<div class="tier best"><p class="tn">Plus</p>'
+             + (f'<p class="tp">{e(low_plan["price"])}<small> for {e(low_plan["name"])} · {per_day(low_plan)}</small></p>' if low_plan else '<p class="tp">Plus</p>')
+             + '<p class="td">Everything in Free, plus an AI writer for your resume and letters, and an email when a job fits. One payment, nothing renews.</p>' + cta
+             + tick(["AI resume writer: bullet points and summary from your notes", "Resume reworded for each posting, with the keywords it misses", "AI resume review: score, weak points, rewrites",
+                     "AI cover letters and resignation letters", "Interview questions for the posting, with your answers", "An email the day a job fits your answers", "Pay check with a script for negotiating",
+                     "LinkedIn profile review", "Your jobs and resumes on every device"]) + "</div>"
+             '<div class="tier"><p class="tn">Employers</p><p class="tp">Free<small> to post a job</small></p><p class="td">A standard listing costs nothing. A featured one stays at the top of its list.</p>'
+             f'<a class="btn ghost" href="{P}/post-a-job/">Post a job</a>'
+             + tick(["A standard listing for 30 days", "Featured job from $99", "Pinned job, company spotlight, sponsor of a category", "Paid in crypto, switched on at once", "No calls, no sales manager"]) + "</div></div>")
+    yes, no = '<td class="y">Yes</td>', '<td class="n">—</td>'
+    cell = lambda v: yes if v is True else no if v is False else f"<td>{e(v)}</td>"
+    grid_rows = [("Jobs", None, None), ("Every job and the link to apply", True, True), ("Search, categories, salary data, rankings", True, True), ("Matching by five answers", True, True), ("An email when a job fits", False, True),
+                 ("Resume", None, None), ("Resume builder, 5 templates", True, True), ("PDF and Word downloads", "Unlimited", "Unlimited"), ("Resume review", "By rules", "By AI, with rewrites"),
+                 ("Match against a posting", "Keywords found and missing", "Bullets reworded for the posting"), ("AI writer for bullet points and summary", False, True),
+                 ("Letters", None, None), ("Cover letter", "Fill-in template", "Draft from your resume and the posting"), ("Thank-you, raise and resignation letters", "Templates", "AI drafts"),
+                 ("Interview and pay", None, None), ("Interview questions for one posting", False, True), ("Salary checker and offer check", True, True), ("Script for negotiating an offer", False, True),
+                 ("Tracking", None, None), ("Application tracker", "On this device", "On every device"), ("LinkedIn profile review", "By rules", "By AI")]
+    grid_html = "".join(f'<tr class="grp"><th colspan="3">{e(a_)}</th></tr>' if b_ is None else f"<tr><td>{e(a_)}</td>{cell(b_)}{cell(c_)}</tr>" for a_, b_, c_ in grid_rows)
     soon = "" if plus.get("live") else '<div class="banner">Plus is not on sale yet. This page shows what it will do and what it will cost. Everything in the “free” list works today.</div>'
     plus_qa = [("Is this a subscription?", "No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel. There is no card on file to charge."),
                ("Do I have to pay to see or apply for jobs?", "No. Every job is public the moment we have it and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
@@ -2602,11 +2628,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          crumbs(("Plus", "")) + '<h1>Applications go out and nothing comes back. Plus finds out why and <span class="hl">fixes it</span>, job by job</h1>'
          '<p class="lead">A resume gets one short first read, and nobody tells you why it was put aside: the result is on page two, the bullets list duties, the letter could be for any company. '
          f'Plus reads your resume the way a recruiter does, rewords it for each posting and tells you the day a job fits. One payment, from {min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else "a few cents a day"}. Nothing renews.</p>{soon}'
+         + tiers
          + section("What Plus adds", pcard_html)
          + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. '
                    'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
          + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
-         + section("Free and Plus side by side", f'<div class="tablewrap"><table><tr><th></th><th>Free</th><th>Plus</th></tr>{cmp_html}</table></div>')
+         + section("Free and Plus, line by line", f'<div class="tablewrap"><table class="grid"><tr><th></th><th>Free</th><th>Plus</th></tr>{grid_html}</table></div>')
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
