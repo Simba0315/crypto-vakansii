@@ -85,8 +85,9 @@ jobs:
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
       - name: Check the site fits the hosting limit
         run: |
-          mb=$(du -sm site | cut -f1); echo "site is ${mb} MB (the Pages limit is 1024)"
-          if [ "$mb" -gt 990 ]; then echo "the site no longer fits the hosting limit"; exit 1; fi
+          # bytes of content, not disk blocks: with 40,000 small folders "du" overstates the size by a third
+          mb=$(find site -type f -printf '%s\n' | awk '{s+=$1} END {print int(s/1048576)}'); echo "site is ${mb} MB of content (the Pages limit is 1024)"
+          if [ "$mb" -gt 950 ]; then echo "the site no longer fits the hosting limit"; exit 1; fi
       - name: Check pages against the page standard
         continue-on-error: true
         run: python3 check.py
