@@ -121,6 +121,15 @@ the titles it catches (the test loop is in the commit that added the file). The 
 Logos: a company without an official logo is shown with no picture at all (`.ava:not(.has)` in `style.css`); never bring the
 letter squares back.
 
+## Pictures before words
+
+The owner, looking at the rankings hub on 2026-11-13: "what are these texts, I cannot read at all; more pictures, charts,
+infographics everywhere". A page that is a list of headings and sentences counts as unfinished. Helpers in `build.py`:
+`market_pics` (four panels: jobs by field, pay histogram with the median column, three rings, postings by day), `cols()` (column
+chart), `donut()` (ring), `.hbars` (bars with a link per row), `ins_chart()` (the top ten of a ranking as bars above its table),
+`icard()` (a ranking as a card with its top four as a small chart). Every chart is counted from the build's own data and has one
+caption that says what it shows; no decorative charts, no invented numbers. When you add a page with numbers, draw them.
+
 ## "For you": the match by answers (`/for-you/`)
 
 Five plain questions (kind of work, experience, where, pay, skills), answered with buttons; the markup is in `build.py` (`FY_WORK`,

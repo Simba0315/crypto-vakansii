@@ -942,6 +942,36 @@ def main():
                 + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/roles/{s_}/">{e(nm)}</a><span>{c:,}</span></li>' for s_, nm, c in (live if top is None else live[:top]))
                 + (f'<li class="more"><a href="{P}/categories/{fs}/">All {len(live)} in {e(rlow(fn))}</a></li>' if top is not None and len(live) > top else "") + "</ul></div>")
     ROLE_TOP = sorted(((nm, s_, len(ROLE_JOBS[s_])) for nm, s_, _ in ROLES if s_ in ROLE_BASE), key=lambda x: -x[2])
+    # Pictures before words (the owner: "I cannot read walls of text: more charts and infographics everywhere").
+    # Every picture is counted from the open postings on this build; each has one caption that says what it shows.
+    def donut(part, whole, label):
+        pc = round(100 * part / max(1, whole))
+        return (f'<div class="donut"><svg viewBox="0 0 36 36" role="img" aria-label="{pc}% {e(label)}"><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--bg2)" stroke-width="3.8"/>'
+                f'<circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--ac)" stroke-width="3.8" stroke-dasharray="{pc} {100 - pc}" transform="rotate(-90 18 18)"/>'
+                f'<text x="18" y="21" text-anchor="middle">{pc}%</text></svg><span>{e(label)}</span></div>')
+    def cols(pairs, hi_=None):                      # [(label under the column, value)]: a column chart
+        mx_ = max((v for _, v in pairs), default=1) or 1
+        return ('<div class="ccols">' + "".join(f'<div{" class=\"hi\"" if hi_ is not None and i == hi_ else ""} style="height:{max(2, round(100 * v / mx_))}%"><b>{v:,}</b></div>' for i, (_, v) in enumerate(pairs)) + "</div>"
+                '<div class="ccx">' + "".join(f"<span>{e(lb)}</span>" for lb, _ in pairs) + "</div>")
+    fam_top = sorted(fam_rows, key=lambda f: -len(f[4]))[:10]
+    pic_fields = '<div class="hbars">' + "".join(
+        f'<a href="{P}/categories/{fs}/"><span class="hn">{e(fn)}</span><span class="hb"><i style="width:{max(3, round(100 * len(js_) / len(fam_top[0][4])))}%"></i></span><span class="hc">{len(js_):,}</span></a>' for fs, fn, _, _, js_ in fam_top) + "</div>"
+    mids_all = [(j["usd"][0] + j["usd"][1]) / 2 for j in active if j["usd"]]
+    edges = [(0, 75), (75, 100), (100, 125), (125, 150), (150, 175), (175, 200), (200, 250), (250, 300), (300, 10 ** 6)]
+    pay_cols = [(("<$75K" if lo == 0 else f"${lo}K+" if hi > 1000 else f"${lo}K"), sum(1 for v in mids_all if lo * 1000 <= v < hi * 1000)) for lo, hi in edges]
+    med_all = median(mids_all) if mids_all else 0
+    med_i = next((i for i, (lo, hi) in enumerate(edges) if lo * 1000 <= med_all < hi * 1000), None)
+    days14 = [(datetime.date.today() - datetime.timedelta(days=d)) for d in range(13, -1, -1)]
+    by_day = Counter((j["posted"] or "")[:10] for j in active)
+    day_cols = [(f"{d.day}", by_day.get(d.isoformat(), 0)) for d in days14]
+    n_pay, n_ent = sum(bool(j["salary"]) for j in active), sum(1 for j in active if j["entry"])
+    market_pics = ('<div class="pics">'
+                   f'<figure class="pic"><figcaption><b>Where the jobs are</b>Open jobs in the ten largest fields. A job can count in two fields.</figcaption>{pic_fields}</figure>'
+                   f'<figure class="pic"><figcaption><b>What the postings pay</b>{len(mids_all):,} postings state a yearly range in US dollars. The middle of the range is most often here; the green column holds the median, {money(med_all)}.</figcaption>{cols(pay_cols, med_i)}</figure>'
+                   f'<figure class="pic"><figcaption><b>Three numbers about today’s jobs</b>Out of {n:,} open jobs.</figcaption><div class="donuts">'
+                   + donut(len(remote), n, "can be done from home") + donut(n_pay, n, "state the pay") + donut(n_ent, n, "are for beginners") + "</div></figure>"
+                   f'<figure class="pic"><figcaption><b>New jobs, day by day</b>Open jobs by the day the employer posted them, last 14 days. The numbers under the columns are days of the month.</figcaption>{cols(day_cols)}</figure>'
+                   "</div>")
     ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
     TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT)       # [(path, name, one line)]
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
@@ -1039,6 +1069,7 @@ def main():
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
             + section("Latest tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"All {n:,} jobs"))
             + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"))
+            + section("The job market today, in four pictures", market_pics, ("insights/", "All rankings and charts"))
             + pulse + anatomy
             + '<div class="inkband">' + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data")) + "</div>"
             + '<section class="sec"><div class="sec-head"><h2>Browse the jobs</h2></div><div class="tabs2">'
@@ -1651,10 +1682,26 @@ def main():
 
     # Insights: ranked lists recalculated from live data every day
     month = f"{['January','February','March','April','May','June','July','August','September','October','November','December'][int(TODAY[5:7]) - 1]} {TODAY[:4]}"
-    def insight(slug, h1, desc, lead, head, rows_html, more):
+    INS_PREV = {}
+    def ins_points(rows_html, chart):
+        pts = []
+        for r_ in rows_html[:10]:
+            c_ = re.findall(r"<td>(.*?)</td>", r_, re.S)
+            if len(c_) <= max(chart): continue
+            lab, raw = re.sub(r"<[^>]+>", "", c_[chart[0]]).strip(), re.sub(r"<[^>]+>", "", c_[chart[1]]).strip()
+            m_, href = re.search(r"\d[\d,]*\.?\d*", raw), re.search(r'href="([^"]+)"', c_[chart[0]])
+            if lab and m_: pts.append((html.unescape(lab), float(m_.group(0).replace(",", "")), html.unescape(raw), href.group(1) if href else ""))
+        return pts
+    def ins_chart(pts):
+        mx_ = max((p_[1] for p_ in pts), default=0)
+        if len(pts) < 4 or not mx_: return ""
+        return ('<div class="hbars chart">' + "".join(f'<a href="{e(h_) if h_ else "#"}"><span class="hn">{e(lab[:44])}</span><span class="hb"><i style="width:{max(2, round(100 * v / mx_))}%"></i></span><span class="hc">{e(raw[:24])}</span></a>'
+                                                     for lab, v, raw, h_ in pts) + "</div>")
+    def insight(slug, h1, desc, lead, head, rows_html, more, chart=(1, 2)):
+        INS_PREV[f"insights/{slug}/"] = ins_points(rows_html, chart)
         page(f"insights/{slug}/", f"{h1} — {month} | {SITE}", desc,
              crumbs(("Insights", "insights/"), (h1, "")) + f"<h1>{e(h1)}</h1><p class=\"lead\">{lead} Recalculated every day from {n:,} open roles; this is the picture for {month}.</p>"
-             + ttable(head, rows_html) + f'<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p><p><a class="btn" href="{P}/{more[0]}">{e(more[1])}</a></p>' + cite(f"insights/{slug}/", f"{h1}, {month}"))
+             + ins_chart(INS_PREV[f"insights/{slug}/"]) + ttable(head, rows_html) + f'<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p><p><a class="btn" href="{P}/{more[0]}">{e(more[1])}</a></p>' + cite(f"insights/{slug}/", f"{h1}, {month}"))
         return (f"insights/{slug}/", h1, desc)
     sal_by_tag = sorted(((t, median([(lo + hi) / 2 for _, (lo, hi) in g]), len(g)) for t, g in g_tag.items() if len(g) >= 30), key=lambda x: -x[1])
     remote_co = sorted(((c, sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js)) for c, js in companies.items()), key=lambda x: -x[1])
@@ -1696,7 +1743,7 @@ def main():
                        f"These are the employers, among {len(pay_rank)} with 20 or more open roles, that state it most often. A missing salary here can also mean a wording our rules do not recognise.",
                        ["#", "Company", "Open roles", "With a salary", "Share"],
                        [trow([rank(i), cl(c), f"{k_:,}", f"{s_:,}", barc(s_, k_, pctf(s_, k_))]) for i, (c, k_, s_) in enumerate(pay_rank[:50]) if s_],
-                       ("with-salary/", "Jobs with the salary listed")))
+                       ("with-salary/", "Jobs with the salary listed"), chart=(1, 4)))
     linger = sorted(((c, len(js), sum(age_days(j) >= LONG_OPEN for j in js), int(median([age_days(j) for j in js]))) for c, js in big.items()), key=lambda x: (-x[2] / x[1], -x[1]))
     long_all = sum(age_days(j) >= LONG_OPEN for j in active)
     INS.append(insight("long-open-roles", f"Tech roles open {LONG_OPEN} days or more: where postings linger", "How many tech job postings have been open for three months or longer, and at which companies they pile up.",
@@ -1704,7 +1751,7 @@ def main():
                        "but it is worth knowing before you spend an evening on an application.",
                        ["#", "Company", "Open roles", f"Open {LONG_OPEN}+ days", "Share", "Median days open"],
                        [trow([rank(i), cl(c), f"{k_:,}", f"{l_:,}", barc(l_, k_, pctf(l_, k_)), f"{md_:,}"]) for i, (c, k_, l_, md_) in enumerate(linger[:50]) if l_],
-                       ("new/", "Jobs posted in the last 3 days")))
+                       ("new/", "Jobs posted in the last 3 days"), chart=(1, 4)))
     pulse_rank = sorted(((c, *PULSE[c]) for c in PULSE if PULSE[c][0] or PULSE[c][1]), key=lambda x: -(x[1] - x[2]))
     INS.append(insight("hiring-pulse", "Hiring pulse: who is ramping up and who is slowing down", "Which tech companies opened and closed the most roles in the last seven days, from daily snapshots of their careers pages.",
                        "Roles each company opened and closed in the last seven days. Closed counts are tracked from the day we started watching a company.",
@@ -1736,7 +1783,7 @@ def main():
         INS.append(insight("highest-paying-remote-jobs", "Highest-paying remote jobs right now", "The 40 remote jobs with the highest advertised pay among open postings today, at most two per employer.",
                            "Remote roles ranked by the top of the pay range the employer states, at most two from one employer.", ["#", "Role", "Company", "Advertised pay", "Posted"],
                            [trow([rank(i), f'<a href="{P}/job/{j["slug"]}/">{e(j["title"][:70])}</a>', cl(j["company"]), f"<strong>{e(j['salary'][:28])}</strong>", fdate(j["posted"] or j["first_seen"], False)])
-                            for i, (j, _) in enumerate(rich_remote)], ("salary/200k/remote/", "Remote jobs that pay $200K or more")))
+                            for i, (j, _) in enumerate(rich_remote)], ("salary/200k/remote/", "Remote jobs that pay $200K or more"), chart=(1, 3)))
     aw_co = Counter(j["company"] for j in active if j.get("anywhere") and j["remote"]).most_common(30)
     if len(aw_co) >= 5:
         rem_n = Counter(j["company"] for j in remote)
@@ -1752,13 +1799,24 @@ def main():
         INS.append(insight("remote-jobs-100k-by-field", "Remote jobs that pay $100K or more, by field", "In which kinds of work remote jobs pay six figures: remote roles per field, how many state pay and how many start at $100K or more.",
                            "A remote job counts here when the bottom of its advertised yearly range is $100,000 or more.", ["Field", "Remote roles", "State pay", "Start at $100K+", "Median advertised pay"],
                            [trow([f'<a href="{P}/categories/{fs}/">{e(fn)}</a>', f"{r_:,}", f"{p_:,}", barc(h_, p_, f"{h_:,}"), f"<strong>{money(md_)}</strong>"]) for fs, fn, r_, p_, h_, md_ in sorted(f100, key=lambda x: -x[4])],
-                           ("salary/100k/remote/", "Remote jobs that pay $100K or more")))
-    page("insights/", f"Tech Hiring Insights — {month} | {SITE}", "Rankings built from live job postings: highest-paying skills, most in-demand skills, companies hiring remotely and more.",
-         crumbs(("Insights", "")) + f'<h1>Tech hiring insights</h1><p class="plain"><b>In plain words:</b> lists made from today’s open jobs, such as which skills pay the most and which companies hire the most.</p><p class="lead">Rankings recalculated every day from {n:,} open roles at {m} companies.</p>'
-         + '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h2>{e(t)}</h2><p>{e(d)}</p></a>' for u, t, d in INS)
-         + f'<a class="feat" href="{P}/trends/"><h3>Hiring trends dashboard</h3><p>All the headline numbers on one page: skills, companies, categories and locations.</p></a></div>'
-         + section("Who is hiring, field by field", '<p class="lead">For each field: the employers with the most open jobs, how many are remote and what they advertise as pay.</p><ul class="tiles">'
-                   + "".join(tile(u, f"Companies hiring: {rlow(fn)}", k) for u, fn, k in INS_FAM) + "</ul>"))
+                           ("salary/100k/remote/", "Remote jobs that pay $100K or more"), chart=(0, 3)))
+    def icard(u, t, d):
+        pts = INS_PREV.get(u, [])[:4]
+        mx_ = max((p_[1] for p_ in pts), default=0)
+        prev = "".join(f'<span class="rw"><span>{e(lab[:20])}</span><span class="mt"><i style="width:{max(4, round(100 * v / mx_))}%"></i></span><b>{e(raw[:10])}</b></span>' for lab, v, raw, _ in pts) if mx_ else ""
+        return (f'<a class="tcard" href="{P}/{u}">' + (f'<span class="tprev wide" aria-hidden="true">{prev}</span>' if prev else "")
+                + f'<span class="tbody"><b>{e(t)}</b><span>{e(d)}</span><i><u>Open the list</u></i></span></a>')
+    fam_bars = '<div class="hbars">' + "".join(
+        f'<a href="{P}/{u}"><span class="hn">{e(fn)}</span><span class="hb"><i style="width:{max(2, round(100 * k / max(x[2] for x in INS_FAM)))}%"></i></span><span class="hc">{k:,} jobs</span></a>'
+        for u, fn, k in sorted(INS_FAM, key=lambda x: -x[2])) + "</div>" if INS_FAM else ""
+    page("insights/", f"Job Market in Charts: rankings from {n:,} open jobs — {month} | {SITE}",
+         "The job market in pictures: where the jobs are, what they pay, who is hiring in each field, which skills pay most. Charts and rankings counted from today’s open postings.",
+         crumbs(("Insights", "")) + f'<h1>The job market <span class="hl">in pictures</span></h1>'
+         f'<p class="lead">Charts and rankings counted from {n:,} open jobs at {m} employers, redrawn each time the jobs are read again. Every chart links to the list behind it.</p>'
+         + market_pics
+         + section("Rankings", '<div class="tgrid">' + "".join(icard(u, t, d) for u, t, d in INS)
+                   + f'<a class="tcard" href="{P}/trends/"><span class="tbody"><b>Hiring trends dashboard</b><span>The headline numbers on one page: skills, companies, categories and locations.</span><i><u>Open the dashboard</u></i></span></a></div>')
+         + (section("Who is hiring, field by field", '<p class="note">Each bar opens the list of employers with the most open jobs in that field, with their remote roles and advertised pay.</p>' + fam_bars) if fam_bars else ""))
 
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"

@@ -847,3 +847,24 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .ic-s{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E")}
 .ic-t{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 4a8 8 0 0 0 0 16z' fill='%23000' stroke='none'/%3E%3C/svg%3E")}
 .ic-m{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 7h16M4 12h16M4 17h16'/%3E%3C/svg%3E")}
+/* pictures: four panels of charts, column charts, rings */
+.pics{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:34px 48px;margin:22px 0 8px}
+.pic{margin:0;min-width:0}
+.pic figcaption{font-size:13.5px;line-height:1.45;color:var(--muted);margin:0 0 14px;padding-bottom:9px;border-bottom:1.5px solid var(--text);min-height:74px}
+.pic figcaption b{display:block;font:700 18px/1.25 var(--display);letter-spacing:-.02em;color:var(--text);margin-bottom:4px}
+.pic .hbars a{grid-template-columns:minmax(110px,190px) 1fr auto;padding:6px 0;min-height:34px}
+.ccols{display:flex;align-items:flex-end;gap:5px;height:170px;padding-top:20px;border-bottom:1.5px solid var(--text)}
+.ccols div{flex:1;min-width:0;background:var(--line2);position:relative}
+.ccols div.hi{background:var(--ac)}
+.ccols b{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);font:500 10.5px var(--mono);color:var(--muted);padding-bottom:3px;white-space:nowrap}
+.ccx{display:flex;gap:5px;margin-top:6px}
+.ccx span{flex:1;min-width:0;text-align:center;font:500 10.5px var(--mono);color:var(--faint);white-space:nowrap;overflow:hidden}
+.donuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding-top:6px}
+.donut{text-align:center;font-size:13.5px;color:var(--muted);line-height:1.35}
+.donut svg{display:block;width:100%;max-width:128px;margin:0 auto 8px}
+.donut text{font:700 8.5px var(--display);fill:var(--text);letter-spacing:-.02em}
+.hbars.chart{margin:6px 0 26px;max-width:860px}
+.hbars.chart a{grid-template-columns:minmax(130px,300px) 1fr auto}
+.tprev.wide .rw{grid-template-columns:112px 1fr auto}
+.tprev.wide .rw span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:560px){.ccols b{font-size:9px}.pic figcaption{min-height:0}}
