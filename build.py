@@ -2425,12 +2425,24 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
     # service worker: keeps versioned scripts and styles, fonts and logos in the browser, so repeat views skip the network for them
-    (OUT / "sw.js").write_text(f"""var V='{V}',C='hrn-assets-'+V;
-self.addEventListener('install',function(){{self.skipWaiting();}});
+    # Offline page: shown only when a page was never opened before and there is no connection
+    page("offline/", f"You are offline | {SITE}", "This page is shown when there is no connection and the page you asked for was not opened before.",
+         '<h1>No connection right now</h1><p class="lead">Pages you opened before still work: your saved jobs, the jobs you looked at and the tools. '
+         f'<a href="{P}/my-jobs/">Open My jobs</a>. The rest comes back when the connection does.</p>', head='<meta name="robots" content="noindex">', sitemap=False, compact=True)
+    # Service worker. Three jobs: (1) versioned scripts and styles, fonts and logos come from the browser's store, so repeat views skip
+    # the network for them; (2) every page the visitor opens is kept (the newest 80), so saved jobs and recently read jobs open with no
+    # connection; (3) the search data is kept too, so the search page works offline with the last list it loaded.
+    (OUT / "sw.js").write_text(f"""var V='{V}',C='hrn-assets-'+V,PG='hrn-pages-1',B='{P}';
+self.addEventListener('install',function(e){{e.waitUntil(caches.open(PG).then(function(c){{return c.addAll([B+'/offline/',B+'/my-jobs/']).catch(function(){{}});}}));self.skipWaiting();}});
 self.addEventListener('activate',function(e){{e.waitUntil(caches.keys().then(function(ks){{return Promise.all(ks.map(function(k){{return k.indexOf('hrn-assets-')===0&&k!==C?caches.delete(k):null;}}));}}).then(function(){{return self.clients.claim();}}));}});
+function trim(c){{return c.keys().then(function(ks){{return ks.length>80?Promise.all(ks.slice(0,ks.length-80).map(function(k){{return c.delete(k);}})):null;}});}}
 self.addEventListener('fetch',function(e){{var r=e.request;if(r.method!=='GET')return;var u=new URL(r.url);if(u.origin!==location.origin)return;
-if(!(/\\/(fonts|logos)\\//.test(u.pathname)||/[?&]v=/.test(u.search)))return;
-e.respondWith(caches.open(C).then(function(c){{return c.match(r).then(function(hit){{return hit||fetch(r).then(function(res){{if(res.ok)c.put(r,res.clone());return res;}});}});}}).catch(function(){{return fetch(r);}}));}});
+if(/\\/(fonts|logos)\\//.test(u.pathname)||/[?&]v=/.test(u.search)){{
+e.respondWith(caches.open(C).then(function(c){{return c.match(r).then(function(hit){{return hit||fetch(r).then(function(res){{if(res.ok)c.put(r,res.clone());return res;}});}});}}).catch(function(){{return fetch(r);}}));return;}}
+var page=r.mode==='navigate',data=/\\/data\\/(head|index|geo|skills)\\.json$/.test(u.pathname);if(!page&&!data)return;
+var key=page?u.origin+u.pathname:r;
+e.respondWith(fetch(r).then(function(res){{if(res.ok){{var copy=res.clone();caches.open(PG).then(function(c){{return c.put(key,copy).then(function(){{return trim(c);}});}});}}return res;}})
+.catch(function(){{return caches.open(PG).then(function(c){{return c.match(key).then(function(hit){{return hit||(page?c.match(B+'/offline/'):Response.error());}});}});}}));}});
 """, encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'

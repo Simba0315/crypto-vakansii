@@ -57,7 +57,7 @@ number of listings (Indeed); all applications in one place and one-click save (T
 | Saved data must survive | ✅ backup and restore; ➕ the browser is asked to keep saved jobs and the resume when it clears storage |
 | Works on every screen, dark mode | ✅ phone, tablet, desktop, dark |
 | No paid ranking mixed in silently | ✅ featured jobs are labelled |
-| Works without a connection | 📋 the service worker keeps styles and scripts; saved jobs and the last results should open offline too |
+| Works without a connection | ➕ every page a visitor has opened (the newest 80), My jobs and the search data open with no connection; a plain page says so when something was never opened |
 | One-tap apply with a stored profile, "employer viewed" notice | 📋 only for jobs posted directly with us; needs the server |
 
 ## If we make an app or an installable site
