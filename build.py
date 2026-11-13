@@ -1772,6 +1772,73 @@ def main():
                        "Roles each company opened and closed in the last seven days. Closed counts are tracked from the day we started watching a company.",
                        ["#", "Company", "Opened", "Closed", "Net", "Trend"],
                        [trow([rank(i), cl(c), f"+{o_}", f"−{k_}", f"<strong>{o_ - k_:+d}</strong>", mood]) for i, (c, o_, k_, mood) in enumerate(pulse_rank[:40])], ("companies/", "All companies")))
+    # Company against company (the owner pointed at the "compare companies" pages of Indeed and Glassdoor). Theirs rest on reviews;
+    # ours on what each employer's own postings show today: how much it hires, how often it states pay, how much of it is remote.
+    cfacts = {}
+    for c, js in companies.items():
+        act_ = [j for j in js if j["active"]]
+        if len(act_) < 5: continue
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in act_ if j["usd"]]
+        cfacts[slugify(c)] = dict(name=c, n=len(act_), remote=sum(j["remote"] for j in act_), pay=sum(bool(j["salary"]) for j in act_), med=int(median(mids_)) if len(mids_) >= 15 else 0,
+                                  week=sum(1 for j in act_ if (j["posted"] or "") >= week), entry=sum(1 for j in act_ if j["entry"]), old=sum(age_days(j) >= LONG_OPEN for j in act_),
+                                  fields=[CAT[k] for k, _ in Counter(j["cat"] for j in act_).most_common(3)], skills=[t for t, _ in Counter(t for j in act_ for t in j["tags"]).most_common(6)])
+    write("data/compare.json", json.dumps({s_: [f["name"], f["n"], f["remote"], f["pay"], f["med"], f["week"], f["entry"], f["old"], f["fields"], f["skills"]] for s_, f in cfacts.items()},
+                                         ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    def vs_rows(A, B):
+        pc = lambda a_, b_: round(100 * a_ / max(1, b_))
+        rows_ = [("Open jobs", A["n"], B["n"], f'{A["n"]:,}', f'{B["n"]:,}'), ("Can be done from home", pc(A["remote"], A["n"]), pc(B["remote"], B["n"]), f'{pc(A["remote"], A["n"])}%', f'{pc(B["remote"], B["n"])}%'),
+                 ("State the pay", pc(A["pay"], A["n"]), pc(B["pay"], B["n"]), f'{pc(A["pay"], A["n"])}%', f'{pc(B["pay"], B["n"])}%'),
+                 ("Median advertised pay", A["med"], B["med"], money(A["med"]) if A["med"] else "too few postings", money(B["med"]) if B["med"] else "too few postings"),
+                 ("Posted in the last 7 days", A["week"], B["week"], f'{A["week"]:,}', f'{B["week"]:,}'), ("For beginners", A["entry"], B["entry"], f'{A["entry"]:,}', f'{B["entry"]:,}'),
+                 (f"Open {LONG_OPEN} days or more", pc(A["old"], A["n"]), pc(B["old"], B["n"]), f'{pc(A["old"], A["n"])}%', f'{pc(B["old"], B["n"])}%')]
+        out = ""
+        for lab, a_, b_, ta, tb in rows_:
+            mx_ = max(a_, b_, 1)
+            out += (f'<div class="vsr"><span class="vl">{e(lab)}</span><span class="va"><b>{e(ta)}</b><i style="width:{round(100 * a_ / mx_)}%"></i></span>'
+                    f'<span class="vb"><i style="width:{round(100 * b_ / mx_)}%"></i><b>{e(tb)}</b></span></div>')
+        return out
+    def vs_head(A, B, sa, sb):
+        return (f'<div class="vsh"><a href="{P}/companies/{sa}/">{ava(A["name"])}<b>{e(A["name"])}</b></a><span>vs</span><a href="{P}/companies/{sb}/"><b>{e(B["name"])}</b>{ava(B["name"])}</a></div>')
+    vs_top = [s_ for s_, _ in sorted(cfacts.items(), key=lambda kv: -kv[1]["n"])[:14]]
+    vs_pairs = [(a_, b_) for i, a_ in enumerate(vs_top) for b_ in vs_top[i + 1:]]
+    vs_path = lambda a_, b_: f"companies/compare/{a_}-vs-{b_}/"
+    for sa, sb in vs_pairs:
+        A, B = cfacts[sa], cfacts[sb]
+        more_, rem_, pay_ = (A, B) if A["n"] >= B["n"] else (B, A), (A, B) if A["remote"] / A["n"] >= B["remote"] / B["n"] else (B, A), (A, B) if A["pay"] / A["n"] >= B["pay"] / B["n"] else (B, A)
+        verdict = [f'{more_[0]["name"]} has more open jobs: {more_[0]["n"]:,} against {more_[1]["n"]:,}.',
+                   f'{rem_[0]["name"]} has the larger share of remote roles: {round(100 * rem_[0]["remote"] / rem_[0]["n"])}% against {round(100 * rem_[1]["remote"] / rem_[1]["n"])}%.',
+                   f'{pay_[0]["name"]} states the pay more often: in {round(100 * pay_[0]["pay"] / pay_[0]["n"])}% of its postings against {round(100 * pay_[1]["pay"] / pay_[1]["n"])}%.']
+        if A["med"] and B["med"]:
+            hi_, lo_ = (A, B) if A["med"] >= B["med"] else (B, A)
+            verdict.append(f'{hi_["name"]} advertises higher pay: a median of {money(hi_["med"])} against {money(lo_["med"])}. The roles differ, so this compares what is on offer, not the same job.')
+        qa_ = [(f"Which has more open jobs, {A['name']} or {B['name']}?", verdict[0] + f" Counted on {fdate(TODAY)} from each company’s own careers page."),
+               (f"Does {A['name']} or {B['name']} hire more remote workers?", verdict[1]), (f"Which of the two states the pay in its postings?", verdict[2])]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        side = lambda F: (f'<div><p class="flabel">{e(F["name"])} hires most in</p><p>{e(", ".join(F["fields"]))}</p>' + (f'<p class="flabel">Skills it asks for most</p><p>{e(", ".join(F["skills"]))}</p>' if F["skills"] else "") + "</div>")
+        others_ = [x for x in vs_top if x not in (sa, sb)][:6]
+        page(vs_path(sa, sb), f"{A['name']} vs {B['name']}: jobs, pay and remote work | {SITE}",
+             f"{A['name']} against {B['name']} by their own job postings: {A['n']:,} and {B['n']:,} open roles, the share that is remote, how often pay is stated and what is advertised. Counted {fdate(TODAY)}.",
+             crumbs(("Companies", "companies/"), ("Compare", "companies/compare/"), (f"{A['name']} vs {B['name']}", "")) + f"<h1>{e(A['name'])} vs {e(B['name'])}: hiring side by side</h1>"
+             f'<p class="lead">What each company’s own job postings show on {fdate(TODAY)}: how many roles are open, how many can be done from home, how often the pay is stated and what is advertised.</p>'
+             + vs_head(A, B, sa, sb) + f'<div class="vs">{vs_rows(A, B)}</div>'
+             + '<div class="card verdict">' + "".join(f"<p>{e(v)}</p>" for v in verdict) + "</div>"
+             + f'<div class="vsside">{side(A)}{side(B)}</div>'
+             + f'<p class="cta2"><a class="btn" href="{P}/companies/{sa}/">See {e(A["name"])} jobs</a> <a class="btn ghost" style="margin-top:0" href="{P}/companies/{sb}/">See {e(B["name"])} jobs</a></p>'
+             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
+             + section("More comparisons", '<ul class="tiles">' + "".join(tile(vs_path(*sorted((x, o), key=vs_top.index)), f"{cfacts[x]['name']} vs {cfacts[o]['name']}", cfacts[x]["n"] + cfacts[o]["n"]) for x in (sa, sb) for o in others_[:3]) + "</ul>",
+                       ("companies/compare/", "Compare any two companies"))
+             + f'<p class="note">Counted from open roles collected from each company’s own careers page. A median needs at least 15 postings with a yearly range in US dollars. <a href="{P}/methodology/">How the numbers are made</a>.</p>', head=ld_)
+    vs_opts = "".join(f'<option value="{s_}">{e(f["name"])}</option>' for s_, f in sorted(cfacts.items(), key=lambda kv: kv[1]["name"].lower()))
+    page("companies/compare/", f"Compare Companies by Their Job Postings: {len(cfacts)} employers | {SITE}",
+         f"Put any two of {len(cfacts)} employers side by side: open jobs, remote share, how often pay is stated, advertised pay, new roles this week. Counted from their own postings.",
+         crumbs(("Companies", "companies/"), ("Compare", "")) + '<h1>Compare two companies by what they are <span class="hl">hiring for</span></h1>'
+         f'<p class="lead">Pick any two of {len(cfacts)} employers. The bars show what their own job postings say today: how many roles are open, how many can be done from home, how often the pay is stated.</p>'
+         f'<div class="feedpick vspick"><label for="vs-a">First</label><select id="vs-a">{vs_opts}</select><label for="vs-b">Second</label><select id="vs-b">{vs_opts}</select></div>'
+         f'<div id="vs-out" data-a="{vs_top[0]}" data-b="{vs_top[1]}" data-long="{LONG_OPEN}">' + vs_head(cfacts[vs_top[0]], cfacts[vs_top[1]], vs_top[0], vs_top[1]) + f'<div class="vs">{vs_rows(cfacts[vs_top[0]], cfacts[vs_top[1]])}</div></div>'
+         + section("Comparisons people open most", '<ul class="tiles">' + "".join(tile(vs_path(a_, b_), f"{cfacts[a_]['name']} vs {cfacts[b_]['name']}", cfacts[a_]["n"] + cfacts[b_]["n"]) for a_, b_ in vs_pairs[:24]) + "</ul>")
+         + f'<p class="note">Reviews by employees are not part of this: the comparison uses only what employers publish in their postings. <a href="{P}/methodology/">How the numbers are made</a>.</p>')
+
     # Who is hiring, field by field. The big job sites answer this with hand-written lists ("15 companies hiring for remote nursing
     # jobs"); here the same lists are counted from today's postings, so they cannot go stale.
     INS_FAM = []

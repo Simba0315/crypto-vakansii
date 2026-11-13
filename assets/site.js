@@ -215,6 +215,32 @@
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 
+  /* ---------- compare two companies: bars from data/compare.json ---------- */
+  var vsOut = $('vs-out'), vsA = $('vs-a'), vsB = $('vs-b');
+  if (vsOut && vsA && vsB) {
+    var qp = new URLSearchParams(location.search);
+    vsA.value = qp.get('a') || vsOut.getAttribute('data-a'); vsB.value = qp.get('b') || vsOut.getAttribute('data-b');
+    fetch(P + '/data/compare.json').then(function (r) { return r.json(); }).then(function (D) {
+      var nf = function (x) { return Number(x).toLocaleString('en-US'); }, pc = function (a, b) { return Math.round(100 * a / Math.max(1, b)); };
+      var money = function (v) { return v ? '$' + Math.round(v / 1000) + 'K' : 'too few postings'; };
+      var draw = function () {
+        var a = D[vsA.value], b = D[vsB.value]; if (!a || !b) return;
+        var rows = [['Open jobs', a[1], b[1], nf(a[1]), nf(b[1])], ['Can be done from home', pc(a[2], a[1]), pc(b[2], b[1]), pc(a[2], a[1]) + '%', pc(b[2], b[1]) + '%'],
+          ['State the pay', pc(a[3], a[1]), pc(b[3], b[1]), pc(a[3], a[1]) + '%', pc(b[3], b[1]) + '%'], ['Median advertised pay', a[4], b[4], money(a[4]), money(b[4])],
+          ['Posted in the last 7 days', a[5], b[5], nf(a[5]), nf(b[5])], ['For beginners', a[6], b[6], nf(a[6]), nf(b[6])],
+          ['Open ' + vsOut.getAttribute('data-long') + ' days or more', pc(a[7], a[1]), pc(b[7], b[1]), pc(a[7], a[1]) + '%', pc(b[7], b[1]) + '%']];
+        var side = function (x, slug) { return '<div><p class="flabel">' + esc(x[0]) + ' hires most in</p><p>' + esc(x[8].join(', ')) + '</p>' + (x[9].length ? '<p class="flabel">Skills it asks for most</p><p>' + esc(x[9].join(', ')) + '</p>' : '') +
+          '<p><a class="btn sm" href="' + P + '/companies/' + slug + '/">See ' + esc(x[0]) + ' jobs</a></p></div>'; };
+        vsOut.innerHTML = '<div class="vsh"><a href="' + P + '/companies/' + vsA.value + '/"><b>' + esc(a[0]) + '</b></a><span>vs</span><a href="' + P + '/companies/' + vsB.value + '/"><b>' + esc(b[0]) + '</b></a></div><div class="vs">' +
+          rows.map(function (r) { var mx = Math.max(r[1], r[2], 1); return '<div class="vsr"><span class="vl">' + r[0] + '</span><span class="va"><b>' + r[3] + '</b><i style="width:' + Math.round(100 * r[1] / mx) + '%"></i></span><span class="vb"><i style="width:' + Math.round(100 * r[2] / mx) + '%"></i><b>' + r[4] + '</b></span></div>'; }).join('') +
+          '</div><div class="vsside">' + side(a, vsA.value) + side(b, vsB.value) + '</div>';
+        try { history.replaceState(null, '', '?a=' + encodeURIComponent(vsA.value) + '&b=' + encodeURIComponent(vsB.value)); } catch (e) {}
+      };
+      vsA.addEventListener('change', draw); vsB.addEventListener('change', draw);
+      if (qp.get('a') || qp.get('b')) draw();
+    }).catch(function () {});
+  }
+
   /* ---------- feeds page: pick a feed, copy its address ---------- */
   var feedpick = $('feedpick'), feedurl = $('feedurl'), feedcopy = $('feedcopy');
   if (feedpick && feedurl) {
