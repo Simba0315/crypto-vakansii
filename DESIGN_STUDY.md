@@ -19,8 +19,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    the postings. ✅ Pay by field with the number of postings behind each figure (2026-11-13).
 6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. 📋 Still to do: the
    "Related" and "Compare with" runs as labelled rows (label left, links right, "More" last).
-7. ✅ **Tools show a result at once** ("Show an example"). 📋 Still to do: a sub-navigation under the header on tool pages and the
-   questions in two columns.
+7. ✅ **Tools show a result at once** ("Show an example"). ✅ Sub-navigation row on tool pages (2026-11-13). 📋 Still to do: the questions in two columns.
 8. ✅ **Tools index: break the grid** (2026-11-13: three wide rows plus a ruled list with an example on the right). Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
 9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
