@@ -119,8 +119,28 @@ into it at once; when something ships, update its row. He asked for this on 2026
    change prices or contacts in `config.json` on your own (the Telegram contact was given by the owner).
 3. Closed jobs stay as archive pages.
 4. Real company logos only, from the company's own site.
-5. Design: the "Signal" identity (warm paper, ink, one lime accent, mono numerals, the board). Keep it consistent, distinctive
-   and polished on phone and desktop. No purple gradients, no stock images, no generic "AI look".
+5. Design: warm paper, ink, hairlines and ONE calm green (tokens in `style.css`: `--hl` green as a fill under text, `--ac`
+   green as a line, `--pop` the same green on dark surfaces). History, 2026-11-13: the owner asked to remove the "AI look", said
+   he liked the green marker under words and the green underlines on links, then left the colour to us ("decide yourself, maybe
+   neutral; what matters is that people like it, it is convenient, simple, clear, and nobody thinks it is AI"). The acid lime on
+   black was dropped because that pairing is the stock look of generated landing pages; the marker and the underlines stayed,
+   in a natural green that also passes contrast as a line. Do not bring lime or per-section colours back.
+   Banned, because they read as a template:
+   - offset "sticker" shadows, gradients as decoration, glow, pulsing dots, hover lifts;
+   - grids of identical cards that hold only a heading and two lines; use a ruled list (`.feats`, `.gloss`) or a table.
+     A card is fine when it shows something real: tool tiles (`.tcard`) carry a small screen of the tool's result;
+   - small capital letters in mono with letter-spacing as labels; mono is for numbers only;
+   - boxes around everything: lists are flat with hairlines, like a printed index (`.jobs`, `.tiles`, `.hbars`, tables);
+   - a row of four big numbers in the hero, badge-style kickers above a headline, arrows after every link;
+   - accordions for questions: questions and answers are plain text (`.qa`).
+   Required, from the same day ("the tools page looked like it had no design, I could not tell what was clickable",
+   "every page must be worked through", "an ordinary person will not understand many skills"):
+   - anything clickable must look clickable: a green underline on the name, a hover state on the whole row or tile;
+   - flat does not mean bare: every page needs a designed first screen and a clear visual order;
+   - jargon gets a plain line next to it (`skills_info.py` holds one for every skill: add a line when you add a skill).
+   Copy: no rhetorical-question headlines ("Tired of…?"), no formula pairs ("X is easy to write and hard to check"),
+   no "No X, no Y, no Z" triads, no claim we cannot back with our own data, no repeating the same figures in a sentence
+   and in a row of numbers on one page. Say the problem as a plain statement, then the fact, then what the page does.
 6. Do not copy text or designs from other sites. Original features are preferred over imitations.
 7. Nothing that needs a server exists yet (accounts, payments, email). Do not fake it: no forms that go nowhere.
 8. No spam, no fake accounts, no posting on third-party sites, no contacting companies or people on the owner's behalf.

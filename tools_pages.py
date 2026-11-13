@@ -9,6 +9,7 @@ from collections import defaultdict
 from html import escape as _e
 
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+TILES = {}                                                             # page path -> ready tile, filled by build_tools() so the home page can show the same tiles
 MIN_SAMPLE = 20                                                       # no salary figure is shown for fewer postings than this
 QS = [0, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100]      # percentile points embedded for the salary checker
 LEVELS = [("", "Any level"), ("Intern", "Intern"), ("Junior", "Junior"), ("none", "No level in the title"), ("Senior", "Senior"), ("Lead", "Lead")]
@@ -187,7 +188,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     sal_rows = "".join(f"<tr><td>{e(name)}</td>" + "".join(cell(slug, lv) for lv in cols) + "</tr>" for slug, name in [("", "All categories")] + cats)
     sal_table = ('<div class="tablewrap"><table><tr><th>Category</th><th>Any level</th><th>Junior</th><th>No level in title</th><th>Senior</th><th>Lead</th></tr>' + sal_rows + "</table></div>"
                  f'<p class="note">Median advertised salary · number of postings counted. A dash means fewer than {MIN_SAMPLE} postings. Yearly, US dollars, as of {DATE}. '
-                 f'<a href="{P}/salaries/">Salaries by skill and company →</a></p>')
+                 f'<a href="{P}/salaries/">Salaries by skill and company</a></p>')
     tool("salary-checker", "seekers", "Tech salary checker",
          "See the median and range of advertised salaries for your category, level and skill, and where your pay sits.",
          "Tech Salary Checker — Is Your Pay Fair?",
@@ -700,7 +701,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         return html_, ld
 
     def cards(items):
-        return '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h2 class="fh">{e(n)}</h2><p>{e(d)}</p></a>' for u, n, d in items) + "</div>"
+        return '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h3>{e(n)}</h3><p>{e(d)}</p></a>' for u, n, d in items) + "</div>"
 
     for t in TOOLS:
         path = f"tools/{t['slug']}/"
@@ -713,14 +714,62 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         body = (crumbs(("Tools", "tools/"), (t["name"], "")) + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + t["html"]
                 + '<div class="tl-after">' + extra
                 + section(t["how_title"], f'<div class="tl-how">{t["how"]}</div>')
-                + section(f'{t["name"]}: questions and answers', faq_html)
+                + section("Questions", faq_html)
                 + section("Related tools", cards(related), ("tools/", "All free tools")) + "</div>")
         page(path, t["title"], t["desc"], body, head=assets + app_ld + faq_ld + crumbs_ld([("Tools", "tools/"), (t["name"], "")]))
 
+    # ------------------------------------------------------------ tiles
+    # Each tile carries a small screen that shows what the tool gives back. The salary screen uses today's real figures;
+    # the others are worked examples (the arithmetic in them is exact) and say so.
+    mids = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in jobs if j.get("usd"))
+    kmoney = lambda v: f"${v / 1000:,.0f}K"
+    ex = '<span class="ex">example</span>'
+    PREV = {
+        "resume-match": ex + '<span class="big">78%<small>match</small></span><span class="mt"><i style="width:78%"></i></span>'
+                             '<span class="ln"><b>9 of 12</b> skills from the posting found. Missing: Kafka, Terraform, Go</span>',
+        "salary-converter": ex + '<span class="ln">$60 an hour, 40 hours a week</span><span class="big">$124,800<small>a year</small></span>'
+                                 '<span class="ln"><b>$10,400</b> a month · <b>$2,400</b> a week</span>',
+        "raise-calculator": ex + '<span class="ln">$120,000 with a 7% raise</span><span class="big">$128,400<small>a year</small></span>'
+                                 '<span class="ln"><b>+$8,400</b> a year · <b>+$700</b> a month</span>',
+        "compare-offers": ex + '<span class="rw"><span>Offer A</span><span class="mt"><i style="width:100%"></i></span><b>$182K</b></span>'
+                               '<span class="rw"><span>Offer B</span><span class="mt"><i style="width:94%"></i></span><b>$171K</b></span>'
+                               '<span class="ln">Base, bonus, equity and benefits, per year</span>',
+        "equity-calculator": ex + '<span class="ln">10,000 options · strike $4.20 · share $10.00</span><span class="big">$58,000<small>on paper</small></span>'
+                                  '<span class="mt"><i style="width:50%"></i></span><span class="ln"><b>Half vested</b> after two of four years</span>',
+        "time-zone-overlap": ex + '<span class="rw"><span>New York</span><span class="mt"><i style="left:58.3%;width:33.3%"></i></span></span>'
+                                  '<span class="rw"><span>London</span><span class="mt"><i style="left:37.5%;width:33.3%"></i></span></span>'
+                                  '<span class="rw"><span>Berlin</span><span class="mt"><i style="left:33.3%;width:33.3%"></i></span></span>'
+                                  '<span class="ln"><b>2 shared hours</b> a day in winter: 14:00 to 16:00 UTC</span>',
+        "cover-letter": '<span class="ln"><b>Dear Hiring Manager,</b></span><span class="sk" style="width:96%"></span><span class="sk h" style="width:62%"></span>'
+                        '<span class="sk" style="width:90%"></span><span class="sk" style="width:84%"></span><span class="sk" style="width:38%"></span>',
+        "negotiation-email": ex + '<span class="ln"><b>Subject:</b> the offer, a question about salary</span><span class="sk" style="width:92%"></span>'
+                                  '<span class="sk" style="width:86%"></span><span class="ln">Asking for <b>$165,000</b> instead of $150,000</span><span class="sk" style="width:44%"></span>',
+        "contractor-rate": ex + '<span class="ln">To end up with $100,000 a year</span><span class="big">$722<small>a day</small></span>'
+                                '<span class="ln"><b>180</b> billable days · <b>$90</b> an hour</span>',
+        "job-description-checker": ex + '<span class="big">64<small>out of 100</small></span><span class="mt"><i style="width:64%"></i></span>'
+                                        '<span class="ln">No salary range · 14 must-haves · 2 biased words</span>',
+        "jobposting-schema": '<code>{ "@type": <b>"JobPosting"</b>,\n  "title": "Data Engineer",\n  "datePosted": "' + today.isoformat() + '",\n  "hiringOrganization": { … } }</code>',
+        "boolean-search": '<code>(<b>"backend engineer"</b> OR "software engineer")\nAND (Python OR Go)\nNOT (recruiter OR intern)</code>',
+    }
+    if len(mids) >= MIN_SAMPLE:
+        q = lambda p: mids[min(len(mids) - 1, int(p * len(mids)))]
+        lo, hi = q(.1), q(.9)
+        pos = lambda v: max(0, min(100, 100 * (v - lo) / max(hi - lo, 1)))
+        PREV["salary-checker"] = (f'<span class="big">{kmoney(q(.5))}<small>median today</small></span>'
+                                  f'<span class="mt"><i style="left:{pos(q(.25)):.0f}%;width:{pos(q(.75)) - pos(q(.25)):.0f}%"></i><u style="left:{pos(q(.5)):.0f}%"></u></span>'
+                                  f'<span class="ln">Half of postings: <b>{kmoney(q(.25))} to {kmoney(q(.75))}</b> · {len(mids):,} roles</span>')
+
+    def tile(path, name, text, slug=""):
+        prev = PREV.get(slug)
+        return (f'<a class="tcard" href="{P}/{path}">' + (f'<span class="tprev" aria-hidden="true">{prev}</span>' if prev else "")
+                + f'<span class="tbody"><b>{e(name)}</b><span>{e(text)}</span><i><u>Open the tool</u></i></span></a>')
+
+    for t in TOOLS:
+        TILES[f"tools/{t['slug']}/"] = tile(f"tools/{t['slug']}/", t["name"], t["card"], t["slug"])
+
     # ------------------------------------------------------------ the hub
     def group(key):
-        return ('<div class="feats">' + "".join(
-            f'<a class="feat" href="{P}/tools/{t["slug"]}/"><h2 class="fh">{e(t["name"])}</h2><p>{e(t["card"])}</p></a>' for t in TOOLS if t["group"] == key) + "</div>")
+        return '<div class="tgrid">' + "".join(TILES[f"tools/{t['slug']}/"] for t in TOOLS if t["group"] == key) + "</div>"
     hub_faq = [("Are these tools free?", "Yes. Every tool on this page is free, needs no account and can be used as often as you like."),
                ("Do the tools store or upload what I type?",
                 "No. All calculations and text checks run in your browser. What you type is saved only in this browser’s storage so a tool remembers it next time, and every tool has a Clear button that erases it."),
@@ -734,16 +783,16 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     list_ld = _ld({"@context": "https://schema.org", "@type": "ItemList", "name": f"Free tools on {SITE}", "numberOfItems": len(TOOLS),
                    "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": t["name"], "url": f"{FULL}/tools/{t['slug']}/"} for i, t in enumerate(TOOLS)]})
     page("tools/", "Free Tools for Tech Job Seekers & Recruiters" + brand, hub_desc,
-         crumbs(("Tools", "")) + "<h1>Free tools for finding a tech job and for hiring</h1>"
-         '<p class="lead">Is my pay fair? Does my resume fit this posting? Which offer is really worth more? Why does nobody apply to our vacancy? Each tool here answers one of these questions. '
-         f"They run in your browser, with no account and nothing uploaded, and the salary figures come from the {n_paid:,} open postings on this site that publish a pay range.</p>"
-         + section(f"For job seekers · {n_seek} tools", group("seekers"))
-         + section(f"For employers and recruiters · {n_emp} tools", group("employers"))
+         crumbs(("Tools", "")) + "<h1>Free tools for a tech job search and for hiring</h1>"
+         f'<p class="lead">{len(TOOLS)} small tools for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
+         f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
+         + section("For job seekers", group("seekers"))
+         + section("For employers and recruiters", group("employers"))
          + section("How these tools work", '<div class="feats">'
-                   '<div class="feat"><p class="pain">Worried about pasting your resume into a website?</p><h2 class="fh">Nothing leaves your browser</h2><p>Every calculation and text check runs on your device. There is no account and no upload; “Clear” erases what a tool remembers.</p></div>'
-                   f'<div class="feat"><p class="pain">Tired of salary numbers with no source?</p><h2 class="fh">Figures from live postings</h2><p>Salary data comes from {n_paid:,} open roles that publish a yearly US-dollar range, and no figure is shown for fewer than {MIN_SAMPLE} postings.</p></div>'
-                   '<div class="feat"><p class="pain">Not sure what a score really means?</p><h2 class="fh">The method is on the page</h2><p>Plain arithmetic and fill-in templates, no AI. Under each tool you can read exactly how its result is calculated.</p></div></div>')
-         + section("Free tools: questions and answers", faq_html)
+                   '<div class="feat"><h3>Nothing leaves your browser</h3><p>Every calculation and text check runs on your device. Nothing is uploaded, and “Clear” erases what a tool remembers.</p></div>'
+                   f'<div class="feat"><h3>The salary figures have a source</h3><p>They come from {n_paid:,} open roles that publish a yearly US-dollar range. No figure is shown for fewer than {MIN_SAMPLE} postings.</p></div>'
+                   '<div class="feat"><h3>The method is on the page</h3><p>Arithmetic and fill-in templates, not AI. Under each tool you can read how its result is calculated.</p></div></div>')
+         + section("Questions", faq_html)
          + section("More on this site", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")])),
          head=assets + list_ld + faq_ld + crumbs_ld([("Tools", "")]))
 
