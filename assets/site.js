@@ -1027,3 +1027,21 @@
     if (searches.length || fkeys.length) load().then(function (index) { if (searches.length) drawSearches(index); if (fkeys.length) drawFollows(index); }).catch(function () {});
   }
 })();
+
+/* Pricing: one table for people looking for work, another for employers. Without this script both are shown, one after the other. */
+(function () {
+  var sw = document.getElementById('pswitch'); if (!sw) return;
+  var a = document.getElementById('for-seekers'), b = document.getElementById('for-employers');
+  function show(emp) {
+    a.hidden = emp; b.hidden = !emp;
+    [].forEach.call(sw.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String((x.getAttribute('data-v') === 'e') === emp)); });
+  }
+  sw.hidden = false;
+  sw.addEventListener('click', function (ev) {
+    var t = ev.target.closest('button'); if (!t) return;
+    var emp = t.getAttribute('data-v') === 'e'; show(emp);
+    try { history.replaceState(null, '', emp ? '#employers' : location.pathname); } catch (e) {}
+  });
+  window.addEventListener('hashchange', function () { show(location.hash === '#employers'); });
+  show(location.hash === '#employers');
+})();

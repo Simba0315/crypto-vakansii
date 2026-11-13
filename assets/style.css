@@ -999,3 +999,53 @@ td s.was{font-size:.92em}
 .rexside .invf b{font-size:26px}
 .rexside .hbars.chart{margin:6px 0 10px}
 .rexside .hbars.chart a{grid-template-columns:minmax(90px,150px) 1fr auto}
+
+/* pricing: plans side by side, a tick, a cross or a few words in every cell */
+.ptwrap{border:1px solid var(--line2);border-radius:12px;overflow-x:auto;background:var(--card);margin:16px 0 14px}
+.pt{width:100%;border-collapse:collapse;min-width:620px;margin:0}
+.pt.c2{min-width:520px}
+.pt th,.pt td{padding:15px 20px;text-align:left;border:0;border-bottom:1px solid var(--line);font-size:15px;line-height:1.35;vertical-align:middle;background:transparent}
+.pt td,.pt .pc{border-left:1px solid var(--line)}
+.pt tbody tr:last-child th,.pt tbody tr:last-child td{border-bottom:0}
+.pt thead th{padding:22px 20px 20px;vertical-align:top}
+.pt{table-layout:fixed}
+.pt .pf{width:36%}
+.pt.c3 .pf{width:31%}
+.pt .pc b{display:block;font-size:21px;letter-spacing:-.015em;font-weight:700}
+.pt .pc .pp{display:block;margin-top:8px;font-size:14.5px;font-weight:400;color:var(--muted);line-height:1.5}
+.pt .pc .pp b{display:inline;font-size:inherit;letter-spacing:0;color:var(--text)}
+.pt .pc .pn{display:block;margin-top:4px;font-size:13px;font-weight:400;color:var(--faint)}
+.pt .best{background:var(--accent-soft)}
+.pt thead .best>b{color:var(--btn-h)}
+:root[data-theme=dark] .pt thead .best>b{color:var(--ac)}
+.pt tr.pg th{font-size:17px;font-weight:700;padding:26px 20px 14px;letter-spacing:-.01em}
+.pt tbody th[scope=row]{font-weight:400;color:var(--muted)}
+.pv{display:inline-flex;align-items:center;gap:10px;font-weight:500}
+.pv.ok::before,.pv.no::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;background:var(--hl) center/11px no-repeat}
+.pv.ok::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.4l2.6 2.6L10 3.4' fill='none' stroke='%2306361c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.pv.no::before{background-color:var(--line);background-size:9px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 2.5l7 7M9.5 2.5l-7 7' fill='none' stroke='%238b897f' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")}
+.pv.lim{color:var(--muted);font-weight:400}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pswitch{margin:6px 0 4px}
+.pswitch .tab{font-size:15px;padding:10px 16px;border-radius:6px}
+/* on a phone the feature name takes its own line and the plans stand under it, so the paid column is never off the screen */
+@media(max-width:640px){
+  .ptwrap{overflow:clip}
+  .pt,.pt.c2{min-width:0;display:block}
+  .pt thead,.pt tbody{display:block}
+  .pt tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pt.c3 tr{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pt .pf{display:none}
+  .pt thead{position:sticky;top:57px;z-index:2;background:var(--card);border-bottom:1px solid var(--line2)}
+  .pt thead th{padding:12px 12px 10px;border-bottom:0}
+  .pt .pc b{font-size:16px}
+  .pt .pc .pp{font-size:12.5px;margin-top:4px}
+  .pt .pc .pn{display:none}
+  .pt th,.pt td{padding:10px 12px 12px;font-size:13.5px}
+  .pt tbody th[scope=row]{grid-column:1/-1;border-bottom:0;padding:12px 12px 0;color:var(--text);font-weight:500}
+  .pt tr.pg th{grid-column:1/-1;padding:20px 12px 8px;font-size:16px;background:var(--bg2)}
+  .pt .pf+.pc,.pt th[scope=row]+td{border-left:0}
+  .pt tbody tr:last-child th{border-bottom:0}
+  .pv{gap:7px}
+  .pv.ok::before,.pv.no::before{width:17px;height:17px;background-size:9px}
+}

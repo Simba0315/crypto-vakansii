@@ -359,7 +359,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="preload" href="{P}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
@@ -373,7 +373,7 @@ def FULL_FOOT():
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
-<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
+<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
@@ -868,6 +868,21 @@ def cite(path, title):
 PRICE = {p_["name"]: p_ for p_ in CFG.get("prices", [])}
 price_of = lambda name: PRICE.get(name, {}).get("price", "")
 was_of = lambda name: (f'<s class="was">{e(PRICE[name]["was"])}</s> ' if PRICE.get(name, {}).get("was") else "")
+def ptable(cols, rows):
+    """Plans side by side, the way pricing pages show them: a column per plan with its price on top, features in groups, a tick,
+    a cross or a few words in every cell. cols: (name, price as HTML, note, best). rows: (group,) or (feature, cell, cell...);
+    a cell is True, False, words (shown with a tick) or "~words" (shown plainly: the plan has it in a smaller form)."""
+    def cell(v, best):
+        b = ' class="best"' if best else ""
+        if v is True: return f'<td{b}><span class="pv ok"><span class="vh">Yes</span></span></td>'
+        if v is False: return f'<td{b}><span class="pv no"><span class="vh">No</span></span></td>'
+        return f'<td{b}><span class="pv lim">{e(v[1:])}</span></td>' if v.startswith("~") else f'<td{b}><span class="pv ok">{e(v)}</span></td>'
+    head = '<tr><th class="pf"></th>' + "".join(f'<th scope="col" class="pc{" best" if b else ""}"><b>{e(n_)}</b><span class="pp">{pr}</span><span class="pn">{e(nt)}</span></th>' for n_, pr, nt, b in cols) + "</tr>"
+    body = "".join(f'<tr class="pg"><th scope="colgroup" colspan="{len(cols) + 1}">{e(r[0])}</th></tr>' if len(r) == 1 else
+                   f'<tr><th scope="row">{e(r[0])}</th>' + "".join(cell(v, cols[i][3]) for i, v in enumerate(r[1:])) + "</tr>" for r in rows)
+    return f'<div class="ptwrap"><table class="pt c{len(cols)}"><thead>{head}</thead><tbody>{body}</tbody></table></div>'
+
+
 LAUNCH = ('<p class="launch"><b>Launch prices.</b> Every price here is about a third of the regular one while the paid plans are new. The regular price is the one crossed out.</p>'
           if CFG.get("launch_prices") else "")
 
@@ -3002,6 +3017,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              '<div class="tier"><p class="tn">Employers</p><p class="tp">Free<small> to post a job</small></p><p class="td">A standard listing costs nothing. A featured one stays at the top of its list.</p>'
              f'<a class="btn ghost" href="{P}/post-a-job/">Post a job</a>'
              + tick(["A standard listing for 30 days", f"Featured job from {price_of('Featured job')}", "Pinned job, company spotlight, sponsor of a category", "Paid in crypto, switched on at once", "No calls, no sales manager"]) + "</div></div>")
+    ai_m = re.search(r"AI_MONTHLY\s*=\s*\{\s*resume:\s*(\d+),\s*letter:\s*(\d+),\s*interview:\s*(\d+)", (ROOT / "server" / "src" / "worker.js").read_text(encoding="utf-8") if (ROOT / "server" / "src" / "worker.js").exists() else "")
+    ai_allow = f"{ai_m.group(1)} resume tasks, {ai_m.group(2)} letters, {ai_m.group(3)} interview sessions" if ai_m else "Shown before you pay"
+    plus_price = " · ".join(f'{was_span(pl)}<b>{e(pl["price"])}</b> for {e(pl["name"])}' for pl in plus["plans"]) or "Plus"
+    seek_pt = ptable([("Free", "<b>$0</b>", "No account, no card", False), ("Plus", plus_price, "One payment. Nothing renews", True)], [
+        ("Resume",), ("Resume builder", "All 5 templates", "All 5 templates"), ("Resumes kept", "~1, in this browser", "Unlimited, on every device"), ("PDF and Word downloads", "Unlimited", "Unlimited"),
+        (f"Resume examples for {len(rex_data)} kinds of work", True, True),
+        ("AI writer",), ("AI writer for bullet points and summary", False, True), ("Keywords for one posting", "~Found and missing", "Bullets reworded for the posting"),
+        ("Resume review and score", "~By rules", "By AI, with rewrites"), ("LinkedIn profile review", "~By rules", "By AI"), ("AI use each month", False, ai_allow),
+        ("Letters",), ("Cover letter", "~Fill-in template", "AI draft from your resume and the posting"), ("Thank-you, raise and resignation letters", "~Templates", "AI drafts"),
+        ("Interview and pay",), ("Interview questions for one posting, with feedback on your answers", False, True), ("Salary checker and offer check", True, True), ("Script for negotiating an offer", False, True),
+        ("Jobs",), ("Every job and the link to apply", True, True), ("Matching by five answers, with reasons", True, True), ("An email the day a job fits", False, True),
+        ("Application tracker", "~On this device", "On every device"),
+        ("Payment",), ("How you pay", "~Nothing to pay", "Once, in crypto"), ("Renews by itself", "~Nothing to renew", "Never")])
     yes, no = '<td class="y">Yes</td>', '<td class="n">—</td>'
     cell = lambda v: yes if v is True else no if v is False else f"<td>{e(v)}</td>"
     grid_rows = [("Jobs", None, None), ("Every job and the link to apply", True, True), ("Search, categories, salary data, rankings", True, True), ("Matching by five answers", True, True), ("An email when a job fits", False, True),
@@ -3038,12 +3066,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<p class="lead">A resume gets one short first read, and nobody tells you why it was put aside: the result is on page two, the bullets list duties, the letter could be for any company. '
          f'Plus reads your resume the way a recruiter does, rewords it for each posting and tells you the day a job fits. One payment, from {min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else "a few cents a day"}. Nothing renews.</p>{soon}'
          + LAUNCH + tiers
+         + section("Free and Plus, side by side", seek_pt + f'<p class="note">Hiring? Employers have their own table on the <a href="{P}/pricing/#employers">pricing page</a>.</p>')
          + section("What Plus adds", pcard_html)
          + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. '
                    'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
          + section("What the same things cost elsewhere", else_html)
          + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
-         + section("Free and Plus, line by line", f'<div class="tablewrap"><table class="grid"><tr><th></th><th>Free</th><th>Plus</th></tr>{grid_html}</table></div>')
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{was_of(p['name'])}<strong>{e(p['price'])}</strong></td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
@@ -3074,6 +3102,16 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                  + etick(["Everything in Standard", "Highlighted row with a “Featured” mark", "Above regular listings in its category for 14 days", "On as soon as the payment is confirmed: nobody to write to", "Views and clicks to apply in your account"]) + "</div>"
                  f'<div class="tier"><p class="tn">Pinned</p><p class="tp">{was_of("Pinned job")}{price_of("Pinned job")}<small> for 7 days</small></p><p class="td">The first row on the home page and in its category.</p>{ebtn}'
                  + etick(["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites and channels read"]) + "</div></div>")
+    emp_pt = ptable([("Standard", "<b>Free</b>", "30 days in the list", False),
+                     ("Featured", f'{was_of("Featured job")}<b>{price_of("Featured job")}</b> once', "14 days above regular jobs", True),
+                     ("Pinned", f'{was_of("Pinned job")}<b>{price_of("Pinned job")}</b> once', "7 days in the first row", False)], [
+        ("The listing",), ("In the list and in search", "30 days", "30 days", "30 days"), ("Its own page, readable by Google’s job box", True, True, True),
+        ("A link straight to your application page", True, True, True), ("Checked before it goes live", True, True, True), ("Close or renew it yourself, any time", True, True, True),
+        ("Where it stands",), ("Place in its category", "~By date", "Above regular jobs, 14 days", "First row, 7 days"), ("Highlighted row with a “Featured” mark", False, True, True),
+        ("First row of the home page", False, False, "7 days"),
+        ("Your account",), ("Starts", "~At the next hourly update", "Within the hour after payment", "Within the hour after payment"), ("Views and clicks to apply, per job", False, True, True),
+        ("A receipt for every payment", "~Nothing to pay", True, True),
+        ("Payment",), ("How you pay", "~Nothing to pay", "Once, in crypto", "Once, in crypto"), ("Renews by itself", "~Nothing to renew", "Never", "Never")])
     demo_rows = [dict(j) for j in latest[:4]]
     demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior", "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company",
                 "slug": "", "title": "Senior Backend Engineer (your job)", "posted": TODAY}
@@ -3093,6 +3131,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<p class="lead">There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
          'A featured one stays at the top instead of sliding down as new roles arrive.</p>'
          + LAUNCH + emp_tiers
+         + section("Standard, Featured and Pinned, side by side", emp_pt + f'<p class="note">Looking for work, not hiring? Job seekers have their own table on the <a href="{P}/pricing/">pricing page</a>.</p>')
          + section("How your job looks in the list", '<p class="note">The two highlighted rows are examples of featured jobs; the others are real listings from today.</p>' + demo_html)
          + section("What appears in your account at once", emp_cab)
          + f'{pain_html}' + section("Every plan and price", f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>')
@@ -3108,6 +3147,31 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<a href="{P}/widgets/">badge and widget</a>.</p>'
          "<h3>What happens when the job closes?</h3><p>It moves to the archive and is marked as closed. The page stays online.</p>"
          "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>")
+    # Pricing: both sides on one page, each with its own table. A person looking for work and a company hiring buy different
+    # things, so they never share a table (the owner: "for the job seeker and for the employer everything must be different").
+    price_qa = [("Do I have to pay to see jobs or to apply?", "No. Every job is public and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
+                ("How do I pay?", "In crypto, on a checkout page: USDT, BTC, ETH and other coins. Cards and bank transfers are not taken yet."),
+                ("Will I be charged again?", "No. Every price here is a single payment. Nothing renews by itself, there is no card on file and nothing to cancel."),
+                ("Why are the prices so low?", "They are launch prices, about a third of the regular ones, while the paid plans are new. The regular price is the one crossed out."),
+                ("Can I buy today?", "Not yet. Payments are being connected; until then everything in the Free and Standard columns works as it does today.")]
+    price_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in price_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    extra_rows = "".join(f"<tr><td><strong>{e(p_['name'])}</strong></td><td>{was_of(p_['name'])}<strong>{e(p_['price'])}</strong></td><td>{e(p_['what'])}</td></tr>"
+                         for p_ in CFG["prices"] if p_["name"] not in ("Standard listing", "Featured job", "Pinned job"))
+    low_day = min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else ""
+    page("pricing/", f"Pricing: free for job seekers, Plus from {plus['plans'][0]['price'] if plus['plans'] else ''}, featured jobs from {price_of('Featured job')} | {SITE}",
+         f"What is free and what is paid, side by side. Job seekers: every job and the resume builder are free, Plus adds an AI writer from {low_day}. Employers: a standard listing is free, a featured job is {price_of('Featured job')}.",
+         crumbs(("Pricing", "")) + '<h1>Pricing: what is free and <span class="hl">what you pay for</span></h1>'
+         '<p class="lead">Two tables, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
+         '<p class="tabs pswitch" id="pswitch" hidden><button class="tab" type="button" data-v="s" aria-pressed="true">I’m looking for work</button><button class="tab" type="button" data-v="e" aria-pressed="false">I’m hiring</button></p>'
+         + LAUNCH
+         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_pt}'
+           f'<p><a class="btn primary" href="{P}/for-you/">Start free with five questions</a> <a class="btn ghost" style="margin-top:0" href="{P}/plus/">See Plus</a></p></section>'
+         + f'<section class="sec" id="for-employers"><div class="sec-head"><h2>Hiring</h2><a href="{P}/post-a-job/">See a featured job</a></div>'
+           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_pt
+           + f'<h3>More ways to be seen</h3><div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What you get</th></tr>{extra_rows}</table></div>'
+           f'<p><a class="btn primary" href="{P}/post-a-job/">Post a job</a></p></section>'
+         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in price_qa) + "</dl>"), head=price_ld)
     # Employer account: only exists once the API is deployed, so the site never shows a form that goes nowhere
     if CFG["api_url"]:
         acc_data = {"site": FULL, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
