@@ -21,7 +21,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    "Related" and "Compare with" runs as labelled rows (label left, links right, "More" last).
 7. ✅ **Tools show a result at once** ("Show an example"). 📋 Still to do: a sub-navigation under the header on tool pages and the
    questions in two columns.
-8. 📋 **Tools index: break the grid.** Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
+8. ✅ **Tools index: break the grid** (2026-11-13: three wide rows plus a ruled list with an example on the right). Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
 9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
    the highest-paid list sits on a full-width dark band. 📋 Still to do: section headers with the heading left and one sentence
