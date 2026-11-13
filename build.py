@@ -712,12 +712,21 @@ def auto_more(path, h1):
     return {"contract": "etype=Contract", "part-time": "etype=Part-time", "internships": "etype=Internship"}.get(seg[0], "") if len(seg) == 1 else ""
 
 
+# How many pages a topic list may have. The whole site has to fit the hosting limit (the workflow stops above 950 MiB), and a list's
+# second and later pages are the first thing to give way as jobs are added: measured on 13 Nov 2026 with 41,187 open jobs, pages 3 to 5
+# of all lists weighed 63 MiB and page 2 another 66 MiB. main() sets the number from the count of open jobs; HRN_PAGE_CAP overrides it
+# (the workflow builds again with 1 if a build still came out too large).
+LIST_PAGES = 2
+
+
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None):
     jobs = order(jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
     rows = collapse(jobs)
     total = len(rows)
-    if max_pages is None and head_html is None: max_pages = 5       # deep pages of a topic list add weight, not visitors; company pages keep everything
+    # deep pages of a topic list add weight, not visitors (the search shows the rest); company pages keep everything
+    if max_pages is None and head_html is None: max_pages = LIST_PAGES
+    elif max_pages: max_pages = min(max_pages, LIST_PAGES)
     if more is None: more = auto_more(path, h1)       # False: the list has no equivalent in the search filters
     if max_pages: rows = rows[:per * max_pages]
     pages = max(1, -(-len(rows) // per))
@@ -1011,6 +1020,8 @@ def main():
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
+    global LIST_PAGES
+    LIST_PAGES = int(os.environ.get("HRN_PAGE_CAP") or (2 if len(active) <= 43000 else 1))
     archived = [j for j in jobs if not j["active"]]
     by_cat = defaultdict(list)
     for j in active: by_cat[j["cat"]].append(j)

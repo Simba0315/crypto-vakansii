@@ -103,6 +103,12 @@ jobs:
         run: |
           # bytes of content, not disk blocks: with 40,000 small folders "du" overstates the size by a third
           mb=$(find site -type f -printf '%s\n' | awk '{s+=$1} END {print int(s/1048576)}'); echo "site is ${mb} MB of content (the Pages limit is 1024)"
+          # Too large: build again with one page per list (the search shows the rest) rather than stop updating the site.
+          if [ "$mb" -gt 940 ]; then
+            echo "too large, building again with one page per list"
+            HRN_PAGE_CAP=1 python3 build.py
+            mb=$(find site -type f -printf '%s\n' | awk '{s+=$1} END {print int(s/1048576)}'); echo "site is now ${mb} MB of content"
+          fi
           if [ "$mb" -gt 950 ]; then echo "the site no longer fits the hosting limit"; exit 1; fi
       - name: Check pages against the page standard
         continue-on-error: true

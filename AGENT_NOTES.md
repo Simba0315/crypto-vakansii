@@ -307,22 +307,13 @@ field. Every category and every field on `/categories/` has an icon: `ICON` (dra
 `tile()` and the directory block add it by themselves. A new category or field needs an entry in `SLUG_ICON` and in
 `skills_info.CATEGORIES`.
 
-## Hosting limit (measured 13 Nov 2026)
+## Hosting limit (measured 13 Nov 2026, corrected the same evening)
 
-The built site is about 780 MiB; the workflow stops above 950 MiB and GitHub Pages allows 1 GB. A job page weighs about 11.4 KB, a
-list page about 34 KB. That leaves room for roughly 10,000 more jobs. More than that needs job pages served by the server
-(`server/`), which waits for the owner's domain. `sources_candidates.json` (when present) is a list of further company boards found
-and verified but NOT yet read by the collector: add from it only as far as the size allows.
-
-## Pricing cards and near-me pages (13 Nov 2026)
-
-`/pricing/` is built from `pcard()` (plan cards) above `ptable()` (line-by-line tables). The highlighted card says “Recommended”, never
-“Most popular”: nothing has been sold, and the site does not state what it cannot show. Prices come from `config.json` only.
-The owner wants the best of several sites, not a copy of one: `PRICING_RESEARCH.md` holds what other job sites charge and how their
-pricing pages are laid out.
-
-`near_page()` makes `/jobs-near-me/`, `/part-time-jobs-near-me/` and `/full-time-jobs-near-me/`. `nearMe()` in `site.js` fills the list:
-country from the time zone (`data/geo.json`), nearest city from the browser's location only after the visitor presses the button
-(`CITY_LL` in `build.py` holds the coordinates; the distance is worked out in the browser). Nothing about the visitor is sent anywhere,
-and the page says so.
-
+The workflow stops above 950 MiB and GitHub Pages allows 1 GB. Measured on a fresh collection with 41,187 open jobs and 732 companies:
+873 MiB. One more job costs about 30 KB all in (its page about 12.4 KB, the rest is its rows in lists and its company's pages), so the
+room left is small. An earlier note here said "room for 10,000 more jobs": that was measured on a stale local copy with few full
+descriptions and was wrong. `LIST_PAGES` in `build.py` caps topic lists at 2 pages (1 above 43,000 open jobs); the workflow builds
+again with `HRN_PAGE_CAP=1` if a build is over 940 MiB. `sources_candidates.json` holds 3,852 more verified company boards (134,467 jobs
+at the time): 188 of them were added to `sources_tech.json` on 13 Nov 2026 (entries with `"added"`). Do not add more until job pages
+are served by the server (`server/`), which waits for the owner's domain. Measure with a fresh `python3 collect.py` before trusting a
+local size.
