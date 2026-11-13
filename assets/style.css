@@ -514,3 +514,21 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 .tab{min-height:40px}
 .unsave{min-height:36px;padding:6px 8px}
 @media(max-width:720px){.rel a,.popular a,.chipbtn{min-height:40px}.trow select{min-height:40px}}
+
+/* resume templates: all single-column and plain, so screening software reads them the same way */
+.rb-actions{align-items:flex-end}
+.rb-tplpick{margin-left:auto}
+#rb-preview.tpl-modern{font:14px/1.55 "Inter",system-ui,sans-serif}
+#rb-preview.tpl-modern h2.pv-name{font-size:30px;letter-spacing:-.03em}
+#rb-preview.tpl-modern h3{border-bottom:0;border-left:3px solid #111;padding:0 0 0 8px;letter-spacing:.06em}
+#rb-preview.tpl-compact{font:12.5px/1.4 "Inter",system-ui,sans-serif;padding:26px 30px}
+#rb-preview.tpl-compact h2.pv-name{font-size:21px}
+#rb-preview.tpl-compact h3{margin:13px 0 5px;font-size:10.5px}
+#rb-preview.tpl-compact .pv-item{margin-bottom:6px}
+#rb-preview.tpl-developer{font:13px/1.55 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+#rb-preview.tpl-developer h2.pv-name,#rb-preview.tpl-developer .pv-title,#rb-preview.tpl-developer .pv-contact,#rb-preview.tpl-developer h3,#rb-preview.tpl-developer .pv-top{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+#rb-preview.tpl-developer h3{border-bottom:1px dashed #111;text-transform:none;letter-spacing:0;font-size:13px}
+#rb-preview.tpl-developer h3::before{content:"## "}
+#rb-preview.tpl-executive h2.pv-name,#rb-preview.tpl-executive .pv-title,#rb-preview.tpl-executive .pv-contact{text-align:center}
+#rb-preview.tpl-executive h2.pv-name{font:700 28px/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em}
+#rb-preview.tpl-executive h3{text-align:center;border-bottom:0;border-top:1px solid #111;padding:8px 0 0;letter-spacing:.16em;font-weight:600}

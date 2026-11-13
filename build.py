@@ -1607,12 +1607,15 @@ def main():
          crumbs(("Skills", "")) + f'<h1>Tech jobs by skill</h1><p class="lead">Open roles that mention each skill. Each skill page also links to its salary data and to remote and city versions.</p><ul class="tiles">{skill_tiles}</ul>')
 
     # Resume builder: stays in the browser, prints to PDF
-    page("resume/", f"Free Resume Builder — no sign-up, private | {SITE}",
-         "Build a clean, ATS-friendly resume in your browser and save it as PDF. No account, nothing is uploaded, and one click matches it to open tech jobs.",
+    page("resume/", f"Free Resume Builder — free PDF and Word download | {SITE}",
+         "Build an ATS-friendly resume in your browser: five templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open tech jobs.",
          crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Two-column templates with icons look good to people and can turn into scrambled text in applicant tracking systems. '
-         'This builder gives you a plain one-column page that parses cleanly. Fill in the left side, watch the page on the right, save it as PDF. '
-         'Everything stays in this browser: no account, nothing is uploaded.</p>'
-         '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Download PDF</button>'
+         'And many builders let you write for free, then charge for the download. Here you get five plain one-column templates that parse cleanly, and the PDF and the Word file are free. '
+         'Fill in the form, watch the page update, download. Everything stays in this browser: no account, nothing is uploaded.</p>'
+         '<p class="note no-print">“Save as PDF” opens your browser’s print window: choose “Save as PDF” as the printer.</p>'
+         '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button>'
+         '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
+         '<option value="developer">Developer</option><option value="executive">Executive</option></select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          '<div class="rgrid"><div id="rb-form"></div><div id="rb-preview" aria-live="polite"></div></div></div>'
          + '<section class="sec no-print"><div class="sec-head"><h2>What makes a resume get read</h2></div><div class="feats">'

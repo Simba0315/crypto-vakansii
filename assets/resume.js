@@ -3,7 +3,12 @@
   var root = document.getElementById('rb'); if (!root) return;
   var H = window.HRN, esc = H.esc, $ = function (id) { return document.getElementById(id); };
   var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }] };
-  var data = H.get('hrn_resume', null) || JSON.parse(JSON.stringify(blank));
+  var data = H.get('hrn_resume', null);
+  if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};          // a damaged or foreign value must not break the builder
+  Object.keys(blank).forEach(function (k) { if (Array.isArray(blank[k]) ? !Array.isArray(data[k]) || !data[k].length : typeof data[k] !== 'string') data[k] = JSON.parse(JSON.stringify(blank[k])); });
+  var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive'];
+  if (TPLS.indexOf(data.tpl) < 0) data.tpl = 'classic';
+  var applyTpl = function () { var pv = $('rb-preview'), sel = $('rb-tpl'); pv.className = 'tpl-' + data.tpl; if (sel) sel.value = data.tpl; };
   var save = function () { H.set('hrn_resume', data); };
   var field = function (label, key, type, ph) {
     return '<label class="rl">' + label + (type === 'area' ? '<textarea data-k="' + key + '" rows="4" placeholder="' + ph + '">' + esc(data[key]) + '</textarea>'
@@ -46,7 +51,20 @@
         (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + (data.summary ? '<h3>Summary</h3><p>' + esc(data.summary) + '</p>' : '') +
         (exp ? '<h3>Experience</h3>' + exp : '') + (edu ? '<h3>Education</h3>' + edu : '') + (skills.length ? '<h3>Skills</h3><p>' + skills.map(esc).join(' · ') + '</p>' : '')
       : '<p class="pane-empty">Start typing on the left. Your resume appears here.</p>';
+    applyTpl();
   };
+  // a Word file: the same page as simple HTML, which Word opens and saves as .docx
+  var wordFile = function () {
+    var css = 'body{font-family:' + (data.tpl === 'classic' ? 'Georgia,serif' : data.tpl === 'developer' ? 'Consolas,monospace' : 'Arial,sans-serif') + ';font-size:11pt;line-height:1.4;color:#111}' +
+      'h2{font-size:20pt;margin:0}h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;border-bottom:1px solid #111;margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}';
+    var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Resume</title><style>' + css + '</style></head><body>' +
+      $('rb-preview').innerHTML.replace(/<div class="pv-top"><strong>(.*?)<\/strong><span>(.*?)<\/span><\/div>/g, '<p><strong>$1</strong> &nbsp; <span>$2</span></p>') + '</body></html>';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + html], { type: 'application/msword' }));
+    a.download = (data.name ? data.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '-' : '') + 'resume.doc';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-tpl') { data.tpl = ev.target.value; save(); applyTpl(); } });
   root.addEventListener('input', function (ev) {
     var t = ev.target, blk = t.closest('.rblock');
     if (blk && t.getAttribute('data-f')) data[blk.getAttribute('data-list')][Number(blk.getAttribute('data-i'))][t.getAttribute('data-f')] = t.value;
@@ -59,6 +77,7 @@
     if (add) { data[add].push(add === 'exp' ? { role: '', org: '', dates: '', text: '' } : { what: '', org: '', dates: '' }); save(); drawForm(); drawPreview(); }
     else if (del) { data[del].splice(Number(t.closest('.rblock').getAttribute('data-i')), 1); if (!data[del].length) data[del] = JSON.parse(JSON.stringify(blank[del])); save(); drawForm(); drawPreview(); }
     else if (t.id === 'rb-print') window.print();
+    else if (t.id === 'rb-doc') wordFile();
     else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
     else if (t.id === 'rb-match') {
       var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');
