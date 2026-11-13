@@ -1,5 +1,7 @@
 // Runs the API on this machine for trying the whole flow without Cloudflare:  node --no-warnings server/dev.mjs
 // Payments are simulated (PAY_MODE=test): opening the "payment link" marks the order as paid. Data lives in memory unless DB_FILE is set.
+// There is no mailbox either: a sign-up answers with confirm_token (send it to POST /api/auth/confirm), a password reset with its token.
+// The owner's token for /api/admin/... is "dev-admin".
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
