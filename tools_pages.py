@@ -36,9 +36,11 @@ def _sel(k, label, options, hint="", cls="", attrs="", show=""):
             + (f'<p class="tl-h">{hint}</p>' if hint else "") + "</div>")
 
 
-def _area(k, label, rows, ph="", hint="", cls="full", tall=False, show=""):
+def _area(k, label, rows, ph="", hint="", cls="full", tall=False, show="", ex=""):
+    """`ex` is the text the "Show an example" button puts in; without it the placeholder is used when it is itself an example."""
     return (f'<div class="tl-f{" " + cls if cls else ""}"{show}><label class="tl-l" for="tl-{k}">{label}</label>'
-            f'<textarea id="tl-{k}" data-k="{k}" rows="{rows}"{" class=" + chr(34) + "tl-tall" + chr(34) if tall else ""}' + (f' placeholder="{_e(ph)}"' if ph else "") + "></textarea>"
+            f'<textarea id="tl-{k}" data-k="{k}" rows="{rows}"{" class=" + chr(34) + "tl-tall" + chr(34) if tall else ""}' + (f' placeholder="{_e(ph)}"' if ph else "")
+            + (f' data-ex="{_e(ex)}"' if ex else "") + "></textarea>"
             + (f'<p class="tl-h">{hint}</p>' if hint else "") + "</div>")
 
 
@@ -57,7 +59,19 @@ def _board(title, msg):
 
 
 def _clear(ask=False):
-    return f'<button class="btn ghost sm tl-end" type="button" data-clear{"=" + chr(34) + "ask" + chr(34) if ask else ""}>Clear</button>'
+    return ('<button class="btn ghost sm tl-end" type="button" data-example>Show an example</button>'
+            f'<button class="btn ghost sm" type="button" data-clear{"=" + chr(34) + "ask" + chr(34) if ask else ""}>Clear</button>')
+
+
+EX_RESUME = ("Alex Morgan\nSenior Backend Engineer\n\nSummary\nBackend engineer with 8 years of experience building APIs and data pipelines in Python and Go.\n\n"
+             "Experience\nSenior Backend Engineer, Example Co, 2021 to now\n- Built a payments API in Python and PostgreSQL that handles 4 million requests a day\n"
+             "- Cut p95 latency from 900 ms to 250 ms by adding Redis caching\n- Moved 30 services to Kubernetes on AWS with Terraform\n\n"
+             "Backend Engineer, Sample Ltd, 2017 to 2021\n- Wrote REST and GraphQL services in Python (Django)\n- Set up CI/CD with GitHub Actions\n\n"
+             "Skills\nPython, Go, PostgreSQL, Redis, Docker, Kubernetes, AWS, Terraform, GraphQL")
+EX_JD = ("Senior Backend Engineer\n\nAbout the role\nYou will design and run the services behind our payments platform. We are a team of twelve engineers and we ship every day.\n\n"
+         "What you will do\n- Build and operate backend services in Python and Go\n- Design PostgreSQL schemas and keep queries fast\n- Run services on Kubernetes on AWS\n"
+         "- Work with Kafka event streams\n\nRequirements\n- 5+ years of backend experience\n- Strong Python and PostgreSQL\n- Experience with Kafka and Terraform\n"
+         "- Experience with Kubernetes\n\nSalary: $170,000 - $210,000 a year. Remote in the United States.")
 
 
 def _private(what):
@@ -149,8 +163,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Paste your resume and the job description: you get a match score, the skills and repeated terms you are missing, and a short list of fixes. Nothing is uploaded.",
          wrap("resume-match",
               '<div class="card tl-form"><div class="tl-grid wide">'
-              + _area("resume", "Your resume (plain text)", 12, "Paste the text of your resume here", cls="", tall=True)
-              + _area("jd", "The job description", 12, "Paste the full text of the job posting here", cls="", tall=True) + "</div>"
+              + _area("resume", "Your resume (plain text)", 12, "Paste the text of your resume here", cls="", tall=True, ex=EX_RESUME)
+              + _area("jd", "The job description", 12, "Paste the full text of the job posting here", cls="", tall=True, ex=EX_JD) + "</div>"
               + '<div class="tl-grid one">' + _f("title", "Job title in the posting (optional)", "Senior Backend Engineer", mode="", hint="We check that your resume uses the same title.") + "</div>"
               + '<div class="tl-actions"><button class="btn" type="button" id="tl-run">Check the match</button>'
                 '<button class="btn ghost" type="button" id="tl-import" hidden>Use my resume from the builder</button>' + _clear(True) + "</div></div>"
@@ -555,7 +569,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Paste your text and the checker scores it and lists what to fix: length, missing salary, must-have overload, gender-coded and exclusionary wording, jargon and readability. The text stays in your browser.",
          wrap("job-description-checker",
               '<div class="card tl-form">'
-              + _area("text", "Job description", 14, "Paste the full text of your job posting here, with its headings and bullet points", tall=True)
+              + _area("text", "Job description", 14, "Paste the full text of your job posting here, with its headings and bullet points", tall=True, ex=EX_JD)
               + '<div class="tl-actions"><button class="btn" type="button" id="tl-run">Check the description</button>' + _clear(True) + "</div></div>"
               + _private(" The text is checked inside your browser and is never sent anywhere.")
               + _board("Job description score", "Paste a job description to see its score and what to fix.")

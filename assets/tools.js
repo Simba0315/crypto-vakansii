@@ -758,6 +758,19 @@
     root.addEventListener('input', on);
     root.addEventListener('change', on);
     root.addEventListener('click', function (ev) {
+      var x = ev.target.closest ? ev.target.closest('[data-example]') : null;
+      if (x) {                                            // fill every empty field with its example so the result shows at once
+        var v = read(), any = false;
+        els.forEach(function (el) {
+          if (box(el) || el.tagName === 'SELECT' || el.value) return;
+          var ex = el.getAttribute('data-ex');
+          if (ex == null) { var ph = el.getAttribute('placeholder') || ''; ex = /^(paste|type|e\.g)\b/i.test(ph) ? '' : ph.split(' or ')[0]; }
+          if (ex) { v[el.getAttribute('data-k')] = ex; any = true; }
+        });
+        if (any) { put(v); render(read(), '', api); api.save(); }
+        var go = root.querySelector('#tl-run'); if (go) go.click();
+        return;
+      }
       var b = ev.target.closest ? ev.target.closest('[data-clear]') : null;
       if (!b) return;
       if (b.getAttribute('data-clear') === 'ask' && !window.confirm('Erase everything you typed here from this browser?')) return;
@@ -811,7 +824,7 @@
   function kv(rows) { return '<dl class="tl-kv">' + rows.filter(Boolean).map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') + '</dl>'; }
   function idle(el, left, msg) { board(el, left, '', '<p class="tl-big tl-dim">—</p>' + sub(esc(msg))); }
   function meter(pct) { return '<div class="tl-meter" aria-hidden="true"><i style="width:' + Math.max(0, Math.min(100, pct)) + '%"></i></div>'; }
-  function cash(x, s) { return money(x, s, Math.abs(x) < 1000 ? 2 : 0); }          // small amounts keep their cents
+  function cash(x, s) { return money(x, s, Math.abs(x) < 100 || Math.abs(x) < 1000 && Math.round(x * 100) % 100 ? 2 : 0); }   // cents only where they say something: $440, not $440.00
   function tags(level) { return { fix: ['fix', 'Fix'], warn: ['warn', 'Check'], info: ['info', 'Note'], ok: ['ok', 'OK'] }[level]; }
   function list(items) {
     return '<ul class="tl-list">' + items.map(function (i) { var t = tags(i.level); return '<li><span class="tl-tag ' + t[0] + '">' + t[1] + '</span><div><b>' + esc(i.t) + '</b><p>' + esc(i.d) + '</p></div></li>'; }).join('') + '</ul>';
