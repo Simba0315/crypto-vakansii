@@ -773,7 +773,7 @@ def badge_svg(label, value):
     lw, vw = int(34 + 7.7 * len(label)), int(18 + 7.7 * len(value))
     w = lw + vw
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="28" viewBox="0 0 {w} 28" role="img" aria-label="{e(label)}: {e(value)}">'
-            f'<rect width="{w}" height="28" rx="6" fill="#0e0e0c"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#7ee39a"/><rect x="{lw}" width="8" height="28" fill="#c8f560"/>'
+            f'<rect width="{w}" height="28" rx="6" fill="#0e0e0c"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#7ee39a"/><rect x="{lw}" width="8" height="28" fill="#7ee39a"/>'
             f'<circle cx="14" cy="14" r="4" fill="#3ecf5f"/><text x="25" y="18.5" fill="#fff" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(label)}</text>'
             f'<text x="{lw + 9}" y="18.5" fill="#06361c" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(value)}</text></svg>')
 
@@ -1740,13 +1740,13 @@ el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js
 html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;overflow:hidden}}
 .top{{display:flex;justify-content:space-between;align-items:center;padding:2.2vh 3vw;border-bottom:1px solid #2b2b27;font-size:clamp(12px,1.5vw,20px);letter-spacing:.08em;text-transform:uppercase;color:#a5a399}}
 .top a{{color:#f3f2ec;text-decoration:none;font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;text-transform:none;font-size:clamp(16px,2vw,28px)}}
-.top b{{color:#c8f560;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#3ecf5f;margin-right:.6em}}
+.top b{{color:#7ee39a;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#3ecf5f;margin-right:.6em}}
 #rows{{padding:1vh 3vw}}.r{{display:grid;grid-template-columns:7ch minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.7fr);gap:2vw;align-items:baseline;padding:1.55vh 0;border-bottom:1px solid #1f1f1c;animation:in .5s backwards}}
-@keyframes in{{from{{opacity:0;transform:translateY(8px)}}}}.a{{color:#c8f560;font-size:clamp(11px,1.3vw,18px)}}
+@keyframes in{{from{{opacity:0;transform:translateY(8px)}}}}.a{{color:#7ee39a;font-size:clamp(11px,1.3vw,18px)}}
 .t{{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.1vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3f2ec;text-decoration:none}}
 .c,.l{{font-size:clamp(11px,1.4vw,20px);color:#a5a399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.c{{color:#e9e7de}}
 .foot{{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:1.6vh 3vw;font-size:clamp(10px,1.1vw,15px);color:#77756c;letter-spacing:.06em;text-transform:uppercase;background:#0b0b0a}}
-.foot a{{color:#c8f560;text-decoration:none}}@media(max-width:700px){{.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}}}</style></head><body>
+.foot a{{color:#7ee39a;text-decoration:none}}@media(max-width:700px){{.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}}}</style></head><body>
 <div class="top"><a href="{P}/"><span class="dot"></span>{e(SITE)}</a><h1 id="what" style="all:unset">Fresh on the board</h1><b id="clock"></b></div><div id="rows"></div>
 <div class="foot"><span id="count"></span><a href="{P}/widgets/">Put this board on your screen</a></div>
 <script>(function(){{var q=new URLSearchParams(location.search),path=q.get('skill')?'skills/'+q.get('skill'):q.get('company')?'companies/'+q.get('company'):q.get('location')?'locations/'+q.get('location'):q.has('remote')?'remote':'latest';
@@ -1774,7 +1774,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<label class="wl">Rows<select id="wb-limit"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>15</option></select></label>'
          '<label class="wl">Layout<select id="wb-layout"><option value="list">List</option><option value="cards">Cards</option><option value="compact">Compact (sidebar)</option><option value="ticker">Ticker</option><option value="careers">Careers page (all jobs, with search)</option></select></label>'
          '<label class="wl">Theme<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label>'
-         '<label class="wl">Accent<input type="color" id="wb-accent" value="#c8f560" aria-label="Accent colour"></label>'
+         '<label class="wl">Accent<input type="color" id="wb-accent" value="#1f9d55" aria-label="Accent colour"></label>'
          '<label class="wl">Embed as<select id="wb-mode"><option value="script">Script (best)</option><option value="iframe">iframe (Notion, Substack, strict CMS)</option></select></label></div></div>'
          + section("Jobs widget", '<div id="wb-preview" style="margin-bottom:16px"></div><textarea id="wb-code" rows="4" readonly aria-label="Widget code"></textarea>'
                    '<p><button class="btn sm" type="button" data-copy="wb-code">Copy widget code</button> <span class="note">Works in WordPress (Custom HTML block), Webflow, Ghost, Notion embeds and plain HTML.</span></p>')
@@ -2098,7 +2098,7 @@ e.respondWith(caches.open(C).then(function(c){{return c.match(r).then(function(h
 """, encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
-          f'<rect width="220" height="48" rx="10" fill="#0e0e0c"/><circle cx="26" cy="24" r="7" fill="#c8f560"/>'
+          f'<rect width="220" height="48" rx="10" fill="#0e0e0c"/><circle cx="26" cy="24" r="7" fill="#7ee39a"/>'
           '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
           f'<text x="46" y="37" fill="#b9b7ad" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")

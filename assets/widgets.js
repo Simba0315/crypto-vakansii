@@ -19,7 +19,7 @@
     var page = { latest: 'jobs/', remote: 'remote/', skill: 'skills/' + slug + '/', category: 'jobs/' + slug + '/', location: 'locations/' + slug + '/', company: 'companies/' + slug + '/' }[t];
     var label = { latest: 'Tech jobs', remote: 'Remote tech jobs', skill: nameOf() + ' jobs', category: nameOf() + ' jobs', location: 'Tech jobs in ' + nameOf(), company: 'Jobs at ' + nameOf() }[t];
     var link = '<a href="' + FULL + '/' + page + '">' + label.replace(/&/g, '&amp;') + ' on ' + D.site + '</a>';
-    var acc = accent.value && accent.value.toLowerCase() !== '#c8f560' ? accent.value : '';
+    var acc = accent.value && accent.value.toLowerCase() !== '#1f9d55' ? accent.value : '';
     var attrs = ' data-limit="' + limit.value + '"' + (layout.value !== 'list' ? ' data-layout="' + layout.value + '"' : '') + (theme.value !== 'auto' ? ' data-theme="' + theme.value + '"' : '') + (acc ? ' data-accent="' + acc + '"' : '');
     var q = 'jobs=' + encodeURIComponent(spec) + '&limit=' + limit.value + (layout.value !== 'list' ? '&layout=' + layout.value : '') + (theme.value !== 'auto' ? '&theme=' + theme.value : '') + (acc ? '&accent=' + encodeURIComponent(acc) : '');
     var rowsH = layout.value === 'careers' ? 1300 : layout.value === 'ticker' ? 150 : layout.value === 'cards' ? 150 + Math.ceil(limit.value / 3) * 120 : 120 + limit.value * (layout.value === 'compact' ? 38 : 58);
