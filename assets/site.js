@@ -183,6 +183,25 @@
     }
   });
 
+  /* ---------- voice search: say it instead of typing it (browsers with speech recognition) ---------- */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) Array.prototype.forEach.call(document.querySelectorAll('.searchbar'), function (bar) {
+    var input = bar.querySelector('input[type=search]'); if (!input) return;
+    var mic = document.createElement('button'); mic.type = 'button'; mic.className = 'mic'; mic.setAttribute('aria-label', 'Say what you are looking for');
+    input.parentNode.insertBefore(mic, input.nextSibling);
+    mic.addEventListener('click', function () {
+      var rec = new SR(); rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 1;
+      mic.classList.add('on');
+      rec.onresult = function (ev) {
+        input.value = ev.results[0][0].transcript.replace(/[.?!]$/, '');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        var form = input.form; if (form && form.getAttribute('action')) form.submit(); else if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      };
+      rec.onend = rec.onerror = function () { mic.classList.remove('on'); };
+      try { rec.start(); } catch (e) { mic.classList.remove('on'); }
+    });
+  });
+
   /* ---------- current section in the menu ---------- */
   var here = location.pathname.replace(P, '');
   document.querySelectorAll('#nav a.nl').forEach(function (a) {
@@ -427,6 +446,70 @@
       hideBtn.addEventListener('click', function () { if (hidden[me.s]) delete hidden[me.s]; else hidden[me.s] = 1; set('hrn_hidden', hidden); paintHide(); });
     }
   }
+  /* Job page extras. Nothing here needs our server: the live check asks the employer's own hiring system from the visitor's
+     browser, the voice is the browser's, the reminder is a calendar file made on the spot. */
+  function jobExtras(root) {
+    var q1 = function (sel) { return root.querySelector(sel); };
+    var ap = q1('#apply'); if (!ap || ap.getAttribute('data-x')) return;
+    ap.setAttribute('data-x', '1');
+    var href = ap.getAttribute('href') || '', m, api = '', ashby = '';
+    if ((m = /(?:job-boards|boards)(?:\.eu)?\.greenhouse\.io\/([^\/?#]+)\/jobs\/(\d+)/.exec(href))) api = 'https://boards-api.greenhouse.io/v1/boards/' + m[1] + '/jobs/' + m[2];
+    else if ((m = /jobs(\.eu)?\.lever\.co\/([^\/?#]+)\/([0-9a-f-]{36})/.exec(href))) api = 'https://api' + (m[1] || '') + '.lever.co/v0/postings/' + m[2] + '/' + m[3];
+    else if ((m = /jobs\.ashbyhq\.com\/([^\/?#]+)\/([0-9a-f-]{36})/.exec(href))) { api = 'https://api.ashbyhq.com/posting-api/job-board/' + m[1]; ashby = m[2]; }
+    var h1 = q1('h1'), title = h1 ? h1.textContent : document.title, saveB = q1('#save'), company = saveB ? saveB.getAttribute('data-company') : '';
+    var tagsEl = q1('#match'), tags = tagsEl ? (tagsEl.getAttribute('data-tags') || '').split('|').filter(Boolean) : [];
+    var box = document.createElement('div'); box.className = 'jtools';
+    box.innerHTML = (api ? '<button type="button" class="linkbtn" data-act="live">Check with the employer right now</button>' : '') +
+      (window.speechSynthesis ? '<button type="button" class="linkbtn" data-act="listen">Listen to this posting</button>' : '') +
+      '<button type="button" class="linkbtn" data-act="ics">Remind me to follow up in 7 days</button>' +
+      (tags.length ? '<button type="button" class="linkbtn" data-act="plain">What these skills mean</button>' : '') + '<p class="jout" aria-live="polite" hidden></p>';
+    var after = q1('#apply-hint') || q1('.note.goes') || ap;
+    after.parentNode.insertBefore(box, after.nextSibling);
+    var out = box.querySelector('.jout'), say = function (html) { out.innerHTML = html; out.hidden = false; };
+    var hhmm = function () { try { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) { return 'now'; } };
+    box.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-act]'); if (!b) return;
+      var act = b.getAttribute('data-act');
+      if (act === 'live') {
+        say('Asking the employer’s hiring system…');
+        fetch(api, { cache: 'no-store' }).then(function (r) {
+          if (ashby) return r.json().then(function (d) { return (d.jobs || []).some(function (x) { return x.id === ashby; }); });
+          if (r.status === 404) return false;
+          if (!r.ok) throw new Error('status');
+          return true;
+        }).then(function (open) {
+          say(open ? '<b class="ok">Still open.</b> The employer’s hiring system confirmed it to your browser at ' + hhmm() + '. We were not asked.'
+                   : '<b class="warn">Closed.</b> The employer’s hiring system no longer has this job (checked at ' + hhmm() + '). This page will say so after the next update.');
+        }).catch(function () { say('The employer’s system did not answer. The “Apply” button opens its page, where you can see for yourself.'); });
+      } else if (act === 'listen') {
+        var synth = window.speechSynthesis;
+        if (synth.speaking) { synth.cancel(); b.textContent = 'Listen to this posting'; return; }
+        var prose = q1('.prose'), text = title + (company ? ', at ' + company : '') + '. ' + (prose ? prose.textContent : '');
+        var u = new SpeechSynthesisUtterance(text.slice(0, 5000)); u.lang = 'en-US'; u.rate = 1;
+        u.onend = function () { b.textContent = 'Listen to this posting'; };
+        b.textContent = 'Stop reading'; synth.speak(u);
+      } else if (act === 'ics') {
+        var d = new Date(); d.setDate(d.getDate() + 7); d.setHours(9, 0, 0, 0);
+        var p2 = function (n) { return (n < 10 ? '0' : '') + n; }, stamp = function (x) { return x.getFullYear() + p2(x.getMonth() + 1) + p2(x.getDate()) + 'T' + p2(x.getHours()) + p2(x.getMinutes()) + '00'; };
+        var clean = function (t) { return String(t).replace(/[\\;,]/g, ' ').replace(/\s+/g, ' ').trim(); };
+        var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hiring Right Now//EN', 'BEGIN:VEVENT', 'UID:' + Date.now() + '@hrn', 'DTSTAMP:' + stamp(new Date()), 'DTSTART:' + stamp(d),
+          'DURATION:PT15M', 'SUMMARY:' + clean('Follow up: ' + title + (company ? ' at ' + company : '')), 'DESCRIPTION:' + clean('You applied a week ago. If there is no answer, write a short follow-up. ' + location.href),
+          'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Follow up on your application', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+        var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = 'follow-up.ics';
+        document.body.appendChild(a); a.click(); a.remove();
+        say('A calendar file was saved. Open it and your calendar adds a reminder for ' + d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + ', 9:00.');
+      } else if (act === 'plain') {
+        say('Loading…');
+        fetch(P + '/data/skillinfo.json').then(function (r) { return r.json(); }).then(function (info) {
+          var rows = tags.map(function (t) { return info[t] ? '<div><dt>' + esc(t) + '</dt><dd>' + esc(info[t]) + '</dd></div>' : ''; }).join('');
+          say(rows ? '<dl class="qa one">' + rows + '</dl>' : 'No plain description for these skills yet.');
+        }).catch(function () { say('Could not load the descriptions.'); });
+      }
+    });
+  }
+  HRN.jobExtras = jobExtras;
+  var bindJob0 = bindJob;
+  bindJob = function (root) { bindJob0(root); jobExtras(root); };
   HRN.bindJob = bindJob;
   bindJob(document);
   near();
@@ -481,7 +564,15 @@
     var chips = Array.prototype.slice.call(fy.querySelectorAll('#fy-skills .chipbtn'));
     var place = $('fy-place'), payIn = $('fy-pay-in'), noPay = $('fy-nopay'), list = $('fy-list'), count = $('fy-count'), more = $('fy-more'), jump = $('fy-jump');
     var payNote = $('fy-pay-note'), gap = $('fy-gap');
-    var shown = 30, found = [], nFull = 0, extra = new Map(), why = new Map(), asked = 0;
+    var shown = 30, found = [], nFull = 0, extra = new Map(), why = new Map(), asked = 0, fromLink = false;
+    // answers that arrived in a link are shown, and kept only once the visitor changes something
+    try {
+      if (location.hash.indexOf('#a=') === 0) {
+        var got = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));
+        profile = { skills: got.s || [], cats: got.c || [], exp: got.e == null ? '' : String(got.e), where: got.w || '', whereSet: !!got.w, place: got.p || '', placeSet: true, pay: got.y || 0, paySet: !!got.y, nopay: !!got.n };
+        fromLink = true;
+      }
+    } catch (e) {}
     var LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, REG = { europe: 1, 'asia-pacific': 1, 'latin-america': 1, africa: 1 };
     var DROP = { work: 'Any kind of work', exp: 'Any experience', where: 'Home or office, any country', country: 'Any country', pay: 'Any pay', skills: 'Without the skills' };
     var nf = function (x) { return Number(x).toLocaleString('en-US'); };
@@ -577,7 +668,8 @@
       list.innerHTML = html; more.hidden = found.length <= shown; decorate(list);
     };
     var run = function () {
-      set('hrn_profile', profile); paint();
+      if (!fromLink) set('hrn_profile', profile);
+      paint();
       var A = answers(); asked = A.n;
       if (!asked) {
         payNote.textContent = ''; gap.hidden = true; gap.innerHTML = ''; why = new Map(); nFull = 0;
@@ -645,8 +737,53 @@
         }).join('') + '</div>' : '';
       }).catch(function () { count.innerHTML = '<p class="fy-n">Could not load the jobs. Please reload the page.</p>'; });
     };
+    var fyNote = $('fy-note'), tell = function (msg) { if (fyNote) { fyNote.textContent = msg; fyNote.hidden = !msg; } };
+    if (fromLink) tell('These answers came from a link. They replace your own only if you change something here.');
     fy.addEventListener('click', function (ev) {
       var t = ev.target, opt = t.closest && t.closest('.opt'), c = t.closest && t.closest('#fy-skills .chipbtn');
+      if (t.id !== 'fy-share' && t.id !== 'fy-pic' && t.id !== 'fy-alert' && t.id !== 'fy-more') fromLink = false;
+      if (t.id === 'fy-share') {
+        var o = { c: profile.cats, e: profile.exp, w: profile.where, p: profile.place, y: profile.pay, n: profile.nopay ? 1 : 0, s: profile.skills };
+        var url = location.origin + P + '/for-you/#a=' + btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+        var ok = function () { tell('Link copied. Whoever opens it sees today’s jobs for the same answers: a friend, a recruiter, or you on another device.'); };
+        if (navigator.clipboard) navigator.clipboard.writeText(url).then(ok, function () { tell(url); }); else tell(url);
+        return;
+      }
+      if (t.id === 'fy-pic') {
+        if (!asked || !found.length) { tell('Answer a question first: the picture is drawn from your result.'); return; }
+        var cv = document.createElement('canvas'); cv.width = 1200; cv.height = 630;
+        var g = cv.getContext('2d'), full = found.slice(0, nFull || found.length), paid = full.filter(function (j) { return j[13]; }).map(function (j) { return j[13]; }).sort(function (a, b) { return a - b; });
+        var cos = {}; full.forEach(function (j) { cos[j[2]] = (cos[j[2]] || 0) + 1; });
+        var top = Object.keys(cos).sort(function (a, b) { return cos[b] - cos[a]; }).slice(0, 3);
+        g.fillStyle = '#f6f5f0'; g.fillRect(0, 0, 1200, 630); g.fillStyle = '#b7eec3'; g.fillRect(0, 0, 1200, 14);
+        g.fillStyle = '#0e0e0c'; g.font = '600 30px system-ui, sans-serif'; g.fillText('My job market · ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 70, 96);
+        g.font = '800 150px system-ui, sans-serif'; g.fillText(nf(nFull || found.length), 70, 270);
+        g.font = '500 36px system-ui, sans-serif'; g.fillText((nFull ? 'open jobs fit all ' + asked + ' of my answers' : 'open jobs fit my answers in part'), 76, 326);
+        g.fillStyle = '#55534c'; g.font = '500 28px system-ui, sans-serif';
+        var lines = [profile.cats.length ? 'Work: ' + profile.cats.map(function (c) { return catName[c] || c; }).join(', ') : '', profile.where === 'remote' ? 'From home' : profile.where === 'office' ? 'At an office' : '',
+          profile.pay ? 'Pay from ' + kfmt(profile.pay) + ' a year' : '', profile.skills.length ? 'Skills: ' + profile.skills.slice(0, 5).join(', ') : ''].filter(Boolean);
+        lines.forEach(function (ln, i) { g.fillText(ln.slice(0, 70), 76, 392 + i * 40); });
+        g.fillStyle = '#0e0e0c'; g.font = '600 28px system-ui, sans-serif';
+        if (paid.length >= 5) g.fillText('Half of them pay up to ' + kfmt(paid[Math.floor(paid.length / 2)]) + ' or more', 700, 392);
+        if (top.length) g.fillText('Hiring most: ' + top.join(', ').slice(0, 34), 700, 432);
+        g.fillStyle = '#1f9d55'; g.fillRect(70, 560, 60, 6); g.fillStyle = '#0e0e0c'; g.font = '700 26px system-ui, sans-serif'; g.fillText('Hiring Right Now', 146, 572);
+        g.fillStyle = '#6c6a62'; g.font = '500 22px system-ui, sans-serif'; g.fillText(location.host + P + '/for-you/', 380, 572);
+        cv.toBlob(function (blob) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-job-market.png'; document.body.appendChild(a); a.click(); a.remove(); tell('The picture was saved to your downloads.'); });
+        return;
+      }
+      if (t.id === 'fy-alert') {
+        if (!('Notification' in window)) { tell('This browser cannot show notifications.'); return; }
+        if (!asked) { tell('Answer a question first, so there is something to watch for.'); return; }
+        Notification.requestPermission().then(function (perm) {
+          if (perm !== 'granted') { tell('Notifications are switched off for this site in your browser settings.'); return; }
+          profile.alert = Date.now(); set('hrn_profile', profile); keepForWorker();
+          tell('Done. This browser will tell you when new jobs fit these answers. No email, no account: it works while this site is open in a tab, and in the background where the browser allows it (the site installed as an app).');
+          if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(function (reg) {
+            if (reg.periodicSync) reg.periodicSync.register('hrn-fit', { minInterval: 3 * 3600 * 1000 }).catch(function () {});
+          });
+        });
+        return;
+      }
       if (opt) {
         var box = opt.parentNode.id, v = opt.getAttribute('data-v'), on = opt.getAttribute('aria-pressed') === 'true';
         if (box === 'fy-work') { var i = profile.cats.indexOf(v); if (i >= 0) profile.cats.splice(i, 1); else profile.cats.push(v); }
@@ -686,6 +823,23 @@
         }).catch(function () { note.textContent = 'Could not read the skills list. Pick skills by hand above.'; });
       }
     });
+    // alerts without an account: the answers are kept where the service worker can read them, and an open tab checks every 20 minutes
+    var keepForWorker = function () {
+      if (!window.caches) return;
+      caches.open('hrn-profile').then(function (c) { return c.put(P + '/__profile', new Response(JSON.stringify({ A: { cats: profile.cats, where: profile.where, pay: profile.pay, exp: profile.exp }, seen: profile.alert || Date.now() }))); }).catch(function () {});
+    };
+    var watch = function () {
+      if (!profile.alert || !('Notification' in window) || Notification.permission !== 'granted') return;
+      loadHead().then(function (h) {
+        var A = answers(), fresh = h.rows.filter(function (j) { if (!j[23] || j[23] * 60000 <= profile.alert) return false; var w = judge(j, A); return w && w.ok === A.n; });
+        if (!fresh.length) return;
+        profile.alert = Date.now(); set('hrn_profile', profile); keepForWorker();
+        var title = fresh.length + (fresh.length === 1 ? ' new job fits' : ' new jobs fit') + ' your answers', body = fresh[0][1] + ' at ' + fresh[0][2] + (fresh.length > 1 ? ' and ' + (fresh.length - 1) + ' more' : '');
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(function (reg) { reg.showNotification(title, { body: body, tag: 'hrn-fit', data: P + '/for-you/' }); });
+        else try { new Notification(title, { body: body }); } catch (e) {}
+      }).catch(function () {});
+    };
+    if (profile.alert) { keepForWorker(); setTimeout(watch, 8000); setInterval(function () { headCache = null; watch(); }, 20 * 60 * 1000); }
     place.addEventListener('change', function () { profile.place = place.value; profile.placeSet = true; profile.placeGuess = false; run(); });
     noPay.addEventListener('change', function () { profile.nopay = noPay.checked; run(); });
     var payTimer;

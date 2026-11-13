@@ -945,3 +945,23 @@ table.grid tr.grp th{text-align:left;font:700 15px var(--display);letter-spacing
 .rb-plus{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 14px;padding:11px 14px;background:var(--accent-soft);border-left:3px solid var(--ac);font-size:14.5px}
 .rb-plus span{color:var(--muted)}
 .rb-plus a{margin-left:auto;font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+/* job page tools, voice search, the resume builder's demand panel */
+.jtools{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 4px;font-size:13.5px}
+.jtools .jout{flex-basis:100%;margin:6px 0 0;padding:10px 12px;background:var(--accent-soft);border-left:3px solid var(--ac);font-size:14px;line-height:1.5}
+.jtools .ok{color:var(--green)}
+.jtools .warn{color:var(--amber)}
+.qa.one{grid-template-columns:1fr}
+.qa.one div{padding:8px 0}
+.mic{flex:none;width:36px;height:36px;border:0;border-radius:6px;background:transparent;color:var(--faint);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.mic::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat;--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 14 0M12 18v3'/%3E%3C/svg%3E")}
+.mic:hover{color:var(--text);background:var(--bg2)}
+.mic.on{color:var(--hl-ink);background:var(--hl)}
+.fy-acts.more{border-top:0;padding-top:8px}
+#fy-note{margin:10px 0 0;padding:10px 12px;background:var(--accent-soft);border-left:3px solid var(--ac);font-size:14px;color:var(--text)}
+#rb-demand{margin:0 0 16px}
+#rb-demand .rbd-h{margin:0 0 4px;font-size:15px}
+#rb-demand .rbd-h b{font:700 20px var(--display);letter-spacing:-.02em;background:linear-gradient(transparent 62%,var(--hl) 62%)}
+#rb-demand .hbars{max-width:720px}
+#rb-demand .hbars a{grid-template-columns:minmax(100px,180px) 1fr auto;padding:5px 0;min-height:30px}
+.hbars.moves a{grid-template-columns:minmax(140px,240px) minmax(60px,200px) 1fr}
+.hbars.moves .hc{white-space:normal;text-align:left}

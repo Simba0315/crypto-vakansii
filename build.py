@@ -373,7 +373,7 @@ def FULL_FOOT():
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
-<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -1321,6 +1321,31 @@ def main():
                 faq=f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
                 after=section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
+    # Which kinds of work sit close to each other: two roles are neighbours when employers ask for the same skills in both.
+    BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
+    role_sk, role_med = {}, {}
+    for s_, (nm_, js_) in by_role.items():
+        if s_ in BROAD or s_.endswith("-speaking"): continue
+        cnt_ = Counter(t for j in js_ for t in j["tags"])
+        role_sk[s_] = {t for t, k in cnt_.most_common(12) if k >= max(3, len(js_) * 0.04)}
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"]]
+        role_med[s_] = median(mids_) if len(mids_) >= 30 else 0
+    def neighbours(slug_r):
+        mine = role_sk.get(slug_r) or set()
+        if len(mine) < 3: return ""
+        cand = sorted(((len(mine & sk_) / len(mine | sk_), o) for o, sk_ in role_sk.items() if o != slug_r and len(mine & sk_) >= 3), reverse=True)[:5]
+        if len(cand) < 2: return ""
+        rows_ = ""
+        for sc, o in cand:
+            shared = sorted(mine & role_sk[o], key=lambda t: -skill_counts[t])[:4]
+            pay = ""
+            if role_med.get(slug_r) and role_med.get(o):
+                dlt = role_med[o] - role_med[slug_r]
+                pay = f'{money(role_med[o])}, {"about the same" if abs(dlt) < 5000 else money(abs(dlt)) + (" more" if dlt > 0 else " less")}'
+            rows_ += (f'<a href="{P}/roles/{o}/"><span class="hn">{e(by_role[o][0])}</span><span class="hb"><i style="width:{round(100 * sc / cand[0][0])}%"></i></span>'
+                      f'<span class="hc">{e(", ".join(shared))}{" · " + pay if pay else ""}</span></a>')
+        return section("Kinds of work close to this one", '<p class="note">Roles where employers ask for the same skills. The bar shows how much the skill lists overlap; the text names the shared skills'
+                       ' and, where 30 postings state pay, the median advertised pay there.</p><div class="hbars moves">' + rows_ + "</div>")
     for slug_r, (rname, rj) in by_role.items():
         paid_r = sum(1 for j in rj if j["usd"])
         low, w_ = rlow(rname), roles_info.INFO.get(slug_r, ("", ""))[1]
@@ -1334,7 +1359,7 @@ def main():
                 trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + mini_pics(rj) + fam_line + rel(REL["role:" + slug_r]) + secs[0], faq=f"{low} jobs",
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
                 hub=secs[1], list_title=f"Newest {low} jobs", more=None if slug_r in ROLE_BASE else False,
-                after=section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
+                after=neighbours(slug_r) + section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
                               (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 30 else None))
 
     # The directory: every category with the kinds of work in it, on one page, and a page with text for each category
@@ -1971,6 +1996,37 @@ def main():
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in feed_qa) + "</dl>")
          + f'<p class="note">For programs: the <a href="{P}/api/">free API</a>. For web pages: the <a href="{P}/widgets/">job widget</a>.</p>', head=feed_ld)
 
+    # Ahead: what this site does that job sites do not do yet (the owner: "implement at least ten things from the future")
+    ex_ = '<span class="ex">example</span>'
+    ahead_cards = [
+        ("Ask the employer yourself, in one click", "On a job page, “Check with the employer right now” makes your own browser ask the employer’s hiring system whether the job is still there. You do not have to take our word for it.", "jobs/",
+         ex_ + '<span class="big">Still open<small>14:02</small></span><span class="ln">Confirmed to <b>your browser</b> by the employer’s system</span>'),
+        ("Alerts with no email and no account", "Answer the five questions and press “Tell me when new jobs fit”. This browser tells you. Nothing about you is stored anywhere else.", "for-you/",
+         ex_ + '<span class="ln"><b>3 new jobs fit your answers</b></span><span class="ln">Data Analyst at Example Co and 2 more</span><span class="sk" style="width:60%"></span>'),
+        ("Say it instead of typing it", "The microphone in the search bar listens: “remote design jobs paying over 100 thousand”. The search reads the place, the pay and the level out of plain words.", "jobs/",
+         '<span class="ln">“remote data analyst jobs over 100k”</span><span class="rw"><span>Remote</span><span class="mt"><i style="width:100%"></i></span><b>yes</b></span><span class="rw"><span>Pay</span><span class="mt"><i style="width:60%"></i></span><b>$100K+</b></span>'),
+        ("Listen to a posting", "“Listen to this posting” reads the job aloud in the browser’s own voice: for the commute, or for anyone who would rather hear than read.", "jobs/",
+         '<span class="ln"><b>Reading aloud…</b></span><span class="sk" style="width:92%"></span><span class="sk h" style="width:44%"></span><span class="sk" style="width:70%"></span>'),
+        ("A follow-up reminder that needs no app", "“Remind me to follow up in 7 days” saves a calendar file. Open it, and your own calendar reminds you. We never see your calendar.", "my-jobs/",
+         ex_ + '<span class="ln"><b>Follow up: Data Analyst at Example Co</b></span><span class="ln">Friday, 9:00 · your own calendar</span>'),
+        ("Every skill explained in one line", "“What these skills mean” on a job page turns the jargon of the posting into plain words, one line per skill.", "glossary/",
+         '<span class="ln"><b>Kubernetes</b></span><span class="ln">Runs many copies of a program across many servers and adds more when traffic grows</span>'),
+        ("Kinds of work next to yours", "Each role page shows the roles where employers ask for the same skills, with what they advertise as pay: a map of where you could move.", "categories/",
+         ex_ + '<span class="rw"><span>Data scientist</span><span class="mt"><i style="width:100%"></i></span><b>+$22K</b></span><span class="rw"><span>Analytics eng.</span><span class="mt"><i style="width:74%"></i></span><b>+$9K</b></span>'),
+        ("Send your criteria, not your resume", "“Copy a link to these answers” makes a link that opens today’s jobs for your criteria. Send it to a friend who hears of openings, or to a recruiter, without giving away who you are.", "for-you/",
+         '<span class="ln"><b>…/for-you/#a=</b>eyJjIjpbImRhdGEi…</span><span class="ln">Opens the same list on any device</span>'),
+        ("Your job market as one picture", "“Save the result as a picture” draws your answers and what the market offers for them today: how many jobs fit, what they pay, who is hiring.", "for-you/",
+         ex_ + '<span class="big">61<small>jobs fit all 5 answers</small></span><span class="ln">Half pay up to <b>$203K</b> or more</span>'),
+        ("A resume that knows what is in demand", "While you type in the resume builder, it shows how many open jobs ask for each skill you mention and how many jobs fit the resume as it stands.", "resume/",
+         ex_ + '<span class="rw"><span>Python</span><span class="mt"><i style="width:100%"></i></span><b>8,341</b></span><span class="rw"><span>SQL</span><span class="mt"><i style="width:52%"></i></span><b>4,254</b></span><span class="ln">1,240 jobs ask for three of your skills</span>'),
+    ]
+    page("ahead/", f"Ten Things This Job Site Does That Others Do Not Yet | {SITE}",
+         "Check a job with the employer from your own browser, get alerts with no email and no account, search by voice, listen to a posting, and seven more things job sites do not do yet.",
+         crumbs(("Ahead", "")) + '<h1>Ten things here that job sites <span class="hl">do not do yet</span></h1>'
+         '<p class="lead">Each of them works in your browser, with no account and nothing sent to us. Open any of them and try.</p>'
+         '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
+         f'<p class="note">Some of these depend on what your browser can do: speech recognition and background checks are not in every browser. Where one is missing, its button does not appear.</p>')
+
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"
     ST = json.loads(stats_file.read_text()) if stats_file.exists() else {}
@@ -2213,12 +2269,15 @@ def main():
                '<details class="scan"><summary>Paste your resume and have the skills found for you</summary>'
                '<textarea id="fy-text" rows="7" placeholder="Paste the text of your resume here" aria-label="Resume text"></textarea>'
                '<p><button class="btn sm" id="fy-scan" type="button">Find my skills</button> <span class="note" id="fy-scan-note"></span></p></details>')
-         + '<p class="fy-acts"><button class="btn ghost sm" id="fy-example" type="button">Show an example</button> <button class="btn ghost sm" id="fy-clear" type="button">Clear my answers</button></p></div>'
+         + '<p class="fy-acts"><button class="btn ghost sm" id="fy-example" type="button">Show an example</button> <button class="btn ghost sm" id="fy-clear" type="button">Clear my answers</button></p>'
+         '<p class="fy-acts more"><button class="btn ghost sm" id="fy-alert" type="button">Tell me when new jobs fit</button> <button class="btn ghost sm" id="fy-share" type="button">Copy a link to these answers</button> '
+         '<button class="btn ghost sm" id="fy-pic" type="button">Save the result as a picture</button></p><p class="note" id="fy-note" role="status" hidden></p></div>'
          '<div class="fy-out" id="fy-out"><div class="fy-sum" id="fy-count" aria-live="polite"></div><div id="fy-gap" hidden></div>'
          '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p></div></div>'
          '<a class="fy-jump" id="fy-jump" href="#fy-out" hidden></a>'
          + section("Questions about this page", fy_faq), head=fy_ld)
     write("data/skills.json", json.dumps([[n_, rx] for n_, rx in SKILLS if n_ in skill_counts], ensure_ascii=False), sitemap=False)
+    write("data/skillinfo.json", json.dumps({t: skills_info.plain(t) for t in skill_counts if skills_info.plain(t)}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
 
     # Skills hub
     by_group = defaultdict(list)
@@ -2249,6 +2308,7 @@ def main():
          '<option value="developer">Developer</option><option value="executive">Executive</option></select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
+         '<div id="rb-demand" class="no-print" aria-live="polite"></div>'
          '<div class="rgrid"><div id="rb-form"></div><div id="rb-preview" aria-live="polite"></div></div></div>'
          + '<section class="sec no-print"><div class="sec-head"><h2>What makes a resume get read</h2></div><div class="feats">'
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
@@ -2929,6 +2989,14 @@ var page=r.mode==='navigate',data=/\\/data\\/(head|index|geo|skills)\\.json$/.te
 var key=page?u.origin+u.pathname:r;
 e.respondWith(fetch(r).then(function(res){{if(res.ok){{var copy=res.clone();caches.open(PG).then(function(c){{return c.put(key,copy).then(function(){{return trim(c);}});}});}}return res;}})
 .catch(function(){{return caches.open(PG).then(function(c){{return c.match(key).then(function(hit){{return hit||(page?c.match(B+'/offline/'):Response.error());}});}});}}));}});
+function fit(){{return caches.open('hrn-profile').then(function(c){{return c.match(B+'/__profile').then(function(r){{return r&&r.json();}}).then(function(st){{if(!st)return;
+return fetch(B+'/data/head.json',{{cache:'no-store'}}).then(function(r){{return r.json();}}).then(function(d){{var A=st.A||{{}},n=0,first='';
+d.r.forEach(function(r){{var t=r[14]||0;if(!t||t*60000<=st.seen)return;if(A.cats&&A.cats.length&&A.cats.indexOf(d.k[r[5]])<0)return;if(A.where==='remote'&&!(r[4]&1))return;if(A.where==='office'&&(r[4]&1))return;
+if(A.pay&&!(r[10]>=A.pay))return;if(A.exp==='0'&&r[6]!==1&&r[6]!==2)return;n++;if(!first)first=r[1]+' at '+d.c[r[2]];}});
+if(!n)return;st.seen=Date.now();return c.put(B+'/__profile',new Response(JSON.stringify(st))).then(function(){{
+return self.registration.showNotification(n+(n===1?' new job fits':' new jobs fit')+' your answers',{{body:first+(n>1?' and '+(n-1)+' more':''),tag:'hrn-fit',data:B+'/for-you/'}});}});}});}});}}).catch(function(){{}});}}
+self.addEventListener('periodicsync',function(e){{if(e.tag==='hrn-fit')e.waitUntil(fit());}});
+self.addEventListener('notificationclick',function(e){{e.notification.close();e.waitUntil(clients.openWindow(e.notification.data||B+'/'));}});
 """, encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'

@@ -110,4 +110,27 @@
     }
   });
   drawForm(); drawPreview();
+
+  /* What the open jobs ask for: the skills this resume names, each with the number of open jobs that ask for it, and how many
+     jobs ask for at least three of them. Counted in the browser from the same index the search uses. */
+  var demand = document.getElementById('rb-demand'), pats = null, timer;
+  function drawDemand() {
+    if (!demand || !H.load) return;
+    var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');
+    if (text.replace(/\s/g, '').length < 20) { demand.innerHTML = ''; return; }
+    (pats ? Promise.resolve(pats) : fetch(H.base + '/data/skills.json').then(function (r) { return r.json(); }).then(function (p) { pats = p; return p; })).then(function (p) {
+      var mine = []; p.forEach(function (x) { try { if (new RegExp(x[1], 'i').test(text)) mine.push(x[0]); } catch (e) {} });
+      if (!mine.length) { demand.innerHTML = '<p class="note">No skill that employers name in postings was found in this resume yet. Write the tools and methods you use by their names.</p>'; return; }
+      return H.load().then(function (all) {
+        var per = {}, need = Math.min(3, mine.length), fit = 0;
+        mine.forEach(function (t) { per[t] = 0; });
+        all.forEach(function (j) { var k = 0; for (var i = 0; i < j[7].length; i++) if (per[j[7][i]] != null) { per[j[7][i]]++; k++; } if (k >= need) fit++; });
+        var top = mine.slice().sort(function (a, b) { return per[b] - per[a]; }).slice(0, 8), mx = per[top[0]] || 1, nf = function (x) { return Number(x).toLocaleString('en-US'); };
+        demand.innerHTML = '<p class="rbd-h"><b>' + nf(fit) + '</b> open jobs ask for ' + (need === 1 ? 'the skill' : 'at least ' + need + ' of the ' + mine.length + ' skills') + ' in this resume</p><div class="hbars">' +
+          top.map(function (t) { return '<a href="' + H.base + '/jobs/?skills=' + encodeURIComponent(t) + '"><span class="hn">' + H.esc(t) + '</span><span class="hb"><i style="width:' + Math.max(2, Math.round(100 * per[t] / mx)) + '%"></i></span><span class="hc">' + nf(per[t]) + ' jobs</span></a>'; }).join('') + '</div>';
+      });
+    }).catch(function () {});
+  }
+  document.getElementById('rb').addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(drawDemand, 900); });
+  setTimeout(drawDemand, 600);
 })();
