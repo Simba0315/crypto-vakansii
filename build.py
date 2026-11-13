@@ -1769,7 +1769,7 @@ def main():
 <title>Jobs widget | {e(SITE)}</title><style>html,body{{margin:0;background:transparent}}body{{padding:2px 8px 8px 2px}}</style></head><body>
 <div id="w"><a href="{FULL}/" target="_blank" rel="noopener">Tech jobs on {e(SITE)}</a></div>
 <script>(function(){{var p=new URLSearchParams(location.search),el=document.getElementById('w');
-el.setAttribute('data-hrn-jobs',p.get('jobs')||'latest');['limit','layout','theme','accent','title'].forEach(function(k){{if(p.get(k))el.setAttribute('data-'+k,p.get(k));}});
+el.setAttribute('data-hrn-jobs',p.get('jobs')||'latest');['limit','layout','theme','accent','title','search','company'].forEach(function(k){{if(p.get(k))el.setAttribute('data-'+k,p.get(k));}});
 el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js?v={V}"></script></body></html>""", sitemap=False)
 
     # The board: a full-screen, auto-rotating wall of the freshest roles (for a second monitor, an office screen, a classroom)
@@ -1807,31 +1807,99 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # Widgets, badges, API: ways for other sites to show our jobs and link back
     wb_data = {"site": SITE, "skills": [[tslug(t), t] for t, _ in skill_counts.most_common()], "categories": [[cs, CAT[cs]] for cs in CAT if by_cat[cs]],
                "locations": [[slug, name.removeprefix("the ")] for name, slug, _ in places], "companies": [[slugify(c), c] for c, _ in comp_items if OPEN[c]]}
-    page("widgets/", f"Free Jobs Widget & Live Hiring Badges for Your Site | {SITE}",
-         "Put live tech jobs on your blog, community or company site in one line of code. Free jobs widget and live badges for any skill, category, city or company.",
-         crumbs(("Widgets", "")) + '<h1>Live tech jobs on your site, never out of date</h1>'
-         '<p class="lead">A jobs page kept by hand goes stale within a week. This widget and the badges refresh themselves every day. '
-         'Pick what to show and copy one snippet. Free, for blogs, communities, bootcamps, newsletters and company sites.</p>'
+    wsize = round(len((ROOT / "assets" / "widget.js").read_bytes()) / 1024)
+    w_faq = [("Is the job widget free?", "Yes. There is no plan, no account and no limit on page views. The snippet keeps a small link back to this site, which is how the widget stays free."),
+             ("Do I need to sign up or get a key?", "No. Choose what to show in the builder on this page, copy the code and paste it into your site."),
+             ("How often do the jobs update?", f"Lists from our index are rebuilt every day from the career pages of {m} companies, so closed roles drop out by themselves. A list of your own company’s jobs is read live from your hiring system every time the page opens."),
+             ("Can I show only my own company’s jobs?", "Yes. If you post jobs through Greenhouse, Lever or Ashby, pick that system in the builder and type the name of your board. The widget reads your public board directly, with no account and nothing to keep in sync by hand."),
+             ("Does it work with WordPress, Webflow, Wix, Squarespace, Shopify and Framer?", "Yes. Anything that lets you paste HTML works with the script version. Builders that strip scripts, such as Notion, take the iframe version. The table on this page says where to paste the code on each platform."),
+             ("Will the widget slow my page down?", f"The script is about {wsize} KB, loads asynchronously and draws inside its own container, so it does not block your page and your styles do not leak into it or out of it."),
+             ("Where does a click on a job lead?", "To the job’s page on this site, which shows the salary, the remote rules and the date of the last check, and from there to the employer’s own application page. For your own board the click goes straight to your application page."),
+             ("Can I change how it looks?", "Yes: five layouts (list, cards, compact, ticker and a full careers page), a light, dark or automatic theme, your own accent colour, your own heading and an optional search box.")]
+    w_faq_html = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in w_faq) + "</dl>"
+    w_ld = ('<script type="application/ld+json">' + json.dumps([
+        {"@context": "https://schema.org", "@type": "WebApplication", "name": f"{SITE} job widget", "url": f"{FULL}/widgets/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any",
+         "description": "A free embeddable job widget: self-updating tech jobs by skill, city, category or company, or a company’s own jobs read from Greenhouse, Lever or Ashby.",
+         "isAccessibleForFree": True, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/"}},
+        {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in w_faq]}],
+        ensure_ascii=False).replace("</", "<\\/") + "</script>" + crumbs_ld([("Job widget", "")]))
+    wt = lambda head, rows_: ('<div class="tablewrap"><table><tr>' + "".join(f"<th>{h_}</th>" for h_ in head) + "</tr>"
+                              + "".join("<tr>" + "".join(f"<td>{c_}</td>" for c_ in r_) + "</tr>" for r_ in rows_) + "</table></div>")
+    page("widgets/", f"Free Job Widget for Your Website | {SITE}",
+         "A free job widget for any website: one snippet shows self-updating tech jobs by skill or city, or your own company’s jobs from Greenhouse, Lever or Ashby. No sign-up.",
+         crumbs(("Job widget", "")) + '<h1>Free job widget for your website</h1>'
+         '<p class="lead">Paste one snippet and your page shows open jobs that keep themselves up to date: tech jobs from our index by skill, city, category or company, '
+         'or your own company’s jobs read straight from Greenhouse, Lever or Ashby. It is free and needs no account, and nobody has to type the jobs in.</p>'
          f'<div id="wb" data-full="{FULL}" data-base="{P}"><div class="card"><div class="fbar" style="margin:0">'
-         '<label class="wl">Show<select id="wb-type"><option value="skill">Jobs by skill</option><option value="category">Jobs by category</option><option value="location">Jobs by location</option>'
-         '<option value="company">Jobs at a company</option><option value="remote">Remote jobs</option><option value="latest">Latest jobs</option></select></label>'
+         '<label class="wl">Show<select id="wb-type"><optgroup label="Tech jobs from our index"><option value="skill">Jobs by skill</option><option value="category">Jobs by category</option><option value="location">Jobs by location</option>'
+         '<option value="company">Jobs at a company we list</option><option value="remote">Remote jobs</option><option value="latest">Latest jobs</option></optgroup>'
+         '<optgroup label="Your own company’s jobs"><option value="greenhouse">From Greenhouse</option><option value="lever">From Lever</option><option value="ashby">From Ashby</option></optgroup></select></label>'
          '<label class="wl">Which one<select id="wb-val"></select></label>'
+         '<label class="wl" id="wb-board-l" hidden>Board name<input type="text" id="wb-board" placeholder="acme" autocomplete="off" spellcheck="false"></label>'
+         '<label class="wl" id="wb-co-l" hidden>Company name<input type="text" id="wb-co" placeholder="Acme" autocomplete="off"></label>'
          '<label class="wl">Rows<select id="wb-limit"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>15</option></select></label>'
          '<label class="wl">Layout<select id="wb-layout"><option value="list">List</option><option value="cards">Cards</option><option value="compact">Compact (sidebar)</option><option value="ticker">Ticker</option><option value="careers">Careers page (all jobs, with search)</option></select></label>'
          '<label class="wl">Theme<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label>'
          '<label class="wl">Accent<input type="color" id="wb-accent" value="#1f9d55" aria-label="Accent colour"></label>'
-         '<label class="wl">Embed as<select id="wb-mode"><option value="script">Script (best)</option><option value="iframe">iframe (Notion, Substack, strict CMS)</option></select></label></div></div>'
-         + section("Jobs widget", '<div id="wb-preview" style="margin-bottom:16px"></div><textarea id="wb-code" rows="4" readonly aria-label="Widget code"></textarea>'
-                   '<p><button class="btn sm" type="button" data-copy="wb-code">Copy widget code</button> <span class="note">Works in WordPress (Custom HTML block), Webflow, Ghost, Notion embeds and plain HTML.</span></p>')
-         + section("Live badge", '<p><img id="wb-badge" alt="Live badge preview" height="28"></p><p class="note">The number on the badge is recalculated every day. Good for a README, a footer or a blog post.</p>'
-                   '<span class="flabel">HTML</span><textarea id="wb-badge-html" rows="2" readonly aria-label="Badge HTML"></textarea><p><button class="btn sm" type="button" data-copy="wb-badge-html">Copy HTML</button></p>'
-                   '<span class="flabel">Markdown (GitHub README)</span><textarea id="wb-badge-md" rows="2" readonly aria-label="Badge Markdown"></textarea><p><button class="btn sm" type="button" data-copy="wb-badge-md">Copy Markdown</button></p>')
+         '<label class="wl">Embed as<select id="wb-mode"><option value="script">Script (best)</option><option value="iframe">iframe (Notion, strict site builders)</option></select></label>'
+         '<label class="check"><input type="checkbox" id="wb-search"> Search box and “Show more”</label></div>'
+         '<p class="note" id="wb-hint" hidden style="margin:12px 0 0">The board name is the last part of your careers page address: boards.greenhouse.io/<b>acme</b>, jobs.lever.co/<b>acme</b> or jobs.ashbyhq.com/<b>acme</b>.</p></div>'
+         + section("Preview and code", '<div id="wb-preview" style="margin-bottom:16px"></div><textarea id="wb-code" rows="4" readonly aria-label="Widget code"></textarea>'
+                   '<p><button class="btn sm" type="button" data-copy="wb-code">Copy the code</button> <span class="note">What you see above is the widget itself, running on this page.</span></p>')
+         + '<section class="sec" id="wb-badge-sec"><div class="sec-head"><h2>Live badge</h2></div><p><img id="wb-badge" alt="Live badge preview" height="28"></p><p class="note">The number on the badge is recalculated every day. Good for a README, a footer or a blog post.</p>'
+           '<span class="flabel">HTML</span><textarea id="wb-badge-html" rows="2" readonly aria-label="Badge HTML"></textarea><p><button class="btn sm" type="button" data-copy="wb-badge-html">Copy HTML</button></p>'
+           '<span class="flabel">Markdown (GitHub README)</span><textarea id="wb-badge-md" rows="2" readonly aria-label="Badge Markdown"></textarea><p><button class="btn sm" type="button" data-copy="wb-badge-md">Copy Markdown</button></p></section>'
          + "</div>"
+         + section("How to add the job widget to your site", '<ol class="steps"><li><b>Choose what to show</b> in the builder above: a skill, a city, a category, one company, or your own board.</li>'
+                   "<li><b>Copy the code.</b> It is two lines: a container with a normal link inside, and the script.</li>"
+                   "<li><b>Paste it where the list should appear</b>, in any block that accepts HTML. The jobs load when the page opens and stay current without you.</li></ol>"
+                   '<p class="note">If scripts are blocked, the link inside the container still shows, so the spot never ends up empty.</p>')
+         + section("Where to paste it, by platform", wt(["Platform", "Where the code goes"], [
+             ["<strong>WordPress</strong>", "Add a Custom HTML block in the editor, or a Custom HTML widget in a sidebar or footer, and paste the script version."],
+             ["<strong>Webflow</strong>", "Add an Embed element and paste the script version. Scripts do not run in the Designer preview, so publish the page to see it."],
+             ["<strong>Wix</strong>", "Add → Embed code → Embed HTML, then paste the iframe version."],
+             ["<strong>Squarespace</strong>", "Add a Code block and paste the script version. Squarespace allows scripts in Code blocks only on some plans; where it does not, use the iframe version in an Embed block."],
+             ["<strong>Shopify</strong>", "In the theme editor add a Custom Liquid section or block and paste the script version."],
+             ["<strong>Framer</strong>", "Insert → Embed, switch it to HTML and paste the script version."],
+             ["<strong>Ghost</strong>", "Add an HTML card in the editor and paste the script version."],
+             ["<strong>Notion</strong>", "Notion removes scripts. Take the iframe version and paste the address from its <code>src</code> into an Embed block."],
+             ["<strong>Plain HTML</strong>", "Paste the script version anywhere inside <code>&lt;body&gt;</code>."]]))
+         + section("Your own company’s jobs, straight from your hiring system",
+                   '<p>If your company posts jobs through Greenhouse, Lever or Ashby, the widget can read your public job board directly in the visitor’s browser. '
+                   'Pick your system in the builder and type the name of your board. New roles appear and closed ones disappear by themselves, and a click on a job opens your own application page.</p>'
+                   '<p>Nothing passes through our servers in this mode, so there is no account, no limit on the number of jobs and nothing to pay. '
+                   'A very large board, with thousands of roles, takes a moment longer to load. Add the search box for boards with more than a dozen roles.</p>')
+         + section("Options", wt(["Attribute", "What it does", "Default"], [
+             ["<code>data-hrn-jobs</code>", "What to show: <code>latest</code>, <code>remote</code>, <code>skill:python</code>, <code>category:engineering</code>, <code>location:london</code>, <code>company:stripe</code>, "
+                                           "or your own board: <code>greenhouse:acme</code>, <code>lever:acme</code>, <code>ashby:acme</code>", "<code>latest</code>"],
+             ["<code>data-limit</code>", "Rows to show, 1 to 20. With the search box on, rows per page", "6"],
+             ["<code>data-layout</code>", "<code>list</code>, <code>cards</code>, <code>compact</code>, <code>ticker</code> or <code>careers</code>", "<code>list</code>"],
+             ["<code>data-theme</code>", "<code>auto</code> follows the visitor’s system, or force <code>light</code> or <code>dark</code>", "<code>auto</code>"],
+             ["<code>data-accent</code>", "Any hex colour for the hover bar and the link underline", "<code>#1f9d55</code>"],
+             ["<code>data-search</code>", "<code>1</code> adds a search box, a team filter where teams exist, and “Show more”", "off"],
+             ["<code>data-title</code>", "Your own heading for the widget", "the name of the list"],
+             ["<code>data-company</code>", "Your company name, shown in the heading of your own board", "none"]]))
+         + section("How it differs from other job widgets", wt(["", "This widget", "Widget builders", "Hiring-system embeds"], [
+             ["Where the jobs come from", f"Our index of {n:,} open tech jobs, or your own board", "You type each job in by hand", "Your own board only"],
+             ["Jobs from other companies, by skill or city", "Yes", "No", "No"],
+             ["Stays up to date by itself", "Yes", "Only when you edit it", "Yes"],
+             ["Account", "None", "Required", "You are already a customer"],
+             ["Price", "Free", "A free tier with limits, then a monthly fee", "Part of the system’s price"],
+             ["Branding", "A small link back", "Removed on paid plans", "The system’s own look"]])
+             + '<p class="note">A fair summary of the three kinds of job widget as their own pages describe them in November 2026; individual products differ.</p>')
+         + section("Will Google index the jobs in the widget?",
+                   '<p>Treat the widget as something for your visitors, not for Google. The list is drawn by a script after your page loads, and Google credits a job to the page that carries the full posting and its JobPosting markup: '
+                   'the employer’s own page, or the job’s page on this site. If you want your own vacancies to appear in Google’s job search, mark up each vacancy page on your site. '
+                   f'The free <a href="{P}/tools/jobposting-schema/">JobPosting schema generator</a> writes that code for you.</p>')
+         + section("Limits and fair use", '<p>The widget reads one small file that changes once a day, so there is no rate limit to run into. A list for a skill, city or category holds the 30 newest roles; '
+                   'a company’s list holds all of its open roles. Keep the link back inside the snippet.</p>')
+         + section("Questions", w_faq_html)
          + section("More for developers and writers", '<div class="feats">'
                    f'<a class="feat" href="{P}/api/"><h3>Free jobs API</h3><p>JSON feeds for every skill, category, city and company. No key, no sign-up.</p></a>'
                    f'<a class="feat" href="{P}/trends/"><h3>Hiring data to quote</h3><p>Live numbers on skills, salaries and companies, with ready-made citations and CSV downloads.</p></a>'
                    f'<a class="feat" href="{P}/feed.xml"><h3>RSS feeds</h3><p>Plug any category or skill feed into Slack, Discord or a reader.</p></a></div>')
-         + '<script type="application/json" id="wb-data">' + json.dumps(wb_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>')
+         + '<script type="application/json" id="wb-data">' + json.dumps(wb_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>',
+         head=w_ld)
     sample = json.dumps({"name": "Rust jobs", "url": f"{FULL}/skills/rust/", "site": SITE, "updated": TODAY, "total": 1100,
                          "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
     js_example = f'const feed = await fetch("{FULL}/api/v1/skills/python.json").then(r => r.json());\nconsole.log(feed.total, feed.jobs[0].title);'

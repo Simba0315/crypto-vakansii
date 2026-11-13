@@ -3,7 +3,10 @@
      <a href="…">Python jobs on Hiring Right Now</a>
    </div>
    <script src="…/widget.js" async></script>
-   Layouts: list (default), cards, compact, ticker. The link inside the div stays visible as the footer and works even if scripts are blocked. */
+   Layouts: list (default), cards, compact, ticker, careers. data-search="1" adds a search box and "show more".
+   A company can also show its own jobs straight from its hiring system, with no account anywhere:
+     data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme"   (the name of the board in that system), data-company="Acme"
+   The link inside the div stays visible as the footer and works even if scripts are blocked. */
 (function () {
   var S = document.currentScript;
   var base = (S && S.src ? S.src : '').replace(/\/widget\.js.*$/, '');
@@ -34,6 +37,7 @@
     '.m{grid-row:1/3;grid-column:3;text-align:right;font:500 12px ' + MONO + ';color:var(--mut);white-space:nowrap}' +
     '.m b{display:block;color:var(--ink);font-weight:600;font-size:12.5px}' +
     '.e{padding:18px 16px;color:var(--mut)}' +
+    '.own .r{grid-template-columns:minmax(0,1fr) auto}.own .lg,.own .lt{display:none}.own .t,.own .c{grid-column:1}.own .m{grid-column:2}' +
     '.f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 16px;font-size:13px;font-weight:600}' +
     '::slotted(a),.f a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--acc);text-decoration-thickness:2px;text-underline-offset:3px}' +
     /* cards */
@@ -54,49 +58,77 @@
   function row(j, logos) {
     var mark = j.logo && logos ? '<img class="lg" src="' + esc(j.logo) + '" alt="" loading="lazy">' : '<span class="lt">' + esc((String(j.company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span>';
     return '<a class="r" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + mark + '<span class="t">' + esc(j.title) + '</span>' +
-      '<span class="c">' + esc(j.company) + (j.location ? ' · ' + esc(j.location) : j.remote ? ' · Remote' : '') + '</span>' +
+      '<span class="c">' + esc([j.company, j.location || (j.remote ? 'Remote' : '')].filter(Boolean).join(' · ')) + '</span>' +
       '<span class="m">' + (j.salary ? '<b>' + esc(j.salary) + '</b>' : '') + esc(age(j.posted)) + '</span></a>';
+  }
+  // A company's own board, read in the visitor's browser from the hiring system's public feed. Nothing passes through our site.
+  function own(type, raw, el, src) {
+    var jobs = [], day = function (v) { return String(v || '').slice(0, 10); };
+    if (type === 'greenhouse') (raw.jobs || []).forEach(function (j) {
+      jobs.push({ title: j.title, url: j.absolute_url, location: j.location && j.location.name || '', posted: day(j.first_published || j.updated_at), category: '' });
+    });
+    else if (type === 'lever') (Array.isArray(raw) ? raw : []).forEach(function (j) {
+      var c = j.categories || {};
+      jobs.push({ title: j.text, url: j.hostedUrl, location: c.location || '', posted: j.createdAt ? day(new Date(j.createdAt).toISOString()) : '', category: c.team || c.department || '' });
+    });
+    else (raw.jobs || []).forEach(function (j) {
+      if (j.isListed === false) return;
+      jobs.push({ title: j.title, url: j.jobUrl, location: j.location || '', posted: day(j.publishedAt), category: j.department || j.team || '' });
+    });
+    jobs = jobs.filter(function (j) { return j.title && /^https:\/\//.test(j.url || ''); });
+    jobs.sort(function (a, b) { return a.posted < b.posted ? 1 : a.posted > b.posted ? -1 : 0; });
+    var co = el.getAttribute('data-company') || '';
+    jobs.forEach(function (j) { j.company = co; });
+    var site = (S && S.src ? S.src : '').replace(/\/widget\.js.*$/, '') || src;
+    return { name: co ? 'Jobs at ' + co : 'Open roles', total: jobs.length, url: site + '/widgets/', site: 'Hiring Right Now', jobs: jobs, own: true };
   }
   function render(el) {
     if (!el || el.getAttribute('data-hrn-ready')) return;
     el.setAttribute('data-hrn-ready', '1');
     var spec = (el.getAttribute('data-hrn-jobs') || 'latest').split(':'), type = spec[0], slug = spec.slice(1).join(':');
     var path = { latest: 'latest', remote: 'remote', skill: 'skills/' + slug, category: 'categories/' + slug, location: 'locations/' + slug, company: 'companies/' + slug }[type] || 'latest';
+    var ats = { greenhouse: 'https://boards-api.greenhouse.io/v1/boards/' + encodeURIComponent(slug) + '/jobs',
+                lever: 'https://api.lever.co/v0/postings/' + encodeURIComponent(slug) + '?mode=json',
+                ashby: 'https://api.ashbyhq.com/posting-api/job-board/' + encodeURIComponent(slug) }[type];
     var limit = Math.max(1, Math.min(20, parseInt(el.getAttribute('data-limit') || '6', 10) || 6));
     var theme = { light: 'light', dark: 'dark' }[el.getAttribute('data-theme')] || 'auto';
     var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
     var accent = /^#[0-9a-fA-F]{3,8}$/.test(el.getAttribute('data-accent') || '') ? el.getAttribute('data-accent') : '';
     var src = el.getAttribute('data-hrn-base') || base;
-    fetch(src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); }).then(function (d) {
-      var jobs = layout === 'careers' ? d.jobs : d.jobs.slice(0, limit), body;
+    var interactive = layout === 'careers' || el.getAttribute('data-search') === '1', step = layout === 'careers' ? 20 : limit;
+    fetch(ats || src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); }).then(function (d) {
+      if (ats) d = own(type, d, el, src);
+      var jobs = interactive ? d.jobs : d.jobs.slice(0, limit), body;
       if (!jobs.length) body = '<div class="e">No open roles right now.</div>';
       else if (layout === 'ticker') {
         var items = jobs.map(function (j) { return '<a href="' + esc(j.url) + '" target="_blank" rel="noopener"><b>' + esc(j.title) + '</b><span>' + esc(j.company) + '</span></a>'; }).join('');
         body = '<div class="tick"><div class="run">' + items + items + '</div></div>';
-      } else if (layout === 'careers') {
+      } else if (interactive) {
         body = '<div class="cs"><input type="search" placeholder="Search ' + jobs.length + ' open roles" aria-label="Search roles"><select aria-label="Team"><option value="">All teams</option></select></div>' +
-          '<div class="rows"></div><button class="more" type="button" hidden>Show more</button>';
-      } else body = '<div class="' + (layout === 'list' ? 'rows' : layout) + '">' + jobs.map(function (j) { return row(j, layout !== 'compact'); }).join('') + '</div>';
+          '<div class="rows' + (layout === 'compact' ? ' compact' : '') + (d.own ? ' own' : '') + '"></div><button class="more" type="button" hidden>Show more</button>';
+      } else body = '<div class="' + (layout === 'list' ? 'rows' : layout) + (d.own ? ' own' : '') + '">' + jobs.map(function (j) { return row(j, layout !== 'compact'); }).join('') + '</div>';
       var root = el.shadowRoot || (el.attachShadow ? el.attachShadow({ mode: 'open' }) : null);
       var html = '<style>' + CSS + '</style><div class="w ' + theme + '"' + (accent ? ' style="--acc:' + accent + '"' : '') + '><div class="h"><span class="ht"><span class="dot"></span>' + esc(el.getAttribute('data-title') || d.name) + '</span>' +
         '<span class="n">' + Number(d.total).toLocaleString('en-US') + ' open</span></div>' + body +
-        '<div class="f">' + (root ? '<slot><a href="' + esc(d.url) + '" target="_blank" rel="noopener">See all on ' + esc(d.site) + '</a></slot>' :
-          '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">See all on ' + esc(d.site) + '</a>') + '<span class="by">Updated daily</span></div></div>';
+        '<div class="f">' + (root ? '<slot><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a></slot>' :
+          '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a>') + '<span class="by">' + (d.own ? 'Live from the hiring system' : 'Updated daily') + '</span></div></div>';
       if (root) root.innerHTML = html; else el.innerHTML = html;
-      if (layout === 'careers') {                      // a whole careers page: filter by text and team, 20 rows at a time
-        var scope = root || el, box = scope.querySelector('.cs input'), team = scope.querySelector('.cs select'), rowsEl = scope.querySelector('.rows'), moreBtn = scope.querySelector('.more'), shown = 20;
+      if (interactive && jobs.length && layout !== 'ticker') {     // search by text and team, a page of rows at a time
+        var scope = root || el, box = scope.querySelector('.cs input'), team = scope.querySelector('.cs select'), rowsEl = scope.querySelector('.rows'), moreBtn = scope.querySelector('.more'), shown = step;
+        var logos = layout === 'list' && !d.own;
         var teams = {}; jobs.forEach(function (j) { if (j.category) teams[j.category] = (teams[j.category] || 0) + 1; });
         team.innerHTML += Object.keys(teams).sort(function (a, b) { return teams[b] - teams[a]; }).map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + ' (' + teams[t] + ')</option>'; }).join('');
+        team.hidden = Object.keys(teams).length < 2;
         var paint = function () {
           var q = box.value.trim().toLowerCase(), list = jobs.filter(function (j) {
             return (!team.value || j.category === team.value) && (!q || (j.title + ' ' + j.location).toLowerCase().indexOf(q) >= 0);
           });
-          rowsEl.innerHTML = list.slice(0, shown).map(function (j) { return row(j, false); }).join('') || '<div class="e">No roles match.</div>';
+          rowsEl.innerHTML = list.slice(0, shown).map(function (j) { return row(j, logos); }).join('') || '<div class="e">No roles match.</div>';
           moreBtn.hidden = list.length <= shown; moreBtn.textContent = 'Show more (' + (list.length - shown) + ')';
         };
-        box.addEventListener('input', function () { shown = 20; paint(); });
-        team.addEventListener('change', function () { shown = 20; paint(); });
-        moreBtn.addEventListener('click', function () { shown += 20; paint(); });
+        box.addEventListener('input', function () { shown = step; paint(); });
+        team.addEventListener('change', function () { shown = step; paint(); });
+        moreBtn.addEventListener('click', function () { shown += step; paint(); });
         paint();
       }
     }).catch(function () {});          // on failure the plain link inside the element stays as it is
