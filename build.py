@@ -2078,6 +2078,9 @@ def main():
          '<div class="feedpick"><label for="feedpick">Pick a feed</label><select id="feedpick">' + feed_opts + '</select>'
          f'<input id="feedurl" type="text" readonly value="{FULL}/feed.xml" aria-label="Feed address"><button class="btn" id="feedcopy" type="button">Copy the address</button></div>'
          + section("Where a feed can go", '<div class="tgrid">' + "".join(f'<div class="tcard"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span></span></div>' for t_, d_, scr in feed_cards) + "</div>")
+         + section("For job search engines", f'<p>One XML file with the jobs posted in the last 30 days, the newest first: <a href="{P}/feeds/jobs.xml"><code>{FULL}/feeds/jobs.xml</code></a>. '
+                   'Each job carries its number, title, employer, place, country, date, pay where stated, the opening lines and the address of its page here. It is rebuilt every hour. '
+                   'Job search engines may read it once an hour and must link each job to its page on this site.</p>')
          + section("Every feed", feed_dir)
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in feed_qa) + "</dl>")
          + f'<p class="note">For programs: the <a href="{P}/api/">free API</a>. For web pages: the <a href="{P}/widgets/">job widget</a>.</p>', head=feed_ld)
@@ -2436,6 +2439,22 @@ def main():
                    "<div><dt>Not yet</dt><dd>Payments are not switched on, so there is no revenue to report. The site is on a temporary address; its own domain comes next.</dd></div>"
                    "<div><dt>Costs</dt><dd>Hosting and collection run on free tiers; the site is built and maintained by automation, with nobody on the payroll.</dd></div></dl>")
          + f'<p class="note">Data and method: <a href="{P}/methodology/">how the numbers are made</a>, <a href="{P}/status/">what the last update did</a>, <a href="{P}/insights/">charts</a>. ' + (f"To talk: {contact}." if contact else "") + "</p>")
+
+    # One XML file for job search engines (Careerjet, Adzuna, Trovit and others take a feed of this shape: source/job with
+    # referencenumber, title, url, company, city, country, date, description). It holds the jobs posted in the last 30 days, the
+    # newest first, 10,000 at most: we keep only the opening lines of a posting, and the link leads to our page of the job.
+    # Who takes such a feed and on what terms: AGGREGATORS_RESEARCH.md.
+    cd_ = lambda v: "<![CDATA[" + str(v).replace("]]>", "]]]]><![CDATA[>") + "]]>"
+    month_ago = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
+    feed_jobs = [j for j in order(active) if (j["posted"] or "") >= month_ago and j["excerpt"] and not j.get("pool")][:10000]
+    JT = {"Full-time": "fulltime", "Part-time": "parttime", "Contract": "contract", "Internship": "internship"}
+    feed_items = "".join(
+        "<job>" + f"<title>{cd_(j['title'])}</title><date>{cd_((j['posted'] or TODAY)[:10] + 'T00:00:00Z')}</date><referencenumber>{cd_(j['id'])}</referencenumber>"
+        f"<url>{cd_(FULL + '/job/' + j['slug'] + '/')}</url><company>{cd_(j['company'])}</company><city>{cd_(j['location'] or '')}</city><country>{cd_((country_of(j['location'] or '') or ('',))[0])}</country>"
+        f"<remotetype>{cd_('Fully remote' if j['remote'] else '')}</remotetype><description>{cd_(e(j['excerpt']) + ' … The full posting and the link to apply are on the page of the job.')}</description>"
+        f"<salary>{cd_(j['salary'] or '')}</salary><jobtype>{cd_(JT.get(j.get('etype') or '', ''))}</jobtype><category>{cd_(CAT.get(j['cat'], ''))}</category></job>" for j in feed_jobs)
+    write("feeds/jobs.xml", f'<?xml version="1.0" encoding="UTF-8"?><source><publisher>{e(SITE)}</publisher><publisherurl>{FULL}/</publisherurl>'
+                            f"<lastBuildDate>{format_datetime(datetime.datetime.now(datetime.timezone.utc))}</lastBuildDate>{feed_items}</source>", sitemap=False)
 
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"
