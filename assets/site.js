@@ -236,6 +236,39 @@
   var profile = get('hrn_profile', { skills: [], lvl: '', cat: '', sal: 0, remote: false });
 
   /* job page controls; also used for the preview pane on the search page */
+  /* ---------- near you: the country comes from the browser's time zone; nothing is asked and nothing is sent ---------- */
+  function near() {
+    var box = document.getElementById('near'); if (!box) return;
+    fetch(P + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
+      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+      var n = function (x) { return Number(x).toLocaleString('en-US'); };
+      var draw = function () {
+        var code = get('hrn_place', '') || G.tz[tz] || '', c = G.c[code], bits = [], label;
+        if (c) {
+          label = c[0];
+          if (c[2] && c[1]) bits.push('<a href="' + P + '/locations/' + c[1] + '/">' + n(c[2]) + (c[2] === 1 ? ' job' : ' jobs') + ' in ' + esc(c[0]) + '</a>');
+          if (c[3] && c[1]) bits.push('<a href="' + P + '/jobs/?remote&loc=' + c[1] + '">' + n(c[3]) + ' remote ' + (c[3] === 1 ? 'role names' : 'roles name') + ' it</a>');
+          var reg = G.r[c[4]];
+          if (reg && !(c[2] && c[1])) bits.push('<a href="' + P + '/locations/' + c[4] + '/">' + n(reg[1]) + ' jobs in ' + esc(reg[0]) + '</a>');
+        } else {
+          var key = /^Europe\//.test(tz) ? 'europe' : /^(Asia|Australia|Pacific|Indian)\//.test(tz) ? 'asia-pacific' : /^Africa\//.test(tz) ? 'africa' : /^America\//.test(tz) ? 'latin-america' : '';
+          var rg = G.r[key];
+          label = rg ? rg[0] : '';
+          if (rg) bits.push('<a href="' + P + '/locations/' + key + '/">' + n(rg[1]) + ' jobs in ' + esc(rg[0]) + '</a>');
+        }
+        bits.push('<a href="' + P + '/jobs/?remote&any">' + n(G.w) + ' remote roles open worldwide</a>');
+        var opts = Object.keys(G.c).sort(function (a, b) { return G.c[a][0] < G.c[b][0] ? -1 : 1; }).map(function (k) {
+          return '<option value="' + k + '"' + (k === code ? ' selected' : '') + '>' + esc(G.c[k][0]) + '</option>';
+        }).join('');
+        box.innerHTML = '<span class="near-l">' + (label ? 'Near you, ' + esc(label) + ':' : 'From anywhere:') + '</span> ' + bits.join(' · ') +
+          ' <label class="near-pick">Change place<select id="near-sel" aria-label="Your country"><option value="">Choose a country</option>' + opts + '</select></label>';
+        box.hidden = false;
+      };
+      box.addEventListener('change', function (ev) { if (ev.target.id === 'near-sel' && ev.target.value) { set('hrn_place', ev.target.value); draw(); } });
+      draw();
+    }).catch(function () {});
+  }
+
   function bindJob(root) {
     var q1 = function (sel) { return root.querySelector(sel); };
     var saveBtn = q1('#save'), appliedBtn = q1('#applied');
@@ -313,6 +346,7 @@
   }
   HRN.bindJob = bindJob;
   bindJob(document);
+  near();
 
   /* ---------- lists: saved / applied / viewed marks, faster navigation ---------- */
   decorate(document);

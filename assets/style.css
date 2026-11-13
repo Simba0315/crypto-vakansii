@@ -640,3 +640,15 @@ html{scroll-padding-top:76px}
 label.wl input[type=text]{font:500 14.5px "Inter","Inter Fallback",system-ui,sans-serif;padding:11px 13px;border:1px solid var(--line2);border-radius:6px;background:var(--card);color:var(--text);width:170px}
 label.wl input[type=text]:focus{outline:0;border-color:var(--text);box-shadow:0 0 0 3px var(--hl)}
 td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5px;border-radius:3px;white-space:nowrap}
+
+/* near you */
+.near{margin:14px 0 0;font-size:14.5px;color:var(--muted);line-height:1.7}
+.near-l{color:var(--text);font-weight:600}
+.near a{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.near a:hover{background:var(--hl);color:var(--hl-ink)}
+.near-pick{position:relative;display:inline-block;margin-left:8px;color:var(--faint);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px;cursor:pointer}
+.near-pick select{position:absolute;inset:0;width:100%;max-width:none;opacity:0;cursor:pointer;padding:0;border:0}
+
+/* search: what to drop when nothing fits */
+.relax{margin:0 0 14px;font-size:14.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 16px;align-items:center}
+.relax .linkbtn{font-size:14.5px;text-decoration-color:var(--ac);text-decoration-thickness:2px}

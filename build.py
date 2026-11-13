@@ -919,6 +919,23 @@ def main():
                    '<span class="ac-b">Apply on company site</span></a>'
                    '<ol class="anat-n" start="4">' + "".join(note_li(i) for i in range(3, 6)) + "</ol></div>"
                    '<p class="note" style="text-align:center;margin-top:14px">A real listing, open today. The other ' f'{n - 1:,}' ' are laid out the same way.</p></section>')
+    # Where the visitor is: the browser's time zone names a country without asking for anything. For each country we know:
+    # jobs located there, remote roles whose posting names it, its region; plus remote roles open worldwide.
+    live_slugs = {slug for _, slug, _ in places}
+    code_slug = {rule: slug for _, slug, rule in PLACES if isinstance(rule, str) and rule != "region"}
+    region_of = {c_: r_ for r_, (members, _) in REGIONS.items() for c_ in members}
+    named = Counter()
+    for j in remote:
+        for c_, _ in (countries_of(j["location"]) if j["location"] else []): named[c_] += 1
+    place_n = {slug: len(js) for _, slug, js in places}
+    geo_c = {"US": ["United States", "united-states", place_n.get("united-states", 0), named["US"], ""]}
+    for code_, nm_, _, _ in COUNTRIES:
+        slug_ = code_slug.get(code_, "")
+        geo_c[code_] = [nm_, slug_ if slug_ in live_slugs else "", place_n.get(slug_, 0), named[code_], region_of.get(code_, "")]
+    geo = {"w": sum(1 for j in remote if j.get("anywhere")), "c": geo_c,
+           "r": {r_: [next(nm.removeprefix("the ") for nm, sl, _ in PLACES if sl == r_), place_n.get(r_, 0)] for r_ in REGIONS if r_ in live_slugs},
+           "tz": json.loads((ROOT / "tz_countries.json").read_text()) if (ROOT / "tz_countries.json").exists() else {}}
+    write("data/geo.json", json.dumps(geo, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     new_today_h = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY)
     closed_today_h = sum(1 for j in archived if j.get("closed") == TODAY)
     pulse = (f'<p class="pulse"><b>This morning’s update</b><span>{sum(1 for j in active if j.get("last_seen") == TODAY):,} roles re-checked</span>'
@@ -933,6 +950,7 @@ def main():
             f'<form class="searchbar" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
             f'<p class="popular"><span>Or start with</span><a href="{P}/remote/">remote</a><a href="{P}/new/">new this week</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a>'
             f'<a href="{P}/perks/visa-sponsorship/">visa sponsorship</a><a href="{P}/entry-level/">entry-level</a><a href="{P}/with-salary/">salary listed</a><a href="{P}/crypto/">crypto</a></p>'
+            f'<p class="near" id="near" hidden></p>'
             f'<p class="heroalt">{len(remote):,} of them are remote and {fresh3:,} were posted in the last three days. '
             f'If you would rather not search, <a href="{P}/for-you/">list your skills and see what fits</a>.</p></div>'
             f'<div class="board" aria-label="Newest roles"><div class="board-h"><span>Just posted</span><a href="{P}/board/"><b>Open as a wall</b></a></div>{board_rows}</div></div>'
