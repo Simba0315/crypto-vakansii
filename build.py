@@ -1692,6 +1692,22 @@ def main():
         where = Counter(p_ for j in act for p_ in j["places"] if p_ in PLACE_LIVE).most_common(6)      # only places that have a page
         sim = sorted(((len(set(stack) & set(STACK[o])), OPEN[o], o) for o in STACK if o != c and len(set(stack) & set(STACK[o])) >= 4), reverse=True)[:6]
         overview = ""
+        pay_by = {}
+        for j in act:
+            if j["usd"]: pay_by.setdefault(j["cat"], []).append(j["usd"])
+        pay_rows = sorted(((k, v) for k, v in pay_by.items() if len(v) >= 3 and k != OTHER[0]), key=lambda kv: -len(kv[1]))[:8]
+        if pay_rows:
+            lo_all = min(lo for _, v in pay_rows for lo, _ in v); hi_all = max(hi for _, v in pay_rows for _, hi in v); span_ = max(1, hi_all - lo_all)
+            def pay_row(k, v):
+                lo_, hi_ = min(lo for lo, _ in v), max(hi for _, hi in v)
+                mid_ = median([(a + b) / 2 for a, b in v]) if len(v) >= 15 else None
+                bar = (f'<span class="prange"><i style="left:{100 * (lo_ - lo_all) / span_:.1f}%;width:{max(2, 100 * (hi_ - lo_) / span_):.1f}%"></i>'
+                       + (f'<b style="left:{100 * (mid_ - lo_all) / span_:.1f}%"></b>' if mid_ else "") + "</span>")
+                return (f'<tr><td><a href="{P}/jobs/{k}/">{e(CAT[k])}</a></td><td>{len(v)}</td><td>{money(lo_)} to {money(hi_)}</td>'
+                        f'<td>{money(mid_) if mid_ else "—"}</td><td class="pcell">{bar}</td></tr>')
+            overview += section(f"Pay by field at {c}", sid="pay", inner='<div class="tablewrap"><table><tr><th>Field</th><th>Postings with pay</th><th>Lowest to highest advertised</th><th>Median</th><th>Spread</th></tr>'
+                                + "".join(pay_row(k, v) for k, v in pay_rows) + "</table></div>"
+                                f'<p class="note">Pay ranges that {e(c)} printed in its open postings, converted to US dollars. A field needs 3 postings with pay to appear and 15 for a median. The line shows where the range sits; the tick marks the median.</p>')
         if stack:
             overview += section(f"Tech stack at {c}", sid="stack", inner='<div class="rel">' + "".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>' for t in stack) + "</div>"
                                 '<p class="note">Skills mentioned most often across its open roles.</p>')
@@ -1706,7 +1722,7 @@ def main():
                        f'<span class="note">Get a “new roles” count for this company in My jobs.</span></p></div></div>'
                      + (f'<dl class="facts">{"".join(chips)}</dl>' if act else "")
                      + '<nav class="anch" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
-                     + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
+                     + ('<a href="#pay">Pay</a>' if pay_rows else "") + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
                      + (f'<a href="#closed">Closed <b>{len(arc):,}</b></a>' if arc else "") + '</nav><div id="jobs"></div>')
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'open job')} today | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + ". Categories, locations and remote roles.",

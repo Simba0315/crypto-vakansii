@@ -16,7 +16,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
 4. ✅ **Job page: the decision first.** The pay stated in the posting on a scale with the category median marked, then Apply and
    Save, then the facts.
 5. ✅ **Company page:** a sticky bar of anchors with counts, fact tiles with a small label over the value, a lead written from
-   the postings. 📋 Still to do: pay by role with the number of postings behind each figure.
+   the postings. ✅ Pay by field with the number of postings behind each figure (2026-11-13).
 6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. 📋 Still to do: the
    "Related" and "Compare with" runs as labelled rows (label left, links right, "More" last).
 7. ✅ **Tools show a result at once** ("Show an example"). 📋 Still to do: a sub-navigation under the header on tool pages and the
