@@ -966,3 +966,19 @@ table.grid tr.grp th{text-align:left;font:700 15px var(--display);letter-spacing
 .hbars.moves a{grid-template-columns:minmax(140px,240px) minmax(60px,200px) 1fr}
 .hbars.moves .hc{white-space:normal;text-align:left}
 .jobs.demo{max-width:980px;border-top:1.5px solid var(--text)}
+/* guides, help, facts for investors */
+.guide{max-width:880px}
+.guide h2{margin:30px 0 8px;font-size:22px}
+.guide p{max-width:72ch}
+.guide .hbars.chart{max-width:none}
+.guide .qa{grid-template-columns:1fr;max-width:72ch}
+.helpb{padding:0 0 26px;max-width:880px}
+.helpb h2{font-size:19px}
+.invf{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 28px;margin:18px 0 6px;border-top:1.5px solid var(--text)}
+.invf div{padding:14px 0 12px;border-bottom:1px solid var(--line)}
+.invf b{display:block;font:800 34px/1.05 var(--display);letter-spacing:-.03em}
+.invf span{font-size:13.5px;color:var(--muted)}
+s.was{font-weight:500;color:var(--faint);text-decoration-thickness:2px;font-size:.62em;letter-spacing:0;margin-right:4px}
+td s.was{font-size:.92em}
+.tier.best s.was{color:#8b897f}
+.launch{margin:0 0 14px;padding:12px 16px;background:var(--hl);color:var(--hl-ink);border-radius:6px;font-size:15px;max-width:900px}

@@ -260,6 +260,18 @@
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 
+  /* ---------- help page: type a word, keep the answers that contain it ---------- */
+  var helpfilter = $('helpfilter');
+  if (helpfilter) helpfilter.addEventListener('input', function () {
+    var q = helpfilter.value.trim().toLowerCase(), shown = 0;
+    document.querySelectorAll('#help .helpb').forEach(function (b) {
+      var any = 0;
+      b.querySelectorAll('dl > div').forEach(function (d) { var hit = !q || (d.getAttribute('data-n') || '').indexOf(q) >= 0; d.hidden = !hit; if (hit) any++; });
+      b.hidden = !any; if (any) shown++;
+    });
+    var none = $('helpnone'); if (none) none.hidden = shown > 0;
+  });
+
   /* ---------- compare two companies: bars from data/compare.json ---------- */
   var vsOut = $('vs-out'), vsA = $('vs-a'), vsB = $('vs-b');
   if (vsOut && vsA && vsB) {

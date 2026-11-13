@@ -371,9 +371,9 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
-<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
-<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
+<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -864,6 +864,13 @@ def cite(path, title):
             f'<pre><code>{e(f"Source: {SITE}, “{title}”, {url}")}</code></pre></details>')
 
 
+PRICE = {p_["name"]: p_ for p_ in CFG.get("prices", [])}
+price_of = lambda name: PRICE.get(name, {}).get("price", "")
+was_of = lambda name: (f'<s class="was">{e(PRICE[name]["was"])}</s> ' if PRICE.get(name, {}).get("was") else "")
+LAUNCH = ('<p class="launch"><b>Launch prices.</b> Every price here is about a third of the regular one while the paid plans are new. The regular price is the one crossed out.</p>'
+          if CFG.get("launch_prices") else "")
+
+
 def badge_svg(label, value):
     lw, vw = int(34 + 7.7 * len(label)), int(18 + 7.7 * len(value))
     w = lw + vw
@@ -1103,7 +1110,7 @@ def main():
     if CFG.get("plus", {}).get("live"):
         plus_band = (f'<div class="band"><div><h2>Get the email when a matching job appears</h2><p>Plus watches your saved searches and helps with the resume and cover letter for each posting. One payment, nothing renews.</p></div>'
                      f'<a class="btn" href="{P}/plus/">See Plus</a></div>')
-    band = (f'<div class="band"><div><h2>Hiring?</h2><p>Your posting sits next to {n:,} others here. A standard listing is free; a featured one stays at the top of the list, from $99, paid in crypto.</p></div>'
+    band = (f'<div class="band"><div><h2>Hiring?</h2><p>Your posting sits next to {n:,} others here. A standard listing is free; a featured one stays at the top of the list, from {price_of("Featured job")}, paid in crypto.</p></div>'
             f'<a class="btn" href="{P}/post-a-job/">Post a job</a></div>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
     FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of tech companies. Every listing links to the original posting, and you apply on the employer's own site."),
@@ -2027,6 +2034,264 @@ def main():
          '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
          f'<p class="note">Some of these depend on what your browser can do: speech recognition and background checks are not in every browser. Where one is missing, its button does not appear.</p>')
 
+    # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
+    # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.
+    GUIDES = []
+    PUBLISHED = "2026-11-13"
+    def bars_(rows_, unit=""):                     # [(label, value, shown text, link)]
+        mx_ = max((r_[1] for r_ in rows_), default=0) or 1
+        return '<div class="hbars chart">' + "".join(
+            f'<a href="{P}/{u_}"><span class="hn">{e(lab)}</span><span class="hb"><i style="width:{max(2, round(100 * v_ / mx_))}%"></i></span><span class="hc">{e(txt)}</span></a>' for lab, v_, txt, u_ in rows_) + "</div>"
+    def guide(slug, title, desc, cat, lead, body, prev, more=()):
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
+               "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
+               "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": FULL + "/og.jpg"}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        links = ('<p class="note cmpl">Next: ' + " · ".join(f'<a href="{P}/{u_}">{e(t_)}</a>' for u_, t_ in more) + "</p>") if more else ""
+        page(f"guides/{slug}/", f"{title} | {SITE}", desc,
+             crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
+             f'<p class="lead">{lead}</p>{body}{links}</article>', head=ld_)
+        GUIDES.append((slug, title, desc, cat, prev))
+    pc_ = lambda a_, b_: round(100 * a_ / max(1, b_))
+    fam_stats = []
+    for fs, fn, fd, live, js_ in fam_rows:
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"]]
+        rmids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"] and j["remote"]]
+        fam_stats.append(dict(fs=fs, fn=fn, n=len(js_), rem=sum(j["remote"] for j in js_), pay=sum(bool(j["salary"]) for j in js_), ent=sum(1 for j in js_ if j["entry"]),
+                              med=median(mids_) if len(mids_) >= 30 else 0, rmed=median(rmids_) if len(rmids_) >= 30 else 0))
+    big_f = [f for f in fam_stats if f["n"] >= 100]
+    mini = lambda rows_: "".join(f'<span class="rw"><span>{e(lab[:20])}</span><span class="mt"><i style="width:{max(4, round(100 * v_ / max(r_[1] for r_ in rows_)))}%"></i></span><b>{e(txt)}</b></span>' for lab, v_, txt in rows_[:4])
+    skel = '<span class="sk" style="width:92%"></span><span class="sk h" style="width:54%"></span><span class="sk" style="width:80%"></span><span class="sk" style="width:66%"></span>'
+
+    # 1. remote work by field
+    by_rem = sorted(big_f, key=lambda f: -f["rem"] / f["n"])
+    rem_pay = sorted((f for f in big_f if f["rmed"]), key=lambda f: -f["rmed"])
+    guide("remote-jobs-by-field", "Which jobs can be done from home, and what they pay",
+          f"{pc_(len(remote), n)}% of {n:,} open jobs can be done from home. The share by field, what remote jobs advertise as pay, and how many are open to any country.", "Remote work",
+          f"Out of {n:,} open jobs, {len(remote):,} can be done from home: {pc_(len(remote), n)}%. The share is highest in {e(rlow(by_rem[0]['fn']))} ({pc_(by_rem[0]['rem'], by_rem[0]['n'])}%) "
+          f"and lowest in {e(rlow(by_rem[-1]['fn']))} ({pc_(by_rem[-1]['rem'], by_rem[-1]['n'])}%).",
+          "<h2>Remote jobs, field by field</h2><p>The bar is the share of a field’s open jobs that can be done from home. Each bar opens the remote jobs of that field.</p>"
+          + bars_([(f["fn"], f["rem"] / f["n"], f'{pc_(f["rem"], f["n"])}% · {f["rem"]:,} jobs', f'categories/{f["fs"]}/remote/' if f["rem"] >= 20 else f'categories/{f["fs"]}/') for f in by_rem])
+          + ("<h2>What remote jobs advertise as pay</h2><p>The median of the yearly ranges stated in remote postings, where at least 30 postings in the field state one.</p>"
+             + bars_([(f["fn"], f["rmed"], money(f["rmed"]), f'categories/{f["fs"]}/remote/') for f in rem_pay]) if rem_pay else "")
+          + f"<h2>Remote does not mean “from any country”</h2><p>Most remote jobs are open in some countries only: the employer must be able to hire you where you live. Of the {len(remote):,} remote jobs here, "
+            f"{len(aw):,} name no country at all. Those are on the <a href=\"{P}/work-from-anywhere/\">work-from-anywhere list</a>. For the rest, the <a href=\"{P}/for-you/\">match by five answers</a> asks for your country and leaves out the jobs that do not hire there.</p>",
+          '<span class="ex">today</span>' + mini([(f["fn"], f["rem"] / f["n"], f'{pc_(f["rem"], f["n"])}%') for f in by_rem]),
+          (("remote/", "All remote jobs"), ("insights/highest-paying-remote-jobs/", "The 40 best paid remote jobs"), ("guides/who-states-the-pay/", "Who states the pay")))
+
+    # 2. how long postings stay open
+    ages = [age_days(j) for j in active]
+    age_cols = [("0–7 d", sum(a_ <= 7 for a_ in ages)), ("8–30", sum(7 < a_ <= 30 for a_ in ages)), ("31–60", sum(30 < a_ <= 60 for a_ in ages)), ("61–90", sum(60 < a_ <= 90 for a_ in ages)),
+                ("91–180", sum(90 < a_ <= 180 for a_ in ages)), ("180+", sum(a_ > 180 for a_ in ages))]
+    guide("how-long-jobs-stay-open", "How long a job posting stays open, and what an old one means",
+          f"Half of open postings are younger than {int(median(ages))} days; {pc_(long_all, n)}% have been open {LONG_OPEN} days or more. What an old posting tells you and how to check it.", "Reading postings",
+          f"Half of the {n:,} open postings are younger than {int(median(ages))} days. {long_all:,} of them, {pc_(long_all, n)}%, have been open for {LONG_OPEN} days or more. An old posting is not always a dead one, and the difference can be checked.",
+          '<h2>Open postings by age</h2><p>How many postings are this old today, counted from the date the employer posted them.</p><div class="pics two"><figure class="pic">' + cols(age_cols, 0) + "</figure></div>"
+          f"<h2>Why some postings never close</h2><p>Three reasons account for most of them. Some employers hire for the same title all year and keep one posting for it. Some postings are an invitation to send a resume for the future, "
+          f"with no opening behind it; we mark those “talent pool”. And some are simply forgotten. A posting that is {LONG_OPEN} days old carries a mark on this site so you can decide before spending an evening on it.</p>"
+          f"<h2>How to check one</h2><p>Open the job page and press “Check with the employer right now”. Your browser asks the employer’s own hiring system whether the job is still there and shows the answer. "
+          f"Today {closed_today_h:,} postings were closed by employers; their pages stay online, marked as closed.</p>",
+          '<span class="ex">today</span>' + mini([(lb, v_, f"{v_:,}") for lb, v_ in age_cols]),
+          (("insights/long-open-roles/", "Where postings linger"), ("new/", "Jobs posted in the last 3 days"), ("guides/is-this-job-still-open/", "Is this job still open?")))
+
+    # 3. who states the pay
+    by_pay = sorted(big_f, key=lambda f: -f["pay"] / f["n"])
+    guide("who-states-the-pay", "Who states the pay in a job posting",
+          f"{SALPCT}% of {n:,} open postings state what the job pays. The share by field, which employers always state it, and what to do when a posting is silent.", "Pay",
+          f"{SALPCT}% of the {n:,} open postings state what the job pays. In {e(rlow(by_pay[0]['fn']))} it is {pc_(by_pay[0]['pay'], by_pay[0]['n'])}%; in {e(rlow(by_pay[-1]['fn']))}, {pc_(by_pay[-1]['pay'], by_pay[-1]['n'])}%.",
+          "<h2>Postings that state the pay, field by field</h2><p>The bar is the share of a field’s postings in which a pay range can be found.</p>"
+          + bars_([(f["fn"], f["pay"] / f["n"], f'{pc_(f["pay"], f["n"])}%', f'categories/{f["fs"]}/') for f in by_pay])
+          + f"<h2>Why the share differs</h2><p>Some US states require a pay range in a job posting; elsewhere it is the employer’s choice. So the same company often states pay for a role in New York and stays silent for the same role in another country. "
+            f"A missing figure here can also mean a wording our reader does not recognise.</p>"
+            f"<h2>When a posting is silent</h2><p>Look at what the same kind of work pays where it is stated: the <a href=\"{P}/tools/salary-checker/\">salary checker</a> shows the range for a role and level from postings that publish it, "
+            f"and the <a href=\"{P}/tools/offer-check/\">offer check</a> places a figure you were offered among them. The list of <a href=\"{P}/with-salary/\">jobs that state pay</a> leaves the silent ones out.</p>",
+          '<span class="ex">today</span>' + mini([(f["fn"], f["pay"] / f["n"], f'{pc_(f["pay"], f["n"])}%') for f in by_pay]),
+          (("insights/pay-transparency/", "Employers that state pay most often"), ("salaries/", "Salary data"), ("guides/job-levels-explained/", "What the level in a title means")))
+
+    # 4. entry level
+    by_ent = sorted((f for f in big_f if f["ent"]), key=lambda f: -f["ent"])
+    n_ent_all = sum(1 for j in active if j["entry"])
+    guide("entry-level-jobs", "Where beginners are hired: entry-level jobs by field",
+          f"{n_ent_all:,} of {n:,} open jobs are internships or junior roles. Which fields have them, which employers hire the most beginners, and how to find the rest.", "First job",
+          f"{n_ent_all:,} of the {n:,} open jobs are internships or junior roles: {pc_(n_ent_all, n)}%. Most titles do not name a level at all, so the real number of jobs a beginner can get is larger than the label suggests.",
+          "<h2>Internships and junior roles, field by field</h2><p>The number of open jobs whose title says intern, junior, graduate or the like.</p>"
+          + bars_([(f["fn"], f["ent"], f'{f["ent"]:,} jobs', f'categories/{f["fs"]}/entry-level/' if f["ent"] >= 20 else f'categories/{f["fs"]}/') for f in by_ent])
+          + "<h2>Employers with the most entry-level jobs</h2>" + bars_([(c, k, f"{k:,} jobs", f"companies/{slugify(c)}/") for c, k in entry_co[:10] if k])
+          + f"<h2>Jobs that do not say “junior”</h2><p>A posting with no level in the title is usually a mid-level one, but not always: read how many years it asks for. In the <a href=\"{P}/for-you/\">match by five answers</a>, “I am starting out” lists the entry-level jobs first "
+            f"and then the ones that name no level, each marked as such. Kinds of work that often take beginners: sales development, customer support, and AI training and data annotation.</p>",
+          '<span class="ex">today</span>' + mini([(f["fn"], f["ent"], f'{f["ent"]:,}') for f in by_ent]),
+          (("entry-level/", "All entry-level jobs"), ("internships/", "Internships"), ("categories/internships-entry-level/", "Internships and first jobs")))
+
+    # 5. skills in demand
+    top_sk = skill_counts.most_common(15)
+    guide("skills-in-demand", "The skills employers ask for most, in plain words",
+          f"The 15 skills named in the most open job postings today, each explained in one line: from {top_sk[0][0]} ({top_sk[0][1]:,} jobs) down.", "Skills",
+          f"Job postings name tools and methods as if everyone knew them. These are the fifteen named most often in {n:,} open postings, with a plain line for each.",
+          "<h2>Asked for in the most postings</h2>" + bars_([(t, k, f"{k:,} jobs · {pc_(k, n)}%", f"skills/{tslug(t)}/") for t, k in top_sk])
+          + '<h2>What each one is</h2><dl class="qa">' + "".join(f"<div><dt>{e(t)}</dt><dd>{e(skills_info.plain(t)) or 'No plain description yet.'}</dd></div>" for t, _ in top_sk) + "</dl>"
+          + f"<h2>Using this</h2><p>Write the skills you have by the names postings use: screening software looks for the word. The <a href=\"{P}/resume/\">resume builder</a> shows, while you type, how many open jobs ask for each skill it finds in your text.</p>",
+          '<span class="ex">today</span>' + mini([(t, k, f"{k:,}") for t, k in top_sk]),
+          (("skills/", "All skills"), ("insights/highest-paying-tech-skills/", "The skills with the highest advertised pay"), ("compare/", "Compare two skills")))
+
+    # 6. levels
+    lvl_rows = []
+    for lv, lab_, what_ in (("Intern", "Intern", "a placement during studies or straight after, usually for a fixed number of months"), ("Junior", "Junior", "a first full job in the field; the employer expects to teach"),
+                            ("", "No level in the title", "most often a mid-level job: able to work alone on ordinary tasks"), ("Senior", "Senior", "years of practice; solves hard problems without being told how, and helps others"),
+                            ("Lead", "Lead, staff, principal, manager", "sets the direction for a team or a large part of the product, with or without managing people")):
+        js_ = [j for j in active if j["level"] == lv]
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"]]
+        lvl_rows.append((lab_, what_, len(js_), median(mids_) if len(mids_) >= 30 else 0))
+    guide("job-levels-explained", "Intern, junior, senior, lead: what the level in a job title means",
+          "What each level in a job title means in plain words, how many open jobs carry it and what they advertise as pay, counted from today’s postings.", "Reading postings",
+          f"A level in a title is the employer’s shorthand for how much experience it wants. Half of the postings do not use one. This is what each means, with today’s counts and pay.",
+          "<h2>Advertised pay by level</h2><p>The median of the yearly ranges stated in postings of each level.</p>"
+          + bars_([(lab_, md_, money(md_), "salaries/") for lab_, _, _, md_ in lvl_rows if md_])
+          + '<h2>What each level means</h2><dl class="qa">' + "".join(f"<div><dt>{e(lab_)} · {k:,} open jobs</dt><dd>{e(what_[0].upper() + what_[1:])}.</dd></div>" for lab_, what_, k, _ in lvl_rows) + "</dl>"
+          + f"<h2>Titles differ between companies</h2><p>A “senior” at one company is a “staff” at another, and banks call most people “vice president”. Read the years of experience and the tasks in the posting, not only the word. "
+            f"The <a href=\"{P}/salaries/\">salary pages</a> show the pay ladder for each kind of work.</p>",
+          '<span class="ex">today</span>' + mini([(lab_.split(",")[0], md_, money(md_)) for lab_, _, _, md_ in lvl_rows if md_]),
+          (("salaries/", "Salary data by role and level"), ("guides/entry-level-jobs/", "Where beginners are hired"), ("glossary/", "Glossary of job-search terms")))
+
+    # 7–9. how-to guides
+    guide("is-this-job-still-open", "How to tell whether a job posting is still open",
+          "Four checks that take a minute: the date, the employer’s own page, the wording of the posting and how long it has been open.", "Reading postings",
+          "Job sites copy postings from each other and keep them after the employer has closed them. Four checks tell you in a minute whether a posting is worth an evening.",
+          '<ol class="steps"><li><b>Look at the date the employer posted it.</b> Not the date a job site found it. Here both are on the job page.</li>'
+          "<li><b>Ask the employer’s own page.</b> If the posting is gone there, it is closed, whatever a job site says. On this site the button “Check with the employer right now” does it from your browser.</li>"
+          "<li><b>Read the first lines for an invitation.</b> “Join our talent community”, “general application”, “future opportunities” mean there is no opening today.</li>"
+          f"<li><b>Count the days.</b> A posting open for {LONG_OPEN} days or more may still be real, and it is fair to ask the recruiter whether the role is being filled now.</li></ol>"
+          f"<h2>What this site does about it</h2><p>Every posting is read from the employer’s own hiring system each hour. When one disappears there, it leaves the lists here and its page is marked closed. Today that happened to {closed_today_h:,} postings; "
+          f"{long_all:,} open ones carry the “open {LONG_OPEN} days or more” mark.</p>",
+          '<span class="ln"><b>Still open</b> · confirmed 14:02</span>' + skel,
+          (("guides/how-long-jobs-stay-open/", "How long postings stay open"), ("safety/", "How to check that an offer is real"), ("status/", "Is the data fresh?")))
+    guide("how-to-read-a-job-posting", "How to read a job posting: what each part tells you",
+          "The six parts of a job posting and what to look for in each: the title, the place, the pay, what you must have, what is nice to have, and how to apply.", "Reading postings",
+          "A posting is written by a busy person from a template. Knowing what each part usually means saves you from applying to the wrong jobs and from skipping the right ones.",
+          '<dl class="qa"><div><dt>The title</dt><dd>It names the work and often the level. The same work has many titles, so search by the kind of work, not one title.</dd></div>'
+          "<div><dt>The place</dt><dd>“Remote” with a country means you must live there. “Hybrid” means some days in the office: ask how many. No country at all usually means anywhere.</dd></div>"
+          "<div><dt>The pay</dt><dd>A range is what the employer may pay, not what it will. The bottom is for someone who meets the minimum; the top is rarely offered at once.</dd></div>"
+          "<div><dt>What you must have</dt><dd>Usually five to eight lines. If you meet most of them, apply: the list describes an ideal person, and those are rare.</dd></div>"
+          "<div><dt>What is nice to have</dt><dd>Extras. They matter when two candidates are otherwise equal.</dd></div>"
+          "<div><dt>How to apply</dt><dd>A real employer asks you to apply on its own site or hiring system and never asks for money, a copy of a passport or a wallet before a contract.</dd></div></dl>"
+          f"<h2>See it on a real posting</h2><p>The home page takes one of today’s postings apart, part by part. The <a href=\"{P}/tools/resume-match/\">resume match checker</a> compares the “must have” lines with your resume, "
+          f"and the <a href=\"{P}/glossary/\">glossary</a> explains the terms.</p>",
+          '<span class="ln"><b>Senior Data Analyst</b></span><span class="ln">Remote, Germany · $120K – $150K</span>' + skel,
+          (("guides/job-levels-explained/", "What the level in a title means"), ("guides/who-states-the-pay/", "Who states the pay"), ("safety/", "Job offer safety")))
+    guide("follow-up-after-applying", "When and how to follow up after applying for a job",
+          "Wait a week, write three sentences, send it once. A short guide with the reminder and the letter ready to use.", "Applying",
+          "Most applications get no answer, and silence does not always mean no. One short follow-up after a week is normal and sometimes moves an application to the top of the pile.",
+          '<ol class="steps"><li><b>Wait seven days</b> after applying, or after the date the posting gave for answers.</li>'
+          "<li><b>Write to a person if you can find one</b>: the recruiter named in the posting or on the company’s page. Otherwise reply to the confirmation email.</li>"
+          "<li><b>Three sentences are enough.</b> Which job you applied for and when; one line on why you fit; that you are glad to send anything else they need.</li>"
+          "<li><b>Send it once.</b> A second message a week later is the limit. After that, move on and keep the application marked as open.</li></ol>"
+          f"<h2>The tools for it</h2><p>On a job page, “Remind me to follow up in 7 days” saves a calendar file with the reminder. The <a href=\"{P}/my-jobs/\">application tracker</a> shows which applications have gone quiet. "
+          f"After an interview, the <a href=\"{P}/tools/thank-you-email/\">thank-you email</a> tool writes the letter from four fields.</p>",
+          '<span class="ln"><b>Follow up: Data Analyst</b></span><span class="ln">Friday, 9:00 · your own calendar</span>' + skel,
+          (("my-jobs/", "Application tracker"), ("tools/job-search-calculator/", "How many applications one offer takes"), ("tools/", "All tools")))
+
+    gcats = []
+    for g_ in GUIDES:
+        if g_[3] not in gcats: gcats.append(g_[3])
+    gcard = lambda g_: (f'<a class="tcard" href="{P}/guides/{g_[0]}/"><span class="tprev wide" aria-hidden="true">{g_[4]}</span><span class="tbody"><b>{e(g_[1])}</b><span>{e(g_[2])}</span><i><u>Read</u></i></span></a>')
+    page("guides/", f"Guides: the job market explained with today’s numbers | {SITE}",
+         f"{len(GUIDES)} guides to finding work, each with figures recounted from {n:,} open jobs: remote work by field, who states the pay, how long postings stay open, entry-level jobs, skills in demand.",
+         crumbs(("Guides", "")) + '<h1>Guides, with <span class="hl">today’s numbers</span> in them</h1>'
+         f'<p class="lead">Advice about job search goes out of date, and the figures in it faster. Every guide here is recounted from the {n:,} open jobs each time they are read again, so a number you see is today’s.</p>'
+         + "".join(section(c_, '<div class="tgrid">' + "".join(gcard(g_) for g_ in GUIDES if g_[3] == c_) + "</div>") for c_ in gcats)
+         + f'<p class="note">More to read: the <a href="{P}/glossary/">glossary</a>, the <a href="{P}/safety/">job offer safety checklist</a>, the <a href="{P}/insights/">charts and rankings</a>.</p>')
+
+    # Help: one page that answers what people would otherwise write to ask (the owner looked at the knowledge base of hh.ru and wants
+    # nobody to have to write to support). Every answer is plain text on the page, findable by the filter and by search engines.
+    HELP = [("Looking for a job", [
+                ("Do I need an account?", "No. Searching, saving jobs, the tracker, the resume builder and every tool work without one. What you save is kept in your browser."),
+                ("How do I apply for a job?", "Open the job and press “Apply on company site”. You apply on the employer’s own page; this site takes no part in it and charges nothing."),
+                ("Why did a job I saved disappear from the lists?", "The employer closed it. Its page stays at the same address, marked as closed, and stays in “My jobs” so your notes are not lost."),
+                ("How fresh are the jobs?", "The employers’ careers pages are read again every hour. Fresh postings show how many minutes or hours ago the employer posted them."),
+                ("How can I be told about new jobs?", "On the “For you” page answer the five questions and press “Tell me when new jobs fit”. Your browser will notify you. No email is needed."),
+                ("Can I search by voice or by plain words?", "Yes. Type or say something like “remote design jobs paying over 100 thousand”: the search reads the place, the pay and the level out of it."),
+                ("Where is my data kept, and how do I delete it?", "In this browser only. “My jobs” has a button that erases everything, and another that saves a backup file.")]),
+            ("Resume and tools", [
+                ("Is the resume builder free?", "Yes, including the PDF and the Word file, with no limit on downloads."),
+                ("Is my resume uploaded anywhere?", "No. The builder, the resume review and the match checker read the text inside your browser."),
+                ("What does the resume review check?", "Six things a recruiter notices on a first read: what the first screen holds, duties instead of results, numbers, the skills list, gaps between dates and length. The formula for the score is on the tool’s page."),
+                ("Do the tools use AI?", "The free tools do not: calculators are arithmetic, checkers count words and patterns, letter writers are templates. AI writing is part of the paid plan, Plus.")]),
+            ("Plus and payments", [
+                ("What is Plus?", "A paid plan for job seekers: an AI writer for the resume and letters, a resume reworded for each posting, interview questions for a posting, and an email when a job fits."),
+                ("Is Plus a subscription?", "No. It is one payment for one, three or twelve months. When the period ends nothing is charged and there is nothing to cancel."),
+                ("How do I pay?", "In crypto (USDT, BTC, ETH and other coins) on a checkout page. The plan switches on by itself when the network confirms the payment."),
+                ("Do I have to pay to see or apply for jobs?", "No, never. Every job and its link to apply are free for everyone.")]),
+            ("Employers", [
+                ("How do I post a job?", "Create an employer account with an address on your company’s domain, paste the job and the link where people apply. A standard listing is free."),
+                ("Why must I use a company email?", "So that nobody can post in your company’s name. A recruiter without such an address can prove who they are by signing in with LinkedIn; those jobs are checked by a person before they appear."),
+                ("How fast does a paid placement start?", "At once after the payment is confirmed. The job is marked Featured or Pinned automatically; there is nobody to write to."),
+                ("Our jobs are listed here although we never posted them. Why?", "They are read from the public feed of your hiring system and link to your own page. To correct or remove a listing, write to the contact on the employers page; it is done at the next update."),
+                ("Can I see what a listing brought?", "The employer account shows views of the job page and clicks on “Apply” for each job.")]),
+            ("Safety and trust", [
+                ("How do I know a job is real?", "Every listing is read from the employer’s own hiring system and links to it. On the job page, “Check with the employer right now” lets your own browser confirm it."),
+                ("Someone asked me for money or documents. What now?", "Stop and do not pay. A real employer never charges a candidate. The safety page lists the common schemes and what to do if you already paid."),
+                ("How do I report a problem with a listing?", "Use the link “Report a problem with this listing” on the job page."),
+                ("Where do the salary figures come from?", "Only from pay ranges that employers publish in their own postings. No surveys and no numbers sent in by users.")])]
+    help_n = sum(len(qs) for _, qs in HELP)
+    help_html = "".join(f'<div class="dirb helpb"><h2><span>{e(g_)}</span><span>{len(qs)}</span></h2><dl class="qa one">' + "".join(f'<div data-n="{e((q_ + " " + a_).lower())}"><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>' for q_, a_ in qs) + "</dl></div>" for g_, qs in HELP)
+    help_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for _, qs in HELP for q_, a_ in qs]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("help/", f"Help: {help_n} answers for job seekers and employers | {SITE}",
+         f"{help_n} short answers: how to apply, where your data is kept, how alerts work without email, what Plus is and how payment works, how employers post a job and what a paid placement does.",
+         crumbs(("Help", "")) + '<h1>Help: the answer is probably <span class="hl">already here</span></h1>'
+         f'<p class="lead">{help_n} short answers for job seekers and employers. Type a word to find yours.</p>'
+         '<p class="dirfind"><input type="search" id="helpfilter" placeholder="Type a word, for example payment, resume or closed" aria-label="Find an answer"></p>'
+         f'<p class="lead" id="helpnone" hidden>No answer with these words. ' + (f"Write to us: {contact}." if contact else "The contact is on the employers page.") + "</p>"
+         f'<div id="help">{help_html}</div>'
+         f'<p class="note">Longer explanations: <a href="{P}/guides/">guides</a>, <a href="{P}/methodology/">how the site works</a>, <a href="{P}/privacy/">privacy</a>, <a href="{P}/safety/">job offer safety</a>.</p>', head=help_ld)
+
+    # The open hiring index: employers ranked by how openly they hire, from their own postings, once a quarter by name but recounted
+    # daily. (hh.ru runs a vote for "best employers"; a vote needs a server and can be gamed, so the first edition counts what can be
+    # counted. A vote can be added on top once accounts exist.)
+    qtr = f"Q{(int(TODAY[5:7]) - 1) // 3 + 1} {TODAY[:4]}"
+    ohi = []
+    for s_, f in cfacts.items():
+        if f["n"] < 20: continue
+        pay_, fresh_, act_, ent_ = f["pay"] / f["n"], 1 - f["old"] / f["n"], min(1, 5 * f["week"] / f["n"]), min(1, 10 * f["entry"] / f["n"])
+        ohi.append((round(40 * pay_ + 30 * fresh_ + 20 * act_ + 10 * ent_), s_, f, pay_, fresh_, act_, ent_))
+    ohi.sort(key=lambda x: (-x[0], -x[2]["n"]))
+    for i, (sc, s_, f, *_r) in enumerate(ohi[:50]):
+        write(f"badge/open-hiring/{s_}.svg", badge_svg(f"Open hiring index {qtr}", f"#{i + 1} · {sc}/100"), sitemap=False)
+    ohi_rows = "".join(trow([rank(i), cl(f["name"]), f"<strong>{sc}</strong>", f"{round(100 * pay_)}%", f"{round(100 * fresh_)}%", f"{f['week']:,}", f"{f['entry']:,}", f"{f['n']:,}"]) for i, (sc, s_, f, pay_, fresh_, act_, ent_) in enumerate(ohi[:50]))
+    top1 = ohi[0] if ohi else None
+    page("open-hiring-index/", f"Open Hiring Index {qtr}: employers ranked by how openly they hire | {SITE}",
+         f"{len(ohi)} employers with 20 or more open jobs, ranked by what their own postings show: how often they state pay, how few postings they leave open for months, how much they hire now and for beginners.",
+         crumbs(("Open hiring index", "")) + f'<h1>Open hiring index, {qtr}</h1>'
+         '<p class="plain"><b>In plain words:</b> a score from 0 to 100 for how openly an employer hires. It is counted from the employer’s own job postings, not from votes or reviews.</p>'
+         f'<p class="lead">{len(ohi)} employers with 20 or more open jobs. An employer scores high when it states the pay, does not leave postings open for months, is hiring this week and takes beginners.</p>'
+         + bars_([(f["name"], sc, f"{sc} of 100", f"companies/{s_}/") for sc, s_, f, *_r in ohi[:12]])
+         + ttable(["#", "Employer", "Score", "State the pay", f"Not open {LONG_OPEN}+ days", "Posted this week", "For beginners", "Open jobs"], [ohi_rows])
+         + section("How the score is made", '<dl class="qa"><div><dt>States the pay: up to 40 points</dt><dd>The share of the employer’s open postings in which a pay range can be found.</dd></div>'
+                   f'<div><dt>Does not let postings linger: up to 30 points</dt><dd>The share of its postings that are younger than {LONG_OPEN} days.</dd></div>'
+                   "<div><dt>Is hiring now: up to 20 points</dt><dd>The share of its postings published in the last seven days; a fifth or more gives all 20.</dd></div>"
+                   "<div><dt>Takes beginners: up to 10 points</dt><dd>The share of internships and junior roles; a tenth or more gives all 10.</dd></div></dl>"
+                   "<p class=\"note\">The score says nothing about what it is like to work there: it measures the postings, and a missing pay figure can also be a wording our reader does not recognise. "
+                   f"The table is recounted with every update; the name of the quarter changes four times a year.</p>")
+         + (section("For employers on the list", f'<p>The 50 highest have a badge that shows their place today. Put it on a careers page or in a post:</p><pre><code>{e(f"<a href=\"{FULL}/open-hiring-index/\"><img src=\"{FULL}/badge/open-hiring/{top1[1]}.svg\" alt=\"Open hiring index {qtr}\"></a>")}</code></pre>'
+                    f'<p class="note">This is the badge of {e(top1[2]["name"])}. For another employer replace <code>{e(top1[1])}</code> with the last part of the address of its page on this site.</p>'
+                    f'<p><img src="{P}/badge/open-hiring/{top1[1]}.svg" alt="Open hiring index badge" height="28"></p>') if top1 else "")
+         + f'<p class="note">Compare any two employers: <a href="{P}/companies/compare/">company against company</a>. Pay transparency alone: <a href="{P}/insights/pay-transparency/">the ranking</a>.</p>')
+
+    # Facts for investors and partners: what exists, in numbers counted on this build. No forecasts, no revenue claims.
+    n_pages_ = len(URLS)
+    inv_facts = [("Open jobs", f"{n:,}"), ("Employers read every hour", f"{m:,}"), ("Pages", f"{n_pages_:,}"), ("Fields and kinds of work", f"{len(fam_rows)} / {len(by_role)}"), ("Free tools", f"{len(TOOLS) + len(tools_pages.EXTRA)}"), ("People on the payroll", "0")]
+    page("investors/", f"For Investors and Partners: the facts | {SITE}",
+         f"{SITE} in numbers counted today: {n:,} open jobs from {m:,} employers, {n_pages_:,} pages, how it is built, how it will earn and what stage it is at.",
+         crumbs(("For investors and partners", "")) + '<h1>For investors and partners: <span class="hl">the facts</span></h1>'
+         '<p class="lead">A job site that reads employers’ own hiring systems every hour, shows only what is still open and runs without staff. The numbers below are counted on this page’s build, not written by hand.</p>'
+         '<div class="invf">' + "".join(f'<div><b>{e(v_)}</b><span>{e(k_)}</span></div>' for k_, v_ in inv_facts) + "</div>"
+         + market_pics
+         + section("How it earns", '<dl class="qa"><div><dt>Job seekers</dt><dd>Plus: one payment for one, three or twelve months for an AI resume writer, letters, interview preparation and alerts. Jobs and applying stay free.</dd></div>'
+                   "<div><dt>Employers</dt><dd>A standard listing is free; featured and pinned listings, a company spotlight and sponsorship of a field are paid, self-serve, and start the moment the payment is confirmed.</dd></div>"
+                   "<div><dt>Sites and partners</dt><dd>Widgets, feeds and an API bring the listings to other sites and channels with a link back; unbranded and extended versions are planned as paid.</dd></div></dl>")
+         + section("Where it stands", '<dl class="qa"><div><dt>Built</dt><dd>The site, the hourly collection, the directory of fields and roles, 28 tools and a resume builder, rankings and charts, the accounts and payments server with fraud checks and its tests.</dd></div>'
+                   "<div><dt>Not yet</dt><dd>Payments are not switched on, so there is no revenue to report. The site is on a temporary address; its own domain comes next.</dd></div>"
+                   "<div><dt>Costs</dt><dd>Hosting and collection run on free tiers; the site is built and maintained by automation, with nobody on the payroll.</dd></div></dl>")
+         + f'<p class="note">Data and method: <a href="{P}/methodology/">how the numbers are made</a>, <a href="{P}/status/">what the last update did</a>, <a href="{P}/insights/">charts</a>. ' + (f"To talk: {contact}." if contact else "") + "</p>")
+
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"
     ST = json.loads(stats_file.read_text()) if stats_file.exists() else {}
@@ -2611,6 +2876,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # feature as a small screen (marked as an example), and does the price arithmetic for the visitor.
     plus = CFG.get("plus", {"live": False, "plans": []})
     cta = ('<a class="btn primary lg" href="#pay">Get Plus</a>' if plus.get("live") else '<button class="btn primary lg" type="button" disabled>Available soon</button>')
+    was_span = lambda pl: (f'<s class="was">{e(pl["was"])}</s> ' if pl.get("was") else "")
     def per_day(pl):
         m_ = re.search(r"\d+", pl["price"]); k_ = re.search(r"\d+", pl["name"])
         if not m_ or not k_: return ""
@@ -2618,7 +2884,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         return f"{round(100 * int(m_.group(0)) / days_)} cents a day"
     plans = "".join(
         f'<div class="plan{" best" if pl.get("best") else ""}">' + (f'<span class="pill acc">{e(pl["note"])}</span>' if pl.get("note") else '<span class="pill ghost">–</span>')
-        + f'<p class="pname">{e(pl["name"])}</p><p class="price">{e(pl["price"])}</p><p class="note">{e(pl["per"])} · <b>{per_day(pl)}</b></p>{cta}</div>' for pl in plus["plans"])
+        + f'<p class="pname">{e(pl["name"])}</p><p class="price">{was_span(pl)}{e(pl["price"])}</p><p class="note">{e(pl["per"])} · <b>{per_day(pl)}</b></p>{cta}</div>' for pl in plus["plans"])
     ex_ = '<span class="ex">example</span>'
     pcards = [
         ("Resume review", "A read the way a recruiter reads: twenty seconds, top to bottom. You get a score, what the reader saw, what they could not find, and the lines to rewrite.",
@@ -2657,14 +2923,15 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              + tick(["Every job and the link to apply", "Search, 23 fields of work, salary data", "Matching by five answers, with reasons", "Resume builder: 5 templates, PDF and Word", "Resume review and resume match by rules",
                      "Letter templates: cover, thank-you, resignation", "Application tracker on this device"]) + "</div>"
              '<div class="tier best"><p class="tn">Plus</p>'
-             + (f'<p class="tp">{e(low_plan["price"])}<small> for {e(low_plan["name"])} · {per_day(low_plan)}</small></p>' if low_plan else '<p class="tp">Plus</p>')
+             + (f'<p class="tp">{was_span(low_plan)}{e(low_plan["price"])}<small> for {e(low_plan["name"])} · {per_day(low_plan)}</small></p>' if low_plan else '<p class="tp">Plus</p>')
              + '<p class="td">Everything in Free, plus an AI writer for your resume and letters, and an email when a job fits. One payment, nothing renews.</p>' + cta
-             + tick(["AI resume writer: bullet points and summary from your notes", "Resume reworded for each posting, with the keywords it misses", "AI resume review: score, weak points, rewrites",
-                     "AI cover letters and resignation letters", "Interview questions for the posting, with your answers", "An email the day a job fits your answers", "Pay check with a script for negotiating",
-                     "LinkedIn profile review", "Your jobs and resumes on every device"]) + "</div>"
+             + tick(["AI resume writer and editor: bullet points and summary from your notes", "Resume reworded for each posting, with the keywords it misses", "AI resume review: score, weak points, rewrites",
+                     "AI cover letters, thank-you and resignation letters", "Interview practice: questions for the posting and feedback on your answers", "An email the day a job fits your answers",
+                     "Pay check with a script for negotiating", "AI review of your LinkedIn profile", "As many resumes as you like, all five templates", "Your jobs and resumes on every device",
+                     "One payment: nothing renews, no card on file"]) + "</div>"
              '<div class="tier"><p class="tn">Employers</p><p class="tp">Free<small> to post a job</small></p><p class="td">A standard listing costs nothing. A featured one stays at the top of its list.</p>'
              f'<a class="btn ghost" href="{P}/post-a-job/">Post a job</a>'
-             + tick(["A standard listing for 30 days", "Featured job from $99", "Pinned job, company spotlight, sponsor of a category", "Paid in crypto, switched on at once", "No calls, no sales manager"]) + "</div></div>")
+             + tick(["A standard listing for 30 days", f"Featured job from {price_of('Featured job')}", "Pinned job, company spotlight, sponsor of a category", "Paid in crypto, switched on at once", "No calls, no sales manager"]) + "</div></div>")
     yes, no = '<td class="y">Yes</td>', '<td class="n">—</td>'
     cell = lambda v: yes if v is True else no if v is False else f"<td>{e(v)}</td>"
     grid_rows = [("Jobs", None, None), ("Every job and the link to apply", True, True), ("Search, categories, salary data, rankings", True, True), ("Matching by five answers", True, True), ("An email when a job fits", False, True),
@@ -2674,6 +2941,18 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                  ("Interview and pay", None, None), ("Interview questions for one posting", False, True), ("Salary checker and offer check", True, True), ("Script for negotiating an offer", False, True),
                  ("Tracking", None, None), ("Application tracker", "On this device", "On every device"), ("LinkedIn profile review", "By rules", "By AI")]
     grid_html = "".join(f'<tr class="grp"><th colspan="3">{e(a_)}</th></tr>' if b_ is None else f"<tr><td>{e(a_)}</td>{cell(b_)}{cell(c_)}</tr>" for a_, b_, c_ in grid_rows)
+    # what the same things cost elsewhere: the plans other services publish, read on their own pricing pages on the date given
+    else_rows = [("AI resume writer and editor, resume score, keywords for a job", "Plus", "Rezi Pro: $29 a month"),
+                 ("Resume review and LinkedIn review", "Free by rules; by AI in Plus", "RocketHunt Pro: 290 ₽ a month"),
+                 ("Match with a job, skill by skill", "Free", "RocketHunt Pro: 290 ₽ a month"),
+                 ("What a role pays and whether an offer is fair", "Free", "RocketHunt Pro: 290 ₽ a month"),
+                 ("Cover letters without a limit", "Template free; AI drafts in Plus", "hh PRO: 999 ₽ a month"),
+                 ("Resume downloads as PDF and Word", "Free, no limit", "Rezi Free: 3 PDF files; Word only in Pro"),
+                 ("Interview practice with AI", "Plus", "Rezi Free: 1 interview; more in Pro"),
+                 ("How the payment works", "One payment, ends by itself", "Monthly, renewed automatically")]
+    else_html = ('<div class="tablewrap"><table class="grid"><tr><th>What you get</th><th>Here</th><th>Elsewhere</th></tr>'
+                 + "".join(f"<tr><td>{e(a_)}</td><td class=\"y2\"><strong>{e(b_)}</strong></td><td>{e(c_)}</td></tr>" for a_, b_, c_ in else_rows)
+                 + '</table></div><p class="note">The right-hand column is what each service published on its own pricing page on November 13, 2026. Prices change; check theirs before you compare.</p>')
     soon = "" if plus.get("live") else '<div class="banner">Plus is not on sale yet. This page shows what it will do and what it will cost. Everything in the “free” list works today.</div>'
     plus_qa = [("Is this a subscription?", "No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel. There is no card on file to charge."),
                ("Do I have to pay to see or apply for jobs?", "No. Every job is public the moment we have it and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
@@ -2684,19 +2963,20 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     plus_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in plus_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("plus/", f"Plus: resume review, letters and job alerts, one payment | {SITE}",
-         "Plus reviews your resume, rewords it for each posting, drafts the cover letter, prepares you for the interview and emails you when a job fits. One payment from 11 cents a day, nothing renews. Every job stays free.",
+         "Plus reviews your resume, rewords it for each posting, drafts the cover letter, prepares you for the interview and emails you when a job fits. One payment, a few cents a day, nothing renews. Every job stays free.",
          crumbs(("Plus", "")) + '<h1>Applications go out and nothing comes back. Plus finds out why and <span class="hl">fixes it</span>, job by job</h1>'
          '<p class="lead">A resume gets one short first read, and nobody tells you why it was put aside: the result is on page two, the bullets list duties, the letter could be for any company. '
          f'Plus reads your resume the way a recruiter does, rewords it for each posting and tells you the day a job fits. One payment, from {min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else "a few cents a day"}. Nothing renews.</p>{soon}'
-         + tiers
+         + LAUNCH + tiers
          + section("What Plus adds", pcard_html)
          + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. '
                    'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
+         + section("What the same things cost elsewhere", else_html)
          + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
          + section("Free and Plus, line by line", f'<div class="tablewrap"><table class="grid"><tr><th></th><th>Free</th><th>Plus</th></tr>{grid_html}</table></div>')
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
     # Employers
-    rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
+    rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{was_of(p['name'])}<strong>{e(p['price'])}</strong></td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
     app_url = f"{P}/account/" if CFG["api_url"] else ""
     steps = ('<ol class="steps"><li><b>Create an employer account.</b> It takes an email and a password.</li>'
              "<li><b>Paste the job.</b> Title, link to apply, location, description. We open the link to check the job is really there.</li>"
@@ -2720,9 +3000,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     emp_tiers = ('<div class="tiers">'
                  f'<div class="tier"><p class="tn">Standard</p><p class="tp">Free</p><p class="td">Your job in the list and in search, like every other job here.</p>{ebtn}'
                  + etick(["In the main list for 30 days", "Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close or renew it yourself, any time"]) + "</div>"
-                 f'<div class="tier best"><p class="tn">Featured</p><p class="tp">$99<small> for 14 days</small></p><p class="td">A highlighted row that stays above the regular listings of its category.</p>{ebtn}'
+                 f'<div class="tier best"><p class="tn">Featured</p><p class="tp">{was_of("Featured job")}{price_of("Featured job")}<small> for 14 days</small></p><p class="td">A highlighted row that stays above the regular listings of its category.</p>{ebtn}'
                  + etick(["Everything in Standard", "Highlighted row with a “Featured” mark", "Above regular listings in its category for 14 days", "On as soon as the payment is confirmed: nobody to write to", "Views and clicks to apply in your account"]) + "</div>"
-                 f'<div class="tier"><p class="tn">Pinned</p><p class="tp">$199<small> for 7 days</small></p><p class="td">The first row on the home page and in its category.</p>{ebtn}'
+                 f'<div class="tier"><p class="tn">Pinned</p><p class="tp">{was_of("Pinned job")}{price_of("Pinned job")}<small> for 7 days</small></p><p class="td">The first row on the home page and in its category.</p>{ebtn}'
                  + etick(["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites and channels read"]) + "</div></div>")
     demo_rows = [dict(j) for j in latest[:4]]
     demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior", "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company",
@@ -2734,15 +3014,15 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                '<span class="ln">Live since Nov 13 · <b>Renew</b> · <b>Close</b></span></span><span class="tbody"><b>The placement, switched on</b><span>The moment the network confirms the payment, the job is marked Featured and the account shows how many days are left. Nothing to send, nobody to wait for.</span></span></div>'
                '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="rw"><span>Views</span><span class="mt"><i style="width:100%"></i></span><b>1,204</b></span><span class="rw"><span>Clicks to apply</span><span class="mt"><i style="width:22%"></i></span><b>86</b></span>'
                '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the placement did.</span></span></div>'
-               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · $99</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
+               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · ' + price_of("Featured job") + '</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
                '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the period ends, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
-    page("post-a-job/", f"Post a Tech Job — free listing, featured from $99 | {SITE}" if app_url else f"Post a Tech Job — plans and prices for employers | {SITE}",
-         ("Post a tech job for free, or feature it from $99 so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
-          "Plans and prices for employers: free standard listings, featured jobs from $99, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
+    page("post-a-job/", f"Post a Tech Job — free listing, featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Tech Job — plans and prices for employers | {SITE}",
+         (f"Post a tech job for free, or feature it from {price_of('Featured job')} so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
+          f"Plans and prices for employers: free standard listings, featured jobs from {price_of('Featured job')}, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
          crumbs(("For employers", "")) + "<h1>Post a tech job that doesn’t get buried</h1>"
          f'<p class="lead">There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
          'A featured one stays at the top instead of sliding down as new roles arrive.</p>'
-         + emp_tiers
+         + LAUNCH + emp_tiers
          + section("How your job looks in the list", '<p class="note">The two highlighted rows are examples of featured jobs; the others are real listings from today.</p>' + demo_html)
          + section("What appears in your account at once", emp_cab)
          + f'{pain_html}' + section("Every plan and price", f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>')

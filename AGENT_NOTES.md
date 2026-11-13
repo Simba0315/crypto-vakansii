@@ -169,6 +169,21 @@ caption that says what it shows; no decorative charts, no invented numbers. When
 - `REPORT_RU.md` is the owner's report in Russian; update it when something he asked for ships. He reads the task list pinned in
   the app and this report, not the English files.
 
+## Prices (the owner's decision of 2026-11-13)
+
+The owner cut every price to about a third "temporarily" (launch prices). `config.json` holds the current price, the earlier one
+in `"was"` (shown crossed out) and `"launch_prices": true` (the green line above the tariffs). Pages read prices through
+`price_of()` / `was_of()` in `build.py`; `PRODUCTS` in `server/src/worker.js` must carry the same amounts. Only the owner changes
+prices. Never add a countdown or a deadline that is not real.
+
+## Guides, help, the open hiring index (`/guides/`, `/help/`, `/open-hiring-index/`, `/investors/`)
+
+Guides are the blog: each is written once in `build.py` (`guide(...)`) and its figures are recounted from the open postings on
+every build. A new guide needs a chart or a list from the data, a lead that states the fact, and links to the lists and tools it
+mentions; add it to a category that exists. `/help/` is one page of short answers with a filter (`HELP`): when a feature ships,
+add its answer there. The open hiring index scores employers from their own postings (the formula is on the page); do not call it
+"best employers". `/investors/` shows counted facts only: no forecasts, no revenue claims.
+
 ## "For you": the match by answers (`/for-you/`)
 
 Five plain questions (kind of work, experience, where, pay, skills), answered with buttons; the markup is in `build.py` (`FY_WORK`,

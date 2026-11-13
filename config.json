@@ -8,38 +8,44 @@
     {
       "name": "Standard listing",
       "price": "Free",
-      "what": "Your job in the main feed for 30 days, then in the archive."
+      "what": "Your job in the main feed for 30 days. When it closes, its page stays online, marked as closed."
     },
     {
       "name": "Featured job",
-      "price": "$99",
-      "what": "Highlighted row and a place above regular listings in its category for 14 days."
+      "price": "$29",
+      "what": "Highlighted row and a place above regular listings in its category for 14 days.",
+      "was": "$99"
     },
     {
       "name": "Pinned job",
-      "price": "$199",
-      "what": "Top of the home page and of its category for 7 days."
+      "price": "$59",
+      "what": "Top of the home page and of its category for 7 days.",
+      "was": "$199"
     },
     {
       "name": "5-job pack",
-      "price": "$399",
-      "what": "Five featured jobs to use within 3 months."
+      "price": "$119",
+      "what": "Five featured jobs to use within 3 months.",
+      "was": "$399"
     },
     {
       "name": "Company spotlight",
-      "price": "$499 / month",
-      "what": "Your company in “Featured employers” on the home page and at the top of the companies list, plus a badge on your company page."
+      "price": "$149 / month",
+      "what": "Your company in “Featured employers” on the home page and at the top of the companies list, plus a badge on your company page.",
+      "was": "$499 / month"
     },
     {
       "name": "Category or skill sponsor",
-      "price": "$299 / month",
-      "what": "Your company named at the top of one category or skill page, for example “Engineering jobs · supported by you”."
+      "price": "$89 / month",
+      "what": "Your company named at the top of one category or skill page, for example “Engineering jobs · supported by you”.",
+      "was": "$299 / month"
     },
     {
       "name": "Branded listing",
-      "price": "$149",
+      "price": "$49",
       "what": "A featured job with a cover image and a longer description written by you.",
-      "soon": true
+      "soon": true,
+      "was": "$149"
     }
   ],
   "wallets": [
@@ -64,26 +70,30 @@
     "plans": [
       {
         "name": "1 month",
-        "price": "$9",
+        "price": "$3",
         "per": "one payment",
-        "note": ""
+        "note": "",
+        "was": "$9"
       },
       {
         "name": "3 months",
-        "price": "$19",
-        "per": "about $6.30 a month",
-        "note": "Save 30%",
-        "best": true
+        "price": "$7",
+        "per": "about $2.30 a month",
+        "note": "Save 22%",
+        "best": true,
+        "was": "$19"
       },
       {
         "name": "12 months",
-        "price": "$39",
-        "per": "about $3.25 a month",
-        "note": "Save 64%"
+        "price": "$12",
+        "per": "$1 a month",
+        "note": "Save 67%",
+        "was": "$39"
       }
     ]
   },
   "sponsors": [],
   "api_url": "",
-  "indexnow_key": "da012c9b3f492ce3845d18a66c19d58c"
+  "indexnow_key": "da012c9b3f492ce3845d18a66c19d58c",
+  "launch_prices": true
 }
