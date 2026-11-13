@@ -63,7 +63,7 @@ When you fix an open item, move it up and say how you checked it.
 | 44 | Wide tool tables on phones have no scroll hint | `tools.css` |
 | 47 | Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
 | 49–56, 59 | Server (`server/src/worker.js`), not deployed: a second post by the same employer is refused; company identity is an exact string ("Stripe!" passes); editing company skips the link check; activation is not atomic; removed jobs stay online; pending orders are never reconciled; rate limits can be raced; the link check is weaker than its comment; no password reset | must be fixed and tested before the server is deployed |
-| 61 | Tool logic still open: resume match misses Go; job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13 with tests: `num("150.000")`, "founded 15 years ago", 2000% ownership) | `tools.js`, add tests |
+| 61 | Tool logic still open: job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13: `num("150.000")`, "founded 15 years ago", 2000% ownership, and Go in running text such as "Python and Go", which also raises the number of jobs tagged Go at the next collection) | `tools.js`, add tests |
 | 62–66 | Mixed title casing, "Other" shown as a category name, sample cards linking to `#`, (fixed 2026-11-13: "$440.00" next to "$2,200"; the leftover `/hiring-badge/` stub is now a real hiring badge page) | polish |
 | 68 | The contact handle is "@orderbulkreviews" on a site that promises no invented reviews | the owner's call |
 
