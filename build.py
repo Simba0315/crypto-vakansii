@@ -1206,7 +1206,7 @@ def main():
             chips.append(f"<span class='chip'><b>{100 * sum(bool(j['salary']) for j in act) / len(act):.0f}%</b> show pay</span>")
             old_ = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
             chips.append(f"<span class='chip'><b>{100 * old_ / len(act):.0f}%</b> open {LONG_OPEN}+ days</span>")
-        if len(sal_mid) >= 3: chips.append(f"<span class='chip'><b>{money(median(sal_mid))}</b> median advertised salary</span>")
+        if len(sal_mid) >= 15: chips.append(f"<span class='chip'><b>{money(median(sal_mid))}</b> median advertised salary</span>")
         chips += [f"<span class='chip'><b>{k}</b> {e(name)}</span>" for name, k in top_cats]
         op_, cl_, mood = PULSE.get(c, (0, 0, "Steady"))
         chips.append(f"<span class='chip pulse'><b>+{op_}</b> opened · <b>−{cl_}</b> closed this week · {mood}</span>")
@@ -1247,7 +1247,7 @@ def main():
         rem = sum(j["remote"] for j in act)
         FACT[c] = (f"{e(c)} has {roles(len(act), 'open role')} right now" + (f", {rem:,} of them remote" if rem else "") + "."
                    + (f" Most are in {e(', '.join(tops[:-1]) + ' and ' + tops[-1] if len(tops) > 1 else tops[0])}." if tops else "")
-                   + (f" The median advertised salary across its roles with a published range is {money(median(mids))}." if len(mids) >= 3 else ""))
+                   + (f" The median advertised salary across its roles with a published range is {money(median(mids))}." if len(mids) >= 15 else ""))
 
     # Job pages + archive
     for j in archived:
@@ -2151,7 +2151,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          'Hourly and monthly figures are left out, and a salary written in an unusual way can be missed, so “not listed” on this site does not prove the employer hides it. Skills, perks such as visa sponsorship, seniority and employment type are read from the title and text of the posting by fixed rules, not guessed. '
          'A perk is listed only when the posting mentions it, and statements such as “we cannot sponsor visas” are excluded. Rules can miss or misread a posting, so confirm the details on the employer\'s page.</p>'
          '<h2 class="h2s">How are salary medians calculated?</h2><p>From open roles that publish a yearly range in US dollars. For each role we take the midpoint of the range; the median is the middle value of those midpoints. '
-         'A figure is shown only when at least 15 roles are available (30 for skill and category pages). These are advertised ranges, not what people are actually paid, and they lean towards companies and regions that publish pay.</p>'
+         'A median is shown for a list or a company only when at least 15 of its roles publish a yearly range. Rankings and comparisons that set one group against another need 30. '
+         'The salary tools, which also show the spread, need 20. These are advertised ranges, not what people are actually paid, and they lean towards companies and regions that publish pay.</p>'
          '<h2 class="h2s">Why is a job listed once when it is open in several cities?</h2><p>Lists show a role once and add “+N more locations”. Each posting still has its own page. Counts on the site are counts of postings.</p>'
          f'<h2 class="h2s">How to report a mistake</h2><p>' + (f"Write to us: {contact}." if contact else "A contact address will be published on the About page shortly.") + "</p>")
     tools_md = "; ".join(f"[{nm}]({FULL}/{u})" for u, nm, _ in TOOLS)

@@ -51,12 +51,12 @@ When you fix an open item, move it up and say how you checked it.
 | 4 | “Clear my profile” left the skill-gap block, the note and the pasted text | The handler now clears all three (`site.js`) |
 | 40 | BreadcrumbList markup missing on company, salary, insights, report and tool hub pages | `page()` now writes the markup from the visible trail on every page that has one |
 | 3 | Salary checker offered “Intern” and “Junior” levels that never returned a figure | The level list now holds only levels that have at least 20 postings with a yearly range (`tools_pages.py`) |
+| 12 | Methodology stated one minimum sample while pages used 3, 8, 10, 15, 20 and 30 | Three thresholds, each stated in the methodology: 15 for a median next to a list or company (company pages used 3), 30 for rankings and comparisons, 20 for the salary tools |
 
 ## Open
 
 | # | Finding | Note |
 |---|---|---|
-| 12 | Methodology states one minimum sample; pages use 3, 8, 10, 15, 20 and 30 | pick one set of thresholds and state each |
 | 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
 | 22 | Tool copy slips still open: "a honest", "Inc..", the contractor rate sentence, "Download PDF" opens print (fixed 2026-11-13: "Found 1 skills", "With prices up -2%") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
