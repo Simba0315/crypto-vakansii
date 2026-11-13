@@ -652,3 +652,42 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 /* search: what to drop when nothing fits */
 .relax{margin:0 0 14px;font-size:14.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 16px;align-items:center}
 .relax .linkbtn{font-size:14.5px;text-decoration-color:var(--ac);text-decoration-thickness:2px}
+.nearbtn{font-size:14px;text-decoration-color:var(--ac);text-decoration-thickness:2px;margin-right:auto}
+
+/* one line of figures with their date and source, set in mono: used above the home headline and on hub pages */
+.stamp{margin:0 0 14px;font:500 13px/1.6 var(--mono);color:var(--muted)}
+.stamp b{color:var(--text);font-weight:600}
+.stamp a{color:inherit;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.stamp a:hover{color:var(--text);text-decoration-color:var(--ac)}
+.hero .stamp{margin-bottom:16px}
+/* search with two fields: what and where */
+.searchbar.two{max-width:660px;padding-left:14px}
+.searchbar.two input[type=search]{min-width:0;flex:1 1 0}
+.searchbar.two input[name=where]{flex:.8 1 0}
+.sb-sep{width:1px;align-self:stretch;margin:6px 4px;background:var(--line2);flex:none}
+@media(max-width:560px){.searchbar.two{flex-wrap:wrap;padding:8px 10px 10px}.searchbar.two>svg{display:none}.searchbar.two input[type=search]{flex:1 1 100%;border-bottom:1px solid var(--line)!important}
+  .searchbar.two input[name=where]{border-bottom:0!important}.sb-sep{display:none}.searchbar.two .btn{flex:1 1 100%;margin-top:6px;padding:12px}}
+/* the board: pay on the right */
+.board>a{grid-template-columns:44px minmax(0,1fr) auto}
+.board .bp{align-self:center;font-size:12.5px;color:var(--pop);white-space:nowrap}
+/* job rows in fixed columns: logo, title, pay, tags, age. Pay lines up down the list. */
+.jp{font:600 13px var(--mono);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jp.none{color:var(--line2);font-weight:400}
+@media(min-width:900px){
+  .job>a{grid-template-columns:auto minmax(0,1fr) 168px 216px 44px;gap:16px}
+  .job .jr{display:contents}
+  .job .jp{text-align:right}
+  .job .pills{justify-content:flex-start;flex-wrap:nowrap;overflow:hidden}
+  .job time{text-align:right}
+  /* the search page list sits in a narrower column: tags go under the title there */
+  .sgrid .job>a{grid-template-columns:auto minmax(0,1fr) 150px 44px}
+  .sgrid .job .pills{grid-column:2/-1;grid-row:2;margin-top:-6px}
+  .sgrid .job .jp{grid-column:3;grid-row:1}
+  .sgrid .job time{grid-column:4;grid-row:1}
+}
+@media(max-width:899px){.jr{flex-wrap:wrap;gap:4px 12px}.job .jp.none{display:none}}
+/* with the preview open the list is narrow: the title gets the whole line, pay and tags go under it */
+@media(min-width:1240px){.sgrid.haspane .job>a{grid-template-columns:auto minmax(0,1fr) 40px;gap:4px 12px}.sgrid.haspane .job .jp{grid-column:2;grid-row:2;text-align:left}.sgrid.haspane .job .jp.none{display:none}.sgrid.haspane .job time{grid-column:3;grid-row:1}.sgrid.haspane .job .pills{grid-column:2/-1;grid-row:3;margin-top:0;flex-wrap:wrap}}
+/* job page: apply first, the facts after */
+.side dl.meta{margin:18px 0 0}
+.side .sideact+dl.meta{padding-top:16px;border-top:1px solid var(--line)}

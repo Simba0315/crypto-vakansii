@@ -359,7 +359,6 @@ def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
-    if j["salary"]: b.append(f'<span class="pill sal">{e(j["salary"][:28])}</span>')
     if j["remote"]: b.append('<span class="pill ok">Remote</span>')
     if j["level"]: b.append(f'<span class="pill">{e(j["level"])}</span>')
     b += [f'<span class="pill">{e(t)}</span>' for t in j["tags"][:3]]
@@ -368,7 +367,7 @@ def card(j, extra=0):
     label, fresh = age(j["posted"])
     return (f'<li class="job{" feat" if j["featured"] else ""}"><a href="{P}/job/{j["slug"]}/">{ava(j["company"])}'
             f'<span><span class="jt">{e(j["title"])}</span><span class="js">{sub}</span></span>'
-            f'<span class="jr"><span class="pills">{"".join(b)}</span><time datetime="{j["posted"]}"{" class=\"new\"" if fresh and j["active"] else ""}>{label}</time></span></a></li>')
+            f'<span class="jr"><span class="jp{"" if j["salary"] else " none"}">{e(j["salary"][:28]) if j["salary"] else "—"}</span><span class="pills">{"".join(b)}</span><time datetime="{j["posted"]}"{" class=\"new\"" if fresh and j["active"] else ""}>{label}</time></span></a></li>')
 
 
 def tile(url, name, count, avatar=False):
@@ -509,7 +508,8 @@ def hub_stats(js):
     cells = [(f"{k:,}", "open roles"), (f"{sum(1 for j in js if (j['posted'] or '') >= HUB['week']):,}", "posted in the last 7 days"),
              (f"{100 * sum(j['remote'] for j in js) / k:.0f}%", "remote"), (f"{len({j['company'] for j in js}):,}", "companies hiring")]
     if len(mids) >= 30: cells.append((money(median(mids)), "median advertised salary"))
-    return '<div class="statrow">' + "".join(f'<div class="stat"><b>{a}</b><span>{b}</span></div>' for a, b in cells) + "</div>"
+    return ('<p class="stamp">' + " · ".join(f"<b>{a}</b> {b}" for a, b in cells)
+            + f' · <a href="{P}/methodology/">checked {fdate(TODAY, False)} against employer career pages</a></p>')
 
 
 def hub_sections(label, js, skip=""):
@@ -597,8 +597,7 @@ def intro_for(jobs, pre="", post="", hub=False):
     names = [c for c, _ in Counter(j["company"] for j in jobs).most_common(5)]
     top = ", ".join(names)
     if hub and len(jobs) >= 20 and len(names) >= 3:
-        return (f"{e(', '.join(names[:-1]))} and {e(names[-1])} have the most open {pre}roles{post} right now. "
-                f"Every listing was checked against the employer’s careers page on {fdate(TODAY)}.")
+        return f"{e(', '.join(names[:-1]))} and {e(names[-1])} have the most open {pre}roles{post} right now."
     mids = [(lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]]]
     who = (e(", ".join(names[:-1])) + " and " + e(names[-1]) + " have the most. ") if len(names) > 1 else (e(top) + " has them all. ")
     bits = ([f"{r:,} {'is' if r == 1 else 'are'} remote"] if 0 < r < len(jobs) else []) + ([f"the median advertised salary is {money(median(mids))}"] if len(mids) >= 15 else [])
@@ -752,7 +751,7 @@ def job_page(j, active_by_cat):
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
-            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card"><dl class="meta">{meta}</dl>{apply_btn}{save_btn}</aside></div>'
+            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
             + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = f"{j['title']} at {j['company']}"
@@ -942,17 +941,18 @@ def main():
              f'<span>{new_today_h:,} posted today</span><span>{closed_today_h:,} closed and moved to the archive</span><a href="{P}/status/">Data status</a></p>')
     board_rows = "".join(
         f'<a href="{P}/job/{j["slug"]}/"><span class="ba">{age(j["posted"])[0]}</span><span><span class="bt">{e(j["title"])}</span>'
-        f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span></a>' for j in diverse(order(specific), 6, 1))
+        f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span>'
+        f'<span class="bp">{e(j["salary"][:20]) if j["salary"] else ""}</span></a>' for j in diverse(order(specific), 6, 1))
     hero = (f'<section class="hero"><div class="wrap"><div>'
+            f'<p class="stamp">Checked {fdate(TODAY, False)} · <b>{n:,}</b> open roles · <b>{fresh3:,}</b> new in 3 days</p>'
             f'<h1>Stop applying to tech jobs that are <span class="hl">already gone</span></h1>'
-            f'<p class="sub">Old listings stay online long after the job is filled. We read {m} company career pages every morning and keep only what is still open. '
-            f'On {fdate(TODAY, False)} that is {n:,} roles.</p>'
-            f'<form class="searchbar" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
+            f'<p class="sub">Old listings stay online long after the job is filled. We read {m} company career pages every morning and keep only what is still open.</p>'
+            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="What: job title, skill or company">'
+            f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search</button></form>'
             f'<p class="popular"><span>Or start with</span><a href="{P}/remote/">remote</a><a href="{P}/new/">new this week</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a>'
             f'<a href="{P}/perks/visa-sponsorship/">visa sponsorship</a><a href="{P}/entry-level/">entry-level</a><a href="{P}/with-salary/">salary listed</a><a href="{P}/crypto/">crypto</a></p>'
             f'<p class="near" id="near" hidden></p>'
-            f'<p class="heroalt">{len(remote):,} of them are remote and {fresh3:,} were posted in the last three days. '
-            f'If you would rather not search, <a href="{P}/for-you/">list your skills and see what fits</a>.</p></div>'
+            f'<p class="heroalt">If you would rather not search, <a href="{P}/for-you/">list your skills and see what fits</a>.</p></div>'
             f'<div class="board" aria-label="Newest roles"><div class="board-h"><span>Just posted</span><a href="{P}/board/"><b>Open as a wall</b></a></div>{board_rows}</div></div>'
             f'<div class="wrap0 hero-logos"><p>Read this morning from the career pages of</p><div class="logorow">'
             + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
@@ -982,7 +982,6 @@ def main():
             + section("By role", '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + "</ul>", ("roles/", "All roles"))
             + section("Who is hiring most", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("By location", f'<ul class="tiles">{place_top}</ul>', ("locations/", f"All {len(places)} locations")) + band
-            + section("More new jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[12:32])}</ul>', ("jobs/", f"All {n:,} jobs"))
             + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u, nm, d_ in TOOLS[:6]) + "</div>",
                       ("tools/", f"All {len(TOOLS)} tools"))
             + section("For your own site", '<div class="feats">'

@@ -240,6 +240,20 @@
   catch (e) { if (!jobs.length) count.textContent = 'Could not load the list. Please reload the page.'; return; }
   full = true;
   // keep the visitor's place: same order, same number of rows, unless they were waiting for results
-  if (f0.q) smart();                 // a query typed on the home page arrives here as text: read the filters out of it
+  // Near you: one click narrows the list to the visitor's country (taken from the time zone, or the place they picked on the home page)
+  fetch(H.base + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
+    var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    var c = G.c[H.get('hrn_place', '') || G.tz[tz] || ''];
+    if (!c || !c[1] || !c[2] || !Array.prototype.some.call(loc.options, function (o) { return o.value === c[1]; })) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn nearbtn';
+    b.textContent = 'Near you: only ' + c[0] + ' (' + Number(c[2]).toLocaleString('en-US') + ')';
+    b.addEventListener('click', function () { loc.value = c[1]; run(); b.hidden = true; });
+    b.hidden = !!loc.value;
+    loc.addEventListener('change', function () { b.hidden = !!loc.value; });
+    count.parentNode.insertBefore(b, count.nextSibling);
+  }).catch(function () {});
+  var wh = new URLSearchParams(location.search).get('where');          // the "where" field of the home page search
+  if (wh) q.value = (q.value + ' in ' + wh).trim();
+  if (q.value) smart();              // a query typed on the home page arrives here as text: read the filters out of it
   keepShown = !waiting && !query(); run(); keepShown = false;
 })();

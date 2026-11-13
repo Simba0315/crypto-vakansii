@@ -104,14 +104,14 @@
   }
   function card(j, more, badge) {
     var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
-      (j[8] ? '<span class="pill sal">' + esc(j[8].slice(0, 28)) + '</span>' : '') + (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
+      (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
       j[7].slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
     var ag = ageOf(j[16]);
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
       '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
-      '<span class="jr"><span class="pills">' + pills + '</span><time' + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
+      '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
   }
   // mark cards of jobs the visitor already saved, applied to or opened (works for static and script-built lists)
   function decorate(scope) {
