@@ -10,6 +10,7 @@ from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
 import tools_pages                      # the free tools section: /tools/ and one page per tool
 import roles_info
+import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
 
 ROOT = Path(__file__).parent
@@ -371,7 +372,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -1330,6 +1331,7 @@ def main():
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     # Which kinds of work sit close to each other: two roles are neighbours when employers ask for the same skills in both.
     BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
+    has_rex = lambda s_: (s_ == "intern" or s_ not in BROAD) and not s_.endswith("-speaking")
     role_sk, role_med = {}, {}
     for s_, (nm_, js_) in by_role.items():
         if s_ in BROAD or s_.endswith("-speaking"): continue
@@ -1358,7 +1360,8 @@ def main():
         low, w_ = rlow(rname), roles_info.INFO.get(slug_r, ("", ""))[1]
         many = ROLE_PLURAL.get(rname, low + "s")
         fams = [(fs, fn) for fs, fn, _, live, _ in fam_rows if any(s_ == slug_r for s_, _, _ in live)]
-        fam_line = ('<p class="note cmpl">Part of: ' + " · ".join(f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams) + "</p>") if fams else ""
+        fam_line = ('<p class="note cmpl">Part of: ' + " · ".join(f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams)
+                    + (f' · Resume: <a href="{P}/resume/examples/{slug_r}/">an example for this work</a>' if has_rex(slug_r) else "") + "</p>") if fams else ""
         secs = hub_sections(f"{low} roles", rj, "roles")
         listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open) | {SITE}",
                 f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated hourly.",
@@ -2034,14 +2037,81 @@ def main():
          '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
          f'<p class="note">Some of these depend on what your browser can do: speech recognition and background checks are not in every browser. Where one is missing, its button does not appear.</p>')
 
-    # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
-    # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.
-    GUIDES = []
-    PUBLISHED = "2026-11-13"
+    pc_ = lambda a_, b_: round(100 * a_ / max(1, b_))
     def bars_(rows_, unit=""):                     # [(label, value, shown text, link)]
         mx_ = max((r_[1] for r_ in rows_), default=0) or 1
         return '<div class="hbars chart">' + "".join(
             f'<a href="{P}/{u_}"><span class="hn">{e(lab)}</span><span class="hb"><i style="width:{max(2, round(100 * v_ / mx_))}%"></i></span><span class="hc">{e(txt)}</span></a>' for lab, v_, txt, u_ in rows_) + "</div>"
+    # Resume examples: one page per kind of work, with the skills employers name in today's postings for it and an invented
+    # example that opens in the builder. See resume_examples.py.
+    rex_data, rex_dir = {}, defaultdict(list)
+    fam_of = {}
+    for fs, fn, fd, live, js_ in fam_rows:
+        for s_, _, _ in live: fam_of.setdefault(s_, (fs, fn))
+    def paper(d):
+        return ('<div class="paper"><p class="pp-name">' + e(d["name"]) + '</p><p class="pp-title">' + e(d["title"]) + '</p><p class="pp-contact">' + e(d["place"]) + " · " + e(d["email"]) + "</p>"
+                '<p class="pp-h">Summary</p><p>' + e(d["summary"]) + '</p><p class="pp-h">Skills</p><p>' + e(d["skills"]) + '</p><p class="pp-h">Experience</p>'
+                + "".join(f'<p class="pp-job"><b>{e(x["role"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p><ul>' + "".join(f"<li>{e(ln)}</li>" for ln in x["text"].split("\n")) + "</ul>" for x in d["exp"])
+                + '<p class="pp-h">Education</p>' + "".join(f'<p class="pp-job"><b>{e(x["what"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p>' for x in d["edu"]) + "</div>")
+    for slug_r, (rname, rj) in by_role.items():
+        if not has_rex(slug_r): continue
+        fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
+        low = rlow(rname)
+        cnt_ = Counter(t for j in rj for t in j["tags"])
+        top_ = resume_examples.asked(slug_r, cnt_.most_common(), len(rj))
+        tech_ = slug_r in resume_examples.TECH
+        d = resume_examples.example(slug_r, rname, fs, top_, rlow(fn))
+        skills_ = d["skills"].split(", ")
+        if slug_r not in resume_examples.ROLE: print(f"  resume example: no entry of its own for {slug_r}, the lines of its field are used")
+        rex_data[slug_r] = d
+        rex_dir[fs].append((slug_r, rname, len(rj)))
+        titles_ = [t for t, _ in Counter(j["title"] for j in rj).most_common(40) if len(t) <= 60][:6]
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"]]
+        facts_ = [("Open jobs today", f"{len(rj):,}"), ("Can be done from home", f"{pc_(sum(j['remote'] for j in rj), len(rj))}%")] + ([("Median advertised pay", money(median(mids_)))] if len(mids_) >= 30 else [])
+        chart_ = bars_([(t, k, f"{k:,} jobs · {pc_(k, len(rj))}%", f"skills/{tslug(t)}/") for t, k in top_]) if top_ else ""
+        if tech_ and top_:
+            ask_ = "<h2>What employers ask for</h2><p>The skills named most often in today’s postings for this work. Name the ones you have, by these words: screening software looks for the word.</p>" + chart_
+        elif len(top_) >= 2:
+            ask_ = ("<h2>Tools employers name</h2><p>Postings for this work describe duties more than tools. These are the tools they do name; put on the resume the ones you have used.</p>" + chart_)
+        else:
+            ask_ = "<h2>What employers ask for</h2><p>Postings for this work rarely name tools. They describe duties, so show results in the same words the posting uses for its duties.</p>"
+        qa_ = [(f"Which skills should {art(low)} {low} resume list?",
+                (f"The ones employers name most in open postings: {', '.join(t for t, _ in top_[:6])}. List those you really have, in these words." if tech_ and top_ else
+                 f"What the work consists of: {', '.join(skills_[:5])}. Postings for this work describe duties more than tools, so use the posting’s own words for each duty and put a result next to it.")),
+               ("How long should it be?", "One page for up to ten years of experience, two at most. The first third of the first page decides whether the rest is read."),
+               ("Is this example a real person?", "No. The name, the employers and the numbers are invented to show the form: a verb first, one result, one number. Replace every line with your own.")]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        w_ = roles_info.INFO.get(slug_r, ("", ""))[1]
+        page(f"resume/examples/{slug_r}/", f"{tcase(rname)} Resume Example | {SITE}",
+             (f"{art(low).capitalize()} {low} resume example with the skills employers name in {len(rj):,} open postings today: {', '.join(t for t, _ in top_[:5])}. Open it in the free builder and make it yours." if tech_ and top_ else
+              f"{art(low).capitalize()} {low} resume example with measured results, next to what {len(rj):,} open postings for this work offer today. Open it in the free builder and make it yours."),
+             crumbs(("Resume builder", "resume/"), ("Examples", "resume/examples/"), (rname, "")) + f"<h1>{e(rname)} resume example</h1>"
+             f'<p class="lead">' + (f"A person in this job {e(w_)}. " if w_ else "") + f"Below: an example to start from, and what {len(rj):,} open postings for this work ask for today.</p>"
+             '<div class="rexgrid"><div>' + paper(d) + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
+             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this example in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/tools/resume-review/">Check your own resume</a></p></div>'
+             '<div class="rexside"><div class="invf">' + "".join(f"<div><b>{e(v_)}</b><span>{e(k_)}</span></div>" for k_, v_ in facts_) + "</div>" + ask_
+             + ("<h2>Titles employers use</h2><p>" + e("; ".join(titles_)) + ".</p>" if titles_ else "")
+             + '<h2>Make it yours</h2><ol class="steps"><li><b>Keep the form, change every fact.</b> A verb first, what changed, one number.</li>'
+               f'<li><b>Use the posting’s words.</b> The <a href="{P}/tools/resume-match/">match checker</a> shows which of them your resume lacks.</li>'
+               f'<li><b>Put the strongest result first.</b> The <a href="{P}/tools/resume-review/">resume review</a> tells you what a first read finds.</li></ol></div></div>'
+             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
+             + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_)
+    write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    rex_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(rex_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/resume/examples/{s_}/">{e(nm)}</a><span>{k:,} jobs</span></li>' for s_, nm, k in rex_dir[fs]) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if rex_dir.get(fs)) + "</div>"
+    page("resume/examples/", f"Resume Examples for {len(rex_data)} Kinds of Work | {SITE}",
+         f"{len(rex_data)} resume examples, each with the skills employers name in today’s open postings for that work. Open any of them in the free resume builder.",
+         crumbs(("Resume builder", "resume/"), ("Examples", "")) + f'<h1>Resume examples for <span class="hl">{len(rex_data)} kinds of work</span></h1>'
+         '<p class="lead">Each example comes with the skills employers name for that work in today’s open postings, counted again at every update. Pick your work, open the example in the builder and replace it line by line.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">resume builder</a> works for any job.</p>' + rex_html)
+
+    # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
+    # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.
+    GUIDES = []
+    PUBLISHED = "2026-11-13"
     def guide(slug, title, desc, cat, lead, body, prev, more=()):
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
                "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
@@ -2051,7 +2121,6 @@ def main():
              crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
              f'<p class="lead">{lead}</p>{body}{links}</article>', head=ld_)
         GUIDES.append((slug, title, desc, cat, prev))
-    pc_ = lambda a_, b_: round(100 * a_ / max(1, b_))
     fam_stats = []
     for fs, fn, fd, live, js_ in fam_rows:
         mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"]]
@@ -2573,6 +2642,7 @@ def main():
          '<option value="developer">Developer</option><option value="executive">Executive</option></select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
+         f'<p class="note no-print">Not sure how to start? <a href="{P}/resume/examples/">Open a resume example for your kind of work</a> and replace it line by line.</p>'
          '<div id="rb-demand" class="no-print" aria-live="polite"></div>'
          '<div class="rgrid"><div id="rb-form"></div><div id="rb-preview" aria-live="polite"></div></div></div>'
          + '<section class="sec no-print"><div class="sec-head"><h2>What makes a resume get read</h2></div><div class="feats">'

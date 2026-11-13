@@ -258,6 +258,19 @@ that is not the employer's own hiring system must be labelled as such and kept o
     plainly that self-serve is not open yet.
 9. GitHub Pages limit is 1 GB. Check the built size (`du -sh site`) and do not add page types that push it past 800 MB.
 
+## Resume examples (`resume_examples.py`, `/resume/examples/`)
+
+- One page per live role (not the broad ones, not "-speaking"), built in `build.py` just before the guides. The example is an
+  invented person and the page says so. `data/resume-examples.json` holds every example in the resume builder's own shape;
+  `/resume/?example=<role>` loads it (it asks before replacing a resume already in the browser).
+- Every role has its own entry in `ROLE`: title, plain skills, four lines. A new role without an entry gets its field's lines
+  and the build prints a line about it: write the entry. `python3 resume_examples.py` checks the entries.
+- A tool gets into a line only through a typed place (`{lang:Python}`, `{crm:the CRM}`): the first skill of that kind that
+  postings for the role name, else the word after the colon. Putting the role's top tags into free places produced lines like
+  "designed a housing in Python"; do not go back to that.
+- The collector's tags are technical. For roles in `TECH` they lead the skills line and the chart. For other roles a tag
+  mostly describes the employer, so only office tools (`OFFICE`) are counted and the page says postings name duties, not tools.
+
 ## Ideas not done yet
 
 - Deploy `server/` to Cloudflare (owner's logins needed). Then: Plus (email alerts need an email service; AI resume tailoring, cover letters and interview prep with a monthly allowance per plan; the device sync endpoint already exists).

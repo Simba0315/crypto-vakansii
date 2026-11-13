@@ -982,3 +982,20 @@ s.was{font-weight:500;color:var(--faint);text-decoration-thickness:2px;font-size
 td s.was{font-size:.92em}
 .tier.best s.was{color:#8b897f}
 .launch{margin:0 0 14px;padding:12px 16px;background:var(--hl);color:var(--hl-ink);border-radius:6px;font-size:15px;max-width:900px}
+/* resume examples: the example on paper, the facts beside it */
+.rexgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:28px 48px;margin:18px 0 10px;align-items:start}
+@media(min-width:1000px){.rexgrid{grid-template-columns:minmax(0,560px) minmax(0,1fr)}}
+.paper{background:#fff;color:#111;border:1px solid var(--line2);border-radius:2px;padding:30px 34px;font:14px/1.5 Georgia,"Times New Roman",serif}
+.paper p{margin:0 0 6px;max-width:none}
+.paper .pp-name{font:700 25px/1.15 "Inter",system-ui,sans-serif;letter-spacing:-.01em;margin:0}
+.paper .pp-title{font:500 15px "Inter",system-ui,sans-serif;color:#333;margin:4px 0 0}
+.paper .pp-contact{font:12.5px "Inter",system-ui,sans-serif;color:#555;margin:8px 0 0}
+.paper .pp-h{font:700 12px "Inter",system-ui,sans-serif;color:#111;border-bottom:1px solid #111;padding-bottom:4px;margin:18px 0 8px}
+.paper .pp-job{margin:8px 0 0}
+.paper .pp-job span{float:right;font:12.5px "Inter",system-ui,sans-serif;color:#555}
+.paper ul{margin:4px 0 0;padding-left:18px}
+.rexside h2{font-size:19px;margin:22px 0 6px}
+.rexside .invf{margin-top:0}
+.rexside .invf b{font-size:26px}
+.rexside .hbars.chart{margin:6px 0 10px}
+.rexside .hbars.chart a{grid-template-columns:minmax(90px,150px) 1fr auto}

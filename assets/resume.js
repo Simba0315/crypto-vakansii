@@ -133,4 +133,16 @@
   }
   document.getElementById('rb').addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(drawDemand, 900); });
   setTimeout(drawDemand, 600);
+
+  /* An example from /resume/examples/<role>/ opens here: ?example=<role>. A resume that is already in this browser is replaced
+     only if the visitor agrees. */
+  var exq = ''; try { exq = new URLSearchParams(location.search).get('example') || ''; } catch (e) {}
+  if (exq) fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (all) {
+    var ex = all[exq]; if (!ex) return;
+    var mine = (data.name + data.summary + data.exp.map(function (x) { return x.role + x.text; }).join('')).trim();
+    if (mine && !confirm('Replace the resume in this browser with the example?')) return;
+    Object.keys(ex).forEach(function (k) { data[k] = JSON.parse(JSON.stringify(ex[k])); });
+    save(); applyTpl(); drawForm(); drawPreview(); drawDemand();
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  }).catch(function () {});
 })();
