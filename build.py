@@ -324,9 +324,11 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
-<div><p class="fhd">Browse</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/my-jobs/">My jobs</a></li><li><a href="{P}/plus/">Plus</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/status/">Data status</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/perks/">Perks</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/locations/">Locations</a></li></ul></div>
-<div><p class="fhd">Categories</p><ul>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Employers</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/about/">About</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Browse</p><ul><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Insights</a></li><li><a href="{P}/status/">Data status</a></li></ul></div>
+<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs widget &amp; badges</a></li><li><a href="{P}/api/">Free jobs API</a></li><li><a href="{P}/feed.xml">RSS feed</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
+<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/methodology/">Methodology</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -844,7 +846,7 @@ def main():
             lm = [(lo + hi) / 2 for j in by_cat[cs] if j["level"] == lv and j["usd"] for lo, hi in [j["usd"]]]
             if len(lm) >= 15: EST[(cs, lv)] = median(lm)
     top_cats = sorted((s for s in CAT if by_cat[s] and s != OTHER[0]), key=lambda s: -len(by_cat[s]))
-    FOOT["cats"] = "".join(f'<li><a href="{P}/jobs/{s}/">{e(CAT[s])}</a></li>' for s in top_cats[:6])
+    FOOT["cats"] = "".join(f'<li><a href="{P}/jobs/{s}/">{e(CAT[s])}</a></li>' for s in top_cats[:4])
     pop_sk = [t for t, _ in Counter(t for j in active for t in j["tags"]).most_common(10)]
     FOOT["pop"] = ('<p class="pop"><span>Popular searches:</span>' + "".join(f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} jobs</a>' for t in pop_sk)
                    + "".join(f'<a href="{P}/locations/{slug}/">Jobs in {e(name.removeprefix("the "))}</a>' for name, slug, _ in sorted(places, key=lambda x: -len(x[2]))[:6]) + "</p>")
@@ -869,11 +871,46 @@ def main():
     ROLE_TOP = sorted(((nm, s_, sum(1 for j in active if role_hit(nm, rx, j["title"]))) for nm, s_, rx in ROLES), key=lambda x: -x[2])
     ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
     TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT)       # [(path, name, one line)]
-    cats = "".join(tile(f"jobs/{s}/", CAT[s], len(by_cat[s])) for s in CAT if by_cat[s])
+    cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
+                   for s in sorted((s for s in CAT if by_cat[s]), key=lambda s: (s == OTHER[0], -len(by_cat[s]))))
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
     place_top = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in sorted(places, key=lambda x: -len(x[2]))[:28])
     comp_top = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items[:12])
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
+    logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS][:10]
+    # one real, open listing taken apart: what a visitor can read on every job page
+    aj = next((j for j in latest if j["salary"] and j["remote"] and j.get("years") and j["location"] and len(j["title"]) <= 46 and j.get("usd") and j["cat"] in CATMED
+               and j["id"].split("-", 1)[0] in SOURCE_NAME and slugify(j["company"]) in LOGOS), None)
+    anatomy = ""
+    if aj:
+        lands_a = countries_of(aj["location"])
+        scope_a = "worldwide" if aj.get("anywhere") else " or ".join(nm for _, nm in lands_a[:3]) if lands_a else ""
+        try: open_a = max(0, (datetime.date.today() - datetime.date.fromisoformat(aj["posted"][:10])).days)
+        except Exception: open_a = 0
+        rows_a = [("Salary", e(aj["salary"]) + f'<small>Median for {e(CAT[aj["cat"]])} roles: {money(CATMED[aj["cat"]])}</small>'),
+                  ("Workplace", "Remote" + (f", {e(scope_a)}" if scope_a else "")),
+                  ("Experience asked", f'{aj["years"]}+ years'),
+                  ("Open for", "Posted today" if open_a == 0 else f"{open_a} day{'s' if open_a != 1 else ''}"),
+                  ("Last checked", fdate(aj.get("last_seen") or TODAY)),
+                  ("Source", f'{e(aj["company"])}’s own posting on {SOURCE_NAME[aj["id"].split("-", 1)[0]]}')]
+        notes_a = [("Pay, when the employer states it.", "When it does not, you see what similar roles advertise."),
+                   ("Where “remote” applies.", "The countries the posting accepts, not just the word."),
+                   ("Years of experience asked.", "An “entry-level” title that wants five years stands out."),
+                   ("How long it has been open.", "A posting older than 90 days is flagged."),
+                   ("When we last checked it", "against the employer’s own page."),
+                   ("Where it came from.", "Always the employer’s posting, never another job board.")]
+        note_li = lambda i: f'<li><i>{i + 1}</i><span><b>{notes_a[i][0]}</b> {notes_a[i][1]}</span></li>'
+        anatomy = ('<section class="sec"><div class="sec-head"><h2>What every listing tells you</h2><a href="' + f'{P}/job/{aj["slug"]}/' + '">Open this job</a></div>'
+                   '<div class="anat"><ol class="anat-n">' + "".join(note_li(i) for i in range(3)) + "</ol>"
+                   f'<a class="anat-card" href="{P}/job/{aj["slug"]}/"><span class="ac-h">{ava(aj["company"])}<span><b>{e(aj["title"])}</b><span>{e(aj["company"])} · {e(aj["location"][:40])}</span></span></span>'
+                   '<span class="ac-rows">' + "".join(f'<span class="ac-r"><i>{i + 1}</i><span class="k">{k}</span><span class="v">{v}</span></span>' for i, (k, v) in enumerate(rows_a)) + "</span>"
+                   '<span class="ac-b">Apply on company site</span></a>'
+                   '<ol class="anat-n" start="4">' + "".join(note_li(i) for i in range(3, 6)) + "</ol></div>"
+                   '<p class="note" style="text-align:center;margin-top:14px">A real listing, open today. The other ' f'{n - 1:,}' ' are laid out the same way.</p></section>')
+    new_today_h = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY)
+    closed_today_h = sum(1 for j in archived if j.get("closed") == TODAY)
+    pulse = (f'<p class="pulse"><b>This morning’s update</b><span>{sum(1 for j in active if j.get("last_seen") == TODAY):,} roles re-checked</span>'
+             f'<span>{new_today_h:,} posted today</span><span>{closed_today_h:,} closed and moved to the archive</span><a href="{P}/status/">Data status</a></p>')
     board_rows = "".join(
         f'<a href="{P}/job/{j["slug"]}/"><span class="ba">{age(j["posted"])[0]}</span><span><span class="bt">{e(j["title"])}</span>'
         f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span></a>' for j in diverse(order(specific), 6, 1))
@@ -886,7 +923,10 @@ def main():
             f'<a href="{P}/perks/visa-sponsorship/">visa sponsorship</a><a href="{P}/entry-level/">entry-level</a><a href="{P}/with-salary/">salary listed</a><a href="{P}/crypto/">crypto</a></p>'
             f'<p class="heroalt">{len(remote):,} of them are remote and {fresh3:,} were posted in the last three days. '
             f'If you would rather not search, <a href="{P}/for-you/">list your skills and see what fits</a>.</p></div>'
-            f'<div class="board" aria-label="Newest roles"><div class="board-h"><span>Just posted</span><a href="{P}/board/"><b>Open as a wall</b></a></div>{board_rows}</div></div></section>')
+            f'<div class="board" aria-label="Newest roles"><div class="board-h"><span>Just posted</span><a href="{P}/board/"><b>Open as a wall</b></a></div>{board_rows}</div></div>'
+            f'<div class="wrap0 hero-logos"><p>Read this morning from the career pages of</p><div class="logorow">'
+            + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
+            + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos)} more</a></div></div></section>')
     plus_band = ""
     if CFG.get("plus", {}).get("live"):
         plus_band = (f'<div class="band"><div><h2>Get the email when a matching job appears</h2><p>Plus watches your saved searches and helps with the resume and cover letter for each posting. One payment, nothing renews.</p></div>'
@@ -906,8 +946,9 @@ def main():
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
             + section("Latest tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"All {n:,} jobs"))
+            + pulse + anatomy
             + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data"))
-            + section("Browse by category", f'<ul class="tiles">{cats}</ul>')
+            + section("Browse by category", f'<ul class="gloss">{cats}</ul>')
             + section("By role", '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + "</ul>", ("roles/", "All roles"))
             + section("Who is hiring most", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
             + section("By location", f'<ul class="tiles">{place_top}</ul>', ("locations/", f"All {len(places)} locations")) + band
@@ -1044,7 +1085,7 @@ def main():
         if not js: continue
         listing(f"jobs/{s}/", f"{name} jobs in tech", f"{name} Jobs in Tech ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), name + ' job')} at tech companies. Remote and on-site roles, updated daily.",
-                js, intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s]) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
+                js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s]) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
                 hub=hub_sections(f"{name} roles", js)[1], accent=CAT_ACCENT.get(s), list_title=f"Newest {name} jobs")
         rj = [j for j in js if j["remote"]]
         if len(rj) >= 5:
@@ -1918,7 +1959,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<a class="brandtile" href="{P}/og.jpg" download><img src="{P}/og.jpg" alt="{e(SITE)} share image" width="210" height="110" loading="lazy"><span>Share image · JPG 1200×630</span></a></div>'
                    '<p class="note">Keep the mark and the name together, leave clear space around them, and do not recolour, stretch or redraw them. The wordmark is set in Bricolage Grotesque ExtraBold.</p>')
          + section("Colours and type", '<div class="swatches">' + swatch("#f6f5f0", "Paper") + swatch("#0e0e0c", "Ink", "#f3f2ec") + swatch("#b7eec3", "Marker green") + swatch("#1f9d55", "Line green", "#ffffff") + swatch("#3ecf5f", "Live green") + swatch("#e2dfd5", "Line") + "</div>"
-                   '<p>Headlines: Bricolage Grotesque (700–800). Text: Inter (400–700). Numbers: JetBrains Mono (500–700). All three are open-source typefaces.</p>')
+                   '<div class="types"><div><span class="t1">Hiring Right Now</span><small>Headlines: Bricolage Grotesque, 700–800</small></div>'
+                   '<div><span class="t2">Every role here comes from the company’s own careers page and is checked again every day.</span><small>Text: Inter, 400–700</small></div>'
+                   f'<div><span class="t3">{n:,} · $196K · {fdate(TODAY, False)}</span><small>Numbers: JetBrains Mono, 500–700</small></div></div>'
+                   '<p class="note">All three are open-source typefaces.</p>')
          + section("Placements for employers and sponsors", f'<div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What it is</th></tr>{rows}</table></div>'
                    + ("<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout." if CFG["api_url"] else
                       "<p>Placements will be bought and switched on in a self-serve employer account, paid in crypto at checkout. The account is not open yet, so nothing can be bought today.")

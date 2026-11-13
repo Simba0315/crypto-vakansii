@@ -152,3 +152,26 @@ def plain(skill):
     """The plain line for a skill as a sentence, or an empty string."""
     d = INFO.get(skill, ("", ""))[1]
     return d[0].upper() + d[1:] + "." if d else ""
+
+
+# The same for job categories: who works in each, in plain words.
+CATEGORIES = {
+    "engineering": "people who write, test and run software and hardware: developers, DevOps, QA, machine learning and hardware engineers",
+    "security": "people who protect systems and data: security engineers, analysts, penetration testers and incident response",
+    "product": "people who decide what gets built and why: product managers, product owners and program managers",
+    "design": "people who shape how a product looks and works: product, UX and brand designers, researchers and writers",
+    "sales-bd": "people who bring in customers and partners: account executives, sales engineers, business development and partnerships",
+    "marketing": "people who make a product known: growth, content, brand, events, community and developer relations",
+    "support": "people who help customers after the sale: support, customer success, onboarding and technical account managers",
+    "compliance-legal": "lawyers and specialists who keep a company inside the rules: legal counsel, compliance, risk, policy and privacy",
+    "finance": "people who manage the money: accounting, financial planning, treasury, tax and, at trading firms, traders and quants",
+    "people": "people who hire and look after staff: recruiters, HR partners, people operations and workplace teams",
+    "data-research": "people who turn data into answers: analysts, data scientists, data engineers and researchers",
+    "operations": "people who keep the business running day to day: operations, supply chain, IT, facilities and administration",
+    "other": "roles whose title did not fit any of the other groups",
+}
+
+
+def plain_cat(slug):
+    d = CATEGORIES.get(slug, "")
+    return d[0].upper() + d[1:] + "." if d else ""
