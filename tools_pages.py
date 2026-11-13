@@ -199,7 +199,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          wrap("salary-checker",
               '<div class="card tl-form"><div class="tl-grid">'
               + _sel("cat", "Category", [("", "All categories")] + cats)
-              + _sel("lvl", "Level", LEVELS, hint="Taken from the job title: Senior, Lead, Junior…")
+              + _sel("lvl", "Level", [(v, n_) for v, n_ in LEVELS if not v or f"|{v}|" in groups], hint="Taken from the job title: Senior, Lead, Junior…")
               + _sel("skill", "Skill (optional)", [("", "Any skill")] + [(s, s) for s in skills])
               + _f("pay", "Your yearly salary, USD (optional)", "150,000", hint="Base pay before tax. You can type 150k.") + "</div>"
               + '<div class="tl-actions">' + _clear() + "</div></div>"

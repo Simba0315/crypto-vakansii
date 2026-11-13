@@ -16,6 +16,7 @@
     var mult = 1, m = s.match(/^(.*?\d)(k|m|mm|b|bn)$/);
     if (m) { s = m[1]; mult = m[2] === 'k' ? 1e3 : m[2] === 'b' || m[2] === 'bn' ? 1e9 : 1e6; }
     if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s = s.replace(/,/g, '');
+    else if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
     else if (/^-?\d+,\d{1,2}$/.test(s)) s = s.replace(',', '.');
     else s = s.replace(/,/g, '');
     if (!/^-?(\d+\.?\d*|\.\d+)$/.test(s)) return NaN;
@@ -117,7 +118,7 @@
     else val = fd > 0 && price > 0 ? price * fd : 0;
     if (!(n > 0) || !(price > 0)) return null;
     var rounds = Math.min(Math.floor(pos(o.rounds)), 20), dil = Math.min(pos(o.dilution), 99) / 100;
-    var retained = Math.pow(1 - dil, rounds), spread = Math.max(0, price - strike), own = fd > 0 ? n / fd : null;
+    var retained = Math.pow(1 - dil, rounds), spread = Math.max(0, price - strike), own = fd > 0 && n <= fd ? n / fd : null;
     var vestMonths = pos(o.vestYears) * 12, monthsIn = num(o.monthsIn), vest = null;
     if (!isNaN(monthsIn) && monthsIn >= 0) {
       var vn = T.vested(n, monthsIn, vestMonths, pos(o.cliffMonths));
@@ -499,7 +500,7 @@
     else add('warn', 'No requirements list found', 'We could not find a requirements or qualifications heading, or any “must” lines. Say plainly what a person needs in order to do this job.', 5);
 
     // years of experience
-    var yrs = [], ym, YR = /(\d{1,2})\s*\+?\s*(?:[-–]\s*\d{1,2}\s*)?(?:years|yrs)\b/gi;
+    var yrs = [], ym, YR = /(\d{1,2})\s*\+?\s*(?:[-–]\s*\d{1,2}\s*)?(?:years|yrs)\b(?!\s+(?:ago|old|in business|running))/gi;
     while ((ym = YR.exec(text))) yrs.push(+ym[1]);
     var maxY = yrs.length ? Math.max.apply(null, yrs) : 0;
     if (maxY >= 8) add('warn', 'Asks for ' + maxY + '+ years of experience', 'Years are a rough stand-in for ability and screen out people who learned faster. Say what the person must be able to do on day one.', 3);
@@ -843,7 +844,7 @@
       if (!r) return idle(out, 'Your raise', num(v.current) > 0 ? 'Now enter the raise as a percent, as an amount or as the new salary. The other two are filled in for you.' : 'Enter your current yearly salary, then the raise as a percent, an amount or the new salary.');
       var up = r.amount >= 0, word = up ? 'more' : 'less', real = '';
       if (r.realPct !== undefined) {
-        real = ' With prices up ' + esc(plain(r.inflation, 2)) + '%, that is ' + (r.realPct >= 0 ? 'a real raise of ' : 'a real pay cut of ') + esc(plain(Math.abs(r.realPct), 2)) + '%: the new salary buys what ' +
+        real = ' With prices ' + (r.inflation >= 0 ? 'up ' : 'down ') + esc(plain(Math.abs(r.inflation), 2)) + '%, that is ' + (r.realPct >= 0 ? 'a real raise of ' : 'a real pay cut of ') + esc(plain(Math.abs(r.realPct), 2)) + '%: the new salary buys what ' +
           esc(money(r.next / (1 + r.inflation / 100), s, 0)) + ' bought before.';
       }
       board(out, up ? 'Your raise' : 'Your pay cut', (up ? '+' : '−') + plain(Math.abs(r.pct), 2) + '%',

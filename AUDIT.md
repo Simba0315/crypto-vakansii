@@ -48,22 +48,22 @@ When you fix an open item, move it up and say how you checked it.
 | 58 | No size check | The workflow prints the size and stops before the hosting limit |
 | 60 | `resume.js`, `widget.js`, `widgets.js` were not in the version hash | Added, so returning visitors get new versions |
 | 7 | `/board/` with an unknown parameter showed an empty wall | Falls back to the latest roles with a line saying so; a link to the job list if nothing loads |
+| 4 | “Clear my profile” left the skill-gap block, the note and the pasted text | The handler now clears all three (`site.js`) |
+| 40 | BreadcrumbList markup missing on company, salary, insights, report and tool hub pages | `page()` now writes the markup from the visible trail on every page that has one |
+| 3 | Salary checker offered “Intern” and “Junior” levels that never returned a figure | The level list now holds only levels that have at least 20 postings with a yearly range (`tools_pages.py`) |
 
 ## Open
 
 | # | Finding | Note |
 |---|---|---|
-| 3 | Salary checker: "Intern" and "Junior" levels return nothing; hint shows without a skill | `tools_pages.py`, `tools.js` |
-| 4 | "Clear my profile" on `/for-you/` leaves the skill-gap block, the note and the pasted text | `site.js` |
 | 12 | Methodology states one minimum sample; pages use 3, 8, 10, 15, 20 and 30 | pick one set of thresholds and state each |
 | 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
-| 22 | Tool copy slips: "a honest", "Inc..", "Found 1 skills", "With prices up -2%", contractor rate sentence, "Download PDF" opens print | `tools.js`, `site.js`, `build.py` |
+| 22 | Tool copy slips still open: "a honest", "Inc..", the contractor rate sentence, "Download PDF" opens print (fixed 2026-11-13: "Found 1 skills", "With prices up -2%") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
-| 40 | BreadcrumbList markup missing on company, salary, insights, report and tool hub pages | add from the visible breadcrumb |
 | 44 | Wide tool tables on phones have no scroll hint | `tools.css` |
 | 47 | Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
 | 49–56, 59 | Server (`server/src/worker.js`), not deployed: a second post by the same employer is refused; company identity is an exact string ("Stripe!" passes); editing company skips the link check; activation is not atomic; removed jobs stay online; pending orders are never reconciled; rate limits can be raced; the link check is weaker than its comment; no password reset | must be fixed and tested before the server is deployed |
-| 61 | Tool logic: `num()` reads "150.000" as 150; resume match misses Go; job description checker misreads some salary formats and "founded 15 years ago"; boolean search invents a title; stock options shows 2000% ownership | `tools.js`, add tests |
+| 61 | Tool logic still open: resume match misses Go; job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13 with tests: `num("150.000")`, "founded 15 years ago", 2000% ownership) | `tools.js`, add tests |
 | 62–66 | Mixed title casing, "Other" shown as a category name, sample cards linking to `#`, the leftover `/hiring-badge/` page, "$440.00" next to "$2,200" | polish |
 | 68 | The contact handle is "@orderbulkreviews" on a site that promises no invented reviews | the owner's call |
 

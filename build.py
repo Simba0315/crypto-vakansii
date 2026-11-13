@@ -298,9 +298,21 @@ def fit_desc(d):
     return d
 
 
+CRUMB_RX = re.compile(r'<div class="crumbs">(.*?)</div>', re.S)
+CRUMB_A = re.compile(r'<a href="([^"]*)">(.*?)</a>')
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False):
     url = f"{FULL}/{path}"
     title, desc = fit_title(title), fit_desc(desc)
+    if '"BreadcrumbList"' not in head:                 # every page with a visible trail carries the same trail as markup
+        m_ = CRUMB_RX.search(body)
+        if m_:
+            parts = []
+            for bit in m_.group(1).split(" / ")[1:]:
+                a_ = CRUMB_A.fullmatch(bit.strip())
+                parts.append((html.unescape(a_.group(2)), a_.group(1)[len(P) + 1:]) if a_ else (html.unescape(bit.strip()), ""))
+            if parts: head += crumbs_ld(parts)
     write(path, f"""<!doctype html>
 <html lang="en" data-base="{P}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">

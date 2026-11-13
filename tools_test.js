@@ -406,5 +406,16 @@ eq('salary group', [g.n, g.low, g.high, g.median, g.p25, g.p75, g.p10, g.p90, g.
 eq('missing salary group', T.salaryGroup(DATA, 'design', 'Junior', ''), null);
 eq('no data', T.salaryGroup(null, '', '', ''), null);
 
+/* audit 2026-11-13: slips found by the review */
+eq('num: dot as thousands separator', T.num('150.000'), 150000);
+eq('num: European thousands with decimals', T.num('1.250.000,50'), 1250000.5);
+eq('num: a plain decimal is still a decimal', T.num('12.5'), 12.5);
+eq('num: 1.2m still works', T.num('1.2m'), 1200000);
+eq('equity: more options than shares gives no ownership figure', T.equity({ options: '2000000', strike: '1', price: '10', fdShares: '100000', multiples: ['2'] }).ownership, null);
+near('equity: a normal stake is kept', T.equity({ options: '10000', strike: '1', price: '10', fdShares: '10000000', multiples: ['2'] }).ownership, 0.001);
+let jdA = T.checkJD('About us\nWe were founded 15 years ago and have been 12 years in business.\n\nRequirements\n- 3+ years of Python\n- SQL\n' + 'You will build services that customers rely on every day. '.repeat(12));
+eq('jd: "founded 15 years ago" is not a requirement', JSON.stringify(jdA).indexOf('15+ years') < 0, true);
+eq('jd: a real requirement is still found', JSON.stringify(jdA).indexOf('3+ years') >= 0, true);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

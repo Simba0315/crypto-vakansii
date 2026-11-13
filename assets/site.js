@@ -404,7 +404,12 @@
       if (c) { var s = c.getAttribute('data-skill'), i = profile.skills.indexOf(s); if (i >= 0) profile.skills.splice(i, 1); else profile.skills.push(s); run(); return; }
       if (ev.target.id === 'fy-more') { shown += 40; render(); return; }
       if (ev.target.getAttribute('data-add')) { var add = ev.target.getAttribute('data-add'); if (profile.skills.indexOf(add) < 0) profile.skills.push(add); run(); return; }
-      if (ev.target.id === 'fy-clear') { profile = { skills: [], lvl: '', cat: '', sal: 0, remote: false }; lvl.value = cat.value = sal.value = ''; rem.checked = false; run(); return; }
+      if (ev.target.id === 'fy-clear') {
+        profile = { skills: [], lvl: '', cat: '', sal: 0, remote: false }; lvl.value = cat.value = sal.value = ''; rem.checked = false;
+        var gap = $('fy-gap'), txt = $('fy-text'), sn = $('fy-scan-note');          // nothing of the old profile stays on screen
+        if (gap) { gap.hidden = true; gap.innerHTML = ''; } if (txt) txt.value = ''; if (sn) sn.textContent = '';
+        run(); return;
+      }
       if (ev.target.id === 'fy-scan') {
         var text = $('fy-text').value, note = $('fy-scan-note');
         if (text.trim().length < 40) { note.textContent = 'Paste a bit more text first.'; return; }
@@ -415,7 +420,7 @@
           var known = chips.map(function (c) { return c.getAttribute('data-skill'); });
           got = got.filter(function (s) { return known.indexOf(s) >= 0; });
           got.forEach(function (s) { if (profile.skills.indexOf(s) < 0) profile.skills.push(s); });
-          note.textContent = got.length ? 'Found ' + got.length + ' skills: ' + got.join(', ') + '.' : 'No known skills found. Pick them by hand above.';
+          note.textContent = got.length ? 'Found ' + got.length + (got.length === 1 ? ' skill: ' : ' skills: ') + got.join(', ') + '.' : 'No known skills found. Pick them by hand above.';
           run();
         }).catch(function () { note.textContent = 'Could not read the skills list. Pick skills by hand above.'; });
       }
