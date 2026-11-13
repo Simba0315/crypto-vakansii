@@ -35,7 +35,8 @@
   /* ---------- job index: compact file expanded into rows ---------- */
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
   //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere, 21 logo, 22 talent pool,
-  //       23 exact posting time in minutes since 1970 (0 when only the day is known or the job is over a week old)]
+  //       23 exact posting time in minutes since 1970 (0 when only the day is known or the job is over a week old),
+  //       24 country codes of the places the job is in, for the flags]
   var cache, headCache;
   function expand(d) {
     var cslug = d.c.map(function (c) { return slugOf(c) || 'job'; });
@@ -45,7 +46,8 @@
         return [s, r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
-          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0, r[14] || 0];
+          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0, r[14] || 0,
+          d.f ? r[11].map(function (i) { return d.f[i]; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).slice(0, 3) : []];
     });
   }
   function load() {
@@ -132,6 +134,30 @@
       } else if (el.hasAttribute('data-day')) { el.textContent = el.getAttribute('data-day'); el.removeAttribute('data-day'); }
     });
   }
+  /* ---------- flags: a country is never shown without one ---------- */
+  // Chrome and Edge on Windows have no flag pictures and print the two letters instead; there the icon becomes a small badge with the code
+  var flagsOk = (function () {
+    try {
+      var c = document.createElement('canvas').getContext('2d'); c.font = '16px sans-serif';
+      return c.measureText('\uD83C\uDDFA\uD83C\uDDF8').width < c.measureText('\uD83C\uDDFA').width * 1.6;
+    } catch (e) { return true; }
+  })();
+  function flag(code) {
+    if (!flagsOk) return '<i class="fl cc">' + code + '</i>';
+    return '<i class="fl">' + String.fromCodePoint(0x1F1E6 + code.charCodeAt(0) - 65, 0x1F1E6 + code.charCodeAt(1) - 65) + '</i>';
+  }
+  function flags(codes) { return (codes || []).map(flag).join(''); }
+  if (!flagsOk) {
+    var letters = function (t) { return t.replace(/[\uD83C][\uDDE6-\uDDFF]/g, function (m) { return String.fromCharCode(65 + m.charCodeAt(1) - 0xDDE6); }); };
+    var plain = function (root) {
+      Array.prototype.forEach.call((root || document).querySelectorAll('i.fl:not(.cc)'), function (el) {
+        var t = letters(el.textContent); if (t === el.textContent) { el.remove(); return; }       // a globe has no letters: drop it
+        el.textContent = t; el.className = 'fl cc';
+      });
+      Array.prototype.forEach.call((root || document).querySelectorAll('option'), function (o) { if (/[\uD83C][\uDDE6-\uDDFF]/.test(o.textContent)) o.textContent = o.textContent.replace(/[\uD83C][\uDDE6-\uDDFF]/g, '').trim(); });
+    };
+    plain(); document.addEventListener('DOMContentLoaded', function () { plain(); });
+  }
   function card(j, more, badge) {
     var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
       (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
@@ -139,7 +165,7 @@
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
     var ag = ageOf(j[16]);
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
-      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') +
+      '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + flags(j[24]) + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
       '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (j[23] ? ' data-t="' + j[23] * 60 + '"' : '') + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
   }
@@ -360,7 +386,7 @@
         var code = get('hrn_place', '') || G.tz[tz] || '', c = G.c[code], bits = [], label;
         if (c) {
           label = c[0];
-          if (c[2] && c[1]) bits.push('<a href="' + P + '/locations/' + c[1] + '/">' + n(c[2]) + (c[2] === 1 ? ' job' : ' jobs') + ' in ' + esc(c[0]) + '</a>');
+          if (c[2] && c[1]) bits.push('<a href="' + P + '/locations/' + c[1] + '/">' + n(c[2]) + (c[2] === 1 ? ' job' : ' jobs') + ' in ' + flag(code) + esc(c[0]) + '</a>');
           if (c[3] && c[1]) bits.push('<a href="' + P + '/jobs/?remote&loc=' + c[1] + '">' + n(c[3]) + ' remote ' + (c[3] === 1 ? 'role names' : 'roles name') + ' it</a>');
           var reg = G.r[c[4]];
           if (reg && !(c[2] && c[1])) bits.push('<a href="' + P + '/locations/' + c[4] + '/">' + n(reg[1]) + ' jobs in ' + esc(reg[0]) + '</a>');
@@ -1044,4 +1070,17 @@
   });
   window.addEventListener('hashchange', function () { show(location.hash === '#employers'); });
   show(location.hash === '#employers');
+})();
+
+/* a "copy" button for a sentence or a block of text on the page: <button data-clip="id of the element"> */
+(function () {
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('[data-clip]') : null; if (!b) return;
+    var src = document.getElementById(b.getAttribute('data-clip')); if (!src) return;
+    var text = 'value' in src ? src.value : src.textContent, old = b.textContent;
+    if (!b.hasAttribute('data-raw')) text = text.replace(/\s+/g, ' ').trim();
+    var done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = old; }, 1600); };
+    var pick = function () { var r = document.createRange(); r.selectNodeContents(src); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, pick); else pick();
+  });
 })();

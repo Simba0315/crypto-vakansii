@@ -1164,3 +1164,23 @@ h2{letter-spacing:-.025em}
 }
 .shot .job .pill:not(.sal):not(.ok){display:none}
 .shot .job .pill.ok::before{content:"·";margin:0 7px;color:var(--line2);font-weight:400}
+
+/* flags in front of country names */
+.fl{font-style:normal;margin-right:.36em;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla",sans-serif;line-height:1}
+.fl+.fl{margin-left:-.12em}
+.fl.cc{display:inline-block;font:600 10px/1 var(--mono);letter-spacing:.03em;color:var(--muted);border:1px solid var(--line2);border-radius:4px;padding:2px 3px;vertical-align:.12em}
+h1 .fl{margin-right:.3em}
+
+/* a sentence ready to quote, and the "link to this page" block as a card */
+.quotable{margin-top:28px;border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;background:var(--accent-soft)}
+.quotable blockquote{margin:6px 0 12px;font-size:18px;line-height:1.5;max-width:70ch}
+.quotable cite{display:block;margin-top:6px;font-size:13px;font-style:normal;color:var(--muted);word-break:break-all}
+.quotable p{margin:0}
+details.embed{border:1px solid var(--line);border-radius:var(--radius);background:var(--bg2);padding:0;margin-top:20px}
+details.embed>summary{padding:16px 20px;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+details.embed>summary::-webkit-details-marker{display:none}
+details.embed>summary::after{content:"+";font-size:22px;line-height:1;color:var(--muted);flex:none}
+details.embed[open]>summary::after{content:"\2013"}
+details.embed>:not(summary){margin-left:20px;margin-right:20px}
+details.embed[open]{padding-bottom:16px}
+details.embed pre{background:var(--bg)}

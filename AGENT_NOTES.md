@@ -289,3 +289,13 @@ that is not the employer's own hiring system must be labelled as such and kept o
 - More sources: other applicant tracking systems (Workable, SmartRecruiters, Recruitee, Teamtailor).
 - Compare page (two skills or two companies side by side), monthly hiring report page.
 - Mobile apps and a browser extension are planned by the owner after the site.
+
+## Flags (owner's rule, 13 Nov 2026)
+
+A country name in a list, tile, heading, table or job card is never printed without its flag. In `build.py`: `fl(code)` for an ISO code,
+`pfl(slug)` for a place page (a city gets its country's flag, a region a globe), `path_fl(path)` for a link to `locations/…` or
+`crypto/in/…`, `loc_flags(location)` for a job's location line. `tile()`, `listing()` headings, the salary `table()` and the crypto
+directory add the flag by themselves from the path. In `site.js`: `flag(code)` and `flags(codes)`; row[24] of the job index holds the
+country codes. Not in running prose and not in meta titles. Chrome on Windows cannot draw flags: `site.js` turns `i.fl` into a
+two-letter badge (`.fl.cc`).
+
