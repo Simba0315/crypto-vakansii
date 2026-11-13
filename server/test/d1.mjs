@@ -11,18 +11,21 @@ class Statement {
     return column ? row[column] : { ...row };
   }
   async all() { return { results: this.sqlite.prepare(this.sql).all(...this.args).map((r) => ({ ...r })), success: true, meta: {} }; }
-  async run() {
+  runNow() {
     const r = this.sqlite.prepare(this.sql).run(...this.args);
-    return { success: true, meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) } };
+    return { success: true, results: [], meta: { changes: Number(r.changes), last_row_id: Number(r.lastInsertRowid) } };
   }
+  async run() { return this.runNow(); }
 }
 
 export class D1 {
   constructor(file = ':memory:') { this.sqlite = new DatabaseSync(file); }
   prepare(sql) { return new Statement(this.sqlite, sql); }
+  // Like D1's batch: one transaction, all of it or none of it. Nothing is awaited between BEGIN and COMMIT, so no other request's
+  // statement can run in the middle of it (with an await there, two requests in flight would share one open transaction).
   async batch(statements) {
-    this.sqlite.exec('BEGIN');
-    try { const out = []; for (const s of statements) out.push(await s.run()); this.sqlite.exec('COMMIT'); return out; }
+    this.sqlite.exec('BEGIN IMMEDIATE');
+    try { const out = statements.map((s) => s.runNow()); this.sqlite.exec('COMMIT'); return out; }
     catch (err) { this.sqlite.exec('ROLLBACK'); throw err; }
   }
   async exec(sql) { this.sqlite.exec(sql); }

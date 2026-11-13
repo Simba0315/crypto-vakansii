@@ -53,6 +53,7 @@ When you fix an open item, move it up and say how you checked it.
 | 3 | Salary checker offered “Intern” and “Junior” levels that never returned a figure | The level list now holds only levels that have at least 20 postings with a yearly range (`tools_pages.py`) |
 | 12 | Methodology stated one minimum sample while pages used 3, 8, 10, 15, 20 and 30 | Three thresholds, each stated in the methodology: 15 for a median next to a list or company (company pages used 3), 30 for rankings and comparisons, 20 for the salary tools |
 | 44 | Wide tables on phones had no scroll hint | A soft shadow now shows at the edge a table can still be scrolled towards (`.tablewrap`) |
+| 49–56, 59 | Server (`server/src/worker.js`, not deployed): second post refused, company identity an exact string, edits skipping the link check, activation not atomic, placements outliving a removed job, pending orders never reconciled, rate limits that could be raced, a weak link check, no password reset | All nine fixed with tests (the suite went from 110 to 300 checks; each new test fails on the old code): company names are owned by one account through a normalised key, any edit of link, title, company or site re-runs the check, activation is one transaction, a deleted job takes its placement down, a cron and the order page ask the gateway about unpaid invoices, counters are a single statement, the link check follows redirects hop by hop, password reset exists (mail goes out only once a `MAIL` binding is set) |
 
 ## Open
 
@@ -62,9 +63,9 @@ When you fix an open item, move it up and say how you checked it.
 | 22 | Tool copy slips still open: "a honest", the contractor rate sentence, "Download PDF" opens print (fixed 2026-11-13: "Found 1 skills", "With prices up -2%", "Inc..") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
 | 47 | Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
-| 49–56, 59 | Server (`server/src/worker.js`), not deployed: a second post by the same employer is refused; company identity is an exact string ("Stripe!" passes); editing company skips the link check; activation is not atomic; removed jobs stay online; pending orders are never reconciled; rate limits can be raced; the link check is weaker than its comment; no password reset | must be fixed and tested before the server is deployed |
 | 61 | Tool logic still open: job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13: `num("150.000")`, "founded 15 years ago", 2000% ownership, and Go in running text such as "Python and Go", which also raises the number of jobs tagged Go at the next collection) | `tools.js`, add tests |
 | 62–66 | Mixed title casing, "Other" shown as a category name, sample cards linking to `#`, (fixed 2026-11-13: "$440.00" next to "$2,200"; the leftover `/hiring-badge/` stub is now a real hiring badge page) | polish |
+| 69 | Left after the server fixes: the account page has no password-reset form and no delete button for a job; `createOrder` creates the gateway invoice before saving the order; “renew” does not re-check the apply link; look-alike letters in company names are not folded | `assets/account.js`, `server/src/worker.js`, before the server is deployed |
 | 68 | The contact handle is "@orderbulkreviews" on a site that promises no invented reviews | the owner's call |
 
 ## Not covered by the review
