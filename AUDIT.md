@@ -60,7 +60,7 @@ When you fix an open item, move it up and say how you checked it.
 | # | Finding | Note |
 |---|---|---|
 | 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
-| 22 | Tool copy slips still open: "a honest", the contractor rate sentence, "Download PDF" opens print (fixed 2026-11-13: "Found 1 skills", "With prices up -2%", "Inc..") | `tools.js`, `build.py` |
+| 22 | Tool copy slips still open: "a honest" and "Download PDF" no longer appear in visible copy (checked 2026-11-13); contractor rate sentence reworded 2026-11-13 (fixed 2026-11-13: "Found 1 skills", "With prices up -2%", "Inc..") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
 | 47 | Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
 | 61 | Tool logic still open: job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13: `num("150.000")`, "founded 15 years ago", 2000% ownership, and Go in running text such as "Python and Go", which also raises the number of jobs tagged Go at the next collection) | `tools.js`, add tests |

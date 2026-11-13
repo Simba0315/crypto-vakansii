@@ -1150,7 +1150,7 @@
       board(out, title, fmt(r.days, 1) + ' billable days a year',
         big(money(r.day, s, 0), 'per day') +
         sub('You need to invoice ' + esc(money(r.revenue, s, 0)) + ' a year over ' + esc(fmt(r.days, 1)) + ' billable days. ' +
-          (r.upliftPct > 0.5 ? 'Per hour that is ' + esc(plain(r.upliftPct, 0)) + '% above the ' + esc(money(r.salariedHour, s, 2)) + ' an hour the same income works out to in a salaried job (2,080 paid hours a year).' : 'With no days off, no unbilled time and no extra costs entered, this equals the salaried hourly rate. Fill in those fields for a realistic figure.')) +
+          (r.upliftPct > 0.5 ? 'Per hour that is ' + esc(plain(r.upliftPct, 0)) + '% more than the ' + esc(money(r.salariedHour, s, 2)) + ' an hour that the same yearly income pays in a salaried job (2,080 paid hours a year). The difference covers your days off, unbilled time and costs, which an employer would otherwise carry.' : 'With no days off, no unbilled time and no extra costs entered, this equals the salaried hourly rate. Fill in those fields for a realistic figure.')) +
         kv([['Per hour', money(r.hour, s, 2)], ['Per day', money(r.day, s, 0)], ['Per month, average', money(r.month, s, 0)], ['Yearly invoices', money(r.revenue, s, 0)], ['Days worked', fmt(r.workDays, 1)], ['Days billed', fmt(r.days, 1)]]));
     });
   };
