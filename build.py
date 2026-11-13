@@ -486,7 +486,7 @@ SLUG_ICON = {   # fields on /categories/ and the categories of job lists
     "people": "users", "data-research": "chart", "operations": "sliders", "healthcare": "heart", "manufacturing": "factory", "supply-chain": "box", "retail": "bag",
     "education": "cap", "consulting": "case", "other": "dots",
 }
-PATH_FIELD = re.compile(r"^(?:jobs|crypto|categories)/([a-z0-9-]+)/$")
+PATH_FIELD = re.compile(r"^(?:jobs|crypto|categories|salaries)/([a-z0-9-]+)/$")
 
 
 def icon(slug):
@@ -1723,8 +1723,9 @@ def main():
     paid = [(j, j["usd"]) for j in active if j["usd"]]
     def table(groups, link=None, minimum=15, top=40):  # median salary per group
         rows_ = sorted(((k, median([(lo + hi) / 2 for _, (lo, hi) in v]), len(v)) for k, v in groups.items() if len(v) >= minimum), key=lambda r: -r[1])[:top]
-        name = lambda k: ('<a href="' + P + "/" + link(k) + '">' + path_fl(link(k)) + e(k) + "</a>") if link else e(k)
-        body_ = "".join(f"<tr><td>{name(k)}</td><td><strong>{money(m_)}</strong></td><td>{c:,}</td></tr>" for k, m_, c in rows_)
+        name = lambda k: (path_icon(link(k)) + '<a href="' + P + "/" + link(k) + '">' + path_fl(link(k)) + e(k) + "</a>") if link else e(k)
+        mx_ = max((r[1] for r in rows_), default=1) or 1
+        body_ = "".join(f'<tr><td>{name(k)}</td><td class="salbar"><strong>{money(m_)}</strong><span class="bar"><i style="width:{max(4, round(100 * m_ / mx_))}%"></i></span></td><td>{c:,}</td></tr>' for k, m_, c in rows_)
         return f'<div class="tablewrap"><table><tr><th>Name</th><th>Median salary</th><th>Roles counted</th></tr>{body_}</table></div>'
     g_cat, g_tag, g_comp = defaultdict(list), defaultdict(list), defaultdict(list)
     for j, r in paid:
@@ -1751,9 +1752,13 @@ def main():
         return section(title, t_) if t_ else ""
     page("salaries/", f"Tech Salaries From Live Job Postings ({len(paid):,} roles) | {SITE}",
          "Median salaries in tech by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
-         crumbs(("Salaries", "")) + "<h1>Tech salaries from live job postings</h1>"
+         crumbs(("Salaries", "")) + '<h1>Tech salaries from <span class="hl">live job postings</span></h1>'
          f'<p class="lead">{100 - SALPCT}% of open tech postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
          f'Each figure is a <a href="{P}/glossary/#median">median</a>: half of the postings advertise more than it, half less. These are advertised ranges, not what people are actually paid.</p>'
+         + (lambda mids_: f'<div class="statrow"><div class="stat"><b>{money(median(mids_))}</b><span>median advertised salary</span></div>'
+                          f'<div class="stat"><b>{money(mids_[len(mids_) // 4])} – {money(mids_[3 * len(mids_) // 4])}</b><span>middle half of roles</span></div>'
+                          f'<div class="stat"><b>{SALPCT}%</b><span>of open postings state pay</span></div>'
+                          f'<div class="stat"><b>{len(mids_):,}</b><span>roles counted today</span></div></div>')(sorted((lo + hi) / 2 for _, (lo, hi) in paid))
          + section("By category", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10))
          + level_section("Tech salaries by level, intern to lead", paid)
          + section("By skill", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"))

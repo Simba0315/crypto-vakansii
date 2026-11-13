@@ -1230,3 +1230,31 @@ details.embed pre{background:var(--bg)}
 .achip:hover{border-color:var(--text)}
 .achip:hover span{color:var(--text)}
 @media(max-width:720px){.achip{min-height:40px}}
+
+/* tables and figures in the new look: a table sits in a rounded card, figures are tiles, bars are rounded */
+.tablewrap{border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow);margin:14px 0}
+.sec-head+.tablewrap{border-top:1px solid var(--line);margin-top:0}
+.tablewrap table{margin:0}
+.tablewrap th,.tablewrap td,.tablewrap th:last-child,.tablewrap td:last-child{padding:12px 18px}
+.tablewrap th{background:var(--bg2);font-size:12.5px}
+.tablewrap tr:last-child td{border-bottom:0}
+.tablewrap tr:hover td{background:var(--bg2)}
+.tablewrap td{vertical-align:middle}
+.tablewrap .fic{width:26px;height:26px;border-radius:8px;margin-right:10px}
+.tablewrap .fic svg{width:15px;height:15px}
+.bar,.bar i,.hbars .hb,.hbars .hb i{border-radius:999px}
+td.salbar{white-space:nowrap}
+td.salbar strong{display:inline-block;min-width:60px}
+td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
+.statrow{border:0;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:22px 0 8px}
+.stat{background:var(--bg2);border-radius:14px;padding:18px 20px}
+.stat b{font-size:30px;letter-spacing:-.03em}
+@media(max-width:560px){.tablewrap th,.tablewrap td,.tablewrap th:last-child,.tablewrap td:last-child{padding:11px 12px}td.salbar .bar{display:none}}
+/* job page: the small actions under Apply read as a list of things you can do */
+.jtools{display:block;margin:14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.jtools .linkbtn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:11px 14px;text-align:left;text-decoration:none;border-bottom:1px solid var(--line);background:var(--card);font-size:14px}
+.jtools .linkbtn::after{content:"\203A";color:var(--faint);font-size:18px;line-height:1}
+.jtools .linkbtn:hover{background:var(--bg2)}
+.jtools .linkbtn:last-of-type{border-bottom:0}
+.jtools .jout{margin:0;border-left:0;border-top:1px solid var(--line);padding:11px 14px}
+
