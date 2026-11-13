@@ -215,6 +215,17 @@
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 
+  /* ---------- feeds page: pick a feed, copy its address ---------- */
+  var feedpick = $('feedpick'), feedurl = $('feedurl'), feedcopy = $('feedcopy');
+  if (feedpick && feedurl) {
+    feedpick.addEventListener('change', function () { feedurl.value = feedpick.value; });
+    feedurl.addEventListener('focus', function () { feedurl.select(); });
+    if (feedcopy) feedcopy.addEventListener('click', function () {
+      var done = function () { feedcopy.textContent = 'Copied'; setTimeout(function () { feedcopy.textContent = 'Copy the address'; }, 1600); };
+      if (navigator.clipboard) navigator.clipboard.writeText(feedurl.value).then(done, function () { feedurl.select(); }); else { feedurl.select(); done(); }
+    });
+  }
+
   /* ---------- companies page: quick filter ---------- */
   var cfilter = $('cfilter');
   if (cfilter) cfilter.addEventListener('input', function () {

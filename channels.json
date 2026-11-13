@@ -1,0 +1,4 @@
+{
+  "telegram": [],
+  "x": {"enabled": false, "max_per_run": 2, "filter": {"min_usd": 150000}}
+}

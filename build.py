@@ -372,7 +372,7 @@ def FULL_FOOT():
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
-<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feed.xml">News feed (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
+<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
@@ -1832,6 +1832,42 @@ def main():
          + section("Rankings", '<div class="tgrid">' + "".join(icard(u, t, d) for u, t, d in INS)
                    + f'<a class="tcard" href="{P}/trends/"><span class="tbody"><b>Hiring trends dashboard</b><span>The headline numbers on one page: skills, companies, categories and locations.</span><i><u>Open the dashboard</u></i></span></a></div>')
          + (section("Who is hiring, field by field", '<p class="note">Each bar opens the list of employers with the most open jobs in that field, with their remote roles and advertised pay.</p>' + fam_bars) if fam_bars else ""))
+
+    # Feeds: every list as an address a bot can read. Channel owners in Telegram, Slack and Discord plug these into their own bots,
+    # and every item links back to the job page here (the owner asked for "Telegram feeds like @nodejsjobsfeed" and for more channels).
+    feed_groups = [("The whole site", [("feed.xml", "All new jobs"), ("remote/feed.xml", "Remote jobs"), ("crypto/feed.xml", "Crypto and web3 jobs")]),
+                   ("By field", [(f"categories/{fs}/feed.xml", fn) for fs, fn, _, _, _ in fam_rows]),
+                   ("By kind of work", [(f"roles/{s_}/feed.xml", nm) for s_, (nm, _) in sorted(by_role.items(), key=lambda kv: kv[1][0].lower())]),
+                   ("By skill", [(f"skills/{tslug(t)}/feed.xml", t) for t, _ in skill_counts.most_common(40)])]
+    feed_opts = "".join(f'<optgroup label="{e(g_)}">' + "".join(f'<option value="{FULL}/{u}">{e(nm)}</option>' for u, nm in items) + "</optgroup>" for g_, items in feed_groups)
+    feed_dir = '<div class="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(g_)}</span><span>{len(items)}</span></h2><ul>' + "".join(f'<li><a href="{P}/{u}">{e(nm)}</a><span>RSS</span></li>' for u, nm in items) + "</ul></div>" for g_, items in feed_groups) + "</div>"
+    msg_ = ('<span class="ln"><b>Senior Data Analyst</b> at Example Co</span><span class="ln">Remote · $120K – $150K</span><span class="sk" style="width:70%"></span>')
+    feed_cards = [
+        ("A Telegram channel", "Add an RSS bot to your channel as an administrator and give it the feed address. Each new job arrives as a post with a link.", '<span class="ex">example</span>' + msg_ + '<span class="ln">posted by the bot, 2 minutes ago</span>'),
+        ("A Slack channel", "Install Slack’s RSS app and type the command with the feed address in the channel that should get the jobs.", '<code>/feed subscribe\n' + f'{FULL.split("//")[1][:34]}…/feed.xml</code>'),
+        ("A Discord server", "An RSS bot such as MonitoRSS reads the address and posts each new job into the room you pick.", '<span class="ex">example</span><span class="ln"><b>#jobs</b></span>' + msg_),
+        ("Your own reader or inbox", "Any feed reader shows new jobs like unread mail. Services such as IFTTT, Zapier or Make can also send each one to your email.", '<span class="rw"><span>Unread</span><span class="mt"><i style="width:100%"></i></span><b>12</b></span><span class="ln">New jobs since yesterday</span><span class="sk" style="width:84%"></span>'),
+    ]
+    feed_qa = [("Is it free?", "Yes. No key, no account, no limit on how many feeds you use."),
+               ("How often does a feed change?", "Each time the employers’ careers pages are read again. A feed holds the 100 newest jobs of its kind."),
+               ("May I post these jobs in my channel or on my site?", "Yes, for personal and commercial projects. Keep the link to the job page: people apply through it, on the employer’s own site, free of charge."),
+               ("What is in each item?", "The job title and the employer, the place, the first lines of the posting, the date and a link to the job page."),
+               ("Is there something more exact than a feed?", "Yes: the free API returns the same lists as data for programs, and the widget shows them on a web page without any code of your own.")]
+    feed_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in feed_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    n_feeds = sum(len(items) for _, items in feed_groups)
+    page("feeds/", f"Job Feeds (RSS) for Telegram, Slack and Discord: {n_feeds} lists | {SITE}",
+         f"Free RSS feeds of new jobs by field, kind of work and skill: {n_feeds} addresses for a Telegram channel, a Slack or Discord room, or a feed reader. No key, no account.",
+         crumbs(("Feeds", "")) + '<h1>New jobs, sent to your channel or chat <span class="hl">by themselves</span></h1>'
+         '<p class="plain"><b>In plain words:</b> a feed is an address that always returns the newest jobs of one kind. A bot or an app reads it and posts each new job where you want it.</p>'
+         f'<p class="lead">{n_feeds} feeds, one for every field, kind of work and skill. Pick one, copy its address, give it to a bot. Every item links to the job page, where people apply on the employer’s own site.</p>'
+         '<div class="feedpick"><label for="feedpick">Pick a feed</label><select id="feedpick">' + feed_opts + '</select>'
+         f'<input id="feedurl" type="text" readonly value="{FULL}/feed.xml" aria-label="Feed address"><button class="btn" id="feedcopy" type="button">Copy the address</button></div>'
+         + section("Where a feed can go", '<div class="tgrid">' + "".join(f'<div class="tcard"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span></span></div>' for t_, d_, scr in feed_cards) + "</div>")
+         + section("Every feed", feed_dir)
+         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in feed_qa) + "</dl>")
+         + f'<p class="note">For programs: the <a href="{P}/api/">free API</a>. For web pages: the <a href="{P}/widgets/">job widget</a>.</p>', head=feed_ld)
 
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"
