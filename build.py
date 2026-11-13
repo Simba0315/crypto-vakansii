@@ -1209,6 +1209,16 @@ def main():
     # The hero shows the product instead of describing it: the search, four numbers, then a framed window with today's jobs and
     # three doors beside it (the owner asked, many times, for the look of the sites he sends: light, large, the product on show).
     shot_rows = "".join(card(j) for j in diverse(order(specific), 7, 1))
+    # Tabs over the same window: each tab is a real link (works without scripts) and a script swaps the list in place.
+    SHOT_MORE = {"remote": "See all remote jobs", "with-salary": "See all jobs with pay listed", "entry-level": "See all entry-level jobs"}
+    shot_tabs = [("Latest jobs", "jobs", shot_rows)]
+    for lab_, href_, pool_ in (("Remote", "remote", [j for j in specific if j["remote"]]),
+                               ("With salary", "with-salary", [j for j in specific if j["salary"]]),
+                               ("Entry-level", "entry-level", [j for j in specific if j["entry"]])):
+        if len(pool_) >= 7:
+            shot_tabs.append((lab_, href_, "".join(card(j) for j in diverse(order(pool_), 7, 1))))
+    shot_nav = "".join(f'<a{" class=on" if i_ == 0 else ""} href="{P}/{h_}/" data-tab="{i_}" data-more="{SHOT_MORE.get(h_, "")}">{l_}</a>' for i_, (l_, h_, _) in enumerate(shot_tabs))
+    shot_panels = "".join(f'<ul class="jobs" data-panel="{i_}"{"" if i_ == 0 else " hidden"}>{r_}</ul>' for i_, (_, _, r_) in enumerate(shot_tabs))
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
     hero = (f'<section class="hero v2"><div class="wrap">'
@@ -1223,8 +1233,8 @@ def main():
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read every hour</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
             f'<div class="wrap"><div class="shot"><div class="shot-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'
-            f'<div class="shot-tabs"><a class="on" href="{P}/jobs/">Latest jobs</a><a href="{P}/remote/">Remote</a><a href="{P}/with-salary/">With salary</a><a href="{P}/entry-level/">Entry-level</a><a href="{P}/board/">Live wall</a></div></div>'
-            f'<div class="shot-body"><div><ul class="jobs">{shot_rows}</ul><p class="shot-more"><a class="btn" href="{P}/jobs/">See all {n:,} jobs</a></p></div>'
+            f'<div class="shot-tabs" id="shot-tabs">{shot_nav}<a href="{P}/board/">Live wall</a></div></div>'
+            f'<div class="shot-body"><div id="shot-panels">{shot_panels}<p class="shot-more"><a class="btn" id="shot-more" href="{P}/jobs/">See all {n:,} jobs</a></p></div>'
             f'<aside class="shot-side">'
             f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
             f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>Five templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'

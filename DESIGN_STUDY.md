@@ -27,7 +27,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    the highest-paid list sits on a full-width dark band. 📋 Still to do: section headers with the heading left and one sentence
    plus the "all" link right.
 10. 📋 **Two type sizes by purpose:** 36–40px section headings on pages that explain, 24–28px on pages that list.
-11. ✅ **The board in the hero shows pay.** 📋 Still to do: tabs (Just posted, Highest paid, Remote).
+11. ✅ **The board in the hero shows pay**, and its tabs (Latest, Remote, With salary, Entry-level) swap the list in place (2026-11-14).
 12. ✅ **A line of provenance instead of badges and ratings:** "checked on … against employer career pages", linked to the method.
 13. ✅ **Header:** six items (was eight). 📋 Still to do: menus under Jobs, Tools and Resources, and a search field with "/".
 14. 📋 **Footer:** five short columns, then directory rows (by skill, by location, by category), then the stamp.
