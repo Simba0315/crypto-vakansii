@@ -47,6 +47,7 @@ When you fix an open item, move it up and say how you checked it.
 | 57 | One bad value in a feed stopped the whole daily run; jobs of removed sources never closed | Each feed is read inside its own guard; jobs of sources no longer read are closed |
 | 58 | No size check | The workflow prints the size and stops before the hosting limit |
 | 60 | `resume.js`, `widget.js`, `widgets.js` were not in the version hash | Added, so returning visitors get new versions |
+| 7 | `/board/` with an unknown parameter showed an empty wall | Falls back to the latest roles with a line saying so; a link to the job list if nothing loads |
 
 ## Open
 
@@ -54,7 +55,6 @@ When you fix an open item, move it up and say how you checked it.
 |---|---|---|
 | 3 | Salary checker: "Intern" and "Junior" levels return nothing; hint shows without a skill | `tools_pages.py`, `tools.js` |
 | 4 | "Clear my profile" on `/for-you/` leaves the skill-gap block, the note and the pasted text | `site.js` |
-| 7 | `/board/` with an unknown parameter shows an empty wall | add a fallback to the latest jobs and a line of text |
 | 12 | Methodology states one minimum sample; pages use 3, 8, 10, 15, 20 and 30 | pick one set of thresholds and state each |
 | 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
 | 22 | Tool copy slips: "a honest", "Inc..", "Found 1 skills", "With prices up -2%", contractor rate sentence, "Download PDF" opens print | `tools.js`, `site.js`, `build.py` |

@@ -1746,7 +1746,7 @@ html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"Je
 .t{{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.1vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3f2ec;text-decoration:none}}
 .c,.l{{font-size:clamp(11px,1.4vw,20px);color:#a5a399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.c{{color:#e9e7de}}
 .foot{{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:1.6vh 3vw;font-size:clamp(10px,1.1vw,15px);color:#77756c;letter-spacing:.06em;text-transform:uppercase;background:#0b0b0a}}
-.foot a{{color:#7ee39a;text-decoration:none}}@media(max-width:700px){{.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}}}</style></head><body>
+.foot a{{color:#7ee39a;text-decoration:none}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#7ee39a}}@media(max-width:700px){{.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}}}</style></head><body>
 <div class="top"><a href="{P}/"><span class="dot"></span>{e(SITE)}</a><h1 id="what" style="all:unset">Fresh on the board</h1><b id="clock"></b></div><div id="rows"></div>
 <div class="foot"><span id="count"></span><a href="{P}/widgets/">Put this board on your screen</a></div>
 <script>(function(){{var q=new URLSearchParams(location.search),path=q.get('skill')?'skills/'+q.get('skill'):q.get('company')?'companies/'+q.get('company'):q.get('location')?'locations/'+q.get('location'):q.has('remote')?'remote':'latest';
@@ -1756,7 +1756,11 @@ function age(iso){{var p=String(iso||'').split('-');if(p.length<3)return'';var n
 function draw(){{if(!jobs.length)return;var s=jobs.slice(page*per,page*per+per);if(!s.length){{page=0;s=jobs.slice(0,per)}}
 rows.innerHTML=s.map(function(j,i){{return'<div class="r" style="animation-delay:'+i*70+'ms"><span class="a">'+age(j.posted)+'</span><a class="t" href="'+esc(j.url)+'">'+esc(j.title)+'</a><span class="c">'+esc(j.company)+'</span><span class="l">'+esc(j.salary||j.location||(j.remote?'Remote':''))+'</span></div>'}}).join('');page++}}
 function tick(){{document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{{hour:'2-digit',minute:'2-digit'}})}}
-fetch('{P}/api/v1/'+path+'.json').then(function(r){{return r.json()}}).then(function(d){{jobs=d.jobs;document.getElementById('what').textContent=d.name;document.getElementById('count').textContent=Number(d.total).toLocaleString('en-US')+' open roles · updated daily';draw();setInterval(draw,9000)}});
+var asked=q.get('skill')||q.get('company')||q.get('location')||'',timer;
+function note(html){{rows.innerHTML='<p class="n">'+html+'</p>'}}
+function show(d,miss){{jobs=d.jobs;page=0;document.getElementById('what').textContent=miss?'Latest roles':d.name;document.getElementById('count').innerHTML=(miss?'<span class="m">No board for “'+esc(asked.slice(0,40))+'” · showing the latest</span> · ':'')+Number(d.total).toLocaleString('en-US')+' open roles · updated daily';draw();clearInterval(timer);timer=setInterval(draw,9000)}}
+function load(p,miss){{return fetch('{P}/api/v1/'+p+'.json').then(function(r){{if(!r.ok)throw 0;return r.json()}}).then(function(d){{if(!d.jobs||!d.jobs.length)throw 0;show(d,miss)}})}}
+load(path.toLowerCase().replace(/[^a-z0-9/_.+-]/gi,'-'),false).catch(function(){{if(path==='latest')throw 0;return load('latest',true)}}).catch(function(){{note('The board could not load right now. <a href="{P}/jobs/">Open the job list</a>')}});
 tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},3600000)}})();</script></body></html>""")
 
     # Widgets, badges, API: ways for other sites to show our jobs and link back
