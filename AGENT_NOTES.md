@@ -108,6 +108,19 @@ Push with the deploy key already configured in this clone (`core.sshCommand`). A
 `ROADMAP.md` (in Russian, for the owner) lists every request he has made and where it stands. Any new request from him goes
 into it at once; when something ships, update its row. He asked for this on 2026-11-13: "add everything to the plan, always".
 
+## Categories and roles (`roles_info.py`, `/categories/`, `/roles/`)
+
+The owner asked for a category directory "like the big job sites", with a page and text for every category, and not only for
+tech work. It has two levels: 23 categories (`FAMILIES`, pages `/categories/<slug>/`) and about 160 roles (the 25 in `ROLES` in
+`build.py` plus `MORE_ROLES`, pages `/roles/<slug>/`). A role is a pattern matched against job titles; it gets a page at 20 open
+jobs. Each role has a plural and one plain line ("a person in this job …") that becomes the page intro, the meta description and
+the first FAQ answer, so write it as a verb phrase that an outsider understands. `"nt"` on a role leaves out engineering and
+sales titles that only mention the field ("Software Engineer, Tax Platform"). Before adding a role, count it and read a sample of
+the titles it catches (the test loop is in the commit that added the file). The first 25 roles have every combination page
+(remote, entry-level, each big place); the others only where 20–25 jobs fill the page, to keep the site inside the hosting limit.
+Logos: a company without an official logo is shown with no picture at all (`.ava:not(.has)` in `style.css`); never bring the
+letter squares back.
+
 ## "For you": the match by answers (`/for-you/`)
 
 Five plain questions (kind of work, experience, where, pay, skills), answered with buttons; the markup is in `build.py` (`FY_WORK`,

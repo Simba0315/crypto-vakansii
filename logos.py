@@ -1,6 +1,6 @@
 """Find each company's own website, verify it by its page title, and save its icon to assets/logos/<slug>.png.
 
-A company without a verified site keeps the letter avatar: a wrong logo is worse than no logo.
+A company without a verified site is shown without any picture (the owner asked for no letter squares): a wrong logo is worse than no logo.
 """
 import hashlib, json, re, subprocess, sys, concurrent.futures as cf
 from pathlib import Path
@@ -13,6 +13,9 @@ MAP = ROOT / "logos.json"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 
 OVERRIDE = {  # names whose site cannot be guessed from the name
+    "Toast": "toasttab.com", "Grafana Labs": "grafana.com", "Render": "render.com", "Grow Therapy": "growtherapy.com", "Generate Biomedicines": "generatebiomedicines.com",
+    "Talkspace": "talkspace.com", "Substack": "substack.com", "Greenlight": "greenlight.com", "Zilliz": "zilliz.com", "Immuta": "immuta.com", "ChowNow": "chownow.com",
+    "Doppler": "doppler.com", "StreamNative": "streamnative.io", "FlutterFlow": "flutterflow.io", "Grayscale": "grayscale.com",
     "Scale AI": "scale.com", "Hugging Face": "huggingface.co", "Weights & Biases": "wandb.ai", "Runway": "runwayml.com", "Mistral AI": "mistral.ai", "xAI": "x.ai",
     "Character.AI": "character.ai", "Together AI": "together.ai", "Cursor": "cursor.com", "dbt Labs": "getdbt.com", "Epic Games": "epicgames.com", "Riot Games": "riotgames.com",
     "Hims & Hers": "hims.com", "Ro": "ro.co", "Oscar Health": "hioscar.com", "Devoted Health": "devoted.com", "Cityblock Health": "cityblock.com", "Flatiron Health": "flatiron.com",
@@ -128,6 +131,27 @@ def icon(domain, dest):
     return True
 
 
+def site_icon(domain, dest):
+    """The icon the company's own home page names (apple-touch-icon first), for sites the favicon service has nothing for."""
+    from urllib.parse import urljoin
+    html = curl(f"https://{domain}")[:120000]
+    found = []
+    for tag in re.findall(r"<link[^>]+>", html, re.I):
+        rel = re.search(r'rel=["\']([^"\']+)', tag, re.I); href = re.search(r'href=["\']([^"\']+)', tag, re.I)
+        if not rel or not href or "icon" not in rel.group(1).lower() or "mask" in rel.group(1).lower(): continue
+        found.append((("apple" in rel.group(1).lower()) * 2 + (".png" in href.group(1).lower()), urljoin(f"https://{domain}/", href.group(1))))
+    for _, u in sorted(found, reverse=True) + [(0, f"https://{domain}/apple-touch-icon.png")]:
+        data = curl(u, binary=True)
+        if not data.startswith(b"\x89PNG") or len(data) < 300: continue
+        dest.write_bytes(data)
+        m = re.search(r"pixelWidth: (\d+)", subprocess.run(["sips", "-g", "pixelWidth", str(dest)], capture_output=True, text=True).stdout)
+        if not m or int(m.group(1)) < 32:
+            dest.unlink(missing_ok=True); continue
+        if int(m.group(1)) > 96: subprocess.run(["sips", "-Z", "96", str(dest)], capture_output=True)
+        return True
+    return False
+
+
 def work(src):
     name, slug = src["name"], slugify(src["name"])
     dest = OUTDIR / f"{slug}.png"
@@ -137,7 +161,7 @@ def work(src):
         names = page_names(d)
         # Only trusted addresses are used. Accept when the page names the company, or when the site refuses scripts.
         ok = names is None or name in OVERRIDE or key in names[0] or key in names[1] or (len(first) >= 5 and (first in names[0] or first in names[1]))
-        if ok and icon(d, dest):
+        if ok and (icon(d, dest) or (name in OVERRIDE and site_icon(d, dest))):
             return name, d
     return name, None
 

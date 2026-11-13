@@ -821,3 +821,29 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
   .fy-jump{display:none}
 }
 @media(max-width:520px){.opts.pay{grid-template-columns:repeat(4,minmax(0,1fr))}.why{padding-left:0}}
+/* the directory of categories: fields as ruled blocks in columns, like a printed index */
+.dir{columns:3 290px;column-gap:44px;margin-top:20px}
+.dirb{break-inside:avoid;padding:0 0 28px}
+.dirb h2,.dirb h3{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1.5px solid var(--text);padding-bottom:7px;margin:0}
+.dirb h2 u,.dirb h3 u{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.dirb h2 a:hover u,.dirb h3 a:hover u{background:var(--hl);color:var(--hl-ink)}
+.dirb h2 span,.dirb h3 span,.dirb li span{font:500 12px var(--mono);color:var(--faint);letter-spacing:0}
+.dirb p{margin:7px 0 2px;font-size:13.5px;color:var(--muted)}
+.dirb ul{list-style:none;margin:0;padding:0}
+.dirb li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1px solid var(--line)}
+.dirb li a{flex:1;padding:8px 0;font-size:15px;color:var(--text)}
+.dirb li a:hover{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.dirb li.more{border-bottom:0}
+.dirb li.more a{font-weight:600;font-size:14px;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.dirfind{margin:0 0 6px;max-width:520px}
+.dirfind input{border:1.5px solid var(--text)}
+/* no logo, no picture: a letter on a coloured square told nobody anything */
+.ava:not(.has):not(.keep){visibility:hidden}
+.jhead .ava:not(.has),.tiles .ava:not(.has),.logorow .ava:not(.has),.chead .ava:not(.has),.anat .ava:not(.has),.board .ava:not(.has){display:none}
+.jobs:not(:has(.ava.has)) .job .ava{display:none}
+.jobs:not(:has(.ava.has)) .job>a>span:nth-child(2){grid-column:1/3}
+/* header icons live here once instead of in every page */
+.icon[class*="ic-"]::before{content:"";width:17px;height:17px;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.ic-s{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E")}
+.ic-t{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 4a8 8 0 0 0 0 16z' fill='%23000' stroke='none'/%3E%3C/svg%3E")}
+.ic-m{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 7h16M4 12h16M4 17h16'/%3E%3C/svg%3E")}

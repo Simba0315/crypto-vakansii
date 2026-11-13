@@ -13,11 +13,12 @@
   function today() { return dateInt(new Date()); }
   function since(days) { var d = new Date(); d.setDate(d.getDate() - days); return dateInt(d); }
   function slugOf(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, ''); }
-  // avatar markup: initial on a tinted square, with the company logo on top when there is one
+  // avatar markup: the company logo. Without a logo the square is not shown at all (the owner asked for no letter squares);
+  // the letter stays in the markup only as a fallback for styles that are switched off
   function avatar(company, logo, guess) {
     var letter = (String(company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     var img = logo ? '<img src="' + P + '/logos/' + logo + '.png" alt="" loading="lazy">' : guess ? '<img src="' + P + '/logos/' + slugOf(company) + '.png" alt="" loading="lazy" onerror="this.remove()">' : '';
-    return '<span class="ava' + (logo ? ' has' : '') + '" style="--h:' + hue(company) + '" aria-hidden="true">' + esc(letter) + img + '</span>';
+    return '<span class="ava' + (logo || guess ? ' has' : '') + '" style="--h:' + hue(company) + '" aria-hidden="true">' + esc(letter) + img + '</span>';
   }
   function hue(name) { var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360; return h; }
   var $ = function (id) { return document.getElementById(id); };
@@ -198,6 +199,21 @@
     else if (ev.key === 'Escape' && pal && !pal.hidden) pal.hidden = true;
   });
   var palBtn = $('palbtn'); if (palBtn) palBtn.addEventListener('click', palette);
+
+  /* ---------- categories page: type a few letters, keep the kinds of work that contain them ---------- */
+  var dirfilter = $('dirfilter');
+  if (dirfilter) dirfilter.addEventListener('input', function () {
+    var q = dirfilter.value.trim().toLowerCase(), shown = 0;
+    document.querySelectorAll('#dir .dirb').forEach(function (b) {
+      var any = 0, head = (b.querySelector('h2') || b).textContent.toLowerCase(), whole = !q || head.indexOf(q) >= 0;
+      b.querySelectorAll('li').forEach(function (li) {
+        var n = li.getAttribute('data-n'), hit = whole || (n != null && n.indexOf(q) >= 0);
+        li.hidden = !hit; if (hit) any++;
+      });
+      b.hidden = !any; if (any) shown++;
+    });
+    var none = $('dirnone'); if (none) none.hidden = shown > 0;
+  });
 
   /* ---------- companies page: quick filter ---------- */
   var cfilter = $('cfilter');
@@ -384,7 +400,7 @@
       var html = seenList.map(function (j) {
         return '<li class="job"><a href="' + P + '/job/' + encodeURIComponent(j.s) + '/">' + avatar(j.c, j.l ? slugOf(j.c) : '', false) + '<span><span class="jt">' + esc(j.t) + '</span><span class="js">' + esc(j.c) + ' · viewed recently</span></span></a></li>';
       }).join('');
-      if (lastSearch) html += '<li class="job"><a href="' + P + '/jobs/?' + esc(lastSearch.qs) + '"><span class="ava" aria-hidden="true">⌕</span><span><span class="jt">' + esc(lastSearch.label) + '</span><span class="js">Your saved search</span></span></a></li>';
+      if (lastSearch) html += '<li class="job"><a href="' + P + '/jobs/?' + esc(lastSearch.qs) + '"><span class="ava keep" aria-hidden="true">⌕</span><span><span class="jt">' + esc(lastSearch.label) + '</span><span class="js">Your saved search</span></span></a></li>';
       $('home-recent-list').innerHTML = html; recent.hidden = false;
     }
   }
@@ -747,7 +763,7 @@
           for (var k = 0; k < index.length; k++) if (index[k][16] > s.seen && match(index[k], f)) n++;
           fresh = n ? '<span class="pill ok">' + n + ' new</span>' : '<span class="pill">No new jobs</span>';
         }
-        return '<li class="trow" data-i="' + i + '"><span class="ava" aria-hidden="true">⌕</span><div class="main"><a class="tt ss-open" href="' + P + '/jobs/?' + esc(s.qs) + '">' + esc(s.label) + '</a>' +
+        return '<li class="trow" data-i="' + i + '"><span class="ava keep" aria-hidden="true">⌕</span><div class="main"><a class="tt ss-open" href="' + P + '/jobs/?' + esc(s.qs) + '">' + esc(s.label) + '</a>' +
           '<span class="js">Saved search</span></div><div class="ctl">' + fresh + '<button class="unsave ss-del" type="button">Remove</button></div></li>';
       }).join('');
     };

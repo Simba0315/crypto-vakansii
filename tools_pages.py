@@ -9,6 +9,7 @@ from collections import defaultdict
 from html import escape as _e
 
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+EXTRA = ["resume/", "for-you/", "my-jobs/"]                             # the three big tools that live on their own pages: shown first, on the hub and on the home page
 TILES = {}                                                             # page path -> ready tile, filled by build_tools() so the home page can show the same tiles
 MIN_SAMPLE = 20                                                       # no salary figure is shown for fewer postings than this
 QS = [0, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100]      # percentile points embedded for the salary checker
@@ -786,6 +787,15 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
 
     for t in TOOLS:
         TILES[f"tools/{t['slug']}/"] = tile(f"tools/{t['slug']}/", t["name"], t["card"], t["slug"])
+    # the resume builder, the match by answers and the application tracker are tools too; a visitor who opens "Tools" must find them first
+    PREV["resume"] = ('<span class="ln"><b>Your name</b> · Data analyst</span><span class="sk" style="width:92%"></span><span class="sk h" style="width:46%"></span>'
+                      '<span class="sk" style="width:86%"></span><span class="sk" style="width:74%"></span><span class="ln">Saved as <b>Word</b>, <b>PDF</b> or plain text</span>')
+    PREV["for-you"] = ex + '<span class="big">61<small>jobs fit all 5 answers</small></span><span class="mt"><i style="width:100%"></i></span><span class="ln">Work · experience · place · <b>pay</b> · skills</span>'
+    PREV["my-jobs"] = (ex + '<span class="rw"><span>Saved</span><span class="mt"><i style="width:100%"></i></span><b>9</b></span><span class="rw"><span>Applied</span><span class="mt"><i style="width:66%"></i></span><b>6</b></span>'
+                       '<span class="rw"><span>Interview</span><span class="mt"><i style="width:22%"></i></span><b>2</b></span><span class="ln">A reminder when an application goes quiet</span>')
+    TILES["resume/"] = tile("resume/", "Resume builder", "Type your experience once and get a clean one-column resume that screening software reads correctly. Download it as Word or PDF.", "resume")
+    TILES["for-you/"] = tile("for-you/", "Jobs that fit you", "Answer five questions about the work, the place and the pay you want, and see the open jobs that fit, with the reason next to each.", "for-you")
+    TILES["my-jobs/"] = tile("my-jobs/", "Application tracker", "Save jobs, mark where each application stands and keep notes. Kept in your browser, with a backup file you can download.", "my-jobs")
 
     # ------------------------------------------------------------ the hub
     def group(key):
@@ -799,13 +809,14 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
                 f"From the salary ranges that employers publish in their own job postings on this site: {n_paid:,} open roles with a yearly US-dollar range as of {DATE}. No surveys and no numbers submitted by users.")]
     faq_html, faq_ld = faq_block(hub_faq)
     n_seek, n_emp = sum(t["group"] == "seekers" for t in TOOLS), sum(t["group"] == "employers" for t in TOOLS)
-    hub_desc = "Free tools for job search and hiring in tech: resume match checker, salary checker, pay calculators, offer comparison, job description checker and more."
+    hub_desc = "Free tools for a job search and for hiring: resume builder, resume match checker, job matching by answers, application tracker, salary checker, pay calculators, cover letter and more."
     list_ld = _ld({"@context": "https://schema.org", "@type": "ItemList", "name": f"Free tools on {SITE}", "numberOfItems": len(TOOLS),
                    "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": t["name"], "url": f"{FULL}/tools/{t['slug']}/"} for i, t in enumerate(TOOLS)]})
     page("tools/", "Free Tools for Tech Job Seekers & Recruiters" + brand, hub_desc,
          crumbs(("Tools", "")) + "<h1>Free tools for a tech job search and for hiring</h1>"
-         f'<p class="lead">{len(TOOLS)} small tools for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
+         f'<p class="lead">{len(TOOLS) + len(EXTRA)} tools, from a resume builder to pay calculators, for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
          f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
+         + section("Start here: resume, matching, tracking", '<div class="tgrid">' + "".join(TILES[u] for u in EXTRA) + "</div>")
          + section("For job seekers", group("seekers"))
          + section("For employers and recruiters", group("employers"))
          + section("How these tools work", '<div class="feats">'

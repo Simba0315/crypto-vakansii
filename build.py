@@ -9,6 +9,7 @@ from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
 import tools_pages                      # the free tools section: /tools/ and one page per tool
+import roles_info
 import skills_info                      # what each skill is, in plain words, and its group
 
 ROOT = Path(__file__).parent
@@ -150,16 +151,38 @@ ROLES = [   # (name, slug, pattern matched against the job title)
     ("Program and project manager", "program-manager", r"program manager|\btpm\b|project manager"),
     ("Solutions engineer", "solutions-engineer", r"solutions? (engineer|architect|consultant)|sales engineer|forward deployed|customer engineer"),
     ("IT support", "it-support", r"\bit (support|specialist|technician|administrator|engineer|manager|operations)|help ?desk|desktop support|systems? administrator|sysadmin"),
-    ("Account executive", "account-executive", r"account executive|\bae\b"), ("Customer success manager", "customer-success-manager", r"customer success (manager|lead|associate|specialist|partner)|\bcsm\b"),
+    ("Account executive", "account-executive", r"account executive|\bae\b"), ("Customer success manager", "customer-success-manager", r"customer success|\bcsm\b"),
     ("Marketing manager", "marketing-manager", r"marketing manager|growth (manager|marketer|lead)|head of marketing|product marketing|demand generation"),
-    ("Recruiter", "recruiter", r"recruiter|talent acquisition|sourcer|talent partner"),
+    ("Recruiter", "recruiter", r"recruiter|recruiting|talent acquisition|sourcer|talent (partner|community|coordinator|operations)"),
 ]
 # how each role reads in the plural ("jobs for data engineers"), and titles that belong to another profession even if a role word is in them
 ROLE_PLURAL = {"Cybersecurity": "cybersecurity specialists", "IT support": "IT support specialists", "DevOps engineer": "DevOps engineers", "QA engineer": "QA engineers",
                "Program and project manager": "program and project managers"}
 ROLE_OTHER = re.compile(r"\b(sales|account executive|counsel|attorney|recruiter|recruiting|marketing|paralegal)\b", re.I)
 ROLE_OWN = {"Account executive", "Marketing manager", "Recruiter", "Solutions engineer", "Customer success manager"}       # roles the exclusion must not touch
-role_hit = lambda nm, rx, title: bool(re.search(rx, title, re.I)) and (nm in ROLE_OWN or not ROLE_OTHER.search(title))
+# The 25 roles above came first and have every combination page. The rest of the directory (categories, more roles, plain lines,
+# plurals) is in roles_info.py: add a role there and it gets its page, its place in a category and its text.
+ROLE_BASE = {s_ for _, s_, _ in ROLES}
+ROLES += [(r[0], r[1], r[2]) for r in roles_info.MORE_ROLES]
+ROLE_PLURAL |= {nm: roles_info.INFO[s_][0] for nm, s_, _ in ROLES if s_ in roles_info.INFO}
+ROLE_OWN |= {r[0] for r in roles_info.MORE_ROLES}
+ROLE_NT = {r[0] for r in roles_info.MORE_ROLES if len(r) > 5}       # fields of work whose word also sits in engineering and sales titles
+NOT_TECH = re.compile(roles_info.NOT_TECH, re.I)
+ROLE_RX = {nm: re.compile(rx, re.I) for nm, _, rx in ROLES}
+role_hit = lambda nm, rx, title: bool(ROLE_RX[nm].search(title)) and (nm in ROLE_OWN or not ROLE_OTHER.search(title)) and not (nm in ROLE_NT and NOT_TECH.search(title))
+KEEP_CAP = {"German", "French", "Spanish", "Japanese", "Portuguese", "Chinese", "Italian", "Dutch", "Korean"}
+
+
+def rlow(nm):
+    """A role or category name inside a sentence: lower case unless it starts with an acronym or a proper name."""
+    w = nm.split()[0]
+    return nm if w in KEEP_CAP or sum(c.isupper() for c in w) >= 2 else nm[0].lower() + nm[1:]
+
+
+def art(nm):
+    w = nm.split()[0]
+    if sum(c.isupper() for c in w) >= 2: return "an" if w[0] in "AEFHILMNORSX" else "a"
+    return "an" if nm[0].lower() in "aeiou" else "a"
 TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc"}
 URLS = []
 ORG_LD = [""]
@@ -303,6 +326,14 @@ CRUMB_RX = re.compile(r'<div class="crumbs">(.*?)</div>', re.S)
 CRUMB_A = re.compile(r'<a href="([^"]*)">(.*?)</a>')
 
 
+LD_RX = re.compile(r'(<script type="application/ld\+json">)(.*?)(</script>)', re.S)
+
+
+def ld_small(m_):
+    try: return m_.group(1) + json.dumps(json.loads(m_.group(2)), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + m_.group(3)
+    except ValueError: return m_.group(0)
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False):
     url = f"{FULL}/{path}"
     title, desc = fit_title(title), fit_desc(desc)
@@ -314,6 +345,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
                 a_ = CRUMB_A.fullmatch(bit.strip())
                 parts.append((html.unescape(a_.group(2)), a_.group(1)[len(P) + 1:]) if a_ else (html.unescape(bit.strip()), ""))
             if parts: head += crumbs_ld(parts)
+    head = LD_RX.sub(ld_small, head)
     write(path, f"""<!doctype html>
 <html lang="en" data-base="{P}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
@@ -326,9 +358,9 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="preload" href="{P}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
-<div class="hact"><button class="icon" id="palbtn" type="button" aria-label="Quick search (Ctrl K)">{ICON_SEARCH}</button><button class="icon" id="theme" type="button" aria-label="Switch between light and dark">{ICON_THEME}</button><a class="btn" href="{P}/post-a-job/">Post a job</a>
-<button class="icon burger" id="menu" type="button" aria-label="Menu" aria-expanded="false">{ICON_MENU}</button></div></div></header>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><a class="btn" href="{P}/post-a-job/">Post a job</a>
+<button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
 {MINI_FOOT if compact else FULL_FOOT()}
 </body></html>""", sitemap)
@@ -338,7 +370,7 @@ def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every day.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
-<div><p class="fhd">Browse</p><ul><li><a href="{P}/roles/">Roles</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
+<div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feed.xml">News feed (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
@@ -894,7 +926,21 @@ def main():
     latest = diverse(order(specific), 40)
 
     # Home
-    ROLE_TOP = sorted(((nm, s_, sum(1 for j in active if role_hit(nm, rx, j["title"]))) for nm, s_, rx in ROLES), key=lambda x: -x[2])
+    ROLE_JOBS = {s_: [j for j in active if role_hit(nm, rx, j["title"])] for nm, s_, rx in ROLES}
+    by_role = {s_: (nm, ROLE_JOBS[s_]) for nm, s_, _ in ROLES if len(ROLE_JOBS[s_]) >= 20}
+    fam_rows = []        # (slug, name, what kind of work, [(role slug, role name, jobs)], every job in the category once)
+    for fs, fn, fd, rs in roles_info.FAMILIES:
+        live = [(s_, by_role[s_][0], len(by_role[s_][1])) for s_ in rs if s_ in by_role]
+        seen_, js_ = set(), []
+        for s_, _, _ in live:
+            for j in by_role[s_][1]:
+                if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
+        if live: fam_rows.append((fs, fn, fd, live, js_))
+    def dir_block(fs, fn, fd, live, js_, top=None, tag="h2"):
+        return (f'<div class="dirb"><{tag}><a href="{P}/categories/{fs}/"><u>{e(fn)}</u></a><span>{len(js_):,}</span></{tag}><p>{e(fd[0].upper() + fd[1:])}.</p><ul>'
+                + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/roles/{s_}/">{e(nm)}</a><span>{c:,}</span></li>' for s_, nm, c in (live if top is None else live[:top]))
+                + (f'<li class="more"><a href="{P}/categories/{fs}/">All {len(live)} in {e(rlow(fn))}</a></li>' if top is not None and len(live) > top else "") + "</ul></div>")
+    ROLE_TOP = sorted(((nm, s_, len(ROLE_JOBS[s_])) for nm, s_, _ in ROLES if s_ in ROLE_BASE), key=lambda x: -x[2])
     ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
     TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT)       # [(path, name, one line)]
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
@@ -991,20 +1037,19 @@ def main():
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
             + section("Latest tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"All {n:,} jobs"))
+            + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"))
             + pulse + anatomy
             + '<div class="inkband">' + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data")) + "</div>"
             + '<section class="sec"><div class="sec-head"><h2>Browse the jobs</h2></div><div class="tabs2">'
-              '<input type="radio" name="dir" id="dir-cat" checked><label for="dir-cat">By category</label>'
-              '<input type="radio" name="dir" id="dir-role"><label for="dir-role">By role</label>'
+              '<input type="radio" name="dir" id="dir-role" checked><label for="dir-role">By role</label>'
               '<input type="radio" name="dir" id="dir-loc"><label for="dir-loc">By location</label>'
               '<input type="radio" name="dir" id="dir-co"><label for="dir-co">By company</label>'
-              f'<div class="tabp" id="p-cat"><ul class="gloss">{cats}</ul></div>'
-              + '<div class="tabp" id="p-role"><ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + f'</ul><p class="tabmore"><a href="{P}/roles/">All roles</a></p></div>'
+              '<div class="tabp" id="p-role"><ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + f'</ul><p class="tabmore"><a href="{P}/categories/">All {len(by_role)} roles, by category</a></p></div>'
               + f'<div class="tabp" id="p-loc"><ul class="tiles">{place_top}</ul><p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
               + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
             + plus_band + band
-            + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u, nm, d_ in TOOLS[:6]) + "</div>",
-                      ("tools/", f"All {len(TOOLS)} tools"))
+            + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u in tools_pages.EXTRA + [u for u, nm, d_ in TOOLS[:3]]) + "</div>",
+                      ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"))
             + section("For your own site", '<div class="feats">'
                       f'<a class="feat" href="{P}/widgets/"><h3>A list of jobs for your site</h3><p>Have a blog, a community or a company site? Put a small list of fresh jobs on it. You paste a short piece of code once and the list keeps itself up to date.</p></a>'
                       f'<a class="feat" href="{P}/widgets/"><h3>A “we’re hiring” picture with a live number</h3><p>A small image that shows how many roles are open today. For a site footer, a blog post or a project page.</p></a>'
@@ -1088,25 +1133,28 @@ def main():
             if cs == OTHER[0]: continue
             add(f"locations/{slug}/{cs}/", f"{cname} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
                 f"loc={slug}&cat={cs}", f"{e(cname)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
-    by_role = {slug: (name, [j for j in active if role_hit(name, rx, j["title"])]) for name, slug, rx in ROLES}
-    by_role = {slug: v for slug, v in by_role.items() if len(v[1]) >= 20}
     HUB["roles"] = {slug: (nm, {j["id"] for j in rj_}) for slug, (nm, rj_) in by_role.items()}
     HUB["week"], HUB["live"] = (datetime.date.today() - datetime.timedelta(days=7)).isoformat(), {slug for _, slug, _ in places}
     for slug_r, (rname, rj) in by_role.items():
-        trail_r, low = (("Roles", "roles/"), (rname, f"roles/{slug_r}/")), rname[0].lower() + rname[1:] if rname not in ("DevOps engineer", "QA engineer", "IT support") else rname
+        trail_r, low, base_r = (("Categories", "categories/"), (rname, f"roles/{slug_r}/")), rlow(rname), slug_r in ROLE_BASE
         many = ROLE_PLURAL.get(rname, low + "s")
-        add(f"roles/{slug_r}/remote/", f"Remote {low} jobs", [j for j in rj if j["remote"]], trail_r, f"remote=1&q={quote(rname)}", "remote ", f" for {e(many)}", [("role:" + slug_r, "Remote")])
-        add(f"roles/{slug_r}/entry-level/", f"Entry-level {low} jobs", [j for j in rj if j["entry"]], trail_r, f"entry=1&q={quote(rname)}", "entry-level ", f" for {e(many)}", [("role:" + slug_r, "Entry-level")])
-        for name, slug, _ in big_places:
-            add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", [j for j in rj if slug in j["places"]], trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(many)} in {e(name)}",
-                [("role:" + slug_r, name.removeprefix("the ")), ("place:" + slug, rname)])
+        rem_, ent_ = [j for j in rj if j["remote"]], [j for j in rj if j["entry"]]
+        if base_r or len(rem_) >= 20: add(f"roles/{slug_r}/remote/", f"Remote {low} jobs", rem_, trail_r, f"remote=1&q={quote(rname)}", "remote ", f" for {e(many)}", [("role:" + slug_r, "Remote")])
+        if base_r or len(ent_) >= 20: add(f"roles/{slug_r}/entry-level/", f"Entry-level {low} jobs", ent_, trail_r, f"entry=1&q={quote(rname)}", "entry-level ", f" for {e(many)}", [("role:" + slug_r, "Entry-level")])
+        for name, slug, _ in (big_places if base_r else big_places[:6]):
+            here_ = [j for j in rj if slug in j["places"]]
+            if base_r or len(here_) >= 25:
+                add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", here_, trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(many)} in {e(name)}",
+                    [("role:" + slug_r, name.removeprefix("the ")), ("place:" + slug, rname)])
     cut3 = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
     for t, js in by_tag.items():
         add(f"skills/{tslug(t)}/new/", f"{t} jobs posted in the last 3 days", [j for j in js if (j["posted"] or "") >= cut3], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
             f"age=3&skills={quote(t)}", "", f" mentioning {e(t)}, posted in the last three days", [("tag:" + t, "Last 3 days")])
     for slug_r, (rname, rj) in by_role.items():
-        add(f"roles/{slug_r}/new/", f"{rname} jobs posted in the last 3 days", [j for j in rj if (j["posted"] or "") >= cut3], (("Roles", "roles/"), (rname, f"roles/{slug_r}/")),
-            f"age=3&q={quote(rname)}", "", " posted in the last three days", [("role:" + slug_r, "Last 3 days")])
+        new_ = [j for j in rj if (j["posted"] or "") >= cut3]
+        if slug_r in ROLE_BASE or len(new_) >= 20:
+            add(f"roles/{slug_r}/new/", f"{rname} jobs posted in the last 3 days", new_, (("Categories", "categories/"), (rname, f"roles/{slug_r}/")),
+                f"age=3&q={quote(rname)}", "", " posted in the last three days", [("role:" + slug_r, "Last 3 days")])
     add("remote/new/", "Remote tech jobs posted in the last 3 days", [j for j in remote if (j["posted"] or "") >= cut3], (("Remote", "remote/"),), "remote=1&age=3", "remote ", " posted in the last three days", [("remote", "Last 3 days")])
     add("remote/entry-level/", "Remote entry-level tech jobs", [j for j in remote if j["entry"]], (("Remote", "remote/"),), "remote=1&entry=1", "remote entry-level ", "", [("remote", "Entry-level")])
     for t, js in by_tag.items():
@@ -1185,15 +1233,58 @@ def main():
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     for slug_r, (rname, rj) in by_role.items():
         paid_r = sum(1 for j in rj if j["usd"])
+        low, w_ = rlow(rname), roles_info.INFO.get(slug_r, ("", ""))[1]
+        many = ROLE_PLURAL.get(rname, low + "s")
+        fams = [(fs, fn) for fs, fn, _, live, _ in fam_rows if any(s_ == slug_r for s_, _, _ in live)]
+        fam_line = ('<p class="note cmpl">Part of: ' + " · ".join(f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams) + "</p>") if fams else ""
+        secs = hub_sections(f"{low} roles", rj, "roles")
         listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open) | {SITE}",
-                f"{roles(len(rj), 'open role')} for {ROLE_PLURAL.get(rname, rname.lower() + 's')} at tech companies, straight from their careers pages. Remote filter, salary data, updated daily.",
-                rj, intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True), trail=(("Roles", "roles/"),), feed=True, extra=hub_stats(rj) + rel(REL["role:" + slug_r]) + hub_sections(f"{rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname} roles", rj, "roles")[0], faq=f"{rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname} jobs",
-                hub=hub_sections(f"{rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname} roles", rj, "roles")[1], list_title=f"Newest {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname} jobs",
-                after=section(f"Companies hiring {ROLE_PLURAL.get(rname, rname.lower() + 's')}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
+                f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated daily.",
+                rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
+                trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + fam_line + rel(REL["role:" + slug_r]) + secs[0], faq=f"{low} jobs",
+                faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
+                hub=secs[1], list_title=f"Newest {low} jobs", max_pages=None if slug_r in ROLE_BASE else 2,
+                after=section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
                               (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 30 else None))
-    page("roles/", f"Tech Jobs by Role — {len(by_role)} job titles | {SITE}", "Browse open tech jobs by role: software engineer, data engineer, product manager, DevOps, security and more, each with remote, city and salary pages.",
-         crumbs(("Roles", "")) + '<h1>Tech jobs by role</h1><p class="lead">Job titles differ from company to company, so each role here gathers the variants employers use. Every role page links to its remote, entry-level, city and salary versions.</p>'
-         '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, len(js_)) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: -len(kv[1][1]))) + "</ul>")
+
+    # The directory: every category with the kinds of work in it, on one page, and a page with text for each category
+    kinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
+        ("remote/", "Remote jobs"), ("work-from-anywhere/", "Work from anywhere"), ("new/", "New in the last 3 days"), ("entry-level/", "Entry-level jobs"), ("internships/", "Internships"),
+        ("contract/", "Contract jobs"), ("part-time/", "Part-time jobs"), ("with-salary/", "Jobs that state pay"), ("salary/200k/", "Jobs that pay $200K or more"), ("perks/visa-sponsorship/", "Jobs with visa sponsorship")))
+    dir_tail = (f'<div class="dirb"><h2><a href="{P}/jobs/"><u>By type of work</u></a></h2><p>How and when the work is done.</p><ul>{kinds}</ul></div>'
+                f'<div class="dirb"><h2><a href="{P}/skills/"><u>By skill or tool</u></a><span>{len(skill_counts)}</span></h2><p>Jobs that ask for a language, a program or a method by name.</p><ul>'
+                + "".join(f'<li data-n="{e(t.lower())}"><a href="{P}/skills/{tslug(t)}/">{e(t)} jobs</a><span>{c:,}</span></li>' for t, c in skill_counts.most_common(14))
+                + f'<li class="more"><a href="{P}/skills/">All {len(skill_counts)} skills</a></li></ul></div>')
+    dir_html = '<div class="dir" id="dir">' + "".join(dir_block(*f) for f in fam_rows) + dir_tail + "</div>"
+    dir_filter = ('<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, lawyer or designer" aria-label="Find a category"></p>'
+                  '<p class="lead" id="dirnone" hidden>No category with these words. Try the <a href="' + P + '/jobs/">job search</a>: it looks through every title.</p>')
+    dir_qa = [("How are jobs sorted into categories?", "By the job title. Each kind of work has a list of the titles employers use for it, and a posting whose title matches is listed there. A posting can sit in two categories when its title belongs to both, for example a staff backend engineer."),
+              ("Are these only technology jobs?", f"No. The employers are mostly technology, finance, health, space and consumer companies, and they hire for every kind of work: {len(fam_rows)} fields here, from software and data to sales, accounting, law, nursing, warehouses and shops."),
+              ("Why is a category missing?", "A kind of work gets a page when at least 20 open jobs match it. Smaller ones are still found through the search."),
+              ("How often are the lists updated?", "Every time the employers’ careers pages are read again, at least once a day. A job that the employer has closed leaves the lists and moves to the archive.")]
+    dir_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in dir_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    dir_faq = section("Questions about the categories", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in dir_qa) + "</dl>")
+    page("categories/", f"Job Categories: {len(by_role)} kinds of work in {len(fam_rows)} fields | {SITE}",
+         f"Browse {n:,} open jobs by category: {len(fam_rows)} fields and {len(by_role)} kinds of work, from software and data to sales, finance, law, healthcare and the factory floor. Each has its own page.",
+         crumbs(("Categories", "")) + '<h1>Browse all job <span class="hl">categories</span></h1>'
+         f'<p class="lead">{n:,} open jobs, sorted into {len(fam_rows)} fields and {len(by_role)} kinds of work. Pick a field to read what the work is and see who is hiring, or go straight to a kind of work. '
+         'The number next to each name is how many jobs are open today.</p>' + dir_filter + dir_html + dir_faq, head=dir_ld)
+    page("roles/", f"Jobs by Role: {len(by_role)} job titles | {SITE}", f"Every kind of work with open jobs, A to Z: {len(by_role)} roles, each with remote, entry-level, city and salary pages.",
+         crumbs(("Categories", "categories/"), ("All roles", "")) + '<h1>All roles, A to Z</h1><p class="lead">Job titles differ from company to company, so each role here gathers the variants employers use. '
+         f'The same roles grouped by field are on the <a href="{P}/categories/">categories page</a>.</p>'
+         '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, len(js_)) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: kv[1][0].lower())) + "</ul>")
+    for fs, fn, fd, live, js_ in fam_rows:
+        low_f, names_ = rlow(fn), [nm for _, nm, _ in live]
+        role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">{e(roles_info.what(s_))}</span></a></li>' for s_, nm, c in live) + "</ul>"
+        others = '<p class="note cmpl">Other categories: ' + " · ".join(f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs) + "</p>"
+        secs = hub_sections(low_f, js_, "roles")
+        listing(f"categories/{fs}/", f"{fn} jobs", f"{tcase(fn)} Jobs ({len(js_):,} open) | {SITE}",
+                f"{len(js_):,} open jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked daily.",
+                js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=2, more="", feed=True,
+                extra=hub_stats(js_) + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
+                faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
+                hub=secs[1], after=section(f"Who is hiring in {low_f}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js_).most_common(12)) + "</ul>") + others)
     for name, slug, js in places:
         short = name.removeprefix("the ")
         listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
@@ -1385,7 +1476,7 @@ def main():
             salary_page(cat_slug[name], name, group, (f"jobs/{cat_slug[name]}/", f"All {name} jobs"))
     for slug_r, (rname, rj) in by_role.items():
         group = [(j, j["usd"]) for j in rj if j["usd"]]
-        if len(group) >= 30: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rname.lower() if rname not in ('DevOps engineer', 'QA engineer', 'IT support') else rname} jobs"))
+        if len(group) >= 30: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rlow(rname)} jobs"))
 
     # Hiring trends: one page of live numbers
     week = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
