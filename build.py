@@ -1525,7 +1525,7 @@ def main():
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
                 hub=secs[1], list_title=f"Newest {low} jobs", more=None if slug_r in ROLE_BASE else False,
                 after=neighbours(slug_r) + section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
-                              (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 30 else None))
+                              (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 20 else None))
 
     # Lists by when the work is done. People search these by the hours, not by the profession: "night shift jobs", "weekend jobs", "summer jobs".
     HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
@@ -1779,29 +1779,51 @@ def main():
                 f"Tech job postings that state pay advertise a median of {money(median([(lo + hi) / 2 for _, (lo, hi) in paid]))} a year; {100 - SALPCT}% of open postings state no pay at all. "
                 f"Counted from {len(paid):,} open postings, {MONTH_YEAR}."))
 
-    def salary_page(slug, label, group, back):
+    def salary_page(slug, label, group, back, role=False):
         by_loc = defaultdict(list)
         for j, r in group:
             for ps in j["places"]: by_loc[PLACE_NAME[ps]].append((j, r))
         cut = level_section(f"{label} salary by level", group) + \
               (section(f"{label} salary by location", table(by_loc, lambda k: f"locations/{PLACE_SLUG[k]}/", 15, 20)) if sum(len(v) >= 15 for v in by_loc.values()) >= 2 else "")
         mids = sorted((lo + hi) / 2 for _, (lo, hi) in group)
+        mean_ = sum(mids) / len(mids)
         pct = lambda q: mids[min(len(mids) - 1, int(len(mids) * q))]
         comp = defaultdict(list)
         for j, r in group: comp[j["company"]].append((j, r))
         stats = (f'<div class="statrow"><div class="stat"><b>{money(median(mids))}</b><span>median advertised salary</span></div>'
                  f'<div class="stat"><b>{money(pct(.25))} – {money(pct(.75))}</b><span>middle half of roles</span></div>'
-                 f'<div class="stat"><b>{money(mids[-1])}</b><span>highest midpoint</span></div><div class="stat"><b>{len(mids):,}</b><span>roles counted</span></div></div>')
+                 f'<div class="stat"><b>{money(mean_)}</b><span>average advertised salary</span></div><div class="stat"><b>{len(mids):,}</b><span>roles counted</span></div></div>')
         top_jobs = diverse_pairs(sorted(group, key=lambda x: -x[1][1]), 20)
-        page(f"salaries/{slug}/", f"{label} Salaries in Tech — median {money(median(mids))} ({len(mids):,} roles) | {SITE}",
-             f"What {label} roles pay at tech companies: median, typical range and top-paying employers, from {len(mids):,} open job postings.",
-             crumbs(("Salaries", "salaries/"), (label, "")) + f"<h1>{e(label)} salaries in tech</h1>"
+        # People type "average <job> salary" and writers quote the answer: the page states it in words, as questions, and for search engines.
+        best_c = sorted(((median([(lo + hi) / 2 for _, (lo, hi) in v]), k) for k, v in comp.items() if len(v) >= 3), reverse=True)[:3]
+        sal_qa = [(f"What is the average {label} salary?", f"{money(mean_)} a year on average and {money(median(mids))} at the median, across {len(mids):,} open {label} postings at tech companies that state pay "
+                   f"({MONTH_YEAR}). The median is the better guide: a few very high offers pull the average up."),
+                  ("What is the typical range?", f"The middle half of the postings offer {money(pct(.25))} to {money(pct(.75))} a year. A quarter offer less and a quarter offer more."),
+                  ("Where do these figures come from?", "From the pay ranges employers print in their own job postings, read from their careers pages every hour. The midpoint of each range is counted. "
+                   "These are advertised ranges for open roles, mostly in the United States and in US dollars, not what people are actually paid.")]
+        if best_c:
+            sal_qa.insert(2, (f"Which companies advertise the highest {label} pay?", ", ".join(f"{k} ({money(m_)})" for m_, k in best_c) + ", by the median of their open postings that state pay (three postings or more)."))
+        sal_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sal_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        if role:      # a kind of work, so the page can also be read as an occupation with its pay
+            sal_ld += ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Occupation", "name": label,
+                "description": f"Advertised pay for {label} roles at tech companies, from {len(mids):,} open job postings that state a yearly range in US dollars.",
+                "mainEntityOfPage": {"@type": "WebPage", "url": f"{FULL}/salaries/{slug}/", "lastReviewed": TODAY},
+                "estimatedSalary": [{"@type": "MonetaryAmountDistribution", "name": "base", "currency": "USD", "duration": "P1Y",
+                                     "percentile25": round(pct(.25)), "median": round(median(mids)), "percentile75": round(pct(.75))}]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        # the figures are the reason to click, so they stay in the title and the site name gives way (a title holds about 65 characters)
+        t_long = f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})"
+        page(f"salaries/{slug}/", t_long if len(t_long) <= 65 else f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median",
+             f"The average {label} salary at tech companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
+             f"Counted from {len(mids):,} open job postings that state pay.",
+             crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
              f'<p class="lead">From {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>{stats}'
              + cut + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
              + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
+             + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
              + cite(f"salaries/{slug}/", f"{label} salaries in tech",
                     f"The median advertised salary for {label} roles at tech companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
-                    f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."))
+                    f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld)
     for t, group in g_tag.items():
         if len(group) >= 30:
             salary_page(TAG_SLUG.get(t, slugify(t)), t, group, (f"skills/{TAG_SLUG.get(t, slugify(t))}/", f"All {t} jobs"))
@@ -1810,7 +1832,7 @@ def main():
             salary_page(cat_slug[name], name, group, (f"jobs/{cat_slug[name]}/", f"All {name} jobs"))
     for slug_r, (rname, rj) in by_role.items():
         group = [(j, j["usd"]) for j in rj if j["usd"]]
-        if len(group) >= 30: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rlow(rname)} jobs"))
+        if len(group) >= 20: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rlow(rname)} jobs"), role=True)      # 20 postings with pay is enough for a median; the page states the count
 
     # Hiring trends: one page of live numbers
     week = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
