@@ -66,3 +66,18 @@ against developers and crypto workers).
 Listings come from the employer's own system by construction; the email, the apply link and the company site must agree; there is
 nothing on the site through which a stranger can message a job seeker; rules against "install this" postings, which no general
 board publishes; payment never buys trust.
+
+## Update, 2026-11-13: three ways to prove who is posting
+
+The owner asked that employers and recruiters be able to post without a mailbox on the company's domain ("through LinkedIn or
+some other way, like Hirify"). The server (`server/README.md`) now accepts three proofs, and the review queue shows which one an
+account used:
+
+1. an email on the company's own domain, confirmed by a link (as before);
+2. the domain itself, proved by a DNS TXT record or a file on the site, for people with no mailbox there;
+3. sign-in with LinkedIn, for recruiters and agencies. LinkedIn states that this sign-in does not verify identity, so it is the
+   weakest of the three and is treated that way: a recruiter's job always waits for a person, is published as "posted by a
+   recruiter, not verified by the employer", must link to the hiring company's own site or a listed hiring system, cannot claim
+   a company name and never counts towards trust. The site must not use the words "verified recruiter".
+
+Everything else is unchanged: screening of the text, limits for new accounts, reports without an account, the review queue.

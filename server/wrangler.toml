@@ -9,6 +9,10 @@ SITE_ORIGINS = "https://simba0315.github.io"
 API_URL = "https://hiring-right-now-api.YOUR-SUBDOMAIN.workers.dev"
 GITHUB_REPO = "Simba0315/crypto-vakansii"
 PLUS_LIVE = "0"
+# Sign In with LinkedIn (see README): the page LinkedIn sends people back to, exactly as registered in the LinkedIn app. Uncomment
+# together with the secrets LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET (npx wrangler secret put ...). The AI tools of Plus need the
+# secret ANTHROPIC_API_KEY. Secrets never go into this file.
+# LINKEDIN_REDIRECT_URL = "https://simba0315.github.io/crypto-vakansii/account/"
 
 [[d1_databases]]
 binding = "DB"

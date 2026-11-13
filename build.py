@@ -2221,7 +2221,7 @@ def main():
                 ("Do I have to pay to see or apply for jobs?", "No, never. Every job and its link to apply are free for everyone.")]),
             ("Employers", [
                 ("How do I post a job?", "Create an employer account with an address on your company’s domain, paste the job and the link where people apply. A standard listing is free."),
-                ("Why must I use a company email?", "So that nobody can post in your company’s name. A recruiter without such an address can prove who they are by signing in with LinkedIn; those jobs are checked by a person before they appear."),
+                ("Why must I use a company email?", "So that nobody can post in your company’s name. A recruiter without such an address signs in with LinkedIn; such a job is marked “posted by a recruiter, not verified by the employer” and is read by a person before it appears. A domain can also be proved with a record in its DNS or a file on the site."),
                 ("How fast does a paid placement start?", "At once after the payment is confirmed. The job is marked Featured or Pinned automatically; there is nobody to write to."),
                 ("Our jobs are listed here although we never posted them. Why?", "They are read from the public feed of your hiring system and link to your own page. To correct or remove a listing, write to the contact on the employers page; it is done at the next update."),
                 ("Can I see what a listing brought?", "The employer account shows views of the job page and clicks on “Apply” for each job.")]),

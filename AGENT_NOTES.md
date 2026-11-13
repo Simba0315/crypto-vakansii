@@ -169,6 +169,15 @@ caption that says what it shows; no decorative charts, no invented numbers. When
 - `REPORT_RU.md` is the owner's report in Russian; update it when something he asked for ships. He reads the task list pinned in
   the app and this report, not the English files.
 
+## The server, state on 2026-11-13 (`server/`, 948 tests, not deployed)
+
+Accounts, Cryptomus checkout, employer postings with fraud checks, three proofs of identity (company email, DNS or file, LinkedIn
+for recruiters), AI endpoints for Plus (`/api/ai/…`, Anthropic Messages API, one model constant, a monthly allowance whose worst
+cost is checked by a test against the price of Plus), per-job view and apply counters, admin review. What the site's pages must
+do to use each of these is listed in `server/README.md` under "What the site's pages need"; none of it is wired into the pages
+yet. Deploying needs the owner's explicit go-ahead for Cloudflare and his own secrets (Cryptomus, mail, LinkedIn, Anthropic):
+never enter them, never run the deploy for him.
+
 ## Prices (the owner's decision of 2026-11-13)
 
 The owner cut every price to about a third "temporarily" (launch prices). `config.json` holds the current price, the earlier one
