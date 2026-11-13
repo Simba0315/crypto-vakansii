@@ -953,6 +953,21 @@ def main():
         mx_ = max((v for _, v in pairs), default=1) or 1
         return ('<div class="ccols">' + "".join(f'<div{" class=\"hi\"" if hi_ is not None and i == hi_ else ""} style="height:{max(2, round(100 * v / mx_))}%"><b>{v:,}</b></div>' for i, (_, v) in enumerate(pairs)) + "</div>"
                 '<div class="ccx">' + "".join(f"<span>{e(lb)}</span>" for lb, _ in pairs) + "</div>")
+    def mini_pics(js):
+        """Two pictures for a list of jobs: what they pay (when at least 30 state it) and three rings."""
+        if len(js) < 20: return ""
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js if j["usd"]]
+        pay = ""
+        if len(mids_) >= 30:
+            eg = [(0, 75), (75, 100), (100, 125), (125, 150), (150, 175), (175, 200), (200, 250), (250, 300), (300, 10 ** 6)]
+            md_ = median(mids_)
+            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars. The green column holds the median, {money(md_)}.</figcaption>'
+                   + cols([(("<$75K" if lo == 0 else f"${lo}K+" if hi > 1000 else f"${lo}K"), sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)) for lo, hi in eg],
+                          next((i for i, (lo, hi) in enumerate(eg) if lo * 1000 <= md_ < hi * 1000), None)) + "</figure>")
+        rings = (f'<figure class="pic"><figcaption><b>Three numbers</b>Out of {len(js):,} open jobs in this list.</figcaption><div class="donuts">'
+                 + donut(sum(j["remote"] for j in js), len(js), "can be done from home") + donut(sum(bool(j["salary"]) for j in js), len(js), "state the pay")
+                 + donut(sum(1 for j in js if j["entry"]), len(js), "are for beginners") + "</div></figure>")
+        return f'<div class="pics two">{pay}{rings}</div>'
     fam_top = sorted(fam_rows, key=lambda f: -len(f[4]))[:10]
     pic_fields = '<div class="hbars">' + "".join(
         f'<a href="{P}/categories/{fs}/"><span class="hn">{e(fn)}</span><span class="hb"><i style="width:{max(3, round(100 * len(js_) / len(fam_top[0][4])))}%"></i></span><span class="hc">{len(js_):,}</span></a>' for fs, fn, _, _, js_ in fam_top) + "</div>"
@@ -1030,7 +1045,7 @@ def main():
     new_today_h = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY)
     closed_today_h = sum(1 for j in archived if j.get("closed") == TODAY)
     pulse = (f'<p class="pulse"><b>This morning’s update</b><span>{sum(1 for j in active if j.get("last_seen") == TODAY):,} roles re-checked</span>'
-             f'<span>{new_today_h:,} posted today</span><span>{closed_today_h:,} closed and moved to the archive</span><a href="{P}/status/">Data status</a></p>')
+             f'<span>{new_today_h:,} posted today</span><span>{closed_today_h:,} closed by employers (their pages stay, marked closed)</span><a href="{P}/status/">Data status</a></p>')
     board_rows = "".join(
         f'<a href="{P}/job/{j["slug"]}/"><span class="ba">{age(j["posted"])[0]}</span><span><span class="bt">{e(j["title"])}</span>'
         f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span>'
@@ -1057,7 +1072,7 @@ def main():
             f'<a class="btn" href="{P}/post-a-job/">Post a job</a></div>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
     FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of tech companies. Every listing links to the original posting, and you apply on the employer's own site."),
-           ("How often is the site updated?", "Every day. New roles are added, and roles that companies have closed are moved to the archive and marked as closed."),
+           ("How often is the site updated?", "Every day. New roles are added. A role the company has closed keeps its page at the same address, marked as closed, and leaves the lists of open jobs."),
            ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with email alerts and AI resume tools is on the way; no job will be held back for it."),
            ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
            ("Can I see salaries?", "Where the employer publishes a range, we show it, let you filter and sort by it, and use it for the salary pages.")]
@@ -1281,7 +1296,7 @@ def main():
         listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open) | {SITE}",
                 f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated daily.",
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
-                trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + fam_line + rel(REL["role:" + slug_r]) + secs[0], faq=f"{low} jobs",
+                trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + mini_pics(rj) + fam_line + rel(REL["role:" + slug_r]) + secs[0], faq=f"{low} jobs",
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
                 hub=secs[1], list_title=f"Newest {low} jobs", more=None if slug_r in ROLE_BASE else False,
                 after=section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
@@ -1333,7 +1348,7 @@ def main():
         listing(f"categories/{fs}/", f"{fn} jobs", f"{tcase(fn)} Jobs ({len(js_):,} open) | {SITE}",
                 f"{len(js_):,} open jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked daily.",
                 js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
-                extra=hub_stats(js_) + vers_line + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
+                extra=hub_stats(js_) + mini_pics(js_) + vers_line + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
                 faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
                 hub=secs[1], after=section(f"Who is hiring in {low_f}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js_).most_common(12)) + "</ul>") + others)
     for name, slug, js in places:
@@ -2390,37 +2405,68 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than a few times a day (it only changes once a day).</p>'
                    f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>'), head=api_ld)
 
-    # Plus (paid plan for job seekers; one-time payments, no subscription)
+    # Plus (paid plan for job seekers; one-time payments, no subscription). The page sells the problem first, shows each
+    # feature as a small screen (marked as an example), and does the price arithmetic for the visitor.
     plus = CFG.get("plus", {"live": False, "plans": []})
     cta = ('<a class="btn primary lg" href="#pay">Get Plus</a>' if plus.get("live") else '<button class="btn primary lg" type="button" disabled>Available soon</button>')
+    def per_day(pl):
+        m_ = re.search(r"\d+", pl["price"]); k_ = re.search(r"\d+", pl["name"])
+        if not m_ or not k_: return ""
+        days_ = {1: 30, 3: 91, 12: 365}.get(int(k_.group(0)), 30 * int(k_.group(0)))
+        return f"{round(100 * int(m_.group(0)) / days_)} cents a day"
     plans = "".join(
         f'<div class="plan{" best" if pl.get("best") else ""}">' + (f'<span class="pill acc">{e(pl["note"])}</span>' if pl.get("note") else '<span class="pill ghost">–</span>')
-        + f'<p class="pname">{e(pl["name"])}</p><p class="price">{e(pl["price"])}</p><p class="note">{e(pl["per"])}</p>{cta}</div>' for pl in plus["plans"])
-    feats = [("Email alerts", f"Nobody can check {m} career pages a day. Save a search once, and the email arrives when a matching role is picked up from an employer’s careers page."),
-             ("A resume for one posting", "The same resume sent everywhere rarely fits. Your bullet points are reworded against one specific posting, using only what is already in your resume, and you approve each line."),
-             ("Cover letter drafts", "A draft built from your resume and the posting, ready to edit, so a letter stops costing an evening."),
-             ("Interview prep", "Likely questions taken from the posting’s own requirements, with points from your resume to answer them."),
-             ("My jobs on every device", "Saved jobs, application statuses and notes follow you from laptop to phone."),
-             ("What stays free", "Every job, the moment we have it. Search, filters, salary data, the tracker and the free tools. Nothing is held back for members.")]
-    feat_html = "".join(f'<div class="feat"><h2>{e(a)}</h2><p>{e(b)}</p></div>' for a, b in feats)
-    rows_cmp = [("Search, filters and salary data", "Yes", "Yes"), ("Every job, the moment we have it", "Yes", "Yes"), ("Save jobs and track applications", "On this device", "On every device"),
-                ("Alerts for saved searches", "On the site, when you visit", "By email, when we see the job"), ("Resume against a posting", "Match check (free tool)", "Reworded for the posting"),
-                ("Cover letters", "Template (free tool)", "Draft from your resume"), ("Interview prep for one role", "No", "Yes")]
-    cmp_html = "".join(f"<tr><td>{e(a)}</td><td>{e(b)}</td><td><strong>{e(c_)}</strong></td></tr>" for a, b, c_ in rows_cmp)
-    soon = "" if plus.get("live") else '<div class="banner">Plus is not on sale yet. This page shows what it will do and what it will cost.</div>'
-    page("plus/", f"Plus: job alerts by email and resume help | {SITE}",
-         "Plus emails you when a matching tech job appears and helps with the resume and cover letter for it. One payment, no subscription. Every job stays free.",
-         crumbs(("Plus", "")) + f'<h1>Plus: hear about the right job the day it appears</h1>'
-         f'<p class="lead">The free site has every job. What it cannot do is tell you when a new one fits, or help you write the resume for it. '
-         f'Plus does both. You pay once for the period you pick, and nothing renews.</p>{soon}'
-         f'<div class="feats">{feat_html}</div>'
-         + section("Prices", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. Card payments will follow. The AI tools have a monthly allowance, shown before you pay, sized for an active job search.</p>')
+        + f'<p class="pname">{e(pl["name"])}</p><p class="price">{e(pl["price"])}</p><p class="note">{e(pl["per"])} · <b>{per_day(pl)}</b></p>{cta}</div>' for pl in plus["plans"])
+    ex_ = '<span class="ex">example</span>'
+    pcards = [
+        ("Resume review", "A read the way a recruiter reads: twenty seconds, top to bottom. You get a score, what the reader saw, what they could not find, and the lines to rewrite.",
+         ex_ + '<span class="big">6<small>out of 10</small></span><span class="mt"><i style="width:60%"></i></span><span class="ln">First result appears on <b>page two</b> · no numbers in 7 of 9 bullets</span>'),
+        ("Your resume, reworded for one posting", "The same resume sent everywhere rarely fits. Your own bullet points are reworded against the posting you picked, using only what is already in your resume. You approve each line.",
+         ex_ + '<span class="ln">Before: worked on the product catalogue</span><span class="ln"><b>After: cut catalogue load time by 40% by moving rendering to the server</b></span><span class="ln">Matches “performance” in the posting</span>'),
+        ("Cover letter for the posting", "A draft built from your resume and the posting: a full letter for email, or four lines for a message to the recruiter. Ready to edit, so a letter stops costing an evening.",
+         '<span class="ln"><b>Dear hiring team,</b></span><span class="sk" style="width:94%"></span><span class="sk h" style="width:58%"></span><span class="sk" style="width:88%"></span><span class="sk" style="width:40%"></span>'),
+        ("An email when a job fits", f"Nobody can check {m} career pages a day. Answer the five questions once; when an employer posts a job that fits, the email arrives the same day.",
+         ex_ + '<span class="ln"><b>3 new jobs fit your answers</b></span><span class="rw"><span>Remote</span><span class="mt"><i style="width:100%"></i></span><b>3 of 3</b></span>'
+               '<span class="rw"><span>Pay</span><span class="mt"><i style="width:66%"></i></span><b>2 of 3</b></span><span class="ln">Sent 08:10, the morning they were posted</span>'),
+        ("Interview prep for one job", "Likely questions taken from the posting’s own requirements, each with the points from your resume that answer it.",
+         ex_ + '<span class="ln"><b>1.</b> Tell us about a migration you led</span><span class="ln"><b>2.</b> How do you measure page speed?</span><span class="ln"><b>3.</b> A release you had to roll back</span><span class="ln">From 6 requirements in the posting</span>'),
+        ("Pay check and what to say", "Where an offer sits among the pay ranges employers advertise for the same work, and a short script for asking for more when it sits low.",
+         ex_ + '<span class="ln">Offer <b>$118K</b> · median for this work <b>$140K</b></span><span class="mt"><i style="left:22%;width:46%"></i><u style="left:30%"></u></span><span class="ln"><b>16% below the median</b>: worth asking</span>'),
+        ("LinkedIn profile review", "What a recruiter sees in search results: the headline and the first three lines. You get the fixes, with the fragment each one refers to.",
+         ex_ + '<span class="ln">Headline: <b>“Open to work”</b></span><span class="ln">Says no role and no field</span><span class="sk" style="width:86%"></span><span class="ln">3 fixes · 1 buzzword</span>'),
+        ("Your jobs on every device", "Saved jobs, application statuses and notes follow you from the laptop to the phone.",
+         ex_ + '<span class="rw"><span>Saved</span><span class="mt"><i style="width:100%"></i></span><b>9</b></span><span class="rw"><span>Applied</span><span class="mt"><i style="width:66%"></i></span><b>6</b></span>'
+               '<span class="rw"><span>Interview</span><span class="mt"><i style="width:22%"></i></span><b>2</b></span><span class="ln">Laptop and phone show the same list</span>'),
+    ]
+    pcard_html = '<div class="tgrid">' + "".join(f'<div class="tcard"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span></span></div>' for t_, d_, scr in pcards) + "</div>"
+    free_now = "".join(f'<li><a href="{P}/{u}">{e(t_)}</a><span>free</span></li>' for u, t_ in (
+        ("jobs/", "Every job and the link to apply, the moment we have it"), ("for-you/", "Matching by five answers, with the reason next to each job"), ("categories/", f"Browsing by {len(fam_rows)} fields and {len(by_role)} kinds of work"),
+        ("salaries/", "Salary data from the pay ranges employers publish"), ("resume/", "Resume builder with Word and PDF"), ("tools/", "Every tool: resume match, pay calculators, letters"), ("my-jobs/", "Application tracker with reminders")))
+    rows_cmp = [("Every job and the link to apply", "Yes", "Yes"), ("Search, filters, categories, salary data", "Yes", "Yes"), ("Matching by five answers", "Yes", "Yes, and by email"),
+                ("Save jobs and track applications", "On this device", "On every device"), ("New jobs that fit", "On the site, when you visit", "By email, the day they are posted"),
+                ("Resume", "Builder and match check", "Reviewed, and reworded for each posting"), ("Cover letters", "Fill-in template", "Draft from your resume and the posting"),
+                ("Interview prep", "No", "Questions from the posting, with your answers"), ("Pay", "Salary checker", "Offer check with a script for negotiating"), ("LinkedIn profile", "No", "Reviewed, with fixes")]
+    cmp_html = "".join(f"<tr><td>{e(a_)}</td><td>{e(b_)}</td><td><strong>{e(c_)}</strong></td></tr>" for a_, b_, c_ in rows_cmp)
+    soon = "" if plus.get("live") else '<div class="banner">Plus is not on sale yet. This page shows what it will do and what it will cost. Everything in the “free” list works today.</div>'
+    plus_qa = [("Is this a subscription?", "No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel. There is no card on file to charge."),
+               ("Do I have to pay to see or apply for jobs?", "No. Every job is public the moment we have it and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
+               ("How do I pay?", "With crypto (USDT, BTC, ETH and other coins) on a checkout page. Plus turns on in your account once the network confirms the payment."),
+               ("Is the resume help written by AI?", "Yes, the review, the rewording, the letters and the interview questions are. It works only from your own resume and the posting, adds no experience you do not have, and you approve every line before you use it."),
+               ("How much can I use it?", "The AI tools have a monthly allowance, shown before you pay, sized for an active job search: dozens of applications a month."),
+               ("When does it launch?", "When payments are connected. Until then the free site works as it does today.")]
+    plus_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in plus_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("plus/", f"Plus: resume review, letters and job alerts, one payment | {SITE}",
+         "Plus reviews your resume, rewords it for each posting, drafts the cover letter, prepares you for the interview and emails you when a job fits. One payment from 11 cents a day, nothing renews. Every job stays free.",
+         crumbs(("Plus", "")) + '<h1>Applications go out and nothing comes back. Plus finds out why and <span class="hl">fixes it</span>, job by job</h1>'
+         '<p class="lead">A resume gets one short first read, and nobody tells you why it was put aside: the result is on page two, the bullets list duties, the letter could be for any company. '
+         f'Plus reads your resume the way a recruiter does, rewords it for each posting and tells you the day a job fits. One payment, from {min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else "a few cents a day"}. Nothing renews.</p>{soon}'
+         + section("What Plus adds", pcard_html)
+         + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. '
+                   'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
+         + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
          + section("Free and Plus side by side", f'<div class="tablewrap"><table><tr><th></th><th>Free</th><th>Plus</th></tr>{cmp_html}</table></div>')
-         + '<section class="sec"><div class="sec-head"><h2>Questions</h2></div>'
-         "<h3>Is this a subscription?</h3><p>No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel.</p>"
-         "<h3>Do I have to pay to see or apply for jobs?</h3><p>No. Every job is public the moment we have it and free to apply to. Plus adds alerts and tools; it does not unlock listings.</p>"
-         "<h3>How do I pay?</h3><p>With crypto (USDT, BTC, ETH and other coins) on a checkout page. Plus turns on in your account once the network confirms the payment. Card payments are planned.</p>"
-         "<h3>When does it launch?</h3><p>It is being finished. Until then the free site works as it does today.</p></section>")
+         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{e(p['price'])}</td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
     app_url = f"{P}/account/" if CFG["api_url"] else ""

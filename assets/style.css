@@ -868,3 +868,10 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .tprev.wide .rw{grid-template-columns:112px 1fr auto}
 .tprev.wide .rw span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:560px){.ccols b{font-size:9px}.pic figcaption{min-height:0}}
+.pics.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:900px;margin:8px 0 26px}
+.pics.two .pic figcaption{min-height:0}
+.pics.two .ccols{height:130px}
+.pics.two .donut svg{max-width:104px}
+.dir.free{columns:1}
+.dir.free ul{columns:2 320px;column-gap:44px}
+.dir.free li{break-inside:avoid}
