@@ -152,6 +152,23 @@ chart), `donut()` (ring), `.hbars` (bars with a link per row), `ins_chart()` (th
 `icard()` (a ranking as a card with its top four as a small chart). Every chart is counted from the build's own data and has one
 caption that says what it shows; no decorative charts, no invented numbers. When you add a page with numbers, draw them.
 
+## Added on the evening of 2026-11-13 (one long session with the owner)
+
+- Tools: 28 in `tools_pages.py` / `assets/tools.js` (643 tests), plus the resume builder, the match and the tracker shown first.
+  The hub groups job-seeker tools under four headings as tiles with a small screen; keep new tools in that form.
+- `/companies/compare/` and `companies/compare/<a>-vs-<b>/`: employers side by side from `data/compare.json` (mirrored bars).
+- `/feeds/`: an RSS address for every field, role and skill. `post.py` + `channels.json` + `CHANNELS.md`: posting new jobs to the
+  owner's own Telegram and X; silent until he lists a channel and adds the secret himself. Never enter or ask for his tokens.
+- `/plus/` and `/post-a-job/`: tariffs as three columns with ticks, every feature shown as a small example screen. Plus is not
+  on sale; do not remove the banner that says so until the server is live. No invented reviews, user counts or ratings.
+- `/ahead/`: ten things that run in the visitor's browser (live check with the employer's hiring system, alerts without an
+  account, voice search, listen, calendar reminder, skills in plain words, neighbouring roles, a link that carries the answers,
+  the result as a picture, skill demand inside the resume builder). The code is in `jobExtras()` and the "For you" block of
+  `assets/site.js`, `assets/resume.js` and the end of `sw.js` in `build.py`.
+- Closed jobs keep their pages; the owner objected to the word "archive" on the home page. Say "closed, the page stays".
+- `REPORT_RU.md` is the owner's report in Russian; update it when something he asked for ships. He reads the task list pinned in
+  the app and this report, not the English files.
+
 ## "For you": the match by answers (`/for-you/`)
 
 Five plain questions (kind of work, experience, where, pay, skills), answered with buttons; the markup is in `build.py` (`FY_WORK`,
