@@ -317,3 +317,15 @@ again with `HRN_PAGE_CAP=1` if a build is over 940 MiB. `sources_candidates.json
 at the time): 188 of them were added to `sources_tech.json` on 13 Nov 2026 (entries with `"added"`). Do not add more until job pages
 are served by the server (`server/`), which waits for the owner's domain. Measure with a fresh `python3 collect.py` before trusting a
 local size.
+
+## Job markup rules (14 Nov 2026)
+
+- Every open job's JobPosting has `validThrough` = today + 30 days (`VALID_TO`); the site is rebuilt hourly and a closed job loses
+  its markup, so the date is always in the future while the job is open.
+- A remote job gets `applicantLocationRequirements` from the countries its location names, or from a region word through
+  `REGION_LANDS` ("EMEA", "Europe", "North America", "APAC", "LATAM"). A remote job that names no country and no region
+  ("Remote", "Global", "Worldwide") gets NO markup at all (`mark_ok`): never guess a country. Its page is still indexed.
+- Location parts like "Remote" or "EMEA" are not written as a Place address (`NOT_A_PLACE`).
+- No section heading is just "Questions": write what the questions are about (the owner's standard: every H2 carries a key or a
+  real question).
+

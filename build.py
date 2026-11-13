@@ -218,7 +218,8 @@ URLS = []
 ORG_LD = [""]
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js"))).hexdigest()[:8]   # cache-busting version
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
-             f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a></p></div></footer>')
+             f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a> · '
+             f'<a href="{P}/methodology/">How it works</a> · <a href="{P}/privacy/">Privacy</a> · <a href="{P}/terms/">Terms</a></p></div></footer>')
 SAL_BAD = re.compile(r"CA\$|C\$|A\$|AU\$|S\$|SG\$|HK\$|NZ\$|CAD|AUD|SGD|EUR|GBP|CHF|JPY|INR|€|£|¥|₹", re.I)
 SAL_NUM = re.compile(r"(\d[\d,\. ]*\d|\d)\s?([kK])?")
 
@@ -265,6 +266,22 @@ POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (applica
                      r"always (hiring|looking)|spontaneous application|unsolicited application|open call", re.I)     # titles that are a standing invitation, not one specific opening
 REGION_WORDS = [("Europe", r"europe|\bemea\b|\beu\b"), ("Asia-Pacific", r"\bapac\b|asia"), ("Latin America", r"latam|latin america"), ("the Americas", r"americas"), ("North America", r"north america")]
 ETYPE_LD = {"Full-time": "FULL_TIME", "Part-time": "PART_TIME", "Contract": "CONTRACTOR", "Internship": "INTERN"}
+# A remote posting that names a part of the world instead of countries ("Remote - EMEA", "North America"): the countries Google needs.
+_EU = ["GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS"]
+REGION_LANDS = [(r"north america|\bnamer\b|\bamer\b|\bnoram\b", ["US", "CA"]), (r"\bamericas\b", ["US", "CA", "MX", "BR", "AR", "CO", "CL"]),
+                (r"\bemea\b", _EU + ["IL", "AE", "SA", "TR", "ZA", "NG", "KE"]), (r"\beurope\b|\beu\b|\beea\b", _EU),
+                (r"\bapac\b|asia[- ]pacific", ["IN", "SG", "HK", "JP", "KR", "TW", "AU", "NZ", "MY", "PH", "ID", "TH", "VN"]),
+                (r"\blatam\b|latin america|south america", ["BR", "MX", "AR", "CO", "CL"])]
+NOT_A_PLACE = re.compile(r"^(fully |100% )?(remote|remoto|global|worldwide|anywhere|international|multiple locations|hybrid|emea|apac|amer|americas|namer|latam|europe|north america|"
+                         r"remote[ ,/–-]+\w+( \w+)?|\w+( \w+)?[ ,/–-]+remote)$", re.I)
+VALID_TO = (datetime.date.fromisoformat(TODAY) + datetime.timedelta(days=30)).isoformat()      # the site is rebuilt hourly; a closed job loses its markup at once
+
+
+def region_lands(loc):
+    names = {"US": "United States", **{c: nm for c, nm, _, _ in COUNTRIES}}
+    for rx, codes in REGION_LANDS:
+        if re.search(rx, loc or "", re.I): return [(c, names[c]) for c in codes if c in names]
+    return []
 MARK = '<rect width="32" height="32" rx="8" fill="#0e0e0c"/><circle cx="16" cy="16" r="6.5" fill="#3ecf5f"/>'
 GRAD = ""
 LOGO = '<i class="live" aria-hidden="true"></i>'
@@ -331,6 +348,17 @@ def tcase(s):
 
 def fit_title(t):
     """Keep the key at the start and the brand at the end, but never let a title run long."""
+    pg = re.search(r", page \d+(?= \| |$)", t)        # page 2, 3 of a list: the number must survive, or the pages share one title
+    if pg and len(t) > 65:
+        rest = t[:pg.start()] + t[pg.end():]
+        left, brand = rest.rsplit(" | ", 1) if " | " in rest else (rest, "")
+        left = re.sub(r" \([\d,]+ (?:open|roles?)\)", "", left)
+        room = 65 - len(pg.group(0)) - (len(brand) + 3 if brand else 0)
+        if len(left) > room:
+            head_ = re.split(r" — |: ", left)[0]
+            left = head_ if 12 <= len(head_) <= room else left[:room + 1].rsplit(" ", 1)[0]
+            left = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|&))+$", "", left.rstrip(" ,-–—:&("))
+        return left + pg.group(0) + (" | " + brand if brand else "")
     if len(t) <= 65: return t
     t2 = re.sub(r" \([\d,]+ (?:open|roles?)\)", "", t)
     if len(t2) <= 65: return t2
@@ -346,7 +374,7 @@ def fit_title(t):
 
 def fit_desc(d):
     d = " ".join(d.split())
-    if len(d) < 110: d = d.rstrip(".") + f". Collected from official company career pages and updated every hour on {SITE}."
+    if len(d) < 125: d = d.rstrip(".") + f". Collected from official company career pages and updated every hour on {SITE}."
     if len(d) > 160: d = d[:157].rsplit(" ", 1)[0].rstrip(",.;:–—") + "…"
     return d
 
@@ -841,7 +869,7 @@ def job_page(j, active_by_cat):
     pills += [(f'<a class="pill perk" href="{P}/perks/{PERK_SLUG[x]}/">{e(x)}</a>' if x in PERK_OK else f'<span class="pill perk">{e(x)}</span>') for x in j.get("perks", []) if x in PERK_SLUG]
     if j["level"]: pills.append(f'<span class="pill">{e(j["level"])}</span>')
     pills += [f'<a class="pill" href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a>' for t in j["tags"]]
-    head = ""
+    head, micro = "", ""
     if j["active"]:
         org = {"@type": "Organization", "name": j["company"]}
         if LOGO_SITE.get(j["company"]): org["sameAs"] = "https://" + LOGO_SITE[j["company"]]
@@ -856,15 +884,21 @@ def job_page(j, active_by_cat):
             spots = []                                        # one Place per location the posting lists, each with its own country
             for part in [x.strip(" ,-–") for x in re.split(r";|\||•", j["location"]) if x.strip(" ,-–")][:6]:
                 here = countries_of(part)
+                if not here and NOT_A_PLACE.match(part): continue       # "Remote", "EMEA": not an address
                 spots.append({"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": part, **({"addressCountry": here[0][0]} if len(here) == 1 else {})}})
             if spots: ld["jobLocation"] = spots[0] if len(spots) == 1 else spots
         if j["remote"]:
             ld["jobLocationType"] = "TELECOMMUTE"
-            lands = countries_of(j["location"]) if j["location"] else []
-            if lands: ld["applicantLocationRequirements"] = [{"@type": "Country", "name": nm} for _, nm in lands][:8] if len(lands) > 1 else {"@type": "Country", "name": lands[0][1]}
+            lands = (countries_of(j["location"]) or region_lands(j["location"])) if j["location"] else []
+            if lands: ld["applicantLocationRequirements"] = [{"@type": "Country", "name": nm} for _, nm in lands][:32] if len(lands) > 1 else {"@type": "Country", "name": lands[0][1]}
         if j.get("etype") in ETYPE_LD:
             ld["employmentType"] = ETYPE_LD[j["etype"]]
-        if full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
+        ld["validThrough"] = VALID_TO
+        # Google reads a remote posting only with the countries it is open to. A remote job that names none ("Remote", "Global")
+        # gets no markup at all rather than a guessed country; its page is still found by ordinary search.
+        mark_ok = (not j["remote"] or "applicantLocationRequirements" in ld) and ("jobLocation" in ld or "applicantLocationRequirements" in ld)
+        if not mark_ok: head, micro = "", ""
+        elif full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
         else: head, micro = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>", ""
         host_ = re.sub(r"^www\.", "", re.sub(r"^https?://([^/?#]+).*$", r"\1", j["url"] or "")).lower()
         apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a>'
@@ -893,9 +927,9 @@ def job_page(j, active_by_cat):
     else:
         tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> at {e(j["company"])}{where} is closed. '
                 f'{"It closed on " + fdate(j["closed"]) if j.get("closed") else "The employer took it down"} and it no longer takes applications.</p>')
-    about = tldr + (f'<div itemscope itemtype="https://schema.org/JobPosting">{micro}<h2>About the role</h2>'
-                    f'<div class="prose desc" itemprop="description">{full}</div></div>'
-                    f'<p class="note">The employer’s own description, as published on {e(j["company"])}’s careers page.</p>' if full else
+    about = tldr + ((f'<div itemscope itemtype="https://schema.org/JobPosting">{micro}<h2>About the role</h2><div class="prose desc" itemprop="description">{full}</div></div>'
+                     if micro else f'<h2>About the role</h2><div class="prose desc">{full}</div>')
+                    + f'<p class="note">The employer’s own description, as published on {e(j["company"])}’s careers page.</p>' if full else
                     f'<h2>About the role</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">The opening lines of the posting. The rest is on {e(j["company"])}’s careers page.</p>'
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
@@ -1445,7 +1479,7 @@ def main():
             if s_ in BROAD or s_.endswith("-speaking"): continue
             own = s_ in ("blockchain-engineer", "smart-contract-engineer", "trader")       # the name already says crypto
             cadd(croles, f"crypto/roles/{s_}/", (f"{nm} jobs" if own else f"Crypto {rlow(nm)} jobs"), [j for j in rj if j.get("crypto")],
-                 "{n} for this work at crypto and web3 companies: exchanges, wallets, infrastructure and DeFi.", f"{e(rlow(nm))} ", least=10, label=nm)
+                 "{n} for " + rlow(nm).replace("{", "").replace("}", "") + " work at crypto and web3 companies: exchanges, wallets, infrastructure and DeFi.", f"{e(rlow(nm))} ", least=10, label=nm)
         for name, slug, pj in places:
             short = name.removeprefix("the ")
             cadd(cplaces, f"crypto/in/{slug}/", f"Crypto jobs in {short}", [j for j in pj if j.get("crypto")], "{n} at crypto and web3 companies in " + name + ".", "", f" at crypto and web3 companies in {e(name)}", least=10, label=short)
@@ -2115,7 +2149,7 @@ def main():
              + '<div class="card verdict">' + "".join(f"<p>{e(v)}</p>" for v in verdict) + "</div>"
              + f'<div class="vsside">{side(A)}{side(B)}</div>'
              + f'<p class="cta2"><a class="btn" href="{P}/companies/{sa}/">See {e(A["name"])} jobs</a> <a class="btn ghost" style="margin-top:0" href="{P}/companies/{sb}/">See {e(B["name"])} jobs</a></p>'
-             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
+             + section(f"Questions about {A['name']} and {B['name']} jobs", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + section("More comparisons", '<ul class="tiles">' + "".join(tile(vs_path(*sorted((x, o), key=vs_top.index)), f"{cfacts[x]['name']} vs {cfacts[o]['name']}", cfacts[x]["n"] + cfacts[o]["n"]) for x in (sa, sb) for o in others_[:3]) + "</ul>",
                        ("companies/compare/", "Compare any two companies"))
              + f'<p class="note">Counted from open roles collected from each company’s own careers page. A median needs at least 15 postings with a yearly range in US dollars. <a href="{P}/methodology/">How the numbers are made</a>.</p>', head=ld_)
@@ -2226,7 +2260,7 @@ def main():
                    'Each job carries its number, title, employer, place, country, date, pay where stated, the opening lines and the address of its page here. It is rebuilt every hour. '
                    'Job search engines may read it once an hour and must link each job to its page on this site.</p>')
          + section("Every feed", feed_dir)
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in feed_qa) + "</dl>")
+         + section("Questions about job feeds", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in feed_qa) + "</dl>")
          + f'<p class="note">For programs: the <a href="{P}/api/">free API</a>. For web pages: the <a href="{P}/widgets/">job widget</a>.</p>', head=feed_ld)
 
     # Ahead: what this site does that job sites do not do yet (the owner: "implement at least ten things from the future")
@@ -2318,7 +2352,7 @@ def main():
              + '<h2>Make it yours</h2><ol class="steps"><li><b>Keep the form, change every fact.</b> A verb first, what changed, one number.</li>'
                f'<li><b>Use the posting’s words.</b> The <a href="{P}/tools/resume-match/">match checker</a> shows which of them your resume lacks.</li>'
                f'<li><b>Put the strongest result first.</b> The <a href="{P}/tools/resume-review/">resume review</a> tells you what a first read finds.</li></ol></div></div>'
-             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
+             + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_)
     write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     rex_html = '<div class="dir" id="dir">' + "".join(
@@ -3078,7 +3112,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'The free <a href="{P}/tools/jobposting-schema/">JobPosting schema generator</a> writes that code for you.</p>')
          + section("Limits and fair use", '<p>The widget reads one small file that changes once an hour, so there is no rate limit to run into. A list for a skill, city or category holds the 30 newest roles; '
                    'a company’s list holds all of its open roles. Keep the link back inside the snippet.</p>')
-         + section("Questions", w_faq_html)
+         + section("Questions about the job widget", w_faq_html)
          + section("More for developers and writers", '<div class="feats">'
                    f'<a class="feat" href="{P}/api/"><h3>Free jobs API</h3><p>JSON feeds for every skill, category, city and company. No key, no sign-up.</p></a>'
                    f'<a class="feat" href="{P}/trends/"><h3>Hiring data to quote</h3><p>Live numbers on skills, salaries and companies, with ready-made citations and CSV downloads.</p></a>'
@@ -3151,7 +3185,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        '<p><button class="btn sm ghost" type="button" data-copy="pw-b" style="margin-top:0">Copy the code</button></p>'
                        f'<p>This snippet shows the latest tech jobs. To show one skill, a city, one company or your own board, with your colours and layout, <a href="{P}/widgets/">build your own on the job widget page</a>.</p>')
              + section("What your visitors will see", f'<div data-hrn-jobs="latest" data-limit="5" data-hrn-base="{P}"><a href="{P}/jobs/">Tech jobs on {e(SITE)}</a></div>')
-             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in p_faq) + "</dl>")
+             + section(f"Questions about the job widget for {pname}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in p_faq) + "</dl>")
              + section("Other platforms", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in PLATFORMS if x[0] != pslug) + f'<a href="{P}/widgets/">All options</a></p>')
              + f'<script src="{P}/widget.js?v={V}" defer></script>'
              "<script>document.addEventListener('click',function(ev){var b=ev.target.closest('[data-copy]');if(!b)return;var t=document.getElementById(b.getAttribute('data-copy'));"
@@ -3296,7 +3330,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
          + section("What the same things cost elsewhere", else_html)
          + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
+         + section("Questions about Plus", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
     # Employers
     rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{was_of(p['name'])}<strong>{e(p['price'])}</strong></td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
     app_url = f"{P}/account/" if CFG["api_url"] else ""
@@ -3452,7 +3486,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
            + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_trust + emp_cards + emp_vs + '<h3 class="cmp-h">Which plan fits</h3>' + emp_fit + '<h3 class="cmp-h">Standard, Featured and Pinned, line by line</h3>' + emp_pt
            + f'<h3>More ways to be seen</h3><div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What you get</th></tr>{extra_rows}</table></div>'
            f'<p><a class="btn primary" href="{P}/post-a-job/">Post a job</a></p></section>'
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in price_qa) + "</dl>"), head=price_ld)
+         + section("Questions about prices and payment", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in price_qa) + "</dl>"), head=price_ld)
     # "Jobs near me" and "part time jobs near me": among the most searched job phrases in every country.
     # The country comes from the device's time zone (nothing is sent anywhere); the nearest city only if the visitor allows location, and it is worked out in the browser.
     CITY_LL = {"new-york": (40.71, -74.01), "san-francisco": (37.77, -122.42), "seattle": (47.61, -122.33), "austin": (30.27, -97.74), "chicago": (41.88, -87.63), "boston": (42.36, -71.06),
@@ -3496,7 +3530,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        f'<a class="feat" href="{P}/part-time/"><h3>Part-time jobs</h3><p>{sum(1 for j in active if j.get("etype") == "Part-time"):,} jobs for fewer hours than a full week.</p></a>'
                        f'<a class="feat" href="{P}/entry-level/"><h3>Entry-level jobs</h3><p>Jobs for a first year of work, and internships.</p></a></div>')
              + static_list
-             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>"), head=ld_)
+             + section(f"Questions about {word}jobs near you", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>"), head=ld_)
     near_page("jobs-near-me/", "", "Jobs near me", f"Jobs Near Me: {len(active):,} open jobs in {len(places)} cities and countries | {SITE}",
               f"Jobs near you, hiring now: {len(active):,} open jobs in {len(places)} cities and countries, read from employers’ own pages every hour. Your country is found from the time zone; pick a city or allow location for the nearest one.",
               f"{len(active):,} open jobs in {len(places)} cities and countries, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
@@ -3545,7 +3579,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<a class="feat" href="{P}/resume/"><h3>Resume builder</h3><p>One page, plain layout, Word and PDF. Free, nothing to sign up for.</p></a>'
                    f'<a class="feat" href="{P}/tools/"><h3>Free tools</h3><p>Match a resume to a posting, pay calculators, letters, an application tracker.</p></a>'
                    f'<a class="feat" href="{P}/guides/"><h3>Guides</h3><p>Short articles with figures recounted from today’s postings.</p></a></div>')
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in men_qa) + "</dl>"), head=men_ld)
+         + section("Questions about mentors", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in men_qa) + "</dl>"), head=men_ld)
     # Employer account: only exists once the API is deployed, so the site never shows a form that goes nowhere
     if CFG["api_url"]:
         acc_data = {"site": FULL, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
@@ -3617,7 +3651,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<p class="lead">A “we’re hiring” picture says nothing new after the first week. These badges carry today’s number of open roles and update themselves. '
          f'Copy one below, or <a href="{P}/widgets/">pick any skill, city, category or company in the builder</a>.</p>'
          f'<div class="feats">{badge_rows}</div>'
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hb_faq) + "</dl>"),
+         + section("Questions about the hiring badge", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hb_faq) + "</dl>"),
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
              {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hb_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     org_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
