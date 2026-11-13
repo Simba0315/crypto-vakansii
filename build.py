@@ -371,7 +371,7 @@ def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
-<div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Locations</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
+<div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
@@ -1311,24 +1311,53 @@ def main():
     listing("remote/", "Remote tech jobs", f"Remote Tech Jobs — {roles(len(remote), 'open role')} | {SITE}",
             f"{roles(len(remote), 'remote job')} at tech companies: engineering, marketing, support, compliance and more.",
             remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}{remote_more}<div class="sec"><div class="sec-head"><h2>All remote tech jobs</h2></div></div>', feed=True, faq="remote tech jobs")
+    BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
+    # Crypto: the hub answers the search "crypto jobs" (and "web3 jobs", "blockchain jobs"), so it shows what these jobs pay, who
+    # hires, and links to every narrower list people search for by name: by kind, by profession, by place.
     crypto = [j for j in active if j.get("crypto")]
     if crypto:
+        ctrail = (("Crypto jobs", "crypto/"),)
+        ckinds, croles, cplaces = [], [], []
+        def cadd(bucket, path, h1, js, desc, pre="", post=" at crypto and web3 companies", least=5, label=None):
+            if len(js) < least: return
+            listing(path, h1, f"{h1} ({len(js):,} open) | {SITE}", desc.format(n=roles(len(js), "open job")), js, intro_for(js, pre, post), trail=ctrail, max_pages=3, more=False,
+                    faq=h1[0].lower() + h1[1:])
+            bucket.append((path, label or h1, len(js)))
+        cadd(ckinds, "crypto/remote/", "Remote crypto jobs", [j for j in crypto if j["remote"]], "{n} at crypto and web3 companies that can be done from home. Updated hourly.", "remote ")
+        cadd(ckinds, "crypto/new/", "New crypto jobs", [j for j in crypto if (j["posted"] or "") >= cut3], "{n} at crypto and web3 companies posted in the last three days.", "", " at crypto and web3 companies posted in the last 3 days")
+        cadd(ckinds, "crypto/with-salary/", "Crypto jobs with salary", [j for j in crypto if j["salary"]], "{n} at crypto and web3 companies where the employer states the pay.", "", " at crypto and web3 companies with a published salary range")
+        cadd(ckinds, "crypto/entry-level/", "Entry-level crypto jobs", [j for j in crypto if j["entry"]], "{n} at crypto and web3 companies that ask for little or no experience.", "entry-level ")
+        cadd(ckinds, "crypto/internships/", "Crypto internships", [j for j in crypto if j.get("etype") == "Internship"], "{n}: internships at crypto and web3 companies.", "internship ")
+        cadd(ckinds, "crypto/work-from-anywhere/", "Crypto jobs open to any country", [j for j in crypto if j.get("anywhere")], "{n} at crypto and web3 companies that do not tie the job to one country.", "", " at crypto and web3 companies open to any country")
+        for s_, (nm, rj) in by_role.items():
+            if s_ in BROAD or s_.endswith("-speaking"): continue
+            own = s_ in ("blockchain-engineer", "smart-contract-engineer", "trader")       # the name already says crypto
+            cadd(croles, f"crypto/roles/{s_}/", (f"{nm} jobs" if own else f"Crypto {rlow(nm)} jobs"), [j for j in rj if j.get("crypto")],
+                 "{n} for this work at crypto and web3 companies: exchanges, wallets, infrastructure and DeFi.", f"{e(rlow(nm))} ", least=10, label=nm)
+        for name, slug, pj in places:
+            short = name.removeprefix("the ")
+            cadd(cplaces, f"crypto/in/{slug}/", f"Crypto jobs in {short}", [j for j in pj if j.get("crypto")], "{n} at crypto and web3 companies in " + name + ".", "", f" at crypto and web3 companies in {e(name)}", least=10, label=short)
+        croles.sort(key=lambda x: -x[2]); cplaces.sort(key=lambda x: -x[2])
+        cdir = lambda title, rows_: (f'<div class="dirb"><h2><span>{e(title)}</span><span>{len(rows_)}</span></h2><ul>'
+                                     + "".join(f'<li><a href="{P}/{u}">{e(nm)}</a><span>{k:,} jobs</span></li>' for u, nm, k in rows_) + "</ul></div>") if rows_ else ""
         ccats = "".join(tile(f"crypto/{s}/", CAT[s], c) for s in CAT if (c := sum(1 for j in crypto if j["cat"] == s)) >= 5)
-        listing("crypto/", "Crypto & web3 jobs", f"Crypto & Web3 Jobs — {roles(len(crypto), 'open role')} | {SITE}",
-                f"{roles(len(crypto))} at crypto and web3 companies: exchanges, wallets, blockchain infrastructure and DeFi. Updated hourly.",
-                crypto, intro_for(crypto, "", " at crypto and web3 companies"),
-                extra=f'<ul class="tiles">{ccats}</ul><div class="sec"><div class="sec-head"><h2>All crypto &amp; web3 jobs</h2></div></div>', feed=True, faq="crypto and web3 jobs")
+        chire = "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in crypto).most_common(12))
+        eng_pc = round(100 * sum(1 for j in crypto if j["cat"] == "engineering") / len(crypto))
+        listing("crypto/", "Crypto jobs", f"Crypto Jobs: {len(crypto):,} Open Web3 and Blockchain Roles | {SITE}",
+                f"{roles(len(crypto), 'open job')} at crypto, web3 and blockchain companies: exchanges, wallets, infrastructure and DeFi. Remote and on-site, with pay where the employer states it. Updated hourly.",
+                crypto, intro_for(crypto, "", " at crypto, web3 and blockchain companies"),
+                extra=mini_pics(crypto) + f'<ul class="tiles">{ccats}</ul>'
+                + section("Who is hiring in crypto", f'<ul class="tiles">{chire}</ul>', ("companies/", "All companies"))
+                + '<div class="dir">' + cdir("Kinds of crypto jobs", ckinds) + cdir("By profession", croles) + cdir("By place", cplaces) + "</div>"
+                + '<div class="sec"><div class="sec-head"><h2>All crypto jobs</h2></div></div>', feed=True, faq="crypto jobs",
+                faq_first=("What counts as a crypto job here?", f"A job at a company whose business is crypto, web3 or blockchain: exchanges, wallets, custody, blockchain infrastructure, DeFi and analytics. "
+                           f"Of the {len(crypto):,} open today, {eng_pc}% are engineering jobs; the rest are in compliance, marketing, support, finance, design and other fields, so the list is not only for programmers."))
         for s, name in CAT.items():
             cj = [j for j in crypto if j["cat"] == s]
             if len(cj) >= 5:
                 listing(f"crypto/{s}/", f"{name} jobs in crypto & web3", f"{name} Jobs in Crypto & Web3 ({len(cj):,} open) | {SITE}",
                         f"{roles(len(cj), name + ' job')} at crypto and web3 companies. Remote and on-site roles, updated hourly.",
-                        cj, intro_for(cj, f"{e(name)} ", " at crypto and web3 companies"), trail=(("Crypto & web3", "crypto/"),))
-        cr = [j for j in crypto if j["remote"]]
-        if len(cr) >= 5:
-            listing("crypto/remote/", "Remote crypto & web3 jobs", f"Remote Crypto Jobs — {roles(len(cr), 'open role')} | {SITE}",
-                    f"{roles(len(cr), 'remote job')} at crypto and web3 companies. Work from anywhere, updated hourly.",
-                    cr, intro_for(cr, "remote ", " at crypto and web3 companies"), trail=(("Crypto & web3", "crypto/"),))
+                        cj, intro_for(cj, f"{e(name)} ", " at crypto and web3 companies"), trail=ctrail)
     sal = [j for j in active if j["salary"]]
     listing("with-salary/", "Tech jobs with salary listed", f"Tech Jobs With Salary Listed ({len(sal):,}) | {SITE}",
             "Tech jobs where the employer publishes the salary range up front.", sal, intro_for(sal, "", " with a published salary range"))
@@ -1345,7 +1374,6 @@ def main():
                 after=section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     # Which kinds of work sit close to each other: two roles are neighbours when employers ask for the same skills in both.
-    BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
     has_rex = lambda s_: (s_ == "intern" or s_ not in BROAD) and not s_.endswith("-speaking")
     role_sk, role_med = {}, {}
     for s_, (nm_, js_) in by_role.items():
@@ -1442,8 +1470,27 @@ def main():
                 f"{roles(len(js), 'tech job')} in {name}. Startups and established tech companies hiring now.",
                 js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug]) + hub_sections(f"tech roles in {short}", js, "places")[0], faq=f"tech jobs in {name}", feed=True,
                 hub=hub_sections(f"tech roles in {short}", js, "places")[1], list_title=f"Newest tech jobs in {short}")
-    page("locations/", f"Tech Jobs by Location | {SITE}", "Browse tech jobs by city, country and region.",
-         crumbs(("Locations", "")) + f'<h1>Tech jobs by location</h1><p class="lead">Open roles per place. A job that lists several locations appears in each of them.</p><ul class="tiles">{place_html}</ul>')
+    rule_of = {slug: rule for _, slug, rule in PLACES}
+    WORLD = (("North America", {"US", "CA"}), ("Europe", REGIONS["europe"][0]), ("Asia-Pacific", REGIONS["asia-pacific"][0]), ("Latin America", REGIONS["latin-america"][0]))
+    def world(code): return next((nm for nm, codes in WORLD if code in codes), "Middle East and Africa")
+    lrow = lambda name, slug, js: (f'<li data-n="{e(name.lower())}"><a href="{P}/locations/{slug}/">{e(name.removeprefix("the "))}</a><span>{len(js):,} jobs'
+                                   + (f' · {sum(j["remote"] for j in js):,} remote' if any(j["remote"] for j in js) else "") + "</span></li>")
+    lgroups = defaultdict(list)
+    for name, slug, js in places:
+        r_ = rule_of.get(slug)
+        lgroups[world(r_) if isinstance(r_, str) and r_ != "region" else "Parts of the world" if r_ == "region" else "Cities and states"].append((name, slug, js))
+    lorder = [nm for nm, _ in WORLD] + ["Middle East and Africa", "Parts of the world", "Cities and states"]
+    ldir = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(g)}</span><span>{len(lgroups[g])}</span></h2><ul>' + "".join(lrow(*x) for x in sorted(lgroups[g], key=lambda x: -len(x[2]))) + "</ul></div>" for g in lorder if lgroups.get(g)) + "</div>"
+    n_ctry = sum(len(lgroups[g]) for g in lorder[:5] if lgroups.get(g))
+    ltop = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in sorted((x for g in lorder[:5] for x in lgroups.get(g, [])), key=lambda x: -len(x[2]))[:8])
+    page("locations/", f"Jobs by Country: {n_ctry} Countries and {len(lgroups.get('Cities and states', []))} Cities | {SITE}",
+         f"Choose a country: open jobs in {n_ctry} countries, each with the number that can be done from home. Also by part of the world and by city.",
+         crumbs(("Locations", "")) + f'<h1>Jobs by country: <span class="hl">choose yours</span></h1>'
+         f'<p class="lead">Open jobs in {n_ctry} countries, counted today. A job that lists several places appears in each of them. Jobs that are not tied to one country are under <a href="{P}/work-from-anywhere/">work from anywhere</a>.</p>'
+         f'<ul class="tiles">{ltop}</ul>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a country or a city, for example Germany or Austin" aria-label="Find a place"></p>'
+         f'<p class="lead" id="dirnone" hidden>No such place in today’s jobs. Try <a href="{P}/remote/">remote jobs</a> or the <a href="{P}/jobs/">search</a>.</p>' + ldir)
 
     # Companies (+ per-company data for the embeddable widget)
     week_ago = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
