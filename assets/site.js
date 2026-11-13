@@ -3,7 +3,11 @@
 (function () {
   var P = document.documentElement.getAttribute('data-base') || '';
   function get(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
-  function set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function set(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+    // saved jobs and a resume are the visitor's work: ask the browser not to clear them when it tidies up
+    if ((k === 'hrn_jobs' || k === 'hrn_resume') && !set.asked && navigator.storage && navigator.storage.persist) { set.asked = true; try { navigator.storage.persist(); } catch (e) {} }
+  }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function dateInt(d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
   function today() { return dateInt(new Date()); }
@@ -59,7 +63,7 @@
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
       remote: p.has('remote'), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
       skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new',
-      real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
+      titles: p.has('ti'), real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
     };
   }
   function match(j, f) {
@@ -81,7 +85,7 @@
     if (f.sal > 1 && !(j[13] >= f.sal)) return false;
     for (var i = 0; i < f.skills.length; i++) if (j[7].indexOf(f.skills[i]) < 0) return false;
     if (f.words.length) {
-      var hay = j[17] || (j[17] = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase());
+      var hay = f.titles ? j[1].toLowerCase() : j[17] || (j[17] = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase());
       for (var k = 0; k < f.words.length; k++) if (hay.indexOf(f.words[k]) < 0) return false;
     }
     return true;
