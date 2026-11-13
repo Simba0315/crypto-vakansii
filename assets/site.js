@@ -205,6 +205,21 @@
     });
     var none = $('cnone'); if (none) none.hidden = shown > 0;
   });
+  /* companies page: sort by open roles, roles posted in the last 7 days, or name (buttons are hidden until this script runs) */
+  var csort = $('csort'), clist = $('clist');
+  if (csort && clist) {
+    csort.hidden = false;
+    csort.addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      var k = b.getAttribute('data-s'), items = Array.prototype.slice.call(clist.children);
+      items.sort(function (a, z) {
+        if (k === 'n') return a.getAttribute('data-n').localeCompare(z.getAttribute('data-n'));
+        return (+z.getAttribute('data-' + k) - +a.getAttribute('data-' + k)) || (+z.getAttribute('data-o') - +a.getAttribute('data-o'));
+      });
+      var frag = document.createDocumentFragment(); items.forEach(function (li) { frag.appendChild(li); }); clist.appendChild(frag);
+      csort.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    });
+  }
 
   /* ---------- job tracker ---------- */
   var STATUS = [['saved', 'Saved'], ['applied', 'Applied'], ['interview', 'Interviewing'], ['offer', 'Offer'], ['closed', 'Not moving forward']];

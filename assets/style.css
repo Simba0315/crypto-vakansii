@@ -283,7 +283,9 @@ label.check input{accent-color:var(--text)}
 /* My jobs */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 6px}
 .tab{font:inherit;font-size:14px;font-weight:600;padding:7px 13px;border-radius:8px;border:1px solid var(--line2);background:var(--card);color:var(--muted);cursor:pointer}
-.tab[aria-selected=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.tab[aria-selected=true],.tab[aria-pressed=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.csort{margin:12px 0 0}
+.up{font:600 12px var(--mono);color:var(--green);background:var(--green-soft);border-radius:5px;padding:1px 5px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tab i{font:500 12px var(--mono);font-style:normal;opacity:.75;margin-left:6px}
 .trow{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line)}
 .trow:last-child{border-bottom:0}

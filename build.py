@@ -911,11 +911,30 @@ def main():
          crumbs(("Locations", "")) + f'<h1>Tech jobs by location</h1><p class="lead">Open roles per place. A job that lists several locations appears in each of them.</p><ul class="tiles">{place_html}</ul>')
 
     # Companies (+ per-company data for the embeddable widget)
-    grid = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True).replace("<li>", f'<li data-n="{e(c.lower())}">', 1) for c, js in comp_items)
+    week_ago = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    fresh_n = {c: sum(1 for j in js if j["active"] and (j.get("posted") or "") >= week_ago) for c, js in comp_items}
+
+    def co_tile(c, js):
+        n, w = sum(j["active"] for j in js), fresh_n[c]
+        up = f'<span class="up" title="{w:,} posted in the last 7 days">+{w:,}</span>' if w else ""
+        return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}"><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
+                f'<span class="n">{e(c)}</span>{up}<span class="c">{n:,}</span></a></li>')
+    grid = "".join(co_tile(c, js) for c, js in comp_items)
+    top_open = [(c, sum(j["active"] for j in js)) for c, js in comp_items[:3]]
+    top_new = [(c, n) for c, n in sorted(fresh_n.items(), key=lambda kv: -kv[1])[:3] if n]
+    names = lambda xs: " and ".join(filter(None, [", ".join(f"{e(c)} ({n:,})" for c, n in xs[:-1]), f"{e(xs[-1][0])} ({xs[-1][1]:,})"])) if xs else ""
+    co_lead = f"{len(companies)} employers with open roles today. {names(top_open)} have the most." if len(top_open) > 1 else f"{len(companies)} employers with open roles today."
+    if top_new:
+        co_lead += (f" {sum(1 for n in fresh_n.values() if n):,} of them posted new roles in the last 7 days, led by {names(top_new)}."
+                    ' The <span class="up">+N</span> mark in the list is that weekly number.')
     page("companies/", f"Tech Companies Hiring Now — {len(companies)} employers | {SITE}",
          "Tech companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
-         crumbs(("Companies", "")) + f'<h1>Tech companies hiring now</h1><p class="lead">{len(companies)} employers. The number is their current open roles.</p>'
+         crumbs(("Companies", "")) + f'<h1>Tech companies hiring now</h1><p class="lead">{co_lead}</p>'
          '<input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">'
+         '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
+         '<button class="tab" type="button" data-s="o" aria-pressed="true">Most open roles</button>'
+         '<button class="tab" type="button" data-s="w" aria-pressed="false">Most new this week</button>'
+         '<button class="tab" type="button" data-s="n" aria-pressed="false">A–Z</button></div>'
          + (section("Featured employers", spot_tiles(spot_cos)) if spot_cos else "") +
          f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>')
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
