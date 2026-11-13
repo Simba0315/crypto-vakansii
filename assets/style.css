@@ -1222,3 +1222,11 @@ details.embed pre{background:var(--bg)}
 @media(max-width:1020px){.pgrid{grid-template-columns:1fr}}
 @media(max-width:760px){.pcards.c3{grid-template-columns:1fr}.pk-d{min-height:0}}
 .nearme .sec-head h2 .pill{vertical-align:middle;margin-left:8px}
+
+/* Applied filters on the search page: each one is a button that removes it */
+.applied{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.achip{font:inherit;font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 10px 4px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--text);cursor:pointer;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.achip span{font-size:17px;line-height:1;color:var(--muted);text-decoration:none}
+.achip:hover{border-color:var(--text)}
+.achip:hover span{color:var(--text)}
+@media(max-width:720px){.achip{min-height:40px}}

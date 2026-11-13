@@ -12,7 +12,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
 2. ✅ **Job rows in fixed columns:** logo, title with company and place, pay (mono, right-aligned), tags, age. Pay lines up down
    the list; a faint dash holds the column when pay is not stated. Levels.fyi and RemoteOK keep pay, tags and age in columns.
 3. ✅ **Search page: filters in one row on top**, the less used ones under "More filters", the list on the left and a wide preview
-   on the right, a smaller page title. 📋 Still to do: applied filters as removable chips.
+   on the right, a smaller page title. ✅ Applied filters are removable chips above the list, with "Clear all" (2026-11-13).
 4. ✅ **Job page: the decision first.** The pay stated in the posting on a scale with the category median marked, then Apply and
    Save, then the facts.
 5. ✅ **Company page:** a sticky bar of anchors with counts, fact tiles with a small label over the value, a lead written from

@@ -70,7 +70,7 @@
   };
   var run = function () {
     var qs = query(), f = H.parse(qs);
-    if (!full && qs) { waiting = true; count.textContent = 'Searching all jobs…'; return; }   // filters need the whole index
+    if (!full && qs) { paintApplied(); waiting = true; count.textContent = 'Searching all jobs…'; return; }   // filters need the whole index
     var rows = jobs.filter(function (j) { return H.match(j, f); });
     if (f.sort === 'sal') rows = rows.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
     else if (f.sort === 'rel' && f.words.length) {                 // title matches first, then the rest, newest first inside each group
@@ -93,10 +93,33 @@
     }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
+    paintApplied();
     relax(rows.length, qs);
   };
   // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each.
   var hint = document.createElement('p'); hint.className = 'relax'; hint.hidden = true; list.parentNode.insertBefore(hint, list);
+  // Applied filters as chips: one click on a chip removes that filter; "Clear all" removes every one.
+  var applied = document.createElement('p'); applied.className = 'applied'; applied.hidden = true; list.parentNode.insertBefore(applied, hint);
+  var paintApplied = function () {
+    var items = [];
+    if (q.value.trim()) items.push(['q', '“' + q.value.trim() + '”']);
+    [['cat', cat], ['lvl', lvl], ['loc', loc], ['sal', sal], ['age', age], ['perk', perk], ['etype', etype]].forEach(function (x) { if (x[1].value) items.push([x[0], text(x[1])]); });
+    [['remote', fRemote, 'Remote'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['real', fReal, 'Fresh openings only']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
+    skills.forEach(function (s) { items.push(['skill:' + s, s]); });
+    applied.innerHTML = items.map(function (x) { return '<button class="achip" type="button" data-rm="' + H.esc(x[0]) + '" aria-label="Remove filter: ' + H.esc(x[1]) + '">' + H.esc(x[1]) + '<span aria-hidden="true">×</span></button>'; }).join('') +
+      (items.length > 1 ? '<button class="linkbtn" type="button" data-rm="*">Clear all</button>' : '');
+    applied.hidden = !items.length;
+  };
+  applied.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-rm]'); if (!b) return;
+    var k = b.getAttribute('data-rm');
+    var boxes = { remote: fRemote, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    if (k === '*') { q.value = ''; skills = []; Object.keys(boxes).forEach(function (n) { if (boxes[n]) boxes[n].checked = false; }); Object.keys(sels).forEach(function (n) { sels[n].value = ''; }); if (!sortTouched) sort.value = 'new'; }
+    else if (k === 'q') { q.value = ''; if (!sortTouched) sort.value = 'new'; }
+    else if (k.indexOf('skill:') === 0) skills = skills.filter(function (s) { return s !== k.slice(6); });
+    else if (boxes[k]) boxes[k].checked = false; else if (sels[k]) sels[k].value = '';
+    paintChips(); run();
+  });
   var relax = function (n, qs) {
     hint.hidden = true; hint.innerHTML = '';
     if (n || !full || !qs) return;
