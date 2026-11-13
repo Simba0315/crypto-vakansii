@@ -13,8 +13,8 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    the list; a faint dash holds the column when pay is not stated. Levels.fyi and RemoteOK keep pay, tags and age in columns.
 3. 📋 **Search page: filters in one row of dropdown chips on top**, applied filters as removable chips, count and sort on one line,
    the page title reduced to a count line. Indeed, LinkedIn, Glassdoor and Levels.fyi all do this.
-4. ✅ **Job page: the decision first.** Apply and Save sit above the facts. 📋 Still to do: one mono pay line tagged "from the
-   posting", and the category median drawn as a thin range bar with a tick (Glassdoor's "Pay details").
+4. ✅ **Job page: the decision first.** The pay stated in the posting on a scale with the category median marked, then Apply and
+   Save, then the facts.
 5. 📋 **Company page:** a sticky bar of anchors with counts (Jobs 14 · Pay · Tech stack · Locations · Similar), fact tiles with a
    small label over the value, pay by role with the number of postings behind each figure, a short "what the postings show" paragraph.
 6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. 📋 Still to do: the
@@ -23,13 +23,13 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    questions in two columns.
 8. 📋 **Tools index: break the grid.** Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
-9. ✅ **Home pacing:** the second list of new jobs is gone. 📋 Still to do: categories, roles and locations in one tabbed directory;
-   one section on a full-width dark band; section headers with the heading left and one sentence plus the "all" link right.
+9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
+   the highest-paid list sits on a full-width dark band. 📋 Still to do: section headers with the heading left and one sentence
+   plus the "all" link right.
 10. 📋 **Two type sizes by purpose:** 36–40px section headings on pages that explain, 24–28px on pages that list.
 11. ✅ **The board in the hero shows pay.** 📋 Still to do: tabs (Just posted, Highest paid, Remote).
 12. ✅ **A line of provenance instead of badges and ratings:** "checked on … against employer career pages", linked to the method.
-13. 📋 **Header:** five items (Jobs, Companies, Salaries, Tools, Resources) with menus, a search field with "/", My jobs,
-    For employers, Post a job. Ours has eight items and three controls.
+13. ✅ **Header:** six items (was eight). 📋 Still to do: menus under Jobs, Tools and Resources, and a search field with "/".
 14. 📋 **Footer:** five short columns, then directory rows (by skill, by location, by category), then the stamp.
 
 ## How job sites lay things out (for item 3 and 5)

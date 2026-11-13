@@ -708,3 +708,13 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 #dir-cat:checked~#p-cat,#dir-role:checked~#p-role,#dir-loc:checked~#p-loc,#dir-co:checked~#p-co{display:block}
 .tabmore{margin:14px 0 0;font-size:14.5px;font-weight:500}
 .tabmore a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+
+/* job page: the pay range on a scale, the category median as a mark */
+.paybar{margin:0 0 16px}
+.pb-h{margin:0 0 10px;display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.pb-h b{font:700 20px/1.2 var(--mono);letter-spacing:-.02em}
+.pb-h span{font-size:13px;color:var(--faint)}
+.pb-t{position:relative;height:8px;background:var(--bg2)}
+.pb-t i{position:absolute;top:0;bottom:0;background:var(--ac)}
+.pb-t u{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;background:var(--text)}
+.pb-s{margin:10px 0 0;font-size:13px;color:var(--muted);line-height:1.45}

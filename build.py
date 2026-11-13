@@ -643,7 +643,7 @@ def job_page(j, active_by_cat):
     if j["level"]: rows.append(("Level", e(j["level"])))
     if j.get("etype"): rows.append(("Type", e(j["etype"])))
     if j["salary"]:
-        ctx = (f'<br><span class="note">Median for {e(CAT[j["cat"]])} roles: {money(CATMED[j["cat"]])}</span>' if j.get("usd") and j["cat"] in CATMED and j["cat"] != OTHER[0] else "")
+        ctx = ""            # the comparison with the category median is drawn as a bar above the Apply button
         if j.get("usd") and j["usd"][1] >= 2 * j["usd"][0]:
             ctx += f'<br><span class="note">A wide range: the top is {j["usd"][1] / j["usd"][0]:.1f} times the bottom. Ask early where this role sits in it.</span>'
         rows.append(("Salary", e(j["salary"]) + ctx))
@@ -739,6 +739,17 @@ def job_page(j, active_by_cat):
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all its roles</a></p></div>'
+    # Pay at a glance: the range from the posting on a scale, with the median of its category marked
+    paybar = ""
+    if j["active"] and j.get("usd") and j["cat"] in CATMED and j["cat"] != OTHER[0] and j["usd"][1] >= j["usd"][0] > 0:
+        lo_, hi_ = j["usd"]; med_ = CATMED[j["cat"]]
+        a_, b_ = min(lo_, med_) * 0.85, max(hi_, med_) * 1.15
+        pos_ = lambda v: max(0.0, min(100.0, 100 * (v - a_) / (b_ - a_)))
+        mid_ = (lo_ + hi_) / 2
+        verdict = "above" if mid_ > med_ * 1.05 else "below" if mid_ < med_ * 0.95 else "close to"
+        paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
+                  f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%"></i><u style="left:{pos_(med_):.1f}%"></u></div>'
+                  f'<p class="pb-s">The middle of this range is {verdict} the median for {e(CAT[j["cat"]])} roles, {money(med_)} (the mark on the line).</p></div>')
     data = f'data-slug="{j["slug"]}" data-title="{e(j["title"])}" data-company="{e(j["company"])}"'
     more_roles = OPEN[j["company"]] - (1 if j["active"] else 0)
     glance = (f'<p class="note"><a href="{comp_url}">{roles(more_roles, "more open role")} at {e(j["company"])}</a></p>' if more_roles > 0 else "")
@@ -752,7 +763,7 @@ def job_page(j, active_by_cat):
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
-            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
+            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
             + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = f"{j['title']} at {j['company']}"
