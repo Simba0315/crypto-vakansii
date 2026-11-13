@@ -532,3 +532,20 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 #rb-preview.tpl-executive h2.pv-name,#rb-preview.tpl-executive .pv-title,#rb-preview.tpl-executive .pv-contact{text-align:center}
 #rb-preview.tpl-executive h2.pv-name{font:700 28px/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em}
 #rb-preview.tpl-executive h3{text-align:center;border-bottom:0;border-top:1px solid #111;padding:8px 0 0;letter-spacing:.16em;font-weight:600}
+
+/* section hubs: horizontal bars for skills and job titles */
+.hbars{display:grid;gap:2px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:6px}
+.hbars a{display:grid;grid-template-columns:minmax(120px,220px) 1fr auto;gap:14px;align-items:center;padding:9px 12px;border-radius:7px;min-height:40px}
+.hbars a:hover{background:var(--accent-soft)}
+.hbars .hn{font-weight:600;font-size:15px}
+.hbars .hb{height:10px;border-radius:5px;background:var(--bg2);overflow:hidden}
+.hbars .hb i{display:block;height:100%;background:var(--text);border-radius:5px}
+.hbars a:hover .hb i{background:var(--hl-ink)}
+.hbars .hc{font:500 12.5px var(--mono);color:var(--muted);white-space:nowrap}
+@media(max-width:560px){.hbars a{grid-template-columns:1fr auto}.hbars .hb{grid-column:1/-1;order:3}}
+
+.hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin:6px 0 8px}
+.hubgrid .h2s{margin:0 0 10px;font-size:18px}
+.hubgrid .hbars a{grid-template-columns:minmax(96px,150px) 1fr auto;padding:7px 10px}
+.sec-head.lst{margin-top:30px}
+@media(max-width:560px){.rel a:nth-child(n+9){display:none}}
