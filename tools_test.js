@@ -417,5 +417,388 @@ let jdA = T.checkJD('About us\nWe were founded 15 years ago and have been 12 yea
 eq('jd: "founded 15 years ago" is not a requirement', JSON.stringify(jdA).indexOf('15+ years') < 0, true);
 eq('jd: a real requirement is still found', JSON.stringify(jdA).indexOf('3+ years') >= 0, true);
 
+/* ================================================================ tools added 2026-11-13 ================================================================ */
+
+/* calendar dates and the last working day (16 November 2026 is a Monday) */
+eq('long date', T.longDate('2026-11-30'), 'November 30, 2026');
+eq('long date with the day', T.longDate('2026-11-30', true), 'Monday, November 30, 2026');
+eq('leap day', T.longDate('2024-02-29', true), 'Thursday, February 29, 2024');
+eq('29 February in a common year is not a date', T.longDate('2025-02-29'), '');
+eq('junk is not a date', [T.longDate(''), T.longDate('30/11/2026'), T.longDate('0026-11-30'), T.dayName('x')], ['', '', '', '']);
+eq('add days across a year end', T.addDays('2026-12-25', 14), '2027-01-08');
+let ld = T.lastDay({ date: '2026-11-16', amount: '2', unit: 'weeks' });
+eq('2 weeks from a Monday, starting the next day', [ld.first, ld.end, ld.last, ld.workDays, ld.calendarDays, ld.endsOnWeekend], ['2026-11-17', '2026-11-30', '2026-11-30', 10, 14, false]);
+ld = T.lastDay({ date: '2026-11-16', amount: '2', unit: 'weeks', from: 'same' });
+eq('2 weeks counted from the day itself end on a Sunday', [ld.first, ld.end, ld.last, ld.endsOnWeekend, ld.workDays], ['2026-11-16', '2026-11-29', '2026-11-27', true, 10]);
+eq('10 working days equal 2 weeks', T.lastDay({ date: '2026-11-16', amount: '10', unit: 'workdays' }).last, '2026-11-30');
+eq('10 working days counted from the day itself', T.lastDay({ date: '2026-11-16', amount: '10', unit: 'workdays', from: 'same' }).last, '2026-11-27');
+eq('1 working day after a Friday is Monday', T.lastDay({ date: '2026-11-13', amount: '1', unit: 'workdays' }).last, '2026-11-16');
+ld = T.lastDay({ date: '2026-11-14', amount: '1', unit: 'workdays', from: 'same' });
+eq('notice on a Saturday: the weekend is skipped and flagged', [ld.last, ld.givenOnWeekend, ld.workDays], ['2026-11-16', true, 1]);
+eq('working days never end on a weekend', [1, 2, 3, 4, 5, 6, 7, 23, 64].every(function (n) { const x = T.lastDay({ date: '2026-11-11', amount: String(n), unit: 'workdays' }); return !x.endsOnWeekend && x.workDays === n; }), true);
+ld = T.lastDay({ date: '2026-01-31', amount: '1', unit: 'months' });
+eq('1 month from 31 January ends on the last day of February, a Saturday', [ld.end, ld.last, ld.endsOnWeekend], ['2026-02-28', '2026-02-27', true]);
+eq('…and on 29 February in a leap year', T.lastDay({ date: '2024-01-31', amount: '1', unit: 'months' }).end, '2024-02-29');
+eq('1 month counted from the day itself', T.lastDay({ date: '2026-11-16', amount: '1', unit: 'months', from: 'same' }).end, '2026-12-15');
+ld = T.lastDay({ date: '2026-11-30', amount: '3', unit: 'months' });
+eq('3 months across the year end, ending on a Sunday', [ld.end, ld.last], ['2027-02-28', '2027-02-26']);
+eq('2 weeks across the year end', T.lastDay({ date: '2026-12-21', amount: '2', unit: 'weeks' }).last, '2027-01-04');
+eq('30 calendar days', T.lastDay({ date: '2026-11-16', amount: '30', unit: 'days' }).end, '2026-12-16');
+ld = T.lastDay({ date: '2026-11-16', amount: '0', unit: 'weeks' });
+eq('no notice: the job ends that day', [ld.end, ld.last, ld.workDays, ld.calendarDays], ['2026-11-16', '2026-11-16', 0, 0]);
+ld = T.lastDay({ date: '2026-11-13', amount: '2', unit: 'days' });
+eq('a notice period that covers only a weekend has no working day in it', [ld.end, ld.last, ld.workDays, ld.endsOnWeekend], ['2026-11-15', '2026-11-13', 0, true]);
+eq('half weeks: 1,5 weeks is 11 days', T.lastDay({ date: '2026-11-16', amount: '1,5', unit: 'weeks' }).end, '2026-11-27');
+eq('an unknown unit is read as weeks', T.lastDay({ date: '2026-11-16', amount: '1', unit: 'fortnights' }).end, '2026-11-23');
+eq('last day: nothing typed', [T.lastDay({}), T.lastDay({ date: '2026-11-16', amount: '' }), T.lastDay({ date: '', amount: '2' })], [null, null, null]);
+eq('last day: impossible date, negative or absurd notice', [T.lastDay({ date: '2026-02-30', amount: '2' }), T.lastDay({ date: '2026-11-16', amount: '-1' }), T.lastDay({ date: '2026-11-16', amount: '521', unit: 'weeks' }), T.lastDay({ date: '2026-11-16', amount: '99999', unit: 'workdays' })], [null, null, null, null]);
+ok('last day: ten years of notice is still counted', T.lastDay({ date: '2026-11-16', amount: '520', unit: 'weeks' }).end === '2036-11-03');
+ok('working days left are Mondays to Fridays only', T.lastDay({ date: '2026-11-16', amount: '52', unit: 'weeks' }).workDays === 260);
+
+/* job search funnel */
+eq('rate: percent forms', [T.rate('8').pct, T.rate('7,5%').pct, T.rate(' 20 % ').pct, T.rate('0').pct], [8, 7.5, 20, 0]);
+eq('rate: counts', [T.rate('3 of 40').pct, T.rate('3/40').pct, T.rate('3 out of 40').pct, T.rate('1 from 5').pct, T.rate('0 of 12').pct], [7.5, 7.5, 7.5, 20, 0]);
+eq('rate: the count is remembered', T.rate('3 of 40').from, 40);
+ok('rate: impossible values', [T.rate('50 of 40'), T.rate('120'), T.rate(''), T.rate('abc'), T.rate('3 of 0'), T.rate('-5')].every(function (x) { return isNaN(x.pct); }));
+let fu = T.funnel({ perWeek: '10', weeks: '8', reply: '3 of 40', offer: '1 of 5' });
+near('funnel applications', fu.applications, 80); near('funnel interviews', fu.interviews, 6); near('funnel offers', fu.offers, 1.2);
+near('funnel applications per offer', fu.perOffer, 1 / (0.075 * 0.2)); near('funnel applications per interview', fu.perInterview, 40 / 3); near('funnel weeks to one offer', fu.weeksToOffer, 1 / (0.075 * 0.2) / 10);
+near('funnel chance of at least one offer', fu.chance, (1 - Math.pow(1 - 0.015, 80)) * 100); eq('funnel remembers small counts', [fu.replyFrom, fu.offerFrom], [40, 5]);
+eq('funnel: rounded as on the tile', [T.fmt(fu.perOffer, 0), T.fmt(fu.interviews, 1), T.fmt(fu.offers, 2)], ['67', '6', '1.2']);
+fu = T.funnel({ perWeek: '5', weeks: '4', reply: '0', offer: '25' });
+eq('funnel: a zero rate gives no offer and no division by zero', [fu.perOffer, fu.perInterview, fu.weeksToOffer, fu.offers, fu.chance], [null, null, null, 0, 0]);
+fu = T.funnel({ perWeek: '1', weeks: '1', reply: '100', offer: '100' });
+eq('funnel: certain rates', [fu.perOffer, fu.offers, fu.chance], [1, 1, 100]);
+eq('funnel: missing or impossible input', [T.funnel({}), T.funnel({ perWeek: '0', weeks: '8', reply: '5', offer: '5' }), T.funnel({ perWeek: '10', weeks: '', reply: '5', offer: '5' }), T.funnel({ perWeek: '10', weeks: '8', reply: '150', offer: '5' }), T.funnel({ perWeek: '10', weeks: '8', reply: '5', offer: '' })], [null, null, null, null, null]);
+fu = T.funnel({ perWeek: '1,000', weeks: '52', reply: '2,5', offer: '10%' });
+near('funnel: large numbers and a decimal comma', fu.offers, 52000 * 0.025 * 0.1); ok('funnel: the chance never passes 100', fu.chance <= 100 && fu.chance > 99.9);
+
+/* remote work savings */
+let rs = T.remoteSavings({ minutes: '45', cost: '12', lunch: '14', lunchHome: '5', home: '2', hourly: '30', daysNow: '5', daysNew: '0', weeks: '46' });
+eq('remote: the example', [rs.days, rs.hours, rs.travel, rs.food, rs.homeCost, rs.money, rs.timeValue, rs.total], [230, 345, 2760, 2070, 460, 4370, 10350, 14720]);
+near('remote: per month', rs.month, 4370 / 12); near('remote: working weeks', rs.workWeeks, 345 / 40);
+rs = T.remoteSavings({ minutes: '30', cost: '10', daysNow: '5', daysNew: '2', weeks: '46' });
+eq('remote: hybrid, three days fewer', [rs.days, rs.hours, rs.money, rs.timeValue], [138, 138, 1380, null]);
+rs = T.remoteSavings({ minutes: '30', cost: '10', daysNow: '0', daysNew: '3', weeks: '48' });
+eq('remote: more office days give a cost', [rs.days, rs.hours, rs.money], [-144, -144, -1440]);
+eq('remote: defaults are 5 days, none after, 46 weeks', T.remoteSavings({ minutes: '60' }).hours, 460);
+eq('remote: same days, nothing changes', T.remoteSavings({ minutes: '60', daysNow: '3', daysNew: '3' }).hours, 0);
+near('remote: decimal comma in a price', T.remoteSavings({ cost: '12,50' }).travel, 2875);
+near('remote: lunch at home dearer than at work counts against the saving', T.remoteSavings({ lunch: '5', lunchHome: '8', daysNow: '1', weeks: '10' }).money, -30);
+eq('remote: nothing typed, or impossible figures', [T.remoteSavings({}), T.remoteSavings({ minutes: '45', daysNow: '8' }), T.remoteSavings({ minutes: '45', weeks: '60' }), T.remoteSavings({ minutes: '45', weeks: '0' }), T.remoteSavings({ minutes: '900' })], [null, null, null, null, null]);
+
+/* cost per hire */
+let ch = T.costPerHire({ ads: '3,000', agency: '18,000', recHours: '120', recRate: '45', intHours: '90', intRate: '70', tools: '2,400', other: '1,500', hires: '6' });
+eq('cost per hire: the example', [ch.total, ch.perHire, ch.outside, ch.time, ch.hours, ch.hoursPerHire, ch.top.name, ch.unpriced], [36600, 6100, 24900, 11700, 210, 35, 'Agency and recruiter fees', false]);
+near('cost per hire: shares add up to 100', ch.parts.reduce(function (s, p) { return s + p.share; }, 0), 100);
+eq('cost per hire: tile figures', [T.plain(ch.top.share, 0), T.plain(ch.time / ch.total * 100, 0)], ['49', '32']);
+near('cost per hire: a part per hire', ch.parts[2].perHire, 900);
+ch = T.costPerHire({ ads: '500', hires: '' });
+eq('cost per hire: total without a number of hires', [ch.total, ch.perHire, ch.hires, ch.parts[0].perHire], [500, null, null, null]);
+eq('cost per hire: zero hires is not divided', T.costPerHire({ ads: '500', hires: '0' }).perHire, null);
+eq('cost per hire: nothing spent', [T.costPerHire({}), T.costPerHire({ hires: '3' }), T.costPerHire({ ads: '0', hires: '3' })], [null, null, null]);
+ch = T.costPerHire({ ads: '100', recHours: '40', hires: '1' });
+eq('cost per hire: hours without an hourly cost are flagged and not counted', [ch.unpriced, ch.total, ch.time], [true, 100, 0]);
+ch = T.costPerHire({ agency: '1.2m', ads: '250.000', hires: '40' });
+eq('cost per hire: large and European figures', [ch.total, ch.perHire], [1450000, 36250]);
+eq('cost per hire: negative amounts count as zero', T.costPerHire({ ads: '-500', tools: '200', hires: '2' }).total, 200);
+
+/* interview scorecard */
+const CRIT = [{ name: 'Technical skills', weight: '30' }, { name: 'Problem solving', weight: '25' }, { name: 'Communication', weight: '20' }, { name: 'Teamwork', weight: '15' }, { name: 'Motivation for the role', weight: '10' }, { name: '', weight: '' }];
+let sc = T.scorecard({ role: 'Senior Backend Engineer', max: '5', criteria: CRIT, candidates: [{ name: '', ratings: ['4', '5', '3', '4', '4', ''] }, { name: 'Candidate B', ratings: ['5', '3', '4', '3', '5', ''] }, { name: 'Candidate C', ratings: ['3', '4', '5', '5', '3', ''] }] });
+near('scorecard: A', sc.candidates[0].score, 4.05); near('scorecard: B', sc.candidates[1].score, 4); near('scorecard: C', sc.candidates[2].score, 3.95);
+eq('scorecard: best, no tie, weights add up', [sc.best, sc.tie, sc.sum100, sc.equal, sc.criteria.length, sc.candidates[0].name], [0, false, true, false, 5, 'Candidate A']);
+near('scorecard: percent of the maximum', sc.candidates[0].pct, 81);
+ok('scorecard: text sheet has the role, every criterion and the formula', /^Interview scorecard: Senior Backend Engineer\n/.test(sc.text) && CRIT.slice(0, 5).every(function (c) { return sc.text.indexOf(c.name) > 0; }) && /Technical skills \(weight 30%\)/.test(sc.text) && /sum of \(rating × weight\) ÷ sum of weights/.test(sc.text), sc.text);
+eq('scorecard: legend of a 5-point scale has a middle', sc.legend, '1 = well below what the role needs, 3 = meets it, 5 = well above');
+sc = T.scorecard({ criteria: [{ name: 'A' }, { name: 'B' }, { name: 'C' }], candidates: [{ ratings: ['5', '3', '1'] }] });
+eq('scorecard: no weights means equal weights', [sc.equal, sc.candidates[0].score], [true, 3]); near('scorecard: equal shares', sc.criteria[0].share, 100 / 3);
+sc = T.scorecard({ criteria: [{ name: 'A', weight: '3' }, { name: 'B', weight: '1' }], candidates: [{ ratings: ['4', '2'] }, { ratings: ['4', ''] }, { ratings: ['9', '2'] }, { ratings: ['', ''] }] });
+eq('scorecard: weights that do not add up to 100 are shares', [sc.sum100, sc.criteria[0].share, sc.candidates[0].score], [false, 75, 3.5]);
+eq('scorecard: a half-rated candidate is not complete and not the best', [sc.candidates[1].complete, sc.candidates[1].rated, sc.candidates[1].of, sc.candidates[1].score, sc.best], [false, 1, 2, 4, 0]);
+eq('scorecard: a rating outside the scale is left out and counted', [sc.candidates[2].bad, sc.candidates[2].score, sc.candidates[2].complete], [1, 2, false]);
+eq('scorecard: an unrated candidate has no score', [sc.candidates[3].score, sc.candidates[3].pct], [null, null]);
+sc = T.scorecard({ max: '10', criteria: [{ name: 'A', weight: '50' }, { name: 'B', weight: '50' }, { name: 'C', weight: '' }], candidates: [{ ratings: ['8', '6', '1'] }, { ratings: ['6', '8', '10'] }] });
+eq('scorecard: a tie, a 10-point scale, an unweighted criterion', [sc.tie, sc.best, sc.max, sc.unweighted, sc.candidates[0].score, sc.candidates[0].of], [true, 0, 10, ['C'], 7, 2]);
+eq('scorecard: decimal comma in a rating', T.scorecard({ criteria: [{ name: 'A', weight: '1' }], candidates: [{ ratings: ['3,5'] }] }).candidates[0].score, 3.5);
+eq('scorecard: unknown scale falls back to 5, a 4-point legend has no middle', [T.scorecard({ max: '7' }).max, T.scorecard({ max: '4' }).legend], [5, '1 = well below what the role needs, 4 = well above']);
+sc = T.scorecard({});
+eq('scorecard: empty', [sc.criteria, sc.candidates, sc.best, sc.text], [[], [], -1, '']);
+
+/* thank-you email */
+const TY = { to: 'Dana', name: 'Alex Morgan', role: 'Senior Backend Engineer', company: 'Acme', when: 'this morning', topic: 'The move from monthly releases to weekly ones.', add: 'it is the kind of change I led in my last job' };
+['short', 'warm', 'formal'].forEach(function (tone) {
+  const m = T.thankYou(Object.assign({}, TY, { tone: tone }));
+  ok('thank-you ' + tone + ' clean', !/undefined|NaN|\[| {2}| [.,]|\.\./.test(m.text) && /^Subject: Thank you for the Senior Backend Engineer interview\n\n/.test(m.text) && /\nAlex Morgan$/.test(m.text), m.text);
+  ok('thank-you ' + tone + ' has the facts', ['Dana', 'Senior Backend Engineer', 'at Acme', 'this morning', 'the move from monthly releases to weekly ones', 'It is the kind of change I led in my last job.'].every(function (x) { return m.text.indexOf(x) >= 0; }), m.text);
+  const e = T.thankYou({ tone: tone });
+  ok('empty thank-you ' + tone + ' uses placeholders', /\[job title\]/.test(e.text) && /\[one thing you discussed\]/.test(e.text) && /\[Your name\]$/.test(e.text) && !/undefined|NaN| {2}/.test(e.text) && e.subject === 'Thank you for the interview', e.text);
+});
+ok('thank-you tones differ', T.thankYou(Object.assign({}, TY, { tone: 'warm' })).body !== T.thankYou(Object.assign({}, TY, { tone: 'formal' })).body);
+ok('thank-you: unknown tone is the short one', T.thankYou(Object.assign({}, TY, { tone: 'x' })).text === T.thankYou(Object.assign({}, TY, { tone: 'short' })).text);
+ok('thank-you: short is the shortest', T.wordCount(T.thankYou(Object.assign({}, TY, { tone: 'short' })).body) < T.wordCount(T.thankYou(Object.assign({}, TY, { tone: 'warm' })).body));
+
+/* resignation letter */
+const RS = { name: 'Alex Morgan', to: 'Dana Lee', title: 'Senior Backend Engineer', company: 'Acme Inc.', lastDay: '2026-11-27', date: '2026-11-13', notice: "2 weeks' notice", thanks: true, thanksFor: 'The chance to lead the payments project.', handover: true, handoverWhat: 'finish the release notes' };
+let rl = T.resignation(RS);
+ok('resignation email clean', !/undefined|NaN|\[| {2}|\.\./.test(rl.text) && /^Subject: Resignation: Alex Morgan\n\nDear Dana Lee,\n\n/.test(rl.text) && /Best regards,\nAlex Morgan$/.test(rl.text), rl.text);
+ok('resignation: last day written out with its weekday', rl.text.indexOf('My last working day will be Friday, November 27, 2026, which gives 2 weeks of notice.') > 0, rl.text);
+ok('resignation: thanks and handover', rl.text.indexOf('and in particular for the chance to lead the payments project.') > 0 && rl.text.indexOf('Before my last day I can finish the release notes.') > 0, rl.text);
+eq('resignation: days between the letter and the last day', rl.days, 14);
+rl = T.resignation(Object.assign({}, RS, { format: 'letter', thanks: false, handover: false, notice: 'one month' }));
+ok('resignation letter: date on top, no subject, no thanks, neutral close', /^November 13, 2026\n\nDear Dana Lee,/.test(rl.text) && !/Subject|Thank you|handover/.test(rl.text) && /Please let me know what you need from me before I leave\.\n\nSincerely,\nAlex Morgan$/.test(rl.text) && /one month of notice/.test(rl.text), rl.text);
+rl = T.resignation({});
+ok('empty resignation uses placeholders', ['[manager’s name]', '[job title]', '[company]', '[last working day]', '[Your name]'].every(function (x) { return rl.text.indexOf(x) >= 0; }) && !/undefined|NaN| {2}/.test(rl.text) && rl.days === null, rl.text);
+eq('resignation: an impossible date is a blank, not a wrong date', /\[last working day\]/.test(T.resignation({ lastDay: '2026-02-31' }).text), true);
+eq('resignation: a last day before the letter is reported', T.resignation({ date: '2026-11-13', lastDay: '2026-11-01' }).days, -12);
+
+/* raise request */
+const RR = { to: 'Dana', name: 'Alex Morgan', title: 'Support Team Lead', since: 'In March 2025.', current: '80,000', target: '88k', cur: '$', achievements: '- Cut reply time from two days to nine hours\n2. Trained four new team members\n\n• Wrote the help articles', market: '$85,000 to $92,000', source: 'advertised salaries on Hiring Right Now.' };
+let rq = T.raiseRequest(RR);
+ok('raise request clean', !/undefined|NaN|\[| {2}|\.\./.test(rq.text) && /^Subject: Request to review my pay\n\nHi Dana,/.test(rq.text) && /Thank you,\nAlex Morgan$/.test(rq.text), rq.text);
+eq('raise request: percent, per year, per month', [rq.pct, rq.diff, rq.perYear, T.roundTo(rq.perMonth, 2)], [10, 8000, 8000, 666.67]);
+ok('raise request: both figures and the percent in the text', rq.text.indexOf('My pay is $80,000 a year. I am asking for $88,000, an increase of 10%.') > 0, rq.text);
+ok('raise request: results as a clean list', /\n- Cut reply time from two days to nine hours\n- Trained four new team members\n- Wrote the help articles\n/.test(rq.text) && !/- - |2\. Trained|•/.test(rq.text), rq.text);
+ok('raise request: when the pay last changed, and the market figure with its source', rq.text.indexOf('It last changed in March 2025.') > 0 && rq.text.indexOf('is $85,000 to $92,000 (source: advertised salaries on Hiring Right Now).') > 0, rq.text);
+rq = T.raiseRequest({ current: '5000', target: '5400', period: 'month', cur: '€', market: '5.500' });
+eq('raise request: monthly pay', [rq.pct, rq.perMonth, rq.perYear], [8, 400, 4800]);
+ok('raise request: currency, period and a market figure typed as a number', /€5,000 a month/.test(rq.text) && /an increase of 8%/.test(rq.text) && /is €5,500\./.test(rq.text), rq.text);
+rq = T.raiseRequest({ current: '90000', target: '85000' });
+ok('raise request: a lower figure is not called an increase', rq.pct < 0 && !/increase/.test(rq.text));
+rq = T.raiseRequest({});
+ok('empty raise request uses placeholders', /\[current pay\]/.test(rq.text) && /\[the pay you are asking for\]/.test(rq.text) && /\[Add two or three results/.test(rq.text) && rq.pct === null && rq.perMonth === null && !/undefined|NaN| {2}/.test(rq.text), rq.text);
+eq('raise request: rounding of a third of a percent', /an increase of 3\.3%/.test(T.raiseRequest({ current: '60000', target: '62000' }).text), true);
+
+/* reference request */
+const RF = { to: 'Sam', name: 'Alex Morgan', role: 'Engineering Manager', company: 'Acme', by: 'the end of next week', relation: 'You managed me at Example Co from 2021 to 2023.', points: 'The payments rewrite\nHow I worked with support', attach: true };
+['warm', 'formal', 'short'].forEach(function (tone) {
+  ['call', 'letter', 'form', 'linkedin'].forEach(function (how) {
+    const m = T.referenceRequest(Object.assign({}, RF, { tone: tone, how: how }));
+    ok('reference ' + tone + '/' + how + ' clean', !/undefined|NaN|\[| {2}| [.,]|\.\./.test(m.text) && /^Subject: /.test(m.text) && /\nAlex Morgan$/.test(m.text), m.text);
+    ok('reference ' + tone + '/' + how + ' has the facts', ['Sam', 'an Engineering Manager role at Acme', 'We worked together when you managed me at Example Co from 2021 to 2023', 'the end of next week', '- The payments rewrite', 'attached'].every(function (x) { return m.text.indexOf(x) >= 0; }), m.text);
+  });
+});
+ok('reference: each way of giving it has its own sentence', ['call', 'letter', 'form', 'linkedin'].map(function (h) { return T.referenceRequest(Object.assign({}, RF, { how: h })).body; }).filter(function (b, i, a) { return a.indexOf(b) === i; }).length === 4);
+let rf = T.referenceRequest({});
+ok('empty reference request is still a whole email', /a new role/.test(rf.text) && /\[Your name\]$/.test(rf.text) && !/undefined|NaN| {2}|attached|these are the points/.test(rf.text), rf.text);
+ok('reference: company without a role', /applying for a role at Acme/.test(T.referenceRequest({ company: 'Acme' }).text));
+
+/* LinkedIn headline and About */
+let li = T.linkedin({ role: 'Senior Backend Engineer', years: '8', strengths: 'Python, PostgreSQL, payments', next: 'Senior backend roles at product companies.', result: 'I cut page load time from 4 s to 1.2 s' });
+eq('linkedin: three headlines', li.headlines.map(function (h) { return h.text; }), ['Senior Backend Engineer | Python | PostgreSQL | payments', 'Senior Backend Engineer with 8 years of experience in Python, PostgreSQL and payments',
+  'Senior Backend Engineer | Python, PostgreSQL, payments | Open to Senior backend roles at product companies']);
+eq('linkedin: counters', li.headlines.map(function (h) { return [h.length, h.left]; }), [[56, 164], [85, 135], [106, 114]]);
+eq('linkedin: About paragraph', li.about, 'I am a Senior Backend Engineer with 8 years of experience. My strongest areas are Python, PostgreSQL and payments. I cut page load time from 4 s to 1.2 s. I am now looking for Senior backend roles at product companies. The best way to reach me is a message here on LinkedIn.');
+eq('linkedin: About length is counted', li.aboutLength, li.about.length);
+const LONG = 'a very long strength that goes on and on about one particular field of work and its many branches';
+li = T.linkedin({ role: 'Principal Engineer', strengths: [LONG, LONG + ' two', LONG + ' three', LONG + ' four', 'fifth'].join(', '), next: LONG + ' ' + LONG });
+ok('linkedin: every headline stays inside 220 characters', li.headlines.length >= 2 && li.headlines.every(function (h) { return h.length <= 220 && h.length === h.text.length && h.left === 220 - h.length; }), li.headlines);
+ok('linkedin: strengths are dropped from the end, the title stays', li.headlines.every(function (h) { return h.text.indexOf('Principal Engineer') === 0; }) && li.headlines[0].text.indexOf(' four') < 0, li.headlines);
+eq('linkedin: at most four strengths are used', li.strengths.length, 4);
+li = T.linkedin({ role: 'x'.repeat(300) });
+ok('linkedin: a title longer than the limit is cut to it', li.headlines.length === 1 && li.headlines[0].length === 220);
+li = T.linkedin({ role: 'Nurse' });
+eq('linkedin: identical variants are shown once', [li.headlines.length, li.headlines[0].text, li.about], [1, 'Nurse', 'I work as a Nurse. The best way to reach me is a message here on LinkedIn.']);
+eq('linkedin: empty form', [T.linkedin({}).empty, T.linkedin({ role: 'Nurse' }).empty, T.linkedin({}).headlines[0].text], [true, false, '[Your job title]']);
+ok('linkedin: one strength, no years', /^Analyst focused on SQL$/.test(T.linkedin({ role: 'Analyst', strengths: 'SQL' }).headlines[1].text) && /My strongest area is SQL\./.test(T.linkedin({ role: 'Analyst', strengths: 'SQL' }).about));
+eq('linkedin: the limits', [T.HEADLINE_MAX, T.ABOUT_MAX], [220, 2600]);
+
+/* interview answer (STAR) */
+const STAR = { situation: 'Last year our support team at Example Co was answering about 900 tickets a week, and a third of them were the same question about failed card payments. Replies were taking two days.',
+  task: 'As the team lead, I was asked to bring the reply time under one day without hiring more people.',
+  action: 'I read 200 of the payment tickets and grouped them by cause. I found that most came from one unclear error message, so I wrote a clearer message and asked the product team to ship it. I also wrote a help article and a saved reply for my team, and I checked the numbers every Monday for six weeks.',
+  result: 'Payment tickets fell from about 300 to 90 a week, and our average reply time dropped from two days to nine hours.', learned: 'It taught me to look for the cause of a problem before asking for more people.' };
+let st = T.star(STAR);
+eq('star: the example is 149 words, 64 seconds', [st.words, st.seconds, st.time, st.fixes, st.complete], [149, 64, '1 min 4 s', 0, true]);
+eq('star: words per part', [st.parts.situation, st.parts.task, st.parts.action, st.parts.result], [33, 19, 59, 22]);
+eq('star: five paragraphs in order', st.text.split('\n\n').map(function (p) { return p.split(' ')[0]; }), ['Last', 'As', 'I', 'Payment', 'It']);
+ok('star: every check passes', st.checks.length === 4 && st.checks.every(function (c) { return c.level === 'ok'; }), st.checks);
+eq('star: speaking time', [T.speak(0), T.speak(45), T.speak(60), T.speak(64), T.speak(125.4)], ['0 s', '45 s', '1 min', '1 min 4 s', '2 min 5 s']);
+eq('star: 140 words take one minute', Math.round(140 / T.WPM * 60), 60);
+st = T.star(Object.assign({}, STAR, { result: '' }));
+ok('star: a missing result is the first thing to fix', st.checks[0].level === 'fix' && /The result is missing/.test(st.checks.map(function (c) { return c.t; }).join('|')) && st.complete === false, st.checks);
+st = T.star(Object.assign({}, STAR, { action: 'We read the tickets and we grouped them by cause, i.e. by the message shown. Then we wrote a clearer message and we shipped it.' }));
+ok('star: an action without “I” is flagged, and “i.e.” is not an “I”', st.checks.some(function (c) { return c.level === 'fix' && /never says “I”/.test(c.t) && /“We” appears 4 times/.test(c.d); }), st.checks);
+st = T.star(Object.assign({}, STAR, { action: 'We read the tickets. We grouped them. I wrote a clearer message and we shipped it together with the product team after a review.' }));
+ok('star: more “we” than “I”', st.checks.some(function (c) { return c.level === 'warn' && /More “we” than “I”/.test(c.t); }), st.checks);
+ok('star: a setup longer than the action is flagged', st.checks.some(function (c) { return /setup is longer/.test(c.t); }));
+st = T.star(Object.assign({}, STAR, { result: 'Customers were happier and the team was calmer.' }));
+ok('star: no number in the result', st.checks.some(function (c) { return c.level === 'warn' && /No number in the result/.test(c.t); }));
+ok('star: a number word counts', T.star(Object.assign({}, STAR, { result: 'Reply time fell by half.' })).checks.some(function (c) { return /result has a number/.test(c.t); }));
+st = T.star({ situation: 'It was busy.', task: 'I had to help.', action: 'I helped.', result: 'It worked.' });
+ok('star: a very short answer', st.seconds < 45 && st.checks.some(function (c) { return c.level === 'fix' && /Too short/.test(c.t); }), st);
+st = T.star(Object.assign({}, STAR, { action: (STAR.action + ' ').repeat(5) }));
+ok('star: a very long answer', st.seconds > 120 && st.checks.some(function (c) { return c.level === 'fix' && /Too long/.test(c.t); }), st.seconds);
+st = T.star(Object.assign({}, STAR, { learned: '', action: STAR.action.replace(' and I checked the numbers every Monday for six weeks', '') }));
+ok('star: 45 to 59 seconds is marked to check', st.seconds >= 45 && st.seconds < 60 && st.checks.some(function (c) { return c.level === 'warn' && /A little short/.test(c.t); }), st.seconds);
+eq('star: empty', [T.star({}).empty, T.star({}).words, T.star({ learned: '  ' }).empty], [true, 0, true]);
+ok('star: sentences get a capital and a full stop', T.star({ action: 'i called the customer' }).text === 'I called the customer.');
+
+/* resume bullet point */
+let bp = T.bullet({ verb: 'rebuilt', what: 'The checkout flow in React.', result: 'Cut failed payments by 30%.' });
+eq('bullet: three variants', bp.variants.map(function (v) { return v.text; }), ['Rebuilt the checkout flow in React, which cut failed payments by 30%', 'Rebuilt the checkout flow in React and cut failed payments by 30%', 'Cut failed payments by 30% by rebuilding the checkout flow in React']);
+eq('bullet: lengths and lines', bp.variants.map(function (v) { return [v.length, v.lines]; }), [[68, 1], [65, 1], [67, 1]]);
+eq('bullet: all four checks pass', [bp.passed, bp.of, bp.kind, bp.checks.map(function (c) { return c.level; }).join()], [4, 4, 'verb', 'ok,ok,ok,ok']);
+eq('bullet: -ing forms', ['Built', 'cut', 'Led', 'Managed', 'shipped', 'Simplified', 'Set up', 'agreed', 'Xyz', ''].map(T.gerund), ['building', 'cutting', 'leading', 'managing', 'shipping', 'simplifying', 'setting up', 'agreeing', '', '']);
+ok('bullet: every verb on the list has an -ing form', T.STRONG.length > 90 && T.STRONG.every(function (v) { return /ing$/.test(T.gerund(v)); }), T.STRONG.filter(function (v) { return !/ing$/.test(T.gerund(v)); }));
+ok('bullet: the list has no duplicates and is in past tense', T.STRONG.filter(function (v, i, a) { return a.indexOf(v) !== i; }).length === 0);
+bp = T.bullet({ verb: 'Responsible', what: 'for the checkout page', result: '' });
+ok('bullet: a weak opener, duty wording and a missing result are fixes', ['weak way to start', 'Duty wording: “responsible for”', 'No result'].every(function (x) { return bp.checks.some(function (c) { return c.level === 'fix' && c.t.indexOf(x) >= 0; }); }) && bp.variants.length === 1 && bp.passed === 0, bp.checks);
+bp = T.bullet({ verb: 'Refurbished', what: 'three shop floors', result: '30% more visitors' });
+eq('bullet: a result that is not a verb phrase gets neutral joins', bp.variants.map(function (v) { return v.text; }), ['Refurbished three shop floors: 30% more visitors', 'Refurbished three shop floors; 30% more visitors', '30% more visitors after refurbishing three shop floors']);
+ok('bullet: an unlisted verb is a note, not a fault', bp.checks.some(function (c) { return c.level === 'info' && /not on our verb list/.test(c.t); }) && bp.checks.some(function (c) { return c.level === 'info' && /past-tense verb/.test(c.t); }) && bp.passed === bp.of, bp.checks);
+bp = T.bullet({ verb: 'Led', what: 'a team of six', result: 'raising sales in the region' });
+eq('bullet: an -ing result is joined with a comma', bp.variants.map(function (v) { return v.text; }), ['Led a team of six, raising sales in the region']);
+ok('bullet: “six” counts as a number', bp.checks.some(function (c) { return c.t === 'Has a number'; }));
+bp = T.bullet({ verb: 'Managed', what: 'my team and I worked on the roadmap', result: 'improved morale' });
+ok('bullet: no number, “worked on” and “I” are all reported', bp.checks.some(function (c) { return c.level === 'warn' && c.t === 'No number'; }) && bp.checks.some(function (c) { return /worked on/.test(c.t); }) && bp.checks.some(function (c) { return /Leave out “I”/.test(c.t); }), bp.checks);
+bp = T.bullet({ verb: 'Built', what: 'x '.repeat(120).trim(), result: 'saved 5 hours a week' });
+ok('bullet: a line of more than 200 characters is long', bp.variants[0].lines === 3 && bp.checks.some(function (c) { return c.level === 'warn' && /^Long: /.test(c.t); }), bp.variants[0].length);
+ok('bullet: a very short line', T.bullet({ verb: 'Cut', what: 'costs', result: 'saved 5%' }).checks.some(function (c) { return /^Short: /.test(c.t); }));
+eq('bullet: empty', [T.bullet({}).empty, T.bullet({}).variants.length, T.bullet({ verb: ' ' }).empty], [true, 0, true]);
+ok('bullet: fixes come first', T.bullet({ verb: 'Helped', what: 'with reports', result: 'saved 5 hours' }).checks[0].level === 'fix');
+
+/* date ranges in text, and gaps */
+const NOW = '2026-11-13', lab = function (r) { return T.monthLabel(r.start) + '..' + T.monthLabel(r.end); };
+eq('ranges: month names', T.dateRanges('Developer, Acme\nJan 2021 – Mar 2023', NOW).map(lab), ['Jan 2021..Mar 2023']);
+eq('ranges: full month names and a hyphen', T.dateRanges('January 2021 - March 2023', NOW).map(lab), ['Jan 2021..Mar 2023']);
+eq('ranges: “Sept.” and “Present”', T.dateRanges('Sept. 2019 to Present', NOW).map(function (r) { return [lab(r), r.open]; }), [['Sep 2019..Nov 2026', true]]);
+eq('ranges: years only run from January to December', T.dateRanges('BSc, Example University, 2019–2021', NOW).map(function (r) { return [lab(r), r.years]; }), [['Jan 2019..Dec 2021', true]]);
+eq('ranges: month/year', T.dateRanges('03/2020 - present', NOW).map(lab), ['Mar 2020..Nov 2026']);
+eq('ranges: year-month and dotted forms', T.dateRanges('2020-03 – 2022-11 and 03.2020 — 11.2022', NOW).map(lab), ['Mar 2020..Nov 2022', 'Mar 2020..Nov 2022']);
+eq('ranges: mixed ends and other words for today', ['Mar 2020 – 2022', '2018 until now', '2024 to date', 'June 2025 through current'].map(function (s) { return T.dateRanges(s, NOW).map(lab)[0]; }), ['Mar 2020..Dec 2022', 'Jan 2018..Nov 2026', 'Jan 2024..Nov 2026', 'Jun 2025..Nov 2026']);
+eq('ranges: the line and its number are kept', T.dateRanges('a\nb\nEngineer, 2019 - 2021 (Berlin)', NOW).map(function (r) { return [r.at, r.line]; }), [[2, 'Engineer, 2019 - 2021 (Berlin)']]);
+eq('ranges: a year in progress ends today, not in December', T.dateRanges('2024 – 2026', NOW).map(lab), ['Jan 2024..Nov 2026']);
+eq('ranges: not dates', ['2000-2500 users', '13/2020 - 01/2021', 'Mar 2023 – Jan 2021', '2031 – 2033', 'call 555-2019', 'May the 4th', 'present – 2021', '1200 - 1500 requests', ''].map(function (s) { return T.dateRanges(s, NOW).length; }), [0, 0, 0, 0, 0, 0, 0, 0, 0]);
+const R = function (text) { return T.dateRanges(text, NOW); };
+eq('gaps: six empty months are not a gap', T.gaps(R('Jan 2021 – Mar 2023\nOct 2023 – present'), NOW).length, 0);
+let gp = T.gaps(R('Nov 2023 – present\nJan 2021 – Mar 2023'), NOW);
+eq('gaps: seven empty months are, in any order of the lines', gp.map(function (g) { return [g.months, T.monthLabel(g.from), T.monthLabel(g.to), g.after.line, g.before.line]; }), [[7, 'Apr 2023', 'Oct 2023', 'Jan 2021 – Mar 2023', 'Nov 2023 – present']]);
+eq('gaps: years only, a whole year missing', T.gaps(R('2015 – 2017\n2019 – 2021\n2021 – present'), NOW).map(function (g) { return g.months; }), [12]);
+eq('gaps: years only, touching years are not a gap', T.gaps(R('2015 – 2017\n2018 – present'), NOW).length, 0);
+eq('gaps: a long job covers a short break inside it', T.gaps(R('2015 – present\nJan 2016 – Mar 2016\nJan 2020 – Feb 2020'), NOW).length, 0);
+gp = T.gaps(R('Jan 2019 – Feb 2021\n03/2022 - 01/2025'), NOW);
+eq('gaps: time since the last entry counts', gp.map(function (g) { return [g.months, !!g.before]; }), [[12, true], [22, false]]);
+eq('gaps: a job that ended four months ago is not a gap', T.gaps(R('Jan 2019 – Jul 2026'), NOW).length, 0);
+eq('gaps: nothing to compare', [T.gaps([], NOW).length, T.gaps(null, NOW).length], [0, 0]);
+eq('gaps: another threshold', T.gaps(R('Jan 2021 – Mar 2023\nOct 2023 – present'), NOW, 3).length, 1);
+
+/* resume review */
+const WEAK_CV = 'Jordan Example\nSoftware Developer\njordan@example.com · Springfield\n\nAbout me\nI am a passionate and hard-working developer who loves technology and is always eager to learn new things. I have worked in many different teams and on many ' +
+  'different projects over the years, and I believe that communication and teamwork are the key to success. I am looking for a company where I can grow, take on new challenges and make a real difference with my skills.\n\n' +
+  'Skills\nPython, Django, JavaScript, React, PostgreSQL, MySQL, MongoDB, Redis, Docker, Kubernetes, AWS, Terraform, Jenkins, Git, Linux, Kafka, GraphQL, Elasticsearch, TypeScript, Go, Rust, PHP\n\n' +
+  'Experience\nSoftware Developer, Example Shop Ltd\n03/2022 - present\n- Responsible for the backend of the online store\n- Worked on the checkout and the payment pages\n' +
+  '- Built a Python service that sends order emails and cut failed deliveries from 4% to 1%\n- Participated in code reviews and daily meetings\n\nJunior Developer, Sample Agency\nJan 2019 – Feb 2021\n- Helped with websites for clients of the agency\n' +
+  '- Duties included fixing bugs, writing tests and updating old pages when clients asked for changes to their content or their design, and talking to clients on the phone about what they wanted to change, which often took most of the day\n' +
+  '- Moved 12 client sites from PHP to Django\n\nEducation\nBSc Computer Science, Example University\n2015 – 2018';
+let rv = T.resumeReview(WEAK_CV, NOW);
+const pts = function (r) { const o = {}; r.checks.forEach(function (c) { o[c.id] = c.points; }); return o; };
+eq('review: the example scores 2 out of 10', [rv.score, rv.verdict], [2, 'Hard to skim: start with the first fixes on the list']);
+eq('review: points of each check', pts(rv), { screen: 0, wording: 0, numbers: 1, skills: 0, gaps: 0.5, length: 0.5 });
+eq('review: the six checks are worth 10 points', [rv.checks.map(function (c) { return c.max; }), rv.checks.reduce(function (s, c) { return s + c.max; }, 0)], [[2, 2, 2, 1.5, 1, 1.5], 10]);
+eq('review: the score is the sum of the checks', rv.score, rv.checks.reduce(function (s, c) { return s + c.points; }, 0));
+eq('review: what was counted', [rv.words, rv.firstJob, rv.summaryWords, rv.bullets, rv.withNumbers, rv.skills.length, rv.unused.length, rv.duty, rv.ranges.length, rv.gaps.length], [220, 13, 67, 7, 2, 22, 19, 5, 3, 1]);
+eq('review: the gap is the year between the two jobs', [rv.gaps[0].months, T.monthLabel(rv.gaps[0].from), T.monthLabel(rv.gaps[0].to)], [12, 'Mar 2021', 'Feb 2022']);
+const fixOf = function (r, rx) { return r.fixes.filter(function (f) { return rx.test(f.t); })[0]; };
+ok('review: duty lines are quoted in the visitor’s own words', fixOf(rv, /describe duties/).q.join('|').indexOf('- Responsible for the backend of the online store|- Worked on the checkout') === 0 && fixOf(rv, /describe duties/).q.length === 5, fixOf(rv, /describe duties/));
+ok('review: the gap quotes both date lines', JSON.stringify(fixOf(rv, /A break of 12 months/).q) === JSON.stringify(['Jan 2019 – Feb 2021', '03/2022 - present']));
+ok('review: the long line is quoted, shortened', /^- Duties included fixing bugs.*…$/.test(fixOf(rv, /longer than two lines/).q[0]) && fixOf(rv, /longer than two lines/).q[0].length <= 140);
+ok('review: first-screen findings quote the summary and the skills line', /^I am a passionate/.test(fixOf(rv, /summary runs to 67 words/).q[0]) && /^Python, Django/.test(fixOf(rv, /22 skills are listed before any job/).q[0]) && !!fixOf(rv, /first job starts on line 13/));
+ok('review: unused skills are named', /JavaScript, React, PostgreSQL/.test(fixOf(rv, /19 of 22 listed skills/).d) && rv.unused.indexOf('Python') < 0 && rv.unused.indexOf('Django') < 0 && rv.unused.indexOf('PHP') < 0, rv.unused);
+ok('review: bullets without a number are quoted', fixOf(rv, /2 of 7 bullet points/).q.length === 3);
+ok('review: the costliest checks come first', /first job|summary|skills are listed/.test(rv.fixes[0].t) && /break of/.test(rv.fixes[rv.fixes.length - 1].t), rv.fixes.map(function (f) { return f.t; }));
+eq('review: weaknesses are the checks that lost points, strengths the rest', [rv.weaknesses.length, rv.strengths.length], [6, 0]);
+const GOOD_CV = 'Alex Morgan\nSenior Backend Engineer\nalex@example.com · Berlin\n\nSummary\nBackend engineer with 8 years of experience building payment APIs and data pipelines in Python and Go.\n\n' +
+  'Experience\nSenior Backend Engineer, Example Co\nMar 2021 – present\n- Built a payments API in Python and PostgreSQL that handles 4 million requests a day\n- Cut p95 latency from 900 ms to 250 ms by adding Redis caching\n' +
+  '- Moved 30 services to Kubernetes on AWS with Terraform\n- Mentored four engineers who now run the on-call rota\n- Wrote the runbooks that the support team uses during incidents\n\n' +
+  'Backend Engineer, Sample Ltd\nJun 2017 – Feb 2021\n- Wrote REST and GraphQL services in Python for 200 business customers\n- Set up CI/CD with GitHub Actions and cut release time from 2 hours to 15 minutes\n' +
+  '- Rebuilt the billing export in Go, which removed 12 hours of manual work a month\n- Led the move from MySQL to PostgreSQL without downtime for customers\n\n' +
+  'Junior Developer, Demo Studio\nJul 2014 – May 2017\n- Built internal tools in Python for a team of 25 people\n- Automated the weekly sales report, saving 6 hours a week\n- Fixed bugs in the customer portal and wrote the first test suite for it\n' +
+  '- Trained two interns who later joined the team as developers\n\nEducation\nBSc Computer Science, Example University\n2010 – 2014\n\nSkills\nPython, Go, PostgreSQL, Redis, Kubernetes, AWS, Terraform, GraphQL, CI/CD\n\n' +
+  'Projects\nOpen-source rate limiter for Python web services, used by three small companies in production since 2022. I maintain the project, review contributions and write the release notes. ' +
+  'Speaker at two local meetups about running PostgreSQL at scale, with slides and recordings published online for anyone to read and reuse in their own teams and study groups.';
+rv = T.resumeReview(GOOD_CV, NOW);
+eq('review: a sound resume gets full points', [rv.score, rv.verdict, rv.fixes.length, rv.weaknesses.length, rv.strengths.length], [10, 'Reads well on a first skim', 0, 0, 6]);
+eq('review: what was counted in it', [rv.firstJob <= 12, rv.bullets, rv.withNumbers, rv.skills.length, rv.unused.length, rv.ranges.length, rv.gaps.length, rv.pages], [true, 13, 8, 9, 0, 4, 0, 'about one page']);
+ok('review: strengths name their check', rv.strengths.map(function (s) { return s.name; }).join() === 'First screen,Wording,Numbers,Skills,Gaps,Length');
+rv = T.resumeReview(GOOD_CV.replace('Mar 2021 – present', 'Spring 2021 onwards').replace('Jun 2017 – Feb 2021', 'four years').replace('Jul 2014 – May 2017', 'three years').replace('2010 – 2014', 'class of 2014').replace('since 2022', 'for years'), NOW);
+eq('review: unreadable dates are said plainly and cost half a point', [pts(rv).gaps, !!fixOf(rv, /dates could not be read/), rv.ranges.length], [0.5, true, 0]);
+rv = T.resumeReview(GOOD_CV.replace('\n\nSkills\nPython, Go, PostgreSQL, Redis, Kubernetes, AWS, Terraform, GraphQL, CI/CD', ''), NOW);
+eq('review: no skills line', [pts(rv).skills, !!fixOf(rv, /No skills line found/)], [0.5, true]);
+rv = T.resumeReview(GOOD_CV.replace('Skills\nPython, Go,', 'Skills: Python, Go,').replace('GraphQL, CI/CD', 'GraphQL, CI/CD\nLanguages: English (fluent), German'), NOW);
+eq('review: an inline “Skills:” line and a labelled line inside the block are both read', [rv.skills.slice(0, 2), rv.skills.indexOf('German') > 0, rv.skills.indexOf('English') > 0, pts(rv).skills], [['Python', 'Go'], true, true, 1.5]);
+rv = T.resumeReview(GOOD_CV.replace('Mar 2021 – present', 'Mar 2022 – present'), NOW);
+eq('review: one gap costs half a point', [pts(rv).gaps, rv.gaps.length, rv.score], [0.5, 1, 9.5]);
+rv = T.resumeReview(GOOD_CV.replace('- Built a payments API', '- Responsible for a payments API'), NOW);
+eq('review: one duty line costs one point', [pts(rv).wording, rv.duty, rv.score], [1, 1, 9]);
+rv = T.resumeReview(GOOD_CV.replace('Experience\n', '').replace('Summary\n', ''), NOW);
+eq('review: without headings the first dated line starts the experience', [rv.firstJob != null, pts(rv).wording, rv.bullets], [true, 2, 13]);
+rv = T.resumeReview('Pat Example. I am a baker with many years of work in kitchens of every size and kind. '.repeat(8), NOW);
+eq('review: text with no job, no dates and no bullets', [pts(rv), rv.firstJob, rv.words], [{ screen: 0, wording: 2, numbers: 0, skills: 0.5, gaps: 0.5, length: 0.5 }, null, 144]);
+eq('review: too little text', [T.resumeReview('Alex Morgan, engineer.').error, T.resumeReview('').error, T.resumeReview(null).words], ['short', 'short', 0]);
+rv = T.resumeReview(GOOD_CV + ('\n- Shipped one more feature for 10 customers and wrote the notes for the release that followed it').repeat(80), NOW);
+eq('review: a very long resume loses the length point', [pts(rv).length, rv.pages, !!fixOf(rv, /more than two pages/)], [0.5, 'more than two pages', true]);
+eq('review: the thresholds are the ones printed on the page', T.REVIEW, { screen: 12, summary: 60, before: 10, list: 20, gap: 6, onePage: 650, twoPages: 1300, thin: 250, least: 150 });
+
+/* LinkedIn profile review */
+const levels = function (r) { const o = {}; r.items.forEach(function (i) { o[i.level] = (o[i.level] || 0) + 1; }); return o; };
+const item = function (r, rx) { return r.items.filter(function (i) { return rx.test(i.t); })[0]; };
+let lr = T.linkedinReview({ headline: 'OPEN TO WORK 🚀🚀🚀 | Passionate, results-driven guru | Dream big!',
+  about: 'PASSIONATE ABOUT TECHNOLOGY!!! Jordan is a hard-working team player and a true thought leader with a proven track record. Jordan thinks outside the box and always gives everything. Jordan has worked in many companies and loves new challenges.' });
+eq('linkedin review: the example has ten things to fix', [lr.fixes, lr.notes, lr.headline, lr.about, levels(lr)], [10, 0, 66, 242, { fix: 1, warn: 9, ok: 1 }]);
+ok('linkedin review: “open to work” alone is the first fix and quotes the headline', lr.items[0].level === 'fix' && /only says you are looking/.test(lr.items[0].t) && /^OPEN TO WORK/.test(lr.items[0].q[0]), lr.items[0]);
+ok('linkedin review: buzzwords are named', /passionate, results-driven, guru/.test(item(lr, /in the headline: /).t) && /6 buzzwords/.test(item(lr, /in the About text: /).t) && item(lr, /in the About text: /).q.length === 2);
+ok('linkedin review: third person, capitals, no number, no contact line', /^Jordan is a hard-working/.test(item(lr, /first person/).q[0]) && item(lr, /Capital letters/).q[0] === 'PASSIONATE ABOUT TECHNOLOGY' && !!item(lr, /No number/) && /loves new challenges\.$/.test(item(lr, /No ask/).q[0]));
+ok('linkedin review: three emoji in a headline are counted', /^3 emoji/.test(item(lr, /emoji in the headline/).t));
+lr = T.linkedinReview({ headline: 'Senior Backend Engineer | Python, PostgreSQL | Payments',
+  about: 'I am a backend engineer with 8 years of experience building payment systems for online shops. I help product teams ship reliable APIs: at Example Co I cut failed charges by 30% for two million users. My strongest areas are Python, PostgreSQL and Kafka. I am now looking for senior backend roles at product companies. The best way to reach me is a message here on LinkedIn.' });
+eq('linkedin review: a sound profile has nothing to fix', [lr.fixes, lr.notes, levels(lr)], [0, 0, { ok: 7 }]);
+ok('linkedin review: the opening is at most 300 characters and ends at a word', lr.opening.length <= 300 && lr.more === true && lr.about.indexOf === undefined && /\w$/.test(lr.opening), lr.opening);
+lr = T.linkedinReview({ headline: 'Engineer '.repeat(30).trim(), about: '' });
+ok('linkedin review: a headline over 220 characters quotes what is cut off', lr.headline === 269 && /49 over the limit/.test(lr.items[0].t) && lr.items[0].q[0].length === 49 && !!item(lr, /No About text/), lr.items[0]);
+eq('linkedin review: a bare job title is a note, not a fault', T.linkedinReview({ headline: 'Engineer' }).items.filter(function (i) { return i.level === 'info'; }).map(function (i) { return i.t; }), ['The headline uses 8 of 220 characters', 'A job title, but no field or specialty']);
+ok('linkedin review: a slogan has no job title', !!item(T.linkedinReview({ headline: 'Helping brands dream bigger every single day' }), /No job title found/));
+ok('linkedin review: a company name is not a field', !!item(T.linkedinReview({ headline: 'Manager at Acme Widgets' }), /no field or specialty/));
+ok('linkedin review: a headline in capitals', !!item(T.linkedinReview({ headline: 'SENIOR ACCOUNTANT FOR SMALL BUSINESSES' }), /capital letters/));
+lr = T.linkedinReview({ headline: 'Nurse | Intensive care', about: 'I am a nurse. '.repeat(200) });
+ok('linkedin review: an About text over 2,600 characters', /over the limit/.test(item(lr, /About text is/).t) && lr.about > 2600);
+lr = T.linkedinReview({ headline: 'Data analyst | SQL, Python', about: 'I am a data analyst and I turn raw sales tables into weekly reports that people read. Over five years I have built 40 dashboards. '.repeat(3) + 'Message me here.' });
+ok('linkedin review: an opening that does not say for whom is a note', item(lr, /who you do it for/).level === 'info' && lr.fixes === 0, lr.items.map(function (i) { return i.level + ' ' + i.t; }));
+lr = T.linkedinReview({ about: '⭐ I help teams ⭐ ship ⭐ faster ⭐ for 10 clients ⭐ every year ⭐ write to me ⭐' });
+ok('linkedin review: emoji overload in the About text, and a missing headline', /^7 emoji/.test(item(lr, /emoji in the About/).t) && !!item(lr, /No headline/));
+eq('linkedin review: empty', [T.linkedinReview({}).empty, T.linkedinReview({ headline: '  ', about: '\n' }).empty, T.linkedinReview({}).fixes], [true, true, 0]);
+
+/* offer check */
+const OD = { q: QS, min: 20, date: 'Nov 13, 2026', g: {
+  '||': [900, 120, 170].concat(VALS.map(function (v) { return v / 1000; })),
+  'engineering||': [500, 130, 180].concat(VALS.map(function (v) { return v / 1000 + 10; })),
+  'engineering|Senior|': [200, 150, 210].concat(VALS.map(function (v) { return v / 1000 + 30; })),
+  '|Junior|': [60, 70, 95].concat(VALS.map(function (v) { return v / 1000 - 50; })) } };
+let oc = T.offerCheck(OD, '151,200', 'engineering', 'Senior');           // this group: median 180, quarters 150 and 210
+eq('offer check: 16% below the median, on the lower quarter line', [oc.group.median, oc.group.p25, oc.group.p75, oc.zone, Math.round(oc.diff), oc.wider, oc.verdict], [180000, 150000, 210000, 'mid', -16, false, '16% below the median, inside the middle half: there is room to ask']);
+oc = T.offerCheck(OD, '140k', 'engineering', 'Senior');
+eq('offer check: below the lower quarter', [oc.pay, oc.zone, oc.verdict, oc.group.n], [140000, 'low', '22% below the median: worth asking for more', 200]);
+oc = T.offerCheck(OD, '185000', 'engineering', 'Senior');
+eq('offer check: close to the median', [oc.zone, oc.verdict], ['mid', 'Close to the median: in line with what postings advertise']);
+eq('offer check: above the median, inside the middle half', T.offerCheck(OD, '200000', 'engineering', 'Senior').verdict, '11% above the median, inside the middle half');
+oc = T.offerCheck(OD, '260000', 'engineering', 'Senior');
+eq('offer check: above the upper quarter', [oc.zone, oc.verdict], ['high', '44% above the median: higher than three quarters of the advertised ranges']);
+ok('offer check: the position among postings', T.offerCheck(OD, '180000', 'engineering', 'Senior').pct === 50 && T.offerCheck(OD, '50000', 'engineering', 'Senior').pct === 0 && T.offerCheck(OD, '900000', 'engineering', 'Senior').pct === 100);
+oc = T.offerCheck(OD, '100000', 'engineering', 'Junior');
+eq('offer check: too few postings, every category at the same level is used first', [oc.cat, oc.lvl, oc.wider, oc.mixesLevels, oc.mixesCategories, oc.group.n, oc.group.median, oc.verdict], ['', 'Junior', true, false, true, 60, 100000, 'Close to the median of the wider group']);
+eq('offer check: …and the same category at any level is given as a second yardstick', [oc.also.cat, oc.also.lvl, oc.also.group.n, oc.also.group.median], ['engineering', '', 500, 160000]);
+oc = T.offerCheck(OD, '60000', 'design', 'Junior');
+eq('offer check: a low offer in a wider group is not told to ask for more', [oc.cat, oc.lvl, oc.zone, oc.also, oc.verdict], ['', 'Junior', 'low', null, '40% below the median of the wider group: low for that group, which is only a rough guide']);
+oc = T.offerCheck(OD, '100000', 'engineering', 'Lead');
+eq('offer check: then the same category at any level, said to mix levels', [oc.cat, oc.lvl, oc.wider, oc.mixesLevels, oc.mixesCategories, oc.group.n, oc.also], ['engineering', '', true, true, false, 500, null]);
+oc = T.offerCheck(OD, '100000', 'design', 'Lead');
+eq('offer check: then all postings', [oc.cat, oc.lvl, oc.wider, oc.mixesLevels, oc.mixesCategories, oc.group.n], ['', '', true, true, true, 900]);
+eq('offer check: a wider group gets the position without the advice', [T.offerCheck(OD, '85000', 'design', 'Junior').verdict, T.offerCheck(OD, '300000', 'design', 'Junior').verdict], ['15% below the median of the wider group, inside the middle half', '200% above the median of the wider group: higher than three quarters of its advertised ranges']);
+eq('offer check: a category with too few postings, any level', [T.offerCheck(OD, '100000', 'design', '').cat, T.offerCheck(OD, '100000', 'design', '').mixesLevels], ['', false]);
+eq('offer check: all categories, any level is not “wider”', T.offerCheck(OD, '150000', '', '').wider, false);
+eq('offer check: nothing typed, junk, zero', [T.offerCheck(OD, '', 'engineering', 'Senior'), T.offerCheck(OD, 'abc', '', ''), T.offerCheck(OD, '0', '', '')], [null, null, null]);
+eq('offer check: no data at all', [T.offerCheck(null, '150000', '', '').group, T.offerCheck({ q: QS, g: {} }, '150000', 'engineering', 'Senior').group], [null, null]);
+eq('offer check: a European figure', T.offerCheck(OD, '150.000', '', '').pay, 150000);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
