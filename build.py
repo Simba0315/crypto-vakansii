@@ -3381,16 +3381,42 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                  + pcard("Pinned", price_of("Pinned job"), "for 7 days", "The first row on the home page and in its category.", emp_btn(False), "One payment per job.",
                          was=PRICE.get("Pinned job", {}).get("was", ""),
                          ticks=["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites read"]) + "</div>")
+    # What pricing pages of other job sites have in common, taken into this one (PRICING_RESEARCH.md, 44 sites): three choices, a marked
+    # middle one, short promises above the cards, "which plan fits", a comparison table and questions under them. Not taken: cheap trials
+    # that renew at a higher price, countdowns, extras ticked in advance.
+    # The figures below were read from the sites' own public price pages on MARKET["date"]. Re-read those pages before changing one.
+    MARKET = {"date": "13 Nov 2026", "seeker_month": 29,
+              "seeker_sites": ["Enhancv", "Himalayas", "Kickresume", "FlexJobs", "Zety", "Teal", "Rezi", "Resume.io", "Simplify", "Huntr", "Jobscan"],
+              "post": 299, "post_sites": ["Jobicy", "Working Nomads", "Remote3", "We Work Remotely", "Remote OK", "Remotive", "Cryptocurrency Jobs", "Dice"]}
+    trust = lambda items: '<ul class="ptrust">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
+    def pvs(them_big, them_txt, us_big, us_txt, src):
+        return (f'<div class="pvs"><div><p class="pvs-l">Elsewhere</p><p class="pvs-n">{e(them_big)}</p><p>{e(them_txt)}</p></div>'
+                f'<div class="us"><p class="pvs-l">Here</p><p class="pvs-n">{e(us_big)}</p><p>{e(us_txt)}</p></div><p class="pvs-s">{e(src)}</p></div>')
+    fit = lambda rows: '<div class="pfit">' + "".join(f"<div><b>{e(a)}</b>{e(b)}</div>" for a, b in rows) + "</div>"
+    seek_trust = trust(["One payment, nothing renews", "No card kept on file", "Paid in crypto", "The free part stays free"])
+    seek_vs = pvs(f"${MARKET['seeker_month']} a month", f"The median price of {len(MARKET['seeker_sites'])} job-search services that sell by the month. Almost all of them renew by themselves.",
+                  f"{plus['plans'][0]['price']} for a month", "One payment that ends by itself. Longer plans cost less per month.",
+                  f"Prices on the public pages of {', '.join(MARKET['seeker_sites'])}, read on {MARKET['date']}.") if plus["plans"] else ""
+    seek_fit = fit([("1 month", "You are already interviewing and want the letters and the interview practice for these weeks."),
+                    ("3 months", "You are starting a search and do not know how long it will take. This is the one we recommend."),
+                    ("12 months", "You change jobs or take contracts through the year, or want the lowest price per month.")])
+    emp_trust = trust(["A standard listing is free", "No subscription", "On within the hour after payment", "Paid in crypto"])
+    emp_vs = pvs(f"${MARKET['post']}", f"The median price of one 30-day job post on {len(MARKET['post_sites'])} job boards that print a price.",
+                 "Free", f"For a standard 30-day listing. {price_of('Featured job')} puts it above the regular ones for 14 days.",
+                 f"Prices on the public pages of {', '.join(MARKET['post_sites'])}, read on {MARKET['date']}.")
+    emp_fit = fit([("Standard", "One role and no hurry. It is in the list and in search like every other job."),
+                   ("Featured", "A role that must be seen this fortnight. This is the one we recommend."),
+                   ("Pinned", "A launch or an urgent hire: the first row of the home page for a week.")])
     page("pricing/", f"Pricing: free for job seekers, Plus from {plus['plans'][0]['price'] if plus['plans'] else ''}, featured jobs from {price_of('Featured job')} | {SITE}",
          f"What is free and what is paid, side by side. Job seekers: every job and the resume builder are free, Plus adds an AI writer from {low_day}. Employers: a standard listing is free, a featured job is {price_of('Featured job')}.",
          crumbs(("Pricing", "")) + '<h1>Pricing: what is free and <span class="hl">what you pay for</span></h1>'
          '<p class="lead">Two sets of plans, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
          '<p class="tabs pswitch" id="pswitch" hidden><button class="tab" type="button" data-v="s" aria-pressed="true">I’m looking for work</button><button class="tab" type="button" data-v="e" aria-pressed="false">I’m hiring</button></p>'
          + LAUNCH
-         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_cards}<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}'
+         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_trust}{seek_cards}{seek_vs}<h3 class="cmp-h">Which plan fits</h3>{seek_fit}<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}'
            f'<p><a class="btn primary" href="{P}/for-you/">Start free with five questions</a> <a class="btn ghost" style="margin-top:0" href="{P}/plus/">See Plus</a></p></section>'
          + f'<section class="sec" id="for-employers"><div class="sec-head"><h2>Hiring</h2><a href="{P}/post-a-job/">See a featured job</a></div>'
-           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_cards + '<h3 class="cmp-h">Standard, Featured and Pinned, line by line</h3>' + emp_pt
+           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_trust + emp_cards + emp_vs + '<h3 class="cmp-h">Which plan fits</h3>' + emp_fit + '<h3 class="cmp-h">Standard, Featured and Pinned, line by line</h3>' + emp_pt
            + f'<h3>More ways to be seen</h3><div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What you get</th></tr>{extra_rows}</table></div>'
            f'<p><a class="btn primary" href="{P}/post-a-job/">Post a job</a></p></section>'
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in price_qa) + "</dl>"), head=price_ld)
