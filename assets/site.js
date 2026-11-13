@@ -34,7 +34,8 @@
 
   /* ---------- job index: compact file expanded into rows ---------- */
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
-  //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere]
+  //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere, 21 logo, 22 talent pool,
+  //       23 exact posting time in minutes since 1970 (0 when only the day is known or the job is over a week old)]
   var cache, headCache;
   function expand(d) {
     var cslug = d.c.map(function (c) { return slugOf(c) || 'job'; });
@@ -44,7 +45,7 @@
         return [s, r[1], c, r[3], r[4] & 1, d.k[r[5]], d.l[li], r[7].map(function (i) { return d.t[i]; }), r[8],
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
-          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0];
+          (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0, r[14] || 0];
     });
   }
   function load() {
@@ -107,6 +108,30 @@
     var days = Math.max(0, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - d) / 864e5));
     return [days === 0 ? 'Today' : days < 14 ? days + 'd' : days < 60 ? Math.floor(days / 7) + 'w' : Math.floor(days / 30) + 'mo', days <= 2];
   }
+  // How long ago, in words, for an age in seconds under 24 hours; '' for anything older (the day label stays).
+  // Short for list rows ("now", "20 min", "3 h": the age column is 44px wide), long for a sentence ("20 minutes ago").
+  // An age below zero (a time in the future, a clock that is off) reads as "now", never as a negative number.
+  function ago(sec, full) {
+    if (!(sec < 86400)) return '';
+    var m = Math.max(0, Math.floor(sec / 60)), h = Math.floor(m / 60);
+    if (!m) return full ? 'just now' : 'now';
+    if (!h) return full ? m + (m === 1 ? ' minute ago' : ' minutes ago') : m + ' min';
+    return full ? h + (h === 1 ? ' hour ago' : ' hours ago') : h + ' h';
+  }
+  // Every <time data-t="seconds since 1970"> younger than 24 hours says how long ago that was and is marked new; data-long asks for the
+  // sentence form. Runs on load, after every list a script renders (see decorate) and once a minute. What the page was built with stays
+  // in data-day and comes back when the posting turns a day old while the page is open.
+  function freshen(scope) {
+    var now = Date.now() / 1000;
+    Array.prototype.forEach.call((scope || document).querySelectorAll('time[data-t]'), function (el) {
+      var label = ago(now - Number(el.getAttribute('data-t') || NaN), el.hasAttribute('data-long'));
+      if (label) {
+        if (!el.hasAttribute('data-day')) el.setAttribute('data-day', el.textContent);
+        if (el.textContent !== label) el.textContent = label;
+        el.classList.add('new');
+      } else if (el.hasAttribute('data-day')) { el.textContent = el.getAttribute('data-day'); el.removeAttribute('data-day'); }
+    });
+  }
   function card(j, more, badge) {
     var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
       (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
@@ -116,10 +141,11 @@
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
       '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
-      '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
+      '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (j[23] ? ' data-t="' + j[23] * 60 + '"' : '') + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
   }
   // mark cards of jobs the visitor already saved, applied to or opened (works for static and script-built lists)
   function decorate(scope) {
+    freshen();                                              // whole page, not only `scope`: the search page fills its preview pane just before it calls this
     var mine = get('hrn_jobs', {}), seen = {};
     get('hrn_seen', []).forEach(function (x) { seen[x.s] = 1; });
     (scope || document).querySelectorAll('.job > a').forEach(function (a) {
@@ -407,6 +433,7 @@
 
   /* ---------- lists: saved / applied / viewed marks, faster navigation ---------- */
   decorate(document);
+  setInterval(function () { freshen(); }, 60000);           // "20 min" becomes "21 min" while the page stays open
   /* instant navigation: the browser prepares a page while the pointer rests on its link (Chrome and Edge);
      other browsers fall back to fetching the job page on hover */
   var specOk = window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules');

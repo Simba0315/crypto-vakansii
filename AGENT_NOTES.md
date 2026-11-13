@@ -15,6 +15,28 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
 - `logos.py` finds each company's own site and saves its icon to `assets/logos/`. Only trusted addresses are used
   (hand-checked `OVERRIDE` list or `<name>.com`); a wrong logo is worse than none. Never draw or invent logos.
 
+## Freshness: exact times and the hourly run
+
+The owner, 2026-11-13: "it must say when a job was added 30 minutes ago or 20 minutes ago, and you need to check often".
+
+- Schedule: `update.yml` runs every hour at :17 UTC and on every push (this replaces "runs daily" in the section above). Measured on
+  2026-11-13: a run takes 9 to 15 minutes, 7 to 13 of them reading the feeds. The 03:17 run is also the once-a-day run: `DAILY` is
+  true only for it and for a run started by hand, and it guards the monthly report snapshot and the IndexNow ping. Put anything new
+  that should happen once a day or less behind `if: env.DAILY == 'true'`. The schedule is stated on `/status/` and in the copy
+  ("every hour", "hourly"): change the cron lines, `DAILY` and that text together. Never write "real time".
+- Data: `collect.py` keeps `posted_at` (UTC, `2026-11-13T09:05:52Z`) from the feed's publishing time: Greenhouse `first_published`
+  (never `updated_at`, which moves with every edit), Lever `createdAt`, Ashby `publishedAt`. `first_seen_at` is the moment our run
+  first saw a job; only jobs new since this change have it, and no page shows it yet. `posted` and `first_seen` stay dates.
+  A job without `posted_at` (closed before the change, posted through our own API) works everywhere at day precision.
+- Pages: `when()` in `build.py` puts the exact time on a job's `<time>` (`datetime` and `data-t`, seconds since 1970) for open jobs
+  under a week old. The text in the file stays the day label ("Today", "1d"): a page built an hour ago must not state an age.
+  `freshen()` in `site.js` rewrites every `time[data-t]` younger than 24 hours ("now", "20 min", "3 h"; with `data-long`, on the
+  job page, "35 minutes ago"), marks it `new` and repeats every minute. `decorate()` calls it, so every list a script renders gets
+  it. Row labels must stay within 6 characters: the age column is 44px wide.
+- Index: the last field of a row in `data/index.json` is the posting time in minutes since 1970 (0 when unknown or over a week
+  old); `expand()` puts it in `j[23]`. `order()` sorts by the exact time, so "newest first" is right within a day.
+- `node fresh_test.js` (labels, no negative ages, the refresh) must end with "0 failed".
+
 ## Accounts, checkout and automation (`server/`)
 
 - `server/src/worker.js` is the whole API (Cloudflare Worker + D1, no dependencies): accounts, orders, Cryptomus invoices and

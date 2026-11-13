@@ -173,6 +173,7 @@ a.pill:hover{color:var(--text);text-decoration:underline;text-underline-offset:3
 .job .pill.warn{background:none;border:0;color:var(--amber)}
 .job time{font:500 12px var(--mono);color:var(--faint);white-space:nowrap}
 .job time.new{color:var(--green);font-weight:600}
+dl.meta time.new{color:var(--green)}
 @media(max-width:720px){.job>a{grid-template-columns:auto minmax(0,1fr)}.jr{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}.pills{justify-content:flex-start}.job .pills{gap:0 12px}.job .pill+.pill::before{content:none}}
 
 /* Search layout: filters | results | preview */
@@ -687,7 +688,7 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 }
 @media(max-width:899px){.jr{flex-wrap:wrap;gap:4px 12px}.job .jp.none{display:none}}
 /* with the preview open the list is narrow: the title gets the whole line, pay and tags go under it */
-@media(min-width:1240px){.sgrid.haspane .job>a{grid-template-columns:auto minmax(0,1fr) 40px;gap:4px 12px}.sgrid.haspane .job .jp{grid-column:2;grid-row:2;text-align:left}.sgrid.haspane .job .jp.none{display:none}.sgrid.haspane .job time{grid-column:3;grid-row:1}.sgrid.haspane .job .pills{grid-column:2/-1;grid-row:3;margin-top:0;flex-wrap:wrap}}
+@media(min-width:1240px){.sgrid.haspane .job>a{grid-template-columns:auto minmax(0,1fr) 44px;gap:4px 12px}.sgrid.haspane .job .jp{grid-column:2;grid-row:2;text-align:left}.sgrid.haspane .job .jp.none{display:none}.sgrid.haspane .job time{grid-column:3;grid-row:1}.sgrid.haspane .job .pills{grid-column:2/-1;grid-row:3;margin-top:0;flex-wrap:wrap}}
 /* job page: apply first, the facts after */
 .side dl.meta{margin:18px 0 0}
 .side .sideact+dl.meta{padding-top:16px;border-top:1px solid var(--line)}
