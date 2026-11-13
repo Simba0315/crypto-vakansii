@@ -168,6 +168,12 @@ CATEGORIES = {
     "people": "people who hire and look after staff: recruiters, HR partners, people operations and workplace teams",
     "data-research": "people who turn data into answers: analysts, data scientists, data engineers and researchers",
     "operations": "people who keep the business running day to day: operations, supply chain, IT, facilities and administration",
+    "healthcare": "people who treat and look after patients, in person or online: nurses, physicians, therapists, pharmacists and care coordinators",
+    "manufacturing": "people who build, test and maintain physical things: technicians, machinists, welders, production and maintenance crews, inspectors",
+    "supply-chain": "people who buy the parts and move the goods: sourcing, procurement, planning, warehouses, logistics and fleets",
+    "retail": "people who serve customers in a shop, a cafe or a hotel: store staff, key holders, shift leads, cooks and front-desk teams",
+    "education": "people who teach: teachers, tutors, instructors, curriculum writers and the teams that train a company's own staff",
+    "consulting": "people who set a product up for a customer and advise how to use it: consultants, implementation and solutions specialists, engagement managers",
     "other": "roles whose title did not fit any of the other groups",
 }
 

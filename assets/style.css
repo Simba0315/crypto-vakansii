@@ -1184,3 +1184,11 @@ details.embed[open]>summary::after{content:"\2013"}
 details.embed>:not(summary){margin-left:20px;margin-right:20px}
 details.embed[open]{padding-bottom:16px}
 details.embed pre{background:var(--bg)}
+
+/* icons of the fields of work */
+.fic{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--ac);flex:none;vertical-align:middle;margin-right:10px}
+.fic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile .fic{width:30px;height:30px;border-radius:9px;margin-right:0}
+.tile .fic svg{width:18px;height:18px}
+.dirb h2 a,.dirb h3 a{display:inline-flex;align-items:center}
+.dirb h2:has(.fic),.dirb h3:has(.fic){align-items:center}

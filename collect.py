@@ -32,6 +32,29 @@ CATS = [
     ("people", "People & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
     ("data-research", "Data & Research", r"analyst|\bdata\b|research|quant|scientist|economist|strategy"),
     ("operations", "Operations", r"operations|project manager|program manager|chief of staff|executive assistant|office|administrat"),
+    # Added 13 Nov 2026 (the owner asked for the fields other job sites have). They stand after the older ones on purpose:
+    # a title that already had a category keeps it, and only what used to fall into "Other" is sorted further.
+    ("healthcare", "Healthcare", r"\bnurse|nursing|clinical|clinician|physician|\bmedical\b|therapist|pharmac|\bnp\b|dental|dentist|veterinar|care (manager|coordinator|guide|navigator|advocate)|"
+                                 r"health coach|behavioral health|caregiver|\bemt\b|paramedic|optomet"),
+    ("manufacturing", "Manufacturing & Trades", r"technician|manufactur|production|welder|machinist|assembl|\boperator\b|inspector|maintenance|electrician|\bmechanic\b|fabricat|tooling|\bcnc\b|"
+                                                r"facilities|construction|quality (control|inspector|technician)|painter|plumber|hvac|rigger|crane|installer"),
+    ("supply-chain", "Supply Chain & Logistics", r"\bsupply\b|sourcing|procurement|logistics|warehouse|fulfil+ment|\bbuyer\b|\bplanner\b|inventory|shipping|receiving|transport|\bdriver\b|"
+                                                 r"materials? (handler|planner|manager|coordinator)|dispatcher|fleet"),
+    ("retail", "Retail & Hospitality", r"\bretail\b|\bstore\b|key holder|cashier|barista|\bchef\b|\bcook\b|hospitality|merchandis|shift (lead|supervisor|manager)|restaurant|front desk|concierge|housekeep"),
+    ("education", "Education & Training", r"teacher|instructor|\btutor|curriculum|\btrainer\b|learning (designer|specialist|experience|and development|& development)|enablement|professor|lecturer|"
+                                          r"education|instructional"),
+    ("consulting", "Consulting & Solutions", r"consultant|consulting|implementation|professional services|solutions? (consult|architect|specialist|manager|lead)|deployment strategist|onboarding|"
+                                             r"technical account|engagement manager|delivery (manager|lead)|advisor|advisory"),
+]
+# When the title names no field, the department the employer filed the job under often does ("Sales", "People", "Supply Chain").
+DEPT_CATS = [
+    ("sales-bd", r"sales|go.to.market|\bgtm\b|revenue|commercial|business development|partnerships?|account (management|development)"),
+    ("marketing", r"marketing|growth|brand|communications|community"), ("support", r"customer (success|experience|support|care)|\bsupport\b"),
+    ("finance", r"finance|accounting|\bg&a\b|treasury"), ("people", r"people|talent|\bhr\b|human resources|recruit"), ("compliance-legal", r"legal|compliance|\brisk\b|policy"),
+    ("supply-chain", r"supply chain|logistics|fulfil+ment|procurement|fleet"), ("manufacturing", r"manufactur|production|\bmfg\b|field service|facilities|data center"),
+    ("healthcare", r"medical|clinical|\bhealth\b|care team"), ("retail", r"retail|key holders?|\bstores?\b"), ("data-research", r"\bdata\b|research|analytics"),
+    ("security", r"security"), ("product", r"product"), ("design", r"design"), ("engineering", r"engineering|technology|infrastructure|\bit\b|software|hardware"),
+    ("operations", r"operations|\bops\b|admin|workplace"),
 ]
 OTHER = ("other", "Other")
 
@@ -217,7 +240,13 @@ def slugify(s):
     return s[:60].strip("-") or "job"
 
 
-def classify(title):
+def classify(title, dept=""):
+    got = classify_title(title)
+    if got != OTHER[0] or not dept: return got
+    return next((slug for slug, rx in DEPT_CATS if re.search(rx, dept, re.I)), OTHER[0])
+
+
+def classify_title(title):
     # what the person does comes before what the product is: "Cybersecurity Sales Specialist" is a sales job, "Senior Counsel, Security" a legal one
     if re.search(r"\b(sales|account executive|business development)\b|account manage", title, re.I) and not re.search(r"engineer|architect", title, re.I): return "sales-bd"
     if re.search(r"\bcounsel\b|\battorney\b|\bparalegal\b", title, re.I): return "compliance-legal"
@@ -347,7 +376,7 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
         "remote": remote, "hybrid": hybrid,
         "dept": (dept or "").strip(), "posted": (posted or "")[:10],
         "posted_at": utc_iso(posted_at),      # the exact publishing time when the feed gives one ("" otherwise); "posted" stays the day
-        "excerpt": excerpt(text), "cat": classify(title), "level": level(title),
+        "excerpt": excerpt(text), "cat": classify(title, dept or ""), "level": level(title),
         "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I) and n.lower() not in company.lower()][:12],     # a company's own name in its postings is not a skill
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
         "salary": tidy_pay(salary) or pay_from_text(text, location),

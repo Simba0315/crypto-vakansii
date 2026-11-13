@@ -447,6 +447,59 @@ def when(j):
     return f'datetime="{j["posted_at"]}" data-t="{t}"' if t and j["active"] and NOW - t < WEEK else f'datetime="{j["posted"]}"'
 
 
+# Line icons for the fields of work, drawn for this site (24x24, stroke only). One per field, so a list of fields is read by shape before it is read by word.
+ICON = {
+    "code": '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/>',
+    "spark": '<circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',
+    "chart": '<path d="M2 20h20M5 20V11M10 20V5M15 20v-7M20 20V8"/>',
+    "cloud": '<path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.1 9.5 4.3 4.3 0 0 0 7 18z"/>',
+    "shield": '<path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
+    "board": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v10"/>',
+    "pen": '<path d="M4 20l4-1L19 8l-3-3L5 16l-1 4z"/><path d="M14 7l3 3"/>',
+    "megaphone": '<path d="M4 10v4h3l8 4V6L7 10H4z"/><path d="M18 9a4 4 0 0 1 0 6"/>',
+    "trend": '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+    "headset": '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="13" width="4" height="6" rx="1.5"/><rect x="17.5" y="13" width="4" height="6" rx="1.5"/>',
+    "coin": '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5C14 8.6 13.1 8 12 8c-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.500.8 2.5 2-1 2-2.5 2c-1.1 0-2-.5-2.5-1.4M12 6.5V8M12 16v1.5"/>',
+    "scales": '<path d="M12 4v16M7 20h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0L5 7zM19 7l-3 7a3 3 0 0 0 6 0l-3-7z"/>',
+    "users": '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+    "sliders": '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+    "chip": '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+    "text": '<path d="M4 6h16M4 11h16M4 16h9"/>',
+    "heart": '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+    "cap": '<path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/>',
+    "bag": '<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    "globe": '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>',
+    "hex": '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 8l3.5 4-3.5 4-3.5-4L12 8z"/>',
+    "crown": '<path d="M4 18h16M4 18L3 8l5 4 4-6 4 6 5-4-1 10"/>',
+    "sprout": '<path d="M12 21v-9"/><path d="M12 12c0-3.5-2.5-6-7-6 0 3.5 2.5 6 7 6z"/><path d="M12 14c0-3 2.2-5 7-5 0 3-2.2 5-7 5z"/>',
+    "factory": '<path d="M3 20V10l6 4v-4l6 4V6h6v14H3z"/>',
+    "box": '<path d="M3 8l9-5 9 5v8l-9 5-9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+    "case": '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+    "dots": '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>',
+}
+SLUG_ICON = {   # fields on /categories/ and the categories of job lists
+    "software-development": "code", "ai-machine-learning": "spark", "data-analytics": "chart", "cloud-devops-it": "cloud", "security": "shield", "product-project": "board",
+    "design-creative": "pen", "marketing-communications": "megaphone", "sales": "trend", "customer-service": "headset", "accounting-finance": "coin", "legal-compliance": "scales",
+    "hr-recruiting": "users", "operations-administration": "sliders", "hardware-engineering": "chip", "writing-translation": "text", "science-healthcare": "heart",
+    "education-training": "cap", "retail-hospitality": "bag", "languages": "globe", "crypto-web3": "hex", "leadership": "crown", "internships-entry-level": "sprout",
+    "engineering": "code", "product": "board", "design": "pen", "sales-bd": "trend", "marketing": "megaphone", "support": "headset", "compliance-legal": "scales", "finance": "coin",
+    "people": "users", "data-research": "chart", "operations": "sliders", "healthcare": "heart", "manufacturing": "factory", "supply-chain": "box", "retail": "bag",
+    "education": "cap", "consulting": "case", "other": "dots",
+}
+PATH_FIELD = re.compile(r"^(?:jobs|crypto|categories)/([a-z0-9-]+)/$")
+
+
+def icon(slug):
+    """The field's icon in a soft square, or nothing when the slug is not a field."""
+    name = SLUG_ICON.get(slug)
+    return f'<span class="fic"><svg viewBox="0 0 24 24" aria-hidden="true">{ICON[name]}</svg></span>' if name else ""
+
+
+def path_icon(path):
+    m = PATH_FIELD.match(path)
+    return icon(m.group(1)) if m else ""
+
+
 def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
@@ -463,7 +516,7 @@ def card(j, extra=0):
 
 
 def tile(url, name, count, avatar=False):
-    return f'<li><a class="tile" href="{P}/{url}">{ava(name, "sm") if avatar else ""}<span class="n">{path_fl(url)}{e(name)}</span><span class="c">{count:,}</span></a></li>'
+    return f'<li><a class="tile" href="{P}/{url}">{ava(name, "sm") if avatar else ""}{path_icon(url)}<span class="n">{path_fl(url)}{e(name)}</span><span class="c">{count:,}</span></a></li>'
 
 
 def section(title, inner, link=None, sid=""):
@@ -1030,7 +1083,7 @@ def main():
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
     def dir_block(fs, fn, fd, live, js_, top=None, tag="h2"):
-        return (f'<div class="dirb"><{tag}><a href="{P}/categories/{fs}/"><u>{e(fn)}</u></a><span>{len(js_):,}</span></{tag}><p>{e(fd[0].upper() + fd[1:])}.</p><ul>'
+        return (f'<div class="dirb"><{tag}><a href="{P}/categories/{fs}/">{icon(fs)}<u>{e(fn)}</u></a><span>{len(js_):,}</span></{tag}><p>{e(fd[0].upper() + fd[1:])}.</p><ul>'
                 + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/roles/{s_}/">{e(nm)}</a><span>{c:,}</span></li>' for s_, nm, c in (live if top is None else live[:top]))
                 + (f'<li class="more"><a href="{P}/categories/{fs}/">All {len(live)} in {e(rlow(fn))}</a></li>' if top is not None and len(live) > top else "") + "</ul></div>")
     ROLE_TOP = sorted(((nm, s_, len(ROLE_JOBS[s_])) for nm, s_, _ in ROLES if s_ in ROLE_BASE), key=lambda x: -x[2])

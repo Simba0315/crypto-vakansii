@@ -24,7 +24,7 @@ let clock = 1800000000000, page = [];
 class Clock extends Date { constructor(...a) { if (a.length) super(...a); else super(clock); } static now() { return clock; } }   // the test sets the time
 const doc = { querySelectorAll: (sel) => (sel === 'time[data-t]' ? page : []) };
 const S = new Function('document', 'Date', 'P', "var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];" +
-  ['esc', 'slugOf', 'hue', 'avatar', 'expand', 'ageOf', 'ago', 'freshen', 'card'].map(cut).join('\n') +
+  'var flagsOk = true;' + ['esc', 'slugOf', 'hue', 'avatar', 'expand', 'ageOf', 'ago', 'freshen', 'flag', 'flags', 'card'].map(cut).join('\n') +
   '\nreturn { ago: ago, freshen: freshen, expand: expand, card: card };')(doc, Clock, '');
 const now = () => Math.floor(clock / 1000);
 

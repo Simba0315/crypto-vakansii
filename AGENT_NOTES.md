@@ -299,3 +299,18 @@ directory add the flag by themselves from the path. In `site.js`: `flag(code)` a
 country codes. Not in running prose and not in meta titles. Chrome on Windows cannot draw flags: `site.js` turns `i.fl` into a
 two-letter badge (`.fl.cc`).
 
+## Categories and icons (13 Nov 2026)
+
+`collect.py` `CATS` has 18 categories plus Other. The six added on 13 Nov 2026 stand after the older ones on purpose, so a title that
+already had a category keeps it. `classify(title, dept)` falls back to the employer's department (`DEPT_CATS`) when the title names no
+field. Every category and every field on `/categories/` has an icon: `ICON` (drawings) and `SLUG_ICON` (slug to drawing) in `build.py`;
+`tile()` and the directory block add it by themselves. A new category or field needs an entry in `SLUG_ICON` and in
+`skills_info.CATEGORIES`.
+
+## Hosting limit (measured 13 Nov 2026)
+
+The built site is about 780 MiB; the workflow stops above 950 MiB and GitHub Pages allows 1 GB. A job page weighs about 11.4 KB, a
+list page about 34 KB. That leaves room for roughly 10,000 more jobs. More than that needs job pages served by the server
+(`server/`), which waits for the owner's domain. `sources_candidates.json` (when present) is a list of further company boards found
+and verified but NOT yet read by the collector: add from it only as far as the size allows.
+
