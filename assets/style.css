@@ -735,3 +735,5 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .plain b{font-weight:650}
 .plain a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
 .qa>div:target{background:var(--accent-soft);box-shadow:-10px 0 0 var(--accent-soft),10px 0 0 var(--accent-soft)}
+.side .note.goes{margin:8px 0 0;text-align:center;font-size:12.5px}
+.note.goes b{font:500 12.5px var(--mono);color:var(--muted);font-weight:500;overflow-wrap:anywhere}

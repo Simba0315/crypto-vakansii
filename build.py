@@ -707,8 +707,10 @@ def job_page(j, active_by_cat):
             ld["employmentType"] = ETYPE_LD[j["etype"]]
         if full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
         else: head, micro = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>", ""
+        host_ = re.sub(r"^www\.", "", re.sub(r"^https?://([^/?#]+).*$", r"\1", j["url"] or "")).lower()
         apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a>'
-                     '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>')
+                     + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else "")
+                     + '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>')
         banner = ""
     else:
         apply_btn = f'<a class="btn lg" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs</a>'
@@ -1690,7 +1692,7 @@ def main():
                  ("What if the recruiter wants to continue in a messenger?", "Ask to continue by email from the company’s domain or through its hiring system. A recruiter who refuses, or whose address does not match the company’s site, is not acting for that company.")]
     safety_faq, safety_ld = qa_block(safety_qa)
     page("safety/", f"Is This Job Offer Real? A safety checklist for job seekers | {SITE}",
-         "How to tell a real job offer from a fake one: seven warning signs, how to check a recruiter and a posting, extra checks for crypto hiring, and what to do if you already paid.",
+         "How to tell a real job offer from a fake one: seven warning signs, four schemes spreading now, how to check a recruiter, extra checks for crypto hiring, and what to do if you already paid.",
          crumbs(("Safety", "")) + "<h1>How to check that a job offer is real</h1>"
          '<p class="lead">Fake recruiters borrow the names of real companies, hold “interviews” in a chat app and ask for money, documents or wallet access before any contract exists. '
          f'Ten minutes of checking catches most of it. Last reviewed {fdate(TODAY)}.</p>'
@@ -1711,12 +1713,25 @@ def main():
                    "<li>Run test tasks, repositories and “audit this code” requests only in a disposable environment with no wallets or keys on it.</li>"
                    "<li>If pay is in tokens, ask for the terms in writing: amount, vesting, and what happens if the token cannot be sold.</li>"
                    "<li>Confirm the team through the project’s official site and channels, not through links the recruiter sends.</li></ul>")
+         + section("Four schemes that are spreading now", '<ol class="steps">'
+                   "<li><b>Pay to get paid.</b> You “rate products” or “like videos” for small sums, then are told to deposit money to unlock your earnings. A job that asks you to top up an account is not a job.</li>"
+                   "<li><b>The cheque that is too big.</b> You receive a cheque or a transfer for more than agreed and are asked to send the difference back. The first payment later bounces; yours does not.</li>"
+                   "<li><b>Forwarding parcels or money.</b> “Receive packages at home and send them on” and “process payments through your account” are how stolen goods and money are moved. The person holding them is the one the police find.</li>"
+                   "<li><b>The interview that needs you to install something.</b> A “meeting app”, a “coding test” repository or a script to “fix your microphone” that carries a program stealing passwords and crypto wallets. "
+                   "Real companies interview in ordinary video-call tools. Open any test project only on a machine with no wallets and no saved passwords; in an editor such as VS Code keep Restricted Mode on and look for tasks that start by themselves.</li></ol>")
+         + section("What this site checks, and what it cannot", "<p><b>Checked every day:</b> that each job still exists on the employer’s own hiring system, where it came from, and when it was posted. "
+                   "The address the Apply button opens is written under the button on every job page, so you can see where you are going before you click.</p>"
+                   "<p><b>Not checked:</b> what happens after you leave this site, how an employer treats applicants, and whether a company can pay. "
+                   + (f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access. Our only contact is {contact}.</p>" if contact else
+                      f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access.</p>")
+                   + "<p><b>Something looks wrong?</b> Every job page has a “Report a problem with this listing” link. A report about money, an install request or a move to a chat app is looked at first.</p>")
          + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever or Ashby), links straight to that posting and is checked again every day; "
                    f"a role that disappears from the employer’s page is marked closed the same day. Each job page names its source and the date of the last check. {NO_ANON}, "
                    f'and we never ask you for money, documents or an account. Details: <a href="{P}/methodology/">how listings are collected</a> and <a href="{P}/status/">today’s data status</a>.</p>')
          + section("What should I do if I already sent money or data?", "<p>Act the same day. Call your bank or card issuer and ask to stop or dispute the payment. Change the passwords of any account you shared, starting with email. "
                    "If a seed phrase or key was exposed, move the funds to a new wallet at once. Then report it: in the United States to "
-                   '<a href="https://reportfraud.ftc.gov/" rel="noopener">reportfraud.ftc.gov</a> and <a href="https://www.ic3.gov/" rel="noopener">ic3.gov</a>; elsewhere to your national consumer-protection body or police cyber unit. '
+                   '<a href="https://reportfraud.ftc.gov/" rel="noopener">reportfraud.ftc.gov</a> and <a href="https://www.ic3.gov/" rel="noopener">ic3.gov</a>; in the United Kingdom to '
+                   '<a href="https://www.actionfraud.police.uk/" rel="noopener">Action Fraud</a>; elsewhere to your national consumer-protection body or police cyber unit. '
                    "Tell the real company too, so it can warn other candidates.</p>")
          + section("Job offer safety: questions and answers", safety_faq), head=safety_ld)
 
