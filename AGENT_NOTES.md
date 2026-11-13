@@ -27,6 +27,9 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
   `data/jobs.json` and `data/placements.json`; `build.py` applies them (pinned, featured, sponsors). A purchase asks GitHub to
   rebuild the site.
 - Never sell what does not exist: Plus stays off (`PLUS_LIVE`) until its features are built.
+- No job is ever delayed or gated for payment (decided 2026-11-13, the owner left the call to the agent): traffic is what employers
+  pay for, and paying to see public jobs is what users of other sites hate most. Plus sells speed and tools only. AI features run
+  only for paying accounts and always inside a fixed monthly allowance, so their cost can never exceed what was paid.
 
 ## Marketing (owner, 2026-11-12/13: "everything that exists in marketing must be on the site")
 
@@ -115,7 +118,7 @@ into it at once; when something ships, update its row. He asked for this on 2026
 
 ## Ideas not done yet
 
-- Deploy `server/` to Cloudflare (owner's logins needed). Then: Plus (email alerts need an email service, 48-hour early access, AI résumé tools, device sync endpoint already exists).
+- Deploy `server/` to Cloudflare (owner's logins needed). Then: Plus (email alerts need an email service; AI resume tailoring, cover letters and interview prep with a monthly allowance per plan; the device sync endpoint already exists).
 - More sources: other applicant tracking systems (Workable, SmartRecruiters, Recruitee, Teamtailor).
 - Compare page (two skills or two companies side by side), monthly hiring report page.
 - Mobile apps and a browser extension are planned by the owner after the site.

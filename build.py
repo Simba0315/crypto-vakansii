@@ -700,14 +700,14 @@ def main():
             f'<dl class="stats"><div><dt>{n:,}</dt><dd>open roles</dd></div><div><dt>{m}</dt><dd>companies</dd></div>'
             f'<div><dt>{len(remote):,}</dt><dd>remote</dd></div><div><dt>{fresh3:,}</dt><dd>new in 3 days</dd></div></dl></div>'
             f'<div class="board" aria-label="Freshest roles"><div class="board-h"><span>Fresh on the board</span><a href="{P}/board/"><b>Full screen ↗</b></a></div>{board_rows}</div></div></section>')
-    plus_band = (f'<div class="band alt"><div><h2>Applied everywhere and heard nothing?</h2><p>Timing and fit decide whether a resume gets read. Plus will show you new roles 48 hours early, email you matches the moment they appear and review your resume. One payment, no subscription.</p></div>'
+    plus_band = (f'<div class="band alt"><div><h2>Applied everywhere and heard nothing?</h2><p>Timing and fit decide whether a resume gets read. Plus will email you the moment a matching role appears and tailor your resume. One payment, no subscription.</p></div>'
                  f'<a class="btn lg" href="{P}/plus/">See Plus</a></div>')
     band = (f'<div class="band"><div><h2>Is your open role getting lost?</h2><p>A candidate here chooses between {n:,} roles today. Featured placement puts yours on the first screen they see. Standard listings are free, featured starts at $99 in crypto.</p></div>'
             f'<a class="btn lg" href="{P}/post-a-job/">Post a job</a></div>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
     FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of tech companies. Every listing links to the original posting, and you apply on the employer's own site."),
            ("How often is the site updated?", "Every day. New roles are added, and roles that companies have closed are moved to the archive and marked as closed."),
-           ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with early access and extra tools is on the way."),
+           ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with email alerts and AI resume tools is on the way; no job will be held back for it."),
            ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
            ("Can I see salaries?", "Where the employer publishes a range, we show it, let you filter and sort by it, and use it for the salary pages.")]
     faq_html = "".join(f"<details class='faq'><summary>{e(q_)}</summary><p>{e(a_)}</p></details>" for q_, a_ in FAQ)
@@ -1409,10 +1409,10 @@ def main():
                    "<li>Saving jobs, tracking applications and saved searches, kept in your browser.</li><li>The resume builder and every tool in the tools section.</li><li>Widgets, badges, the data files and the API.</li></ul>")
          + section("What will this site never do?", "<ul><li>Charge you to apply for a job.</li><li>Ask for your phone number, or call you.</li>"
                    "<li>Sell or pass on personal data. Job seekers have no accounts here, so there is nothing to sell.</li><li>Send you email you did not ask for.</li>"
-                   "<li>Renew a payment by itself. Anything paid is a single payment for a stated period.</li><li>Show a job as open after we know it is closed, or hide where a listing came from.</li>"
+                   "<li>Hold a job back for paying members. Every listing is public the moment we have it.</li><li>Renew a payment by itself. Anything paid is a single payment for a stated period.</li><li>Show a job as open after we know it is closed, or hide where a listing came from.</li>"
                    "<li>Publish invented reviews, numbers, partners or deadlines.</li></ul>")
          + section("What costs money, and for whom?", f'<p>Employers can pay to place a job or a company more prominently; the prices are public on the <a href="{P}/post-a-job/">employers page</a>. '
-                   f'Job seekers pay nothing today. An optional paid set of extra tools, <a href="{P}/plus/">Plus</a>, is planned; what it includes and what it costs will be published in full before anything is sold.</p>')
+                   f'Job seekers pay nothing today. An optional paid set of email alerts and AI resume tools, <a href="{P}/plus/">Plus</a>, is planned; it will not unlock any listing, and what it includes and what it costs will be published in full before anything is sold.</p>')
          + section("How can I check that you keep to this?", f'<p>The <a href="{P}/status/">data status page</a> shows what the latest update did. The <a href="{P}/methodology/">methodology</a> explains every label and number. '
                    f'The <a href="{P}/privacy/">privacy page</a> lists what is stored and where. The site’s code is public.</p>'))
 
@@ -1579,28 +1579,29 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     plans = "".join(
         f'<div class="plan{" best" if pl.get("best") else ""}">' + (f'<span class="pill acc">{e(pl["note"])}</span>' if pl.get("note") else '<span class="pill ghost">–</span>')
         + f'<p class="pname">{e(pl["name"])}</p><p class="price">{e(pl["price"])}</p><p class="note">{e(pl["per"])}</p>{cta}</div>' for pl in plus["plans"])
-    feats = [("You see the job too late", "See jobs 48 hours early", "New roles reach Plus members two days before the public site, while the pile of applications is still small."),
-             (f"You can’t check {m} career pages a day", "Instant email alerts", "Save a search once and get an email the moment a matching job is posted, instead of checking back."),
-             ("Your resume gets skipped", "AI resume review", "Line-by-line feedback on your resume against the roles you are aiming for, with wording you can paste in."),
-             ("Every cover letter eats an evening", "Tailored cover letters", "A draft for any job in one click, built from your resume and the posting."),
+    feats = [(f"You can’t check {m} career pages a day", "Email alerts as soon as we see the job", "Save a search once. When a matching role is picked up from an employer’s careers page, you get an email, instead of finding it days later."),
+             ("One resume for every job gets skipped", "Resume tailored to the posting", "Your bullet points reworded against one specific posting, using only what is already in your resume. You approve every line."),
+             ("Every cover letter eats an evening", "Cover letter drafts", "A draft for any job in one click, built from your resume and the posting, ready to edit."),
+             ("Walking into the interview cold", "Interview prep for that role", "Likely questions drawn from the posting’s own requirements, with points from your resume to answer them."),
              ("Your notes are stuck on one laptop", "My jobs on every device", "Saved jobs, application statuses and notes follow you from laptop to phone."),
-             ("Worried the free site will shrink?", "Everything free stays free", "Search, filters, salary data, the resume builder and applying do not move behind Plus. It adds speed and tools on top.")]
+             ("Worried you will pay to see jobs?", "Every job stays free and immediate", "No listing is held back for paying members. Search, filters, salary data, the tracker and every free tool stay free. Plus adds speed and tools on top.")]
     feat_html = "".join(f'<div class="feat"><p class="pain">{e(pain)}</p><h2 class="fh">{e(a)}</h2><p>{e(b)}</p></div>' for pain, a, b in feats)
-    rows_cmp = [("Search, filters and salary data", "✓", "✓"), ("Save jobs and track applications", "This device", "Every device"), ("New jobs", "After 48 hours", "Immediately"),
-                ("Alerts for saved searches", "On the site", "By email, instantly"), ("AI resume review", "—", "✓"), ("Cover letter drafts", "—", "✓")]
+    rows_cmp = [("Search, filters and salary data", "✓", "✓"), ("Every job, the moment we have it", "✓", "✓"), ("Save jobs and track applications", "This device", "Every device"),
+                ("Alerts for saved searches", "On the site, when you visit", "By email, as soon as we see the job"), ("Resume against a posting", "Match check (free tool)", "Reworded for the posting"),
+                ("Cover letters", "Template (free tool)", "Draft from your resume"), ("Interview prep for one role", "—", "✓")]
     cmp_html = "".join(f"<tr><td>{e(a)}</td><td>{e(b)}</td><td><strong>{e(c_)}</strong></td></tr>" for a, b, c_ in rows_cmp)
     soon = "" if plus.get("live") else '<div class="banner">Plus is not available yet. This page shows what we are building and what it will cost. Nothing can be bought today.</div>'
-    page("plus/", f"{SITE} Plus — get to new jobs first | {SITE}",
-         "Applying and hearing nothing back? Plus gets you to new tech jobs 48 hours early, with instant alerts and AI resume review. One payment, no subscription.",
+    page("plus/", f"{SITE} Plus — job alerts and AI resume tools | {SITE}",
+         "Applying and hearing nothing back? Plus emails you as soon as a matching tech job appears and tailors your resume and cover letter to it. One payment, no subscription.",
          crumbs(("Plus", "")) + f'<h1>Tired of applying and hearing nothing back?</h1>'
          f'<p class="lead">Two things you control decide whether a resume gets read: how early it arrives and how closely it matches the posting. '
-         f'{e(SITE)} Plus works on both. One payment, no subscription, nothing renews by itself.</p>{soon}'
+         f'{e(SITE)} Plus works on both. Every job stays free and public for everyone; Plus is the speed and the tools. One payment, no subscription, nothing renews by itself.</p>{soon}'
          f'<div class="feats">{feat_html}</div>'
-         + section("Pick how long you need it", f'<div class="plans">{plans}</div><p class="note">One-time payment in crypto at a checkout page; access switches on by itself the moment the payment is confirmed. Card payments will follow. Searching and applying stay free for everyone.</p>')
+         + section("Pick how long you need it", f'<div class="plans">{plans}</div><p class="note">One-time payment in crypto at a checkout page; access switches on by itself the moment the payment is confirmed. Card payments will follow. The AI tools come with a monthly allowance that is shown before you pay; it is sized for an active job search and cannot run up a bill. Searching and applying stay free for everyone.</p>')
          + section("Free and Plus side by side", f'<div class="tablewrap"><table><tr><th>Feature</th><th>Free</th><th>Plus</th></tr>{cmp_html}</table></div>')
          + '<section class="sec"><div class="sec-head"><h2>Questions</h2></div>'
          "<h3>Is this a subscription?</h3><p>No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel.</p>"
-         "<h3>Do I have to pay to apply for jobs?</h3><p>Never. Every job on the site is free to view and apply to. Plus adds speed and tools.</p>"
+         "<h3>Do I have to pay to see or apply for jobs?</h3><p>Never. Every job is public the moment we have it and free to apply to. Plus does not unlock listings; it adds alerts and tools.</p>"
          "<h3>How do I pay?</h3><p>With crypto (USDT, BTC, ETH and other coins) on a checkout page. Plus turns on in your account automatically once the network confirms the payment. Card payments are planned.</p>"
          "<h3>When does it launch?</h3><p>We are finishing it now. Until then every feature of the free site keeps working as it does today.</p></section>")
     # Employers
