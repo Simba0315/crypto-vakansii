@@ -606,10 +606,11 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     rows = collapse(jobs)
     total = len(rows)
     if max_pages is None and head_html is None: max_pages = 5       # deep pages of a topic list add weight, not visitors; company pages keep everything
-    if more is None: more = auto_more(path, h1)
+    if more is None: more = auto_more(path, h1)       # False: the list has no equivalent in the search filters
     if max_pages: rows = rows[:per * max_pages]
     pages = max(1, -(-len(rows) // per))
-    note = (f'<p class="note">Showing the newest {len(rows):,}. <a href="{P}/jobs/{"?" + more if more else ""}">See all {len(jobs):,} in search</a></p>'
+    note = ((f'<p class="note">Showing the newest {len(rows):,}. <a href="{P}/jobs/{"?" + more if more else ""}">See all {len(jobs):,} in search</a></p>' if more is not False
+             else f'<p class="note">Showing the newest {len(rows):,} of {total:,}. The <a href="{P}/jobs/">search</a> looks through all of them by title, place and pay.</p>')      # no search filter reproduces this list
             if total > len(rows) else "")
     ld = crumbs_ld(list(trail) + [(h1, "")]) if head_html is None else ""
     if accent: ld += f"<style>:root:root:root{{--hl:{accent};--accent-soft:color-mix(in srgb,{accent} 22%,var(--card))}}</style>"      # each section of the site has its own colour
@@ -1195,9 +1196,17 @@ def main():
                     f"{roles(len(rj), 'remote ' + name + ' job')} at tech companies. Work from anywhere, updated daily.",
                     rj, intro_for(rj, f"remote {e(name)} "), trail=(("Remote", "remote/"),))
     rcats = "".join(tile(f"remote/{s}/", CAT[s], c) for s in CAT if (c := sum(j["remote"] for j in by_cat[s])) >= 5)
+    # the remote hub also answers "remote jobs in my field", "remote and part-time", "remote and well paid": one link each
+    rfams = "".join(tile(f"categories/{fs}/remote/", fn, c) for fs, fn, _, _, js_ in fam_rows if (c := sum(j["remote"] for j in js_)) >= 20)
+    rkinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
+        ("work-from-anywhere/", "Open to any country"), ("remote/new/", "Posted in the last 3 days"), ("remote/entry-level/", "Entry-level"), ("remote/full-time/", "Full-time"),
+        ("remote/part-time/", "Part-time"), ("remote/contract/", "Contract"), ("salary/100k/remote/", "Paying $100K or more"), ("salary/200k/remote/", "Paying $200K or more"),
+        ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles")))
+    remote_more = (section("Remote jobs by field", f'<ul class="tiles">{rfams}</ul>', ("categories/", "All categories")) if rfams else "") + \
+        f'<div class="dir"><div class="dirb"><h2><span>Kinds of remote work</span></h2><ul>{rkinds}</ul></div></div>'
     listing("remote/", "Remote tech jobs", f"Remote Tech Jobs — {roles(len(remote), 'open role')} | {SITE}",
             f"{roles(len(remote), 'remote job')} at tech companies: engineering, marketing, support, compliance and more.",
-            remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}<div class="sec"><div class="sec-head"><h2>All remote tech jobs</h2></div></div>', feed=True, faq="remote tech jobs")
+            remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}{remote_more}<div class="sec"><div class="sec-head"><h2>All remote tech jobs</h2></div></div>', feed=True, faq="remote tech jobs")
     crypto = [j for j in active if j.get("crypto")]
     if crypto:
         ccats = "".join(tile(f"crypto/{s}/", CAT[s], c) for s in CAT if (c := sum(1 for j in crypto if j["cat"] == s)) >= 5)
@@ -1243,7 +1252,7 @@ def main():
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
                 trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + fam_line + rel(REL["role:" + slug_r]) + secs[0], faq=f"{low} jobs",
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
-                hub=secs[1], list_title=f"Newest {low} jobs", max_pages=None if slug_r in ROLE_BASE else 2,
+                hub=secs[1], list_title=f"Newest {low} jobs", more=None if slug_r in ROLE_BASE else False,
                 after=section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
                               (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 30 else None))
 
@@ -1277,12 +1286,23 @@ def main():
     for fs, fn, fd, live, js_ in fam_rows:
         low_f, names_ = rlow(fn), [nm for _, nm, _ in live]
         role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">{e(roles_info.what(s_))}</span></a></li>' for s_, nm, c in live) + "</ul>"
-        others = '<p class="note cmpl">Other categories: ' + " · ".join(f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs) + "</p>"
+        rank_ = (f'<p class="note cmpl">Ranking: <a href="{P}/insights/companies-hiring-{fs}/">companies hiring for {e(low_f)} jobs</a>, with remote roles and pay</p>'
+                 if len({j["company"] for j in js_}) >= 8 else "")
+        others = rank_ + '<p class="note cmpl">Other categories: ' + " · ".join(f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs) + "</p>"
         secs = hub_sections(low_f, js_, "roles")
+        vers = []
+        for vslug, vname, vjs in (("remote", "Remote", [j for j in js_ if j["remote"]]), ("entry-level", "Entry-level", [j for j in js_ if j["entry"]])):
+            if len(vjs) < 20: continue
+            vers.append(f'<a href="{P}/categories/{fs}/{vslug}/">{vname} {e(low_f)} jobs</a> ({len(vjs):,})')
+            listing(f"categories/{fs}/{vslug}/", f"{vname} {low_f} jobs", f"{vname} {tcase(fn)} Jobs ({len(vjs):,} open) | {SITE}",
+                    f"{len(vjs):,} open {vname.lower()} jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked against them.",
+                    vjs, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(vjs, f"{vname.lower()} ", "", hub=True), trail=(("Categories", "categories/"), (fn, f"categories/{fs}/")), per=50, max_pages=2, more=False,
+                    extra=hub_stats(vjs), faq=f"{vname.lower()} {low_f} jobs")
+        vers_line = ('<p class="note cmpl">Also: ' + " · ".join(vers) + "</p>") if vers else ""
         listing(f"categories/{fs}/", f"{fn} jobs", f"{tcase(fn)} Jobs ({len(js_):,} open) | {SITE}",
                 f"{len(js_):,} open jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked daily.",
-                js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=2, more="", feed=True,
-                extra=hub_stats(js_) + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
+                js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
+                extra=hub_stats(js_) + vers_line + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
                 faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
                 hub=secs[1], after=section(f"Who is hiring in {low_f}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js_).most_common(12)) + "</ul>") + others)
     for name, slug, js in places:
@@ -1615,6 +1635,14 @@ def main():
             yr = f" {TODAY[:4]}–{int(TODAY[:4]) + 1}" if et == "Internship" else ""
             listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at tech companies, straight from their careers pages. Updated daily.", ej,
                     intro_for(ej, f"{et.lower()} "), trail=(("All jobs", "jobs/"),))
+    for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
+                                ("Part-time", "remote/part-time/", "Remote part-time jobs", "work from home for fewer hours than a full week"),
+                                ("Full-time", "remote/full-time/", "Remote full-time jobs", "full-week jobs done from home")):
+        ej = [j for j in remote if j.get("etype") == et]
+        if len(ej) >= 20:
+            listing(path, h1, f"{tcase(h1)} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {what_}, read from employers’ own careers pages and checked against them.", ej,
+                    f"<strong>{e(h1)}</strong>: {e(what_)}. " + intro_for(ej, f"remote {et.lower()} ", "", hub=True), trail=(("Remote", "remote/"),), per=50, max_pages=3, faq=h1[0].lower() + h1[1:],
+                    extra=hub_stats(ej))
     aw = [j for j in active if j.get("anywhere") and j["remote"]]
     if len(aw) >= 8:
         listing("work-from-anywhere/", "Work-from-anywhere tech jobs", f"Work From Anywhere Tech Jobs ({len(aw):,} open) | {SITE}",
@@ -1682,10 +1710,55 @@ def main():
                        "Roles each company opened and closed in the last seven days. Closed counts are tracked from the day we started watching a company.",
                        ["#", "Company", "Opened", "Closed", "Net", "Trend"],
                        [trow([rank(i), cl(c), f"+{o_}", f"−{k_}", f"<strong>{o_ - k_:+d}</strong>", mood]) for i, (c, o_, k_, mood) in enumerate(pulse_rank[:40])], ("companies/", "All companies")))
+    # Who is hiring, field by field. The big job sites answer this with hand-written lists ("15 companies hiring for remote nursing
+    # jobs"); here the same lists are counted from today's postings, so they cannot go stale.
+    INS_FAM = []
+    for fs, fn, fd, live, js_ in fam_rows:
+        per_co = defaultdict(list)
+        for j in js_: per_co[j["company"]].append(j)
+        top_ = sorted(per_co.items(), key=lambda kv: -len(kv[1]))[:30]
+        if len(per_co) < 8: continue
+        low_f = rlow(fn)
+        def newest_(v):
+            j = max(v, key=lambda x: x["posted"] or x["first_seen"] or "")
+            return f'<a href="{P}/job/{j["slug"]}/">{e(j["title"][:64])}</a>'
+        def pay_(v):
+            mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in v if j["usd"]]
+            return f"<strong>{money(median(mids_))}</strong>" if len(mids_) >= 15 else "—"
+        insight(f"companies-hiring-{fs}", f"Companies hiring for {low_f} jobs", f"The employers with the most open {low_f} jobs right now: how many roles each has, how many are remote and what they advertise as pay.",
+                f"{fd[0].upper() + fd[1:]}: {len(js_):,} open jobs at {len(per_co):,} employers, {sum(j['remote'] for j in js_):,} of them remote. These employers have the most. "
+                "Pay is shown where an employer states it in at least 15 of these postings.",
+                ["#", "Company", "Open roles", "Remote", "Median advertised pay", "Newest role"],
+                [trow([rank(i), cl(c), f"{len(v):,}", f"{sum(j['remote'] for j in v):,}", pay_(v), newest_(v)]) for i, (c, v) in enumerate(top_)], (f"categories/{fs}/", f"All {low_f} jobs"))
+        INS_FAM.append((f"insights/companies-hiring-{fs}/", fn, len(js_)))
+    rich_remote = diverse_pairs(sorted(((j, j["usd"]) for j in remote if j["usd"]), key=lambda x: -x[1][1]), 40)
+    if len(rich_remote) >= 15:
+        INS.append(insight("highest-paying-remote-jobs", "Highest-paying remote jobs right now", "The 40 remote jobs with the highest advertised pay among open postings today, at most two per employer.",
+                           "Remote roles ranked by the top of the pay range the employer states, at most two from one employer.", ["#", "Role", "Company", "Advertised pay", "Posted"],
+                           [trow([rank(i), f'<a href="{P}/job/{j["slug"]}/">{e(j["title"][:70])}</a>', cl(j["company"]), f"<strong>{e(j['salary'][:28])}</strong>", fdate(j["posted"] or j["first_seen"], False)])
+                            for i, (j, _) in enumerate(rich_remote)], ("salary/200k/remote/", "Remote jobs that pay $200K or more")))
+    aw_co = Counter(j["company"] for j in active if j.get("anywhere") and j["remote"]).most_common(30)
+    if len(aw_co) >= 5:
+        rem_n = Counter(j["company"] for j in remote)
+        INS.append(insight("work-from-anywhere-companies", "Companies with work-from-anywhere jobs", "Employers whose remote postings name no country: the roles are open to candidates anywhere in the world.",
+                           "Most remote jobs are open in some countries only. These employers have postings with no country restriction at all.", ["#", "Company", "Open to any country", "All its remote roles"],
+                           [trow([rank(i), cl(c), f"{k:,}", f"{rem_n[c]:,}"]) for i, (c, k) in enumerate(aw_co)], ("work-from-anywhere/", "All work-from-anywhere jobs")))
+    f100 = []
+    for fs, fn, fd, live, js_ in fam_rows:
+        rj_ = [j for j in js_ if j["remote"]]
+        paid_ = [j for j in rj_ if j["usd"]]
+        if len(paid_) >= 30: f100.append((fs, fn, len(rj_), len(paid_), sum(1 for j in paid_ if j["usd"][0] >= 100000), median([(j["usd"][0] + j["usd"][1]) / 2 for j in paid_])))
+    if len(f100) >= 6:
+        INS.append(insight("remote-jobs-100k-by-field", "Remote jobs that pay $100K or more, by field", "In which kinds of work remote jobs pay six figures: remote roles per field, how many state pay and how many start at $100K or more.",
+                           "A remote job counts here when the bottom of its advertised yearly range is $100,000 or more.", ["Field", "Remote roles", "State pay", "Start at $100K+", "Median advertised pay"],
+                           [trow([f'<a href="{P}/categories/{fs}/">{e(fn)}</a>', f"{r_:,}", f"{p_:,}", barc(h_, p_, f"{h_:,}"), f"<strong>{money(md_)}</strong>"]) for fs, fn, r_, p_, h_, md_ in sorted(f100, key=lambda x: -x[4])],
+                           ("salary/100k/remote/", "Remote jobs that pay $100K or more")))
     page("insights/", f"Tech Hiring Insights — {month} | {SITE}", "Rankings built from live job postings: highest-paying skills, most in-demand skills, companies hiring remotely and more.",
          crumbs(("Insights", "")) + f'<h1>Tech hiring insights</h1><p class="plain"><b>In plain words:</b> lists made from today’s open jobs, such as which skills pay the most and which companies hire the most.</p><p class="lead">Rankings recalculated every day from {n:,} open roles at {m} companies.</p>'
          + '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h2>{e(t)}</h2><p>{e(d)}</p></a>' for u, t, d in INS)
-         + f'<a class="feat" href="{P}/trends/"><h3>Hiring trends dashboard</h3><p>All the headline numbers on one page: skills, companies, categories and locations.</p></a></div>')
+         + f'<a class="feat" href="{P}/trends/"><h3>Hiring trends dashboard</h3><p>All the headline numbers on one page: skills, companies, categories and locations.</p></a></div>'
+         + section("Who is hiring, field by field", '<p class="lead">For each field: the employers with the most open jobs, how many are remote and what they advertise as pay.</p><ul class="tiles">'
+                   + "".join(tile(u, f"Companies hiring: {rlow(fn)}", k) for u, fn, k in INS_FAM) + "</ul>"))
 
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"
