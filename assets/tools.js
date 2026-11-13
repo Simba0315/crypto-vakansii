@@ -708,6 +708,626 @@
       p75: T.quantile(data.q, vals, 75), p90: T.quantile(data.q, vals, 90), min: vals[0], max: vals[vals.length - 1] };
   };
 
+  /* ================================================================ letters, builders and calculators added 2026-11-13 ================================================================ */
+
+  /* ---------- calendar dates: whole days, no clock and no time zone ---------- */
+  var MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function dayNum(s) {                                    // "2026-11-16" -> days since 1 January 1970; NaN when it is not a real date
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(clean(s));
+    if (!m || +m[1] < 1900 || +m[1] > 2200 || !isDate(m[0])) return NaN;
+    return Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5;
+  }
+  function dayIso(n) { return new Date(n * 864e5).toISOString().slice(0, 10); }
+  function weekday(n) { return mod(n + 4, 7); }           // 1 January 1970 was a Thursday; 0 = Sunday
+  function isWork(n) { var w = weekday(n); return w !== 0 && w !== 6; }
+  function workdaysBetween(a, b) {                        // Mondays to Fridays from day a to day b, both counted
+    if (b < a) return 0;
+    var full = Math.floor((b - a + 1) / 7), c = full * 5;
+    for (var d = a + full * 7; d <= b; d++) if (isWork(d)) c++;
+    return c;
+  }
+  function addMonths(n, k) {                              // the same day of the month k months later; the 31st becomes the last day of a shorter month
+    var d = new Date(n * 864e5), y = d.getUTCFullYear(), m = d.getUTCMonth() + k;
+    return Date.UTC(y, m, Math.min(d.getUTCDate(), new Date(Date.UTC(y, m + 1, 0)).getUTCDate())) / 864e5;
+  }
+  // "2026-11-30" -> "November 30, 2026", or "Monday, November 30, 2026" with the day name; '' when it is not a date
+  T.longDate = function (s, withDay) {
+    var n = dayNum(s); if (isNaN(n)) return '';
+    var d = new Date(n * 864e5);
+    return (withDay ? DAY_NAMES[weekday(n)] + ', ' : '') + MONTH_NAMES[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+  };
+  T.dayName = function (s) { var n = dayNum(s); return isNaN(n) ? '' : DAY_NAMES[weekday(n)]; };
+  T.addDays = function (s, k) { var n = dayNum(s); return isNaN(n) ? '' : dayIso(n + k); };
+
+  /* ---------- last working day ---------- */
+  // o.date: the day notice is given; o.amount + o.unit ('weeks', 'workdays', 'months', 'days'): the notice period;
+  // o.from: 'next' when the period starts the day after notice is given (the default), 'same' when that day is day one.
+  // Weeks, months and calendar days give the date the notice ends; the last working day is the last Monday-to-Friday on or before it.
+  // Working days are counted one by one, skipping Saturdays and Sundays. Public holidays are not known and not removed.
+  var NOTICE_MAX = { weeks: 520, workdays: 2600, months: 120, days: 3650 };
+  T.lastDay = function (o) {
+    o = o || {};
+    var start = dayNum(o.date), n = num(o.amount), unit = NOTICE_MAX[o.unit] ? o.unit : 'weeks', same = o.from === 'same';
+    if (isNaN(start) || !(n >= 0) || n > NOTICE_MAX[unit]) return null;
+    var first = same ? start : start + 1, k = unit === 'weeks' ? Math.round(n * 7) : Math.round(n), end;
+    if (!k) end = start;                                  // no notice: the job ends the day notice is given
+    else if (unit === 'workdays') { for (var d = first, left = k; left > 0; d++) if (isWork(d)) { left--; end = d; } }
+    else if (unit === 'months') end = addMonths(start, k) - (same ? 1 : 0);
+    else end = first + k - 1;
+    var last = end; while (!isWork(last)) last--;
+    return { date: dayIso(start), first: dayIso(first), end: dayIso(end), last: dayIso(last), endsOnWeekend: last !== end, givenOnWeekend: !isWork(start),
+      workDays: k ? workdaysBetween(first, last) : 0, calendarDays: end - start, unit: unit, count: unit === 'weeks' ? k / 7 : k, from: same ? 'same' : 'next' };
+  };
+
+  /* ---------- job search funnel ---------- */
+  // A rate typed as a percent ("8", "7,5%") or as the person's own count ("3 of 40", "3/40", "3 out of 40").
+  T.rate = function (v) {
+    var s = clean(v).toLowerCase(), m = /^(.+?)\s*(?:\/|out of|of|from)\s*(.+)$/.exec(s);
+    if (m) { var a = num(m[1]), b = num(m[2]); return a >= 0 && b > 0 && a <= b ? { pct: a / b * 100, got: a, from: b } : { pct: NaN, from: null }; }
+    var p = num(s);
+    return { pct: p >= 0 && p <= 100 ? p : NaN, from: null };
+  };
+  // interviews = applications × reply rate; offers = interviews × offer rate; applications per offer = 1 ÷ (reply rate × offer rate).
+  // "chance" is the probability of at least one offer if every application has the same, independent odds: 1 − (1 − p)^applications.
+  T.funnel = function (o) {
+    o = o || {};
+    var perWeek = num(o.perWeek), weeks = num(o.weeks), a = T.rate(o.reply), b = T.rate(o.offer);
+    if (!(perWeek > 0) || !(weeks > 0) || isNaN(a.pct) || isNaN(b.pct) || perWeek > 1e6 || weeks > 5200) return null;
+    var apps = perWeek * weeks, p = a.pct / 100 * b.pct / 100;
+    return { perWeek: perWeek, weeks: weeks, applications: apps, replyPct: a.pct, offerPct: b.pct, replyFrom: a.from, offerFrom: b.from, interviews: apps * a.pct / 100, offers: apps * p,
+      perInterview: a.pct > 0 ? 100 / a.pct : null, perOffer: p > 0 ? 1 / p : null, weeksToOffer: p > 0 ? 1 / p / perWeek : null, chance: p > 0 ? (1 - Math.pow(1 - p, apps)) * 100 : 0 };
+  };
+
+  /* ---------- remote work savings ---------- */
+  // Office days avoided in a year = (office days a week now − office days a week after) × working weeks.
+  // Time = days × minutes one way × 2. Money = days × (travel + lunch bought out − lunch at home − extra cost of a day at home).
+  // A negative result means more office days than now: the same arithmetic then shows what the change costs.
+  T.remoteSavings = function (o) {
+    o = o || {};
+    var mins = pos(o.minutes), cost = pos(o.cost), lunch = pos(o.lunch), lunchHome = pos(o.lunchHome), home = pos(o.home), hourly = pos(o.hourly);
+    var now = num(o.daysNow), next = num(o.daysNew), weeks = num(o.weeks);
+    if (isNaN(now)) now = 5; if (isNaN(next)) next = 0; if (isNaN(weeks)) weeks = 46;
+    if (!(now >= 0 && now <= 7) || !(next >= 0 && next <= 7) || !(weeks > 0 && weeks <= 52) || mins > 720) return null;
+    if (!mins && !cost && !lunch && !lunchHome && !home) return null;
+    var days = (now - next) * weeks, hours = days * mins * 2 / 60, travel = days * cost, food = days * (lunch - lunchHome), homeCost = days * home, money = travel + food - homeCost;
+    return { days: days, hours: hours, workWeeks: hours / 40, travel: travel, food: food, homeCost: homeCost, money: money, month: money / 12, perDay: cost + lunch - lunchHome - home,
+      minutesPerDay: mins * 2, timeValue: hourly > 0 ? hours * hourly : null, total: hourly > 0 ? money + hours * hourly : null, weeks: weeks, daysNow: now, daysNew: next };
+  };
+
+  /* ---------- cost per hire ---------- */
+  // Cost per hire = (advertising + agency fees + recruiter hours × hourly cost + interviewer hours × hourly cost + tools + other) ÷ hires.
+  T.costPerHire = function (o) {
+    o = o || {};
+    var hires = num(o.hires), recH = pos(o.recHours), intH = pos(o.intHours), recR = pos(o.recRate), intR = pos(o.intRate);
+    var parts = [['Job advertising', pos(o.ads), 'out'], ['Agency and recruiter fees', pos(o.agency), 'out'], ['Recruiters’ time', recH * recR, 'time'], ['Interviewers’ time', intH * intR, 'time'],
+      ['Tools and software', pos(o.tools), 'out'], ['Other costs', pos(o.other), 'out']];
+    var total = parts.reduce(function (s, p) { return s + p[1]; }, 0);
+    if (!(total > 0)) return null;
+    var ok = hires >= 1, top = null;
+    var rows = parts.map(function (p) {
+      var r = { name: p[0], amount: p[1], kind: p[2], share: p[1] / total * 100, perHire: ok ? p[1] / hires : null };
+      if (p[1] > 0 && (!top || p[1] > top.amount)) top = r;
+      return r;
+    });
+    var sum = function (kind) { return rows.reduce(function (s, r) { return s + (r.kind === kind ? r.amount : 0); }, 0); };
+    return { total: total, hires: ok ? hires : null, perHire: ok ? total / hires : null, parts: rows, top: top, outside: sum('out'), time: sum('time'), hours: recH + intH,
+      hoursPerHire: ok ? (recH + intH) / hires : null, unpriced: (recH > 0 && !recR) || (intH > 0 && !intR) };
+  };
+
+  /* ---------- interview scorecard ---------- */
+  // Weighted score = sum of (rating × weight) ÷ sum of weights, over the criteria that have a rating. Weights need not add up to 100:
+  // each one counts as its share of the total. When no weight is typed at all, every criterion counts the same.
+  T.scorecard = function (o) {
+    o = o || {};
+    var max = [4, 5, 10].indexOf(+o.max) >= 0 ? +o.max : 5, role = clean(o.role), crit = [];
+    (o.criteria || []).forEach(function (c, i) { var name = clean(c && c.name); if (name) crit.push({ i: i, name: name, weight: pos(c.weight) }); });
+    var total = crit.reduce(function (s, c) { return s + c.weight; }, 0), equal = crit.length > 0 && !total;
+    if (equal) { crit.forEach(function (c) { c.weight = 1; }); total = crit.length; }
+    crit.forEach(function (c) { c.share = total ? c.weight / total * 100 : 0; });
+    var cands = (o.candidates || []).map(function (cd, ci) {
+      cd = cd || {};
+      var ratings = cd.ratings || [], sum = 0, w = 0, rated = 0, bad = 0, of = 0;
+      var rows = crit.map(function (c) {
+        if (!(c.weight > 0)) return null;
+        of++;
+        var raw = clean(ratings[c.i]), r = num(raw);
+        if (!raw) return null;
+        if (!(r >= 1 && r <= max)) { bad++; return null; }
+        rated++; sum += r * c.weight; w += c.weight;
+        return { rating: r, points: r * c.share / 100 };
+      });
+      return { name: clean(cd.name) || 'Candidate ' + 'ABCDEFGH'.charAt(ci), rated: rated, of: of, bad: bad, complete: of > 0 && rated === of, score: w > 0 ? sum / w : null,
+        pct: w > 0 ? sum / w / max * 100 : null, rows: rows };
+    });
+    var best = -1, tie = false;
+    cands.forEach(function (c, i) {
+      if (!c.complete) return;
+      if (best < 0 || c.score > cands[best].score + 1e-9) { best = i; tie = false; }
+      else if (Math.abs(c.score - cands[best].score) <= 1e-9) tie = true;
+    });
+    var legend = '1 = well below what the role needs' + (max % 2 ? ', ' + (max + 1) / 2 + ' = meets it' : '') + ', ' + max + ' = well above';
+    var text = ['Interview scorecard' + (role ? ': ' + role : ''), 'Candidate: ____________________   Interviewer: ____________________   Date: ____________', '',
+      'Rate each criterion from 1 to ' + max + '. ' + legend + '.', '']
+      .concat(crit.map(function (c, i) { return (i + 1) + '. ' + c.name + ' (weight ' + plain(c.share, 1) + '%)\n   Rating: ____   Notes:'; }))
+      .concat(['', 'Weighted score = sum of (rating × weight) ÷ sum of weights = ____ out of ' + max, 'Overall notes:']).join('\n');
+    return { role: role, max: max, criteria: crit, total: total, equal: equal, sum100: Math.abs(total - 100) < 1e-9, unweighted: crit.filter(function (c) { return !(c.weight > 0); }).map(function (c) { return c.name; }),
+      candidates: cands, best: best, tie: tie, legend: legend, text: crit.length ? text : '' };
+  };
+
+  /* ---------- letters: more shared helpers ---------- */
+  function phrase(s) { return clean(s).replace(/[.!?;,:]+$/, ''); }                 // a few words that go inside a sentence
+  function mid(s) {                                                                // …and that must not start with a capital "The" or "Our" there
+    return phrase(s).replace(/^(The|A|An|Our|Your|My|Their|How|What|Why|When|Where|That|This|You|We|It|Some|All|On|In|At|By|Before|After)\b/, function (w) { return w.toLowerCase(); });
+  }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+  function lines(s, max) {                                                         // one item per line; bullet marks and numbering are dropped
+    return String(s || '').split(/\n+/).map(function (l) { return clean(l.replace(/^\s*(?:[-•*]\s*|\d{1,2}[.)]\s+)/, '')); }).filter(Boolean).slice(0, max || 5);
+  }
+  function mail(subject, paras) {
+    var body = paras.filter(Boolean).join('\n\n').replace(/([^.])\.\.(?!\.)/g, '$1.');
+    return { subject: subject, body: body, text: 'Subject: ' + subject + '\n\n' + body };
+  }
+
+  /* ---------- thank-you email after an interview (fill-in template, three tones) ---------- */
+  T.thankYou = function (f) {
+    f = f || {};
+    var tone = f.tone === 'warm' || f.tone === 'formal' ? f.tone : 'short';
+    var name = clean(f.name) || '[Your name]', to = clean(f.to), role = clean(f.role) || '[job title]', company = clean(f.company), when = mid(f.when);
+    var topic = mid(f.topic) || '[one thing you discussed]', add = sentence(f.add), at = company ? ' at ' + company : '', w = when ? ' ' + when : '';
+    var p = [to ? (tone === 'formal' ? 'Dear ' : 'Hi ') + to + ',' : tone === 'formal' ? 'Dear Hiring Manager,' : 'Hello,'];
+    if (tone === 'warm') {
+      p.push('Thank you for taking the time to talk with me' + w + '. I really enjoyed our conversation about the ' + role + ' role' + at + '.');
+      p.push('What stayed with me most was ' + topic + '.' + (add ? ' ' + add : ''));
+      p.push('I came away even more interested in the job. If there is anything else you need from me, just let me know.');
+      p.push('Thanks again,\n' + name);
+    } else if (tone === 'formal') {
+      p.push('Thank you for the opportunity to interview for the position of ' + role + at + w + '.');
+      p.push('I appreciated learning about ' + topic + '.' + (add ? ' ' + add : ''));
+      p.push('I remain very interested in the position and would be glad to provide any further information you need.');
+      p.push('Yours sincerely,\n' + name);
+    } else {
+      p.push('Thank you for talking with me' + w + ' about the ' + role + ' role' + at + '. I enjoyed hearing about ' + topic + ', and I am still very interested in the job.' + (add ? ' ' + add : ''));
+      p.push('I look forward to hearing about the next steps.');
+      p.push('Best regards,\n' + name);
+    }
+    return mail(clean(f.role) ? 'Thank you for the ' + role + ' interview' : 'Thank you for the interview', p);
+  };
+
+  /* ---------- resignation letter (fill-in template: the facts, optional thanks, optional handover) ---------- */
+  T.resignation = function (f) {
+    f = f || {};
+    var letter = f.format === 'letter', name = clean(f.name) || '[Your name]', to = clean(f.to) || '[manager’s name]', title = clean(f.title) || '[job title]', company = clean(f.company) || '[company]';
+    var last = T.longDate(f.lastDay, true) || '[last working day]', written = T.longDate(f.date);
+    var notice = phrase(f.notice).replace(/\s*(?:of\s+)?notice$/i, '').replace(/[’']s?$/, ''), thanksFor = mid(f.thanksFor), can = mid(f.handoverWhat);
+    var p = [letter && written ? written : '', 'Dear ' + to + ','];
+    p.push('Please accept this ' + (letter ? 'letter' : 'email') + ' as formal notice that I am resigning from my position as ' + title + ' at ' + company + '. My last working day will be ' + last +
+      (notice ? ', which gives ' + notice + ' of notice' : '') + '.');
+    if (f.thanks) p.push('Thank you for the opportunities I have had here' + (thanksFor ? ', and in particular for ' + thanksFor : '') + '.');
+    if (f.handover) p.push('I want to make the handover as smooth as possible. ' + (can ? 'Before my last day I can ' + can + '.' : 'I am happy to hand over my work and brief whoever takes it on.'));
+    else p.push('Please let me know what you need from me before I leave.');
+    p.push((letter ? 'Sincerely,' : 'Best regards,') + '\n' + name);
+    var m = mail('Resignation: ' + name, p), a = dayNum(f.date), b = dayNum(f.lastDay);
+    if (letter) m.text = m.body;                           // a printed letter carries a date, not a subject line
+    m.days = !isNaN(a) && !isNaN(b) ? b - a : null;        // calendar days between the letter and the last day, to compare with the contract
+    return m;
+  };
+
+  /* ---------- raise request email (fill-in template; the percent and the monthly difference are plain arithmetic) ---------- */
+  T.raiseRequest = function (f) {
+    f = f || {};
+    var sym = f.cur == null ? '$' : f.cur, per = f.period === 'month' ? 'month' : 'year';
+    var name = clean(f.name) || '[Your name]', to = clean(f.to), title = clean(f.title), since = mid(f.since), cur = num(f.current), want = num(f.target);
+    var curT = cur > 0 ? money(cur, sym, 0) : '[current pay]', wantT = want > 0 ? money(want, sym, 0) : '[the pay you are asking for]';
+    var diff = cur > 0 && want > 0 ? want - cur : null, pct = diff != null ? diff / cur * 100 : null, wins = lines(f.achievements, 5);
+    var market = clean(f.market), mNum = num(market), source = phrase(f.source);
+    var p = [to ? 'Hi ' + to + ',' : 'Hello,'];
+    p.push('I would like to ask you to review my pay' + (title ? ' as ' + title : '') + '.' + (since ? ' It last changed ' + since + '.' : ''));
+    p.push('Here is what I have delivered' + (since ? ' since then' : '') + ':\n\n' +
+      (wins.length ? wins.map(function (x) { return '- ' + x; }).join('\n') : '- [Add two or three results, each with a number if you have one]'));
+    p.push('My pay is ' + curT + ' a ' + per + '. I am asking for ' + wantT + (pct > 0 ? ', an increase of ' + plain(pct, 1) + '%' : '') + '.' +
+      (market ? ' For comparison, the market figure I found for this role is ' + (mNum > 0 ? money(mNum, sym, 0) : phrase(market)) + (source ? ' (source: ' + source + ')' : '') + '.' : ''));
+    p.push('Could we set up a time to talk about it?');
+    p.push('Thank you,\n' + name);
+    var m = mail('Request to review my pay', p);
+    m.pct = pct; m.diff = diff; m.perYear = diff == null ? null : per === 'month' ? diff * 12 : diff; m.perMonth = diff == null ? null : per === 'month' ? diff : diff / 12;
+    return m;
+  };
+
+  /* ---------- reference request email (fill-in template, three tones) ---------- */
+  T.referenceRequest = function (f) {
+    f = f || {};
+    var tone = f.tone === 'formal' || f.tone === 'short' ? f.tone : 'warm', how = ['call', 'letter', 'form', 'linkedin'].indexOf(f.how) >= 0 ? f.how : 'call';
+    var name = clean(f.name) || '[Your name]', to = clean(f.to), role = clean(f.role), company = clean(f.company), by = mid(f.by), rel = mid(f.relation), points = lines(f.points, 4);
+    var job = role ? article(role) + ' ' + role + ' role' + (company ? ' at ' + company : '') : company ? 'a role at ' + company : 'a new role';
+    var pick = function (warm, formal, short) { return tone === 'formal' ? formal : tone === 'short' ? short : warm; };
+    var p = [to ? pick('Hi ', 'Dear ', 'Hi ') + to + ',' : 'Hello,'];
+    p.push(pick('I hope you are well. I am applying for ' + job + ', and I would be very grateful if you would be a reference for me.',
+      'I am applying for ' + job + ' and am writing to ask whether you would be willing to act as a reference for me.',
+      'I am applying for ' + job + '. Would you be willing to be a reference for me?') +
+      (rel ? ' We worked together when ' + rel + pick(', so you know my work well.', '.', '.') : ''));
+    p.push(how === 'letter' ? 'The employer asks for a short written reference' + (by ? ', and I would need it by ' + by : '') + '.'
+      : how === 'form' ? 'The employer will send you a short online form' + (by ? ' to fill in by ' + by : '') + '.'
+      : how === 'linkedin' ? pick('A short recommendation on my LinkedIn profile would help a lot', 'A brief recommendation on my LinkedIn profile would be most helpful', 'A short LinkedIn recommendation would help') + (by ? ', if possible by ' + by : '') + '.'
+      : pick('The employer may contact you by phone or email', 'The employer may contact you by telephone or email', 'They may call or email you') + (by ? ', most likely before ' + by : '') + '.');
+    if (points.length) p.push(pick('If it helps, these are the points that matter most for this role:', 'The points most relevant to this role are:', 'What matters most for this role:') + '\n\n' + points.map(function (x) { return '- ' + x; }).join('\n'));
+    if (f.attach) p.push(pick('I have attached my current resume and the job description so you have the details to hand.', 'I have attached my current resume and the job description for your reference.', 'My resume and the job description are attached.'));
+    p.push(pick('If you would rather not, or the timing is bad, I completely understand. Just let me know either way.', 'I fully understand if you are not able to do this. Please let me know either way.', 'No problem at all if you cannot. Please let me know either way.'));
+    p.push(pick('Thank you,', 'Yours sincerely,', 'Thanks,') + '\n' + name);
+    return mail(pick('Could you be a reference for me?', 'Request for a reference', 'Reference request'), p);
+  };
+
+  /* ---------- LinkedIn headline and About (fill-in templates; the limits are LinkedIn's own field lengths) ---------- */
+  T.HEADLINE_MAX = 220; T.ABOUT_MAX = 2600;
+  T.linkedin = function (f) {
+    f = f || {};
+    var role = clean(f.role) || '[Your job title]', years = yearsText(f.years), next = mid(f.next), result = sentence(f.result);
+    var st = String(f.strengths || '').split(/[,;\n]+/).map(clean).filter(Boolean).slice(0, 4);
+    var fit = function (make) {                            // leave strengths off the end until the line fits; cut at a word only as the last resort
+      for (var k = st.length; k >= 0; k--) { var s = make(st.slice(0, k)); if (s.length <= T.HEADLINE_MAX) return s; }
+      var cut = make([]).slice(0, T.HEADLINE_MAX + 1);
+      return (/\s/.test(cut) ? cut.replace(/\s+\S*$/, '') : cut.slice(0, T.HEADLINE_MAX)).replace(/[\s|,·]+$/, '');
+    };
+    var made = [
+      ['Keywords', fit(function (a) { return [role].concat(a).join(' | '); })],
+      ['One sentence', fit(function (a) { return role + (years ? ' with ' + years + ' of experience' : '') + (a.length ? (years ? ' in ' : ' focused on ') + andList(a) : ''); })],
+      ['What you want next', fit(function (a) { return role + (a.length ? ' | ' + a.join(', ') : '') + (next ? ' | Open to ' + next : years ? ' | ' + years : ''); })]
+    ], seen = {}, headlines = [];
+    made.forEach(function (h) { if (!seen[h[1]]) { seen[h[1]] = 1; headlines.push({ kind: h[0], text: h[1], length: h[1].length, left: T.HEADLINE_MAX - h[1].length }); } });
+    var a = [years ? 'I am ' + article(role) + ' ' + role + ' with ' + years + ' of experience.' : 'I work as ' + article(role) + ' ' + role + '.'];
+    if (st.length) a.push((st.length === 1 ? 'My strongest area is ' : 'My strongest areas are ') + andList(st) + '.');
+    if (result) a.push(result);
+    if (next) a.push('I am now looking for ' + next + '.');
+    a.push('The best way to reach me is a message here on LinkedIn.');
+    var about = a.join(' ').replace(/([^.])\.\.(?!\.)/g, '$1.');
+    return { headlines: headlines, about: about, aboutLength: about.length, strengths: st, empty: !clean(f.role) && !st.length && !years && !next && !result };
+  };
+
+  /* ---------- interview answer: situation, task, action, result ---------- */
+  var NUMBER = /\d|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|thousand|million|billion|half|halved|double|doubled|twice|triple|tripled|third|quarter|dozen|percent)\b/i;
+  T.WPM = 140;                                             // a calm speaking pace, in words a minute
+  T.speak = function (sec) { sec = Math.max(0, Math.round(sec)); var m = Math.floor(sec / 60), s = sec % 60; return m ? m + ' min' + (s ? ' ' + s + ' s' : '') : s + ' s'; };
+  T.star = function (f) {
+    f = f || {};
+    var PARTS = [['situation', 'The situation', 'Where and when it happened, in one or two sentences.'], ['task', 'The task', 'What you were asked to do, or the problem that was yours to solve.'],
+      ['action', 'The action', 'The steps you took yourself, in order.'], ['result', 'The result', 'What changed because of it, with a number if you have one.']];
+    var txt = {}, n = {}, body = [], items = [], add = function (level, t, d) { items.push({ level: level, t: t, d: d }); };
+    PARTS.forEach(function (p) { txt[p[0]] = sentence(f[p[0]]); n[p[0]] = wordCount(txt[p[0]]); if (txt[p[0]]) body.push(txt[p[0]]); });
+    var learned = sentence(f.learned); if (learned) body.push(learned);
+    var text = body.join('\n\n'), words = wordCount(text), sec = Math.round(words / T.WPM * 60), time = T.speak(sec);
+    if (!words) return { empty: true, text: '', words: 0, seconds: 0, time: T.speak(0), checks: [], fixes: 0, complete: false, parts: n };
+    PARTS.forEach(function (p) { if (!txt[p[0]]) add('fix', p[1] + ' is missing', p[2]); });
+    var basis = words + ' words at ' + T.WPM + ' words a minute. ';
+    if (sec < 45) add('fix', 'Too short: about ' + time, basis + 'That leaves little room for what you did. Add the steps you took, one sentence each.');
+    else if (sec < 60) add('warn', 'A little short: about ' + time, basis + 'Aim for 60 to 90 seconds: add one more step to the action.');
+    else if (sec <= 90) add('ok', 'Good length: about ' + time, basis + 'That is inside the 60 to 90 seconds this page aims for.');
+    else if (sec <= 120) add('warn', 'A little long: about ' + time, basis + 'Aim for 60 to 90 seconds: shorten the situation first.');
+    else add('fix', 'Too long: about ' + time, basis + 'Keep one situation, your two or three main steps and the result.');
+    if (txt.result) {
+      if (NUMBER.test(txt.result)) add('ok', 'The result has a number', 'A figure makes the outcome easy to remember and easy to check.');
+      else add('warn', 'No number in the result', 'Say how much, how many or how fast: a percent, an amount of money, a count, a date met. If nothing was measured, say what people could do afterwards that they could not do before.');
+    }
+    if (txt.action) {
+      var me = (txt.action.match(/\bi\b(?!\.e)/gi) || []).length, we = (txt.action.match(/\bwe\b/gi) || []).length;
+      if (!me) add('fix', 'The action never says “I”', (we ? '“We” appears ' + we + ' time' + (we === 1 ? '' : 's') + '. ' : '') + 'The answer is about your part. Say what you did yourself: “I proposed…”, “I wrote…”, “I persuaded…”.');
+      else if (we > me) add('warn', 'More “we” than “I” in the action', '“We” appears ' + we + ' times and “I” ' + me + '. Keep the team in the situation and make the action about your own steps.');
+      else add('ok', 'The action is about what you did', '“I” appears ' + me + ' time' + (me === 1 ? '' : 's') + (we ? ', “we” ' + we : '') + '.');
+      if (n.situation + n.task > n.action) add('warn', 'The setup is longer than the action', 'The situation and the task take ' + (n.situation + n.task) + ' words, the action ' + n.action + '. Cut the background to two or three sentences and spend the time on what you did.');
+      else if (txt.situation || txt.task) add('ok', 'The action gets more room than the setup', 'The action takes ' + n.action + ' words, the situation and the task ' + (n.situation + n.task) + '.');
+    }
+    var rank = { fix: 0, warn: 1, info: 2, ok: 3 };
+    items.sort(function (a, b) { return rank[a.level] - rank[b.level]; });
+    return { text: text, words: words, seconds: sec, time: time, checks: items, fixes: items.filter(function (i) { return i.level !== 'ok'; }).length,
+      complete: PARTS.every(function (p) { return !!txt[p[0]]; }), parts: n };
+  };
+
+  /* ---------- resume bullet point: verb + what you did + result ---------- */
+  var STRONG = ('accelerated achieved analyzed audited automated boosted built captured championed closed coached consolidated converted created cut debugged decreased delivered deployed designed developed ' +
+    'directed doubled drafted drove earned edited eliminated engineered established exceeded expanded fixed formed founded generated grew guided halved hired identified implemented improved increased ' +
+    'integrated introduced launched led lifted lowered managed mapped measured mentored merged migrated modernized negotiated onboarded opened optimized organized overhauled owned piloted planned presented ' +
+    'prevented produced published raised ran rebuilt recovered recruited redesigned reduced refactored replaced researched resolved restructured retained rewrote saved scaled secured set shipped shortened ' +
+    'simplified sold solved standardized started streamlined taught tested trained translated tripled unified won wrote').split(' ');
+  var STRONG_SET = {}; STRONG.forEach(function (w) { STRONG_SET[w] = 1; });
+  var ING = { built: 'building', cut: 'cutting', drove: 'driving', grew: 'growing', led: 'leading', ran: 'running', rebuilt: 'rebuilding', rewrote: 'rewriting', set: 'setting', sold: 'selling', taught: 'teaching',
+    won: 'winning', wrote: 'writing', made: 'making', took: 'taking', brought: 'bringing', kept: 'keeping', got: 'getting', gave: 'giving', held: 'holding', met: 'meeting', paid: 'paying', sent: 'sending',
+    spent: 'spending', found: 'finding', began: 'beginning', beat: 'beating', hit: 'hitting', put: 'putting', saw: 'seeing', oversaw: 'overseeing', spoke: 'speaking', split: 'splitting', shut: 'shutting' };
+  var WEAK = { responsible: 'Replace “Responsible for” with the action itself: Led, Ran, Managed, Built.', helped: 'Say what your own part was: Built, Wrote, Trained, Fixed.', assisted: 'Say what your own part was: Built, Wrote, Trained, Fixed.',
+    worked: 'Say what you made or changed: Built, Wrote, Designed, Fixed.', participated: 'Say what you contributed: Presented, Tested, Organized.', involved: 'Say what you contributed: Presented, Tested, Organized.',
+    tasked: 'Say what you did, not what you were told to do.', duties: 'Name one thing you got done instead of a list of duties.', was: 'Start with the action: Led, Built, Cut, Launched.', were: 'Start with the action: Led, Built, Cut, Launched.',
+    did: 'Name the action: Built, Wrote, Tested, Sold.', tried: 'Say what you finished, and what it changed.', attempted: 'Say what you finished, and what it changed.', had: 'Start with the action: Led, Built, Cut, Launched.' };
+  var DULL = [['responsible for', 'start with what you did: Led, Ran, Built'], ['duties included', 'name one result instead of a list of duties'], ['tasked with', 'say what you did, not what you were told to do'],
+    ['in charge of', 'write “Led” or “Managed” and add the size of the thing'], ['helped with', 'name the part that was yours'], ['helped to', 'name the part that was yours'], ['worked on', 'say what you built, wrote or changed'],
+    ['assisted with', 'name the part that was yours'], ['assisted in', 'name the part that was yours'], ['participated in', 'say what you contributed'], ['involved in', 'say what you contributed'], ['was part of', 'say what you contributed']];
+  T.STRONG = STRONG; T.LINE = 100;                          // about 100 characters fit on one line of a one-column resume: an estimate, not a rule
+  // "Rebuilt" -> "rebuilding": from the list for irregular verbs, by rule for -ed verbs, '' when the form is not known
+  T.gerund = function (verb) {
+    var bits = clean(verb).split(' '), w = (bits[0] || '').toLowerCase(), g = ING[w] || (/ied$/.test(w) ? w.slice(0, -3) + 'ying' : /eed$/.test(w) ? w.slice(0, -1) + 'ing' : /[a-z]{2,}ed$/.test(w) ? w.slice(0, -2) + 'ing' : '');
+    return g ? [g].concat(bits.slice(1)).join(' ') : '';
+  };
+  function pastVerb(w) { return !!(STRONG_SET[w] || ING[w] || (/[a-z]{2,}ed$/.test(w) && !/eed$/.test(w) && w !== 'hundred')); }
+  T.bullet = function (f) {
+    f = f || {};
+    var verb = cap(phrase(f.verb)), what = mid(f.what), result = phrase(f.result), items = [], add = function (level, t, d) { items.push({ level: level, t: t, d: d }); };
+    if (!verb && !what && !result) return { empty: true, variants: [], checks: [], passed: 0, of: 0 };
+    var first = (verb.split(' ')[0] || '').toLowerCase(), r0 = (result.split(' ')[0] || '').toLowerCase(), base = [verb, what].filter(Boolean).join(' ');
+    var kind = !result ? 'none' : pastVerb(r0) ? 'verb' : /[a-z]{3,}ing$/.test(r0) ? 'ing' : 'other';
+    var r = kind === 'other' ? result : result.charAt(0).toLowerCase() + result.slice(1), g = what ? T.gerund(verb) : '', v = [];
+    if (kind === 'verb') { v.push(['Action first', base + ', which ' + r], ['Short', base + ' and ' + r]); if (g) v.push(['Result first', cap(r) + ' by ' + g + ' ' + what]); }
+    else if (kind === 'ing') v.push(['Action first', base + ', ' + r]);
+    else if (kind === 'other') { v.push(['Action first', base + ': ' + result], ['Short', base + '; ' + result]); if (g) v.push(['Result first', cap(result) + ' after ' + g + ' ' + what]); }
+    else v.push(['Action only', base]);
+    var variants = v.map(function (x) { return { kind: x[0], text: x[1], length: x[1].length, lines: Math.max(1, Math.ceil(x[1].length / T.LINE)) }; }), main = variants[0], all = [verb, what, result].join(' ');
+    if (!verb) add('fix', 'No action verb', 'Start the line with what you did, in one word: Built, Led, Cut, Launched, Negotiated.');
+    else if (WEAK[first]) add('fix', '“' + cap(first) + '” is a weak way to start', WEAK[first]);
+    else if (STRONG_SET[first]) add('ok', 'Starts with a strong verb: ' + cap(first), 'One word that says what you did.');
+    else add('info', '“' + cap(first) + '” is not on our verb list', 'Keep it if it is a past-tense verb that names exactly what you did. The verbs this page counts as strong are listed below.');
+    if (!what) add('fix', 'Nothing after the verb', 'Say what you built, led, changed or sold, and for whom.');
+    if (kind === 'none') add('fix', 'No result', 'Add what changed because of your work: time saved, money earned, errors avoided, people served.');
+    else if (kind !== 'verb') add('info', 'Start the result with a past-tense verb', 'Written as “cut…”, “saved…”, “raised…” or “won…”, the result fits more sentence patterns and you get more variants.');
+    if (NUMBER.test(what + ' ' + result)) add('ok', 'Has a number', 'A figure tells the reader how big the work was.');
+    else add('warn', 'No number', 'Add how much, how many or how fast: a percent, an amount, a count of users, a team size, a deadline.');
+    if (main.length < 40) add('warn', 'Short: ' + main.length + ' characters', 'The line says little so far. Add what the work was for and what it changed.');
+    else if (main.length <= 2 * T.LINE) add('ok', 'Length is fine: ' + main.length + ' characters, about ' + main.lines + ' line' + (main.lines === 1 ? '' : 's'), 'One to two lines is easy to scan.');
+    else add('warn', 'Long: ' + main.length + ' characters, about ' + main.lines + ' lines', 'Keep a bullet point to two lines. Cut adjectives, and tools that are already in your skills list.');
+    var dull = findPhrases(all, DULL);
+    if (dull.length) add('fix', 'Duty wording: ' + dull.map(function (x) { return '“' + x.term + '”'; }).join(', '), cap(dull.map(function (x) { return '“' + x.term + '”: ' + x.tip; }).join('. ')) + '.');
+    else add('ok', 'No “responsible for” wording', 'The line describes something you did, not a duty you held.');
+    if (/\b(?:i|my|we)\b(?!\.e)/i.test(all)) add('info', 'Leave out “I”, “my” and “we”', 'Resume bullet points start with the verb; the reader knows the line is about you.');
+    var rank = { fix: 0, warn: 1, info: 2, ok: 3 }, scored = items.filter(function (i) { return i.level !== 'info'; });
+    items.sort(function (a, b) { return rank[a.level] - rank[b.level]; });
+    return { variants: variants, checks: items, kind: kind, passed: scored.filter(function (i) { return i.level === 'ok'; }).length, of: scored.length };
+  };
+
+  /* ---------- date ranges in running text: "Jan 2021 – Mar 2023", "2019–2021", "03/2020 - present" ---------- */
+  var MON3 = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  var MON = 'jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?';
+  var POINT = '(?:(?:' + MON + ')\\.?,?\\s+\\d{4}|\\d{1,2}[/.]\\d{4}|\\d{4}[/.-]\\d{1,2}(?![/.\\d-])|\\d{4}|present|current|now|today|ongoing|date)';
+  var RANGE_SRC = '(^|[^a-z0-9/.-])(' + POINT + ')\\s*(?:[-–—−]|to|until|till|through)\\s*(' + POINT + ')(?![a-z0-9])';
+  function monthNow(today) {                               // "2026-11-13" (or nothing: the real date) -> months since year 0
+    var m = /^(\d{4})-(\d{2})/.exec(today || ''), d = new Date();
+    return m ? +m[1] * 12 + +m[2] - 1 : d.getFullYear() * 12 + d.getMonth();
+  }
+  function monthOf(s, end, now) {                          // one end of a range -> months since year 0; a bare year means January at the start and December at the end
+    s = s.toLowerCase().trim();
+    if (/^(?:present|current|now|today|ongoing|date)$/.test(s)) return end ? now : NaN;
+    var m, y, mo;
+    if ((m = /^([a-z]+)\.?,?\s+(\d{4})$/.exec(s))) { mo = MON3.indexOf(m[1].slice(0, 3)); y = +m[2]; }
+    else if ((m = /^(\d{1,2})[/.](\d{4})$/.exec(s))) { mo = +m[1] - 1; y = +m[2]; }
+    else if ((m = /^(\d{4})[/.-](\d{1,2})$/.exec(s))) { y = +m[1]; mo = +m[2] - 1; }
+    else if ((m = /^(\d{4})$/.exec(s))) { y = +m[1]; mo = end ? 11 : 0; }
+    else return NaN;
+    if (!(mo >= 0 && mo <= 11) || y < 1950 || y > Math.floor(now / 12) + 1) return NaN;
+    return Math.min(y * 12 + mo, end ? now : Infinity);
+  }
+  T.monthLabel = function (i) { return MONTH_NAMES[mod(i, 12)].slice(0, 3) + ' ' + Math.floor(i / 12); };
+  // Every date range the text holds, with the line it stands on. Ranges that end before they start, and dates that are not dates, are left out.
+  T.dateRanges = function (text, today) {
+    var now = monthNow(today), out = [];
+    String(text || '').split(/\r?\n/).forEach(function (ln, i) {
+      var rx = new RegExp(RANGE_SRC, 'gi'), m;
+      while ((m = rx.exec(ln))) {
+        var a = monthOf(m[2], false, now), b = monthOf(m[3], true, now);
+        if (!isNaN(a) && !isNaN(b) && a <= b) out.push({ start: a, end: b, open: /^[a-z]+$/i.test(m[3].trim()), years: /^\d{4}$/.test(m[2].trim()) || /^\d{4}$/.test(m[3].trim()), raw: clean(m[2] + ' – ' + m[3]), line: clean(ln), at: i });
+      }
+    });
+    return out;
+  };
+  // Breaks of more than `min` months (six unless told otherwise) between the ranges, and the time since the last one ended.
+  T.gaps = function (ranges, today, min) {
+    var now = monthNow(today), list = (ranges || []).slice().sort(function (x, y) { return x.start - y.start || x.end - y.end; }), out = [], last = null;
+    min = min == null ? 6 : min;
+    list.forEach(function (r) {
+      if (last && r.start - last.end - 1 > min) out.push({ months: r.start - last.end - 1, from: last.end + 1, to: r.start - 1, after: last, before: r });
+      if (!last || r.end > last.end) last = r;
+    });
+    if (last && now - last.end > min) out.push({ months: now - last.end, from: last.end + 1, to: now, after: last, before: null });
+    return out;
+  };
+
+  /* ---------- resume review: six plain checks, ten points ---------- */
+  var SECTIONS = [
+    ['experience', /^(?:work|professional|relevant|career)?\s*(?:experience|employment(?: history)?|work history|career history)$/i],
+    ['education', /^(?:education(?: (?:and|&) training)?|academic background|studies|qualifications)$/i],
+    ['skills', /^(?:technical|key|core|hard|top)?\s*(?:skills(?: (?:and|&) (?:tools|technologies))?|competencies|technologies|tech stack|stack|tools)$/i],
+    ['summary', /^(?:(?:professional|career|personal)?\s*(?:summary|profile|objective|statement)|about(?: me)?)$/i],
+    ['other', /^(?:(?:side |personal )?projects|certifications?|certificates|languages|awards|publications|interests|hobbies|references|volunteering|volunteer work|courses|training|contact|links)$/i]
+  ];
+  function heading(s) {                                    // "Experience", "SKILLS:", "Skills: Python, Go" -> { section, rest }
+    var m = /^([A-Za-z &]{3,40}?)\s*:\s*(.*)$/.exec(s), name = (m ? m[1] : s).trim(), rest = m ? m[2].trim() : '';
+    if (name.split(/\s+/).length > 4 || /[.!?]$/.test(name)) return null;
+    for (var k = 0; k < SECTIONS.length; k++) if (SECTIONS[k][1].test(name)) return { section: SECTIONS[k][0], rest: rest };
+    return null;
+  }
+  function cut(s, n) { s = clean(s); n = n || 140; return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s; }
+  function hasFigure(s) { return /\d/.test(String(s).replace(/\b(?:19|20)\d{2}\b/g, '')) || /\b(?:percent|doubled|halved|tripled)\b/i.test(s); }
+  T.REVIEW = { screen: 12, summary: 60, before: 10, list: 20, gap: 6, onePage: 650, twoPages: 1300, thin: 250, least: 150 };     // the thresholds, named on the page under “How it works”
+  T.resumeReview = function (text, today) {
+    text = String(text || '').replace(/\r/g, '');
+    var words = wordCount(text), R = T.REVIEW;
+    if (words < 80) return { error: 'short', words: words };
+    // every line gets a section: the part before the first heading is "top"; a line with a date range starts the experience when no heading did
+    var rows = [], sec = 'top', named = false;
+    text.split('\n').forEach(function (raw, i) {
+      var s = raw.trim(); if (!s) return;
+      var h = BULLET.test(raw) ? null : heading(s), ranges = T.dateRanges(s, today), row = { at: i, s: s, head: false, bullet: BULLET.test(raw), words: wordCount(s), lines: Math.max(1, Math.ceil(s.length / T.LINE)), ranges: ranges };
+      if (h && !(sec === 'skills' && h.section === 'other' && h.rest)) {           // "Languages: Python, Go" inside the skills block is a list, not a new section
+        sec = h.section; if (sec === 'experience') named = true;
+        row.head = true; row.rest = h.rest;
+      } else if (ranges.length && !named && (sec === 'top' || sec === 'summary' || sec === 'skills')) sec = 'experience';
+      row.sec = sec; rows.push(row);
+    });
+    var of = function (name) { return rows.filter(function (r) { return r.sec === name && !r.head; }); };
+    var exp = of('experience'), bullets = exp.filter(function (r) { return r.bullet; });
+    if (!bullets.length) bullets = exp.filter(function (r) { return r.words >= 8 && !r.ranges.length; });
+    var checks = [], fixes = [], strengths = [];
+    var done = function (id, name, points, max, t, good) { checks.push({ id: id, name: name, points: points, max: max, t: t }); if (points === max && good) strengths.push({ name: name, t: t, d: good }); };
+    var fix = function (id, t, d, q) { fixes.push({ id: id, t: t, d: d, q: (q || []).filter(Boolean).map(function (x) { return cut(x); }) }); };
+
+    // 1. the first screen: what the first 12 lines of the page hold (a long line counts as several)
+    var line = 0, firstJob = null, hold = {}, lost = 0;
+    rows.forEach(function (r) {
+      var from = line + 1; line += r.lines;
+      if (r.sec === 'experience' && !r.head && firstJob == null) firstJob = from;
+      if (!(r.head && r.sec === 'experience')) for (var k = from; k <= Math.min(line, R.screen); k++) hold[r.sec] = (hold[r.sec] || 0) + 1;      // the heading “Experience” alone is not a job
+    });
+    var NAMES = { top: 'your name and contact details', summary: 'the summary', skills: 'the skills list', education: 'education', other: 'other sections', experience: 'experience' };
+    var held = ['top', 'summary', 'skills', 'education', 'other', 'experience'].filter(function (k) { return hold[k]; }).map(function (k) { return NAMES[k] + ' (' + hold[k] + ')'; });
+    var summary = rows.filter(function (r) { return r.sec === 'summary' && (!r.head || r.rest); }).concat(named || firstJob != null ? rows.filter(function (r) { return r.sec === 'top' && r.words >= 15; }) : []);
+    var sumWords = summary.reduce(function (s, r) { return s + (r.head ? wordCount(r.rest) : r.words); }, 0);
+    var skillRows = rows.filter(function (r) { return r.sec === 'skills' && (r.head ? r.rest : true); }), seen = {}, skills = [];
+    skillRows.forEach(function (r) {
+      (r.head ? r.rest : r.s.replace(/^\s*(?:[-*•·▪◦‣–—>]|\d{1,2}[.)])\s+/, '').replace(/^[A-Za-z &/]{2,30}:\s*/, '')).replace(/[()]/g, ',').split(/[,;•·|]+/).forEach(function (x) {
+        x = clean(x).replace(/^(?:and|&)\s+/i, '').replace(/\.$/, ''); var k = x.toLowerCase();
+        if (x && x.length <= 40 && x.split(' ').length <= 4 && !seen[k]) { seen[k] = 1; skills.push(x); }
+      });
+    });
+    var skillsFirst = skillRows.length && (firstJob == null || skillRows[0].at < (exp[0] ? exp[0].at : Infinity));
+    if (firstJob == null) { lost = 2; fix('screen', 'No job with dates was found', 'We could not find an “Experience” heading or a line with a date range, so the review cannot tell where your work history starts. Put each job on its own line with its dates.', []); }
+    else {
+      if (firstJob > R.screen) { lost++; fix('screen', 'The first job starts on line ' + firstJob, 'The first ' + R.screen + ' lines hold ' + andList(held) + '. A reader who stops there has not seen where you worked. Move the latest job up, or shorten what stands above it.', [(summary[0] || skillRows[0] || rows[0]).s]); }
+      if (sumWords > R.summary) { lost++; fix('screen', 'The summary runs to ' + sumWords + ' words', 'Keep it to two or three lines (up to ' + R.summary + ' words): your role, your years of experience and your strongest result. The rest belongs under the jobs.', [summary[0].s]); }
+      if (skillsFirst && skills.length > R.before) { lost++; fix('screen', skills.length + ' skills are listed before any job', 'A long list of tools ahead of the work history says what you have touched, not what you did with it. Keep up to ' + R.before + ' there, or move the list below the experience.', [skillRows[0].head ? skillRows[0].rest : skillRows[0].s]); }
+    }
+    done('screen', 'First screen', Math.max(0, 2 - lost), 2, firstJob == null ? 'No job found on the page' : lost ? 'The first ' + R.screen + ' lines hold ' + andList(held) : 'Your latest job starts on line ' + firstJob + ' of the page',
+      'The first ' + R.screen + ' lines hold ' + andList(held) + '.');
+
+    // 2. wording: duties instead of results
+    var duty = (bullets.length ? bullets : exp).filter(function (r) { return findPhrases(r.s, DULL).length; });
+    if (duty.length) fix('wording', duty.length + ' line' + (duty.length === 1 ? ' describes a duty' : 's describe duties') + ', not a result', 'Lines that open with “' + findPhrases(duty[0].s, DULL)[0].term + '” and similar say what the job was. Start each with what you did (Built, Led, Cut) and end with what it changed.', duty.slice(0, 5).map(function (r) { return r.s; }));
+    done('wording', 'Wording', duty.length === 0 ? 2 : duty.length <= 2 ? 1 : 0, 2, duty.length ? duty.length + ' line' + (duty.length === 1 ? '' : 's') + ' with duty wording' : 'No “responsible for” wording',
+      'None of the lines under your jobs uses “responsible for”, “worked on”, “participated in” or the other duty phrases on our list.');
+
+    // 3. numbers
+    var withNum = bullets.filter(function (r) { return hasFigure(r.s); }), share = bullets.length ? withNum.length / bullets.length : 0, plain3 = bullets.filter(function (r) { return !hasFigure(r.s); });
+    if (!bullets.length) fix('numbers', 'No bullet points found under your jobs', 'Describe each job in three to five short lines that start with a dash, one piece of work per line.', []);
+    else if (share < 0.5) fix('numbers', withNum.length + ' of ' + bullets.length + ' bullet points contain a number', 'Add a figure where you honestly can: how many users, how much faster, what budget, how large the team. Half or more of the lines with a number earns full points.', plain3.slice(0, 3).map(function (r) { return r.s; }));
+    done('numbers', 'Numbers', share >= 0.5 ? 2 : share >= 0.25 ? 1 : 0, 2, bullets.length ? withNum.length + ' of ' + bullets.length + ' bullet points have a number' : 'No bullet points found',
+      withNum.length ? 'For example: “' + cut(withNum[0].s, 110) + '”' : '');
+
+    // 4. skills: the list against the experience text
+    var expText = (exp.length ? exp : rows.filter(function (r) { return r.sec !== 'skills'; })).map(function (r) { return r.s; }).join('\n');
+    var unused = skills.filter(function (x) { return !new RegExp('(^|[^a-z0-9+#])' + x.toLowerCase().replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&') + '(?![a-z0-9+#])', 'i').test(expText); });
+    var uShare = skills.length ? unused.length / skills.length : 0, sPts = !skills.length ? 0.5 : (uShare <= 1 / 3 ? 1 : uShare <= 2 / 3 ? 0.5 : 0) + (skills.length <= R.list ? 0.5 : 0);
+    if (!skills.length) fix('skills', 'No skills line found', 'Add one line headed “Skills” with the tools and methods you can be asked about, each of them also named in the job where you used it.', []);
+    else {
+      if (uShare > 1 / 3) fix('skills', unused.length + ' of ' + skills.length + ' listed skills never appear under a job', 'Not found in your experience text: ' + unused.slice(0, 12).join(', ') + (unused.length > 12 ? ' and ' + (unused.length - 12) + ' more' : '') + '. Name each skill in the job where you used it, in the same spelling, or take it off the list.', [skillRows[0].head ? skillRows[0].rest : skillRows[0].s]);
+      if (skills.length > R.list) fix('skills', 'The skills list has ' + skills.length + ' entries', 'Past ' + R.list + ' a list stops saying what you are good at. Keep the skills the jobs you want ask for and that your experience backs up.', []);
+    }
+    done('skills', 'Skills', sPts, 1.5, !skills.length ? 'No skills line found' : unused.length ? unused.length + ' of ' + skills.length + ' listed skills are not in the experience text' : 'All ' + skills.length + ' listed skills appear under a job',
+      skills.length + ' skills are listed, and ' + (unused.length ? 'all but ' + unused.length + ' of them also appear' : 'every one of them also appears') + ' in the text of your jobs.');
+
+    // 5. gaps between the date ranges that could be read
+    var ranges = []; rows.forEach(function (r) { r.ranges.forEach(function (x) { ranges.push(x); }); });
+    var gaps = T.gaps(ranges, today, R.gap);
+    if (!ranges.length) fix('gaps', 'The dates could not be read', 'We found no date range in a form we can read, such as “Jan 2021 – Mar 2023”, “2019–2021” or “03/2020 – present”, so gaps were not checked. Give every job a start and an end in one of these forms.', []);
+    gaps.forEach(function (g) {
+      if (g.before) fix('gaps', 'A break of ' + g.months + ' months: ' + T.monthLabel(g.from) + ' to ' + T.monthLabel(g.to), 'Nothing is listed between these two entries' + (g.after.years || g.before.years ? ' (a range given in years only is counted from January of the first year to December of the last)' : '') + '. A gap is not a fault, but a reader will ask. Add one line saying what you did: study, care, travel, freelance work.', [g.after.line, g.before.line]);
+      else fix('gaps', 'Nothing listed for the last ' + g.months + ' months', 'Your latest entry ends in ' + T.monthLabel(g.after.end) + '. If you are still in that job, write “present”. If not, add a line for what you have done since.', [g.after.line]);
+    });
+    done('gaps', 'Gaps', !ranges.length ? 0.5 : gaps.length === 0 ? 1 : gaps.length === 1 ? 0.5 : 0, 1, !ranges.length ? 'Dates could not be read' : gaps.length ? gaps.length + ' break' + (gaps.length === 1 ? '' : 's') + ' of more than ' + R.gap + ' months' : 'No break of more than ' + R.gap + ' months',
+      ranges.length + ' date range' + (ranges.length === 1 ? ' was' : 's were') + ' read, and none of them leaves more than ' + R.gap + ' months uncovered.');
+
+    // 6. length
+    var long = exp.filter(function (r) { return r.s.length > 2 * T.LINE; }), pages = words <= R.onePage ? 'about one page' : words <= R.twoPages ? 'about two pages' : 'more than two pages';
+    var lenPts = words >= R.thin && words <= R.twoPages ? 1 : words >= R.least && words < R.thin ? 0.5 : 0;
+    if (words < R.thin) fix('length', 'Short: ' + words + ' words', 'A full page holds roughly 450 to 650 words. Check that the whole resume was pasted, then give each job three to five lines about what you did and what changed.', []);
+    else if (words > R.twoPages) fix('length', 'Long: ' + fmt(words) + ' words, more than two pages', 'Cut jobs older than ten years to one line each and keep the detail for the work that matches the jobs you want.', []);
+    if (long.length) fix('length', long.length + ' line' + (long.length === 1 ? '' : 's') + ' longer than two lines of the page', 'A bullet point of more than about ' + 2 * T.LINE + ' characters is a paragraph. Split it, or keep the one result that matters.', long.slice(0, 3).map(function (r) { return r.s; }));
+    done('length', 'Length', lenPts + (long.length ? 0 : 0.5), 1.5, fmt(words) + ' words, ' + pages + (long.length ? '; ' + long.length + ' over-long line' + (long.length === 1 ? '' : 's') : ''),
+      fmt(words) + ' words is ' + pages + ', and no line under your jobs runs past two lines.');
+
+    var score = checks.reduce(function (s, c) { return s + c.points; }, 0), order = {};
+    checks.forEach(function (c) { order[c.id] = c.max - c.points; });
+    fixes.sort(function (a, b) { return order[b.id] - order[a.id]; });        // the checks that cost the most points come first
+    return { score: score, verdict: score >= 8.5 ? 'Reads well on a first skim' : score >= 6.5 ? 'Solid, with a few things to tighten' : score >= 4.5 ? 'Readable, but the best points are hard to find' : 'Hard to skim: start with the first fixes on the list',
+      words: words, pages: pages, checks: checks, strengths: strengths, weaknesses: checks.filter(function (c) { return c.points < c.max; }), fixes: fixes,
+      bullets: bullets.length, withNumbers: withNum.length, skills: skills, unused: unused, ranges: ranges, gaps: gaps, firstJob: firstJob, summaryWords: sumWords, duty: duty.length };
+  };
+
+  /* ---------- LinkedIn profile review: headline and About ---------- */
+  var BUZZ = ['passionate', 'results-driven', 'results-oriented', 'guru', 'ninja', 'rockstar', 'rock star', 'wizard', 'synergy', 'synergies', 'thought leader', 'visionary', 'detail-oriented', 'team player',
+    'self-starter', 'go-getter', 'hard-working', 'hardworking', 'motivated', 'innovative', 'strategic thinker', 'proven track record', 'outside the box', 'out of the box', 'game-changer', 'seasoned', 'driven'];
+  var ROLE = /\b(?:engineer|developer|programmer|designer|architect|analyst|scientist|researcher|manager|director|lead|head of|officer|founder|co-founder|owner|president|vp|ceo|cto|cfo|coo|cmo|consultant|advisor|adviser|specialist|strategist|coordinator|administrator|assistant|associate|recruiter|sourcer|marketer|copywriter|writer|editor|journalist|translator|accountant|bookkeeper|auditor|controller|lawyer|attorney|paralegal|nurse|doctor|physician|pharmacist|therapist|teacher|tutor|professor|lecturer|trainer|coach|technician|mechanic|electrician|operator|driver|representative|agent|broker|buyer|planner|producer|photographer|illustrator|animator|artist|tester|qa|sre|devops|sysadmin|student|graduate|intern|apprentice|freelancer|contractor|executive|supervisor|partner|generalist|clerk|chef|pilot|scrum master|product owner|salesperson)\b/i;
+  var LOOKING = /#?open\s?to\s?work|open to (?:new )?(?:opportunities|roles|offers|work)|(?:looking|seeking|searching) for (?:a |an |my )?(?:new |next )?(?:job|role|position|opportunit(?:y|ies)|challenges?)|actively (?:looking|seeking)|job ?seeker|unemployed|available (?:immediately|now)|between jobs/gi;
+  var ASK = /\b(?:contact|reach|e-?mail|message|dm|get in touch|connect|write to|call me|let[’']s talk|book a|open to|looking for|hire me|available for)\b|[\w.+-]+@[\w-]+\.[\w.]+|https?:\/\/|www\./i;
+  var DOES = /\bI(?:[’']m| am| help| build| design| lead| write| work| manage| run| create| develop| teach| sell| make| turn| speciali[sz]e| focus| support| analy[sz]e| plan| fix| grow| train| coach| recruit| hire| translate| edit| test| automate| ship| deliver| advise| care| treat)\b/i;
+  var WHOM = /\b(?:help(?:s|ing)?|serv(?:e|es|ing)|clients?|customers?|users?|teams?|companies|businesses|startups?|founders?|patients?|students?|brands?|agencies|employers?|organi[sz]ations|nonprofits|readers|shoppers)\b/i;
+  var EMOJI; try { EMOJI = new RegExp('\\p{Extended_Pictographic}', 'gu'); } catch (e) { EMOJI = /[☀-➿]|[\uD83C-\uD83E][\uDC00-\uDFFF]/g; }
+  T.OPENING = 300;                                         // the part of the About text this page treats as visible before “see more”
+  T.linkedinReview = function (f) {
+    f = f || {};
+    var head = clean(f.headline), about = String(f.about || '').replace(/\r/g, '').trim(), items = [];
+    if (!head && !about) return { empty: true, items: [], fixes: 0, headline: 0, about: 0, opening: '' };
+    var add = function (level, t, d, q) { items.push({ level: level, t: t, d: d, q: (q || []).filter(Boolean).map(function (x) { return cut(x, 160); }) }); };
+    var sents = (about.match(/[^.!?\n]+[.!?]*/g) || []).map(clean).filter(Boolean), holding = function (rx) { return sents.filter(function (s) { return s.search(rx) >= 0; })[0] || ''; };
+    var emoji = function (s) { return (s.match(EMOJI) || []).length; }, upper = function (s) { var l = s.replace(/[^A-Za-z]/g, ''); return l.length ? l.replace(/[^A-Z]/g, '').length / l.length : 0; };
+
+    if (!head) add('fix', 'No headline', 'Paste the line that stands under your name on LinkedIn. It is the only text people see next to your name in search results and comments.');
+    else {
+      if (head.length > T.HEADLINE_MAX) add('fix', 'The headline is ' + head.length + ' characters: ' + (head.length - T.HEADLINE_MAX) + ' over the limit', 'LinkedIn cuts a headline at ' + T.HEADLINE_MAX + ' characters. Everything from this point is lost:', [head.slice(T.HEADLINE_MAX)]);
+      else if (head.length < 30) add('info', 'The headline uses ' + head.length + ' of ' + T.HEADLINE_MAX + ' characters', 'There is room for your field, your main skills or the kind of customer you work for.', [head]);
+      else add('ok', 'Headline length: ' + head.length + ' of ' + T.HEADLINE_MAX + ' characters', 'Inside the limit.');
+      var looking = head.match(LOOKING), role = ROLE.test(head);
+      var rest = head.replace(LOOKING, ' ').replace(new RegExp(ROLE.source, 'gi'), ' ').replace(/(?:\bat\b|@)\s+[A-Z][\w&.-]*(?:\s+[A-Z][\w&.-]*)*/g, ' ').toLowerCase().match(/[a-z][a-z+#.-]{2,}/g) || [];
+      var field = rest.filter(function (w) { return !STOP[w] && !/^(?:senior|junior|principal|staff|chief|mid|level|experienced|new|next)$/.test(w); }).length > 0;
+      if (looking && !role) add('fix', 'The headline only says you are looking', '“' + looking[0] + '” tells a recruiter you are available, not what you do. Lead with your job title and your field; LinkedIn has a separate “Open to work” setting for the rest.', [head]);
+      else if (!role) add('warn', 'No job title found in the headline', 'We looked for a title such as engineer, designer, manager or nurse and found none. A slogan or a company name does not tell a searcher what you do. If your title is an unusual one, ignore this.', [head]);
+      else if (!field) add('info', 'A job title, but no field or specialty', 'Add what kind of work it is or who it is for: the industry, your main tools, the type of customer.', [head]);
+      else add('ok', 'The headline names a role and a field', 'A searcher can tell what you do from this line alone.');
+      var hb = findPhrases(head, BUZZ);
+      if (hb.length) add('warn', 'Buzzword' + (hb.length === 1 ? '' : 's') + ' in the headline: ' + hb.map(function (x) { return x.term; }).join(', '), 'These words fit any profile. Use the space for a skill, a field or a result.', [head]);
+      if (head.replace(/[^A-Za-z]/g, '').length >= 12 && upper(head) > 0.6) add('warn', 'The headline is written in capital letters', 'Capitals read as shouting and are harder to scan. Keep them for abbreviations.', [head]);
+      if (emoji(head) > 2) add('warn', emoji(head) + ' emoji in the headline', 'One or two as separators are fine; more push the words out of the visible part.', [head]);
+    }
+
+    var opening = about.length > T.OPENING ? about.slice(0, T.OPENING + 1).replace(/\s+\S*$/, '') : about;
+    if (!about) add('fix', 'No About text', 'Paste your About section to have it checked. A profile without one leaves the reader with job titles only.');
+    else {
+      if (about.length > T.ABOUT_MAX) add('fix', 'The About text is ' + fmt(about.length) + ' characters: over the limit', 'LinkedIn accepts ' + fmt(T.ABOUT_MAX) + ' characters. This is where it would be cut:', [about.slice(T.ABOUT_MAX)]);
+      else if (about.length < T.OPENING) add('warn', 'The About text is short: ' + about.length + ' characters', 'All of it fits in the opening lines. Add one result with a number and say what you want next.', [about]);
+      else add('ok', 'About length: ' + fmt(about.length) + ' of ' + fmt(T.ABOUT_MAX) + ' characters', 'Inside the limit, and long enough to say something.');
+      var does = ROLE.test(opening) || DOES.test(opening), whom = WHOM.test(opening);
+      if (!does) add('warn', 'The opening does not say what you do', 'Only the first lines show before “see more”. Start with your role and the work you do; move the story of how you got there further down.', [opening]);
+      else if (!whom) add('info', 'The opening does not say who you do it for', 'Name the kind of company, team or customer your work serves, in the first two sentences.', [opening]);
+      else add('ok', 'The opening says what you do and for whom', 'The lines that show before “see more” carry the main point.');
+      if (!/\b(?:i|my|me)\b(?!\.e)/i.test(about)) add('warn', 'Not written in the first person', 'It is your own profile: write “I” and “my”. A text about “he” or “she” reads like someone else’s press release.', [holding(/\b(?:he|she|his|her|is|has|was)\b/i) || sents[0]]);
+      else add('ok', 'Written in the first person', 'The text speaks as “I”.');
+      if (hasFigure(about)) add('ok', 'Has a number or a concrete result', 'For example: “' + cut(sents.filter(hasFigure)[0] || about, 110) + '”');
+      else add('warn', 'No number and no concrete result', 'Add one thing you can count: years in the field, people served, money saved, the size of the team or the project.', []);
+      if (ASK.test(about)) add('ok', 'Says how to reach you or what you want', 'Found: “' + cut(holding(ASK) || about, 110) + '”');
+      else add('warn', 'No ask and no contact line', 'End with what you are open to and how to reach you: a message on LinkedIn, an email address.', [sents[sents.length - 1]]);
+      var ab = findPhrases(about, BUZZ);
+      if (ab.length) add(ab.length > 2 ? 'warn' : 'info', ab.length + ' buzzword' + (ab.length === 1 ? '' : 's') + ' in the About text: ' + ab.map(function (x) { return x.term; }).join(', '), 'Replace each with the fact behind it: what you did, for whom, with what result.',
+        ab.slice(0, 2).map(function (x) { return holding(phraseRx(x.term)); }).filter(function (s, i, a) { return a.indexOf(s) === i; }));
+      var shout = about.match(/\b[A-Z]{2,}(?:[ \t]+[A-Z]{2,}){2,}\b/);
+      if (shout || (about.replace(/[^A-Za-z]/g, '').length >= 80 && upper(about) > 0.3)) add('warn', 'Capital letters in the About text', 'Whole phrases in capitals read as shouting. Keep capitals for names and abbreviations.', [shout ? shout[0] : sents[0]]);
+      if (emoji(about) > 5) add('warn', emoji(about) + ' emoji in the About text', 'A few as bullet marks are fine. More than five compete with the words.', [sents.filter(function (s) { return emoji(s); })[0]]);
+    }
+    var rank = { fix: 0, warn: 1, info: 2, ok: 3 };
+    items.sort(function (a, b) { return rank[a.level] - rank[b.level]; });
+    return { items: items, fixes: items.filter(function (i) { return i.level === 'fix' || i.level === 'warn'; }).length, notes: items.filter(function (i) { return i.level === 'info'; }).length,
+      headline: head.length, about: about.length, opening: opening, more: about.length > opening.length };
+  };
+
+  /* ---------- offer check: an offered salary against the advertised ranges ---------- */
+  // Uses the same embedded aggregates as the salary checker. When the chosen category and level have too few postings, the next wider group is used:
+  // every category at the same level (pay follows the level first), then the same category at any level, then everything.
+  // `also` is the other of those two groups when it exists, so the page can show both yardsticks.
+  T.offerCheck = function (data, pay, cat, lvl) {
+    var x = num(pay); cat = cat || ''; lvl = lvl || '';
+    if (!(x > 0)) return null;
+    var tries = [[cat, lvl], ['', lvl], [cat, ''], ['', '']], g = null, used = null;
+    for (var i = 0; i < tries.length && !g; i++) { g = T.salaryGroup(data, tries[i][0], tries[i][1], ''); used = tries[i]; }
+    if (!g) return { pay: x, group: null };
+    var wider = used[0] !== cat || used[1] !== lvl, other = wider && cat && lvl && used[1] === lvl ? T.salaryGroup(data, cat, '', '') : null, diff = (x - g.median) / g.median * 100, d = Math.round(Math.abs(diff)), zone = x < g.p25 ? 'low' : x > g.p75 ? 'high' : 'mid';
+    var med = wider ? 'the median of the wider group' : 'the median';          // advice is given only for the group that was asked for
+    var verdict = zone === 'low' ? d + '% below ' + med + ': ' + (wider ? 'low for that group, which is only a rough guide' : 'worth asking for more')
+      : zone === 'high' ? d + '% above ' + med + ': higher than three quarters of ' + (wider ? 'its' : 'the') + ' advertised ranges'
+      : d <= 5 ? 'Close to ' + med + (wider ? '' : ': in line with what postings advertise')
+      : diff < 0 ? d + '% below ' + med + ', inside the middle half' + (wider ? '' : ': there is room to ask') : d + '% above ' + med + ', inside the middle half';
+    return { pay: x, group: g, cat: used[0], lvl: used[1], wider: wider, mixesLevels: wider && used[1] !== lvl, mixesCategories: wider && used[0] !== cat, also: other ? { cat: cat, lvl: '', group: other } : null, diff: diff, zone: zone, pct: T.percentile(data.q, g.vals, x), verdict: verdict };
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = T;
   if (typeof document === 'undefined') return;
 
@@ -827,7 +1447,8 @@
   function cash(x, s) { return money(x, s, Math.abs(x) < 100 || Math.abs(x) < 1000 && Math.round(x * 100) % 100 ? 2 : 0); }   // cents only where they say something: $440, not $440.00
   function tags(level) { return { fix: ['fix', 'Fix'], warn: ['warn', 'Check'], info: ['info', 'Note'], ok: ['ok', 'OK'] }[level]; }
   function list(items) {
-    return '<ul class="tl-list">' + items.map(function (i) { var t = tags(i.level); return '<li><span class="tl-tag ' + t[0] + '">' + t[1] + '</span><div><b>' + esc(i.t) + '</b><p>' + esc(i.d) + '</p></div></li>'; }).join('') + '</ul>';
+    return '<ul class="tl-list">' + items.map(function (i) { var t = tags(i.level); return '<li><span class="tl-tag ' + t[0] + '">' + t[1] + '</span><div><b>' + esc(i.t) + '</b>' + (i.d ? '<p>' + esc(i.d) + '</p>' : '') +
+      (i.q || []).map(function (q) { return '<blockquote class="tl-quote">' + esc(q) + '</blockquote>'; }).join('') + '</div></li>'; }).join('') + '</ul>';
   }
   var tools = {};
 
@@ -1179,6 +1800,298 @@
         big(K(g.median), 'median') + bar +
         sub(you + 'Sample: ' + esc(fmt(g.n)) + ' open ' + esc(what) + ', each with a published yearly US-dollar range, as of ' + esc(D.date) + '. The typical posting advertises ' + esc(K(g.low)) + ' to ' + esc(K(g.high)) + '.' + (pay > 0 ? '' : ' Enter your salary to see where it sits.')) +
         kv([['Lowest tenth, below', K(g.p10)], ['Middle half', K(g.p25) + ' – ' + K(g.p75)], ['Median', K(g.median)], ['Top tenth, above', K(g.p90)], ['Postings counted', fmt(g.n)]]));
+    });
+  };
+
+  /* ================================================================ pages added 2026-11-13 ================================================================ */
+  function localIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function fill(el, text, hint) { el.textContent = text || hint; el.setAttribute('data-empty', text ? '0' : '1'); }
+  function blanks(text) { var n = (text.match(/\[[^\]]+\]/g) || []).length; return n ? ' · ' + n + ' blank' + (n === 1 ? '' : 's') + ' in [brackets] still to fill' : ''; }
+  // a letter or an email on the sheet beside the form; `note` adds a line in front of the word count
+  function letter(make, note, each_) {
+    var paper = $('tl-paper'), info = $('tl-count');
+    return form(function (v) {
+      if (each_) each_(v);
+      var m = make(v);
+      paper.textContent = m.text;
+      info.textContent = (note ? note(m, v) : '') + T.wordCount(m.body) + ' words' + blanks(m.text);
+    });
+  }
+
+  /* ---------- thank-you email ---------- */
+  tools['thank-you-email'] = function () { letter(T.thankYou); };
+
+  /* ---------- resignation letter ---------- */
+  tools['resignation-letter'] = function () {
+    var today = localIso(), date = root.querySelector('[data-k="date"]'), last = root.querySelector('[data-k="lastDay"]'), two = T.lastDay({ date: today, amount: 2, unit: 'weeks' });
+    if (date) date.setAttribute('value', today);                        // the letter is dated today unless changed
+    if (last && two) last.setAttribute('data-ex', two.last);            // the example leaves two weeks from today
+    letter(T.resignation, function (m) {
+      return m.days == null ? 'Check your contract for the notice period you owe. '
+        : m.days < 0 ? 'The last working day is before the date of the letter. Check the two dates. '
+        : 'From the date of the letter to your last day: ' + m.days + ' day' + (m.days === 1 ? '' : 's') + '. Check that this covers the notice period in your contract. ';
+    }, function (v) { each('[data-if]', function (el) { el.hidden = !v[el.getAttribute('data-if')]; }); });
+  };
+
+  /* ---------- raise request email ---------- */
+  tools['raise-request-email'] = function () {
+    var out = $('tl-out'), title = 'The raise you are asking for';
+    letter(T.raiseRequest, null, function (v) {
+      var m = T.raiseRequest(v), s = v.cur, per = v.period === 'month' ? 'month' : 'year';
+      if (m.diff == null) return idle(out, title, 'Enter your current pay and the pay you are asking for to see the difference in percent and per month.');
+      if (m.diff <= 0) return idle(out, title, 'The pay you ask for is not above your current pay. Check the two numbers.');
+      board(out, title, '+' + money(m.perYear, s, 0) + ' a year', big('+' + plain(m.pct, 1) + '%', 'more than now') +
+        sub('From ' + esc(money(num(v.current), s, 0)) + ' to ' + esc(money(num(v.target), s, 0)) + ' a ' + per + ', before tax. The email states the same percent, so the reader does not have to work it out.') +
+        kv([['More per month', '+' + cash(m.perMonth, s)], ['More per year', '+' + money(m.perYear, s, 0)], ['Pay now, per ' + per, money(num(v.current), s, 0)], ['Pay asked for, per ' + per, money(num(v.target), s, 0)]]));
+    });
+  };
+
+  /* ---------- reference request email ---------- */
+  tools['reference-request-email'] = function () { letter(T.referenceRequest); };
+
+  /* ---------- LinkedIn headline and About ---------- */
+  tools['linkedin-headline'] = function () {
+    var hint = 'Enter your job title to build the headlines.';
+    form(function (v) {
+      var r = T.linkedin(v);
+      [0, 1, 2].forEach(function (i) {
+        var h = r.empty ? null : r.headlines[i], n = i + 1;
+        $('tl-c' + n).hidden = !h && i > 0;
+        $('tl-k' + n).textContent = 'Headline ' + n + (h ? ' · ' + h.kind.toLowerCase() : '');
+        fill($('tl-q' + n), h ? h.text : '', hint);
+        $('tl-n' + n).textContent = h ? h.length + ' of ' + T.HEADLINE_MAX + ' characters · ' + h.left + ' left' : '';
+      });
+      fill($('tl-q4'), r.empty ? '' : r.about, 'Your About paragraph appears here.');
+      $('tl-n4').textContent = r.empty ? '' : fmt(r.aboutLength) + ' of ' + fmt(T.ABOUT_MAX) + ' characters · ' + T.wordCount(r.about) + ' words' + blanks(r.about);
+    });
+  };
+
+  /* ---------- interview answer ---------- */
+  tools['interview-answer-builder'] = function () {
+    var paper = $('tl-paper'), info = $('tl-count'), out = $('tl-out'), detail = $('tl-detail'), title = 'Speaking time';
+    form(function (v) {
+      var r = T.star(v), q = clean(v.question);
+      if (r.empty) {
+        fill(paper, '', 'Fill in the four parts. Your answer appears here as you type.'); info.textContent = ''; detail.innerHTML = '';
+        return idle(out, title, 'Describe the situation, the task, what you did and the result to see how long the answer takes to say.');
+      }
+      fill(paper, (q ? 'Question: ' + q + '\n\n' : '') + r.text);
+      info.textContent = r.words + ' words · about ' + r.time + ' spoken at ' + T.WPM + ' words a minute';
+      var at = Math.max(4, Math.min(96, r.seconds / 150 * 100));
+      board(out, title, r.complete ? (r.fixes ? r.fixes + ' to fix or check' : 'All checks pass') : 'Not complete yet',
+        big(r.time, 'said aloud') +
+        '<div class="tl-range" aria-hidden="true"><i style="left:40%;width:20%"></i><b style="left:' + plain(at, 1) + '%"><span>this answer</span></b></div>' +
+        '<div class="tl-scale" aria-hidden="true"><span>0 s</span><span>green: 60 to 90 s</span><span>2 min 30 s</span></div>' +
+        sub(esc(r.words + ' words at ' + T.WPM + ' words a minute. ') + (r.fixes ? 'The list below shows what to fix or check, most important first.' : 'Every check passes.') + ' People speak at different speeds: say it aloud once with a timer.') +
+        kv([['Situation', r.parts.situation + ' words'], ['Task', r.parts.task + ' words'], ['Action', r.parts.action + ' words'], ['Result', r.parts.result + ' words']]));
+      detail.innerHTML = list(r.checks);
+    });
+  };
+
+  /* ---------- resume bullet point ---------- */
+  tools['resume-bullet-builder'] = function () {
+    var out = $('tl-out'), detail = $('tl-detail'), verbs = $('tl-verbs'), title = 'Bullet point check', hint = 'Type a verb, what you did and the result to build the line.';
+    if (verbs) verbs.textContent = T.STRONG.map(cap).join(', ') + '.';
+    form(function (v) {
+      var r = T.bullet(v);
+      [0, 1, 2].forEach(function (i) {
+        var x = r.variants[i], n = i + 1;
+        $('tl-c' + n).hidden = !x && i > 0;
+        $('tl-k' + n).textContent = 'Variant ' + n + (x ? ' · ' + x.kind.toLowerCase() : '');
+        fill($('tl-q' + n), x ? x.text : '', hint);
+        $('tl-n' + n).textContent = x ? x.length + ' characters · about ' + x.lines + ' line' + (x.lines === 1 ? '' : 's') + ' on the page' : '';
+      });
+      if (r.empty) { detail.innerHTML = ''; return idle(out, title, hint); }
+      board(out, title, r.passed === r.of ? 'All checks pass' : (r.of - r.passed) + ' to fix', big(r.passed + ' of ' + r.of, 'checks passed') + meter(r.of ? r.passed / r.of * 100 : 0) +
+        sub('The checks are run on the first variant: <b>' + esc(r.variants[0].text) + '</b>'));
+      detail.innerHTML = list(r.checks);
+    });
+  };
+
+  /* ---------- job search funnel ---------- */
+  tools['job-search-calculator'] = function () {
+    var out = $('tl-out'), title = 'Applications for one offer';
+    form(function (v) {
+      if (!clean(v.perWeek) && !clean(v.reply) && !clean(v.offer)) return idle(out, title, 'Enter how many applications you send a week and your own two rates.');
+      var r = T.funnel(v);
+      if (!r) return idle(out, title, 'Check the figures: applications a week and weeks must be above zero, and each rate a percent from 0 to 100 or a count such as “3 of 40”.');
+      var n1 = function (x) { return fmt(x, x < 10 ? 1 : 0); }, pc = function (x) { return plain(x, 1) + '%'; }, right = fmt(r.applications, 1) + ' applications in ' + fmt(r.weeks, 1) + ' week' + (r.weeks === 1 ? '' : 's');
+      var rough = [r.replyFrom, r.offerFrom].some(function (n) { return n != null && n < 20; }) ? ' A rate worked out from fewer than 20 applications or interviews is rough: update it as your search goes on.' : '';
+      var rows = [['Applications sent', fmt(r.applications, 1)], ['Interviews expected', n1(r.interviews)], ['Offers expected', fmt(r.offers, r.offers < 10 ? 2 : 0)], ['Chance of at least one offer', plain(r.chance, 0) + '%'],
+        ['Applications that lead to an interview', pc(r.replyPct)], ['Interviews that lead to an offer', pc(r.offerPct)]];
+      if (r.perOffer == null) return board(out, title, right, '<p class="tl-big tl-dim">—</p>' +
+        sub('One of your rates is 0%, so this arithmetic gives no offer however many applications you send. If your search has only just started, enter the rates again once you have had a few replies.') + kv(rows));
+      board(out, title, right, big(fmt(r.perOffer, 0), 'applications') +
+        sub('At your rates, one offer takes about ' + esc(fmt(r.perOffer, 0)) + ' applications: ' + esc(n1(r.perInterview)) + ' applications for each interview, and ' + esc(n1(100 / r.offerPct)) + ' interview' + (r.offerPct === 100 ? '' : 's') + ' for each offer. At ' +
+          esc(fmt(r.perWeek, 1)) + ' a week that is about ' + esc(n1(r.weeksToOffer)) + ' week' + (r.weeksToOffer === 1 ? '' : 's') + ' of applying. These are averages from the numbers you typed. They are not statistics about the job market and not a promise.' + rough) +
+        kv(rows));
+    });
+  };
+
+  /* ---------- remote work savings ---------- */
+  tools['remote-work-savings'] = function () {
+    var out = $('tl-out'), title = 'Saved by working from home';
+    form(function (v) {
+      if (['minutes', 'cost', 'lunch', 'lunchHome', 'home'].every(function (k) { return !clean(v[k]); })) return idle(out, title, 'Enter your commute and what a day at the office costs you.');
+      var r = T.remoteSavings(v), s = v.cur;
+      if (!r) return idle(out, title, 'Check the figures: office days a week from 0 to 7, working weeks a year from 1 to 52, and a commute of at most 12 hours one way.');
+      if (!r.days) return board(out, title, 'No change', '<p class="tl-big tl-dim">0</p>' + sub('The number of office days is the same before and after, so nothing changes. Lower “office days a week after the change”.'));
+      var more = r.days < 0, flip = more ? -1 : 1, hours = r.hours * flip, cashNet = r.money * flip, gain = cashNet >= 0 !== more;       // gain: money stays in your pocket
+      var signed = function (x) { return (x < 0 ? '−' : '') + money(Math.abs(x), s, 0); };
+      board(out, more ? 'Cost of more office days' : title, fmt(Math.abs(r.days), 1) + (more ? ' more' : ' fewer') + ' office days a year',
+        (cashNet ? big(money(Math.abs(cashNet), s, 0), gain ? 'saved a year' : 'more spent a year') : big(fmt(hours, 0), more ? 'more hours of travel a year' : 'hours of travel saved a year')) +
+        sub('Going from ' + esc(fmt(r.daysNow, 1)) + ' to ' + esc(fmt(r.daysNew, 1)) + ' office days a week over ' + esc(fmt(r.weeks, 1)) + ' working weeks ' + (more ? 'adds ' : 'removes ') + '<b>' + esc(fmt(hours, 0)) + ' hours</b> of travel a year, which is ' +
+          esc(fmt(hours / 40, 1)) + ' working weeks of 40 hours.' + (cashNet ? ' In money that is ' + esc(money(Math.abs(cashNet) / 12, s, 0)) + ' a month ' + (gain ? 'kept' : 'spent') + '.' : '') +
+          (r.timeValue != null ? ' At the hourly figure you entered, the travel time alone is worth ' + esc(money(Math.abs(r.timeValue), s, 0)) + ' a year.' : '') + ' Every figure here is your own; nothing is assumed about prices or taxes.') +
+        kv([[more ? 'Extra travel time a year' : 'Travel time saved a year', fmt(hours, 0) + ' h'], [more ? 'Extra travel cost' : 'Travel cost saved', signed(r.travel * flip)],
+          [more ? 'Extra lunch and coffee' : 'Lunch and coffee saved', signed(r.food * flip)], r.homeCost ? [more ? 'Saved at home' : 'Extra cost at home', signed(r.homeCost * flip)] : null,
+          [gain ? 'Money kept a year' : 'Extra cost a year', money(Math.abs(cashNet), s, 0)], [gain ? 'Money kept a month' : 'Extra cost a month', money(Math.abs(cashNet) / 12, s, 0)],
+          r.timeValue != null ? ['Travel time in money', money(Math.abs(r.timeValue), s, 0)] : null]));
+    });
+  };
+
+  /* ---------- last working day ---------- */
+  tools['last-working-day'] = function () {
+    var out = $('tl-out'), title = 'Your last working day', date = root.querySelector('[data-k="date"]');
+    if (date) date.setAttribute('value', localIso());                   // notice is given today unless changed
+    var short = function (s) { var p = T.longDate(s).split(' '); return p[0].slice(0, 3) + ' ' + p.slice(1).join(' '); };
+    form(function (v) {
+      if (!clean(v.amount)) return idle(out, title, 'Enter the length of your notice period.');
+      var r = T.lastDay(v);
+      if (!r) return idle(out, title, 'Check the two fields: a real date, and a notice period from 0 up to 10 years.');
+      var one = r.count === 1, period = plain(r.count, 2) + ' ' + ({ weeks: one ? 'week' : 'weeks', workdays: one ? 'working day' : 'working days', months: one ? 'month' : 'months', days: one ? 'calendar day' : 'calendar days' })[r.unit];
+      board(out, title, r.count ? period + ' of notice' : 'No notice period', big(short(r.last), T.dayName(r.last)) +
+        sub('Notice given on ' + esc(T.longDate(r.date, true)) + '. ' + (r.count ? 'The notice period of ' + esc(period) + ' starts ' + (r.from === 'same' ? 'that day' : 'the next day') + ' and ends on ' + esc(T.longDate(r.end, true)) + '.' : 'With no notice period, the job ends that day.') +
+          (r.endsOnWeekend ? ' That is a ' + esc(T.dayName(r.end)) + ', so the last Monday-to-Friday on or before it is ' + esc(T.longDate(r.last, true)) + '.' : '') +
+          (r.count && !r.workDays ? ' No working day falls inside this notice period.' : '') +
+          (r.givenOnWeekend ? ' The day you picked for giving notice is a ' + esc(T.dayName(r.date)) + '; an employer may count it from the next working day.' : '') +
+          ' <b>Public holidays are not known to this page.</b> If one falls on that day or inside the period, or if your contract counts notice differently, the date changes: your contract decides.') +
+        kv([['Notice ends', short(r.end)], ['Last working day', short(r.last)], ['Working days left', fmt(r.workDays) + ' (Mon to Fri)'], ['Calendar days', fmt(r.calendarDays)]]));
+    });
+  };
+
+  /* ---------- cost per hire ---------- */
+  tools['cost-per-hire'] = function () {
+    var out = $('tl-out'), table = $('tl-table'), title = 'Cost per hire';
+    form(function (v) {
+      var r = T.costPerHire(v), s = v.cur;
+      if (!r) { table.innerHTML = ''; return idle(out, title, 'Enter what the hiring cost and how many people were hired.'); }
+      var gap = r.unpriced ? ' Hours entered without an hourly cost are not counted: add what an hour of that person’s time costs.' : '';
+      if (r.perHire == null) board(out, title, 'Total ' + money(r.total, s, 0), '<p class="tl-big tl-dim">—</p>' + sub('Enter the number of people hired (1 or more) to divide the total of ' + esc(money(r.total, s, 0)) + '.' + gap));
+      else board(out, title, fmt(r.hires, 1) + (r.hires === 1 ? ' hire' : ' hires'), big(money(r.perHire, s, 0), 'per hire') +
+        sub('Total cost ' + esc(money(r.total, s, 0)) + ' ÷ ' + esc(fmt(r.hires, 1)) + (r.hires === 1 ? ' hire' : ' hires') + '. The largest part is <b>' + esc(r.top.name.toLowerCase()) + '</b>: ' + esc(plain(r.top.share, 0)) + '% of the total.' + gap) +
+        kv([['Total cost', money(r.total, s, 0)], ['Paid to others', money(r.outside, s, 0) + ' · ' + plain(r.outside / r.total * 100, 0) + '%'], ['Your staff’s time', money(r.time, s, 0) + ' · ' + plain(r.time / r.total * 100, 0) + '%'],
+          r.hours ? ['Staff hours per hire', fmt(r.hoursPerHire, 1)] : null]));
+      table.innerHTML = '<div class="tablewrap"><table><tr><th>Part of the cost</th><th>Amount</th><th>Share</th><th>Per hire</th></tr>' + r.parts.map(function (p) {
+        return '<tr><td>' + esc(p.name) + '</td><td class="num">' + esc(money(p.amount, s, 0)) + '</td><td class="num">' + esc(plain(p.share, 1)) + '%</td><td class="num">' + (p.perHire == null ? '—' : esc(money(p.perHire, s, 0))) + '</td></tr>';
+      }).join('') + '<tr class="tl-total"><td>Total</td><td class="num">' + esc(money(r.total, s, 0)) + '</td><td class="num">100%</td><td class="num">' + (r.perHire == null ? '—' : esc(money(r.perHire, s, 0))) + '</td></tr></table></div>';
+    });
+  };
+
+  /* ---------- interview scorecard ---------- */
+  tools['interview-scorecard'] = function () {
+    var out = $('tl-out'), table = $('tl-table'), sheet = $('tl-sheet'), text = $('tl-text'), IDS = ['a', 'b', 'c'], N = 6, title = 'Weighted score';
+    var two = function (x) { return roundTo(x, 2).toFixed(2); };          // scores always with two decimals, so 4.05 and 4.00 line up
+    form(function (v) {
+      var crit = [], i;
+      for (i = 1; i <= N; i++) crit.push({ name: v['c' + i], weight: v['w' + i] });
+      var r = T.scorecard({ role: v.role, max: v.max, criteria: crit, candidates: IDS.map(function (p) { var x = []; for (var k = 1; k <= N; k++) x.push(v[p + '_r' + k]); return { name: v[p + '_name'], ratings: x }; }) });
+      for (i = 1; i <= N; i++) IDS.forEach(function (p) {                // each rating box carries the name of its criterion; a box without one is hidden
+        var lab = root.querySelector('label[for="tl-' + p + '_r' + i + '"]'), c = r.criteria.filter(function (x) { return x.i === i - 1; })[0];
+        if (!lab) return;
+        lab.parentNode.hidden = !c || !(c.weight > 0);
+        if (c) lab.textContent = c.name + ', 1 to ' + r.max;
+      });
+      var notes = [];
+      if (r.equal) notes.push('No weights are typed, so every criterion counts the same.');
+      else if (r.criteria.length && !r.sum100) notes.push('The weights add up to ' + plain(r.total, 2) + ', not 100, so each one counts as its share of that total.');
+      if (r.unweighted.length) notes.push(andList(r.unweighted) + (r.unweighted.length === 1 ? ' has' : ' have') + ' no weight and ' + (r.unweighted.length === 1 ? 'is' : 'are') + ' not counted.');
+      if (r.criteria.length && r.criteria.length < 4) notes.push('This page suggests four to six criteria; you have ' + r.criteria.length + '.');
+      if (!r.criteria.length) {
+        sheet.innerHTML = '<p class="note">Name the criteria above to build the scorecard.</p>'; text.textContent = ''; table.innerHTML = '';
+        return idle(out, title, 'Name four to six criteria, give each a weight, then rate each candidate.');
+      }
+      var scale = []; for (i = 1; i <= r.max; i++) scale.push(i);
+      sheet.innerHTML = '<p class="tl-t">Interview scorecard' + (r.role ? ': ' + esc(r.role) : '') + '</p><p class="tl-fill">Candidate ______________________ &nbsp; Interviewer ______________________ &nbsp; Date ______________</p>' +
+        '<div class="tablewrap"><table><tr><th>Criterion</th><th>Weight</th><th>Rating: circle one</th><th>What you saw or heard</th></tr>' +
+        r.criteria.map(function (c) { return '<tr><td>' + esc(c.name) + '</td><td class="num">' + esc(plain(c.share, 1)) + '%</td><td class="num">' + scale.join(' &nbsp; ') + '</td><td class="tl-wide"></td></tr>'; }).join('') +
+        '</table></div><p class="note">' + esc(cap(r.legend)) + '. Weighted score = sum of (rating × weight) ÷ sum of weights = ______ out of ' + r.max + '.</p>';
+      text.textContent = r.text;
+      var rated = r.candidates.filter(function (c) { return c.score != null; }), bad = r.candidates.reduce(function (n, c) { return n + c.bad; }, 0);
+      if (bad) notes.push(bad + ' rating' + (bad === 1 ? '' : 's') + ' outside 1 to ' + r.max + (bad === 1 ? ' was' : ' were') + ' left out.');
+      if (!rated.length) { table.innerHTML = ''; return board(out, title, '', '<p class="tl-big tl-dim">—</p>' + sub('Rate a candidate on each criterion, from 1 to ' + r.max + ', to see the weighted score. ' + esc(notes.join(' ')))); }
+      var best = r.best >= 0 ? r.candidates[r.best] : null, top = best || rated[0], open = rated.filter(function (c) { return !c.complete; });
+      board(out, title, best ? (r.tie ? 'A tie at the top' : best.name) : 'Ratings not complete', big(two(top.score), 'out of ' + r.max) +
+        sub((best ? (r.tie ? 'The top candidates have the same weighted score of ' + esc(two(best.score)) + '.' : '<b>' + esc(best.name) + '</b> has the highest weighted score: ' + esc(two(best.score)) + ' out of ' + r.max + ', which is ' + esc(plain(best.pct, 0)) + '% of the maximum.')
+          : esc(top.name) + ' so far: ' + esc(two(top.score)) + ' from ' + top.rated + ' of ' + top.of + ' criteria.') +
+          (open.length ? ' Not fully rated yet: ' + esc(open.map(function (c) { return c.name + ' (' + c.rated + ' of ' + c.of + ')'; }).join(', ')) + '.' : '') + ' ' + esc(notes.join(' ')) +
+          ' The score puts your ratings in order; the decision stays with the people who did the interviews.') +
+        kv(rated.map(function (c) { return [c.name, two(c.score) + (c.complete ? '' : ' so far')]; })));
+      table.innerHTML = '<div class="tablewrap"><table><tr><th>Criterion</th><th>Weight</th>' + r.candidates.map(function (c) { return '<th>' + esc(c.name) + '</th>'; }).join('') + '</tr>' +
+        r.criteria.map(function (c, k) {
+          return '<tr><td>' + esc(c.name) + '</td><td class="num">' + esc(plain(c.share, 1)) + '%</td>' + r.candidates.map(function (cd) { var x = cd.rows[k]; return '<td class="num">' + (x ? esc(plain(x.rating, 1)) : '—') + '</td>'; }).join('') + '</tr>';
+        }).join('') +
+        '<tr class="tl-total"><td>Weighted score</td><td class="num">100%</td>' + r.candidates.map(function (cd, k) { return '<td class="num' + (k === r.best && !r.tie ? ' tl-best' : '') + '">' + (cd.score == null ? '—' : esc(two(cd.score))) + '</td>'; }).join('') + '</tr></table></div>';
+    });
+  };
+
+  /* ---------- resume review ---------- */
+  tools['resume-review'] = function () {
+    var out = $('tl-out'), detail = $('tl-detail'), title = 'Resume review';
+    var F = form(function (v) {
+      var r = T.resumeReview(v.text);
+      if (r.error) { detail.innerHTML = ''; return idle(out, title, clean(v.text) ? 'Paste the whole resume: ' + r.words + ' words is too little to review. At least 80 are needed.' : 'Paste the text of your resume to see its score and what to fix.'); }
+      var pts = function (c) { return plain(c.points, 1) + ' of ' + plain(c.max, 1); };
+      board(out, title, fmt(r.words) + ' words · ' + r.pages, big(plain(r.score, 1), '/ 10') + meter(r.score * 10) +
+        sub('<b>' + esc(r.verdict) + '.</b> The score is the sum of the six checks below. It rates how the page reads on a first skim; it cannot tell whether the content is true, how the layout looks or how well you fit a particular job.') +
+        kv(r.checks.map(function (c) { return [c.name, pts(c)]; })));
+      detail.innerHTML = '<p class="tl-t">Strengths</p>' + (r.strengths.length ? list(r.strengths.map(function (x) { return { level: 'ok', t: x.name + ': ' + x.t, d: x.d }; })) : '<p class="note">No check has full points yet.</p>') +
+        '<p class="tl-t">Weaknesses</p>' + (r.weaknesses.length ? list(r.weaknesses.map(function (c) { return { level: 'warn', t: c.name + ': ' + c.t, d: 'Points: ' + pts(c) + '.' }; })) : '<p class="note">Every check has full points.</p>') +
+        '<p class="tl-t">What to fix, starting with what costs the most points</p>' + (r.fixes.length ? list(r.fixes.map(function (x) { return { level: 'fix', t: x.t, d: x.d, q: x.q }; })) : '<p class="note">Nothing on our list. Read the first lines of the page once more: that is the part that gets read.</p>');
+    });
+    var go = $('tl-run');
+    if (go) go.addEventListener('click', function () { F.draw(); if (out.scrollIntoView) out.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  };
+
+  /* ---------- LinkedIn profile review ---------- */
+  tools['linkedin-review'] = function () {
+    var out = $('tl-out'), detail = $('tl-detail'), title = 'Profile review';
+    var F = form(function (v) {
+      var r = T.linkedinReview(v);
+      if (r.empty) { detail.innerHTML = ''; return idle(out, title, 'Paste your headline and your About text to see what to fix.'); }
+      board(out, title, r.fixes ? 'Fixes first' : 'Nothing to fix', big(String(r.fixes), r.fixes === 1 ? 'thing to fix' : 'things to fix') +
+        sub((r.fixes ? 'The list below starts with what to fix and quotes the part of your text each point is about.' : 'None of the checks found a problem. The list shows what was tested.') + (r.notes ? ' ' + r.notes + ' smaller note' + (r.notes === 1 ? '' : 's') + ' follow.' : '')) +
+        kv([['Headline', r.headline + ' / ' + T.HEADLINE_MAX], ['About', fmt(r.about) + ' / ' + fmt(T.ABOUT_MAX)], ['To fix', String(r.fixes)], ['Notes', String(r.notes)]]));
+      detail.innerHTML = (r.opening ? '<div class="card"><p class="tl-t">The first ' + T.OPENING + ' characters of your About text: the part read before “see more”</p><blockquote class="tl-quote">' + esc(r.opening) + (r.more ? '…' : '') + '</blockquote></div>' : '') + list(r.items);
+    });
+    var go = $('tl-run');
+    if (go) go.addEventListener('click', function () { F.draw(); if (out.scrollIntoView) out.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  };
+
+  /* ---------- offer check ---------- */
+  tools['offer-check'] = function () {
+    var out = $('tl-out'), title = 'Your offer against advertised pay', D;
+    try { D = JSON.parse($('tl-data').textContent); } catch (e) { D = null; }
+    var label = function (k, val) { var el = root.querySelector('[data-k="' + k + '"]'), o = el ? Array.prototype.filter.call(el.options, function (x) { return x.value === val; })[0] : null; return o ? o.text : ''; };
+    var what = function (cat, lvl) { return (lvl && lvl !== 'none' ? label('lvl', lvl) + ' ' : '') + (cat ? label('cat', cat) : 'tech') + ' roles' + (lvl === 'none' ? ' with no level in the title' : ''); };
+    var K = function (x) { return '$' + fmt(x / 1000, 0) + 'K'; };
+    form(function (v) {
+      if (!clean(v.pay)) return idle(out, title, 'Enter the yearly pay you were offered, in US dollars.');
+      var r = T.offerCheck(D, v.pay, v.cat, v.lvl);
+      if (!r) return idle(out, title, 'Enter the offer as a number, for example 150,000 or 150k.');
+      if (r.pay < 1000) return idle(out, title, 'Enter the full yearly figure, for example 150,000 or 150k.');
+      if (!r.group) return idle(out, title, 'There are not enough open postings with a published salary to compare with today.');
+      var g = r.group, lo = g.p10 - (g.p90 - g.p10) * 0.12, hi = g.p90 + (g.p90 - g.p10) * 0.12, at = function (x) { return hi > lo ? Math.max(0, Math.min(100, (x - lo) / (hi - lo) * 100)) : 50; };
+      var bar = '<div class="tl-range" aria-hidden="true"><i style="left:' + plain(at(g.p25), 2) + '%;width:' + plain(at(g.p75) - at(g.p25), 2) + '%"></i><u style="left:' + plain(at(g.median), 2) + '%"></u>' +
+        '<b style="left:' + plain(Math.max(4, Math.min(96, at(r.pay))), 2) + '%"><span>offer</span></b></div><div class="tl-scale" aria-hidden="true"><span>' + K(g.p10) + ' · lowest tenth</span><span>top tenth · ' + K(g.p90) + '</span></div>';
+      var zone = r.zone === 'low' ? 'below the lower quarter: three out of four advertised ranges have a higher midpoint' : r.zone === 'high' ? 'above the upper quarter: three out of four advertised ranges have a lower midpoint' : 'in the middle half of the advertised ranges';
+      var wide = r.wider ? ' Fewer than ' + (D.min || 20) + ' open postings with a published salary match ' + esc(what(v.cat, v.lvl)) + ', so the offer is compared with the wider group: ' + esc(what(r.cat, r.lvl)) + '.' +
+        ' That group mixes ' + (r.mixesLevels && r.mixesCategories ? 'every category and level' : r.mixesLevels ? 'all levels' : 'every category') + ', so read the result as a rough guide.' +
+        (r.also ? ' For comparison, ' + esc(what(r.also.cat, r.also.lvl)) + ' at every level have a median of ' + K(r.also.group.median) + ' from ' + esc(fmt(r.also.group.n)) + ' postings, senior roles included.' : '') : '';
+      board(out, title, fmt(g.n) + ' postings', big((r.diff >= 0 ? '+' : '−') + plain(Math.abs(r.diff), 0) + '%', 'against the median of ' + K(g.median)) + bar +
+        sub('<b>' + esc(r.verdict) + '.</b> ' + esc(money(r.pay, '$', 0)) + ' is ' + zone + '.' + wide + ' Compared with ' + esc(fmt(g.n)) + ' open ' + esc(what(r.cat, r.lvl)) + ' that publish a yearly US-dollar range, as of ' + esc(D.date) +
+          '. These are advertised ranges, not what people were paid, and bonus and equity are not in them.') +
+        kv([['Lower quarter, below', K(g.p25)], ['Median', K(g.median)], ['Upper quarter, above', K(g.p75)], ['Your offer', money(r.pay, '$', 0)], ['Postings counted', fmt(g.n)]]));
     });
   };
 

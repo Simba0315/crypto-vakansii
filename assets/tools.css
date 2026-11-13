@@ -110,6 +110,17 @@ td.tl-best{background:var(--accent-soft)}
 .tl-zone .tl-x{width:44px}
 @media(max-width:720px){.tl-zone{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tl-zone .tl-f.z-tz,.tl-zone .tl-f.z-name{grid-column:1/-1}.tl-zone .tl-x{grid-column:1/-1;width:auto;text-align:left}}
 
+/* reviews, letters and builders: a quoted line of the visitor's own text, plain-text results, the scorecard */
+.tl-quote{margin:8px 0 0;padding:1px 0 1px 12px;border-left:2px solid var(--ac);font-size:14.5px;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+.card>.tl-quote{margin-top:0}
+.tl-q.txt{font-family:inherit;font-size:15.5px;line-height:1.55}
+.tl-paper[data-empty="1"]{color:var(--faint)}
+.tl-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(84px,130px);gap:10px;align-items:end}
+.tl-sheet .tl-t{margin-top:0}
+.tl-sheet td{padding-top:14px;padding-bottom:14px}
+.tl-sheet td.tl-wide{width:38%}
+.tl-fill{margin:0 0 12px;font-size:14.5px;color:var(--muted);overflow-wrap:anywhere}
+
 /* text under the tool */
 .tl-how p,.tl-faq p{max-width:76ch;color:var(--muted);margin:8px 0 0}
 .tl-how p:first-child{margin-top:0}
