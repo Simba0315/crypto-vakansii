@@ -209,6 +209,25 @@
     }
   });
 
+  /* ---------- home window: the tabs swap the list in place (each tab is also a plain link to its full list) ---------- */
+  (function () {
+    var tabs = $('shot-tabs'), box = $('shot-panels'), more = $('shot-more');
+    if (!tabs || !box) return;
+    tabs.addEventListener('click', function (ev) {
+      var a = ev.target.closest ? ev.target.closest('a[data-tab]') : null;
+      if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
+      ev.preventDefault();
+      var i = a.getAttribute('data-tab');
+      [].forEach.call(tabs.querySelectorAll('a[data-tab]'), function (t) { t.classList.toggle('on', t === a); });
+      [].forEach.call(box.querySelectorAll('[data-panel]'), function (u) { u.hidden = u.getAttribute('data-panel') !== i; });
+      if (more) {
+        if (!more.getAttribute('data-all')) more.setAttribute('data-all', more.textContent);
+        more.href = a.href;
+        more.textContent = i === '0' ? more.getAttribute('data-all') : a.getAttribute('data-more');
+      }
+    });
+  })();
+
   /* ---------- voice search: say it instead of typing it (browsers with speech recognition) ---------- */
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SR) Array.prototype.forEach.call(document.querySelectorAll('.searchbar'), function (bar) {

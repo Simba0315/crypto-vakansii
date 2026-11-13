@@ -1352,7 +1352,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
                       "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "browserRequirements": "Requires JavaScript", "isAccessibleForFree": True, "inLanguage": "en",
                       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": org})
         extra = section("Advertised salaries by category and level", sal_table) if t["slug"] == "salary-checker" else ""
-        body = (crumbs(("Tools", "tools/"), (t["name"], "")) + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + t["html"]
+        sub = (f'<nav class="tsub" aria-label="{"Tools for people hiring" if t["group"] == "employers" else "Tools for job seekers"}"><a class="all" href="{P}/tools/">All tools</a>'
+               + "".join(f'<a href="{P}/tools/{o["slug"]}/"' + (' aria-current="page"' if o is t else "") + f'>{e(o["name"])}</a>' for o in TOOLS if o["group"] == t["group"]) + "</nav>")
+        body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + t["html"]
                 + '<div class="tl-after">' + extra
                 + section(t["how_title"], f'<div class="tl-how">{t["how"]}</div>')
                 + section("Questions", faq_html)

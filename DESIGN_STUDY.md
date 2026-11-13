@@ -16,18 +16,17 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
 4. ✅ **Job page: the decision first.** The pay stated in the posting on a scale with the category median marked, then Apply and
    Save, then the facts.
 5. ✅ **Company page:** a sticky bar of anchors with counts, fact tiles with a small label over the value, a lead written from
-   the postings. 📋 Still to do: pay by role with the number of postings behind each figure.
+   the postings. ✅ Pay by field with the number of postings behind each figure (2026-11-13).
 6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. 📋 Still to do: the
    "Related" and "Compare with" runs as labelled rows (label left, links right, "More" last).
-7. ✅ **Tools show a result at once** ("Show an example"). 📋 Still to do: a sub-navigation under the header on tool pages and the
-   questions in two columns.
+7. ✅ **Tools show a result at once** ("Show an example"). ✅ Sub-navigation row on tool pages (2026-11-13). 📋 Still to do: the questions in two columns.
 8. ✅ **Tools index: break the grid** (2026-11-13: three wide rows plus a ruled list with an example on the right). Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
 9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
    the highest-paid list sits on a full-width dark band. 📋 Still to do: section headers with the heading left and one sentence
    plus the "all" link right.
 10. 📋 **Two type sizes by purpose:** 36–40px section headings on pages that explain, 24–28px on pages that list.
-11. ✅ **The board in the hero shows pay.** 📋 Still to do: tabs (Just posted, Highest paid, Remote).
+11. ✅ **The board in the hero shows pay**, and its tabs (Latest, Remote, With salary, Entry-level) swap the list in place (2026-11-14).
 12. ✅ **A line of provenance instead of badges and ratings:** "checked on … against employer career pages", linked to the method.
 13. ✅ **Header:** six items (was eight). 📋 Still to do: menus under Jobs, Tools and Resources, and a search field with "/".
 14. 📋 **Footer:** five short columns, then directory rows (by skill, by location, by category), then the stamp.
