@@ -399,7 +399,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
-<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
@@ -1516,10 +1516,21 @@ def main():
                 after=neighbours(slug_r) + section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
                               (f"salaries/{slug_r}/", f"{rname} salary") if paid_r >= 30 else None))
 
+    # Lists by when the work is done. People search these by the hours, not by the profession: "night shift jobs", "weekend jobs", "summer jobs".
+    HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
+        ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
+        ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
+        ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
+        ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
+        if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
+    for p_, h_, w_, js_ in HOURS:
+        listing(p_, h_, f"{h_} ({len(js_):,} open) | {SITE}", f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
+                intro_for(js_, "", f" whose posting names {w_}"), trail=(("All jobs", "jobs/"),))
     # The directory: every category with the kinds of work in it, on one page, and a page with text for each category
     kinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
         ("remote/", "Remote jobs"), ("work-from-anywhere/", "Work from anywhere"), ("new/", "New in the last 3 days"), ("entry-level/", "Entry-level jobs"), ("internships/", "Internships"),
-        ("contract/", "Contract jobs"), ("part-time/", "Part-time jobs"), ("with-salary/", "Jobs that state pay"), ("salary/200k/", "Jobs that pay $200K or more"), ("perks/visa-sponsorship/", "Jobs with visa sponsorship")))
+        ("contract/", "Contract jobs"), ("part-time/", "Part-time jobs"), ("with-salary/", "Jobs that state pay"), ("salary/200k/", "Jobs that pay $200K or more"), ("perks/visa-sponsorship/", "Jobs with visa sponsorship"),
+        ("jobs-near-me/", "Jobs near me")) + tuple((p_, h_) for p_, h_, _, _ in HOURS))
     dir_tail = (f'<div class="dirb"><h2><a href="{P}/jobs/"><u>By type of work</u></a></h2><p>How and when the work is done.</p><ul>{kinds}</ul></div>'
                 f'<div class="dirb"><h2><a href="{P}/skills/"><u>By skill or tool</u></a><span>{len(skill_counts)}</span></h2><p>Jobs that ask for a language, a program or a method by name.</p><ul>'
                 + "".join(f'<li data-n="{e(t.lower())}"><a href="{P}/skills/{tslug(t)}/">{e(t)} jobs</a><span>{c:,}</span></li>' for t, c in skill_counts.most_common(14))
@@ -1676,7 +1687,7 @@ def main():
                      + '<nav class="anch" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
                      + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
                      + (f'<a href="#closed">Closed <b>{len(arc):,}</b></a>' if arc else "") + '</nav><div id="jobs"></div>')
-        listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Jobs — {roles(len(act), 'open role')} | {SITE}",
+        listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'open job')} today | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + ". Categories, locations and remote roles.",
                 act, head_html=head_html, after=overview + closed + embed, faq=f"jobs at {c}", feed=True)
 
@@ -3195,7 +3206,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     ai_m = re.search(r"AI_MONTHLY\s*=\s*\{\s*resume:\s*(\d+),\s*letter:\s*(\d+),\s*interview:\s*(\d+)", (ROOT / "server" / "src" / "worker.js").read_text(encoding="utf-8") if (ROOT / "server" / "src" / "worker.js").exists() else "")
     ai_allow = f"{ai_m.group(1)} resume tasks, {ai_m.group(2)} letters, {ai_m.group(3)} interview sessions" if ai_m else "Shown before you pay"
     plus_price = " · ".join(f'{was_span(pl)}<b>{e(pl["price"])}</b> for {e(pl["name"])}' for pl in plus["plans"]) or "Plus"
-    seek_pt = ptable([("Free", "<b>$0</b>", "No account, no card", False), ("Plus", plus_price, "One payment. Nothing renews", True)], [
+    seek_pt = ptable([("Free", "<b>$0</b>", "No account, no card", False), ("Plus", (f'from {was_span(plus["plans"][0])}<b>{e(plus["plans"][0]["price"])}</b>' if plus["plans"] else "Plus"), "One payment. Nothing renews", True)], [
         ("Resume",), ("Resume builder", "All 5 templates", "All 5 templates"), ("Resumes kept", "~1, in this browser", "Unlimited, on every device"), ("PDF and Word downloads", "Unlimited", "Unlimited"),
         (f"Resume examples for {len(rex_data)} kinds of work", True, True),
         ("AI writer",), ("AI writer for bullet points and summary", False, True), ("Keywords for one posting", "~Found and missing", "Bullets reworded for the posting"),
@@ -3334,19 +3345,108 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     extra_rows = "".join(f"<tr><td><strong>{e(p_['name'])}</strong></td><td>{was_of(p_['name'])}<strong>{e(p_['price'])}</strong></td><td>{e(p_['what'])}</td></tr>"
                          for p_ in CFG["prices"] if p_["name"] not in ("Standard listing", "Featured job", "Pinned job"))
     low_day = min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else ""
+    # Plan cards first (plan, price, button: how every pricing page that sells is read), the line-by-line tables under them.
+    # "Recommended" is our advice, said as such; "most popular" would be a claim about sales that have not happened.
+    def pcard(name, price, per, sub, btn, fine="", chip="", was="", best=False, ticks=None):
+        return (f'<div class="pcard{" best" if best else ""}">' + ('<span class="pband">Recommended</span>' if best else "")
+                + f'<p class="pk-n">{e(name)}</p><p class="pk-p"><b>{e(price)}</b><span>{e(per)}</span></p>'
+                + '<p class="pk-s">' + (f"<s>{e(was)}</s>" if was else "") + (f'<span class="pchip">{e(chip)}</span>' if chip else "") + "</p>"
+                + f'<p class="pk-d">{e(sub)}</p>{btn}' + (f'<p class="pk-f">{e(fine)}</p>' if fine else "") + (tick(ticks) if ticks else "") + "</div>")
+    def plus_btn(best):
+        kind = "primary" if best else "ghost"
+        return (f'<a class="btn {kind}" href="{P}/plus/#pay">Get Plus</a>' if plus.get("live") else f'<a class="btn {kind}" href="{P}/plus/">See what Plus does</a>')      # not on sale yet: a dead grey button teaches nothing, the Plus page does
+    seek_cards = ('<div class="pgrid">'
+                  + pcard("Free", "$0", "forever", "Everything needed to find a job and apply.", f'<a class="btn ghost" href="{P}/for-you/">Start free</a>', "No account, no card.",
+                          ticks=["Every job and the link to apply", "Search, 23 fields of work, salary data", "Resume builder: 5 templates, PDF and Word", "Resume examples and letter templates", "Application tracker on this device"])
+                  + '<div class="pside"><div class="pcards c3">'
+                  + "".join(pcard(f"Plus · {pl['name']}", pl["price"], f"for {pl['name']}", " · ".join(x for x in (pl.get("per", ""), per_day(pl)) if x), plus_btn(pl.get("best")),
+                                  "One payment. It ends by itself; nothing renews.", chip=pl.get("note", ""), was=pl.get("was", ""), best=bool(pl.get("best"))) for pl in plus["plans"])
+                  + '</div><div class="pincl"><p class="pk-n">Every Plus plan includes everything in Free, and</p>'
+                  + tick(["AI resume writer and editor", "Resume reworded for each posting", "AI resume review: score and rewrites", "AI cover, thank-you and resignation letters", "Interview practice for the posting",
+                          "An email the day a job fits", "Pay check with a negotiating script", "Your jobs and resumes on every device"]) + "</div></div></div>") if plus["plans"] else ""
+    def emp_btn(best):
+        kind = "primary" if best else "ghost"
+        return f'<a class="btn {kind}" href="{e(app_url)}">Post a job</a>' if app_url else f'<a class="btn {kind}" href="{P}/post-a-job/">How posting works</a>'
+    emp_cards = ('<div class="pcards c3">'
+                 + pcard("Standard", "Free", "for 30 days", "Your job in the list and in search, like every other job here.", emp_btn(False),
+                         ticks=["Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close or renew it yourself"])
+                 + pcard("Featured", price_of("Featured job"), "for 14 days", "A highlighted row that stays above the regular listings of its category.", emp_btn(True), "One payment per job.",
+                         was=PRICE.get("Featured job", {}).get("was", ""), best=True,
+                         ticks=["Everything in Standard", "Highlighted row with a “Featured” mark", "Above regular listings for 14 days", "Views and clicks to apply in your account"])
+                 + pcard("Pinned", price_of("Pinned job"), "for 7 days", "The first row on the home page and in its category.", emp_btn(False), "One payment per job.",
+                         was=PRICE.get("Pinned job", {}).get("was", ""),
+                         ticks=["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites read"]) + "</div>")
     page("pricing/", f"Pricing: free for job seekers, Plus from {plus['plans'][0]['price'] if plus['plans'] else ''}, featured jobs from {price_of('Featured job')} | {SITE}",
          f"What is free and what is paid, side by side. Job seekers: every job and the resume builder are free, Plus adds an AI writer from {low_day}. Employers: a standard listing is free, a featured job is {price_of('Featured job')}.",
          crumbs(("Pricing", "")) + '<h1>Pricing: what is free and <span class="hl">what you pay for</span></h1>'
-         '<p class="lead">Two tables, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
+         '<p class="lead">Two sets of plans, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
          '<p class="tabs pswitch" id="pswitch" hidden><button class="tab" type="button" data-v="s" aria-pressed="true">I’m looking for work</button><button class="tab" type="button" data-v="e" aria-pressed="false">I’m hiring</button></p>'
          + LAUNCH
-         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_pt}'
+         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_cards}<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}'
            f'<p><a class="btn primary" href="{P}/for-you/">Start free with five questions</a> <a class="btn ghost" style="margin-top:0" href="{P}/plus/">See Plus</a></p></section>'
          + f'<section class="sec" id="for-employers"><div class="sec-head"><h2>Hiring</h2><a href="{P}/post-a-job/">See a featured job</a></div>'
-           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_pt
+           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_cards + '<h3 class="cmp-h">Standard, Featured and Pinned, line by line</h3>' + emp_pt
            + f'<h3>More ways to be seen</h3><div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What you get</th></tr>{extra_rows}</table></div>'
            f'<p><a class="btn primary" href="{P}/post-a-job/">Post a job</a></p></section>'
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in price_qa) + "</dl>"), head=price_ld)
+    # "Jobs near me" and "part time jobs near me": among the most searched job phrases in every country.
+    # The country comes from the device's time zone (nothing is sent anywhere); the nearest city only if the visitor allows location, and it is worked out in the browser.
+    CITY_LL = {"new-york": (40.71, -74.01), "san-francisco": (37.77, -122.42), "seattle": (47.61, -122.33), "austin": (30.27, -97.74), "chicago": (41.88, -87.63), "boston": (42.36, -71.06),
+               "washington-dc": (38.91, -77.04), "denver": (39.74, -104.99), "los-angeles": (34.05, -118.24), "dallas": (32.78, -96.80), "atlanta": (33.75, -84.39), "san-diego": (32.72, -117.16),
+               "pittsburgh": (40.44, -80.00), "portland": (45.52, -122.68), "miami": (25.76, -80.19), "phoenix": (33.45, -112.07), "raleigh-durham": (35.78, -78.64), "houston": (29.76, -95.37),
+               "toronto": (43.65, -79.38), "vancouver": (49.28, -123.12), "berlin": (52.52, 13.40), "munich": (48.14, 11.58), "bangalore": (12.97, 77.59), "sydney": (-33.87, 151.21),
+               "united-kingdom": (51.51, -0.13), "singapore": (1.35, 103.82), "hong-kong": (22.32, 114.17), "uae": (25.20, 55.27), "ireland": (53.35, -6.26), "france": (48.86, 2.35),
+               "netherlands": (52.37, 4.90), "japan": (35.68, 139.69), "israel": (32.08, 34.78), "poland": (52.23, 21.01), "spain": (40.42, -3.70), "portugal": (38.72, -9.14),
+               "sweden": (59.33, 18.07), "switzerland": (47.38, 8.54), "brazil": (-23.55, -46.63), "mexico": (19.43, -99.13), "south-korea": (37.57, 126.98), "taiwan": (25.03, 121.57)}
+    def near_page(path, et, h1, title, desc, lead):
+        nj = lambda js: [j for j in js if not et or j.get("etype") == et]
+        rows_ = sorted(((name.removeprefix("the "), slug, nj(js)) for name, slug, js in places), key=lambda x: -len(x[2]))
+        rows_ = [r for r in rows_ if r[2]]
+        ntile = lambda name, slug, js: (f'<li><a class="tile" href="{P}/' + (f"jobs/?loc={slug}&amp;etype={quote(et)}" if et else f"locations/{slug}/") + f'" data-place="{slug}" data-name="{e(name)}"'
+                                        + (f' data-ll="{CITY_LL[slug][0]},{CITY_LL[slug][1]}"' if slug in CITY_LL else "") + f'><span class="n">{pfl(slug)}{e(name)}</span><span class="c">{len(js):,}</span></a></li>')
+        is_city = lambda slug: not isinstance(rule_of.get(slug), str)
+        cities = "".join(ntile(*r) for r in rows_ if is_city(r[1]))
+        lands = "".join(ntile(*r) for r in rows_ if not is_city(r[1]))
+        allj = nj(active)
+        word = (et.lower() + " ") if et else ""
+        qa = [(f"How does this page know which {word}jobs are near me?", "It reads the time zone your device is set to and takes the country from it. Nothing is sent anywhere and nothing is stored on a server. "
+               "For the nearest city, press “Use my location”: your browser asks first, and the distance is worked out on your device."),
+              ("What if my city is not in the list?", f"Cities get their own list when enough employers hire there. Until then your country’s list holds those jobs, and the search finds a city by name. There are {len(rows_)} places today."),
+              (f"Are there remote {word}jobs I can do from here?", "Yes. A remote job names the countries it can be done from, and those jobs are in your country’s list. Jobs open to any country are under “work from anywhere”."),
+              ("How fresh are the jobs?", "Every job is read from the employer’s own careers page every hour. When the employer closes it, it leaves the list within the hour.")]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        static_list = (section(f"Newest {word}jobs, everywhere", f'<ul class="jobs">{"".join(card(j) for j in diverse(order(allj), 30, 2))}</ul>',
+                               (("part-time/", "All part-time jobs") if et == "Part-time" else ("jobs/?etype=Full-time", "All full-time jobs") if et == "Full-time" else ("new/", "All new jobs"))) if allj else "")
+        page(path, title, desc,
+             crumbs((h1, "")) + f'<h1>{e(h1.rsplit(" ", 2)[0])} <span class="hl">near me</span></h1><p class="lead">{lead}</p>'
+             f'<p class="near" id="near" hidden></p>'
+             f'<section class="sec nearme" id="nearme" data-etype="{e(et)}" hidden><div class="sec-head"><h2 id="nearme-h"></h2><span id="nearme-more"></span></div><ul class="jobs" id="nearme-list"></ul>'
+             '<p><button class="btn ghost sm" type="button" id="nearme-geo" hidden style="margin-top:0">Use my location for the nearest city</button> '
+             '<span class="note" id="nearme-note">The country is taken from your device’s time zone. Nothing is sent anywhere.</span></p></section>'
+             + (section("Pick a city", f'<ul class="tiles">{cities}</ul>') if cities else "")
+             + section("Pick a country or a part of the world", f'<ul class="tiles">{lands}</ul>', ("locations/", "All places"))
+             + section("Or work from home", '<div class="feats">'
+                       f'<a class="feat" href="{P}/remote/"><h3>Remote jobs</h3><p>{sum(1 for j in active if j["remote"]):,} jobs done from home. Each one says which countries it is open to.</p></a>'
+                       f'<a class="feat" href="{P}/work-from-anywhere/"><h3>Work from anywhere</h3><p>{sum(1 for j in active if j.get("anywhere")):,} remote jobs open to any country.</p></a>'
+                       f'<a class="feat" href="{P}/part-time/"><h3>Part-time jobs</h3><p>{sum(1 for j in active if j.get("etype") == "Part-time"):,} jobs for fewer hours than a full week.</p></a>'
+                       f'<a class="feat" href="{P}/entry-level/"><h3>Entry-level jobs</h3><p>Jobs for a first year of work, and internships.</p></a></div>')
+             + static_list
+             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>"), head=ld_)
+    near_page("jobs-near-me/", "", "Jobs near me", f"Jobs Near Me: {len(active):,} open jobs in {len(places)} cities and countries | {SITE}",
+              f"Jobs near you, hiring now: {len(active):,} open jobs in {len(places)} cities and countries, read from employers’ own pages every hour. Your country is found from the time zone; pick a city or allow location for the nearest one.",
+              f"{len(active):,} open jobs in {len(places)} cities and countries, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+    ft_n = sum(1 for j in active if j.get("etype") == "Full-time")
+    if ft_n >= 20:
+        near_page("full-time-jobs-near-me/", "Full-time", "Full-time jobs near me", f"Full-Time Jobs Near Me: {ft_n:,} open today | {SITE}",
+                  f"Full-time jobs near you, hiring now: {ft_n:,} open full-week jobs by city and country, read from employers’ own pages every hour.",
+                  f"{ft_n:,} open jobs that the employer marks as full-time, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+    pt_n = sum(1 for j in active if j.get("etype") == "Part-time")
+    if pt_n >= 20:
+        near_page("part-time-jobs-near-me/", "Part-time", "Part-time jobs near me", f"Part-Time Jobs Near Me: {pt_n:,} open today | {SITE}",
+                  f"Part-time jobs near you, hiring now: {pt_n:,} open jobs for fewer hours than a full week, by city and country, read from employers’ own pages every hour.",
+                  f"{pt_n:,} open part-time jobs, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+
     # Mentors: what it will be and an application for real people. No mentor is listed until a real one is checked; nobody is invented.
     tg = CFG.get("contact_telegram", "")
     men_qa = [("Are the mentors real people?", "Yes, or there are none. A mentor is listed only under a real name, with a public profile we have checked and the companies they worked at. No mentor is invented, and software is never shown as a person."),

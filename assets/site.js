@@ -552,6 +552,65 @@
   bindJob(document);
   near();
 
+  /* ---------- "jobs near me": the list for the visitor's place. Country from the time zone; nearest city only if the visitor allows location (worked out here, sent nowhere) ---------- */
+  function nearMe() {
+    var box = document.getElementById('nearme'); if (!box) return;
+    var et = box.getAttribute('data-etype') || '', head = document.getElementById('nearme-h'), list = document.getElementById('nearme-list'), more = document.getElementById('nearme-more');
+    var btn = document.getElementById('nearme-geo'), note = document.getElementById('nearme-note');
+    var num = function (x) { return Number(x).toLocaleString('en-US'); };
+    function tileOf(slug) { return document.querySelector('[data-place="' + slug + '"]'); }
+    function show(slug, name, how, wider) {
+      load().then(function (rows) {
+        var got = rows.filter(function (j) { return j[14].indexOf(slug) >= 0 && (!et || j[19] === et) && !j[22]; });
+        if (!got.length && wider) return wider();            // nothing in the country today: the part of the world it is in
+        var codes = got.length ? got[0][24].slice(0, 1) : [];
+        head.innerHTML = (et ? esc(et) + ' jobs in ' : 'Jobs in ') + (tileOf(slug) && tileOf(slug).querySelector('.fl') ? tileOf(slug).querySelector('.fl').outerHTML : flags(codes)) + esc(name) +
+          ' <span class="pill">' + num(got.length) + '</span>';
+        list.innerHTML = got.slice(0, 20).map(function (j) { return card(j); }).join('') ||
+          '<li class="job"><span class="js" style="padding:16px">No ' + (et ? esc(et.toLowerCase()) + ' ' : '') + 'jobs in ' + esc(name) + ' today. The lists below cover other places and work from home.</span></li>';
+        more.innerHTML = got.length > 20 ? '<a href="' + P + '/jobs/?loc=' + slug + (et ? '&etype=' + encodeURIComponent(et) : '') + '">All ' + num(got.length) + ' in ' + esc(name) + '</a>' : '';
+        if (how && note) note.textContent = how;
+        box.hidden = false; freshen(list);
+      }).catch(function () {});
+    }
+    function km(a, b, c, d) {
+      var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2), h = x * x + Math.cos(a * r) * Math.cos(c * r) * y * y;
+      return 12742 * Math.asin(Math.sqrt(h));
+    }
+    function byZone() {
+      fetch(P + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
+        var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+        var code = get('hrn_place', '') || G.tz[tz] || '', c = G.c[code];
+        if (c && c[1]) return show(c[1], c[0], '', function () {
+          var reg = G.r[c[4]];
+          if (reg) show(c[4], reg[0], 'Nothing in ' + c[0] + ' today, so this is the list for ' + reg[0] + '.'); else show(c[1], c[0]);
+        });
+        var key = (c && c[4]) || (/^Europe\//.test(tz) ? 'europe' : /^(Asia|Australia|Pacific|Indian)\//.test(tz) ? 'asia-pacific' : /^Africa\//.test(tz) ? 'africa' : /^America\//.test(tz) ? 'latin-america' : '');
+        if (key && G.r[key]) show(key, G.r[key][0]);
+      }).catch(function () {});
+    }
+    byZone();
+    document.addEventListener('change', function (ev) { if (ev.target.id === 'near-sel' && ev.target.value) setTimeout(byZone, 0); });
+    if (btn && navigator.geolocation) {
+      btn.hidden = false;
+      btn.addEventListener('click', function () {
+        btn.disabled = true; btn.textContent = 'Asking your browser…';
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          var best = null;
+          Array.prototype.forEach.call(document.querySelectorAll('[data-ll]'), function (a) {
+            var ll = a.getAttribute('data-ll').split(','), d = km(pos.coords.latitude, pos.coords.longitude, Number(ll[0]), Number(ll[1]));
+            if (!best || d < best.d) best = { d: d, slug: a.getAttribute('data-place'), name: a.getAttribute('data-name') };
+          });
+          btn.disabled = false; btn.textContent = 'Use my location for the nearest city';
+          if (best && best.d <= 150) show(best.slug, best.name, 'Nearest list: ' + best.name + ', about ' + Math.round(best.d) + ' km from you. Your location stayed on this device.');
+          else if (note) note.textContent = 'No city list within 150 km of you yet, so the country list is shown. Your location stayed on this device.';
+        }, function () { btn.disabled = false; btn.textContent = 'Use my location for the nearest city'; if (note) note.textContent = 'Location was not shared. The country is taken from your device’s time zone.'; },
+        { maximumAge: 600000, timeout: 10000 });
+      });
+    }
+  }
+  nearMe();
+
   /* ---------- lists: saved / applied / viewed marks, faster navigation ---------- */
   decorate(document);
   setInterval(function () { freshen(); }, 60000);           // "20 min" becomes "21 min" while the page stays open

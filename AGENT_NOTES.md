@@ -314,3 +314,15 @@ list page about 34 KB. That leaves room for roughly 10,000 more jobs. More than 
 (`server/`), which waits for the owner's domain. `sources_candidates.json` (when present) is a list of further company boards found
 and verified but NOT yet read by the collector: add from it only as far as the size allows.
 
+## Pricing cards and near-me pages (13 Nov 2026)
+
+`/pricing/` is built from `pcard()` (plan cards) above `ptable()` (line-by-line tables). The highlighted card says “Recommended”, never
+“Most popular”: nothing has been sold, and the site does not state what it cannot show. Prices come from `config.json` only.
+The owner wants the best of several sites, not a copy of one: `PRICING_RESEARCH.md` holds what other job sites charge and how their
+pricing pages are laid out.
+
+`near_page()` makes `/jobs-near-me/`, `/part-time-jobs-near-me/` and `/full-time-jobs-near-me/`. `nearMe()` in `site.js` fills the list:
+country from the time zone (`data/geo.json`), nearest city from the browser's location only after the visitor presses the button
+(`CITY_LL` in `build.py` holds the coordinates; the distance is worked out in the browser). Nothing about the visitor is sent anywhere,
+and the page says so.
+
