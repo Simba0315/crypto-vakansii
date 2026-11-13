@@ -240,6 +240,10 @@
     var q1 = function (sel) { return root.querySelector(sel); };
     var saveBtn = q1('#save'), appliedBtn = q1('#applied');
     if (!saveBtn) return;
+    var shareRow = q1('#share');
+    if (shareRow && !shareRow.firstChild) shareRow.innerHTML = '<span>Share:</span><button class="linkbtn" id="copy" type="button">Copy link</button>' +
+      ['LinkedIn', 'X', 'Telegram', 'WhatsApp', 'Reddit', 'Email'].map(function (n) { return '<button class="linkbtn" type="button" data-share="' + n.toLowerCase() + '">' + n + '</button>'; }).join('') +
+      '<button class="linkbtn" id="hide" type="button">Not interested</button><button class="linkbtn" id="mute" type="button">Hide this company</button>';
     var me = { s: saveBtn.getAttribute('data-slug'), t: saveBtn.getAttribute('data-title'), c: saveBtn.getAttribute('data-company'), l: root.querySelector('.jhead .ava.has') ? 1 : 0 };
     var label = function () {
       var rec = jobs[me.s];

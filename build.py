@@ -112,6 +112,9 @@ PLACES = [
 ]
 
 
+PLACES += [(nm, re.sub(r"[^a-z0-9]+", "-", nm.lower()).strip("-"), code) for code, nm, _, _ in COUNTRIES if code not in {r for _, _, r in PLACES if isinstance(r, str)}]
+
+
 def places_of(loc):
     """Slugs of every place page a location line belongs on."""
     codes = {c for c, _ in countries_of(loc)}
@@ -664,11 +667,7 @@ def job_page(j, active_by_cat):
     save_btn = ((f'<div class="sideact"><button class="btn ghost" id="save" type="button" {data}>Save job</button>'
                  f'<button class="btn ghost" id="applied" type="button">Mark as applied</button></div>'
                  f'<p class="note">Applying is free and happens on the employer\'s own page.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>'
-                 '<p class="share"><span>Share:</span><button class="linkbtn" id="copy" type="button">Copy link</button>'
-                 '<button class="linkbtn" type="button" data-share="linkedin">LinkedIn</button><button class="linkbtn" type="button" data-share="x">X</button>'
-                 '<button class="linkbtn" type="button" data-share="telegram">Telegram</button><button class="linkbtn" type="button" data-share="whatsapp">WhatsApp</button>'
-                 '<button class="linkbtn" type="button" data-share="reddit">Reddit</button><button class="linkbtn" type="button" data-share="email">Email</button>'
-                 f'<button class="linkbtn" id="hide" type="button">Not interested</button><button class="linkbtn" id="mute" type="button">Hide this company</button></p>'
+                 '<p class="share" id="share"></p>'
                  f'<p class="note"><a href="{P}/safety/">How to check that a job offer is real</a></p>') if j["active"] else "") + glance
     loc = f" · {e(j['location'])}" if j["location"] else ""
     body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
@@ -907,6 +906,7 @@ def main():
     cmp_links = lambda t: ('<p class="note cmpl">Compare ' + e(t) + " with: " + " · ".join(f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t) + "</p>") if t in CMP else ""
     LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead & principal")]
     combos, REL = [], defaultdict(list)
+    big_places = [x for x in places if len(x[2]) >= 150]      # combination pages only where a place has enough jobs to fill them
     def add(path, h1, js, trail, qs, pre, post, keys):
         if len(js) < 8: return
         combos.append((path, h1, js, trail, qs, pre, post))
@@ -914,7 +914,7 @@ def main():
     for t, js in by_tag.items():
         add(f"remote/skills/{tslug(t)}/", f"Remote {t} jobs", [j for j in js if j["remote"]], (("Remote", "remote/"),),
             f"remote=1&skills={quote(t)}", "remote ", f" mentioning {e(t)}", [("tag:" + t, f"Remote {t} jobs"), ("remote", f"Remote {t}")])
-        for name, slug, _ in places:
+        for name, slug, _ in big_places:
             short = name.removeprefix("the ")
             add(f"locations/{slug}/skills/{tslug(t)}/", f"{t} jobs in {name}", [j for j in js if slug in j["places"]],
                 (("Locations", "locations/"), (short, f"locations/{slug}/")), f"loc={slug}&skills={quote(t)}", "", f" mentioning {e(t)} in {e(name)}",
@@ -934,7 +934,7 @@ def main():
         many = ROLE_PLURAL.get(rname, low + "s")
         add(f"roles/{slug_r}/remote/", f"Remote {low} jobs", [j for j in rj if j["remote"]], trail_r, f"remote=1&q={quote(rname)}", "remote ", f" for {e(many)}", [("role:" + slug_r, "Remote")])
         add(f"roles/{slug_r}/entry-level/", f"Entry-level {low} jobs", [j for j in rj if j["entry"]], trail_r, f"entry=1&q={quote(rname)}", "entry-level ", f" for {e(many)}", [("role:" + slug_r, "Entry-level")])
-        for name, slug, _ in places:
+        for name, slug, _ in big_places:
             add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", [j for j in rj if slug in j["places"]], trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(many)} in {e(name)}",
                 [("role:" + slug_r, name.removeprefix("the ")), ("place:" + slug, rname)])
     cut3 = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
@@ -953,7 +953,7 @@ def main():
         pk = [j for j in active if perk_name in j.get("perks", [])]
         add(f"perks/{perk_slug}/remote/", f"Remote tech jobs with {perk_name.lower()}", [j for j in pk if j["remote"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
             f"remote=1&perk={quote(perk_name)}", "remote ", f" that mention {perk_name.lower()}", [])
-        for name, slug, _ in places:
+        for name, slug, _ in big_places:
             add(f"perks/{perk_slug}/{slug}/", f"Tech jobs with {perk_name.lower()} in {name}", [j for j in pk if slug in j["places"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
                 f"loc={slug}&perk={quote(perk_name)}", "", f" in {e(name)} that mention {perk_name.lower()}", [("place:" + slug, perk_name)])
     for k_ in (100, 150, 200, 250, 300):                       # "jobs that pay 100k": the low end of the advertised range is at least that much
@@ -1064,6 +1064,7 @@ def main():
          f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>')
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
+    PLACE_LIVE = {slug for _, slug, _ in places}
     PLACE_SLUG = {v: k for k, v in PLACE_NAME.items()}
     for c, js in companies.items():
         slug = slugify(c)
@@ -1091,7 +1092,7 @@ def main():
                  f'<pre><code>{badge_code(f"badge/companies/{slug}.svg", c + " is hiring", f"companies/{slug}/")}</code></pre>'
                  f'<p class="note"><a href="{P}/widgets/">More widgets and badges →</a></p></details>')
         stack = [t for t, _ in Counter(t for j in act for t in j["tags"]).most_common(10)]
-        where = Counter(p_ for j in act for p_ in j["places"]).most_common(6)
+        where = Counter(p_ for j in act for p_ in j["places"] if p_ in PLACE_LIVE).most_common(6)      # only places that have a page
         sim = sorted(((len(set(stack) & set(STACK[o])), OPEN[o], o) for o in STACK if o != c and len(set(stack) & set(STACK[o])) >= 4), reverse=True)[:6]
         overview = ""
         if stack:
