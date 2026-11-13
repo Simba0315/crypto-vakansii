@@ -389,66 +389,209 @@
     }
   }
 
-  /* ---------- For you: skill profile and resume scan ---------- */
+  /* ---------- For you: five plain questions; every open job is checked against the answers ---------- */
   var fy = $('fy-root');
   if (fy) {
+    // the answers stay in this browser; an older profile (one category, a level name, "remote only") is carried over
+    if (!profile.skills) profile.skills = [];
+    if (!profile.cats) profile.cats = profile.cat ? [profile.cat] : [];
+    if (profile.exp == null) profile.exp = { Intern: '0', Junior: '0', Senior: '2', Lead: '3' }[profile.lvl] || '';
+    if (profile.where == null) profile.where = profile.remote ? 'remote' : '';
+    if (profile.pay == null) profile.pay = profile.sal > 1 ? profile.sal : 0;
     var chips = Array.prototype.slice.call(fy.querySelectorAll('#fy-skills .chipbtn'));
-    var lvl = $('fy-lvl'), cat = $('fy-cat'), sal = $('fy-sal'), rem = $('fy-remote'), list = $('fy-list'), count = $('fy-count'), more = $('fy-more');
-    var shown = 40, found = [], extra = new Map(), scores = new Map();
-    lvl.value = profile.lvl || ''; cat.value = profile.cat || ''; sal.value = profile.sal ? String(profile.sal) : ''; rem.checked = !!profile.remote;
-    var paintChips = function () { chips.forEach(function (c) { c.setAttribute('aria-pressed', profile.skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); };
+    var place = $('fy-place'), payIn = $('fy-pay-in'), noPay = $('fy-nopay'), list = $('fy-list'), count = $('fy-count'), more = $('fy-more'), jump = $('fy-jump');
+    var payNote = $('fy-pay-note'), gap = $('fy-gap');
+    var shown = 30, found = [], nFull = 0, extra = new Map(), why = new Map(), asked = 0;
+    var LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, REG = { europe: 1, 'asia-pacific': 1, 'latin-america': 1, africa: 1 };
+    var DROP = { work: 'Any kind of work', exp: 'Any experience', where: 'Home or office, any country', country: 'Any country', pay: 'Any pay', skills: 'Without the skills' };
+    var nf = function (x) { return Number(x).toLocaleString('en-US'); };
+    var kfmt = function (v) { return '$' + (v >= 1000 ? Math.round(v / 1000) + 'K' : v); };
+    var jobsWord = function (k) { return nf(k) + (k === 1 ? ' job' : ' jobs'); };
+    // the lower end of a yearly US-dollar range, read from the text of the posting's pay line; 0 when it cannot be read
+    var lowOf = function (j) {
+      var m = /(\d{1,3}(?:[ , ]\d{3})+|\d[\d.]*)\s?(k)?/i.exec(j[8] || ''); if (!m) return 0;
+      var v = parseFloat(m[1].replace(/[ , ]/g, '')) * (m[2] ? 1000 : 1);
+      return v >= 10000 && v <= j[13] ? v : 0;
+    };
+    var catName = {};
+    Array.prototype.forEach.call(fy.querySelectorAll('#fy-work .opt'), function (b) { catName[b.getAttribute('data-v')] = b.querySelector('b').textContent; });
+    var press = function (boxId, test) { Array.prototype.forEach.call(fy.querySelectorAll('#' + boxId + ' .opt'), function (b) { b.setAttribute('aria-pressed', test(b.getAttribute('data-v')) ? 'true' : 'false'); }); };
+    var paint = function () {
+      chips.forEach(function (c) { c.setAttribute('aria-pressed', profile.skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); });
+      press('fy-work', function (v) { return profile.cats.indexOf(v) >= 0; });
+      press('fy-exp', function (v) { return String(profile.exp) === v && v !== ''; });
+      press('fy-where', function (v) { return (profile.where || '') === v && (v !== '' || profile.whereSet); });
+      press('fy-pay', function (v) { return Number(v) === (profile.pay || 0) && (Number(v) > 0 || profile.paySet); });
+      place.value = profile.place || '';
+      noPay.checked = !!profile.nopay;
+      if (document.activeElement !== payIn) payIn.value = profile.pay && !fy.querySelector('#fy-pay .opt[data-v="' + profile.pay + '"]') ? profile.pay : '';
+    };
+    // the answers in the shape the checks need; `skip` leaves one question out (used for "what if I drop this answer")
+    var answers = function (skip) {
+      var o = place.options[place.selectedIndex], set_ = {};
+      if (o && profile.placeGuess && !profile.whereSet) o = null;          // a country guessed from the time zone counts only once question 3 is answered
+      profile.skills.forEach(function (s) { set_[s] = 1; });
+      var A = { cats: skip === 'work' ? [] : profile.cats, exp: skip === 'exp' || profile.exp === '' ? '' : Number(profile.exp),
+        where: skip === 'where' ? '' : profile.where || '', slug: skip === 'where' || skip === 'country' || !o ? '' : o.getAttribute('data-s') || '', reg: o ? o.getAttribute('data-r') || '' : '',
+        cname: o && o.value ? o.textContent : '', pay: skip === 'pay' ? 0 : profile.pay || 0, nopay: skip === 'pay' ? false : !!profile.nopay,
+        skills: skip === 'skills' ? [] : profile.skills, set: set_ };
+      A.n = (A.cats.length ? 1 : 0) + (A.exp !== '' ? 1 : 0) + (A.where || A.slug ? 1 : 0) + (A.pay || A.nopay ? 1 : 0) + (A.skills.length ? 1 : 0);
+      return A;
+    };
+    // one job against the answers: null when it contradicts one, otherwise ticks, question marks and the reasons to show
+    var judge = function (j, A) {
+      if (mute.c[j[2]] || hidden[j[0]]) return null;
+      if (mute.w.length) { var low = j[1].toLowerCase(); for (var w = 0; w < mute.w.length; w++) if (low.indexOf(mute.w[w]) >= 0) return null; }
+      var ok = 0, half = 0, bits = [], k = 0, edge = 0, i;
+      if (A.cats.length) { if (A.cats.indexOf(j[5]) < 0) return null; ok++; bits.push([1, catName[j[5]] || j[5]]); }
+      if (A.exp !== '') {
+        var lv = LV[j[6]] == null ? 1 : LV[j[6]], d = A.exp === 0 && lv <= 0 ? 0 : Math.abs(A.exp - lv);
+        if (d > 1) return null;
+        if (!d) { ok++; bits.push([1, j[6] ? j[6] + ' level' : 'Mid-level title']); }
+        else { half++; bits.push([0, j[6] ? j[6] + ' level, a step ' + (lv > A.exp ? 'above' : 'below') + ' yours' : 'Title does not name a level']); }
+      }
+      if (A.where || A.slug) {
+        var pl = j[14], inC = A.slug && pl.indexOf(A.slug) >= 0, res;
+        var fromHome = function () {
+          if (!j[4]) return null;
+          if (!A.slug) return [1, 'Remote'];
+          if (j[20]) return [1, 'Remote, open to any country'];
+          if (inC) return [1, 'Remote, names ' + A.cname];
+          if (A.reg && pl.indexOf(A.reg) >= 0 && pl.every(function (p) { return REG[p]; })) return [1, 'Remote across your region'];
+          return pl.length ? null : [0, 'Remote, does not say from which countries'];
+        };
+        var onSite = function () { return j[4] ? null : !A.slug ? [1, 'On site or hybrid'] : inC ? [1, 'In ' + A.cname] : null; };
+        res = A.where === 'remote' ? fromHome() : A.where === 'office' ? onSite() : onSite() || fromHome();
+        if (!res) return null;
+        if (res[0]) ok++; else half++;
+        bits.push(res);
+      }
+      if (A.pay || A.nopay) {
+        if (j[13]) {
+          if (A.pay && j[13] < A.pay) return null;
+          var lo = lowOf(j);
+          ok++;
+          if (!A.pay) bits.push([1, 'States pay']);
+          else if (lo >= A.pay) bits.push([1, 'Whole range is above ' + kfmt(A.pay)]);
+          else { edge = 1; bits.push([1, 'Top of the range, ' + kfmt(j[13]) + ', reaches ' + kfmt(A.pay)]); }
+        } else if (!j[8]) { if (A.nopay) return null; half++; bits.push([0, 'Does not state pay']); }
+        else { half++; bits.push([0, 'Pay is given per hour or in another currency']); }
+      }
+      if (A.skills.length) {
+        var hit = []; for (i = 0; i < j[7].length; i++) if (A.set[j[7][i]]) hit.push(j[7][i]);
+        k = hit.length;
+        if (k) { ok++; bits.push([1, (k === 1 ? 'Your skill: ' : k + ' of your skills: ') + hit.slice(0, 4).join(', ') + (k > 4 ? ' and more' : '')]); }
+        else if (A.n === 1) return null;                                   // skills are the only answer: a job with none of them is no match
+        else { half++; bits.push([0, j[7].length ? 'Asks for skills you did not pick' : 'Names no skills']); }
+      }
+      return { ok: ok, s: ok * 10 + half * 3 + Math.min(k, 5) - edge * 0.5, bits: bits };
+    };
     var render = function () {
-      list.innerHTML = found.slice(0, shown).map(function (j) {
-        var k = scores.get(j[0]);
-        return card(j, extra.get(j[0]) || 0, k ? k + (k === 1 ? ' skill match' : ' skill matches') : '');
-      }).join('');
-      more.hidden = found.length <= shown; decorate(list);
+      var html = '', rows = found.slice(0, shown);
+      rows.forEach(function (j, i) {
+        var w = why.get(j[0]);
+        if (asked && i === nFull && nFull > 0) html += '<li class="fy-div">Fit in part: at least one answer could not be checked</li>';
+        var line = w ? '<p class="why"><b>' + w.ok + ' of ' + asked + '</b>' + w.bits.map(function (b) { return '<span class="' + (b[0] ? 'y' : 'q') + '">' + esc(b[1]) + '</span>'; }).join('') + '</p>' : '';
+        html += card(j, extra.get(j[0]) || 0, '').replace(/<\/li>$/, line + '</li>');
+      });
+      list.innerHTML = html; more.hidden = found.length <= shown; decorate(list);
     };
     var run = function () {
-      profile.lvl = lvl.value; profile.cat = cat.value; profile.sal = Number(sal.value) || 0; profile.remote = rem.checked;
-      set('hrn_profile', profile); paintChips();
-      if (!profile.skills.length) { list.innerHTML = ''; more.hidden = true; count.textContent = 'Pick at least one skill to see matching jobs.'; return; }
-      count.textContent = 'Matching…';
+      set('hrn_profile', profile); paint();
+      var A = answers(); asked = A.n;
+      if (!asked) {
+        payNote.textContent = ''; gap.hidden = true; gap.innerHTML = ''; why = new Map(); nFull = 0;
+        count.innerHTML = '<p class="fy-n">Answer any question and the jobs that fit are listed here.</p><p class="note">Until then, these are the newest postings.</p>';
+        if (jump) jump.hidden = true;
+        loadHead().then(function (h) { if (asked) return; extra = new Map(); found = collapse(h.rows.filter(function (j) { return !mute.c[j[2]] && !hidden[j[0]]; }), extra).slice(0, 30); shown = 30; render(); }).catch(function () {});
+        return;
+      }
+      count.innerHTML = '<p class="fy-n">Checking every open job…</p>';
       load().then(function (all) {
-        var f = { cat: profile.cat, lvl: profile.lvl, loc: '', remote: profile.remote, entry: false, crypto: false, any: false, perk: '', etype: '', since: 0, sal: profile.sal, skills: [], words: [] };
-        scores = new Map();
-        var rows = all.filter(function (j) {
-          if (!match(j, f)) return false;
-          var k = 0; for (var i = 0; i < j[7].length; i++) if (profile.skills.indexOf(j[7][i]) >= 0) k++;
-          if (!k) return false;
-          scores.set(j[0], k); return true;
-        });
-        rows.sort(function (a, b) { return scores.get(b[0]) - scores.get(a[0]) || b[16] - a[16]; });
-        extra = new Map(); found = collapse(rows, extra); shown = 40;
-        count.textContent = rows.length.toLocaleString('en-US') + (rows.length === 1 ? ' job matches' : ' jobs match') + ' your skills, best matches first.';
-        render();
-        // which single skill would open up the most roles you do not match yet
-        var gain = {}, gap = $('fy-gap');
-        all.forEach(function (j) {
-          if (scores.has(j[0]) || !match(j, f)) return;
-          j[7].forEach(function (t) { if (profile.skills.indexOf(t) < 0) gain[t] = (gain[t] || 0) + 1; });
-        });
-        var best = Object.keys(gain).sort(function (a, b) { return gain[b] - gain[a]; }).slice(0, 6);
-        if (gap) {
-          gap.hidden = !best.length;
-          gap.innerHTML = best.length ? '<p class="flabel" style="margin:16px 0 8px">One more skill would open up</p><div class="skillbar">' + best.map(function (t) {
-            return '<button class="chipbtn gapbtn" type="button" data-add="' + esc(t) + '">+ ' + esc(t) + ' · ' + gain[t].toLocaleString('en-US') + ' more roles</button>';
-          }).join('') + '</div>' : '';
+        if (answers().n !== asked) return;
+        why = new Map();
+        var rows = all.filter(function (j) { var w = judge(j, A); if (!w) return false; why.set(j[0], w); return true; });
+        rows.sort(function (a, b) { return why.get(b[0]).s - why.get(a[0]).s || (A.pay ? b[13] - a[13] : 0) || b[16] - a[16]; });
+        extra = new Map(); found = collapse(rows, extra); shown = 30;
+        nFull = 0; found.forEach(function (j) { if (why.get(j[0]).ok === asked) nFull++; });
+        // one employer with many similar roles must not fill the first screen: two rows per company, then the next two, and so on
+        var spread = function (group) {
+          var out = [], rest = group;
+          while (rest.length) {
+            var seen = {}, later = [];
+            rest.forEach(function (j) { seen[j[2]] = (seen[j[2]] || 0) + 1; if (seen[j[2]] <= 2) out.push(j); else later.push(j); });
+            rest = later;
+          }
+          return out;
+        };
+        found = spread(found.slice(0, nFull)).concat(spread(found.slice(nFull)));
+        var part = found.length - nFull, qs = asked === 1 ? 'your answer' : (asked === 2 ? 'both' : 'all ' + asked) + ' of your answers';
+        var head = nFull ? '<b class="hl">' + nf(nFull) + '</b> ' + (nFull === 1 ? 'job fits ' : 'jobs fit ') + qs : 'No open job fits ' + qs;
+        var mark = ' A tick is an answer the job agrees with; a question mark is something the posting does not say.';
+        var sub = part && nFull ? nf(part) + ' more ' + (part === 1 ? 'fits' : 'fit') + ' in part and ' + (part === 1 ? 'comes' : 'come') + ' after them.' + mark
+          : part ? jobsWord(part) + (part === 1 ? ' fits' : ' fit') + ' in part and ' + (part === 1 ? 'is' : 'are') + ' listed below.' + mark
+          : nFull ? 'A tick is an answer the job agrees with.' : 'Try one of the changes below, or clear an answer.';
+        // which single answer, if dropped, opens the most jobs: shown when the full matches are few
+        var tips = '';
+        if (nFull < 10 && asked > 1) {
+          var opts = [];
+          ['work', 'exp', 'country', 'where', 'pay', 'skills'].forEach(function (q) {
+            var B = answers(q); if (q === 'country' ? !(A.slug && A.where) : B.n === asked) return;
+            var c = 0; all.forEach(function (j) { var w = judge(j, B); if (w && w.ok === B.n) c++; });
+            if (c > nFull) opts.push([q, c]);
+          });
+          opts.sort(function (a, b) { return b[1] - a[1]; });
+          if (opts.length) tips = '<p class="flabel">Change one answer and more jobs fit</p><p class="fy-tips">' + opts.slice(0, 3).map(function (o) { return '<button class="chipbtn" type="button" data-drop="' + o[0] + '">' + DROP[o[0]] + ': ' + jobsWord(o[1]) + '</button>'; }).join('') + '</p>';
         }
-      }).catch(function () { count.textContent = 'Could not load jobs. Please reload the page.'; });
+        var full = profile.cats.length <= 1 && !profile.skills.length ? '<a href="' + P + '/jobs/?' + [profile.cats[0] ? 'cat=' + profile.cats[0] : '', profile.where === 'remote' ? 'remote' : '', A.slug ? 'loc=' + A.slug : '', A.pay ? 'sal=' + A.pay + (A.nopay ? '' : '&nosal') : ''].filter(Boolean).join('&') + '">Open the same in the full search</a>' : '';
+        count.innerHTML = '<p class="fy-n">' + head + '</p>' + (sub ? '<p class="note">' + sub + '</p>' : '') + tips + (full ? '<p class="note">' + full + '</p>' : '');
+        if (jump) { jump.hidden = false; jump.textContent = (nFull ? jobsWord(nFull) + ' fit' : jobsWord(found.length) + ' fit in part') + ' · show the list'; }
+        render();
+        // question 4: what the jobs that fit the other answers pay, so the figure asked for can be a realistic one
+        var hi = []; var B4 = answers('pay'), fitOther = 0;
+        all.forEach(function (j) { var w = judge(j, B4); if (w && w.ok === B4.n) { fitOther++; if (j[13]) hi.push(j[13]); } });
+        hi.sort(function (a, b) { return a - b; });
+        payNote.textContent = hi.length >= 15 ? 'Of the ' + jobsWord(fitOther) + ' that fit your other answers, ' + nf(hi.length) + ' state pay in US dollars. Half of those go up to ' + kfmt(hi[Math.floor(hi.length / 2)]) + ' or more.' : '';
+        // question 5: which single skill would add the most jobs you do not match yet
+        var gain = {};
+        if (profile.skills.length) all.forEach(function (j) {
+          var w = why.get(j[0]); if (!w || w.ok === asked) return;
+          j[7].forEach(function (t) { if (!A.set[t]) gain[t] = (gain[t] || 0) + 1; });
+        });
+        var best = Object.keys(gain).sort(function (a, b) { return gain[b] - gain[a]; }).slice(0, 5);
+        gap.hidden = !best.length;
+        gap.innerHTML = best.length ? '<p class="flabel">Skills asked for most by the jobs that fit you only in part</p><div class="skillbar">' + best.map(function (t) {
+          return '<button class="chipbtn gapbtn" type="button" data-add="' + esc(t) + '">+ ' + esc(t) + ' · ' + nf(gain[t]) + '</button>';
+        }).join('') + '</div>' : '';
+      }).catch(function () { count.innerHTML = '<p class="fy-n">Could not load the jobs. Please reload the page.</p>'; });
     };
     fy.addEventListener('click', function (ev) {
-      var c = ev.target.closest && ev.target.closest('#fy-skills .chipbtn');
-      if (c) { var s = c.getAttribute('data-skill'), i = profile.skills.indexOf(s); if (i >= 0) profile.skills.splice(i, 1); else profile.skills.push(s); run(); return; }
-      if (ev.target.id === 'fy-more') { shown += 40; render(); return; }
-      if (ev.target.getAttribute('data-add')) { var add = ev.target.getAttribute('data-add'); if (profile.skills.indexOf(add) < 0) profile.skills.push(add); run(); return; }
-      if (ev.target.id === 'fy-clear') {
-        profile = { skills: [], lvl: '', cat: '', sal: 0, remote: false }; lvl.value = cat.value = sal.value = ''; rem.checked = false;
-        var gap = $('fy-gap'), txt = $('fy-text'), sn = $('fy-scan-note');          // nothing of the old profile stays on screen
-        if (gap) { gap.hidden = true; gap.innerHTML = ''; } if (txt) txt.value = ''; if (sn) sn.textContent = '';
+      var t = ev.target, opt = t.closest && t.closest('.opt'), c = t.closest && t.closest('#fy-skills .chipbtn');
+      if (opt) {
+        var box = opt.parentNode.id, v = opt.getAttribute('data-v'), on = opt.getAttribute('aria-pressed') === 'true';
+        if (box === 'fy-work') { var i = profile.cats.indexOf(v); if (i >= 0) profile.cats.splice(i, 1); else profile.cats.push(v); }
+        else if (box === 'fy-exp') profile.exp = on ? '' : v;
+        else if (box === 'fy-where') { profile.where = on ? '' : v; profile.whereSet = !on; }
+        else if (box === 'fy-pay') { profile.pay = on ? 0 : Number(v); profile.paySet = !on; }
         run(); return;
       }
-      if (ev.target.id === 'fy-scan') {
+      if (c) { var s = c.getAttribute('data-skill'), k = profile.skills.indexOf(s); if (k >= 0) profile.skills.splice(k, 1); else profile.skills.push(s); run(); return; }
+      if (t.id === 'fy-more') { shown += 30; render(); return; }
+      if (t.getAttribute('data-add')) { var add = t.getAttribute('data-add'); if (profile.skills.indexOf(add) < 0) profile.skills.push(add); run(); return; }
+      if (t.getAttribute('data-drop')) {
+        var q = t.getAttribute('data-drop');
+        if (q === 'work') profile.cats = []; else if (q === 'exp') profile.exp = ''; else if (q === 'country') { profile.place = ''; profile.placeSet = true; profile.placeGuess = false; } else if (q === 'where') { profile.where = ''; profile.whereSet = false; profile.place = ''; profile.placeSet = true; profile.placeGuess = false; }
+        else if (q === 'pay') { profile.pay = 0; profile.paySet = false; profile.nopay = false; } else profile.skills = [];
+        run(); return;
+      }
+      if (t.id === 'fy-clear' || t.id === 'fy-example') {
+        var txt = $('fy-text'), sn = $('fy-scan-note');
+        profile = { skills: [], cats: [], exp: '', where: '', place: '', pay: 0, nopay: false };
+        if (t.id === 'fy-example') profile = { skills: ['Python', 'SQL'].filter(function (s) { return chips.some(function (c) { return c.getAttribute('data-skill') === s; }); }), cats: ['data-research'], exp: '1', where: 'remote', whereSet: true, place: '', pay: 100000, paySet: true, nopay: false };
+        if (txt) txt.value = ''; if (sn) sn.textContent = '';
+        run(); return;
+      }
+      if (t.id === 'fy-scan') {
         var text = $('fy-text').value, note = $('fy-scan-note');
         if (text.trim().length < 40) { note.textContent = 'Paste a bit more text first.'; return; }
         note.textContent = 'Reading…';
@@ -463,8 +606,26 @@
         }).catch(function () { note.textContent = 'Could not read the skills list. Pick skills by hand above.'; });
       }
     });
-    [lvl, cat, sal, rem].forEach(function (el) { el.addEventListener('change', run); });
+    place.addEventListener('change', function () { profile.place = place.value; profile.placeSet = true; profile.placeGuess = false; run(); });
+    noPay.addEventListener('change', function () { profile.nopay = noPay.checked; run(); });
+    var payTimer;
+    payIn.addEventListener('input', function () {
+      clearTimeout(payTimer);
+      payTimer = setTimeout(function () { var v = Math.round(Number(payIn.value)) || 0; profile.pay = v >= 1000 ? v : 0; profile.paySet = profile.pay > 0; run(); }, 350);
+    });
+    // on a phone the list is below the form: a bar at the bottom says how many jobs fit and jumps to them
+    if (jump && 'IntersectionObserver' in window) new IntersectionObserver(function (en) { jump.classList.toggle('off', en[0].isIntersecting); }, { rootMargin: '0px 0px -30% 0px' }).observe($('fy-out'));
     run();
+    // the country is filled in from the browser's time zone the first time; it can be changed or cleared
+    if (!profile.placeSet && !profile.place) fetch(P + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
+      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+      var code = get('hrn_place', '') || G.tz[tz] || '';
+      if (code && !profile.placeSet && place.querySelector('option[value="' + code + '"]')) {
+        place.value = code; var nt = $('fy-place-note');
+        if (nt) nt.textContent = 'Set from your device’s time zone. It only counts once you pick how you want to work, and you can change it.';
+        profile.place = code; profile.placeGuess = true; set('hrn_profile', profile);
+      }
+    }).catch(function () {});
   }
 
   /* ---------- My jobs page ---------- */

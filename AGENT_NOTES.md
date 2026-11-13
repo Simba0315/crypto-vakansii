@@ -108,6 +108,21 @@ Push with the deploy key already configured in this clone (`core.sshCommand`). A
 `ROADMAP.md` (in Russian, for the owner) lists every request he has made and where it stands. Any new request from him goes
 into it at once; when something ships, update its row. He asked for this on 2026-11-13: "add everything to the plan, always".
 
+## "For you": the match by answers (`/for-you/`)
+
+Five plain questions (kind of work, experience, where, pay, skills), answered with buttons; the markup is in `build.py` (`FY_WORK`,
+`ask()`), the logic in `assets/site.js` (`judge()`): a job that contradicts an answer is left out, a job that agrees gets a tick,
+a posting that is silent on the point gets a question mark and is listed after the full fits. Nothing is sent anywhere; the answers
+live in `hrn_profile` in the browser. This page is the free half of the planned paid "Plus" (`ROADMAP.md` section 33), so keep it
+free and never put a login in front of it. When the index gains a field, add it to `judge()` and to the reasons shown.
+
+## Where the jobs could also come from (`SOURCES_RESEARCH.md`)
+
+Research of 2026-11-13: what Hirify and JobAssist read, 40 Telegram channels with their formats and the page markup of
+`t.me/s/<channel>`, 20 more hiring systems and open feeds with their addresses, ways to find company addresses in bulk, and what
+Indeed offers employers. The build order is in `ROADMAP.md` sections 29 and 30. The site promises "read from the employer"; a source
+that is not the employer's own hiring system must be labelled as such and kept out of the main lists.
+
 ## Who else works on this repository
 
 - A cloud routine (created 2026-11-13, "Hiring Right Now: one improvement every 3 hours", claude.ai/code/routines) makes one

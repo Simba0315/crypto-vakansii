@@ -1775,23 +1775,71 @@ def main():
          "<h2 class='h2s'>Removing a listing</h2><p>" + (f"Employers who want a listing or company page removed can write to us: {contact}. It is taken down at the next update." if contact
                                                         else "Employers who want a listing or company page removed can ask through the contact details on the employers page.") + "</p>")
 
-    # For you: skill profile and resume scan, all in the browser
-    fy_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t, _ in skill_counts.most_common())
-    page("for-you/", f"Jobs for you — match tech jobs to your skills and resume | {SITE}",
-         "Pick your skills or paste your resume and see the open tech jobs that fit, best matches first. Runs in your browser: nothing is uploaded.",
-         crumbs(("For you", "")) + f'<h1>See only the tech jobs that fit you</h1><p class="lead">Reading {n:,} postings to find the twenty that fit is a second job. Pick your skills or paste your resume, and every open role is ranked by how well it fits. '
-         'It all happens in your browser: your resume is never uploaded.</p>'
-         f'<div id="fy-root"><div class="card"><h2>Your skills</h2><div class="skillbar" id="fy-skills" style="margin-top:12px">{fy_chips}</div>'
-         '<details class="scan"><summary>Or paste your resume and let us find your skills</summary>'
-         '<textarea id="fy-text" rows="7" placeholder="Paste the text of your resume here" aria-label="Resume text"></textarea>'
-         '<p><button class="btn sm" id="fy-scan" type="button">Find my skills</button> <span class="note" id="fy-scan-note"></span></p></details>'
-         '<div class="fbar" style="margin:14px 0 0"><select id="fy-lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>'
-         f'<select id="fy-cat" aria-label="Category"><option value="">All categories</option>{opts}</select>'
-         '<select id="fy-sal" aria-label="Salary"><option value="">Any salary</option><option value="100000">$100K+</option><option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>'
-         '<label class="check"><input type="checkbox" id="fy-remote"> Remote only</label></div></div>'
-         '<div id="fy-gap" hidden></div>'
-         '<div class="rbar" style="margin-top:18px"><p class="note" id="fy-count"></p><button class="btn ghost sm" id="fy-clear" type="button">Clear my profile</button></div>'
-         '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p></div>')
+    # For you: five plain questions; the answers stay in the browser and every open job is checked against them
+    FY_WORK = [("engineering", "Building software", "developers, testers, DevOps"), ("data-research", "Working with data", "analysts, data scientists, researchers"),
+               ("design", "Design", "how a product looks and works"), ("product", "Planning the product", "product and program managers"),
+               ("sales-bd", "Sales", "finding customers and partners"), ("marketing", "Marketing", "making a product known"),
+               ("support", "Helping customers", "support and customer success"), ("finance", "Finance", "accounting, planning, trading"),
+               ("people", "Hiring and HR", "recruiters and people teams"), ("compliance-legal", "Legal and compliance", "lawyers, risk and policy"),
+               ("operations", "Operations and IT", "keeping the business running"), ("security", "Security", "protecting systems and data")]
+    pct_paid = round(100 * sum(bool(j["salary"]) for j in active) / max(1, n))
+    def fy_opt(v, label, hint="", count=None):
+        return (f'<button class="opt" type="button" data-v="{e(str(v))}" aria-pressed="false"><b>{e(label)}</b>' + (f"<span>{e(hint)}</span>" if hint else "")
+                + (f'<i>{count:,}</i>' if count is not None else "") + "</button>")
+    fy_work = "".join(fy_opt(s_, lb, hint, len(by_cat[s_])) for s_, lb, hint in FY_WORK if by_cat[s_])
+    fy_exp = (fy_opt(0, "I am starting out", "internships and junior roles") + fy_opt(1, "A few years", "roles with no “senior” in the title")
+              + fy_opt(2, "Many years", "senior and staff roles") + fy_opt(3, "I lead people", "lead, manager, director"))
+    fy_where = fy_opt("remote", "From home", "remote roles") + fy_opt("office", "At an office", "on site or hybrid") + fy_opt("", "Either", "")
+    code_slug_all = {rule: slug for _, slug, rule in PLACES if isinstance(rule, str) and rule != "region"}
+    fy_places = "".join(f'<option value="{c_}" data-s="{code_slug_all.get(c_, "")}" data-r="{region_of.get(c_, "")}">{e(nm_)}</option>'
+                        for c_, nm_ in sorted([("US", "United States")] + [(c_, nm_) for c_, nm_, _, _ in COUNTRIES if c_ != "US"], key=lambda x: x[1]))
+    fy_pay = "".join(fy_opt(v, lb) for v, lb in [(0, "Any pay"), (60000, "$60K"), (80000, "$80K"), (100000, "$100K"), (130000, "$130K"), (160000, "$160K"), (200000, "$200K"), (250000, "$250K")])
+    def fy_chip(t):
+        tip = skills_info.plain(t)
+        return f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false"' + (f' title="{e(tip)}"' if tip else "") + f">{e(t)}</button>"
+    fy_top = "".join(fy_chip(t) for t, _ in skill_counts.most_common(18))
+    fy_groups = defaultdict(list)
+    for t, _ in skill_counts.most_common():
+        fy_groups[skills_info.INFO.get(t, ("other", ""))[0]].append(t)
+    fy_all = "".join(f'<p class="flabel">{e(gn)} <span>{e(gd.rstrip("."))}</span></p><div class="skillbar">{"".join(fy_chip(t) for t in fy_groups[gk])}</div>'
+                     for gk, gn, gd in skills_info.GROUPS + [("other", "Other skills", "")] if fy_groups.get(gk))
+    def ask(n_, q_, hint, inner):
+        return (f'<div class="ask" role="group" aria-labelledby="ask{n_}"><h2 id="ask{n_}"><span class="ask-n">{n_}</span>{e(q_)}</h2>' + (f'<p class="ask-h">{hint}</p>' if hint else "") + inner + "</div>")
+    fy_qa = [("How is the fit worked out?", "Each open job is compared with every question you answered. A job that agrees with an answer gets a tick for it; a job that says nothing on the point, "
+              "such as a posting with no pay, gets a question mark; a job that contradicts an answer is left out. Jobs with the most ticks come first."),
+             ("Is my resume or any answer sent anywhere?", "No. The answers and the resume text are read by a script inside your browser and kept in this browser only. Clear my answers removes them."),
+             ("Why do many jobs carry a question mark for pay?", f"About {pct_paid}% of the open jobs state pay in the posting. The rest are still listed, below the ones that state it, unless you choose to hide them."),
+             ("Why is pay in US dollars a year?", "Most postings that state pay give a yearly range in US dollars, so that is what can be compared. A posting that gives pay per hour or in another currency is shown with its own figure and a question mark."),
+             ("Does it cost anything?", "No. Matching, searching and applying are free, and applying always happens on the employer’s own page.")]
+    fy_faq = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in fy_qa) + "</dl>"
+    fy_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in fy_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("for-you/", f"Tech Jobs That Match Your Skills and Pay | {SITE}",
+         f"Say what work you want, your experience, where you live and the pay you need. {n:,} open tech jobs are checked against your answers and the ones that fit are listed first, with the reason.",
+         crumbs(("For you", "")) + f'<h1>Answer five questions and see the jobs that <span class="hl">fit you</span></h1>'
+         f'<p class="lead">Reading {n:,} postings to find the twenty worth applying to takes days. Say what work you want, how much experience you have, where you live and what you need to earn. '
+         'Every open job is checked against your answers, and next to each one you see what fits and what does not.</p>'
+         '<p class="plain"><b>In plain words:</b> this page is a short form. Nothing you answer leaves your browser, there is no account, and you can skip any question.</p>'
+         '<div id="fy-root" class="fy"><div class="fy-form">'
+         + ask(1, "What kind of work do you want?", "Pick one or several. Leave it empty to see every kind.", f'<div class="opts" id="fy-work">{fy_work}</div>')
+         + ask(2, "How much experience do you have?", "", f'<div class="opts one" id="fy-exp">{fy_exp}</div>')
+         + ask(3, "Where do you want to work?", "", f'<div class="opts one" id="fy-where">{fy_where}</div>'
+               f'<label class="ask-l" for="fy-place">Your country</label><select id="fy-place"><option value="">Any country</option>{fy_places}</select>'
+               '<p class="ask-h" id="fy-place-note">Remote roles are often open to some countries only, so the country matters for them too.</p>')
+         + ask(4, "How much do you need to earn?", "In US dollars a year, before tax. Jobs that pay less are left out.", f'<div class="opts one pay" id="fy-pay">{fy_pay}</div>'
+               '<label class="ask-l" for="fy-pay-in">Or type your own figure</label><span class="payin">$<input type="number" id="fy-pay-in" min="0" max="2000000" step="5000" inputmode="numeric" placeholder="120000"> a year</span>'
+               '<label class="check"><input type="checkbox" id="fy-nopay"> Hide jobs that do not state pay</label><p class="ask-h" id="fy-pay-note"></p>')
+         + ask(5, "What can you do?", "Optional. These are tools and skills that postings ask for by name. If the names mean nothing to you, skip this question.",
+               f'<div id="fy-skills"><div class="skillbar">{fy_top}</div>'
+               f'<details class="scan"><summary>All {len(skill_counts)} skills, in groups</summary>{fy_all}</details></div>'
+               '<details class="scan"><summary>Paste your resume and have the skills found for you</summary>'
+               '<textarea id="fy-text" rows="7" placeholder="Paste the text of your resume here" aria-label="Resume text"></textarea>'
+               '<p><button class="btn sm" id="fy-scan" type="button">Find my skills</button> <span class="note" id="fy-scan-note"></span></p></details>')
+         + '<p class="fy-acts"><button class="btn ghost sm" id="fy-example" type="button">Show an example</button> <button class="btn ghost sm" id="fy-clear" type="button">Clear my answers</button></p></div>'
+         '<div class="fy-out" id="fy-out"><div class="fy-sum" id="fy-count" aria-live="polite"></div><div id="fy-gap" hidden></div>'
+         '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p></div></div>'
+         '<a class="fy-jump" id="fy-jump" href="#fy-out" hidden></a>'
+         + section("Questions about this page", fy_faq), head=fy_ld)
     write("data/skills.json", json.dumps([[n_, rx] for n_, rx in SKILLS if n_ in skill_counts], ensure_ascii=False), sitemap=False)
 
     # Skills hub

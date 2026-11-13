@@ -761,3 +761,63 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 }
 @media(min-width:861px) and (max-width:1239px){.sgrid.haspane{grid-template-columns:minmax(0,1fr)}}
 .filters:has(>label[hidden]:only-child){display:none}
+/* For you: a short form on the left, the jobs that fit on the right */
+.fy{display:grid;grid-template-columns:minmax(0,1fr);gap:28px;margin-top:22px}
+.ask{border-top:1.5px solid var(--text);padding:14px 0 24px;min-width:0}
+.ask h2{font-size:19px;display:flex;gap:12px;align-items:baseline;margin:0 0 6px}
+.ask-n{font:500 13px var(--mono);color:var(--faint);min-width:12px}
+.ask-h{margin:0 0 4px;font-size:14px;color:var(--muted);max-width:54ch}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:10px 0 0}
+.opt{font:inherit;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;align-items:baseline;align-content:start;padding:9px 11px;border:1px solid var(--line2);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer;min-height:44px}
+.opt b{font-weight:600;font-size:14.5px}
+.opt span{grid-column:1/-1;font-size:12.5px;color:var(--muted);line-height:1.35}
+.opt i{font:500 12px var(--mono);font-style:normal;color:var(--faint);grid-column:2;grid-row:1}
+.opt:hover{border-color:var(--text)}
+.opt[aria-pressed=true]{background:var(--hl);border-color:var(--hl);color:var(--hl-ink)}
+.opt[aria-pressed=true] span,.opt[aria-pressed=true] i{color:var(--hl-ink);opacity:.82}
+.opt:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.opts.pay{grid-template-columns:repeat(4,minmax(0,1fr))}
+.opts.pay .opt{display:block;text-align:center;padding:10px 4px}
+.opts.pay .opt b{font:600 13.5px var(--mono)}
+.ask-l{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px}
+.ask select{width:100%;max-width:none}
+.payin{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:var(--muted)}
+.payin input{font:500 15px var(--mono);width:132px;padding:9px 10px;border:1px solid var(--line2);border-radius:6px;background:var(--card);color:var(--text)}
+.payin input:focus{outline:0;border-color:var(--text);box-shadow:0 0 0 3px var(--hl)}
+.ask label.check{display:flex;margin-top:8px;padding-left:0}
+.ask .skillbar{margin-top:10px}
+.ask .flabel{margin:16px 0 0}
+.ask .flabel span{font-weight:400;color:var(--faint)}
+.ask #fy-pay-note,.ask #fy-place-note{margin-top:10px}
+.fy-acts{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px;margin:0}
+.fy-acts .btn{margin-top:0}
+.fy-out{min-width:0;scroll-margin-top:72px}
+#fy-count{border-top:1.5px solid var(--text);padding-top:14px;margin-bottom:6px}
+.fy-n{font:700 22px/1.25 var(--display);letter-spacing:-.02em;margin:0 0 6px}
+#fy-count .note{margin:0 0 8px;max-width:66ch;font-size:14px;color:var(--muted)}
+#fy-count .note a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.fy-tips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+#fy-gap{margin:0 0 10px}
+#fy-gap .flabel{margin:8px 0 6px}
+.fy-div{list-style:none;font-size:13.5px;font-weight:600;color:var(--muted);padding:20px 0 8px;border-bottom:1.5px solid var(--text)}
+.why{margin:-6px 0 0;padding:0 0 12px 58px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 14px;align-items:baseline}
+.why b{font:600 12px var(--mono);color:var(--text)}
+.why .y::before{content:"✓ ";color:var(--green);font-weight:700}
+.why .q{color:var(--faint)}
+.why .q::before{content:"? ";color:var(--amber);font-weight:700}
+.fy-out .job .pill:not(.acc){display:none}
+.fy-out .job>a{row-gap:0}
+.fy-jump{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;display:flex;justify-content:center;padding:13px 16px;border-radius:8px;background:var(--btn);color:var(--btn-ink);font-weight:650;font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.fy-jump.off{display:none}
+@media(min-width:900px){
+  .fy-out .job>a{grid-template-columns:auto minmax(0,1fr) 150px 44px}
+  .fy-out .job .jp{grid-column:3;grid-row:1}
+  .fy-out .job time{grid-column:4;grid-row:1}
+  .fy-out .job .pills{grid-column:2/-1;grid-row:2}
+}
+@media(min-width:980px){
+  .fy{grid-template-columns:440px minmax(0,1fr);gap:48px;align-items:start}
+  .fy-out{position:sticky;top:72px;max-height:calc(100vh - 88px);overflow:auto;padding-right:8px;scrollbar-width:thin}
+  .fy-jump{display:none}
+}
+@media(max-width:520px){.opts.pay{grid-template-columns:repeat(4,minmax(0,1fr))}.why{padding-left:0}}
