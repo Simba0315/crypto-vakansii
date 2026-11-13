@@ -583,6 +583,27 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 .tbody>i u{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
 .tcard:hover .tbody>i u{background:var(--hl);color:var(--hl-ink)}
 
+/* tools hub: the three main tools as wide rows, the rest as a ruled list with a sample result on the right */
+.twides{display:flex;flex-direction:column;gap:16px}
+.twide{display:grid;grid-template-columns:340px 1fr;background:var(--card);border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.twide:hover{border-color:var(--text)}
+.twide .tprev{height:auto;min-height:150px;border-bottom:0;border-right:4px solid var(--pop)}
+.twide .tbody{justify-content:center;padding:20px 26px}
+.twide .tbody>b{font-size:22px}
+.twide .tbody>span{font-size:15.5px;max-width:560px}
+.twide:hover .tbody>i u{background:var(--hl);color:var(--hl-ink)}
+.tlist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 44px}
+.tlist li{border-bottom:1px solid var(--line)}
+.tlist a{display:grid;grid-template-columns:1fr;gap:3px;padding:13px 10px;margin:0 -10px;height:100%;align-content:start}
+.tlist a:hover{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--ac)}
+.tlist b{font-weight:650;font-size:16.5px}
+.tlist b u{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.tlist a:hover b u{background:var(--hl);color:var(--hl-ink)}
+.tlist .d{color:var(--muted);font-size:14.5px}
+.tlist .r{margin-top:5px;font:500 12.5px/1.4 var(--mono);color:var(--text);overflow-wrap:anywhere}
+.tlist .r small{font:500 12px "Inter","Inter Fallback",system-ui,sans-serif;color:var(--faint);margin-right:8px}
+@media(max-width:820px){.twide{grid-template-columns:1fr}.twide .tprev{border-right:0;border-bottom:4px solid var(--pop)}.tlist{grid-template-columns:1fr}}
+
 /* skills as a glossary: the name, how many jobs ask for it, and what it is in plain words */
 .gloss{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:0 44px}
 .gloss li{border-bottom:1px solid var(--line)}

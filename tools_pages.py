@@ -793,13 +793,45 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     PREV["for-you"] = ex + '<span class="big">61<small>jobs fit all 5 answers</small></span><span class="mt"><i style="width:100%"></i></span><span class="ln">Work · experience · place · <b>pay</b> · skills</span>'
     PREV["my-jobs"] = (ex + '<span class="rw"><span>Saved</span><span class="mt"><i style="width:100%"></i></span><b>9</b></span><span class="rw"><span>Applied</span><span class="mt"><i style="width:66%"></i></span><b>6</b></span>'
                        '<span class="rw"><span>Interview</span><span class="mt"><i style="width:22%"></i></span><b>2</b></span><span class="ln">A reminder when an application goes quiet</span>')
+    TILE_TEXT = {
+        "resume/": ("resume/", "Resume builder", "Type your experience once and get a clean one-column resume that screening software reads correctly. Download it as Word or PDF.", "resume"),
+        "for-you/": ("for-you/", "Jobs that fit you", "Answer five questions about the work, the place and the pay you want, and see the open jobs that fit, with the reason next to each.", "for-you"),
+        "my-jobs/": ("my-jobs/", "Application tracker", "Save jobs, mark where each application stands and keep notes. Kept in your browser, with a backup file you can download.", "my-jobs"),
+    }
     TILES["resume/"] = tile("resume/", "Resume builder", "Type your experience once and get a clean one-column resume that screening software reads correctly. Download it as Word or PDF.", "resume")
     TILES["for-you/"] = tile("for-you/", "Jobs that fit you", "Answer five questions about the work, the place and the pay you want, and see the open jobs that fit, with the reason next to each.", "for-you")
     TILES["my-jobs/"] = tile("my-jobs/", "Application tracker", "Save jobs, mark where each application stands and keep notes. Kept in your browser, with a backup file you can download.", "my-jobs")
 
     # ------------------------------------------------------------ the hub
+    # The hub: three wide rows for the tools most visitors want, then a ruled list with a one-line sample result on the right.
+    RES = {
+        "resume-match": "78% match · 9 of 12 skills found",
+        "salary-converter": "$60 an hour = $124,800 a year",
+        "raise-calculator": "7% on $120,000 = +$8,400 a year",
+        "compare-offers": "Offer A $182K, offer B $171K",
+        "equity-calculator": "10,000 options at $10 = $58,000 on paper",
+        "time-zone-overlap": "New York and London share 2 hours",
+        "cover-letter": "A one-page letter, ready to edit",
+        "negotiation-email": "Ask for $165,000 instead of $150,000",
+        "contractor-rate": "$100,000 a year = $722 a day",
+        "job-description-checker": "64 out of 100: no salary range",
+        "jobposting-schema": '{ "@type": "JobPosting", … }',
+        "boolean-search": '("backend engineer" OR …) AND Python',
+    }
+    if len(mids) >= MIN_SAMPLE:
+        RES["salary-checker"] = f"Median today {kmoney(q(.5))} across {len(mids):,} roles"
+
+    def wide(path, name, text, slug):
+        prev = PREV.get(slug, "")
+        return (f'<a class="twide" href="{P}/{path}"><span class="tprev" aria-hidden="true">{prev}</span>'
+                f'<span class="tbody"><b>{e(name)}</b><span>{e(text)}</span><i><u>Open the tool</u></i></span></a>')
+
+    def trow(path, name, text, slug):
+        return (f'<li><a href="{P}/{path}"><b><u>{e(name)}</u></b><span class="d">{e(text)}</span>'
+                f'<span class="r"><small>Example</small>{e(RES.get(slug, ""))}</span></a></li>')
+
     def group(key):
-        return '<div class="tgrid">' + "".join(TILES[f"tools/{t['slug']}/"] for t in TOOLS if t["group"] == key) + "</div>"
+        return '<ul class="tlist">' + "".join(trow(f"tools/{t['slug']}/", t["name"], t["card"], t["slug"]) for t in TOOLS if t["group"] == key) + "</ul>"
     hub_faq = [("Are these tools free?", "Yes. Every tool on this page is free, needs no account and can be used as often as you like."),
                ("Do the tools store or upload what I type?",
                 "No. All calculations and text checks run in your browser. What you type is saved only in this browser’s storage so a tool remembers it next time, and every tool has a Clear button that erases it."),
@@ -816,7 +848,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          crumbs(("Tools", "")) + "<h1>Free tools for a tech job search and for hiring</h1>"
          f'<p class="lead">{len(TOOLS) + len(EXTRA)} tools, from a resume builder to pay calculators, for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
          f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
-         + section("Start here: resume, matching, tracking", '<div class="tgrid">' + "".join(TILES[u] for u in EXTRA) + "</div>")
+         + section("Start here: resume, matching, tracking", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>")
          + section("For job seekers", group("seekers"))
          + section("For employers and recruiters", group("employers"))
          + section("How these tools work", '<div class="feats">'
