@@ -340,7 +340,7 @@
       'I would really enjoy talking about how I could contribute to the team.' + (contact ? ' The best way to reach me is ' + contact + '.' : '') + ' Thank you for reading, and I hope to hear from you.',
       'I would welcome the opportunity to discuss my application at your convenience.' + (contact ? ' I can be reached at ' + contact + '.' : '') + ' Thank you for your consideration.'));
     paras.push(pick('Best regards,', 'Warm regards,', 'Yours sincerely,') + '\n' + name);
-    return paras.join('\n\n');
+    return paras.join('\n\n').replace(/([^.])\.\.(?!\.)/g, '$1.');      // "Acme Inc." at the end of a sentence must not give "Inc.."
   };
 
   /* ---------- salary negotiation email (fill-in template) ---------- */

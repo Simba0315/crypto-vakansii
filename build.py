@@ -2126,9 +2126,29 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    + (f"<p>Questions: {contact}.</p>" if contact else "")),
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": f"{FULL}/brand/logo-mark.svg",
                "description": short_bp}) + "</script>")
-    page("hiring-badge/", f"Hiring Badge & Jobs Widget | {SITE}", "Free live hiring badges and an embeddable jobs widget for any site.",
-         crumbs(("Widgets", "widgets/"), ("Hiring badge", "")) + f'<h1>Hiring badge &amp; jobs widget</h1><p class="lead">Badges and widgets now live on one page with a builder: '
-         f'<a href="{P}/widgets/">open the widget builder</a>.</p>', sitemap=False)
+    # Hiring badges: small live pictures with a count of open roles, for a README, a footer or a post
+    top_co = next((c for c, _ in comp_items if OPEN[c]), "")
+    top_sk = skill_counts.most_common(1)[0][0] if skill_counts else ""
+    badges = [("Tech jobs", "badge/jobs.svg", "jobs/"), ("Remote tech jobs", "badge/remote.svg", "remote/")]
+    if top_sk: badges.append((f"{top_sk} jobs", f"badge/skills/{tslug(top_sk)}.svg", f"skills/{tslug(top_sk)}/"))
+    if top_co: badges.append((f"{top_co} is hiring", f"badge/companies/{slugify(top_co)}.svg", f"companies/{slugify(top_co)}/"))
+    badge_rows = "".join(
+        f'<div class="feat"><p><img src="{P}/{img}" alt="{e(lbl)} badge" height="28" loading="lazy"></p>'
+        f'<span class="flabel">HTML</span><textarea rows="2" readonly aria-label="HTML for the {e(lbl)} badge">{e(f"""<a href="{FULL}/{pg}"><img src="{FULL}/{img}" alt="{lbl} on {SITE}" height="28"></a>""")}</textarea>'
+        f'<span class="flabel">Markdown</span><textarea rows="2" readonly aria-label="Markdown for the {e(lbl)} badge">{e(f"[![{lbl} on {SITE}]({FULL}/{img})]({FULL}/{pg})")}</textarea></div>' for lbl, img, pg in badges)
+    hb_faq = [("What is a hiring badge?", "A small picture that says a company or a field is hiring, usually with a number. These badges are live: the number of open roles on each one is recounted every day."),
+              ("Where can I use a hiring badge?", "In a GitHub README, a site footer, a blog post, an email signature or a community page: anywhere an image with a link works."),
+              ("Is there a badge for my company?", f"If your company is among the {m} whose career pages we read, yes: its badge shows its current number of open roles. Pick it in the widget builder."),
+              ("Is it free?", "Yes. Copy the code and use it; the badge links back to the list it counts.")]
+    page("hiring-badge/", f"Free Hiring Badge with a Live Count of Open Roles | {SITE}",
+         "Free hiring badges for a README, a footer or a post: a small live image with today’s number of open roles for tech jobs, a skill, a city or your company. Copy and paste.",
+         crumbs(("Job widget", "widgets/"), ("Hiring badge", "")) + '<h1>Free hiring badge with a live count</h1>'
+         '<p class="lead">A “we’re hiring” picture says nothing new after the first week. These badges carry today’s number of open roles and update themselves. '
+         f'Copy one below, or <a href="{P}/widgets/">pick any skill, city, category or company in the builder</a>.</p>'
+         f'<div class="feats">{badge_rows}</div>'
+         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hb_faq) + "</dl>"),
+         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hb_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     org_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
               "logo": FULL + "/og.jpg", "description": "A daily-updated index of open tech jobs collected from companies' official careers pages."}) + "</script>")
     page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} tech job listings come from, how often they are checked and what the site does not do.",
