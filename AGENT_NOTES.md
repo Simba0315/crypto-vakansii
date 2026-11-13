@@ -108,6 +108,13 @@ Push with the deploy key already configured in this clone (`core.sshCommand`). A
 `ROADMAP.md` (in Russian, for the owner) lists every request he has made and where it stands. Any new request from him goes
 into it at once; when something ships, update its row. He asked for this on 2026-11-13: "add everything to the plan, always".
 
+## Who else works on this repository
+
+- A cloud routine (created 2026-11-13, "Hiring Right Now: one improvement every 3 hours", claude.ai/code/routines) makes one
+  improvement every 3 hours and pushes to `main`; a scheduled task on the owner's Mac did the same before it. Always
+  `git pull --rebase origin main` before starting and before pushing, add a line to `CHANGELOG.md`, and push once per run:
+  every push cancels a deploy that is still running.
+
 ## Rules from the owner (do not break)
 
 1. Every page must pass his "perfect page" standard: SEO, GEO/AIO, AEO, E-E-A-T, mobile. Title: key first, brand last, about 60
