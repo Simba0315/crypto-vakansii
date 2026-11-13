@@ -33,11 +33,17 @@ jobs:
       - name: Restore jobs database
         run: |
           mkdir -p data
-          if git fetch --depth=1 origin data 2>/dev/null; then
+          # The data branch holds the only copy of the archive. "It does not exist yet" and "it could not be reached" must not
+          # be confused: starting empty after a network error would overwrite everything a few steps later.
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth=1 origin data
             git show FETCH_HEAD:jobs.json.gz | gunzip > data/jobs.json
             git show FETCH_HEAD:reports.json > data/reports.json 2>/dev/null || rm -f data/reports.json
             echo "restored $(wc -c < data/jobs.json) bytes"
+            echo "PREV_BYTES=$(wc -c < data/jobs.json | tr -d ' ')" >> "$GITHUB_ENV"
           else
+            code=$?
+            if [ "$code" != "2" ]; then echo "could not reach the repository (exit $code): stopping instead of starting empty"; exit 1; fi
             echo "no data branch yet, starting empty"
           fi
       - name: Collect jobs (closed ones move to the archive)
@@ -46,6 +52,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          new=$(wc -c < data/jobs.json | tr -d ' ')
+          if [ -n "${PREV_BYTES:-}" ] && [ "$new" -lt $((PREV_BYTES / 2)) ]; then
+            echo "the new database ($new bytes) is less than half of the previous one ($PREV_BYTES bytes): not saving it"; exit 1
+          fi
           tmp="$(mktemp -d)"
           gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
@@ -73,6 +83,13 @@ jobs:
           git add -A
           git commit -q -m "Jobs database and monthly reports"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+      - name: Check the site fits the hosting limit
+        run: |
+          mb=$(du -sm site | cut -f1); echo "site is ${mb} MB (the Pages limit is 1024)"
+          if [ "$mb" -gt 990 ]; then echo "the site no longer fits the hosting limit"; exit 1; fi
+      - name: Check pages against the page standard
+        continue-on-error: true
+        run: python3 check.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

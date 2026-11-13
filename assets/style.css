@@ -320,12 +320,12 @@ a.feat:hover{border-color:var(--text);transform:translate(-2px,-2px);box-shadow:
 footer{margin-top:84px;background:#0e0e0c;color:#b9b7ad;padding:48px 0 34px;font-size:14px}
 footer .logo{color:#fff}
 .fcols{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:32px}
-.fcols h4{font:500 11.5px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:#77756c;margin:0 0 10px}
+.fcols .fhd{font:500 11.5px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:#a09e94;margin:0 0 10px}
 .fcols ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}
 .fcols a:hover,.pop a:hover{color:#c8f560}
 .pop{display:flex;gap:6px 14px;flex-wrap:wrap;margin:34px 0 0;font-size:13.5px}
-.pop span{color:#77756c}
-.fine{margin-top:28px;padding-top:18px;border-top:1px solid #262622;font-size:13px;color:#77756c}
+.pop span{color:#a09e94}
+.fine{margin-top:28px;padding-top:18px;border-top:1px solid #262622;font-size:13px;color:#a09e94}
 footer.mini{margin-top:56px;padding:18px 0}
 footer.mini .fine{margin:0;padding:0;border:0}
 footer.mini a{color:#b9b7ad}footer.mini a:hover{color:#c8f560}
@@ -498,3 +498,19 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 .mjdata{display:flex;flex-wrap:wrap;gap:8px}
 .mjdata .btn.ghost{margin-top:0}
 .trow .pill.warn{margin-left:6px;vertical-align:middle}
+
+/* full job description from the employer */
+.prose.desc h3{font-family:var(--display);font-size:18px;letter-spacing:-.01em;margin:22px 0 6px}
+.prose.desc ul,.prose.desc ol{margin:8px 0 12px;padding-left:22px}
+.prose.desc li{font-size:16px;line-height:1.65;margin:4px 0}
+.prose.desc li::marker{color:var(--faint)}
+
+/* tap targets: nothing a finger must hit is smaller than 40px */
+.icon{width:40px;height:40px}
+.crumbs a{display:inline-block;padding:6px 0}
+.rel a,.popular a,.chipbtn{min-height:36px;display:inline-flex;align-items:center}
+.pager a,.pager span{min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center}
+.share .linkbtn,.linkbtn{padding:8px 4px}
+.tab{min-height:40px}
+.unsave{min-height:36px;padding:6px 8px}
+@media(max-width:720px){.rel a,.popular a,.chipbtn{min-height:40px}.trow select{min-height:40px}}

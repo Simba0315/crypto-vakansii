@@ -46,7 +46,7 @@ for f in sample:
     h1 = re.findall(r"<h1[\s>]", h)
     if len(h1) != 1: fails[t][f"h1 count {len(h1)}"] += 1
     if not title or not (10 <= len(html.unescape(title.group(1))) <= 75): fails[t]["title length outside 10-75"] += 1
-    if not desc or not (70 <= len(desc.group(1)) <= 170): fails[t]["description length outside 70-170"] += 1
+    if not desc or not (70 <= len(html.unescape(desc.group(1))) <= 170): fails[t]["description length outside 70-170"] += 1
     want = FULL + "/" + ("" if rel == "index.html" else rel[:-len("index.html")])
     if not canon or canon.group(1) != want: fails[t]["canonical is not self"] += 1
     if 'lang="en"' not in h[:200]: fails[t]["no lang"] += 1

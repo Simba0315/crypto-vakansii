@@ -464,9 +464,13 @@
       if (t.classList.contains('unsave') && t.closest('.trow') && t.closest('#mj-list')) { delete jobs[t.closest('.trow').getAttribute('data-s')]; store(); draw(); return; }
       if (t.id === 'mj-export') {
         var rows = [['Title', 'Company', 'Status', 'Added', 'Note', 'Link']].concat(Object.keys(jobs).map(function (k) {
-          var r = jobs[k]; return [r.t, r.c, r.st, new Date(r.at).toISOString().slice(0, 10), r.note || '', location.origin + P + '/job/' + k + '/'];
+          var r = jobs[k], d = new Date(r.at);
+          var day = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+          return [r.t, r.c, r.st, day, r.note || '', location.origin + P + '/job/' + k + '/'];
         }));
-        var csv = rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+        if (rows.length < 2) return;
+        var cell = function (c) { c = String(c); if (/^[=+\-@]/.test(c)) c = "'" + c; return '"' + c.replace(/"/g, '""') + '"'; };   // a title starting with "=" must not run as a formula
+        var csv = '\ufeff' + rows.map(function (r) { return r.map(cell).join(','); }).join('\n');
         var a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'my-jobs.csv';
         document.body.appendChild(a); a.click(); a.remove();
@@ -505,15 +509,22 @@
           try {
             var b = JSON.parse(String(reader.result));
             if (!b || b.app !== 'hiring-right-now' || !b.data || typeof b.data !== 'object') throw new Error('not a backup');
-            KEYS.forEach(function (k) { if (b.data[k] != null) set(k, b.data[k]); });
+            var LISTS = { hrn_searches: 1, hrn_seen: 1 };
+            KEYS.forEach(function (k) {
+              var v = b.data[k];
+              if (v == null || typeof v !== 'object' || Array.isArray(v) !== !!LISTS[k]) return;      // wrong shape: leave what is there
+              set(k, v);
+            });
             location.reload();
           } catch (e) { dataNote.textContent = 'That file is not a backup from this site.'; }
         };
         reader.readAsText(file);
       });
       $('mj-erase').addEventListener('click', function () {
-        if (!window.confirm('Erase saved jobs, applications, notes, searches and hidden items from this browser? This cannot be undone.')) return;
-        KEYS.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+        if (!window.confirm('Erase everything this site keeps in this browser: saved jobs, applications, notes, searches, hidden items, your skill profile, your resume and what you typed into the tools? This cannot be undone.')) return;
+        try {
+          Object.keys(localStorage).forEach(function (k) { if (KEYS.indexOf(k) >= 0 || k.indexOf('hrn_tool_') === 0) localStorage.removeItem(k); });
+        } catch (e) {}
         location.reload();
       });
     }

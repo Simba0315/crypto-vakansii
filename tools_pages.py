@@ -576,7 +576,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          [("What makes a good job description?",
            "One that lets the right person decide quickly: what they will do, what they must already be able to do, what it pays, where the work happens and what the hiring steps are. Everything else can live on the careers page."),
           ("Should a job description include the salary?",
-           f"Yes, if you want candidates to be able to tell whether the role fits them. Of the {n_jobs:,} open tech roles we track, {sal_pct}% state what they pay, so a posting with a clear range also stands out from most of the others."),
+           f"Yes, if you want candidates to be able to tell whether the role fits them. Of the {n_jobs:,} open tech roles we track, {sal_pct}% state what they pay" + (", so a posting with a clear range also stands out from most of the others." if sal_pct < 40 else ", and candidates who filter by salary never see the rest.")),
           ("What is gender-coded language in a job posting?",
            "Words that readers tend to associate more with men (“competitive”, “dominant”) or more with women (“supportive”, “collaborative”). Research by Gaucher, Friesen and Kay (2011) found that adverts loaded with masculine-coded words appealed less to women. The checker counts both kinds from a short word list and tells you which way the text leans."),
           ("How many requirements should a job posting list?",

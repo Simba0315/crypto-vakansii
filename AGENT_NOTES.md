@@ -47,6 +47,21 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
 - Pure logic in `assets/tools.js` is covered by `node tools_test.js assets/tools.js` (must end with "0 failed").
 - New tools go into the `TOOLS` list inside `build_tools()`; ideas with search demand are in `ROADMAP.md` section 8.
 
+## Audit backlog (`AUDIT.md`)
+
+An independent review on 2026-11-13 listed 68 findings; most are fixed, the open ones are in the table at the end of that file
+(tool logic, a few stale texts, the whole server review). Fix open items before adding new page types.
+
+## Getting into Google's job search (what Google requires)
+
+Checked against Google's own documentation on 2026-11-13: the job details must be visible without login, applying must be free
+and possible from the page, the description must be complete, `jobLocation` needs `addressCountry`, remote roles need
+`jobLocationType` and `applicantLocationRequirements`, expired jobs must lose their markup. So: never gate a listing or its apply
+link, for money or for sign-up. Full descriptions are stored only for postings up to 14 days old because of the hosting size limit
+(`DESC_SINCE` in `collect.py`); raise it when the site moves off GitHub Pages. Pages with a full description carry their
+JobPosting data as microdata on the visible text (`microdata()` in `build.py`), the others as JSON-LD.
+Still needed from the owner: Search Console for the site (his Google account), then the Indexing API.
+
 ## What users of job sites complain about (`USER_PAINS.md`)
 
 53 review sources read on 2026-11-13 (Hirify on Product Radar, Trustpilot, Hacker News and others). The top pains are dead and

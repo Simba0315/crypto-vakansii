@@ -3,12 +3,14 @@
 Closed jobs are never deleted: they stay in the file with active=false (archive).
 """
 import datetime, html, json, os, re, sys, concurrent.futures as cf
+from html.parser import HTMLParser
 from pathlib import Path
 from net import get_json
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data" / "jobs.json"
 TODAY = datetime.date.today().isoformat()
+DESC_SINCE = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()     # full descriptions are stored for postings newer than this
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
 EXCLUDE = {"Casa", "Swan", "Sei", "Safe", "Circle", "Compound", "Ramp", "Robinhood Crypto",
@@ -17,25 +19,26 @@ EXCLUDE_TECH = set()  # tech-list names to skip (wrong company behind the feed)
 CRYPTO_RE = re.compile(r"crypto|blockchain|bitcoin|web3|defi\b|token|ethereum|stablecoin|digital asset|on-chain|onchain|wallet", re.I)
 
 CATS = [
-    ("engineering", "Engineering", r"engineer|developer|devops|sre\b|architect|programmer|\bqa\b|sdet|frontend|backend|full.?stack|solidity|rust\b|tech lead|cto\b|开发|工程师"),
-    ("security", "Security", r"security|auditor|pentest|soc\b|threat|infosec"),
+    ("security", "Security", r"security|pentest|\bsoc\b|threat|infosec|\bappsec\b"),
+    ("engineering", "Engineering", r"engineer|developer|devops|\bsre\b|architect|programmer|\bqa\b|sdet|frontend|backend|full.?stack|solidity|\brust\b|tech lead|\bcto\b|member of technical staff|"
+                                   r"software|machine learning|firmware|hardware|embedded|robotics|\basic\b|\bfpga\b|\brtl\b|technical program manager|engineering program manager|开发|工程师"),
     ("product", "Product", r"product manager|product owner|product lead|head of product|product director|产品"),
-    ("design", "Design", r"design|\bux\b|\bui\b|creative|illustrat|motion"),
-    ("marketing", "Marketing & Community", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|seo\b|copywrit|kol\b|运营"),
-    ("sales-bd", "Sales & Business Development", r"sales|business development|\bbd\b|partnership|account (executive|manager)|institutional|relationship manager|listing"),
-    ("data-research", "Data & Research", r"analyst|data\b|research|quant|scientist|economist|strategy"),
+    ("design", "Design", r"\bdesign(er|ers)?\b|\bux\b|\bui\b|creative|illustrat|motion"),
+    ("sales-bd", "Sales & Business Development", r"\bsales\b|business development|\bbd\b|partnership|account (executive|manage)|institutional|relationship manager|listing"),
+    ("marketing", "Marketing & Community", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|\bseo\b|copywrit|\bkol\b|运营"),
     ("support", "Customer Support", r"support|customer (service|success|experience)|client service|helpdesk"),
-    ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel|risk|regulatory|fraud|investigat|mlro|audit"),
-    ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|treasury|controller|tax\b|payroll|trader|trading"),
+    ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel|attorney|\brisk\b|regulatory|fraud|investigat|mlro|audit"),
+    ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|accounts? (payable|receivable)|treasury|controller|\btax\b|payroll|trader|trading|billing|\bfp&a\b"),
     ("people", "People & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
+    ("data-research", "Data & Research", r"analyst|\bdata\b|research|quant|scientist|economist|strategy"),
     ("operations", "Operations", r"operations|project manager|program manager|chief of staff|executive assistant|office|administrat"),
 ]
 OTHER = ("other", "Other")
 
 SKILLS = [
-    ("Solidity", r"solidity"), ("Rust", r"\brust\b"), ("Go", r"golang|\bgo[,/)]|[,/(] ?go\b"), ("Python", r"python"),
-    ("TypeScript", r"typescript"), ("JavaScript", r"javascript"), ("React", r"\breact\b"), ("Node.js", r"node\.?js"),
-    ("Java", r"\bjava\b"), ("C++", r"c\+\+"), ("Kotlin", r"kotlin"), ("Swift", r"\bswift\b"), ("SQL", r"\bsql\b"),
+    ("Solidity", r"solidity"), ("Rust", r"\brust\b"), ("Go", r"golang|\bgo[,/)]|[,/(] ?go\b(?![- ](?:to|live)\b)"), ("Python", r"python"),
+    ("TypeScript", r"typescript"), ("JavaScript", r"javascript"), ("React", r"(?-i:\bReact\b)(?! to\b)|\breact\.?js\b|\breact native\b"), ("Node.js", r"node\.?js"),
+    ("Java", r"\bjava\b"), ("C++", r"c\+\+"), ("Kotlin", r"kotlin"), ("Swift", r"(?-i:\bSwift\b)|\bswiftui\b"), ("SQL", r"\bsql\b"),
     ("Ruby", r"\bruby\b"), ("PHP", r"\bphp\b"), ("C#", r"\bc#"), (".NET", r"\.net\b"), ("Scala", r"\bscala\b"), ("Elixir", r"\belixir\b"),
     ("PostgreSQL", r"postgres"), ("Docker", r"\bdocker\b"), ("Terraform", r"terraform"), ("GCP", r"\bgcp\b|google cloud"), ("Azure", r"\bazure\b"),
     ("Machine Learning", r"machine learning"), ("LLM", r"\bllms?\b|large language model"), ("iOS", r"\bios\b"), ("Android", r"\bandroid\b"),
@@ -55,26 +58,31 @@ PERKS = [   # (name, page slug, pattern) detected in the posting text
     ("Relocation support", "relocation", r"relocation (assistance|support|package|bonus|allowance)|(help|support) (you )?(to |with )?relocat"),
     ("Equity", "equity", r"stock options|\brsus?\b|equity (grant|package|compensation|awards?|stake|ownership)|(company|meaningful|generous|competitive|plus|salary (and|&)|bonus (and|&|,)) equity"),
     ("4-day week", "4-day-week", r"4[- ]day (work ?)?week|four[- ]day (work ?)?week"),
-    ("Unlimited PTO", "unlimited-pto", r"unlimited (pto|paid time off|vacation|holiday)|flexible (pto|paid time off)"),
+    ("Unlimited PTO", "unlimited-pto", r"unlimited (pto|paid time off|vacation|holiday|time off)"),
     ("Parental leave", "parental-leave", r"parental leave|maternity leave|paternity leave"),
     ("Learning budget", "learning-budget", r"learning (budget|stipend|allowance)|education (budget|stipend|allowance)|professional development (budget|stipend|allowance)"),
     ("No degree required", "no-degree", r"no (college |university |formal )?degree (is )?(required|needed|necessary)|degree (is )?not (required|needed|necessary)|(with or )?without a (college |university )?degree|or equivalent (practical |work |professional |relevant |industry )?experience|equivalent (practical|work|professional|industry) experience"),
     ("Home office stipend", "home-office-stipend", r"home office (stipend|budget|allowance|setup)|work[- ]from[- ]home (stipend|budget|allowance)|remote (work )?(stipend|allowance)"),
 ]
-NO_VISA = re.compile(r"(not|unable|cannot|can't|can not|no|won't|will not|don't|do not) (\w+ ){0,5}(sponsor|sponsorship)|without (\w+ ){0,3}sponsorship|sponsorship is(n't| not)", re.I)
+NO_VISA = re.compile(r"(not|unable|cannot|can['’]t|can not|no|won['’]t|will not|don['’]t|do not) (\w+ ){0,5}(sponsor|sponsorship)|without (\w+ ){0,3}sponsorship|sponsorship is(n['’]t| not)", re.I)
+NO_RELO = re.compile(r"relocation (assistance|support|package|benefits?|bonus|allowance) (is|are|will) not|no relocation|(not|unable to|cannot|can['’]t|don['’]t|do not|won['’]t) (\w+ ){0,4}relocation|without relocation", re.I)
 
 
 def perks(text):
     out = [name for name, _, rx in PERKS if re.search(rx, text, re.I)]
     if "Visa sponsorship" in out and NO_VISA.search(text): out.remove("Visa sponsorship")
+    if "Relocation support" in out and NO_RELO.search(text): out.remove("Relocation support")
     return out
 
 
 def etype(title, hint=""):
     """Employment type when the feed or the title says so; empty when unknown."""
     h, t = (hint or "").lower().replace(" ", "").replace("-", "").replace("_", ""), title.lower()
-    if "intern" in h or re.search(r"\bintern(ship)?\b", t): return "Internship"
-    if "contract" in h or "temporary" in h or re.search(r"\bcontract(or)?\b|\btemporary\b|\bfreelance\b|fixed[- ]term", t): return "Contract"
+    if h in ("intern", "internship") or re.search(r"\bintern(ship)?s?\b|\bco-?op\b", t): return "Internship"
+    # "contract" as a kind of job, not as a subject: "Smart Contract Engineer" and "Contracts Manager" are not contract work
+    if h in ("contract", "contractor", "temporary", "temp", "fixedterm") or re.search(
+            r"\(contract\)|[-–,:] ?contract\b|\bcontract[- ](to[- ]hire|role|position|basis)|\bcontractor\b|\d+[- ]?(month|week)s?[- ]contract|\btemporary\b|\bfreelance\b|fixed[- ]term", t):
+        return "Contract"
     if "parttime" in h or re.search(r"part[- ]time", t): return "Part-time"
     if "fulltime" in h or "permanent" in h: return "Full-time"
     return ""
@@ -94,6 +102,96 @@ def strip_html(s):
     return re.sub(r"[ \t\xa0]+", " ", re.sub(r"\n\s*\n+", "\n", s)).strip()
 
 
+class _Clean(HTMLParser):
+    """Turns a posting's HTML into a small safe subset: paragraphs, lists, headings, bold and italic. No attributes, no links, no scripts."""
+    BLOCK = {"p", "div", "section", "article", "header", "footer", "table", "tr", "blockquote", "pre"}
+    HEAD = {"h1", "h2", "h3", "h4", "h5", "h6"}
+    SKIP = {"script", "style", "iframe", "svg", "noscript", "form", "button", "select", "textarea", "head", "title", "video", "audio", "object"}
+    INLINE = {"strong": "strong", "b": "strong", "em": "em", "i": "em"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.out, self.buf, self.lists, self.inline, self.skip, self.kind, self.in_li, self.auto = [], [], [], [], 0, "p", False, False
+
+    def end_auto(self):            # a list we opened ourselves for a stray <li> ends at the next block
+        if self.auto and self.lists and not self.in_li:
+            self.emit(); self.out.append(f"</{self.lists.pop()}>"); self.auto = False
+
+    def emit(self):
+        raw = "".join(self.buf) + "".join(f"</{t}>" for t in reversed(self.inline))
+        text = re.sub(r"\s+", " ", raw).strip()
+        plain = re.sub(r"<[^>]+>", "", text).strip()
+        if plain:
+            if self.lists: self.out.append(f"<li>{text}</li>")              # anything inside a list is an item
+            elif self.kind == "h": self.out.append(f"<h3>{plain}</h3>")
+            else: self.out.append(f"<p>{text}</p>")
+        self.buf = [f"<{t}>" for t in self.inline]
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SKIP: self.skip += 1; return
+        if self.skip: return
+        if tag in ("ul", "ol"):
+            self.emit(); self.out.append(f"<{tag}>"); self.lists.append(tag); self.in_li = False
+        elif tag == "li":
+            self.emit()
+            if not self.lists: self.out.append("<ul>"); self.lists.append("ul"); self.auto = True
+            self.in_li = True
+        elif tag in ("td", "th"):
+            self.buf.append(" ")
+        elif tag in self.HEAD:
+            self.end_auto(); self.emit(); self.kind = "h"
+        elif tag in self.BLOCK or tag == "br":
+            if self.in_li: self.buf.append(" ")
+            else: self.end_auto(); self.emit(); self.kind = "p"
+        elif tag in self.INLINE:
+            t = self.INLINE[tag]
+            if t not in self.inline: self.inline.append(t); self.buf.append(f"<{t}>")
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP: self.skip = max(0, self.skip - 1); return
+        if self.skip: return
+        if tag in ("ul", "ol"):
+            self.emit()
+            if self.lists: self.out.append(f"</{self.lists.pop()}>")
+            self.in_li = False
+        elif tag == "li":
+            self.emit(); self.in_li = False
+        elif tag in self.HEAD:
+            self.emit(); self.kind = "p"
+        elif tag in self.BLOCK:
+            if self.in_li: self.buf.append(" ")
+            else: self.emit(); self.kind = "p"
+        elif tag in self.INLINE and self.inline and self.inline[-1] == self.INLINE[tag]:
+            self.inline.pop(); self.buf.append(f"</{self.INLINE[tag]}>")
+
+    def handle_data(self, data):
+        if not self.skip: self.buf.append(html.escape(data, quote=False))
+
+    def result(self, limit):
+        self.emit()
+        while self.lists: self.out.append(f"</{self.lists.pop()}>")
+        kept, size, stack = [], 0, []
+        for part in self.out:                                   # cut at a block boundary and close whatever list was open
+            if size + len(part) > limit and part not in ("</ul>", "</ol>"): break
+            kept.append(part); size += len(part)
+            if part in ("<ul>", "<ol>"): stack.append(part[1:3])
+            elif part in ("</ul>", "</ol>") and stack: stack.pop()
+        kept += [f"</{t}>" for t in reversed(stack)]
+        return re.sub(r"<(ul|ol)></\1>", "", "".join(kept))
+
+
+def clean_html(raw, limit=12000):
+    """The employer's description as safe, plain HTML (see _Clean), or "" if nothing readable is left."""
+    if not raw: return ""
+    p = _Clean()
+    try:
+        p.feed(raw); p.close()
+        out = p.result(limit)
+    except Exception:
+        return ""
+    return out if len(re.sub(r"<[^>]+>", "", out)) >= 200 else ""
+
+
 def excerpt(text, n=420):
     m = ROLE_MARKERS.search(text)
     body = text[m.end():] if m and len(text) - m.end() > 200 else text
@@ -110,6 +208,12 @@ def slugify(s):
 
 
 def classify(title):
+    # what the person does comes before what the product is: "Cybersecurity Sales Specialist" is a sales job, "Senior Counsel, Security" a legal one
+    if re.search(r"\b(sales|account executive|business development)\b|account manage", title, re.I) and not re.search(r"engineer|architect", title, re.I): return "sales-bd"
+    if re.search(r"\bcounsel\b|\battorney\b|\bparalegal\b", title, re.I): return "compliance-legal"
+    if re.search(r"recruit|talent acquisition|\bsourcer\b", title, re.I): return "people"
+    if re.search(r"product marketing|marketing manager", title, re.I): return "marketing"
+    if re.search(r"\bdata (engineer|scientist|analyst)|research (scientist|engineer)|machine learning|\bml\b", title, re.I) and re.search(r"scientist|analyst", title, re.I): return "data-research"
     for slug, name, rx in CATS:
         if re.search(rx, title, re.I):
             return slug
@@ -118,10 +222,12 @@ def classify(title):
 
 def level(title):
     t = title.lower()
-    if re.search(r"\bintern(ship)?s?\b|\btrainee\b|\bnew grad|\bgraduate program", t): return "Intern"
-    if re.search(r"head of|\bdirector\b|\bvp\b|vice president|\bchief\b|\bprincipal\b|\bstaff\b|\blead\b", t): return "Lead"
+    if re.search(r"\bintern(ship)?s?\b|\btrainee\b|\bco-?op\b|\bapprentice", t): return "Intern"
+    staff = re.search(r"\bstaff\b", t) and not re.search(r"of (technical )?staff|technical staff|staff (accountant|attorney|nurse|writer|assistant|associate|counsel|auditor)", t)
+    if re.search(r"head of|\bdirector\b|\bvp\b|vice president|\bchief\b(?! of staff)|\bprincipal\b|\blead\b", t) or staff: return "Lead"
     if re.search(r"\bsenior\b|\bsr\b\.?", t): return "Senior"
-    if re.search(r"\bjunior\b|\bjr\b\.?|entry[- ]level|\bassociate\b", t): return "Junior"
+    # "Associate" in front of a role is a junior grade ("Associate Product Manager"); after it, it is a job noun ("Operations Associate")
+    if re.search(r"\bjunior\b|\bjr\b\.?|entry[- ]level|new grad|\bgraduate\b|early[- ]career|^associate\b(?! (general counsel|director|creative director|vice president|vp|partner|principal))", t): return "Junior"
     return ""
 
 
@@ -163,8 +269,8 @@ def pay_from_greenhouse(ranges):
     cur = ok[0].get("currency_type") or "USD"
     same = [r for r in ok if (r.get("currency_type") or "USD") == cur]
     lo, hi = min(r["min_cents"] for r in same) / 100, max(r["max_cents"] for r in same) / 100
-    if lo < 1000: return ""                              # hourly or daily figures are not yearly salaries
-    return pay_k("$", lo, hi) if cur == "USD" else f"{cur} {lo / 1000:,.0f}K - {hi / 1000:,.0f}K"
+    if hi > 3 * lo: lo, hi = same[0]["min_cents"] / 100, same[0]["max_cents"] / 100     # zones too far apart to be one range: show the first
+    return tidy_pay(f"{lo:.0f} - {hi:.0f} {cur}")
 
 
 YEARS_RX = re.compile(r"(\d{1,2})\s?\+?\s?(?:(?:-|–|to)\s?\d{1,2}\s?\+?\s?)?years?[’']?\s+(?:of\s+)?(?:[\w/&-]+\s+){0,4}?experience", re.I)
@@ -176,27 +282,61 @@ def years_asked(text):
     return min(vals) if vals else 0
 
 
-def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint=""):
-    title = re.sub(r"\s+", " ", title or "").strip()
-    location = re.sub(r"\s+", " ", location or "").strip()
+def tidy_pay(s):
+    """One short, consistent pay string from whatever the feed gave: "$152K - $239K" for a year, "$38 - $55 an hour" otherwise.
+    Returns "" when the text is not a usable figure (no numbers, an amount too small to be yearly with no unit, an absurd value)."""
+    s = re.sub(r"\s+", " ", s or "").split(" • ")[0].strip()
+    s = re.sub(r"(?<=\d) (?=\d{3}\b)", "", s)               # "180 000" is 180000
+    if not s: return ""
+    unit = ("an hour" if re.search(r"hour|/ ?hr\b", s, re.I) else "a month" if re.search(r"month", s, re.I) else "a week" if re.search(r"week", s, re.I)
+            else "a day" if re.search(r"\bday\b|daily", s, re.I) else "")
+    cur = re.search(r"US\$|CA\$|C\$|A\$|\$|£|€|\b(USD|CAD|AUD|GBP|EUR|SGD|INR|CHF|JPY|BRL|MXN|PLN|SEK|ILS|AED|HKD|NZD)\b", s)
+    nums = [float(re.sub(r"[\s,]", "", n)) * (1000 if k else 1) for n, k in re.findall(r"(\d[\d,]*(?:\.\d+)?|\d[\d ]*\d)\s?([kK])?(?![\d%])", s)][:2]
+    if not nums or not cur: return ""
+    lo, hi = nums[0], nums[-1]
+    if hi < lo: return ""
+    code = cur.group(0).upper()
+    sym = PAY_SYM.get(code, code + " ")
+    if unit:
+        return (f"{sym}{lo:,.0f} - {sym}{hi:,.0f} {unit}" if hi > lo else f"{sym}{lo:,.0f} {unit}")[:40]
+    if lo < 15000 or (lo + hi) / 2 > 900000: return ""        # too small to be a yearly salary with no unit, or not a plausible one
+    return (f"{sym}{lo / 1000:,.0f}K - {sym}{hi / 1000:,.0f}K" if hi > lo else f"{sym}{lo / 1000:,.0f}K").replace("  ", " ")
+
+
+def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False):
+    title = re.sub(r"\s+", " ", str(title or "")).strip()
+    location = re.sub(r"\s+", " ", str(location or "")).strip()
+    hybrid = bool(hybrid) or bool(re.search(r"\bhybrid\b", location, re.I))
+    remote = (bool(remote) or bool(re.search(r"\bremote\b", location, re.I))) and not (hybrid and not re.search(r"\bremote\b", location, re.I))
+    limited = re.search(r"\b(us|usa|u\.s\.|united states|eu|europe|emea|apac|canada|uk|americas|latam|time ?zone|est|pst|cet)\b|anywhere in", location, re.I)
     if location.lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: location = ""
     blob = title + "\n" + text
     return {
         "id": f"{ats}-{slugify(company)}-{jid}",
         "company": company, "title": title, "url": url, "location": location,
-        "remote": bool(remote) or bool(re.search(r"remote", location, re.I)),
+        "remote": remote, "hybrid": hybrid,
         "dept": (dept or "").strip(), "posted": (posted or "")[:10],
         "excerpt": excerpt(text), "cat": classify(title), "level": level(title),
-        "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I)][:8],
+        "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I)][:12],
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
-        "salary": salary or pay_from_text(text, location),
+        "salary": tidy_pay(salary) or pay_from_text(text, location),
         "perks": perks(text), "etype": etype(title, hint), "years": years_asked(text),
-        "anywhere": bool(re.search(r"worldwide|world-wide|anywhere|global|any location", location, re.I)),
+        # the full description is kept only for recent postings: that is where it matters most, and the hosting has a size limit
+        "desc": clean_html(desc) if desc and (posted or "")[:10] >= DESC_SINCE else "",
+        "anywhere": bool(re.search(r"worldwide|world-wide|\banywhere\b|\bglobal\b|any location", location, re.I)) and not limited,
         "_crypto": bool(CRYPTO_RE.search(blob)),
     }
 
 
 def fetch(src):
+    try:
+        return fetch_feed(src)
+    except Exception as ex:                                    # an odd value in one feed: leave that company as it was and carry on
+        print(f"feed error for {src.get('name')}: {type(ex).__name__}: {ex}")
+        return src["name"], None
+
+
+def fetch_feed(src):
     name, ats, tok = src["name"], src["ats"], src["token"]
     out = []
     if ats == "greenhouse":
@@ -205,7 +345,7 @@ def fetch(src):
         for j in d["jobs"]:
             dept = ", ".join(x.get("name", "") for x in (j.get("departments") or []))
             out.append(norm(name, ats, j["id"], j.get("title"), j.get("absolute_url"), (j.get("location") or {}).get("name"),
-                            False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges"))))
+                            False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges")), "", html.unescape(j.get("content") or "")))
     elif ats == "lever":
         d = get_json(f"https://api.lever.co/v0/postings/{tok}?mode=json", 60)
         if not isinstance(d, list): return name, None
@@ -214,17 +354,21 @@ def fetch(src):
             text = "\n".join([j.get("descriptionPlain") or ""] + [f"{l.get('text','')}\n{strip_html(l.get('content'))}" for l in (j.get("lists") or [])])
             posted = datetime.datetime.fromtimestamp(j["createdAt"] / 1000, datetime.timezone.utc).date().isoformat() if j.get("createdAt") else ""
             sr = j.get("salaryRange") or {}
-            sal = f"{sr.get('min'):,.0f}–{sr.get('max'):,.0f} {sr.get('currency','')}".replace(",", " ") if sr.get("min") and sr.get("max") else ""
+            per = str(sr.get("interval") or "").lower()
+            sal = (f"{sr.get('min'):.0f} - {sr.get('max'):.0f} {sr.get('currency', '')}"
+                   + (" per hour" if "hour" in per else " per month" if "month" in per else " per week" if "week" in per else " per day" if "day" in per else "")) if sr.get("min") and sr.get("max") else ""
             out.append(norm(name, ats, j["id"], j.get("text"), j.get("hostedUrl"), c.get("location"), j.get("workplaceType") == "remote",
-                            c.get("team") or c.get("department"), posted, text, sal, c.get("commitment") or ""))
+                            c.get("team") or c.get("department"), posted, text, sal, c.get("commitment") or "",
+                            (j.get("description") or "") + "".join(f"<h3>{html.escape(l.get('text', ''))}</h3><ul>{l.get('content', '')}</ul>" for l in (j.get("lists") or [])) + (j.get("additional") or "")))
     else:
         d = get_json(f"https://api.ashbyhq.com/posting-api/job-board/{tok}?includeCompensation=true", 60)
         if not d or "jobs" not in d: return name, None
         for j in d["jobs"]:
             comp = (j.get("compensation") or {})
             sal = comp.get("scrapeableCompensationSalarySummary") or comp.get("compensationTierSummary") or ""
-            out.append(norm(name, ats, j["id"], j.get("title"), j.get("jobUrl") or j.get("applyUrl"), j.get("location"), j.get("isRemote"),
-                            j.get("department") or j.get("team"), j.get("publishedAt"), j.get("descriptionPlain") or strip_html(j.get("descriptionHtml")), sal, j.get("employmentType") or ""))
+            wt = str(j.get("workplaceType") or "").lower()          # Ashby sets isRemote for hybrid roles too, so the workplace type decides
+            out.append(norm(name, ats, j["id"], j.get("title"), j.get("jobUrl") or j.get("applyUrl"), j.get("location"), wt == "remote" if wt else j.get("isRemote"),
+                            j.get("department") or j.get("team"), j.get("publishedAt"), j.get("descriptionPlain") or strip_html(j.get("descriptionHtml")), sal, j.get("employmentType") or "", j.get("descriptionHtml") or "", wt == "hybrid"))
     return name, out
 
 
@@ -319,6 +463,10 @@ def main():
         for jid, old in db.items():
             if old["company"] == name and old["active"] and jid not in seen:
                 old.update(active=False, closed=TODAY); stats["closed"] += 1
+    known = {s["name"] for s in sources}                       # a company we no longer read cannot keep "open" jobs forever
+    for old in db.values():
+        if old["active"] and not old.get("direct") and old["company"] not in known:
+            old.update(active=False, closed=TODAY); stats["closed"] += 1
     DATA.parent.mkdir(exist_ok=True)
     direct_and_paid(db, used_slugs, {s["name"].lower() for s in sources}, stats)
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
