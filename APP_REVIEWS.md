@@ -48,7 +48,7 @@ number of listings (Indeed); all applications in one place and one-click save (T
 | Search that takes the words literally; filters are hard limits | ✅ filters are exact; ➕ "job titles only" switch; ➕ plain words become filters; ➕ when nothing fits the site says which filter to drop instead of showing unrelated jobs |
 | Hide a company, block words | ✅ |
 | Scam and ghost-job defence | ✅ every job is read from the employer's own system, with source and last-checked date; long-open and talent-pool flags; ➕ "report a problem" link on every job |
-| Sort by date, salary filter, job type, company search | ✅ ; 📋 "include jobs that do not state pay" switch for the salary filter |
+| Sort by date, salary filter, job type, company search | ✅ ; ➕ finer salary steps and an "also show jobs that do not state pay" switch |
 | Application tracking, follow-up reminder, "closed by the employer" mark | ✅ |
 | Notifications off by default | ✅ there are none; 📋 opt-in alerts per saved search need the server |
 | Location remembered, "remote" says which countries | ✅ remote scope on the job page; ➕ the site knows the visitor's country and offers "only my country" |

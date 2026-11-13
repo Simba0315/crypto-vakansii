@@ -1030,7 +1030,9 @@ def main():
               + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>')
               + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>')
               + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
-                                '<option value="150000">$150K+</option><option value="200000">$200K+</option><option value="300000">$300K+</option></select>')
+                                '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
+                                '<option value="250000">$250K+</option><option value="300000">$300K+</option></select>'
+                                '<div class="filters" style="margin-top:8px"><label hidden><input type="checkbox" id="f-nosal"> Also show jobs that do not state pay</label></div>')
               + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>')
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')

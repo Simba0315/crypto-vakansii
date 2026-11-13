@@ -6,7 +6,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), age = $('age'), sort = $('sort');
   var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
-  var fReal = $('f-real'), fTi = $('f-ti'), xwords = $('xwords'), xcos = $('xcos');
+  var fReal = $('f-real'), fTi = $('f-ti'), fNosal = $('f-nosal'), xwords = $('xwords'), xcos = $('xcos');
   var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
   var ftoggle = $('ftoggle'), fwrap = $('fwrap'), keepShown = false;
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
@@ -18,6 +18,7 @@
   fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto; fAny.checked = f0.any; perk.value = f0.perk; etype.value = f0.etype;
   if (fReal) fReal.checked = f0.real;
   if (fTi) fTi.checked = f0.titles;
+  if (fNosal) { fNosal.checked = f0.nosal; fNosal.parentNode.hidden = !(Number(sal.value) > 1); sal.addEventListener('change', function () { fNosal.parentNode.hidden = !(Number(sal.value) > 1); }); }
   if (xwords) xwords.value = H.mute.w.join(', ');
   var sortTouched = new URLSearchParams(location.search).has('sort');
   var skills = f0.skills.slice();
@@ -42,6 +43,7 @@
     if (fAny.checked) p.set('any', '1');
     if (fReal && fReal.checked) p.set('real', '1');
     if (fTi && fTi.checked) p.set('ti', '1');
+    if (fNosal && fNosal.checked && Number(sal.value) > 1) p.set('nosal', '1');
     if (perk.value) p.set('perk', perk.value);
     if (etype.value) p.set('etype', etype.value);
     if (skills.length) p.set('skills', skills.join(','));
@@ -124,7 +126,7 @@
   // typing a query switches to "best match" unless the visitor picked a sort order themselves
   q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
   sort.addEventListener('change', function () { sortTouched = true; });
-  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fEntry, fCrypto, fAny, fReal, fTi].forEach(function (el) { if (el) el.addEventListener('change', run); });
+  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fEntry, fCrypto, fAny, fReal, fTi, fNosal].forEach(function (el) { if (el) el.addEventListener('change', run); });
   // words and companies the visitor never wants to see: remembered in this browser, applied to every list
   var drawMuted = function () {
     if (!xcos) return;

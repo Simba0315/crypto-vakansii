@@ -63,7 +63,7 @@
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
       remote: p.has('remote'), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
       skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new',
-      titles: p.has('ti'), real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
+      titles: p.has('ti'), nosal: p.has('nosal'), real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
     };
   }
   function match(j, f) {
@@ -82,7 +82,7 @@
     if (hidden[j[0]]) return false;
     if (f.since && !(j[16] >= f.since)) return false;
     if (f.sal === 1 && !j[8]) return false;
-    if (f.sal > 1 && !(j[13] >= f.sal)) return false;
+    if (f.sal > 1 && !(j[13] >= f.sal) && !(f.nosal && !j[8])) return false;      // "also show jobs that do not state pay" lets the unknowns through
     for (var i = 0; i < f.skills.length; i++) if (j[7].indexOf(f.skills[i]) < 0) return false;
     if (f.words.length) {
       var hay = f.titles ? j[1].toLowerCase() : j[17] || (j[17] = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase());
