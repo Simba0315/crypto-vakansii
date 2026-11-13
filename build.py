@@ -977,11 +977,17 @@ def main():
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
             + section("Latest tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"All {n:,} jobs"))
             + pulse + anatomy
-            + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data"))
-            + section("Browse by category", f'<ul class="gloss">{cats}</ul>')
-            + section("By role", '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + "</ul>", ("roles/", "All roles"))
-            + section("Who is hiring most", f'<ul class="tiles">{comp_top}</ul>', ("companies/", f"All {len(companies)} companies")) + plus_band
-            + section("By location", f'<ul class="tiles">{place_top}</ul>', ("locations/", f"All {len(places)} locations")) + band
+            + '<div class="inkband">' + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data")) + "</div>"
+            + '<section class="sec"><div class="sec-head"><h2>Browse the jobs</h2></div><div class="tabs2">'
+              '<input type="radio" name="dir" id="dir-cat" checked><label for="dir-cat">By category</label>'
+              '<input type="radio" name="dir" id="dir-role"><label for="dir-role">By role</label>'
+              '<input type="radio" name="dir" id="dir-loc"><label for="dir-loc">By location</label>'
+              '<input type="radio" name="dir" id="dir-co"><label for="dir-co">By company</label>'
+              f'<div class="tabp" id="p-cat"><ul class="gloss">{cats}</ul></div>'
+              + '<div class="tabp" id="p-role"><ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + f'</ul><p class="tabmore"><a href="{P}/roles/">All roles</a></p></div>'
+              + f'<div class="tabp" id="p-loc"><ul class="tiles">{place_top}</ul><p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
+              + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
+            + plus_band + band
             + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u, nm, d_ in TOOLS[:6]) + "</div>",
                       ("tools/", f"All {len(TOOLS)} tools"))
             + section("For your own site", '<div class="feats">'

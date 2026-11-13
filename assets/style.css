@@ -691,3 +691,20 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 /* job page: apply first, the facts after */
 .side dl.meta{margin:18px 0 0}
 .side .sideact+dl.meta{padding-top:16px;border-top:1px solid var(--line)}
+
+/* a section on a dark band the full width of the window: everything inside takes the dark values by itself */
+.inkband{--bg:#0e0e0c;--bg2:#1c1c19;--card:#171715;--text:#f3f2ec;--muted:#b9b7ad;--faint:#8b897f;--line:#2b2b27;--line2:#3d3d37;--accent-soft:#16241a;--ac:#5fd486;--hl:#6ee08f;--hl-ink:#062b15;--green:#6fdd95;--green-soft:#12301d;
+  background:var(--bg);color:var(--text);margin:56px calc(50% - 50vw) 0;padding:46px calc(50vw - 50%) 54px}
+.inkband .sec{margin-top:0}
+.inkband+.sec{margin-top:56px}
+/* tabs without script: four lists in the space of one */
+.tabs2{display:flex;flex-wrap:wrap;gap:6px 6px;position:relative}
+.tabs2>input{position:absolute;opacity:0;pointer-events:none}
+.tabs2>label{order:1;padding:8px 14px;border:1px solid var(--line2);border-radius:6px;font-size:14.5px;font-weight:600;color:var(--muted);cursor:pointer;background:var(--card)}
+.tabs2>label:hover{color:var(--text);border-color:var(--text)}
+.tabs2>input:checked+label{background:var(--text);color:var(--bg);border-color:var(--text)}
+.tabs2>input:focus-visible+label{outline:2px solid var(--text);outline-offset:2px}
+.tabs2>.tabp{order:2;flex-basis:100%;display:none;margin-top:12px}
+#dir-cat:checked~#p-cat,#dir-role:checked~#p-role,#dir-loc:checked~#p-loc,#dir-co:checked~#p-co{display:block}
+.tabmore{margin:14px 0 0;font-size:14.5px;font-weight:500}
+.tabmore a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
