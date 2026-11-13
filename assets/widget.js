@@ -111,7 +111,7 @@
       var html = '<style>' + CSS + '</style><div class="w ' + theme + '"' + (accent ? ' style="--acc:' + accent + '"' : '') + '><div class="h"><span class="ht"><span class="dot"></span>' + esc(el.getAttribute('data-title') || d.name) + '</span>' +
         '<span class="n">' + Number(d.total).toLocaleString('en-US') + ' open</span></div>' + body +
         '<div class="f">' + (root ? '<slot><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a></slot>' :
-          '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a>') + '<span class="by">' + (d.own ? 'Live from the hiring system' : 'Updated daily') + '</span></div></div>';
+          '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a>') + '<span class="by">' + (d.own ? 'Live from the hiring system' : 'Updated hourly') + '</span></div></div>';
       if (root) root.innerHTML = html; else el.innerHTML = html;
       if (interactive && jobs.length && layout !== 'ticker') {     // search by text and team, a page of rows at a time
         var scope = root || el, box = scope.querySelector('.cs input'), team = scope.querySelector('.cs select'), rowsEl = scope.querySelector('.rows'), moreBtn = scope.querySelector('.more'), shown = step;

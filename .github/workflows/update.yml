@@ -3,8 +3,13 @@ name: Update jobs and deploy site
 on:
   push:
     branches: [main]
+  # Every hour at 17 minutes past (UTC): a job an employer has just published is picked up by the next run.
+  # A whole run took 9 to 15 minutes when this was set (15 runs measured on 2026-11-13; reading the feeds is 7 to 13 of them),
+  # so hourly runs do not pile up. The same schedule is stated on the site's /status/ page (build.py): change the two together.
+  # It is written as two lines on purpose: the 03:17 run is also the once-a-day run, see DAILY below.
   schedule:
-    - cron: "17 3 * * *"   # every day at 03:17 UTC
+    - cron: "17 3 * * *"          # 03:17 UTC: the hourly work plus the once-a-day work
+    - cron: "17 0-2,4-23 * * *"   # every other hour: collect, build, deploy
   workflow_dispatch:
 
 permissions:
@@ -23,6 +28,11 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      # "true" only in the run started by the 03:17 line of the schedule above, or by hand. Steps that must not happen 24 times a day
+      # are guarded with it. The check is on which schedule line fired, not on the clock: GitHub often starts a scheduled run late,
+      # and a run that waited past 04:00 must still count as the 03:17 one. The text here must match that cron line exactly.
+      DAILY: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '17 3 * * *' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -69,7 +79,10 @@ jobs:
       - name: Build site
         run: python3 build.py
       # The build adds this month's figures to data/reports.json; past months in it must never be lost, so it is saved again.
+      # Once a day (DAILY) is enough: the snapshot is one set of figures per month, and saving it means pushing the whole jobs
+      # database a second time. In the other runs the file restored at the start is carried over unchanged by "Save jobs database".
       - name: Save monthly report snapshots
+        if: env.DAILY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -97,9 +110,11 @@ jobs:
           path: site
       - id: deploy
         uses: actions/deploy-pages@v4
-      # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed today.
+      # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed.
+      # Once a day (DAILY): sending the same addresses every hour is what IndexNow asks sites not to do. The list from build.py
+      # holds the jobs first seen or closed yesterday and today, so nothing found between two daily runs is left out.
       - name: Tell search engines which pages changed
-        if: steps.deploy.outcome == 'success'
+        if: env.DAILY == 'true' && steps.deploy.outcome == 'success'
         continue-on-error: true
         run: |
           if [ -s data/indexnow.json ]; then

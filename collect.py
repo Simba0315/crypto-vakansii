@@ -313,7 +313,27 @@ def tidy_pay(s):
     return (f"{sym}{lo / 1000:,.0f}K - {sym}{hi / 1000:,.0f}K" if hi > lo else f"{sym}{lo / 1000:,.0f}K").replace("  ", " ")
 
 
-def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False):
+def utc_now():
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def utc_iso(v):
+    """An exact time from a feed as UTC with seconds, "2026-11-13T09:05:52Z". Takes ISO 8601 text with a time and an offset
+    (Greenhouse, Ashby) or milliseconds since 1970 (Lever). Returns "" for a bare date or anything unreadable: no time is better than a guessed one."""
+    try:
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            t = datetime.datetime.fromtimestamp(v / 1000, datetime.timezone.utc)
+        else:
+            s = str(v or "").strip()
+            if "T" not in s.upper(): return ""                       # a day without a time
+            t = datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+            if t.tzinfo is None: return ""                           # a time without an offset cannot be placed
+        return t.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if t.year >= 2000 else ""
+    except Exception:
+        return ""
+
+
+def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False, posted_at=None):
     title = re.sub(r"\s+", " ", str(title or "")).strip()
     location = re.sub(r"\s+", " ", str(location or "")).strip()
     hybrid = bool(hybrid) or bool(re.search(r"\bhybrid\b", location, re.I))
@@ -326,6 +346,7 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
         "company": company, "title": title, "url": url, "location": location,
         "remote": remote, "hybrid": hybrid,
         "dept": (dept or "").strip(), "posted": (posted or "")[:10],
+        "posted_at": utc_iso(posted_at),      # the exact publishing time when the feed gives one ("" otherwise); "posted" stays the day
         "excerpt": excerpt(text), "cat": classify(title), "level": level(title),
         "tags": [n for n, rx in SKILLS if re.search(rx, title if n in TITLE_ONLY else blob, re.I) and n.lower() not in company.lower()][:12],     # a company's own name in its postings is not a skill
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
@@ -355,7 +376,8 @@ def fetch_feed(src):
         for j in d["jobs"]:
             dept = ", ".join(x.get("name", "") for x in (j.get("departments") or []))
             out.append(norm(name, ats, j["id"], j.get("title"), j.get("absolute_url"), (j.get("location") or {}).get("name"),
-                            False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges")), "", html.unescape(j.get("content") or "")))
+                            False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges")), "", html.unescape(j.get("content") or ""),
+                            posted_at=j.get("first_published")))          # the publishing time; "updated_at" moves with every edit, so it is never used as the exact time
     elif ats == "lever":
         d = get_json(f"https://api.lever.co/v0/postings/{tok}?mode=json", 60)
         if not isinstance(d, list): return name, None
@@ -369,7 +391,8 @@ def fetch_feed(src):
                    + (" per hour" if "hour" in per else " per month" if "month" in per else " per week" if "week" in per else " per day" if "day" in per else "")) if sr.get("min") and sr.get("max") else ""
             out.append(norm(name, ats, j["id"], j.get("text"), j.get("hostedUrl"), c.get("location"), j.get("workplaceType") == "remote",
                             c.get("team") or c.get("department"), posted, text, sal, c.get("commitment") or "",
-                            (j.get("description") or "") + "".join(f"<h3>{html.escape(l.get('text', ''))}</h3><ul>{l.get('content', '')}</ul>" for l in (j.get("lists") or [])) + (j.get("additional") or "")))
+                            (j.get("description") or "") + "".join(f"<h3>{html.escape(l.get('text', ''))}</h3><ul>{l.get('content', '')}</ul>" for l in (j.get("lists") or [])) + (j.get("additional") or ""),
+                            posted_at=j.get("createdAt")))                # milliseconds; the only time Lever's public feed has
     else:
         d = get_json(f"https://api.ashbyhq.com/posting-api/job-board/{tok}?includeCompensation=true", 60)
         if not d or "jobs" not in d: return name, None
@@ -378,7 +401,7 @@ def fetch_feed(src):
             sal = comp.get("scrapeableCompensationSalarySummary") or comp.get("compensationTierSummary") or ""
             wt = str(j.get("workplaceType") or "").lower()          # Ashby sets isRemote for hybrid roles too, so the workplace type decides
             out.append(norm(name, ats, j["id"], j.get("title"), j.get("jobUrl") or j.get("applyUrl"), j.get("location"), wt == "remote" if wt else j.get("isRemote"),
-                            j.get("department") or j.get("team"), j.get("publishedAt"), j.get("descriptionPlain") or strip_html(j.get("descriptionHtml")), sal, j.get("employmentType") or "", j.get("descriptionHtml") or "", wt == "hybrid"))
+                            j.get("department") or j.get("team"), j.get("publishedAt"), j.get("descriptionPlain") or strip_html(j.get("descriptionHtml")), sal, j.get("employmentType") or "", j.get("descriptionHtml") or "", wt == "hybrid", posted_at=j.get("publishedAt")))
     return name, out
 
 
@@ -406,13 +429,14 @@ def direct_and_paid(db, used_slugs, indexed, stats):
         old = db.get(j["id"])
         if old:
             j.update(slug=old["slug"], first_seen=old["first_seen"])
+            if old.get("first_seen_at"): j["first_seen_at"] = old["first_seen_at"]
         else:
             base = f"{slugify(j['title'])}-{slugify(j['company'])}"
             slug, i = base, 2
             while slug in used_slugs:
                 slug, i = f"{base}-{i}", i + 1
             used_slugs.add(slug)
-            j.update(slug=slug, first_seen=TODAY)
+            j.update(slug=slug, first_seen=TODAY, first_seen_at=utc_now())
             stats["new"] += 1
         j.update(last_seen=TODAY, active=True)
         db[j["id"]] = j
@@ -445,6 +469,7 @@ def main():
         with cf.ThreadPoolExecutor(3) as ex:
             again = dict(ex.map(fetch, retry))
         results = [(name, again.get(name) if jobs is None else jobs) for name, jobs in results]
+    seen_at = utc_now()                                     # when this run finished reading the feeds: the "first seen" time of every job that is new in it
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
@@ -459,13 +484,14 @@ def main():
             old = db.get(j["id"])
             if old:
                 j.update(slug=old["slug"], first_seen=old["first_seen"])
+                if old.get("first_seen_at"): j["first_seen_at"] = old["first_seen_at"]      # jobs first seen before exact times were kept have none
             else:
                 base = f"{slugify(j['title'])}-{slugify(name)}"
                 slug, i = base, 2
                 while slug in used_slugs:
                     slug, i = f"{base}-{i}", i + 1
                 used_slugs.add(slug)
-                j.update(slug=slug, first_seen=TODAY)
+                j.update(slug=slug, first_seen=TODAY, first_seen_at=seen_at)
                 stats["new"] += 1
             j.update(last_seen=TODAY, active=True)
             j.pop("closed", None)
