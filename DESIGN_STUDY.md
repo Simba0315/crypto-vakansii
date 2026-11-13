@@ -11,12 +11,12 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    (what, where), one row of links. Indeed's home is one screen with a two-field search; Uniswap puts the working form in the hero.
 2. ✅ **Job rows in fixed columns:** logo, title with company and place, pay (mono, right-aligned), tags, age. Pay lines up down
    the list; a faint dash holds the column when pay is not stated. Levels.fyi and RemoteOK keep pay, tags and age in columns.
-3. 📋 **Search page: filters in one row of dropdown chips on top**, applied filters as removable chips, count and sort on one line,
-   the page title reduced to a count line. Indeed, LinkedIn, Glassdoor and Levels.fyi all do this.
+3. ✅ **Search page: filters in one row on top**, the less used ones under "More filters", the list on the left and a wide preview
+   on the right, a smaller page title. 📋 Still to do: applied filters as removable chips.
 4. ✅ **Job page: the decision first.** The pay stated in the posting on a scale with the category median marked, then Apply and
    Save, then the facts.
-5. 📋 **Company page:** a sticky bar of anchors with counts (Jobs 14 · Pay · Tech stack · Locations · Similar), fact tiles with a
-   small label over the value, pay by role with the number of postings behind each figure, a short "what the postings show" paragraph.
+5. ✅ **Company page:** a sticky bar of anchors with counts, fact tiles with a small label over the value, a lead written from
+   the postings. 📋 Still to do: pay by role with the number of postings behind each figure.
 6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. 📋 Still to do: the
    "Related" and "Compare with" runs as labelled rows (label left, links right, "More" last).
 7. ✅ **Tools show a result at once** ("Show an example"). 📋 Still to do: a sub-navigation under the header on tool pages and the

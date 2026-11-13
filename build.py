@@ -1023,7 +1023,7 @@ def main():
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     group = lambda label, inner: f'<div class="fgroup"><span class="flabel">{label}</span>{inner}</div>'
-    search = (crumbs(("All jobs", "")) + "<h1>Search tech jobs</h1>"
+    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">Search tech jobs</h1>'
               f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
@@ -1037,6 +1037,7 @@ def main():
                                 '<div class="filters" style="margin-top:8px"><label hidden><input type="checkbox" id="f-nosal"> Also show jobs that do not state pay</label></div>')
               + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>')
+              + '<details class="morefilters"><summary>More filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
               + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'
                                    '<input type="text" id="xwords" class="xin" placeholder="Words in the title, e.g. senior, sales" aria-label="Words to leave out of results" autocomplete="off">'
@@ -1044,7 +1045,7 @@ def main():
               + group("Perk", '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + "</select>")
               + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
               + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
-              + '<div class="fgroup"><button class="linkbtn" id="fclear" type="button">Clear all filters</button></div></aside>'
+              + '</div></details><div class="fgroup fclear"><button class="linkbtn" id="fclear" type="button">Clear all filters</button></div></aside>'
               '<div><div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select>'
               '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'

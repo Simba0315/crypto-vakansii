@@ -737,3 +737,27 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .qa>div:target{background:var(--accent-soft);box-shadow:-10px 0 0 var(--accent-soft),10px 0 0 var(--accent-soft)}
 .side .note.goes{margin:8px 0 0;text-align:center;font-size:12.5px}
 .note.goes b{font:500 12.5px var(--mono);color:var(--muted);font-weight:500;overflow-wrap:anywhere}
+
+/* search page: filters in one row on top, the list on the left, a wide preview on the right */
+.h1s{font-size:26px;margin:10px 0 0}
+.morefilters summary{cursor:pointer;font-size:14px;font-weight:600;padding:8px 0}
+.morefilters .mf{display:grid;gap:0}
+@media(min-width:861px){
+  .sgrid,.sgrid.haspane{grid-template-columns:minmax(0,1fr);gap:0 28px}
+  #fwrap{grid-column:1/-1;position:static;max-height:none;overflow:visible;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid var(--line)}
+  #fwrap .fgroup{border:0;padding:0}
+  #fwrap .fgroup select{width:auto;max-width:210px;padding:8px 10px;font-size:14px}
+  #fwrap .flabel{font-size:12px;font-weight:500;color:var(--faint);margin-bottom:4px}
+  #fwrap .filters{flex-direction:row;flex-wrap:wrap;gap:4px 16px;align-items:center;min-height:38px}
+  #fwrap .fclear{margin-left:auto;align-self:center}
+  .morefilters{flex-basis:100%;order:9}
+  .morefilters .mf{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-start;padding:10px 0 4px}
+  .morefilters .fgroup{max-width:420px}
+  .morefilters .xin{min-width:260px}
+}
+@media(min-width:1240px){
+  .sgrid.haspane{grid-template-columns:minmax(0,470px) minmax(0,1fr)}
+  .pane{padding:26px 30px}
+}
+@media(min-width:861px) and (max-width:1239px){.sgrid.haspane{grid-template-columns:minmax(0,1fr)}}
+.filters:has(>label[hidden]:only-child){display:none}
