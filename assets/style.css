@@ -248,7 +248,7 @@ dl.meta dd{margin:0;font-weight:500}
 .band .btn:hover{background:#2b2b27}
 
 /* Tables, code */
-.tablewrap{overflow-x:auto;border-top:1.5px solid var(--text)}
+.tablewrap{overflow-x:auto;border-top:1.5px solid var(--text);background:linear-gradient(to right,var(--bg) 40%,transparent),linear-gradient(to left,var(--bg) 40%,transparent) 100% 0,linear-gradient(to right,rgba(14,14,12,.16),transparent),linear-gradient(to left,rgba(14,14,12,.16),transparent) 100% 0;background-repeat:no-repeat;background-size:36px 100%,36px 100%,12px 100%,12px 100%;background-attachment:local,local,scroll,scroll}
 .sec-head+.tablewrap{border-top:0;margin-top:-14px}
 table{border-collapse:collapse;width:100%;font-size:15px}
 th,td{text-align:left;padding:11px 22px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}

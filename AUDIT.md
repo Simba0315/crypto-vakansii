@@ -52,6 +52,7 @@ When you fix an open item, move it up and say how you checked it.
 | 40 | BreadcrumbList markup missing on company, salary, insights, report and tool hub pages | `page()` now writes the markup from the visible trail on every page that has one |
 | 3 | Salary checker offered “Intern” and “Junior” levels that never returned a figure | The level list now holds only levels that have at least 20 postings with a yearly range (`tools_pages.py`) |
 | 12 | Methodology stated one minimum sample while pages used 3, 8, 10, 15, 20 and 30 | Three thresholds, each stated in the methodology: 15 for a median next to a list or company (company pages used 3), 30 for rankings and comparisons, 20 for the salary tools |
+| 44 | Wide tables on phones had no scroll hint | A soft shadow now shows at the edge a table can still be scrolled towards (`.tablewrap`) |
 
 ## Open
 
@@ -60,7 +61,6 @@ When you fix an open item, move it up and say how you checked it.
 | 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
 | 22 | Tool copy slips still open: "a honest", the contractor rate sentence, "Download PDF" opens print (fixed 2026-11-13: "Found 1 skills", "With prices up -2%", "Inc..") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
-| 44 | Wide tool tables on phones have no scroll hint | `tools.css` |
 | 47 | Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
 | 49–56, 59 | Server (`server/src/worker.js`), not deployed: a second post by the same employer is refused; company identity is an exact string ("Stripe!" passes); editing company skips the link check; activation is not atomic; removed jobs stay online; pending orders are never reconciled; rate limits can be raced; the link check is weaker than its comment; no password reset | must be fixed and tested before the server is deployed |
 | 61 | Tool logic still open: job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13: `num("150.000")`, "founded 15 years ago", 2000% ownership, and Go in running text such as "Python and Go", which also raises the number of jobs tagged Go at the next collection) | `tools.js`, add tests |

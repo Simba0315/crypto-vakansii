@@ -54,6 +54,25 @@
     applyTpl();
   };
   // a Word file: the same page as simple HTML, which Word opens and saves as .docx
+  // The same resume in the open JSON Resume format (jsonresume.org): a file other tools and AI assistants can read
+  var jsonFile = function () {
+    var links = String(data.links || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    var url = function (x) { return /^https?:\/\//i.test(x) ? x : 'https://' + x; };
+    var out = {
+      $schema: 'https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json',
+      basics: { name: data.name || '', label: data.title || '', email: data.email || '', phone: data.phone || '', summary: data.summary || '',
+        location: { address: data.place || '' }, profiles: links.map(function (x) { return { network: x.replace(/^https?:\/\//i, '').split('/')[0], url: url(x) }; }) },
+      work: data.exp.filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
+        return { name: x.org || '', position: x.role || '', summary: x.dates || '', highlights: String(x.text || '').split('\n').map(function (l) { return l.replace(/^\s*[-*•]\s*/, '').trim(); }).filter(Boolean) };
+      }),
+      education: data.edu.filter(function (x) { return x.what || x.org; }).map(function (x) { return { institution: x.org || '', area: x.what || '', studyType: '', endDate: x.dates || '' }; }),
+      skills: String(data.skills || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) { return { name: x }; })
+    };
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }));
+    a.download = (data.name ? data.name.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'resume') + '.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  };
   var wordFile = function () {
     var css = 'body{font-family:' + (data.tpl === 'classic' ? 'Georgia,serif' : data.tpl === 'developer' ? 'Consolas,monospace' : 'Arial,sans-serif') + ';font-size:11pt;line-height:1.4;color:#111}' +
       'h2{font-size:20pt;margin:0}h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;border-bottom:1px solid #111;margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}';
@@ -78,6 +97,7 @@
     else if (del) { data[del].splice(Number(t.closest('.rblock').getAttribute('data-i')), 1); if (!data[del].length) data[del] = JSON.parse(JSON.stringify(blank[del])); save(); drawForm(); drawPreview(); }
     else if (t.id === 'rb-print') window.print();
     else if (t.id === 'rb-doc') wordFile();
+    else if (t.id === 'rb-json') jsonFile();
     else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
     else if (t.id === 'rb-match') {
       var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');

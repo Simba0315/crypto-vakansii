@@ -307,18 +307,24 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          ["salary-checker", "negotiation-email", "salary-converter"], ["salaries/"])
 
     # ------------------------------------------------------------ 5. offer comparison
+    # the placeholders double as the example, so each offer gets its own figures: a comparison of two equal offers shows nothing
+    OFFER_EX = {"a": ("120,000", "10% or 12,000", "20,000", "10,000", "4", "3,000", "25", "3", "18"),
+                "b": ("135,000", "5% or 6,750", "8,000", "5,000", "3", "2,000", "20", "0", "0"),
+                "c": ("110,000", "15% or 16,500", "40,000", "20,000", "6", "4,000", "30", "5", "22")}
+
     def offer_col(p, letter, hidden=False):
+        base, bonus, eq, sign, match, other, pto, cdays, ccost = OFFER_EX[p]
         return (f'<div class="tl-col" id="tl-col-{p}"{" hidden" if hidden else ""}><p class="tl-t">Offer {letter}</p>'
                 + _f(f"{p}_name", "Company", f"Offer {letter}", mode="")
-                + _f(f"{p}_base", "Base salary per year", "120,000")
-                + _f(f"{p}_bonus", "Bonus per year", "10% or 12,000", mode="text", hint="An amount, or a percent of base.")
-                + _f(f"{p}_equity", "Equity vesting per year", "20,000", hint="Your own estimate of its value.")
-                + _f(f"{p}_signon", "Sign-on bonus (paid once)", "10,000")
-                + _f(f"{p}_match", "Retirement match, % of base", "4")
-                + _f(f"{p}_other", "Other benefits per year", "3,000", hint="Health cover, stipends, meals.")
-                + _f(f"{p}_pto", "Paid days off per year", "25", hint="Vacation plus public holidays.")
-                + _f(f"{p}_cdays", "Commute days per week", "3")
-                + _f(f"{p}_ccost", "Cost per commute day", "18") + "</div>")
+                + _f(f"{p}_base", "Base salary per year", base)
+                + _f(f"{p}_bonus", "Bonus per year", bonus, mode="text", hint="An amount, or a percent of base.")
+                + _f(f"{p}_equity", "Equity vesting per year", eq, hint="Your own estimate of its value.")
+                + _f(f"{p}_signon", "Sign-on bonus (paid once)", sign)
+                + _f(f"{p}_match", "Retirement match, % of base", match)
+                + _f(f"{p}_other", "Other benefits per year", other, hint="Health cover, stipends, meals.")
+                + _f(f"{p}_pto", "Paid days off per year", pto, hint="Vacation plus public holidays.")
+                + _f(f"{p}_cdays", "Commute days per week", cdays)
+                + _f(f"{p}_ccost", "Cost per commute day", ccost) + "</div>")
     tool("compare-offers", "seekers", "Job offer comparison",
          "Put two or three offers side by side: base, bonus, equity, sign-on, benefits, days off and commute.",
          "Job Offer Comparison Calculator (2–3 Offers)",
