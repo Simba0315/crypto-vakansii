@@ -1867,14 +1867,14 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    "<li><b>Paste it where the list should appear</b>, in any block that accepts HTML. The jobs load when the page opens and stay current without you.</li></ol>"
                    '<p class="note">If scripts are blocked, the link inside the container still shows, so the spot never ends up empty.</p>')
          + section("Where to paste it, by platform", wt(["Platform", "Where the code goes"], [
-             ["<strong>WordPress</strong>", "Add a Custom HTML block in the editor, or a Custom HTML widget in a sidebar or footer, and paste the script version."],
-             ["<strong>Webflow</strong>", "Add an Embed element and paste the script version. Scripts do not run in the Designer preview, so publish the page to see it."],
-             ["<strong>Wix</strong>", "Add → Embed code → Embed HTML, then paste the iframe version."],
-             ["<strong>Squarespace</strong>", "Add a Code block and paste the script version. Squarespace allows scripts in Code blocks only on some plans; where it does not, use the iframe version in an Embed block."],
-             ["<strong>Shopify</strong>", "In the theme editor add a Custom Liquid section or block and paste the script version."],
-             ["<strong>Framer</strong>", "Insert → Embed, switch it to HTML and paste the script version."],
-             ["<strong>Ghost</strong>", "Add an HTML card in the editor and paste the script version."],
-             ["<strong>Notion</strong>", "Notion removes scripts. Take the iframe version and paste the address from its <code>src</code> into an Embed block."],
+             [f'<a href="{P}/widgets/wordpress/"><strong>WordPress</strong></a>', "Add a Custom HTML block in the editor, or a Custom HTML widget in a sidebar or footer, and paste the script version."],
+             [f'<a href="{P}/widgets/webflow/"><strong>Webflow</strong></a>', "Add an Embed element and paste the script version. Scripts do not run in the Designer preview, so publish the page to see it."],
+             [f'<a href="{P}/widgets/wix/"><strong>Wix</strong></a>', "Add → Embed code → Embed HTML, then paste the iframe version."],
+             [f'<a href="{P}/widgets/squarespace/"><strong>Squarespace</strong></a>', "Add a Code block and paste the script version. Squarespace allows scripts in Code blocks only on some plans; where it does not, use the iframe version in an Embed block."],
+             [f'<a href="{P}/widgets/shopify/"><strong>Shopify</strong></a>', "In the theme editor add a Custom Liquid section or block and paste the script version."],
+             [f'<a href="{P}/widgets/framer/"><strong>Framer</strong></a>', "Insert → Embed, switch it to HTML and paste the script version."],
+             [f'<a href="{P}/widgets/ghost/"><strong>Ghost</strong></a>', "Add an HTML card in the editor and paste the script version."],
+             [f'<a href="{P}/widgets/notion/"><strong>Notion</strong></a>', "Notion removes scripts. Take the iframe version and paste the address from its <code>src</code> into an Embed block."],
              ["<strong>Plain HTML</strong>", "Paste the script version anywhere inside <code>&lt;body&gt;</code>."]]))
          + section("Your own company’s jobs, straight from your hiring system",
                    '<p>If your company posts jobs through Greenhouse, Lever or Ashby, the widget can read your public job board directly in the visitor’s browser. '
@@ -1912,6 +1912,80 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<a class="feat" href="{P}/feed.xml"><h3>RSS feeds</h3><p>Plug any category or skill feed into Slack, Discord or a reader.</p></a></div>')
          + '<script type="application/json" id="wb-data">' + json.dumps(wb_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>',
          head=w_ld)
+    # One page per site builder: the same widget, with the steps and the catches of that platform
+    snip_script = e(f'<div data-hrn-jobs="latest" data-limit="6"><a href="{FULL}/jobs/">Tech jobs on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
+    snip_iframe = e(f'<iframe src="{FULL}/embed/?jobs=latest&limit=6" title="Tech jobs" loading="lazy" style="width:100%;max-width:720px;height:470px;border:0"></iframe>\n<p><a href="{FULL}/jobs/">Tech jobs on {SITE}</a></p>')
+    PLATFORMS = [
+        ("wordpress", "WordPress", "script",
+         ["Open the page or post in the editor and press the plus sign where the jobs should appear.", "Choose the <b>Custom HTML</b> block and paste the code below.",
+          "Press Preview to see the list, then Update or Publish.", "For a sidebar or footer, go to Appearance → Widgets and add a <b>Custom HTML</b> widget with the same code."],
+         "No plugin is needed. On WordPress.com plans that remove scripts, and for users who are not allowed to post unfiltered HTML, use the iframe version further down.",
+         [("Do I need a plugin to show jobs on WordPress?", "No. The widget is two lines of HTML that go into a Custom HTML block or widget. There is nothing to install or update."),
+          ("The block shows only a link. What went wrong?", "WordPress removed the script. That happens on WordPress.com plans without custom code and for user roles that cannot post unfiltered HTML. Use the iframe version instead.")]),
+        ("webflow", "Webflow", "script",
+         ["In the Designer open the Add panel and drag a <b>Code Embed</b> element to where the jobs should appear.", "Paste the code below and save the embed.",
+          "Publish the site. Scripts do not run inside the Designer, so the canvas shows only the link."],
+         "Code Embed is part of Webflow’s paid plans. The widget draws inside its own container, so your Webflow classes do not affect it.",
+         [("Why does the Webflow Designer show only a link?", "The Designer does not run scripts in embeds. Publish the site and open the live page: the list appears there."),
+          ("Can I style the widget with Webflow classes?", "No, and they cannot break it either: the widget is drawn in its own container. Change its look with the accent, theme and layout options in the builder.")]),
+        ("wix", "Wix", "iframe",
+         ["In the editor press Add Elements, then Embed Code, then <b>Embed HTML</b>.", "Choose “Code”, paste the code below and press Update.",
+          "Drag the box to the size you want. Wix shows embedded code inside a frame, so set the height to fit the rows."],
+         "Wix places all embedded code in a frame of a fixed size. If the list is cut off, make the box taller or ask for fewer rows in the builder.",
+         [("Why is the job list cut off on my Wix page?", "Wix gives embedded code a fixed box. Make the box taller in the editor, or choose fewer rows in the builder."),
+          ("Does the widget work on a free Wix site?", "Yes. Embed HTML is available in the Wix editor without an upgrade.")]),
+        ("squarespace", "Squarespace", "script",
+         ["Edit the page, press the plus sign where the jobs should appear and add a <b>Code</b> block.", "Paste the code below, leave the type as HTML and switch “Display Source” off.",
+          "Save. The list shows on the live page; the editor may show a placeholder."],
+         "Scripts in Code blocks are a paid feature on Squarespace. On a plan without it, add an Embed block and use the iframe version further down.",
+         [("My Squarespace plan does not allow scripts. Can I still show jobs?", "Yes. Add an Embed block and paste the iframe version of the widget. It shows the same list without running a script on your page."),
+          ("Why do I see a placeholder in the Squarespace editor?", "Squarespace does not run scripts while you edit. Save and open the page as a visitor would.")]),
+        ("shopify", "Shopify", "script",
+         ["Open Online Store → Themes and press Customize on your theme.", "Go to the page where the jobs should appear and add a <b>Custom Liquid</b> section or block.",
+          "Paste the code below and save."],
+         "A careers page on a store works well with the careers layout: pick your own board in the builder to show only your company’s roles.",
+         [("Where do I paste the widget in Shopify?", "In the theme editor, in a Custom Liquid section or block. Themes without it accept the same code in a Custom HTML section."),
+          ("Can I show only my store’s own vacancies?", "Yes, if you post them through Greenhouse, Lever or Ashby: pick that system in the builder and type the name of your board.")]),
+        ("framer", "Framer", "script",
+         ["Open Insert, find <b>Embed</b> and place it on the canvas.", "Set its type to HTML and paste the code below.", "Resize the embed to fit the rows and publish."],
+         "The preview in Framer runs the widget, so you see the list before you publish.",
+         [("Does the widget follow my Framer site’s dark mode?", "With the theme set to “match the visitor” it follows the visitor’s system setting. To follow your site instead, set the theme to light or dark in the builder."),
+          ("Can I use it in a Framer CMS page?", "Yes. An Embed with the same code works on any page, including pages built from the CMS.")]),
+        ("notion", "Notion", "iframe",
+         ["In the builder choose “iframe” as the embed type.", "Copy only the address inside <code>src=\"…\"</code> from the code.", "In Notion type <b>/embed</b>, paste the address and press Embed link. Drag the corner to resize."],
+         "Notion removes scripts, so it takes the address of the widget’s own page, not the snippet.",
+         [("Why does pasting the snippet into Notion not work?", "Notion does not run scripts or raw HTML. Use an Embed block with the address from the iframe version of the widget."),
+          ("Does the list in Notion stay up to date?", "Yes. The embed loads the widget’s page each time the Notion page opens, and that page is rebuilt every day.")]),
+        ("ghost", "Ghost", "script",
+         ["In the editor press the plus sign on an empty line and choose the <b>HTML</b> card.", "Paste the code below.", "Preview the post, then publish or update."],
+         "The HTML card also works in newsletters sent from Ghost, but email clients do not run scripts: readers of the email see the link, readers on the site see the list.",
+         [("Will the widget show in emails sent from Ghost?", "No. Email clients do not run scripts, so the email shows the plain link inside the snippet. The list appears on the web version of the post."),
+          ("Can I put it in the sidebar of my Ghost theme?", "Yes. Paste the same two lines into the theme file where the sidebar is, or use Code injection for a site-wide spot.")]),
+    ]
+    for pslug, pname, best, steps_p, catch, faq_p in PLATFORMS:
+        first, second = (("Script version", snip_script), ("iframe version", snip_iframe)) if best == "script" else (("iframe version", snip_iframe), ("Script version", snip_script))
+        p_faq = faq_p + [("Is the job widget free on " + pname + "?", "Yes. There is no plan and no account. The snippet keeps a small link back to this site.")]
+        p_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in p_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page(f"widgets/{pslug}/", f"Job Widget for {pname}: free, no account | {SITE}",
+             f"How to add a free job widget to a {pname} site: where to paste the code, what to watch for, and a live preview. Tech jobs by skill or city, or your own company’s jobs.",
+             crumbs(("Job widget", "widgets/"), (pname, "")) + f"<h1>Job widget for {e(pname)}</h1>"
+             f'<p class="lead">A self-updating list of open jobs on your {e(pname)} site, in a few clicks. It is the same free widget as on the <a href="{P}/widgets/">job widget page</a>; this page has the steps for {e(pname)}.</p>'
+             + section(f"Add it to {pname}", '<ol class="steps">' + "".join(f"<li>{x}</li>" for x in steps_p) + f'</ol><p class="note">{catch}</p>')
+             + section("The code", f'<span class="flabel">{first[0]} (use this one on {e(pname)})</span><textarea id="pw-a" rows="3" readonly aria-label="{first[0]}">{first[1]}</textarea>'
+                       '<p><button class="btn sm" type="button" data-copy="pw-a">Copy the code</button></p>'
+                       f'<span class="flabel">{second[0]}</span><textarea id="pw-b" rows="3" readonly aria-label="{second[0]}">{second[1]}</textarea>'
+                       '<p><button class="btn sm ghost" type="button" data-copy="pw-b" style="margin-top:0">Copy the code</button></p>'
+                       f'<p>This snippet shows the latest tech jobs. To show one skill, a city, one company or your own board, with your colours and layout, <a href="{P}/widgets/">build your own on the job widget page</a>.</p>')
+             + section("What your visitors will see", f'<div data-hrn-jobs="latest" data-limit="5" data-hrn-base="{P}"><a href="{P}/jobs/">Tech jobs on {e(SITE)}</a></div>')
+             + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in p_faq) + "</dl>")
+             + section("Other platforms", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in PLATFORMS if x[0] != pslug) + f'<a href="{P}/widgets/">All options</a></p>')
+             + f'<script src="{P}/widget.js?v={V}" defer></script>'
+             "<script>document.addEventListener('click',function(ev){var b=ev.target.closest('[data-copy]');if(!b)return;var t=document.getElementById(b.getAttribute('data-copy'));"
+             "var done=function(){var x=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=x},1500)};"
+             "if(navigator.clipboard)navigator.clipboard.writeText(t.value).then(done,function(){t.select()});else{t.select();done()}});</script>",
+             head=p_ld)
+
     sample = json.dumps({"name": "Rust jobs", "url": f"{FULL}/skills/rust/", "site": SITE, "updated": TODAY, "total": 1100,
                          "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
     js_example = f'const feed = await fetch("{FULL}/api/v1/skills/python.json").then(r => r.json());\nconsole.log(feed.total, feed.jobs[0].title);'
