@@ -1108,17 +1108,31 @@ def main():
         f'<a href="{P}/job/{j["slug"]}/"><time class="ba" {when(j)}>{age(j["posted"])[0]}</time><span><span class="bt">{e(j["title"])}</span>'
         f'<span class="bc">{e(j["company"])}{" · " + e(j["location"][:40]) if j["location"] else ""}</span></span>'
         f'<span class="bp">{e(j["salary"][:20]) if j["salary"] else ""}</span></a>' for j in diverse(order(specific), 6, 1))
-    hero = (f'<section class="hero"><div class="wrap"><div>'
-            f'<p class="stamp">Checked {fdate(TODAY, False)} · <b>{n:,}</b> open roles · <b>{fresh3:,}</b> new in 3 days</p>'
-            f'<h1>Stop applying to tech jobs that are <span class="hl">already gone</span></h1>'
+    # The hero shows the product instead of describing it: the search, four numbers, then a framed window with today's jobs and
+    # three doors beside it (the owner asked, many times, for the look of the sites he sends: light, large, the product on show).
+    shot_rows = "".join(card(j) for j in diverse(order(specific), 7, 1))
+    rem_n = sum(1 for j in active if j["remote"])
+    paid_n = sum(1 for j in active if j["salary"])
+    hero = (f'<section class="hero v2"><div class="wrap">'
+            f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
+            f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
             f'<p class="sub">Old listings stay online long after the job is filled. We read {m} company career pages every hour and keep only what is still open.</p>'
             f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="What: job title, skill or company">'
-            f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search</button></form>'
-            f'<p class="popular"><span>Or start with</span><a href="{P}/remote/">remote</a><a href="{P}/new/">new this week</a><a href="{P}/skills/python/">Python</a><a href="{P}/skills/rust/">Rust</a>'
-            f'<a href="{P}/perks/visa-sponsorship/">visa sponsorship</a><a href="{P}/entry-level/">entry-level</a><a href="{P}/with-salary/">salary listed</a><a href="{P}/crypto/">crypto</a></p>'
+            f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
+            f'<p class="popular"><a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/entry-level/">Entry-level</a>'
+            f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/crypto/">Crypto</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
-            f'<p class="heroalt">If you would rather not search, <a href="{P}/for-you/">list your skills and see what fits</a>.</p></div>'
-            f'<div class="board" aria-label="Newest roles"><div class="board-h"><span>Just posted</span><a href="{P}/board/"><b>Open as a wall</b></a></div>{board_rows}</div></div>'
+            f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read every hour</span></div>'
+            f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
+            f'<div class="wrap"><div class="shot"><div class="shot-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'
+            f'<div class="shot-tabs"><a class="on" href="{P}/jobs/">Latest jobs</a><a href="{P}/remote/">Remote</a><a href="{P}/with-salary/">With salary</a><a href="{P}/entry-level/">Entry-level</a><a href="{P}/board/">Live wall</a></div></div>'
+            f'<div class="shot-body"><div><ul class="jobs">{shot_rows}</ul><p class="shot-more"><a class="btn" href="{P}/jobs/">See all {n:,} jobs</a></p></div>'
+            f'<aside class="shot-side">'
+            f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
+            f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>Five templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'
+            f'<a class="scard" href="{P}/salaries/"><b>What jobs pay</b><span>{paid_n:,} postings state the pay. See the median for your work.</span><em>Check salaries</em></a>'
+            f'<a class="scard" href="{P}/tools/"><b>28 free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
+            f'</aside></div></div></div>'
             f'<div class="wrap0 hero-logos"><p>Read every hour from the career pages of</p><div class="logorow">'
             + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
             + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos)} more</a></div></div></section>')
@@ -1140,7 +1154,7 @@ def main():
     top_paid = diverse_pairs(sorted(((j, j["usd"]) for j in active if j["usd"]), key=lambda x: -x[1][1]), 8)
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
-            + section("Latest tech jobs", f'<ul class="jobs">{"".join(card(j) for j in latest[:12])}</ul>', ("jobs/", f"All {n:,} jobs"))
+
             + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"))
             + section("The job market today, in four pictures", market_pics, ("insights/", "All rankings and charts"))
             + pulse + anatomy

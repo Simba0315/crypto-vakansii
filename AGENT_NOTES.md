@@ -258,6 +258,18 @@ that is not the employer's own hiring system must be labelled as such and kept o
     plainly that self-serve is not open yet.
 9. GitHub Pages limit is 1 GB. Check the built size (`du -sh site`) and do not add page types that push it past 800 MB.
 
+## The look since 13 Nov 2026 (owner's decision; do not go back to the paper look)
+
+- The owner asked many times for the look of the sites he sends (Rezi first): light, large, rounded, the product on show.
+  The last block of `assets/style.css` ("The look since 13 Nov 2026") overrides the older paper-and-rules styles: white
+  background, Inter for headings, pill buttons (the main button is green), `.jobs`, `.tiles li`, `.dirb`, `.pic`, `.tcard` as
+  rounded cards with `--shadow`, `.sec-head` without the black rule and with a pill link.
+- Home hero (`.hero.v2`): centred headline, pill search, shortcut chips, `.hstats` (four numbers), `.shot` (a framed window
+  with today's jobs and `.scard` doors beside it), logos as pills. Do not put a `<nav>` inside the page body: the mobile
+  menu styles catch it.
+- New components must follow this look: cards with a 12–16px radius, one green accent, large type, a picture or a product
+  view before text. `DESIGN_STUDY.md` describes the earlier direction; where they differ, this section wins.
+
 ## Resume examples (`resume_examples.py`, `/resume/examples/`)
 
 - One page per live role (not the broad ones, not "-speaking"), built in `build.py` just before the guides. The example is an
