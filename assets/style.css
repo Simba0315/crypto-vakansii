@@ -965,3 +965,4 @@ table.grid tr.grp th{text-align:left;font:700 15px var(--display);letter-spacing
 #rb-demand .hbars a{grid-template-columns:minmax(100px,180px) 1fr auto;padding:5px 0;min-height:30px}
 .hbars.moves a{grid-template-columns:minmax(140px,240px) minmax(60px,200px) 1fr}
 .hbars.moves .hc{white-space:normal;text-align:left}
+.jobs.demo{max-width:980px;border-top:1.5px solid var(--text)}

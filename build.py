@@ -2713,13 +2713,39 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ("Roles without pay get filtered out", f"{100 - SALPCT}% of postings here show no salary. Anyone who filters or sorts by pay never sees them. Adding a range costs nothing."),
              ("Company spotlight", "Your logo and your open roles on the home page and at the top of the companies list.")]
     pain_html = '<div class="feats">' + "".join(f'<div class="feat"><h2>{e(a)}</h2><p>{e(b)}</p></div>' for a, b in pains) + "</div>"
+    # What an employer gets the moment the payment is confirmed, shown rather than described (the owner: "show what they get at once:
+    # how the listing is highlighted, what appears in the account").
+    etick = lambda items: '<ul class="ticks">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
+    ebtn = (f'<a class="btn ghost" href="{e(app_url)}">Post a job</a>' if app_url else '<button class="btn ghost" type="button" disabled>Opens soon</button>')
+    emp_tiers = ('<div class="tiers">'
+                 f'<div class="tier"><p class="tn">Standard</p><p class="tp">Free</p><p class="td">Your job in the list and in search, like every other job here.</p>{ebtn}'
+                 + etick(["In the main list for 30 days", "Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close or renew it yourself, any time"]) + "</div>"
+                 f'<div class="tier best"><p class="tn">Featured</p><p class="tp">$99<small> for 14 days</small></p><p class="td">A highlighted row that stays above the regular listings of its category.</p>{ebtn}'
+                 + etick(["Everything in Standard", "Highlighted row with a “Featured” mark", "Above regular listings in its category for 14 days", "On as soon as the payment is confirmed: nobody to write to", "Views and clicks to apply in your account"]) + "</div>"
+                 f'<div class="tier"><p class="tn">Pinned</p><p class="tp">$199<small> for 7 days</small></p><p class="td">The first row on the home page and in its category.</p>{ebtn}'
+                 + etick(["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites and channels read"]) + "</div></div>")
+    demo_rows = [dict(j) for j in latest[:4]]
+    demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior", "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company",
+                "slug": "", "title": "Senior Backend Engineer (your job)", "posted": TODAY}
+    demo_html = ('<ul class="jobs demo">' + card(demo_job).replace(f'href="{P}/job//"', 'href="#"') + "".join(card(j) for j in demo_rows[:2])
+                 + card(dict(demo_job, title="Product Designer (your second job)", salary="", tags=["Figma"], level="")).replace(f'href="{P}/job//"', 'href="#"') + "".join(card(j) for j in demo_rows[2:4]) + "</ul>")
+    emp_cab = ('<div class="tgrid">'
+               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Senior Backend Engineer</b></span><span class="rw"><span>Featured</span><span class="mt"><i style="width:64%"></i></span><b>9 days left</b></span>'
+               '<span class="ln">Live since Nov 13 · <b>Renew</b> · <b>Close</b></span></span><span class="tbody"><b>The placement, switched on</b><span>The moment the network confirms the payment, the job is marked Featured and the account shows how many days are left. Nothing to send, nobody to wait for.</span></span></div>'
+               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="rw"><span>Views</span><span class="mt"><i style="width:100%"></i></span><b>1,204</b></span><span class="rw"><span>Clicks to apply</span><span class="mt"><i style="width:22%"></i></span><b>86</b></span>'
+               '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the placement did.</span></span></div>'
+               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · $99</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
+               '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the period ends, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
     page("post-a-job/", f"Post a Tech Job — free listing, featured from $99 | {SITE}" if app_url else f"Post a Tech Job — plans and prices for employers | {SITE}",
          ("Post a tech job for free, or feature it from $99 so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
           "Plans and prices for employers: free standard listings, featured jobs from $99, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
          crumbs(("For employers", "")) + "<h1>Post a tech job that doesn’t get buried</h1>"
          f'<p class="lead">There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
          'A featured one stays at the top instead of sliding down as new roles arrive.</p>'
-         f'{pain_html}' + section("Plans and prices for employers", f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>')
+         + emp_tiers
+         + section("How your job looks in the list", '<p class="note">The two highlighted rows are examples of featured jobs; the others are real listings from today.</p>' + demo_html)
+         + section("What appears in your account at once", emp_cab)
+         + f'{pain_html}' + section("Every plan and price", f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>')
          + section("How a company spotlight looks", '<div class="spot"><a href="#">' + ava("Your company") + '<span><b>Your company</b><span class="s">42 open roles · featured</span></span></a></div>'
                    '<p class="note">Shown on the home page and at the top of the companies list.</p>')
          + section("How a featured listing looks", '<ul class="jobs">' + card({"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior",
