@@ -247,6 +247,71 @@
     after.parentNode.insertBefore(box, after.nextSibling);
   })();
 
+  /* ---------- interview questions: practise out loud. The browser reads each question, listens to the answer (where it can),
+     and checks it the way the interview answer builder does: 60 to 90 seconds, a number, "I" more than "we". Nothing is recorded or sent. ---------- */
+  (function () {
+    var qs = Array.prototype.slice.call(document.querySelectorAll('ol.iq li h3'));
+    if (!qs.length) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition, say = window.speechSynthesis;
+    var box = document.createElement('section');
+    box.className = 'sec voicepr';
+    box.innerHTML = '<div class="vp-card"><p class="vp-h"><b>Practise out loud</b><span>' + (SR ? 'The page reads a question, listens to your answer and checks it. Nothing is recorded or sent anywhere.' : 'The page reads a question; type your answer and it is checked. This browser cannot listen; Chrome and Edge can.') + '</span></p>'
+      + '<p class="vp-q" id="vp-q"></p><div class="vp-row"><button class="btn primary sm" type="button" id="vp-start">Start question 1</button><button class="btn ghost sm" type="button" id="vp-stop" hidden>I have finished</button>'
+      + '<button class="btn ghost sm" type="button" id="vp-next" hidden>Next question</button><span class="note" id="vp-time"></span></div>'
+      + (SR ? '' : '<textarea id="vp-type" rows="4" placeholder="Type your answer here" hidden></textarea>') + '<p class="vp-said" id="vp-said"></p><ul class="vp-checks" id="vp-checks"></ul></div>';
+    var first = document.querySelector('ol.iq'); first.parentNode.insertBefore(box, first);
+    var i = 0, rec = null, said = '', t0 = 0, tick = 0;
+    var el = function (id) { return document.getElementById(id); };
+    var check = function () {
+      var secs = Math.round((Date.now() - t0) / 1000), txt = SR ? said : (el('vp-type') || {}).value || '', w = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+      var I = (txt.match(/\bI\b|\bI'm\b|\bI've\b|\bmy\b/g) || []).length, we = (txt.match(/\bwe\b|\bour\b/gi) || []).length, num = /\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|percent|half|double)\b/i.test(txt);
+      var rows = [[secs >= 45 && secs <= 120, 'Length: ' + secs + ' seconds' + (secs < 45 ? ', short: add the result and what you did yourself.' : secs > 120 ? ', long: cut the background.' : ', a good length.')],
+        [num, num ? 'You gave a number. Results with numbers are remembered.' : 'No number: say what changed, by how much.'],
+        [I >= we, I >= we ? 'You said what you did yourself.' : 'More “we” than “I”: say which part was yours.'],
+        [w >= 60, w + ' words' + (w < 60 ? ': give the situation, what you did and the result.' : '.')]];
+      el('vp-checks').innerHTML = rows.map(function (r) { return '<li class="' + (r[0] ? 'ok' : 'fix') + '">' + r[1] + '</li>'; }).join('');
+    };
+    var stop = function () {
+      clearInterval(tick); if (rec) { try { rec.stop(); } catch (e) {} rec = null; }
+      el('vp-stop').hidden = true; el('vp-next').hidden = i >= qs.length - 1; el('vp-start').hidden = false; el('vp-start').textContent = 'Try again'; check();
+    };
+    var start = function () {
+      var q = qs[i].textContent.trim(); el('vp-q').textContent = (i + 1) + '. ' + q; said = ''; el('vp-said').textContent = ''; el('vp-checks').innerHTML = '';
+      el('vp-start').hidden = true; el('vp-next').hidden = true; el('vp-stop').hidden = false;
+      var listen = function () {
+        t0 = Date.now(); tick = setInterval(function () { el('vp-time').textContent = Math.round((Date.now() - t0) / 1000) + ' s'; }, 500);
+        if (!SR) { var ta = el('vp-type'); ta.hidden = false; ta.value = ''; ta.focus(); return; }
+        rec = new SR(); rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true;
+        rec.onresult = function (ev) { var t = ''; for (var k = 0; k < ev.results.length; k++) t += ev.results[k][0].transcript + ' '; said = t; el('vp-said').textContent = t; };
+        rec.onerror = function () { el('vp-said').textContent = 'The microphone is not available: allow it in the browser, or type in another browser.'; };
+        try { rec.start(); } catch (e) {}
+      };
+      if (say) { try { say.cancel(); var u = new SpeechSynthesisUtterance(q); u.lang = 'en-US'; u.onend = listen; say.speak(u); return; } catch (e) {} }
+      listen();
+    };
+    el('vp-start').addEventListener('click', start);
+    el('vp-stop').addEventListener('click', stop);
+    el('vp-next').addEventListener('click', function () { i = Math.min(qs.length - 1, i + 1); start(); });
+  })();
+
+  /* ---------- job page: the chance the posting is still open in 7 days, from the closings we have seen (data/survival.json) ---------- */
+  (function () {
+    var meta = document.querySelector('aside dl.meta'), apply = $('apply');
+    if (!meta || !apply || !window.fetch) return;
+    var tm = meta.querySelector('time[datetime]'), crumb = document.querySelector('.crumbs a[href*="/jobs/"]');
+    if (!tm) return;
+    var posted = new Date(tm.getAttribute('datetime').slice(0, 10) + 'T00:00:00Z'), cat = crumb ? (crumb.getAttribute('href').match(/\/jobs\/([^/]+)\//) || [])[1] : '';
+    fetch(P + '/data/survival.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (S) {
+      if (!S || !S.all) return;
+      var h = (cat && S.cat && S.cat[cat]) || S.all, age = Math.max(0, Math.floor((Date.now() - posted) / 864e5)), p = 1;
+      var hz = function (a) { var i = 0; while (i < S.bands.length && a > S.bands[i]) i++; var v = h[i]; return v == null ? S.all[i] : v; };
+      for (var d = 0; d < 7; d++) { var v = hz(age + d); if (v == null) return; p *= 1 - v; }
+      var pct = Math.round(p * 100);
+      meta.insertAdjacentHTML('beforeend', '<dt>Still open in 7 days</dt><dd><b>About ' + pct + '% likely</b><br><span class="note">From how often postings of this age' + (cat && S.cat && S.cat[cat] ? ' in this field' : '') + ' closed since we started watching on ' +
+        new Date(S.since + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' (' + S.closed.toLocaleString('en-US') + ' closings so far). More exact every day.</span></dd>');
+    }).catch(function () {});
+  })();
+
   /* ---------- job page: "Tailor my resume to this job" next to "Check my resume for this job" ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('a.rmbox'), function (a) {
     var m = (a.getAttribute('href') || '').match(/[?&]job=([a-z0-9-]+)/);
@@ -280,6 +345,7 @@
         ['/relocate/', 'Relocation guides', 'Jobs abroad with visa or relocation help, by country.'],
         ['/guides/', 'Guides', 'The job market explained with today’s numbers.'],
         ['/glossary/', 'Glossary', 'Hiring words in plain English.'],
+        ['/ahead/', 'From the future', 'Things no other job site does yet, working today.'],
         ['/tools/', 'All free tools', 'Offer check, raise calculator, letters and more.']]],
       '/pricing/': ['For employers', [
         ['/post-a-job/', 'Post a job', 'Free, with paid options to stand out.'],

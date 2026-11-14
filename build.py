@@ -1254,6 +1254,35 @@ def main():
            "r": {r_: [next(nm.removeprefix("the ") for nm, sl, _ in PLACES if sl == r_), place_n.get(r_, 0)] for r_ in REGIONS if r_ in live_slugs},
            "tz": json.loads((ROOT / "tz_countries.json").read_text()) if (ROOT / "tz_countries.json").exists() else {}}
     write("data/geo.json", json.dumps(geo, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    # Survival of a posting (no job site shows it): the daily chance that an open posting of a given age closes, from the closings
+    # we have seen since tracking began, per age band and, where there are enough closings, per field. site.js turns it into
+    # "still open in 7 days: about N%" on each job page. It gets more exact every day the data grows.
+    try:
+        d0_ = min(datetime.date.fromisoformat(j["first_seen"][:10]) for j in jobs if j.get("first_seen"))
+        today_ = datetime.date.fromisoformat(TODAY[:10])
+        BANDS = (7, 30, 90, 10 ** 6)                       # upper age (days since posting) of each band
+        band = lambda a: next(i for i, u in enumerate(BANDS) if a <= u)
+        def hazard(sel):
+            ex, ev = [0.0] * len(BANDS), [0] * len(BANDS)
+            for j in sel:
+                try: posted = datetime.date.fromisoformat((j.get("posted") or j["first_seen"])[:10])
+                except (KeyError, ValueError): continue
+                start = max(datetime.date.fromisoformat(j["first_seen"][:10]), d0_)
+                end = datetime.date.fromisoformat(j["last_seen"][:10]) if not j["active"] else today_
+                for k in range(max(1, (end - start).days)):          # each day the posting was watched is a day it could have closed
+                    ex[band(max(0, (start - posted).days + k))] += 1
+                if not j["active"]: ev[band(max(0, (end - posted).days))] += 1
+            return [round(ev[i] / ex[i], 5) if ex[i] >= 200 else None for i in range(len(BANDS))], sum(ev)
+        h_all, n_ev = hazard(jobs)
+        by_c = defaultdict(list)
+        for j in jobs: by_c[j["cat"]].append(j)
+        h_cat = {}
+        for c_, js_ in by_c.items():
+            h_, n_ = hazard(js_)
+            if n_ >= 30: h_cat[c_] = h_
+        write("data/survival.json", json.dumps({"since": d0_.isoformat(), "closed": n_ev, "bands": BANDS[:-1], "all": h_all, "cat": h_cat}, separators=(",", ":")), sitemap=False)
+    except ValueError:
+        pass
     new_today_h = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY)
     closed_today_h = sum(1 for j in archived if j.get("closed") == TODAY)
     pulse = (f'<p class="pulse"><b>Today so far</b><span>{sum(1 for j in active if j.get("last_seen") == TODAY):,} roles re-checked</span>'
@@ -1316,6 +1345,25 @@ def main():
     faq_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in FAQ]}) + "</script>")
     top_paid = diverse_pairs(sorted(((j, j["usd"]) for j in active if j["usd"]), key=lambda x: -x[1][1]), 8)
+    # From the future: what this site does that no job site does yet (the owner: "think 30 years ahead, I do not see it").
+    # Defined here so the home page shows them; /ahead/ lists them first, then the earlier ten.
+    FUTURE = [
+        ("Will it still be open next week?", "Every job page estimates the chance the posting is still open in 7 days, from the closings we see every hour. No job site shows this.", "jobs/",
+         '<span class="ex">example</span><span class="big">92%<small>still open in 7 days</small></span><span class="ln">From the postings we saw close, at this age, in this field</span>'),
+        ("Skill GPS: the one skill to learn next", "The resume builder counts, across every open job, which single skill would bring the most jobs within your reach, and what they pay.", "resume/",
+         '<span class="ex">example</span><span class="rw"><span>AWS</span><span class="mt"><i style="width:100%"></i></span><b>+509</b></span><span class="rw"><span>Java</span><span class="mt"><i style="width:86%"></i></span><b>+439</b></span><span class="ln">more jobs within reach</span>'),
+        ("Practise the interview out loud", "On every interview questions page the browser reads a question, listens to your answer and checks its length, the numbers and whether you said what you did.", "interview-questions/",
+         '<span class="ex">example</span><span class="ln"><b>“Walk me through a project where you used SQL.”</b></span><span class="ln">✓ 74 seconds · ✓ a number · → more “I”, less “we”</span>'),
+        ("Your AI assistant, already briefed", "One click opens ChatGPT, Claude or Perplexity with your resume and the job in a ready request: tailor the resume, write the letter, rehearse the interview.", "resume/",
+         '<span class="ln"><b>Tailor it to the target job</b></span><span class="ln">ChatGPT · Claude · Perplexity</span><span class="sk" style="width:70%"></span>'),
+        ("A resume that targets one job", "Open a job, press “Tailor my resume to this job”: the builder shows the match in percent and the missing skills, each one button away.", "resume/",
+         '<span class="ex">example</span><span class="big">29% → 41%<small>match after one skill</small></span><span class="ln">+ Salesforce · + Excel · + AI</span>'),
+        ("Every job straight from the employer", "Each posting is read from the employer’s own hiring system and re-checked every hour; your own browser can ask that system whether the job is still there.", "jobs/",
+         '<span class="ex">example</span><span class="ln"><b>✓ Employer’s own posting</b></span><span class="ln">Read from Greenhouse · checked 14:02</span>'),
+    ]
+    future_home = section("From the future, working today", '<div class="tgrid">' + "".join(
+        f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in FUTURE[:3]) + "</div>",
+        ("ahead/", "All the things others do not do yet"), sub="No account, nothing sent to us: each one works in your browser.")
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
 
@@ -1331,6 +1379,7 @@ def main():
               + f'<div class="tabp" id="p-loc"><ul class="tiles">{place_top}</ul><p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
               + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
             + plus_band + band
+            + future_home
             + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u in tools_pages.EXTRA + [u for u, nm, d_ in TOOLS[:3]]) + "</div>",
                       ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"), sub="Each one opens with a worked example, free and without sign-up.")
             + section("For your own site", '<div class="feats">'
@@ -2322,7 +2371,7 @@ def main():
 
     # Ahead: what this site does that job sites do not do yet (the owner: "implement at least ten things from the future")
     ex_ = '<span class="ex">example</span>'
-    ahead_cards = [
+    ahead_cards = list(FUTURE) + [
         ("Ask the employer yourself, in one click", "On a job page, “Check with the employer right now” makes your own browser ask the employer’s hiring system whether the job is still there. You do not have to take our word for it.", "jobs/",
          ex_ + '<span class="big">Still open<small>14:02</small></span><span class="ln">Confirmed to <b>your browser</b> by the employer’s system</span>'),
         ("Alerts with no email and no account", "Answer the five questions and press “Tell me when new jobs fit”. This browser tells you. Nothing about you is stored anywhere else.", "for-you/",
@@ -2344,9 +2393,9 @@ def main():
         ("A resume that knows what is in demand", "While you type in the resume builder, it shows how many open jobs ask for each skill you mention and how many jobs fit the resume as it stands.", "resume/",
          ex_ + '<span class="rw"><span>Python</span><span class="mt"><i style="width:100%"></i></span><b>8,341</b></span><span class="rw"><span>SQL</span><span class="mt"><i style="width:52%"></i></span><b>4,254</b></span><span class="ln">1,240 jobs ask for three of your skills</span>'),
     ]
-    page("ahead/", f"Ten Things This Job Site Does That Others Do Not Yet | {SITE}",
-         "Check a job with the employer from your own browser, get alerts with no email and no account, search by voice, listen to a posting, and seven more things job sites do not do yet.",
-         crumbs(("Ahead", "")) + '<h1>Ten things here that job sites <span class="hl">do not do yet</span></h1>'
+    page("ahead/", f"From the Future: {len(ahead_cards)} Things This Job Site Does That Others Do Not Yet | {SITE}",
+         "The chance a job is still open next week, a skill GPS, interview practice out loud, an AI assistant briefed with your resume, and more things job sites do not do yet.",
+         crumbs(("From the future", "")) + f'<h1>From the future: <span class="hl">{len(ahead_cards)} things job sites do not do yet</span></h1>'
          '<p class="lead">Each of them works in your browser, with no account and nothing sent to us. Open any of them and try.</p>'
          '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
          f'<p class="note">Some of these depend on what your browser can do: speech recognition and background checks are not in every browser. Where one is missing, its button does not appear.</p>')

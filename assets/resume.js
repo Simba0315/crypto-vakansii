@@ -156,7 +156,7 @@
         + (m.terms.filter(function (t) { return !t.found; }).length ? '<p class="note">Its repeated words you do not use yet: ' + m.terms.filter(function (t) { return !t.found; }).slice(0, 6).map(function (t) { return '“' + esc(t.term) + '”'; }).join(', ') + '.</p>' : '');
     }
     html += '<details class="rbc-jd"' + (jd ? '' : ' open') + '><summary>' + (jd ? 'Change the posting' : 'Paste a posting') + '</summary><textarea id="rb-jd" rows="5" placeholder="Paste the full text of the job posting">' + esc(jd) + '</textarea>'
-      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + payLine(text);
+      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + payLine(text) + aiLine(text);
     chk.innerHTML = html;
     chk.hidden = false;
   };
@@ -192,6 +192,24 @@
         : 'The median of ' + mid.g.n.toLocaleString('en-US') + ' open postings that ask for ' + esc(mid.sk) + ' and state yearly pay. ')
       + (lvl && mid.lv ? 'Counted at ' + esc(lvl.toLowerCase()) + ' level, from your title. ' : '') + 'Pay depends on the country and the employer too. '
       + '<a href="' + H.base + '/tools/salary-checker/">Check a skill or level</a> · <a href="' + H.base + '/tools/offer-check/">Check an offer</a></p></div>';
+  };
+  /* AI help without a server of our own: each button opens ChatGPT, Claude or Perplexity with this resume and a ready request.
+     Nothing is sent until the visitor clicks, and the request says plainly not to invent anything. */
+  var aiLine = function (text) {
+    if (String(text).replace(/\s+/g, ' ').trim().length < 60) return '';
+    var cut = function (t, n) { t = String(t || ''); return t.length > n ? t.slice(0, n) + '…' : t; };
+    var cv = cut(text, 2400), post = cut(jd, 1600);
+    var asks = [
+      ['Rewrite my bullet points', 'Rewrite the bullet points of my resume below. Start each with a strong past-tense verb, keep one result per line, and add a number where my text gives one. Do not invent facts, numbers or employers: where a number is missing, write [number] for me to fill in.\n\nMY RESUME:\n' + cv],
+      ['Write my summary', 'Write a resume summary of 2 or 3 sentences from my resume below: my current role, my strongest skills and one result. Plain words, no buzzwords, nothing that is not in my resume.\n\nMY RESUME:\n' + cv]];
+    if (jd) asks.push(['Tailor it to the target job', 'Compare my resume with the job posting below. List the skills and words of the posting my resume is missing, then rewrite my summary and my bullet points to match the posting, using only experience that is in my resume.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv],
+                      ['Write the cover letter', 'Write a short cover letter (under 250 words) for the job posting below, from my resume. Lead with two results from my experience that match the posting. Do not invent anything.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv],
+                      ['Practise the interview', 'Interview me for the job posting below, one question at a time, using my resume. After each answer, tell me what was strong and what to add.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv]);
+    var go = [['ChatGPT', 'https://chatgpt.com/?q='], ['Claude', 'https://claude.ai/new?q='], ['Perplexity', 'https://www.perplexity.ai/search?q=']];
+    return '<div class="rbc-ai"><p class="rbc-h"><b>AI help</b> with your own ChatGPT, Claude or Perplexity</p>'
+      + '<p class="note">Each link opens that assistant with your resume' + (jd ? ' and the target job' : '') + ' in a ready request. Nothing leaves this page until you click; after that the text is with that service. Check every line it writes.</p><ul class="rbc-asks">'
+      + asks.map(function (a) { return '<li><b>' + esc(a[0]) + '</b>' + go.map(function (g) { return '<a href="' + g[1] + encodeURIComponent(a[1]) + '" target="_blank" rel="nofollow noopener">' + g[0] + '</a>'; }).join('') + '</li>'; }).join('')
+      + '</ul></div>';
   };
   var needPats = function () {
     if (skillPats || !window.HRNT) return;
@@ -236,6 +254,16 @@
   /* What the open jobs ask for: the skills this resume names, each with the number of open jobs that ask for it, and how many
      jobs ask for at least three of them. Counted in the browser from the same index the search uses. */
   var demand = document.getElementById('rb-demand'), pats = null, timer;
+  /* Skill GPS: the one skill to add that would bring the most open jobs within reach (jobs that ask for all but one of the
+     resume's skills, plus this one), with the pay those jobs advertise at the top of their range. Counted in the browser. */
+  function nextSkills(gain, gainPay, nf, need) {
+    var best = Object.keys(gain).sort(function (a, b) { return gain[b] - gain[a]; }).slice(0, 4);
+    if (!best.length || gain[best[0]] < 5) return '';
+    var med = function (a) { if (!a || a.length < 10) return ''; a = a.slice().sort(function (x, y) { return x - y; }); return ' · up to $' + Math.round(a[Math.floor(a.length / 2)] / 1000) + 'K at the median'; };
+    return '<div class="rbd-next"><p class="rbd-h"><b>Skill GPS</b> the one skill to add next</p><ol>' + best.map(function (t) {
+      return '<li><a href="' + H.base + '/jobs/?skills=' + encodeURIComponent(t) + '">' + H.esc(t) + '</a>: <b>+' + nf(gain[t]) + '</b> open jobs would ask for ' + (need === 1 ? 'a skill' : need + ' of the skills') + ' in this resume' + med(gainPay[t]) + '</li>';
+    }).join('') + '</ol><p class="note">Counted now from every open job: the jobs that ask for all but one of your skills, plus this one. Learn it only if it fits the work you want.</p></div>';
+  }
   function drawDemand() {
     if (!demand || !H.load) return;
     var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');
@@ -244,12 +272,17 @@
       var mine = []; p.forEach(function (x) { try { if (new RegExp(x[1], 'i').test(text)) mine.push(x[0]); } catch (e) {} });
       if (!mine.length) { demand.innerHTML = '<p class="note">No skill that employers name in postings was found in this resume yet. Write the tools and methods you use by their names.</p>'; return; }
       return H.load().then(function (all) {
-        var per = {}, need = Math.min(3, mine.length), fit = 0;
+        var per = {}, need = Math.min(3, mine.length), fit = 0, gain = {}, gainPay = {};
         mine.forEach(function (t) { per[t] = 0; });
-        all.forEach(function (j) { var k = 0; for (var i = 0; i < j[7].length; i++) if (per[j[7][i]] != null) { per[j[7][i]]++; k++; } if (k >= need) fit++; });
+        all.forEach(function (j) {
+          var k = 0; for (var i = 0; i < j[7].length; i++) if (per[j[7][i]] != null) { per[j[7][i]]++; k++; }
+          if (k >= need) { fit++; return; }
+          if (k === need - 1) j[7].forEach(function (t) { if (per[t] == null) { gain[t] = (gain[t] || 0) + 1; if (j[13]) (gainPay[t] = gainPay[t] || []).push(j[13]); } });   // one more skill would make it fit
+        });
         var top = mine.slice().sort(function (a, b) { return per[b] - per[a]; }).slice(0, 8), mx = per[top[0]] || 1, nf = function (x) { return Number(x).toLocaleString('en-US'); };
         demand.innerHTML = '<p class="rbd-h"><b>' + nf(fit) + '</b> open jobs ask for ' + (need === 1 ? 'the skill' : 'at least ' + need + ' of the ' + mine.length + ' skills') + ' in this resume</p><div class="hbars">' +
-          top.map(function (t) { return '<a href="' + H.base + '/jobs/?skills=' + encodeURIComponent(t) + '"><span class="hn">' + H.esc(t) + '</span><span class="hb"><i style="width:' + Math.max(2, Math.round(100 * per[t] / mx)) + '%"></i></span><span class="hc">' + nf(per[t]) + ' jobs</span></a>'; }).join('') + '</div>';
+          top.map(function (t) { return '<a href="' + H.base + '/jobs/?skills=' + encodeURIComponent(t) + '"><span class="hn">' + H.esc(t) + '</span><span class="hb"><i style="width:' + Math.max(2, Math.round(100 * per[t] / mx)) + '%"></i></span><span class="hc">' + nf(per[t]) + ' jobs</span></a>'; }).join('') + '</div>'
+          + nextSkills(gain, gainPay, nf, need);
       });
     }).catch(function () {});
   }

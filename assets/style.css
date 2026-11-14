@@ -1438,3 +1438,27 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .pill.fit{background:var(--accent-soft);color:var(--text);font-weight:600}
 .rbc-pay{grid-column:1/-1;border-top:1px solid var(--line)}
 .rbc>.rbc-pay{border-left:0}
+.rbc-ai{grid-column:1/-1;border-top:1px solid var(--line)}
+.rbc>.rbc-ai{border-left:0}
+.rbc-asks{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 18px}
+.rbc-asks li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.rbc-asks b{flex:1 1 100%;font-weight:650}
+.rbc-asks a{font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.rbd-next{margin:14px 0 0;padding:12px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);max-width:720px}
+.rbd-next ol{margin:6px 0 4px;padding-left:20px}
+.rbd-next li{margin:4px 0;font-size:14.5px}
+.rbd-next a{font-weight:650;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+
+/* interview questions: practise out loud */
+.vp-card{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:16px 18px;max-width:860px;margin:0 0 14px}
+.vp-h{margin:0 0 8px}.vp-h b{display:block;font-size:17px}.vp-h span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.vp-q{font-weight:650;margin:6px 0 10px;font-size:16px}.vp-q:empty{display:none}
+.vp-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.vp-row .btn{margin-top:0}
+.vp-said{color:var(--muted);font-size:14.5px;margin:10px 0 0}.vp-said:empty{display:none}
+.voicepr textarea{width:100%;margin-top:10px;font:inherit;padding:10px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);color:var(--text)}
+.vp-checks{list-style:none;margin:10px 0 0;padding:0;font-size:14.5px}.vp-checks:empty{display:none}
+.vp-checks li{padding:4px 0 4px 24px;position:relative}
+.vp-checks li::before{position:absolute;left:0;font-weight:700}
+.vp-checks li.ok::before{content:"✓";color:var(--ac)}.vp-checks li.fix::before{content:"→";color:var(--amber,#b45309)}
+
