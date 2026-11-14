@@ -290,8 +290,15 @@ a.chip{text-decoration:underline;text-decoration-color:var(--line2);text-underli
 .stat b{display:block;font:700 24px/1.15 var(--display);letter-spacing:-.02em}
 .stat span{font-size:13.5px;color:var(--muted)}
 .rel{display:flex;gap:2px 14px;flex-wrap:wrap;align-items:center;margin:0 0 20px;font-size:14px;color:var(--faint)}
-.rel a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.rel a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px;min-height:36px;display:inline-flex;align-items:center}
 .rel a:hover{color:var(--text);text-decoration-color:var(--text)}
+.lrow{display:grid;grid-template-columns:132px 1fr;gap:4px 18px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px}
+.lrow:not(:has(+.lrow)){border-bottom:1px solid var(--line);margin-bottom:20px}
+.lrow>b{font-weight:600;color:var(--text)}
+.lrow>div{display:flex;flex-wrap:wrap;gap:0 16px;align-items:center}
+.lrow a{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.lrow a:hover{background:var(--hl)}
+.lrow a.more{margin-left:auto;font-weight:600}
 
 /* My jobs */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 6px}
@@ -517,12 +524,12 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 /* tap targets: nothing a finger must hit is smaller than 40px */
 .icon{width:40px;height:40px}
 .crumbs a{display:inline-block;padding:6px 0}
-.rel a,.popular a,.chipbtn{min-height:36px;display:inline-flex;align-items:center}
+.lrow a,.popular a,.chipbtn{min-height:36px;display:inline-flex;align-items:center}
 .pager a,.pager span{min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center}
 .share .linkbtn,.linkbtn{padding:8px 4px}
 .tab{min-height:40px}
 .unsave{min-height:36px;padding:6px 8px}
-@media(max-width:720px){.rel a,.popular a,.chipbtn{min-height:40px}.trow select{min-height:40px}}
+@media(max-width:720px){.lrow a,.popular a,.chipbtn{min-height:40px}.trow select{min-height:40px}}
 
 /* resume templates: all single-column and plain, so screening software reads them the same way */
 .rb-actions{align-items:flex-end}
@@ -556,7 +563,7 @@ footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 .hubgrid .h2s{margin:0;font-size:18px;padding-bottom:8px;border-bottom:1.5px solid var(--text)}
 .hubgrid .hbars a{grid-template-columns:minmax(96px,150px) 1fr auto}
 .sec-head.lst{margin-top:30px}
-@media(max-width:560px){.rel a:nth-child(n+9){display:none}}
+@media(max-width:560px){.rel a:nth-child(n+9){display:none}.lrow{grid-template-columns:1fr}.lrow a.more{margin-left:0}}
 
 /* tool tiles: each one shows a small screen of what the tool gives back, so it is plain what it does and that it opens */
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}

@@ -17,8 +17,8 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    Save, then the facts.
 5. ✅ **Company page:** a sticky bar of anchors with counts, fact tiles with a small label over the value, a lead written from
    the postings. ✅ Pay by field with the number of postings behind each figure (2026-11-13).
-6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. 📋 Still to do: the
-   "Related" and "Compare with" runs as labelled rows (label left, links right, "More" last).
+6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. ✅ "Related", "Compare with" and similar
+   runs are labelled rows (label left, links right, "More" last) (2026-11-14).
 7. ✅ **Tools show a result at once** ("Show an example"). ✅ Sub-navigation row on tool pages (2026-11-13). 📋 Still to do: the questions in two columns.
 8. ✅ **Tools index: break the grid** (2026-11-13: three wide rows plus a ruled list with an example on the right). Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
