@@ -1266,7 +1266,7 @@
       $('mj-unhide').addEventListener('click', function () { hidden = {}; set('hrn_hidden', hidden); mute.c = {}; mute.w = []; set('hrn_mute', mute); hiddenNote.hidden = true; });
     }
     // your data: a copy to keep, a way to move it to another device, and a way to wipe it
-    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
+    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume', 'hrn_resume_set'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
     if ($('mj-backup')) {
       $('mj-backup').addEventListener('click', function () {
         var data = {}; KEYS.forEach(function (k) { var v = get(k, null); if (v != null) data[k] = v; });

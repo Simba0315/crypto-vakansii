@@ -488,7 +488,7 @@ def main():
     is_crypto = {s["name"]: s["crypto"] for s in sources}
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
     used_slugs = {j["slug"] for j in db.values()}
-    stats = {"new": 0, "closed": 0, "failed": [], "dropped": []}
+    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": []}
     with cf.ThreadPoolExecutor(12) as ex:
         results = list(ex.map(fetch, sources))
     # second, gentler pass for feeds that timed out or were rate-limited the first time
@@ -525,9 +525,11 @@ def main():
             j.update(last_seen=TODAY, active=True)
             j.pop("closed", None)
             db[j["id"]] = j
-        for jid, old in db.items():
-            if old["company"] == name and old["active"] and jid not in seen:
-                old.update(active=False, closed=TODAY); stats["closed"] += 1
+        gone = [old for jid, old in db.items() if old["company"] == name and old["active"] and jid not in seen]
+        for old in gone:
+            old.update(active=False, closed=TODAY); stats["closed"] += 1
+        if not jobs and len(gone) >= 20:
+            stats["emptied"].append(name)                   # the whole board went empty at once: often a move to another hiring system
     known = {s["name"] for s in sources}                       # a company we no longer read cannot keep "open" jobs forever
     for old in db.values():
         if old["active"] and not old.get("direct") and old["company"] not in known:
@@ -539,8 +541,9 @@ def main():
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
-                                                          "failed": stats["failed"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
+                                                          "failed": stats["failed"], "emptied": stats["emptied"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
     print("failed:", ", ".join(stats["failed"]) or "-")
+    print("boards that went empty (check whether the company moved its job board):", ", ".join(stats["emptied"]) or "-")
     print("dropped as not crypto:", ", ".join(stats["dropped"]) or "-")
 
 

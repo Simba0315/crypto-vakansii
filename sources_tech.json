@@ -2191,8 +2191,8 @@
  },
  {
   "name": "Shield AI",
-  "ats": "lever",
-  "token": "shieldai",
+  "ats": "ashby",
+  "token": "shield",
   "count": 300
  },
  {

@@ -829,8 +829,54 @@
     exp: /^(work |professional |relevant |employment |career )?(experience|employment|work history|employment history|career history)$/,
     edu: /^(education|education (and|&) training|academic background|qualifications|academic qualifications)$/,
     skills: /^((technical|core|key|professional|hard) )?(skills|competencies)( (and|&) (tools|technologies|expertise))?$|^(tools|technologies|tech stack|expertise)$/,
-    other: /^(projects|personal projects|certifications?|certificates|licenses( (and|&) certifications)?|languages|interests|hobbies|awards|honou?rs|publications|volunteer(ing| experience)?|references|achievements|courses|training)$/
+    proj: /^((personal|side|selected|key|academic|open[- ]source) )?projects$/,
+    cert: /^(certifications?|certificates|licenses( (and|&) certifications)?|certifications (and|&) licenses)$/,
+    lang: /^((spoken )?languages|language skills)$/,
+    other: /^(interests|hobbies|awards|honou?rs|publications|volunteer(ing| experience)?|references|achievements|courses|training)$/
   };
+  // Languages people speak: a "Languages" section that lists Python and Go is a skills list, and its items go to the skills
+  var SPOKEN = ('english spanish french german italian portuguese dutch polish russian ukrainian belarusian czech slovak hungarian romanian bulgarian serbian croatian bosnian slovenian ' +
+    'greek turkish arabic hebrew persian farsi urdu hindi bengali punjabi tamil telugu marathi gujarati kannada malayalam chinese mandarin cantonese japanese korean vietnamese thai indonesian ' +
+    'malay filipino tagalog swahili amharic yoruba hausa igbo zulu afrikaans swedish norwegian danish finnish icelandic estonian latvian lithuanian georgian armenian azerbaijani kazakh uzbek ' +
+    'catalan basque galician irish welsh albanian macedonian maltese luxembourgish sign asl bsl').split(' ');
+  var URLISH = /https?:\/\/[^\s,|)]+|(?:www\.)?(?:[a-z0-9-]+\.)+(?:com|io|dev|app|org|net|co|ai|me|so|xyz|page|site|tech)(?:\/[^\s,|)]*)?/i;
+  function langsOf(lines) {                                // "English (native), German – B2" -> [{name, level}]; anything else -> rest
+    var out = { lang: [], rest: [] };
+    lines.forEach(function (l) {
+      (l.replace(BULLET, '').match(/[^,;|•·(]+(?:\([^)]*\))?/g) || []).forEach(function (tok) {
+        var m = tok.trim().match(/^([\p{L} ]{2,30}?)\s*(?:\(([^)]*)\)|[:–—-]\s*(.+))?$/u);
+        if (!m) { if (tok.trim()) out.rest.push(tok.trim()); return; }
+        var name = m[1].trim(), level = (m[2] || m[3] || '').trim();
+        if (name.toLowerCase().split(' ').some(function (w) { return SPOKEN.indexOf(w) >= 0; })) out.lang.push({ name: name, level: level });
+        else out.rest.push(name);
+      });
+    });
+    return out;
+  }
+  function projectsOf(lines) {                             // a short line without a full stop starts a project; the lines under it are its text
+    var out = [], cur = null;
+    lines.forEach(function (line) {
+      var bullet = BULLET.test(line), body = line.replace(BULLET, '').trim(), short = body.length <= 90 && !/[.;]$/.test(body);
+      if (!bullet && short && (!cur || cur.text)) {
+        var u = body.match(URLISH), name = (u ? body.replace(u[0], ' ') : body).replace(/\s*[|–—:·•()-]+\s*$/, '').replace(/^\s*[|–—:·•()-]+\s*/, '').replace(/\s+[|–—·•-]\s+$/, '').trim();
+        cur = { name: name, link: u ? u[0].replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '') : '', text: '' }; out.push(cur); return;
+      }
+      if (!cur) { cur = { name: '', link: '', text: '' }; out.push(cur); }
+      var u2 = !cur.link && body.match(URLISH);
+      if (u2 && body.replace(u2[0], '').replace(/[\s:|–—-]+/g, '').length < 12) { cur.link = u2[0].replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''); return; }
+      cur.text += (cur.text ? '\n' : '') + body;
+    });
+    return out.filter(function (x) { return x.name || x.text; });
+  }
+  function certsOf(lines) {                                // "AWS Certified Developer – Associate, Amazon Web Services, 2023" -> {name, org, date}
+    return lines.map(function (line) {
+      var s = line.replace(BULLET, '').trim(), d = s.match(new RegExp('\\(?\\b(?:' + RX_MONTH + '\\s+)?(?:19|20)\\d{2}\\)?\\s*$', 'i')), date = '';
+      if (d) { date = d[0].replace(/[()]/g, '').trim(); s = s.slice(0, d.index); }
+      s = s.replace(/[\s,(|–—-]+$/, '').trim();
+      var i = s.lastIndexOf(', '), p = i > 0 && s.length - i <= 42 ? [s.slice(0, i), s.slice(i + 2)] : splitHead(s);
+      return { name: (p[0] || '').trim(), org: (p[1] || '').trim(), date: date };
+    }).filter(function (x) { return x.name; });
+  }
   var ROLE_WORD = /\b(engineer|developer|analyst|manager|designer|lead|director|specialist|consultant|intern|head|officer|scientist|architect|administrator|coordinator|associate|representative|executive|assistant|founder|owner|researcher|writer|editor|accountant|recruiter|technician|programmer|tester|support|agent|advisor|adviser|partner|vp|cto|ceo|cfo|coo)\b/i;
   var DEGREE = /\b(bachelor|master|b\.?\s?sc|m\.?\s?sc|b\.?a\.?|m\.?a\.?|mba|ph\.?d|doctor|diploma|degree|associate|certificate|bsc|msc|b\.?eng|m\.?eng|b\.?s\.?|m\.?s\.?|a\.?a\.?|high school|ged)\b/i;
   function headingOf(line) {
@@ -879,7 +925,7 @@
   }
   T.parseResume = function (text) {
     var lines = String(text || '').replace(/\r\n?/g, '\n').split('\n').map(function (l) { return l.replace(/[ \t]/g, ' ').replace(/ {2,}/g, ' ').trim(); }).filter(Boolean);
-    var out = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [], edu: [] };
+    var out = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [], edu: [], proj: [], cert: [], lang: [] };
     var all = lines.join('\n');
     var em = all.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/); if (em) out.email = em[0];
     var ph = (all.match(/\+?\d[\d ().-]{7,}\d/g) || []).filter(function (x) { return x.replace(/\D/g, '').length >= 9 && !RX_RANGE.test(x); })[0]; if (ph) out.phone = ph.trim();
@@ -908,9 +954,14 @@
         if (s && s.length <= 40 && sk.map(function (x) { return x.toLowerCase(); }).indexOf(s.toLowerCase()) < 0) sk.push(s);
       });
     });
+    var lg = langsOf(sec.lang || []);
+    lg.rest.forEach(function (s) { if (s.length <= 40 && sk.map(function (x) { return x.toLowerCase(); }).indexOf(s.toLowerCase()) < 0) sk.push(s); });     // "Languages: Python, Go"
     out.skills = sk.slice(0, 40).join(', ');
     out.exp = entries(sec.exp || [], false);
     out.edu = entries(sec.edu || [], true);
+    out.proj = projectsOf(sec.proj || []);
+    out.cert = certsOf(sec.cert || []);
+    out.lang = lg.lang;
     return out;
   };
   // A JSON Resume file (jsonresume.org), this builder's own "JSON" download included, which keeps a job's dates in work[].summary.
@@ -933,7 +984,35 @@
       }).filter(function (x) { return x.role || x.org; }),
       edu: (o.education || []).map(function (e) {
         return { what: [s(e.studyType), s(e.area)].filter(Boolean).join(' '), org: s(e.institution), dates: span(e) };
-      }).filter(function (x) { return x.what || x.org; })
+      }).filter(function (x) { return x.what || x.org; }),
+      proj: (o.projects || []).map(function (p) {
+        p = p || {};
+        return { name: s(p.name), link: s(p.url).replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''), text: [s(p.description)].concat(p.highlights || []).filter(Boolean).join('\n') };
+      }).filter(function (x) { return x.name || x.text; }),
+      cert: (o.certificates || []).map(function (c) { c = c || {}; return { name: s(c.name), org: s(c.issuer), date: s(c.date) }; }).filter(function (x) { return x.name; }),
+      lang: (o.languages || []).map(function (l) { l = l || {}; return { name: s(l.language), level: s(l.fluency) }; }).filter(function (x) { return x.name; })
+    };
+  };
+  // The builder's resume as a JSON Resume file (jsonresume.org): other tools and AI assistants read it, and fromJsonResume reads it back.
+  // A job's dates are kept as written ("2021 – now") in work[].summary, because the schema wants ISO dates the builder does not ask for.
+  T.toJsonResume = function (d) {
+    d = d || {};
+    var str = function (v) { return typeof v === 'string' ? v.trim() : ''; }, list = function (v) { return Array.isArray(v) ? v.filter(function (x) { return x && typeof x === 'object'; }) : []; };
+    var lines = function (t) { return String(t || '').split('\n').map(function (l) { return l.replace(/^\s*[-*•]\s*/, '').trim(); }).filter(Boolean); };
+    var url = function (x) { return /^https?:\/\//i.test(x) ? x : 'https://' + x; };
+    var links = str(d.links).split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    return {
+      $schema: 'https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json',
+      basics: { name: str(d.name), label: str(d.title), email: str(d.email), phone: str(d.phone), summary: str(d.summary),
+        location: { address: str(d.place) }, profiles: links.map(function (x) { return { network: x.replace(/^https?:\/\//i, '').split('/')[0], url: url(x) }; }) },
+      work: list(d.exp).filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
+        return { name: str(x.org), position: str(x.role), summary: str(x.dates), highlights: lines(x.text) };
+      }),
+      education: list(d.edu).filter(function (x) { return x.what || x.org; }).map(function (x) { return { institution: str(x.org), area: str(x.what), studyType: '', endDate: str(x.dates) }; }),
+      projects: list(d.proj).filter(function (x) { return x.name || x.text; }).map(function (x) { return { name: str(x.name), url: str(x.link) ? url(str(x.link)) : '', highlights: lines(x.text) }; }),
+      certificates: list(d.cert).filter(function (x) { return x.name; }).map(function (x) { return { name: str(x.name), issuer: str(x.org), date: str(x.date) }; }),
+      languages: list(d.lang).filter(function (x) { return x.name; }).map(function (x) { return { language: str(x.name), fluency: str(x.level) }; }),
+      skills: str(d.skills).split(',').map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) { return { name: x }; })
     };
   };
 
@@ -1254,6 +1333,44 @@
     var rank = { fix: 0, warn: 1, info: 2, ok: 3 }, scored = items.filter(function (i) { return i.level !== 'info'; });
     items.sort(function (a, b) { return rank[a.level] - rank[b.level]; });
     return { variants: variants, checks: items, kind: kind, passed: scored.filter(function (i) { return i.level === 'ok'; }).length, of: scored.length };
+  };
+
+  /* ---------- one line under a job in the resume builder, checked as it is typed: the rules of the bullet point tool, in a few words ----------
+     A present-tense verb ("Lead", "Manages") is accepted: the current job is often written that way. */
+  var NOW_VERB = { lead: 1, leads: 1, build: 1, builds: 1, run: 1, runs: 1, write: 1, writes: 1, grow: 1, grows: 1, drive: 1, drives: 1, sell: 1, sells: 1, teach: 1, teaches: 1,
+    win: 1, wins: 1, set: 1, sets: 1, cut: 1, cuts: 1, rebuild: 1, rebuilds: 1, rewrite: 1, rewrites: 1, oversee: 1, oversees: 1, make: 1, makes: 1, keep: 1, keeps: 1, hold: 1, holds: 1 };
+  function anyVerb(w) {
+    if (!w) return false;
+    if (pastVerb(w) || NOW_VERB[w]) return true;
+    var b = w.replace(/(?:es|s)$/, ''), forms = [w + 'd', w + 'ed', b + 'd', b + 'ed', w.replace(/y$/, 'ied'), b.replace(/y$/, 'ied'), w + w.slice(-1) + 'ed', w.replace(/ies$/, 'ied')];
+    return forms.some(function (f) { return STRONG_SET[f]; });
+  }
+  T.lineHints = function (line) {
+    var s = clean(String(line == null ? '' : line).replace(/^\s*(?:[-*•·▪◦‣–—>]|\d{1,2}[.)])\s*/, ''));
+    if (!s) return null;
+    var out = [], add = function (level, t) { out.push({ level: level, t: t }); };
+    var first = (s.split(' ')[0] || '').toLowerCase().replace(/[^a-z-]/g, ''), dull = findPhrases(s, DULL);
+    if (dull.length) add('fix', '“' + cap(dull[0].term) + '”: ' + dull[0].tip);
+    else if (WEAK[first]) add('fix', WEAK[first]);
+    else if (!anyVerb(first)) add('warn', 'Start with what you did: Built, Led, Cut, Launched');
+    if (!hasFigure(s) && !NUMBER.test(s.replace(/\b(?:19|20)\d{2}\b|\bone\b/gi, ''))) add('warn', 'Add a number: how many, how much, how fast');
+    if (s.length > 2 * T.LINE) add('warn', 'Long: ' + s.length + ' characters, over two lines of the page');
+    else if (s.length < 30) add('warn', 'Short: say what it changed');
+    if (/\b(?:i|my|we|our|me)\b(?!\.e)/i.test(s)) add('info', 'Leave out “I”, “my” and “we”');
+    return { text: s, hints: out, ok: !out.some(function (h) { return h.level !== 'info'; }) };
+  };
+
+  /* ---------- the request for an AI assistant to write the summary, in a tone the visitor picks (resumai offers a tone) ---------- */
+  T.TONES = [['plain', 'Plain'], ['confident', 'Confident'], ['short', 'Short'], ['warm', 'Warm']];
+  T.summaryAsk = function (cv, tone, post) {
+    var ask = {
+      plain: 'Write a resume summary of 2 or 3 sentences from my resume below: my current role, my strongest skills and one result. Plain words, no buzzwords.',
+      confident: 'Write a confident resume summary of 2 or 3 sentences from my resume below. Open with my role and years of experience, then my strongest result with its number, then the skills I am best at. Active verbs; no “helped”, “assisted” or other hedging words; no buzzwords.',
+      short: 'Write a resume summary of at most 2 short sentences (under 35 words) from my resume below: my role and my single strongest result. No adjectives about me.',
+      warm: 'Write a warm, friendly resume summary of 2 or 3 sentences from my resume below: who I help and how, my strongest skills and one result. Natural words, as I would say it to a person, no buzzwords.'
+    }[tone] || '';
+    if (!ask) return T.summaryAsk(cv, 'plain', post);
+    return ask + ' Do not add anything that is not in my resume.' + (post ? ' Aim it at the job posting below: lead with what it asks for, where my resume has it.\n\nJOB POSTING:\n' + post : '') + '\n\nMY RESUME:\n' + cv;
   };
 
   /* ---------- date ranges in running text: "Jan 2021 – Mar 2023", "2019–2021", "03/2020 - present" ---------- */
@@ -1852,7 +1969,8 @@
       imp.hidden = false;
       imp.addEventListener('click', function () {
         var text = [cv.title, cv.summary].concat((cv.exp || []).map(function (x) { return [x.role, x.org, x.dates].filter(Boolean).join(', ') + '\n' + (x.text || ''); }),
-          (cv.edu || []).map(function (x) { return [x.what, x.org, x.dates].filter(Boolean).join(', '); }), [cv.skills ? 'Skills: ' + cv.skills : '']).filter(Boolean).join('\n\n');
+          (cv.edu || []).map(function (x) { return [x.what, x.org, x.dates].filter(Boolean).join(', '); }),
+          (Array.isArray(cv.proj) ? cv.proj : []).map(function (x) { return x ? [x.name, x.text].filter(Boolean).join('\n') : ''; }), [cv.skills ? 'Skills: ' + cv.skills : '']).filter(Boolean).join('\n\n');
         F.set('resume', text); F.save(); F.draw();
       });
     }

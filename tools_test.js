@@ -847,5 +847,55 @@ eq('import JSON Resume: our own download comes back the same', [J.name, J.title,
 eq('import JSON Resume: standard dates', T.fromJsonResume({ basics: {}, work: [{ name: 'X', position: 'Y', startDate: '2019-01', endDate: '', summary: 'Ran the team.' }] }).exp[0], { role: 'Y', org: 'X', dates: '2019-01 – now', text: 'Ran the team.' });
 eq('import JSON Resume: not a resume', [T.fromJsonResume({ a: 1 }), T.fromJsonResume(null)], [null, null]);
 
+
+// ---- hints under each line of a job in the resume builder
+const lh = function (l) { const r = T.lineHints(l); return r ? [r.ok, r.hints.map(function (h) { return h.level; })] : null; };
+eq('line hints: a strong line passes', lh('Built a payments API used by 40 banks, cutting settlement time by 12%'), [true, []]);
+eq('line hints: duty wording is a fix', lh('Responsible for the payments API and its 3 integrations with partner banks')[1][0], 'fix');
+eq('line hints: a weak first word is a fix', T.lineHints('Helped the team ship 4 releases of the mobile app this year').hints[0].level, 'fix');
+eq('line hints: no verb, no number, short', lh('Payments API'), [false, ['warn', 'warn', 'warn']]);
+eq('line hints: present tense for the current job is fine', lh('Lead a team of 6 engineers who ship the mobile app every week'), [true, []]);
+eq('line hints: "Manages" and "Plan" count as verbs', [lh('Manages a budget of $2M across three regions and two product lines')[0], lh('Plan the quarterly roadmap with 5 product managers and sales')[0]], [true, true]);
+eq('line hints: "I" and "we" are only a note', lh('Led the launch where we grew sign-ups by 30% in two months')[1], ['info']);
+eq('line hints: a year is not a result number', lh('Launched the new onboarding flow for customers in 2023 with the design team')[1], ['warn']);
+eq('line hints: a number in words counts', lh('Doubled weekly active users of the reporting dashboard after the redesign')[0], true);
+eq('line hints: bullets stripped, empty lines skipped', [T.lineHints('- Cut cloud costs by 18% by moving batch jobs to spot instances').text, T.lineHints('   '), T.lineHints(null)], ['Cut cloud costs by 18% by moving batch jobs to spot instances', null, null]);
+eq('line hints: over two lines of the page', T.lineHints('Built ' + 'a very long description of the work and its many parts '.repeat(4) + 'for 10 teams').hints.some(function (h) { return /^Long/.test(h.t); }), true);
+
+// ---- the summary request for an AI assistant, in four tones
+const tones = T.TONES.map(function (t) { return T.summaryAsk('CV TEXT', t[0]); });
+eq('summary ask: four different requests', new Set(tones).size, 4);
+eq('summary ask: every tone forbids inventing and carries the resume', tones.every(function (t) { return /Do not add anything that is not in my resume/.test(t) && /MY RESUME:\nCV TEXT$/.test(t); }), true);
+eq('summary ask: an unknown tone falls back to plain', T.summaryAsk('X', 'shouty'), T.summaryAsk('X', 'plain'));
+eq('summary ask: the short tone names the length', /under 35 words/.test(T.summaryAsk('X', 'short')), true);
+eq('summary ask: a target posting is included', /JOB POSTING:\nPOST TEXT\n\nMY RESUME:\nX$/.test(T.summaryAsk('X', 'warm', 'POST TEXT')), true);
+
+// ---- projects, certificates and languages: JSON Resume out and back, and read from an old resume
+const fullCv = { name: 'Alex Morgan', title: 'Data Analyst', email: 'a@b.co', phone: '', place: 'Lisbon', links: 'github.com/alexm', summary: 'S', skills: 'SQL, Excel',
+  exp: [{ role: 'Analyst', org: 'Acme', dates: '2021 – now', text: '- Cut costs 10%\nBuilt the weekly report' }], edu: [{ what: 'Economics', org: 'Uni', dates: '2020' }],
+  proj: [{ name: 'Rent tracker', link: 'github.com/alexm/rent', text: 'Charts rents in 12 cities\nUsed by 300 people' }, { name: '', link: '', text: '' }],
+  cert: [{ name: 'Google Data Analytics', org: 'Coursera', date: '2022' }], lang: [{ name: 'English', level: 'Fluent' }, { name: 'Portuguese', level: 'Native' }] };
+const jout = T.toJsonResume(fullCv);
+eq('JSON Resume out: projects, certificates, languages in the schema names', [jout.projects, jout.certificates, jout.languages],
+  [[{ name: 'Rent tracker', url: 'https://github.com/alexm/rent', highlights: ['Charts rents in 12 cities', 'Used by 300 people'] }], [{ name: 'Google Data Analytics', issuer: 'Coursera', date: '2022' }],
+   [{ language: 'English', fluency: 'Fluent' }, { language: 'Portuguese', fluency: 'Native' }]]);
+eq('JSON Resume out: bullet marks dropped from highlights', jout.work[0].highlights, ['Cut costs 10%', 'Built the weekly report']);
+const back = T.fromJsonResume(JSON.parse(JSON.stringify(jout)));
+eq('JSON Resume: out and back gives the same resume', [back.exp, back.edu, back.proj, back.cert, back.lang, back.skills],
+  [[{ role: 'Analyst', org: 'Acme', dates: '2021 – now', text: 'Cut costs 10%\nBuilt the weekly report' }], fullCv.edu, [{ name: 'Rent tracker', link: 'github.com/alexm/rent', text: 'Charts rents in 12 cities\nUsed by 300 people' }], fullCv.cert, fullCv.lang, 'SQL, Excel']);
+eq('JSON Resume out: an old resume without the new sections', [T.toJsonResume({ name: 'X', exp: 'broken' }).projects, T.toJsonResume({}).work], [[], []]);
+const CV3 = ['Sam Lee', 'Frontend Developer', 'sam@lee.dev', '', 'Experience', 'Frontend Developer at Shopline', '2021 – present', '- Built the checkout in React, lifting conversion 8%', '',
+  'Projects', 'Budget Buddy — github.com/samlee/budget-buddy', '- A budgeting app in React Native with 2,000 downloads', 'Open-source date picker', 'Used by 40 projects on npm.', '',
+  'Certifications', 'AWS Certified Developer – Associate, Amazon Web Services, 2023', 'Google UX Design Certificate — Coursera (2021)', 'Scrum Master', '',
+  'Languages', 'English (native), Spanish – B2, JavaScript', '', 'Skills', 'React, TypeScript, CSS'].join('\n');
+const R3 = T.parseResume(CV3);
+eq('import: projects with a link and their lines', R3.proj, [{ name: 'Budget Buddy', link: 'github.com/samlee/budget-buddy', text: 'A budgeting app in React Native with 2,000 downloads' },
+  { name: 'Open-source date picker', link: '', text: 'Used by 40 projects on npm.' }]);
+eq('import: certificates with issuer and year', R3.cert, [{ name: 'AWS Certified Developer – Associate', org: 'Amazon Web Services', date: '2023' },
+  { name: 'Google UX Design Certificate', org: 'Coursera', date: '2021' }, { name: 'Scrum Master', org: '', date: '' }]);
+eq('import: spoken languages with level; a programming language goes to the skills', [R3.lang, R3.skills], [[{ name: 'English', level: 'native' }, { name: 'Spanish', level: 'B2' }], 'React, TypeScript, CSS, JavaScript']);
+eq('import: the job is still read', R3.exp.map(function (x) { return [x.role, x.org]; }), [['Frontend Developer', 'Shopline']]);
+eq('import: no new sections in an old resume', [R1.proj, R1.cert, R1.lang], [[], [], []]);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

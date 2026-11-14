@@ -2,34 +2,89 @@
 (function () {
   var root = document.getElementById('rb'); if (!root) return;
   var H = window.HRN, esc = H.esc, $ = function (id) { return document.getElementById(id); };
-  var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }] };
-  var data = H.get('hrn_resume', null);
-  if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};          // a damaged or foreign value must not break the builder
-  Object.keys(blank).forEach(function (k) { if (Array.isArray(blank[k]) ? !Array.isArray(data[k]) || !data[k].length : typeof data[k] !== 'string') data[k] = JSON.parse(JSON.stringify(blank[k])); });
+  var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }],
+    proj: [], cert: [], lang: [] };
+  var copy = function (x) { return JSON.parse(JSON.stringify(x)); };
   var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive'];
-  if (TPLS.indexOf(data.tpl) < 0) data.tpl = 'classic';
+  var fill = function (d) {                                                         // a damaged, old or foreign value must not break the builder
+    if (!d || typeof d !== 'object' || Array.isArray(d)) d = {};
+    Object.keys(blank).forEach(function (k) {
+      if (Array.isArray(blank[k]) ? !Array.isArray(d[k]) || (!d[k].length && blank[k].length) : typeof d[k] !== 'string') d[k] = copy(blank[k]);
+      else if (Array.isArray(d[k])) d[k] = d[k].filter(function (x) { return x && typeof x === 'object'; });
+    });
+    if (TPLS.indexOf(d.tpl) < 0) d.tpl = 'classic';
+    return d;
+  };
+  var data = fill(H.get('hrn_resume', null));
+  /* Several resumes, one per kind of job: the open one stays in hrn_resume, which the other pages read; the others, with the posting
+     each was aimed at, wait in hrn_resume_set. */
+  var SET = H.get('hrn_resume_set', null);
+  if (!SET || typeof SET !== 'object' || !Array.isArray(SET.items) || !SET.items.length) SET = { cur: 'r1', items: [{ id: 'r1', label: '' }] };
+  SET.items = SET.items.filter(function (x) { return x && typeof x.id === 'string'; }).slice(0, 30);
+  if (!SET.items.length) SET.items = [{ id: 'r1', label: '' }];
+  if (!SET.items.some(function (x) { return x.id === SET.cur; })) SET.cur = SET.items[0].id;
   var applyTpl = function () {
     var pv = $('rb-preview'), sel = $('rb-tpl'); pv.className = 'tpl-' + data.tpl; if (sel) sel.value = data.tpl;
     pv.style.fontSize = data.fs ? data.fs + 'px' : ''; pv.style.lineHeight = data.lh ? String(data.lh) : '';
     Array.prototype.forEach.call(document.querySelectorAll('.tplcard'), function (c) { c.classList.toggle('on', c.getAttribute('data-pick') === data.tpl); });
   };
   var save = function () { H.set('hrn_resume', data); };
+  var cutText = function (t, n) { t = String(t || ''); return t.length > n ? t.slice(0, n) + '…' : t; };
+  var copyText = function (txt, ok) {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function () {});
+    else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} ta.remove(); }
+  };
   var field = function (label, key, type, ph) {
     return '<label class="rl">' + label + (type === 'area' ? '<textarea data-k="' + key + '" rows="4" placeholder="' + ph + '">' + esc(data[key]) + '</textarea>'
       : '<input type="text" data-k="' + key + '" placeholder="' + ph + '" value="' + esc(data[key]) + '">') + '</label>';
   };
+  /* The lists of the resume: jobs, schools, projects, certificates, languages. Each field is [key, placeholder, label for screen readers]. */
+  var LISTS = {
+    exp: { f: [['role', 'Job title'], ['org', 'Company'], ['dates', '2022 – now', 'Dates']], text: 'One achievement per line. Start with a verb, add a number where you can.', add: '+ Add a job', del: 'Remove this job', hints: true },
+    edu: { f: [['what', 'Degree or course'], ['org', 'School'], ['dates', '2018 – 2022', 'Dates']], add: '+ Add education', del: 'Remove' },
+    proj: { f: [['name', 'Project name'], ['link', 'github.com/you/project', 'Link']], text: 'What it does and what came of it: users, downloads, time saved. One point per line.', add: '+ Add a project', del: 'Remove this project', hints: true },
+    cert: { f: [['name', 'Certificate or licence'], ['org', 'Issued by'], ['date', '2024', 'Year']], add: '+ Add a certificate', del: 'Remove' },
+    lang: { f: [['name', 'Language'], ['level', 'Native, fluent, B2…', 'Level']], add: '+ Add a language', del: 'Remove', levels: true }
+  };
+  var emptyOf = function (k) { var o = {}; LISTS[k].f.forEach(function (x) { o[x[0]] = ''; }); if (LISTS[k].text) o.text = ''; return o; };
+  /* Hints under each line of a job or project, as it is typed: a verb first, a number, two lines at most (the bullet point tool's rules). */
+  var hintsHtml = function (text) {
+    var T = window.HRNT; if (!T || !T.lineHints) return '';
+    var rows = String(text || '').split('\n').map(T.lineHints).filter(Boolean);
+    if (!rows.length) return '';
+    var bad = rows.filter(function (r) { return !r.ok || r.hints.length; }), good = rows.length - rows.filter(function (r) { return !r.ok; }).length;
+    return '<p class="rbh-sum"><b class="' + (good === rows.length ? 'ok' : '') + '">' + good + ' of ' + rows.length + '</b> line' + (rows.length === 1 ? '' : 's') + ' read well</p>'
+      + (bad.length ? '<ul class="rbh">' + bad.map(function (r) {
+        var lvl = r.hints.some(function (h) { return h.level === 'fix'; }) ? 'fix' : r.ok ? 'info' : 'warn';
+        return '<li class="' + lvl + '"><span class="rbh-l">' + esc(r.text.length > 54 ? r.text.slice(0, 52).replace(/\s+\S*$/, '') + '…' : r.text) + '</span><span class="rbh-t">' + r.hints.map(function (h) { return esc(h.t); }).join(' · ') + '</span></li>';
+      }).join('') + '</ul>' : '');
+  };
+  var listBlock = function (k, x, i) {
+    var L = LISTS[k];
+    return '<div class="rblock" data-list="' + k + '" data-i="' + i + '"><div class="rrow">' + L.f.map(function (f) {
+        return '<input type="text" data-f="' + f[0] + '" placeholder="' + esc(f[1]) + '" aria-label="' + esc(f[2] || f[1]) + '" value="' + esc(x[f[0]]) + '"' + (L.levels && f[0] === 'level' ? ' list="rb-levels"' : '') + '>';
+      }).join('') + '</div>'
+      + (L.text ? '<textarea data-f="text" rows="' + Math.min(9, Math.max(4, String(x.text || '').split('\n').length + 1)) + '" placeholder="' + esc(L.text) + '">' + esc(x.text) + '</textarea>' : '')
+      + (L.hints ? '<div class="rbh-box" aria-live="polite">' + hintsHtml(x.text) + '</div>' : '')
+      + '<button class="linkbtn" type="button" data-del="' + k + '">' + L.del + '</button></div>';
+  };
+  var listOf = function (k) { return data[k].map(function (x, i) { return listBlock(k, x, i); }).join('') + '<p><button class="btn ghost sm" type="button" data-add="' + k + '">' + LISTS[k].add + '</button></p>'; };
+  /* The summary step: a word count, and the request for an AI assistant in the tone the visitor picks. */
+  var tone = H.get('hrn_rb_tone', 'plain');
+  var sumCount = function () {
+    var n = String(data.summary || '').split(/\s+/).filter(Boolean).length;
+    return n ? n + (n === 1 ? ' word' : ' words') + (n > 60 ? ': over 60, cut it to two or three lines' : n < 20 ? ': a summary is usually 30 to 60 words' : ': a good length') : 'Aim for 30 to 60 words.';
+  };
+  var sumAI = function () {
+    var T = window.HRNT; if (!T || !T.TONES) return '';
+    return '<div class="rb-sumai"><p><b>Let an AI assistant draft it</b><span>From the jobs you entered, in the tone you pick. It copies the request; you paste it and check every line.</span></p>'
+      + '<p class="rb-tones" role="radiogroup" aria-label="Tone">' + T.TONES.map(function (t) { return '<button type="button" class="chipbtn" role="radio" aria-checked="' + (tone === t[0]) + '" aria-pressed="' + (tone === t[0]) + '" data-tone="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</p>'
+      + '<p class="rb-sumgo">' + [['ChatGPT', 'https://chatgpt.com/'], ['Claude', 'https://claude.ai/new'], ['Perplexity', 'https://www.perplexity.ai/']].map(function (g) {
+        return '<a href="' + g[1] + '" target="_blank" rel="nofollow noopener" data-asksum="1">Write it with ' + g[0] + '</a>'; }).join('') + '</p>'
+      + '<p class="note" id="rb-sum-done" hidden>Copied. Paste it in the assistant’s message box (Ctrl+V or ⌘V).</p></div>';
+  };
   var drawForm = function () {
-    var exp = data.exp.map(function (x, i) {
-      return '<div class="rblock" data-list="exp" data-i="' + i + '"><div class="rrow"><input type="text" data-f="role" placeholder="Job title" value="' + esc(x.role) + '">' +
-        '<input type="text" data-f="org" placeholder="Company" value="' + esc(x.org) + '"><input type="text" data-f="dates" placeholder="2022 – now" value="' + esc(x.dates) + '"></div>' +
-        '<textarea data-f="text" rows="4" placeholder="One achievement per line. Start with a verb, add a number where you can.">' + esc(x.text) + '</textarea>' +
-        '<button class="linkbtn" type="button" data-del="exp">Remove this job</button></div>';
-    }).join('');
-    var edu = data.edu.map(function (x, i) {
-      return '<div class="rblock" data-list="edu" data-i="' + i + '"><div class="rrow"><input type="text" data-f="what" placeholder="Degree or course" value="' + esc(x.what) + '">' +
-        '<input type="text" data-f="org" placeholder="School" value="' + esc(x.org) + '"><input type="text" data-f="dates" placeholder="2018 – 2022" value="' + esc(x.dates) + '"></div>' +
-        '<button class="linkbtn" type="button" data-del="edu">Remove</button></div>';
-    }).join('');
+    var exp = listOf('exp'), edu = listOf('edu');
     var sec = function (id, inner) { return '<div class="rsec' + (tab === id ? ' on' : '') + '" data-sec="' + id + '">' + inner + nextBtn(id) + '</div>'; };
     $('rb-form').innerHTML =
       sec('contact', '<div class="rb-imp no-print"><p><b>Already have a resume?</b><span>Word, PDF, text or JSON Resume: it is read in this browser, nothing is uploaded.</span></p>' +
@@ -41,12 +96,16 @@
         '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline: the job you want', 'title', 'text', 'Senior Backend Engineer') +
         '<div class="rrow">' + field('Email', 'email', 'text', 'you@example.com') + field('Phone', 'phone', 'text', '+1 555 010 0199') + '</div>' +
         '<div class="rrow">' + field('Location', 'place', 'text', 'Berlin, Germany · open to remote') + field('Links', 'links', 'text', 'github.com/you, linkedin.com/in/you') + '</div>') +
-      sec('summary', field('Summary', 'summary', 'area', 'Two or three sentences: what you do, for how long, and what you are best at.')) +
-      sec('experience', '<span class="flabel">Experience</span>' + exp + '<p><button class="btn ghost sm" type="button" data-add="exp">+ Add a job</button></p>') +
-      sec('education', '<span class="flabel">Education</span>' + edu + '<p><button class="btn ghost sm" type="button" data-add="edu">+ Add education</button></p>') +
+      sec('summary', field('Summary', 'summary', 'area', 'Two or three sentences: what you do, for how long, and what you are best at.') + '<p class="note rb-sumc" id="rb-sumc">' + sumCount() + '</p>' + sumAI()) +
+      sec('experience', '<span class="flabel">Experience</span>' + exp) +
+      sec('education', '<span class="flabel">Education</span>' + edu) +
       sec('skills', '<span class="flabel">Skills</span>' + field('Comma-separated', 'skills', 'text', 'Python, PostgreSQL, AWS, Kubernetes')) +
+      sec('more', '<p class="note rb-more-n">Each of these is optional: a section with nothing in it is left off the page.</p>'
+        + '<span class="flabel">Projects</span>' + listOf('proj') + '<span class="flabel">Certificates and licences</span>' + listOf('cert')
+        + '<span class="flabel">Languages</span>' + listOf('lang')
+        + '<datalist id="rb-levels"><option value="Native"><option value="Fluent"><option value="Professional"><option value="Conversational"><option value="Basic"><option value="C2"><option value="C1"><option value="B2"><option value="B1"><option value="A2"></datalist>') +
       sec('finish', finishUp());
-    drawTabs();
+    drawTabs(); drawSet();
   };
   /* ---- Import an old resume, as resumai and Rezi offer it: a Word file is unzipped here (the browser's own DecompressionStream), a PDF
      is read with pdf.js, loaded only when a PDF is chosen; the text goes through HRNT.parseResume. Nothing leaves the browser. ---- */
@@ -108,15 +167,53 @@
   };
   var useImport = function (r, how) {
     if (!r || !(r.name || r.summary || r.skills || r.exp.length)) { impMsg = 'Nothing could be read from ' + esc(how) + '. Paste the text instead, or fill in the form.'; drawForm(); return; }
-    var mine = (data.name + data.summary + data.exp.map(function (x) { return x.role + x.text; }).join('')).trim();
-    if (mine && !confirm('Replace the resume in this browser with the one from ' + how + '?')) return;
+    if (hasContent(data)) {
+      if (!confirm('Open the resume from ' + how + ' as a new resume? The one you have now stays in the list above the form.')) return;
+      if (!addResume({ tpl: data.tpl })) return;
+    }
     ['name', 'title', 'email', 'phone', 'place', 'links', 'summary', 'skills'].forEach(function (k) { data[k] = r[k] || ''; });
-    data.exp = r.exp.length ? r.exp.map(function (x) { return { role: x.role || '', org: x.org || '', dates: x.dates || '', text: x.text || '' }; }) : JSON.parse(JSON.stringify(blank.exp));
-    data.edu = r.edu.length ? r.edu.map(function (x) { return { what: x.what || '', org: x.org || '', dates: x.dates || '' }; }) : JSON.parse(JSON.stringify(blank.edu));
-    var nsk = r.skills ? r.skills.split(',').length : 0;
-    impMsg = '<b>Read from ' + esc(how) + ':</b> ' + [r.exp.length + (r.exp.length === 1 ? ' job' : ' jobs'), r.edu.length + (r.edu.length === 1 ? ' school' : ' schools'), nsk + (nsk === 1 ? ' skill' : ' skills')].join(', ') +
+    data.exp = r.exp.length ? r.exp.map(function (x) { return { role: x.role || '', org: x.org || '', dates: x.dates || '', text: x.text || '' }; }) : copy(blank.exp);
+    data.edu = r.edu.length ? r.edu.map(function (x) { return { what: x.what || '', org: x.org || '', dates: x.dates || '' }; }) : copy(blank.edu);
+    ['proj', 'cert', 'lang'].forEach(function (k) { data[k] = (r[k] || []).map(function (x) { var o = emptyOf(k); Object.keys(o).forEach(function (f) { o[f] = String(x[f] || ''); }); return o; }); });
+    var nsk = r.skills ? r.skills.split(',').length : 0, more = function (k, one, many) { var n = (r[k] || []).length; return n ? [n + ' ' + (n === 1 ? one : many)] : []; };
+    impMsg = '<b>Read from ' + esc(how) + ':</b> ' + [r.exp.length + (r.exp.length === 1 ? ' job' : ' jobs'), r.edu.length + (r.edu.length === 1 ? ' school' : ' schools'), nsk + (nsk === 1 ? ' skill' : ' skills')]
+      .concat(more('proj', 'project', 'projects'), more('cert', 'certificate', 'certificates'), more('lang', 'language', 'languages')).join(', ') +
       '. An import is a first draft: check each section, above all the jobs.';
     save(); drawForm(); drawPreview(); drawDemand();
+  };
+  var hasContent = function (d) { return !!(d.name + d.summary + d.exp.map(function (x) { return x.role + x.text; }).join('')).trim(); };
+
+  /* Several resumes: a list above the form, with New (your contact details, the rest blank), Duplicate, Rename and Delete. */
+  var curItem = function () { return SET.items.filter(function (x) { return x.id === SET.cur; })[0]; };
+  var keepSet = function () { H.set('hrn_resume_set', SET); };
+  var labelOf = function (it) { var d = it.id === SET.cur ? data : it.data || {}; return it.label || d.title || d.name || 'Untitled resume'; };
+  var stash = function () { var c = curItem(); c.data = copy(data); c.jd = typeof jd === 'string' ? jd : ''; };
+  var redraw = function () { applyTpl(); drawForm(); drawPreview(); drawDemand(); if (chk) drawCheck(); };
+  var setJd = function (v) { jd = v || ''; jdTitle = ''; H.set('hrn_rb_target', jd); };
+  var addResume = function (start, label, post) {             // the current resume goes into the list; a new one opens
+    if (SET.items.length >= 20) { alert('Twenty resumes is the limit here. Delete one you no longer use first.'); return false; }
+    stash();
+    var id = 'r' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
+    SET.items.push({ id: id, label: label || '' }); SET.cur = id;
+    data = fill(copy(start || {})); setJd(post); keepSet(); save();
+    return true;
+  };
+  var openItem = function (id) {
+    var it = SET.items.filter(function (x) { return x.id === id; })[0];
+    if (!it || id === SET.cur) return;
+    stash();
+    data = fill(it.data); setJd(it.jd); delete it.data; delete it.jd; SET.cur = id;
+    keepSet(); save(); redraw();
+  };
+  var drawSet = function () {
+    var el = $('rb-set'); if (!el) return;
+    var n = SET.items.length;
+    el.innerHTML = '<label class="rb-which"><span>' + (n > 1 ? 'Your resumes (' + n + ')' : 'Your resume') + '</span><select id="rb-which">'
+      + SET.items.map(function (it) { return '<option value="' + esc(it.id) + '"' + (it.id === SET.cur ? ' selected' : '') + '>' + esc(labelOf(it)) + '</option>'; }).join('') + '</select></label>'
+      + '<span class="rb-setb"><button class="linkbtn" type="button" id="rb-new" title="A new resume with your contact details filled in">New</button>'
+      + '<button class="linkbtn" type="button" id="rb-dup" title="A copy of this resume to aim at another kind of job">Duplicate</button>'
+      + '<button class="linkbtn" type="button" id="rb-ren">Rename</button>' + (n > 1 ? '<button class="linkbtn" type="button" id="rb-delr">Delete</button>' : '') + '</span>'
+      + (n === 1 && hasContent(data) ? '<p class="note">Applying for two kinds of jobs? Duplicate this resume and aim the copy at the other posting: each keeps its own target job.</p>' : '');
   };
   var readFile = function (f) {
     var T = window.HRNT, name = f.name || 'the file', ext = (name.split('.').pop() || '').toLowerCase();
@@ -133,13 +230,14 @@
   root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-file' && ev.target.files && ev.target.files[0]) readFile(ev.target.files[0]); });
 
   /* Tabs, as Rezi lays its builder out: one section at a time, a "next" button, and "Finish up" with the templates and the format. */
-  var TABS = [['contact', 'Contact'], ['summary', 'Summary'], ['experience', 'Experience'], ['education', 'Education'], ['skills', 'Skills'], ['finish', 'Finish up']];
+  var TABS = [['contact', 'Contact'], ['summary', 'Summary'], ['experience', 'Experience'], ['education', 'Education'], ['skills', 'Skills'], ['more', 'Projects & more'], ['finish', 'Finish up']];
   var tab = H.get('hrn_rb_tab', 'contact');
   if (!TABS.some(function (t) { return t[0] === tab; })) tab = 'contact';
   var filled = function (id) {
     return id === 'contact' ? !!(data.name && (data.email || data.phone)) : id === 'summary' ? String(data.summary || '').length > 40
       : id === 'experience' ? data.exp.some(function (x) { return x.role && x.text; }) : id === 'education' ? data.edu.some(function (x) { return x.what || x.org; })
-      : id === 'skills' ? String(data.skills || '').split(',').filter(function (x) { return x.trim(); }).length >= 3 : false;
+      : id === 'skills' ? String(data.skills || '').split(',').filter(function (x) { return x.trim(); }).length >= 3
+      : id === 'more' ? data.proj.some(function (x) { return x.name || x.text; }) || data.cert.some(function (x) { return x.name; }) || data.lang.some(function (x) { return x.name; }) : false;
   };
   var drawTabs = function () {
     var nav = $('rb-tabs'); if (!nav) return;
@@ -168,39 +266,36 @@
       + '<p class="note">One page is what most recruiters read: if the sheet runs over, make the text a little smaller or cut older jobs to a line each.</p>'
       + '<p class="rsec-dl"><button class="btn primary" type="button" id="rb-print2">Download PDF</button><button class="btn ghost" type="button" id="rb-doc2">Word</button></p>';
   };
+  var linesOf = function (t) { return String(t || '').split('\n').map(function (l) { return l.replace(/^[-•*\s]+/, '').trim(); }).filter(Boolean); };
+  var ulOf = function (t) { var lines = linesOf(t); return lines.length ? '<ul>' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : ''; };
   var drawPreview = function () {
     var contact = [data.email, data.phone, data.place].concat(String(data.links || '').split(',').map(function (s) { return s.trim(); })).filter(Boolean).map(esc).join(' · ');
     var exp = data.exp.filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
-      var lines = String(x.text || '').split('\n').map(function (l) { return l.replace(/^[-•*\s]+/, '').trim(); }).filter(Boolean);
-      return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.role) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.dates) + '</span></div>' +
-        (lines.length ? '<ul>' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : '') + '</div>';
+      return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.role) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.dates) + '</span></div>' + ulOf(x.text) + '</div>';
     }).join('');
+    var proj = data.proj.filter(function (x) { return x.name || x.text; }).map(function (x) {
+      return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.name) + '</strong><span>' + esc(x.link) + '</span></div>' + ulOf(x.text) + '</div>';
+    }).join('');
+    var cert = data.cert.filter(function (x) { return x.name; }).map(function (x) {
+      return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.name) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.date) + '</span></div></div>';
+    }).join('');
+    var lang = data.lang.filter(function (x) { return x.name; }).map(function (x) { return esc(x.name) + (x.level ? ' (' + esc(x.level) + ')' : ''); });
     var edu = data.edu.filter(function (x) { return x.what || x.org; }).map(function (x) {
       return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.what) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.dates) + '</span></div></div>';
     }).join('');
     var skills = String(data.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    $('rb-preview').innerHTML = (data.name || data.title || contact || exp || edu || skills.length)
+    $('rb-preview').innerHTML = (data.name || data.title || contact || exp || edu || skills.length || proj || cert || lang.length)
       ? '<h2 class="pv-name">' + esc(data.name || 'Your name') + '</h2>' + (data.title ? '<p class="pv-title">' + esc(data.title) + '</p>' : '') +
         (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + (data.summary ? '<h3>Summary</h3><p>' + esc(data.summary) + '</p>' : '') +
-        (exp ? '<h3>Experience</h3>' + exp : '') + (edu ? '<h3>Education</h3>' + edu : '') + (skills.length ? '<h3>Skills</h3><p>' + skills.map(esc).join(' · ') + '</p>' : '')
+        (exp ? '<h3>Experience</h3>' + exp : '') + (proj ? '<h3>Projects</h3>' + proj : '') + (edu ? '<h3>Education</h3>' + edu : '') + (cert ? '<h3>Certifications</h3>' + cert : '') +
+        (skills.length ? '<h3>Skills</h3><p>' + skills.map(esc).join(' · ') + '</p>' : '') + (lang.length ? '<h3>Languages</h3><p>' + lang.join(' · ') + '</p>' : '')
       : '<p class="pane-empty">Start typing on the left. Your resume appears here.</p>';
     applyTpl();
   };
   // a Word file: the same page as simple HTML, which Word opens and saves as .docx
   // The same resume in the open JSON Resume format (jsonresume.org): a file other tools and AI assistants can read
   var jsonFile = function () {
-    var links = String(data.links || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
-    var url = function (x) { return /^https?:\/\//i.test(x) ? x : 'https://' + x; };
-    var out = {
-      $schema: 'https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json',
-      basics: { name: data.name || '', label: data.title || '', email: data.email || '', phone: data.phone || '', summary: data.summary || '',
-        location: { address: data.place || '' }, profiles: links.map(function (x) { return { network: x.replace(/^https?:\/\//i, '').split('/')[0], url: url(x) }; }) },
-      work: data.exp.filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
-        return { name: x.org || '', position: x.role || '', summary: x.dates || '', highlights: String(x.text || '').split('\n').map(function (l) { return l.replace(/^\s*[-*•]\s*/, '').trim(); }).filter(Boolean) };
-      }),
-      education: data.edu.filter(function (x) { return x.what || x.org; }).map(function (x) { return { institution: x.org || '', area: x.what || '', studyType: '', endDate: x.dates || '' }; }),
-      skills: String(data.skills || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) { return { name: x }; })
-    };
+    var out = window.HRNT.toJsonResume(data);
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }));
     a.download = (data.name ? data.name.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'resume') + '.json';
@@ -217,17 +312,51 @@
     document.body.appendChild(a); a.click(); a.remove();
   };
   root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-tpl') { data.tpl = ev.target.value; save(); applyTpl(); } });
+  var htimer;
   root.addEventListener('input', function (ev) {
     var t = ev.target, blk = t.closest('.rblock');
-    if (blk && t.getAttribute('data-f')) data[blk.getAttribute('data-list')][Number(blk.getAttribute('data-i'))][t.getAttribute('data-f')] = t.value;
-    else if (t.getAttribute('data-k')) data[t.getAttribute('data-k')] = t.value;
-    else return;
+    if (blk && t.getAttribute('data-f')) {
+      var lk = blk.getAttribute('data-list'), item = data[lk][Number(blk.getAttribute('data-i'))];
+      if (!item) return;
+      item[t.getAttribute('data-f')] = t.value;
+      var hb = blk.querySelector('.rbh-box');
+      if (t.tagName === 'TEXTAREA' && t.scrollHeight > t.clientHeight + 2) t.style.height = Math.min(t.scrollHeight + 4, 420) + 'px';      // the box grows with the lines
+      if (hb && t.getAttribute('data-f') === 'text') { clearTimeout(htimer); htimer = setTimeout(function () { hb.innerHTML = hintsHtml(t.value); }, 350); }
+    } else if (t.getAttribute('data-k')) {
+      var k = t.getAttribute('data-k'); data[k] = t.value;
+      if (k === 'summary' && $('rb-sumc')) $('rb-sumc').textContent = sumCount();
+      if (k === 'title' && / \(copy\)$/.test(curItem().label || '')) { curItem().label = ''; keepSet(); }        // a copy renamed by its new headline
+      if (k === 'title' || k === 'name') { var o = document.querySelector('#rb-which option[value="' + SET.cur + '"]'); if (o) o.textContent = labelOf(curItem()); }
+    } else return;
     save(); drawPreview();
   });
+  root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-which') openItem(ev.target.value); });
   root.addEventListener('click', function (ev) {
     var t = ev.target, add = t.getAttribute('data-add'), del = t.getAttribute('data-del');
-    if (add) { data[add].push(add === 'exp' ? { role: '', org: '', dates: '', text: '' } : { what: '', org: '', dates: '' }); save(); drawForm(); drawPreview(); }
-    else if (del) { data[del].splice(Number(t.closest('.rblock').getAttribute('data-i')), 1); if (!data[del].length) data[del] = JSON.parse(JSON.stringify(blank[del])); save(); drawForm(); drawPreview(); }
+    if (add && LISTS[add]) {
+      data[add].push(emptyOf(add)); save(); drawForm(); drawPreview();
+      var nb = document.querySelector('#rb-form [data-list="' + add + '"][data-i="' + (data[add].length - 1) + '"] input'); if (nb) nb.focus();
+    }
+    else if (del && LISTS[del]) { data[del].splice(Number(t.closest('.rblock').getAttribute('data-i')), 1); if (!data[del].length && blank[del].length) data[del] = copy(blank[del]); save(); drawForm(); drawPreview(); }
+    else if (t.closest && t.closest('[data-tone]')) {
+      tone = t.closest('[data-tone]').getAttribute('data-tone'); H.set('hrn_rb_tone', tone);
+      Array.prototype.forEach.call(document.querySelectorAll('[data-tone]'), function (b) { var on = b.getAttribute('data-tone') === tone; b.setAttribute('aria-checked', on); b.setAttribute('aria-pressed', on); });
+      if (chk) drawCheck();
+    }
+    else if (t.getAttribute('data-asksum')) {                 // copy the request; the link then opens the assistant in a new tab
+      var done = $('rb-sum-done');
+      if (!data.exp.some(function (x) { return x.role || x.text; })) { ev.preventDefault(); done.textContent = 'Add at least one job first: the assistant writes the summary from your experience.'; done.hidden = false; return; }
+      var ask = window.HRNT.summaryAsk(cutText(asText(), 2400), tone, jd ? cutText(jd, 1600) : '');
+      copyText(ask, function () { done.textContent = 'Copied. Paste it in the assistant’s message box (Ctrl+V or ⌘V).'; done.hidden = false; });
+    }
+    else if (t.id === 'rb-new') { if (addResume({ name: data.name, email: data.email, phone: data.phone, place: data.place, links: data.links, tpl: data.tpl })) { setTab('contact'); redraw(); } }
+    else if (t.id === 'rb-dup') { var src = copy(data), lb = labelOf(curItem()); if (addResume(src, lb + ' (copy)', jd)) redraw(); }
+    else if (t.id === 'rb-ren') { var nm = prompt('Name this resume (only you see the name):', labelOf(curItem())); if (nm != null) { curItem().label = nm.trim().slice(0, 60); keepSet(); drawSet(); } }
+    else if (t.id === 'rb-delr') {
+      if (SET.items.length < 2 || !confirm('Delete “' + labelOf(curItem()) + '” from this browser? The other resumes stay.')) return;
+      SET.items = SET.items.filter(function (x) { return x.id !== SET.cur; });
+      var nx = SET.items[0]; data = fill(nx.data); setJd(nx.jd); delete nx.data; delete nx.jd; SET.cur = nx.id; keepSet(); save(); redraw();
+    }
     else if (t.closest && t.closest('[data-tab]')) setTab(t.closest('[data-tab]').getAttribute('data-tab'));
     else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); applyTpl(); }
     else if (t.getAttribute('data-fs')) { data.fs = Math.max(11, Math.min(16, (data.fs || 14) + Number(t.getAttribute('data-fs')) * 0.5)); save(); applyTpl(); $('rb-fs').textContent = data.fs; }
@@ -238,9 +367,9 @@
     else if (t.id === 'rb-json') jsonFile();
     else if (t.id === 'rb-paste') { var pb = $('rb-pastebox'); pb.hidden = !pb.hidden; if (!pb.hidden) $('rb-pastetext').focus(); }
     else if (t.id === 'rb-pasteread') { var txt = $('rb-pastetext').value; if (txt.trim()) useImport(window.HRNT.parseResume(txt), 'the pasted text'); }
-    else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
+    else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = fill({ tpl: data.tpl }); save(); drawForm(); drawPreview(); } }
     else if (t.id === 'rb-match') {
-      var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');
+      var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; }), data.proj.map(function (x) { return x.name + ' ' + x.text; })).join('\n');
       t.textContent = 'Matching…';
       fetch(H.base + '/data/skills.json').then(function (r) { return r.json(); }).then(function (pats) {
         var prof = H.get('hrn_profile', { skills: [], lvl: '', cat: '', sal: 0, remote: false });
@@ -270,6 +399,12 @@
     }
     var ed = data.edu.filter(function (x) { return x.what || x.org; });
     if (ed.length) { L.push('Education'); ed.forEach(function (x) { L.push([x.what, x.org, x.dates].filter(Boolean).join(', ')); }); }
+    var pj = data.proj.filter(function (x) { return x.name || x.text; });
+    if (pj.length) { L.push('', 'Projects'); pj.forEach(function (x) { L.push([x.name, x.link].filter(Boolean).join(', ')); linesOf(x.text).forEach(function (l) { L.push('- ' + l); }); }); }
+    var ce = data.cert.filter(function (x) { return x.name; });
+    if (ce.length) { L.push('', 'Certifications'); ce.forEach(function (x) { L.push([x.name, x.org, x.date].filter(Boolean).join(', ')); }); }
+    var la = data.lang.filter(function (x) { return x.name; });
+    if (la.length) L.push('', 'Languages: ' + la.map(function (x) { return x.name + (x.level ? ' (' + x.level + ')' : ''); }).join(', '));
     return L.join('\n');
   };
   var drawCheck = function () {
@@ -365,11 +500,10 @@
   var aiAsks = [];
   var aiLine = function (text) {
     if (String(text).replace(/\s+/g, ' ').trim().length < 60) return '';
-    var cut = function (t, n) { t = String(t || ''); return t.length > n ? t.slice(0, n) + '…' : t; };
-    var cv = cut(text, 2400), post = cut(jd, 1600);
+    var cv = cutText(text, 2400), post = cutText(jd, 1600), T = window.HRNT, toneName = (T.TONES.filter(function (x) { return x[0] === tone; })[0] || [0, 'Plain'])[1];
     var asks = [
       ['Rewrite my bullet points', 'Rewrite the bullet points of my resume below. Start each with a strong past-tense verb, keep one result per line, and add a number where my text gives one. Do not invent facts, numbers or employers: where a number is missing, write [number] for me to fill in.\n\nMY RESUME:\n' + cv],
-      ['Write my summary', 'Write a resume summary of 2 or 3 sentences from my resume below: my current role, my strongest skills and one result. Plain words, no buzzwords, nothing that is not in my resume.\n\nMY RESUME:\n' + cv]];
+      ['Write my summary' + (tone !== 'plain' ? ' (' + toneName.toLowerCase() + ')' : ''), T.summaryAsk(cv, tone, '')]];
     if (jd) asks.push(['Tailor it to the target job', 'Compare my resume with the job posting below. List the skills and words of the posting my resume is missing, then rewrite my summary and my bullet points to match the posting, using only experience that is in my resume.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv],
                       ['Write the cover letter', 'Write a short cover letter (under 250 words) for the job posting below, from my resume. Lead with two results from my experience that match the posting. Do not invent anything.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv],
                       ['Practise the interview', 'Interview me for the job posting below, one question at a time, using my resume. After each answer, tell me what was strong and what to add.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv]);
@@ -402,10 +536,8 @@
     root.addEventListener('click', function (ev) {
       var ai = ev.target.getAttribute && ev.target.getAttribute('data-ask');
       if (ai != null && aiAsks[+ai]) {                      // copy first; the link itself then opens the assistant in a new tab
-        var txt = aiAsks[+ai][1], done = $('rb-ai-done');
-        var ok = function () { if (done) done.hidden = false; };
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function () {});
-        else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} ta.remove(); }
+        var done = $('rb-ai-done');
+        copyText(aiAsks[+ai][1], function () { if (done) done.hidden = false; });
         return;
       }
       var add = ev.target.getAttribute && ev.target.getAttribute('data-addskill');
@@ -443,7 +575,7 @@
   }
   function drawDemand() {
     if (!demand || !H.load) return;
-    var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');
+    var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; }), data.proj.map(function (x) { return x.name + ' ' + x.text; })).join('\n');
     if (text.replace(/\s/g, '').length < 20) { demand.innerHTML = ''; return; }
     (pats ? Promise.resolve(pats) : fetch(H.base + '/data/skills.json').then(function (r) { return r.json(); }).then(function (p) { pats = p; return p; })).then(function (p) {
       var mine = []; p.forEach(function (x) { try { if (new RegExp(x[1], 'i').test(text)) mine.push(x[0]); } catch (e) {} });
@@ -471,10 +603,11 @@
   var exq = ''; try { exq = new URLSearchParams(location.search).get('example') || ''; } catch (e) {}
   if (exq) fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (all) {
     var ex = all[exq]; if (!ex) return;
-    var mine = (data.name + data.summary + data.exp.map(function (x) { return x.role + x.text; }).join('')).trim();
-    if (mine && !confirm('Replace the resume in this browser with the example?')) return;
-    Object.keys(ex).forEach(function (k) { data[k] = JSON.parse(JSON.stringify(ex[k])); });
-    save(); applyTpl(); drawForm(); drawPreview(); drawDemand();
+    if (hasContent(data)) {                                 // a resume in progress is never replaced: the example opens as another resume
+      if (!confirm('Open the example as a new resume? The one you have now stays in the list above the form.')) return;
+      if (!addResume(Object.assign({ tpl: data.tpl }, ex), (ex.title || 'Example') + ' (example)')) return;
+    } else { data = fill(Object.assign({ tpl: data.tpl }, copy(ex))); save(); }
+    redraw();
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
   }).catch(function () {});
 })();

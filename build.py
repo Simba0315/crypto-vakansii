@@ -442,7 +442,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -1372,6 +1372,16 @@ def main():
     # Survival of a posting (no job site shows it): the daily chance that an open posting of a given age closes, from the closings
     # we have seen since tracking began, per age band and, where there are enough closings, per field. site.js turns it into
     # "still open in 7 days: about N%" on each job page. It gets more exact every day the data grows.
+    # A whole job board that empties in one day is a move to another hiring system (Shield AI left Lever for Ashby on 13 Nov 2026, 673
+    # postings in one run), not 673 jobs filled: such closings, and those jobs, are left out of every closing figure.
+    SURV = {}
+    co_open_on, co_closed_on = Counter(), Counter()
+    for j in jobs:
+        if not j["active"] and j.get("closed"): co_closed_on[(j["company"], j["closed"])] += 1
+    for (c_, d_), k_ in list(co_closed_on.items()):
+        if k_ >= 20: co_open_on[(c_, d_)] = sum(1 for j in jobs if j["company"] == c_ and j["first_seen"][:10] <= d_ and (j["active"] or (j.get("closed") or "") >= d_))
+    MOVED = {cd for cd, k_ in co_closed_on.items() if k_ >= 20 and k_ >= 0.8 * max(1, co_open_on[cd])}
+    moved_n = sum(co_closed_on[cd] for cd in MOVED)
     try:
         d0_ = min(datetime.date.fromisoformat(j["first_seen"][:10]) for j in jobs if j.get("first_seen"))
         today_ = datetime.date.fromisoformat(TODAY[:10])
@@ -1380,6 +1390,7 @@ def main():
         def hazard(sel):
             ex, ev = [0.0] * len(BANDS), [0] * len(BANDS)
             for j in sel:
+                if not j["active"] and (j["company"], j.get("closed")) in MOVED: continue      # a board move, not a closing
                 try: posted = datetime.date.fromisoformat((j.get("posted") or j["first_seen"])[:10])
                 except (KeyError, ValueError): continue
                 start = max(datetime.date.fromisoformat(j["first_seen"][:10]), d0_)
@@ -1396,6 +1407,9 @@ def main():
             h_, n_ = hazard(js_)
             if n_ >= 30: h_cat[c_] = h_
         write("data/survival.json", json.dumps({"since": d0_.isoformat(), "closed": n_ev, "bands": BANDS[:-1], "all": h_all, "cat": h_cat}, separators=(",", ":")), sitemap=False)
+        h_ent, n_ent_ev = hazard([j for j in jobs if j["level"] in ("Junior", "Intern")])
+        SURV = {"since": d0_, "days": (today_ - d0_).days + 1, "closed": n_ev, "all": h_all, "cat": h_cat, "entry": h_ent if n_ent_ev >= 30 else None,
+                "entry_closed": n_ent_ev, "moved": moved_n, "moved_cos": sorted({c_ for c_, _ in MOVED})}
     except ValueError:
         pass
     new_today_h = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY)
@@ -3761,6 +3775,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     feeds = (f'<div class="stat"><b>{ST["sources"] - len(ST["failed"]):,} of {ST["sources"]:,}</b><span>employer feeds answered</span></div>' if ST else "")
     failed_html = (section("Feeds that did not answer in the last run", "<p>" + ", ".join(e(x) for x in ST["failed"]) + ".</p>"
                            '<p class="note">Their listings are left exactly as they were and are read again in the next run. Nothing is marked closed on a failed read.</p>') if ST.get("failed") else "")
+    failed_html += (section("Job boards that went empty in the last run", "<p>" + ", ".join(e(x) for x in ST["emptied"]) + ".</p>"
+                            '<p class="note">Every posting on these boards disappeared at once. That usually means the employer moved to another hiring system; '
+                            'their postings are marked closed and left out of the figures on how long jobs stay open until the new board is added.</p>') if ST.get("emptied") else "")
     page("status/", f"Data Status — how fresh the job listings are today | {SITE}",
          f"The employers’ career pages are read every hour. What the latest update of {SITE} did: feeds read, roles re-checked, new and closed jobs today.",
          crumbs(("Data status", "")) + "<h1>Data status: how fresh the listings are today</h1>"
@@ -3837,7 +3854,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<p class="plain"><b>In plain words:</b> a summary of the tech job market for each month. A finished month never changes, so it can be quoted.</p>'
          '<p class="lead">One page per month. A month’s page stops changing when the month ends, so a figure you quote from it stays where you found it.</p>'
          '<ul class="tiles">' + "".join(tile(f"reports/{k}/", mlabel(k), REPORTS[k]["open"]) for k in rep_months) + "</ul>"
-         '<p class="note">The number on each tile is the count of open roles in that month’s report.</p>')
+         '<p class="note">The number on each tile is the count of open roles in that month’s report.</p>'
+         + section("Studies from the same data", f'<ul class="feats"><li><a href="{P}/how-long-job-postings-stay-open/"><b><u>How long job postings stay open</u></b></a> '
+                   'Closings seen every hour, open jobs by age, entry-level jobs and where the jobs are on the map.</li></ul>'))
 
     # Safety: how to tell a real job offer from a fake one, and what this site does about it
     def qa_block(qa):
@@ -4027,13 +4046,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          'Fill in the form, watch the page update, download. Everything stays in this browser: no account, nothing is uploaded.</p>'
          f'<p class="note no-print">Which builders charge for the download? <a href="{P}/free-resume-builders/">We read the pricing pages of {len(builders_check.BUILDERS)} of them</a>.</p>'
          '<p class="note no-print">“Save as PDF” opens your browser’s print window: choose “Save as PDF” as the printer.</p>'
-         '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
+         '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF — free</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
          '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
          '<option value="developer">Developer</option><option value="executive">Executive</option></select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
          f'<p class="note no-print">Not sure how to start? <a href="{P}/resume/examples/">Open a resume example for your kind of work</a> and replace it line by line.</p>'
-         '<div class="rgrid app"><div class="rb-left no-print"><div id="rb-tabs" class="rb-tabs" role="navigation" aria-label="Resume sections"></div><div id="rb-form"></div></div>'
+         '<div class="rgrid app"><div class="rb-left no-print"><div id="rb-set" class="rb-set"></div><div id="rb-tabs" class="rb-tabs" role="navigation" aria-label="Resume sections"></div><div id="rb-form"></div></div>'
          '<div class="rb-mid"><div id="rb-preview" aria-live="polite"></div></div>'
          '<aside class="rb-side no-print" aria-label="Score and suggestions"><div id="rb-check" class="rbc" aria-live="polite" hidden></div></aside></div>'
          '<div id="rb-demand" class="no-print" aria-live="polite"></div></div>'
@@ -4780,6 +4799,148 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Questions about the jobs map", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in map_qa) + "</dl>")
          + f'<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script><script src="{P}/map.js?v={V}" defer></script>', head=map_ld)
 
+    # How long job postings stay open: a study from our own hourly checks (the owner's plan, section 101: a report with our own figures,
+    # the kind that brought Rezi links from the press). Every figure is recounted on each build. Measured counts are stated as counts;
+    # the share closed within 7 / 30 / 90 days is an estimate from the daily closing rates seen so far, and the page says what it rests on.
+    if SURV:
+        BND_ = (7, 30, 90, 10 ** 6)
+        def curve(hz, upto=400):
+            """Share of postings still open d days after posting (d = 0..), from the daily closing chance in each age band; stops at the
+            first band without enough data."""
+            out, p_ = [1.0], 1.0
+            for a in range(upto):
+                x = hz[next(i for i, u in enumerate(BND_) if a <= u)] if hz else None
+                if x is None: break
+                p_ *= 1 - x; out.append(p_)
+            return out
+        S_all = curve(SURV["all"])
+        at = lambda S, d: S[d] if S and d < len(S) else None
+        pc = lambda x: f"{round(100 * x)}%"
+        since_s, days_s = fdate(SURV["since"].isoformat()), SURV["days"]
+        # How far the estimate may reach: a few days of records say little about postings that stay up for months (on 14 Nov 2026,
+        # three days of closings projected 2% of postings still open at 180 days, while 33% of the open jobs were already over 90 days old).
+        reach = 30 if days_s < 30 else 90 if days_s < 90 else 180
+        early = days_s < 14
+        c7, c30, c90 = (None if at(S_all, d) is None or d > reach else 1 - at(S_all, d) for d in (7, 30, 90))
+        half_d = next((d for d, v in enumerate(S_all) if v <= 0.5 and d <= reach), None)
+        cl_real = [j for j in archived if (j["company"], j.get("closed")) not in MOVED and j.get("posted") and j.get("closed")]
+        def days_between(a, b):
+            try: return max(0, (datetime.date.fromisoformat(b[:10]) - datetime.date.fromisoformat(a[:10])).days)
+            except ValueError: return None
+        age_cl = sorted(x for x in (days_between(j["posted"], j["closed"]) for j in cl_real) if x is not None)
+        med_cl = age_cl[len(age_cl) // 2] if age_cl else 0
+        ages_o = [age_days(j) for j in active]
+        old90 = sum(1 for a in ages_o if a > 90)
+        AGE_B = [(0, 7, "0–7"), (8, 30, "8–30"), (31, 90, "31–90"), (91, 180, "91–180"), (181, 365, "181–365"), (366, 10 ** 6, "366+")]
+        age_pts = [(lb, k_, f"{lb} days since posting · {k_:,} open jobs") for lo, hi, lb in AGE_B for k_ in [sum(1 for a in ages_o if lo <= a <= hi)]]
+        cl_pts = [(lb, k_, f"{lb} days after posting · {k_:,} closings") for lo, hi, lb in AGE_B for k_ in [sum(1 for a in age_cl if lo <= a <= hi)]]
+        # by field: the estimated share closed within 30 days, where the field had enough closings
+        fld = []
+        for cs, hz in SURV["cat"].items():
+            if cs == OTHER[0]: continue
+            S_ = curve(hz, 30)
+            if at(S_, 30) is not None: fld.append((cs, 1 - S_[30], len(by_cat.get(cs, []))))
+        fld.sort(key=lambda x: -x[1])
+        fld_bars = ('<div class="hbars">' + "".join(
+            f'<a href="{P}/jobs/{cs}/"><span class="hn">{e(CAT[cs])}</span><span class="hb"><i style="width:{max(2, round(100 * v / fld[0][1]))}%"></i></span><span class="hc">{pc(v)}</span></a>'
+            for cs, v, _ in fld) + "</div>") if fld else ""
+        surv_rows = [(d, at(S_all, d)) for d in (7, 14, 21, 30, 60, 90, 180) if at(S_all, d) is not None and d <= reach]
+        surv_bars = ('<div class="hbars">' + "".join(
+            f'<div><span class="hn">After {d} days</span><span class="hb"><i style="width:{max(2, round(100 * v))}%"></i></span><span class="hc">{pc(v)} open</span></div>' for d, v in surv_rows) + "</div>")
+        # entry-level postings
+        ent = [j for j in active if j["entry"]]
+        ent_cat = Counter(j["cat"] for j in ent if j["cat"] != OTHER[0]).most_common(8)
+        ent_exp2 = sum(1 for j in ent if (j.get("years") or 0) >= 2)
+        ent_rem, ent_pay, ent_int = sum(1 for j in ent if j["remote"]), sum(1 for j in ent if j["salary"]), sum(1 for j in ent if j["level"] == "Intern")
+        ent_mid = [(j["usd"][0] + j["usd"][1]) / 2 for j in ent if j["usd"] and j["level"] == "Junior"]
+        ent_cos = Counter(j["company"] for j in ent).most_common(8)
+        S_ent = curve(SURV["entry"], 30) if SURV.get("entry") else None
+        e30 = 1 - S_ent[30] if at(S_ent, 30) is not None else None
+        ent_bars = '<div class="hbars">' + "".join(
+            f'<a href="{P}/jobs/?entry=1&amp;cat={cs}"><span class="hn">{e(CAT[cs])}</span><span class="hb"><i style="width:{max(2, round(100 * k_ / ent_cat[0][1]))}%"></i></span><span class="hc">{k_:,}</span></a>'
+            for cs, k_ in ent_cat) + "</div>" if ent_cat else ""
+        ent_co = '<div class="hbars">' + "".join(
+            f'<a href="{P}/companies/{slugify(c_)}/"><span class="hn">{e(c_)}</span><span class="hb"><i style="width:{max(2, round(100 * k_ / ent_cos[0][1]))}%"></i></span><span class="hc">{k_:,}</span></a>'
+            for c_, k_ in ent_cos) + "</div>" if ent_cos else ""
+        city_top = map_n.most_common(10)
+        city_bars = '<div class="hbars">' + "".join(
+            f'<a href="{P}/{map_url(k)}"><span class="hn">{fl(geo_cities.CITIES[k][1])}{e(geo_cities.CITIES[k][0])}</span><span class="hb"><i style="width:{max(2, round(100 * k_ / city_top[0][1]))}%"></i></span><span class="hc">{k_:,}</span></a>'
+            for k, k_ in city_top) + "</div>" if city_top else ""
+        # a small picture of the map: the 150 cities with the most jobs, placed by longitude and latitude (cropped to where they are),
+        # each dot sized by its open jobs; the city with the most is orange
+        dots_ = map_n.most_common(150)
+        dot_svg = ""
+        if dots_:
+            xs_ = [geo_cities.CITIES[k][3] for k, _ in dots_]; ys_ = [-geo_cities.CITIES[k][2] for k, _ in dots_]
+            x0_, y0_ = min(xs_) - 8, min(ys_) - 8
+            w_, h_ = max(xs_) + 8 - x0_, max(ys_) + 8 - y0_
+            dot_svg = (f'<svg class="st-dots" viewBox="{x0_:.0f} {y0_:.0f} {w_:.0f} {h_:.0f}" role="img" aria-label="Dots for the {len(dots_)} cities with the most open jobs, placed by longitude and latitude">'
+                       + "".join(f'<circle cx="{geo_cities.CITIES[k][3]:.1f}" cy="{-geo_cities.CITIES[k][2]:.1f}" r="{max(0.9, 7 * (k_ / dots_[0][1]) ** 0.5):.1f}"'
+                                 f'{" class=" + chr(34) + "top" + chr(34) if i == 0 else ""}/>' for i, (k, k_) in enumerate(dots_)) + "</svg>")
+        tile_ = lambda label, value, sub: f'<div class="st"><span class="st-l">{label}</span><b class="st-v">{value}</b><span class="st-s">{sub}</span></div>'
+        est_note = (f"{'Early estimate: ' if early else 'Estimate: '}from {SURV['closed']:,} closings seen in {days_s} days of hourly checks (since {since_s}). "
+                    f"It reaches {reach} days for now" + (", and the 90-day figure appears once the record covers 30 days" if reach < 90 else "") + ". It will move as the record grows.")
+        quote_s = (f"Of {len(active):,} open tech job postings checked on {fdate(TODAY)}, {pc(old90 / max(1, len(active)))} had been up for more than 90 days; "
+                   f"the postings that closed since {since_s} had been open a median of {med_cl} days.")
+        lead_s = (f"Of the {len(age_cl):,} postings that employers took down since {since_s}, half had been open {med_cl} days or more. "
+                  + (f"At the closing rates seen in {'the first ' if early else ''}{days_s} days of records, about {pc(c7)} of new postings close within 7 days and {pc(c30)} within 30" + (f", {pc(c90)} within 90" if c90 is not None else "") + ". " if c7 is not None and c30 is not None else "")
+                  + f"{pc(old90 / max(1, len(active)))} of the {len(active):,} jobs open today were posted more than 90 days ago.")
+        st_qa = [
+            ("How long do job postings stay open?", lead_s),
+            ("How many job postings are entry level?", f"{len(ent):,} of {len(active):,} open tech postings ({pc(len(ent) / max(1, len(active)))}) are marked junior or intern in the title or by the employer: "
+             f"{ent_int:,} internships and {len(ent) - ent_int:,} junior roles. {ent_exp2:,} of them ({pc(ent_exp2 / max(1, len(ent)))}) still ask for two years of experience or more."),
+            ("Why are some postings open for months?", f"The page does not say why: a posting stays open as long as the employer keeps it on its careers page. "
+             f"Some roles are hard to fill, some are kept up to collect applications all year. {old90:,} of today’s open jobs were posted more than 90 days ago; each of their pages says so."),
+            ("How are the figures counted?", f"Every hour the careers pages of the employers we follow are read. A posting that is no longer there is counted as closed on that day. "
+             f"When a whole job board empties at once, the employer has usually moved to another hiring system, so those postings" + (f" ({SURV['moved']:,} of them)" if SURV["moved"] else "") + " are left out. "
+             "The estimated shares multiply the daily chance of closing seen for postings of each age (up to 7 days, 8 to 30, 31 to 90, older); "
+             f"while the record is short they reach only {reach} days ahead.")]
+        st_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@graph": [
+            {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in st_qa]},
+            {"@type": "Dataset", "name": "How long job postings stay open", "description": f"Daily closing rates of tech job postings by age, measured from hourly checks of employers’ careers pages since {since_s}.",
+             "url": f"{FULL}/how-long-job-postings-stay-open/", "dateModified": TODAY, "creator": {"@type": "Organization", "name": SITE, "url": FULL + "/"},
+             "isAccessibleForFree": True, "license": "https://creativecommons.org/licenses/by/4.0/",
+             "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/data/survival.json"}]}]},
+            ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page("how-long-job-postings-stay-open/", f"How Long Do Job Postings Stay Open? Our Hourly Data | {SITE}",
+             f"How long tech job postings stay open, from hourly checks of {len({j['company'] for j in active}):,} employers’ careers pages: closings, open jobs by age, entry-level jobs, the map.",
+             crumbs(("Hiring reports", "reports/"), ("How long postings stay open", "")) + '<h1>How long job postings stay open</h1>'
+             f'<p class="lead">{e(lead_s)}</p>'
+             f'<p class="note">Counted from the careers pages of the employers we read every hour; updated {fdate(TODAY)}. Free to quote with a link.</p>'
+             '<div class="stats3 st4">'
+             + tile_("Median age at closing", f"{med_cl} days", f"measured: {len(age_cl):,} closings")
+             + tile_("Open more than 90 days", pc(old90 / max(1, len(active))), f"measured: {old90:,} of {len(active):,} open jobs")
+             + (tile_("Closed within 7 days", pc(c7), ("early " if early else "") + "estimate, new postings") if c7 is not None else "")
+             + (tile_("Closed within 30 days", pc(c30), ("early " if early else "") + "estimate, new postings") if c30 is not None else "")
+             + (tile_("Closed within 90 days", pc(c90), "estimate, new postings") if c90 is not None else "")
+             + "</div>"
+             f'<p class="note">{e(est_note)}' + (f' Half of all postings close within about {half_d} days at these rates.' if half_d else "") + "</p>"
+             + section("How long postings stay open", '<div class="pics two">'
+                       f'<figure class="pic"><figcaption><b>Still open after…</b>The {"early " if early else ""}estimated share of new postings still on the employer’s page that many days after posting, up to {reach} days.</figcaption>{surv_bars}</figure>'
+                       f'<figure class="pic"><figcaption><b>Age at closing</b>The {len(age_cl):,} postings that closed since {since_s}, by how many days they had been up. The median is {med_cl} days.</figcaption>'
+                       + vcols(cl_pts, aria="Closed postings by days since posting") + "</figure></div>")
+             + section("How old today’s open jobs are", '<div class="pics two">'
+                       f'<figure class="pic"><figcaption><b>Open jobs by age</b>All {len(active):,} open postings, by days since the employer posted them.</figcaption>'
+                       + vcols(age_pts, hi=next((i for i, (lo, hi, _) in enumerate(AGE_B) if lo > 90), None), aria="Open jobs by days since posting") + "</figure>"
+                       + (f'<figure class="pic"><figcaption><b>Closed within 30 days, by field</b>Estimated share of new postings closed within 30 days, in fields with at least 30 closings.</figcaption>{fld_bars}</figure>' if fld_bars else "")
+                       + "</div>", ("insights/long-open-roles/", "Employers with long-open roles"))
+             + section("Entry-level jobs", f'<p>{len(ent):,} of the {len(active):,} open postings ({pc(len(ent) / max(1, len(active)))}) are for beginners: {ent_int:,} internships and {len(ent) - ent_int:,} junior roles. '
+                       f'{ent_rem:,} can be done from home and {ent_pay:,} state the pay' + (f'; junior roles that state a yearly range in US dollars pay {money(median(ent_mid))} at the median' if len(ent_mid) >= 30 else "") + '. '
+                       f'{ent_exp2:,} of them ({pc(ent_exp2 / max(1, len(ent)))}) ask for two years of experience or more.'
+                       + (f' At the closing rates seen so far, about {pc(e30)} of new entry-level postings close within 30 days, against {pc(c30)} for all postings.' if e30 is not None and c30 is not None else "") + "</p>"
+                       + '<div class="pics two">'
+                       + (f'<figure class="pic"><figcaption><b>Where the entry-level jobs are</b>Open junior and intern postings by field.</figcaption>{ent_bars}</figure>' if ent_bars else "")
+                       + (f'<figure class="pic"><figcaption><b>Who hires the most beginners</b>Employers with the most open junior and intern postings.</figcaption>{ent_co}</figure>' if ent_co else "")
+                       + "</div>", ("entry-level/", "All entry-level jobs"))
+             + section("Where the jobs are", f'<p>{map_total:,} of the open jobs name a city; they are spread over {len(map_keys):,} cities. The ten with the most:</p>'
+                       f'<div class="pics two"><figure class="pic"><figcaption><b>Cities with the most open jobs</b>Open postings that name the city.</figcaption>{city_bars}</figure>'
+                       f'<a class="pic st-map" href="{P}/map/">{dot_svg}<b>See every city on the map</b><span>A dot per city, sized by its open jobs. Type a job or a skill and the dots are counted again.</span><u>Open the jobs map</u></a></div>',
+                       ("map/", "Jobs map"))
+             + section("How these figures are counted", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in st_qa) + "</dl>"
+                       + f'<p class="note">The data behind the estimate: <a href="{P}/data/survival.json">survival.json</a> (daily closing chance by age band, overall and by field). '
+                       f'How the jobs are collected: <a href="{P}/methodology/">methodology</a>. Today’s run: <a href="{P}/status/">data status</a>.</p>')
+             + cite("how-long-job-postings-stay-open/", "How long job postings stay open", quote_s), head=st_ld)
+
     # Resignation letters, one page per situation. In the Rezi study these pages bring that site about a fifth of its search visits.
     RL = resignation_pages.LETTERS
     rl_year = TODAY[:4]
@@ -5003,6 +5164,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Insights and rankings]({FULL}/insights/)
 - [Free JSON API]({FULL}/api/): {FULL}/api/v1/index.json
 - [Monthly hiring reports]({FULL}/reports/): one dated page per month that stops changing when the month ends
+- [How long job postings stay open]({FULL}/how-long-job-postings-stay-open/): closings measured every hour, open jobs by age, entry-level jobs, the jobs map
 - [Data status]({FULL}/status/): what the latest update did and how old the open listings are
 - [Pay transparency ranking]({FULL}/insights/pay-transparency/) and [long-open roles]({FULL}/insights/long-open-roles/)
 - [Methodology]({FULL}/methodology/): how listings are collected and how figures are calculated

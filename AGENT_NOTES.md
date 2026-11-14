@@ -392,3 +392,16 @@ plain HTML, so the page is readable without the map.
   of 140 roles x 7,000 descriptions x 20 patterns added 10 minutes to the build.
 - `/interview-questions/` and `/how-to-hire/` exist for every role with a resume example and 20 open postings, the same set
   as the job description templates. Role pages link all of them in the "Prepare" row only under that condition.
+
+## Resume builder data, closing statistics, the lifespan study (14 Nov 2026, evening)
+
+- Several resumes: the open one stays in `hrn_resume` (other pages read it); the others wait in `hrn_resume_set`
+  (`{cur, items: [{id, label, data, jd}]}`; the current item carries no `data`). An example or an import never replaces a resume in
+  progress: it opens as a new item. New sections `proj`, `cert`, `lang` are lists; `fill()` in `assets/resume.js` repairs old or
+  damaged values. JSON Resume in and out is `HRNT.toJsonResume` / `HRNT.fromJsonResume` (tested in `tools_test.js`).
+- A whole job board that empties in one run is a move to another hiring system, not filled jobs (Shield AI, Lever → Ashby, 13 Nov:
+  673 postings). `build.py` (`MOVED`) leaves such closings out of `survival.json` and every closing figure; `collect.py` lists them
+  as `emptied` in `data/stats.json` and `/status/` shows them. When one appears, find the company's new board and update the source.
+- `/how-long-job-postings-stay-open/` states measured counts first; the estimate's reach grows with the record (`reach`: 30 days
+  while the record is under 30 days, 90 under 90, then 180) and says "early" for the first two weeks. Do not show longer horizons
+  sooner: on 14 Nov three days of closings projected 2% of postings alive at 180 days while 33% of open jobs were over 90 days old.
