@@ -1724,3 +1724,8 @@ a.pic.st-map:hover u{text-decoration-color:var(--text)}
 .fitline .fit-have{color:var(--text)}
 .fitline .fit-grow{color:var(--muted)}
 .fitline a{font-weight:600;white-space:nowrap;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+/* trust marks on company pages: the rule and the number are on the mark itself */
+.tbadges{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:14px 0 4px}
+.tb{display:inline-flex;align-items:baseline;gap:6px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:13px;color:var(--muted)}
+.tb b{color:var(--text);font-weight:650}
+.tbadges a{font-size:13px;color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}

@@ -247,6 +247,20 @@ def usd_range(s):
     return (lo, hi) if 30000 <= lo <= hi <= 1500000 else None
 
 
+def usd_hourly(s):
+    """US-dollar hourly (low, high) from a salary string that states an hourly rate ("$39 - $49 an hour", "$37/hr"), or None."""
+    if not s or SAL_BAD.search(s) or ("$" not in s and "USD" not in s.upper()) or not re.search(r"\bhour\b|/\s?hr\b|per hr|hourly", s, re.I):
+        return None
+    vals = []
+    for num, k in SAL_NUM.findall(s):
+        if k: return None                                  # "$50k" is not an hourly rate
+        try: vals.append(float(num.replace(",", "").replace(" ", "")))
+        except ValueError: continue
+    if not vals: return None
+    lo, hi = vals[0], vals[1] if len(vals) > 1 else vals[0]
+    return (lo, hi) if 7 <= lo <= hi <= 500 else None
+
+
 def money(v):
     return f"${v / 1000:,.0f}K"
 
@@ -440,7 +454,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
-<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
@@ -1903,6 +1917,20 @@ def main():
     if top_new:
         co_lead += (f" {sum(1 for n in fresh_n.values() if n):,} of them posted new roles in the last 7 days, led by {names(top_new)}."
                     ' The <span class="up">+N</span> mark in the list is that weekly number.')
+    day90 = (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat()
+    def mk_counts():
+        a_ = p_ = f_ = 0
+        for c, js in comp_items:
+            act_ = [j for j in js if j["active"]]
+            if fresh_n[c] >= 3: a_ += 1
+            if len(act_) >= 5:
+                if sum(bool(j["salary"]) for j in act_) >= len(act_) / 2: p_ += 1
+                if sum(1 for j in act_ if (j["posted"] or j["first_seen"])[:10] <= day90) < len(act_) / 4: f_ += 1
+        return a_, p_, f_
+    mk_a, mk_p, mk_f = mk_counts()
+    mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days.", mk_a),
+               ("States the pay", "At least half of its open roles state the pay (employers with 5 open roles or more).", mk_p),
+               ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f)]
     page("companies/", f"Tech Companies Hiring Now — {len(companies)} employers | {SITE}",
          "Tech companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
          crumbs(("Companies", "")) + f'<h1>Tech companies hiring now</h1><p class="lead">{co_lead}</p>'
@@ -1912,7 +1940,9 @@ def main():
          '<button class="tab" type="button" data-s="w" aria-pressed="false">Most new this week</button>'
          '<button class="tab" type="button" data-s="n" aria-pressed="false">A–Z</button></div>'
          + (section("Featured employers", spot_tiles(spot_cos)) if spot_cos else "") +
-         f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>')
+         f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>'
+         + section("What the marks on company pages mean", '<dl class="qa">' + "".join(f"<div><dt>✓ {e(nm)}</dt><dd>{e(rule)} Today: {k_:,} employers.</dd></div>" for nm, rule, k_ in mk_rows) + "</dl>"
+                   '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"))
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
     PLACE_LIVE = {slug for _, slug, _ in places}
@@ -1936,6 +1966,16 @@ def main():
         op_, cl_, mood = PULSE.get(c, (0, 0, "Steady"))
         facts.append((f"This week · {mood.lower()}", f"+{op_} / −{cl_}"))
         chips = [f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in facts]
+        # Trust marks (Upwork shows them on clients): each says the rule and the number behind it, counted from the open postings
+        tb_ = []
+        if fresh_n.get(c, 0) >= 3: tb_.append(("Actively hiring", f"{fresh_n[c]:,} roles posted in the last 7 days"))
+        if len(act) >= 5:
+            pay_s = sum(bool(j["salary"]) for j in act)
+            old5 = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
+            if pay_s >= len(act) / 2: tb_.append(("States the pay", f"{round(100 * pay_s / len(act))}% of its open roles state it"))
+            if old5 < len(act) / 4: tb_.append(("Few old postings", f"{round(100 * old5 / len(act))}% open {LONG_OPEN} days or more"))
+        tbadges = ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in tb_)
+                   + f'<a href="{P}/companies/#marks">What the marks mean</a></p>') if tb_ else ""
         cats_txt = [e(name) for name, _ in top_cats if name != OTHER[1]]
         lead = ((f"{e(c)} has {roles(len(act), 'open role')} right now" + (f", {rem_c:,} of them remote" if rem_c else "") + "."
                  + (f" Most are in {', '.join(cats_txt[:-1]) + ' and ' + cats_txt[-1] if len(cats_txt) > 1 else cats_txt[0]}." if cats_txt else "")
@@ -1981,7 +2021,7 @@ def main():
                      + f'<div class="jhead">{ava(c, "lg")}<div><h1>Jobs at {e(c)}</h1><span class="js">{lead}</span>'
                      + f'<p style="margin:12px 0 0"><button class="btn ghost sm" id="follow" type="button" data-slug="{slug}" data-name="{e(c)}" style="margin-top:0">Follow {e(c)}</button> '
                        f'<span class="note">Get a “new roles” count for this company in My jobs.</span></p></div></div>'
-                     + (f'<dl class="facts">{"".join(chips)}</dl>' if act else "")
+                     + tbadges + (f'<dl class="facts">{"".join(chips)}</dl>' if act else "")
                      + '<nav class="anch" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
                      + ('<a href="#pay">Pay</a>' if pay_rows else "") + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
                      + (f'<a href="#closed">Closed <b>{len(arc):,}</b></a>' if arc else "") + '</nav><div id="jobs"></div>')
@@ -4941,6 +4981,72 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        f'How the jobs are collected: <a href="{P}/methodology/">methodology</a>. Today’s run: <a href="{P}/status/">data status</a>.</p>')
              + cite("how-long-job-postings-stay-open/", "How long job postings stay open", quote_s), head=st_ld)
 
+    # Jobs by hourly pay (Upwork has a page per hourly rate; the searches in keywords.json are "jobs that pay 25 an hour" and "salary for
+    # 20 dollars an hour"). A job is listed by the lowest pay its posting states: an hourly rate as written, a yearly salary divided by
+    # 2,080 hours (40 a week, 52 weeks). US dollars only, as each employer states it.
+    dollars = lambda v: f"${v:,.0f}"                # exact dollars: $4,333 a month, not $4K
+    HR_BANDS = [(20, 25), (25, 30), (30, 40), (40, 50), (50, 75), (75, 100), (100, None)]
+    hr_of = {}
+    for j in active:
+        h_ = usd_hourly(j["salary"])
+        if h_: hr_of[j["id"]] = (h_[0], "h")
+        elif j["usd"]: hr_of[j["id"]] = (j["usd"][0] / 2080, "y")
+    def hr_band(lo_, hi_):
+        return [j for j in active if j["id"] in hr_of and lo_ <= hr_of[j["id"]][0] < (hi_ or 10 ** 6)]
+    hr_jobs = {lo_: hr_band(lo_, hi_) for lo_, hi_ in HR_BANDS}
+    hr_label = lambda lo_, hi_: f"${lo_} to ${hi_} an hour" if hi_ else f"${lo_} an hour or more"
+    hr_chips = lambda cur: '<p class="rel"><span>Other pay:</span>' + "".join(
+        f'<a href="{P}/jobs-that-pay/{lo_}-an-hour/"{" aria-current=" + chr(34) + "page" + chr(34) if lo_ == cur else ""}>{e(hr_label(lo_, hi_))}</a>' for lo_, hi_ in HR_BANDS if len(hr_jobs[lo_]) >= 20) + "</p>"
+    hr_total = sum(len(v) for v in hr_jobs.values())
+    for lo_, hi_ in HR_BANDS:
+        js_ = hr_jobs[lo_]
+        if len(js_) < 20: continue
+        n_h = sum(1 for j in js_ if hr_of[j["id"]][1] == "h")
+        cats_ = Counter(CAT[j["cat"]] for j in js_ if j["cat"] != OTHER[0]).most_common(3)
+        yr_lo, yr_hi = lo_ * 2080, (hi_ * 2080 if hi_ else None)
+        span_ = f"between {dollars(yr_lo)} and {dollars(yr_hi)} a year" if hi_ else f"{dollars(yr_lo)} a year or more"
+        lead_ = (f"${lo_} an hour is {dollars(yr_lo)} a year for full-time work (40 hours a week, 52 weeks), {dollars(yr_lo / 12)} a month. "
+                 f"{len(js_):,} open jobs start their stated pay at {e(hr_label(lo_, hi_))}, or {span_}: {n_h:,} state an hourly rate, {len(js_) - n_h:,} a yearly salary.")
+        qa_ = [(f"How much is ${lo_} an hour a year?", f"At 40 hours a week for 52 weeks, ${lo_} an hour is {dollars(yr_lo)} a year, {dollars(yr_lo / 12)} a month or {dollars(lo_ * 40)} a week. "
+                f"For other hours, use the pay converter on this site."),
+               (f"Which jobs pay ${lo_} an hour?", f"Of the {len(js_):,} open jobs listed here, the most are in " + ", ".join(f"{c_.lower()} ({k_:,})" for c_, k_ in cats_) + ". "
+                f"{n_h:,} of them state an hourly rate; the others state a yearly salary that works out to this hourly pay."),
+               ("Why is a job listed under this pay?", f"Each job is placed by the lowest pay its posting states, so every job here pays at least ${lo_} an hour"
+                + (f" and starts below ${hi_}" if hi_ else "") + "; many ranges go higher. Only pay stated in US dollars is counted.")]
+        qa_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        conv = ('<div class="stats3 st4">'
+                + f'<div class="st"><span class="st-l">An hour</span><b class="st-v">${lo_}</b><span class="st-s">{"up to $" + str(hi_) if hi_ else "or more"}</span></div>'
+                + f'<div class="st"><span class="st-l">A week</span><b class="st-v">{dollars(lo_ * 40)}</b><span class="st-s">40 hours</span></div>'
+                + f'<div class="st"><span class="st-l">A month</span><b class="st-v">{dollars(yr_lo / 12)}</b><span class="st-s">a twelfth of the year</span></div>'
+                + f'<div class="st"><span class="st-l">A year</span><b class="st-v">{dollars(yr_lo)}</b><span class="st-s">2,080 hours</span></div></div>')
+        listing(f"jobs-that-pay/{lo_}-an-hour/", f"Jobs that pay {hr_label(lo_, hi_)}", f"Jobs That Pay ${lo_} an Hour ({len(js_):,} open) | {SITE}",
+                f"{len(js_):,} open jobs whose stated pay starts at {hr_label(lo_, hi_)} ({span_}), from employers’ own careers pages. What ${lo_} an hour is a week, a month, a year.",
+                js_, intro=lead_, trail=(("Jobs by hourly pay", "jobs-that-pay/"),), more=False,
+                extra=conv + hr_chips(lo_) + f'<p class="note">Work out any other rate with the <a href="{P}/tools/salary-converter/">pay converter</a>, or see <a href="{P}/salaries/">what each job pays</a>.</p>',
+                list_title=f"Open jobs from {hr_label(lo_, hi_)}",
+                after=section(f"Questions about ${lo_} an hour", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>") + qa_ld)
+    hr_rows = [(lo_, hi_, len(hr_jobs[lo_])) for lo_, hi_ in HR_BANDS if len(hr_jobs[lo_]) >= 20]
+    if hr_rows:
+        top_n = max(k_ for _, _, k_ in hr_rows)
+        hr_bars = '<div class="hbars">' + "".join(
+            f'<a href="{P}/jobs-that-pay/{lo_}-an-hour/"><span class="hn">{e(hr_label(lo_, hi_))}</span><span class="hb"><i style="width:{max(2, round(100 * k_ / top_n))}%"></i></span><span class="hc">{k_:,}</span></a>'
+            for lo_, hi_, k_ in hr_rows) + "</div>"
+        conv_rows = "".join(f"<tr><td>${h_}</td><td>{dollars(h_ * 40)}</td><td>{dollars(h_ * 2080 / 12)}</td><td>{dollars(h_ * 2080)}</td></tr>" for h_ in (15, 18, 20, 22, 25, 30, 35, 40, 50, 75, 100))
+        hub_qa = [("How is an hourly rate turned into a yearly salary?", "Multiply it by 2,080: 40 hours a week for 52 weeks. $25 an hour is $52,000 a year; a yearly salary divided by 2,080 gives the hourly rate."),
+                  ("Which jobs are listed under each rate?", f"Every open job that states its pay in US dollars: {hr_total:,} today. A job is placed by the lowest pay its posting states, as an hourly rate or as a yearly salary divided by 2,080.")]
+        hub_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hub_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page("jobs-that-pay/", f"Jobs by Hourly Pay: $20, $25, $30 an Hour and More | {SITE}",
+             f"Open jobs by the hourly pay they state, from $20 to $100 an hour or more ({hr_total:,} today), with what each rate is a week, a month and a year.",
+             crumbs(("Jobs by hourly pay", "")) + "<h1>Jobs by hourly pay</h1>"
+             f'<p class="lead">{hr_total:,} open jobs state their pay in US dollars. Here they are by the hourly rate they start at: an hourly rate as the employer wrote it, '
+             'or a yearly salary divided by 2,080 hours (40 a week, 52 weeks). Pick a rate to see the jobs.</p>'
+             + f'<figure class="pic" style="max-width:760px"><figcaption><b>Open jobs by starting hourly pay</b>Each job counted once, by the lowest pay its posting states.</figcaption>{hr_bars}</figure>'
+             + section("Hourly pay in a week, a month and a year", '<div class="tablewrap"><table><thead><tr><th>An hour</th><th>A week (40 h)</th><th>A month</th><th>A year (2,080 h)</th></tr></thead><tbody>'
+                       + conv_rows + f'</tbody></table></div><p class="note">Any other rate or number of hours: the <a href="{P}/tools/salary-converter/">pay converter</a>.</p>')
+             + section("Questions about hourly pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hub_qa) + "</dl>"), head=hub_ld)
+
     # Resignation letters, one page per situation. In the Rezi study these pages bring that site about a fifth of its search visits.
     RL = resignation_pages.LETTERS
     rl_year = TODAY[:4]
@@ -5164,6 +5270,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Insights and rankings]({FULL}/insights/)
 - [Free JSON API]({FULL}/api/): {FULL}/api/v1/index.json
 - [Monthly hiring reports]({FULL}/reports/): one dated page per month that stops changing when the month ends
+- [Jobs by hourly pay]({FULL}/jobs-that-pay/): open jobs by the hourly rate they start at, $20 to $100 an hour or more, with each rate a week, a month and a year
 - [How long job postings stay open]({FULL}/how-long-job-postings-stay-open/): closings measured every hour, open jobs by age, entry-level jobs, the jobs map
 - [Data status]({FULL}/status/): what the latest update did and how old the open listings are
 - [Pay transparency ranking]({FULL}/insights/pay-transparency/) and [long-open roles]({FULL}/insights/long-open-roles/)
