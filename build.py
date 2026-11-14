@@ -1322,7 +1322,7 @@ def main():
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read every hour</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
             f'<div class="wrap"><div class="shot"><div class="shot-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'
-            f'<div class="shot-tabs" id="shot-tabs">{shot_nav}<a href="{P}/board/">Live wall</a></div></div>'
+            f'<div class="shot-tabs" id="shot-tabs">{shot_nav}</div></div>'
             f'<div class="shot-body"><div id="shot-panels">{shot_panels}<p class="shot-more"><a class="btn" id="shot-more" href="{P}/jobs/">See all {n:,} jobs</a></p></div>'
             f'<aside class="shot-side">'
             f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
@@ -4043,10 +4043,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
 el.setAttribute('data-hrn-jobs',p.get('jobs')||'latest');['limit','layout','theme','accent','title','search','company'].forEach(function(k){{if(p.get(k))el.setAttribute('data-'+k,p.get(k));}});
 el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js?v={V}"></script></body></html>""", sitemap=False)
 
-    # The board: a full-screen, auto-rotating wall of the freshest roles (for a second monitor, an office screen, a classroom)
+    # The board: a full-screen, auto-rotating wall of the freshest roles (for a second monitor, an office screen, a classroom). The owner
+    # found it on 14 Nov with no idea what it was for: it now says so on top, has back / pause / next and a page count, is a plain
+    # scrolling list on phones, is no longer linked from the home page (only from /widgets/) and is kept out of search results.
     write("board/", f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Board — live tech jobs wall | {e(SITE)}</title><meta name="description" content="A full-screen live board of the freshest tech jobs, rotating automatically. Put it on a second monitor, an office screen or a classroom wall.">
-<link rel="canonical" href="{FULL}/board/"><link rel="icon" type="image/svg+xml" href="{P}/favicon.svg">
+<meta name="robots" content="noindex"><link rel="canonical" href="{FULL}/board/"><link rel="icon" type="image/svg+xml" href="{P}/favicon.svg">
 <style>@font-face{{font-family:"Inter";font-weight:400 700;font-display:swap;src:url({P}/fonts/inter-latin.woff2) format("woff2")}}
 @font-face{{font-family:"JetBrains Mono";font-weight:500 700;font-display:swap;src:url({P}/fonts/jbmono-latin.woff2) format("woff2")}}
 html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;overflow:hidden}}
@@ -4058,22 +4060,33 @@ html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"Je
 .t{{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.1vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3f2ec;text-decoration:none}}
 .c,.l{{font-size:clamp(11px,1.4vw,20px);color:#a5a399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.c{{color:#e9e7de}}
 .foot{{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:1.6vh 3vw;font-size:clamp(10px,1.1vw,15px);color:#77756c;letter-spacing:.06em;text-transform:uppercase;background:#0b0b0a}}
-.foot a{{color:#7ee39a;text-decoration:none}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#7ee39a}}@media(max-width:700px){{.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}}}</style></head><body>
-<div class="top"><a href="{P}/"><span class="dot"></span>{e(SITE)}</a><h1 id="what" style="all:unset">Fresh on the board</h1><b id="clock"></b></div><div id="rows"></div>
+.foot a{{color:#7ee39a;text-decoration:none}}
+.bar{{display:flex;justify-content:space-between;align-items:center;gap:2vw;padding:1.2vh 3vw;font-family:Inter,system-ui,sans-serif;font-size:clamp(12px,1.1vw,16px);color:#a5a399;border-bottom:1px solid #1f1f1c}}
+.ctl{{display:flex;align-items:center;gap:.6em;white-space:nowrap}}.ctl button{{font:inherit;color:#f3f2ec;background:#1a1a17;border:1px solid #2b2b27;border-radius:8px;padding:.35em .8em;cursor:pointer}}
+.ctl button:hover{{border-color:#7ee39a}}#pg{{font-family:"JetBrains Mono",ui-monospace,monospace;color:#7ee39a;min-width:9ch;text-align:right}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#7ee39a}}@media(max-width:700px){{html,body{{height:auto;overflow:auto}}.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}.ctl{{display:none}}.foot{{position:static}}.bar{{display:block}}}}</style></head><body>
+<div class="top"><a href="{P}/"><span class="dot"></span>{e(SITE)}</a><h1 id="what" style="all:unset">Fresh on the board</h1><b id="clock"></b></div>
+<div class="bar"><span>A live wall for an office screen, a TV or a second monitor: a new page of jobs every 9 seconds. Press F11 for full screen. <a href="{P}/widgets/" style="color:#7ee39a">Pick a skill, city or company</a> · <a href="{P}/jobs/" style="color:#7ee39a">Search all jobs</a></span>
+<span class="ctl"><button id="prev" type="button" aria-label="Previous page">‹</button><button id="pause" type="button">Pause</button><button id="next" type="button" aria-label="Next page">›</button><span id="pg"></span></span></div><div id="rows"></div>
 <div class="foot"><span id="count"></span><a href="{P}/widgets/">Put this board on your screen</a></div>
 <script>(function(){{var q=new URLSearchParams(location.search),path=q.get('skill')?'skills/'+q.get('skill'):q.get('company')?'companies/'+q.get('company'):q.get('location')?'locations/'+q.get('location'):q.has('remote')?'remote':'latest';
-var rows=document.getElementById('rows'),jobs=[],page=0,per=Math.max(4,Math.floor((innerHeight*0.78)/Math.max(46,innerHeight*0.075)));
+var rows=document.getElementById('rows'),jobs=[],page=0,phone=innerWidth<=700,per=phone?1e9:Math.max(4,Math.floor((innerHeight*0.7)/Math.max(46,innerHeight*0.075))),run=null;
 function esc(v){{return String(v==null?'':v).replace(/[&<>"]/g,function(c){{return{{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c]}})}}
 function age(iso){{var p=String(iso||'').split('-');if(p.length<3)return'';var n=new Date(),d=new Date(+p[0],+p[1]-1,+p[2]),k=Math.max(0,Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-d)/864e5));return k===0?'TODAY':k<14?k+'D':Math.floor(k/7)+'W'}}
-function draw(){{if(!jobs.length)return;var s=jobs.slice(page*per,page*per+per);if(!s.length){{page=0;s=jobs.slice(0,per)}}
-rows.innerHTML=s.map(function(j,i){{return'<div class="r" style="animation-delay:'+i*70+'ms"><span class="a">'+age(j.posted)+'</span><a class="t" href="'+esc(j.url)+'">'+esc(j.title)+'</a><span class="c">'+esc(j.company)+'</span><span class="l">'+esc(j.salary||j.location||(j.remote?'Remote':''))+'</span></div>'}}).join('');page++}}
+function pages(){{return Math.max(1,Math.ceil(jobs.length/per))}}
+function go(d){{page=(page+d+pages())%pages();draw()}}
+function play(on){{clearInterval(run);run=on&&!phone?setInterval(function(){{go(1)}},9000):null;document.getElementById('pause').textContent=run?'Pause':'Play'}}
+document.getElementById('prev').onclick=function(){{go(-1);play(!!run)}};document.getElementById('next').onclick=function(){{go(1);play(!!run)}};
+document.getElementById('pause').onclick=function(){{play(!run)}};
+addEventListener('keydown',function(e){{if(e.key==='ArrowRight')document.getElementById('next').click();else if(e.key==='ArrowLeft')document.getElementById('prev').click();else if(e.key===' '){{e.preventDefault();play(!run)}}}});
+function draw(){{if(!jobs.length)return;var s=jobs.slice(page*per,page*per+per);if(!s.length){{page=0;s=jobs.slice(0,per)}}document.getElementById('pg').textContent=(page+1)+' / '+pages();
+rows.innerHTML=s.map(function(j,i){{return'<div class="r" style="animation-delay:'+i*70+'ms"><span class="a">'+age(j.posted)+'</span><a class="t" href="'+esc(j.url)+'">'+esc(j.title)+'</a><span class="c">'+esc(j.company)+'</span><span class="l">'+esc(j.salary||j.location||(j.remote?'Remote':''))+'</span></div>'}}).join('')}}
 function tick(){{document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{{hour:'2-digit',minute:'2-digit'}})}}
 var asked=q.get('skill')||q.get('company')||q.get('location')||'',timer;
 function note(html){{rows.innerHTML='<p class="n">'+html+'</p>'}}
-function show(d,miss){{jobs=d.jobs;page=0;document.getElementById('what').textContent=miss?'Latest roles':d.name;document.getElementById('count').innerHTML=(miss?'<span class="m">No board for “'+esc(asked.slice(0,40))+'” · showing the latest</span> · ':'')+Number(d.total).toLocaleString('en-US')+' open roles · updated every hour';draw();clearInterval(timer);timer=setInterval(draw,9000)}}
+function show(d,miss){{jobs=d.jobs;page=0;document.getElementById('what').textContent=miss?'Latest roles':d.name;document.getElementById('count').innerHTML=(miss?'<span class="m">No board for “'+esc(asked.slice(0,40))+'” · showing the latest</span> · ':'')+Number(d.total).toLocaleString('en-US')+' open roles · updated every hour';draw();play(true)}}
 function load(p,miss){{return fetch('{P}/api/v1/'+p+'.json').then(function(r){{if(!r.ok)throw 0;return r.json()}}).then(function(d){{if(!d.jobs||!d.jobs.length)throw 0;show(d,miss)}})}}
 load(path.toLowerCase().replace(/[^a-z0-9/_.+-]/gi,'-'),false).catch(function(){{if(path==='latest')throw 0;return load('latest',true)}}).catch(function(){{note('The board could not load right now. <a href="{P}/jobs/">Open the job list</a>')}});
-tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},3600000)}})();</script></body></html>""")
+tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},3600000)}})();</script></body></html>""", sitemap=False)
 
     # Widgets, badges, API: ways for other sites to show our jobs and link back
     wb_data = {"site": SITE, "skills": [[tslug(t), t] for t, _ in skill_counts.most_common()], "categories": [[cs, CAT[cs]] for cs in CAT if by_cat[cs]],
