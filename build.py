@@ -798,6 +798,65 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False)
 
 
+def intern_hub(path, h1, yr, ej):
+    """The internships page: the plain meaning of the word, when the openings start, what they pay, who hires interns and where, then the list."""
+    k = len(ej)
+    top5 = Counter(j["company"] for j in ej).most_common(5)
+    n_co = len({j["company"] for j in ej})
+    r_ = sum(j["remote"] for j in ej)
+    blob = lambda j: j["title"] + " " + (j["excerpt"] or "")
+    seasons = [("Summer", r"\bsummer\b", "Roughly May or June to August or September: the usual internship for students, with applications opening the autumn before."),
+               ("Fall", r"\b(?:fall|autumn)\b", "A term from about September to December, often next to classes or in a gap term."),
+               ("Winter or spring", r"\b(?:winter|spring)\b", "January to May or June; some are co-ops, which last a whole term of full-time work."),
+               ("Co-op", r"\bco-?op\b", "A longer placement, usually four to eight months of full-time work, common in the US and Canada.")]
+    cnt = [(nm, sum(1 for j in ej if re.search(rx, blob(j), re.I)), what) for nm, rx, what in seasons]
+    cnt = [(nm, c, w) for nm, c, w in cnt if c >= 5]
+    named = sum(1 for j in ej if re.search(r"\bsummer\b|\bfall\b|\bautumn\b|\bwinter\b|\bspring\b|\bco-?op\b", blob(j), re.I))
+    paid = sum(1 for j in ej if j.get("usd"))
+    new7 = sum(1 for j in ej if (j["posted"] or "") >= HUB["week"])
+    plain = (f"<strong>An internship</strong> is a short job, mostly a few months, where a student or a recent graduate works on real tasks at a company to learn the trade. "
+             f"{k:,} are open today, {new7:,} of them posted in the last 7 days. " + intro_for(ej, "internship ", "", hub=True))
+    seas = ""
+    if cnt:
+        seas = section("When the internships start", '<div class="tablewrap"><table><tr><th>Season named in the posting</th><th>Open roles</th><th>What it usually means</th></tr>'
+                       + "".join(f"<tr><td><strong>{e(nm)}</strong></td><td>{c:,}</td><td>{e(w)}</td></tr>" for nm, c, w in cnt)
+                       + f'</table></div><p class="note">Counted from the words in the job title and text. {named:,} of the {k:,} internships name a season; the others name none. One posting can name two seasons.</p>')
+    pay_note = ""
+    if paid:
+        pay_note = (f'<p class="note">{paid:,} of the {k:,} internships ({round(100 * paid / k)}%) state pay in the posting; the others do not say. '
+                    f'Whether an internship pays is worth asking in the first call.</p>')
+    glance, tail = hub_sections("internships", ej, skip="roles")
+    qa = [("How many internships are open right now?", f"{k:,} at {n_co:,} companies as of {fdate(TODAY)}; {new7:,} were posted in the last seven days. The list is rebuilt every hour from the employers' own careers pages."),
+          ("Which companies have the most internships?", "Right now: " + ", ".join(f"{c} ({n_:,})" for c, n_ in top5[:-1]) + f" and {top5[-1][0]} ({top5[-1][1]:,})."),
+          ("Are there remote internships?", f"{r_:,} of the {k:,} ({round(100 * r_ / k)}%) are listed as remote; most are done on site, so check the place line of each job."),
+          ("Do I need to be a student to apply?", "Many internships ask for a current student or a recent graduate, and the posting says so in its requirements. Some are open to career changers and to people returning to work. The requirements line of each job is the only place that decides it."),
+          ("How early should I apply for a summer internship?", "Many large companies open summer roles in the autumn before and fill them over the winter, so applying in September to December gives the most choice. Postings that name a summer are listed in the table above."),
+          ("Are internships paid?", f"Only {paid:,} of the {k:,} open internships state a figure in the posting, so for most the answer comes in the first call. Ask before you accept a place, and ask what the pay covers." if paid else "The postings here do not state a figure, so ask in the first call."),
+          ("Can an internship turn into a job?", "At some companies, yes, and the posting sometimes says so. We have no figures for how many interns are hired afterwards, so this site gives no percentage.")]
+    own = section("Questions about internships", '<dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(a_)}</dd></div>" for q, a_ in qa) + "</dl>")
+    ld_own = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    links = labrow("Also see", [f'<a href="{P}/entry-level/">Entry-level jobs</a>', f'<a href="{P}/crypto/internships/">Crypto internships</a>', f'<a href="{P}/categories/internships-entry-level/">Internships and first jobs</a>',
+                                f'<a href="{P}/guides/">Guides</a>', f'<a href="{P}/resume/">Resume builder</a>'])
+    ld = crumbs_ld([("All jobs", "jobs/"), (h1, "")])
+    top = crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}{e(yr)}</h1>" + f'<p class="lead">{plain}</p>'
+    rows = collapse(order(ej))
+    per = 100
+    shown = rows[:per * LIST_PAGES]
+    pages = max(1, -(-len(shown) // per))
+    note = (f'<p class="note">Showing the newest {len(shown):,}. <a href="{P}/jobs/?etype=Internship">See all {k:,} in search</a></p>' if len(rows) > len(shown) else "")
+    rss(f"{path}feed.xml", f"{h1} — {SITE}", path, order(ej))
+    for n in range(1, pages + 1):
+        chunk = shown[(n - 1) * per:n * per]
+        body = top if n == 1 else crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}</h1>"
+        if n == 1: body += hub_stats(ej) + seas + pay_note + glance + links + f'<div class="sec-head lst"><h2>Newest internships</h2></div>'
+        body += f'<ul class="jobs">{"".join(card(j, x) for j, x in chunk)}</ul>' + pager_html(path, n, pages) + note + ((tail + own) if n == 1 else "")
+        title = f"{h1}{yr} ({k:,} open, {MONTH_YEAR}) | {SITE}"
+        desc = (f"{k:,} open internships{yr}: when they start, whether they pay, which companies hire interns and where, straight from employers’ careers pages. Updated hourly.")
+        if n == 1: page(path, title, desc, body, head=ld + ld_own)
+        else: page(f"{path}{n}/", f"{h1}{yr}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False)
+
+
 def intro_for(jobs, pre="", post="", hub=False):
     if not jobs: return ""
     r = sum(j["remote"] for j in jobs)
@@ -2123,6 +2182,9 @@ def main():
         ej = [j for j in active if j.get("etype") == et]
         if len(ej) >= 8:
             yr = f" {TODAY[:4]}–{int(TODAY[:4]) + 1}" if et == "Internship" else ""
+            if et == "Internship" and len(ej) >= 40:
+                intern_hub(path, h1, yr, ej)
+                continue
             listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at tech companies, straight from their careers pages. Updated hourly.", ej,
                     intro_for(ej, f"{et.lower()} "), trail=(("All jobs", "jobs/"),))
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),

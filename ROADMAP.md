@@ -117,7 +117,7 @@
 | «interview questions», «how to get a job in tech without a degree» | гайды | ✅ `/interview-questions/`, `/how-to-become/` |
 | «job offer letter / acceptance / rejection email» | шаблоны писем в инструментах | ✅ `/tools/job-offer-response/`, `/tools/candidate-rejection-email/` |
 | «job description template» | генератор описания вакансии для работодателей | ✅ шаблоны для 143 профессий `/job-descriptions/` + проверка |
-| «tech internships summer 2027» | страница стажировок с годом в заголовке | 📋 |
+| «tech internships summer 2027» | страница стажировок с годом в заголовке | ✅ 14.11: `/internships/` стала хабом (сезоны, оплата, кто берёт, вопросы) |
 | «jobs near me» | сначала пропускали; по просьбе владельца 13.11 сделаны три страницы (раздел 75) | ✅ |
 | «for 16 year olds», «for felons» и т.п. | не наша ниша, пропускаем | ⛔ |
 
