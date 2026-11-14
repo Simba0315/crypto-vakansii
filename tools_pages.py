@@ -13,7 +13,7 @@ EXTRA = ["resume/", "for-you/", "my-jobs/"]                             # the th
 TILES = {}                                                             # page path -> ready tile, filled by build_tools() so the home page can show the same tiles
 MIN_SAMPLE = 20                                                       # no salary figure is shown for fewer postings than this
 QS = [0, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100]      # percentile points embedded for the salary checker
-LEVELS = [("", "Any level"), ("Intern", "Intern"), ("Junior", "Junior"), ("none", "No level in the title"), ("Senior", "Senior"), ("Lead", "Lead")]
+LEVELS = [("", "Any level"), ("Intern", "Intern"), ("Junior", "Junior"), ("none", "No level in the title"), ("Senior", "Senior"), ("Lead", "Lead and above")]
 
 
 # ---------------------------------------------------------------- small HTML helpers
@@ -253,7 +253,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         return f'<td class="num"><strong>{money(g[10])}</strong> <span class="note">· {g[0]:,}</span></td>' if g else '<td class="num">—</td>'       # g[10] is the median: 3 leading numbers + index of 50 in QS
     assert QS[7] == 50
     sal_rows = "".join(f"<tr><td>{e(name)}</td>" + "".join(cell(slug, lv) for lv in cols) + "</tr>" for slug, name in [("", "All categories")] + cats)
-    sal_table = ('<div class="tablewrap"><table><tr><th>Category</th><th>Any level</th><th>Junior</th><th>No level in title</th><th>Senior</th><th>Lead</th></tr>' + sal_rows + "</table></div>"
+    sal_table = ('<div class="tablewrap"><table><tr><th>Category</th><th>Any level</th><th>Junior</th><th>No level in the title</th><th>Senior</th><th>Lead and above</th></tr>' + sal_rows + "</table></div>"
                  f'<p class="note">Median advertised salary · number of postings counted. A dash means fewer than {MIN_SAMPLE} postings. Yearly, US dollars, as of {DATE}. '
                  f'<a href="{P}/salaries/">Salaries by skill and company</a></p>')
     tool("salary-checker", "seekers", "Tech salary checker",

@@ -59,7 +59,7 @@ When you fix an open item, move it up and say how you checked it.
 
 | # | Finding | Note |
 |---|---|---|
-| 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
+| 21 | ✅ (15 Nov) Level names differ between pill, page title, salary table and tool | `LVL_NAME` in `build.py`: Intern, Junior, Senior, Lead and above, No level in the title; checked in the built job pages and tables |
 | 22 | Tool copy slips still open: "a honest" and "Download PDF" no longer appear in visible copy (checked 2026-11-13); contractor rate sentence reworded 2026-11-13 (fixed 2026-11-13: "Found 1 skills", "With prices up -2%", "Inc..") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
 | 47 | (fixed 15 Nov: the sub-navigation row unfolded into a tall list on phones) Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |

@@ -25,6 +25,7 @@ OUT = ROOT / "site"
 CFG = json.loads((ROOT / "config.json").read_text())
 CFG["api_url"] = os.environ.get("HRN_API_URL", CFG.get("api_url", "")).rstrip("/")   # the accounts and checkout API; empty until it is deployed
 SITE, BASE, P = CFG["site_name"], CFG["base_url"].rstrip("/"), CFG.get("base_path", "").rstrip("/")
+LVL_NAME = {"Intern": "Intern", "Junior": "Junior", "Senior": "Senior", "Lead": "Lead and above", "": "No level in the title"}   # the one vocabulary for seniority (AUDIT 21); "Lead" covers lead, staff, principal, head of, director
 FULL = BASE + P
 TODAY = datetime.date.today().isoformat()
 e = html.escape
@@ -560,7 +561,7 @@ def card(j, extra=0):
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
     if j["remote"]: b.append('<span class="pill ok">Remote</span>')
-    if j["level"]: b.append(f'<span class="pill">{e(j["level"])}</span>')
+    if j["level"]: b.append(f'<span class="pill">{e(LVL_NAME[j["level"]])}</span>')
     b += [f'<span class="pill">{e(t)}</span>' for t in j["tags"][:3]]
     loc = j["location"] if len(j["location"]) <= 60 else j["location"][:57].rstrip(" ,;") + "…"
     sub = e(j["company"]) + (f" · {loc_flags(j['location'])}{e(loc)}" if loc else "") + (f" · +{extra} more location{'s' if extra > 1 else ''}" if extra else "")
@@ -744,10 +745,10 @@ def hub_sections(label, js, skip=""):
                                             + '<p class="note">A role that lists several places is counted in each of them.</p>'))
     lv = defaultdict(list)
     for j in js:
-        if j.get("usd"): lv[j["level"] or "No level in the title"].append((j["usd"][0] + j["usd"][1]) / 2)
+        if j.get("usd"): lv[LVL_NAME[j["level"]]].append((j["usd"][0] + j["usd"][1]) / 2)
     pay = [(nm, median(v), len(v)) for nm, v in lv.items() if len(v) >= 15]
     if len(pay) >= 2:
-        order_ = {"Intern": 0, "Junior": 1, "No level in the title": 2, "Senior": 3, "Lead": 4}
+        order_ = {LVL_NAME[k]: i for i, k in enumerate(("Intern", "Junior", "", "Senior", "Lead"))}
         out.append(section(f"What {label} pay, by level", '<div class="tablewrap"><table><tr><th>Level in the title</th><th>Median advertised salary</th><th>Roles counted</th></tr>'
                            + "".join(f"<tr><td>{e(nm)}</td><td><strong>{money(md)}</strong></td><td>{c:,}</td></tr>" for nm, md, c in sorted(pay, key=lambda x: order_.get(x[0], 9)))
                            + '</table></div><p class="note">Medians of the midpoints of advertised yearly US-dollar ranges; a level needs at least 15 such roles. Advertised, not verified pay.</p>'))
@@ -919,7 +920,7 @@ def job_page(j, active_by_cat):
         rows.append(("Experience asked", f"{j['years']}+ years" + ('<br><span class="note">An entry-level title that asks for several years of experience.</span>' if odd else "")))
     if j["pool"]: rows.append(("Kind of posting", 'Talent pool<br><span class="note">A standing invitation to apply, not one specific opening.</span>'))
     rows.append(("Category", f'<a href="{P}/jobs/{j["cat"]}/">{e(CAT[j["cat"]])}</a>'))
-    if j["level"]: rows.append(("Level", e(j["level"])))
+    if j["level"]: rows.append(("Level", e(LVL_NAME[j["level"]])))
     if j.get("etype"): rows.append(("Type", e(j["etype"])))
     if j["salary"]:
         ctx = ""            # the comparison with the category median is drawn as a bar above the Apply button
@@ -964,7 +965,7 @@ def job_page(j, active_by_cat):
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
     if j["pool"]: pills.append('<span class="pill warn">Talent pool</span>')
     pills += [(f'<a class="pill perk" href="{P}/perks/{PERK_SLUG[x]}/">{e(x)}</a>' if x in PERK_OK else f'<span class="pill perk">{e(x)}</span>') for x in j.get("perks", []) if x in PERK_SLUG]
-    if j["level"]: pills.append(f'<span class="pill">{e(j["level"])}</span>')
+    if j["level"]: pills.append(f'<span class="pill">{e(LVL_NAME[j["level"]])}</span>')
     pills += [f'<a class="pill" href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a>' for t in j["tags"]]
     head, micro = "", ""
     if j["active"]:
@@ -1567,7 +1568,7 @@ def main():
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
               + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
-              + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option><option value="Exec">Director and above</option></select>')
+              + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option value="Lead">Lead and above</option><option value="Exec">Director and above</option></select>')
               + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>')
               + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
@@ -1578,7 +1579,7 @@ def main():
               + '<details class="morefilters"><summary>More filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
               + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'
-                                   '<div class="filters xlv"><span class="note">Levels:</span>' + "".join(f'<label><input type="checkbox" class="f-xl" value="{x}"> {x}</label>' for x in ("Intern", "Junior", "Senior", "Lead")) + '</div>'
+                                   '<div class="filters xlv"><span class="note">Levels:</span>' + "".join(f'<label><input type="checkbox" class="f-xl" value="{x}"> {LVL_NAME[x]}</label>' for x in ("Intern", "Junior", "Senior", "Lead")) + '</div>'
                                    '<input type="text" id="xwords" class="xin" placeholder="Words in the title, e.g. senior, sales" aria-label="Words to leave out of results" autocomplete="off">'
                                    '<div id="xcos" class="xcos"></div>')
               + group("Perk", '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + "</select>")
@@ -1604,7 +1605,7 @@ def main():
     CMP = [t for t, _ in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:14]]      # skills that get head-to-head comparison pages
     cmp_path = lambda a, b: "compare/{}-vs-{}/".format(*[tslug(x) for x in sorted((a, b), key=CMP.index)])
     cmp_links = lambda t: labrow("Compare with", [f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t], ("compare/", "Any two skills")) if t in CMP else ""
-    LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead & principal")]
+    LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead and above")]
     combos, REL = [], defaultdict(list)
     big_places = [x for x in places if len(x[2]) >= 150]      # combination pages only where a place has enough jobs to fill them
     def add(path, h1, js, trail, qs, pre, post, keys):
@@ -2083,7 +2084,7 @@ def main():
     best = sorted(paid, key=lambda x: -x[1][1])
     def level_table(group, minimum=15):  # pay ladder: median and middle half per seniority level; "" when there is too little data
         rows_ = []
-        for lv, name in (("Intern", "Intern"), ("Junior", "Junior"), ("Senior", "Senior"), ("Lead", "Lead and above"), ("", "No level in title")):
+        for lv, name in ((k, LVL_NAME[k]) for k in ("Intern", "Junior", "Senior", "Lead", "")):
             ms = sorted((lo + hi) / 2 for j, (lo, hi) in group if j["level"] == lv)
             if len(ms) >= minimum: rows_.append((lv, name, median(ms), ms[len(ms) // 4], ms[min(len(ms) - 1, len(ms) * 3 // 4)], len(ms)))
         if sum(1 for r in rows_ if r[0]) < 2: return ""
@@ -3503,8 +3504,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # 6. levels
     lvl_rows = []
     for lv, lab_, what_ in (("Intern", "Intern", "a placement during studies or straight after, usually for a fixed number of months"), ("Junior", "Junior", "a first full job in the field; the employer expects to teach"),
-                            ("", "No level in the title", "most often a mid-level job: able to work alone on ordinary tasks"), ("Senior", "Senior", "years of practice; solves hard problems without being told how, and helps others"),
-                            ("Lead", "Lead, staff, principal, manager", "sets the direction for a team or a large part of the product, with or without managing people")):
+                            ("", LVL_NAME[""], "most often a mid-level job: able to work alone on ordinary tasks"), ("Senior", "Senior", "years of practice; solves hard problems without being told how, and helps others"),
+                            ("Lead", "Lead and above: lead, staff, principal, director", "sets the direction for a team or a large part of the product, with or without managing people")):
         js_ = [j for j in active if j["level"] == lv]
         mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"]]
         lvl_rows.append((lab_, what_, len(js_), median(mids_) if len(mids_) >= 30 else 0))
@@ -3673,7 +3674,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               "<h2>How much more a Senior title advertises, by field</h2><p>Each bar is the median pay of postings with Senior in the title as a share of the median of postings that name no level, in fields where both groups have at least 15 postings with a stated yearly range. "
               "</p>"
               + bars_([(a_[0], a_[3] / a_[2], sg_(a_), f"categories/{a_[1]}/") for a_ in lad_])
-              + "<h2>The figures behind the bars</h2><div class=\"tablewrap\"><table class=\"t4\"><tr><th>Field</th><th>No level in title</th><th>Senior</th><th>Lead and above</th></tr>"
+              + "<h2>The figures behind the bars</h2><div class=\"tablewrap\"><table class=\"t4\"><tr><th>Field</th><th>No level in the title</th><th>Senior</th><th>Lead and above</th></tr>"
               + "".join(f"<tr><td>{e(a_[0])}</td><td>{money(a_[2])}</td><td>{money(a_[3])}</td><td>{money(a_[4]) if a_[4] else '—'}</td></tr>" for a_ in lad_)
               + "</table></div><p class=\"note\">Medians of the middle of each stated range, in US dollars a year. A dash means fewer than 15 postings.</p>"
               "<h2>Using the figures when you ask for a raise</h2><p>A raise request is easier to grant when it names a number and a reason. Employers answer to what the market advertises for the same work, so bring the range for your kind of work and level, "
