@@ -132,6 +132,7 @@ jobs:
       # --delay-updates puts every new file in place at the end, so no visitor sees half an upload.
       # continue-on-error: an upload that fails must not stop the GitHub Pages deploy below.
       - name: Upload to our server
+        id: upload
         if: env.HRN_SERVER_ON == 'true'
         continue-on-error: true
         env:
@@ -146,14 +147,19 @@ jobs:
             --exclude='/site/job/' --include='/site/***' --include='/data/' --include='/data/jobs.db' \
             --include='/*.py' --include='/*.json' --include='/assets/***' --exclude='*' ./ "hrn@$HOST:/"
           rm -f "$RUNNER_TEMP/hrn_key" "$RUNNER_TEMP/hrn_known"
+      # Switched: the old address turns into redirects only once the new site reached the server; if the upload failed, GitHub
+      # Pages keeps what it served before (the previous redirects, or the old site) rather than send people to a stale server.
       - name: Redirects from the old address
-        if: env.SWITCHED == '1'
+        if: env.SWITCHED == '1' && steps.upload.outcome == 'success'
         run: python3 pages_redirect.py
       - uses: actions/configure-pages@v5
+        if: env.SWITCHED != '1' || steps.upload.outcome == 'success'
       - uses: actions/upload-pages-artifact@v3
+        if: env.SWITCHED != '1' || steps.upload.outcome == 'success'
         with:
           path: ${{ env.SWITCHED == '1' && 'pages_site' || 'site' }}
       - id: deploy
+        if: env.SWITCHED != '1' || steps.upload.outcome == 'success'
         uses: actions/deploy-pages@v4
       # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed.
       # Once a day (DAILY): sending the same addresses every hour is what IndexNow asks sites not to do. The list from build.py
