@@ -1,9 +1,32 @@
 # Домены: все варианты, перепроверены 15 ноября 2026
 
 Проверка по официальному реестру .com (Verisign RDAP) сегодня. «Свободен» — в реестре такого имени нет; занять его может кто
-угодно в любой день, поэтому перед покупкой я проверю ещё раз. Всего проверено 571 имя, свободны 211 (все — .com).
+угодно в любой день, поэтому перед покупкой я проверю ещё раз. Всего проверено 775 имён .com, свободны 345.
 Короткие имена со словом job (jobfox, jobjar, jobnest, jobhive…) почти все давно заняты: из 196 таких проверенных занято 147.
 Поэтому самые узнаваемые свободные — короткие фразы со словом job.
+
+## Ваш список (проверено сейчас): все 9 свободны
+
+cheersjob.com, jobseveryhour.com, jobstillopen.com, jobonmonday.com, freshjobclub.com, stillopenjobs.com, jobs24h.com,
+nospamjobs.com, jobbravo.com — все свободны.
+
+**Мой совет из вашего списка, по порядку:**
+1. **jobseveryhour.com** — ни на что не похоже и говорит главное: вакансии проверяются каждый час. Легко сказать вслух.
+2. **jobs24h.com** — самое короткое из вашего списка (7 знаков), «24h» понимают в любой стране.
+3. **jobstillopen.com** — наше обещание: «вакансия ещё открыта».
+4. **nospamjobs.com** — понятная выгода: без спама и мусора.
+5. **jobbravo.com** — радостное, «браво» понимают все.
+
+Не советую: stillopenjobs.com (то же, что №3, но звучит хуже), cheersjob.com (job в единственном числе, «cheers» — больше
+британское), jobonmonday.com (слишком узкий смысл), freshjobclub.com (звучит как у многих).
+
+Совет: взять основное имя и одно короткое для защиты (например jobseveryhour.com + jobs24h.com, около $20 в год за оба),
+второе просто перенаправит на первое.
+
+## Новые короткие находки
+
+**jobs1h.com** (6 знаков: «вакансии за час»), **isjobopen.com**, **jobisopen.com**, **jobs24now.com**, **jobsnow24.com**,
+**jobs24open.com**, **jobs9am.com**, **jobs7am.com**.
 
 ## Только .com: мой топ по узнаваемости (15 ноября)
 
@@ -129,6 +152,31 @@ pinkypromisejobs.com, scoutshonorjobs.com, nokiddingjobs.com, notadrilljobs.com,
 ## Из прошлых подборок
 
 rolesnow.com, hiringmark.com, hyrboard.com, taloxa.com, hrnhq.com, usehrn.com, jobveri.com, kangajob.com, mintrole.com, voilajobs.com, hirefig.com
+
+
+## Ещё свободные (15 ноября, третий заход)
+
+**Время: каждый час, 24 часа, сейчас:** jobsdailyfresh.com, jobsthisweek.com, jobsthishour.com, jobsjustnow.com, jobsjustposted.com, newjobseveryhour.com, jobsfreshtoday.com, jobs24hour.com, jobs24hours.com, jobsin24h.com, jobs24hrs.com, jobsnowopen.com, jobsrightnowonly.com, jobsupdated.com, livejobsnow.com
+
+**Открыто, по-настоящему:** openjobsdaily.com, realjobsdaily.com, stillhiringjobs.com, jobsstillopen.com, stillopenroles.com, openrolesdaily.com, onlyopenjobs.com, alwaysopenjobs.com, truejobsdaily.com, realopenroles.com, jobsreallyopen.com, reallyopenjobs.com, openandhiring.com, hiringandopen.com
+
+**Без спама, без мошенников:** nospamjob.com, spamfreejobs.com, jobsnospam.com, junkfreejob.com, cleanjobsdaily.com, noscamjob.com, safejobsonly.com, trustedjobsdaily.com, verifiedjobsnow.com, jobsnoscam.com, jobsnofake.com, nofakejobsdaily.com, jobswithnospam.com, zerospamjobs.com, spamlessjobs.com, safejobsdaily.com
+
+**Радостные слова + jobs:** hurrayjob.com, greatjobsdaily.com, happyjobsdaily.com, jobsunshine.com, jobgoodnews.com, jobsdance.com, jobsclap.com, clapjobs.com
+
+**День недели и старт:** jobbymonday.com, jobsbymonday.com, newjobmonday.com, startmondayjob.com, jobonfriday.com, jobsforfriday.com, mondayjobsfresh.com, mondaystartjobs.com, jobnextweek.com, nextweekjob.com, startsoonjobs.com
+
+**Клубы и охота:** jobclubdaily.com, freshjobsclub.com, openjobclub.com, dailyjobclub.com, jobhunterclub.com, jobfinderclub.com, jobseekersclub.com, jobhuntersdaily.com, jobfindersdaily.com
+
+**Как jobs24h (коротко, с цифрой):** jobsfresh24.com, freshjobs24.com, jobs24fresh.com, jobs24open.com, open24jobs.com, jobsopen24.com, jobs24now.com, jobsnow24.com, 24jobsnow.com, jobs1h.com, jobs1hour.com, jobsby9.com, jobs9am.com, jobs7am.com, jobs365now.com, jobs24hnow.com, jobs24hr.com
+
+**Как jobstillopen (обещание «открыта»):** stillopenjob.com, isthejobopen.com, jobisopen.com, yesitsopen.com, jobstillopennow.com, openjobcheck.com, jobopencheck.com, checkjobopen.com, isjobopen.com, jobopenyes.com, yesjobopen.com, stillopenyes.com, stillhiringnow.com, jobstillhiring.com, stillhiringjob.com
+
+**Как nospamjobs (чисто, без обмана):** nojobspam.com, jobspamfree.com, scamfreejob.com, safejobfinder.com, cleanjobsonly.com, purejobsonly.com, honestjobsonly.com, nojunkjobsdaily.com, spamfreejob.com, nospamroles.com, nospamhiring.com, zerobsjobs.com
+
+**Как jobbravo / cheersjob (радость):** jobcheer.com, jobcheersup.com, jobhurray.com, jobyippie.com, wootjob.com, high5job.com, tadajob.com
+
+**Как jobonmonday / freshjobclub:** jobsonmonday.com, newjobonmonday.com, jobbymon.com, mondayhired.com, hiredbymon.com, jobclub24.com, club24jobs.com, jobfreshclub.com, thefreshjobclub.com, freshjobcrew.com, jobcrew24.com, jobsquad24.com
 
 ## Что дальше
 
