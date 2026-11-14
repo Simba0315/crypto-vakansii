@@ -1702,6 +1702,42 @@
     }
   };
 
+  /* ---------- keywords of a job description: the skills it names and the terms it repeats, and a skills line to copy ---------- */
+  tools['job-description-keywords'] = function () {
+    var out = $('tl-out'), detail = $('tl-detail'), pats = null;
+    var F = form(function (v) {
+      if (pats === null) { detail.innerHTML = ''; return idle(out, 'Keywords', 'Loading the skills list…'); }
+      var jd = clean(v.jd), words = jd ? jd.split(/\s+/).length : 0;
+      if (words < 30) { detail.innerHTML = ''; return idle(out, 'Keywords', words ? 'Paste the whole description: at least 30 words.' : 'Paste a job description to see the keywords it stresses.'); }
+      var skills = T.findSkills(jd, pats), terms = T.keyTerms(jd, pats, 20);
+      board(out, 'Keywords', skills.length + ' skills · ' + terms.length + ' terms', big(String(skills.length + terms.length), 'keywords') +
+        sub(skills.length ? 'Named skills: ' + skills.slice(0, 6).join(', ') + (skills.length > 6 ? ' and ' + (skills.length - 6) + ' more.' : '.') : 'The posting names none of the tracked skills; its repeated terms are below.'));
+      var pill = function (t) { return '<span class="pill ok">' + esc(t) + '</span>'; };
+      detail.innerHTML =
+        (skills.length ? '<div class="card"><p class="tl-t">Skills the posting names</p><div class="tl-pills">' + skills.map(pill).join('') + '</div></div>' : '') +
+        (terms.length ? '<div class="card"><p class="tl-t">Terms the posting repeats</p><div class="tl-pills">' + terms.map(function (t) { return pill(t.term + ' ×' + t.n); }).join('') +
+          '</div><p class="note">×3 means the posting uses the term three times. Use these words where they describe work you really did.</p></div>' : '') +
+        (skills.length ? '<div class="card"><p class="tl-t">A skills line to copy</p><textarea id="tl-line" rows="2" readonly aria-label="Skills line">Skills: ' + esc(skills.join(', ')) + '</textarea>' +
+          '<p><button class="btn sm" type="button" data-copy="tl-line">Copy the line</button> <span class="note">Delete the skills you do not have before you paste it.</span></p></div>' : '') +
+        '<p><a class="btn ghost sm" href="' + H.base + '/tools/resume-match/">Check your resume against this posting</a></p>';
+    });
+    fetch(H.base + '/data/skills.json').then(function (res) { if (!res.ok) throw new Error('skills'); return res.json(); })
+      .then(function (data) { pats = T.compilePats(data); F.draw(); })
+      .catch(function () { pats = []; F.draw(); });
+    var go = $('tl-run');
+    if (go) go.addEventListener('click', function () { F.draw(); if (out.scrollIntoView) out.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    var slug = (location.search.match(/[?&]job=([a-z0-9-]{3,160})/) || [])[1];         // ?job=<slug>: read the posting from its page on this site
+    if (slug && window.fetch && window.DOMParser) {
+      fetch(H.base + '/job/' + slug + '/').then(function (r) { return r.ok ? r.text() : ''; }).then(function (page) {
+        if (!page) return;
+        var doc = new DOMParser().parseFromString(page, 'text/html'), d = doc.querySelector('.prose.desc') || doc.querySelector('.prose');
+        if (!d) return;
+        var blocks = [].map.call(d.querySelectorAll('h2,h3,h4,p,li'), function (x) { return x.textContent.trim(); }).filter(Boolean);
+        F.set('jd', blocks.length ? blocks.join('\n') : d.textContent.trim()); F.save(); F.draw();
+      }).catch(function () {});
+    }
+  };
+
   /* ---------- cover letter ---------- */
   tools['cover-letter'] = function () {
     var paper = $('tl-paper'), count = $('tl-count');

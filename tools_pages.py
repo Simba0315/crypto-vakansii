@@ -212,6 +212,35 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Not exactly. Applicant tracking systems differ, and this tool does not copy any of them. It checks the part you control: whether the skills and terms the posting stresses appear in your resume, so that a keyword search or a quick read finds them.")],
          ["resume-review", "resume-bullet-builder", "cover-letter"], ["resume/", "for-you/"])
 
+    # ------------------------------------------------------------ 1b. keywords of a job description (the Careerist study: one tool page per search phrase)
+    tool("job-description-keywords", "seekers", "Job description keyword finder",
+         "Paste a job description: see the skills and the terms it stresses, and get a skills line to copy into your resume.",
+         "Job Description Keyword Finder: Skills and ATS Keywords",
+         "Paste a job description to see the skills and repeated terms it stresses, ranked, and copy a ready skills line for your resume. Free, runs in your browser.",
+         "Find the keywords in a job description",
+         "Recruiters search their applicant tracking system for the words the posting uses. Paste the posting: you get the skills it names, the terms it repeats "
+         "and a skills line in its own words, ready for your resume. Nothing is uploaded.",
+         wrap("job-description-keywords",
+              '<div class="card tl-form"><div class="tl-grid one">'
+              + _area("jd", "The job description", 14, "Paste the full text of the job posting here", cls="", tall=True, ex=EX_JD) + "</div>"
+              + '<div class="tl-actions"><button class="btn" type="button" id="tl-run">Find the keywords</button>' + _clear(True) + "</div></div>"
+              + _private(" The text is read inside your browser and never sent anywhere.")
+              + _board("Keywords", "Paste a job description to see the keywords it stresses.")
+              + '<div class="tl-detail" id="tl-detail"></div>'),
+         "How the keywords are found",
+         f"<p><strong>Skills.</strong> The text is searched for the {n_skills} skills this site tracks in job postings: languages, frameworks, cloud platforms and tools, "
+         "including their usual spellings (“Postgres” is PostgreSQL).</p>"
+         "<p><strong>Repeated terms.</strong> Words and two-word phrases the posting uses at least twice, once the words every posting uses (“team”, “experience”, “requirements”) "
+         "are left out. The more often a term is repeated, the higher it is listed.</p>"
+         "<p>The skills line joins the skills found, in the posting’s order. Copy only the ones you really have.</p>",
+         [("What are ATS keywords?",
+           "The words a recruiter types when searching applications in an applicant tracking system: usually the skills, tools and job title the posting names. A resume that uses the same words is found more often."),
+          ("Should I copy every keyword into my resume?",
+           "No: only the ones that are true for you. Where you have a skill, use the posting’s exact word, in the skills line and in the job where you used it."),
+          ("Is the job description uploaded anywhere?",
+           "No. It is read inside your browser and kept only in this browser’s storage so the page remembers it; the Clear button erases it.")],
+         ["resume-match", "resume-bullet-builder", "cover-letter"], ["resume/", "for-you/"])
+
     # ------------------------------------------------------------ 2. salary checker
     groups = salary_groups(jobs)
     cats = [(s, n) for s, n in CAT.items() if s != "other" and f"{s}||" in groups]
@@ -1368,6 +1397,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     kmoney = lambda v: f"${v / 1000:,.0f}K"
     ex = '<span class="ex">example</span>'
     PREV = {
+        "job-description-keywords": ex + '<span class="big">14<small>keywords</small></span><span class="ln"><b>Python, SQL, Airflow</b> · “data pipelines” ×4</span>',
         "resume-match": ex + '<span class="big">78%<small>match</small></span><span class="mt"><i style="width:78%"></i></span>'
                              '<span class="ln"><b>9 of 12</b> skills from the posting found. Missing: Kafka, Terraform, Go</span>',
         "salary-converter": ex + '<span class="ln">$60 an hour, 40 hours a week</span><span class="big">$124,800<small>a year</small></span>'
@@ -1472,6 +1502,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # The hub: three wide rows for the tools most visitors want, then a ruled list with a one-line sample result on the right.
     RES = {
         "resume-match": "78% match · 9 of 12 skills found",
+        "job-description-keywords": "14 keywords · Python, SQL, Airflow",
         "salary-converter": "$60 an hour = $124,800 a year",
         "raise-calculator": "7% on $120,000 = +$8,400 a year",
         "compare-offers": "Offer A $182K, offer B $171K",
@@ -1499,7 +1530,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     def group(key):
         return '<div class="tgrid">' + "".join(TILES[f"tools/{t['slug']}/"] for t in TOOLS if t["group"] == key) + "</div>"
     # job-seeker tools stand in the order of a search: the resume, applying, the offer, leaving. A tool that is not named here still appears, in a last group.
-    HUB = [("Resume and LinkedIn profile", ["resume-review", "resume-match", "resume-bullet-builder", "linkedin-headline", "linkedin-review"]),
+    HUB = [("Resume and LinkedIn profile", ["resume-review", "resume-match", "job-description-keywords", "resume-bullet-builder", "linkedin-headline", "linkedin-review"]),
            ("Applying and interviews", ["cover-letter", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email"]),
            ("Pay and offers", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "raise-calculator", "raise-request-email", "salary-converter", "equity-calculator", "contractor-rate"]),
            ("Remote work and leaving a job", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
