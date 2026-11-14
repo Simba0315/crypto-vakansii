@@ -162,7 +162,7 @@ class Handler(SimpleHTTPRequestHandler):
                     total, slugs, facets = search_engine.search(one("q"), limit=5000, cap=5000, timeout=3)
                 except OSError:
                     return self.send_json(503, {"error": "search engine unavailable"})
-                return self.send_json(200, {"q": one("q"), "total": total, "slugs": slugs, "fuzzy": bool(facets.get("fuzzy")), "engine": "lucene"},
+                return self.send_json(200, {"q": one("q"), "total": total, "slugs": slugs, "fuzzy": bool(facets.get("fuzzy")), "exact": facets.get("exact", total), "engine": "lucene"},
                                       [("Cache-Control", "public, max-age=120")])
             try:
                 total, js, facets, engine = find(one("q"), remote=one("remote") in ("1", "true"), limit=int(one("limit", "20")), offset=int(one("offset", "0")))
@@ -192,7 +192,7 @@ class Handler(SimpleHTTPRequestHandler):
         if os.environ.get("HRN_QUIET") != "1": super().log_message(fmt, *args)
 
 
-CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "config.json")]
+CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "search_engine.py", "config.json")]
 
 
 def watch(seen):

@@ -88,7 +88,7 @@
       fetch(H.base + '/api/search?all=1&q=' + encodeURIComponent(text_)).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
         if (!d || !Array.isArray(d.slugs)) throw 0;
         var ranks = new Map(); d.slugs.forEach(function (s_, i) { ranks.set(s_, i); });
-        LUC = { q: text_, ranks: ranks, capped: d.total > d.slugs.length, fuzzy: !!d.fuzzy };
+        LUC = { q: text_, ranks: ranks, capped: d.total > d.slugs.length, fuzzy: !!d.fuzzy, exact: d.exact || 0 };
         if (q.value.trim() === text_) { keepShown = false; run(); }
       }).catch(function () { lucOK = false; });
     }
@@ -130,7 +130,8 @@
     paintApplied();
     relax(rows.length, qs);
     if (L && L.fuzzy && rows.length) {               // the engine found nothing for the words as typed and forgave a typo
-      hint.innerHTML = 'Nothing for “' + H.esc(q.value.trim()) + '” as typed: showing ' + (L.capped ? 'the ' + L.ranks.size.toLocaleString('en-US') + ' best matches' : 'jobs') + ' for the closest spelling.'; hint.hidden = false;
+      hint.innerHTML = (L.exact ? 'Only ' + L.exact + (L.exact === 1 ? ' job matches “' : ' jobs match “') + H.esc(q.value.trim()) + '” as typed'
+        : 'Nothing for “' + H.esc(q.value.trim()) + '” as typed') + ': showing ' + (L.capped ? 'the ' + L.ranks.size.toLocaleString('en-US') + ' best matches' : 'jobs') + ' for the closest spelling.'; hint.hidden = false;
     }
   };
   // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each.

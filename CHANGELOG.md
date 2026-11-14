@@ -2,6 +2,8 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-14 23:30 — Search: employers misspell too (“manger” stands in 9 postings), so “product manger” found 2 jobs as typed and the typo was never forgiven. When the words as typed find fewer than 10 jobs and the forgiving search ten times as many (20 or more), the closest spelling is shown and the page says how many matched as typed. The page server now restarts when `search_engine.py` changes too. Checked the earlier three batches on the live site.
+
 - 2026-11-14 23:00 — Jobs by hourly pay (`/jobs-that-pay/` and seven bands from $20 to $100+ an hour): each job placed by the lowest pay it states, hourly as written or yearly ÷ 2,080; each page says what the rate is a week, a month and a year (searches in keywords.json: “jobs that pay 25 an hour”). Trust marks on company pages, Upwork-style, each with its rule and number: actively hiring, states the pay, few old postings; the rules and counts are on `/companies/`. Pages: `/jobs-that-pay/…`, every company page, `/companies/`, footer, llms.txt.
 
 - 2026-11-14 22:15 — Site search: a typo in a common word (“product manger”, over the engine's 5,000-match cap) found nothing; the engine's 5,000 best matches for the closest spelling are now kept, with a note that says so. Job cards and job pages mark the skills on the resume made in the builder (✓, first) and the ones to grow (dashed), as resumai does; two-letter names count only from the skills line. Practise out loud: speaking pace in words a minute and filler words, when the browser listened. The selected search card is grey instead of green. Pages: `/jobs/`, every list and job page, `/interview-questions/…`.

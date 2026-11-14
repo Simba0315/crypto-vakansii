@@ -141,17 +141,30 @@ def query(q, remote=False, limit=20, offset=0, fuzzy=False, cap=50):
                      "company": {"terms": {"field": "company.raw", "size": 10}}}}
 
 
+FEW = 10          # the words as typed find fewer jobs than this: try them forgiving typos too
+
+
+def prefer_fuzzy(exact, forgiving):
+    """Show the closest spelling instead of the words as typed? Yes when they find nothing, or when they find only a few and the
+    forgiving search finds ten times as many (at least 20). Employers misspell too: "manger" stands in 9 postings, so "product
+    manger" found 2 jobs as typed while "product manager" has thousands."""
+    return exact == 0 or (exact < FEW and forgiving >= max(20, 10 * exact))
+
+
 def search(q, remote=False, limit=20, offset=0, timeout=1.5, cap=50):
-    """(total, [slugs], facets) from OpenSearch: the words as typed first, and only when they find nothing, the same words
-    forgiving typos (facets["fuzzy"] then says so). Raises OSError when it is not there or does not answer in time."""
+    """(total, [slugs], facets) from OpenSearch: the words as typed first; when they find nothing or only a few, the same words
+    forgiving typos (facets["fuzzy"] then says so, and facets["exact"] how many jobs the words as typed found). Raises OSError
+    when it is not there or does not answer in time."""
     if not URL: raise OSError("HRN_OPENSEARCH is not set")
     body = query(q, remote, limit, offset, cap=cap)
     if body is None: return 0, [], {}
     r, fuzzy = call("POST", f"/{ALIAS}/_search", body, timeout=timeout), False
-    if r["hits"]["total"]["value"] == 0:
-        r, fuzzy = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True, cap=cap), timeout=timeout), True
+    exact = r["hits"]["total"]["value"]
+    if exact < FEW:
+        rf = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True, cap=cap), timeout=timeout)
+        if prefer_fuzzy(exact, rf["hits"]["total"]["value"]): r, fuzzy = rf, True
     a = r.get("aggregations", {})
-    facets = {"fuzzy": fuzzy, "remote": a.get("remote", {}).get("doc_count", 0), "hybrid": a.get("hybrid", {}).get("doc_count", 0)}
+    facets = {"fuzzy": fuzzy, "exact": exact if fuzzy else r["hits"]["total"]["value"], "remote": a.get("remote", {}).get("doc_count", 0), "hybrid": a.get("hybrid", {}).get("doc_count", 0)}
     for k in ("cat", "level", "company"):
         facets[k] = [[b["key"], b["doc_count"]] for b in a.get(k, {}).get("buckets", []) if b["key"]]
     return r["hits"]["total"]["value"], [h["_source"]["slug"] for h in r["hits"]["hits"]], facets
@@ -170,6 +183,8 @@ def _test():
     assert query("c++", fuzzy=True)["query"]["bool"]["must"][0]["multi_match"]["fuzziness"] == 0      # no typo forgiven in C++, C#, .NET
     d = doc({"slug": "a", "active": True, "title": "T", "usd": [100, 200], "tags": ["Go"], "posted": "2026-11-01"}, "<p>Build &amp; ship</p>")
     assert d["pay_mid"] == 150 and d["body"].strip() == "Build & ship" and d["posted"] == "2026-11-01"
+    assert prefer_fuzzy(0, 0) and prefer_fuzzy(2, 6246) and prefer_fuzzy(1, 20)
+    assert not prefer_fuzzy(2, 19) and not prefer_fuzzy(9, 89) and not prefer_fuzzy(10, 5000) and not prefer_fuzzy(34, 900)
     print("search_engine: query builder checks passed")
 
 
