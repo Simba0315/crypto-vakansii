@@ -1219,15 +1219,42 @@ def main():
     ROLE_TOP = sorted(((nm, s_, len(ROLE_JOBS[s_])) for nm, s_, _ in ROLES if s_ in ROLE_BASE), key=lambda x: -x[2])
     # Pictures before words (the owner: "I cannot read walls of text: more charts and infographics everywhere").
     # Every picture is counted from the open postings on this build; each has one caption that says what it shows.
-    def donut(part, whole, label):
+    # Charts (the owner, 14 Nov: "dumb charts, not necessarily green on black, more modern"): light cards, one blue for magnitude and
+    # orange only for the one mark a chart is about, thin columns with rounded ends, a few gridlines, selective labels and a tooltip
+    # on every mark (hover or keyboard focus). Colours are tokens (--viz-1, --viz-2) with their own dark-mode steps in style.css.
+    def nice_top(v):
+        if v <= 0: return 1
+        mag = 10 ** (len(str(int(v))) - 1)
+        for k in (1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10):
+            if v <= k * mag: return int(k * mag)
+        return int(10 * mag)
+    def vcols(points, hi=None, now=None, aria=""):
+        """points: [(label under the column, value, tooltip)]. hi: index of the column the chart is about (orange, labelled);
+        now: index of a period still filling up (lighter). The tallest column and hi carry their value; every column a tooltip."""
+        top = nice_top(max((v for _, v, _ in points), default=0))
+        peak = max(range(len(points)), key=lambda i: points[i][1]) if points else None
+        grid = "".join(f'<span style="bottom:{100 * t / 2:.0f}%"><em>{fmt_n(top * t // 2)}</em></span>' for t in (1, 2))
+        bars = "".join(
+            f'<div class="vc-c{" hi" if i == hi else ""}{" now" if i == now else ""}" tabindex="0" data-tip="{e(tip)}" aria-label="{e(tip)}">'
+            f'<i style="height:{max(1.5, 100 * v / top):.1f}%">{f"<b>{fmt_n(v)}</b>" if i in (peak, hi) else ""}</i></div>'
+            for i, (_, v, tip) in enumerate(points))
+        xs = "".join(f"<span>{e(lb)}</span>" for lb, _, _ in points)
+        table = ('<table class="sr-only"><tr><th>Period</th><th>Count</th></tr>'
+                 + "".join(f"<tr><td>{e(tip.split(' · ')[0])}</td><td>{v:,}</td></tr>" for _, v, tip in points) + "</table>")
+        return (f'<div class="vc" role="group" aria-label="{e(aria)}"><div class="vc-plot"><div class="vc-grid">{grid}</div>'
+                f'<div class="vc-cols">{bars}</div></div><div class="vc-x">{xs}</div>{table}</div>')
+    def fmt_n(v):
+        return f"{v / 1000:.1f}K".replace(".0K", "K") if v >= 10000 else f"{v:,}"
+    def cols(pairs, hi_=None):                      # the older call: [(label, value)]
+        return vcols([(lb, v, f"{lb} · {v:,} jobs") for lb, v in pairs], hi_)
+    def meter(part, whole, label):
+        """A stat tile: the share as a number, the count it comes from, and a thin bar of the share."""
         pc = round(100 * part / max(1, whole))
-        return (f'<div class="donut"><svg viewBox="0 0 36 36" role="img" aria-label="{pc}% {e(label)}"><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--bg2)" stroke-width="3.8"/>'
-                f'<circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--ac)" stroke-width="3.8" stroke-dasharray="{pc} {100 - pc}" transform="rotate(-90 18 18)"/>'
-                f'<text x="18" y="21" text-anchor="middle">{pc}%</text></svg><span>{e(label)}</span></div>')
-    def cols(pairs, hi_=None):                      # [(label under the column, value)]: a column chart
-        mx_ = max((v for _, v in pairs), default=1) or 1
-        return ('<div class="ccols">' + "".join(f'<div{" class=\"hi\"" if hi_ is not None and i == hi_ else ""} style="height:{max(2, round(100 * v / mx_))}%"><b>{v:,}</b></div>' for i, (_, v) in enumerate(pairs)) + "</div>"
-                '<div class="ccx">' + "".join(f"<span>{e(lb)}</span>" for lb, _ in pairs) + "</div>")
+        return (f'<div class="st"><span class="st-l">{e(label[0].upper() + label[1:])}</span><b class="st-v">{pc}%</b>'
+                f'<span class="st-m" role="img" aria-label="{pc}% {e(label)}"><i style="width:{max(1, pc)}%"></i></span>'
+                f'<span class="st-s">{part:,} of {whole:,} jobs</span></div>')
+    def donut(part, whole, label):                  # kept name: the three-number pictures are stat tiles now
+        return meter(part, whole, label)
     def mini_pics(js):
         """Two pictures for a list of jobs: what they pay (when at least 30 state it) and three rings."""
         if len(js) < 20: return ""
@@ -1236,10 +1263,12 @@ def main():
         if len(mids_) >= 30:
             eg = [(0, 75), (75, 100), (100, 125), (125, 150), (150, 175), (175, 200), (200, 250), (250, 300), (300, 10 ** 6)]
             md_ = median(mids_)
-            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars. The green column holds the median, {money(md_)}.</figcaption>'
-                   + cols([(("<$75K" if lo == 0 else f"${lo}K+" if hi > 1000 else f"${lo}K"), sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)) for lo, hi in eg],
-                          next((i for i, (lo, hi) in enumerate(eg) if lo * 1000 <= md_ < hi * 1000), None)) + "</figure>")
-        rings = (f'<figure class="pic"><figcaption><b>Three numbers</b>Out of {len(js):,} open jobs in this list.</figcaption><div class="donuts">'
+            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars (bands in thousands). The orange column holds the median, {money(md_)}.</figcaption>'
+                   + vcols([(("<75" if lo == 0 else f"{lo}+" if hi > 1000 else f"{lo}"), c_,
+                              f"{'under $75K' if lo == 0 else f'${lo}K and more' if hi > 1000 else f'${lo}K to ${hi}K'} · {c_:,} postings")
+                             for lo, hi in eg for c_ in [sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)]],
+                            hi=next((i for i, (lo, hi) in enumerate(eg) if lo * 1000 <= md_ < hi * 1000), None), aria="Postings by yearly pay band") + "</figure>")
+        rings = (f'<figure class="pic"><figcaption><b>Three numbers</b>Out of {len(js):,} open jobs in this list.</figcaption><div class="stats3">'
                  + donut(sum(j["remote"] for j in js), len(js), "can be done from home") + donut(sum(bool(j["salary"]) for j in js), len(js), "state the pay")
                  + donut(sum(1 for j in js if j["entry"]), len(js), "are for beginners") + "</div></figure>")
         return f'<div class="pics two">{pay}{rings}</div>'
@@ -1248,20 +1277,43 @@ def main():
         f'<a href="{P}/categories/{fs}/"><span class="hn">{e(fn)}</span><span class="hb"><i style="width:{max(3, round(100 * len(js_) / len(fam_top[0][4])))}%"></i></span><span class="hc">{len(js_):,}</span></a>' for fs, fn, _, _, js_ in fam_top) + "</div>"
     mids_all = [(j["usd"][0] + j["usd"][1]) / 2 for j in active if j["usd"]]
     edges = [(0, 75), (75, 100), (100, 125), (125, 150), (150, 175), (175, 200), (200, 250), (250, 300), (300, 10 ** 6)]
-    pay_cols = [(("<$75K" if lo == 0 else f"${lo}K+" if hi > 1000 else f"${lo}K"), sum(1 for v in mids_all if lo * 1000 <= v < hi * 1000)) for lo, hi in edges]
+    pay_lb = lambda lo, hi: "<75" if lo == 0 else f"{lo}+" if hi > 1000 else f"{lo}"          # thousands of dollars; the caption says so
+    pay_tip = lambda lo, hi: "under $75K" if lo == 0 else f"${lo}K and more" if hi > 1000 else f"${lo}K to ${hi}K"
     med_all = median(mids_all) if mids_all else 0
+    q_srt = sorted(mids_all)
+    q_lo, q_hi = (q_srt[len(q_srt) // 4], q_srt[(3 * len(q_srt)) // 4]) if q_srt else (0, 0)
     med_i = next((i for i, (lo, hi) in enumerate(edges) if lo * 1000 <= med_all < hi * 1000), None)
-    days14 = [(datetime.date.today() - datetime.timedelta(days=d)) for d in range(13, -1, -1)]
+    pay_pts = [(pay_lb(lo, hi), c_, f"{pay_tip(lo, hi)} · {c_:,} postings" + (" · the median is here" if i == med_i else ""))
+               for i, (lo, hi) in enumerate(edges) for c_ in [sum(1 for v in mids_all if lo * 1000 <= v < hi * 1000)]]
+    # New jobs: by day (the last 14 days and today so far) or by week (the last 12 weeks and this one so far). Counted from the
+    # jobs still open, by the day the employer posted them; today and this week are drawn lighter because they are still filling.
+    today_ = datetime.date.today()
     by_day = Counter((j["posted"] or "")[:10] for j in active)
-    day_cols = [(f"{d.day}", by_day.get(d.isoformat(), 0)) for d in days14]
+    days15 = [today_ - datetime.timedelta(days=d) for d in range(14, -1, -1)]
+    day_pts = [(f"{d.day}", by_day.get(d.isoformat(), 0), f"{'Today so far' if d == today_ else d.strftime('%a, %b ') + str(d.day)} · {by_day.get(d.isoformat(), 0):,} new jobs") for d in days15]
+    wk0 = today_ - datetime.timedelta(days=today_.weekday())
+    weeks = [wk0 - datetime.timedelta(weeks=w) for w in range(12, -1, -1)]
+    def wk_count(w):
+        return sum(by_day.get((w + datetime.timedelta(days=k)).isoformat(), 0) for k in range(7))
+    wk_pts = [(f"{w.strftime('%b')} {w.day}" if i % 3 == 0 or w == wk0 else "", wk_count(w),
+               f"{'This week so far' if w == wk0 else 'Week of ' + w.strftime('%b ') + str(w.day)} · {wk_count(w):,} new jobs") for i, w in enumerate(weeks)]
     n_pay, n_ent = sum(bool(j["salary"]) for j in active), sum(1 for j in active if j["entry"])
+    new_jobs_fig = ('<figure class="pic"><figcaption><b>New jobs</b>Jobs still open, by the day the employer posted them. '
+                    'The last column is still filling up.</figcaption>'
+                    '<div class="vtabs"><input type="radio" name="nj" id="nj-d" checked><label for="nj-d">By day</label>'
+                    '<input type="radio" name="nj" id="nj-w"><label for="nj-w">By week</label>'
+                    f'<div class="vtab" id="nj-dp">{vcols(day_pts, now=len(day_pts) - 1, aria="New jobs by day, last 14 days and today")}</div>'
+                    f'<div class="vtab" id="nj-wp">{vcols(wk_pts, now=len(wk_pts) - 1, aria="New jobs by week, last 12 weeks and this week")}</div></div></figure>')
     market_pics = ('<div class="pics">'
                    f'<figure class="pic"><figcaption><b>Where the jobs are</b>Open jobs in the ten largest fields. A job can count in two fields.</figcaption>{pic_fields}</figure>'
-                   f'<figure class="pic"><figcaption><b>What the postings pay</b>{len(mids_all):,} postings state a yearly range in US dollars. The middle of the range is most often here; the green column holds the median, {money(med_all)}.</figcaption>{cols(pay_cols, med_i)}</figure>'
-                   f'<figure class="pic"><figcaption><b>Three numbers about today’s jobs</b>Out of {n:,} open jobs.</figcaption><div class="donuts">'
-                   + donut(len(remote), n, "can be done from home") + donut(n_pay, n, "state the pay") + donut(n_ent, n, "are for beginners") + "</div></figure>"
-                   f'<figure class="pic"><figcaption><b>New jobs, day by day</b>Open jobs by the day the employer posted them, last 14 days. The numbers under the columns are days of the month.</figcaption>{cols(day_cols)}</figure>'
-                   "</div>")
+                   f'<figure class="pic"><figcaption><b>What the postings pay</b>{len(mids_all):,} postings state a yearly range in US dollars: '
+                   f'how many sit in each band, by the middle of their range, in thousands of dollars. The orange column holds the median, {money(med_all)}.</figcaption>'
+                   f'{vcols(pay_pts, hi=med_i, aria="Postings by yearly pay band")}'
+                   + (f'<p class="vc-note"><span><b>{money(med_all)}</b>median</span><span><b>{money(q_lo)}–{money(q_hi)}</b>the middle half of postings</span>'
+                      f'<span><b>{sum(1 for v in mids_all if v >= 200000):,}</b>pay $200K or more</span></p>' if mids_all else "") + '</figure>'
+                   f'<figure class="pic"><figcaption><b>Three numbers about today’s jobs</b>Out of {n:,} open jobs.</figcaption><div class="stats3">'
+                   + meter(len(remote), n, "can be done from home") + meter(n_pay, n, "state the pay") + meter(n_ent, n, "are for beginners") + "</div></figure>"
+                   + new_jobs_fig + "</div>")
     ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
     TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT)       # [(path, name, one line)]
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
@@ -1404,10 +1456,16 @@ def main():
            ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with email alerts and AI resume tools is on the way; no job will be held back for it."),
            ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
            ("Can I see salaries?", "Where the employer publishes a range, we show it, let you filter and sort by it, and use it for the salary pages.")]
-    faq_html = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in FAQ) + "</dl>"
+    faq_html = '<div class="faq2">' + "".join(f'<details><summary>{e(q_)}</summary><p>{e(a_)}</p></details>' for q_, a_ in FAQ) + "</div>"
     faq_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in FAQ]}) + "</script>")
     top_paid = diverse_pairs(sorted(((j, j["usd"]) for j in active if j["usd"]), key=lambda x: -x[1][1]), 8)
+    pay_max = max((u[1] for _, u in top_paid), default=1) or 1
+    paid_board = '<ol class="payrank">' + "".join(
+        f'<li><a href="{P}/job/{j["slug"]}/"><span class="pr-n">{i}</span>{ava(j["company"])}'
+        f'<span class="pr-t"><b>{e(j["title"])}</b><span>{e(j["company"])}{" · " + loc_flags(j["location"]) + e(j["location"][:48]) if j["location"] else ""}</span></span>'
+        f'<span class="pr-p"><b>{e(money(u[0]))}–{e(money(u[1]))}</b><span class="pr-b" aria-hidden="true"><i style="left:{100 * u[0] / pay_max:.1f}%;width:{max(2, 100 * (u[1] - u[0]) / pay_max):.1f}%"></i></span></span></a></li>'
+        for i, (j, u) in enumerate(top_paid, 1)) + "</ol>"
     # From the future: what this site does that no job site does yet (the owner: "think 30 years ahead, I do not see it").
     # Defined here so the home page shows them; /ahead/ lists them first, then the earlier ten.
     FUTURE = [
@@ -1433,7 +1491,7 @@ def main():
             + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.")
             + section("The job market today, in four pictures", market_pics, ("insights/", "All rankings and charts"), sub="Counted from today’s open jobs, redone on every update.")
             + pulse + anatomy
-            + '<div class="inkband">' + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data"), sub="Only jobs that state a yearly pay, converted to US dollars.") + "</div>"
+            + section("Highest paid right now", paid_board, ("salaries/", "Salary data"), sub="Only jobs that state a yearly pay, converted to US dollars. The bar shows the range against the top one.")
             + '<section class="sec"><div class="sec-head"><h2>Browse the jobs</h2></div><div class="tabs2">'
               '<input type="radio" name="dir" id="dir-role" checked><label for="dir-role">By role</label>'
               '<input type="radio" name="dir" id="dir-loc"><label for="dir-loc">By location</label>'
@@ -1445,10 +1503,20 @@ def main():
             + future_home
             + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u in tools_pages.EXTRA + [u for u, nm, d_ in TOOLS[:3]]) + "</div>",
                       ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"), sub="Each one opens with a worked example, free and without sign-up.")
-            + section("For your own site", '<div class="feats">'
-                      f'<a class="feat" href="{P}/widgets/"><h3>A list of jobs for your site</h3><p>Have a blog, a community or a company site? Put a small list of fresh jobs on it. You paste a short piece of code once and the list keeps itself up to date.</p></a>'
-                      f'<a class="feat" href="{P}/widgets/"><h3>A “we’re hiring” picture with a live number</h3><p>A small image that shows how many roles are open today. For a site footer, a blog post or a project page.</p></a>'
-                      f'<a class="feat" href="{P}/api/"><h3>For programmers</h3><p>The whole job list in a form that programs can read (an API), refreshed every hour. Free, with nothing to sign up for.</p></a></div>')
+            + section("For your own site", '<div class="tgrid own">'
+                      f'<a class="tcard" href="{P}/widgets/"><span class="tprev" aria-hidden="true"><span class="ex">widget</span>'
+                      '<span class="wl"><b>Senior Data Engineer</b><span>Spotify · Remote</span></span><span class="wl"><b>Product Designer</b><span>Monzo · London</span></span>'
+                      '<span class="wl"><b>DevOps Engineer</b><span>GitLab · Remote</span></span></span>'
+                      '<span class="tbody"><b>A list of jobs for your site</b><span>For a blog, a community or a company site: paste a short code once and the list stays fresh by itself.</span><i><u>Make yours</u></i></span></a>'
+                      f'<a class="tcard" href="{P}/widgets/"><span class="tprev center" aria-hidden="true"><img src="{P}/hiring-badge.svg" alt="" width="220" height="48" loading="lazy"></span>'
+                      '<span class="tbody"><b>A “we’re hiring” badge with a live number</b><span>A small picture that shows how many roles are open today, for a footer, a post or a project page.</span><i><u>Get the badge</u></i></span></a>'
+                      f'<a class="tcard" href="{P}/board/"><span class="tprev tv" aria-hidden="true"><span class="tvh"><b>Fresh on the board</b><span>2 / 4 · 19:34</span></span>'
+                      '<span class="tvr"><em>1D</em>Data Engineer<span>itD Tech</span></span><span class="tvr"><em>1D</em>Account Executive<span>Staffbase</span></span>'
+                      '<span class="tvr"><em>2D</em>GTM Specialist<span>ZoomInfo</span></span></span>'
+                      '<span class="tbody"><b>A live wall for an office screen</b><span>For a TV in the office, a coworking space or a classroom: fresh jobs fill the screen and turn the page every 9 seconds.</span><i><u>Open the wall</u></i></span></a>'
+                      f'<a class="tcard" href="{P}/api/"><span class="tprev" aria-hidden="true"><code>GET /api/v1/latest.json\n{{ "total": {n},\n  "jobs": [{{ "title": "…",\n    "company": "…" }}] }}</code></span>'
+                      '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
+                      '</div>', sub="Free, no account: put our jobs where your readers already are.")
             + section("Common questions", faq_html, sub="Short answers about where the jobs come from and how to use the site."))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
          f"Tired of job listings that closed weeks ago? {roles(n)} at {m} tech companies, checked against their career pages every hour. Remote and salary filters.", home, hero=hero,
