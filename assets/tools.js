@@ -446,7 +446,11 @@
   var BULLET = /^\s*(?:[-*•·▪◦‣–—>]|\d{1,2}[.)])\s+\S/;
   var PAYWORD = /salary|salaries|compensation|\bpay\b|\bbase\b|\bote\b|per annum|\/\s?(?:year|yr|hour|hr)|per hour|hourly|day rate|\bp\.a\.|remuneration|wage/i;
   var NOTPAY = /budget|stipend|allowance|bonus|revenue|funding|raised|valuation|\barr\b|turnover|customers|users|volume|assets|\baum\b|transactions/i;
-  var AMOUNT = /(?:[$€£₹¥]|\b(?:USD|EUR|GBP|CAD|AUD|CHF|SGD|INR)\b)\s?\d[\d,.]*\s?[kKmM]?\b|\b\d[\d,.]*\s?[kK]?\s?(?:USD|EUR|GBP|CAD|AUD|CHF|SGD|INR|dollars|euros|pounds)\b/g;
+  // a money figure: a symbol or a code in front or behind it, thousands split by a comma, a dot or a space ("120 000"), no dot left on its end
+  var CODE = '(?:USD|EUR|GBP|CAD|AUD|CHF|SGD|INR)', CUR = '(?:[$€£₹¥]|US\\$|\\b' + CODE + '\\b)';
+  var NUMB = '(?:\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+(?:[.,]\\d+)?|\\d(?:[\\d,.]*\\d)?)';
+  var AMOUNT = new RegExp(CUR + '\\s?' + NUMB + '\\s?[kKmM]?\\b|\\b' + NUMB + '\\s?[kK]?\\s?(?:' + CODE + '|dollars|euros|pounds)\\b', 'g');
+  var RANGE_RE = '(?:' + CUR + '\\s?)?' + NUMB + '\\s?[kKmM]?(?:\\s?' + CODE + ')?\\s?(?:[-–—]|to)\\s?(?:' + CUR + '\\s?)?' + NUMB + '\\s?[kKmM]?(?:\\s?' + CODE + ')?';
   T.checkJD = function (text) {
     text = String(text || '');
     var rd = T.readability(text), words = rd.words;
@@ -466,10 +470,13 @@
     var amounts = [], m, near = function (i, len) { return PAYWORD.test(lower.slice(Math.max(0, i - 70), i + len + 40)) && !NOTPAY.test(lower.slice(Math.max(0, i - 40), i)); };
     AMOUNT.lastIndex = 0;
     while ((m = AMOUNT.exec(text))) amounts.push({ s: m[0], near: near(m.index, m[0].length) && !/\d\s?m$/i.test(m[0].trim()) });
-    var range = null, RANGE = /(?:[$€£₹¥]\s?\d[\d,.]*\s?[kKmM]?|\b\d[\d,.]*\s?[kK])\s?(?:[-–—]|to)\s?[$€£₹¥]?\s?\d[\d,.]*\s?[kKmM]?\b/g;
-    while (!range && (m = RANGE.exec(text))) {          // …or when it is a range that looks like a salary on its own ($120k–$150k)
+    var range = null, RANGE = new RegExp(RANGE_RE, 'g');
+    while (!range && (m = RANGE.exec(text))) {          // …or when it is a range that looks like a salary on its own ($120k–$150k, USD 120,000 - 150,000, 90 000 - 110 000 CAD)
       if (/\d\s?m\b/i.test(m[0]) || NOTPAY.test(lower.slice(Math.max(0, m.index - 40), m.index))) continue;
-      if (near(m.index, m[0].length) || (/[$€£₹¥]/.test(m[0]) && /k|\d{2,3}[,.]?\d{3}/i.test(m[0]))) range = m;
+      var sides = m[0].replace(new RegExp(CUR + '|' + CODE, 'g'), ' ').split(/\s?(?:[-–—]|\bto\b)\s?/), lo = num(sides[0]), hi = num(sides[sides.length - 1]);
+      if (lo >= 1900 && lo <= 2100 && hi >= 1900 && hi <= 2100) continue;          // years, not pay
+      var money = new RegExp(CUR + '|\\b' + CODE + '\\b').test(m[0]), thousands = /\d\s?k/i.test(m[0]) || lo >= 1000 || hi >= 1000;
+      if ((near(m.index, m[0].length) && (money || thousands)) || (money && thousands)) range = m;
     }
     var pay = amounts.filter(function (a) { return a.near; });
     if (range) add('ok', 'Salary range is stated', 'Found: ' + clean(range[0]) + '. Say whether it is per year or per hour and what it depends on.');

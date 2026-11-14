@@ -287,6 +287,15 @@ ok('bad: buzzwords', ['fast-paced', 'world-class', 'self-starter', 'hit the grou
 ok('bad: 10+ years flagged', jd.items.some(function (i) { return /10\+ years/.test(i.t); }));
 ok('bad: no location / benefits flagged', jd.items.some(function (i) { return /where the work happens/.test(i.t); }) && jd.items.some(function (i) { return /No benefits/.test(i.t); }));
 ok('bad: fixes come first', jd.items[0].level === 'fix');
+/* salary formats the checker must read (AUDIT 61) */
+const JDPAD = ' We are looking for an engineer to build backend services for our payments platform. You will own services, review code, and work with product. Requirements: five years of experience with Python, strong communication, and a degree or equivalent. Benefits include health cover, equity, learning budget and flexible hours. Location is remote across Europe.'.repeat(2);
+function jdPay(line) { const r = T.checkJD(line + '.' + JDPAD); const it = r.items.filter(function (i) { return /salary|pay figure|pay range/i.test(i.t); })[0]; return it ? it.t + ' | ' + it.d : ''; }
+[['Base salary: 120 000 – 150 000 USD', '120 000 – 150 000 USD'], ['Salary range: USD 120,000 - 150,000', 'USD 120,000 - 150,000'], ['Salary: CAD 90,000 to 110,000', 'CAD 90,000 to 110,000'],
+ ['Salary: 90,000 - 110,000 CAD', '90,000 - 110,000 CAD'], ['Salary: €70.000 – €90.000', '€70.000 – €90.000'], ['Base: US$130,000-US$160,000', 'US$130,000-US$160,000']].forEach(function (c) {
+  const t = jdPay(c[0]); ok('jd salary range read: ' + c[0], /Salary range is stated/.test(t) && t.indexOf('Found: ' + c[1] + '.') >= 0 && t.indexOf('..') < 0, t); });
+ok('jd: one figure with a space-split thousand is whole', /Found: 85 000 EUR\./.test(jdPay('Salary: 85 000 EUR')) || /Found: 85 000 EUR/.test(jdPay('Salary: 85 000 EUR')), jdPay('Salary: 85 000 EUR'));
+ok('jd: years next to the word salary are not a range', !/Salary range is stated/.test(jdPay('Our salary review has run since 2020-2024')), jdPay('Our salary review has run since 2020-2024'));
+ok('jd: "5-7 years" near pay is not a range', !/Salary range is stated/.test(jdPay('Salary depends on 5-7 years of experience')), jdPay('Salary depends on 5-7 years of experience'));
 eq('too short', T.checkJD('Hiring a developer.').error, 'short');
 eq('empty', T.checkJD('').error, 'short');
 ok('score never negative', T.checkJD(BAD + ' ' + BAD.replace(/\n/g, ' ')).score >= 0);
