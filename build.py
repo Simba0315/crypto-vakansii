@@ -434,7 +434,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -2404,6 +2404,63 @@ def main():
          '<p class="lead">Each example comes with the skills employers name for that work in today’s open postings, counted again at every update. Pick your work, open the example in the builder and replace it line by line.</p>'
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
          f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">resume builder</a> works for any job.</p>' + rex_html)
+
+    # Cover letter examples, one per kind of work (the Rezi study: cover letter pages bring that site 6% of its search visits).
+    # Each letter is built from the results in that work's resume example, so the two match; the page adds what today's postings say.
+    CL_RX = re.compile(r"cover[\s-]*letter", re.I)
+    cl_dir = defaultdict(list)
+    for slug_r, d in rex_data.items():
+        rname, rj = by_role[slug_r]
+        fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
+        low = rlow(rname)
+        lines_ = [ln.strip() for ln in (d["exp"][0]["text"] if d["exp"] else "").split("\n") if ln.strip()][:2]
+        cnt_ = Counter(t for j in rj for t in j["tags"])
+        top_ = [t for t, _ in resume_examples.asked(slug_r, cnt_.most_common(), len(rj))][:3]
+        tech_ = slug_r in resume_examples.TECH
+        letter_ = ("Dear Hiring Manager,\n\n"
+                   f"I am applying for the {d['title']} position at [Company]. I have [number] years of experience as {art(low)} {low}, most recently at [Current company], "
+                   f"where my focus is {d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1]}.\n\n"
+                   + ("Two results from that work:\n" + "\n".join(f"- {ln}" for ln in lines_) + "\n\n" if lines_ else "")
+                   + "[One or two sentences on why this company: a product you use, a goal from the posting, a problem you can help with.] "
+                   + (f"I would bring the same focus on measurable results, and hands-on experience with {', '.join(top_[:-1]) + ' and ' + top_[-1] if len(top_) > 1 else top_[0]}, which the posting asks for.\n\n" if tech_ and top_
+                      else "I would bring the same focus on measurable results to your team.\n\n")
+                   + "I would welcome the chance to talk about how I can help. Thank you for your time.\n\nSincerely,\n[Your name]")
+        descs_ = [j for j in rj if j.get("desc")]
+        ask_cl = sum(1 for j in descs_ if CL_RX.search(j["desc"])) if len(descs_) >= 30 else None
+        mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"]]
+        cl_qa = [(f"What should {art(low)} {low} cover letter include?", f"Three things: the role you are applying for, one or two results from your {low} work with numbers, and one specific reason you want this company. "
+                  + (f"Name the skills the posting names; for this work the most frequent today are {', '.join(top_)}." if top_ else "Use the words the posting uses for its duties.")),
+                 (f"Do {low} jobs ask for a cover letter?", ((f"Only {ask_cl} of the {len(descs_):,} open {low} postings with a full description here mention a cover letter in their text" if ask_cl else f"None of the {len(descs_):,} open {low} postings with a full description here mention a cover letter in their text")
+                                                              + " (counted today). The application form often has a separate field for one: when it does, a short letter still helps."
+                                                              if ask_cl is not None else "Many postings make it optional. A short letter still helps when the application form has a place for it.")),
+                 (f"How long should {art(low)} {low} cover letter be?", "Three short paragraphs, under 250 words: a screen without scrolling. Recruiters read the first lines and the results; everything else is skipped.")]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        facts_ = (f'<dl class="facts"><div><dt>Open {e(low)} jobs today</dt><dd>{len(rj):,}</dd></div><div><dt>Can be done from home</dt><dd>{pc_(sum(j["remote"] for j in rj), len(rj))}%</dd></div>'
+                  + (f'<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>' if len(mids_) >= 30 else "") + "</dl>")
+        cl_dir[fs].append((slug_r, rname, len(rj)))
+        page(f"cover-letter-examples/{slug_r}/", f"{tcase(rname)} Cover Letter Example ({TODAY[:4]}) | {SITE}",
+             f"A {low} cover letter example built around measured results, with what today’s {len(rj):,} open {low} postings ask for. Copy it and fill in the brackets.",
+             crumbs(("Cover letter examples", "cover-letter-examples/"), (rname, "")) + f'<h1>{e(rname)} cover letter example: <span class="hl">results first</span></h1>'
+             f'<p class="lead">A cover letter for {e(low)} jobs that leads with what you achieved, not with what you were responsible for. Copy it, replace the parts in [brackets] and use the words of the posting you answer.</p>'
+             + facts_
+             + f'<div class="rl-paper"><pre id="letter">{e(letter_)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> '
+               f'<a class="btn ghost sm" href="{P}/tools/cover-letter/" style="margin-top:0">Write yours with the free builder</a></p></div>'
+             + section(f"Questions about {art(low)} {low} cover letter", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cl_qa) + "</dl>")
+             + section("Use it with", '<div class="feats">'
+                       f'<a class="feat" href="{P}/resume/examples/{slug_r}/"><h3>The {e(low)} resume example</h3><p>The same results, laid out as a one-page resume you can open in the builder.</p></a>'
+                       f'<a class="feat" href="{P}/tools/resume-match/"><h3>Check against a posting</h3><p>See which of the posting’s words your resume and letter are missing.</p></a>'
+                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{len(rj):,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>'), head=ld_)
+    cl_n = sum(len(v) for v in cl_dir.values())
+    cl_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(cl_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/cover-letter-examples/{s_}/">{e(nm)}</a><span>{k:,} jobs</span></li>' for s_, nm, k in sorted(cl_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if cl_dir.get(fs)) + "</div>"
+    page("cover-letter-examples/", f"Cover Letter Examples for {cl_n} Kinds of Work ({TODAY[:4]}) | {SITE}",
+         f"{cl_n} cover letter examples, one for each kind of work, built around measured results and the skills today’s open postings ask for. Copy one or write yours in the free builder.",
+         crumbs(("Cover letter examples", "")) + f'<h1>Cover letter examples for <span class="hl">{cl_n} kinds of work</span></h1>'
+         f'<p class="lead">Each letter leads with two results from that work and names the skills employers ask for in today’s open postings. Pick your work, copy the letter and fill in the brackets, or write your own in the <a href="{P}/tools/cover-letter/">cover letter builder</a>.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/tools/cover-letter/">cover letter builder</a> works for any job.</p>' + cl_html)
 
     # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.

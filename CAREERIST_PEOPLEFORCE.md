@@ -88,3 +88,143 @@ Source: https://careerist.cc/sitemap.xml (one flat file, about 194,000 character
 
 What this tells us: Careerist gets its search traffic from a few hundred blog posts plus 7 one-keyword tool pages. It has no programmatic pages (no job pages, no salary-by-city pages, no resume-example pages). We already have far more pages of the kind that bring search traffic.
 
+---
+
+## 2. PeopleForce (peopleforce.io)
+
+**In one line:** HR software that companies pay for per employee per month. Its users are HR people and recruiters at small and mid-size firms, mostly in Ukraine, Poland and the rest of Europe. It is a possible *partner* for us (we could be a job board inside it), not a competitor.
+
+Numbers on the home page (page says): "1,800+ companies", "120,000 active users", "25+ countries", "98%" satisfaction, first reply in "2 min", ISO 27001, data in Frankfurt. Source: https://peopleforce.io. (In April 2025 the news said 1,300+ clients; see `COMPANIES_RESEARCH.md`.)
+
+### 2.1 Modules and services
+
+All from the menu of https://peopleforce.io.
+
+| Module | What is inside |
+|---|---|
+| Core HR | HR database, employee directory and org chart, leave and paid time off, onboarding and offboarding, preboarding, workflows, request forms, e-signature, documents, knowledge base, internal news, asset tracking, pay components, pay gap (pay transparency) report, HR security |
+| Recruit (ATS) | applicant tracking, AI candidate screening, talent pools, interview scheduling, interview scorecards, recruiting reports, job board posting, careers page builder, GDPR consent, candidate tests, offers, "Prospector" (save candidates from LinkedIn, GitHub, Djinni, Work.ua and others) |
+| Perform | performance reviews (180° and 360°), OKR, KPI, development plans, recognition, feedback, competencies, 1-on-1 meetings, talent calibration (9-box) |
+| Time | timesheets, attendance rules, overtime, project time |
+| Desk | HR helpdesk, anonymous whistleblowing ("Safe Speak") |
+| Pulse | eNPS, lifecycle surveys, engagement reports |
+| Payroll Hub | payroll runs and cycles, cost centres, multi-currency, payslips, invoices, export. It prepares payroll; it does not pay people itself (no "pay" step is described). |
+| Learn | listed, no sub-pages |
+| AI | AI assistant, resume screening and scoring, CV parsing, interview notes, writing coach for reviews, review insights; an MCP connector for ChatGPT and Claude |
+| Other | reports, mobile app, API and webhooks, Zapier and n8n, 4 site languages (English, Spanish, Polish, Ukrainian) |
+| Services | free onboarding, customer success manager, implementation partners, 14-day trial after a demo |
+
+### 2.2 Pricing model
+
+Source: https://peopleforce.io/pricing.
+
+- **Per employee per month, sold in modules.** Only Core HR has a public price: Standard **$2.5**, Professional **$3** per employee per month.
+- **Minimum 50 employees** (so at least $125 a month). Yearly billing is shown as "-20%".
+- Recruit, Perform, Pulse, Time, Desk, Payroll, AI: **no public price**, "Add product" goes through sales.
+- No free plan. 14-day trial after a demo, no card needed. No onboarding fee. Card or direct debit. Taxes added on top.
+- Publishing on job boards where the company has its own contract needs a paid "Contracts add-on". Source: https://peopleforce.io/products/peoplerecruit/job-board-posting.
+
+### 2.3 Job boards they post to (the part that matters for us)
+
+| Channel | How | Source |
+|---|---|---|
+| Work.ua, Robota.ua, Djinni (Ukraine) | Direct integration. Employer links its board accounts once, then publishes from the vacancy; applicants sync every 3 hours. | https://peopleforce.io/products/peoplerecruit/job-board-posting |
+| Happy Monday (Ukrainian job board) | Built by the board: the employer makes an API key in PeopleForce and pastes it into Happy Monday; each applicant (name, email, phone, CV, letter, profile link) lands in PeopleForce tagged "Happy Monday". Free on all plans (page says). | https://help.peopleforce.io/en/articles/11407641-happy-monday-integration (search result summary) |
+| Lezo (AI matching service) | Same pattern: API key pasted into Lezo; Lezo pushes candidates into a chosen vacancy and stage. | https://help.peopleforce.io/en/articles/9459830-lezo-integration (search result summary) |
+| VONQ (paid job ads) | Paid channels from VONQ's catalogue, sorted by the job's country, paid in one checkout inside PeopleForce. VONQ's own product sheet says its marketplace has "2500+ job boards, communities and social media channels". | job-board-posting page above; https://www.vonq.com/wp-content/uploads/2025/12/HAPI-Product-Sheet.pdf (search result only) |
+| DOU | No sync. Employer puts the careers-page link in the DOU ad with DOU as the source. | job-board-posting page |
+| LinkedIn | "There's no free LinkedIn integration." Paid via VONQ or the employer's own LinkedIn contract. | job-board-posting page |
+| Telegram | Link sharing only. | job-board-posting page |
+| Not mentioned | Indeed, Glassdoor, Google for Jobs, XML feeds, Pracuj.pl (even though Pracuj Ventures is an investor). | job-board-posting page |
+
+Integrations page lists **40 integrations**, 7 of them "Job sites": Work.ua, Robota.ua, Djinni, Happy Monday, Lezo, VONQ, Prospector. Also 4 ATS (Workable, Greenhouse, eRecruiter, Ashby). Source: https://peopleforce.io/integrations.
+
+**How a job board gets in (three doors):**
+
+1. **Build the "job board" integration ourselves.** PeopleForce has a developer guide for exactly this. The employer creates an API key in PeopleForce and gives it to the board. The board reads the employer's open vacancies (`state=opened`), lets the employer pick which to post, and sends each applicant back into PeopleForce with a `source` name. The guide warns the recruitment endpoints are "not yet part of the public Company API v4 surface", so the board must confirm with PeopleForce first. Test access is asked for through https://peopleforce.io/partners. Source: https://developer.peopleforce.io/careers/v1/guides/job-boards.
+2. **Careers API.** Read-only list of a company's published vacancies at `app.peopleforce.io/api/careers/v1/vacancies`, needs a "Career API key" from the company. Source: https://developer.peopleforce.io/careers/v1/getting-started (search result summary).
+3. **Join the VONQ catalogue** and be sold as a paid channel inside PeopleForce (and inside Greenhouse, Zoho Recruit, JazzHR and other systems that use VONQ). I found no public "add your job board" page at VONQ; its partner help pages returned 403. VONQ's FAQ for its free "Organic Posting Network" says partners can request a board "but there is no guarantee". Sources: search results for hapisupport.vonq.com; https://hapisupport.vonq.com/hc/en-us/articles/22294089087772-Integration (403, not opened).
+
+**Reading their customers' jobs:** PeopleForce careers pages look like `{company}.peopleforce.io/careers` with jobs at `/careers/v/{id}-{slug}` (example: https://team.peopleforce.io/careers, 5 open jobs). Our collector reads only Greenhouse, Lever and Ashby (`collect.py`, `fetch_feed`). Most PeopleForce customers hire in Ukraine and Europe, so the gain for an English board is small. Whether these pages carry JobPosting data could not be checked (the reader shows text only).
+
+### 2.4 Free tools and content for HR people
+
+| Thing | Count | Source |
+|---|---|---|
+| HR glossary | about **297** English terms (my reader's hand count of the A-Y index), one page each at `/hr-glossary/{term}`; mirrored in Spanish (about 92 in one sitemap part), Polish and Ukrainian | https://peopleforce.io/hr-glossary, https://peopleforce.io/sitemap.xml |
+| "Guides & Research" (called HR templates) | **6** in English: 5 e-books and 1 checklist (EU pay transparency). Filters exist for templates, policies, surveys, AI prompts, but they are empty. | https://peopleforce.io/hr-templates |
+| Job description templates | **0**. A site search found only the glossary entry "Job description". | WebSearch `site:peopleforce.io job description template` |
+| Calculators | **1**: "HR efficiency estimator" (employees, HR staff, salaries in → hours and money saved with PeopleForce out). | https://peopleforce.io/hr-efficiency-calculator |
+| Blog | about 135 English posts in the first sitemap part, plus Spanish, Polish, Ukrainian posts; includes "best HRM systems" and "Zoho alternatives" comparison posts | sitemap |
+| Case studies | 20 on page one, more on page two; each with one number (for example SpaceDev hiring time "14 days → 1 day") | https://peopleforce.io/case-study |
+| Webinars | 7 listed, newest 18 Sep 2025 | https://peopleforce.io/events |
+| Product updates, podcast "PeopleCast" | about 65 update pages and 19 podcast pages in the Ukrainian sitemap part | sitemap |
+
+**Sitemap:** one very large file (about 1.83 million characters) because every URL carries 4 language alternates. I sampled 6 of its 19 parts; I did not count the total. Sections seen: blog, hr-glossary, products (about 70 per language), integrations, case-study, events, product-updates, peoplecast, hr-templates, compare, legal pages. Source: https://peopleforce.io/sitemap.xml.
+
+What this tells us: PeopleForce gets HR-side search traffic from a big multi-language glossary and a blog. It has almost no free tools or templates. The free HR templates space (job descriptions, interview questions, offer letters) is open.
+
+---
+
+## 3. Their things against ours
+
+How I checked "do we have it": tool list from `site/tools/` (28 tools plus the index; source `tools_pages.py`), page types from `build.py` and the site menu (resume builder, resume and cover letter examples, resignation letters, salaries, mentors, glossary, guides, feeds, API, widgets, partners, Plus, post a job). We also have a small server in `server/` (Cloudflare worker), so "needs a server" does not mean impossible.
+
+### 3.1 Careerist
+
+| Their product or page | Do we have it | Static site? | Worth it for us? (one line) |
+|---|---|---|---|
+| Paid courses (QA, AI automation, tech sales) | no | not our business | No. Needs teachers, refunds, US loans; a different company. |
+| Money-back job guarantee | no | not our business | No. Only works when you sell a $3,000+ course; their rules (80 applications a week) show it is mostly marketing. |
+| 1:1 career coaching, mock interviews | partly (`/mentors/` is announced, not live; Plus has AI interview questions with feedback) | needs a server + people | Later. Careerist bundles it into every course, which shows people pay for it; our mentors marketplace is the cheap version. |
+| Job search help: "curated daily job openings" | yes (jobs for you, Plus job alerts, 230 RSS feeds) | have | Already ours, and free; say so louder on landing pages. |
+| AI interview coach (free tool) | partly (in Plus, paid; free STAR answer builder) | needs a server (AI) | No change. A free AI version costs money per use. |
+| Free resume builder | yes | have | Already ours. |
+| AI cover letter writer | yes (free builder; AI in Plus) | have | Already ours. |
+| "AI job descriptions for your resume" | partly (resume bullet builder; Plus rewording) | have | No change. |
+| Future salary calculator | partly (raise calculator, salary checker, salary pages) | easy | Low. We already cover the search terms. |
+| QA engineer salary calculator | yes (salary pages per role) | have | Already ours, with live data. |
+| Job description keyword finder | partly (`resume-match` compares resume and posting) | easy | Yes. A separate one-keyword page ("keywords from a job description") is cheap search traffic; reuse the match code. |
+| Career quiz ("Take the Quiz") | no | easy (plain JavaScript) | Yes. A "which job fits me" quiz that ends on our role pages, resume examples and live jobs. |
+| Free webinars | no | needs people | No. Old (2023) on their side too. |
+| Newsletter ("Careerist Digest") | partly (Plus alerts, RSS) | needs a server to send email | Maybe. A free weekly email by field would grow a list we own. |
+| Free career consultation call (sales call) | no | needs people | No. It is their sales funnel, not a service. |
+| "Success" and "Outcomes" pages with numbers | partly (`/methodology/`, data freshness pages; no user stories) | easy | Yes, but only with numbers we can prove; their unsourced "89%" is a weak spot we should not copy. |
+| Review badges (Trustpilot 4.7 and others) | no | easy once reviews exist | Later. Needs real users first. |
+| Blog, about 450 English posts + Spanish + Russian | partly (10 guides, charts, monthly reports) | easy | Partly. Their posts are generic; our pages win with live data. |
+| "How to become a QA tester / data analyst" career-change posts | partly (role pages, entry-level pages, resume examples) | easy | Yes. One "how to get into {role}" page per role, built from our postings (skills asked, entry-level share, pay, open jobs). |
+| Internship marketplace for companies | partly (`/internships/` job list) | needs people | No. |
+| Recruiting for employers, 15% of salary | no | not our business | No. An agency business. |
+| Ambassador (affiliate) program, up to $500 per student, 90-day cookie | no | needs a server for tracking (worker exists) | Yes, small: pay communities and newsletters a share of employer posts and Plus they bring. |
+| Becoming *their* affiliate (QA course links on our QA and entry-level pages) | no | easy (links) | Maybe, low priority. Money per sale is high, but US-only, their result claims are unproven, and the payout method is not stated. |
+| Spanish and Russian content | no | easy | No. Our market is English. |
+| Installments and loans | no | not needed | No. Plus costs $3. |
+
+### 3.2 PeopleForce
+
+| Their product or page | Do we have it | Static site? | Worth it for us? (one line) |
+|---|---|---|---|
+| Core HR, leave, onboarding, documents, e-signature | no | not our business | No. |
+| ATS (applicant tracking) | no | not our business | No. We send applicants to the employer's own site. |
+| Performance, OKR, time tracking, helpdesk, surveys, payroll prep | no | not our business | No. |
+| Careers page builder | partly (company pages, jobs widget for any site) | easy | Maybe. "A free careers page for a small company" could feed free employer posts. |
+| Job board posting (they push jobs to boards) | n/a: we are a board | — | Yes, as a destination: see the next three rows. |
+| Being a job board inside PeopleForce (employer pastes a PeopleForce API key, we read open jobs and send applicants back tagged with our name) | no | needs a server (worker exists) | Later. Documented and free (Happy Monday did it), but their customers hire mostly in Ukraine and Europe. |
+| Being a paid channel in VONQ's catalogue (sold inside PeopleForce, Greenhouse, Zoho Recruit, JazzHR …) | no | needs a contract, then a feed | Yes, worth one email: one door into many ATS for our $29-59 posts. Terms unknown. |
+| Reading PeopleForce careers pages as a job source | no (collector reads Greenhouse, Lever, Ashby only) | easy | Low. Few English-market jobs there. |
+| Interview scorecards | yes (tool) | have | Already ours. |
+| Interview scheduling, offers | no | not our business | No. |
+| Recruiting analytics, cost savings | partly (cost-per-hire calculator) | easy | No change. |
+| HR glossary, about 297 terms, one page each, 4 languages | partly (29 job-seeker words on one page) | easy | Yes. Grow ours to 150+ terms, one page each, job seeker and hiring words; short answers suit AI search. |
+| HR templates (6 e-books, 1 checklist) | no | easy | Low. Their own section is nearly empty. |
+| Job description templates | no (we have a job description *checker*) | easy | Yes, the biggest gap: PeopleForce has 0, and we have real postings for every role. |
+| HR efficiency calculator | partly (cost-per-hire) | easy | Low. It is a sales tool for their software. |
+| eNPS, turnover, PTO accrual calculators | no | easy | Low. Employer-side; off our core. |
+| Case studies with one number each | no | needs real customers | Later, once employers post with us. |
+| Comparison posts ("best HRM systems", "Zoho alternatives") | no (our `/compare/` pages compare skills, not products) | easy | Low. |
+| Webinars, podcast | no | needs people | No. |
+| Partner page (resellers, universities) | yes (`/partners/`) | have | Already ours. |
+| Public API, JSON feed | yes (`/api/`, `/feeds/jobs.xml`) | have | Already ours, and open without a key (theirs needs one). |
+| Mobile app | partly (web app manifest and service worker) | easy | No change. |
+| MCP connector for ChatGPT and Claude | no (we have `llms.txt` and the API) | needs a server | Maybe. "Search live jobs from Claude or ChatGPT" fits our API; small build. |
+
