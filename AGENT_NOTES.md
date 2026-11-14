@@ -364,3 +364,10 @@ plain HTML, so the page is readable without the map.
 - `/vs/` reads `compare_sites.py`: every fact about another site carries a tagged source `(fact, url, date read)`; a site with fewer
   than 4 sourced rows gets no page. Re-check the facts (prices change) before relying on them; `NOT_SOURCED` lists the gaps.
 
+## Glossary and the checker (14 Nov 2026)
+
+- `/glossary/` is built from `glossary_terms.py` (run it to test). Each term: definition, what to do, links (all must exist on the
+  site), and an optional figure from `gfig` in `build.py`. The index keeps the old `#anchor` ids.
+- Read the whole output of `check.py`, not only a count of "FAIL": broken internal links are reported per template as
+  "broken internal link: N". On 14 Nov 17 of them went out unnoticed for a few hours.
+

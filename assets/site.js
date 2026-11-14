@@ -302,6 +302,10 @@
       });
       b.hidden = !any; if (any) shown++;
     });
+    document.querySelectorAll('dl#dir > div').forEach(function (row) {      // the glossary index: one row per term
+      var hit = !q || row.textContent.toLowerCase().indexOf(q) >= 0;
+      row.hidden = !hit; if (hit) shown++;
+    });
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 

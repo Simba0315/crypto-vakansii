@@ -1350,3 +1350,8 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .fitbox li.y::before{content:"\2713";background:var(--hl);color:var(--hl-ink)}
 .fitbox li.q::before{content:"?";background:var(--bg2);color:var(--muted)}
 
+/* glossary term pages */
+.gl-def{font-size:20px;line-height:1.5;max-width:68ch;color:var(--text)}
+.gl-fig{max-width:760px;margin:14px 0;padding:14px 18px;border-radius:12px;background:var(--accent-soft);font-size:16px}
+.gl-index dt a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+

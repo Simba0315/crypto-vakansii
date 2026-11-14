@@ -16,6 +16,7 @@ import geo_cities                       # where the cities in postings are, for 
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 import compare_sites                    # sourced facts for "Hiring Right Now vs <job site>" (/vs/)
+import glossary_terms                   # the glossary, one page per term (/glossary/)
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -696,7 +697,7 @@ def hub_stats(js):
     mids = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js if j.get("usd"))
     cells = [(f"{k:,}", "open roles"), (f"{sum(1 for j in js if (j['posted'] or '') >= HUB['week']):,}", "posted in the last 7 days"),
              (f"{100 * sum(j['remote'] for j in js) / k:.0f}%", "remote"), (f"{len({j['company'] for j in js}):,}", "companies hiring")]
-    if len(mids) >= 30: cells.append((money(median(mids)), f'<a href="{P}/glossary/#median">median</a> advertised salary'))
+    if len(mids) >= 30: cells.append((money(median(mids)), f'<a href="{P}/glossary/median/">median</a> advertised salary'))
     return ('<p class="stamp">' + " · ".join(f"<b>{a}</b> {b}" for a, b in cells)
             + f' · <a href="{P}/methodology/">checked {fdate(TODAY, False)} against employer career pages</a></p>')
 
@@ -1843,7 +1844,7 @@ def main():
          "Median salaries in tech by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
          crumbs(("Salaries", "")) + '<h1>Tech salaries from <span class="hl">live job postings</span></h1>'
          f'<p class="lead">{100 - SALPCT}% of open tech postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
-         f'Each figure is a <a href="{P}/glossary/#median">median</a>: half of the postings advertise more than it, half less. These are advertised ranges, not what people are actually paid.</p>'
+         f'Each figure is a <a href="{P}/glossary/median/">median</a>: half of the postings advertise more than it, half less. These are advertised ranges, not what people are actually paid.</p>'
          + (lambda mids_: f'<div class="statrow"><div class="stat"><b>{money(median(mids_))}</b><span>median advertised salary</span></div>'
                           f'<div class="stat"><b>{money(mids_[len(mids_) // 4])} – {money(mids_[3 * len(mids_) // 4])}</b><span>middle half of roles</span></div>'
                           f'<div class="stat"><b>{SALPCT}%</b><span>of open postings state pay</span></div>'
@@ -2531,7 +2532,9 @@ def main():
              + section(f"What today’s {low} postings say", '<div class="tablewrap"><table>' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p>')
              + section(f"Questions about hiring {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
-             + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · <a href="{P}/salaries/{slug_r}/">{e(low)} pay</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_)
+             + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
+             + (f'<a href="{P}/salaries/{slug_r}/">{e(low)} pay</a> · ' if (OUT / "salaries" / slug_r / "index.html").exists() else "")      # a salary page exists only from 20 postings with pay
+             + f'<a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_)
     jd_n = sum(len(v) for v in jd_dir.values())
     jd_html = '<div class="dir" id="dir">' + "".join(
         f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(jd_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/job-descriptions/{s_}/">{e(nm)}</a><span>{k:,} postings</span></li>' for s_, nm, k in sorted(jd_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
@@ -3196,49 +3199,59 @@ def main():
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div></section>'
          + f'<script src="{P}/resume.js?v={V}" defer></script>')
 
-    # Glossary: the words of a job search in plain English. Linked from every place where a term could stop a newcomer.
-    GLOSS = [
-        ("Apply on company site", "The button that takes you to the employer’s own page, where you fill in the application. We never collect applications ourselves."),
-        ("Benefits", "What the employer gives on top of pay: health insurance, a pension, paid holidays and the like."),
-        ("Category", "The kind of work: engineering, design, sales and so on. We work it out from the job title."),
-        ("Closed job", "A job the employer has taken down. Its page stays on this site, marked as closed, so old links keep working."),
-        ("Contract", "Work for a fixed period or a single project, usually paid by the hour or the day, without the benefits an employee gets."),
-        ("Cover letter", "A short letter sent with a resume that says why you want this particular job."),
-        ("Entry-level", "A job for people at the start of a career: internships, graduate roles and junior positions."),
-        ("Equity and stock options", "A share in the company, or the right to buy shares later at a price fixed today. What it is worth depends on what the company turns out to be worth."),
-        ("Featured job", "A listing an employer paid to show higher in the list. It is always labelled as featured."),
-        ("Full-time and part-time", "Full-time is usually about 40 hours a week. Part-time is fewer."),
-        ("Hiring system", "The software a company uses to publish its jobs and collect applications; Greenhouse, Lever and Ashby are examples. We read jobs straight from these systems, which is why they are current."),
-        ("Hybrid", "Part of the week in the office and part at home."),
-        ("Internship", "A short placement, usually paid, for students and recent graduates."),
-        ("Last checked", "The date we last saw the job on the employer’s own page."),
-        ("Level", "How much experience the job asks for. Junior means little, senior means several years, and lead, staff or principal are the most experienced people in a team. We read the level from the job title."),
-        ("Median", "The middle value. Line up all the salaries from lowest to highest and take the one in the middle: half are above it and half below. One very high salary hardly moves it, which is why we use it instead of an average."),
-        ("Open for", "How many days have passed since the employer posted the job. A job open for more than 90 days is flagged, because some of those are no longer being filled."),
-        ("Perk", "Something the employer offers beyond pay, such as visa sponsorship or a budget for courses. We show a perk only when the posting mentions it."),
-        ("Posting", "One job advertisement. Also called a listing."),
-        ("Recruiter", "A person whose job is to find candidates for an employer."),
-        ("Relocation", "The employer helps pay for your move to another city or country."),
-        ("Remote", "Work done from home or from anywhere outside an office. Many remote jobs are still limited to certain countries or time zones; the job page says which."),
-        ("Resume", "A one- or two-page summary of your work and education. Also called a CV."),
-        ("Salary range", "The lowest and the highest pay the employer says it may offer for the job, before tax."),
-        ("Skill", "A tool or a language that the posting mentions, such as Python or Figma. The skills page explains each one in a line."),
-        ("Talent pool", "A standing invitation to send a resume, not one specific opening."),
-        ("Visa sponsorship", "The employer helps a worker from another country get the permit needed to work there."),
-        ("Widget", "A small box with a list of jobs that the owner of a website can place on their own site."),
-        ("Work from anywhere", "A remote job whose posting names no country and no region at all."),
-    ]
-    gslug = lambda t: re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
-    gl_extra = {"Skill": f' <a href="{P}/skills/">Skills explained</a>.', "Widget": f' <a href="{P}/widgets/">The job widget</a>.', "Median": f' <a href="{P}/salaries/">Salaries</a>.',
-                "Remote": f' <a href="{P}/remote/">Remote jobs</a>.', "Entry-level": f' <a href="{P}/entry-level/">Entry-level jobs</a>.', "Resume": f' <a href="{P}/resume/">Resume builder</a>.',
-                "Closed job": f' <a href="{P}/archive/">Archive</a>.', "Perk": f' <a href="{P}/perks/">Jobs by perk</a>.'}
-    page("glossary/", f"Job Search Words Explained in Plain English | {SITE}",
-         f"{len(GLOSS)} words you meet when looking for a job, each explained in one or two plain sentences: remote, hybrid, median salary, equity, visa sponsorship and more.",
-         crumbs(("Glossary", "")) + "<h1>Job search words in plain English</h1>"
-         f'<p class="lead">{len(GLOSS)} words that come up on this site and in job postings, each explained in a sentence or two. If a word on the site is not here, it should be: tell us and we will add it.</p>'
-         '<dl class="qa">' + "".join(f'<div id="{gslug(t)}"><dt>{e(t)}</dt><dd>{e(d)}{gl_extra.get(t, "")}</dd></div>' for t, d in GLOSS) + "</dl>",
+    # Glossary: the words of a job search in plain English, one page per term (glossary_terms.py) and an index with the old anchors,
+    # so links to /glossary/#remote keep working. PeopleForce's glossary is its main free asset; ours adds what to do and a figure.
+    GT = glossary_terms.TERMS
+    gslug = lambda t: re.sub(r"[^a-z0-9]+", "-", re.sub(r"\(.*?\)", "", t.lower())).strip("-")
+    n_act = len(active)
+    descs_ = [j for j in active if j.get("desc")]
+    paid_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in active if j["usd"])
+    perk_n = Counter(x for j in active for x in j.get("perks", []))
+    et_n = Counter(j.get("etype", "") for j in active)
+    gfig = {   # a figure counted from today's postings, where the term has one
+        "Remote": f"{sum(1 for j in active if j['remote']):,} of the {n_act:,} open jobs here are remote ({pc_(sum(1 for j in active if j['remote']), n_act)}%).",
+        "Hybrid": f"{sum(1 for j in active if j.get('hybrid')):,} of the {n_act:,} open jobs here are hybrid.",
+        "Contract": f"{et_n.get('Contract', 0):,} of today’s open jobs are marked as contract work.",
+        "Internship": f"{et_n.get('Internship', 0):,} internships are open today.",
+        "Full-time and part-time": f"{et_n.get('Full-time', 0):,} open jobs are marked full-time and {et_n.get('Part-time', 0):,} part-time; the rest do not say.",
+        "Visa sponsorship": f"{perk_n.get('Visa sponsorship', 0):,} of today’s open jobs mention visa sponsorship.",
+        "Relocation": f"{perk_n.get('Relocation support', 0):,} of today’s open jobs mention help with relocation.",
+        "Equity and stock options": f"{perk_n.get('Equity', 0):,} of today’s open jobs mention equity.",
+        "Salary range": f"{pc_(sum(1 for j in active if j['salary']), n_act)}% of today’s open jobs state a pay range.",
+        "Pay transparency": f"{pc_(sum(1 for j in active if j['salary']), n_act)}% of today’s open jobs state a pay range.",
+        "Entry-level": f"{sum(1 for j in active if j['entry']):,} of today’s open jobs have a junior or intern title.",
+        "Work from anywhere": f"{sum(1 for j in active if j.get('anywhere')):,} of today’s remote jobs name no country or region.",
+        "Talent pool": f"{sum(1 for j in active if j['pool']):,} of today’s listings are talent pools rather than openings.",
+        "Cover letter": (f"Only {sum(1 for j in descs_ if re.search(r'cover[ -]*letter', j['desc'], re.I)):,} of the {len(descs_):,} open postings here with a full description mention a cover letter in their text." if len(descs_) >= 100 else ""),
+        "Median": (f"The median advertised pay of today’s open jobs that state a yearly US-dollar range is {money(median(paid_))}." if len(paid_) >= 50 else ""),
+        "Base salary": (f"The middle half of today’s postings that state pay offer {money(paid_[len(paid_) // 4])} to {money(paid_[3 * len(paid_) // 4])} a year." if len(paid_) >= 50 else ""),
+    }
+    for i, (term, d, tip, links) in enumerate(GT):
+        sl = gslug(term)
+        fig = gfig.get(term, "")
+        prev_, next_ = GT[i - 1], GT[(i + 1) % len(GT)]
+        ld_ = ('<script type="application/ld+json">' + json.dumps([
+            {"@context": "https://schema.org", "@type": "DefinedTerm", "name": term, "description": d, "url": f"{FULL}/glossary/{sl}/",
+             "inDefinedTermSet": {"@type": "DefinedTermSet", "name": "Job search glossary", "url": f"{FULL}/glossary/"}},
+            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": f"What is {term[0].lower() + term[1:] if not term[:2].isupper() else term}?",
+                                                                              "acceptedAnswer": {"@type": "Answer", "text": d}}]}], ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page(f"glossary/{sl}/", f"{term}: What It Means in a Job Search | {SITE}",
+             f"{term}, explained in plain English: {d[0].lower() + d[1:] if not d[:2].isupper() else d}",
+             crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(term)}</h1>'
+             f'<p class="lead gl-def">{e(d)}</p>'
+             + (f'<p class="gl-fig">{e(fig)} <span class="note">Counted on {fdate(TODAY)}.</span></p>' if fig else "")
+             + section("What to do about it", f"<p>{e(tip)}</p>")
+             + section("Useful next", '<div class="rel">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>")
+             + f'<p class="note cmpl">Other terms: <a href="{P}/glossary/{gslug(prev_[0])}/">{e(prev_[0])}</a> · <a href="{P}/glossary/{gslug(next_[0])}/">{e(next_[0])}</a> · <a href="{P}/glossary/">all {len(GT)} terms</a></p>', head=ld_)
+    gl_rows = "".join(f'<div id="{gslug(t)}"><dt><a href="{P}/glossary/{gslug(t)}/">{e(t)}</a></dt><dd>{e(d)}</dd></div>' for t, d, _, _ in sorted(GT, key=lambda x: x[0].lower()))
+    page("glossary/", f"Job Search Glossary: {len(GT)} Hiring Terms Explained in Plain English | {SITE}",
+         f"{len(GT)} words you meet when looking for a job or hiring, each explained in plain English with what to do about it: ATS, OTE, vesting, notice period, remote, hybrid, visa sponsorship and more.",
+         crumbs(("Glossary", "")) + f'<h1>Job search glossary: <span class="hl">{len(GT)} terms in plain English</span></h1>'
+         f'<p class="lead">The words that come up in job postings, interviews and offers, each explained in a sentence or two. Open a term for what to do about it and, where there is one, a figure from today’s {n_act:,} open postings.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a word, for example vesting or hybrid" aria-label="Find a term"></p>'
+         '<dl class="qa gl-index" id="dir">' + gl_rows + "</dl>",
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "DefinedTermSet", "name": "Job search glossary", "url": f"{FULL}/glossary/",
-               "hasDefinedTerm": [{"@type": "DefinedTerm", "name": t, "description": d, "url": f"{FULL}/glossary/#{gslug(t)}"} for t, d in GLOSS]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+               "hasDefinedTerm": [{"@type": "DefinedTerm", "name": t, "description": d, "url": f"{FULL}/glossary/{gslug(t)}/"} for t, d, _, _ in GT]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
 
     # Partners
     page("partners/", f"Partner With Us — communities, bootcamps, career services | {SITE}",
