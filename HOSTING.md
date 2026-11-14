@@ -37,6 +37,19 @@ server, the same three files move it to a server of its own.
 - Waiting: the domain's DNS at Cloudflare (then nginx and the certificate: `setup.sh` with `DOMAIN=`), and the three GitHub
   secrets for the hourly upload.
 
+## Done on 14 Nov 2026, evening: the domain
+
+- Cloudflare (free plan): `jobseveryhour.com` A → the server, `www` CNAME → `jobseveryhour.com`, both proxied; SSL/TLS
+  "Full (strict)"; AI crawlers allowed, Bot Preference Sync off (our robots.txt stays ours). Name servers at GoDaddy changed by
+  the owner to `kyree.ns.cloudflare.com` and `nora.ns.cloudflare.com`; the zone is active.
+- On the server: `setup.sh` with `DOMAIN=jobseveryhour.com`: Let's Encrypt certificate (renews by itself), nginx site.
+  Two fixes on the way: `listen 443 ssl http2` (nginx 1.24 has no `http2 on;`; the refused config was never loaded, and setup.sh
+  now takes back any config nginx refuses), and `/srv/hrn` set to 711 so nginx can reach the files.
+- https://jobseveryhour.com answers through Cloudflare; www and http send to https://jobseveryhour.com.
+- The switch (next): with the three GitHub secrets set, `config.json` gets `base_url` `https://jobseveryhour.com` and an empty
+  `base_path`; the workflow then builds the records site for the server and, from `pages_redirect.py`, a redirect site for the
+  old github.io address (one page per old address with a canonical link and a meta refresh; widget scripts and the JSON API kept).
+
 ## The parts
 
 | File | What it does |

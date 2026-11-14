@@ -37,7 +37,6 @@ jobs:
       # (data/jobs.db) next to the pages, and "Upload to our server" sends both there. Until then nothing changes. The address is
       # a secret, not a variable, so it never shows in the public logs: behind Cloudflare it is meant to stay unknown.
       HRN_SERVER_ON: ${{ secrets.HRN_SERVER != '' }}
-      HRN_RECORDS: ${{ secrets.HRN_SERVER != '' && 'both' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -83,6 +82,15 @@ jobs:
           git add -A
           git commit -q -m "Jobs database"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+      # Which site to build. Switched (config.json names the new domain) and the server is set: the site is built for the server
+      # with job records instead of 42,000 job pages, and GitHub Pages serves redirects from the old address (pages_redirect.py).
+      # Server set, not switched yet: the pages as before plus the records, so the server can be tried. Otherwise: as before.
+      - name: Which site to build
+        run: |
+          switched=$(python3 -c "import json; print('1' if 'github.io' not in json.load(open('config.json'))['base_url'] else '')")
+          if [ "$HRN_SERVER_ON" = "true" ] && [ -n "$switched" ]; then echo "HRN_RECORDS=1" >> "$GITHUB_ENV"; echo "SWITCHED=1" >> "$GITHUB_ENV"
+          elif [ "$HRN_SERVER_ON" = "true" ]; then echo "HRN_RECORDS=both" >> "$GITHUB_ENV"
+          fi
       - name: Build site
         run: python3 build.py
       # The build adds this month's figures to data/reports.json; past months in it must never be lost, so it is saved again.
@@ -105,6 +113,7 @@ jobs:
           git commit -q -m "Jobs database and monthly reports"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
       - name: Check the site fits the hosting limit
+        if: env.SWITCHED != '1'          # on our own server there is no 1 GB limit; GitHub Pages then holds only the small redirect site
         run: |
           # bytes of content, not disk blocks: with 40,000 small folders "du" overstates the size by a third
           mb=$(find site -type f -printf '%s\n' | awk '{s+=$1} END {print int(s/1048576)}'); echo "site is ${mb} MB of content (the Pages limit is 1024)"
@@ -137,10 +146,13 @@ jobs:
             --exclude='/site/job/' --include='/site/***' --include='/data/' --include='/data/jobs.db' \
             --include='/*.py' --include='/*.json' --include='/assets/***' --exclude='*' ./ "hrn@$HOST:/"
           rm -f "$RUNNER_TEMP/hrn_key" "$RUNNER_TEMP/hrn_known"
+      - name: Redirects from the old address
+        if: env.SWITCHED == '1'
+        run: python3 pages_redirect.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: ${{ env.SWITCHED == '1' && 'pages_site' || 'site' }}
       - id: deploy
         uses: actions/deploy-pages@v4
       # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed.

@@ -11,6 +11,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 # 1. The user hrn owns /srv/hrn and nothing else. The workflow logs in as hrn with its own key, and that key can only run rsync.
 id hrn >/dev/null 2>&1 || useradd --system --create-home --home-dir /srv/hrn --shell /bin/bash hrn
 install -d -o hrn -g hrn /srv/hrn/app /srv/hrn/app/site /srv/hrn/app/data
+chmod 711 /srv/hrn            # nginx (www-data) must pass through to app/site; the folder itself stays unlisted, .ssh stays 700
 install -d -m 700 -o hrn -g hrn /srv/hrn/.ssh
 if [ -n "${DEPLOY_KEY:-}" ]; then
   line="command=\"rrsync /srv/hrn/app\",no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding $DEPLOY_KEY"
@@ -47,7 +48,13 @@ if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   nginx -t && systemctl reload nginx
   certbot certonly --webroot -w /var/www/letsencrypt -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email
 fi
+cp -f /etc/nginx/sites-available/hrn.conf /root/hrn-setup/hrn.conf.before 2>/dev/null || true
 sed "s/DOMAIN/$DOMAIN/g" "$here/nginx-hrn.conf" > /etc/nginx/sites-available/hrn.conf
 ln -sf /etc/nginx/sites-available/hrn.conf /etc/nginx/sites-enabled/hrn.conf
-nginx -t && systemctl reload nginx
+if ! nginx -t; then
+  # never leave a config nginx refuses: the next reload of hypestkey would fail too
+  if [ -f /root/hrn-setup/hrn.conf.before ]; then cp -f /root/hrn-setup/hrn.conf.before /etc/nginx/sites-available/hrn.conf; else rm -f /etc/nginx/sites-enabled/hrn.conf; fi
+  nginx -t; echo "the new nginx site was refused and taken back; nothing reloaded"; exit 1
+fi
+systemctl reload nginx
 echo "ready: https://$DOMAIN/ (the site appears after the first upload from GitHub)"
