@@ -15,6 +15,7 @@ import skills_info                      # what each skill is, in plain words, an
 import geo_cities                       # where the cities in postings are, for the jobs map
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
+import compare_sites                    # sourced facts for "Hiring Right Now vs <job site>" (/vs/)
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -434,9 +435,9 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
-<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
@@ -2539,6 +2540,99 @@ def main():
          f'Copy one, fill in the brackets, check it with the <a href="{P}/tools/job-description-checker/">job description checker</a> and post it free.</p>'
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a template"></p>'
          f'<p class="lead" id="dirnone" hidden>No template with these words. The <a href="{P}/tools/job-description-checker/">checker</a> works for any job description.</p>' + jd_html)
+
+    # "How to become a <work>" for people changing careers (the Careerist study: that topic carries their whole blog). The steps are
+    # the same advice for every work; what makes each page useful is counted from today's postings: how many are open to beginners,
+    # how many years employers ask, the skills they name first, whether a degree is required, what juniors are paid.
+    hb_dir = defaultdict(list)
+    for slug_r, d in rex_data.items():
+        rname, rj = by_role[slug_r]
+        if len(rj) < 20: continue
+        fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
+        low, n_ = rlow(rname), len(rj)
+        does = (roles_info.INFO.get(slug_r) or (None, ""))[1]
+        begin = [j for j in rj if j["entry"] or (j.get("years") and j["years"] <= 2)]
+        yrs = sorted(j["years"] for j in rj if j.get("years"))
+        y_med = yrs[len(yrs) // 2] if len(yrs) >= 10 else None
+        low_yrs = pc_(sum(1 for y in yrs if y <= 2), len(yrs)) if len(yrs) >= 10 else None
+        nodeg = pc_(sum(1 for j in rj if "No degree required" in j.get("perks", [])), n_)
+        jr_pay = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in begin if j["usd"])
+        all_pay = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"])
+        cnt_ = Counter(t for j in rj for t in j["tags"])
+        top_ = resume_examples.asked(slug_r, cnt_.most_common(), n_)[:5]
+        titles_ = [t for t, _ in Counter(j["title"] for j in begin).most_common(30) if len(t) <= 50][:5]
+        lines_ = [ln.strip() for ln in (d["exp"][0]["text"] if d["exp"] else "").split("\n") if ln.strip()][:2]
+        steps = ("<ol class=\"steps\">"
+                 f"<li><b>Know what the work is.</b> {e(art(low).capitalize())} {e(low)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
+                 + (f"<li><b>Learn the skills employers name first.</b> In today’s {n_:,} postings: " + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in top_) + ".</li>" if top_ else
+                    "<li><b>Learn the duties, not only the tools.</b> Postings for this work describe what you will do more than which software you will use: read ten of them and list the duties that repeat.</li>")
+                 + "<li><b>Build proof you can show.</b> Two or three results with a number, from a job, a course project or volunteer work. The kind of line a recruiter looks for: "
+                 + (f"“{e(lines_[0])}”." if lines_ else "a result with a number.") + "</li>"
+                 + f'<li><b>Write the resume and the letter.</b> Start from the <a href="{P}/resume/examples/{slug_r}/">{e(low)} resume example</a> and the <a href="{P}/cover-letter-examples/{slug_r}/">cover letter example</a>, and replace every line with your own.</li>'
+                 + f'<li><b>Apply where beginners are hired.</b> {len(begin):,} of today’s {n_:,} open {e(low)} jobs are junior or intern roles or ask for two years of experience or less. '
+                 + f'<a href="{P}/roles/{slug_r}/">See the open jobs</a> and check each one with the <a href="{P}/tools/resume-match/">resume match checker</a> before you apply.</li></ol>')
+        hb_qa = [(f"How much experience do {low} jobs ask for?", (f"The median in today’s postings is {y_med} years; {low_yrs}% of the postings that name a number ask for two years or less." if y_med is not None
+                  else "Most postings for this work do not name a number of years. Read the duties: they tell you more about the level than the title does.")),
+                 (f"Do I need a degree to become {art(low)} {low}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
+                  + " Many others accept equivalent experience: read the requirements of each posting."),
+                 (f"How much does a beginner {low} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
+                  else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure.")))]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs today</dt><dd>{n_:,}</dd></div><div><dt>Open to beginners</dt><dd>{len(begin):,}</dd></div>"
+                  + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med is not None else "")
+                  + (f"<div><dt>Beginner pay, median</dt><dd>{money(median(jr_pay))}</dd></div>" if len(jr_pay) >= 8 else "") + "</dl>")
+        hb_dir[fs].append((slug_r, rname, len(begin)))
+        page(f"how-to-become/{slug_r}/", f"How to Become {art(low)} {tcase(rname)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
+             f"How to become {art(low)} {low}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
+             crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
+             f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
+             + facts_ + section(f"Five steps to your first {low} job", steps)
+             + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
+             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_)
+    hb_n = sum(len(v) for v in hb_dir.values())
+    hb_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(hb_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/how-to-become/{s_}/">{e(nm)}</a><span>{k:,} for beginners</span></li>' for s_, nm, k in sorted(hb_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if hb_dir.get(fs)) + "</div>"
+    page("how-to-become/", f"How to Become…: {hb_n} Careers with Skills, Pay and Beginner Jobs | {SITE}",
+         f"How to become one of {hb_n} kinds of professional, from today’s open postings: the jobs open to beginners, the skills employers name first, the experience they ask for and what juniors earn.",
+         crumbs(("How to become…", "")) + f'<h1>How to become… <span class="hl">{hb_n} careers, with today’s figures</span></h1>'
+         '<p class="lead">For people changing careers: pick the work you want. Each page counts, from today’s open postings, how many jobs take beginners, which skills employers name first and what juniors are paid, then gives five steps to the first job.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a career"></p>'
+         f'<p class="lead" id="dirnone" hidden>No career with these words. <a href="{P}/entry-level/">Entry-level jobs</a> lists every job open to beginners.</p>' + hb_html)
+
+    # "Hiring Right Now vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
+    # A site with fewer than 4 sourced rows gets no page: a comparison with gaps would not be fair.
+    VS = [x for x in compare_sites.SITES if len(x["rows"]) >= 4]
+    def vs_src(x):
+        seen_, out_ = set(), []
+        for fact, url, date in x["sources"]:
+            if url in seen_: continue
+            seen_.add(url)
+            out_.append(f'<li><a href="{e(url)}" rel="nofollow noopener">{e(re.sub(r"^https?://(www\.)?", "", url).rstrip("/")[:70])}</a>, read {fdate(date)}</li>')
+        return '<ul class="vs-src">' + "".join(out_) + "</ul>"
+    for x in VS:
+        ours = compare_sites.OUR_NAME
+        table_ = ('<div class="tablewrap"><table class="vs-t"><tr><th></th><th>' + e(x["name"]) + "</th><th>" + e(ours) + "</th></tr>"
+                  + "".join(f"<tr><th>{e(q_)}</th><td>{e(a_)}</td><td>{e(b_)}</td></tr>" for q_, a_, b_ in x["rows"]) + "</table></div>")
+        vs_qa = [(f"Is {ours} better than {x['name']}?", x["pick"]), (f"Where is {x['name']} better?", " ".join(x["them_better"])), (f"Where is {ours} better?", " ".join(x["us_better"]))]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in vs_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page(f"vs/{x['slug']}/", f"{x['name']} vs {ours}: a Fair Comparison ({fdate(TODAY, False)}) | {SITE}",
+             f"{x['name']} and {ours} side by side: who pays, prices, where the jobs come from, where you apply and how fresh the listings are. Every fact about {x['name']} comes with its source.",
+             crumbs(("Compared with other job sites", "vs/"), (x["name"], "")) + f'<h1>{e(x["name"])} vs {e(ours)}: <span class="hl">a fair comparison</span></h1>'
+             f'<p class="lead">{e(x["what"])} Below, the two side by side. Every fact about {e(x["name"])} comes from its own pages or a named source, read on the date shown; where we could not check a fact, the row is left out.</p>'
+             + f'<p class="vs-pick"><b>In short:</b> {e(x["pick"])}</p>'
+             + section(f"{x['name']} and {ours}, side by side", table_)
+             + '<div class="vs-two"><div><h2>Where ' + e(x["name"]) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["them_better"]) + "</ul></div>"
+               '<div><h2>Where ' + e(ours) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["us_better"]) + "</ul></div></div>"
+             + section(f"Questions about {x['name']} and {ours}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in vs_qa) + "</dl>")
+             + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>'), head=ld_)
+    page("vs/", f"{SITE} Compared with Other Job Sites: {len(VS)} Fair Comparisons | {SITE}",
+         f"{SITE} side by side with {', '.join(x['name'] for x in VS[:-1])} and {VS[-1]['name']}: who pays, prices, where jobs come from and where you apply. Every fact sourced and dated.",
+         crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
+         '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now.</p>'
+         + section("Choose a site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>"))
 
     # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.

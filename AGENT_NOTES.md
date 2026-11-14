@@ -356,3 +356,11 @@ plain HTML, so the page is readable without the map.
   from a real resume. New entries need the same fields and must pass the test.
 - Job pages link to `/tools/resume-match/?job=<slug>`; the tool reads the posting from the job page in the browser.
 
+## Employer and career-change pages, comparisons (14 Nov 2026)
+
+- `/cover-letter-examples/`, `/job-descriptions/`, `/how-to-become/` are built in `build.py` from `rex_data` (the resume examples) and
+  today's postings of each role; every figure on them is counted at build time. Job description templates are written for this
+  site; never paste text from a posting into them.
+- `/vs/` reads `compare_sites.py`: every fact about another site carries a tagged source `(fact, url, date read)`; a site with fewer
+  than 4 sourced rows gets no page. Re-check the facts (prices change) before relying on them; `NOT_SOURCED` lists the gaps.
+

@@ -304,8 +304,7 @@ SITES = [
             ("Where the jobs come from", "Employers buy listings on its own posting page."),
             ("How fresh the listings are", "Each listing is bought for 30 days."),
             ("Kinds of jobs", "Remote jobs."),
-            ("Payment methods", "Stripe Checkout, where the buyer picks the method. Its terms name credit card. Invoice by "
-                                "email."),
+            ("Payment methods", "Stripe Checkout, where the buyer picks the method. The invoice comes by email."),
         ),
         them_better=[
             "More ways for employers to stand out: two paid upgrades, and Premium Placement for hiring at scale (from "
@@ -336,9 +335,6 @@ SITES = [
              "job ends at \"Continue to Stripe Checkout - You'll choose your payment method and see the final total on "
              "Stripe.\" The invoice comes by email.",
              "https://weworkremotely.com/post-a-remote-job", R13),
-            # COMPANIES_RESEARCH.md C.12
-            ("[Payment methods] Payment \"electronically via credit card or ... other payment method you select.\"",
-             "https://weworkremotely.com/terms-and-conditions", R13),
         ],
     ),
     # ------------------------------------------------------------------ Remote OK
