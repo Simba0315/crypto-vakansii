@@ -8,7 +8,11 @@
   Object.keys(blank).forEach(function (k) { if (Array.isArray(blank[k]) ? !Array.isArray(data[k]) || !data[k].length : typeof data[k] !== 'string') data[k] = JSON.parse(JSON.stringify(blank[k])); });
   var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive'];
   if (TPLS.indexOf(data.tpl) < 0) data.tpl = 'classic';
-  var applyTpl = function () { var pv = $('rb-preview'), sel = $('rb-tpl'); pv.className = 'tpl-' + data.tpl; if (sel) sel.value = data.tpl; };
+  var applyTpl = function () {
+    var pv = $('rb-preview'), sel = $('rb-tpl'); pv.className = 'tpl-' + data.tpl; if (sel) sel.value = data.tpl;
+    pv.style.fontSize = data.fs ? data.fs + 'px' : ''; pv.style.lineHeight = data.lh ? String(data.lh) : '';
+    Array.prototype.forEach.call(document.querySelectorAll('.tplcard'), function (c) { c.classList.toggle('on', c.getAttribute('data-pick') === data.tpl); });
+  };
   var save = function () { H.set('hrn_resume', data); };
   var field = function (label, key, type, ph) {
     return '<label class="rl">' + label + (type === 'area' ? '<textarea data-k="' + key + '" rows="4" placeholder="' + ph + '">' + esc(data[key]) + '</textarea>'
@@ -26,14 +30,53 @@
         '<input type="text" data-f="org" placeholder="School" value="' + esc(x.org) + '"><input type="text" data-f="dates" placeholder="2018 – 2022" value="' + esc(x.dates) + '"></div>' +
         '<button class="linkbtn" type="button" data-del="edu">Remove</button></div>';
     }).join('');
+    var sec = function (id, inner) { return '<div class="rsec' + (tab === id ? ' on' : '') + '" data-sec="' + id + '">' + inner + nextBtn(id) + '</div>'; };
     $('rb-form').innerHTML =
-      '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline', 'title', 'text', 'Senior Backend Engineer') +
-      '<div class="rrow">' + field('Email', 'email', 'text', 'you@example.com') + field('Phone', 'phone', 'text', '+1 555 010 0199') + '</div>' +
-      '<div class="rrow">' + field('Location', 'place', 'text', 'Berlin, Germany · open to remote') + field('Links', 'links', 'text', 'github.com/you, linkedin.com/in/you') + '</div>' +
-      field('Summary', 'summary', 'area', 'Two or three sentences: what you do, for how long, and what you are best at.') +
-      '<span class="flabel">Experience</span>' + exp + '<p><button class="btn ghost sm" type="button" data-add="exp">+ Add a job</button></p>' +
-      '<span class="flabel">Education</span>' + edu + '<p><button class="btn ghost sm" type="button" data-add="edu">+ Add education</button></p>' +
-      '<span class="flabel">Skills</span>' + field('Comma-separated', 'skills', 'text', 'Python, PostgreSQL, AWS, Kubernetes');
+      sec('contact', '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline: the job you want', 'title', 'text', 'Senior Backend Engineer') +
+        '<div class="rrow">' + field('Email', 'email', 'text', 'you@example.com') + field('Phone', 'phone', 'text', '+1 555 010 0199') + '</div>' +
+        '<div class="rrow">' + field('Location', 'place', 'text', 'Berlin, Germany · open to remote') + field('Links', 'links', 'text', 'github.com/you, linkedin.com/in/you') + '</div>') +
+      sec('summary', field('Summary', 'summary', 'area', 'Two or three sentences: what you do, for how long, and what you are best at.')) +
+      sec('experience', '<span class="flabel">Experience</span>' + exp + '<p><button class="btn ghost sm" type="button" data-add="exp">+ Add a job</button></p>') +
+      sec('education', '<span class="flabel">Education</span>' + edu + '<p><button class="btn ghost sm" type="button" data-add="edu">+ Add education</button></p>') +
+      sec('skills', '<span class="flabel">Skills</span>' + field('Comma-separated', 'skills', 'text', 'Python, PostgreSQL, AWS, Kubernetes')) +
+      sec('finish', finishUp());
+    drawTabs();
+  };
+  /* Tabs, as Rezi lays its builder out: one section at a time, a "next" button, and "Finish up" with the templates and the format. */
+  var TABS = [['contact', 'Contact'], ['summary', 'Summary'], ['experience', 'Experience'], ['education', 'Education'], ['skills', 'Skills'], ['finish', 'Finish up']];
+  var tab = H.get('hrn_rb_tab', 'contact');
+  if (!TABS.some(function (t) { return t[0] === tab; })) tab = 'contact';
+  var filled = function (id) {
+    return id === 'contact' ? !!(data.name && (data.email || data.phone)) : id === 'summary' ? String(data.summary || '').length > 40
+      : id === 'experience' ? data.exp.some(function (x) { return x.role && x.text; }) : id === 'education' ? data.edu.some(function (x) { return x.what || x.org; })
+      : id === 'skills' ? String(data.skills || '').split(',').filter(function (x) { return x.trim(); }).length >= 3 : false;
+  };
+  var drawTabs = function () {
+    var nav = $('rb-tabs'); if (!nav) return;
+    nav.innerHTML = TABS.map(function (t, i) { return '<button type="button" data-tab="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + (filled(t[0]) ? ' done' : '') + '"><i>' + (filled(t[0]) ? '✓' : i + 1) + '</i>' + t[1] + '</button>'; }).join('');
+  };
+  var nextBtn = function (id) {
+    var i = TABS.map(function (t) { return t[0]; }).indexOf(id);
+    return i < TABS.length - 1 ? '<p class="rsec-next"><button class="btn sm" type="button" data-tab="' + TABS[i + 1][0] + '">Next: ' + TABS[i + 1][1] + ' →</button></p>' : '';
+  };
+  var setTab = function (id) {
+    tab = id; H.set('hrn_rb_tab', id);
+    Array.prototype.forEach.call(document.querySelectorAll('#rb-form .rsec'), function (el) { el.classList.toggle('on', el.getAttribute('data-sec') === id); });
+    drawTabs();
+    var left = document.querySelector('.rb-left'); if (left && left.getBoundingClientRect().top < 0) left.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  /* Finish up: the template gallery with small pictures, and the format (size and spacing), saved with the resume. */
+  var TPL_NAMES = { classic: ['Classic', 'Serif, calm, for any field'], modern: ['Modern', 'Clean sans-serif, a bar on each heading'], compact: ['Compact', 'Fits more on one page'],
+    developer: ['Developer', 'Monospace headings, for engineers'], executive: ['Executive', 'Centred name, for senior roles'] };
+  var finishUp = function () {
+    return '<span class="flabel">Template</span><div class="tplgal">' + TPLS.map(function (t) {
+        return '<button type="button" class="tplcard' + (data.tpl === t ? ' on' : '') + '" data-pick="' + t + '"><span class="tplmini tpl-' + t + '"><b>Alex Example</b><i></i><i class="s"></i><u></u><i></i><i class="s"></i></span>'
+          + '<span class="tpln"><b>' + TPL_NAMES[t][0] + '</b><span>' + TPL_NAMES[t][1] + '</span></span></button>';
+      }).join('') + '</div>'
+      + '<span class="flabel">Format</span><div class="fmtrow"><span>Text size</span><button class="btn ghost sm" type="button" data-fs="-1">A−</button><b id="rb-fs">' + (data.fs || 14) + '</b><button class="btn ghost sm" type="button" data-fs="1">A+</button>'
+      + '<span>Spacing</span><button class="btn ghost sm" type="button" data-lh="-0.05">−</button><b id="rb-lh">' + (data.lh || 1.5).toFixed(2) + '</b><button class="btn ghost sm" type="button" data-lh="0.05">+</button></div>'
+      + '<p class="note">One page is what most recruiters read: if the sheet runs over, make the text a little smaller or cut older jobs to a line each.</p>'
+      + '<p class="rsec-dl"><button class="btn primary" type="button" id="rb-print2">Download PDF</button><button class="btn ghost" type="button" id="rb-doc2">Word</button></p>';
   };
   var drawPreview = function () {
     var contact = [data.email, data.phone, data.place].concat(String(data.links || '').split(',').map(function (s) { return s.trim(); })).filter(Boolean).map(esc).join(' · ');
@@ -95,7 +138,12 @@
     var t = ev.target, add = t.getAttribute('data-add'), del = t.getAttribute('data-del');
     if (add) { data[add].push(add === 'exp' ? { role: '', org: '', dates: '', text: '' } : { what: '', org: '', dates: '' }); save(); drawForm(); drawPreview(); }
     else if (del) { data[del].splice(Number(t.closest('.rblock').getAttribute('data-i')), 1); if (!data[del].length) data[del] = JSON.parse(JSON.stringify(blank[del])); save(); drawForm(); drawPreview(); }
-    else if (t.id === 'rb-print') window.print();
+    else if (t.closest && t.closest('[data-tab]')) setTab(t.closest('[data-tab]').getAttribute('data-tab'));
+    else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); applyTpl(); }
+    else if (t.getAttribute('data-fs')) { data.fs = Math.max(11, Math.min(16, (data.fs || 14) + Number(t.getAttribute('data-fs')) * 0.5)); save(); applyTpl(); $('rb-fs').textContent = data.fs; }
+    else if (t.getAttribute('data-lh')) { data.lh = Math.max(1.2, Math.min(1.8, Math.round(((data.lh || 1.5) + Number(t.getAttribute('data-lh'))) * 100) / 100)); save(); applyTpl(); $('rb-lh').textContent = data.lh.toFixed(2); }
+    else if (t.id === 'rb-print' || t.id === 'rb-print2') window.print();
+    else if (t.id === 'rb-doc2') wordFile();
     else if (t.id === 'rb-doc') wordFile();
     else if (t.id === 'rb-json') jsonFile();
     else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
@@ -136,9 +184,13 @@
     var T = window.HRNT;
     if (!chk || !T) return;
     var text = asText(), r = T.resumeReview(text), html = '<div class="rbc-score">';
-    if (r.error) html += '<p class="rbc-h"><b>Score</b> after 80 words</p><p class="note">You have ' + r.words + ' so far. Add your jobs with one result each, and the score appears here.</p>';
+    if (r.error) html += '<p class="rbc-h"><b>Resume score</b> after 80 words</p><p class="note">You have ' + r.words + ' so far. Add your jobs with one result each, and the score appears here.</p>';
     else {
-      html += '<p class="rbc-h"><b>' + (Math.round(r.score * 10) / 10) + '</b><small>/10</small> ' + esc(r.verdict) + '</p>'
+      var v = Math.round(r.score * 10), col = v >= 85 ? 'var(--ac)' : v >= 65 ? '#d4a017' : '#d9534f', len = Math.PI * 80;
+      html += '<div class="gauge"><svg viewBox="0 0 200 112" aria-hidden="true"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>'
+        + '<path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="' + col + '" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + (len * v / 100).toFixed(1) + ' ' + len.toFixed(1) + '"/></svg>'
+        + '<p><b>' + v + '</b><span>' + (v >= 90 ? 'Excellent' : v >= 75 ? 'Good' : v >= 50 ? 'Fair' : 'Needs work') + '</span></p></div>'
+        + '<ul class="gcat">' + r.checks.map(function (c) { var p = c.max ? Math.round(100 * c.points / c.max) : 0; return '<li><span>' + esc(c.name) + '</span><i><em style="width:' + p + '%"></em></i><b>' + p + '</b></li>'; }).join('') + '</ul>'
         + (r.fixes.length ? '<ol class="rbc-fix">' + r.fixes.slice(0, 3).map(function (f) { return '<li><b>' + esc(f.t) + '</b> ' + esc(f.d || '') + '</li>'; }).join('') + '</ol>' : '<p class="note">Nothing important to fix.</p>');
     }
     html += '<p class="note"><a href="' + H.base + '/tools/resume-review/">The full review</a> lists every check.</p></div><div class="rbc-target">';
@@ -242,7 +294,7 @@
   };
   if (chk) {
     var drawPreview0 = drawPreview, ptimer;
-    drawPreview = function () { drawPreview0(); clearTimeout(ptimer); ptimer = setTimeout(drawCheck, 500); };      // any change to the resume (typing, an example, a skill added) updates the score
+    drawPreview = function () { drawPreview0(); drawTabs(); clearTimeout(ptimer); ptimer = setTimeout(drawCheck, 500); };      // any change to the resume (typing, an example, a skill added) updates the score
     var start = function () { if (!window.HRNT) return setTimeout(start, 150); needPats(); drawCheck(); };
     start();
     root.addEventListener('input', function (ev) {

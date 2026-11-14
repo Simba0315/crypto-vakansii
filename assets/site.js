@@ -312,6 +312,23 @@
     }).catch(function () {});
   })();
 
+  /* ---------- job page: when Apply is pressed, how much of the posting's skills the resume in this browser names (hh.ru warns
+     before an application that does not fit). It never blocks: the employer's page opens as usual. ---------- */
+  (function () {
+    var apply = $('apply'), tagsEl = document.querySelector('#match');
+    if (!apply || !tagsEl) return;
+    apply.addEventListener('click', function () {
+      var cv = get('hrn_resume', null), tags = (tagsEl.getAttribute('data-tags') || '').split('|').filter(Boolean);
+      if (!cv || !tags.length || document.querySelector('.applyfit')) return;
+      var text = [cv.title, cv.summary, cv.skills].concat((cv.exp || []).map(function (x) { return (x.role || '') + ' ' + (x.text || ''); })).join(' ').toLowerCase();
+      if (text.replace(/\s+/g, ' ').length < 60) return;
+      var has = tags.filter(function (t) { return text.indexOf(t.toLowerCase()) >= 0; }), miss = tags.filter(function (t) { return has.indexOf(t) < 0; });
+      var m = (location.pathname.match(/\/job\/([^/]+)\//) || [])[1];
+      apply.insertAdjacentHTML('afterend', '<p class="applyfit note"><b>Your resume names ' + has.length + ' of the ' + tags.length + ' skills this job names.</b> '
+        + (miss.length ? 'Missing: ' + miss.slice(0, 5).map(esc).join(', ') + '. ' : '') + (m ? '<a href="' + P + '/resume/?job=' + m + '">Tailor it to this job</a>' : '') + '</p>');
+    });
+  })();
+
   /* ---------- job page: "Tailor my resume to this job" next to "Check my resume for this job" ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('a.rmbox'), function (a) {
     var m = (a.getAttribute('href') || '').match(/[?&]job=([a-z0-9-]+)/);
