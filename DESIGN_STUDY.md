@@ -19,7 +19,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    the postings. ✅ Pay by field with the number of postings behind each figure (2026-11-13).
 6. ✅ **Hub pages: no row of five big numbers.** The figures are one mono line with their date and source. ✅ "Related", "Compare with" and similar
    runs are labelled rows (label left, links right, "More" last) (2026-11-14).
-7. ✅ **Tools show a result at once** ("Show an example"). ✅ Sub-navigation row on tool pages (2026-11-13). 📋 Still to do: the questions in two columns.
+7. ✅ **Tools show a result at once** ("Show an example"). ✅ Sub-navigation row on tool pages (2026-11-13). ✅ The questions in two columns (2026-11-14).
 8. ✅ **Tools index: break the grid** (2026-11-13: three wide rows plus a ruled list with an example on the right). Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
 9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
@@ -27,8 +27,8 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
 10. 📋 **Two type sizes by purpose:** 36–40px section headings on pages that explain, 24–28px on pages that list.
 11. ✅ **The board in the hero shows pay**, and its tabs (Latest, Remote, With salary, Entry-level) swap the list in place (2026-11-14).
 12. ✅ **A line of provenance instead of badges and ratings:** "checked on … against employer career pages", linked to the method.
-13. ✅ **Header:** six items (was eight). 📋 Still to do: menus under Jobs, Tools and Resources, and a search field with "/".
-14. 📋 **Footer:** five short columns, then directory rows (by skill, by location, by category), then the stamp.
+13. ✅ **Header:** six items (was eight). ✅ Menus under Resume, Tools and Pricing (2026-11-14): a panel with a line of plain text per link on wide screens, the links under each item in the phone menu; built by `site.js`, so the 49,000 pages carry no extra bytes. ✅ "/" puts the cursor in the search box.
+14. 📋 **Footer:** five short columns, then directory rows (by skill, by location, by category), then the stamp. Deferred: the rows would add about 1 KB to each of 49,000 pages (about 50 MB) while the site is at 911 of 950 MiB; after the server.
 
 ## How job sites lay things out (for item 3 and 5)
 

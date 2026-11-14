@@ -203,6 +203,79 @@
     var open = header.classList.toggle('open');
     menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  /* ---------- header menus under Resume, Tools and Pricing: built here, so the pages themselves carry no extra bytes.
+     Wide screens: a panel under the header on hover, on ArrowDown or on a tap of the arrow; Escape closes it.
+     The phone menu lists the same links under each item. The links are also in the footer of every page. ---------- */
+  (function () {
+    var nav = $('nav');
+    if (!nav || !header) return;
+    var M = {
+      '/resume/': ['Resume and letters', [
+        ['/resume/', 'Resume builder', 'A one-page resume in your browser, no account.'],
+        ['/resume/examples/', 'Resume examples', 'A written example for each kind of work.'],
+        ['/cover-letter-examples/', 'Cover letter examples', 'A letter for each kind of work, ready to copy.'],
+        ['/resume-words/', 'Resume words', 'What to write instead of “managed” or “helped”.'],
+        ['/resignation-letters/', 'Resignation letters', 'From two weeks notice to effective immediately.'],
+        ['/tools/resume-review/', 'Resume review', 'A score out of 10 and what to fix first.'],
+        ['/tools/resume-match/', 'Resume match', 'Your resume against a posting, word by word.']]],
+      '/tools/': ['Career help', [
+        ['/interview-questions/', 'Interview questions', 'What to prepare for each job, and what a good answer shows.'],
+        ['/how-to-become/', 'How to become…', 'Skills, pay and beginner jobs, career by career.'],
+        ['/career-quiz/', 'Career quiz', 'Seven plain questions: the fields that fit you.'],
+        ['/map/', 'Jobs map', 'Every city with open jobs on one map.'],
+        ['/guides/', 'Guides', 'The job market explained with today’s numbers.'],
+        ['/glossary/', 'Glossary', 'Hiring words in plain English.'],
+        ['/tools/', 'All free tools', 'Offer check, raise calculator, letters and more.']]],
+      '/pricing/': ['For employers', [
+        ['/post-a-job/', 'Post a job', 'Free, with paid options to stand out.'],
+        ['/pricing/', 'Pricing', 'Every plan and what it includes.'],
+        ['/how-to-hire/', 'How to hire…', 'Who else is hiring each role, and what they pay.'],
+        ['/job-descriptions/', 'Job description templates', 'A template per role, with today’s figures.'],
+        ['/widgets/', 'Jobs for your website', 'A widget with your jobs or any list.'],
+        ['/api/', 'Data for developers', 'Every open job as free JSON.']]]
+    };
+    var wideQ = window.matchMedia('(min-width: 1081px)'), cur = null, timer = 0;
+    var panel = document.createElement('div');
+    panel.className = 'navpanel'; panel.id = 'navpanel'; panel.hidden = true;
+    header.appendChild(panel);
+    var close = function () {
+      clearTimeout(timer);
+      if (!cur) return;
+      cur.setAttribute('aria-expanded', 'false'); cur = null; panel.hidden = true;
+    };
+    var show = function (a, key) {
+      clearTimeout(timer);
+      if (cur === a) return;
+      if (cur) cur.setAttribute('aria-expanded', 'false');
+      var m = M[key];
+      panel.innerHTML = '<div class="wrap"><p class="np-h">' + esc(m[0]) + '</p><ul>' + m[1].map(function (x) {
+        return '<li><a href="' + P + x[0] + '"><b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></a></li>';
+      }).join('') + '</ul></div>';
+      panel.hidden = false; cur = a; a.setAttribute('aria-expanded', 'true');
+    };
+    Array.prototype.forEach.call(nav.querySelectorAll('a.nl'), function (a) {
+      var key = (a.getAttribute('href') || '').slice(P.length);
+      if (!M[key]) return;
+      a.classList.add('hasmenu'); a.setAttribute('aria-haspopup', 'true'); a.setAttribute('aria-expanded', 'false'); a.setAttribute('aria-controls', 'navpanel');
+      a.addEventListener('mouseenter', function () { if (!wideQ.matches) return; clearTimeout(timer); timer = setTimeout(function () { show(a, key); }, cur ? 0 : 120); });
+      a.addEventListener('mouseleave', function () { clearTimeout(timer); timer = setTimeout(close, 260); });
+      a.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'ArrowDown' || !wideQ.matches) return;
+        ev.preventDefault(); show(a, key);
+        var first = panel.querySelector('a'); if (first) first.focus();
+      });
+      var sub = document.createElement('div');       // the phone menu: the same links, under the item
+      sub.className = 'navsub';
+      sub.innerHTML = M[key][1].filter(function (x) { return x[0] !== key; }).map(function (x) { return '<a href="' + P + x[0] + '">' + esc(x[1]) + '</a>'; }).join('');
+      a.parentNode.insertBefore(sub, a.nextSibling);
+    });
+    panel.addEventListener('mouseenter', function () { clearTimeout(timer); });
+    panel.addEventListener('mouseleave', function () { clearTimeout(timer); timer = setTimeout(close, 260); });
+    panel.addEventListener('focusout', function (ev) { if (!panel.contains(ev.relatedTarget) && ev.relatedTarget !== cur) close(); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && cur) { var a = cur; close(); a.focus(); } });
+    document.addEventListener('click', function (ev) { if (cur && !panel.contains(ev.target) && ev.target !== cur) close(); });
+    if (wideQ.addEventListener) wideQ.addEventListener('change', close);
+  })();
   document.addEventListener('keydown', function (ev) {
     if (ev.key === '/' && !/input|textarea|select/i.test((ev.target && ev.target.tagName) || '')) {
       var box = $('q') || document.querySelector('.searchbar input');

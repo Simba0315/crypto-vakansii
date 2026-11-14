@@ -2667,9 +2667,9 @@ def main():
          "Clear written updates, the overlap hours you keep and decisions that do not wait for a call."),
     ]
     IQ_RX = [(re.compile(rx, re.I), a, b, c) for rx, a, b, c in IQ_THEMES]
-    IQ_SHORT = ["Stakeholders", "Work across teams", "Ownership, end to end", "Setting priorities", "Ambiguity", "A fast pace", "KPIs and metrics", "Presenting",
+    IQ_SHORT = ["Stakeholders", "Work across teams", "End-to-end ownership", "Setting priorities", "Ambiguity", "A fast pace", "KPIs and metrics", "Presenting",
                 "Mentoring", "Work with customers", "Compliance and regulation", "Budgets", "Deadlines", "Decisions from data", "AI tools", "On-call duty", "Travel",
-                "Shifts, nights, weekends", "A sales quota", "Good writing", "Time zones"]      # the same themes in two or three words
+                "Night and weekend shifts", "A sales quota", "Good writing", "Time zones"]      # the same themes in two or three words
     assert len(IQ_SHORT) == len(IQ_RX)
     all_desc = [j for j in active if j.get("desc")]
     iq_hit = {j["id"]: [bool(rx.search(j["desc"])) for rx, _, _, _ in IQ_RX] for j in all_desc}      # each posting is read once

@@ -1366,7 +1366,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         return _ld({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": items})
 
     def faq_block(faq):
-        html_ = '<div class="tl-faq">' + "".join(f"<h3>{e(q)}</h3><p>{e(a)}</p>" for q, a in faq) + "</div>"
+        html_ = '<div class="tl-faq">' + "".join(f"<div><h3>{e(q)}</h3><p>{e(a)}</p></div>" for q, a in faq) + "</div>"      # two columns on wide screens (DESIGN_STUDY 7)
         ld = _ld({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]})
         return html_, ld
 

@@ -1385,3 +1385,27 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 /* search: levels to leave out, one row */
 .filters.xlv{margin-top:10px;align-items:center}
 .filters.xlv .note{margin:0 4px 0 0}
+
+/* header menus (built by site.js): a panel under the header on wide screens, links under each item in the phone menu */
+nav a.nl.hasmenu::after{content:"";display:inline-block;width:6px;height:6px;margin-left:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-3px) rotate(45deg);opacity:.55}
+nav a.nl.hasmenu[aria-expanded=true]{color:var(--text);background:var(--bg2)}
+.navpanel{position:absolute;left:0;right:0;top:100%;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 22px 40px -28px rgba(0,0,0,.35)}
+.navpanel[hidden]{display:none}
+header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1fr);gap:28px;height:auto;align-items:start;padding-top:20px;padding-bottom:24px}
+.np-h{margin:10px 0 0;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.navpanel ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 16px}
+.navpanel a{display:block;padding:10px 12px;border-radius:6px}
+.navpanel a:hover,.navpanel a:focus-visible{background:var(--bg2)}
+.navpanel b{display:block;font-weight:650;font-size:15px;color:var(--text)}
+.navpanel a:hover b{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.navpanel span{display:block;margin-top:3px;font-size:13.5px;line-height:1.4;color:var(--muted)}
+.navsub{display:none}
+@media(max-width:1080px){
+  .navpanel{display:none!important}
+  nav a.nl.hasmenu::after{display:none}
+  nav a.nl.hasmenu{border-bottom:0}
+  header.site.open nav{max-height:calc(100vh - 56px);max-height:calc(100dvh - 56px);overflow-y:auto;overscroll-behavior:contain}      /* the phone menu is long: it scrolls by itself */
+  .navsub{display:flex;flex-wrap:wrap;gap:2px 16px;padding:0 12px 12px;border-bottom:1px solid var(--line)}
+  .navsub a{padding:5px 0;font-size:14.5px;color:var(--muted);text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
+}
+
