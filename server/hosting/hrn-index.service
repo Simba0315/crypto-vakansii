@@ -1,0 +1,20 @@
+# Loads the job records (data/jobs.db) into the Lucene index (search_engine.py), started by hrn-index.path after every upload.
+[Unit]
+Description=Hiring Right Now search index (Lucene)
+After=opensearch.service
+Requires=opensearch.service
+
+[Service]
+Type=oneshot
+User=hrn
+Group=hrn
+WorkingDirectory=/srv/hrn/app
+Environment=PYTHONDONTWRITEBYTECODE=1 HRN_OPENSEARCH=http://127.0.0.1:9200
+ExecStart=/usr/bin/python3 search_engine.py index
+Nice=10
+CPUQuota=60%
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/srv/hrn
+PrivateTmp=true

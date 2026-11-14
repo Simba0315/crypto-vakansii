@@ -25,6 +25,18 @@ Hostinger VPS `srv2127103`, the one hypestkey runs on: 2 vCPU, 8 GB RAM, 96 GB d
 and 60% of one processor) and nginx site. It does not touch hypestkey's files, database, PHP or Redis. If the site outgrows the shared
 server, the same three files move it to a server of its own.
 
+## Done on the server (14 Nov 2026, with the owner's go-ahead)
+
+- `setup.sh` without a domain: user `hrn`, `/srv/hrn/app`, service `hrn-site` (running, 127.0.0.1:8790, about 100 MB), the upload
+  key in `/srv/hrn/.ssh/authorized_keys` limited to `rrsync /srv/hrn/app` (checked: it cannot run commands). The key's private
+  half is `~/.ssh/hrn_deploy` on the owner's Mac.
+- The site and the records uploaded once from the Mac with that key (16 s); every page, job pages from records, `/api/search` and
+  `/mcp` answer on the server.
+- `opensearch.sh`: OpenSearch 3.9 running, index loaded, search on Lucene. hypestkey's nginx, PHP, MariaDB and Redis were not
+  restarted (running since 06:39 UTC that day) and hypestkey answers as before.
+- Waiting: the domain's DNS at Cloudflare (then nginx and the certificate: `setup.sh` with `DOMAIN=`), and the three GitHub
+  secrets for the hourly upload.
+
 ## The parts
 
 | File | What it does |
@@ -35,6 +47,9 @@ server, the same three files move it to a server of its own.
 | `records.py` search | a word index over every job in the same file (SQLite FTS5: the kind of index Lucene keeps, ranked by BM25 as Lucene does), 23 MiB, a search in 1–250 ms |
 | `serve.py` `/api/search` | the search as JSON: `?q=rust remote&limit=20` |
 | `serve.py` `/mcp` | a connector for AI assistants (Model Context Protocol): Claude, ChatGPT and others add the address and search our jobs in plain words (`search_jobs`, `get_job`) |
+| `search_engine.py` | Lucene search through OpenSearch: index settings (synonyms, C++/C#/.NET, light English stemming), the hourly load with an alias swap, the query (exact first, typos forgiven second, facets) |
+| `server/hosting/opensearch.sh` | installs and configures OpenSearch from its official repository, the index units, and points the page server at it |
+| `server/hosting/hrn-index.path`, `hrn-index.service` | reload the search index whenever a new `data/jobs.db` arrives |
 | `records_test.py` | builds every job page from its record and compares it with the file the same build wrote: must end with `0 different` |
 | `check.py` | in a site without job files, samples job pages from the records and counts a link to `/job/<slug>/` as good when the record exists |
 | `server/hosting/setup.sh` | one-time setup on the server, as root: user, folder, service, nginx site, certificate |
@@ -62,9 +77,10 @@ once the owner allows it.
 4. **Me, on the server, with the owner's go-ahead:** `DOMAIN=jobseveryhour.com DEPLOY_KEY="<public half of a new key>" bash
    server/hosting/setup.sh` as root: user `hrn`, folder `/srv/hrn`, service `hrn-site`, nginx site, Let's Encrypt certificate,
    Cloudflare's address lists for the real visitor address. Nothing of hypestkey's is touched.
-5. **Owner, in GitHub (Settings → Secrets and variables → Actions):** secret `HRN_DEPLOY_KEY` (the private half of that key,
-   made for this only: on the server it can do nothing but rsync into `/srv/hrn/app`) and variable `HRN_SERVER` (the server's
-   address). Optional variable `HRN_SERVER_HOSTKEY` (the server's line from `ssh-keyscan`) so the first connection is checked too.
+5. **GitHub (Settings → Secrets and variables → Actions), three secrets:** `HRN_DEPLOY_KEY` (the private half of that key,
+   made for this only: on the server it can do nothing but rsync into `/srv/hrn/app`), `HRN_SERVER` (the server's address; a
+   secret so it never shows in the public logs) and `HRN_SERVER_HOSTKEY` (the server's lines from `ssh-keyscan`, so the
+   connection is checked).
    From the next hourly run the workflow builds the records as well and uploads the site to the server (step "Upload to our
    server"); GitHub Pages keeps working the same until the switch.
 6. **Me:** check the site on the server (pages, job pages from records, search, the MCP address), then switch:
@@ -83,15 +99,20 @@ once the owner allows it.
   accounts go live; the key is the owner's and goes into the server's settings, not into the repository.
 - Beget is a Russian company: the privacy page will name where mail is kept.
 
-## Search: SQLite FTS5 now, Lucene when it pays off
+## Search: Lucene (OpenSearch) on the server, SQLite FTS5 as the fallback
 
-Lucene itself is free (Apache licence), but it is a Java library: on a server it runs inside OpenSearch, Solr or Elasticsearch, a
-Java service that wants 1–2 GB of memory of its own on the shared 8 GB server. FTS5 keeps the same kind of index (for every word, the
-jobs it is in) and ranks with the same BM25 formula, inside the file the pages already come from, with no service to run. What
-Lucene adds: typo-tolerant search, synonyms, facet counts ("Remote 812, Berlin 77") computed with the search, "more like this",
-search by distance. Moving later changes only `records.Store.search` and the build step that fills the index; the pages, the
-`/api/search` answer and the MCP tools stay the same. The point to move: about a million jobs, or when typo-tolerant search and
-facet counts are wanted on the server rather than in the browser.
+The owner, 14 Nov: "why not Lucene right away?" — so it is in place. OpenSearch 3.9 (Lucene 10.5) runs on the server for the page
+server only: 127.0.0.1:9200, security plugin off because nothing outside the machine can reach it, 1 GB heap, at most 2 GB of memory
+and one processor (`server/hosting/opensearch.sh`). `search_engine.py` loads every job into a new index after each upload
+(`hrn-index.path` watches `data/jobs.db`, `hrn-index.service` runs the load, 42,149 jobs in a few seconds, 58 MB) and moves the alias
+`jobs` to it in one step. `serve.py` asks Lucene first and falls back to FTS5 in the records file when OpenSearch does not answer.
+
+What Lucene gives here, checked on the server on 14 Nov 2026:
+- the words as typed first, honest counts ("solidity" 34 jobs; FTS5's Porter stemming had cut it to "solid" and counted 685);
+- typos forgiven when the words as typed find nothing ("pyhton", "product manger", "kubernets");
+- synonyms at search time ("k8s" finds Kubernetes, "js" JavaScript), word families ("engineering" finds "engineer");
+- counts for the filters with every search (remote, hybrid, level, field, top companies) in the `facets` of `/api/search`;
+- answers in 20-60 ms.
 
 ## Later on the same server
 

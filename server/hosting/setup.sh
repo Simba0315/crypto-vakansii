@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # One-time setup of Hiring Right Now on the Hostinger server, next to hypestkey. Run as root from this folder; running it again is safe.
 #   DOMAIN=jobseveryhour.com DEPLOY_KEY="ssh-ed25519 AAAA... github-deploy" bash setup.sh
+#   DEPLOY_KEY="..." bash setup.sh       (no domain yet: everything but nginx; run again with DOMAIN once it points here)
 # Before: the domain's A record points at this server (certbot checks it). After: the GitHub workflow uploads the site every hour.
 # It adds a user, a folder, a service and an nginx site. It does not touch hypestkey: not its files, its database, PHP or Redis.
 set -euo pipefail
-DOMAIN=${DOMAIN:?set DOMAIN, e.g. DOMAIN=jobseveryhour.com}
+DOMAIN=${DOMAIN:-}      # empty: only the user, the folder and the service; nginx and the certificate wait for the domain
 here=$(cd "$(dirname "$0")" && pwd)
 
 # 1. The user hrn owns /srv/hrn and nothing else. The workflow logs in as hrn with its own key, and that key can only run rsync.
@@ -25,6 +26,8 @@ install -m 644 "$here/hrn-site.service" /etc/systemd/system/hrn-site.service
 systemctl daemon-reload
 systemctl enable hrn-site >/dev/null
 [ -f /srv/hrn/app/serve.py ] && systemctl restart hrn-site || echo "hrn-site starts after the first upload (serve.py is not there yet)"
+
+if [ -z "$DOMAIN" ]; then echo "no DOMAIN: the user, the folder and the service are ready; run again with DOMAIN=... for nginx and the certificate"; exit 0; fi
 
 # 3. Behind Cloudflare every visitor arrives from a Cloudflare address and the real one is in CF-Connecting-IP; without this the
 #    per-visitor limits in nginx-hrn.conf would count the whole of Cloudflare as one visitor. The ranges come from Cloudflare's lists.

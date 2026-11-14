@@ -8,7 +8,8 @@ On the server nginx hands out the files itself, keeps each job page for a few mi
 (server/hosting/nginx-hrn.conf). A job page is built in a few milliseconds; the page of a job that is not in the records is a 404.
 
 Two more addresses, both read-only and public:
-  /api/search?q=python+berlin&remote=1&limit=20&offset=0   word search over every open job (records.Store.search), as JSON
+  /api/search?q=python+berlin&remote=1&limit=20&offset=0   word search over every open job, as JSON: Lucene (OpenSearch, see
+                                                           search_engine.py) when HRN_OPENSEARCH is set, else SQLite FTS5
   /mcp                                                     the connector an AI assistant adds by address (Model Context Protocol):
                                                            tools search_jobs and get_job
 """
@@ -18,13 +19,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
-import build, records                                    # noqa: E402  (build.py is only read here: its main() does not run)
+import build, records, search_engine                     # noqa: E402  (build.py is only read here: its main() does not run)
 
 SITE, P = ROOT / "site", build.P
 STORE = records.Store(ROOT / "data" / "jobs.db", build, live=os.environ.get("HRN_LIVE", "1") != "0")
 JOB = re.compile(r"^" + re.escape(P) + r"/job/([a-z0-9-]+)(/?)$")
 SEARCH, MCP = P + "/api/search", P + "/mcp"
 TAG = re.compile(r"<[^>]+>")
+
+
+def find(q, remote=False, limit=20, offset=0):
+    """Search: Lucene (OpenSearch) when it is set up and answers, otherwise SQLite FTS5 in the records file.
+    Returns (total, records, facets, engine)."""
+    try:
+        total, slugs, facets = search_engine.search(q, remote=remote, limit=limit, offset=offset)
+        return total, STORE.records(slugs), facets, "lucene"
+    except OSError:
+        total, js = STORE.search(q, remote=remote, limit=limit, offset=offset)
+        return total, js, {}, "sqlite"
 
 
 def brief(j):
@@ -57,7 +69,7 @@ MCP_TOOLS = [
 def mcp_call(name, args):
     if name == "search_jobs":
         q = str(args.get("query") or "")
-        total, js = STORE.search(q, remote=bool(args.get("remote_only")), limit=int(args.get("limit") or 10))
+        total, js, _, _ = find(q, remote=bool(args.get("remote_only")), limit=int(args.get("limit") or 10))
         items = [brief(j) for j in js]
         lines = [f"{total:,} open jobs match “{q}”." + (" The best ones:" if items else " Try fewer or other words.")]
         lines += [f"{i}. {x['title']} — {x['company']}" + (f" · {x['location']}" if x["location"] else "") + (" · remote" if x["remote"] else "")
@@ -144,10 +156,10 @@ class Handler(SimpleHTTPRequestHandler):
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k, d="": (qs.get(k) or [d])[0]
             try:
-                total, js = STORE.search(one("q"), remote=one("remote") in ("1", "true"), limit=int(one("limit", "20")), offset=int(one("offset", "0")))
+                total, js, facets, engine = find(one("q"), remote=one("remote") in ("1", "true"), limit=int(one("limit", "20")), offset=int(one("offset", "0")))
             except ValueError:
                 return self.send_json(400, {"error": "limit and offset are numbers"})
-            return self.send_json(200, {"q": one("q"), "total": total, "jobs": [brief(j) for j in js]},
+            return self.send_json(200, {"q": one("q"), "total": total, "jobs": [brief(j) for j in js], "facets": facets, "engine": engine},
                                   [("Cache-Control", "public, max-age=120"), ("Access-Control-Allow-Origin", "*")])
         m = JOB.match(path)
         if m:

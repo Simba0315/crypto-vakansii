@@ -1,0 +1,10 @@
+# A new data/jobs.db (the hourly upload puts it in place in one step) starts hrn-index.service.
+[Unit]
+Description=Reload the search index when new job records arrive
+
+[Path]
+PathChanged=/srv/hrn/app/data/jobs.db
+Unit=hrn-index.service
+
+[Install]
+WantedBy=multi-user.target

@@ -139,6 +139,14 @@ class Store:
                                     (match, limit, offset)).fetchall()
         return total, [json.loads(r) for (r,) in rows]
 
+    def records(self, slugs):
+        """The stored records of these jobs, in the order given (a slug with no record is skipped)."""
+        if not slugs: return []
+        with self.lock:
+            self._fresh()
+            got = {s: json.loads(r) for s, r in self.con.execute(f"SELECT slug, rec FROM jobs WHERE slug IN ({','.join('?' * len(slugs))})", list(slugs))}
+        return [got[s] for s in slugs if s in got]
+
     def record(self, slug):
         """One job as stored, with its text, or None."""
         with self.lock:

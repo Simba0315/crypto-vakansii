@@ -33,9 +33,11 @@ jobs:
       # are guarded with it. The check is on which schedule line fired, not on the clock: GitHub often starts a scheduled run late,
       # and a run that waited past 04:00 must still count as the 03:17 one. The text here must match that cron line exactly.
       DAILY: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '17 3 * * *' }}
-      # Our own server (HOSTING.md): once the repository variable HRN_SERVER is set, the build also writes the job records
-      # (data/jobs.db) next to the pages, and "Upload to our server" sends both there. Until then nothing changes.
-      HRN_RECORDS: ${{ vars.HRN_SERVER != '' && 'both' || '' }}
+      # Our own server (HOSTING.md): once the secret HRN_SERVER (its address) is set, the build also writes the job records
+      # (data/jobs.db) next to the pages, and "Upload to our server" sends both there. Until then nothing changes. The address is
+      # a secret, not a variable, so it never shows in the public logs: behind Cloudflare it is meant to stay unknown.
+      HRN_SERVER_ON: ${{ secrets.HRN_SERVER != '' }}
+      HRN_RECORDS: ${{ secrets.HRN_SERVER != '' && 'both' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -119,12 +121,14 @@ jobs:
       # The upload to our own server: the files (without the 42,000 job pages, which the server builds from the records), the records
       # and the page code. HRN_DEPLOY_KEY is a key made for this only; on the server it can do nothing but rsync into /srv/hrn/app.
       # --delay-updates puts every new file in place at the end, so no visitor sees half an upload.
+      # continue-on-error: an upload that fails must not stop the GitHub Pages deploy below.
       - name: Upload to our server
-        if: vars.HRN_SERVER != ''
+        if: env.HRN_SERVER_ON == 'true'
+        continue-on-error: true
         env:
           KEY: ${{ secrets.HRN_DEPLOY_KEY }}
-          HOST: ${{ vars.HRN_SERVER }}
-          HOSTKEY: ${{ vars.HRN_SERVER_HOSTKEY }}
+          HOST: ${{ secrets.HRN_SERVER }}
+          HOSTKEY: ${{ secrets.HRN_SERVER_HOSTKEY }}
         run: |
           umask 077
           printf '%s\n' "$KEY" > "$RUNNER_TEMP/hrn_key"
