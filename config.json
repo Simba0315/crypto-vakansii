@@ -95,5 +95,10 @@
   "sponsors": [],
   "api_url": "",
   "indexnow_key": "da012c9b3f492ce3845d18a66c19d58c",
-  "launch_prices": true
+  "launch_prices": true,
+  "verify": {
+    "google": "",
+    "bing": "",
+    "yandex": ""
+  }
 }

@@ -1357,7 +1357,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + t["html"]
                 + '<div class="tl-after">' + extra
                 + section(t["how_title"], f'<div class="tl-how">{t["how"]}</div>')
-                + section("Questions", faq_html)
+                + section(f"Questions about the {t['name'][0].lower() + t['name'][1:]}", faq_html)
                 + section("Related tools", cards(related), ("tools/", "All free tools")) + "</div>")
         page(path, t["title"], t["desc"], body, head=assets + app_ld + faq_ld + crumbs_ld([("Tools", "tools/"), (t["name"], "")]))
 
@@ -1524,13 +1524,22 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          f'<p class="lead">{len(TOOLS) + len(EXTRA)} tools, from a resume builder to pay calculators, for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
          f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
          + section("Start here: resume, matching, tracking", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>")
+         + section("Templates and examples to copy", '<div class="feats">'
+                   f'<a class="feat" href="{P}/resume/examples/"><h3>Resume examples</h3><p>A written example for each kind of work, with the skills today’s postings name.</p></a>'
+                   f'<a class="feat" href="{P}/cover-letter-examples/"><h3>Cover letter examples</h3><p>A letter for each kind of work that leads with results, ready to copy.</p></a>'
+                   f'<a class="feat" href="{P}/resignation-letters/"><h3>Resignation letters</h3><p>Two weeks notice, effective immediately, by email and 15 more situations.</p></a>'
+                   f'<a class="feat" href="{P}/resume-words/"><h3>Stronger resume words</h3><p>What to write instead of “managed”, “helped” or “responsible for”.</p></a>'
+                   f'<a class="feat" href="{P}/how-to-become/"><h3>How to become…</h3><p>Skills, pay and jobs open to beginners, for people changing careers.</p></a>'
+                   f'<a class="feat" href="{P}/job-descriptions/"><h3>Job description templates</h3><p>For employers: a template per role with what today’s postings ask and pay.</p></a>'
+                   f'<a class="feat" href="{P}/map/"><h3>Jobs map</h3><p>Every city with open jobs on one map. Search a skill and see where it is hiring.</p></a>'
+                   f'<a class="feat" href="{P}/vs/"><h3>Compared with other job sites</h3><p>Fair, sourced comparisons with Indeed, LinkedIn and others.</p></a></div>')
          + seekers
          + section("For employers and recruiters", group("employers"))
          + section("How these tools work", '<div class="feats">'
                    '<div class="feat"><h3>Nothing leaves your browser</h3><p>Every calculation and text check runs on your device. Nothing is uploaded, and “Clear” erases what a tool remembers.</p></div>'
                    f'<div class="feat"><h3>The salary figures have a source</h3><p>They come from {n_paid:,} open roles that publish a yearly US-dollar range. No figure is shown for fewer than {MIN_SAMPLE} postings.</p></div>'
                    '<div class="feat"><h3>The method is on the page</h3><p>Arithmetic and fill-in templates, not AI. Under each tool you can read how its result is calculated.</p></div></div>')
-         + section("Questions", faq_html)
+         + section("Questions about the tools", faq_html)
          + section("More on this site", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")])),
          head=assets + list_ld + faq_ld + crumbs_ld([("Tools", "")]))
 
