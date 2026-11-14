@@ -981,7 +981,7 @@ Rezi — частная компания, официальной бухгалт�
 - ✅ Заголовок страниц компаний: «<Компания> Careers» (так ищут: «fedex careers», «delta careers»).
 - ✅ Списки по времени работы: `/night-shift/`, `/weekend/`, `/summer/`, `/temporary/` (каждый появляется, когда в нём
   не меньше 20 вакансий).
-- 📋 Примеры сопроводительных писем по профессиям; статьи «interview tips», «how to ask for a raise».
+- ✅ Статья «how to ask for a raise» на наших данных: `/guides/does-senior-pay-more/` (2026-11-14). 📋 Примеры сопроводительных писем по профессиям; статьи «interview tips».
 - ⚠️ По «jobs near me» в поиске стоят Indeed, LinkedIn и блок вакансий самого Google. Попасть в блок Google можно:
   разметка вакансий у нас есть, но нужен свой домен и Search Console (раздел 69).
 
