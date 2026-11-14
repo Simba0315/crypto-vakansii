@@ -36,7 +36,7 @@
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
   //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere, 21 logo, 22 talent pool,
   //       23 exact posting time in minutes since 1970 (0 when only the day is known or the job is over a week old),
-  //       24 country codes of the places the job is in, for the flags]
+  //       24 country codes of the places the job is in, for the flags, 25 hybrid]
   var cache, headCache;
   function expand(d) {
     var cslug = d.c.map(function (c) { return slugOf(c) || 'job'; });
@@ -47,7 +47,7 @@
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
           (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0, r[14] || 0,
-          d.f ? r[11].map(function (i) { return d.f[i]; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).slice(0, 3) : []];
+          d.f ? r[11].map(function (i) { return d.f[i]; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).slice(0, 3) : [], r[4] & 32 ? 1 : 0];
     });
   }
   function load() {
@@ -65,7 +65,7 @@
     return {
       q: p.get('q') || '', words: (p.get('q') || '').toLowerCase().split(/\s+/).filter(Boolean),
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
-      remote: p.has('remote'), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
+      remote: p.has('remote'), hybrid: p.has('hybrid'), xl: (p.get('xl') || '').split(',').filter(Boolean), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
       skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new',
       titles: p.has('ti'), nosal: p.has('nosal'), real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
     };
@@ -77,7 +77,8 @@
     if (f.cat && j[5] !== f.cat) return false;
     if (f.lvl && j[6] !== f.lvl) return false;
     if (f.loc && j[14].indexOf(f.loc) < 0) return false;
-    if (f.remote && !j[4]) return false;
+    if ((f.remote || f.hybrid) && !((f.remote && j[4]) || (f.hybrid && j[25]))) return false;     // both ticked: either kind
+    if (f.xl && f.xl.length && f.xl.indexOf(j[6]) >= 0) return false;                             // levels the visitor leaves out
     if (f.entry && !j[10]) return false;
     if (f.crypto && !j[15]) return false;
     if (f.any && !(j[20] && j[4])) return false;

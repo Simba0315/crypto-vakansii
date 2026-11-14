@@ -1561,7 +1561,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
                    f'<a class="feat" href="{P}/resignation-letters/"><h3>Resignation letters</h3><p>Two weeks notice, effective immediately, by email and 15 more situations.</p></a>'
                    f'<a class="feat" href="{P}/resume-words/"><h3>Stronger resume words</h3><p>What to write instead of “managed”, “helped” or “responsible for”.</p></a>'
                    f'<a class="feat" href="{P}/how-to-become/"><h3>How to become…</h3><p>Skills, pay and jobs open to beginners, for people changing careers.</p></a>'
+                   f'<a class="feat" href="{P}/interview-questions/"><h3>Interview questions</h3><p>The questions to prepare for each kind of work, and what a good answer shows.</p></a>'
                    f'<a class="feat" href="{P}/job-descriptions/"><h3>Job description templates</h3><p>For employers: a template per role with what today’s postings ask and pay.</p></a>'
+                   f'<a class="feat" href="{P}/how-to-hire/"><h3>How to hire…</h3><p>For employers: who else is hiring each role, what they pay, and six steps.</p></a>'
                    f'<a class="feat" href="{P}/map/"><h3>Jobs map</h3><p>Every city with open jobs on one map. Search a skill and see where it is hiring.</p></a>'
                    f'<a class="feat" href="{P}/vs/"><h3>Compared with other job sites</h3><p>Fair, sourced comparisons with Indeed, LinkedIn and others.</p></a></div>')
          + seekers

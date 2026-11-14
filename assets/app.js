@@ -6,7 +6,9 @@
   var $ = function (id) { return document.getElementById(id); };
   var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), age = $('age'), sort = $('sort');
   var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
-  var fReal = $('f-real'), fTi = $('f-ti'), fNosal = $('f-nosal'), xwords = $('xwords'), xcos = $('xcos');
+  var fReal = $('f-real'), fTi = $('f-ti'), fNosal = $('f-nosal'), xwords = $('xwords'), xcos = $('xcos'), fHybrid = $('f-hybrid');
+  var xlBoxes = Array.prototype.slice.call(document.querySelectorAll('.f-xl'));
+  var xlOf = function () { return xlBoxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }); };
   var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
   var ftoggle = $('ftoggle'), fwrap = $('fwrap'), keepShown = false;
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
@@ -17,6 +19,8 @@
   q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; sal.value = f0.sal ? String(f0.sal) : ''; age.value = f0.age ? String(f0.age) : ''; sort.value = f0.sort;
   fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto; fAny.checked = f0.any; perk.value = f0.perk; etype.value = f0.etype;
   if (fReal) fReal.checked = f0.real;
+  if (fHybrid) fHybrid.checked = f0.hybrid;
+  xlBoxes.forEach(function (b) { b.checked = f0.xl.indexOf(b.value) >= 0; });
   if (fTi) fTi.checked = f0.titles;
   if (fNosal) { fNosal.checked = f0.nosal; fNosal.parentNode.hidden = !(Number(sal.value) > 1); sal.addEventListener('change', function () { fNosal.parentNode.hidden = !(Number(sal.value) > 1); }); }
   if (xwords) xwords.value = H.mute.w.join(', ');
@@ -38,6 +42,8 @@
     if (sal.value) p.set('sal', sal.value);
     if (age.value) p.set('age', age.value);
     if (fRemote.checked) p.set('remote', '1');
+    if (fHybrid && fHybrid.checked) p.set('hybrid', '1');
+    if (xlOf().length) p.set('xl', xlOf().join(','));
     if (fEntry.checked) p.set('entry', '1');
     if (fCrypto.checked) p.set('crypto', '1');
     if (fAny.checked) p.set('any', '1');
@@ -58,6 +64,8 @@
     if (fAny.checked) parts.push('Work from anywhere');
     if (fReal && fReal.checked) parts.push('Fresh openings only');
     if (fRemote.checked) parts.push('Remote');
+    if (fHybrid && fHybrid.checked) parts.push('Hybrid');
+    if (xlOf().length) parts.push('No ' + xlOf().join(', ').toLowerCase());
     if (fEntry.checked) parts.push('Entry-level');
     if (fCrypto.checked) parts.push('Crypto');
     if (skills.length) parts.push(skills.join(' + '));
@@ -78,7 +86,7 @@
       rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
     }
     total = full ? rows.length : Math.max(allTotal, rows.length); extra = new Map(); found = H.collapse(rows, extra);
-    var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + skills.length;
+    var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     if (!keepShown) shown = 50;
     render();
@@ -104,7 +112,8 @@
     var items = [];
     if (q.value.trim()) items.push(['q', '“' + q.value.trim() + '”']);
     [['cat', cat], ['lvl', lvl], ['loc', loc], ['sal', sal], ['age', age], ['perk', perk], ['etype', etype]].forEach(function (x) { if (x[1].value) items.push([x[0], text(x[1])]); });
-    [['remote', fRemote, 'Remote'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['real', fReal, 'Fresh openings only']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
+    [['remote', fRemote, 'Remote'], ['hybrid', fHybrid, 'Hybrid'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['real', fReal, 'Fresh openings only']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
+    if (xlOf().length) items.push(['xl', 'No ' + xlOf().join(', ').toLowerCase()]);
     skills.forEach(function (s) { items.push(['skill:' + s, s]); });
     applied.innerHTML = items.map(function (x) { return '<button class="achip" type="button" data-rm="' + H.esc(x[0]) + '" aria-label="Remove filter: ' + H.esc(x[1]) + '">' + H.esc(x[1]) + '<span aria-hidden="true">×</span></button>'; }).join('') +
       (items.length > 1 ? '<button class="linkbtn" type="button" data-rm="*">Clear all</button>' : '');
@@ -113,35 +122,87 @@
   applied.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-rm]'); if (!b) return;
     var k = b.getAttribute('data-rm');
-    var boxes = { remote: fRemote, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    if (k === 'xl' || k === '*') xlBoxes.forEach(function (x) { x.checked = false; });
     if (k === '*') { q.value = ''; skills = []; Object.keys(boxes).forEach(function (n) { if (boxes[n]) boxes[n].checked = false; }); Object.keys(sels).forEach(function (n) { sels[n].value = ''; }); if (!sortTouched) sort.value = 'new'; }
     else if (k === 'q') { q.value = ''; if (!sortTouched) sort.value = 'new'; }
     else if (k.indexOf('skill:') === 0) skills = skills.filter(function (s) { return s !== k.slice(6); });
     else if (boxes[k]) boxes[k].checked = false; else if (sels[k]) sels[k].value = '';
     paintChips(); run();
   });
+  // "Did you mean": a word of the query that no job contains is swapped for the closest word that jobs do contain (one typo for
+  // short words, two for long ones; the more common word wins a tie). Shown only when the corrected search finds something.
+  var vocab = null;
+  var dist = function (a, b, lim) {               // edit distance with swapped neighbours counted as one edit, stops early past `lim`
+    var m = a.length, n = b.length, d = [], i, k;
+    for (i = 0; i <= m; i++) { d[i] = [i]; }
+    for (k = 1; k <= n; k++) d[0][k] = k;
+    for (i = 1; i <= m; i++) {
+      var low = 99;
+      for (k = 1; k <= n; k++) {
+        var c = a[i - 1] === b[k - 1] ? 0 : 1;
+        d[i][k] = Math.min(d[i - 1][k] + 1, d[i][k - 1] + 1, d[i - 1][k - 1] + c);
+        if (i > 1 && k > 1 && a[i - 1] === b[k - 2] && a[i - 2] === b[k - 1]) d[i][k] = Math.min(d[i][k], d[i - 2][k - 2] + 1);
+        if (d[i][k] < low) low = d[i][k];
+      }
+      if (low > lim) return lim + 1;
+    }
+    return d[m][n];
+  };
+  var suggest = function (words) {
+    if (!vocab) {
+      vocab = new Map();
+      jobs.forEach(function (j) { (j[1] + ' ' + j[2] + ' ' + j[7].join(' ')).toLowerCase().split(/[^a-z0-9+#.]+/).forEach(function (w) { if (w.length > 2) vocab.set(w, (vocab.get(w) || 0) + 1); }); });
+    }
+    var hays = jobs.map(function (j) { return j[17] || (j[17] = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase()); }), changed = false;
+    var out = words.map(function (w) {
+      if (w.length < 4 || hays.some(function (h) { return h.indexOf(w) >= 0; })) return w;
+      var lim = w.length > 6 ? 2 : 1, best = '', bd = lim + 1, bn = 0;
+      vocab.forEach(function (n, v) {
+        if (Math.abs(v.length - w.length) > lim) return;
+        var x = dist(w, v, lim);
+        if (x < bd || (x === bd && n > bn)) { best = v; bd = x; bn = n; }
+      });
+      if (best && bd <= lim) { changed = true; return best; }
+      return w;
+    });
+    return changed ? out.join(' ') : '';
+  };
   var relax = function (n, qs) {
     hint.hidden = true; hint.innerHTML = '';
     if (n || !full || !qs) return;
+    var mean = '', p0 = H.parse(qs);
+    if (p0.words.length) {
+      var fix = suggest(p0.words);
+      if (fix) {
+        var p1 = new URLSearchParams(qs); p1.set('q', fix);
+        var f1 = H.parse(p1.toString()), c1 = 0;
+        for (var i1 = 0; i1 < jobs.length; i1++) if (H.match(jobs[i1], f1)) c1++;
+        if (c1) mean = 'Did you mean <button class="linkbtn" type="button" data-q="' + H.esc(fix) + '">“' + H.esc(fix) + '”</button>? ' + c1.toLocaleString('en-US') + (c1 === 1 ? ' job. ' : ' jobs. ');
+      }
+    }
     var p = new URLSearchParams(qs), names = { q: 'the words “' + q.value.trim() + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
-      remote: 'Remote', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'Fresh openings only', skills: skills.join(' + ') }, out = [];
+      remote: 'Remote', hybrid: 'Hybrid', xl: 'the levels left out', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'Fresh openings only', skills: skills.join(' + ') }, out = [];
     p.forEach(function (_, k) {
-      if (!names[k]) return;
+      if (!names[k] || (k === 'q' && mean)) return;           // a spelling fix is the better way out than dropping the words
       var p2 = new URLSearchParams(qs); p2.delete(k);
       var f2 = H.parse(p2.toString()), c = 0;
       for (var i = 0; i < jobs.length; i++) if (H.match(jobs[i], f2)) c++;
       if (c) out.push([c, k, names[k]]);
     });
-    if (!out.length) return;
+    if (!out.length && !mean) return;
     out.sort(function (a, b) { return b[0] - a[0]; });
-    hint.innerHTML = 'Nothing fits all of that. ' + out.slice(0, 4).map(function (x) {
+    hint.innerHTML = mean + (out.length ? 'Nothing fits all of that. ' : '') + out.slice(0, 4).map(function (x) {
       return '<button class="linkbtn" type="button" data-drop="' + x[1] + '">Without ' + H.esc(x[2]) + ': ' + x[0].toLocaleString('en-US') + (x[0] === 1 ? ' job' : ' jobs') + '</button>';
     }).join(' ');
     hint.hidden = false;
   };
   hint.addEventListener('click', function (ev) {
+    var fixQ = ev.target.getAttribute && ev.target.getAttribute('data-q');
+    if (fixQ) { q.value = fixQ; run(); return; }
     var k = ev.target.getAttribute && ev.target.getAttribute('data-drop'); if (!k) return;
-    var boxes = { remote: fRemote, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    if (k === 'xl') xlBoxes.forEach(function (x) { x.checked = false; });
     if (k === 'q') q.value = ''; else if (k === 'skills') { skills = []; paintChips(); } else if (boxes[k]) boxes[k].checked = false; else if (sels[k]) sels[k].value = '';
     run();
   });
@@ -149,7 +210,7 @@
   // typing a query switches to "best match" unless the visitor picked a sort order themselves
   q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
   sort.addEventListener('change', function () { sortTouched = true; });
-  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fEntry, fCrypto, fAny, fReal, fTi, fNosal].forEach(function (el) { if (el) el.addEventListener('change', run); });
+  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fHybrid, fEntry, fCrypto, fAny, fReal, fTi, fNosal].concat(xlBoxes).forEach(function (el) { if (el) el.addEventListener('change', run); });
   // words and companies the visitor never wants to see: remembered in this browser, applied to every list
   var drawMuted = function () {
     if (!xcos) return;
@@ -179,7 +240,7 @@
   var clearBtn = $('fclear');
   if (clearBtn) clearBtn.addEventListener('click', function () {
     [cat, lvl, loc, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
-    [fRemote, fEntry, fCrypto, fAny, fReal].forEach(function (el) { if (el) el.checked = false; });
+    [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].concat(xlBoxes).forEach(function (el) { if (el) el.checked = false; });
     skills = []; paintChips(); run();
   });
 

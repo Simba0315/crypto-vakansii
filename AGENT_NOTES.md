@@ -14,6 +14,10 @@ Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: ht
   `data` branch, collect, save it back, build, deploy to Pages. `data/` and `site/` are not in `main`.
 - `logos.py` finds each company's own site and saves its icon to `assets/logos/`. Only trusted addresses are used
   (hand-checked `OVERRIDE` list or `<name>.com`); a wrong logo is worse than none. Never draw or invent logos.
+  When no site works, it takes the logo the company uploaded to its own Greenhouse, Ashby or Lever board (only near-square
+  ones; `logos.json` then says `board:<ats>/<token>`, and the build does not use that as the company's site). A name whose
+  obvious domain belongs to someone else goes into `NO_SITE` (mesh.com shows Microsoft's logo). Look at every new logo
+  before publishing: put them on one page and take a screenshot.
 
 ## Freshness: exact times and the hourly run
 
@@ -370,4 +374,7 @@ plain HTML, so the page is readable without the map.
   site), and an optional figure from `gfig` in `build.py`. The index keeps the old `#anchor` ids.
 - Read the whole output of `check.py`, not only a count of "FAIL": broken internal links are reported per template as
   "broken internal link: N". On 14 Nov 17 of them went out unnoticed for a few hours.
-
+- Anything that runs a regex over the full text of postings must read each posting once (see `iq_hit` in `build.py`): a loop
+  of 140 roles x 7,000 descriptions x 20 patterns added 10 minutes to the build.
+- `/interview-questions/` and `/how-to-hire/` exist for every role with a resume example and 20 open postings, the same set
+  as the job description templates. Role pages link all of them in the "Prepare" row only under that condition.

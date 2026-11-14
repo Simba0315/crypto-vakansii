@@ -65,6 +65,9 @@ OVERRIDE = {  # names whose site cannot be guessed from the name
     "Grow Therapy": "growtherapy.com", "Sword Health": "swordhealth.com", "Dyno Therapeutics": "dynotx.com", "Generate Biomedicines": "generatebiomedicines.com",
     "Khan Academy": "khanacademy.org", "Grafana Labs": "grafana.com", "ConvertKit": "kit.com", "Pure Storage": "purestorage.com", "Flow Traders": "flowtraders.com", "Nubank": "nubank.com.br",
 }
+# Names whose obvious address belongs to someone else or shows nothing (mesh.com shows Microsoft's logo, two are parked or blank):
+# only the logo on the company's own job board is used for them.
+NO_SITE = {"Mesh", "Extenteam Client Roles", "Movers+Shakers"}
 CHALLENGE = {"", "justamoment", "attentionrequired", "accessdenied", "pleasewait", "403forbidden", "forbidden", "robotcheck", "securitycheck", "areyouarobot", "error", "blocked"}
 
 
@@ -90,6 +93,7 @@ def primaries(name, token):
     """Addresses we trust: the hand-checked one, a token that already is a domain, and <name>.com."""
     base, tok = stems(name, token)
     out = []
+    if name in NO_SITE: return out
     if name in OVERRIDE: out.append(OVERRIDE[name])
     if "." in token: out.append(token.lower())
     if name not in OVERRIDE:
@@ -152,6 +156,38 @@ def site_icon(domain, dest):
     return False
 
 
+def board_icon(src, dest):
+    """The logo the company uploaded to its own job board on Greenhouse, Ashby or Lever: the board we read its jobs from, so the
+    picture cannot belong to another company. Kept only when it is close to square: a wide word mark is unreadable at icon size."""
+    ats, tok = src.get("ats") or src.get("type") or "", src.get("token") or ""
+    if not tok: return False
+    if ats == "greenhouse":
+        html = curl(f"https://job-boards.greenhouse.io/{tok}")
+        urls = re.findall(r'https://s\d-recruiting\.cdn\.greenhouse\.io/external_greenhouse_job_boards/logos/[^"\\ ]+', html)
+    elif ats == "ashby":
+        html = curl(f"https://jobs.ashbyhq.com/{tok}")
+        urls = re.findall(r'"logoSquareImageUrl":"(https://[^"]+)"', html)
+    elif ats == "lever":
+        html = curl(f"https://jobs.lever.co/{tok}")
+        urls = re.findall(r'<img alt="[^"]*logo" src="(https://lever-client-logos[^"]+)"', html)
+    else:
+        return False
+    if not urls: return False
+    data = curl(urls[0].replace("\\u0026", "&"), binary=True)
+    if len(data) < 300: return False
+    tmp = dest.with_suffix(".src")
+    tmp.write_bytes(data)
+    subprocess.run(["sips", "-s", "format", "png", str(tmp), "--out", str(dest)], capture_output=True)
+    tmp.unlink(missing_ok=True)
+    if not dest.exists(): return False
+    info = subprocess.run(["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(dest)], capture_output=True, text=True).stdout
+    w, h = (int(x) for x in (re.search(r"pixelWidth: (\d+)", info).group(1), re.search(r"pixelHeight: (\d+)", info).group(1))) if "pixelHeight" in info else (0, 0)
+    if min(w, h) < 32 or max(w, h) > 1.3 * min(w, h):
+        dest.unlink(missing_ok=True); return False
+    if max(w, h) > 96: subprocess.run(["sips", "-Z", "96", str(dest)], capture_output=True)
+    return True
+
+
 def work(src):
     name, slug = src["name"], slugify(src["name"])
     dest = OUTDIR / f"{slug}.png"
@@ -163,6 +199,8 @@ def work(src):
         ok = names is None or name in OVERRIDE or key in names[0] or key in names[1] or (len(first) >= 5 and (first in names[0] or first in names[1]))
         if ok and (icon(d, dest) or (name in OVERRIDE and site_icon(d, dest))):
             return name, d
+    if board_icon(src, dest):                       # no verified site, or no usable icon there: the logo on the company's own job board
+        return name, f"board:{src.get('ats') or src.get('type')}/{src['token']}"
     return name, None
 
 

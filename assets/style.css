@@ -1372,3 +1372,16 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .qz-h{display:flex;align-items:center;gap:10px;font-size:18px}
 .qz-fig{color:var(--muted);font-size:14px}
 
+/* interview questions: numbered cards, the number runs on across sections */
+.iq{list-style:none;counter-reset:iq;padding:0;margin:14px 0 8px;display:grid;gap:12px;max-width:860px}
+.iq li{counter-increment:iq;position:relative;padding:16px 18px 16px 58px;border:1px solid var(--line);border-radius:var(--radius,12px);background:var(--card)}
+.iq li::before{content:counter(iq);position:absolute;left:18px;top:17px;width:26px;height:26px;display:grid;place-items:center;background:var(--hl);color:var(--hl-ink);font:700 12px var(--mono);border-radius:6px}
+.iq h3{margin:0 0 6px;font-size:17px;line-height:1.35}
+.iq .why{margin:0 0 6px;font-size:13.5px;color:var(--muted)}
+.iq .good{margin:0;font-size:15px}
+.iq .good b{font-weight:650}
+@media (max-width:560px){.iq li{padding:14px 14px 14px 48px}.iq li::before{left:12px;top:15px}}
+
+/* search: levels to leave out, one row */
+.filters.xlv{margin-top:10px;align-items:center}
+.filters.xlv .note{margin:0 4px 0 0}
