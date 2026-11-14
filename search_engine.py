@@ -119,7 +119,7 @@ SKIP = {"a", "an", "and", "or", "not", "the", "of", "in", "at", "for", "to", "wi
         "positions", "vacancy", "vacancies", "opening", "openings", "career", "careers", "hiring", "work"}
 
 
-def query(q, remote=False, limit=20, offset=0, fuzzy=False):
+def query(q, remote=False, limit=20, offset=0, fuzzy=False, cap=50):
     """The search request: every word must be found, in any field; the whole phrase in the title ranks first. "remote" in the
     words is the remote filter. fuzzy: forgive a typo (one in a word of 5-8 letters, two from 9), for the second try when the
     words as typed find nothing. Returns None when there is nothing to look for."""
@@ -131,7 +131,7 @@ def query(q, remote=False, limit=20, offset=0, fuzzy=False):
                              "prefix_length": 1, "max_expansions": 30}} for w in words]
     filt = [{"term": {"active": True}}] + ([{"term": {"remote": True}}] if remote else [])
     phrase = " ".join(words)
-    return {"size": max(1, min(int(limit), 50)), "from": max(0, min(int(offset), 1000)), "_source": ["slug"], "track_total_hits": True,
+    return {"size": max(1, min(int(limit), cap)), "from": max(0, min(int(offset), 1000)), "_source": ["slug"], "track_total_hits": True,
             "query": {"bool": {"must": must, "filter": filt,
                                "should": [{"match_phrase": {"title": {"query": phrase, "boost": 8}}},
                                           {"match": {"title": {"query": phrase, "operator": "and", "boost": 4}}},
@@ -141,15 +141,15 @@ def query(q, remote=False, limit=20, offset=0, fuzzy=False):
                      "company": {"terms": {"field": "company.raw", "size": 10}}}}
 
 
-def search(q, remote=False, limit=20, offset=0, timeout=1.5):
+def search(q, remote=False, limit=20, offset=0, timeout=1.5, cap=50):
     """(total, [slugs], facets) from OpenSearch: the words as typed first, and only when they find nothing, the same words
     forgiving typos (facets["fuzzy"] then says so). Raises OSError when it is not there or does not answer in time."""
     if not URL: raise OSError("HRN_OPENSEARCH is not set")
-    body = query(q, remote, limit, offset)
+    body = query(q, remote, limit, offset, cap=cap)
     if body is None: return 0, [], {}
     r, fuzzy = call("POST", f"/{ALIAS}/_search", body, timeout=timeout), False
     if r["hits"]["total"]["value"] == 0:
-        r, fuzzy = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True), timeout=timeout), True
+        r, fuzzy = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True, cap=cap), timeout=timeout), True
     a = r.get("aggregations", {})
     facets = {"fuzzy": fuzzy, "remote": a.get("remote", {}).get("doc_count", 0), "hybrid": a.get("hybrid", {}).get("doc_count", 0)}
     for k in ("cat", "level", "company"):

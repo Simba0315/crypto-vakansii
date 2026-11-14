@@ -155,6 +155,15 @@ class Handler(SimpleHTTPRequestHandler):
         if path == SEARCH:
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k, d="": (qs.get(k) or [d])[0]
+            if one("all") == "1":
+                # For the site's own search box: every match, best first, as slugs only (up to 5,000); the page applies its
+                # filters to them. Lucene only: without it the page keeps its own word matching.
+                try:
+                    total, slugs, facets = search_engine.search(one("q"), limit=5000, cap=5000, timeout=3)
+                except OSError:
+                    return self.send_json(503, {"error": "search engine unavailable"})
+                return self.send_json(200, {"q": one("q"), "total": total, "slugs": slugs, "fuzzy": bool(facets.get("fuzzy")), "engine": "lucene"},
+                                      [("Cache-Control", "public, max-age=120")])
             try:
                 total, js, facets, engine = find(one("q"), remote=one("remote") in ("1", "true"), limit=int(one("limit", "20")), offset=int(one("offset", "0")))
             except ValueError:

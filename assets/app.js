@@ -76,11 +76,36 @@
     count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
     more.hidden = found.length <= shown; H.decorate(list);
   };
+  // Words go to the site's search engine (Lucene, on our server) when it is there: it reads the whole text of each posting, forgives a
+  // typo and knows synonyms, and sends back every match, best first. The filters on this page then apply to those matches as before.
+  // Until it answers, and wherever it is not (offline, an old copy of the site), the words are matched here, in titles and tags.
+  var LUC = { q: '', ranks: null, capped: false, fuzzy: false }, lucOK = !!window.fetch, lucAsked = '';
+  var lucFor = function (text_) {
+    if (!lucOK || !text_) return null;
+    if (LUC.q === text_ && LUC.ranks) return LUC;
+    if (lucAsked !== text_) {
+      lucAsked = text_;
+      fetch(H.base + '/api/search?all=1&q=' + encodeURIComponent(text_)).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
+        if (!d || !Array.isArray(d.slugs)) throw 0;
+        var ranks = new Map(); d.slugs.forEach(function (s_, i) { ranks.set(s_, i); });
+        LUC = { q: text_, ranks: ranks, capped: d.total > d.slugs.length, fuzzy: !!d.fuzzy };
+        if (q.value.trim() === text_) { keepShown = false; run(); }
+      }).catch(function () { lucOK = false; });
+    }
+    return null;
+  };
   var run = function () {
     var qs = query(), f = H.parse(qs);
     if (!full && qs) { paintApplied(); waiting = true; count.textContent = 'Searching all jobs…'; return; }   // filters need the whole index
-    var rows = jobs.filter(function (j) { return H.match(j, f); });
+    var L = f.words.length && !f.titles ? lucFor(q.value.trim()) : null;
+    if (L && L.capped) L = null;                     // a word in thousands of jobs: the titles and tags here find them as well
+    var rows;
+    if (L) {
+      var fw = Object.assign({}, f, { words: [] });
+      rows = jobs.filter(function (j) { return L.ranks.has(j[0]) && H.match(j, fw); });
+    } else rows = jobs.filter(function (j) { return H.match(j, f); });
     if (f.sort === 'sal') rows = rows.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
+    else if (L && f.sort === 'rel') rows = rows.slice().sort(function (a, b) { return L.ranks.get(a[0]) - L.ranks.get(b[0]); });
     else if (f.sort === 'rel' && f.words.length) {                 // title matches first, then the rest, newest first inside each group
       var score = function (j) { var t = j[1].toLowerCase(), n = 0; f.words.forEach(function (w) { if (t.indexOf(w) >= 0) n++; }); return n === f.words.length ? 2 : n ? 1 : 0; };
       rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
@@ -103,6 +128,9 @@
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
     paintApplied();
     relax(rows.length, qs);
+    if (L && L.fuzzy && rows.length) {               // the engine found nothing for the words as typed and forgave a typo
+      hint.innerHTML = 'Nothing for “' + H.esc(q.value.trim()) + '” as typed: showing jobs for the closest spelling.'; hint.hidden = false;
+    }
   };
   // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each.
   var hint = document.createElement('p'); hint.className = 'relax'; hint.hidden = true; list.parentNode.insertBefore(hint, list);
