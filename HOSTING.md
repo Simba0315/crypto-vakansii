@@ -46,7 +46,11 @@ server, the same three files move it to a server of its own.
   Two fixes on the way: `listen 443 ssl http2` (nginx 1.24 has no `http2 on;`; the refused config was never loaded, and setup.sh
   now takes back any config nginx refuses), and `/srv/hrn` set to 711 so nginx can reach the files.
 - https://jobseveryhour.com answers through Cloudflare; www and http send to https://jobseveryhour.com.
-- The switch (next): with the three GitHub secrets set, `config.json` gets `base_url` `https://jobseveryhour.com` and an empty
+- Switched on 14 Nov 2026, 13:40 UTC: the three GitHub secrets are set (the owner signed in to the GitHub CLI on his Mac),
+  `config.json` names https://jobseveryhour.com, and the first run (43598608134) built the records site, uploaded it to the
+  server and deployed the redirect site to GitHub Pages. Checked from outside: pages, job pages from records, Lucene search,
+  `/mcp`, and the old github.io pages pointing at the new address.
+- How the switch works, for reference: with the three GitHub secrets set, `config.json` gets `base_url` `https://jobseveryhour.com` and an empty
   `base_path`; the workflow then builds the records site for the server and, from `pages_redirect.py`, a redirect site for the
   old github.io address (one page per old address with a canonical link and a meta refresh; widget scripts and the JSON API kept).
 
