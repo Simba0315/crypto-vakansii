@@ -323,7 +323,7 @@ def ava(name, cls=""):
     letter = next((c for c in name if c.isalnum()), "?").upper()
     slug = slugify(name)
     img = f'<img src="{P}/logos/{slug}.png" alt="" loading="lazy">' if slug in LOGOS else ""
-    return f'<span class="ava{" " + cls if cls else ""}{" has" if img else ""}" style="--h:{hue(name)}" aria-hidden="true">{e(letter)}{img}</span>'
+    return f'<span class="ava{" " + cls if cls else ""}{" has" if img else ""}" aria-hidden="true">{e(letter)}{img}</span>'      # no hue: the logo covers the square, and a square without a logo is hidden
 
 
 def write(path, content, sitemap=True):
@@ -420,10 +420,10 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
-<meta property="og:type" content="website"><meta property="og:url" content="{e(url)}"><meta property="og:site_name" content="{e(SITE)}">
+<meta property="og:type" content="website">{"" if compact else f'<meta property="og:url" content="{e(url)}">'}<meta property="og:site_name" content="{e(SITE)}">
 <meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#0e0e0c">
 <link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="manifest" href="{P}/manifest.json">
-<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">
+{"" if compact else f'<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">'}
 <link rel="preload" href="{P}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
@@ -1077,7 +1077,7 @@ def main():
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
     global LIST_PAGES
-    LIST_PAGES = int(os.environ.get("HRN_PAGE_CAP") or (2 if len(active) <= 43000 else 1))
+    LIST_PAGES = int(os.environ.get("HRN_PAGE_CAP") or 1)      # owner, 14 Nov: no Cloudflare yet, so the 70 MiB of second pages goes to more jobs; the search shows the rest
     archived = [j for j in jobs if not j["active"]]
     by_cat = defaultdict(list)
     for j in active: by_cat[j["cat"]].append(j)

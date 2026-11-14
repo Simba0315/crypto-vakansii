@@ -1436,4 +1436,5 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .askai-l{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px!important}
 .askai-l a{font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
 .pill.fit{background:var(--accent-soft);color:var(--text);font-weight:600}
-
+.rbc-pay{grid-column:1/-1;border-top:1px solid var(--line)}
+.rbc>.rbc-pay{border-left:0}

@@ -156,9 +156,42 @@
         + (m.terms.filter(function (t) { return !t.found; }).length ? '<p class="note">Its repeated words you do not use yet: ' + m.terms.filter(function (t) { return !t.found; }).slice(0, 6).map(function (t) { return '“' + esc(t.term) + '”'; }).join(', ') + '.</p>' : '');
     }
     html += '<details class="rbc-jd"' + (jd ? '' : ' open') + '><summary>' + (jd ? 'Change the posting' : 'Paste a posting') + '</summary><textarea id="rb-jd" rows="5" placeholder="Paste the full text of the job posting">' + esc(jd) + '</textarea>'
-      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>';
+      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + payLine(text);
     chk.innerHTML = html;
     chk.hidden = false;
+  };
+  /* What jobs like this resume advertise (Adzuna's ValueMyCV, from postings rather than a model): the resume's skill with the most
+     postings that state pay, at the level its title suggests, from the same groups the salary checker uses. */
+  var payData = null, payAsked = false;
+  var payLine = function (text) {
+    var T = window.HRNT;
+    if (!payData || !skillPats || !T) {
+      if (!payAsked && window.fetch) {
+        payAsked = true;
+        fetch(H.base + '/tools/salary-checker/').then(function (r) { return r.ok ? r.text() : ''; }).then(function (page) {
+          var m = page.match(/<script type="application\/json" id="tl-data">([\s\S]*?)<\/script>/);
+          if (m) { try { payData = JSON.parse(m[1]); } catch (e) {} }
+          if (payData) drawCheck();
+        }).catch(function () {});
+      }
+      return '';
+    }
+    var t = String(data.title || ''), lvl = /\b(lead|principal|staff|head|director|vp|chief)\b/i.test(t) ? 'Lead' : /\b(senior|sr)\b/i.test(t) ? 'Senior' : /\b(junior|jr|intern|graduate|entry)\b/i.test(t) ? 'Junior' : '';
+    var groups = [];
+    T.findSkills(text, skillPats).forEach(function (sk) {
+      var g = T.salaryGroup(payData, '', lvl, sk), lv = lvl;
+      if (!(g && g.n >= 20)) { g = T.salaryGroup(payData, '', '', sk); lv = ''; }
+      if (g && g.n >= 20) groups.push({ sk: sk, lv: lv, g: g });
+    });
+    if (!groups.length) return '';
+    groups.sort(function (a, b) { return a.g.median - b.g.median; });
+    var mid = groups[Math.floor((groups.length - 1) / 2)], lo = groups[0], hi = groups[groups.length - 1];
+    var k = function (v) { return '$' + Math.round(v / 1000) + 'K'; };
+    return '<div class="rbc-pay"><p class="rbc-h"><b>' + k(mid.g.median) + '</b> a year: what jobs asking for your skills advertise</p><p class="note">'
+      + (groups.length > 1 ? 'The middle of ' + groups.length + ' skills in this resume: postings that ask for ' + esc(lo.sk) + ' advertise a median of ' + k(lo.g.median) + ', for ' + esc(hi.sk) + ' ' + k(hi.g.median) + '. '
+        : 'The median of ' + mid.g.n.toLocaleString('en-US') + ' open postings that ask for ' + esc(mid.sk) + ' and state yearly pay. ')
+      + (lvl && mid.lv ? 'Counted at ' + esc(lvl.toLowerCase()) + ' level, from your title. ' : '') + 'Pay depends on the country and the employer too. '
+      + '<a href="' + H.base + '/tools/salary-checker/">Check a skill or level</a> · <a href="' + H.base + '/tools/offer-check/">Check an offer</a></p></div>';
   };
   var needPats = function () {
     if (skillPats || !window.HRNT) return;
