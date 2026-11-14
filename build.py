@@ -435,7 +435,7 @@ def FULL_FOOT():
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
-<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
+<div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
@@ -2461,6 +2461,84 @@ def main():
          f'<p class="lead">Each letter leads with two results from that work and names the skills employers ask for in today’s open postings. Pick your work, copy the letter and fill in the brackets, or write your own in the <a href="{P}/tools/cover-letter/">cover letter builder</a>.</p>'
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
          f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/tools/cover-letter/">cover letter builder</a> works for any job.</p>' + cl_html)
+
+    # Job description templates for employers, one per kind of work (the Careerist/PeopleForce study: PeopleForce has none, and
+    # employers search for them). Every figure is counted from today's open postings for that work; the text is a template with
+    # brackets, written for this site, never copied from a posting.
+    jd_dir = defaultdict(list)
+    for slug_r, d in rex_data.items():
+        rname, rj = by_role[slug_r]
+        if len(rj) < 20: continue
+        fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
+        low, n_ = rlow(rname), len(rj)
+        does = (roles_info.INFO.get(slug_r) or (None, ""))[1]
+        focus = [x.strip() for x in (resume_examples.ROLE.get(slug_r, (None, ""))[1] or "").split(",") if x.strip()][:4]
+        yrs = sorted(j["years"] for j in rj if j.get("years"))
+        y_med = yrs[len(yrs) // 2] if len(yrs) >= 10 else None
+        mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"])
+        paid_pct = pc_(sum(1 for j in rj if j["salary"]), n_)
+        q_ = lambda q: mids_[min(len(mids_) - 1, int(len(mids_) * q))]
+        cnt_ = Counter(t for j in rj for t in j["tags"])
+        top_ = [(t, k) for t, k in resume_examples.asked(slug_r, cnt_.most_common(), n_)][:4]
+        perk_ = Counter(x for j in rj for x in j.get("perks", []) if x != "No degree required").most_common(3)      # a requirement, not a benefit
+        rem_pct = pc_(sum(1 for j in rj if j["remote"]), n_)
+        lvl_ = Counter(j["level"] for j in rj if j["level"]).most_common(1)
+        titles_ = [t for t, _ in Counter(j["title"] for j in rj).most_common(60) if len(t) <= 50][:6]
+        tpl = (f"{d['title']}\n[Company] · [City, or Remote and the countries it is open to] · [Full-time]\n\n"
+               "About us\n[Two sentences: what the company does, for whom, and one number that shows where it is now.]\n\n"
+               + (f"About the role\nOur {d['title']} {does}. " if does else "About the role\n[What this person is hired to do, in one sentence.] ") + "You will report to [manager’s title] and work with [team].\n\n"
+               "What you will do\n- [The most important result of the first year, with a number]\n"
+               + "".join(f"- {x[0].upper() + x[1:]}: [what this means in your team]\n" for x in focus)
+               + "- [One more duty that is specific to this job]\n\n"
+               "What we are looking for\n"
+               + (f"- [{y_med}]+ years of experience as {art(low)} {low}\n" if y_med else f"- [Number]+ years of experience as {art(low)} {low}\n")
+               + "".join(f"- Experience with {t}\n" for t, _ in top_)
+               + "- [One or two must-haves that are specific to this job]\n\n"
+               "Pay and benefits\n- Pay range: $[lowest] – $[highest] a year, [plus equity or bonus if any]\n"
+               + "".join(f"- {x}\n" for x, _ in perk_)
+               + "- [Paid time off, health cover and the rest of your benefits]\n\n"
+               "How to apply\n[What to send, the interview steps and how long they take. Name the date you will reply by.]")
+        facts_ = ('<dl class="facts">' + f"<div><dt>Open postings today</dt><dd>{n_:,}</dd></div>"
+                  + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med else "")
+                  + f"<div><dt>Postings that state pay</dt><dd>{paid_pct}%</dd></div>"
+                  + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "")
+                  + f"<div><dt>Open to remote work</dt><dd>{rem_pct}%</dd></div></dl>")
+        data_rows = ([("Experience asked", f"Median {y_med} years; the middle half ask {yrs[len(yrs) // 4]}–{yrs[3 * len(yrs) // 4]} years ({len(yrs):,} postings name a number)")] if y_med else []) + \
+                    ([("Pay advertised", f"{money(q_(.25))} – {money(q_(.75))} for the middle half; median {money(median(mids_))} ({len(mids_):,} postings with a yearly US-dollar range)")] if len(mids_) >= 20 else []) + \
+                    ([("Skills named most", ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_))] if top_ else []) + \
+                    ([("Benefits named most", ", ".join(f"{x} ({pc_(k, n_)}%)" for x, k in perk_))] if perk_ else []) + \
+                    ([("Most common level", f"{lvl_[0][0]} ({pc_(lvl_[0][1], n_)}% of postings)")] if lvl_ else []) + \
+                    ([("Titles employers use", ", ".join(titles_))] if titles_ else [])
+        jd_qa = [(f"What should {art(low)} {low} job description include?", "What the person will achieve in the first year, the duties, the must-have experience, the pay range and how the hiring steps work. "
+                  + (f"For this work, today’s postings name {', '.join(t for t, _ in top_[:3])} most often." if top_ else "Use the words candidates search for, not internal team names.")),
+                 (f"Should {art(low)} {low} job posting show the salary?", f"Yes, if you can: {paid_pct}% of today’s {n_:,} open {low} postings here do. A range filters out people who would turn the offer down, and several US states and EU countries now require it."),
+                 (f"How many years of experience should I ask for?", (f"The median in today’s {low} postings is {y_med} years. Ask for what the work needs: every extra year you require shrinks the pool of applicants." if y_med
+                  else "As few as the work really needs: every extra year you require shrinks the pool of applicants."))]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in jd_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        jd_dir[fs].append((slug_r, rname, n_))
+        page(f"job-descriptions/{slug_r}/", f"{tcase(rname)} Job Description Template ({TODAY[:4]}) | {SITE}",
+             f"A {low} job description template with the figures from {n_:,} open postings: experience asked, pay, skills and benefits employers name. Copy it and post your job free.",
+             crumbs(("For employers", "post-a-job/"), ("Job descriptions", "job-descriptions/"), (rname, "")) + f'<h1>{e(rname)} job description: <span class="hl">template and real figures</span></h1>'
+             f'<p class="lead">A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
+             + facts_
+             + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> '
+               f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div>'
+             + section(f"What today’s {low} postings say", '<div class="tablewrap"><table>' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
+                       f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p>')
+             + section(f"Questions about hiring {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
+             + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · <a href="{P}/salaries/{slug_r}/">{e(low)} pay</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_)
+    jd_n = sum(len(v) for v in jd_dir.values())
+    jd_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(jd_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/job-descriptions/{s_}/">{e(nm)}</a><span>{k:,} postings</span></li>' for s_, nm, k in sorted(jd_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if jd_dir.get(fs)) + "</div>"
+    page("job-descriptions/", f"Job Description Templates for {jd_n} Roles, with Real Pay and Skills Data | {SITE}",
+         f"{jd_n} job description templates for employers, each with the experience, pay, skills and benefits named in today’s open postings for that work. Copy one and post your job free.",
+         crumbs(("For employers", "post-a-job/"), ("Job descriptions", "")) + f'<h1>Job description templates for <span class="hl">{jd_n} roles</span></h1>'
+         '<p class="lead">Each template comes with the figures from today’s open postings for that work: how many years employers ask for, what they pay, which skills and benefits they name. '
+         f'Copy one, fill in the brackets, check it with the <a href="{P}/tools/job-description-checker/">job description checker</a> and post it free.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a template"></p>'
+         f'<p class="lead" id="dirnone" hidden>No template with these words. The <a href="{P}/tools/job-description-checker/">checker</a> works for any job description.</p>' + jd_html)
 
     # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.

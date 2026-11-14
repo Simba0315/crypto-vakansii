@@ -228,3 +228,38 @@ How I checked "do we have it": tool list from `site/tools/` (28 tools plus the i
 | Mobile app | partly (web app manifest and service worker) | easy | No change. |
 | MCP connector for ChatGPT and Claude | no (we have `llms.txt` and the API) | needs a server | Maybe. "Search live jobs from Claude or ChatGPT" fits our API; small build. |
 
+---
+
+## 4. What to take first
+
+Most valuable first. All but item 4 can be built on the static site.
+
+1. **Job description templates, one page per role, built from real postings.** PeopleForce has none (WebSearch `site:peopleforce.io job description template` finds only a glossary entry). We have live postings for 165 roles, so each page can show the duties and skills that real employers write, the pay range they state, and a "post this job free" button. It is the one page type that brings *employers* in from search, and it leads straight to our $29-59 posts.
+2. **"How to get into {role}" pages for career changers.** This is the topic Careerist's ~450 blog posts and its whole business are built on (https://careerist.cc/insights; 71% of its students "had no tech background", https://careerist.cc/outcomes). We can answer it with numbers from today's postings: skills asked most, share of entry-level jobs, pay, open jobs now, resume example. Static, one template, many pages.
+3. **A career quiz ("Which tech job fits me?").** Careerist puts "Take the Quiz" on its blog as a lead magnet. Ours would be plain JavaScript, no sign-up, and end on a role page with live jobs, the resume example and the Plus offer. Cheap, shareable, good for new visitors.
+4. **Become a channel inside applicant tracking systems.** Two doors: ask VONQ how a board joins its paid catalogue (sold inside PeopleForce, Greenhouse, Zoho Recruit, JazzHR), and keep PeopleForce's documented job-board integration in mind (employer's API key → we read open jobs → we send applicants back tagged with our name; https://developer.peopleforce.io/careers/v1/guides/job-boards). First step is only an email by the owner; build only if terms fit. It puts our paid posts where recruiters already work.
+5. **A bigger glossary, one page per term.** PeopleForce's main free asset is about 297 HR terms, each on its own page, in 4 languages (https://peopleforce.io/hr-glossary). Ours has 29 words on one page. Growing to 150+ job-seeker and hiring terms (notice period, at-will, background check, W-2 vs 1099, pay band, offer letter …), each with a two-sentence answer, suits Google and AI answers.
+6. **"Keywords from a job description" as its own tool page.** Careerist has one page per keyword-sized tool (7 in `/free-tools/`). Our `resume-match` already does the work; a separate page with its own title and questions is a day of work for a common search.
+7. **A referral program for communities and newsletters.** Careerist pays "up to $500" per student with a 90-day cookie (https://careerist.cc/ambassador-program). We could pay partners a share of the employer posts and Plus sales they bring, in crypto. Our `/partners/` page already invites these groups; the worker can track a referral code.
+
+Not worth taking: courses, the job guarantee, recruiting at 15% of salary, webinars, sales calls, and all of PeopleForce's HR software.
+
+---
+
+## 5. Not opened or not verified
+
+- **careerist.com = careerist.cc:** only checked by the 302 redirect.
+- **Careerist sitemap counts are approximate.** The reader saw the file in two parts and gave different counts for part one (268 vs "230+" English posts).
+- **Careerist quiz:** the "Take the Quiz" address was not found (`/quiz` is 404). Not opened.
+- **Careerist pages not opened:** AI Automation Engineer, AI Automation Bundle, AI Test Engineer, UX, Analytics, Media about us, Terms, the 3 non-"all" webinar pages.
+- **Careerist outcome claims** ("1000+ employed", "89% … full-time", "$87K", "$115K") have no method or date; not checked anywhere else. Review scores were not checked on Trustpilot, SwitchUp or Google themselves.
+- **Careerist free tools:** I did not test whether a phone number is needed before the result, because that means entering data.
+- **Careerist affiliate payout method** (card, PayPal, crypto): not stated on the page.
+- **Careerist recruiting page:** several numbers on it were blank in the page text.
+- **PeopleForce prices** for Recruit, Perform, Pulse, Time, Desk, Payroll, AI: not public.
+- **PeopleForce glossary count (about 297)** is the reader's hand count. The sitemap total was not counted (6 of 19 parts read).
+- **PeopleForce templates:** whether they ask for an email before download was not checked.
+- **PeopleForce careers pages:** whether they carry JobPosting data was not checked.
+- **PeopleForce ratings** on G2 and Capterra: not opened.
+- **developer.peopleforce.io** home page returned 404; the job-boards guide opened. The Careers API "getting started" page and the Happy Monday and Lezo help articles are known only from search-result summaries. `peopleforce.io/integrations/happy-monday` returned 404.
+- **VONQ:** how a job board joins its catalogue was not found. Its partner help pages (hapisupport.vonq.com) returned 403 and were not opened. The "2500+ job boards" figure is from a search result about VONQ's product sheet, not opened.
