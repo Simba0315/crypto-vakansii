@@ -2,7 +2,8 @@
 
 Closed jobs are never deleted: they stay in the file with active=false (archive).
 """
-import datetime, html, json, os, re, sys, concurrent.futures as cf
+import datetime, hashlib, html, json, os, re, sys, concurrent.futures as cf
+from collections import defaultdict
 from html.parser import HTMLParser
 from pathlib import Path
 from net import get_json
@@ -485,11 +486,26 @@ def main():
     for s in (json.loads(tech_file.read_text()) if tech_file.exists() else []):
         if (s["ats"], s["token"]) not in taken and s["name"].lower() not in taken and s["name"] not in EXCLUDE_TECH:
             sources.append(dict(s, crypto=False)); taken |= {(s["ats"], s["token"]), s["name"].lower()}
+    # Boards added on 14 Nov 2026, once the site moved to its own server and the 1 GB limit of GitHub Pages was gone
+    # (sources_more.json, about 3,000 boards picked from sources_candidates.json: office and tech work, no agencies). Reading
+    # them all every hour would not fit in the hour, so each run reads one share of them (HRN_ROTATE shares, 4 by default:
+    # every board every 4 hours). A board resting this hour keeps its jobs exactly as they were.
+    resting = set()
+    more_file = ROOT / "sources_more.json"
+    rot = max(1, int(os.environ.get("HRN_ROTATE") or 4))
+    slot = datetime.datetime.now(datetime.timezone.utc).hour % rot
+    for s in (json.loads(more_file.read_text()) if more_file.exists() else []):
+        if (s["ats"], s["token"]) in taken or s["name"].lower() in taken or s["name"] in EXCLUDE_TECH: continue
+        taken |= {(s["ats"], s["token"]), s["name"].lower()}
+        if int(hashlib.md5(s["token"].encode()).hexdigest(), 16) % rot == slot:
+            sources.append(dict(s, crypto=False))
+        else:
+            resting.add(s["name"])
     is_crypto = {s["name"]: s["crypto"] for s in sources}
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
     used_slugs = {j["slug"] for j in db.values()}
     stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": []}
-    with cf.ThreadPoolExecutor(12) as ex:
+    with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 20)) as ex:      # 12 for the first 784 boards; 20 with a quarter of the new ones
         results = list(ex.map(fetch, sources))
     # second, gentler pass for feeds that timed out or were rate-limited the first time
     by_name = {s["name"]: s for s in sources}
@@ -499,6 +515,9 @@ def main():
             again = dict(ex.map(fetch, retry))
         results = [(name, again.get(name) if jobs is None else jobs) for name, jobs in results]
     seen_at = utc_now()                                     # when this run finished reading the feeds: the "first seen" time of every job that is new in it
+    open_by_co = defaultdict(list)                          # the open jobs of each company, found once instead of once per board
+    for jid, old in db.items():
+        if old["active"]: open_by_co[old["company"]].append(jid)
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
@@ -525,12 +544,12 @@ def main():
             j.update(last_seen=TODAY, active=True)
             j.pop("closed", None)
             db[j["id"]] = j
-        gone = [old for jid, old in db.items() if old["company"] == name and old["active"] and jid not in seen]
+        gone = [db[jid] for jid in open_by_co.get(name, ()) if db[jid]["active"] and jid not in seen]
         for old in gone:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
         if not jobs and len(gone) >= 20:
             stats["emptied"].append(name)                   # the whole board went empty at once: often a move to another hiring system
-    known = {s["name"] for s in sources}                       # a company we no longer read cannot keep "open" jobs forever
+    known = {s["name"] for s in sources} | resting             # a company we no longer read cannot keep "open" jobs forever; one resting this hour can
     for old in db.values():
         if old["active"] and not old.get("direct") and old["company"] not in known:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
