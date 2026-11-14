@@ -1354,4 +1354,7 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .gl-def{font-size:20px;line-height:1.5;max-width:68ch;color:var(--text)}
 .gl-fig{max-width:760px;margin:14px 0;padding:14px 18px;border-radius:12px;background:var(--accent-soft);font-size:16px}
 .gl-index dt a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
-
+/* section header: heading left, one plain sentence beside it, link at the far right */
+.sec-head.has-sub{gap:10px 24px;flex-wrap:wrap}
+.sec-head .sec-sub{flex:1 1 260px;margin:0;font-size:15px;opacity:.78;line-height:1.4}
+@media(max-width:700px){.sec-head.has-sub{align-items:flex-start}.sec-head.has-sub h2{flex:1 0 100%}.sec-head .sec-sub{flex:1 1 100%;order:2}.sec-head.has-sub a{order:3}}

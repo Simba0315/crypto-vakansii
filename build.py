@@ -557,9 +557,11 @@ def tile(url, name, count, avatar=False):
     return f'<li><a class="tile" href="{P}/{url}">{ava(name, "sm") if avatar else ""}{path_icon(url)}<span class="n">{path_fl(url)}{e(name)}</span><span class="c">{count:,}</span></a></li>'
 
 
-def section(title, inner, link=None, sid=""):
+def section(title, inner, link=None, sid="", sub=""):
+    """A titled block. `sub` is one plain sentence beside the heading (heading left, sentence and the link right)."""
     more = f'<a href="{P}/{link[0]}">{e(link[1])}</a>' if link else ""
-    return f'<section class="sec"{f" id={chr(34)}{sid}{chr(34)}" if sid else ""}><div class="sec-head"><h2>{e(title)}</h2>{more}</div>{inner}</section>'
+    sb = f'<p class="sec-sub">{e(sub)}</p>' if sub else ""
+    return f'<section class="sec"{f" id={chr(34)}{sid}{chr(34)}" if sid else ""}><div class="sec-head{" has-sub" if sub else ""}"><h2>{e(title)}</h2>{sb}{more}</div>{inner}</section>'
 
 
 def order(jobs):
@@ -1316,10 +1318,10 @@ def main():
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
 
-            + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"))
-            + section("The job market today, in four pictures", market_pics, ("insights/", "All rankings and charts"))
+            + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.")
+            + section("The job market today, in four pictures", market_pics, ("insights/", "All rankings and charts"), sub="Counted from today’s open jobs, redone on every update.")
             + pulse + anatomy
-            + '<div class="inkband">' + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data")) + "</div>"
+            + '<div class="inkband">' + section("Highest paid right now", f'<ul class="jobs">{"".join(card(j) for j, _ in top_paid)}</ul>', ("salaries/", "Salary data"), sub="Only jobs that state a yearly pay, converted to US dollars.") + "</div>"
             + '<section class="sec"><div class="sec-head"><h2>Browse the jobs</h2></div><div class="tabs2">'
               '<input type="radio" name="dir" id="dir-role" checked><label for="dir-role">By role</label>'
               '<input type="radio" name="dir" id="dir-loc"><label for="dir-loc">By location</label>'
@@ -1329,12 +1331,12 @@ def main():
               + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
             + plus_band + band
             + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u in tools_pages.EXTRA + [u for u, nm, d_ in TOOLS[:3]]) + "</div>",
-                      ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"))
+                      ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"), sub="Each one opens with a worked example, free and without sign-up.")
             + section("For your own site", '<div class="feats">'
                       f'<a class="feat" href="{P}/widgets/"><h3>A list of jobs for your site</h3><p>Have a blog, a community or a company site? Put a small list of fresh jobs on it. You paste a short piece of code once and the list keeps itself up to date.</p></a>'
                       f'<a class="feat" href="{P}/widgets/"><h3>A “we’re hiring” picture with a live number</h3><p>A small image that shows how many roles are open today. For a site footer, a blog post or a project page.</p></a>'
                       f'<a class="feat" href="{P}/api/"><h3>For programmers</h3><p>The whole job list in a form that programs can read (an API), refreshed every hour. Free, with nothing to sign up for.</p></a></div>')
-            + section("Common questions", faq_html))
+            + section("Common questions", faq_html, sub="Short answers about where the jobs come from and how to use the site."))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
          f"Tired of job listings that closed weeks ago? {roles(n)} at {m} tech companies, checked against their career pages every hour. Remote and salary filters.", home, hero=hero,
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
