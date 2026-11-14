@@ -819,5 +819,33 @@ eq('offer check: nothing typed, junk, zero', [T.offerCheck(OD, '', 'engineering'
 eq('offer check: no data at all', [T.offerCheck(null, '150000', '', '').group, T.offerCheck({ q: QS, g: {} }, '150000', 'engineering', 'Senior').group], [null, null]);
 eq('offer check: a European figure', T.offerCheck(OD, '150.000', '', '').pay, 150000);
 
+// ---- an old resume read back into the builder
+const CV1 = ['JANE DOE', 'Senior Backend Engineer', 'Berlin, Germany | jane.doe@mail.com | +49 151 2345 6789 | linkedin.com/in/janedoe', '',
+  'SUMMARY', 'Backend engineer with 8 years in payments. Built systems that handle 2M transactions a day.', '',
+  'EXPERIENCE', 'Senior Backend Engineer', 'Stripe, Berlin\tJan 2021 – Present', '• Led the move to event sourcing, cutting incidents by 40%', '• Mentored 5 engineers',
+  'Backend Engineer at N26', '2017 - 2020', '- Built the card ledger in Go', '- Reduced latency 30%', '',
+  'Education:', 'B.Sc. Computer Science', 'TU Munich, 2013 – 2017', '', 'SKILLS', 'Languages: Go, Python, SQL', 'Tools: Kafka, PostgreSQL, AWS, Go'].join('\r\n');
+const R1 = T.parseResume(CV1);
+eq('import: name from capitals, headline, place', [R1.name, R1.title, R1.place], ['Jane Doe', 'Senior Backend Engineer', 'Berlin, Germany']);
+eq('import: contacts', [R1.email, R1.phone, R1.links], ['jane.doe@mail.com', '+49 151 2345 6789', 'linkedin.com/in/janedoe']);
+eq('import: summary', R1.summary, 'Backend engineer with 8 years in payments. Built systems that handle 2M transactions a day.');
+eq('import: two jobs, title and company on separate lines or with "at"', R1.exp.map(function (x) { return [x.role, x.org, x.dates]; }),
+  [['Senior Backend Engineer', 'Stripe, Berlin', 'Jan 2021 – Present'], ['Backend Engineer', 'N26', '2017 – 2020']]);
+eq('import: bullet points become lines, without the bullet', R1.exp[0].text, 'Led the move to event sourcing, cutting incidents by 40%\nMentored 5 engineers');
+eq('import: education, degree first', R1.edu, [{ what: 'B.Sc. Computer Science', org: 'TU Munich', dates: '2013 – 2017' }]);
+eq('import: skills without their labels and without repeats', R1.skills, 'Go, Python, SQL, Kafka, PostgreSQL, AWS');
+const R2 = T.parseResume('Max Mustermann\nmax@example.org\n\nWork Experience\nAcme GmbH — Data Analyst (03/2019 – 06/2023)\nBuilt the weekly sales report used by 40 managers.\nAutomated invoice checks in Python.\n\nEducation\nUniversity of Vienna\nMaster of Science, Statistics, 2018\n');
+eq('import: "Company — Role (dates)" turned round, and sentences without bullets', R2.exp.map(function (x) { return [x.role, x.org, x.dates, x.text.split('\n').length]; }), [['Data Analyst', 'Acme GmbH', '03/2019 – 06/2023', 2]]);
+eq('import: school line, then the degree with a year', R2.edu, [{ what: 'Master of Science, Statistics', org: 'University of Vienna', dates: '2018' }]);
+eq('import: no headline invented from an email line', [R2.name, R2.title], ['Max Mustermann', '']);
+eq('import: nothing to read', T.parseResume('').exp, []);
+const own = { basics: { name: 'Alex Morgan', label: 'Data Analyst', email: 'a@b.co', phone: '', summary: 'S', location: { address: 'Lisbon, Portugal' }, profiles: [{ network: 'github.com', url: 'https://github.com/alexm' }] },
+  work: [{ name: 'Acme', position: 'Analyst', summary: '2021 – now', highlights: ['Cut costs 10%'] }], education: [{ institution: 'Uni', area: 'Economics', studyType: '', endDate: '2020' }], skills: [{ name: 'SQL' }, { name: 'Excel', keywords: ['Power Query'] }] };
+const J = T.fromJsonResume(own);
+eq('import JSON Resume: our own download comes back the same', [J.name, J.title, J.place, J.links, J.exp, J.edu, J.skills],
+  ['Alex Morgan', 'Data Analyst', 'Lisbon, Portugal', 'github.com/alexm', [{ role: 'Analyst', org: 'Acme', dates: '2021 – now', text: 'Cut costs 10%' }], [{ what: 'Economics', org: 'Uni', dates: '2020' }], 'SQL, Excel, Power Query']);
+eq('import JSON Resume: standard dates', T.fromJsonResume({ basics: {}, work: [{ name: 'X', position: 'Y', startDate: '2019-01', endDate: '', summary: 'Ran the team.' }] }).exp[0], { role: 'Y', org: 'X', dates: '2019-01 – now', text: 'Ran the team.' });
+eq('import JSON Resume: not a resume', [T.fromJsonResume({ a: 1 }), T.fromJsonResume(null)], [null, null]);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

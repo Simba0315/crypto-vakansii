@@ -1516,3 +1516,15 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .qz-q label.st-bad{border-color:#b3402f;background:#fbeeeb;text-decoration:line-through}
 .st-why{margin:8px 0 2px;font-size:14.5px;color:var(--muted);max-width:62ch}
 .st-why b{color:var(--ink)}
+
+/* Import an old resume, at the top of the Contact step */
+.rb-imp{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;margin:0 0 16px;background:var(--bg2)}
+.rb-imp p{margin:0}
+.rb-imp p:first-child{display:flex;flex-direction:column;gap:2px}
+.rb-imp p:first-child span{color:var(--muted);font-size:13.5px}
+.rb-imp-a{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px!important}
+.rb-imp label.btn{cursor:pointer}
+#rb-pastebox{margin-top:10px}
+#rb-pastebox textarea{width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)}
+#rb-pastebox p{margin-top:8px}
+.rb-impmsg{margin:10px 0 0!important}

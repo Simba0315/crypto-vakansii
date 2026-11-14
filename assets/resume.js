@@ -32,7 +32,13 @@
     }).join('');
     var sec = function (id, inner) { return '<div class="rsec' + (tab === id ? ' on' : '') + '" data-sec="' + id + '">' + inner + nextBtn(id) + '</div>'; };
     $('rb-form').innerHTML =
-      sec('contact', '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline: the job you want', 'title', 'text', 'Senior Backend Engineer') +
+      sec('contact', '<div class="rb-imp no-print"><p><b>Already have a resume?</b><span>Word, PDF, text or JSON Resume: it is read in this browser, nothing is uploaded.</span></p>' +
+        '<p class="rb-imp-a"><label class="btn ghost sm">Import a file<input type="file" id="rb-file" accept=".docx,.pdf,.txt,.md,.json" hidden></label>' +
+        '<button class="linkbtn" type="button" id="rb-paste">or paste the text</button></p>' +
+        '<div id="rb-pastebox" hidden><textarea id="rb-pastetext" rows="7" placeholder="Paste the whole resume as text: name, contacts, experience, education, skills"></textarea>' +
+        '<p><button class="btn sm" type="button" id="rb-pasteread">Read it</button></p></div>' +
+        (impMsg ? '<p class="note rb-impmsg" role="status">' + impMsg + '</p>' : '') + '</div>' +
+        '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline: the job you want', 'title', 'text', 'Senior Backend Engineer') +
         '<div class="rrow">' + field('Email', 'email', 'text', 'you@example.com') + field('Phone', 'phone', 'text', '+1 555 010 0199') + '</div>' +
         '<div class="rrow">' + field('Location', 'place', 'text', 'Berlin, Germany · open to remote') + field('Links', 'links', 'text', 'github.com/you, linkedin.com/in/you') + '</div>') +
       sec('summary', field('Summary', 'summary', 'area', 'Two or three sentences: what you do, for how long, and what you are best at.')) +
@@ -42,6 +48,90 @@
       sec('finish', finishUp());
     drawTabs();
   };
+  /* ---- Import an old resume, as resumai and Rezi offer it: a Word file is unzipped here (the browser's own DecompressionStream), a PDF
+     is read with pdf.js, loaded only when a PDF is chosen; the text goes through HRNT.parseResume. Nothing leaves the browser. ---- */
+  var impMsg = '';
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  var docxXml = function (buf) {
+    var v = new DataView(buf), u8 = new Uint8Array(buf), eocd = -1, i, dec = new TextDecoder();
+    for (i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (v.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) return Promise.reject(new Error('This is not a Word (.docx) file.'));
+    var n = v.getUint16(eocd + 10, true), p = v.getUint32(eocd + 16, true);
+    for (i = 0; i < n && v.getUint32(p, true) === 0x02014b50; i++) {
+      var method = v.getUint16(p + 10, true), size = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), off = v.getUint32(p + 42, true);
+      if (dec.decode(u8.subarray(p + 46, p + 46 + nl)) === 'word/document.xml') {
+        var start = off + 30 + v.getUint16(off + 26, true) + v.getUint16(off + 28, true), raw = u8.slice(start, start + size);
+        if (method === 0) return Promise.resolve(dec.decode(raw));
+        if (method !== 8 || typeof DecompressionStream === 'undefined') return Promise.reject(new Error('This browser cannot open Word files. Paste the text instead.'));
+        return new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+      }
+      p += 46 + nl + xl + cl;
+    }
+    return Promise.reject(new Error('This is not a Word (.docx) file.'));
+  };
+  var docxText = function (xml) {
+    var W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main', doc = new DOMParser().parseFromString(xml, 'application/xml');
+    return Array.prototype.map.call(doc.getElementsByTagNameNS(W, 'p'), function (para) {
+      var s = para.getElementsByTagNameNS(W, 'numPr').length ? '• ' : '';          // a list item in Word has no bullet character, only list settings
+      Array.prototype.forEach.call(para.getElementsByTagNameNS(W, '*'), function (el) {
+        if (el.localName === 't') s += el.textContent; else if (el.localName === 'tab') s += ' '; else if (el.localName === 'br' || el.localName === 'cr') s += '\n';
+      });
+      return s;
+    }).join('\n');
+  };
+  var pdfLib = function () {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    return new Promise(function (ok, no) {
+      var sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js'; sc.crossOrigin = 'anonymous';
+      sc.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); };
+      sc.onerror = function () { no(new Error('The PDF reader did not load. Check the connection, or paste the text instead.')); };
+      document.head.appendChild(sc);
+    });
+  };
+  var pdfText = function (buf) {
+    return pdfLib().then(function (lib) { return lib.getDocument({ data: new Uint8Array(buf) }).promise; }).then(function (doc) {
+      var pages = []; for (var i = 1; i <= Math.min(doc.numPages, 6); i++) pages.push(doc.getPage(i).then(function (pg) { return pg.getTextContent(); }));
+      return Promise.all(pages);
+    }).then(function (contents) {
+      return contents.map(function (c) {
+        var rows = [], last = null;                                                 // the pieces of text on one height make one line
+        c.items.forEach(function (it) {
+          if (typeof it.str !== 'string') return;
+          var x = it.transform[4], y = Math.round(it.transform[5]);
+          if (last && Math.abs(last.y - y) <= 2) last.s += (it.str && last.s && !/\s$/.test(last.s) && !/^\s/.test(it.str) && x - last.end > 1.5 ? ' ' : '') + it.str;
+          else { last = { y: y, s: it.str }; rows.push(last); }
+          last.end = x + (it.width || 0);
+        });
+        return rows.map(function (r) { return r.s; }).join('\n');
+      }).join('\n');
+    });
+  };
+  var useImport = function (r, how) {
+    if (!r || !(r.name || r.summary || r.skills || r.exp.length)) { impMsg = 'Nothing could be read from ' + esc(how) + '. Paste the text instead, or fill in the form.'; drawForm(); return; }
+    var mine = (data.name + data.summary + data.exp.map(function (x) { return x.role + x.text; }).join('')).trim();
+    if (mine && !confirm('Replace the resume in this browser with the one from ' + how + '?')) return;
+    ['name', 'title', 'email', 'phone', 'place', 'links', 'summary', 'skills'].forEach(function (k) { data[k] = r[k] || ''; });
+    data.exp = r.exp.length ? r.exp.map(function (x) { return { role: x.role || '', org: x.org || '', dates: x.dates || '', text: x.text || '' }; }) : JSON.parse(JSON.stringify(blank.exp));
+    data.edu = r.edu.length ? r.edu.map(function (x) { return { what: x.what || '', org: x.org || '', dates: x.dates || '' }; }) : JSON.parse(JSON.stringify(blank.edu));
+    var nsk = r.skills ? r.skills.split(',').length : 0;
+    impMsg = '<b>Read from ' + esc(how) + ':</b> ' + [r.exp.length + (r.exp.length === 1 ? ' job' : ' jobs'), r.edu.length + (r.edu.length === 1 ? ' school' : ' schools'), nsk + (nsk === 1 ? ' skill' : ' skills')].join(', ') +
+      '. An import is a first draft: check each section, above all the jobs.';
+    save(); drawForm(); drawPreview(); drawDemand();
+  };
+  var readFile = function (f) {
+    var T = window.HRNT, name = f.name || 'the file', ext = (name.split('.').pop() || '').toLowerCase();
+    impMsg = 'Reading ' + esc(name) + '…'; drawForm();
+    var done = function (text) { useImport(T.parseResume(text), name); };
+    var fail = function (err) { impMsg = esc(err && err.message || 'This file could not be read.') ; drawForm(); };
+    if (f.size > 8e6) return fail(new Error('This file is over 8 MB. A resume is usually under 1 MB: save it again, or paste the text.'));
+    if (ext === 'json') return f.text().then(function (t) { var o; try { o = JSON.parse(t); } catch (e) { return fail(new Error('This JSON file could not be read.')); } var r = T.fromJsonResume(o); return r ? useImport(r, name) : fail(new Error('This JSON file is not in the JSON Resume format.')); });
+    if (ext === 'docx') return f.arrayBuffer().then(docxXml).then(docxText).then(done).catch(fail);
+    if (ext === 'pdf') return f.arrayBuffer().then(pdfText).then(done).catch(fail);
+    if (ext === 'doc') return fail(new Error('An old .doc file cannot be read here. Open it in Word and save it as .docx or PDF, or paste the text.'));
+    return f.text().then(done).catch(fail);
+  };
+  root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-file' && ev.target.files && ev.target.files[0]) readFile(ev.target.files[0]); });
+
   /* Tabs, as Rezi lays its builder out: one section at a time, a "next" button, and "Finish up" with the templates and the format. */
   var TABS = [['contact', 'Contact'], ['summary', 'Summary'], ['experience', 'Experience'], ['education', 'Education'], ['skills', 'Skills'], ['finish', 'Finish up']];
   var tab = H.get('hrn_rb_tab', 'contact');
@@ -146,6 +236,8 @@
     else if (t.id === 'rb-doc2') wordFile();
     else if (t.id === 'rb-doc') wordFile();
     else if (t.id === 'rb-json') jsonFile();
+    else if (t.id === 'rb-paste') { var pb = $('rb-pastebox'); pb.hidden = !pb.hidden; if (!pb.hidden) $('rb-pastetext').focus(); }
+    else if (t.id === 'rb-pasteread') { var txt = $('rb-pastetext').value; if (txt.trim()) useImport(window.HRNT.parseResume(txt), 'the pasted text'); }
     else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = JSON.parse(JSON.stringify(blank)); save(); drawForm(); drawPreview(); } }
     else if (t.id === 'rb-match') {
       var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; })).join('\n');

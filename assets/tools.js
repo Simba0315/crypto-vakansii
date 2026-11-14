@@ -815,6 +815,128 @@
       hoursPerHire: ok ? (recH + intH) / hires : null, unpriced: (recH > 0 && !recR) || (intH > 0 && !intR) };
   };
 
+  /* ---------- an old resume read back into the builder's fields (resumai and Rezi import a file; here it happens in the browser) ----------
+     The text of a Word, PDF or text file is split at its section headings; the lines above the first heading carry the name and the
+     contacts; a job starts at a line with a date range or at a short heading line after the previous job's text. It is a first draft:
+     the builder says what it read, and the person checks each section. */
+  var RX_MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?';
+  var RX_DATE = '(?:' + RX_MONTH + '\\s+)?(?:19|20)\\d{2}|\\d{1,2}[/.](?:19|20)\\d{2}';
+  var RX_RANGE = new RegExp('(' + RX_DATE + ')\\s*(?:-|–|—|to|until)\\s*(' + RX_DATE + '|present|current|now|today|ongoing)', 'i');
+  var RX_YEAR = /\b(?:19|20)\d{2}\b/;
+  var BULLET = /^[•\-*–·▪●◦‣○■□➢✓]\s*/;
+  var HEADS = {
+    summary: /^(professional |career |personal )?(summary|profile|objective|statement)$|^about( me)?$/,
+    exp: /^(work |professional |relevant |employment |career )?(experience|employment|work history|employment history|career history)$/,
+    edu: /^(education|education (and|&) training|academic background|qualifications|academic qualifications)$/,
+    skills: /^((technical|core|key|professional|hard) )?(skills|competencies)( (and|&) (tools|technologies|expertise))?$|^(tools|technologies|tech stack|expertise)$/,
+    other: /^(projects|personal projects|certifications?|certificates|licenses( (and|&) certifications)?|languages|interests|hobbies|awards|honou?rs|publications|volunteer(ing| experience)?|references|achievements|courses|training)$/
+  };
+  var ROLE_WORD = /\b(engineer|developer|analyst|manager|designer|lead|director|specialist|consultant|intern|head|officer|scientist|architect|administrator|coordinator|associate|representative|executive|assistant|founder|owner|researcher|writer|editor|accountant|recruiter|technician|programmer|tester|support|agent|advisor|adviser|partner|vp|cto|ceo|cfo|coo)\b/i;
+  var DEGREE = /\b(bachelor|master|b\.?\s?sc|m\.?\s?sc|b\.?a\.?|m\.?a\.?|mba|ph\.?d|doctor|diploma|degree|associate|certificate|bsc|msc|b\.?eng|m\.?eng|b\.?s\.?|m\.?s\.?|a\.?a\.?|high school|ged)\b/i;
+  function headingOf(line) {
+    var s = line.toLowerCase().replace(/[:：]$/, '').replace(/\s+/g, ' ').trim();
+    if (!s || s.length > 40) return '';
+    for (var k in HEADS) if (HEADS[k].test(s)) return k;
+    return '';
+  }
+  function splitHead(s) {
+    var m = s.match(/^(.+?)\s+at\s+(.+)$/i);
+    if (m) return [m[1], m[2]];
+    var parts = s.split(/\s+[|–—]\s+|\s+-\s+|\s*\|\s*|\s*·\s*|\s*•\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+    return parts.length >= 2 ? [parts[0], parts.slice(1).join(', ')] : [s];
+  }
+  function entries(lines, edu) {
+    var out = [], cur = null;
+    var fresh = function () { cur = edu ? { what: '', org: '', dates: '', text: '' } : { role: '', org: '', dates: '', text: '' }; out.push(cur); return cur; };
+    var A = edu ? 'what' : 'role';
+    var head = function (s) {
+      s = s.replace(/^[,|–—\-·•()\s]+|[,|–—\-·•()\s]+$/g, '').trim();
+      if (!s) return;
+      var p = splitHead(s);
+      if (edu && p.length === 2 && !DEGREE.test(p[0]) && DEGREE.test(p[1])) p = [p[1], p[0]];
+      if (!edu && p.length === 2 && ROLE_WORD.test(p[1]) && !ROLE_WORD.test(p[0])) p = [p[1], p[0]];      // "Acme — Data Analyst": the company came first
+      if (edu && p.length === 1 && !cur.what && !DEGREE.test(s) && !cur.org) { cur.org = s; return; }
+      if (p.length === 2 && !cur[A] && !cur.org) { cur[A] = p[0]; cur.org = p[1]; }
+      else if (!cur[A]) cur[A] = s;
+      else if (!cur.org) cur.org = s;
+      else cur.text += (cur.text ? '\n' : '') + s;
+    };
+    lines.forEach(function (line) {
+      var bullet = BULLET.test(line), m = line.match(RX_RANGE) || (edu && !bullet ? line.match(RX_YEAR) : null);
+      if (m && !bullet) {
+        if (!cur || cur.dates || cur.text) fresh();
+        cur.dates = m[0].replace(/\s*(?:-|–|—|to|until)\s*/i, ' – ');
+        head(line.replace(m[0], ' '));
+        return;
+      }
+      var short = line.length <= 90 && !/[.;]$/.test(line);
+      if (!bullet && short && (!cur || (cur.text && !/^[a-z]/.test(line)))) { fresh(); head(line); return; }
+      if (!bullet && short && cur && !cur.text && !(cur[A] && cur.org && cur.dates)) { head(line); return; }
+      if (!cur) fresh();
+      cur.text += (cur.text ? '\n' : '') + line.replace(BULLET, '');
+    });
+    return out.filter(function (x) { return x[A] || x.org || x.text; }).map(function (x) { if (edu) delete x.text; return x; });
+  }
+  T.parseResume = function (text) {
+    var lines = String(text || '').replace(/\r\n?/g, '\n').split('\n').map(function (l) { return l.replace(/[ \t]/g, ' ').replace(/ {2,}/g, ' ').trim(); }).filter(Boolean);
+    var out = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [], edu: [] };
+    var all = lines.join('\n');
+    var em = all.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/); if (em) out.email = em[0];
+    var ph = (all.match(/\+?\d[\d ().-]{7,}\d/g) || []).filter(function (x) { return x.replace(/\D/g, '').length >= 9 && !RX_RANGE.test(x); })[0]; if (ph) out.phone = ph.trim();
+    var links = all.match(/(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/[\w%-]+|github\.com\/[\w-]+|gitlab\.com\/[\w-]+|behance\.net\/[\w-]+|dribbble\.com\/[\w-]+)\/?|https?:\/\/[^\s,|]+/gi) || [];
+    out.links = links.filter(function (x, i) { return links.indexOf(x) === i; }).slice(0, 4).map(function (x) { return x.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''); }).join(', ');
+    var sec = { head: [] }, at = 'head';
+    lines.forEach(function (l) { var h = headingOf(l); if (h) { at = h; sec[at] = sec[at] || []; } else (sec[at] = sec[at] || []).push(l); });
+    var contact = function (s) { return /@|\d{3}|https?:|linkedin|github|www\./i.test(s); };
+    var hd = sec.head.slice(0, 8);
+    var nm = hd.filter(function (l) { return !contact(l) && /^[\p{L}][\p{L}'’. -]{2,40}$/u.test(l) && l.split(' ').length >= 2 && l.split(' ').length <= 5; })[0];
+    if (nm) out.name = nm.replace(/\b(\p{L})(\p{L}*)/gu, function (_, a, b) { return nm === nm.toUpperCase() ? a + b.toLowerCase() : a + b; });
+    hd.forEach(function (l) {
+      if (l === nm) return;
+      l.split(/\s*[|•·]\s*/).forEach(function (part) {
+        if (!part || contact(part)) return;
+        if (!out.place && /^[\p{L} .'-]+,\s*[\p{L} .'-]+$/u.test(part) && part.length <= 40) out.place = part;
+        else if (!out.title && part.length <= 70 && part !== out.place && !/,.*,/.test(part)) out.title = part;
+      });
+    });
+    out.summary = (sec.summary || []).join(' ').replace(/\s+/g, ' ').trim();
+    if (!out.summary && !sec.exp && !sec.edu) out.summary = sec.head.filter(function (l) { return l !== nm && !contact(l) && l.length > 90; }).join(' ').slice(0, 600);
+    var sk = [];
+    (sec.skills || []).forEach(function (l) {
+      l.replace(BULLET, '').replace(/^[^,:]{1,30}:\s*/, '').split(/\s*[,;|•·]\s*|\s+\/\s+/).forEach(function (s) {
+        s = s.replace(/[.]$/, '').trim();
+        if (s && s.length <= 40 && sk.map(function (x) { return x.toLowerCase(); }).indexOf(s.toLowerCase()) < 0) sk.push(s);
+      });
+    });
+    out.skills = sk.slice(0, 40).join(', ');
+    out.exp = entries(sec.exp || [], false);
+    out.edu = entries(sec.edu || [], true);
+    return out;
+  };
+  // A JSON Resume file (jsonresume.org), this builder's own "JSON" download included, which keeps a job's dates in work[].summary.
+  T.fromJsonResume = function (o) {
+    if (!o || typeof o !== 'object' || !o.basics) return null;
+    var b = o.basics || {}, loc = b.location || {}, s = function (v) { return typeof v === 'string' ? v.trim() : ''; };
+    var span = function (x) { var a = s(x.startDate), z = s(x.endDate); return a || z ? (a ? a + ' – ' : '') + (z || 'now') : ''; };
+    var looksDate = function (v) { return v.length <= 30 && RX_YEAR.test(v); };
+    return {
+      name: s(b.name), title: s(b.label), email: s(b.email), phone: s(b.phone),
+      place: s(loc.address) || [s(loc.city), s(loc.region), s(loc.countryCode)].filter(Boolean).join(', '),
+      links: [s(b.url)].concat((b.profiles || []).map(function (p) { return s(p && p.url) || (p && p.username ? s(p.network) + '/' + s(p.username) : ''); }))
+        .filter(Boolean).map(function (x) { return x.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''); }).join(', '),
+      summary: s(b.summary),
+      skills: (o.skills || []).map(function (k) { return [s(k && k.name)].concat((k && k.keywords) || []).filter(Boolean).join(', '); }).filter(Boolean).join(', '),
+      exp: (o.work || []).map(function (w) {
+        var sum = s(w.summary), dated = !span(w) && looksDate(sum);
+        return { role: s(w.position), org: s(w.name || w.company), dates: span(w) || (dated ? sum : ''),
+                 text: (dated ? [] : [sum]).concat(w.highlights || []).filter(Boolean).join('\n') };
+      }).filter(function (x) { return x.role || x.org; }),
+      edu: (o.education || []).map(function (e) {
+        return { what: [s(e.studyType), s(e.area)].filter(Boolean).join(' '), org: s(e.institution), dates: span(e) };
+      }).filter(function (x) { return x.what || x.org; })
+    };
+  };
+
   /* ---------- cost of a vacancy: what each working day without the person costs (Upwork lists this calculator) ----------
      Value of a day = revenue per employee ÷ working days, or, when revenue is not known, yearly pay × the value multiple you set ÷
      working days. The open days are calendar days; five in seven of them are counted as working days. */
