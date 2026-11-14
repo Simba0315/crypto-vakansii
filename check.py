@@ -24,22 +24,31 @@ def template(rel):
     return "static"
 
 
+# A site built with HRN_RECORDS=1 has no job pages as files: they are rows of data/jobs.db (records.py), and the sample is built from them.
+STORE, REC = None, set()
+if not (SITE / "job").is_dir() and (ROOT / "data" / "jobs.db").is_file():
+    import build, records
+    STORE = records.Store(ROOT / "data" / "jobs.db", build)
+    REC = STORE.slugs()
+
+
 def exists(href):
     path = href.split("#")[0].split("?")[0]
     if not path.startswith(P + "/"): return True
     rel = path[len(P) + 1:]
     t = SITE / rel
+    if STORE and rel.startswith("job/"): return rel[4:].rstrip("/") in REC
     return t.is_file() or (t / "index.html").is_file() or rel == ""
 
 
 pages = [p for p in SITE.rglob("index.html")]
-jobs = [p for p in pages if p.relative_to(SITE).parts[0] == "job"]
-others = [p for p in pages if p.relative_to(SITE).parts[0] not in ("job", "embed")]
+jobs = [str(p.relative_to(SITE)) for p in pages if p.relative_to(SITE).parts[0] == "job"] or [f"job/{s}/index.html" for s in sorted(REC)]
+others = [str(p.relative_to(SITE)) for p in pages if p.relative_to(SITE).parts[0] not in ("job", "embed")]
 sample = others + random.sample(jobs, min(600, len(jobs)))
 fails, counts, broken = defaultdict(Counter), Counter(), Counter()
-for f in sample:
-    rel = str(f.relative_to(SITE)); t = template(rel); counts[t] += 1
-    h = f.read_text(encoding="utf-8", errors="replace")
+for rel in sample:
+    t = template(rel); counts[t] += 1
+    h = STORE.page(rel.split("/")[1]) if STORE and t == "job" else (SITE / rel).read_text(encoding="utf-8", errors="replace")
     title = re.search(r"<title>(.*?)</title>", h, re.S)
     desc = re.search(r'<meta name="description" content="([^"]*)"', h)
     canon = re.search(r'<link rel="canonical" href="([^"]*)"', h)
@@ -56,7 +65,7 @@ for f in sample:
     for href in set(re.findall(r'href="(/[^"]*)"', h)):
         if not exists(href):
             fails[t]["broken internal link"] += 1; broken[href] += 1
-print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled)")
+print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]
     print(f"  {t:16s} {counts[t]:6d} pages   " + ("OK" if not bad else "; ".join(f"{k}: {v}" for k, v in bad.most_common())))

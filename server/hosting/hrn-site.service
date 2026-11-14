@@ -1,0 +1,26 @@
+# Hiring Right Now: the program that builds job pages from records (serve.py), on the Hostinger server next to hypestkey.
+# It runs as its own user, sees only /srv/hrn, and may take at most 1 GB of memory and 60% of one processor, so the shop keeps its share.
+[Unit]
+Description=Hiring Right Now job pages from records
+After=network.target
+
+[Service]
+User=hrn
+Group=hrn
+WorkingDirectory=/srv/hrn/app
+Environment=PYTHONDONTWRITEBYTECODE=1 HRN_QUIET=1 HRN_WATCH=1 HOST=127.0.0.1 PORT=8790
+ExecStart=/usr/bin/python3 serve.py
+Restart=always
+RestartSec=2
+MemoryMax=1G
+CPUQuota=60%
+Nice=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/srv/hrn
+PrivateTmp=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target

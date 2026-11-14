@@ -1861,7 +1861,17 @@ def main():
         if j.get("closed"):
             key = (j["company"], j["title"].lower(), j["location"].lower())
             REPOST[key] = max(REPOST.get(key, ""), j["closed"])
-    for j in jobs: job_page(j, by_cat)
+    # Job records (records.py), like the postings of a large job site: HRN_RECORDS=1 stores every job as a row of data/jobs.db and writes no
+    # job pages, serve.py builds each page when it is asked for; "both" writes the pages as well, for records_test.py. Unset: pages only.
+    rec_mode = os.environ.get("HRN_RECORDS", "")
+    if rec_mode:
+        import records, sys
+        size = records.save(ROOT / "data" / "jobs.db", jobs, sys.modules[__name__])
+        print(f"job records: {len(jobs):,} in data/jobs.db, {size / 2**20:.0f} MiB")
+    if rec_mode == "1":
+        URLS.extend(f"job/{j['slug']}/" for j in jobs)        # the pages are not files, but they are in the sitemap all the same
+    else:
+        for j in jobs: job_page(j, by_cat)
     listing("archive/", "Closed tech jobs archive", f"Closed Tech Jobs Archive ({len(archived):,}) | {SITE}",
             "Closed jobs at tech companies: see which roles teams were hiring for and when.", archived,
             "Closed jobs stay here so you can see which roles companies were hiring for in the past.")
