@@ -1162,3 +1162,51 @@
     if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, pick); else pick();
   });
 })();
+
+/* job page: how this job fits the visitor's "For you" answers (kept in this browser as hrn_profile), the way Hirify scores a job.
+   Without answers it invites the visitor to give them once; nothing is sent anywhere. */
+(function () {
+  var H = window.HRN, save = document.getElementById('save'), anchor = document.querySelector('.rmbox') || document.getElementById('apply');
+  if (!H || !save || !anchor) return;
+  var p = H.get('hrn_profile', null) || {}, slug = save.getAttribute('data-slug'), P = H.base;
+  var cats = p.cats || [], skills = p.skills || [], exp = p.exp === '' || p.exp == null ? null : Number(p.exp), pay = Number(p.pay) || 0;
+  var box = document.createElement('div');
+  box.className = 'fitbox';
+  if (!cats.length && !skills.length && exp === null && !p.where && !pay) {
+    box.innerHTML = '<a href="' + P + '/for-you/"><b>How well does this job fit you?</b><span>Answer five questions once: every job page then shows it.</span></a>';
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    return;
+  }
+  H.load().then(function (rows) {
+    var j = null;
+    for (var i = 0; i < rows.length; i++) if (rows[i][0] === slug) { j = rows[i]; break; }
+    if (!j) return;
+    var bits = [], ok = 0, n = 0, k = function (v) { return '$' + Math.round(v / 1000) + 'K'; };
+    if (cats.length) { n++; if (cats.indexOf(j[5]) >= 0) { ok++; bits.push([1, 'Your kind of work']); } else bits.push([0, 'Another kind of work than you chose']); }
+    if (exp !== null) {
+      var LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, lv = LV[j[6]] == null ? 1 : LV[j[6]], d = exp === 0 && lv <= 0 ? 0 : Math.abs(exp - lv);
+      n++;
+      if (!d) { ok++; bits.push([1, (j[6] || 'Mid') + ' level, like yours']); } else bits.push([0, (j[6] || 'Mid-level') + ' title, ' + (lv > exp ? 'above' : 'below') + ' your level']);
+    }
+    if (p.where === 'remote' || p.where === 'office') {
+      n++;
+      var rem = !!j[4];
+      if ((p.where === 'remote') === rem) { ok++; bits.push([1, rem ? 'Remote, as you want' : 'On site or hybrid, as you want']); } else bits.push([0, rem ? 'Remote, you chose an office' : 'On site, you chose remote']);
+    }
+    if (pay) {
+      n++;
+      if (j[13] && j[13] >= pay) { ok++; bits.push([1, 'Pay reaches ' + k(pay)]); } else bits.push([0, j[13] ? 'Pay tops out at ' + k(j[13]) : 'Does not state pay']);
+    }
+    if (skills.length) {
+      n++;
+      var hit = j[7].filter(function (t) { return skills.indexOf(t) >= 0; });
+      if (hit.length) { ok++; bits.push([1, (hit.length === 1 ? 'Your skill: ' : hit.length + ' of your skills: ') + hit.slice(0, 3).join(', ')]); }
+      else bits.push([0, j[7].length ? 'Names none of your skills' : 'Names no skills']);
+    }
+    if (!n) return;
+    box.innerHTML = '<p class="fit-h"><b>' + ok + ' of ' + n + '</b> of your answers fit this job</p><ul>' +
+      bits.map(function (b) { return '<li class="' + (b[0] ? 'y' : 'q') + '">' + H.esc(b[1]) + '</li>'; }).join('') + '</ul><a href="' + P + '/for-you/">Change your answers</a>';
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+  }).catch(function () {});
+})();
+
