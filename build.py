@@ -14,6 +14,7 @@ import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
 import geo_cities                       # where the cities in postings are, for the jobs map
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
+import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -433,7 +434,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -3657,6 +3658,35 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'Or build your own in the <a href="{P}/tools/resignation-letter/">free resignation letter builder</a>.</p>'
          + section("Choose your situation", f'<ul class="tiles">{"".join(rl_tile(y) for y in RL)}</ul>')
          + section("Questions about resignation letters", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rl_qa) + "</dl>"), head=rl_ld)
+
+    # Stronger resume words, one page per overused verb ("another word for managed on a resume"). In the Rezi study 8 such pages bring
+    # that site 8% of its search visits. Each page groups the words by what was actually done and shows a resume line for each group.
+    RW = resume_words.WORDS
+    rw_tile = lambda x: f'<li><a class="tile" href="{P}/resume-words/{x["slug"]}/"><span class="n">Instead of “{e(x["word"])}”</span><span class="c">{sum(len(g[1]) for g in x["groups"])} words</span></a></li>'
+    for x in RW:
+        n_ = sum(len(g[1]) for g in x["groups"])
+        qa_ = x["qa"]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        groups_ = "".join(f'<div class="rw-g"><h3>{e(what)}</h3><p class="rw-w">' + "".join(f"<span>{e(w)}</span>" for w in words) + "</p>"
+                          f'<p class="rw-ex"><span>Example</span>{e(line)}</p></div>' for what, words, line in x["groups"])
+        page(f"resume-words/{x['slug']}/", f"Another Word for “{tcase(x['word'])}” on a Resume: {n_} Synonyms with Examples | {SITE}",
+             f"{n_} stronger words to use instead of “{x['word']}” on a resume, grouped by what you actually did, each group with an example line that shows a result.",
+             crumbs(("Resume words", "resume-words/"), (f"Instead of “{x['word']}”", "")) + f'<h1>Another word for “{e(x["word"])}” on a resume: <span class="hl">{n_} synonyms</span></h1>'
+             f'<p class="lead">{e(x["why"])} The words below are grouped by what you did; each group has an example line with a number, the way a recruiter wants to read it.</p>'
+             + f'<section class="sec"><div class="sec-head"><h2>Words to use instead of “{e(x["word"])}”, by what you did</h2></div><div class="rw-grid">{groups_}</div></section>'
+             + section("Turn your own line into a strong one", '<p>Start with the verb that names the action, add what you did it to, and end with a number: how many, how much, how fast. '
+                       f'The <a href="{P}/tools/resume-bullet-builder/">resume bullet builder</a> puts the three parts together for you, and the <a href="{P}/resume/">resume builder</a> lays out the whole page. Both are free and need no account.</p>')
+             + section(f"Questions about replacing “{x['word']}”", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
+             + section("Other overused resume words", f'<ul class="tiles">{"".join(rw_tile(y) for y in RW if y["slug"] != x["slug"])}</ul>', ("resume-words/", f"All {len(RW)}")), head=ld_)
+    page("resume-words/", f"Resume Synonyms: Stronger Words for {len(RW)} Overused Verbs | {SITE}",
+         f"Stronger words for the {len(RW)} most overused resume verbs, from “managed” and “led” to “responsible for” and “helped”, grouped by what you did, with example lines.",
+         crumbs(("Resume words", "")) + f'<h1>Resume synonyms: <span class="hl">stronger words for {len(RW)} tired verbs</span></h1>'
+         '<p class="lead">Recruiters read “managed”, “responsible for” and “helped” in almost every resume, and those words do not say what changed because of you. '
+         'Pick the word you keep repeating: each page lists better ones by what you actually did, with an example line that has a number.</p>'
+         + section("Pick the word you overuse", f'<ul class="tiles">{"".join(rw_tile(y) for y in RW)}</ul>')
+         + section("Write the whole line", f'<p>A strong resume line has three parts: an action verb, what you did it to, and a result with a number. '
+                   f'The free <a href="{P}/tools/resume-bullet-builder/">resume bullet builder</a> helps you write one, and <a href="{P}/resume/examples/">resume examples for {len(rex_data)} kinds of work</a> show whole resumes written this way.</p>'))
 
     # Mentors: what it will be and an application for real people. No mentor is listed until a real one is checked; nobody is invented.
     tg = CFG.get("contact_telegram", "")

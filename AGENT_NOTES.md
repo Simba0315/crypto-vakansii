@@ -349,3 +349,10 @@ positions live in `geo_cities.py` (run it to check them); ambiguous names (Cambr
 The dots appear on `style.load` from `n`; the job index loads after, for search and the city panel. The city list under the map is
 plain HTML, so the page is readable without the map.
 
+## Content pages copied from the Rezi study (14 Nov 2026)
+
+- `/resignation-letters/` from `resignation_pages.py` (18 situations) and `/resume-words/` from `resume_words.py` (19 verbs). Both
+  modules have a `test()`: run them after any edit. Texts are written for this site; example resume lines are invented, never taken
+  from a real resume. New entries need the same fields and must pass the test.
+- Job pages link to `/tools/resume-match/?job=<slug>`; the tool reads the posting from the job page in the browser.
+
