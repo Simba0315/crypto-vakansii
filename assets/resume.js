@@ -156,7 +156,7 @@
         + (m.terms.filter(function (t) { return !t.found; }).length ? '<p class="note">Its repeated words you do not use yet: ' + m.terms.filter(function (t) { return !t.found; }).slice(0, 6).map(function (t) { return '“' + esc(t.term) + '”'; }).join(', ') + '.</p>' : '');
     }
     html += '<details class="rbc-jd"' + (jd ? '' : ' open') + '><summary>' + (jd ? 'Change the posting' : 'Paste a posting') + '</summary><textarea id="rb-jd" rows="5" placeholder="Paste the full text of the job posting">' + esc(jd) + '</textarea>'
-      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + payLine(text) + aiLine(text);
+      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + titleSkills() + payLine(text) + aiLine(text);
     chk.innerHTML = html;
     chk.hidden = false;
   };
@@ -195,6 +195,29 @@
   };
   /* AI help without a server of our own: each button opens ChatGPT, Claude or Perplexity with this resume and a ready request.
      Nothing is sent until the visitor clicks, and the request says plainly not to invent anything. */
+  /* Skills for the job title, as hh.ru suggests them after the profession is chosen: here from the example of the closest kind of
+     work, whose skills come from today's postings. Each is one button away from the skills line. */
+  var roleEx = null, roleAsked = false;
+  var titleSkills = function () {
+    var t = String(data.title || '').toLowerCase();
+    if (t.replace(/\s/g, '').length < 3) return '';
+    if (!roleEx) {
+      if (!roleAsked && window.fetch) { roleAsked = true; fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (d) { roleEx = d; drawCheck(); }).catch(function () {}); }
+      return '';
+    }
+    var best = null, bestN = 0;
+    Object.keys(roleEx).forEach(function (k) {
+      var words = String(roleEx[k].title || '').toLowerCase().split(/[^a-z0-9+#]+/).filter(function (w) { return w.length > 1; });
+      if (!words.length || words.some(function (w) { return t.indexOf(w) < 0; })) return;
+      if (words.length > bestN) { best = k; bestN = words.length; }
+    });
+    if (!best) return '';
+    var have = {}; String(data.skills || '').split(',').forEach(function (x) { x = x.trim().toLowerCase(); if (x) have[x] = 1; });
+    var miss = String(roleEx[best].skills || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x && !have[x.toLowerCase()]; }).slice(0, 10);
+    if (!miss.length) return '';
+    return '<div class="rbc-sk"><p class="rbc-h"><b>Skills</b> employers ask for in ' + esc(roleEx[best].title) + ' jobs today</p><p class="note">Add the ones you have:</p><p class="rbc-add">'
+      + miss.map(function (x) { return '<button class="chipbtn" type="button" data-addskill="' + esc(x) + '">+ ' + esc(x) + '</button>'; }).join('') + '</p></div>';
+  };
   var aiAsks = [];
   var aiLine = function (text) {
     if (String(text).replace(/\s+/g, ' ').trim().length < 60) return '';

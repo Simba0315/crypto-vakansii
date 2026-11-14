@@ -1461,4 +1461,6 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .vp-checks li{padding:4px 0 4px 24px;position:relative}
 .vp-checks li::before{position:absolute;left:0;font-weight:700}
 .vp-checks li.ok::before{content:"✓";color:var(--ac)}.vp-checks li.fix::before{content:"→";color:var(--amber,#b45309)}
+.rbc-sk{grid-column:1/-1;border-top:1px solid var(--line)}
+.rbc>.rbc-sk{border-left:0}
 
