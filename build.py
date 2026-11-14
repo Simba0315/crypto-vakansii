@@ -12,6 +12,7 @@ import tools_pages                      # the free tools section: /tools/ and on
 import roles_info
 import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
+import geo_cities                       # where the cities in postings are, for the jobs map
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -216,7 +217,7 @@ def art(nm):
 TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc"}
 URLS = []
 ORG_LD = [""]
-V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js"))).hexdigest()[:8]   # cache-busting version
+V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js"))).hexdigest()[:8]   # cache-busting version
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
              f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a> · '
              f'<a href="{P}/methodology/">How it works</a> · <a href="{P}/privacy/">Privacy</a> · <a href="{P}/terms/">Terms</a></p></div></footer>')
@@ -429,7 +430,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
-<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
@@ -3563,7 +3564,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        f'<a class="feat" href="{P}/remote/"><h3>Remote jobs</h3><p>{sum(1 for j in active if j["remote"]):,} jobs done from home. Each one says which countries it is open to.</p></a>'
                        f'<a class="feat" href="{P}/work-from-anywhere/"><h3>Work from anywhere</h3><p>{sum(1 for j in active if j.get("anywhere")):,} remote jobs open to any country.</p></a>'
                        f'<a class="feat" href="{P}/part-time/"><h3>Part-time jobs</h3><p>{sum(1 for j in active if j.get("etype") == "Part-time"):,} jobs for fewer hours than a full week.</p></a>'
-                       f'<a class="feat" href="{P}/entry-level/"><h3>Entry-level jobs</h3><p>Jobs for a first year of work, and internships.</p></a></div>')
+                       f'<a class="feat" href="{P}/map/"><h3>Jobs on a map</h3><p>Every city with open jobs as a dot on a world map. Search a skill and see where it is hiring.</p></a></div>')
              + static_list
              + section(f"Questions about {word}jobs near you", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>"), head=ld_)
     near_page("jobs-near-me/", "", "Jobs near me", f"Jobs Near Me: {len(active):,} open jobs in {len(places)} cities and countries | {SITE}",
@@ -3579,6 +3580,42 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         near_page("part-time-jobs-near-me/", "Part-time", "Part-time jobs near me", f"Part-Time Jobs Near Me: {pt_n:,} open today | {SITE}",
                   f"Part-time jobs near you, hiring now: {pt_n:,} open jobs for fewer hours than a full week, by city and country, read from employers’ own pages every hour.",
                   f"{pt_n:,} open part-time jobs, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+
+    # The jobs map (the owner asked for one like map.rezi.ai): a dot per city, sized by its open jobs. The map draws in the browser from
+    # data/map.json; the city list below the map is plain HTML, so the page reads and ranks without the map. See assets/map.js, geo_cities.py.
+    map_rows = order(active)                      # the same order as data/index.json, so ix[k] belongs to row k there
+    map_keys, map_ix, map_n = {}, [], Counter()
+    for j in map_rows:
+        ck = geo_cities.city_of(j["location"] or "")
+        if ck and ck not in map_keys: map_keys[ck] = len(map_keys)
+        map_ix.append(map_keys[ck] if ck else -1)
+        if ck: map_n[ck] += 1
+    live_place = {slug for _, slug, _ in places}
+    map_url = lambda k: f"locations/{k}/" if k in live_place else f"jobs/?q={quote(geo_cities.CITIES[k][0])}"
+    map_c = [[k, geo_cities.CITIES[k][0], geo_cities.CITIES[k][1], geo_cities.CITIES[k][2], geo_cities.CITIES[k][3], map_url(k)] for k in map_keys]
+    write("data/map.json", json.dumps({"c": map_c, "n": [map_n[k] for k in map_keys], "ix": map_ix}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    map_total = sum(map_n.values())
+    map_tiles = "".join(f'<li><a class="tile" href="{P}/{map_url(k)}" data-city="{map_keys[k]}"><span class="n">{fl(geo_cities.CITIES[k][1])}{e(geo_cities.CITIES[k][0])}</span><span class="c">{n_:,}</span></a></li>'
+                        for k, n_ in map_n.most_common(60))
+    map_qa = [("Where do the jobs on the map come from?", f"From the careers pages of {len(OPEN_C) if 'OPEN_C' in dir() else len({j['company'] for j in active}):,} employers, read every hour. Each dot is a city named in the postings; its size is the number of open jobs there."),
+              ("Why are some jobs not on the map?", f"{len(active) - map_total:,} of the {len(active):,} open jobs name no city: most are remote jobs that only name a country or a region. They are all in the search and on the remote jobs page."),
+              ("Can I search the map?", "Yes. Type a job, a skill or a company, for example “python” or “nurse”: the dots are counted again for that word, in your browser, and the map moves to where those jobs are."),
+              ("Do I apply on this site?", "No. Every job links to the employer’s own posting, and you apply there. This site never stands between you and the employer.")]
+    map_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in map_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
+        '<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">')
+    page("map/", f"Jobs Map: {map_total:,} Open Jobs in {len(map_keys)} Cities | {SITE}",
+         f"A world map of {map_total:,} open jobs in {len(map_keys)} cities, read from employers’ own careers pages every hour. Search a job or a skill and see where it is hiring; no account needed.",
+         crumbs(("Jobs map", "")) + '<h1>Jobs on a map: <span class="hl">see where they are hiring</span></h1>'
+         f'<p class="lead">{map_total:,} open jobs in {len(map_keys)} cities, each read from the employer’s own careers page within the last hour. '
+         'Type a job or a skill to count the dots again; click a dot for the newest jobs there.</p>'
+         '<form class="mapform" id="mapform" role="search"><input type="search" id="mapq" name="q" placeholder="A job, a skill or a company, for example python" aria-label="Search the map">'
+         '<button class="btn primary" type="submit">Show on map</button></form>'
+         '<div class="mapwrap"><div class="jobmap" id="jobmap" role="region" aria-label="Map of open jobs by city"></div>'
+         '<aside class="mappanel" id="mappanel" aria-live="polite" hidden></aside></div><p class="note" id="mapnote">The map needs JavaScript. Every city is listed below.</p>'
+         + section("Cities with the most open jobs", f'<ul class="tiles">{map_tiles}</ul>', ("locations/", "Jobs by country"))
+         + section("Questions about the jobs map", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in map_qa) + "</dl>")
+         + f'<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script><script src="{P}/map.js?v={V}" defer></script>', head=map_ld)
 
     # Mentors: what it will be and an application for real people. No mentor is listed until a real one is checked; nobody is invented.
     tg = CFG.get("contact_telegram", "")
@@ -3847,7 +3884,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "map.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")

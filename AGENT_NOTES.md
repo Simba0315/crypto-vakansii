@@ -329,3 +329,23 @@ local size.
 - No section heading is just "Questions": write what the questions are about (the owner's standard: every H2 carries a key or a
   real question).
 
+
+
+## Owner's standing rules found by the full message audit (14 Nov 2026, `MESSAGES_AUDIT.md`)
+
+- "Не спрашивай, стоит ли внедрять, просто внедряй" (said 3 times): implement without asking anything that needs no account,
+  money, password or message sent in his name.
+- He does nothing himself ("ты продаёшь, а не я"): list only the steps that can be done solely in his name, each with minutes.
+- One site, not a network of sites, and no other niches until this one earns (his own "не хотел бы распыляться", 12 Nov).
+- Most repeated across his 140 messages: the domain (14 times), "do not stop" (11), world-class design (about 11), "take the best
+  from every site" (9), first place in Google (7). Read `MESSAGES_AUDIT.md` before planning a run.
+
+## Jobs map (14 Nov 2026)
+
+`/map/` is built in `build.py` (search for "The jobs map"), drawn by `assets/map.js` with MapLibre GL 4.7.1 from unpkg and the free
+OpenFreeMap "positron" style. `data/map.json`: `c` = cities `[key, name, country, lat, lng, address of its list]`, `n` = open jobs
+per city, `ix` = city of each row of `data/index.json` (same `order(active)`; -1 when the location names no city we know). City
+positions live in `geo_cities.py` (run it to check them); ambiguous names (Cambridge, Newark, Lancaster…) are left out on purpose.
+The dots appear on `style.load` from `n`; the job index loads after, for search and the city panel. The city list under the map is
+plain HTML, so the page is readable without the map.
+

@@ -1,6 +1,6 @@
 # Rezi research: how it grew, what it sells, what map.rezi.ai is, what we lack
 
-Status: IN PROGRESS (written section by section, research started 2026-11-14).
+Status: DONE (research done 2026-11-14; all sections written).
 
 Already known from the Semrush "top pages" file (analysed earlier, not re-read): the 100 top rezi.ai pages get about 30,600 search visits a month. Home and product pages 44%, resignation letter examples and templates 22%, resume templates and examples 13%, "resume synonyms" pages 8%, cover letter pages 6%, map.rezi.ai 1%.
 
@@ -239,12 +239,68 @@ Note on the numbers: TrustMRR counts only Stripe. $237,816 × 12 is about $2.85M
 
 ## 5. What we lack
 
-(pending)
+What we have now (checked in the project folder on 2026-11-14): 42,149 job pages with JobPosting schema (`site/job/`), 734 company pages (`site/companies/`), 165 role pages, country, city and city × field pages (`site/locations/`, e.g. `/locations/austin/engineering/`), salary pages (`site/salaries/`, 242 entries), a free resume builder with PDF and Word download (`site/resume/`), 143 resume examples per role (`site/resume/examples/`), 28 tool folders in `site/tools/` (tools_pages.py), a job tracker with no sign-up (`/my-jobs/`), skill matching (`/for-you/`), a glossary, 10 guides, `llms.txt`, and a Plus plan from $3 whose AI tools and accounts are written in `server/` (Cloudflare Worker) but not deployed.
+
+"How hard" means on our static site: **easy** = pre-built pages or browser-only JavaScript; **needs an AI server** = needs a language model call (our `server/` worker could carry it once deployed); **needs accounts** = needs log-in and stored user data.
+
+| Rezi product or page type | Do we have it? | How hard for us |
+|---|---|---|
+| Jobs map (map.rezi.ai): MapLibre + one static tile file, city × role pages with count and month in title, "tailor your resume to this job" box | **No** (we have list pages by city and field, no map) | **Easy**: 41,000 points fit in one GeoJSON or PMTiles file; all in the browser |
+| City × role landing pages (`/jobs/{city}/{role}`, 30 cities × 6 roles) | **Partly**: we have city × field (`/locations/austin/engineering/`), not city × job title | Easy |
+| Job pages with an AI-structured description (About, Responsibilities, Requirements, Skills, Salary, Benefits) | **Partly**: we have job pages; the description format is not unified | Easy for rules-based splitting; AI rewrite needs an AI server at build time |
+| "Tailor / score your resume for this job" box on every job page, with the job passed to the tool | **Partly**: we have `/tools/resume-match/` and the builder, but not a box on each job that pre-loads the job | Easy (pass the job id in the address or localStorage) |
+| Resume builder | **Yes** (`/resume/`) | — |
+| Resume template gallery (several designs, category pages: simple, modern, compact, creative) and free .docx / Google Docs downloads | **Partly**: one layout, PDF and Word | Easy (more CSS layouts, static .docx files) |
+| Resume examples per job title | **Yes**: 143 vs Rezi's 82 | — |
+| Resignation letter pages per situation and per job (Rezi: 58 pages, about 22% of its search visits) | **Partly**: one tool page `/tools/resignation-letter/` | **Easy**: pre-built template pages, no AI needed |
+| Cover letter examples per role | **Partly**: one builder `/tools/cover-letter/` | Easy |
+| "Resume synonyms for X" pages (8 pages, about 8% of Rezi's search visits) | **No** | **Easy**: static word lists with examples |
+| "X vs Y" and "alternatives" pages (Rezi: 12 "Rezi vs X" + about 14 reviews) | **No** competitor pages (our `/compare/` compares skills) | Easy (writing work, must be fair and dated) |
+| ATS resume checker with a score | **Yes**: `/tools/resume-review/` (score out of 10), works with no sign-up (Rezi's needs an account) | — |
+| Keyword scanner (resume vs job ad) | **Yes**: `/tools/resume-match/` | — |
+| Bullet point writer | **Yes**: `/tools/resume-bullet-builder/` (rules, not AI) | AI version needs an AI server |
+| Resume summary generator | **No** separate tool | Easy as a template tool; AI version needs an AI server |
+| AI resume agent (chat that rewrites the resume) | **No** | Needs an AI server |
+| AI interview practice (voice, pace, filler words) | **Partly**: `/tools/interview-answer-builder/` (STAR, timing) | Speech scoring of pace and filler words can run in the browser (Web Speech API, Chrome only); question generation and feedback need an AI server |
+| Job search with tracker | **Yes**: job board plus `/my-jobs/` (no sign-up) | — |
+| Saved searches that sync across devices | **Partly** (browser only) | Needs accounts (our `server/`, not deployed) |
+| Mobile app (swipe jobs with a 0-100 match score) | **No** (we have a PWA manifest and service worker) | Easy as a PWA "swipe" page using `/for-you/` matching; native app is much more work |
+| Chrome extension (autofill applications on Workday, Greenhouse, Lever) | **No** | Separate product; no server needed for autofill from a local profile, but store review and upkeep per ATS |
+| MCP connector for AI assistants | **No** (we have `llms.txt` and a public `/api/` folder) | Easy for a read-only jobs MCP if it runs from static JSON; resume editing needs accounts |
+| White label for universities, agencies, career sites (Rezi: "70%" revenue share) | **No** (we have widgets, `embed.js` and a partners page) | Our job widgets are a start; a full white label needs accounts |
+| Candidate search for employers ("1.4M+ candidates" map, Sourcing API) | **No** | Needs accounts and opt-in profiles |
+| Creator program (pay per view for short videos) | **No** | No code; needs a budget and a way to pay creators (we pay in crypto only) |
+| Help centre (56 docs), authors, editorial process, user reviews, AI info page, changelog | **Partly**: `/help/`, `/about/`, `/methodology/`, `llms.txt`, CHANGELOG.md | Easy |
+| Lifetime plan ($149) and big giveaways of paid plans | **Partly**: Plus "one payment" from $3 | Easy as an offer; real value only once Plus AI tools are live |
 
 ## What to copy first
 
-(pending)
+Most valuable first.
+
+1. **A jobs map with city × job-title pages** (our map.rezi.ai). Reason: it is Rezi's newest traffic source (launched 21 Apr 2026). It needs no server: MapLibre plus one static file of points, and we already have about 41,000 jobs with places. Copy the SEO frame too: `/map/{city}/{role}` pages with the job count and month in the title, 100 job links in the HTML, "Browse by city" and "Related roles" links, and a sitemap. Rezi's map blocks SemrushBot, so the "1%" Semrush figure probably understates it.
+2. **A "check your resume for this job" box on every job page**, which opens `/tools/resume-match/` or the builder with that job already loaded. Reason: this box is how the map turns visitors into sign-ups. Rezi A/B tests three texts ("Tailor my resume", "Get my score", "Target Resume Now") and hands the job over in a cookie. We already have 42,149 job pages and the tools, so it is pure front-end work. Start with the "score" text, since our checker needs no sign-up.
+3. **Resignation letter pages, one per situation and job** (about 60: "2 weeks notice", "for a better offer", "nurse", "teacher" and so on). Reason: about 61 such pages bring Rezi 22% of its search visits. We have one tool page. They are static text, with no AI.
+4. **"Resume synonyms for X" pages** (start with 20-30 common verbs: led, managed, helped, created). Reason: 8 pages bring Rezi 8% of its search visits. They are cheap and link naturally to our bullet builder.
+5. **Partner distribution with a revenue share.** Offer our job widgets plus resume tools to bootcamps, communities and career services, and pay them a large share of Plus sales in crypto. Reason: Rezi's enterprise page claims a "70%" share and about $986,895 paid to partners. Its 2025 review reports $37.6K from enterprise partners in one month. It also runs clone brands (Resumatic, Resumai). We already have `embed.js`, widgets and a partners page.
+6. **Fair comparison pages** ("Hiring Right Now vs LinkedIn / Indeed / Wellfound", "best job boards for X", "X alternatives"). Reason: Rezi has 12 "Rezi vs X" pages and about 14 reviews. They are what AI assistants and buyers quote. Keep them dated and honest.
+7. **Cover letter examples per role, plus a template gallery** (3-4 resume designs, free .docx downloads with no account). Reason: in Rezi's search traffic, templates and examples bring 13% and cover letters 6%. We can reuse our 143 role pages. Rezi locks "Customize" behind sign-up, while we can let people download freely.
+8. **A "swipe jobs" PWA page with a 0-100 match score** built on `/for-you/`. Reason: Rezi's 2026 bet is a mobile app of this kind, and its map advertises it on every page. A PWA gives most of this with no app store.
+
+Do not copy: paid ads (Rezi spent about $15K a month for a year without a positive return, per Starter Story). Hold back on lifetime-plan giveaways until the Plus AI tools are live: Rezi's giveaways worked because the free plan already gave real value.
 
 ## Not opened or not verified
 
-(pending)
+- **x.com/jacob_jacquet**: HTTP 402, not opened. "Nearly 11,000 paying subscribers, $3.2m ARR, 5M users" comes only from the owner-supplied quote. The nearest checked figure: TrustMRR (Stripe-verified, 13 Nov 2026) shows MRR $237,816, 9,849 active subscriptions and $10,553,932 all-time revenue (https://trustmrr.com/startup/rezi).
+- **indiehackers.com/product/rezi**: HTTP 403, not opened. "$57.5k/mo in Jan 2023" (a post title) and "+15k users from a deal site" come from search snippets only, so they are not verified.
+- **reddit.com** (r/Rezi founder post of Dec 2024, r/IAmA of Nov 2019): our fetch tool cannot open Reddit, so these were not opened. I did not use mirror sites.
+- **appsumo.com/products/rezi-ltd**: timed out, not opened. The AppSumo period (around May-Aug 2020) is inferred from search snippets (an update dated 15 May 2020, a Slickdeals thread of 16 Aug 2020).
+- **first-mrr.com/study/rezi**: HTTP 503, not opened.
+- **Product Hunt dates** (Rezi 2.0 on 24 Apr 2020, Rezi 3.0 with GPT-3 on 21 Jan 2021): from a hunted.space tracker via search, not opened.
+- **Starter Story** (8 Aug 2024): partly behind a members' wall; only the visible text was used. **wearefounders.uk**: paywalled, only the intro was seen ("$5M+ lifetime revenue", "3M+ users"), so it was not used in the timeline.
+- **ARR.Club "$3.2M ARR, 17 Sep 2026"**: search snippet only. **Latka $3.2M (Oct 2024)**: an estimate; Latka says Rezi does not publish revenue.
+- **Conflicts left open**: move to Korea in 2016 (Korea Times) or Nov 2015 (unverified snippet); total funding of about $150,000 (koreatechdesk interview) or $289,000 (koreatechdesk profile); team of 15 or 11 (both in Starter Story); map job count of 3M+ (titles) or 4M+ (/about); 1.4M+ candidates (map) or 4.7M resumes (Sourcing API page).
+- **Popups and emails on rezi.ai**: not seen. We read the server HTML only, did not run the site's scripts and did not sign up, so we received no emails. The founder's claim that the app is promoted "in popups, emails" is not verified. No rezi.ai page except /posts/rezi-map links to the map.
+- **Inside the Rezi app** (how the free tools behave after sign-up, how the `target-job` cookie is used in app.rezi.ai): not tested, since that needs an account.
+- **map.rezi.ai traffic**: unknown. Its robots.txt blocks SemrushBot and AhrefsBot, so the Semrush "1%" figure is unreliable.
+- **socialmediascheduler.ai owner**: only inferred (contact hello@rezi.io, "Jacob Jacquet" shown as Owner in a mock-up, Rezi as the showcase customer). **Resumatic and Resumai prices**: pricing pages not opened.
+- **Korea Times address**: the URL https://www.koreatimes.co.kr/www/biz/2024/08/602_282975.html returned an article dated 6 Feb 2020; the facts were taken from that article.

@@ -1285,3 +1285,20 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .prange{position:relative;display:block;height:8px;background:var(--bg2);border-radius:4px}
 .prange i{position:absolute;top:0;height:100%;background:var(--ac);border-radius:4px}
 .prange b{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink,#111)}
+
+/* the jobs map */
+.mapform{display:flex;gap:10px;margin:18px 0 14px;max-width:720px}
+.mapform input{flex:1;min-width:0;height:46px;border:1px solid var(--line2);border-radius:999px;padding:0 18px;font:inherit;background:var(--card);color:var(--text)}
+.mapwrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.mapwrap:has(.mappanel[hidden]){grid-template-columns:minmax(0,1fr)}
+.jobmap{height:min(68vh,620px);border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg2)}
+.jobmap.off{display:none}
+.mappanel{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:16px 18px;max-height:min(68vh,620px);overflow:auto;box-shadow:var(--shadow)}
+.mp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.mp-head h2{margin:0;font-size:20px}
+.mappanel .jobs .job a{grid-template-columns:auto 1fr}
+.mappanel .jobs .jr{display:none}
+.mp-help{margin-top:14px;padding:14px;border-radius:12px;background:var(--accent-soft);font-size:14px}
+.mp-help p{margin:0 0 8px}
+.maplibregl-popup-content{font:13px/1.35 Inter,system-ui,sans-serif;padding:8px 10px;border-radius:10px}
+@media(max-width:900px){.mapwrap{grid-template-columns:1fr}.jobmap{height:58vh}.mappanel{max-height:none}}
