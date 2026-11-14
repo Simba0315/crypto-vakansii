@@ -13,6 +13,7 @@ import roles_info
 import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
 import geo_cities                       # where the cities in postings are, for the jobs map
+import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -432,7 +433,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -3618,6 +3619,44 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Cities with the most open jobs", f'<ul class="tiles">{map_tiles}</ul>', ("locations/", "Jobs by country"))
          + section("Questions about the jobs map", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in map_qa) + "</dl>")
          + f'<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script><script src="{P}/map.js?v={V}" defer></script>', head=map_ld)
+
+    # Resignation letters, one page per situation. In the Rezi study these pages bring that site about a fifth of its search visits.
+    RL = resignation_pages.LETTERS
+    rl_year = TODAY[:4]
+    rl_tile = lambda x: f'<li><a class="tile" href="{P}/resignation-letters/{x["slug"]}/"><span class="n">{e(x["name"])}</span><span class="c">{e(x["short"])}</span></a></li>'
+    for x in RL:
+        low_ = x["name"][0].lower() + x["name"][1:]
+        qa_ = x["qa"]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        others_ = [y for y in RL if y["slug"] != x["slug"]]
+        page(f"resignation-letters/{x['slug']}/", f"{tcase(x['name'])}: Template and Example ({rl_year}) | {SITE}",
+             f"A {low_} you can copy: {x['when'][0].lower() + x['when'][1:]}",
+             crumbs(("Resignation letters", "resignation-letters/"), (x["name"], "")) + f'<h1>{e(x["name"])}: <span class="hl">template and example</span></h1>'
+             f'<p class="lead">{e(x["when"])} Copy the letter below, replace the parts in [brackets], and send it to your manager.</p>'
+             f'<div class="rl-paper"><pre id="letter">{e(x["letter"])}</pre>'
+             '<p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> '
+             f'<a class="btn ghost sm" href="{P}/tools/resignation-letter/" style="margin-top:0">Fill it in with the free builder</a></p></div>'
+             + section(f"What to put in a {low_}", '<ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["include"]) + "</ul>"
+                       '<p class="note">Notice periods depend on your contract and on the law where you work. This page is general guidance, not legal advice.</p>')
+             + section(f"Questions about a {low_}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
+             + section("Other resignation letters", f'<ul class="tiles">{"".join(rl_tile(y) for y in others_[:9])}</ul>', ("resignation-letters/", f"All {len(RL)} letters"))
+             + section("After you resign", '<div class="feats">'
+                       f'<a class="feat" href="{P}/tools/last-working-day/"><h3>Last working day calculator</h3><p>Count the notice period from the day you hand in the letter.</p></a>'
+                       f'<a class="feat" href="{P}/resume/"><h3>Update your resume</h3><p>Add this job while the results are fresh. Free, no account.</p></a>'
+                       f'<a class="feat" href="{P}/jobs/"><h3>Find the next job</h3><p>{len(active):,} open jobs, read from employers’ own pages every hour.</p></a></div>'), head=ld_)
+    rl_qa = [("How do I write a resignation letter?", "Say that you are resigning, from which position and company, and give your last working day as a date. Add one sentence of thanks and what you will hand over. Keep it short and leave complaints out."),
+             ("How much notice should I give?", "What your contract asks for. In the United States two weeks is the custom; elsewhere a month or more is common. Check the contract before you write the date."),
+             ("Should I resign in person or in writing?", "Both: tell your manager in a short conversation, then send the letter or email the same day so the date is on record.")]
+    rl_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("resignation-letters/", f"Resignation Letter Templates: {len(RL)} Examples for Every Situation ({rl_year}) | {SITE}",
+         f"{len(RL)} resignation letter templates you can copy: two weeks notice, effective immediately, by email, for a new job, relocation, health or family reasons, retirement and more.",
+         crumbs(("Resignation letters", "")) + f'<h1>Resignation letter templates: <span class="hl">{len(RL)} examples</span></h1>'
+         '<p class="lead">Pick the letter that fits your case. Each one is complete: copy it, replace the parts in [brackets], and send it. '
+         f'Or build your own in the <a href="{P}/tools/resignation-letter/">free resignation letter builder</a>.</p>'
+         + section("Choose your situation", f'<ul class="tiles">{"".join(rl_tile(y) for y in RL)}</ul>')
+         + section("Questions about resignation letters", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rl_qa) + "</dl>"), head=rl_ld)
 
     # Mentors: what it will be and an application for real people. No mentor is listed until a real one is checked; nobody is invented.
     tg = CFG.get("contact_telegram", "")

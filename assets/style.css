@@ -1310,3 +1310,9 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .rmbox:hover{border-style:solid}
 .tl-loaded{margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--accent-soft)}
 
+/* resignation letter pages: the letter on a sheet */
+.rl-paper{max-width:760px;margin:22px 0 8px;padding:28px 32px 20px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow)}
+.rl-paper pre{margin:0;padding:0;border:0;background:none;font:16px/1.65 Georgia,"Times New Roman",serif;color:var(--text);white-space:pre-wrap;word-break:normal}
+.rl-act{margin:18px 0 0;display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:560px){.rl-paper{padding:20px 18px 16px}}
+
