@@ -3218,6 +3218,37 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
               '<span class="ex">today</span>' + mini([(f"{lb} yrs", k, f"{pc_(k, len(yrs_all))}%") for lb, k in sorted(yb_, key=lambda x: -x[1])[:4]]),
               (("entry-level/", "Entry-level jobs"), ("how-to-become/", "How to become…"), ("guides/job-levels-explained/", "What the level in a title means")))
 
+    # what moving up a level is worth, from advertised pay (the raise guide asked for in the plan)
+    pm_ = lambda js__: median([(j["usd"][0] + j["usd"][1]) / 2 for j in js__ if j["usd"]]) if sum(1 for j in js__ if j["usd"]) >= 15 else 0
+    fam_js_ = {r_[0]: r_[4] for r_ in fam_rows}
+    lad_ = []
+    for f_ in big_f:
+        js__ = fam_js_.get(f_["fs"], [])
+        base_, sen_, lead_ = (pm_([j for j in js__ if j["level"] == lv_]) for lv_ in ("", "Senior", "Lead"))
+        if base_ and sen_ and f_["fs"] != OTHER[0] and "Internship" not in f_["fn"]: lad_.append((f_["fn"], f_["fs"], base_, sen_, lead_))
+    all_base_, all_sen_ = pm_([j for j in active if j["level"] == ""]), pm_([j for j in active if j["level"] == "Senior"])
+    up_ = lambda a_: round(100 * (a_[3] / a_[2] - 1))
+    sg_ = lambda a_: (f"+{up_(a_)}%" if up_(a_) > 0 else f"−{-up_(a_)}%" if up_(a_) < 0 else "0%")
+    if len(lad_) >= 4 and all_base_ and all_sen_:
+        lad_.sort(key=lambda a_: -(a_[3] / a_[2]))
+        guide("does-senior-pay-more", "Does a Senior title pay more? Advertised pay by level, field by field",
+              f"Senior postings advertise {round(100 * (all_sen_ / all_base_ - 1))}% more than postings with no level in the title overall, but not in every field. The figures by field, to bring when you ask for a raise.", "Pay",
+              f"Across all fields, postings that state pay and name Senior in the title advertise a median of {money(all_sen_)} a year, {round(100 * (all_sen_ / all_base_ - 1))}% more than the {money(all_base_)} of postings with no level in the title. "
+              f"The step differs by field: {sg_(lad_[0])} in {e(rlow(lad_[0][0]))}, {sg_(lad_[-1])} in {e(rlow(lad_[-1][0]))}. In {sum(1 for a_ in lad_ if a_[3] < a_[2])} of the {len(lad_)} fields counted, Senior postings advertise less than postings with no level.",
+              "<h2>How much more a Senior title advertises, by field</h2><p>Each bar is the median pay of postings with Senior in the title as a share of the median of postings that name no level, in fields where both groups have at least 15 postings with a stated yearly range. "
+              "</p>"
+              + bars_([(a_[0], a_[3] / a_[2], sg_(a_), f"categories/{a_[1]}/") for a_ in lad_])
+              + "<h2>The figures behind the bars</h2><div class=\"tablewrap\"><table class=\"t4\"><tr><th>Field</th><th>No level in title</th><th>Senior</th><th>Lead and above</th></tr>"
+              + "".join(f"<tr><td>{e(a_[0])}</td><td>{money(a_[2])}</td><td>{money(a_[3])}</td><td>{money(a_[4]) if a_[4] else '—'}</td></tr>" for a_ in lad_)
+              + "</table></div><p class=\"note\">Medians of the middle of each stated range, in US dollars a year. A dash means fewer than 15 postings.</p>"
+              "<h2>Using the figures when you ask for a raise</h2><p>A raise request is easier to grant when it names a number and a reason. Employers answer to what the market advertises for the same work, so bring the range for your kind of work and level, "
+              "then the results you produced in the last year. Ask in a meeting set for the purpose, not in passing, and ask for a figure inside the range rather than for “more”.</p>"
+              f"<p>The <a href=\"{P}/tools/raise-calculator/\">raise calculator</a> shows what a percentage means in money, the <a href=\"{P}/tools/raise-request-email/\">raise request email</a> writes the message, "
+              f"and the <a href=\"{P}/salaries/\">salary pages</a> hold the range for your role and level.</p>"
+              "<h2>Why Senior does not always pay more</h2><p>A posting with no level in the title can be a manager, a specialist or a mid-level role, and some fields mix very different jobs under one name, so the group with no level can sit above the Senior group. Advertised pay is what an employer offers new hires, not what people already in the job earn. The title is the employer’s word: a Senior at a small company and a Senior at a large one can do very different work.</p>",
+              '<span class="ex">today</span>' + mini([(a_[0], a_[3] / a_[2], sg_(a_)) for a_ in lad_]),
+              (("salaries/", "Salary data"), ("guides/job-levels-explained/", "What the level in a title means"), ("tools/raise-calculator/", "Raise calculator")))
+
     gcats = []
     for g_ in GUIDES:
         if g_[3] not in gcats: gcats.append(g_[3])
