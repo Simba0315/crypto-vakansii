@@ -186,7 +186,56 @@ Slug rule from the code: lower-case, every run of non-letters/digits becomes one
 
 ## 4. How Rezi grew: timeline
 
-(pending)
+Labels: **(own)** = Rezi's own site or the founder's own words; **(interview)** = press or interview with the founder; **(3rd party)** = tracker or estimate; **not verified** = only one weak source or a search snippet.
+
+| When | What happened | Source |
+|---|---|---|
+| Before 2015 | Jacob Jacquet studied Math and Economics at University of Wisconsin–Madison; started his first company at 19, sold it at 21 | (interview) https://koreatechdesk.com/?p=9725 (profile, Oct 2020) |
+| 2014-2015 | Low GPA, yet his own resume got him interviews at Google, Goldman Sachs and others; this became the pitch | (interview) https://www.koreatechdesk.com/?p=10049 (28 Oct 2020); https://www.starterstory.com/stories/ai-powered-free-ats-resume-builder |
+| May 2015 | Idea starts: he posts an ATS-friendly resume template on Reddit | (own) https://www.rezi.ai/posts/0-to-1-million-users |
+| 2015 | First product: a Word template plus a guide, sold for about $9.69 | (interview) Starter Story, 8 Aug 2024 |
+| 2015-2019 | "Rezi Instant": a minimal tool that formats your text into the template, no accounts, for "nearly four years" | (own) /posts/0-to-1-million-users |
+| 2015-2018 | Spends these years looking for money and pays an agency to build the software | (interview) Starter Story |
+| 2016 (some say Nov 2015) | Moves to Korea at 23. Korea Times: came to Seoul in 2016. A search snippet says Nov 2015, as an English teacher in Iksan (**not verified**) | (interview) https://www.koreatimes.co.kr/www/biz/2024/08/602_282975.html (article dated 6 Feb 2020); koreatechdesk p=9725 |
+| By Oct 2020 | Funding is tiny: about $150,000 in total, latest from Lotte Accelerator (p=10049); the profile page says $289,000 from Lotte Accelerator and angel Jihoon Jeong (p=9725). No later round found. Latka: "no funding reported". Starter Story (2024): profitable at about 55% margin. In practice **bootstrapped after a small angel/accelerator cheque** | (interview) koreatechdesk p=10049 and p=9725; (3rd party) https://getlatka.com/companies/rezi |
+| Sept 2019 | SaaS launch (accounts, resume manager, paid Rezi Pro). Development outsourced. Luc Lemerez joins to lead growth | (own) /posts/0-to-1-million-users; https://www.rezi.ai/ai-llm-info ("SaaS Launch: 2019") |
+| Nov 2019 | Reddit AMA (r/IAmA) about getting interviews with a low GPA. Starter Story: early Reddit startup-story posts and the AMA were his most real channel | search result only (Reddit not opened); (interview) Starter Story |
+| Feb 2020 | 2 employees; 2020 revenue projected at 250 million won (about $210,000); "high profit margin". Also licensing deals with US marketing partners | (interview) Korea Times, 6 Feb 2020 |
+| 24 Apr 2020 | "Rezi 2.0" on Product Hunt, #3 Product of the Day | (3rd party) https://hunted.space/product/rezi/launches/rezi-2-0 (via search, **not verified**) |
+| About May-Aug 2020 | **AppSumo lifetime deal** during COVID ("pivotal"). Indie Hackers snippet: a deal site made Rezi go viral, about +15k users (**not verified**). An AppSumo update is dated 15 May 2020; a Slickdeals thread of 16 Aug 2020 shows a lifetime code | (interview) Starter Story; https://appsumo.com/products/rezi-ltd/ (timed out, not opened); search snippets |
+| 2020-2021 | **StackCommerce** lifetime deals on many deal sites (Neowin, Geeky Gadgets 5 Jun 2021, VentureBeat, Entrepreneur store). Neowin: lifetime for $29. Starter Story: StackCommerce drove "revenue-focused growth" | (interview) Starter Story; search results (deal pages not opened) |
+| Oct 2020 | 100,000+ users (105k); growth "mostly organic", **SEO the main channel**; 4 full-time staff; university clients UW–Madison and Seoul National University; partner JOBKOREA | (interview) koreatechdesk p=10049 and p=9725 |
+| Dec 2020 - Jan 2021 | Adopts GPT-3 among the first production apps, with a team of two. "Rezi 3.0" with the GPT-3 "AI Writer" on Product Hunt, 21 Jan 2021 | (own) /posts/0-to-1-million-users; (3rd party) hunted.space via search, **not verified** |
+| Jan 2023 | Indie Hackers update titled "Rezi GPT SaaS app update $57.5k/mo" (title only). New customers +527.7% year on year | search result (IH returned 403); (own) https://www.rezi.ai/posts/year-in-review-2023 |
+| Mar 2023 | **$1M ARR** | (own) year-in-review-2023 |
+| Jul 2023 | 1,000,000 users; 65% of them came in the previous three months (ChatGPT made people want AI writing) | (own) /posts/0-to-1-million-users |
+| Oct-Nov 2023 | **Free top-plan giveaways**: nearly 70,000 sign-ups in one day (Oct 2023, Starter Story); about 55,376 sign-ups in under a day (Nov 2023, own) | (interview) Starter Story; (own) year-in-review-2023 |
+| End 2023 | About 2M users; team of 12 (7 joined in 2023); users in 209 countries | (own) year-in-review-2023 |
+| Jan 2024 | ARR from $1,986,807 to $2,249,233 in one month | (own) https://www.rezi.ai/posts/rezi-year-in-review-2024 |
+| 2024 | Launches **Rezi Enterprise (white label)**, AI Interview, keyword tailoring. Team of 18 (12 in Seoul). Q3: 33% of the top 10 results for "AI resume builder" were Rezi pages. Forbes list, 25 Sep 2024. Indie Hackers: 5th highest-earning open startup (May 2024) | (own) year-in-review-2024 |
+| Aug 2024 | $215K MRR (about $2.5M a year); 2,620,883 users; 432,638 site visits a month. **Paid ads failed**: about $15K a month for a year without positive return. Removing the $3/month Basic plan raised customer lifetime value (now $101.90). Added an anti-churn cancel flow | (interview) Starter Story |
+| 2025 | Job Search (Q1, "over 1.3M" roles); open-source Resume Metadata Standard (Apr); AI Agent (Aug); PharmaCV partner version (Sep). **Lifetime giveaways**: 6,955 accounts (May), then 93,000+ accounts (Sep). A homepage change gave nearly 10x more Pro conversions (Q3). Official recommendation in r/careeradvice (700,000+ members). Enterprise partners made $37.6K in one month. End 2025: about 4,005,400 users | (own) https://www.rezi.ai/posts/year-in-review-2025 |
+| 21 Apr 2026 | **Rezi Map** launched (map.rezi.ai) | (own) https://www.rezi.ai/posts/rezi-map |
+| 2026 (no exact dates) | Mobile app (iOS, Android), Chrome extension, Resume MCP, Creator Program (paid short videos), Candidate Sourcing API (employers search 4.7M Rezi resumes), white-label brands Resumatic and Resumai | (own) the product pages in section 2 |
+| 17 Sep 2026 | ARR.Club lists $3.2M ARR (**not verified**, search snippet). Latka's $3.2M (Oct 2024) is an estimate | (3rd party) https://www.arr.club/rezi; getlatka.com |
+| 13 Nov 2026 | **TrustMRR (Stripe-verified): MRR $237,816; 9,849 active subscriptions; all-time revenue $10,553,932** | (3rd party, verified by Stripe key) https://trustmrr.com/startup/rezi |
+| Now | Founder's post: nearly 11,000 paying subscribers, $3.2m ARR, 5M users. Site counter: 4,785,497+ users | owner-supplied quote (X not opened); (own) rezi.ai footer |
+
+Note on the numbers: TrustMRR counts only Stripe. $237,816 × 12 is about $2.85M and 9,849 subscriptions. The founder's $3.2M and "nearly 11,000" are higher. The gap could be mobile app-store subscriptions and enterprise invoices outside Stripe. That is my guess, not a fact.
+
+### The growth pattern in plain words
+
+1. **One sharp promise, from day one**: "a resume that passes ATS". It began as one Reddit template (2015) and still sells the same thing.
+2. **SEO was the main channel early** (Oct 2020 interview) and stays central: 503 well-made pages, "Rezi vs X" pages, resume examples per job, resignation letters, synonym pages (section 1).
+3. **Reddit**: the first template, an AMA, a subreddit, later an official recommendation in a 700,000-member subreddit.
+4. **Lifetime deals for cash and users when small**: AppSumo (2020) and StackCommerce (2020-2021).
+5. **Early on AI**: GPT-3 in Dec 2020 / Jan 2021, years before most rivals; ChatGPT then drove a wave (65% of the first million users came in 3 months of 2023).
+6. **Mass giveaways of paid plans** make sign-up spikes (70,000 in a day in Oct 2023; 93,000+ lifetime accounts in Sep 2025). Free users then upgrade or bring friends.
+7. **Pricing work beats ads**: paid ads failed; dropping the cheap plan, an anti-churn flow and a homepage change (10x Pro conversions) worked.
+8. **Other people's traffic**: white label (Enterprise) with a "70%" revenue share, partner brands (Resumatic, Resumai, PharmaCV), universities and agencies. Each partner sends its own users into the same app.
+9. **New free traffic sites that feed the app**: map.rezi.ai (jobs map, 2026), mobile app, Chrome extension, MCP. The founder's own words: the app is "a recommended resource" in popups and emails on these sites.
+10. **Paid creators**: since 2026 Rezi pays per view for short videos on TikTok, YouTube Shorts, Reels.
+11. **Small, cheap team in Seoul**: 2 people in 2020, 12 in 2023, 18 in 2024; profitable, no big funding.
 
 ## 5. What we lack
 

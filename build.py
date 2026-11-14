@@ -354,6 +354,7 @@ def fit_title(t):
         left, brand = rest.rsplit(" | ", 1) if " | " in rest else (rest, "")
         left = re.sub(r" \([\d,]+ (?:open|roles?)\)", "", left)
         room = 65 - len(pg.group(0)) - (len(brand) + 3 if brand else 0)
+        if len(left) > room and len(left) + len(pg.group(0)) <= 65: return left + pg.group(0)      # the brand gives way before the words do
         if len(left) > room:
             head_ = re.split(r" — |: ", left)[0]
             left = head_ if 12 <= len(head_) <= room else left[:room + 1].rsplit(" ", 1)[0]
@@ -364,6 +365,7 @@ def fit_title(t):
     if len(t2) <= 65: return t2
     if " | " in t2:                                           # shorten the descriptive part, never drop the brand
         left, brand = t2.rsplit(" | ", 1)
+        if len(left) <= 65: return left           # a title that names a place or a figure keeps it; the brand gives way first
         head_ = re.split(r" — |: ", left)[0]
         if len(head_) >= 12: left = head_
         room = 65 - len(brand) - 3
