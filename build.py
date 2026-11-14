@@ -439,7 +439,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -2641,6 +2641,89 @@ def main():
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
          '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now.</p>'
          + section("Choose a site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>"))
+
+    # Career quiz: "which kind of work fits me?" (the Careerist study: its lead magnet, but theirs asks for a phone number). Seven plain
+    # questions add points to fields of work; the result shows the three best fields with today's figures and the way in. All in the
+    # browser, nothing is stored on a server. QZ maps each answer to fields and points.
+    QZ = [
+        ("What do you enjoy most?", [
+            ("Building things that work", {"software-development": 3, "hardware-engineering": 2, "cloud-devops-it": 2, "ai-machine-learning": 1}),
+            ("Finding answers in numbers", {"data-analytics": 3, "accounting-finance": 2, "ai-machine-learning": 2}),
+            ("Making things look and feel right", {"design-creative": 3, "marketing-communications": 1, "product-project": 1}),
+            ("Talking with people and persuading them", {"sales": 3, "marketing-communications": 2, "hr-recruiting": 1}),
+            ("Organising and keeping things running", {"operations-administration": 3, "product-project": 2, "accounting-finance": 1}),
+            ("Helping people solve their problems", {"customer-service": 3, "hr-recruiting": 1, "science-healthcare": 1}),
+            ("Explaining and teaching", {"education-training": 3, "writing-translation": 2, "customer-service": 1}),
+            ("Looking after people’s health", {"science-healthcare": 3})]),
+        ("Which school subject did you like best?", [
+            ("Maths", {"data-analytics": 2, "software-development": 1, "accounting-finance": 2, "ai-machine-learning": 1}),
+            ("Physics or technology", {"hardware-engineering": 3, "software-development": 1, "cloud-devops-it": 1}),
+            ("Biology or chemistry", {"science-healthcare": 3}),
+            ("Art or design", {"design-creative": 3}),
+            ("Languages or writing", {"writing-translation": 3, "marketing-communications": 1}),
+            ("Economics or business", {"sales": 1, "accounting-finance": 2, "product-project": 1, "operations-administration": 1}),
+            ("Law or social studies", {"legal-compliance": 3, "hr-recruiting": 1})]),
+        ("What would you rather work with all day?", [
+            ("A computer, with long stretches of focus", {"software-development": 2, "data-analytics": 2, "security": 1, "ai-machine-learning": 1}),
+            ("People: calls, meetings, conversations", {"sales": 2, "hr-recruiting": 2, "customer-service": 2}),
+            ("A mix of both", {"product-project": 2, "marketing-communications": 1, "operations-administration": 1}),
+            ("Physical things: machines, tools, equipment", {"hardware-engineering": 3, "retail-hospitality": 1}),
+            ("Rules, documents and checks", {"legal-compliance": 3, "accounting-finance": 1, "security": 1})]),
+        ("What matters most to you in a job?", [
+            ("High pay", {"software-development": 1, "ai-machine-learning": 2, "sales": 1, "security": 1}),
+            ("Helping others", {"science-healthcare": 2, "customer-service": 1, "education-training": 2}),
+            ("Creative freedom", {"design-creative": 2, "marketing-communications": 1, "writing-translation": 1}),
+            ("Stability and clear rules", {"accounting-finance": 1, "legal-compliance": 1, "operations-administration": 2}),
+            ("Working from home", {"software-development": 1, "customer-service": 1, "writing-translation": 1, "data-analytics": 1})]),
+        ("How do you like to work?", [
+            ("Alone, on a hard problem", {"software-development": 2, "security": 2, "data-analytics": 1}),
+            ("In a team, on a shared goal", {"product-project": 1, "design-creative": 1, "operations-administration": 1}),
+            ("Leading and deciding", {"product-project": 3, "sales": 1}),
+            ("Face to face with customers", {"sales": 2, "customer-service": 2, "retail-hospitality": 2})]),
+        ("Which of these are you comfortable with already?", [
+            ("Writing code, even a little", {"software-development": 3, "cloud-devops-it": 1, "ai-machine-learning": 1}),
+            ("Spreadsheets and formulas", {"data-analytics": 2, "accounting-finance": 2, "operations-administration": 1}),
+            ("Drawing or design tools", {"design-creative": 3}),
+            ("Phone calls and presenting", {"sales": 2, "marketing-communications": 1}),
+            ("Contracts, policies and paperwork", {"legal-compliance": 2, "hr-recruiting": 1, "operations-administration": 1}),
+            ("None of these yet", {"customer-service": 1, "retail-hospitality": 1, "operations-administration": 1})]),
+        ("Where are you now?", [
+            ("At school or university", {}), ("Working, in another field", {}), ("Several years in an office job", {}), ("Already working in tech", {})]),
+    ]
+    qz_fields = {}
+    for fs, fn, fd, live, js_ in fam_rows:
+        if fs not in {k for _, opts in QZ for _, w in opts for k in w}: continue
+        beg = [j for j in js_ if j["entry"] or (j.get("years") and j["years"] <= 2)]
+        mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"])
+        top_r = [s_ for s_, _, _ in sorted(live, key=lambda x: -x[2]) if (OUT / "how-to-become" / s_ / "index.html").exists()][:2]
+        qz_fields[fs] = {"n": fn, "d": fd, "jobs": len(js_), "beg": len(beg), "pay": money(median(mids_)) if len(mids_) >= 20 else "", "rem": pc_(sum(1 for j in js_ if j["remote"]), len(js_)),
+                         "roles": [[s_, next(nm for x, nm, _ in live if x == s_)] for s_ in top_r]}
+    qz_html = "".join(f'<fieldset class="qz-q"><legend><span>{i + 1}</span>{e(q)}</legend>' + "".join(
+        f'<label><input type="radio" name="q{i}" value="{k}"><span>{e(a)}</span></label>' for k, (a, _) in enumerate(opts)) + "</fieldset>" for i, (q, opts) in enumerate(QZ))
+    qz_data = json.dumps({"w": [[w for _, w in opts] for _, opts in QZ], "f": qz_fields}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    qz_js = r"""<script>(function(){var D=JSON.parse(document.getElementById('qz-data').textContent),f=document.getElementById('qz'),out=document.getElementById('qz-out'),P=document.documentElement.getAttribute('data-base')||'';
+var esc=function(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+f.addEventListener('submit',function(ev){ev.preventDefault();var sc={},n=0;D.w.forEach(function(opts,i){var c=f.querySelector('input[name=q'+i+']:checked');if(!c)return;n++;var w=opts[+c.value];for(var k in w)sc[k]=(sc[k]||0)+w[k];});
+var exp=f.querySelector('input[name=q'+(D.w.length-1)+']:checked'),newbie=exp&&+exp.value<2;
+if(n<4){out.innerHTML='<p class="banner">Answer at least four questions for a result.</p>';out.hidden=false;return;}
+var top=Object.keys(sc).filter(function(k){return D.f[k];}).sort(function(a,b){return sc[b]-sc[a];}).slice(0,3),best=sc[top[0]]||1;
+out.innerHTML='<h2>Your best fits</h2><ol class="qz-res">'+top.map(function(k){var x=D.f[k];return '<li><div class="qz-h"><b>'+esc(x.n)+'</b><span class="pill">'+Math.round(100*sc[k]/best)+'% fit</span></div><p>'+esc(x.d.charAt(0).toUpperCase()+x.d.slice(1))+'.</p>'+
+'<p class="qz-fig">'+x.jobs.toLocaleString('en-US')+' open jobs · '+x.beg.toLocaleString('en-US')+' open to beginners'+(x.pay?' · median pay '+x.pay:'')+' · '+x.rem+'% remote</p>'+
+'<p>'+x.roles.map(function(r){return '<a class="btn ghost sm" href="'+P+'/how-to-become/'+r[0]+'/">How to become '+esc(r[1].toLowerCase())+'</a>';}).join(' ')+' <a class="btn ghost sm" href="'+P+'/categories/'+k+'/">See the jobs</a></p></li>';}).join('')+'</ol>'+
+'<p class="note">'+(newbie?'Starting out? Look at the jobs open to beginners first, and build one piece of proof for the field you pick.':'Changing field? Start with roles that reuse what you already do well.')+' The figures are from today’s open postings.</p>';
+out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();</script>"""
+    qz_qa = [("Which job is right for me?", "The one that matches what you enjoy, what you are already good at and how you like to work. This quiz scores fields of work on those three, then shows how many jobs each field has today and how many take beginners."),
+             ("Is the career quiz free?", "Yes, and it needs no account, no email and no phone number. Your answers stay in your browser."),
+             ("What should I do after the quiz?", "Open “How to become…” for the field you pick: it lists the skills employers name first and the jobs open to beginners today.")]
+    qz_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in qz_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("career-quiz/", f"Career Quiz: Which Job Fits Me? Free, No Sign-Up | {SITE}",
+         "A free career quiz with seven plain questions. It shows the three fields of work that fit you best, with today’s open jobs, jobs open to beginners and median pay. No email, no sign-up.",
+         crumbs(("Career quiz", "")) + '<h1>Which job fits me? <span class="hl">A seven-question career quiz</span></h1>'
+         '<p class="lead">Seven plain questions about what you enjoy, what you already do well and how you like to work. You get the three fields that fit you best, with how many jobs they have today and how to get in. No email, no sign-up: your answers stay in your browser.</p>'
+         f'<form id="qz" class="qz">{qz_html}<p><button class="btn primary" type="submit">Show my best fits</button></p></form>'
+         f'<section class="sec qz-out" id="qz-out" aria-live="polite" hidden></section><script type="application/json" id="qz-data">{qz_data}</script>{qz_js}'
+         + section("Questions about the career quiz", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in qz_qa) + "</dl>"), head=qz_ld)
 
     # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.

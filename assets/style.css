@@ -1358,3 +1358,17 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .sec-head.has-sub{gap:10px 24px;flex-wrap:wrap}
 .sec-head .sec-sub{flex:1 1 260px;margin:0;font-size:15px;opacity:.78;line-height:1.4}
 @media(max-width:700px){.sec-head.has-sub{align-items:flex-start}.sec-head.has-sub h2{flex:1 0 100%}.sec-head .sec-sub{flex:1 1 100%;order:2}.sec-head.has-sub a{order:3}}
+
+/* career quiz */
+.qz{max-width:860px}
+.qz-q{border:1px solid var(--line);border-radius:14px;padding:16px 18px 12px;margin:0 0 14px;background:var(--card)}
+.qz-q legend{font-weight:650;font-size:16.5px;padding:0 6px;display:flex;align-items:center;gap:10px}
+.qz-q legend span{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--ac);font-size:13px}
+.qz-q label{display:inline-flex;align-items:center;gap:8px;margin:6px 8px 6px 0;padding:8px 14px;border:1px solid var(--line2);border-radius:999px;cursor:pointer;font-size:14.5px}
+.qz-q label:has(input:checked){border-color:var(--ac);background:var(--accent-soft)}
+.qz-q input{accent-color:var(--ac)}
+.qz-res{padding:0;list-style:none;counter-reset:q}
+.qz-res li{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 12px;background:var(--card);box-shadow:var(--shadow)}
+.qz-h{display:flex;align-items:center;gap:10px;font-size:18px}
+.qz-fig{color:var(--muted);font-size:14px}
+
