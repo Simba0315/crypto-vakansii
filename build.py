@@ -791,7 +791,9 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         body = (top + (extra if n == 1 else "") + (f'<div class="sec-head lst"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                 + (f'<ul class="jobs">{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                 + pager_html(path, n, pages) + note + ((hub + faq_html + after) if n == 1 else ""))
-        if n == 1: page(path, title, desc, body, head=ld + faq_ld)
+        if n == 1:
+            # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
+            page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open, {MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld)
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False)
 
 
@@ -2532,6 +2534,13 @@ def main():
     # Job description templates for employers, one per kind of work (the Careerist/PeopleForce study: PeopleForce has none, and
     # employers search for them). Every figure is counted from today's open postings for that work; the text is a template with
     # brackets, written for this site, never copied from a posting.
+    def role_kit(slug_r, low, here):
+        """Every page about one kind of work links all the others (Upwork's "Resources to help you hire"); pages that exist only."""
+        items = [("roles", f"roles/{slug_r}/", "Open jobs"), ("salary", f"salaries/{slug_r}/", "Salary"), ("resume", f"resume/examples/{slug_r}/", "Resume example"),
+                 ("letter", f"cover-letter-examples/{slug_r}/", "Cover letter"), ("iq", f"interview-questions/{slug_r}/", "Interview questions"),
+                 ("become", f"how-to-become/{slug_r}/", "How to become one"), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
+        items = [(k, u, t) for k, u, t in items if k != here and (k != "salary" or (OUT / u / "index.html").exists())]
+        return section(f"Everything about {low} work", '<div class="rel">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for _, u, t in items) + "</div>")
     jd_dir = defaultdict(list)
     for slug_r, d in rex_data.items():
         rname, rj = by_role[slug_r]
@@ -2594,6 +2603,7 @@ def main():
              + section(f"What today’s {low} postings say", '<div class="tablewrap"><table>' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p>')
              + section(f"Questions about hiring {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
+             + role_kit(slug_r, low, "jd")
              + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
              + (f'<a href="{P}/salaries/{slug_r}/">{e(low)} pay</a> · ' if (OUT / "salaries" / slug_r / "index.html").exists() else "")      # a salary page exists only from 20 postings with pay
              + f'<a href="{P}/how-to-hire/{slug_r}/">how to hire {art(low)} {e(low)}</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_)
@@ -2657,6 +2667,7 @@ def main():
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + facts_ + section(f"Five steps to your first {low} job", steps)
              + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
+             + role_kit(slug_r, low, "become")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_)
     hb_n = sum(len(v) for v in hb_dir.values())
     hb_html = '<div class="dir" id="dir">' + "".join(
@@ -2803,6 +2814,7 @@ def main():
                        f'<a class="feat" href="{P}/resume/examples/{slug_r}/"><h3>The {e(low)} resume example</h3><p>The results interviewers ask about, written as resume lines.</p></a>'
                        f'<a class="feat" href="{P}/tools/thank-you-email/"><h3>Thank-you email</h3><p>Send it on the day of the interview, written from four fields.</p></a>'
                        f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{n_:,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>')
+             + role_kit(slug_r, low, "iq")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. The questions are ours; no employer’s interview is copied here.</p>', head=ld_)
     iq_n = sum(len(v) for v in iq_dir.values())
     iq_html = '<div class="dir" id="dir">' + "".join(
@@ -2894,6 +2906,7 @@ def main():
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>')
              + section(f"Six steps to hire {art(low)} {low}", steps)
              + section(f"Questions about hiring {many}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hh_qa) + "</dl>")
+             + role_kit(slug_r, low, "hire")
              + f'<p class="note cmpl">See also: <a href="{P}/job-descriptions/{slug_r}/">{e(low)} job description template</a> · <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
              + f'<a href="{P}/tools/cost-per-hire/">cost per hire calculator</a> · <a href="{P}/how-to-hire/">all hiring guides</a></p>', head=ld_)
     hh_n = sum(len(v) for v in hh_dir.values())

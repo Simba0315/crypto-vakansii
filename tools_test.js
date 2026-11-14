@@ -546,6 +546,13 @@ const TY = { to: 'Dana', name: 'Alex Morgan', role: 'Senior Backend Engineer', c
   ok('rejection: application thanks for applying', /applying for the AE position at Acme/.test(r1.body) && !/keep your details/.test(r1.body));
   ok('rejection: final round, feedback and keep', /every stage/.test(r2.body) && /Others had more hospital sales\./.test(r2.body) && /keep your details/.test(r2.body));
 }
+{
+  const r = T.costOfVacancy({ revenue: '12,000,000', staff: '80', days: '45', extra: '6,000' }), q = T.costOfVacancy({ salary: '95000', mult: '1.5', days: '7' });
+  ok('cost of vacancy: revenue per employee per working day', Math.round(r.perDay) === 577 && r.method === 'revenue');
+  ok('cost of vacancy: 45 days = 32 working days plus cover', Math.round(r.workDays) === 32 && Math.round(r.total) === Math.round(577 * 0 + r.perDay * 45 * 5 / 7 + 6000));
+  ok('cost of vacancy: from pay with a multiple', q.method === 'salary' && Math.round(q.perDay) === Math.round(95000 * 1.5 / 260));
+  ok('cost of vacancy: nothing to go on', T.costOfVacancy({ days: '10' }) === null);
+}
 ok('thank-you tones differ', T.thankYou(Object.assign({}, TY, { tone: 'warm' })).body !== T.thankYou(Object.assign({}, TY, { tone: 'formal' })).body);
 ok('thank-you: unknown tone is the short one', T.thankYou(Object.assign({}, TY, { tone: 'x' })).text === T.thankYou(Object.assign({}, TY, { tone: 'short' })).text);
 ok('thank-you: short is the shortest', T.wordCount(T.thankYou(Object.assign({}, TY, { tone: 'short' })).body) < T.wordCount(T.thankYou(Object.assign({}, TY, { tone: 'warm' })).body));

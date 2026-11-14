@@ -815,6 +815,18 @@
       hoursPerHire: ok ? (recH + intH) / hires : null, unpriced: (recH > 0 && !recR) || (intH > 0 && !intR) };
   };
 
+  /* ---------- cost of a vacancy: what each working day without the person costs (Upwork lists this calculator) ----------
+     Value of a day = revenue per employee ÷ working days, or, when revenue is not known, yearly pay × the value multiple you set ÷
+     working days. The open days are calendar days; five in seven of them are counted as working days. */
+  T.costOfVacancy = function (o) {
+    o = o || {};
+    var rev = pos(o.revenue), staff = num(o.staff), pay = pos(o.salary), mult = pos(o.mult) || 1, wd = pos(o.workdays) || 260, days = pos(o.days), extra = pos(o.extra);
+    var byRevenue = rev > 0 && staff >= 1, perDay = byRevenue ? rev / staff / wd : pay > 0 ? pay * mult / wd : 0;
+    if (!(perDay > 0)) return null;
+    var openWork = days * 5 / 7;
+    return { method: byRevenue ? 'revenue' : 'salary', perDay: perDay, perWeek: perDay * 5, workDays: openWork, lost: perDay * openWork, extra: extra, total: perDay * openWork + extra, mult: mult, wd: wd };
+  };
+
   /* ---------- interview scorecard ---------- */
   // Weighted score = sum of (rating × weight) ÷ sum of weights, over the criteria that have a rating. Weights need not add up to 100:
   // each one counts as its share of the total. When no weight is typed at all, every criterion counts the same.
@@ -2079,6 +2091,17 @@
   };
 
   /* ---------- cost per hire ---------- */
+  tools['cost-of-vacancy'] = function () {
+    var out = $('tl-out'), title = 'Cost of the vacancy';
+    form(function (v) {
+      var r = T.costOfVacancy(v), s = v.cur;
+      if (!r) return idle(out, title, 'Enter your yearly revenue and headcount, or the yearly pay of the role.');
+      board(out, title, (r.method === 'revenue' ? 'From revenue per employee' : 'From the role’s pay × ' + fmt(r.mult, 2)), big(money(r.perDay, s, 0), 'per working day') +
+        sub(r.workDays > 0 ? 'Open for ' + esc(fmt(pos(v.days), 0)) + ' days, about ' + esc(fmt(r.workDays, 0)) + ' working days: <b>' + esc(money(r.total, s, 0)) + '</b>' + (r.extra ? ', of which ' + esc(money(r.extra, s, 0)) + ' paid for cover' : '') + '.'
+          : 'Enter how many days the role has been open to see the total.') +
+        kv([['Each week open', money(r.perWeek, s, 0)], ['Working days a year used', fmt(r.wd, 0)], r.workDays > 0 ? ['Value lost while open', money(r.lost, s, 0)] : null]));
+    });
+  };
   tools['cost-per-hire'] = function () {
     var out = $('tl-out'), table = $('tl-table'), title = 'Cost per hire';
     form(function (v) {

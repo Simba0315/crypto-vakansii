@@ -1343,6 +1343,39 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          ["interview-scorecard", "job-description-checker", "cost-per-hire"], ["post-a-job/"])
 
     # ------------------------------------------------------------ 27. cost per hire
+    tool("cost-of-vacancy", "employers", "Cost of vacancy calculator",
+         "What each working day without the person costs, from revenue per employee or from the role’s pay, and the total for the days the role has been open.",
+         "Cost of Vacancy Calculator: What an Open Role Costs per Day",
+         "Calculate the cost of an unfilled job: value per working day from revenue per employee or from the role’s pay, the weekly cost and the total for the days it has been open. Free.",
+         "See what an open role costs every day",
+         "An empty seat has a price: the work that is not done, the overtime of the people covering it, the projects that wait. "
+         "Enter your revenue and headcount, or the yearly pay of the role, and how long it has been open: you get the cost per working day, per week and in total.",
+         wrap("cost-of-vacancy",
+              '<div class="card tl-form"><p class="tl-t">The value of a day of work</p><div class="tl-grid">'
+              + _f("revenue", "Yearly revenue of the company (optional)", "12,000,000", hint="With the headcount, gives revenue per employee.")
+              + _f("staff", "Number of employees", "80")
+              + _f("salary", "Yearly pay of the role (if no revenue)", "95,000")
+              + _f("mult", "Value multiple of the pay", "1.5", hint="How much more the work is worth than its pay. 1 counts the pay only; it is your assumption.")
+              + '</div><p class="tl-t">The vacancy</p><div class="tl-grid">'
+              + _f("days", "Days the role has been open", "45")
+              + _f("extra", "Paid for cover while open (optional)", "6,000", hint="Overtime, contractors, agency staff.")
+              + _f("workdays", "Working days in a year", "260") + _cur() + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _board("Cost of the vacancy", "Enter your yearly revenue and headcount, or the yearly pay of the role.")),
+         "How the cost of a vacancy is calculated",
+         "<ul><li><code>value of a working day = yearly revenue ÷ employees ÷ working days</code>, or, without revenue, <code>yearly pay × value multiple ÷ working days</code></li>"
+         "<li><code>working days open = calendar days open × 5 ÷ 7</code></li>"
+         "<li><code>total = value of a working day × working days open + what you paid for cover</code></li></ul>"
+         "<p>Both ways are estimates. Revenue per employee suits roles that earn money directly, such as sales; for other roles the pay with a value multiple you choose is fairer. "
+         "The calculator holds no benchmark: the multiple is your assumption, and the page says which method it used.</p>",
+         [("What is the cost of a vacancy?",
+           "The value of the work that does not get done while a role is empty, plus what you pay for cover such as overtime or contractors. It grows with every working day the role stays open."),
+          ("How do you calculate the cost of a vacancy?",
+           "Take the value of one working day of the role, from revenue per employee or from its pay with a multiple, multiply by the working days the role has been open, and add what you paid for cover."),
+          ("How long do roles stay open?",
+           "It depends on the work. The “How to hire…” guides on this site show, for each kind of work, how long today’s open postings have been up.")],
+         ["cost-per-hire", "job-description-checker", "interview-scorecard"], ["post-a-job/"])
+
     tool("cost-per-hire", "employers", "Cost per hire calculator",
          "Advertising, agency fees, recruiter and interviewer hours, tools and the number of hires give the cost per hire and the share of each part.",
          "Cost per Hire Calculator with Cost Breakdown",
@@ -1503,6 +1536,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
                               '<span class="ln">5 lines describe duties: “<b>Responsible for</b> the backend…”</span>',
         "linkedin-review": ex + '<span class="ln">“<b>OPEN TO WORK</b> | Passionate, results-driven guru”</span><span class="big">10<small>things to fix</small></span>'
                                 '<span class="ln">Says only that you are looking · 3 buzzwords · no contact line</span>',
+        "cost-of-vacancy": ex + '<span class="big">$577<small>per working day</small></span><span class="ln">45 days open: <b>$18,500</b></span>',
         "job-offer-response": ex + '<span class="ln"><b>Subject:</b> Offer acceptance: Product Designer</span><span class="sk" style="width:90%"></span><span class="ln">“I am delighted to accept.”</span>',
         "candidate-rejection-email": ex + '<span class="ln"><b>Subject:</b> Your application for Account Executive</span><span class="sk" style="width:88%"></span><span class="sk" style="width:60%"></span>',
         "thank-you-email": ex + '<span class="ln"><b>Subject:</b> Thank you for the interview</span><span class="sk" style="width:94%"></span>'
@@ -1586,6 +1620,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "jobposting-schema": '{ "@type": "JobPosting", … }',
         "boolean-search": '("backend engineer" OR …) AND Python',
         "job-offer-response": "Accept, decline or ask for more time",
+        "cost-of-vacancy": "$577 per working day, $18,500 in 45 days",
         "candidate-rejection-email": "A clear, kind no, with one line of feedback",
     }
     if len(mids) >= MIN_SAMPLE:
