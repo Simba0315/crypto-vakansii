@@ -1350,3 +1350,8 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .fitbox li.y::before{content:"\2713";background:var(--hl);color:var(--hl-ink)}
 .fitbox li.q::before{content:"?";background:var(--bg2);color:var(--muted)}
 
+
+/* section header: heading left, one plain sentence beside it, link at the far right */
+.sec-head.has-sub{gap:10px 24px;flex-wrap:wrap}
+.sec-head .sec-sub{flex:1 1 260px;margin:0;font-size:15px;opacity:.78;line-height:1.4}
+@media(max-width:700px){.sec-head.has-sub{align-items:flex-start}.sec-head.has-sub h2{flex:1 0 100%}.sec-head .sec-sub{flex:1 1 100%;order:2}.sec-head.has-sub a{order:3}}

@@ -23,8 +23,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
 8. ✅ **Tools index: break the grid** (2026-11-13: three wide rows plus a ruled list with an example on the right). Two tools as wide rows with a working mini version, the rest as a ruled two-column list with
    a sample result on the right.
 9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
-   the highest-paid list sits on a full-width dark band. 📋 Still to do: section headers with the heading left and one sentence
-   plus the "all" link right.
+   the highest-paid list sits on a full-width dark band. ✅ Section headers with the heading left, one plain sentence beside it and the "all" link right (2026-11-14, five home sections; `section(..., sub=)`).
 10. 📋 **Two type sizes by purpose:** 36–40px section headings on pages that explain, 24–28px on pages that list.
 11. ✅ **The board in the hero shows pay**, and its tabs (Latest, Remote, With salary, Entry-level) swap the list in place (2026-11-14).
 12. ✅ **A line of provenance instead of badges and ratings:** "checked on … against employer career pages", linked to the method.
