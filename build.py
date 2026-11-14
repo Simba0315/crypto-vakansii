@@ -3620,13 +3620,14 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
          f'<p class="note no-print">Not sure how to start? <a href="{P}/resume/examples/">Open a resume example for your kind of work</a> and replace it line by line.</p>'
+         '<div id="rb-check" class="rbc no-print" aria-live="polite" hidden></div>'
          '<div id="rb-demand" class="no-print" aria-live="polite"></div>'
          '<div class="rgrid"><div id="rb-form"></div><div id="rb-preview" aria-live="polite"></div></div></div>'
          + '<section class="sec no-print"><div class="sec-head"><h2>What makes a resume get read</h2></div><div class="feats">'
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div></section>'
-         + f'<script src="{P}/resume.js?v={V}" defer></script>')
+         + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>')
 
     # Glossary: the words of a job search in plain English, one page per term (glossary_terms.py) and an index with the old anchors,
     # so links to /glossary/#remote keep working. PeopleForce's glossary is its main free asset; ours adds what to do and a figure.

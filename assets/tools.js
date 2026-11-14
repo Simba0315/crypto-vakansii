@@ -1330,6 +1330,7 @@
 
   if (typeof module !== 'undefined' && module.exports) module.exports = T;
   if (typeof document === 'undefined') return;
+  window.HRNT = T;                       // the resume builder scores the resume and matches it to a posting with the same code
 
   /* ================================================================ part 2: pages ================================================================ */
   var root = document.querySelector('.tl[data-tool]'); if (!root) return;

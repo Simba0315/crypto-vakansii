@@ -111,6 +111,90 @@
   });
   drawForm(); drawPreview();
 
+  /* Score and target job, as resume builders like Rezi do it, but in the browser: the review of /tools/resume-review/ gives a score
+     out of 10 with the first fixes, and a pasted posting (or ?job=<slug> from a job page here) gives the match and the missing
+     skills, each one button away from the skills line. The same checks as the tools, so the numbers agree. */
+  var chk = $('rb-check'), jd = H.get('hrn_rb_target', ''), jdTitle = '', skillPats = null, ctimer;
+  var asText = function () {
+    var L = [data.name, data.title, [data.email, data.phone, data.place, data.links].filter(Boolean).join(' · '), ''];
+    if (data.summary) L.push('Summary', data.summary, '');
+    if (data.skills) L.push('Skills', data.skills, '');
+    var ex = data.exp.filter(function (x) { return x.role || x.org || x.text; });
+    if (ex.length) {
+      L.push('Experience');
+      ex.forEach(function (x) {
+        L.push([x.role, x.org].filter(Boolean).join(', ') + (x.dates ? ' ' + x.dates : ''));
+        String(x.text || '').split('\n').forEach(function (l) { l = l.replace(/^[-•*\s]+/, '').trim(); if (l) L.push('- ' + l); });
+      });
+      L.push('');
+    }
+    var ed = data.edu.filter(function (x) { return x.what || x.org; });
+    if (ed.length) { L.push('Education'); ed.forEach(function (x) { L.push([x.what, x.org, x.dates].filter(Boolean).join(', ')); }); }
+    return L.join('\n');
+  };
+  var drawCheck = function () {
+    var T = window.HRNT;
+    if (!chk || !T) return;
+    var text = asText(), r = T.resumeReview(text), html = '<div class="rbc-score">';
+    if (r.error) html += '<p class="rbc-h"><b>Score</b> after 80 words</p><p class="note">You have ' + r.words + ' so far. Add your jobs with one result each, and the score appears here.</p>';
+    else {
+      html += '<p class="rbc-h"><b>' + (Math.round(r.score * 10) / 10) + '</b><small>/10</small> ' + esc(r.verdict) + '</p>'
+        + (r.fixes.length ? '<ol class="rbc-fix">' + r.fixes.slice(0, 3).map(function (f) { return '<li><b>' + esc(f.t) + '</b> ' + esc(f.d || '') + '</li>'; }).join('') + '</ol>' : '<p class="note">Nothing important to fix.</p>');
+    }
+    html += '<p class="note"><a href="' + H.base + '/tools/resume-review/">The full review</a> lists every check.</p></div><div class="rbc-target">';
+    var m = jd && skillPats ? T.matchResume(text, jd, skillPats, jdTitle) : null;
+    if (!jd) html += '<p class="rbc-h"><b>Target job</b></p><p class="note">Paste the posting you are applying for: you will see how well this resume matches it and which of its skills are missing.</p>';
+    else if (!m) html += '<p class="rbc-h"><b>Target job</b></p><p class="note">Reading the skills list…</p>';
+    else if (m.error) html += '<p class="rbc-h"><b>Target job</b></p><p class="note">' + (m.error === 'resume' ? 'Write at least 30 words of resume to compare.' : m.error === 'jd' ? 'Paste the whole posting: at least 30 words.' : 'The posting names too few skills or repeated terms to compare.') + '</p>';
+    else {
+      html += '<p class="rbc-h"><b>' + m.score + '%</b> ' + esc(m.label) + (jdTitle ? ' · ' + esc(jdTitle) : '') + '</p>'
+        + (m.missing.length ? '<p class="note">Skills the posting names and this resume does not. Add only the ones you have:</p><p class="rbc-add">' + m.missing.slice(0, 12).map(function (s) { return '<button class="chipbtn" type="button" data-addskill="' + esc(s) + '">+ ' + esc(s) + '</button>'; }).join('') + '</p>'
+          : '<p class="note">Every skill the posting names is in this resume.</p>')
+        + (m.terms.filter(function (t) { return !t.found; }).length ? '<p class="note">Its repeated words you do not use yet: ' + m.terms.filter(function (t) { return !t.found; }).slice(0, 6).map(function (t) { return '“' + esc(t.term) + '”'; }).join(', ') + '.</p>' : '');
+    }
+    html += '<details class="rbc-jd"' + (jd ? '' : ' open') + '><summary>' + (jd ? 'Change the posting' : 'Paste a posting') + '</summary><textarea id="rb-jd" rows="5" placeholder="Paste the full text of the job posting">' + esc(jd) + '</textarea>'
+      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>';
+    chk.innerHTML = html;
+    chk.hidden = false;
+  };
+  var needPats = function () {
+    if (skillPats || !window.HRNT) return;
+    fetch(H.base + '/data/skills.json').then(function (r) { return r.json(); }).then(function (p) { skillPats = window.HRNT.compilePats(p); drawCheck(); }).catch(function () {});
+  };
+  if (chk) {
+    var start = function () { if (!window.HRNT) return setTimeout(start, 150); needPats(); drawCheck(); };
+    start();
+    root.addEventListener('input', function (ev) {
+      if (ev.target.id === 'rb-jd') { jd = ev.target.value; H.set('hrn_rb_target', jd); jdTitle = ''; }
+      clearTimeout(ctimer);
+      ctimer = setTimeout(function () {
+        var keep = document.activeElement && document.activeElement.id === 'rb-jd';
+        if (keep) return;                                  // do not redraw under the cursor; the result updates when the box loses focus
+        drawCheck();
+      }, 700);
+    });
+    root.addEventListener('focusout', function (ev) { if (ev.target.id === 'rb-jd') drawCheck(); });
+    root.addEventListener('click', function (ev) {
+      var add = ev.target.getAttribute && ev.target.getAttribute('data-addskill');
+      if (add) {
+        var list = String(data.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        if (list.indexOf(add) < 0) list.push(add);
+        data.skills = list.join(', '); save(); drawForm(); drawPreview(); drawCheck();
+      } else if (ev.target.id === 'rb-jd-clear') { jd = ''; jdTitle = ''; H.set('hrn_rb_target', ''); drawCheck(); }
+    });
+    var slug = (location.search.match(/[?&]job=([a-z0-9-]{3,160})/) || [])[1];      // ?job=<slug>: the posting from its page on this site
+    if (slug && window.fetch && window.DOMParser) {
+      fetch(H.base + '/job/' + slug + '/').then(function (r) { return r.ok ? r.text() : ''; }).then(function (page) {
+        if (!page) return;
+        var doc = new DOMParser().parseFromString(page, 'text/html'), d = doc.querySelector('.prose.desc') || doc.querySelector('.prose'), h1 = doc.querySelector('h1');
+        if (!d) return;
+        var blocks = [].map.call(d.querySelectorAll('h2,h3,h4,p,li'), function (x) { return x.textContent.trim(); }).filter(Boolean);
+        jd = blocks.length ? blocks.join('\n') : d.textContent.trim(); jdTitle = h1 ? h1.textContent.trim() : '';
+        H.set('hrn_rb_target', jd); drawCheck();
+      }).catch(function () {});
+    }
+  }
+
   /* What the open jobs ask for: the skills this resume names, each with the number of open jobs that ask for it, and how many
      jobs ask for at least three of them. Counted in the browser from the same index the search uses. */
   var demand = document.getElementById('rb-demand'), pats = null, timer;

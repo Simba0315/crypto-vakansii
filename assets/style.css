@@ -1409,3 +1409,20 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
   .navsub a{padding:5px 0;font-size:14.5px;color:var(--muted);text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
 }
 
+/* resume builder: score and target job */
+.rbc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;margin:0 0 18px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.rbc[hidden]{display:none}
+.rbc>div{padding:16px 18px}
+.rbc>div+div{border-left:1px solid var(--line)}
+.rbc-h{margin:0 0 6px;font-size:15px}
+.rbc-h b{font:700 26px var(--display);letter-spacing:-.02em;margin-right:4px}
+.rbc-h small{font-size:14px;color:var(--muted);margin-right:8px}
+.rbc-fix{margin:6px 0 4px;padding-left:20px;font-size:14px;color:var(--muted)}
+.rbc-fix li{margin:4px 0}
+.rbc-fix b{color:var(--text);font-weight:650}
+.rbc-add{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.rbc-jd{margin-top:8px}
+.rbc-jd summary{cursor:pointer;font-weight:600;font-size:14px;text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
+.rbc-jd textarea{width:100%;margin-top:8px;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);color:var(--text)}
+@media(max-width:820px){.rbc{grid-template-columns:1fr}.rbc>div+div{border-left:0;border-top:1px solid var(--line)}}
+

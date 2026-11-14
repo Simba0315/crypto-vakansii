@@ -203,6 +203,16 @@
     var open = header.classList.toggle('open');
     menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  /* ---------- job page: "Tailor my resume to this job" next to "Check my resume for this job" ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('a.rmbox'), function (a) {
+    var m = (a.getAttribute('href') || '').match(/[?&]job=([a-z0-9-]+)/);
+    if (!m || a.nextElementSibling && a.nextElementSibling.classList.contains('rmbox')) return;
+    var b = document.createElement('a');
+    b.className = 'rmbox'; b.href = P + '/resume/?job=' + m[1];
+    b.innerHTML = '<b>Tailor my resume to this job</b><span>Open the resume builder with this posting as the target</span>';
+    a.parentNode.insertBefore(b, a.nextSibling);
+  });
+
   /* ---------- header menus under Resume, Tools and Pricing: built here, so the pages themselves carry no extra bytes.
      Wide screens: a panel under the header on hover, on ArrowDown or on a tap of the arrow; Escape closes it.
      The phone menu lists the same links under each item. The links are also in the footer of every page. ---------- */
