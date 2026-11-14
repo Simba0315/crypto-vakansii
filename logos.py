@@ -178,6 +178,14 @@ def main():
     with cf.ThreadPoolExecutor(10) as ex:
         for name, d in ex.map(work, todo):
             if d: known[name] = d
+    # The same picture for two different companies is a website builder's or a host's default icon, not a logo: drop all of them.
+    SAME_ICON = {}
+    for f in OUTDIR.glob("*.png"): SAME_ICON.setdefault(hashlib.md5(f.read_bytes()).hexdigest(), []).append(f)
+    for files in SAME_ICON.values():
+        if len(files) > 1:
+            for f in files:
+                f.unlink(); known = {k: v for k, v in known.items() if slugify(k) != f.stem}
+            print("dropped a shared icon:", ", ".join(f.stem for f in files))
     MAP.write_text(json.dumps(known, ensure_ascii=False, indent=1, sort_keys=True))
     missing = sorted(n for n in seen if n not in known)
     print(f"logos: {len(known)} of {len(seen)} companies; missing {len(missing)}")
