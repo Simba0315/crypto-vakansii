@@ -132,7 +132,7 @@
   });
   // "Did you mean": a word of the query that no job contains is swapped for the closest word that jobs do contain (one typo for
   // short words, two for long ones; the more common word wins a tie). Shown only when the corrected search finds something.
-  var vocab = null;
+  var vocab = null, autoFixed = '';
   var dist = function (a, b, lim) {               // edit distance with swapped neighbours counted as one edit, stops early past `lim`
     var m = a.length, n = b.length, d = [], i, k;
     for (i = 0; i <= m; i++) { d[i] = [i]; }
@@ -178,7 +178,11 @@
         var p1 = new URLSearchParams(qs); p1.set('q', fix);
         var f1 = H.parse(p1.toString()), c1 = 0;
         for (var i1 = 0; i1 < jobs.length; i1++) if (H.match(jobs[i1], f1)) c1++;
-        if (c1) mean = 'Did you mean <button class="linkbtn" type="button" data-q="' + H.esc(fix) + '">“' + H.esc(fix) + '”</button>? ' + c1.toLocaleString('en-US') + (c1 === 1 ? ' job. ' : ' jobs. ');
+        if (c1 && !autoFixed) {                       // show the corrected search right away, and say so
+          autoFixed = q.value.trim(); q.value = fix; run();
+          hint.innerHTML = 'Showing jobs for “' + H.esc(fix) + '”. <button class="linkbtn" type="button" data-orig="1">Search for “' + H.esc(autoFixed) + '” instead</button>';
+          hint.hidden = false; return;
+        }
       }
     }
     var p = new URLSearchParams(qs), names = { q: 'the words “' + q.value.trim() + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
@@ -198,6 +202,7 @@
     hint.hidden = false;
   };
   hint.addEventListener('click', function (ev) {
+    if (ev.target.getAttribute && ev.target.getAttribute('data-orig')) { q.value = autoFixed; autoFixed = '\u0000'; run(); return; }   // keep the visitor's own spelling this time
     var fixQ = ev.target.getAttribute && ev.target.getAttribute('data-q');
     if (fixQ) { q.value = fixQ; run(); return; }
     var k = ev.target.getAttribute && ev.target.getAttribute('data-drop'); if (!k) return;
@@ -208,7 +213,7 @@
   });
   var timer;
   // typing a query switches to "best match" unless the visitor picked a sort order themselves
-  q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
+  q.addEventListener('input', function () { autoFixed = ''; if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
   sort.addEventListener('change', function () { sortTouched = true; });
   [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fHybrid, fEntry, fCrypto, fAny, fReal, fTi, fNosal].concat(xlBoxes).forEach(function (el) { if (el) el.addEventListener('change', run); });
   // words and companies the visitor never wants to see: remembered in this browser, applied to every list

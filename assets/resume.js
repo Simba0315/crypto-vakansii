@@ -195,6 +195,7 @@
   };
   /* AI help without a server of our own: each button opens ChatGPT, Claude or Perplexity with this resume and a ready request.
      Nothing is sent until the visitor clicks, and the request says plainly not to invent anything. */
+  var aiAsks = [];
   var aiLine = function (text) {
     if (String(text).replace(/\s+/g, ' ').trim().length < 60) return '';
     var cut = function (t, n) { t = String(t || ''); return t.length > n ? t.slice(0, n) + '…' : t; };
@@ -205,11 +206,12 @@
     if (jd) asks.push(['Tailor it to the target job', 'Compare my resume with the job posting below. List the skills and words of the posting my resume is missing, then rewrite my summary and my bullet points to match the posting, using only experience that is in my resume.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv],
                       ['Write the cover letter', 'Write a short cover letter (under 250 words) for the job posting below, from my resume. Lead with two results from my experience that match the posting. Do not invent anything.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv],
                       ['Practise the interview', 'Interview me for the job posting below, one question at a time, using my resume. After each answer, tell me what was strong and what to add.\n\nJOB POSTING:\n' + post + '\n\nMY RESUME:\n' + cv]);
-    var go = [['ChatGPT', 'https://chatgpt.com/?q='], ['Claude', 'https://claude.ai/new?q='], ['Perplexity', 'https://www.perplexity.ai/search?q=']];
+    var go = [['ChatGPT', 'https://chatgpt.com/'], ['Claude', 'https://claude.ai/new'], ['Perplexity', 'https://www.perplexity.ai/']];
+    aiAsks = asks;                                                     // the request is copied, not put in the address: a resume does not belong in browser history
     return '<div class="rbc-ai"><p class="rbc-h"><b>AI help</b> with your own ChatGPT, Claude or Perplexity</p>'
-      + '<p class="note">Each link opens that assistant with your resume' + (jd ? ' and the target job' : '') + ' in a ready request. Nothing leaves this page until you click; after that the text is with that service. Check every line it writes.</p><ul class="rbc-asks">'
-      + asks.map(function (a) { return '<li><b>' + esc(a[0]) + '</b>' + go.map(function (g) { return '<a href="' + g[1] + encodeURIComponent(a[1]) + '" target="_blank" rel="nofollow noopener">' + g[0] + '</a>'; }).join('') + '</li>'; }).join('')
-      + '</ul></div>';
+      + '<p class="note">Each link copies a ready request with your resume' + (jd ? ' and the target job' : '') + ' and opens that assistant: paste it there (Ctrl+V or ⌘V). Nothing leaves this page until you paste it. Check every line it writes.</p><ul class="rbc-asks">'
+      + asks.map(function (a, i) { return '<li><b>' + esc(a[0]) + '</b>' + go.map(function (g) { return '<a href="' + g[1] + '" target="_blank" rel="nofollow noopener" data-ask="' + i + '">' + g[0] + '</a>'; }).join('') + '</li>'; }).join('')
+      + '</ul><p class="note" id="rb-ai-done" hidden>Copied. Paste it in the assistant’s message box.</p></div>';
   };
   var needPats = function () {
     if (skillPats || !window.HRNT) return;
@@ -231,6 +233,14 @@
     });
     root.addEventListener('focusout', function (ev) { if (ev.target.id === 'rb-jd') drawCheck(); });
     root.addEventListener('click', function (ev) {
+      var ai = ev.target.getAttribute && ev.target.getAttribute('data-ask');
+      if (ai != null && aiAsks[+ai]) {                      // copy first; the link itself then opens the assistant in a new tab
+        var txt = aiAsks[+ai][1], done = $('rb-ai-done');
+        var ok = function () { if (done) done.hidden = false; };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function () {});
+        else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} ta.remove(); }
+        return;
+      }
       var add = ev.target.getAttribute && ev.target.getAttribute('data-addskill');
       if (add) {
         var list = String(data.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
