@@ -43,6 +43,8 @@ MORE_ROLES = [
      "sales engineers", "is the technical person in a sales team: runs the demo, answers the hard questions, proves the product works for this customer"),
     ("Staff and principal engineer", "staff-engineer", r"\b(staff|principal|distinguished)\b.*\b(engineer|developer|scientist|architect)|\b(engineer|developer|scientist|architect)\b.*\b(staff|principal)\b",
      "staff and principal engineers", "is one of the most senior engineers without managing people: sets technical direction and solves the hardest problems"),
+    ("Tech lead and team lead", "tech-lead", r"\b(tech(nical)? lead|team lead|lead (software )?(engineer|developer)|engineering lead)\b",
+     "tech leads and team leads", "leads a small team of engineers while still writing code: plans the work, reviews it and unblocks people"),
     ("Founding team", "founding-team", r"founding", "founding hires", "joins a startup among its first employees and builds the product, or a whole function, from nothing"),
     ("Developer relations and experience", "developer-advocate", r"developer (advocate|relations|evangelist|experience|educator|community|productivity|tools|platform)|devrel|technical evangelist|\bdevx\b|developer tooling",
      "developer advocates", "makes life easier for other programmers: explains a technical product through talks, tutorials and sample code, or builds the tools they work with"),
@@ -278,7 +280,7 @@ MORE_ROLES = [
 FAMILIES = [
     ("software-development", "Software development", "writing the programs behind websites, apps, games and devices",
      ["software-engineer", "backend-engineer", "frontend-engineer", "full-stack-engineer", "mobile-engineer", "web-developer", "product-engineer", "game-developer", "embedded-engineer",
-      "systems-software", "graphics-engineer", "qa-engineer", "automation-engineer", "software-architect", "staff-engineer", "founding-team", "engineering-manager", "developer-advocate", "business-systems"]),
+      "systems-software", "graphics-engineer", "qa-engineer", "automation-engineer", "software-architect", "staff-engineer", "tech-lead", "founding-team", "engineering-manager", "developer-advocate", "business-systems"]),
     ("ai-machine-learning", "AI and machine learning", "building programs that learn from data, and putting them to work",
      ["machine-learning-engineer", "ai-engineer", "research-scientist", "computer-vision", "mlops", "applied-ai", "forward-deployed-engineer", "ai-trainer"]),
     ("data-analytics", "Data and analytics", "collecting data and turning it into answers",

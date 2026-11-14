@@ -106,6 +106,11 @@ ROLE = {
         "Raised the frame rate on the oldest supported console from 24 to a steady 30 by reworking how enemies are updated",
         "Wrote tools that let designers tune 300 values without a programmer; tuning a level went from days to hours",
         "Cut loading time between levels from 28 s to 9 s"]),
+    "tech-lead": ("Tech Lead", "technical direction, code review, mentoring, planning", [
+        "Led a team of 6 engineers that rebuilt the checkout in {lang:Java}; conversion rose from 2.1% to 2.6% in the first quarter",
+        "Introduced design reviews for every change over a week of work; production incidents fell from 9 to 3 a quarter",
+        "Planned each quarter with product and design; the team delivered 11 of 12 committed goals in 2025",
+        "Mentored 2 engineers to senior level and hired 3 more, each through a structured interview loop"]),
     "software-architect": ("Software Architect", "system design, technical strategy, design reviews", [
         "Designed the move from one database to per-service storage; the platform now handles 5 times the load at the same cost",
         "Wrote the reference design used by 12 teams; a new service reaches production in 2 days instead of 3 weeks",
@@ -768,7 +773,7 @@ ROLE = {
 # work where the collector's skill tags say what the employer wants from the person
 TECH = {
     "software-engineer", "backend-engineer", "frontend-engineer", "full-stack-engineer", "mobile-engineer", "qa-engineer", "embedded-engineer",
-    "engineering-manager", "web-developer", "product-engineer", "systems-software", "graphics-engineer", "game-developer", "software-architect",
+    "engineering-manager", "tech-lead", "web-developer", "product-engineer", "systems-software", "graphics-engineer", "game-developer", "software-architect",
     "developer-advocate", "automation-engineer", "machine-learning-engineer", "ai-engineer", "forward-deployed-engineer", "applied-ai",
     "computer-vision", "mlops", "research-scientist", "data-engineer", "data-scientist", "data-analyst", "analytics-engineer", "quant",
     "data-governance", "devops-engineer", "site-reliability-engineer", "systems-engineer", "cloud-engineer", "network-engineer",

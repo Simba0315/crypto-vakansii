@@ -1425,4 +1425,5 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .rbc-jd summary{cursor:pointer;font-weight:600;font-size:14px;text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
 .rbc-jd textarea{width:100%;margin-top:8px;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);color:var(--text)}
 @media(max-width:820px){.rbc{grid-template-columns:1fr}.rbc>div+div{border-left:0;border-top:1px solid var(--line)}}
-
+.vs-t.four tr>*:first-child{width:14%}
+.vs-t.four tr>*:not(:first-child){width:28.6%}

@@ -70,12 +70,24 @@
       titles: p.has('ti'), nosal: p.has('nosal'), real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
     };
   }
+  // words people type for the same thing: a query word also matches its other spellings ("js" finds JavaScript jobs)
+  var SYN = { js: ['javascript', 'js'], javascript: ['javascript', 'js'], ts: ['typescript'], golang: ['go ', 'golang'], k8s: ['kubernetes', 'k8s'], kubernetes: ['kubernetes', 'k8s'],
+    postgres: ['postgres'], postgresql: ['postgres'], py: ['python'], ml: ['machine learning', ' ml', 'ml '], ai: [' ai', 'ai ', 'artificial intelligence', 'llm'],
+    frontend: ['frontend', 'front end', 'front-end'], 'front-end': ['frontend', 'front end', 'front-end'], backend: ['backend', 'back end', 'back-end'], 'back-end': ['backend', 'back end', 'back-end'],
+    fullstack: ['fullstack', 'full stack', 'full-stack'], 'full-stack': ['fullstack', 'full stack', 'full-stack'], devops: ['devops', 'dev ops', 'site reliability', 'platform engineer'],
+    sre: ['site reliability', 'sre'], swe: ['software engineer', 'swe'], pm: ['product manager', 'project manager', ' pm'], ux: ['ux', 'user experience'], ui: ['ui ', ' ui', 'user interface'],
+    qa: ['qa', 'quality assurance', 'test engineer'], hr: ['hr ', ' hr', 'human resources', 'people partner'], cs: ['customer success', 'customer support'],
+    dev: ['developer', 'engineer', 'dev'], developer: ['developer', 'engineer'], programmer: ['developer', 'engineer', 'programmer'], coder: ['developer', 'engineer'],
+    ios: ['ios', 'swift'], android: ['android', 'kotlin'], web3: ['web3', 'crypto', 'blockchain', 'defi'], crypto: ['crypto', 'blockchain', 'web3', 'defi'], blockchain: ['blockchain', 'crypto', 'web3'],
+    nurse: ['nurse', 'nursing', 'rn '], accountant: ['accountant', 'accounting'], lawyer: ['lawyer', 'counsel', 'attorney', 'legal'], attorney: ['attorney', 'counsel', 'lawyer'],
+    copywriter: ['copywriter', 'writer'], sales: ['sales', 'account executive', 'business development'], bdr: ['business development', 'bdr'], sdr: ['sales development', 'sdr'] };
+  var EXEC = /\b(director|vp|svp|evp|vice president|head of|chief|cto|ceo|cfo|coo|cmo|cpo|ciso|cro)\b/i;      // "Director and above" in the level list
   function match(j, f) {
     if (mute.c[j[2]]) return false;
     if (f.real && (j[22] || !(j[16] >= f.realSince))) return false;
     if (mute.w.length) { var low = j[1].toLowerCase(); for (var w = 0; w < mute.w.length; w++) if (low.indexOf(mute.w[w]) >= 0) return false; }
     if (f.cat && j[5] !== f.cat) return false;
-    if (f.lvl && j[6] !== f.lvl) return false;
+    if (f.lvl && (f.lvl === 'Exec' ? !EXEC.test(j[1]) : j[6] !== f.lvl)) return false;
     if (f.loc && j[14].indexOf(f.loc) < 0) return false;
     if ((f.remote || f.hybrid) && !((f.remote && j[4]) || (f.hybrid && j[25]))) return false;     // both ticked: either kind
     if (f.xl && f.xl.length && f.xl.indexOf(j[6]) >= 0) return false;                             // levels the visitor leaves out
@@ -91,7 +103,13 @@
     for (var i = 0; i < f.skills.length; i++) if (j[7].indexOf(f.skills[i]) < 0) return false;
     if (f.words.length) {
       var hay = f.titles ? j[1].toLowerCase() : j[17] || (j[17] = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase());
-      for (var k = 0; k < f.words.length; k++) if (hay.indexOf(f.words[k]) < 0) return false;
+      for (var k = 0; k < f.words.length; k++) {
+        var alts = SYN[f.words[k]];
+        if (!alts) { if (hay.indexOf(f.words[k]) < 0) return false; continue; }
+        var hit = false;
+        for (var a = 0; a < alts.length && !hit; a++) hit = (' ' + hay + ' ').indexOf(alts[a]) >= 0;
+        if (!hit) return false;
+      }
     }
     return true;
   }

@@ -894,6 +894,50 @@
     return mail(clean(f.role) ? 'Thank you for the ' + role + ' interview' : 'Thank you for the interview', p);
   };
 
+  /* ---------- answering a job offer: accept, decline, or ask for time (fill-in template) ---------- */
+  T.offerResponse = function (f) {
+    f = f || {};
+    var mode = f.mode === 'decline' || f.mode === 'time' ? f.mode : 'accept';
+    var name = clean(f.name) || '[Your name]', to = clean(f.to), role = clean(f.role) || '[job title]', company = clean(f.company), at = company ? ' at ' + company : '';
+    var p = [to ? 'Dear ' + to + ',' : 'Dear Hiring Manager,'];
+    if (mode === 'accept') {
+      var start = clean(f.start) || '[start date]';
+      p.push('Thank you for offering me the position of ' + role + at + '. I am delighted to accept.');
+      p.push('As agreed, I will start on ' + start + '.' + (clean(f.terms) ? ' I understand the offer as follows: ' + phrase(f.terms) + '.' : '') + ' Please let me know what you need from me before then: documents, forms or anything else.');
+      p.push('I am looking forward to joining the team.');
+      p.push('Best regards,\n' + name);
+      return mail('Offer acceptance: ' + role, p);
+    }
+    if (mode === 'decline') {
+      p.push('Thank you for offering me the position of ' + role + at + ', and for the time you and the team spent with me.');
+      p.push('After careful thought, I have decided not to accept.' + (clean(f.reason) ? ' ' + sentence(f.reason) : ''));
+      p.push('I enjoyed meeting the team, and I hope our paths cross again.');
+      p.push('Best regards,\n' + name);
+      return mail(role + ' offer', p);
+    }
+    var by = clean(f.by) || '[the date you need]';
+    p.push('Thank you for the offer for the position of ' + role + at + '. I am very interested in it.');
+    p.push('Could I have until ' + by + ' to give you my answer?' + (clean(f.reason) ? ' ' + sentence(f.reason) : ' I want to give it the careful thought it deserves.'));
+    p.push('If you need anything from me in the meantime, I am glad to help.');
+    p.push('Best regards,\n' + name);
+    return mail('Re: ' + role + ' offer', p);
+  };
+
+  /* ---------- telling a candidate no (for employers; fill-in template) ---------- */
+  T.rejection = function (f) {
+    f = f || {};
+    var stage = f.stage === 'interview' || f.stage === 'final' ? f.stage : 'application';
+    var who = clean(f.candidate), role = clean(f.role) || '[job title]', company = clean(f.company) || '[Company]', from = clean(f.from) || '[Your name]';
+    var p = [who ? 'Dear ' + who + ',' : 'Hello,'];
+    p.push(stage === 'application' ? 'Thank you for applying for the ' + role + ' position at ' + company + ' and for your interest in working with us.'
+      : 'Thank you for the time you spent with us' + (stage === 'final' ? ' through every stage of the interviews' : ' in the interview') + ' for the ' + role + ' position at ' + company + '.');
+    p.push('We have decided to move forward with other candidates whose experience is closer to what this role needs' + (stage === 'application' ? '' : ' right now') + '.' + (clean(f.feedback) ? ' ' + sentence(f.feedback) : ''));
+    if (f.keep === 'yes') p.push('With your permission, we would like to keep your details and get in touch if a role that suits you opens. Reply to this email if you would rather we did not.');
+    p.push('We wish you every success in your search.');
+    p.push('Kind regards,\n' + from + '\n' + company);
+    return mail('Your application for ' + role + ' at ' + company, p);
+  };
+
   /* ---------- resignation letter (fill-in template: the facts, optional thanks, optional handover) ---------- */
   T.resignation = function (f) {
     f = f || {};
@@ -1878,6 +1922,12 @@
 
   /* ---------- thank-you email ---------- */
   tools['thank-you-email'] = function () { letter(T.thankYou); };
+
+  /* ---------- answering an offer, telling a candidate no ---------- */
+  tools['job-offer-response'] = function () {
+    letter(T.offerResponse, null, function (v) { each('[data-mode]', function (el) { el.hidden = (' ' + el.getAttribute('data-mode') + ' ').indexOf(' ' + (v.mode || 'accept') + ' ') < 0; }); });
+  };
+  tools['candidate-rejection-email'] = function () { letter(T.rejection); };
 
   /* ---------- resignation letter ---------- */
   tools['resignation-letter'] = function () {

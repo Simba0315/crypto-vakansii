@@ -925,6 +925,43 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated or sent to a server.")],
          ["interview-answer-builder", "reference-request-email", "negotiation-email"], ["for-you/"])
 
+    # ------------------------------------------------------------ 17b. answering a job offer (search demand: "job offer acceptance email", "decline job offer email")
+    tool("job-offer-response", "seekers", "Job offer response email",
+         "Accept an offer, decline it politely or ask for a few more days: a short email from a few fields. A template, not AI.",
+         "Job Offer Acceptance, Decline or Extension Email: Templates",
+         "Write the email that answers a job offer: accept it, decline it politely or ask for more time to decide. Fill in a few fields, copy the text. Private, free.",
+         "Answer a job offer in writing, the right way",
+         "An offer deserves a written answer: it confirms what you agreed, or closes the door politely so it can open again later. "
+         "Pick what you want to say (accept, decline or ask for time), fill in the role and the names, and the email is ready to copy.",
+         wrap("job-offer-response",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("mode", "What do you want to say?", [("accept", "Accept the offer", True), ("decline", "Decline the offer"), ("time", "Ask for more time")])
+              + _f("to", "Recruiter’s or manager’s name", "Ms Rivera", mode="")
+              + _f("name", "Your name", "Alex Morgan", mode="", auto="name")
+              + _f("role", "Job title in the offer", "Product Designer", mode="")
+              + _f("company", "Company", "Acme", mode="", auto="organization")
+              + _f("start", "Start date you agreed", "Monday, 4 January", mode="", show=' data-mode="accept"')
+              + _f("by", "Answer by", "Friday, 18 December", mode="", show=' data-mode="time"', hint="A specific date. A few working days is a normal request.")
+              + _area("terms", "The main terms, to confirm (optional)", 2, "a salary of $95,000 a year and 25 days of paid leave", show=' data-mode="accept"',
+                      hint="Finish the sentence “I understand the offer as follows: …”. Leave it empty if the written offer says it all.")
+              + _area("reason", "A reason (optional)", 2, "I have accepted a role that is closer to the work I want to do next.", show=' data-mode="decline time"',
+                      hint="One sentence. You do not owe a reason; a short one keeps the door open.") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("offer-response.txt") + "</div>"),
+         "How the email is put together",
+         "<p><strong>Accept</strong> thanks them, says yes in the first lines, confirms the start date and, if you add them, the main terms, so both sides have the same thing in writing. "
+         "<strong>Decline</strong> thanks them, says no clearly and leaves the door open. <strong>Ask for time</strong> names a date instead of “a few days”, so nobody has to guess.</p>"
+         "<p>It is a fill-in template: each sentence is built from what you type. Nothing is generated or sent anywhere: copy the text into your own email and send it yourself.</p>",
+         [("How do I accept a job offer by email?",
+           "Thank them, say clearly that you accept, confirm the job title and the start date, and ask what they need from you before the first day. Accept only once the written offer matches what you agreed."),
+          ("How do I decline a job offer politely?",
+           "Thank them for the offer and their time, say clearly that you will not accept, give a short reason if you want to, and say you hope to stay in touch. Answer soon, so they can offer the job to someone else."),
+          ("Can I ask for more time to decide on a job offer?",
+           "Yes. Asking for a few more days is a normal request. Name a specific date, say you are interested, and keep to the date you named."),
+          ("Should I accept an offer before it is in writing?",
+           "Say you are pleased and that you will confirm once you have the written offer. Do not resign from your current job until you have it.")],
+         ["offer-check", "negotiation-email", "compare-offers"], ["for-you/"])
+
     # ------------------------------------------------------------ 18. resignation letter
     tool("resignation-letter", "seekers", "Resignation letter builder",
          "Your last day, your notice period, optional thanks and a handover offer become a short, neutral letter to copy or print.",
@@ -1273,6 +1310,38 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "The notice still ends on that date, but the last day you work is the Friday before, if you work Monday to Friday. The calculator shows both dates.")],
          ["resignation-letter", "compare-offers", "raise-calculator"], ["jobs/"])
 
+    # ------------------------------------------------------------ 26b. telling a candidate no (search demand: "candidate rejection email")
+    tool("candidate-rejection-email", "employers", "Candidate rejection email",
+         "Tell an applicant or an interviewed candidate no, kindly and clearly, with optional feedback. A template, not AI.",
+         "Candidate Rejection Email Template: After Application or Interview",
+         "Write a kind, clear rejection email for a job applicant or an interviewed candidate, with optional feedback and an offer to keep their details. Free template.",
+         "Tell candidates no, clearly and kindly",
+         "Silence is what job seekers complain about most: the candidate who hears nothing after an interview remembers the company. "
+         "Pick the stage they reached, add one line of feedback if you can, and send a short, clear answer.",
+         wrap("candidate-rejection-email",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("stage", "How far did they get?", [("application", "Applied, no interview", True), ("interview", "Had an interview"), ("final", "Reached the final round")])
+              + _f("candidate", "Candidate’s name", "Jordan", mode="")
+              + _f("role", "Job title", "Account Executive", mode="")
+              + _f("company", "Company", "Acme", mode="", auto="organization")
+              + _f("from", "Your name and title", "Sam Lee, Recruiter", mode="", auto="name")
+              + _sel("keep", "Offer to keep their details?", [("no", "No", True), ("yes", "Yes, with their permission")])
+              + _area("feedback", "One line of feedback (optional)", 2, "The other candidates had more experience selling to large hospitals.",
+                      hint="Specific and about the job’s needs, never about the person. Leave it empty if you cannot give any.") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("rejection-email.txt") + "</div>"),
+         "How the email is put together",
+         "<p>It thanks the candidate, says no in the second sentence (not at the end of a long paragraph), gives the reason in terms of the role, and wishes them well. "
+         "After an interview it acknowledges the time they spent. Keeping their details is offered only with their permission.</p>"
+         "<p>It is a fill-in template: each sentence is built from what you type. Nothing is sent anywhere.</p>",
+         [("How do you reject a candidate politely?",
+           "Thank them, say clearly that you are moving forward with other candidates, give one specific reason about the role if you can, and wish them well. Send it as soon as you have decided."),
+          ("Should I give feedback in a rejection email?",
+           "A line of specific feedback about the role’s needs is helpful and appreciated. Keep it about the job, not the person, and check your company’s policy first."),
+          ("How soon should I tell a candidate they were not selected?",
+           "As soon as the decision is made. After an interview, within a few days; candidates who hear nothing remember it.")],
+         ["interview-scorecard", "job-description-checker", "cost-per-hire"], ["post-a-job/"])
+
     # ------------------------------------------------------------ 27. cost per hire
     tool("cost-per-hire", "employers", "Cost per hire calculator",
          "Advertising, agency fees, recruiter and interviewer hours, tools and the number of hires give the cost per hire and the share of each part.",
@@ -1434,6 +1503,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
                               '<span class="ln">5 lines describe duties: “<b>Responsible for</b> the backend…”</span>',
         "linkedin-review": ex + '<span class="ln">“<b>OPEN TO WORK</b> | Passionate, results-driven guru”</span><span class="big">10<small>things to fix</small></span>'
                                 '<span class="ln">Says only that you are looking · 3 buzzwords · no contact line</span>',
+        "job-offer-response": ex + '<span class="ln"><b>Subject:</b> Offer acceptance: Product Designer</span><span class="sk" style="width:90%"></span><span class="ln">“I am delighted to accept.”</span>',
+        "candidate-rejection-email": ex + '<span class="ln"><b>Subject:</b> Your application for Account Executive</span><span class="sk" style="width:88%"></span><span class="sk" style="width:60%"></span>',
         "thank-you-email": ex + '<span class="ln"><b>Subject:</b> Thank you for the interview</span><span class="sk" style="width:94%"></span>'
                                 '<span class="ln">“I enjoyed hearing about <b>the move to weekly releases</b>”</span><span class="sk" style="width:52%"></span>',
         "resignation-letter": ex + '<span class="ln"><b>Dear Dana,</b></span><span class="sk" style="width:95%"></span>'
@@ -1514,6 +1585,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "job-description-checker": "64 out of 100: no salary range",
         "jobposting-schema": '{ "@type": "JobPosting", … }',
         "boolean-search": '("backend engineer" OR …) AND Python',
+        "job-offer-response": "Accept, decline or ask for more time",
+        "candidate-rejection-email": "A clear, kind no, with one line of feedback",
     }
     if len(mids) >= MIN_SAMPLE:
         RES["salary-checker"] = f"Median today {kmoney(q(.5))} across {len(mids):,} roles"
@@ -1532,7 +1605,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # job-seeker tools stand in the order of a search: the resume, applying, the offer, leaving. A tool that is not named here still appears, in a last group.
     HUB = [("Resume and LinkedIn profile", ["resume-review", "resume-match", "job-description-keywords", "resume-bullet-builder", "linkedin-headline", "linkedin-review"]),
            ("Applying and interviews", ["cover-letter", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email"]),
-           ("Pay and offers", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "raise-calculator", "raise-request-email", "salary-converter", "equity-calculator", "contractor-rate"]),
+           ("Pay and offers", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "equity-calculator", "contractor-rate"]),
            ("Remote work and leaving a job", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
     named = {s_ for _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]

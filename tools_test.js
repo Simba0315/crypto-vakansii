@@ -534,6 +534,18 @@ const TY = { to: 'Dana', name: 'Alex Morgan', role: 'Senior Backend Engineer', c
   const e = T.thankYou({ tone: tone });
   ok('empty thank-you ' + tone + ' uses placeholders', /\[job title\]/.test(e.text) && /\[one thing you discussed\]/.test(e.text) && /\[Your name\]$/.test(e.text) && !/undefined|NaN| {2}/.test(e.text) && e.subject === 'Thank you for the interview', e.text);
 });
+{
+  const base = { name: 'Alex', to: 'Ms Rivera', role: 'Product Designer', company: 'Acme', start: 'Monday, 4 January', by: 'Friday', reason: 'I chose another role' };
+  const acc = T.offerResponse(Object.assign({}, base, { mode: 'accept' })), dec = T.offerResponse(Object.assign({}, base, { mode: 'decline' })), tim = T.offerResponse(Object.assign({}, base, { mode: 'time' }));
+  ok('offer response: accept says yes and the start date', /delighted to accept/.test(acc.body) && /Monday, 4 January/.test(acc.body) && /^Offer acceptance/.test(acc.subject));
+  ok('offer response: decline says no clearly', /decided not to accept/.test(dec.body) && /I chose another role\./.test(dec.body));
+  ok('offer response: time names the date', /until Friday/.test(tim.body));
+  ok('offer response: unknown mode accepts', T.offerResponse({ mode: 'x' }).text === T.offerResponse({ mode: 'accept' }).text);
+  ok('offer response: empty fields leave brackets', /\[job title\]/.test(T.offerResponse({}).text) && /\[start date\]/.test(T.offerResponse({}).text));
+  const r1 = T.rejection({ stage: 'application', candidate: 'Jordan', role: 'AE', company: 'Acme', from: 'Sam' }), r2 = T.rejection({ stage: 'final', keep: 'yes', feedback: 'others had more hospital sales' });
+  ok('rejection: application thanks for applying', /applying for the AE position at Acme/.test(r1.body) && !/keep your details/.test(r1.body));
+  ok('rejection: final round, feedback and keep', /every stage/.test(r2.body) && /Others had more hospital sales\./.test(r2.body) && /keep your details/.test(r2.body));
+}
 ok('thank-you tones differ', T.thankYou(Object.assign({}, TY, { tone: 'warm' })).body !== T.thankYou(Object.assign({}, TY, { tone: 'formal' })).body);
 ok('thank-you: unknown tone is the short one', T.thankYou(Object.assign({}, TY, { tone: 'x' })).text === T.thankYou(Object.assign({}, TY, { tone: 'short' })).text);
 ok('thank-you: short is the shortest', T.wordCount(T.thankYou(Object.assign({}, TY, { tone: 'short' })).body) < T.wordCount(T.thankYou(Object.assign({}, TY, { tone: 'warm' })).body));

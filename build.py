@@ -1295,7 +1295,7 @@ def main():
             f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
             f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>Five templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'
             f'<a class="scard" href="{P}/salaries/"><b>What jobs pay</b><span>{paid_n:,} postings state the pay. See the median for your work.</span><em>Check salaries</em></a>'
-            f'<a class="scard" href="{P}/tools/"><b>28 free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
+            f'<a class="scard" href="{P}/tools/"><b>{len(TOOLS)} free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
             f'</aside></div></div></div>'
             f'<div class="wrap0 hero-logos"><p>Read every hour from the career pages of</p><div class="logorow">'
             + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
@@ -1357,7 +1357,7 @@ def main():
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
               + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
-              + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option></select>')
+              + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option>Lead</option><option value="Exec">Director and above</option></select>')
               + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>')
               + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
@@ -1380,7 +1380,7 @@ def main():
               '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'
               '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'
               '<aside class="pane" id="pane" aria-label="Job preview"><p class="pane-empty">Select a job to preview it here.</p></aside></div>'
-              + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in top_skills + [c for c, _ in comp_items[:200]]) + "</datalist>"
+              + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in dict.fromkeys(top_skills + [rlow(nm) for nm, s_, _ in ROLES if s_ in by_role] + [c for c, _ in comp_items[:200]])) + "</datalist>"
               + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"Search {roles(n, 'Tech Job')} | {SITE}",
          "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search,
@@ -2883,11 +2883,60 @@ def main():
                '<div><h2>Where ' + e(ours) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["us_better"]) + "</ul></div></div>"
              + section(f"Questions about {x['name']} and {ours}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in vs_qa) + "</dl>")
              + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>'), head=ld_)
+    # "<site> vs <site>" and "<site> alternatives": the owner asked for compare pages "with all websites" (as Indeed's compare pages),
+    # and people search these between the big names. Only the facts compare_sites.py holds with a source, side by side; no verdict.
+    site_pairs = []
+    def strong_(x):        # a site's strengths without the sentences that compare it with this site ("Our self-serve posting is not open yet")
+        return [t for t in (" ".join(y for y in re.split(r"(?<=\.)\s+", t0) if not re.search(r"\b(our|we|us)\b", y, re.I)) for t0 in x["them_better"]) if t]
+    for i_, a_ in enumerate(VS):
+        for b_ in VS[i_ + 1:]:
+            ra = {q_: t_ for q_, t_, _ in a_["rows"]}; rb = {q_: t_ for q_, t_, _ in b_["rows"]}; ru = {q_: u_ for q_, _, u_ in a_["rows"] + b_["rows"]}
+            common = [q_ for q_, _, _ in a_["rows"] if q_ in rb]
+            if len(common) < 3: continue
+            sl = f"{a_['slug']}-vs-{b_['slug']}"
+            site_pairs.append((sl, a_, b_))
+            table_ = ('<div class="tablewrap"><table class="vs-t four"><tr><th></th><th>' + e(a_["name"]) + "</th><th>" + e(b_["name"]) + "</th><th>" + e(compare_sites.OUR_NAME) + "</th></tr>"
+                      + "".join(f"<tr><th>{e(q_)}</th><td>{e(ra[q_])}</td><td>{e(rb[q_])}</td><td>{e(ru[q_])}</td></tr>" for q_ in common) + "</table></div>")
+            pq = [(f"What is the difference between {a_['name']} and {b_['name']}?", a_["what"] + " " + b_["what"])]
+            if "Who pays" in common: pq.append((f"Who pays on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Who pays']} {b_['name']}: {rb['Who pays']}"))
+            if "Where you apply" in common: pq.append((f"Where do you apply on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Where you apply']} {b_['name']}: {rb['Where you apply']}"))
+            ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in pq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+            src_ = dict(a_); src_["sources"] = a_["sources"] + b_["sources"]
+            page(f"vs/{sl}/", f"{a_['name']} vs {b_['name']}: Who Pays, Where You Apply ({fdate(TODAY, False)}) | {SITE}",
+                 f"{a_['name']} and {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:4]) + ". Every fact comes with its source and the date it was read.",
+                 crumbs(("Compared with other job sites", "vs/"), (f"{a_['name']} vs {b_['name']}", "")) + f'<h1>{e(a_["name"])} vs {e(b_["name"])}: <span class="hl">the facts side by side</span></h1>'
+                 f'<p class="lead">{e(a_["what"])} {e(b_["what"])} Below, what each one says about itself, with the source of every fact. The third column shows how {e(compare_sites.OUR_NAME)} works, for reference.</p>'
+                 + section(f"{a_['name']} and {b_['name']}, side by side", table_)
+                 + '<div class="vs-two"><div><h2>Where ' + e(a_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(a_)) + "</ul></div>"
+                   '<div><h2>Where ' + e(b_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(b_)) + "</ul></div></div>"
+                 + section(f"Questions about {a_['name']} and {b_['name']}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in pq) + "</dl>")
+                 + section("Sources", vs_src(src_) + '<p class="note">A fact that is wrong or out of date can be reported from the <a href="' + P + '/about/">About page</a>; it is corrected or removed.</p>')
+                 + f'<p class="note cmpl">More: <a href="{P}/vs/{a_["slug"]}/">{e(a_["name"])} vs {e(compare_sites.OUR_NAME)}</a> · <a href="{P}/vs/{b_["slug"]}/">{e(b_["name"])} vs {e(compare_sites.OUR_NAME)}</a> · '
+                   f'<a href="{P}/vs/{a_["slug"]}/alternatives/">{e(a_["name"])} alternatives</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
+    for x in VS:
+        others = [y for y in VS if y is not x]
+        alt_ = "".join(
+            f'<div class="feat"><h3>{e(y["name"])}</h3><p>{e(y["what"])}</p>'
+            + "".join(f'<p class="note"><b>{e(q_)}:</b> {e(t_)}</p>' for q_, t_, _ in y["rows"] if q_ in ("Who pays", "Where you apply"))
+            + "<p>" + " · ".join(f'<a href="{P}/vs/{sl}/">{e(a_["name"])} vs {e(b_["name"])}</a>' for sl, a_, b_ in site_pairs if {a_["slug"], b_["slug"]} == {x["slug"], y["slug"]})
+            + f' · <a href="{P}/vs/{y["slug"]}/">{e(y["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>' for y in others)
+        page(f"vs/{x['slug']}/alternatives/", f"{x['name']} Alternatives: {len(others) + 1} Job Sites Compared, with Sources | {SITE}",
+             f"Alternatives to {x['name']}: {', '.join(y['name'] for y in others[:4])} and more, each with who pays and where you apply, from their own pages. Every fact sourced and dated.",
+             crumbs(("Compared with other job sites", "vs/"), (f"{x['name']} alternatives", "")) + f'<h1>{e(x["name"])} alternatives: <span class="hl">{len(others) + 1} job sites, with sources</span></h1>'
+             f'<p class="lead">Other places to look for work than {e(x["name"])}, each described from its own pages, with who pays and where you apply. Open a pair to see every fact side by side.</p>'
+             + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read every hour from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
+                       f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>')
+             + section(f"Other alternatives to {x['name']}", '<div class="feats">' + alt_ + "</div>")
+             + section("Sources", '<p class="note">Every fact on this page comes from the comparison pages linked above, where each one is listed with its source and the date it was read.</p>'))
+
     page("vs/", f"{SITE} Compared with Other Job Sites: {len(VS)} Fair Comparisons | {SITE}",
          f"{SITE} side by side with {', '.join(x['name'] for x in VS[:-1])} and {VS[-1]['name']}: who pays, prices, where jobs come from and where you apply. Every fact sourced and dated.",
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
          '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now.</p>'
-         + section("Choose a site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>"))
+         + section("Choose a site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>")
+         + section("Job sites compared with each other", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{sl}/"><span class="n">{e(a_["name"])} vs {e(b_["name"])}</span></a></li>' for sl, a_, b_ in site_pairs) + "</ul>")
+         + section("Alternatives", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/alternatives/"><span class="n">{e(x["name"])} alternatives</span></a></li>' for x in VS) + "</ul>"))
 
     # Career quiz: "which kind of work fits me?" (the Careerist study: its lead magnet, but theirs asks for a phone number). Seven plain
     # questions add points to fields of work; the result shows the three best fields with today's figures and the way in. All in the
@@ -3348,7 +3397,7 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
          + section("How it earns", '<dl class="qa"><div><dt>Job seekers</dt><dd>Plus: one payment for one, three or twelve months for an AI resume writer, letters, interview preparation and alerts. Jobs and applying stay free.</dd></div>'
                    "<div><dt>Employers</dt><dd>A standard listing is free; featured and pinned listings, a company spotlight and sponsorship of a field are paid, self-serve, and start the moment the payment is confirmed.</dd></div>"
                    "<div><dt>Sites and partners</dt><dd>Widgets, feeds and an API bring the listings to other sites and channels with a link back; unbranded and extended versions are planned as paid.</dd></div></dl>")
-         + section("Where it stands", '<dl class="qa"><div><dt>Built</dt><dd>The site, the hourly collection, the directory of fields and roles, 28 tools and a resume builder, rankings and charts, the accounts and payments server with fraud checks and its tests.</dd></div>'
+         + section("Where it stands", '<dl class="qa"><div><dt>Built</dt><dd>The site, the hourly collection, the directory of fields and roles, ' + str(len(TOOLS)) + ' tools and a resume builder, rankings and charts, the accounts and payments server with fraud checks and its tests.</dd></div>'
                    "<div><dt>Not yet</dt><dd>Payments are not switched on, so there is no revenue to report. The site is on a temporary address; its own domain comes next.</dd></div>"
                    "<div><dt>Costs</dt><dd>Hosting and collection run on free tiers; the site is built and maintained by automation, with nobody on the payroll.</dd></div></dl>")
          + f'<p class="note">Data and method: <a href="{P}/methodology/">how the numbers are made</a>, <a href="{P}/status/">what the last update did</a>, <a href="{P}/insights/">charts</a>. ' + (f"To talk: {contact}." if contact else "") + "</p>")
