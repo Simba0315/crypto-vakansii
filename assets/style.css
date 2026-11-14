@@ -1511,3 +1511,8 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .applyfit{margin:8px 0 0;padding:8px 10px;background:var(--accent-soft);border-radius:8px;font-size:13.5px}
 .applyfit a{font-weight:650;text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
 
+
+.qz-q label.st-ok{border-color:var(--ac);background:var(--accent-soft)}
+.qz-q label.st-bad{border-color:#b3402f;background:#fbeeeb;text-decoration:line-through}
+.st-why{margin:8px 0 2px;font-size:14.5px;color:var(--muted);max-width:62ch}
+.st-why b{color:var(--ink)}

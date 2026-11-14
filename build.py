@@ -16,6 +16,7 @@ import geo_cities                       # where the cities in postings are, for 
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 import compare_sites                    # sourced facts for "Hiring Right Now vs <job site>" (/vs/)
+import quiz_pages                        # skill self-tests (/skill-tests/)
 import glossary_terms                   # the glossary, one page per term (/glossary/)
 
 ROOT = Path(__file__).parent
@@ -2811,6 +2812,7 @@ def main():
          f"Interview questions for {iq_n} kinds of work. Each says why it is likely to come up, from today’s open postings, and what a good answer shows. Free, no sign-up.",
          crumbs(("Interview questions", "")) + f'<h1>Interview questions for <span class="hl">{iq_n} jobs</span></h1>'
          '<p class="lead">Pick your work. Each page lists the questions to prepare for, why each is likely to come up, from the skills and situations today’s open postings name, and what a good answer shows.</p>'
+         f'<p class="note">Want to test a skill instead? Take a <a href="{P}/skill-tests/">ten-question skill test</a> on SQL, Excel, Python and more.</p>'
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a job"></p>'
          f'<p class="lead" id="dirnone" hidden>No page with these words. The <a href="{P}/tools/interview-answer-builder/">interview answer builder</a> works for any job.</p>' + iq_html)
 
@@ -3143,6 +3145,57 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
          f'<form id="qz" class="qz">{qz_html}<p><button class="btn primary" type="submit">Show my best fits</button></p></form>'
          f'<section class="sec qz-out" id="qz-out" aria-live="polite" hidden></section><script type="application/json" id="qz-data">{qz_data}</script>{qz_js}'
          + section("Questions about the career quiz", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in qz_qa) + "</dl>"), head=qz_ld)
+
+    # Skill self-tests: ten questions per skill, scored in the browser. Planned in ROADMAP section 96 (interview tests for traffic).
+    SK_N = Counter(t for j in active for t in j["tags"])
+    sk_cards, sk_items = [], []
+    for qs_, q_ in quiz_pages.QUIZZES.items():
+        sk_t = q_["skill"]; sk_slug = TAG_SLUG.get(sk_t, slugify(sk_t)); sk_n = SK_N.get(sk_t, 0)
+        sk_med = [(j["usd"][0] + j["usd"][1]) / 2 for j in active if sk_t in j["tags"] and j["usd"]]
+        sk_pay = money(median(sk_med)) if len(sk_med) >= 20 else ""
+        sk_has = (OUT / "skills" / sk_slug / "index.html").exists()
+        ihtml = "".join(f'<fieldset class="qz-q"><legend><span>{i + 1}</span>{e(t_)}</legend>' + "".join(
+            f'<label><input type="radio" name="q{i}" value="{k}"><span>{e(a_)}</span></label>' for k, a_ in enumerate(o_)) + "</fieldset>" for i, (t_, o_, _, _) in enumerate(q_["qs"]))
+        idata = json.dumps({"a": [x[2] for x in q_["qs"]], "w": [x[3] for x in q_["qs"]], "n": sk_n, "pay": sk_pay, "name": q_["name"],
+                            "skill": f"{P}/skills/{sk_slug}/" if sk_has else "", "jobs": f"{P}/jobs/?skill={quote(sk_t)}"}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+        ijs = r"""<script>(function(){var D=JSON.parse(document.getElementById('st-data').textContent),f=document.getElementById('st'),out=document.getElementById('st-out');
+var esc=function(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+f.addEventListener('submit',function(ev){ev.preventDefault();var ok=0,seen=0,rows='';
+D.a.forEach(function(r,i){var c=f.querySelector('input[name=q'+i+']:checked'),qs=f.querySelectorAll('fieldset')[i],labs=qs.querySelectorAll('label');
+labs.forEach(function(l){l.classList.remove('st-ok','st-bad');});labs[r].classList.add('st-ok');
+var old=qs.querySelector('.st-why');if(old)old.remove();
+var p=document.createElement('p');p.className='st-why';
+if(c){seen++;if(+c.value===r){ok++;p.innerHTML='<b>Right.</b> '+esc(D.w[i]);}else{c.parentNode.classList.add('st-bad');p.innerHTML='<b>Not quite.</b> '+esc(D.w[i]);}}
+else{p.innerHTML='<b>Skipped.</b> '+esc(D.w[i]);}
+qs.appendChild(p);});
+var lv=ok>=8?'Ready to be asked about it in an interview':ok>=5?'A good base, with some gaps to close':'Worth another week of practice before applying';
+out.innerHTML='<h2>You got '+ok+' of '+D.a.length+'</h2><p class="lead">'+lv+'. Below each question you can read why the answer is what it is.</p>'+
+(D.n?'<p>'+D.n.toLocaleString('en-US')+' open jobs name '+esc(D.name)+' today'+(D.pay?', with a median advertised pay of '+D.pay:'')+'. <a href="'+D.jobs+'">See the jobs</a>'+(D.skill?' · <a href="'+D.skill+'">What employers pair it with</a>':'')+'.</p>':'')+
+'<p class="note">This is a quick self-check of ten questions, not a certificate. Nothing is sent anywhere.</p><p><button class="btn ghost" type="button" id="st-again">Try again</button></p>';
+out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});
+document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true;f.querySelectorAll('.st-why').forEach(function(x){x.remove();});f.querySelectorAll('label').forEach(function(l){l.classList.remove('st-ok','st-bad');});window.scrollTo({top:f.offsetTop-80,behavior:'smooth'});};});})();</script>"""
+        iqa = [(f"How do I prepare for a {q_['name']} interview?", f"Work through realistic questions, read why each answer is right, then redo the ones you missed. This test has ten, taken from what interviewers commonly ask a beginner or a junior. Then read the postings: the {sk_n:,} open jobs that name {q_['name']} show what employers expect on top of it." if sk_n else f"Work through realistic questions, read why each answer is right, then redo the ones you missed."),
+               (f"Is this {q_['name']} test free?", "Yes. It needs no account and no email, runs in your browser and sends nothing anywhere."),
+               ("What does my score mean?", "It is a self-check. Eight or more right means the basics are fresh; five to seven means a good base with gaps; under five means more practice first. It is not an official certificate.")]
+        ild = '<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": a_, "acceptedAnswer": {"@type": "Answer", "text": b_}} for a_, b_ in iqa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
+        page(f"skill-tests/{qs_}/", f"{q_['name']} Test: 10 Interview Questions with Answers | {SITE}",
+             f"A free {q_['name']} test with ten questions that interviewers commonly ask, scored in your browser, with the reason behind every answer. No email, no sign-up.",
+             crumbs(("Skill tests", "skill-tests/"), (q_["name"], "")) + f'<h1>{e(q_["name"])} test: <span class="hl">10 questions to check yourself</span></h1>'
+             f'<p class="plain"><b>In plain words:</b> {e(q_["plain"])} Answer ten questions, press the button, and see which you got right and why.</p>'
+             + (f'<p class="lead">{sk_n:,} open jobs name {e(q_["name"])} today' + (f', with a median advertised pay of {sk_pay}' if sk_pay else "") + ". The questions are the kind that come up in a first interview.</p>" if sk_n else '<p class="lead">Ten questions of the kind that come up in a first interview.</p>')
+             + f'<form id="st" class="qz">{ihtml}<p><button class="btn primary" type="submit">Check my answers</button></p></form>'
+             f'<section class="sec qz-out" id="st-out" aria-live="polite" hidden></section><script type="application/json" id="st-data">{idata}</script>{ijs}'
+             + section("Questions about this test", '<dl class="qa">' + "".join(f"<div><dt>{e(a_)}</dt><dd>{e(b_)}</dd></div>" for a_, b_ in iqa) + "</dl>")
+             + '<p class="rel">More tests: ' + " ".join(f'<a href="{P}/skill-tests/{o_}/">{e(quiz_pages.QUIZZES[o_]["name"])}</a>' for o_ in quiz_pages.QUIZZES if o_ != qs_) + f' <a href="{P}/skill-tests/">All tests</a></p>', head=ild)
+        sk_cards.append((qs_, q_["name"], q_["plain"], sk_n))
+    page("skill-tests/", f"Skill Tests for Job Interviews: SQL, Excel, Python and More | {SITE}",
+         "Free ten-question tests for the skills employers ask for most: SQL, Excel, Python, JavaScript, Linux and Docker. Scored in your browser with the reason behind each answer.",
+         crumbs(("Skill tests", "")) + '<h1>Skill tests: <span class="hl">check yourself before the interview</span></h1>'
+         '<p class="plain"><b>In plain words:</b> a skill test is a short quiz. You answer ten questions about one skill, such as SQL or Excel, and see which answers were right and why.</p>'
+         '<p class="lead">A first interview often starts with questions on the skills listed in the posting. These tests cover the questions that come up most, so you find your gaps at home and not in the call. Free, no sign-up, nothing leaves your browser.</p>'
+         '<div class="feats">' + "".join(f'<a class="feat" href="{P}/skill-tests/{s_}/"><h2>{e(nm_)} test</h2><p>{e(pl_)}' + (f" {k_:,} open jobs name it today." if k_ else "") + "</p></a>" for s_, nm_, pl_, k_ in sk_cards) + "</div>"
+         f'<p class="note">After the test: <a href="{P}/interview-questions/">interview questions by job</a>, the <a href="{P}/resume/">resume builder</a> and the <a href="{P}/tools/resume-match/">resume match</a>.</p>')
 
     # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.
