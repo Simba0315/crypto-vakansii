@@ -98,7 +98,8 @@
     var qs = query(), f = H.parse(qs);
     if (!full && qs) { paintApplied(); waiting = true; count.textContent = 'Searching all jobs…'; return; }   // filters need the whole index
     var L = f.words.length && !f.titles ? lucFor(q.value.trim()) : null;
-    if (L && L.capped) L = null;                     // a word in thousands of jobs: the titles and tags here find them as well
+    if (L && L.capped && !L.fuzzy) L = null;         // a word in thousands of jobs: the titles and tags here find them as well; a typo
+                                                     // they cannot find, so the engine's 5,000 best matches for the closest spelling stay
     var rows;
     if (L) {
       var fw = Object.assign({}, f, { words: [] });
@@ -129,7 +130,7 @@
     paintApplied();
     relax(rows.length, qs);
     if (L && L.fuzzy && rows.length) {               // the engine found nothing for the words as typed and forgave a typo
-      hint.innerHTML = 'Nothing for “' + H.esc(q.value.trim()) + '” as typed: showing jobs for the closest spelling.'; hint.hidden = false;
+      hint.innerHTML = 'Nothing for “' + H.esc(q.value.trim()) + '” as typed: showing ' + (L.capped ? 'the ' + L.ranks.size.toLocaleString('en-US') + ' best matches' : 'jobs') + ' for the closest spelling.'; hint.hidden = false;
     }
   };
   // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each.

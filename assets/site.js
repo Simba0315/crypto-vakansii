@@ -178,15 +178,42 @@
     plain(); document.addEventListener('DOMContentLoaded', function () { plain(); });
   }
   var mySkills = (get('hrn_profile', {}).skills || []).filter(function (s) { return typeof s === 'string'; });
+  /* The skills a visitor has: the ones picked on "For you" and, when a resume was made in the builder here, every skill its text
+     names (resumai shows a job's skills as "on your resume" and "to grow"). Read once per page; nothing leaves the browser.
+     A name of one or two letters (Go, R, C) counts only when it is an item of the resume's skills line: "go" is also a word. */
+  var cvSkillsLine = {}, cvText = (function () {
+    var cv = get('hrn_resume', null), parts = [];
+    if (!cv || typeof cv !== 'object') return '';
+    String(cv.skills || '').split(',').forEach(function (x) { x = x.trim().toLowerCase(); if (x) cvSkillsLine[x] = 1; });
+    parts.push(cv.title, cv.summary, cv.skills);
+    ['exp', 'proj', 'cert'].forEach(function (k) { (Array.isArray(cv[k]) ? cv[k] : []).forEach(function (x) { if (x) parts.push(x.role, x.name, x.text); }); });
+    var t = parts.filter(function (x) { return typeof x === 'string'; }).join('\n').toLowerCase();
+    return t.replace(/\s/g, '').length > 40 ? t : '';
+  })(), haveMemo = {};
+  function have(t) {
+    if (mySkills.indexOf(t) >= 0) return true;
+    if (!cvText) return false;
+    var k = t.toLowerCase();
+    if (haveMemo[k] == null) haveMemo[k] = k.length <= 2 ? !!cvSkillsLine[k]
+      : new RegExp('(^|[^a-z0-9+#])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9+#])').test(cvText);
+    return haveMemo[k];
+  }
+  var knowsSkills = mySkills.length > 0 || !!cvText;
   function skillFit(j) {           // "2 of 3 skills": how many of the skills this job names the visitor has (only when the visitor named some)
-    if (!mySkills.length || !j[7] || !j[7].length) return '';
-    var hit = j[7].filter(function (t) { return mySkills.indexOf(t) >= 0; }).length;
+    if (!knowsSkills || !j[7] || !j[7].length) return '';
+    var hit = j[7].filter(have).length;
     return hit ? '<span class="pill fit" title="Skills you have, of the skills this job names">' + hit + ' of ' + j[7].length + ' skills</span>' : '';
+  }
+  function tagPills(tags) {        // a job's first three skills; with a resume or answers, the ones you have first (✓), the rest "to grow"
+    if (!knowsSkills) return tags.slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
+    return tags.filter(have).concat(tags.filter(function (t) { return !have(t); })).slice(0, 3).map(function (t) {
+      return have(t) ? '<span class="pill have" title="On your resume">✓ ' + esc(t) + '</span>' : '<span class="pill grow" title="To grow: not on your resume yet">' + esc(t) + '</span>';
+    }).join('');
   }
   function card(j, more, badge) {
     var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
       (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
-      j[7].slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
+      tagPills(j[7]);
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
     var ag = ageOf(j[16]);
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
@@ -269,6 +296,14 @@
         [num, num ? 'You gave a number. Results with numbers are remembered.' : 'No number: say what changed, by how much.'],
         [I >= we, I >= we ? 'You said what you did yourself.' : 'More “we” than “I”: say which part was yours.'],
         [w >= 60, w + ' words' + (w < 60 ? ': give the situation, what you did and the result.' : '.')]];
+      // spoken answers only: the pace (this page calls 110 to 170 words a minute easy to follow) and filler words the browser heard
+      var wpm = SR && secs >= 15 && w >= 20 ? Math.round(w * 60 / secs) : 0;
+      if (wpm) rows.push([wpm >= 110 && wpm <= 170, 'Pace: ' + wpm + ' words a minute' + (wpm > 170 ? ', fast: slow down and pause after the result.' : wpm < 110 ? ', slow: shorter sentences, fewer pauses.' : ', easy to follow.') + ' This page calls 110 to 170 comfortable.']);
+      if (SR && w) {
+        var fill = {}, nf = 0;
+        (txt.toLowerCase().match(/\b(?:you know|basically|actually|kind of|sort of|literally|i mean|um+|uh+|erm)\b/g) || []).forEach(function (x) { fill[x] = (fill[x] || 0) + 1; nf++; });
+        rows.push([nf <= 2, nf ? 'Filler words: ' + Object.keys(fill).map(function (k) { return '“' + k.replace(/^i /, 'I ') + '”' + (fill[k] > 1 ? ' ×' + fill[k] : ''); }).join(', ') + (nf > 2 ? '. Pause instead.' : '.') : 'No filler words heard.']);
+      }
       el('vp-checks').innerHTML = rows.map(function (r) { return '<li class="' + (r[0] ? 'ok' : 'fix') + '">' + r[1] + '</li>'; }).join('');
     };
     var stop = function () {
@@ -698,12 +733,16 @@
     };
     if (document.prerendering) document.addEventListener('prerenderingchange', markSeen, { once: true }); else markSeen();
     var fit = q1('#match');
-    if (fit && profile.skills.length) {
+    if (fit && knowsSkills) {                        // on your resume / to grow, as soon as the page opens (resumai's job cards)
       var tags = (fit.getAttribute('data-tags') || '').split('|').filter(Boolean);
-      var hit = tags.filter(function (t) { return profile.skills.indexOf(t) >= 0; });
+      var hit = tags.filter(have), miss = tags.filter(function (t) { return !have(t); });
+      var slugM = (location.pathname.match(/\/job\/([^/]+)\//) || [])[1];
       if (tags.length) {
-        fit.textContent = hit.length ? 'You match ' + hit.length + ' of ' + tags.length + ' listed skills: ' + hit.join(', ') + '.' : 'None of your saved skills are listed for this role.';
-        fit.hidden = false;
+        fit.innerHTML = '<b>' + hit.length + ' of ' + tags.length + ' skills this job names are ' + (cvText ? 'on your resume' : 'in your answers') + '.</b> '
+          + (hit.length ? '<span class="fit-have">✓ ' + hit.map(esc).join(', ✓ ') + '</span> ' : '')
+          + (miss.length ? '<span class="fit-grow">To grow: ' + miss.map(esc).join(', ') + '</span> ' : '')
+          + (cvText && slugM ? '<a href="' + P + '/resume/?job=' + slugM + '">Tailor your resume to it</a>' : '');
+        fit.className = 'note fitline'; fit.hidden = false;
       }
     }
     var muteBtn = q1('#mute');

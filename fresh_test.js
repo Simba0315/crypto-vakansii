@@ -24,7 +24,8 @@ let clock = 1800000000000, page = [];
 class Clock extends Date { constructor(...a) { if (a.length) super(...a); else super(clock); } static now() { return clock; } }   // the test sets the time
 const doc = { querySelectorAll: (sel) => (sel === 'time[data-t]' ? page : []) };
 const S = new Function('document', 'Date', 'P', "var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];" +
-  'var flagsOk = true; var mySkills = [];' + ['esc', 'slugOf', 'hue', 'avatar', 'expand', 'ageOf', 'ago', 'freshen', 'flag', 'flags', 'skillFit', 'card'].map(cut).join('\n') +
+  'var flagsOk = true; var mySkills = [], cvText = "", cvSkillsLine = {}, haveMemo = {}, knowsSkills = false;' +
+  ['esc', 'slugOf', 'hue', 'avatar', 'expand', 'ageOf', 'ago', 'freshen', 'flag', 'flags', 'have', 'skillFit', 'tagPills', 'card'].map(cut).join('\n') +
   '\nreturn { ago: ago, freshen: freshen, expand: expand, card: card };')(doc, Clock, '');
 const now = () => Math.floor(clock / 1000);
 
@@ -86,5 +87,15 @@ eq('expand: an index written before this field existed', rows[2][23], 0);
 eq('card with an exact time', /<time data-t="1800000000"[ >]/.test(S.card(rows[0])), true);
 eq('card without one has no data-t', /data-t=/.test(S.card(rows[1]) + S.card(rows[2])), false);
 
+
+/* skills on your resume / to grow: the resume made in the builder marks a job's skills */
+const R = new Function('esc', "var mySkills = ['SQL'], cvText = 'backend engineer\\nbuilt a payments api in python on aws\\ngo-to-market with c++ and node.js', cvSkillsLine = { python: 1, r: 1 }, haveMemo = {}, knowsSkills = true;" +
+  ['have', 'tagPills'].map(cut).join('\n') + '\nreturn { have: have, tagPills: tagPills };')(function (x) { return String(x); });
+eq('resume: a skill named in the text', [R.have('Python'), R.have('AWS'), R.have('C++'), R.have('Node.js')], [true, true, true, true]);
+eq('resume: a skill picked in the answers', R.have('SQL'), true);
+eq('resume: a two-letter name only from the skills line ("go-to-market" is not Go)', [R.have('Go'), R.have('R')], [false, true]);
+eq('resume: not there', [R.have('Java'), R.have('Kubernetes')], [false, false]);
+eq('resume: the skills you have first, the rest "to grow"', R.tagPills(['Go', 'Java', 'Python', 'AWS']),
+  '<span class="pill have" title="On your resume">✓ Python</span><span class="pill have" title="On your resume">✓ AWS</span><span class="pill grow" title="To grow: not on your resume yet">Go</span>');
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
