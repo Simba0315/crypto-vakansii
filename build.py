@@ -595,10 +595,17 @@ def crumbs_ld(parts):
                                                                  ensure_ascii=False).replace("</", "<\\/") + "</script>")
 
 
-def rel(links):
-    """Row of related listing links: [(path, label, count)], biggest first."""
+def labrow(label, items, more=None):
+    """A labelled row: the label on the left, the links on the right, an optional "More" link last."""
+    if not items: return ""
+    tail = f'<a class="more" href="{P}/{more[0]}">{e(more[1])}</a>' if more else ""
+    return f'<div class="lrow"><b>{e(label)}</b><div>{"".join(items)}{tail}</div></div>'
+
+
+def rel(links, more=None):
+    """Row of related listing links: [(path, label, count)], biggest first; `more` = (path, label) of the full directory."""
     links = sorted(links, key=lambda x: -x[2])[:14]
-    return ('<div class="rel"><span>Related:</span>' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t, _ in links) + "</div>") if links else ""
+    return labrow("Related", [f'<a href="{P}/{u}">{e(t)}</a>' for u, t, _ in links], more)
 
 
 def crumbs(*parts):
@@ -1372,7 +1379,7 @@ def main():
     tslug = lambda t: TAG_SLUG.get(t, slugify(t))
     CMP = [t for t, _ in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:14]]      # skills that get head-to-head comparison pages
     cmp_path = lambda a, b: "compare/{}-vs-{}/".format(*[tslug(x) for x in sorted((a, b), key=CMP.index)])
-    cmp_links = lambda t: ('<p class="note cmpl">Compare ' + e(t) + " with: " + " · ".join(f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t) + "</p>") if t in CMP else ""
+    cmp_links = lambda t: labrow("Compare with", [f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t], ("compare/", "Any two skills")) if t in CMP else ""
     LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead & principal")]
     combos, REL = [], defaultdict(list)
     big_places = [x for x in places if len(x[2]) >= 150]      # combination pages only where a place has enough jobs to fill them
@@ -1450,7 +1457,7 @@ def main():
         if not js: continue
         listing(f"jobs/{s}/", f"{name} jobs in tech", f"{name} Jobs in Tech ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), name + ' job')} at tech companies. Remote and on-site roles, updated hourly.",
-                js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s]) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
+                js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s], ("categories/", "All categories")) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
                 hub=hub_sections(f"{name} roles", js)[1], accent=CAT_ACCENT.get(s), list_title=f"Newest {name} jobs")
         rj = [j for j in js if j["remote"]]
         if len(rj) >= 5:
@@ -1527,7 +1534,7 @@ def main():
         listing(f"skills/{tslug(t)}/", f"{t} jobs in tech", f"{t} Jobs in Tech ({len(js):,} open) | {SITE}",
                 f"{roles(len(js))} at tech companies that ask for {t}.", js,
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
-                trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + hub_stats(js) + rel(REL["tag:" + t]) + cmp_links(t) + hub_sections(f"{t} roles", js, "skills")[0], hub=hub_sections(f"{t} roles", js, "skills")[1], list_title=f"Newest {t} jobs",
+                trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + hub_stats(js) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t) + hub_sections(f"{t} roles", js, "skills")[0], hub=hub_sections(f"{t} roles", js, "skills")[1], list_title=f"Newest {t} jobs",
                 faq=f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
                 after=section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
@@ -1561,13 +1568,13 @@ def main():
         low, w_ = rlow(rname), roles_info.INFO.get(slug_r, ("", ""))[1]
         many = ROLE_PLURAL.get(rname, low + "s")
         fams = [(fs, fn) for fs, fn, _, live, _ in fam_rows if any(s_ == slug_r for s_, _, _ in live)]
-        fam_line = ('<p class="note cmpl">Part of: ' + " · ".join(f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams)
-                    + (f' · Resume: <a href="{P}/resume/examples/{slug_r}/">an example for this work</a>' if has_rex(slug_r) else "") + "</p>") if fams else ""
+        fam_line = (labrow("Part of", [f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams])
+                    + (labrow("Resume", [f'<a href="{P}/resume/examples/{slug_r}/">An example for this work</a>'], ("resume/examples/", "All examples")) if has_rex(slug_r) else "")) if fams else ""
         secs = hub_sections(f"{low} roles", rj, "roles")
         listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open) | {SITE}",
                 f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated hourly.",
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
-                trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + mini_pics(rj) + fam_line + rel(REL["role:" + slug_r]) + secs[0], faq=f"{low} jobs",
+                trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + mini_pics(rj) + fam_line + rel(REL["role:" + slug_r], ("roles/", "All roles")) + secs[0], faq=f"{low} jobs",
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
                 hub=secs[1], list_title=f"Newest {low} jobs", more=None if slug_r in ROLE_BASE else False,
                 after=neighbours(slug_r) + section(f"Companies hiring {many}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in rj).most_common(12)) + "</ul>",
@@ -1614,19 +1621,19 @@ def main():
     for fs, fn, fd, live, js_ in fam_rows:
         low_f, names_ = rlow(fn), [nm for _, nm, _ in live]
         role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">{e(roles_info.what(s_))}</span></a></li>' for s_, nm, c in live) + "</ul>"
-        rank_ = (f'<p class="note cmpl">Ranking: <a href="{P}/insights/companies-hiring-{fs}/">companies hiring for {e(low_f)} jobs</a>, with remote roles and pay</p>'
+        rank_ = (labrow("Ranking", [f'<a href="{P}/insights/companies-hiring-{fs}/">Companies hiring for {e(low_f)} jobs, with remote roles and pay</a>'], ("insights/", "All rankings"))
                  if len({j["company"] for j in js_}) >= 8 else "")
-        others = rank_ + '<p class="note cmpl">Other categories: ' + " · ".join(f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs) + "</p>"
+        others = rank_ + labrow("Other categories", [f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs], ("categories/", "All categories"))
         secs = hub_sections(low_f, js_, "roles")
         vers = []
         for vslug, vname, vjs in (("remote", "Remote", [j for j in js_ if j["remote"]]), ("entry-level", "Entry-level", [j for j in js_ if j["entry"]])):
             if len(vjs) < 20: continue
-            vers.append(f'<a href="{P}/categories/{fs}/{vslug}/">{vname} {e(low_f)} jobs</a> ({len(vjs):,})')
+            vers.append(f'<a href="{P}/categories/{fs}/{vslug}/">{vname} {e(low_f)} jobs ({len(vjs):,})</a>')
             listing(f"categories/{fs}/{vslug}/", f"{vname} {low_f} jobs", f"{vname} {tcase(fn)} Jobs ({len(vjs):,} open) | {SITE}",
                     f"{len(vjs):,} open {vname.lower()} jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked against them.",
                     vjs, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(vjs, f"{vname.lower()} ", "", hub=True), trail=(("Categories", "categories/"), (fn, f"categories/{fs}/")), per=50, max_pages=2, more=False,
                     extra=hub_stats(vjs), faq=f"{vname.lower()} {low_f} jobs")
-        vers_line = ('<p class="note cmpl">Also: ' + " · ".join(vers) + "</p>") if vers else ""
+        vers_line = labrow("Narrower lists", vers)
         listing(f"categories/{fs}/", f"{fn} jobs", f"{tcase(fn)} Jobs ({len(js_):,} open) | {SITE}",
                 f"{len(js_):,} open jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked hourly.",
                 js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
@@ -1637,7 +1644,7 @@ def main():
         short = name.removeprefix("the ")
         listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'tech job')} in {name}. Startups and established tech companies hiring now.",
-                js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug]) + hub_sections(f"tech roles in {short}", js, "places")[0], faq=f"tech jobs in {name}", feed=True,
+                js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug], ("locations/", "All locations")) + hub_sections(f"tech roles in {short}", js, "places")[0], faq=f"tech jobs in {name}", feed=True,
                 hub=hub_sections(f"tech roles in {short}", js, "places")[1], list_title=f"Newest tech jobs in {short}")
     rule_of = {slug: rule for _, slug, rule in PLACES}
     WORLD = (("North America", {"US", "CA"}), ("Europe", REGIONS["europe"][0]), ("Asia-Pacific", REGIONS["asia-pacific"][0]), ("Latin America", REGIONS["latin-america"][0]))
