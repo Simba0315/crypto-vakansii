@@ -1528,3 +1528,29 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 #rb-pastebox textarea{width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)}
 #rb-pastebox p{margin-top:8px}
 .rb-impmsg{margin:10px 0 0!important}
+
+/* /free-resume-builders/: what a free user of each builder can download */
+.fbt{width:100%;border-collapse:collapse;font-size:14px;min-width:880px}
+.fbt th,.fbt td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.fbt thead th{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--bg2);white-space:nowrap}
+.fbt tbody th{font-weight:700;white-space:nowrap}
+.fbt tbody th a{color:var(--text)}
+.fbt td b{display:block;font-weight:700}
+.fbt td span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.fbt .fb-y{color:#1a7f37}.fbt .fb-n{color:#b42318}.fbt .fb-l{color:#9a6700}
+.fbt .fb-u{color:var(--faint);font-size:13px}
+.fbt tr.fb-ours{background:color-mix(in srgb,#3ecf5f 9%,transparent)}
+.fbt tr.fb-ours th span{display:block;font-size:12px;font-weight:600;color:var(--muted)}
+:root[data-theme="dark"] .fbt .fb-y{color:#5fd47d}:root[data-theme="dark"] .fbt .fb-n{color:#ff8a7a}:root[data-theme="dark"] .fbt .fb-l{color:#e3b341}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fbt .fb-y{color:#5fd47d}:root:not([data-theme="light"]) .fbt .fb-n{color:#ff8a7a}:root:not([data-theme="light"]) .fbt .fb-l{color:#e3b341}}
+@media (max-width:700px){
+  .fbwrap{overflow:visible;background:none;border:0;box-shadow:none}
+  .fbt{min-width:0;font-size:14px}
+  .fbt thead{display:none}
+  .fbt,.fbt tbody,.fbt tr,.fbt th,.fbt td{display:block;width:auto}
+  .fbt tr{border:1px solid var(--line);border-radius:14px;background:var(--card);margin:0 0 12px;padding:6px 0 10px}
+  .fbt tbody th{border:0;padding:10px 14px 6px;font-size:16px;white-space:normal}
+  .fbt td{border:0;padding:6px 14px;display:grid;grid-template-columns:118px 1fr;gap:10px}
+  .fbt td::before{content:attr(data-l);color:var(--muted);font-size:12.5px;line-height:1.4}
+  .fbt tr.fb-ours{border-color:#3ecf5f}
+}

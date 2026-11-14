@@ -16,6 +16,7 @@ import geo_cities                       # where the cities in postings are, for 
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 import compare_sites                    # sourced facts for "Hiring Right Now vs <job site>" (/vs/)
+import builders_check                   # what a free user of each resume builder can download (/free-resume-builders/)
 import quiz_pages                        # skill self-tests (/skill-tests/)
 import glossary_terms                   # the glossary, one page per term (/glossary/)
 
@@ -441,7 +442,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
-<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
+<div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
 </div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
@@ -3892,6 +3893,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Two-column templates with icons look good to people and can turn into scrambled text in applicant tracking systems. '
          'And many builders let you write for free, then charge for the download. Here you get five plain one-column templates that parse cleanly, and the PDF and the Word file are free. '
          'Fill in the form, watch the page update, download. Everything stays in this browser: no account, nothing is uploaded.</p>'
+         f'<p class="note no-print">Which builders charge for the download? <a href="{P}/free-resume-builders/">We read the pricing pages of {len(builders_check.BUILDERS)} of them</a>.</p>'
          '<p class="note no-print">“Save as PDF” opens your browser’s print window: choose “Save as PDF” as the printer.</p>'
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
          '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
@@ -3908,6 +3910,63 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div></section>'
          + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>')
+
+    # "Which free resume builders let you download the PDF": the question every "best free resume builder" list argues about (owner,
+    # 14 Nov: "be in the top for free resume builder"). Every fact about another builder is read from its own pages (builders_check.py).
+    BC = builders_check
+    def bc_cell(v, kind=""):
+        v = (v or "").strip()
+        if not v: return '<span class="fb-u">Not stated</span>'
+        head_, _, rest_ = v.partition(":")
+        cls_ = {"yes": "fb-y", "no": "fb-n", "trial": "fb-n", "limited": "fb-l"}.get(kind, "")
+        return (f'<b class="{cls_}">{e(head_)}</b>' + (f'<span>{e(rest_.strip())}</span>' if rest_.strip() else "")) if cls_ else e(v)
+    bc_free = [b for b in BC.BUILDERS if b["pdf"][0] in ("yes", "limited")]
+    bc_paid = [b for b in BC.BUILDERS if b["pdf"][0] in ("no", "trial")]
+    bc_list = lambda xs: ", ".join(b["name"] for b in xs[:-1]) + (" and " if len(xs) > 1 else "") + (xs[-1]["name"] if xs else "")
+    BC_COLS = ["PDF on the free plan", "Watermark", "Word file free", "Account needed", "Free plan limits", "Cheapest paid option"]
+    def bc_tds(b):          # data-l: the column's name, shown beside each value when a phone lays the rows out as cards
+        cells_ = [bc_cell(b["pdf"][1], b["pdf"][0])] + [bc_cell(b[k_]) for k_ in ("watermark", "docx", "signup", "limits", "paid")]
+        return "".join(f'<td data-l="{e(l_)}"><div>{c_}</div></td>' for l_, c_ in zip(BC_COLS, cells_))
+    bc_rows = "".join(f'<tr><th><a href="{e(b["url"])}" rel="nofollow noopener">{e(b["name"])}</a></th>{bc_tds(b)}</tr>' for b in BC.BUILDERS)
+    bc_rows += f'<tr class="fb-ours"><th>{e(SITE)}<span>this site</span></th>{bc_tds(BC.OURS)}</tr>'
+    bc_table = ('<div class="tablewrap fbwrap"><table class="fbt"><thead><tr><th>Builder</th>' + "".join(f"<th>{e(l_)}</th>" for l_ in BC_COLS)
+                + '</tr></thead><tbody>' + bc_rows + "</tbody></table></div>")
+    bc_when = fdate(BC.CHECKED)
+    bc_qa = [
+        ("Which resume builders let you download a PDF for free?",
+         f"On {bc_when}, the free plans of {bc_list(bc_free)} let you download a PDF without paying"
+         + (f"; {bc_list([b for b in bc_free if b['pdf'][0] == 'limited'])} with limits named in the table" if any(b["pdf"][0] == "limited" for b in bc_free) else "")
+         + (f". {bc_list(bc_paid)} ask for a paid plan or a paid trial before the PDF." if bc_paid else ".")
+         + f" The builder on this site gives the PDF and the Word file free, without an account."),
+        ("Why do some free resume builders charge at the download?",
+         "Writing the resume is free so that anyone can start; the payment is asked when the resume is finished and needed. "
+         "The table shows, for each builder, what its own pages say a free user can download, and what the cheapest paid option costs."),
+        ("Can I make a resume for free without signing up?",
+         f"Yes, here: the builder on {SITE} runs in your browser, keeps the resume in the browser and downloads it as a PDF or a Word file for free, with no account and no watermark."),
+        ("How was this checked?",
+         f"We read each builder’s own pricing page, help pages or terms on {bc_when} and wrote down only what they state; a fact a page does not state is shown as “Not stated”. "
+         "Reviews and lists by others were not used as a source. Prices are those the pages showed us that day, in US dollars; several builders say prices differ by country. "
+         f"{bc_list([{'name': n_} for n_ in BC.LEFT_OUT])} are not in the table: their pages did not open for our reader that day."),
+    ]
+    bc_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in bc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    bc_src = '<ul class="vs-src">' + "".join(f'<li><b>{e(b["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in b["sources"]) + "</li>" for b in BC.BUILDERS) + "</ul>"
+    page("free-resume-builders/", f"Free Resume Builders: Which Let You Download the PDF Free | {SITE}",
+         f"We read the pricing pages of {len(BC.BUILDERS)} resume builders on {bc_when}: which give a free PDF, which add a watermark, which ask for a paid trial first.",
+         crumbs(("Resume builder", "resume/"), ("Free resume builders compared", ""))
+         + f'<h1>Which free resume builders let you <span class="hl">download the PDF</span>?</h1>'
+         + f'<p class="tldr"><strong>Checked on {bc_when}:</strong> of {len(BC.BUILDERS)} well-known resume builders, {len(bc_free)} let a free user download a PDF without paying'
+         + (f' ({e(bc_list(bc_free))}' + (f'; {sum(b["pdf"][0] == "limited" for b in bc_free)} of them with limits such as a download cap, one page or branding' if any(b["pdf"][0] == "limited" for b in bc_free) else "") + ")" if bc_free else "") + (f'; {len(bc_paid)} ask for a paid plan or a paid trial before the PDF ({e(bc_list(bc_paid))})' if bc_paid else "")
+         + f'. The builder on this site gives the PDF and the Word file free, with no account and no watermark.</p>'
+         + '<p class="lead">“Free resume builder” often means free to write and paid to download. Below is what each builder’s own pages say a free user gets, '
+           'side by side, with a link to every page we read. Nothing here is a ranking: pick the one that fits you.</p>'
+         + section(f"Free plans side by side, {bc_when}", bc_table + f'<p class="note">Not in the table: {e(bc_list([{"name": n_} for n_ in BC.LEFT_OUT]))}, whose pages did not open for our reader on {bc_when}. “Not stated” means the builder’s own pages do not say.</p>')
+         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in bc_qa) + "</dl>")
+         + section("Make yours here, free", f'<p>Five one-column templates that screening software can read, a score with fixes as you type, your old resume imported from Word or PDF, '
+                   f'and a PDF or Word download at the end. Everything stays in your browser.</p><p><a class="btn primary" href="{P}/resume/">Open the resume builder</a> '
+                   f'<a class="btn ghost" href="{P}/resume/examples/">See resume examples</a></p>')
+         + section("Sources", bc_src + f'<p class="note">Read on {bc_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>'),
+         head=bc_ld)
 
     # Glossary: the words of a job search in plain English, one page per term (glossary_terms.py) and an index with the old anchors,
     # so links to /glossary/#remote keep working. PeopleForce's glossary is its main free asset; ours adds what to do and a figure.
@@ -4822,6 +4881,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Free tools]({FULL}/tools/): {tools_md}
 - [Jobs matched to your skills]({FULL}/for-you/)
 - [Resume builder]({FULL}/resume/)
+- [Free resume builders compared]({FULL}/free-resume-builders/): what the free plan of each well-known resume builder lets you download, read from its own pages, dated
 - [Job widget and live badges for other sites]({FULL}/widgets/)
 
 ## About

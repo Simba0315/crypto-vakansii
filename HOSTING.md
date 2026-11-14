@@ -49,26 +49,49 @@ HRN_RECORDS=1 python3 build.py && python3 check.py               # no job files;
 python3 serve.py                                                 # http://localhost:8790/crypto-vakansii/
 ```
 
-## Moving the site (after the domain is bought, with the owner's go-ahead)
+## Moving the site: the order (owner, 14 Nov: "let's move to the hosting"; Cloudflare allowed if needed)
 
-1. Domain: an A record for `jobseveryhour.com` and `www` pointing at the server's address (the owner, at the registrar).
-2. On the server, as root: `DOMAIN=jobseveryhour.com DEPLOY_KEY="<public half of a new key>" bash server/hosting/setup.sh`.
-   The key is made for this only; its private half goes to the repository's secrets as `HRN_DEPLOY_KEY`, the address as the variable
-   `HRN_SERVER`. On the server the key can do nothing but rsync into `/srv/hrn/app` (`rrsync`).
-3. `config.json`: `base_url` `https://jobseveryhour.com`, `base_path` empty.
-4. The workflow builds with `HRN_RECORDS=1` and, after the build, uploads with:
+Who does what: **owner** = only the owner can (money, his accounts, keys); **me** = done from this repository, or on the server
+once the owner allows it.
 
-   ```
-   rsync -az --delete --delay-updates -e "ssh -i key" \
-     --include='/site/***' --include='/data/' --include='/data/jobs.db' --include='/*.py' --include='/*.json' \
-     --include='/assets/***' --exclude='*' ./ hrn@$HRN_SERVER:/
-   ```
+1. **Owner:** buy `jobseveryhour.com`.
+2. **Owner:** add the domain to Cloudflare (free plan) and set the two Cloudflare name servers at the registrar. Cloudflare then
+   holds the DNS, keeps copies of the pages near visitors, stops floods and bots, and hides the server's address, which hypestkey
+   shares. hypestkey is already behind Cloudflare.
+3. **Owner, in Cloudflare DNS:** `A @` and `A www` → the server's address, proxied (orange cloud). SSL mode "Full (strict)".
+4. **Me, on the server, with the owner's go-ahead:** `DOMAIN=jobseveryhour.com DEPLOY_KEY="<public half of a new key>" bash
+   server/hosting/setup.sh` as root: user `hrn`, folder `/srv/hrn`, service `hrn-site`, nginx site, Let's Encrypt certificate,
+   Cloudflare's address lists for the real visitor address. Nothing of hypestkey's is touched.
+5. **Owner, in GitHub (Settings → Secrets and variables → Actions):** secret `HRN_DEPLOY_KEY` (the private half of that key,
+   made for this only: on the server it can do nothing but rsync into `/srv/hrn/app`) and variable `HRN_SERVER` (the server's
+   address). Optional variable `HRN_SERVER_HOSTKEY` (the server's line from `ssh-keyscan`) so the first connection is checked too.
+   From the next hourly run the workflow builds the records as well and uploads the site to the server (step "Upload to our
+   server"); GitHub Pages keeps working the same until the switch.
+6. **Me:** check the site on the server (pages, job pages from records, search, the MCP address), then switch:
+   `config.json` `base_url` `https://jobseveryhour.com`, `base_path` empty; the workflow builds `HRN_RECORDS=1` (no job pages) and
+   GitHub Pages becomes a set of redirects to the new address (one per old page, with a canonical link), so search engines move
+   their ranking over.
+7. **Owner:** Google Search Console and Bing Webmaster Tools for the new domain; I add the codes they give to `config.json`.
 
-   `--delay-updates` puts all new files in place at the end, so nobody sees half an upload; `jobs.db` is swapped in one step and
-   `serve.py` opens the new one within 20 seconds. When the page code changes, `serve.py` restarts itself (about a second; nginx serves
-   its kept copies meanwhile).
-5. GitHub Pages: the old address sends visitors to the new domain (a page per old address with a canonical link and a redirect),
-   so search engines move their ranking over.
+### Email
+
+- **Mailbox (hello@, support@):** Beget mail is fine for a mailbox people write to: MX, SPF and DKIM records go into Cloudflare
+  DNS. A free alternative with no new account: Cloudflare Email Routing forwards hello@jobseveryhour.com to an existing inbox
+  (receiving only; replies would come from that inbox).
+- **Mail the site sends (job alerts, sign-up links):** not from a mailbox. A sending service made for it (Amazon SES, Postmark,
+  Resend, Brevo) keeps the letters out of spam with SPF, DKIM and DMARC and counts bounces. Needed only once alerts by email and
+  accounts go live; the key is the owner's and goes into the server's settings, not into the repository.
+- Beget is a Russian company: the privacy page will name where mail is kept.
+
+## Search: SQLite FTS5 now, Lucene when it pays off
+
+Lucene itself is free (Apache licence), but it is a Java library: on a server it runs inside OpenSearch, Solr or Elasticsearch, a
+Java service that wants 1–2 GB of memory of its own on the shared 8 GB server. FTS5 keeps the same kind of index (for every word, the
+jobs it is in) and ranks with the same BM25 formula, inside the file the pages already come from, with no service to run. What
+Lucene adds: typo-tolerant search, synonyms, facet counts ("Remote 812, Berlin 77") computed with the search, "more like this",
+search by distance. Moving later changes only `records.Store.search` and the build step that fills the index; the pages, the
+`/api/search` answer and the MCP tools stay the same. The point to move: about a million jobs, or when typo-tolerant search and
+facet counts are wanted on the server rather than in the browser.
 
 ## Later on the same server
 

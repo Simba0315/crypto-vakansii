@@ -26,7 +26,16 @@ systemctl daemon-reload
 systemctl enable hrn-site >/dev/null
 [ -f /srv/hrn/app/serve.py ] && systemctl restart hrn-site || echo "hrn-site starts after the first upload (serve.py is not there yet)"
 
-# 3. nginx: first the plain-http part, so certbot can prove the domain; then the full site with its certificate.
+# 3. Behind Cloudflare every visitor arrives from a Cloudflare address and the real one is in CF-Connecting-IP; without this the
+#    per-visitor limits in nginx-hrn.conf would count the whole of Cloudflare as one visitor. The ranges come from Cloudflare's lists.
+install -d /etc/nginx/snippets
+if v4=$(curl -fsS https://www.cloudflare.com/ips-v4) && v6=$(curl -fsS https://www.cloudflare.com/ips-v6); then
+  { printf '%s\n%s\n' "$v4" "$v6" | sed '/^$/d; s/^/set_real_ip_from /; s/$/;/'; echo 'real_ip_header CF-Connecting-IP;'; } > /etc/nginx/snippets/hrn-cloudflare.conf
+else
+  : > /etc/nginx/snippets/hrn-cloudflare.conf      # the lists did not load: visitors are counted by the address nginx sees
+fi
+
+# 4. nginx: first the plain-http part, so certbot can prove the domain; then the full site with its certificate.
 install -d /var/www/letsencrypt /var/cache/nginx/hrn
 chown www-data:www-data /var/cache/nginx/hrn
 if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then

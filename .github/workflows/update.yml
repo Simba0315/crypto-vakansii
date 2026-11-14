@@ -33,6 +33,9 @@ jobs:
       # are guarded with it. The check is on which schedule line fired, not on the clock: GitHub often starts a scheduled run late,
       # and a run that waited past 04:00 must still count as the 03:17 one. The text here must match that cron line exactly.
       DAILY: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '17 3 * * *' }}
+      # Our own server (HOSTING.md): once the repository variable HRN_SERVER is set, the build also writes the job records
+      # (data/jobs.db) next to the pages, and "Upload to our server" sends both there. Until then nothing changes.
+      HRN_RECORDS: ${{ vars.HRN_SERVER != '' && 'both' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -113,6 +116,23 @@ jobs:
       - name: Check pages against the page standard
         continue-on-error: true
         run: python3 check.py
+      # The upload to our own server: the files (without the 42,000 job pages, which the server builds from the records), the records
+      # and the page code. HRN_DEPLOY_KEY is a key made for this only; on the server it can do nothing but rsync into /srv/hrn/app.
+      # --delay-updates puts every new file in place at the end, so no visitor sees half an upload.
+      - name: Upload to our server
+        if: vars.HRN_SERVER != ''
+        env:
+          KEY: ${{ secrets.HRN_DEPLOY_KEY }}
+          HOST: ${{ vars.HRN_SERVER }}
+          HOSTKEY: ${{ vars.HRN_SERVER_HOSTKEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$KEY" > "$RUNNER_TEMP/hrn_key"
+          if [ -n "$HOSTKEY" ]; then printf '%s\n' "$HOSTKEY" > "$RUNNER_TEMP/hrn_known"; chk="-o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/hrn_known"; else chk="-o StrictHostKeyChecking=accept-new"; fi
+          rsync -az --delete --delay-updates -e "ssh -i $RUNNER_TEMP/hrn_key $chk" \
+            --exclude='/site/job/' --include='/site/***' --include='/data/' --include='/data/jobs.db' \
+            --include='/*.py' --include='/*.json' --include='/assets/***' --exclude='*' ./ "hrn@$HOST:/"
+          rm -f "$RUNNER_TEMP/hrn_key" "$RUNNER_TEMP/hrn_known"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
