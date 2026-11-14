@@ -177,8 +177,14 @@
     };
     plain(); document.addEventListener('DOMContentLoaded', function () { plain(); });
   }
+  var mySkills = (get('hrn_profile', {}).skills || []).filter(function (s) { return typeof s === 'string'; });
+  function skillFit(j) {           // "2 of 3 skills": how many of the skills this job names the visitor has (only when the visitor named some)
+    if (!mySkills.length || !j[7] || !j[7].length) return '';
+    var hit = j[7].filter(function (t) { return mySkills.indexOf(t) >= 0; }).length;
+    return hit ? '<span class="pill fit" title="Skills you have, of the skills this job names">' + hit + ' of ' + j[7].length + ' skills</span>' : '';
+  }
   function card(j, more, badge) {
-    var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
+    var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
       (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '') +
       j[7].slice(0, 3).map(function (t) { return '<span class="pill">' + esc(t) + '</span>'; }).join('');
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
@@ -221,6 +227,26 @@
     var open = header.classList.toggle('open');
     menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  /* ---------- job page: where the posting comes from, and a ready question for an AI assistant ---------- */
+  (function () {
+    var apply = $('apply'), h1 = document.querySelector('.jhead h1'), co = document.querySelector('.jhead .js a');
+    if (!apply || !h1) return;
+    var host = ''; try { host = new URL(apply.href).hostname.replace(/^www\./, ''); } catch (e) {}
+    var ats = /greenhouse\.io$/.test(host) ? 'Greenhouse' : /lever\.co$/.test(host) ? 'Lever' : /ashbyhq\.com$/.test(host) ? 'Ashby' : '';
+    var pills = document.querySelector('.jhead .pills');
+    if (pills && !pills.querySelector('.pill.src')) pills.insertAdjacentHTML('afterbegin', '<span class="pill ok src" title="Read from ' + (ats ? ats + ', the hiring system the employer itself uses' : 'the employer’s own careers site') + ', and re-checked every hour">✓ Employer’s own posting</span>');
+    var title = h1.textContent.trim(), company = co ? co.textContent.trim() : '', url = location.href.split('#')[0].split('?')[0];
+    var ask = 'I am looking at this job: "' + title + '"' + (company ? ' at ' + company : '') + ' (' + url + '). Explain in plain words what the role involves and what it requires, which interview questions I should prepare for, and what I should ask the employer. Then ask me about my experience and tell me how well I fit.';
+    var q = encodeURIComponent(ask);
+    var box = document.createElement('div');
+    box.className = 'askai';
+    box.innerHTML = '<p><b>Ask an AI assistant about this job</b><span>Opens with a ready question; what you type there goes to that service.</span></p>'
+      + '<p class="askai-l"><a href="https://chatgpt.com/?q=' + q + '" target="_blank" rel="nofollow noopener">ChatGPT</a><a href="https://claude.ai/new?q=' + q + '" target="_blank" rel="nofollow noopener">Claude</a>'
+      + '<a href="https://www.perplexity.ai/search?q=' + q + '" target="_blank" rel="nofollow noopener">Perplexity</a></p>';
+    var after = document.querySelector('aside .rmbox') || apply;
+    after.parentNode.insertBefore(box, after.nextSibling);
+  })();
+
   /* ---------- job page: "Tailor my resume to this job" next to "Check my resume for this job" ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('a.rmbox'), function (a) {
     var m = (a.getAttribute('href') || '').match(/[?&]job=([a-z0-9-]+)/);
@@ -251,6 +277,7 @@
         ['/how-to-become/', 'How to become…', 'Skills, pay and beginner jobs, career by career.'],
         ['/career-quiz/', 'Career quiz', 'Seven plain questions: the fields that fit you.'],
         ['/map/', 'Jobs map', 'Every city with open jobs on one map.'],
+        ['/relocate/', 'Relocation guides', 'Jobs abroad with visa or relocation help, by country.'],
         ['/guides/', 'Guides', 'The job market explained with today’s numbers.'],
         ['/glossary/', 'Glossary', 'Hiring words in plain English.'],
         ['/tools/', 'All free tools', 'Offer check, raise calculator, letters and more.']]],

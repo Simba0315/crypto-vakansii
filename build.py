@@ -2856,6 +2856,80 @@ def main():
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a guide"></p>'
          f'<p class="lead" id="dirnone" hidden>No guide with these words. The <a href="{P}/job-descriptions/">job description templates</a> cover the same roles.</p>' + hh_html)
 
+    # Relocation guides, one per country (Relocate.me lives on guides like these, the owner asked for them): from today's postings in
+    # the country, the employers that mention visa sponsorship or help with the move, the kinds of work, the pay, and the official
+    # immigration site. Only official sites that answered when checked on 2026-11-14 are linked; no visa rule is restated here.
+    OFFICIAL_VISA = {
+        "GB": ("GOV.UK: Skilled Worker visa", "https://www.gov.uk/skilled-worker-visa"),
+        "SG": ("Ministry of Manpower: passes and permits", "https://www.mom.gov.sg/passes-and-permits"),
+        "DE": ("Make it in Germany, the German government’s portal for skilled workers", "https://www.make-it-in-germany.com/en/"),
+        "IE": ("Department of Enterprise: employment permits", "https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/"),
+        "AU": ("Department of Home Affairs: working in Australia", "https://immi.homeaffairs.gov.au/visas/working-in-australia"),
+        "JP": ("Immigration Services Agency of Japan", "https://www.isa.go.jp/en/"),
+        "NL": ("IND: residence permits for work", "https://ind.nl/en/residence-permits/work"),
+        "KR": ("Hi Korea, the Korean immigration portal", "https://www.hikorea.go.kr/")}
+    cname_ = {c: nm for c, nm, _, _ in COUNTRIES}
+    cname_["US"] = "United States"
+    the_c = lambda c: ("the " if c in {"US", "GB", "NL", "AE", "PH", "CZ"} else "") + cname_.get(c, c)
+    rl_rows = []
+    for _, slug, rule in PLACES:
+        if not (isinstance(rule, str) and len(rule) == 2): continue
+        cj = [j for j in active if slug in j["places"]]
+        both = [j for j in cj if {"Visa sponsorship", "Relocation support"} & set(j.get("perks", []))]
+        if len(cj) < 150 or len(both) < 10: continue
+        c, nm = rule, the_c(rule)
+        flg = fl(c)
+        visa_ = [j for j in both if "Visa sponsorship" in j.get("perks", [])]
+        relo_ = [j for j in both if "Relocation support" in j.get("perks", [])]
+        cos_ = Counter(j["company"] for j in both).most_common(10)
+        ids_ = {j["id"] for j in both}
+        roles_ = sorted(((sum(1 for j in rj if j["id"] in ids_), slug_r, rname) for slug_r, (rname, rj) in by_role.items() if slug_r not in BROAD and not slug_r.endswith("-speaking")), reverse=True)
+        roles_ = [x for x in roles_ if x[0] >= 2][:8]
+        mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in both if j["usd"])
+        rem_ = pc_(sum(1 for j in both if j["remote"]), len(both))
+        newest = sorted(both, key=lambda j: j.get("posted") or "", reverse=True)[:12]
+        off = OFFICIAL_VISA.get(c)
+        lists_ = [(f"perks/visa-sponsorship/{slug}/", f"{len(visa_):,} jobs with visa sponsorship"), (f"perks/relocation/{slug}/", f"{len(relo_):,} jobs with relocation support")]
+        lists_ = [(u, t) for u, t in lists_ if (OUT / u / "index.html").exists()]
+        facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs in the country</dt><dd>{len(cj):,}</dd></div><div><dt>Mention visa sponsorship</dt><dd>{len(visa_):,}</dd></div>"
+                  f"<div><dt>Mention relocation support</dt><dd>{len(relo_):,}</dd></div>"
+                  + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 10 else "") + "</dl>")
+        steps = ('<ol class="steps">'
+                 f'<li><b>Start with employers that already say they help.</b> {len(cos_)} employers below mention visa sponsorship or relocation in today’s postings in {flg}{e(nm)}. A posting that says so is a better bet than one that is silent.</li>'
+                 + (f'<li><b>Read the official rules first.</b> Visa routes, salary thresholds and documents are set by the government and change: check them on <a href="{e(off[1])}" rel="nofollow noopener">{e(off[0])}</a>. This page does not restate them.</li>'
+                    if off else f'<li><b>Read the official rules first.</b> Visa routes, salary thresholds and documents are set by the government of {flg}{e(nm)} and change: check them on its official immigration website. This page does not restate them.</li>')
+                 + "<li><b>Ask in the first call.</b> “Do you sponsor the visa, and what does relocation support include: flights, temporary housing, a lump sum?” The answer saves weeks.</li>"
+                 + f'<li><b>Count the cost of the move.</b> Put the offer next to the cost of living and the move itself: the <a href="{P}/tools/compare-offers/">offer comparison</a> and the <a href="{P}/tools/salary-converter/">salary converter</a> help.</li>'
+                 + f'<li><b>Say it in your resume.</b> One line under your name, for example “Open to relocating to {e(cname_.get(c, c))}; need visa sponsorship”, answers the recruiter’s first question. The <a href="{P}/resume/">resume builder</a> has a place for it.</li></ol>')
+        qa_ = [(f"Which companies sponsor visas in {nm}?", (f"In today’s postings in {nm}, the employers that mention visa sponsorship most are {', '.join(co for co, _ in Counter(j['company'] for j in visa_).most_common(5))}. "
+                 if visa_ else "None of today’s postings mention visa sponsorship. ") + "A posting that does not mention it may still sponsor: ask."),
+               (f"How many jobs in {nm} offer relocation support?", f"{len(relo_):,} of today’s {len(cj):,} open jobs in {nm} here mention relocation support, and {len(visa_):,} mention visa sponsorship. Counted on {fdate(TODAY)}."),
+               (f"Where is the official information about work visas for {nm}?", (f"On {off[0]}: {off[1]}" if off else f"On the official immigration website of the government of {nm}.") + " Rules and salary thresholds change, so check there before you apply.")]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        flagged = lambda t: e(t).replace(e(nm), flg + e(nm))      # a country is never shown without its flag
+        rl_rows.append((slug, c, nm, len(both), len(cj)))
+        page(f"relocate/{slug}/", f"Relocate to {nm} for Work: {len(both):,} Jobs with Visa or Relocation Help ({TODAY[:4]}) | {SITE}",
+             f"Moving to {nm} for a job: {len(visa_):,} open jobs mention visa sponsorship and {len(relo_):,} relocation support today. The employers, the kinds of work, the pay and the official visa site.",
+             crumbs(("Relocation guides", "relocate/"), (cname_.get(c, c), "")) + f'<h1>Work and relocate to {flg}{e(nm)}: <span class="hl">{len(both):,} jobs that help you move</span></h1>'
+             f'<p class="lead">Today’s open jobs in {flg}{e(nm)} that mention visa sponsorship or help with relocation, counted from employers’ own careers pages: who offers it, for which work, what it pays, and where to read the official rules.</p>'
+             + facts_
+             + section("Employers that mention visa sponsorship or relocation", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(co)}/", co, k, True) for co, k in cos_) + "</ul>")
+             + (section("The kinds of work they hire for", '<div class="hbars">' + "".join(
+                 f'<a href="{P}/roles/{sr}/"><span class="hn">{e(rn)}</span><span class="hb"><i style="width:{max(4, round(100 * k / roles_[0][0]))}%"></i></span><span class="hc">{k} jobs</span></a>' for k, sr, rn in roles_) + "</div>") if roles_ else "")
+             + section(f"Five steps to a job in {cname_.get(c, c)}", steps)
+             + section("The newest of these jobs", '<ul class="jobs">' + "".join(card(j) for j in newest) + "</ul>"
+                       + ("<p>" + " · ".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in lists_) + "</p>" if lists_ else ""))
+             + section(f"Questions about relocating to {cname_.get(c, c)}", '<dl class="qa">' + "".join(f"<div><dt>{flagged(q_t)}</dt><dd>{flagged(a_t)}</dd></div>" for q_t, a_t in qa_) + "</dl>")
+             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages. “Mentions visa sponsorship” means the posting says so; {rem_}% of these jobs can also be done remotely. Not legal advice.</p>', head=ld_)
+    if rl_rows:
+        page("relocate/", f"Relocation Guides: Jobs with Visa Sponsorship in {len(rl_rows)} Countries | {SITE}",
+             f"Jobs that help you move abroad, country by country: {', '.join(cname_.get(c, c) for _, c, _, _, _ in rl_rows[:6])} and more. The employers that sponsor visas, the work they hire for and the official visa sites.",
+             crumbs(("Relocation guides", "")) + f'<h1>Relocation guides: <span class="hl">{len(rl_rows)} countries, with today’s jobs</span></h1>'
+             '<p class="lead">For people who want to work abroad: pick a country to see which employers mention visa sponsorship or relocation help in today’s postings, the work they hire for, the pay and the official visa site.</p>'
+             + '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/relocate/{sl}/"><span class="n">{fl(c)}{e(cname_.get(c, c))}</span><span class="c">{k:,} jobs</span></a></li>' for sl, c, _, k, _ in sorted(rl_rows, key=lambda x: -x[3])) + "</ul>"
+             + f'<p class="note">Also: <a href="{P}/perks/visa-sponsorship/">all jobs with visa sponsorship</a> · <a href="{P}/perks/relocation/">all jobs with relocation support</a></p>')
+
     # "Hiring Right Now vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
     # A site with fewer than 4 sourced rows gets no page: a comparison with gaps would not be fair.
     VS = [x for x in compare_sites.SITES if len(x["rows"]) >= 4]

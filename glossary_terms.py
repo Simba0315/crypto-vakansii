@@ -179,7 +179,7 @@ TERMS = [
     ("Vesting", "How stock options or shares become yours over time, often over four years with nothing until the first year (the cliff).",
      "Note the cliff date: leaving the day before it can mean leaving with nothing.", [("tools/equity-calculator/", "Stock options calculator")]),
     ("Visa sponsorship", "The employer helps a worker from another country get the permit needed to work there.",
-     "Search for postings that say so outright; many that do not mention it will not sponsor.", [("perks/visa-sponsorship/", "Jobs with visa sponsorship")]),
+     "Search for postings that say so outright; many that do not mention it will not sponsor.", [("perks/visa-sponsorship/", "Jobs with visa sponsorship"), ("relocate/", "Relocation guides by country")]),
     ("Widget", "A small box with a list of jobs that the owner of a website can place on their own site.",
      "Communities and career pages use one to show fresh jobs without updating anything by hand.", [("widgets/", "The job widget")]),
     ("Work authorization", "The legal right to work in a country: citizenship, residence or a work visa.",
