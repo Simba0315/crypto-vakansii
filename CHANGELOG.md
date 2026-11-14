@@ -2,6 +2,8 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-15 UTC (cloud run) — Tools on phones: the row of links under the title (“All tools”, “Resume match checker”…) took the header's phone-menu rules and unfolded into a tall list that covered the form (all 34 tool pages); it is now one row that scrolls sideways, as the CSS intended. Why: AUDIT item 47 (phone layout of the tools). Pages: `/tools/*` (assets/tools.css). The local build is 1,475 MiB of content with 89,711 open jobs (the data branch has grown); this change adds about 0.4 KB. The workflow's own size step trims it, but the hosting limit needs the move to the server (`HOSTING.md`).
+
 - 2026-11-14 23:30 — Search: employers misspell too (“manger” stands in 9 postings), so “product manger” found 2 jobs as typed and the typo was never forgiven. When the words as typed find fewer than 10 jobs and the forgiving search ten times as many (20 or more), the closest spelling is shown and the page says how many matched as typed. The page server now restarts when `search_engine.py` changes too. Checked the earlier three batches on the live site.
 
 - 2026-11-14 23:00 — Jobs by hourly pay (`/jobs-that-pay/` and seven bands from $20 to $100+ an hour): each job placed by the lowest pay it states, hourly as written or yearly ÷ 2,080; each page says what the rate is a week, a month and a year (searches in keywords.json: “jobs that pay 25 an hour”). Trust marks on company pages, Upwork-style, each with its rule and number: actively hiring, states the pay, few old postings; the rules and counts are on `/companies/`. Pages: `/jobs-that-pay/…`, every company page, `/companies/`, footer, llms.txt.

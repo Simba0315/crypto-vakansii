@@ -62,7 +62,7 @@ When you fix an open item, move it up and say how you checked it.
 | 21 | Level names differ between pill, page title, salary table and tool | one vocabulary |
 | 22 | Tool copy slips still open: "a honest" and "Download PDF" no longer appear in visible copy (checked 2026-11-13); contractor rate sentence reworded 2026-11-13 (fixed 2026-11-13: "Found 1 skills", "With prices up -2%", "Inc..") | `tools.js`, `build.py` |
 | 33 | 392 groups of identical company, title and location count as separate roles in totals | decide whether totals should collapse them |
-| 47 | Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
+| 47 | (fixed 15 Nov: the sub-navigation row unfolded into a tall list on phones) Phone layout of the time-zone bar and the letter tools | `tools.css`, `tools.js` |
 | 61 | Tool logic still open: job description checker misreads some salary formats; boolean search invents a title (fixed 2026-11-13: `num("150.000")`, "founded 15 years ago", 2000% ownership, and Go in running text such as "Python and Go", which also raises the number of jobs tagged Go at the next collection) | `tools.js`, add tests |
 | 62–66 | Mixed title casing, "Other" shown as a category name, sample cards linking to `#`, (fixed 2026-11-13: "$440.00" next to "$2,200"; the leftover `/hiring-badge/` stub is now a real hiring badge page) | polish |
 | 69 | Left after the server fixes: the account page has no password-reset form and no delete button for a job; `createOrder` creates the gateway invoice before saving the order; “renew” does not re-check the apply link; look-alike letters in company names are not folded | `assets/account.js`, `server/src/worker.js`, before the server is deployed |

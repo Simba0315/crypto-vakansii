@@ -149,7 +149,8 @@ td.tl-best{background:var(--accent-soft)}
 }
 
 /* Tool pages: one row to move between tools without going back to the hub. It scrolls sideways on a phone. */
-.tsub{display:flex;gap:6px;overflow-x:auto;margin:14px -2px 4px;padding:2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.tsub{display:flex;flex-direction:row;align-items:center;position:static;max-height:none;gap:6px;overflow-x:auto;overflow-y:hidden;margin:14px -2px 4px;padding:2px;background:none;border:0;box-shadow:none;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+/* the phone menu rules of the header target every <nav>; this one is a scrolling row of links, not a menu */
 .tsub a{flex:none;padding:8px 13px;border:1px solid var(--line,#e3e1d8);border-radius:999px;font-size:14px;line-height:1.2;color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px;white-space:nowrap}
 .tsub a:hover{background:var(--hl);color:var(--hl-ink);border-color:transparent}
 .tsub a.all{text-decoration:none;font-weight:600}
