@@ -1448,8 +1448,10 @@ def main():
     if CFG.get("plus", {}).get("live"):
         plus_band = (f'<div class="band"><div><h2>Get the email when a matching job appears</h2><p>Plus watches your saved searches and helps with the resume and cover letter for each posting. One payment, nothing renews.</p></div>'
                      f'<a class="btn" href="{P}/plus/">See Plus</a></div>')
-    band = (f'<div class="band"><div><h2>Hiring?</h2><p>Your posting sits next to {n:,} others here. A standard listing is free; a featured one stays at the top of the list, from {price_of("Featured job")}, paid in crypto.</p></div>'
-            f'<a class="btn" href="{P}/post-a-job/">Post a job</a></div>')
+    # The owner, 14 Nov: "the green I do not like, and it must say that it is free". A light card; "free" first and big.
+    band = (f'<div class="band"><div><p class="band-k">For employers</p><h2>Post a job for <span class="free">free</span></h2>'
+            f'<p>A standard listing costs nothing and sits next to {n:,} open jobs from {m:,} companies. Want it first in its list? A featured listing, from {price_of("Featured job")}, paid in crypto.</p></div>'
+            f'<a class="btn primary" href="{P}/post-a-job/">Post a job — free</a></div>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
     FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of tech companies. Every listing links to the original posting, and you apply on the employer's own site."),
            ("How often is the site updated?", "Every hour. New roles are added. A role the company has closed keeps its page at the same address, marked as closed, and leaves the lists of open jobs."),

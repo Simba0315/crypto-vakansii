@@ -147,6 +147,20 @@ the titles it catches (the test loop is in the commit that added the file). The 
 Logos: a company without an official logo is shown with no picture at all (`.ava:not(.has)` in `style.css`); never bring the
 letter squares back.
 
+## The owner's taste (screenshots of 14 Nov 2026 — follow it in every new block)
+
+He sends what he likes; keep these, and build new blocks the same way:
+- **Liked:** the hero (big two-line headline with one highlighted phrase, the "Checked Nov 14 · open jobs · new in 3 days" pill,
+  the rounded search bar, chips under it, "Near you" line, four big numbers); the "Latest jobs" window with tabs and a side column
+  of cards (fit quiz, resume builder, what jobs pay, free tools); the strip of company logos "Read every hour from the career pages
+  of …"; "What every listing tells you" (a real listing in the middle, numbered notes on both sides); category cards with a soft
+  icon, count and a short plain description.
+- **Disliked:** green fills and blocks (the green "Hiring?" band), green pictures on black, dull charts. Use light cards with a thin
+  border, dark text, one accent colour for data (blue `--viz-1`, orange `--viz-2` for the one mark that matters); green stays only
+  as a small accent (the live dot, a highlight behind one phrase, links' underline).
+- **Free must be said:** where something is free (posting a job, the resume builder, tools), the word "free" is visible and big,
+  not buried in a sentence.
+
 ## Pictures before words
 
 The owner, looking at the rankings hub on 2026-11-13: "what are these texts, I cannot read at all; more pictures, charts,
