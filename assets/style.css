@@ -1302,3 +1302,11 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .mp-help p{margin:0 0 8px}
 .maplibregl-popup-content{font:13px/1.35 Inter,system-ui,sans-serif;padding:8px 10px;border-radius:10px}
 @media(max-width:900px){.mapwrap{grid-template-columns:1fr}.jobmap{height:58vh}.mappanel{max-height:none}}
+
+/* job page: "check my resume for this job" under the apply button */
+.rmbox{display:block;margin:12px 0 4px;padding:12px 14px;border:1px dashed var(--ac);border-radius:12px;background:var(--accent-soft);color:var(--text);text-decoration:none}
+.rmbox b{display:block;font-size:14.5px}
+.rmbox span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.rmbox:hover{border-style:solid}
+.tl-loaded{margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--accent-soft)}
+

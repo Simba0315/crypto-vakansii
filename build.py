@@ -913,7 +913,9 @@ def job_page(j, active_by_cat):
         host_ = re.sub(r"^www\.", "", re.sub(r"^https?://([^/?#]+).*$", r"\1", j["url"] or "")).lower()
         apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a>'
                      + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else "")
-                     + '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>')
+                     + '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>'
+                     # Rezi's best-converting box, done our way: no account, the posting goes straight into the checker
+                     + f'<a class="rmbox" href="{P}/tools/resume-match/?job={j["slug"]}"><b>Check my resume for this job</b><span>See which of its words your resume is missing</span></a>')
         banner = ""
     else:
         apply_btn = f'<a class="btn lg" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs</a>'

@@ -1679,6 +1679,27 @@
     }
     var go = $('tl-run');
     if (go) go.addEventListener('click', function () { F.draw(); if (out.scrollIntoView) out.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    // ?job=<slug>: a job page sent the visitor here; its posting is read from this site's own page and put into the form
+    var slug = (location.search.match(/[?&]job=([a-z0-9-]{3,160})/) || [])[1];
+    if (slug && window.fetch && window.DOMParser) {
+      fetch(H.base + '/job/' + slug + '/').then(function (r) { return r.ok ? r.text() : ''; }).then(function (page) {
+        if (!page) return;
+        var doc = new DOMParser().parseFromString(page, 'text/html'), d = doc.querySelector('.prose.desc') || doc.querySelector('.prose');
+        if (!d) return;
+        var blocks = [].map.call(d.querySelectorAll('h2,h3,h4,p,li'), function (x) { return x.textContent.trim(); }).filter(Boolean);
+        var title = ((doc.querySelector('h1') || {}).textContent || '').trim(), apply = doc.getElementById('apply');
+        F.set('jd', blocks.length ? blocks.join('\n') : d.textContent.trim());
+        if (title) F.set('title', title);
+        F.save(); F.draw();
+        var note = document.createElement('p');
+        note.className = 'note tl-loaded';
+        note.innerHTML = 'The posting <b>' + esc(title) + '</b> is filled in from its page on this site.' +
+          (d.classList.contains('desc') ? '' : ' Only its opening lines are here: for a full check, paste the whole description' + (apply ? ' from <a href="' + esc(apply.getAttribute('href')) + '" target="_blank" rel="nofollow noopener">the employer’s page</a>' : '') + '.') +
+          (imp && !imp.hidden ? ' Now press “Use my resume from the builder” or paste your resume.' : ' Now paste your resume.');
+        var form_ = document.querySelector('.tl-form');
+        if (form_) form_.parentNode.insertBefore(note, form_);
+      }).catch(function () {});
+    }
   };
 
   /* ---------- cover letter ---------- */
