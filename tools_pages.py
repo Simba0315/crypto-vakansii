@@ -293,9 +293,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # ------------------------------------------------------------ 3. salary converter
     tool("salary-converter", "seekers", "Salary converter",
          "Turn an hourly, daily, weekly or monthly rate into a yearly salary and back, with your own working hours.",
-         "Salary Converter: Hourly to Yearly Pay",
+         "Salary Calculator: Hourly, Monthly, Yearly Pay",
          "Convert pay between hourly, daily, weekly, monthly and yearly figures. Set your own hours per week and paid weeks per year. Free, instant, no sign-up.",
-         "Convert an hourly rate to a yearly salary, and back",
+         "Salary calculator: hourly to yearly pay, and back",
          "One posting says $55 an hour, another $95,000 a year, and a recruiter quotes a day rate. You cannot compare them until they are in the same unit. "
          "Enter any one figure and your working hours: you get the hourly, daily, weekly, monthly and yearly equivalents at once.",
          wrap("salary-converter",
@@ -314,7 +314,10 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<li><code>monthly = yearly ÷ 12</code>, an average month.</li></ul>"
          "<p>All figures are before tax. For an employee with paid leave, leave “paid weeks” at 52: holidays are paid, so they are already inside the salary. "
          "For contract work, enter the number of weeks you expect to bill.</p>",
-         [("How do I convert an hourly rate to a yearly salary?",
+         [('How much is $60,000 a year per hour?', 'About $28.85 an hour at 40 hours a week for 52 weeks (2,080 hours): divide the yearly figure by 2,080. Monthly it is $5,000 and weekly $1,153.85, before tax.'),
+          ('What is a bi-weekly paycheck on $60,000 a year?', '$2,307.69 before tax: there are 26 bi-weekly pay periods in a year. Paid twice a month (semi-monthly, 24 periods) it is $2,500. This calculator works before tax; take-home pay depends on where you live and your deductions.'),
+          ('Does this calculator show take-home pay after tax?', 'No. Every figure here is before tax and deductions, the way job postings state pay. Use it to compare offers in the same unit; for take-home pay, use your country’s official tax calculator.'),
+          ("How do I convert an hourly rate to a yearly salary?",
            "Multiply the hourly rate by the hours you work in a week and by the weeks you are paid in a year. At 40 hours and 52 weeks that is the hourly rate times 2,080, so $50 an hour is $104,000 a year."),
           ("How many working hours are there in a year?",
            "2,080 if you count 40 hours a week for 52 weeks. A 37.5-hour week gives 1,950 hours and a 35-hour week 1,820. For a salaried employee, paid holidays are already inside these figures."),
@@ -501,9 +504,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         '<div class="tl-paper" id="tl-paper"></div><p class="note tl-noprint" id="tl-count" role="status" aria-live="polite"></p></div>')
     tool("cover-letter", "seekers", "Cover letter builder",
          "Fill in a few facts, pick a tone, get a clean letter to edit. Copy, download or print. A template, not AI.",
-         "Cover Letter Builder — Free, No Sign-Up",
+         "Cover Letter Generator — Free, No Sign-Up",
          "Build a short, clear cover letter from a few facts about you and the job. Three tones; copy, download or print. Template-based, private, no sign-up.",
-         "Write a cover letter without staring at a blank page",
+         "Cover letter generator: write one without staring at a blank page",
          "The empty page is the slowest part of applying. Fill in a few facts about the job and about you, pick a tone, and you have a short, clean letter to edit. "
          "It is a fill-in template, not AI: every sentence is built from what you type, so nothing is invented for you. Nothing is uploaded.",
          wrap("cover-letter",
@@ -528,7 +531,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Each part is built from one or two fields. A field you leave empty drops its sentence, and the three things a letter cannot do without (job title, company, your name) appear in [brackets] until you fill them in.</p>"
          "<p>The tone changes the wording, never the facts: “direct” is plain and brief, “warm” is friendlier, “formal” suits banks, law firms and the public sector. "
          "No AI is involved and nothing is generated: what you read is what you typed, arranged. Treat it as a first draft and change any sentence that does not sound like you.</p>",
-         [("Is this cover letter written by AI?",
+         [('Is there a free cover letter generator with no sign-up?', 'This one: fill in a few facts about you and the job, pick a tone, and copy, download or print the letter. No account, no email, and nothing is uploaded.'),
+          ('Can I use ChatGPT to write a cover letter?', 'Yes, as a first draft. Then make it yours: replace general claims with your own results and numbers, use the posting’s words and cut it to under 250 words. A letter that could go to any company reads as generated. This generator builds every sentence from the facts you type, so nothing is invented.'),
+          ("Is this cover letter written by AI?",
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated, guessed or sent to a server, so the letter contains only facts you typed."),
           ("How long should a cover letter be?",
            "Short: three to five brief paragraphs that fit on one page. The builder shows a word count under the letter and tells you when your answers make it run long."),
@@ -769,9 +774,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # ------------------------------------------------------------ 14. resume review
     tool("resume-review", "seekers", "Resume review",
          "Paste your resume: a score out of 10 from six plain checks, with strengths, weaknesses and what to fix, each quoting your own line.",
-         "Resume Review: Free Score Out of 10 and Fixes",
+         "Free Resume Checker: Score Out of 10 and Fixes",
          "Paste your resume for a rule-based review: a score out of 10 from six checks, strengths, weaknesses and what to fix, quoting your own lines. No AI, private.",
-         "Get your resume reviewed the way a recruiter skims it",
+         "Resume checker: see your resume the way a recruiter skims it",
          "A recruiter’s first pass over a resume is a skim: the top of the page, a few bullet points, the dates. This review reads your text the same way with six plain checks: "
          "what the first screen holds, duty wording, numbers, the skills list, gaps between dates and length. You get a score out of 10 from a formula printed on this page, "
          "strengths, weaknesses and a list of fixes, each quoting your own line. It works by rules, not AI, and nothing is uploaded.",
@@ -802,7 +807,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<p>8.5 and above is labelled “reads well on a first skim”, 6.5 to 8 “solid”, 4.5 to 6 “readable”, anything lower “hard to skim”. The points and thresholds are our own rules of thumb, "
          "written down so that you can check them; they are not an industry standard. The review cannot tell whether what you wrote is true, how the page looks or whether you fit a particular job. "
          "A break in the dates is a question a reader may ask, not a fault.</p>",
-         [("How is the resume score calculated?",
+         [('Is 80% a good ATS score?', 'There is no single ATS score. An employer’s applicant tracking system stores resumes and lets recruiters search them; the percentages people quote come from third-party checkers, each with its own formula. On this site the resume match checker scores the keyword overlap with one posting (75 and above is labelled a strong match), and this review scores how well the page reads on a first skim, out of 10.'),
+          ('How do I check if my resume is good?', 'Three questions cover most of it: does the top third show your title, years and strongest skills; does every line under a job say what changed, with a number; and does it use the words of the posting you apply to. This review checks the first two; the resume match checker checks the third against a real posting.'),
+          ("How is the resume score calculated?",
            "It is the sum of six checks worth 10 points in all: first screen 2, wording 2, numbers 2, skills 1.5, gaps 1 and length 1.5. The exact rule for each check is under “How the score is calculated”, so the same text always gets the same score."),
           ("Is the review done by AI?",
            "No. The page counts words, lines, numbers and dates, and looks for a short list of phrases. That is why every finding can quote the line it is about, and why the review cannot judge things that need understanding, such as whether a result is impressive."),
@@ -1475,6 +1482,27 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     def cards(items):
         return '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h3>{e(n)}</h3><p>{e(d)}</p></a>' for u, n, d in items) + "</div>"
 
+
+    # "In plain words" (owner's standard): two sentences, no jargon, for the tools whose subject is a technical or money term.
+    PLAIN = {
+        "boolean-search": "Recruiters find people by typing a search with the words AND, OR and NOT between the terms. This page writes that search for you, so you only list the job titles and skills.",
+        "jobposting-schema": "Google shows jobs in a special box only when the page describes the job in a fixed code format that its robot can read. This page fills that code in from a short form, and you paste the result into your job page.",
+        "equity-calculator": "Some companies pay part of your salary in options: the right to buy company shares at a fixed price later. This page turns the numbers in your offer letter into what the shares could be worth and what buying them would cost.",
+        "contractor-rate": "A contractor is paid per day or per hour and covers their own holidays, sick days and gaps between jobs. This page works out the rate to ask for so that you end up with the same yearly income as an employee.",
+        "job-description-keywords": "Many employers first read applications with a program that searches for the words in the posting. This page lists the words a posting uses most, so you can use the same ones in your resume where they are true.",
+        "resume-match": "Many employers first read applications with a program that searches for the words in the posting. This page compares your resume with one posting and shows which of its words your resume does not use yet.",
+        "time-zone-overlap": "A remote team can sit in different countries, and the clock is different in each. This page shows which hours of the working day fall inside the working hours of both places.",
+        "interview-answer-builder": "STAR is a way to answer “tell me about a time when…”: say the situation, the task, what you did and the result, in that order. This page puts your four parts together and tells you how long the answer takes to say.",
+        "interview-scorecard": "A scorecard is one list of what you are looking for, with a weight for each item, that every interviewer fills in for every candidate. This page builds that sheet and adds up the ratings into one score per candidate.",
+        "cost-of-vacancy": "A vacancy is a job with nobody in it yet, and the work still has to be done by someone. This page puts a price on each day the job stays empty.",
+        "cost-per-hire": "Cost per hire is everything spent to fill one job, divided by the number of people hired. This page adds the invoices and the time of your own staff, so that the figure is the full one.",
+        "job-description-checker": "A job description is the text of the posting that candidates read before they apply. This page reads yours for the things that make people skip a posting, such as a missing salary or too many requirements, and lists what to change.",
+        "compare-offers": "An offer is more than the base salary: bonus, shares, days off and the commute change what you take home. This page puts two or three offers on one scale, so you can see which one is worth more per year.",
+        "offer-check": "“Below the lower quarter” means lower than three of every four salaries posted for that work. This page places your offer among the salaries that open postings state, and says how many postings that is.",
+        "salary-checker": "The median is the middle figure: half of the postings pay more and half pay less. This page shows the median and the usual range for a kind of work and a level, and where your salary sits among them.",
+        "salary-converter": "Pay is quoted per hour, per day, per month or per year, and the figures cannot be compared until they are in one unit. This page converts one of them into all the others, using the hours you actually work.",
+        "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
+    }
     for t in TOOLS:
         path = f"tools/{t['slug']}/"
         faq_html, faq_ld = faq_block(t["faq"])
@@ -1485,7 +1513,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         extra = section("Advertised salaries by category and level", sal_table) if t["slug"] == "salary-checker" else ""
         sub = (f'<nav class="tsub" aria-label="{"Tools for people hiring" if t["group"] == "employers" else "Tools for job seekers"}"><a class="all" href="{P}/tools/">All tools</a>'
                + "".join(f'<a href="{P}/tools/{o["slug"]}/"' + (' aria-current="page"' if o is t else "") + f'>{e(o["name"])}</a>' for o in TOOLS if o["group"] == t["group"]) + "</nav>")
-        body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + t["html"]
+        body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + (f'<p class="plain"><b>In plain words:</b> {e(PLAIN[t["slug"]])}</p>' if t["slug"] in PLAIN else "") + t["html"]
                 + '<div class="tl-after">' + extra
                 + section(t["how_title"], f'<div class="tl-how">{t["how"]}</div>')
                 + section(f"Questions about the {t['name'][0].lower() + t['name'][1:]}", faq_html)

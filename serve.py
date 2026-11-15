@@ -70,6 +70,19 @@ def brief(j):
             "found_at": j.get("first_seen_at") or ""}
 
 
+def brief_card(j):
+    """brief() plus what a row in a list of jobs shows: t, the exact posting time in seconds (0 when the employer gave only the day), ts,
+    the time lists sort by (t, or the start of the posting day: build.stamp), the level, the first skills, the flags of the place, the
+    logo, and whether it is a standing "talent pool" posting (the home window leaves those out)."""
+    b = brief(j)
+    co = build.slugify(j["company"])
+    b.update({"t": j.get("t") or 0, "ts": j.get("ts") or 0, "level": j.get("level") or "", "tags": list(j.get("tags") or [])[:3],
+              "cc": [c for c, _ in build.countries_of(b["location"])[:3]] if b["location"] else [],
+              "logo": co if co in build.LOGOS else "", "pool": bool(j.get("pool")), "featured": bool(j.get("featured")),
+              "anywhere": bool(j.get("anywhere")), "hybrid": bool(j.get("hybrid"))})
+    return b
+
+
 # ---- MCP: the connector an AI assistant (Claude, ChatGPT and others) adds by its address, then searches our jobs in plain words. ----
 # Model Context Protocol over plain HTTP: one POST per JSON-RPC message, the answer in the same response, no session and no stream.
 # Read-only and public, like the site: no account and nothing about the person asking is kept.
@@ -182,7 +195,7 @@ class Handler(SimpleHTTPRequestHandler):
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             try: limit = max(1, min(int((qs.get("limit") or ["30"])[0]), 100))
             except ValueError: limit = 30
-            return self.send_json(200, {"jobs": [brief(j) for j in STORE.latest(limit)]}, [("Cache-Control", "public, max-age=20"), ("Access-Control-Allow-Origin", "*")])
+            return self.send_json(200, {"jobs": [brief_card(j) for j in STORE.latest(limit)]}, [("Cache-Control", "public, max-age=20"), ("Access-Control-Allow-Origin", "*")])
         if path == DUPE:
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k: (qs.get(k) or [""])[0][:300]

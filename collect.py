@@ -31,11 +31,11 @@ CATS = [
     ("design", "Design", r"\bdesign(er|ers)?\b|\bux\b|\bui\b|creative|illustrat|motion"),
     ("sales-bd", "Sales & Business Development", r"\bsales\b|business development|\bbd\b|partnership|account (executive|manage)|institutional|relationship manager|listing"),
     ("marketing", "Marketing & Community", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|\bseo\b|copywrit|\bkol\b|运营"),
-    ("support", "Customer Support", r"support|customer (service|success|experience|care)|client service|helpdesk|call (center|centre)|contact (center|centre)|call handler"),
+    ("support", "Customer Service & Support", r"support|customer (service|success|experience|care)|client service|helpdesk|call (center|centre)|contact (center|centre)|call handler"),
     ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel(?!l?or)|attorney|\brisk\b|regulatory|fraud|investigat|mlro|audit"),
     ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|accounts? (payable|receivable)|treasury|controller|\btax\b|payroll|trader|trading|billing|\bfp&a\b|"
                                      r"\bteller\b|loan officer|underwrit|mortgage|\bbanker\b|credit analyst"),
-    ("people", "People & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
+    ("people", "HR & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
     # added 15 Nov 2026 with "all professions, wave 1" (the main session): office support work had no field of its own
     ("administrative", "Administrative & Office", r"data entry|receptionist|administrative (assistant|coordinator|specialist|support|associate)|admin(istrative)? assistant|"
                                                   r"office (assistant|clerk|coordinator|administrator|manager)|\bclerk\b|secretar|executive assistant|personal assistant|typist|"

@@ -1818,4 +1818,29 @@ h1,h2,h3,h4{font-variant-numeric:normal}
 .rep-more .tcard .tbody{padding-top:18px}
 table.grid tr.grp th{font-variant-numeric:normal}
 .tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
-.popular a.pop-tech{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}
+.popular a.pop-tech,.hero.v2 .popular a.pop-tech{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}
+
+/* live lists (site.js, /api/latest): a job found after the page was built slides in at its place, and its row says when we found it */
+.jf{display:block;margin-top:3px;font-size:12.5px;line-height:1.35;color:var(--muted)}
+.jf::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);margin:0 7px 0 1px;vertical-align:1px}
+.job.lv-in,.job.lv-out{overflow:hidden}
+.job.lv-in{animation:lv-in .45s ease-out both}
+.job.lv-out{animation:lv-out .4s ease-in both}
+.job.lv>a{animation:lv-glow 2.6s ease-out}
+@keyframes lv-in{from{max-height:0;opacity:0}to{max-height:180px;opacity:1}}
+@keyframes lv-out{from{max-height:180px;opacity:1}to{max-height:0;opacity:0}}
+@keyframes lv-glow{from{background:var(--accent-soft)}to{background:transparent}}
+@media(prefers-reduced-motion:reduce){.job.lv-in,.job.lv-out,.job.lv>a{animation:none}}
+
+/* a page's main action under its opening paragraph (act_row and list_save in build.py): on the first phone screen */
+.lact{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:4px 0 22px;font-size:14px;color:var(--muted)}
+.lact .btn{margin:0;flex:none}
+.lact>a:not(.btn){color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
+.lact span{flex:1 1 240px;line-height:1.45}
+.lact .btn[aria-pressed="true"],.lact .btn[aria-pressed="true"]:hover{background:var(--card);color:var(--text);border-color:var(--line2)}
+.lact a.btn{text-decoration:none}
+/* companies hiring in a place: on a phone the kinds of work give way, so three columns fit the screen */
+@media(max-width:600px){.cotab th:nth-child(4),.cotab td:nth-child(4){display:none}.cotab th{white-space:normal}.cotab th,.cotab td{padding-right:12px}}
+
+/* crosslinks.py: narrower and related pages, a compact list in columns */
+.xlinks h3{font-size:15px;font-weight:650;margin:18px 0 8px;color:var(--muted)}.xl{columns:3 230px;column-gap:28px;list-style:none;padding:0;margin:0 0 6px}.xl li{break-inside:avoid;margin:0 0 7px;line-height:1.35}.xl a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line2)}.xl a:hover{border-bottom-color:var(--ac)}.xl span{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;margin-left:4px}

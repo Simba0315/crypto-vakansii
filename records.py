@@ -62,7 +62,7 @@ def save(path, jobs, b):
         "now": b.NOW, "today": b.TODAY, "v": b.V,
         "sim_cat": {c: [x["slug"] for x in xs] for c, xs in b.SIM["cat"].items()},
         "sim_comp": {key(k): [x["slug"] for x in xs] for k, xs in b.SIM["comp"].items()},
-        "open": dict(b.OPEN), "fact": b.FACT, "catmed": b.CATMED, "est": {key(k): v for k, v in b.EST.items()},
+        "open": dict(b.OPEN), "fact": b.FACT, "tb": b.TB, "catmed": b.CATMED, "est": {key(k): v for k, v in b.EST.items()},
         "close_days": b.CLOSE_DAYS, "repost": {key(k): v for k, v in b.REPOST.items()}, "perk_ok": sorted(b.PERK_OK),
     }
     con.executemany("INSERT INTO ctx VALUES (?, ?)", ((k, dumps(v)) for k, v in ctx.items()))
@@ -122,6 +122,7 @@ class Store:
                  "comp": {tup(k): [cards[s] for s in xs if s in cards] for k, xs in ctx["sim_comp"].items()}}
         b.OPEN = collections.Counter(ctx["open"])
         b.FACT, b.CATMED, b.CLOSE_DAYS = ctx["fact"], ctx["catmed"], ctx["close_days"]
+        b.TB = ctx.get("tb", {})                  # the employers' trust marks (absent in a store built before 15 Nov)
         b.EST = {tup(k): v for k, v in ctx["est"].items()}
         b.REPOST = {tup(k): v for k, v in ctx["repost"].items()}
         b.PERK_OK = set(ctx["perk_ok"])
