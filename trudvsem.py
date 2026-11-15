@@ -175,7 +175,7 @@ def read(stream, limit=None):
 
 def fetch(limit=None):
     """Download and read the daily file; None when it cannot be read (the jobs from it then stay as they were)."""
-    limit = limit or int(os.environ.get("HRN_TRUDVSEM_MAX") or 60000)
+    limit = limit or int(os.environ.get("HRN_TRUDVSEM_MAX") or 80000)
     if os.environ.get("HRN_TRUDVSEM_FILE"):                    # a copy of the file already on disk (for measuring a build locally)
         return read(open(os.environ["HRN_TRUDVSEM_FILE"], encoding="utf-8", errors="replace", newline=""), limit)
     try:
