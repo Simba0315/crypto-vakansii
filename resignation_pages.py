@@ -4,6 +4,11 @@ People search for the letter that fits their case ("two weeks notice letter", "r
 holds a complete letter for that case, what to put in it, and answers to the questions people ask about it. Brackets mark what the
 reader fills in. Nothing here is legal advice: notice periods depend on the contract and the country, and the pages say so.
 Fields: slug, name (the H1 key), short (a few words for lists), when (who the page is for), letter, include (3-4 points), qa (3 pairs).
+
+For the hub page (/resignation-letters/): STANDARD is one complete standard two weeks' notice letter in parts: name, header (lines of
+the sender block, the date and the recipient block; "" is a blank line), greeting, paragraphs (4: notice with position and last day,
+thanks, handover offer, good wishes), close, signature (lines under the close), and letter (all of it joined, ready to copy).
+HUB_QA is a list of (q, a) for the questions people ask about resignation letters in general; HUB_TIPS is a list of short tips.
 """
 
 SIGN = "\n\nSincerely,\n[Your name]"
@@ -178,6 +183,42 @@ LETTERS = [
              ("Should I give the real reason?", "A neutral sentence in the letter. If there was a real problem, raise it in the exit interview or with HR.")]),
 ]
 
+# The standard letter for the hub page: a full printed-letter layout with both address blocks, so it works on paper and, without the
+# header, as an email.
+STANDARD = dict(
+    name="Standard two weeks notice letter",
+    header=["[Your name]", "[Your street address]", "[City, state and ZIP code]", "[Your phone number]", "[Your email address]", "",
+            "[Date]", "",
+            "[Manager’s name]", "[Manager’s job title]", "[Company name]", "[Company street address]", "[City, state and ZIP code]"],
+    greeting="Dear [Manager’s name],",
+    paragraphs=["Please accept this letter as my formal notice of resignation from my position as [job title] at [company name]. My last working day will be [date, two weeks from today].",
+                "Thank you for the support and the opportunities I have had during my time here. I have especially valued [one concrete thing: a project, a skill you learned, a person who helped you].",
+                "Over the next two weeks I will finish as much of my current work as I can, write handover notes, and help train [colleague or my replacement]. Please let me know what else would make the transition easier.",
+                "I wish you and the team continued success, and I hope we stay in touch."],
+    close="Sincerely,",
+    signature=["[Your signature, if you print the letter]", "[Your name]"],
+)
+STANDARD["letter"] = ("\n".join(STANDARD["header"]) + "\n\n" + STANDARD["greeting"] + "\n\n" + "\n\n".join(STANDARD["paragraphs"])
+                      + "\n\n" + STANDARD["close"] + "\n\n" + "\n".join(STANDARD["signature"]))
+
+HUB_QA = [
+    ("How do I write a simple resignation letter?", "Write three things: that you are resigning from your position as [job title], your last working day as a date, and one line of thanks. Address it to your manager, sign it and keep a copy. The standard letter on this page is a complete version you can copy."),
+    ("What do I write in a resignation letter?", "Your job title and the company, the words “formal notice of resignation”, your last working day as a date, a sentence of thanks and an offer to hand over your work. A reason is optional. Leave out complaints, pay and details about your next job."),
+    ("What do I say to resign gracefully?", "Ask your manager for a short private talk and keep it calm. You can say: “I have decided to resign, and my last day will be [date].” “Thank you for everything I have learned here.” “I want to leave things in good order, so I will write handover notes and help train whoever takes over.” Then send the letter the same day."),
+    ("Is it better to resign on a Friday or a Monday?", "There is no rule. Early in the week gives your manager working days to plan the handover while you are there to answer questions. A Friday gives both of you the weekend to take in the news, but it can feel abrupt. Telling your manager in person first matters more than the day."),
+    ("How much notice should I give?", "In the United States two weeks is the custom unless your contract or a union agreement says otherwise. In the UK the legal minimum is one week once you have worked there for a month, and contracts often ask for more. Other countries set their own rules, so check your contract first."),
+    ("What should I not put in a resignation letter?", "Complaints about your manager, colleagues or pay, comparisons with your new employer, your new salary, anything confidential, and words written in anger. The letter stays in your personnel file, so write only what you would be happy for HR and future managers there to read."),
+]
+
+HUB_TIPS = [
+    "Read your contract or employee handbook for the notice period before you choose the date.",
+    "Keep it short and positive: one or two sentences of thanks are enough.",
+    "Offer a handover: name the work you will finish and who could take it over.",
+    "Write your last working day as a date, not as “in two weeks”.",
+    "Keep a copy of the letter and a note of the day you handed it in; ask your manager or HR to confirm the last day in writing.",
+    "Leave out complaints, salary details and where you are going next; raise real problems in the exit interview instead.",
+]
+
 
 def test():
     slugs = [x["slug"] for x in LETTERS]
@@ -187,6 +228,11 @@ def test():
         assert len(x["include"]) >= 3 and len(x["qa"]) == 3 and 60 <= len(x["when"]) <= 260, x["slug"]
         for q, a in x["qa"]:
             assert q.endswith("?") and 10 <= len(a.split()) <= 60, (x["slug"], q)
+    assert len(STANDARD["paragraphs"]) == 4 and STANDARD["letter"].count("[") >= 15 and "[Your name]" in STANDARD["letter"]
+    assert "[Date]" in STANDARD["header"] and "[Manager’s job title]" in STANDARD["header"] and "[Company name]" in STANDARD["header"]
+    assert len(HUB_QA) >= 6 and 5 <= len(HUB_TIPS) <= 6
+    for q, a in HUB_QA:
+        assert q.endswith("?") and 10 <= len(a.split()) <= 80, q
     print(f"resignation_pages: {len(LETTERS)} letters, all checks passed")
 
 
