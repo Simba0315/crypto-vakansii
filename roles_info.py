@@ -277,14 +277,6 @@ MORE_ROLES = [
 ]
 
 # Categories: (slug, name, what kind of work it is, role slugs in the order shown). The first 25 role slugs come from ROLES in build.py.
-# The order the category directory is shown in (the home page and /categories/): all professions, the most common everyday
-# work first, then tech (the owner, 15 Nov 2026: the site covers every profession, not only tech). FAMILIES keeps its own order,
-# because a role that sits in two categories belongs to the first one listed there.
-SHOW_ORDER = ["customer-service", "operations-administration", "science-healthcare", "education-training", "accounting-finance", "legal-compliance",
-              "sales", "marketing-communications", "hr-recruiting", "retail-hospitality", "writing-translation", "design-creative",
-              "software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering",
-              "crypto-web3", "leadership", "languages", "internships-entry-level"]
-
 FAMILIES = [
     ("software-development", "Software development", "writing the programs behind websites, apps, games and devices",
      ["software-engineer", "backend-engineer", "frontend-engineer", "full-stack-engineer", "mobile-engineer", "web-developer", "product-engineer", "game-developer", "embedded-engineer",

@@ -27,7 +27,7 @@ import build, dedupe, records, search_engine             # noqa: E402  (build.py
 SITE, P = ROOT / "site", build.P
 STORE = records.Store(ROOT / "data" / "jobs.db", build, live=os.environ.get("HRN_LIVE", "1") != "0")
 JOB = re.compile(r"^" + re.escape(P) + r"/job/([a-z0-9-]+)(/?)$")
-SEARCH, MCP, DUPE = P + "/api/search", P + "/mcp", P + "/api/check-duplicate"
+SEARCH, MCP, DUPE, LATEST = P + "/api/search", P + "/mcp", P + "/api/check-duplicate", P + "/api/latest"
 TAG = re.compile(r"<[^>]+>")
 
 
@@ -66,7 +66,20 @@ def dup_index():
 def brief(j):
     """A job as the search answer gives it: what a list of results shows, and the address of its page."""
     return {"slug": j["slug"], "title": j["title"], "company": j["company"], "location": j.get("location") or "", "remote": bool(j.get("remote")),
-            "salary": j.get("salary") or "", "posted": j.get("posted") or "", "last_checked": j.get("last_seen") or "", "url": f"{build.FULL}/job/{j['slug']}/"}
+            "salary": j.get("salary") or "", "posted": j.get("posted") or "", "last_checked": j.get("last_seen") or "", "url": f"{build.FULL}/job/{j['slug']}/",
+            "found_at": j.get("first_seen_at") or ""}
+
+
+def brief_card(j):
+    """brief() plus what a row in a list of jobs shows: t, the exact posting time in seconds (0 when the employer gave only the day), ts,
+    the time lists sort by (t, or the start of the posting day: build.stamp), the level, the first skills, the flags of the place, the
+    logo, and whether it is a standing "talent pool" posting (the home window leaves those out)."""
+    b = brief(j)
+    co = build.slugify(j["company"])
+    b.update({"t": j.get("t") or 0, "ts": j.get("ts") or 0, "level": j.get("level") or "", "tags": list(j.get("tags") or [])[:3],
+              "cc": [c for c, _ in build.countries_of(b["location"])[:3]] if b["location"] else [],
+              "logo": co if co in build.LOGOS else "", "pool": bool(j.get("pool")), "featured": bool(j.get("featured"))})
+    return b
 
 
 # ---- MCP: the connector an AI assistant (Claude, ChatGPT and others) adds by its address, then searches our jobs in plain words. ----
@@ -176,6 +189,12 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?", 1)[0].split("#", 1)[0]
         if path == MCP: return self.send(405, "This is an MCP server: add its address as a connector in your AI assistant.", "text/plain; charset=utf-8", [("Allow", "POST")])
+        if path == LATEST:
+            # The newest open jobs, those live.py found since the last upload first: "found 3 minutes ago" is the real time we saw them
+            qs = urllib.parse.parse_qs(self.path.partition("?")[2])
+            try: limit = max(1, min(int((qs.get("limit") or ["30"])[0]), 100))
+            except ValueError: limit = 30
+            return self.send_json(200, {"jobs": [brief_card(j) for j in STORE.latest(limit)]}, [("Cache-Control", "public, max-age=20"), ("Access-Control-Allow-Origin", "*")])
         if path == DUPE:
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k: (qs.get(k) or [""])[0][:300]
@@ -218,7 +237,9 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception as err:                     # a broken record must not take the server down; nginx serves its last copy
                 self.log_error("job page %s: %r", m.group(1), err)
                 return self.send(500, "This page could not be built. Try again in a minute.")
-            if html is None: return self.not_found()
+            if html is None:
+                to = STORE.moved(m.group(1))                 # published live under one address, the hourly record chose another
+                return self.send(301, "", extra=[("Location", f"{P}/job/{to}/")]) if to else self.not_found()
             return self.send(200, html, extra=[("Cache-Control", "public, max-age=300")])
         if P and not (path == P or path.startswith(P + "/")): return self.not_found()
         self.path = self.path[len(P):] or "/"

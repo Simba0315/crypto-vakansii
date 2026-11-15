@@ -240,6 +240,111 @@
   }
   window.HRN = { mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
+  /* ---------- live lists: the home "Latest jobs" window and the first page of /new/ take the newest jobs from /api/latest, on load
+     and then once a minute while the tab is in view. A job the server found after the page was built slides in where its posting
+     time puts it (for a new job, the top), one row at a time. Its row says when we found it ("Found 3 minutes ago") and, when the
+     employer's date is more than a day earlier, that date too ("posted Aug 21"). Both come from the server unchanged; a job without a
+     time we found it gets no such line. If the request fails, the list stays as the build wrote it. ---------- */
+  (function () {
+    var ul = document.querySelector('ul.jobs[data-live]');
+    if (!ul || !window.fetch) return;
+    var home = ul.getAttribute('data-live') === 'home', since = ul.getAttribute('data-since') || '';
+    var cap = home ? ul.children.length : 0;                // the home window keeps its size: a row in, the bottom row out
+    var calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], thisYear = new Date().getFullYear();
+    var dayName = function (y, m, d) { return MON[m - 1] + ' ' + d + (y !== thisYear ? ', ' + y : ''); };
+    var isoDay = function (iso) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ''); return m ? [+m[1], +m[2], +m[3]] : null; };
+    // the time a row sorts by, in seconds: what the build sorts by too (the exact posting time, or the start of the posting day, UTC)
+    var rowTs = function (li) {
+      if (li.getAttribute('data-ts')) return +li.getAttribute('data-ts');
+      var t = li.querySelector('time'); if (!t) return 0;
+      if (t.getAttribute('data-t')) return +t.getAttribute('data-t');
+      var d = isoDay(t.getAttribute('datetime')); return d ? Date.UTC(d[0], d[1] - 1, d[2]) / 1000 : 0;
+    };
+    var shown = function () {
+      var slugs = {}, names = {}, cos = {};
+      Array.prototype.forEach.call(ul.children, function (li) {
+        var a = li.querySelector('a'), m = a && (a.getAttribute('href') || '').match(/\/job\/([^/]+)\/?$/);
+        if (m) slugs[decodeURIComponent(m[1])] = 1;
+        var jt = li.querySelector('.jt'), js = li.querySelector('.js'), co = js ? js.textContent.split(' · ')[0] : '';
+        cos[co] = 1; if (jt) names[co + '\n' + jt.textContent] = 1;    // a job listed in several places is one row (+2 more locations)
+      });
+      return { slugs: slugs, names: names, cos: cos };
+    };
+    var foundText = function (o) {
+      var f = Date.parse(o.found_at || ''); if (isNaN(f)) return '';
+      f /= 1000;
+      var age = Date.now() / 1000 - f, when = ago(age, true);
+      if (!when) { var d = new Date(f * 1000); when = 'on ' + dayName(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+      var p = isoDay(o.posted), pt = o.ts || (p ? Date.UTC(p[0], p[1] - 1, p[2]) / 1000 : 0);
+      return 'Found ' + when + (p && pt && f - pt > 86400 ? ' · posted ' + dayName(p[0], p[1], p[2]) : '');
+    };
+    var row = function (o) {
+      var p = isoDay(o.posted), j = [];                       // the same row as every list: card() reads these places of a job
+      j[0] = o.slug; j[1] = o.title; j[2] = o.company; j[3] = o.location || ''; j[4] = o.remote ? 1 : 0; j[6] = o.level || '';
+      j[7] = o.tags || []; j[8] = o.salary || ''; j[11] = o.featured ? 1 : 0; j[16] = p ? p[0] * 10000 + p[1] * 100 + p[2] : 0;
+      j[21] = o.logo || ''; j[23] = o.t && Date.now() / 1000 - o.t < 7 * 86400 ? Math.floor(o.t / 60) : 0; j[24] = o.cc || [];
+      var box = document.createElement('ul'); box.innerHTML = card(j);
+      var li = box.firstChild, ft = foundText(o);
+      li.setAttribute('data-ts', o.ts || 0); li.classList.add('lv');
+      if (ft) {
+        var s = document.createElement('span'); s.className = 'jf'; s.setAttribute('data-found', o.found_at); s.setAttribute('data-posted', o.posted || '');
+        s.setAttribute('data-pts', o.ts || 0); s.textContent = ft;
+        li.querySelector('.jt').parentNode.appendChild(s);
+      }
+      return li;
+    };
+    var say = (function () {                                  // a screen reader hears that rows were added; the page does not jump
+      var r = document.createElement('p'); r.className = 'vh'; r.setAttribute('aria-live', 'polite'); ul.parentNode.insertBefore(r, ul);
+      return function (t) { r.textContent = t; };
+    })();
+    var queue = [], busy = false;
+    var drop = function (li) {
+      if (calm) { li.remove(); return; }
+      li.classList.add('lv-out'); setTimeout(function () { li.remove(); }, 420);
+    };
+    var next = function () {
+      var it = queue.shift();
+      if (!it) { busy = false; return; }
+      busy = true;
+      var have = shown();
+      if (have.slugs[it.slug] || have.names[it.company + '\n' + it.title] || (home && have.cos[it.company])) return next();
+      var li = row(it), ts = +li.getAttribute('data-ts'), rows = Array.prototype.slice.call(ul.children), at = null;
+      for (var i = 0; i < rows.length; i++) { if (rows[i].classList.contains('feat') || rows[i].classList.contains('lv-out')) continue; if (rowTs(rows[i]) < ts) { at = rows[i]; break; } }
+      var live = rows.filter(function (r_) { return !r_.classList.contains('lv-out'); }).length;
+      if (!at && (!home || live >= cap)) return next();      // older than every row here: it belongs further down (or on a later page)
+      if (!calm) { li.classList.add('lv-in'); li.addEventListener('animationend', function (e) { if (e.target === li) li.classList.remove('lv-in'); }); }
+      ul.insertBefore(li, at);
+      if (home && live + 1 > cap) { var bottom = Array.prototype.filter.call(ul.children, function (r_) { return !r_.classList.contains('lv-out'); }).pop(); if (bottom && bottom !== li) drop(bottom); }
+      try { decorate(li); } catch (e) {}
+      added++;
+      say(added === 1 ? 'A new job was added to the list.' : added + ' new jobs were added to the list.');
+      setTimeout(next, calm ? 0 : 450);
+    };
+    var added = 0, last = 0;
+    var tick = function () {                                  // the "found" lines age while the page is open
+      Array.prototype.forEach.call(ul.querySelectorAll('.jf[data-found]'), function (s) {
+        var t = foundText({ found_at: s.getAttribute('data-found'), posted: s.getAttribute('data-posted'), ts: +s.getAttribute('data-pts') });
+        if (t && s.textContent !== t) s.textContent = t;
+      });
+    };
+    var pull = function () {
+      if (document.visibilityState === 'hidden') return;
+      last = Date.now();
+      fetch(P + '/api/latest?limit=30', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw r.status; return r.json(); }).then(function (d) {
+        var jobs = (d && d.jobs) || [];
+        jobs = jobs.filter(function (o) { return o && o.slug && o.title && o.company && !(home && o.pool) && !(since && (o.posted || '') < since); });
+        jobs.sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });     // oldest first: each one goes in above the last, so the newest ends on top
+        queue = queue.concat(jobs);
+        tick();
+        if (!busy) next();
+      }).catch(function () {});                               // no feed (an old server, a static copy, offline): the built list stays
+    };
+    pull();
+    setInterval(pull, 60000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Date.now() - last > 60000) pull(); });
+  })();
+
   /* ---------- theme + mobile menu + shortcuts ---------- */
   var themeBtn = $('theme');
   if (themeBtn) themeBtn.addEventListener('click', function () {
@@ -410,7 +515,7 @@
         ['/widgets/', 'Jobs for your website', 'A widget with your jobs or any list.'],
         ['/api/', 'Data for developers', 'Every open job as free JSON.']]]
     };
-    var wideQ = window.matchMedia('(min-width: 1081px)'), cur = null, timer = 0;
+    var wideQ = window.matchMedia('(min-width: 1181px)'), cur = null, timer = 0;
     var panel = document.createElement('div');
     panel.className = 'navpanel'; panel.id = 'navpanel'; panel.hidden = true;
     header.appendChild(panel);
