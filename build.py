@@ -247,7 +247,10 @@ def art(nm):
     w = nm.split()[0]
     if sum(c.isupper() for c in w) >= 2: return "an" if w[0] in "AEFHILMNORSX" else "a"
     return "an" if nm[0].lower() in "aeiou" else "a"
-TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc"}
+TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc",
+            "Three.js": "threejs", "A/B testing": "ab-testing", "MITRE ATT&CK": "mitre-attack", "Monday.com": "monday", "SAP S/4HANA": "sap-s4hana",
+            "FP&A": "fpa", "M&A": "mergers-and-acquisitions", "GD&T": "gdt", "Driver's license": "drivers-license", "Security+": "security-plus",
+            "CompTIA A+": "comptia-a-plus"}
 URLS = []
 ORG_LD = [""]
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js"))).hexdigest()[:8]   # cache-busting version
@@ -2062,7 +2065,8 @@ def main():
     rkinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
         ("work-from-anywhere/", "Open to any country"), ("remote/new/", "Posted in the last 3 days"), ("remote/entry-level/", "Entry-level"), ("remote/full-time/", "Full-time"),
         ("remote/part-time/", "Part-time"), ("remote/contract/", "Contract"), ("salary/100k/remote/", "Paying $100K or more"), ("salary/200k/remote/", "Paying $200K or more"),
-        ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles")))
+        ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles"))
+        if u not in ("remote/new/", "remote/entry-level/") or any(c_[0] == u for c_ in combos))      # those two exist only with 8 jobs or more (a quiet day can have fewer new ones)
     remote_more = (section("Remote jobs by field", f'<ul class="tiles">{rfams}</ul>', ("categories/", "All categories")) if rfams else "") + \
         f'<div class="dir"><div class="dirb"><h2><span>Kinds of remote work</span></h2><ul>{rkinds}</ul></div></div>'
     rr_rm = role_rows(remote, 30)
@@ -2860,8 +2864,12 @@ def main():
              + cite(f"salaries/{slug}/", f"{label} salaries",
                     f"The median advertised salary for {label} roles at companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
                     f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld)
+    # a skill that shares its address with a field or a kind of work ("Payroll", "Procurement") leaves /salaries/<slug>/ to that page,
+    # which used to be written over it anyway; the skill page's "salaries" link then leads there
+    sal_taken = {cat_slug[name] for name, group in g_cat.items() if len(group) >= 30 and name != OTHER[1]} | \
+                {slug_r for slug_r, (_, rj) in by_role.items() if sum(1 for j in rj if j["usd"]) >= 20}
     for t, group in g_tag.items():
-        if len(group) >= 30:
+        if len(group) >= 30 and TAG_SLUG.get(t, slugify(t)) not in sal_taken:
             salary_page(TAG_SLUG.get(t, slugify(t)), t, group, (f"skills/{TAG_SLUG.get(t, slugify(t))}/", f"All {t} jobs"))
     for name, group in g_cat.items():
         if len(group) >= 30 and name != OTHER[1]:
