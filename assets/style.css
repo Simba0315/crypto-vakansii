@@ -1927,3 +1927,16 @@ table.grid tr.grp th{font-variant-numeric:normal}
 .about-grid p a{color:var(--text)}
 /* the two pictures on a list page use the whole width */
 .pics.two{max-width:none}
+/* the promise: what is free (ticks) and what we never do (crosses), as cards */
+ul.ticks,ul.crosses{list-style:none;padding:0;margin:6px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:10px}
+ul.ticks li,ul.crosses li{position:relative;margin:0;padding:12px 14px 12px 44px;background:var(--card);border:1px solid var(--line);border-radius:12px;line-height:1.45}
+ul.ticks li::before,ul.crosses li::before{position:absolute;left:14px;top:12px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:700 11px/1 "Public Sans",system-ui,sans-serif}
+ul.ticks li::before{content:"✓";background:var(--green-soft);color:var(--green)}
+ul.crosses li::before{content:"✕";background:var(--bg2);color:var(--text)}
+/* 404 */
+.nf{padding:48px 0 32px;max-width:760px}
+.nf-code{margin:0;font:700 13px/1 var(--mono);letter-spacing:.12em;color:var(--ac)}
+.nf-k{margin:22px 0 10px;font-size:13px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.nf-links{display:flex;flex-wrap:wrap;gap:8px}
+.nf-links a{display:inline-flex;align-items:center;min-height:38px;padding:7px 14px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:14.5px;font-weight:600}
+.nf-links a:hover{border-color:var(--text)}

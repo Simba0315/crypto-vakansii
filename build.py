@@ -5271,9 +5271,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Our promise", "")) + "<h1>What is free here, and what we will never do</h1>"
          '<p class="lead">Job sites have taught people to expect the worst: a trial that becomes a yearly charge, a phone number that ends up with call centres, a “new” job that closed months ago. '
          f'This page is our side of the deal, in plain words. Dated {fdate(TODAY)}; if any of it changes, the change will be stated here first.</p>'
-         + section("What is free, with no account?", "<ul><li>Searching, every filter, salary data and all rankings.</li><li>Opening any job and applying: you always go to the employer’s own page, and we take nothing for it.</li>"
+         + section("What is free, with no account?", "<ul class=\"ticks\"><li>Searching, every filter, salary data and all rankings.</li><li>Opening any job and applying: you always go to the employer’s own page, and we take nothing for it.</li>"
                    "<li>Saving jobs, tracking applications and saved searches, kept in your browser.</li><li>The resume builder and every tool in the tools section.</li><li>Widgets, badges, the data files and the API.</li></ul>")
-         + section("What will this site never do?", "<ul><li>Charge you to apply for a job.</li><li>Ask for your phone number, or call you.</li>"
+         + section("What will this site never do?", "<ul class=\"crosses\"><li>Charge you to apply for a job.</li><li>Ask for your phone number, or call you.</li>"
                    + ("<li>Show your resume to any employer unless you tick “Let employers find my resume”. Even then your name and contact details go to an employer only "
                       "when you accept its request, and one click deletes your resume for good.</li>" if CFG["talent_db"] else "")
                    + ("<li>Sell or pass on personal data. The address you give for job alerts is used for those letters and nothing else.</li>" if CFG["api_url"] else
@@ -6926,9 +6926,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [About]({FULL}/about/) · [Privacy]({FULL}/privacy/) · [Terms]({FULL}/terms/)
 """, sitemap=False)
     page("404.html", f"Page not found | {SITE}", "This page does not exist: the address may have changed or the job may have been renamed. Search open jobs by title, skill or company instead.",
-         f'<h1>Page not found</h1><p class="lead">The address may have changed, or the job may have been renamed. Search for it here:</p>'
+         f'<div class="nf"><p class="nf-code">404</p><h1>Page not found</h1><p class="lead">The address may have changed, or the job may have been renamed. Search for it here:</p>'
          f'<form class="searchbar wide" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
-         f'<p class="note">Or browse <a href="{P}/jobs/">all jobs</a>, <a href="{P}/companies/">companies</a> and <a href="{P}/skills/">skills</a>.</p>', sitemap=False)
+         f'<p class="nf-k">Or start from</p><div class="nf-links">' + "".join(f'<a href="{P}/{u}">{t}</a>' for u, t in (("jobs/", "All jobs"), ("new/", "New this week"),
+         ("remote/", "Remote jobs"), ("companies/", "Companies"), ("salaries/", "Salaries"), ("resume/", "Resume builder"), ("help/", "Help"))) + "</div></div>", sitemap=False)
 
     # Data + static files
     comp_list = sorted({j["company"] for j in active}); ci = {c: i for i, c in enumerate(comp_list)}
