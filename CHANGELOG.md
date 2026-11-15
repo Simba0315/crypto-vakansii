@@ -2,6 +2,8 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-15 — Honesty fixes: "Practise out loud" said nothing was recorded or sent, but Chrome and Edge turn speech into text with Google's and Microsoft's services; the box, the button note and a new paragraph on `/privacy/` now say so (this site keeps nothing; typing sends nothing). The "Search open jobs here" note on comparison pages no longer says you always apply on the employer's site (Telegram posts apply through the channel).
+
 - 2026-11-15 — Work arrangement on every job row (after Wellfound): "Remote, anywhere", "Remote" or "Hybrid" (hybrid was only a search filter before), in lists, search, job pages and the live list. Job pages of open jobs now show the employer's trust marks under "Hiring at …" (Actively hiring, States the pay, Few old postings, each with its number), the same as its company page; carried to the page server in the records context (`tb`).
 
 - 2026-11-15 — From Wellfound: `/locations/<place>/companies/` lists every employer with open jobs in a place, most jobs first, with its new jobs this week and kinds of work (82 places with 20+ employers; Germany 442, the United States 3,071), linked from the place page and a "Hiring in" row on `/companies/`. Role × place pages now exist for every role in every place with 150+ jobs wherever it has 25 or more there (about 1,100 more pages, e.g. "Account executive jobs in Germany (292 open)"), not only for the 25 base roles and the first six places.

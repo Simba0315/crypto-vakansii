@@ -3238,7 +3238,7 @@ def main():
              crumbs(("Interview questions", "interview-questions/"), (rname, "")) + f'<h1>{e(rname)} interview questions: <span class="hl">{n_q} to prepare for</span></h1>'
              f'<p class="lead">Each question says why it is likely to come up, from what today’s {n_:,} open {e(low)} postings ask for, and what a good answer shows. '
              f'Prepare a real example for each, then practise it with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>'
-             + act_row("#practise", "Practise out loud", note="The page reads each question and checks your answer. Nothing is recorded.")
+             + act_row("#practise", "Practise out loud", note="The page reads each question aloud and checks your answer. This site keeps nothing.")
              + facts_ + body_
              + section("Questions to ask them", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in ask_) + "</dl>")
              + section(f"Questions about {art(low)} {low} interview", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in iq_qa) + "</dl>")
@@ -3448,7 +3448,7 @@ def main():
              f"{x['name']} and {ours} side by side: who pays, prices, where the jobs come from, where you apply and how fresh the listings are. Every fact about {x['name']} comes with its source.",
              crumbs(("Compared with other job sites", "vs/"), (x["name"], "")) + f'<h1>{e(x["name"])} vs {e(ours)}: <span class="hl">a fair comparison</span></h1>'
              f'<p class="lead">{e(x["what"])} Below, the two side by side. Every fact about {e(x["name"])} comes from its own pages or a named source, read on the date shown; where we could not check a fact, the row is left out.</p>'
-             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account; you apply on the employer’s own site.")
+             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
              + f'<p class="vs-pick"><b>In short:</b> {e(x["pick"])}</p>'
              + section(f"{x['name']} and {ours}, side by side", table_)
              + '<div class="vs-two"><div><h2>Where ' + e(x["name"]) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["them_better"]) + "</ul></div>"
@@ -3479,7 +3479,7 @@ def main():
                  f"{a_['name']} and {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:4]) + ". Every fact comes with its source and the date it was read.",
                  crumbs(("Compared with other job sites", "vs/"), (f"{a_['name']} vs {b_['name']}", "")) + f'<h1>{e(a_["name"])} vs {e(b_["name"])}: <span class="hl">the facts side by side</span></h1>'
                  f'<p class="lead">{e(a_["what"])} {e(b_["what"])} Below, what each one says about itself, with the source of every fact. The third column shows how {e(compare_sites.OUR_NAME)} works, for reference.</p>'
-                 + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account; you apply on the employer’s own site.")
+                 + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
                  + section(f"{a_['name']} and {b_['name']}, side by side", table_)
                  + '<div class="vs-two"><div><h2>Where ' + e(a_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(a_)) + "</ul></div>"
                    '<div><h2>Where ' + e(b_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(b_)) + "</ul></div></div>"
@@ -3498,7 +3498,7 @@ def main():
              f"Alternatives to {x['name']}: {', '.join(y['name'] for y in others[:4])} and more, each with who pays and where you apply, from their own pages. Every fact sourced and dated.",
              crumbs(("Compared with other job sites", "vs/"), (f"{x['name']} alternatives", "")) + f'<h1>{e(x["name"])} alternatives: <span class="hl">{len(others) + 1} job sites, with sources</span></h1>'
              f'<p class="lead">Other places to look for work than {e(x["name"])}, each described from its own pages, with who pays and where you apply. Open a pair to see every fact side by side.</p>'
-             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account; you apply on the employer’s own site.")
+             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
              + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read {EVERY} from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
                        f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>')
              + section(f"Other alternatives to {x['name']}", '<div class="feats">' + alt_ + "</div>")
@@ -4228,6 +4228,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "<h2 class='h2s'>What is stored in your browser</h2><p>Saved jobs, application statuses and notes, saved searches, followed companies, hidden jobs and companies, words you chose to leave out of results, "
          "recently viewed jobs, your skill profile, the resume you typed into the resume builder, what you entered into the free tools, and the light or dark theme. All of it is kept in your browser's local storage on this device and is not sent to us. "
          f'You can download or erase it on the <a href="{P}/my-jobs/">My jobs</a> page; each tool has its own Clear button; clearing your browser data removes everything.</p>'
+         "<h2 class='h2s'>Practising out loud</h2><p>On the interview questions pages the page can read a question aloud and listen to your answer. "
+         "It uses your browser’s own speech service: in Chrome that service is run by Google and in Edge by Microsoft, so your words go to them to be "
+         "turned into text, under their terms. This site receives none of it and keeps nothing. Typing the answer instead sends nothing anywhere.</p>"
          "<h2 class='h2s'>Your resume</h2><p>A resume you paste on the “For you” page or into a tool is read by a script in your browser. It is never uploaded. The resume builder and the tools keep what you typed in this browser so that it is still there next time.</p>"
          "<h2 class='h2s'>What we do not do</h2><p>No advertising trackers, no analytics cookies, no selling of data.</p>"
          "<h2 class='h2s'>Third parties</h2><p>The site is served by a hosting provider that, like any web server, sees your IP address when you load a page. Fonts, scripts and images are served from this site, not from other companies. "

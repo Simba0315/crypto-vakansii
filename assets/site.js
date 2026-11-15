@@ -400,14 +400,14 @@
   })();
 
   /* ---------- interview questions: practise out loud. The browser reads each question, listens to the answer (where it can),
-     and checks it the way the interview answer builder does: 60 to 90 seconds, a number, "I" more than "we". Nothing is recorded or sent. ---------- */
+     and checks it the way the interview answer builder does: 60 to 90 seconds, a number, "I" more than "we". This site keeps nothing; the browser's own speech service turns the words into text. ---------- */
   (function () {
     var qs = Array.prototype.slice.call(document.querySelectorAll('ol.iq li h3'));
     if (!qs.length) return;
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition, say = window.speechSynthesis;
     var box = document.createElement('section');
     box.className = 'sec voicepr'; box.id = 'practise';               // the "Practise out loud" button under the opening paragraph jumps here
-    box.innerHTML = '<div class="vp-card"><p class="vp-h"><b>Practise out loud</b><span>' + (SR ? 'The page reads a question, listens to your answer and checks it. Nothing is recorded or sent anywhere.' : 'The page reads a question; type your answer and it is checked. This browser cannot listen; Chrome and Edge can.') + '</span></p>'
+    box.innerHTML = '<div class="vp-card"><p class="vp-h"><b>Practise out loud</b><span>' + (SR ? 'The page reads a question, listens to your answer and checks it. This site keeps nothing; your browser’s own speech service turns your words into text.' : 'The page reads a question; type your answer and it is checked. This browser cannot listen; Chrome and Edge can.') + '</span></p>'
       + '<p class="vp-q" id="vp-q"></p><div class="vp-row"><button class="btn primary sm" type="button" id="vp-start">Start question 1</button><button class="btn ghost sm" type="button" id="vp-stop" hidden>I have finished</button>'
       + '<button class="btn ghost sm" type="button" id="vp-next" hidden>Next question</button><span class="note" id="vp-time"></span></div>'
       + (SR ? '' : '<textarea id="vp-type" rows="4" placeholder="Type your answer here" hidden></textarea>') + '<p class="vp-said" id="vp-said"></p><ul class="vp-checks" id="vp-checks"></ul></div>';
