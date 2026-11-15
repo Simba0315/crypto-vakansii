@@ -2418,9 +2418,50 @@ def main():
     mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days.", mk_a),
                ("States the pay", "At least half of its open roles state the pay (employers with 5 open roles or more).", mk_p),
                ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f)]
+    co_types = []
+    co_act = {c: [j for j in js if j["active"]] for c, js in companies.items()}
+    co_act = {c: v for c, v in co_act.items() if len(v) >= 10}
+    def ctry_n(v): return len({cc for j in v for cc, _ in countries_of(j["location"] or "")})
+    TYPES = [("remote-first", "Remote-first companies hiring now", "Remote-First Companies Hiring Now",
+              "at least three quarters of their open roles can be done from home", lambda v: sum(1 for j in v if j["remote"]) / len(v) >= 0.75,
+              lambda v: f'{100 * sum(1 for j in v if j["remote"]) / len(v):.0f}% remote', "remote"),
+             ("hiring-worldwide", "Companies hiring in many countries", "Global Companies Hiring in 8+ Countries",
+              "their open roles are spread over eight countries or more", lambda v: ctry_n(v) >= 8, lambda v: f"{ctry_n(v)} countries", "places"),
+             ("ai-hiring", "Companies hiring most for AI work", "Companies Hiring for AI Roles Now",
+              "at least half of their open roles ask for AI or machine-learning skills", lambda v: sum(1 for j in v if any(t in AI_TAGS for t in j["tags"])) / len(v) >= 0.5,
+              lambda v: f'{100 * sum(1 for j in v if any(t in AI_TAGS for t in j["tags"])) / len(v):.0f}% AI roles', "ai"),
+             ("beginner-friendly", "Companies hiring beginners", "Companies Hiring Entry-Level Now",
+              "at least a quarter of their open roles are junior roles or internships", lambda v: sum(1 for j in v if j["entry"]) / len(v) >= 0.25,
+              lambda v: f'{sum(1 for j in v if j["entry"]):,} for beginners', "entry"),
+             ("pay-transparent", "Companies that state the pay", "Companies That Show Salary in Every Job",
+              "at least four in five of their open roles state the pay", lambda v: sum(1 for j in v if j["salary"]) / len(v) >= 0.8,
+              lambda v: f'{100 * sum(1 for j in v if j["salary"]) / len(v):.0f}% state pay', "pay")]
+    for ts_, h1_, ttl_, rule_, ok_, metric_, _ in TYPES:
+        hits = sorted(((c, v) for c, v in co_act.items() if ok_(v)), key=lambda kv: -len(kv[1]))
+        if len(hits) < 5: continue
+        n_jobs = sum(len(v) for _, v in hits)
+        med_ = lambda v: (lambda m_: money(median(m_)) if len(m_) >= 5 else "–")([(j["usd"][0] + j["usd"][1]) / 2 for j in v if j["usd"]])
+        rows_t = "".join(f'<tr><td>{i_ + 1}</td><td><a href="{P}/companies/{slugify(c)}/">{e(c)}</a></td><td>{len(v):,}</td><td>{e(metric_(v))}</td><td>{med_(v)}</td></tr>'
+                         for i_, (c, v) in enumerate(hits[:200]))
+        qa_t = [(f"Which {h1_[0].lower() + h1_[1:].replace(' hiring now', '').replace('Companies', 'companies')} have the most open jobs?",
+                 "Right now: " + ", ".join(f"{c} ({len(v):,})" for c, v in hits[:5]) + f". {len(hits):,} companies with 10 or more open roles qualify today."),
+                ("How is this list made?", f"From each company’s own open postings, read every hour: a company is listed when {rule_}, and it has at least 10 open roles. "
+                 "Nothing here is a label bought or claimed; it changes as the postings change.")]
+        ld_t = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_t]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page(f"companies/{ts_}/", f"{ttl_}: {len(hits):,} Employers ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
+             f"{len(hits):,} companies where {rule_}, with {n_jobs:,} open jobs between them, counted from their own careers pages and updated every hour.",
+             crumbs(("Companies", "companies/"), (h1_, "")) + f'<h1>{e(h1_)}: <span class="hl">{len(hits):,} employers</span></h1>'
+             f'<p class="lead">Companies where {e(rule_)}, counted today from their own careers pages: {n_jobs:,} open jobs between them. Largest first.</p>'
+             + section(h1_, '<div class="tablewrap"><table><tr><th>#</th><th>Company</th><th>Open roles</th><th>Why it is here</th><th>Median advertised pay</th></tr>' + rows_t + "</table></div>")
+             + section("Questions about this list", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_t) + "</dl>")
+             + '<p class="note cmpl">Other lists: ' + " · ".join(f'<a href="{P}/companies/{o_[0]}/">{e(o_[1])}</a>' for o_ in TYPES if o_[0] != ts_) + "</p>", head=ld_t)
+        co_types.append((ts_, h1_, len(hits)))
+    co_types_html = (section("Companies by type", '<ul class="tiles">' + "".join(tile(f"companies/{t_}/", h_, k_) for t_, h_, k_ in co_types) + "</ul>"
+                             '<p class="note">Counted from each company’s own open postings, so a company moves in and out of a list as it hires.</p>') if co_types else "")
     page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {len(companies):,} employers | {SITE}",
          "Companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
-         crumbs(("Companies", "")) + f'<h1>Companies hiring now, {MONTH_YEAR}</h1><p class="lead">{co_lead}</p>'
+         crumbs(("Companies", "")) + f'<h1>Companies hiring now, {MONTH_YEAR}</h1><p class="lead">{co_lead}</p>{co_types_html}'
          '<input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">'
          '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
          '<button class="tab" type="button" data-s="o" aria-pressed="true">Most open roles</button>'
