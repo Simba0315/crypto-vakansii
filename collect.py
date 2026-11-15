@@ -12,7 +12,9 @@ import countries
 ROOT = Path(__file__).parent
 DATA = ROOT / "data" / "jobs.json"
 TODAY = datetime.date.today().isoformat()
-DESC_SINCE = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()     # full descriptions are stored for postings newer than this
+# Until 15 Nov 2026 the full description was kept only for postings under 14 days old (the GitHub Pages size limit). Job pages are
+# now built on our server from data/jobs.db, and a page is indexed only with its full text, so every open job keeps its description;
+# a job that closes drops it (main()). The data branch splits the database into pieces under GitHub's 100 MB limit (update.yml).
 KNOWN = {}          # the stored jobs by id (set by main): unchanged postings and texts read earlier are reused, see norm() and FEEDS
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -474,7 +476,6 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
     old = KNOWN.get(f"{ats}-{slugify(company)}-{jid}")
     if old and old.get("h") == key:
         j = dict(old)
-        if j.get("desc") and (j.get("posted") or "")[:10] < DESC_SINCE: j["desc"] = ""      # as below: the full text only while recent
         j["_crypto"] = bool(j.get("xc"))
         return j
     return dict(_norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary, hint, desc, hybrid, posted_at), h=key)
@@ -499,8 +500,8 @@ def _norm(company, ats, jid, title, url, location, remote, dept, posted, text, s
         "russian": bool(re.search(r"\brussian\b", blob, re.I)),
         "salary": tidy_pay(salary) or pay_from_text(text, location),
         "perks": perks(text), "etype": etype(title, hint), "years": years_asked(text),
-        # the full description is kept only for recent postings: that is where it matters most, and the hosting has a size limit
-        "desc": clean_html(desc) if desc and (posted or "")[:10] >= DESC_SINCE else "",
+        # the full description, cleaned to a few safe tags (clean_html); dropped when the job closes
+        "desc": clean_html(desc) if desc else "",
         "anywhere": bool(re.search(r"worldwide|world-wide|\banywhere\b|\bglobal\b|any location", location, re.I)) and not limited,
         "xc": bool(CRYPTO_RE.search(blob)),            # the posting's text mentions crypto (kept, so a reused record still answers it)
         "_crypto": bool(CRYPTO_RE.search(blob)),
@@ -1077,6 +1078,8 @@ def main():
             print(f"telegram: skipped this run: {type(ex).__name__}: {ex}")
     # The same opening from several sources (an employer's board, a job site, a channel): one record is shown, the others are
     # named on it as "Also listed on" (dedupe.py; the owner, 15 Nov: "one company can advertise in 20 places").
+    for old in db.values():                                 # a closed job keeps its record and its page, not its full text
+        if not old["active"] and old.get("desc"): old["desc"] = ""
     import dedupe
     stats["dupes"] = dedupe.run(db, label=lambda j: ("tg:" + j["tg"]) if j.get("tg") else j["id"].split("-", 1)[0])
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
