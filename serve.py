@@ -12,6 +12,9 @@ Two more addresses, both read-only and public:
                                                            search_engine.py) when HRN_OPENSEARCH is set, else SQLite FTS5
   /mcp                                                     the connector an AI assistant adds by address (Model Context Protocol):
                                                            tools search_jobs and get_job
+  /api/check-duplicate?company=Stripe&title=Senior+Engineer&location=London&url=…
+                                                           is this job already on the site? (dedupe.py) The matching open jobs,
+                                                           answered from memory in well under a millisecond
 """
 import json, os, re, sys, threading, time, urllib.parse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -19,12 +22,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
-import build, records, search_engine                     # noqa: E402  (build.py is only read here: its main() does not run)
+import build, dedupe, records, search_engine             # noqa: E402  (build.py is only read here: its main() does not run)
 
 SITE, P = ROOT / "site", build.P
 STORE = records.Store(ROOT / "data" / "jobs.db", build, live=os.environ.get("HRN_LIVE", "1") != "0")
 JOB = re.compile(r"^" + re.escape(P) + r"/job/([a-z0-9-]+)(/?)$")
-SEARCH, MCP = P + "/api/search", P + "/mcp"
+SEARCH, MCP, DUPE = P + "/api/search", P + "/mcp", P + "/api/check-duplicate"
 TAG = re.compile(r"<[^>]+>")
 
 
@@ -37,6 +40,27 @@ def find(q, remote=False, limit=20, offset=0):
     except OSError:
         total, js = STORE.search(q, remote=remote, limit=limit, offset=offset)
         return total, js, {}, "sqlite"
+
+
+DUP = {"idx": None, "stamp": None, "busy": False}
+
+
+def dup_index():
+    """The duplicate index (dedupe.py) of the open jobs in data/jobs.db. When the hourly upload brings a new file, a new index is built
+    in the background while the old one keeps answering; only the very first check waits for it (2 to 6 seconds)."""
+    db = ROOT / "data" / "jobs.db"
+    st = db.stat().st_mtime_ns
+
+    def rebuild():
+        try:
+            DUP["idx"], DUP["stamp"] = dedupe.from_db(db, lambda loc: {c for c, _ in build.countries_of(loc)}), st
+        finally:
+            DUP["busy"] = False
+    if DUP["stamp"] != st and not DUP["busy"]:
+        DUP["busy"] = True
+        if DUP["idx"] is None: rebuild()
+        else: threading.Thread(target=rebuild, daemon=True).start()
+    return DUP["idx"]
 
 
 def brief(j):
@@ -152,6 +176,19 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?", 1)[0].split("#", 1)[0]
         if path == MCP: return self.send(405, "This is an MCP server: add its address as a connector in your AI assistant.", "text/plain; charset=utf-8", [("Allow", "POST")])
+        if path == DUPE:
+            qs = urllib.parse.parse_qs(self.path.partition("?")[2])
+            one = lambda k: (qs.get(k) or [""])[0][:300]
+            if not (one("url") or (one("company") and one("title"))):
+                return self.send_json(400, {"error": "give company and title, or url"})
+            idx = dup_index()
+            t0 = time.perf_counter()
+            hits = idx.find(one("company"), one("title"), one("location"), one("remote") in ("1", "true"), one("url"))
+            ms = (time.perf_counter() - t0) * 1000
+            return self.send_json(200, {"duplicate": bool(hits), "checked": idx.size, "ms": round(ms, 3),
+                                        "matches": [{"title": h["title"], "company": h["company"], "location": h["location"], "why": h["why"],
+                                                     "page": f"{build.FULL}/job/{h['slug']}/"} for h in hits]},
+                                  [("Cache-Control", "no-store"), ("Access-Control-Allow-Origin", "*")])
         if path == SEARCH:
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k, d="": (qs.get(k) or [d])[0]
@@ -192,7 +229,7 @@ class Handler(SimpleHTTPRequestHandler):
         if os.environ.get("HRN_QUIET") != "1": super().log_message(fmt, *args)
 
 
-CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "search_engine.py", "config.json")]
+CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "search_engine.py", "dedupe.py", "config.json")]
 
 
 def watch(seen):
@@ -208,6 +245,7 @@ def watch(seen):
 def main():
     host, port = os.environ.get("HOST", "127.0.0.1"), int(os.environ.get("PORT", "8790"))
     STORE.page("")                                       # opens the records once, so the first visitor does not wait for it
+    threading.Thread(target=dup_index, daemon=True).start()  # and the duplicate index, in the background
     print(f"{STORE.count:,} job records; site on http://{host}:{port}{P}/", flush=True)
     if os.environ.get("HRN_WATCH") == "1":
         threading.Thread(target=watch, args=([f.stat().st_mtime_ns for f in CODE],), daemon=True).start()
