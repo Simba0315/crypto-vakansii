@@ -320,7 +320,8 @@ PERK_OK = set()    # perks with enough jobs to have their own page
 PULSE = {}         # company -> (opened in 7 days, closed in 7 days, label)
 CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from closed roles)
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
-SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}     # hiring systems the listings are read from
+SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby", "workable": "Workable", "recruitee": "Recruitee", "teamtailor": "Teamtailor",
+               "personio": "Personio", "workday": "Workday", "smartrecruiters": "SmartRecruiters"}     # hiring systems the listings are read from (collect.fetch_feed)
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
@@ -934,10 +935,10 @@ def auto_more(path, h1):
     return {"contract": "etype=Contract", "part-time": "etype=Part-time", "internships": "etype=Internship"}.get(seg[0], "") if len(seg) == 1 else ""
 
 
-# How many pages a topic list may have. The whole site has to fit the hosting limit (the workflow stops above 950 MiB), and a list's
-# second and later pages are the first thing to give way as jobs are added: measured on 13 Nov 2026 with 41,187 open jobs, pages 3 to 5
-# of all lists weighed 63 MiB and page 2 another 66 MiB. main() sets the number from the count of open jobs; HRN_PAGE_CAP overrides it
-# (the workflow builds again with 1 if a build still came out too large).
+# How many pages a topic list may have. It was first set to fit GitHub Pages' 1 GB (measured on 13 Nov 2026 with 41,187 open jobs,
+# pages 3 to 5 of all lists weighed 63 MiB and page 2 another 66 MiB). The site has since moved to our own server and that limit and
+# the workflow's size check are gone (15 Nov 2026); main() keeps one page a list by the owner's choice of 14 Nov (the search shows the
+# rest). HRN_PAGE_CAP overrides it.
 LIST_PAGES = 2
 
 
@@ -1386,7 +1387,7 @@ def main():
     # How often a careers page is read: the boards in sources.json and sources_tech.json every hour, those in sources_more.json in
     # turn (HRN_ROTATE in collect.py: every four hours). The copy says exactly that, never "every hour" for all of them.
     HOURLY_SET = {s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())}
-    ROT_SET = {s_["name"] for s_ in json.loads((ROOT / "sources_more.json").read_text())} if (ROOT / "sources_more.json").exists() else set()
+    ROT_SET = {s_["name"] for f_ in ("sources_more.json", "sources_ats.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())}   # collect.ROTATING
     m_hourly = len({j["company"] for j in active if j["company"] in HOURLY_SET or j["company"] not in ROT_SET})
     # live.py on the server reads every board at least once an hour (config.json "live_collector"), so the four-hour rotation of the
     # hourly build no longer limits how often a company is checked
@@ -1444,7 +1445,17 @@ def main():
     latest = diverse(order(specific), 40)
 
     # Home
-    ROLE_JOBS = {s_: [j for j in active if role_hit(nm, rx, j["title"])] for nm, s_, rx in ROLES}
+    # The same as {s_: [j for j in active if role_hit(nm, rx, j["title"])] for nm, s_, rx in ROLES}, with each title tested once:
+    # every role against every job was the largest single cost of a build (15 Nov 2026), and many titles repeat ("Store Associate").
+    def jobs_by_role(js):
+        last = {s_: (nm, rx) for nm, s_, rx in ROLES}               # a slug listed twice keeps its last rule, as the dict above did
+        out, of_title = {s_: [] for _, s_, _ in ROLES}, {}
+        for j in js:
+            t = j["title"]
+            if t not in of_title: of_title[t] = [s_ for s_, (nm, rx) in last.items() if role_hit(nm, rx, t)]
+            for s_ in of_title[t]: out[s_].append(j)
+        return out
+    ROLE_JOBS = jobs_by_role(active)
     by_role = {s_: (nm, ROLE_JOBS[s_]) for nm, s_, _ in ROLES if len(ROLE_JOBS[s_]) >= 20}
     fam_rows = []        # (slug, name, what kind of work, [(role slug, role name, jobs)], every job in the category once)
     for fs, fn, fd, rs in roles_info.FAMILIES:
@@ -5328,7 +5339,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    + (f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access. Our only contacts are {contact}, and {mail_a("abuse")} for reports of scam jobs and fake recruiters.</p>" if contact else
                       f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access.</p>")
                    + "<p><b>Something looks wrong?</b> Every job page has a “Report a problem with this listing” link. A report about money, an install request or a move to a chat app is looked at first.</p>")
-         + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever or Ashby), links straight to that posting and is checked again every hour; "
+         + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever, Ashby, Workable, Workday and others), links straight to that posting and is checked again every hour; "
                    f"a role that disappears from the employer’s page is marked closed the same day. Each job page names its source and the date of the last check. {NO_ANON}, "
                    f'and we never ask you for money, documents or an account. Details: <a href="{P}/methodology/">how listings are collected</a> and <a href="{P}/status/">today’s data status</a>.</p>')
          + section("What should I do if I already sent money or data?", "<p>Act the same day. Call your bank or card issuer and ask to stop or dispute the payment. Change the passwords of any account you shared, starting with email. "
@@ -7072,7 +7083,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # media kit has the files, the colours, the descriptions and today's numbers for press and partners.
     BD = brand.DIRECTIONS
     n_hourly = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})
-    n_rot = len(json.loads((ROOT / "sources_more.json").read_text())) if (ROOT / "sources_more.json").exists() else 0
+    n_rot = sum(1 for f_ in ("sources_more.json", "sources_ats.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text()) if not s_.get("hold"))   # collect.ROTATING
     read_line = (f"{n_hourly:,} employers’ careers pages are read every hour and {n_rot:,} more every four hours" if n_rot else f"{n_hourly:,} employers’ careers pages are read every hour")
     bp50 = (f"{SITE} (jobseveryhour.com) is a free job search site built from employers’ own careers pages. It lists {n:,} open jobs at {m:,} companies today. "
             "A job the employer takes down leaves the list, every listing links to the original posting, and nobody needs an account to search or apply.")
