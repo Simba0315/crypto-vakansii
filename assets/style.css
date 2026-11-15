@@ -1817,3 +1817,9 @@ h1,h2,h3,h4{font-variant-numeric:normal}
 .rep-more .tcard .tbody{padding-top:18px}
 table.grid tr.grp th{font-variant-numeric:normal}
 .tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
+/* Job alert sign-up (alert_form in build.py, server/src/alerts.js). Kept small on purpose: the design work may restyle it. */
+.alertf{margin:32px 0;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.alertf h2{margin-top:0}
+.alertf-row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.alertf-row input[type=email]{flex:1 1 14rem;min-width:0;font:inherit;padding:11px 13px;border:1px solid var(--line2);border-radius:6px;background:var(--card);color:var(--text)}
+.alertf-hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}

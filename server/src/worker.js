@@ -19,6 +19,8 @@
    Bindings   DB (D1 database)
               MAIL           optional: anything with send({ from, to, subject, text }). Until it is bound no email leaves (see sendMail).
               DOMAINS        optional: anything with age(domain) -> days since the domain was registered (see domainAge). Not bound: not checked.
+              COMPANY_SITES  optional: company name -> its own site (an object, a Map or a function; prod.mjs reads logos.json). Used to verify
+                             a claim of a company page at once (claimCompanyPage); without it every claim waits for a person.
    Variables  SITE_URL       public address of the site, no trailing slash   (https://example.com)
               SITE_ORIGINS   origins allowed to call the API, comma separated  (https://example.com)
               API_URL        public address of this worker, no trailing slash
@@ -29,6 +31,9 @@
                              answers with its token instead of only mailing it. Never set it in production.
               LINKEDIN_REDIRECT_URL  optional: the page LinkedIn sends people back to, exactly as registered in the LinkedIn app
                              (the account page of the site: <SITE_URL>/account/)
+              SITE_INTERNAL  optional: where this service reads the site's own files on the same machine (http://127.0.0.1:8790)
+              DUPLICATE_URL  optional: the page server's duplicate check (http://127.0.0.1:8790/api/check-duplicate), asked before a job is posted
+              SITE_NAME      optional: the name in letters and pages (Jobs Every Hour)
    Secrets    CRYPTOMUS_MERCHANT, CRYPTOMUS_API_KEY   payment gateway (merchant id and payment API key)
               ADMIN_TOKEN                             owner-only endpoints (/api/admin/...). Not set: every one of them is refused.
               GITHUB_TOKEN                            optional: fine-grained token with Actions: write on GITHUB_REPO
@@ -39,7 +44,11 @@
               few live jobs again (each job once a day, see recheckLinks), tidies up, sends held-back rebuilds.
 */
 
+import { readAlert, describe, searchLink, confirmLetter, confirmLink, tokenOk, isoTime, AlertInputError, ALERT_MAX_JOBS, ALERTS_PER_EMAIL, CONFIRMS_PER_EMAIL_DAY,
+  SIGNUPS_PER_IP_HOUR, PENDING_DAYS, PERIOD } from './alerts.js';
+
 const DAY = 86400;
+const MAIL_LOG_DAYS = 30;                 // how long the log of letters (mail_log: when, to whom, what kind, the result) is kept
 const enc = new TextEncoder();
 const now = () => Math.floor(Date.now() / 1000);
 const hex = (buf) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
@@ -395,7 +404,7 @@ async function signup(env, req, ctx) {
     ]);
   } catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw exists; throw err; }      // the same email signing up twice at the same moment
   await knownDevice(env, req, id);                    // the browser that made the account is not a new device later
-  await later(ctx, sendMail(env, email, 'Confirm your email', confirmText(env, confirm)));
+  await later(ctx, sendMail(env, email, 'Confirm your email', confirmText(env, confirm), { kind: 'confirm' }));
   const user = await db(env, 'SELECT * FROM users WHERE id = ?', id).first(), out = { token: await openSession(env, id), user: await userView(env, user) };
   if (env.PAY_MODE === 'test') out.confirm_token = confirm;      // developer machines only: there is no mailbox to read the link from
   return out;
@@ -411,7 +420,7 @@ async function login(env, req, ctx) {
   if (!(await knownDevice(env, req, user.id))) {
     await later(ctx, sendMail(env, user.email, 'A new sign-in to your employer account', 'Your employer account at ' + env.SITE_URL + ' was just signed in to from a browser it has not been used in before (' +
       new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC).\n\nIf that was you, there is nothing to do.\n\nIf it was not, open ' + env.SITE_URL + '/account/ and choose "Forgot password" to set a new one: ' +
-      'that signs out every browser.\n'));
+      'that signs out every browser.\n', { kind: 'device' }));
   }
   return { token: await openSession(env, user.id), user: await userView(env, user) };
 }
@@ -421,12 +430,13 @@ async function logout(env, req) {
   return { ok: true };
 }
 
-/* The one place mail leaves from. No mail service is connected yet: bind MAIL to anything with send({ from, to, subject, text })
-   (a service binding to a mail worker, for example) and the links that confirm an email, password resets and notices of a new sign-in
-   start arriving. Until then nothing is sent and it says so. The text is never logged: it may carry a link that opens an account. */
-export async function sendMail(env, to, subject, text) {
+/* The one place mail leaves from. MAIL is anything with send({ from, to, subject, text, kind, bulk, headers }): on our own server the
+   SMTP mailer of src/mail.js (server/prod.mjs binds it once SMTP_PASS is set), on Cloudflare a service binding to a mail worker. Without
+   it nothing is sent and it says so. The text is never logged: it may carry a link that opens an account. kind names the letter in the
+   mail log (confirm, reset, device, alert_confirm ...); a mailer may answer { sent: false } (the daily cap, a refusal) instead of throwing. */
+export async function sendMail(env, to, subject, text, extra = {}) {
   if (!env.MAIL || typeof env.MAIL.send !== 'function') return { sent: false };
-  try { await env.MAIL.send({ from: String(env.MAIL_FROM || ''), to, subject, text }); return { sent: true }; }
+  try { const r = await env.MAIL.send({ from: String(env.MAIL_FROM || ''), to, subject, text, ...extra }); return { sent: !(r && r.sent === false) }; }
   catch { console.error('mail: sending failed'); return { sent: false }; }
 }
 /* Password reset, step one. The answer is the same whether or not there is such an account, so it cannot be used to find out who has one.
@@ -442,7 +452,7 @@ async function resetRequest(env, req, ctx) {
   if (user) {
     await db(env, 'INSERT INTO resets (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)', hash, user.id, t, t + RESET_MINUTES * 60).run();
     const mail = sendMail(env, email, 'Set a new password', 'Someone asked to set a new password for your account at ' + env.SITE_URL + '.\n\n' +
-      'Open this link within ' + RESET_MINUTES + ' minutes to choose one:\n' + env.SITE_URL + '/account/#reset=' + token + '\n\nIf it was not you, ignore this message: your password stays as it is.\n');
+      'Open this link within ' + RESET_MINUTES + ' minutes to choose one:\n' + env.SITE_URL + '/account/#reset=' + token + '\n\nIf it was not you, ignore this message: your password stays as it is.\n', { kind: 'reset' });
     if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(mail); else await mail;      // the answer does not wait for the mail service
   }
   if (env.PAY_MODE === 'test') out.token = token;      // developer machines only: there is no mailbox to read the link from (for an unknown email it opens nothing)
@@ -476,7 +486,7 @@ async function confirmRequest(env, user, ctx) {      // a new link for the accou
   await limit(env, 'confirm:' + user.id, 3, 3600);
   const token = rid('', 32), t = now();
   await db(env, 'INSERT INTO confirms (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)', await sha256(token), user.id, t, t + CONFIRM_HOURS * 3600).run();
-  await later(ctx, sendMail(env, user.email, 'Confirm your email', confirmText(env, token)));
+  await later(ctx, sendMail(env, user.email, 'Confirm your email', confirmText(env, token), { kind: 'confirm' }));
   const out = { ok: true, confirmed: false, message: 'A link to confirm your email is on its way. It works for ' + CONFIRM_HOURS + ' hours.' };
   if (env.PAY_MODE === 'test') out.token = token;      // developer machines only
   return out;
@@ -645,17 +655,20 @@ async function domainCheck(env, req, user) {
 }
 
 /* ---------------------------------------------------------------- what the site knows (used to check targets) */
+/* Where this service reads the site itself (the list of companies, a job page to check a target). SITE_INTERNAL, when set, is the page
+   server on the same machine (http://127.0.0.1:8790 on our server): the same files without a trip out through Cloudflare and back. */
+const siteBase = (env) => String(env.SITE_INTERNAL || env.SITE_URL).replace(/\/+$/, '');
 let indexCache = { at: 0, companies: null };
 async function indexedCompanies(env) {
   if (indexCache.companies && now() - indexCache.at < 3600) return indexCache.companies;
   try {
-    const res = await fetch(env.SITE_URL + '/data/head.json');
+    const res = await fetch(siteBase(env) + '/data/head.json');
     if (res.ok) { const d = await res.json(); indexCache = { at: now(), companies: new Map(d.c.map((c) => [companyKey(c), c])) }; }
   } catch {}
   return indexCache.companies || new Map();
 }
 async function sitePage(env, path) {
-  try { const res = await fetch(env.SITE_URL + path); return res.ok ? await res.text() : null; } catch { return null; }
+  try { const res = await fetch(siteBase(env) + path); return res.ok ? await res.text() : null; } catch { return null; }
 }
 const jobSlugFrom = (v) => { const s = String(v || '').trim(), m = /\/job\/([a-z0-9-]{1,140})\/?(?:[?#].*)?$/.exec(s); return m ? m[1] : /^[a-z0-9-]{1,140}$/.test(s) ? s : null; };
 
@@ -1142,7 +1155,11 @@ async function readJob(env, user, b, existing, dry) {
   // under is on it after the first job. That is this account's own company, not one "listed automatically", and must not stop a second job.
   // The same goes for a company that is on the list only through a recruiter's job: it must not stop the next one, nor the company itself.
   const here = held || await db(env, "SELECT company AS name FROM jobs WHERE company_key = ? AND status NOT IN ('removed', 'rejected') ORDER BY created_at LIMIT 1", key).first();
-  if (!here && (await indexedCompanies(env)).has(key)) throw bad('listed', company + ' is already listed here automatically from its careers page. You can promote any of its jobs instead of posting again.', 409);
+  // A company the site reads from its hiring system has its jobs here already. Only the account that manages its page (a verified claim)
+  // may add a job its hiring system does not list; anyone else is told so and offered the claim.
+  const listed = !here && (await indexedCompanies(env)).has(key);
+  if (listed && (recruiter || !(await verifiedClaim(env, user.id, key)))) throw bad('listed', company + ' is already listed here automatically from its careers page: its jobs appear here within an hour of being posted there. ' +
+    (recruiter ? 'You can promote any of its jobs instead of posting again.' : CLAIM_HOW), 409, recruiter ? undefined : { claim: { company: (await indexedCompanies(env)).get(key) } });
   if (!recruiter && home !== own) throw bad('company_url', 'The company site must be on the domain of your account’s email (' + own + ').', 422);
   if (recruiter && (freeMail(companyUrl.hostname) || hiringSystem(companyUrl.hostname) || BLOCKED_HOSTS.test(companyUrl.hostname) || badLink(companyUrl, '')))
     throw bad('company_url', 'Give the hiring company’s own site, not a mailbox service, a hiring system or a page on someone else’s site.', 422);
@@ -1161,6 +1178,14 @@ async function readJob(env, user, b, existing, dry) {
     ? 'The link to apply must be on the hiring company’s site (' + home + ') or on a hiring system such as Greenhouse, Lever or Ashby.'
     : 'The link to apply must be on your company site (' + home + ') or on a hiring system such as Greenhouse, Lever or Ashby.', 422);
   if (await db(env, 'SELECT 1 AS x FROM jobs d WHERE ' + DUPLICATE, ...duplicateOf(user.id, j, existing ? existing.id : '', t)).first()) throw bad('duplicate', SAME_JOB, 409);
+  // the same job from anywhere on the site: the company's hiring system, another account, a job board (dedupe.py). Asked for a new job only.
+  const onSite = existing ? { matches: [] } : await alreadyOnSite(env, j);
+  if (onSite.matches && onSite.matches.length) {
+    const m = onSite.matches[0];
+    throw bad('already_listed', 'This job is already on the site: “' + m.title + '” at ' + m.company + (m.location ? ' (' + m.location + ')' : '') + (m.page ? ', ' + m.page : '') + '. ' +
+      (recruiter ? 'Promote that one instead of posting it again.' : listed ? 'It does not need to be posted again.' : 'If it is your company’s, ' + CLAIM_HOW[0].toLowerCase() + CLAIM_HOW.slice(1)), 409,
+      { matches: onSite.matches, ...(recruiter ? {} : { claim: { company: m.company } }) });
+  }
   if (!dry && (!existing || existing.apply_url !== apply.href || existing.title !== title || existing.company_key !== key || existing.company_url !== companyUrl.origin)) {
     await limit(env, 'linkcheck:' + user.id, LINK_CHECKS_PER_HOUR, 3600);      // each check makes this service open an address someone typed
     const link = await checkApplyLink(apply, home, title);
@@ -1181,6 +1206,7 @@ async function readJob(env, user, b, existing, dry) {
     const ats = hiringSystem(apply.hostname) ? apply.hostname : hiringSystem(j.apply_host) ? j.apply_host : '';
     if (ats) j.reasons.push('the link to apply is on a hiring system (' + ats + '), which cannot be tied to ' + home);
   }
+  if (onSite.unknown) j.reasons.push('the check for the same job elsewhere on the site did not answer: look whether it is listed already');
   const age = dry ? null : await domainAge(env, home);
   if (age !== null && age < YOUNG_DOMAIN_DAYS) j.reasons.push(home + ' was registered ' + Math.floor(age) + ' days ago');
   return j;
@@ -1363,11 +1389,24 @@ async function hit(env, req) {
   const slug = /^j_[a-f0-9]{12}$/.test(ref) ? '' : jobSlugFrom(ref);
   const job = slug === '' ? await db(env, "SELECT id FROM jobs WHERE id = ? AND status = 'live' AND expires_at > ?", ref, t).first()
     : slug ? await db(env, "SELECT id FROM jobs WHERE slug = ? AND status = 'live' AND expires_at > ? ORDER BY created_at DESC LIMIT 1", slug, t).first() : null;
-  if (!job) return null;
+  if (!job) return claimedHit(env, slug, b.company, kind, who, day);
   // the row in hit_seen is the test: it can be written once a day per job, kind and visitor, however many requests arrive together
   const first = await db(env, 'INSERT INTO hit_seen (day, job_id, kind, ip_hash) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', day, job.id, kind, who).run();
   if (first.meta.changes) await db(env, 'INSERT INTO job_hits (job_id, day, views, applies) VALUES (?, ?, ?, ?) ON CONFLICT(job_id, day) DO UPDATE SET views = views + excluded.views, applies = applies + excluded.applies',
     job.id, day, kind === 'view' ? 1 : 0, kind === 'apply' ? 1 : 0).run();
+  return null;
+}
+/* A job read from a hiring system, of a company whose page is claimed: counted for that company (company_hits), the same way. The page
+   sends the company's name with the slug; the slug must end with that name as the site writes it in addresses, so a name cannot be
+   put on another company's jobs. Nothing is counted for a company whose page nobody manages. */
+async function claimedHit(env, slug, company, kind, who, day) {
+  const name = line(company, 120, 1), cs = name ? slugify(name) : '';
+  if (!slug || !cs || !new RegExp('-' + cs.replace(/[-]/g, '\\-') + '(?:-\\d+)?$').test(slug)) return null;
+  const key = companyKey(name);
+  if (!(await db(env, "SELECT 1 AS x FROM company_claims WHERE company_key = ? AND status = 'verified'", key).first())) return null;
+  const first = await db(env, 'INSERT INTO hit_seen (day, job_id, kind, ip_hash) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', day, 'c:' + slug, kind, who).run();
+  if (first.meta.changes) await db(env, 'INSERT INTO company_hits (company_key, slug, day, views, applies) VALUES (?, ?, ?, ?, ?) ON CONFLICT(company_key, slug, day) DO UPDATE SET views = views + excluded.views, applies = applies + excluded.applies',
+    key, slug, day, kind === 'view' ? 1 : 0, kind === 'apply' ? 1 : 0).run();
   return null;
 }
 /* The counts for a set of jobs (where: a condition on jobs j with one argument). It answers a function that gives, for a job id, the
@@ -1417,7 +1456,9 @@ async function exportForSite(env) {
     // who posted it: "employer" (an account tied to the company's own domain) or "recruiter" (a person with a LinkedIn identity, whose
     // name is given, posting for a company they are not part of: the site says "posted by a recruiter, not verified by the employer")
     posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' }));
-  return { generated: new Date(t * 1000).toISOString(), boosts, sponsors, jobs };
+  // companies whose page is managed by the company itself (a verified claim): for the site to say so on the company page
+  const claimed = (await db(env, "SELECT company, decided_at FROM company_claims WHERE status = 'verified' ORDER BY company").all()).results.map((c) => ({ company: c.company, since: isoDay(c.decided_at) }));
+  return { generated: new Date(t * 1000).toISOString(), boosts, sponsors, jobs, claimed };
 }
 /* Ask GitHub to rebuild the site so a change shows up within minutes instead of at the next daily run. At most once in ten minutes. */
 async function requestRebuild(env, fromTimer) {
@@ -1789,6 +1830,220 @@ async function ai(env, req, user, name, m) {
   return { ...out, usage: spent };
 }
 
+/* ---------------------------------------------------------------- pages this service shows itself
+   The links in letters (confirm an alert, unsubscribe) open small pages served from here, with one button each: a GET only shows the
+   page, the button sends the POST that changes something. They need no script, carry no tracker, and are not for search engines. */
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const PAGE_CSS = ':root{color-scheme:light dark;--bg:#fff;--text:#121110;--muted:#5c5852;--line:#ebe8e3;--ac:#15803d;--btn:#121110;--btn-ink:#fff;--hl:#b7eec3}' +
+  '@media (prefers-color-scheme:dark){:root{--bg:#121110;--text:#f4f1ec;--muted:#aca69c;--line:#2a2723;--ac:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--hl:#1f5132}}' +
+  'body{margin:0;background:var(--bg);color:var(--text);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:34rem;margin:0 auto;padding:40px 16px 64px}' +
+  '.brand a{font-weight:700;color:var(--text);text-decoration:none}h1{font-size:1.75rem;line-height:1.2;margin:28px 0 12px}.what{font-size:1.15rem;font-weight:600;background:var(--hl);display:inline;padding:0 4px}' +
+  'a{color:var(--text);text-decoration-color:var(--ac);text-underline-offset:3px}p{margin:12px 0}.small{color:var(--muted);font-size:.9rem}form{margin:16px 0}' +
+  'button{font:inherit;font-weight:600;border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink);border-radius:999px;padding:11px 22px;cursor:pointer}' +
+  'button.ghost{background:transparent;color:var(--text);border-color:var(--line)}button:focus-visible,a:focus-visible{outline:3px solid var(--ac);outline-offset:2px}';
+function htmlPage(env, title, inner, status = 200) {
+  return new Response('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">' +
+    '<title>' + esc(title) + ' | ' + esc(env.SITE_NAME || 'Jobs Every Hour') + '</title><style>' + PAGE_CSS + '</style></head><body><main><p class="brand"><a href="' + esc(env.SITE_URL) + '/">' +
+    esc(env.SITE_NAME || 'Jobs Every Hour') + '</a></p>' + inner + '</main></body></html>', { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" } });
+}
+
+/* ---------------------------------------------------------------- job alerts: sign-up, confirmation, unsubscribe (rules in src/alerts.js)
+   POST /api/alerts { email, q?, cat?, loc?, remote?, sal?, freq? } from the site's form, as JSON (the page's script) or as a plain form
+   post (no script: the answer is then a page). The answer is the same whether or not the address already has alerts, so it tells nobody
+   who is subscribed; only the fifth alert of one address is refused with a reason. A hidden field people do not see ("website") is
+   filled in by programs only: such a sign-up is answered as usual and dropped. */
+const ALERT_SENT = 'Check your inbox: we sent a link to confirm this alert. Nothing is sent until you open it.';
+const toAlertError = (err) => (err instanceof AlertInputError ? bad(err.code, err.message) : err);
+async function alertSignup(env, req, ctx) {
+  const form = /^application\/x-www-form-urlencoded/i.test(req.headers.get('Content-Type') || '');
+  const back = (() => { const r = req.headers.get('Referer') || ''; return r.startsWith(env.SITE_URL + '/') ? r : env.SITE_URL + '/jobs/'; })();
+  try {
+    let b;
+    if (form) { const text = await req.text(); if (text.length > 4000) throw bad('too_large', 'The request is too large.', 413); b = Object.fromEntries(new URLSearchParams(text)); }
+    else b = await body(req);
+    const out = await alertCreate(env, req, ctx, b);
+    if (!form) return out;
+    return htmlPage(env, 'Check your inbox', '<h1>Check your inbox</h1><p>We sent a link to <b>' + esc(cleanEmail(b.email)) + '</b> to confirm this alert:</p><p class="what">' + esc(out.alert) + '</p>' +
+      '<p>Nothing is sent until you open the link and press the button there. No letter? Look in the spam folder; the link works for ' + PENDING_DAYS + ' days.</p><p><a href="' + esc(back) + '">Back to the jobs</a></p>');
+  } catch (err) {
+    if (!form || !(err instanceof HttpError)) throw err;
+    return htmlPage(env, 'The alert was not saved', '<h1>The alert was not saved</h1><p>' + esc(err.message) + '</p><p><a href="' + esc(back) + '">Back to the jobs</a></p>', err.status);
+  }
+}
+async function alertCreate(env, req, ctx, b) {
+  if (!env.MAIL || typeof env.MAIL.send !== 'function') throw bad('mail_off', 'Email alerts are not switched on yet.', 503);
+  const who = await ipHash(env, req);
+  await limit(env, 'alert-ip:' + who, SIGNUPS_PER_IP_HOUR, 3600);
+  const email = cleanEmail(b.email);
+  if (!email || !/^[\x21-\x7e]+$/.test(email)) throw bad('email', 'Enter a valid email address.');
+  if (throwawayMail(email.slice(email.lastIndexOf('@') + 1))) throw bad('throwaway_email', 'This address is a throwaway mailbox. Use an address you keep.');
+  let a; try { a = readAlert(b); } catch (err) { throw toAlertError(err); }
+  const done = { ok: true, message: ALERT_SENT, alert: describe(a) };
+  if (typeof b.website === 'string' && b.website.trim()) return done;
+  const t = now(), same = await db(env, 'SELECT * FROM alerts WHERE email = ? AND q = ? AND cat = ? AND loc = ? AND remote = ? AND sal = ?', email, a.q, a.cat, a.loc, a.remote, a.sal).first();
+  if (same && same.status === 'active') return done;                 // already on: nothing changes, nothing is sent
+  if (!same && Number(await db(env, 'SELECT COUNT(*) AS n FROM alerts WHERE email = ?', email).first('n')) >= ALERTS_PER_EMAIL)
+    throw bad('too_many', 'This address has ' + ALERTS_PER_EMAIL + ' job alerts, the most one address can have. Unsubscribe from one of them (a link in each letter) to add another.', 409);
+  if (!(await allowed(env, 'alert-mail:' + email, CONFIRMS_PER_EMAIL_DAY, DAY))) return done;      // no more than a few confirmation letters a day to one address, whoever asks
+  let id = same ? same.id : rid('a_');
+  if (same) await db(env, 'UPDATE alerts SET freq = ?, created_at = ? WHERE id = ?', a.freq, t, id).run();
+  else {
+    try {
+      await db(env, 'INSERT INTO alerts (id, email, q, cat, loc, remote, sal, freq, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', id, email, a.q, a.cat, a.loc, a.remote, a.sal, a.freq, 'pending', t).run();
+    } catch (err) { if (/UNIQUE/i.test(String(err && err.message))) return done; throw err; }   // the same sign-up twice at the same moment
+  }
+  const letter = await confirmLetter(env, { ...a, id });
+  await later(ctx, sendMail(env, email, letter.subject, letter.text, { kind: 'alert_confirm' }));
+  if (env.PAY_MODE === 'test') done.confirm_url = await confirmLink(env, id);      // developer machines only: there is no mailbox to read the link from
+  return done;
+}
+const alertFromLink = async (env, url, purpose) => {
+  const id = url.searchParams.get('a') || '', token = url.searchParams.get('t') || '';
+  if (!(await tokenOk(env, purpose, id, token))) return { valid: false, id, a: null };
+  return { valid: true, id, token, a: await db(env, 'SELECT * FROM alerts WHERE id = ?', id).first() };
+};
+const toSite = (env) => '<p><a href="' + esc(env.SITE_URL) + '/jobs/">Search jobs</a></p>';
+const freqWords = (a) => (a.freq === 'weekly' ? 'once a week' : 'once a day') + ', at most ' + ALERT_MAX_JOBS + ' jobs in a letter, only when there are new ones';
+async function alertConfirm(env, req, url) {
+  const { a, id, token } = await alertFromLink(env, url, 'confirm');
+  if (!a) return htmlPage(env, 'This link does not work', '<h1>This link does not work any more</h1><p>A confirmation link works for ' + PENDING_DAYS + ' days. Ask for the alert again on the site.</p>' + toSite(env), 404);
+  if (a.status === 'pending' && req.method === 'GET') {
+    return htmlPage(env, 'Confirm your job alert', '<h1>Confirm your job alert</h1><p class="what">' + esc(describe(a)) + '</p><p>To ' + esc(a.email) + ', ' + freqWords(a) + '.</p>' +
+      '<form method="post" action="?a=' + id + '&amp;t=' + token + '"><button>Yes, email me these jobs</button></form><p class="small">Nothing is sent until you press the button. Every letter has a link to unsubscribe in one click.</p>');
+  }
+  if (a.status === 'pending') {
+    const t = now();
+    await db(env, "UPDATE alerts SET status = 'active', confirmed_at = ?, seen_through = ?, due_at = ? WHERE id = ? AND status = 'pending'", t, isoTime(t), t + PERIOD[a.freq] - 1800, id).run();
+  }
+  return htmlPage(env, 'Your job alert is on', '<h1>Your job alert is on</h1><p class="what">' + esc(describe(a)) + '</p><p>The first letter comes ' + (a.freq === 'weekly' ? 'in a week' : 'tomorrow') +
+    ' if new jobs match it, then ' + freqWords(a) + '. Each letter has a link to unsubscribe in one click.</p><p><a href="' + esc(searchLink(env.SITE_URL, a)) + '">See the jobs that match it now</a></p>');
+}
+/* One link for three things, each a button on the page: unsubscribe from this alert, from every alert of the address, or change how
+   often it comes. A mail client's one-click unsubscribe (RFC 8058: a POST with the body "List-Unsubscribe=One-Click") lands here too.
+   An unsubscribed alert is deleted, not kept. */
+async function alertUnsubscribe(env, req, url) {
+  const { valid, a, id, token } = await alertFromLink(env, url, 'unsub');
+  if (!valid) return htmlPage(env, 'This link does not work', '<h1>This link does not work</h1><p>Use the unsubscribe link in the latest letter, or write to the address on our privacy page.</p>' + toSite(env), 404);
+  if (req.method === 'GET') {
+    if (!a) return htmlPage(env, 'You are unsubscribed', '<h1>You are unsubscribed</h1><p>This alert does not exist any more: no letters for it are sent.</p>' + toSite(env));
+    const act = '?a=' + id + '&amp;t=' + token, other = a.freq === 'weekly' ? 'daily' : 'weekly';
+    return htmlPage(env, 'Unsubscribe from this job alert', '<h1>Unsubscribe from this job alert?</h1><p class="what">' + esc(describe(a)) + '</p><p>Now it comes ' + freqWords(a) + '. Letters sent so far: ' + a.letters + '.</p>' +
+      '<form method="post" action="' + act + '"><button>Unsubscribe</button></form>' +
+      '<form method="post" action="' + act + '"><input type="hidden" name="freq" value="' + other + '"><button class="ghost">Send it ' + other + ' instead</button></form>' +
+      '<form method="post" action="' + act + '"><input type="hidden" name="all" value="1"><button class="ghost">Stop every job alert to this address</button></form>');
+  }
+  const text = (await req.text()).slice(0, 4000), oneClick = /List-Unsubscribe=One-Click/i.test(text);
+  const p = /^application\/x-www-form-urlencoded/i.test(req.headers.get('Content-Type') || '') ? new URLSearchParams(text) : new URLSearchParams();
+  const freq = oneClick ? '' : p.get('freq'), all = !oneClick && p.get('all') === '1';
+  if (a && (freq === 'daily' || freq === 'weekly')) {
+    await db(env, 'UPDATE alerts SET freq = ? WHERE id = ?', freq, id).run();
+    return htmlPage(env, 'Changed', '<h1>From now on: ' + freq + '</h1><p class="what">' + esc(describe(a)) + '</p><p>The alert comes ' + freqWords({ ...a, freq }) + '.</p>' + toSite(env));
+  }
+  if (a) await (all ? db(env, 'DELETE FROM alerts WHERE email = ?', a.email) : db(env, 'DELETE FROM alerts WHERE id = ?', id)).run();
+  if (oneClick) return new Response('Unsubscribed.', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+  return htmlPage(env, 'You are unsubscribed', '<h1>You are unsubscribed</h1><p>' + (all ? 'No more job alerts go to this address. They are deleted, not kept.' :
+    a ? 'No more letters for “' + esc(describe(a)) + '”. The alert is deleted, not kept.' : 'This alert does not exist any more: no letters for it are sent.') + '</p>' +
+    (a && !all ? '<p><a href="' + esc(searchLink(env.SITE_URL, a)) + '">Search these jobs on the site</a></p>' : toSite(env)));
+}
+// the alerts of a signed-in account: those of its own address, once that address is confirmed
+async function myAlerts(env, user) {
+  if (!user.confirmed_at) return { alerts: [] };
+  const rows = (await db(env, 'SELECT * FROM alerts WHERE email = ? ORDER BY created_at DESC', user.email).all()).results;
+  return { alerts: rows.map((a) => ({ id: a.id, alert: describe(a), freq: a.freq, status: a.status, created: isoDay(a.created_at), letters: a.letters, search: searchLink(env.SITE_URL, a) })) };
+}
+
+/* ---------------------------------------------------------------- "Is this job already on the site?" (dedupe.py, through serve.py)
+   DUPLICATE_URL is the page server's /api/check-duplicate on the same machine (http://127.0.0.1:8790/api/check-duplicate). It answers
+   from memory, in well under a millisecond, with the open jobs that are this one: the same company and role in an overlapping place,
+   or the same link to apply. Not set (Cloudflare, the tests that do not ask for it): not asked. No answer: { unknown: true }, and the
+   job waits for a person, who can look. */
+async function alreadyOnSite(env, j) {
+  if (!env.DUPLICATE_URL) return { matches: [] };
+  try {
+    const u = new URL(env.DUPLICATE_URL);
+    u.searchParams.set('company', j.company); u.searchParams.set('title', j.title); u.searchParams.set('location', j.location || '');
+    if (j.remote) u.searchParams.set('remote', '1');
+    u.searchParams.set('url', j.apply_url);
+    const res = await fetch(u.href, { signal: AbortSignal.timeout(3000), headers: { Accept: 'application/json' } });
+    const d = res.ok ? await res.json() : null;
+    if (!d || typeof d.duplicate !== 'boolean') return { unknown: true };
+    return { matches: (d.duplicate && Array.isArray(d.matches) ? d.matches : []).slice(0, 5).map((m) => ({ title: line(m && m.title, 200) || '', company: line(m && m.company, 120) || '',
+      location: line(m && m.location, 200) || '', page: typeof (m && m.page) === 'string' && /^https?:\/\/[^\s]+$/.test(m.page) ? m.page.slice(0, 300) : '', why: line(m && m.why, 120) || '' })) };
+  } catch { return { unknown: true }; }
+}
+
+/* ---------------------------------------------------------------- "Claim your company page"
+   The companies the site reads from their hiring systems (about 3,800) are listed without anyone from the company here. An employer
+   account claims its company's page: POST /api/claims { company } with the name as the site shows it. What it needs and what decides:
+   - the account's email is confirmed and the account is tied to a company domain (users.domain: its email, a DNS record or a file);
+   - the site lists the company, and no other account posts under that name or manages its page;
+   - the company's own site as the site knows it (COMPANY_SITES: logos.json, checked by hand or by name) is on the account's domain:
+     then the claim is verified at once. Unknown, different, a look-alike domain or a well-known name from another domain: it waits for
+     a person (GET /api/admin/claims, approve or reject with a reason).
+   What a verified claim gives: the views and clicks on "Apply" of the company's job pages (GET /api/claims/<id>/stats, counted from
+   the job pages' calls to /api/public/hit), the right to post a job here that its hiring system does not list (still screened, checked
+   against the site for duplicates and reviewed like any job), and the mark "claimed" in export.json for the site to show.
+   One account may hold CLAIMS_PER_ACCOUNT claims; one company has one verified claim (the unique index in schema.sql). */
+const CLAIMS_PER_ACCOUNT = 5;
+const CLAIM_HOW = 'Claim the company page instead: sign in with an account on the company’s domain and ask for it on the account page.';
+async function companySite(env, company) {
+  const s = env.COMPANY_SITES;
+  let v = '';
+  try { v = typeof s === 'function' ? await s(company) : s instanceof Map ? s.get(company) : s && typeof s === 'object' ? s[company] : ''; } catch {}
+  v = String(v || '').trim().toLowerCase();
+  if (!v || v.startsWith('board:')) return '';
+  const u = publicUrl(/^https:\/\//.test(v) ? v : 'https://' + v.replace(/^[a-z]+:\/\//, ''));
+  return u ? siteDomain(u.hostname) : '';
+}
+const claimView = (c) => ({ id: c.id, company: c.company, domain: c.domain, status: c.status, reason: c.status === 'verified' ? '' : c.reason, since: isoDay(c.decided_at || c.created_at) });
+const verifiedClaim = (env, userId, key) => db(env, "SELECT * FROM company_claims WHERE user_id = ? AND company_key = ? AND status = 'verified'", userId, key).first();
+async function claimCompanyPage(env, req, user) {
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  const own = domainOf(user);
+  if (!own) throw bad('work_email', 'To claim a company page the account must be tied to the company’s domain: sign up with your work email, or prove the domain with a DNS record or a file on the account page.', 403);
+  await limit(env, 'claim:' + user.id, 10, 3600);
+  const wanted = line((await body(req)).company, 80, 2);
+  if (!wanted) throw bad('company', 'Enter the company name as the site shows it.');
+  const key = companyKey(wanted), company = (await indexedCompanies(env)).get(key);
+  if (!company) throw bad('not_listed', 'The site lists no company by that name. Check the spelling on its page, or post a job: a company that posts its own jobs has its page already.', 404);
+  const held = await db(env, 'SELECT user_id FROM companies WHERE k = ?', key).first();
+  if (held && held.user_id !== user.id) throw bad('company_taken', COMPANY_TAKEN, 409);
+  const taken = bad('claimed', 'Another account already manages this company’s page. If that is wrong, write to the jobs address on the site.', 409);
+  const verified = await db(env, "SELECT * FROM company_claims WHERE company_key = ? AND status = 'verified'", key).first();
+  if (verified) { if (verified.user_id === user.id) return { claim: claimView(verified) }; throw taken; }
+  const mine = await db(env, 'SELECT * FROM company_claims WHERE user_id = ? AND company_key = ?', user.id, key).first();
+  if (mine && mine.status === 'pending') return { claim: claimView(mine) };
+  if (!mine && Number(await db(env, "SELECT COUNT(*) AS n FROM company_claims WHERE user_id = ? AND status != 'rejected'", user.id).first('n')) >= CLAIMS_PER_ACCOUNT)
+    throw bad('limit', 'One account can manage ' + CLAIMS_PER_ACCOUNT + ' company pages.', 429);
+  const site = await companySite(env, company), reasons = [], brand = brandIn(company), odd = lookalike(own);
+  if (!site) reasons.push('the site does not know ' + company + '’s own domain: check that ' + own + ' is it');
+  else if (site !== own) reasons.push('the domain the site knows for ' + company + ' is ' + site + ', and the account is tied to ' + own);
+  if (odd) reasons.push(odd);
+  if (brand && !BRANDS[brand].includes(own)) reasons.push('the company is named “' + company + '”, and the account is not on a domain of ' + brand[0].toUpperCase() + brand.slice(1));
+  const t = now(), status = reasons.length ? 'pending' : 'verified', id = mine ? mine.id : rid('k_');
+  try {
+    if (mine) await db(env, 'UPDATE company_claims SET status = ?, reason = ?, domain = ?, site = ?, created_at = ?, decided_at = ? WHERE id = ?', status, clip(reasons.join('; '), 500), own, site, t, status === 'verified' ? t : 0, id).run();
+    else await db(env, 'INSERT INTO company_claims (id, user_id, company, company_key, domain, site, status, reason, created_at, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      id, user.id, company, key, own, site, status, clip(reasons.join('; '), 500), t, status === 'verified' ? t : 0).run();
+  } catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw taken; throw err; }      // two accounts verified for one company at the same moment
+  if (status === 'verified') await requestRebuild(env);
+  return { claim: claimView(await db(env, 'SELECT * FROM company_claims WHERE id = ?', id).first()) };
+}
+// views and clicks on "Apply" per job page of a claimed company: in all, and the last HIT_DAYS days one by one
+async function claimStats(env, user, id, t) {
+  const c = await db(env, "SELECT * FROM company_claims WHERE id = ? AND user_id = ? AND status = 'verified'", id, user.id).first();
+  if (!c) throw bad('not_found', 'No verified claim with this id on this account.', 404);
+  const days = Array.from({ length: HIT_DAYS }, (_, i) => isoDay(t - (HIT_DAYS - 1 - i) * DAY));
+  const rows = (await db(env, 'SELECT slug, day, views, applies FROM company_hits WHERE company_key = ? ORDER BY slug', c.company_key).all()).results, by = new Map();
+  for (const r of rows) {
+    const x = by.get(r.slug) || { page: env.SITE_URL + '/job/' + r.slug + '/', views: 0, applies: 0, recent: new Map() };
+    x.views += r.views; x.applies += r.applies; if (r.day >= days[0]) x.recent.set(r.day, r); by.set(r.slug, x);
+  }
+  return { company: c.company, jobs: [...by.values()].sort((a, b) => b.views - a.views).slice(0, 500).map((x) => ({ page: x.page, views: x.views, applies: x.applies,
+    by_day: days.map((day) => { const r = x.recent.get(day) || {}; return { day, views: r.views || 0, applies: r.applies || 0 }; }) })) };
+}
+
 /* ---------------------------------------------------------------- router */
 async function route(env, req, url, ctx) {
   const path = url.pathname.replace(/\/+$/, ''), m = req.method, seg = path.split('/').slice(2);     // /api/<seg...>
@@ -1810,6 +2065,9 @@ async function route(env, req, url, ctx) {
   if (path === '/api/auth/reset/request' && m === 'POST') return resetRequest(env, req, ctx);
   if (path === '/api/auth/reset/confirm' && m === 'POST') return resetConfirm(env, req);
   if (path === '/api/webhooks/cryptomus' && m === 'POST') return cryptomusWebhook(env, req);
+  if (path === '/api/alerts' && m === 'POST') return alertSignup(env, req, ctx);                       // job alerts: no account needed
+  if (path === '/api/alerts/confirm' && (m === 'GET' || m === 'POST')) return alertConfirm(env, req, url);
+  if (path === '/api/alerts/unsubscribe' && (m === 'GET' || m === 'POST')) return alertUnsubscribe(env, req, url);
   if (seg[0] === 'dev' && seg[1] === 'pay' && env.PAY_MODE === 'test') {                               // developer machines only
     const o = await db(env, "SELECT * FROM orders WHERE id = ? AND provider = 'test'", seg[2] || '').first();
     if (!o) throw bad('not_found', 'Order not found.', 404);
@@ -1851,6 +2109,15 @@ async function route(env, req, url, ctx) {
       : { id: p.id, kind: p.kind, label: p.label, from: isoDay(p.starts_at), until: isoDay(p.ends_at),
         state: p.ends_at <= t ? 'ended' : !shown(p.target) ? 'paused' : p.starts_at > t ? 'scheduled' : 'live' })) };
   }
+  if (path === '/api/alerts' && m === 'GET') return myAlerts(env, user);
+  if (seg[0] === 'alerts' && seg[1] && !seg[2] && m === 'DELETE') {
+    const done = user.confirmed_at ? await db(env, 'DELETE FROM alerts WHERE id = ? AND email = ?', seg[1], user.email).run() : { meta: { changes: 0 } };
+    if (!done.meta.changes) throw bad('not_found', 'Alert not found.', 404);
+    return { ok: true };
+  }
+  if (path === '/api/claims' && m === 'POST') return claimCompanyPage(env, req, user);
+  if (path === '/api/claims' && m === 'GET') return { claims: (await db(env, 'SELECT * FROM company_claims WHERE user_id = ? ORDER BY created_at DESC', user.id).all()).results.map(claimView) };
+  if (seg[0] === 'claims' && seg[1] && seg[2] === 'stats' && m === 'GET') return claimStats(env, user, seg[1], t);
   if (path === '/api/jobs/preview' && m === 'POST') return previewJob(env, req, user);
   if (path === '/api/jobs' && m === 'POST') return createJob(env, req, user);
   if (path === '/api/jobs' && m === 'GET') {            // each job with what it brought: views of its page and clicks on "Apply", in all and day by day (see hit)
@@ -1947,6 +2214,60 @@ async function admin(env, req, seg, m) {
       recent_orders: (await db(env, 'SELECT id, product, label, amount_usd, status, created_at FROM orders ORDER BY created_at DESC LIMIT 30').all()).results,
       recent_jobs: jobs.map((j) => ({ ...j, ...hits(j.id) })) };
   }
+  // Claims of company pages that wait for a person: the company, the domain the account proved and how, the domain the site knows for
+  // the company, and why it waits. approve makes it the company's one verified claim; reject (with a reason the account reads) ends it.
+  if (seg[1] === 'claims' && !id && m === 'GET') {
+    const rows = (await db(env, "SELECT c.*, u.email, u.domain_proof, u.created_at AS account_created, u.confirmed_at, u.linkedin_sub FROM company_claims c JOIN users u ON u.id = c.user_id WHERE c.status = 'pending' ORDER BY c.created_at LIMIT 200").all()).results;
+    return { claims: rows.map((c) => ({ id: c.id, company: c.company, domain: c.domain, site_we_know: c.site, reason: c.reason, asked: isoDay(c.created_at),
+      account: { id: c.user_id, email_domain: c.email.slice(c.email.lastIndexOf('@') + 1), proved_by: proofsOf({ ...c, domain: c.domain }), age_days: Math.floor((t - c.account_created) / DAY) } })) };
+  }
+  if (seg[1] === 'claims' && seg[3] === 'approve' && m === 'POST') {
+    let done;
+    try { done = await db(env, "UPDATE company_claims SET status = 'verified', reason = '', decided_at = ? WHERE id = ? AND status = 'pending'", t, id).run(); }
+    catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw bad('claimed', 'Another account already manages this company’s page: reject this claim, or reject that one first.', 409); throw err; }
+    if (!done.meta.changes) throw bad('not_found', 'No claim with this id is waiting.', 404);
+    await requestRebuild(env); return { ok: true };
+  }
+  if (seg[1] === 'claims' && seg[3] === 'reject' && m === 'POST') {
+    const reason = line((await body(req)).reason, 300, 3);
+    if (!reason) throw bad('reason', 'Give the reason in 3 to 300 characters: the account reads it.');
+    const done = await db(env, "UPDATE company_claims SET status = 'rejected', reason = ?, decided_at = ? WHERE id = ? AND status IN ('pending', 'verified')", reason, t, id).run();
+    if (!done.meta.changes) throw bad('not_found', 'No claim with this id.', 404);
+    await requestRebuild(env); return { ok: true };
+  }
+  // Who the site has, in counts: accounts of job seekers and of employers, job alerts, claimed company pages, mail sent today, and what
+  // each of the last 30 days added. Counts only: no address leaves this endpoint.
+  if (seg[1] === 'audience' && m === 'GET') {
+    const n = async (sql, ...args) => Number(await db(env, sql, ...args).first('n')) || 0, since = t - 30 * DAY;
+    const employer = "(domain != '' OR linkedin_sub != '')", perDay = async (sql) => (await db(env, sql, since).all()).results;
+    return {
+      accounts: { job_seekers: await n('SELECT COUNT(*) AS n FROM users WHERE banned = 0 AND NOT ' + employer), employers: await n('SELECT COUNT(*) AS n FROM users WHERE banned = 0 AND ' + employer),
+        confirmed: await n('SELECT COUNT(*) AS n FROM users WHERE banned = 0 AND confirmed_at > 0') },
+      alerts: { active: await n("SELECT COUNT(*) AS n FROM alerts WHERE status = 'active'"), addresses: await n("SELECT COUNT(DISTINCT email) AS n FROM alerts WHERE status = 'active'"),
+        weekly: await n("SELECT COUNT(*) AS n FROM alerts WHERE status = 'active' AND freq = 'weekly'"), waiting_for_confirmation: await n("SELECT COUNT(*) AS n FROM alerts WHERE status = 'pending'"),
+        letters_sent: await n('SELECT COALESCE(SUM(letters), 0) AS n FROM alerts') },
+      claims: { verified: await n("SELECT COUNT(*) AS n FROM company_claims WHERE status = 'verified'"), waiting: await n("SELECT COUNT(*) AS n FROM company_claims WHERE status = 'pending'") },
+      jobs_posted_here: { live: await n("SELECT COUNT(*) AS n FROM jobs WHERE status = 'live'"), waiting: await n("SELECT COUNT(*) AS n FROM jobs WHERE status = 'review'") },
+      mail: { sent_today: await n("SELECT COUNT(*) AS n FROM mail_log WHERE status = 'sent' AND at >= ?", t - (t % DAY)), failed_today: await n("SELECT COUNT(*) AS n FROM mail_log WHERE status = 'failed' AND at >= ?", t - (t % DAY)),
+        held_by_cap_today: await n("SELECT COUNT(*) AS n FROM mail_log WHERE status = 'capped' AND at >= ?", t - (t % DAY)), daily_cap: env.MAIL && env.MAIL.cap ? env.MAIL.cap : null },
+      by_day: { accounts: await perDay("SELECT date(created_at, 'unixepoch') AS day, COUNT(*) AS n FROM users WHERE created_at >= ? GROUP BY day ORDER BY day"),
+        alerts_confirmed: await perDay("SELECT date(confirmed_at, 'unixepoch') AS day, COUNT(*) AS n FROM alerts WHERE confirmed_at >= ? GROUP BY day ORDER BY day") } };
+  }
+  // A person asked (privacy@) for everything about an address to be deleted: its job alerts, the mail log rows to it, and an account on
+  // it. The account's jobs come down and what it bought stops; the row itself stays with the address replaced and no way to sign in,
+  // because paid orders point at it (records of payments are kept as the law requires). Answers what was found.
+  if (seg[1] === 'erase' && m === 'POST') {
+    const email = cleanEmail((await body(req)).email);
+    if (!email) throw bad('email', 'Give the email address to erase.');
+    const u = await db(env, 'SELECT id FROM users WHERE email = ?', email).first(), alerts = await db(env, 'SELECT COUNT(*) AS n FROM alerts WHERE email = ?', email).first('n');
+    const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email)];
+    if (u) steps.push(...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
+      ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id), db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
+      db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
+    await env.DB.batch(steps);
+    if (u) await requestRebuild(env);
+    return { ok: true, alerts_deleted: Number(alerts) || 0, account_erased: !!u };
+  }
   if (seg[1] === 'jobs' && seg[3] === 'remove' && m === 'POST') { await env.DB.batch([...settleReports(env, id, t), ...takeDown(env, 'id = ?', id, t)]); await requestRebuild(env); return { ok: true }; }
   // everything of this account goes: sessions, reset and confirmation links, the browsers it was known by, jobs, what it bought, the
   // company names it held; the reports about its jobs are settled as upheld. /api/admin/accounts/<id>/ban is the same endpoint.
@@ -1955,7 +2276,8 @@ async function admin(env, req, seg, m) {
       db(env, 'DELETE FROM resets WHERE user_id = ?', id), db(env, 'DELETE FROM confirms WHERE user_id = ?', id), db(env, 'DELETE FROM devices WHERE user_id = ?', id),
       db(env, 'DELETE FROM oauth_states WHERE user_id = ?', id), db(env, 'DELETE FROM domain_claims WHERE user_id = ?', id),      // its LinkedIn identity stays on it, so it cannot be attached to a new account
       db(env, "UPDATE reports SET decision = 'upheld', decided_at = ? WHERE decided_at = 0 AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)", t, id),
-      ...takeDown(env, 'user_id = ?', id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', id), db(env, 'DELETE FROM companies WHERE user_id = ?', id)]);
+      ...takeDown(env, 'user_id = ?', id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', id), db(env, 'DELETE FROM companies WHERE user_id = ?', id),
+      db(env, 'DELETE FROM company_claims WHERE user_id = ?', id)]);
     await requestRebuild(env); return { ok: true };
   }
   throw bad('not_found', 'Not found.', 404);
@@ -1991,6 +2313,8 @@ export default {
     await step('claims', () => db(env, 'DELETE FROM domain_claims WHERE expires_at < ?', t).run());
     await step('ai', () => db(env, 'DELETE FROM ai_usage WHERE month < ?', monthOf(t - 62 * DAY)).run());      // counts of months gone by: this month and the last are kept
     await step('rate', () => db(env, 'DELETE FROM rate WHERE reset_at < ?', t).run());
+    await step('mail log', () => db(env, 'DELETE FROM mail_log WHERE at < ?', t - MAIL_LOG_DAYS * DAY).run());           // the log of letters is kept 30 days
+    await step('alerts', () => db(env, "DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", t - PENDING_DAYS * DAY).run());   // nobody confirmed them
     await step('rebuild', async () => { if ((await db(env, "SELECT v FROM meta WHERE k = 'rebuild_wanted'").first('v')) === '1') await requestRebuild(env, true); });
   },
 };

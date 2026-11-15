@@ -805,6 +805,26 @@ def auto_more(path, h1):
 LIST_PAGES = 2
 
 
+def alert_form(what, cat="", loc="", search=False):
+    """"Email me new jobs like these": the free job alert sign-up (server/src/alerts.js), small and reusable. Shown only once the API is
+    on (config.json api_url): a form that goes nowhere is not shown (rule 7). Without a script the form posts itself and the API answers
+    with a page; with one, site.js sends it and writes the answer under it. On the search page (search=True) site.js copies the current
+    search (words, category, place, remote, least pay) into the hidden fields when it is sent. The field "website" is for programs only."""
+    if not CFG["api_url"]: return ""
+    uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (cat or loc or "search").lower())
+    hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc)) if v)
+    if search: hid = "".join(f'<input type="hidden" name="{k}" value="">' for k in ("q", "cat", "loc", "remote", "sal"))
+    return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-labelledby="{uid}-h">'
+            f'<h2 id="{uid}-h">Free job alerts: {e(what)}</h2>'
+            '<p>New jobs by email, once a day or once a week, at most 20 in a letter. We send a link to confirm first, and every letter can be stopped in one click.</p>'
+            f'<div class="alertf-row"><label for="{uid}-e">Your email</label><input id="{uid}-e" type="email" name="email" required autocomplete="email" maxlength="254">'
+            f'<label for="{uid}-f">How often</label><select id="{uid}-f" name="freq"><option value="daily">Daily</option><option value="weekly">Weekly</option></select>'
+            '<button class="btn primary" type="submit">Email me new jobs</button></div>'
+            '<p class="alertf-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>'
+            f'{hid}<p class="note" role="status" aria-live="polite" data-alert-out></p>'
+            f'<p class="note">Only your address and this search are kept, until you unsubscribe. <a href="{P}/privacy/#alerts">How alerts handle your address</a></p></form>')
+
+
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None):
     jobs = order(jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
@@ -1650,6 +1670,7 @@ def main():
               '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'
               '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'
               '<aside class="pane" id="pane" aria-label="Job preview"><p class="pane-empty">Select a job to preview it here.</p></aside></div>'
+              + alert_form("new jobs for this search", search=True)
               + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in dict.fromkeys(top_skills + [rlow(nm) for nm, s_, _ in ROLES if s_ in by_role] + [c for c, _ in comp_items[:200]])) + "</datalist>"
               + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"Search {roles(n, 'Job')} | {SITE}",
@@ -1742,7 +1763,7 @@ def main():
         listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), name + ' job')} at companies. Remote and on-site roles, updated hourly.",
                 js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s], ("categories/", "All categories")) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
-                hub=hub_sections(f"{name} roles", js)[1], accent=CAT_ACCENT.get(s), list_title=f"Newest {name} jobs")
+                hub=hub_sections(f"{name} roles", js)[1], accent=CAT_ACCENT.get(s), list_title=f"Newest {name} jobs", after=alert_form(f"new {name} jobs", cat=s))
         rj = [j for j in js if j["remote"]]
         if len(rj) >= 5:
             listing(f"remote/{s}/", f"Remote {name} jobs", f"Remote {name} Jobs ({len(rj):,} open) | {SITE}",
@@ -1957,7 +1978,7 @@ def main():
         listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {short} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'job')} in {name}. Startups and established companies hiring now.",
                 js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug], ("locations/", "All locations")) + hub_sections(f"roles in {short}", js, "places")[0], faq=f"jobs in {name}", feed=True,
-                hub=hub_sections(f"roles in {short}", js, "places")[1], list_title=f"Newest jobs in {short}")
+                hub=hub_sections(f"roles in {short}", js, "places")[1], list_title=f"Newest jobs in {short}", after=alert_form(f"new jobs in {short}", loc=slug))
     rule_of = {slug: rule for _, slug, rule in PLACES}
     WORLD = (("North America", {"US", "CA"}), ("Europe", REGIONS["europe"][0]), ("Asia-Pacific", REGIONS["asia-pacific"][0]), ("Latin America", REGIONS["latin-america"][0]))
     def world(code): return next((nm for nm, codes in WORLD if code in codes), "Middle East and Africa")
@@ -4128,7 +4149,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + section("What is free, with no account?", "<ul><li>Searching, every filter, salary data and all rankings.</li><li>Opening any job and applying: you always go to the employer’s own page, and we take nothing for it.</li>"
                    "<li>Saving jobs, tracking applications and saved searches, kept in your browser.</li><li>The resume builder and every tool in the tools section.</li><li>Widgets, badges, the data files and the API.</li></ul>")
          + section("What will this site never do?", "<ul><li>Charge you to apply for a job.</li><li>Ask for your phone number, or call you.</li>"
-                   "<li>Sell or pass on personal data. Job seekers have no accounts here, so there is nothing to sell.</li><li>Send you email you did not ask for.</li>"
+                   + ("<li>Sell or pass on personal data. The address you give for job alerts is used for those letters and nothing else.</li>" if CFG["api_url"] else
+                      "<li>Sell or pass on personal data. Job seekers have no accounts here, so there is nothing to sell.</li>") + "<li>Send you email you did not ask for.</li>"
                    "<li>Hold a job back for paying members. Every listing is public the moment we have it.</li><li>Renew a payment by itself. Anything paid is a single payment for a stated period.</li><li>Show a job as open after we know it is closed, or hide where a listing came from.</li>"
                    "<li>Publish invented reviews, numbers, partners or deadlines.</li></ul>")
          + section("What costs money, and for whom?", f'<p>Employers can pay to place a job or a company more prominently; the prices are public on the <a href="{P}/post-a-job/">employers page</a>. '
@@ -4137,17 +4159,72 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    f'The <a href="{P}/privacy/">privacy page</a> lists what is stored and where. The site’s code is public.</p>'))
 
     # Privacy and terms
-    page("privacy/", f"Privacy | {SITE}", "What this site stores and what it does not: no accounts, no tracking cookies, your saved jobs stay in your browser.",
-         crumbs(("Privacy", "")) + "<h1>Privacy</h1><p class=\"lead\">Short version: we do not ask for an account, we do not set tracking cookies, and your saved jobs never leave your browser.</p>"
-         "<h2 class='h2s'>What is stored in your browser</h2><p>Saved jobs, application statuses and notes, saved searches, followed companies, hidden jobs and companies, words you chose to leave out of results, "
+    # Privacy. The sections about job alerts and accounts appear in the same build that switches them on (config.json api_url, the server in
+    # server/), so the page never describes something that is not running, and is updated before it runs (the promise under "Changes").
+    api_on = bool(CFG["api_url"])
+    h2p = lambda text, id_="": "<h2 class='h2s'" + (' id="' + id_ + '"' if id_ else "") + ">" + text + "</h2>"
+    priv_who = mail_a("privacy") if MAIL.get("privacy") else "the address on the about page"
+    priv_server = (
+        h2p("Job alerts by email: what we keep", "alerts")
+        + "<p>When you ask for job alerts we keep your email address and the search you chose: the words, the category, the place, remote only or not, the least pay, "
+          "and daily or weekly. We also keep when you asked and confirmed, when the last letter went, how many letters were sent, and up to which moment jobs were already offered to you (a time, not a list of jobs).</p>"
+          "<ul><li><b>Double opt-in.</b> Nothing is sent until you open the confirmation link we mail to the address and press the button on that page. "
+          "A request nobody confirms is deleted after 7 days, and one address gets at most three confirmation letters a day, whoever asks for them.</li>"
+          "<li><b>The letters.</b> Plain text, at most 20 jobs, no images, no tracking pixel, and the links are not counted: we do not know whether you opened a letter or what you clicked in it.</li>"
+          "<li><b>Unsubscribing.</b> Every letter has a link that stops it in one click (mail apps that offer an Unsubscribe button use the same link). The alert is then deleted, not kept.</li>"
+          "<li><b>What else the address is used for.</b> Nothing. It is not added to any other list, shown to employers, sold or passed on.</li></ul>"
+        + h2p("Accounts for employers and job seekers: what we keep")
+        + "<p>Searching and applying need no account. If you open one, we keep your email address; your password as a salted hash (PBKDF2), never the password itself; "
+          "a company name and the company domain the account is tied to, and how that domain was proved (an email on it, a DNS record or a file); "
+          "the name, member id and verified email LinkedIn gives us if you choose to attach a LinkedIn profile; the jobs you post, with the notes of the person who reviewed them; "
+          "the company pages you claim; and how many times a month you used paid AI tools, if you have them (counts only, never what you sent).</p>"
+          "<p>To keep accounts safe we also keep a hash of the session key while you are signed in (30 days at most), one-time links to confirm an address or set a new password "
+          "(only their hash, for 24 hours and 30 minutes), and a hash of the browser description you signed in from, so that a sign-in from a new browser can be reported to you by email.</p>"
+        + h2p("Counts, reports and limits")
+        + "<p>For jobs posted here and for companies that manage their page here, we count views of a job page and clicks on “Apply”: two numbers per job and day. "
+          "To count a visitor once a day, a salted hash of the IP address is kept until the end of that day (UTC), then deleted. "
+          "A report about a job keeps its reason, the note you write, and a salted hash of the IP address, so one address counts once. "
+          "Limits on how often something can be done (signing up, posting, reporting) are counters under such hashes and vanish when their hour is over. "
+          "The web server’s own log (IP address, page, time) is kept for 14 days for security.</p>"
+        + h2p("The record of letters we send")
+        + "<p>For every letter the site sends (an alert, a confirmation link, a new password link, a sign-in notice) we keep for 30 days: the address, the time, what kind of letter it was, "
+          "and the answer of the mail server. Never the subject or the text.</p>"
+        + h2p("Why we may keep it")
+        + "<ul><li><b>Job alerts:</b> your consent, given by confirming the link. You can withdraw it at any time by unsubscribing; letters already sent are not affected.</li>"
+          "<li><b>Accounts and posting jobs:</b> to provide what you asked for when you opened the account.</li>"
+          "<li><b>Fraud checks, reports, limits, sign-in notices and the record of letters:</b> our legitimate interest in keeping scams off the site and accounts safe. You can object; we then weigh it case by case.</li>"
+          "<li><b>Payments,</b> once they exist: the law, which says how long records of payments are kept. Nothing is sold yet.</li></ul>"
+        + h2p("How long it is kept")
+        + "<ul><li>A job alert: until you unsubscribe or ask us to delete it. An unconfirmed one: 7 days.</li><li>An account: until you ask us to delete it.</li>"
+          "<li>The record of letters: 30 days. The web server’s log: 14 days.</li><li>Visitor hashes for counting views: until the end of the day. Rate limit counters: an hour.</li>"
+          "<li>Sessions: 30 days. Confirmation links: 24 hours. New password links: 30 minutes.</li></ul>"
+        + h2p("Who else handles it")
+        + "<p>The data is kept on our own server, a virtual server rented from Hostinger. Requests to the site pass through Cloudflare, which protects it from attacks and, "
+          "like any network in between, sees your IP address and the address of the page. Letters are sent through the mail servers of Beget (Beget LLC, Russia), which also "
+          "keeps the mailboxes you can write to. These companies may process the data outside your country. Fonts, scripts and images are served from this site, not from other companies. "
+          "When you press “Apply”, you go to the employer’s own site, which has its own privacy policy.</p>"
+        + h2p("Seeing, correcting and deleting your data")
+        + f"<p>You can stop any alert yourself from any of its letters. For anything else, write to {priv_who} from the address concerned: you can ask what we keep about it, "
+          "have it corrected, have it deleted, or object to its use. We answer within 30 days, usually much sooner. Deleting removes the alerts of that address, the record of letters to it, "
+          "and the account with its sessions and company pages; jobs it posted come down. Records of payments, once there are any, are kept as long as the law requires. "
+          "You can also complain to the data protection authority where you live.</p>")
+    page("privacy/", f"Privacy | {SITE}", ("What this site keeps: no tracking cookies, saved jobs stay in your browser; for job alerts and accounts your email and what you asked for, deleted on request."
+                                           if api_on else "What this site stores and what it does not: no accounts, no tracking cookies, your saved jobs stay in your browser."),
+         crumbs(("Privacy", "")) + "<h1>Privacy</h1>"
+         + ("<p class=\"lead\">Short version: searching and applying need no account, there are no tracking cookies, and your saved jobs never leave your browser. "
+            "If you ask for job alerts or open an account, we keep your email address and what you asked for, use them for that and nothing else, and delete them when you ask.</p>" if api_on else
+            "<p class=\"lead\">Short version: we do not ask for an account, we do not set tracking cookies, and your saved jobs never leave your browser.</p>")
+         + "<h2 class='h2s'>What is stored in your browser</h2><p>Saved jobs, application statuses and notes, saved searches, followed companies, hidden jobs and companies, words you chose to leave out of results, "
          "recently viewed jobs, your skill profile, the resume you typed into the resume builder, what you entered into the free tools, and the light or dark theme. All of it is kept in your browser's local storage on this device and is not sent to us. "
          f'You can download or erase it on the <a href="{P}/my-jobs/">My jobs</a> page; each tool has its own Clear button; clearing your browser data removes everything.</p>'
          "<h2 class='h2s'>Your resume</h2><p>A resume you paste on the “For you” page or into a tool is read by a script in your browser. It is never uploaded. The resume builder and the tools keep what you typed in this browser so that it is still there next time.</p>"
-         "<h2 class='h2s'>What we do not do</h2><p>No advertising trackers, no analytics cookies, no selling of data.</p>"
-         "<h2 class='h2s'>Third parties</h2><p>The site is served by a hosting provider that, like any web server, sees your IP address when you load a page. Fonts, scripts and images are served from this site, not from other companies. "
-         "When you press “Apply”, you go to the employer's own site, which has its own privacy policy.</p>"
-         + (f"<h2 class='h2s'>Questions and requests about your data</h2><p>Write to {mail_a('privacy')}. As nothing about you is stored on our side, there is usually nothing to see or erase; we answer every request within 30 days.</p>" if MAIL.get("privacy") else "")
-         + "<h2 class='h2s'>Changes</h2><p>If paid accounts or email alerts are added, this page will be updated before they go live.</p>")
+         + (priv_server if api_on else "")
+         + "<h2 class='h2s'>What we do not do</h2><p>No advertising trackers, no analytics cookies, no tracking pixels in letters, no selling of data.</p>"
+         + ("" if api_on else "<h2 class='h2s'>Third parties</h2><p>The site is served by a hosting provider that, like any web server, sees your IP address when you load a page. Fonts, scripts and images are served from this site, not from other companies. "
+                            "When you press “Apply”, you go to the employer's own site, which has its own privacy policy.</p>"
+            + (f"<h2 class='h2s'>Questions and requests about your data</h2><p>Write to {mail_a('privacy')}. As nothing about you is stored on our side, there is usually nothing to see or erase; we answer every request within 30 days.</p>" if MAIL.get("privacy") else ""))
+         + ("<h2 class='h2s'>Changes</h2><p>This page was updated when job alerts and accounts were switched on. If anything else is added (payments, paid tools), this page will say so before it goes live.</p>" if api_on else
+            "<h2 class='h2s'>Changes</h2><p>If paid accounts or email alerts are added, this page will be updated before they go live.</p>"))
     page("terms/", f"Terms of use | {SITE}", f"The terms for using {SITE}: what the site is, how accurate the listings are, where you apply, how job descriptions are used and how to get a listing removed.",
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
@@ -4157,6 +4234,20 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             "links to the original post and shows only the facts of the job and a few lines of the post. They are not checked with the employer. "
             f"A channel owner who does not want the channel's posts here can write to {mail_a('partners')}; they are taken off at the next update.</p>"
             if any(j_.get("tg") for j_ in active) else "")       # only while channel posts are shown (telegram_jobs.py)
+         + (("<h2 class='h2s'>Job alerts</h2><p>Job alerts are free. You ask for one with your email address and confirm it from the letter we send; then you get the new jobs that match it, "
+             "daily or weekly, at most 20 in a letter. Every letter can be stopped in one click. We may stop sending to an address whose mail server refuses our letters, and we may change or end "
+             "the service; an alert is never turned into anything paid without your new, separate consent.</p>"
+             "<h2 class='h2s'>Accounts</h2><p>An account belongs to one person or one company. Keep its password to yourself and give true details. We may suspend or close an account that posts "
+             "fraudulent or misleading jobs, impersonates a company, or tries to get around the checks; what it posted then comes down.</p>"
+             "<h2 class='h2s'>Posting a job here</h2><p>Posting a job is free. It must be a real, open job at the company named, for which you may hire; the link to apply must be on the company’s own site or "
+             "on its hiring system. Every posting is screened automatically, and the first postings of every account, and any that a check flags, are read by a person before they appear. "
+             "Before a job is accepted we check whether it is already on the site; if it is, we say where. Charging candidates any fee, asking them to move money or parcels, to install software or "
+             "to give up bank, card or identity details is not allowed. A job stays up for 30 days and can be renewed; we may refuse or remove any posting, and say why. "
+             "A job posted by a recruiter is marked as such and is always read by a person first.</p>"
+             "<h2 class='h2s'>Company pages</h2><p>Companies whose jobs we read from their own hiring systems can claim their page here with an account tied to the company’s domain. "
+             "A claim we cannot confirm from our records is checked by a person. A claimed page shows the company how many people viewed its jobs here and clicked “Apply”, and lets it post jobs "
+             "its hiring system does not list. We may withdraw a claim that turns out to be wrong.</p>"
+             "<h2 class='h2s'>Payments</h2><p>Nothing is sold yet. The terms of paid placements will be published here before anything can be bought.</p>") if CFG["api_url"] else "")
          + "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
          "<h2 class='h2s'>Job descriptions</h2><p>Descriptions are the employers’ own text, read from the hiring feeds they publish for display on other sites. They are shown unchanged, with the employer named and a link to the original posting.</p>"

@@ -1,6 +1,13 @@
 # API: accounts, self-serve purchases, crypto checkout, fraud checks, AI tools for Plus
 
-One Cloudflare Worker (`src/worker.js`, no dependencies) and one D1 database (`schema.sql`).
+One worker (`src/worker.js`, no dependencies) and one SQLite database (`schema.sql`). Since 15 Nov 2026 it is meant to run on our own
+server, next to the page server: `prod.mjs` runs it on Node 22 with the database in a file, mail goes out through Beget's SMTP server, and
+`hosting/api-setup.sh` installs it ("On our own server" below, the steps in `HOSTING.md`). It can still run as a Cloudflare Worker with D1
+(`wrangler.toml`, "Going live on Cloudflare").
+
+New on 15 Nov 2026, for the owner's "we need to collect a database of employers and users": free job alerts by email with double opt-in
+("Job alerts"), a check that a job is not on the site already before it is posted ("Is this job already on the site?"), and "Claim your
+company page" for the companies the site reads from their hiring systems, with views and clicks on "Apply" for claimed companies.
 A paid order switches itself on: the gateway confirms the payment, the worker records the placement, asks GitHub to rebuild the
 site, and the build reads `/api/public/export.json`. Nobody has to answer an email.
 
@@ -19,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (948 tests), must end with "0 failed"; nothing in it reaches the network
+node --no-warnings server/test/run.mjs          # the test suite (1,073 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -28,7 +35,108 @@ In test mode there is no mailbox, so the answer to a sign-up carries `confirm_to
 the owner's token is `dev-admin`. Sign In with LinkedIn and the AI tools answer 409 there: `dev.mjs` sets no keys for them, and it
 must stay that way. The tests fake LinkedIn, the DNS resolver and the AI provider, with made-up keys.
 
-## Going live (the owner does these; they need his Cloudflare and Cryptomus logins)
+## On our own server (prod.mjs; the install steps are in HOSTING.md)
+
+| File | What it does |
+|---|---|
+| `prod.mjs` | the API on 127.0.0.1:8787: the worker on Node 22, settings from `/srv/hrn/api.env`, the worker's cron every ten minutes, letters sent after the answer has gone |
+| `alerts.mjs` | one run of the job alerts (`--dry`: count only); `hrn-alerts.timer` starts it every hour at about :50 |
+| `mail-test.mjs` | sends one test letter through the mail settings: `sudo -u hrnapi /usr/local/bin/node --no-warnings /srv/hrn/api/server/mail-test.mjs you@example.com` |
+| `src/config.mjs` | reads `api.env` and makes the worker's env: the database file, the mailer, the site's own addresses; payments off unless `PAYMENTS_LIVE=1` |
+| `src/d1.mjs` | the D1 stand-in on `node:sqlite` (moved here from `test/d1.mjs`); a file is opened in WAL mode with a busy timeout, so the API and the alert job share it |
+| `src/mail.js` | the SMTP client (`node:tls` only: TLS on 465, AUTH LOGIN) and the mailer: daily cap, retries with backoff, the log of letters |
+| `src/alerts.js` | job alerts: what a sign-up may say, matching, the letters, the hourly run |
+| `src/records.mjs` | reads the job records (`data/jobs.db`, written by `records.py`) for the alert job, read-only |
+| `hosting/hrn-api.service`, `hrn-alerts.service`, `hrn-alerts.timer` | the systemd units (user `hrnapi`, writes only `/srv/hrn/api/data`) |
+| `hosting/nginx-hrn-api.conf` | nginx: the API's own addresses only; `/api/`, `/api/v1/*.json` and `/api/openapi.json` stay files, `/api/search`, `/api/latest` and `/api/check-duplicate` stay with `serve.py` |
+| `hosting/api-setup.sh` | installs or updates all of it, as root; takes back the code if the API does not start and the nginx files if nginx refuses them |
+| `hosting/api-secret.sh` | writes one setting (the mailbox password) into `api.env` without it showing anywhere, then restarts the API |
+
+Settings in `/srv/hrn/api.env` (KEY=value; root and the service user only):
+
+| Key | Default | What |
+|---|---|---|
+| `SITE_URL` | `https://jobseveryhour.com` | the site; the API is on the same address (`API_URL` defaults to it) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` | `smtp.beget.com`, `465`, `support@jobseveryhour.com` | the mail server and the mailbox letters go out from |
+| `SMTP_PASS` | none: mail is off | the mailbox password, written with `api-secret.sh` by the owner |
+| `MAIL_FROM` | `Jobs Every Hour <SMTP_USER>` | the sender as shown |
+| `MAIL_DAILY_CAP` | `300` | letters a day (UTC) at most; job alerts stop at 80% of it, so confirmation links always have room. Beget publishes no number; raise it only after asking them |
+| `ADMIN_TOKEN` | made at random by `api-setup.sh` | the key to `/api/admin/...` |
+| `PAYMENTS_LIVE` | none: payments off | `1` switches payments on (the owner, last); only then are `CRYPTOMUS_MERCHANT`, `CRYPTOMUS_API_KEY` and `PLUS_LIVE` read |
+| `DB_FILE` | `/srv/hrn/api/data/api.db` | the database |
+| `SITE_INTERNAL`, `DUPLICATE_URL` | `http://127.0.0.1:8790`, its `/api/check-duplicate` | the page server on the same machine (`DUPLICATE_URL=off` stops the duplicate check) |
+| `COMPANY_SITES_FILE`, `RECORDS_FILE` | `/srv/hrn/app/logos.json`, `/srv/hrn/app/data/jobs.db` | what the build uploads every hour: companies' own sites, the job records |
+| `PORT`, `HOST` | `8787`, `127.0.0.1` | where the API listens |
+| `GITHUB_TOKEN`, `GITHUB_REPO`, `LINKEDIN_*`, `ANTHROPIC_API_KEY` | none | optional, as on Cloudflare (see below) |
+
+`PAY_MODE` is refused: `prod.mjs` does not start with it. Nobody can be charged until `PAYMENTS_LIVE=1`: `/api/orders` answers 503
+`payments_off` and `/api/public/products` says `payments: "off"`.
+
+## Job alerts ("Email me new jobs like these")
+
+The form (`alert_form()` in `build.py`, on the search page, every category page and every location page, shown once `api_url` is set)
+sends an address and a search; the alert job mails the new jobs that match. Rules, each in `src/alerts.js` and tested in section 30:
+
+- `POST /api/alerts` `{ email, q?, cat?, loc?, remote?, sal?, freq? }`, as JSON or as a plain form post (then the answer is a page).
+  `q` is cleaned to at most six words of letters, digits, `+` and `#` (C++, C#; a dot only in .NET, Node.js and the like), so no address can
+  be planted in a letter to a stranger; `cat` must be a category slug, `loc` a place slug of the site, `sal` the least yearly pay in US
+  dollars, `freq` `daily` or `weekly`. The answer is the same whether or not the address already has alerts; only a sixth alert of one
+  address is refused (409 `too_many`). A hidden field (`website`) filled in means a program: answered as usual, dropped. Limits: ten
+  sign-ups an hour per visitor, three confirmation letters a day per address. Without mail: 503 `mail_off`.
+- **Double opt-in.** The alert is `pending` and only the confirmation link (`/api/alerts/confirm?a=<id>&t=<token>`) can make it `active`.
+  Opening the link shows a page with a button; the button's POST confirms (mail scanners open links by themselves). An unconfirmed
+  alert is deleted after 7 days. Tokens are an HMAC of the alert id under a random key kept in the database: nothing to store, nothing
+  to guess.
+- **Every letter** is plain text with at most 20 jobs (newest first, one per title and company), a link to the same search on the site,
+  the unsubscribe link, and the headers `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058, what Gmail
+  and Yahoo ask of bulk senders). No images, no tracking pixel, no counted links. A letter is sent only when there are new jobs.
+- **Unsubscribe** (`/api/alerts/unsubscribe?a=&t=`): the page offers three buttons, unsubscribe, send it daily/weekly instead, stop every
+  alert of the address. A mail client's one-click POST unsubscribes at once. An unsubscribed alert is deleted, not kept.
+- **Matching** is the search page's: category slug, place slug in the job's `places`, remote, the top of the job's yearly range in US
+  dollars at or above `sal` (a job without pay is out when pay is asked for), and every word in the title, company or skills as a whole
+  word with its usual endings ("engineer" finds "Engineering", "java" does not find "JavaScript"). Posts from Telegram channels are never mailed.
+- **The run** (`alerts.mjs`, hourly): each due alert gets the jobs first seen after its `seen_through` and up to the newest
+  `first_seen_at` in `data/jobs.db`, then moves on to that moment, so each job is offered once even when an upload is late. A letter
+  held back by the daily cap ends the run and nothing moves on; an address the mail server refuses for good three times loses its alert.
+- A signed-in account sees the alerts of its own confirmed address: `GET /api/alerts`, `DELETE /api/alerts/<id>`.
+
+## Is this job already on the site?
+
+Before a new job is accepted (and in the preview of a draft), the worker asks the page server's duplicate check (`dedupe.py` through
+`serve.py`, `DUPLICATE_URL`): company, title, place, remote, link to apply. If the job is there, the answer is 409 `already_listed` with
+`matches` (title, company, place, page) and, for an employer, `claim: { company }`: the page offers to claim the company page instead.
+An edit is not checked again (the job would find itself). If the check does not answer, the job is not refused: it waits for a person
+with the reason "the check for the same job elsewhere on the site did not answer", even from a trusted account.
+
+## Claim your company page
+
+The about 3,800 companies the site reads from their hiring systems have pages nobody from the company manages. An employer account
+claims one: `POST /api/claims { company }` (the name as the site shows it). It needs a confirmed email and a company domain
+(`users.domain`: the email, a DNS record or a file). When `logos.json` (`COMPANY_SITES`) says the company's own site is on that domain,
+the claim is verified at once; otherwise (unknown site, another domain, a look-alike, a well-known name) it waits for the owner:
+`GET /api/admin/claims`, `POST /api/admin/claims/<id>/approve`, `POST /api/admin/claims/<id>/reject { reason }`. One verified claim per
+company; five claims per account. `GET /api/claims` lists the account's claims with their state and reason.
+
+A verified claim gives:
+- **views and clicks on "Apply"** of the company's job pages: the job page sends `POST /api/public/hit { job: <slug>, kind, company }`
+  (the same call as for jobs posted here, plus the company's name); it is counted only while the claim is verified and only for a slug that
+  ends with the company's name as the site writes it in addresses. `GET /api/claims/<id>/stats`: per job page, totals and the last 14 days.
+- **posting jobs its hiring system does not list**: the `listed` refusal no longer applies to that account (screening, the duplicate check
+  and review still do). Anyone else who tries gets 409 `listed` with `claim: { company }`.
+- **the mark**: `export.json` has `claimed: [{ company, since }]` for the site to say "managed by the company" (not shown by the build yet).
+
+What the site's pages still need for this: the account page (claim form, stats), and the job page's call to `/api/public/hit` with the
+company's name (none of the hit calls is wired into the pages yet, see "What a listing brought").
+
+## The owner's views of the audience
+
+`GET /api/admin/audience`: counts only, no address: accounts of job seekers and employers, active and pending alerts and how many
+addresses they reach, claims, jobs posted here, letters sent and held today against the cap, and what each of the last 30 days added.
+`POST /api/admin/erase { email }`: what a person asks for through privacy@: deletes the alerts of the address and the log of letters to it,
+and erases an account on it (sessions, claims, proofs and jobs go; the row stays with the address replaced because orders may point at it).
+The addresses alert subscribers gave are for alerts only: using them for any other letter needs their separate consent.
+
+## Going live on Cloudflare (the earlier plan; the owner's Cloudflare and Cryptomus logins)
 
 1. `cd server && npx wrangler login`
 2. `npx wrangler d1 create hiring-right-now` and paste the printed id into `wrangler.toml`
@@ -192,7 +300,7 @@ domain later changes hands.
 The token is read from the environment, never typed into a command, so it does not end up in the shell history or the process list:
 
 ```
-export HRN_API=https://hiring-right-now-api.YOUR-SUBDOMAIN.workers.dev
+export HRN_API=https://jobseveryhour.com               # our own server (on Cloudflare: the worker's address)
 read -rs HRN_ADMIN_TOKEN && export HRN_ADMIN_TOKEN     # paste the token and press Enter; nothing is shown
 hrn() { printf 'header = "Authorization: Bearer %s"\n' "$HRN_ADMIN_TOKEN" | curl -sS -K - "$@"; echo; }
 
@@ -204,7 +312,15 @@ hrn "$HRN_API/api/admin/reports"                       # every report, open ones
 hrn -X POST -H 'Content-Type: application/json' -d '{"decision":"dismissed"}' "$HRN_API/api/admin/reports/r_0123456789abcdef0123/decide"
 hrn -X POST "$HRN_API/api/admin/accounts/u_0123456789abcdef0123/ban"
 hrn "$HRN_API/api/admin/overview"
+hrn "$HRN_API/api/admin/claims"                        # company pages claimed, waiting: the domain the account proved and the one the site knows
+hrn -X POST "$HRN_API/api/admin/claims/k_0123456789abcdef0123/approve"
+hrn -X POST -H 'Content-Type: application/json' -d '{"reason":"harvey-ai.dev is not Harvey’s domain."}' "$HRN_API/api/admin/claims/k_0123456789abcdef0123/reject"
+hrn "$HRN_API/api/admin/audience"                      # how many job seekers, employers, alerts; letters today against the cap
+hrn -X POST -H 'Content-Type: application/json' -d '{"email":"person@example.com"}' "$HRN_API/api/admin/erase"   # a deletion request to privacy@
 ```
+
+On the server the token is in `/srv/hrn/api.env`; `sudo grep ^ADMIN_TOKEN= /srv/hrn/api.env` shows it to the owner (copy it into the
+password manager, not into a chat).
 
 How to read the queue. For each job look at `reason` (why it waits), open `apply_url` yourself and check that the page is this job
 at this company, and look at `account.email_domain`: is it the company's real domain? `account.proved_by` says how the poster showed
@@ -366,14 +482,20 @@ number when there are more, keeping an eye on the Worker's limit of outgoing req
 5 per rechecked job and 1 to GitHub). A job whose link now ends on another host than when it was checked goes back to review. A
 link that merely does not open changes nothing by itself. Links that confirm an email and ran out are cleared in the same run,
 and so are LinkedIn sign-ins that never came back, tokens for proving a domain that ran out, the hashes that kept yesterday's
-visitors from being counted twice (`hit_seen`), and the AI counts of months gone by.
+visitors from being counted twice (`hit_seen`), the AI counts of months gone by, rows of the log of letters older than 30 days and job
+alerts nobody confirmed in 7 days.
 
 ## Mail
 
-`sendMail` in `src/worker.js` is the only place mail leaves from, and until a binding named `MAIL` exists it sends nothing. Three
-things depend on it: the link that confirms a new account (**without it nobody can post**), password resets, and the notice of a
-sign-in from a new device. To switch it on, bind `MAIL` in `wrangler.toml` to anything that has `send({ from, to, subject, text })`
-(a service binding to a mail worker, for example) and set the variable `MAIL_FROM`.
+`sendMail` in `src/worker.js` is the only place mail leaves from, and until `MAIL` exists it sends nothing. Four things depend on it:
+the link that confirms a new account (**without it nobody can post**), password resets, the notice of a sign-in from a new device, and
+job alerts (their confirmation links and the letters). On our own server `MAIL` is the mailer of `src/mail.js`, made by `src/config.mjs`
+once `SMTP_PASS` is in the settings: an SMTP client over TLS (port 465, AUTH LOGIN, the server's certificate checked) written with
+`node:tls` only, with a daily cap (`MAIL_DAILY_CAP`; job alerts stop at 80% of it), up to three retries with growing pauses for answers
+that may pass (4xx, a dropped connection, a time-out), none for a 5xx, and a log of every letter in `mail_log` (time, address, kind,
+result, attempts, the server's answer, Message-ID; never the subject or the text; kept 30 days). The tests run it against a fake mail
+server on 127.0.0.1 with a certificate made when they run (`test/fake-smtp.mjs`, `test/cert.mjs`). On Cloudflare, bind `MAIL` to anything
+with `send({ from, to, subject, text })` and set `MAIL_FROM`.
 
 `POST /api/auth/reset/request` `{ email }` always answers the same way, whether or not the account exists. For a real account it
 stores the hash of a one-time token (30 minutes) and hands a mail with the link `<SITE_URL>/account/#reset=<token>` to `sendMail`.
@@ -384,7 +506,8 @@ In test mode (`dev.mjs`) the answers carry the tokens themselves, because there 
 
 ## Database changes
 
-Nothing is deployed yet, so there is nothing to migrate: a new database gets everything from `schema.sql`. For a local `DB_FILE`
+Nothing is deployed yet, so there is nothing to migrate: a new database gets everything from `schema.sql`. The tables of 15 Nov 2026
+(`mail_log`, `alerts`, `company_claims`, `company_hits`) are created by `schema.sql` on any database, old or new, at every start. For a local `DB_FILE`
 kept from an earlier `dev.mjs`, delete the file; or run the lines for the step it is missing, then `schema.sql`.
 
 After the first draft of `schema.sql`: tables `companies` and `resets`, columns `jobs.company_key` and `orders.activation`, new

@@ -182,6 +182,8 @@ class Handler(SimpleHTTPRequestHandler):
             if not (one("url") or (one("company") and one("title"))):
                 return self.send_json(400, {"error": "give company and title, or url"})
             idx = dup_index()
+            if idx is None:                              # the first index is still being built (a few seconds after a start)
+                return self.send_json(503, {"error": "the duplicate index is being built; try again in a few seconds"}, [("Retry-After", "5"), ("Cache-Control", "no-store")])
             t0 = time.perf_counter()
             hits = idx.find(one("company"), one("title"), one("location"), one("remote") in ("1", "true"), one("url"))
             ms = (time.perf_counter() - t0) * 1000

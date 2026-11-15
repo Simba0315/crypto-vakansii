@@ -54,7 +54,8 @@ The owner, 2026-11-13: "it must say when a job was added 30 minutes ago or 20 mi
   webhooks, automatic activation, free job posting with an automatic link check, export for the build. `server/README.md` has the
   local commands and the go-live steps; `node --no-warnings server/test/run.mjs` must end with "0 failed" before any push that
   touches `server/`.
-- It is written and tested but NOT deployed (needs the owner's Cloudflare login and Cryptomus keys). Until `"api_url"` in
+- It is written and tested but NOT deployed. Since 15 Nov 2026 it is meant for our own server, not Cloudflare (next section but several:
+  "Accounts, job alerts and employer posting on our own server"). Until `"api_url"` in
   `config.json` is set, the site has no account page and says plainly that self-serve is not open yet.
 - When it is live: `collect.py` (`direct_and_paid`) pulls posted jobs and paid placements from `/api/public/export.json` into
   `data/jobs.json` and `data/placements.json`; `build.py` applies them (pinned, featured, sponsors). A purchase asks GitHub to
@@ -355,6 +356,28 @@ local size.
   real question).
 
 
+
+## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,073 tests, not installed yet)
+
+- The owner: "we need to collect a database of employers and users". `server/prod.mjs` runs `src/worker.js` on Node 22 on the Hostinger
+  server (127.0.0.1:8787, service `hrn-api`, user `hrnapi`, database `/srv/hrn/api/data/api.db`, settings and secrets in `/srv/hrn/api.env`).
+  `server/hosting/api-setup.sh` installs or updates it; the steps, the owner's password command and the way back are in `HOSTING.md`
+  ("The API on the same server"). It replaces the Cloudflare plan; the worker still runs on Cloudflare if ever wanted.
+- Payments stay off until `PAYMENTS_LIVE=1` is in `api.env` (the owner, last). `PAY_MODE=test` is refused on the server.
+- Mail: `server/src/mail.js`, an SMTP client written on `node:tls` (no packages) for smtp.beget.com:465 from support@: daily cap
+  (`MAIL_DAILY_CAP`, alerts stop at 80%), retries, a log without subjects or texts. The mailbox password is typed by the owner on the
+  server (`api-secret.sh SMTP_PASS`); never ask for it, never write it anywhere.
+- Job alerts (`server/src/alerts.js`, `server/alerts.mjs`, `hrn-alerts.timer` hourly): double opt-in, at most 20 jobs a letter, one-click
+  unsubscribe (RFC 8058 headers), no images or tracking, matching the search page's own filters against `data/jobs.db`. The form is
+  `alert_form()` in `build.py` (search, category and location pages) and a small block at the end of `assets/site.js`; it is shown only when
+  `config.json` `api_url` is set. Keep the form small: its look belongs to the design work, its rules to `server/`.
+- Employers: before a job is posted the worker asks `serve.py`'s `/api/check-duplicate`; a duplicate is refused with where it is and an
+  offer to claim the company page. "Claim your company page" (`/api/claims`) verifies at once when `logos.json` knows the company's site
+  and it is the account's domain, otherwise the owner decides (`/api/admin/claims`). Claimed companies get views and clicks per job page.
+- `/privacy/` and `/terms/` have sections for alerts and accounts that appear in the same build as the forms (`api_on` in `build.py`).
+  If the server starts keeping anything new, the privacy page must say it in the same change.
+- The site's pages do not call `/api/public/hit` yet, and the account page has no claim form or stats yet: `server/README.md` lists what
+  each page needs.
 
 ## Owner's standing rules found by the full message audit (14 Nov 2026, `MESSAGES_AUDIT.md`)
 

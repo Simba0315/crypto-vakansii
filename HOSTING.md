@@ -133,9 +133,9 @@ DMARC moves from `p=none` to `p=quarantine`. An address goes on the site only af
 - **Mailbox (hello@, support@):** Beget mail is fine for a mailbox people write to: MX, SPF and DKIM records go into Cloudflare
   DNS. A free alternative with no new account: Cloudflare Email Routing forwards hello@jobseveryhour.com to an existing inbox
   (receiving only; replies would come from that inbox).
-- **Mail the site sends (job alerts, sign-up links):** not from a mailbox. A sending service made for it (Amazon SES, Postmark,
-  Resend, Brevo) keeps the letters out of spam with SPF, DKIM and DMARC and counts bounces. Needed only once alerts by email and
-  accounts go live; the key is the owner's and goes into the server's settings, not into the repository.
+- **Mail the site sends (job alerts, sign-up links):** decided 15 Nov 2026: from support@ through Beget's SMTP server, with a daily cap,
+  until the volume needs a sending service made for it (Amazon SES, Postmark, Brevo): see "Mail limits" below. The password is the
+  owner's and goes into the server's settings (`api-secret.sh`), not into the repository.
 - Beget is a Russian company: the privacy page will name where mail is kept.
 
 ## Search: Lucene (OpenSearch) on the server, SQLite FTS5 as the fallback
@@ -153,8 +153,93 @@ What Lucene gives here, checked on the server on 14 Nov 2026:
 - counts for the filters with every search (remote, hybrid, level, field, top companies) in the `facets` of `/api/search`;
 - answers in 20-60 ms.
 
+## The API on the same server: accounts, job alerts, free employer posting (code of 15 Nov 2026, not installed yet)
+
+The owner, 15 Nov: "we need to collect a database of employers and users". `server/` now runs on this server: `server/prod.mjs` is the
+API (Node 22, the database in `/srv/hrn/api/data/api.db`, 127.0.0.1:8787, service `hrn-api`), `server/alerts.mjs` sends the job alerts
+every hour (`hrn-alerts.timer`), mail goes out through Beget's SMTP server from support@. Payments stay off. Details: `server/README.md`
+("On our own server", "Job alerts", "Claim your company page").
+
+| | Where | Who can read it |
+|---|---|---|
+| code | `/srv/hrn/api/server` (a copy of the repository's `server/`) | everyone on the machine; owned by root |
+| database | `/srv/hrn/api/data/api.db` (SQLite, WAL) | only the user `hrnapi` |
+| settings and secrets | `/srv/hrn/api.env` | root and `hrnapi` |
+| what it reads from the site | `/srv/hrn/app/data/jobs.db`, `/srv/hrn/app/logos.json`, `http://127.0.0.1:8790` | (uploaded every hour) |
+
+nginx sends only the API's own addresses to it (`server/hosting/nginx-hrn-api.conf`, included by `nginx-hrn.conf`): `/api/health`,
+`/api/auth/…`, `/api/me`, `/api/jobs…`, `/api/orders…`, `/api/placements`, `/api/domain…`, `/api/ai/…`, `/api/sync`, `/api/admin/…`,
+`/api/report`, `/api/webhooks/…`, `/api/public/…`, `/api/alerts…`, `/api/claims…`. `/api/` (the page), `/api/v1/*.json` and
+`/api/openapi.json` stay files; `/api/search`, `/api/latest` and `/api/check-duplicate` stay with `serve.py`. Checked on 15 Nov with nginx
+1.24 and both programs running: each address reaches the right place.
+
+### Installing it (me, on the server, as root; about 2 minutes)
+
+1. From a checkout of the repository on the server (or `server/` copied there):
+   ```
+   sudo bash server/hosting/api-setup.sh
+   ```
+   It installs Node 22 from nodejs.org (checksum checked) if the machine has no Node 22.13+, makes the user `hrnapi` and the folders,
+   writes `/srv/hrn/api.env` with a random `ADMIN_TOKEN` (never overwritten later), starts `hrn-api` and `hrn-alerts.timer`, adds the
+   nginx addresses and reloads nginx. If the API does not answer `/api/health` within 20 seconds the previous code is put back; if nginx
+   refuses the new files both are put back and nothing is reloaded. Running it again updates the code the same way.
+2. Check:
+   ```
+   curl -s https://jobseveryhour.com/api/health                    # {"ok":true}
+   curl -s https://jobseveryhour.com/api/public/products           # "payments":"off"
+   systemctl status hrn-api hrn-alerts.timer --no-pager
+   ```
+
+### The mailbox password (the owner; 2 minutes)
+
+Letters go out from support@jobseveryhour.com through `smtp.beget.com:465`. Its password is typed by the owner into a terminal on the
+server and goes into `/srv/hrn/api.env` and nowhere else: not into the repository, not into a chat, not into a command line. The command:
+
+```
+sudo bash /srv/hrn/api/server/hosting/api-secret.sh SMTP_PASS
+```
+
+It asks for the value and shows nothing while it is typed: type the password of support@ (the one set in the Beget panel) and press
+Enter. The API restarts with mail on. Then a test letter to any address of yours:
+
+```
+sudo -u hrnapi /usr/local/bin/node --no-warnings /srv/hrn/api/server/mail-test.mjs your-address@example.com
+```
+
+It prints `"sent":true` and the server's answer, or the reason it failed (a wrong password is `535`). The same script writes any other
+secret later (`api-secret.sh ADMIN_TOKEN`, the payment keys when the owner switches payments on).
+
+### Switching it on for the site (me; a push)
+
+Only after the steps above work: `config.json` `"api_url": "https://jobseveryhour.com"`. The next hourly build then shows the account
+page, the alert forms on the search, category and location pages, and the privacy and terms text for accounts and alerts (they appear in
+the same build, never before), and `collect.py` starts reading posted jobs from `/api/public/export.json`. Check after that build: the
+run's log has the line `placements: N posted jobs`; if it says `API did not answer`, Cloudflare is stopping GitHub's runner on that
+address, and a Cloudflare rule "skip bot checks for `/api/public/export.json`" fixes it.
+
+### Every day (the owner, or me with his go-ahead)
+
+The review queue and the claims of company pages wait for a person: `server/README.md`, "Reviewing held jobs" (the token:
+`sudo grep ^ADMIN_TOKEN= /srv/hrn/api.env`). How many people signed up: `/api/admin/audience`. Logs: `journalctl -u hrn-api`,
+`journalctl -u hrn-alerts`. What the next alert run would send: `sudo -u hrnapi /usr/local/bin/node --no-warnings /srv/hrn/api/server/alerts.mjs --dry`.
+
+### Taking it back
+
+```
+sudo systemctl disable --now hrn-api hrn-alerts.timer
+sudo rm /etc/nginx/snippets/hrn-api.conf && sudo nginx -t && sudo systemctl reload nginx
+```
+
+and `"api_url": ""` in `config.json`: the site is as before (forms and account page gone), the database stays in `/srv/hrn/api/data`.
+
+### Mail limits
+
+Beget publishes no sending limit for a mailbox; `MAIL_DAILY_CAP` (300 a day) keeps us under any sensible one, and job alerts stop at 80%
+of it so confirmation links always go. When alerts outgrow it, a sending service (Amazon SES, Postmark, Brevo) needs only `SMTP_HOST`,
+`SMTP_USER`, `SMTP_PASS` and a higher cap: the code does not change. DKIM: when Beget's panel shows the record, add it in Cloudflare DNS
+and move DMARC to `p=quarantine` (see Email above).
+
 ## Later on the same server
 
-- The accounts and crypto payments API (`server/src/worker.js`) runs on Node 22 with the built-in SQLite, as `server/dev.mjs` already does
-  here; it needs a production starter and its secrets (NOWPayments) set on the server, not in the repository.
+- Payments: `PAYMENTS_LIVE=1` and the gateway keys in `/srv/hrn/api.env` (the owner, last, when everything else is right).
 - More pages from records the same way: companies (115 MiB), locations (195 MiB), roles (109 MiB) are lists of jobs too.

@@ -1468,3 +1468,30 @@
   }).catch(function () {});
 })();
 
+
+/* ---------- job alerts: "Email me new jobs like these" (alert_form in build.py, server/src/alerts.js) ----------
+   Sends the form as JSON and writes the answer under it; without this script the form posts itself and the API answers with a page.
+   On the search page the current search is copied into the form first, so the alert is the search the visitor is looking at. */
+(function () {
+  var forms = document.querySelectorAll('form[data-alert]');
+  for (var i = 0; i < forms.length; i++) (function (f) {
+    f.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (f.hasAttribute('data-alert-search')) {
+        var p = new URLSearchParams(location.search), set = function (k, v) { var el = f.elements[k]; if (el) el.value = v; };
+        set('q', p.get('q') || ''); set('cat', p.get('cat') || ''); set('loc', p.get('loc') || ''); set('remote', p.has('remote') ? '1' : ''); set('sal', p.get('sal') || '');
+      }
+      var out = f.querySelector('[data-alert-out]'), btn = f.querySelector('button[type=submit]'), data = {};
+      new FormData(f).forEach(function (v, k) { data[k] = String(v); });
+      btn.disabled = true; out.textContent = 'Sending…';
+      fetch(f.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (x) {
+          out.textContent = x.d.message || (x.ok ? 'Done.' : 'The alert was not saved. Please try again.');
+          if (x.ok && f.elements.email) f.elements.email.value = '';
+        })
+        .catch(function () { out.textContent = 'The alert could not be sent. Check the connection and try again.'; })
+        .then(function () { btn.disabled = false; });
+    });
+  })(forms[i]);
+})();

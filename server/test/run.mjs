@@ -2054,6 +2054,412 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   eq([heldJob.views, heldJob.applies, heldJob.reason], [8, 2, 'reported'], 'Hits: a job taken off the site by a report shows the reviewer how many people saw it and clicked through');
 }
 
+/* ---- 29. Mail: the SMTP client over TLS (node:tls only), the mailer with its daily cap, retries and log (src/mail.js) ----
+   Against a fake mail server on 127.0.0.1 (test/fake-smtp.mjs) with a certificate made when the test runs (test/cert.mjs). */
+const { fakeSmtp } = await import('./fake-smtp.mjs');
+const MAILJS = await import('../src/mail.js');
+const smtpServer = await fakeSmtp({ user: 'support@site.test', pass: 'beget-box-pass' });
+const SMTP = { host: 'localhost', port: smtpServer.port, user: 'support@site.test', pass: 'beget-box-pass', ca: smtpServer.ca, timeout: 3000 };
+const unqp = (t) => { const out = []; t = t.replace(/=\r\n/g, ''); for (let i = 0; i < t.length; i++) { if (t[i] === '=') { out.push(parseInt(t.substr(i + 1, 2), 16)); i += 2; } else out.push(t.charCodeAt(i)); } return Buffer.from(out).toString('utf8'); };
+const bodyOf = (data) => unqp(data.slice(data.indexOf('\r\n\r\n') + 4));
+{
+  const m = MAILJS.buildMessage({ from: 'Jobs Every Hour <support@site.test>', to: 'reader@example.org', subject: 'Résumé tips\r\nBcc: victim@x.y', text: '.dot first\nplain line\n' + 'é'.repeat(60) + '\n.',
+    headers: { 'List-Unsubscribe': '<https://api.test/u?a=1>', 'Bad Header': 'x', 'X-Note': 'a\r\nBcc: v@x.y' } });
+  ok(/^Subject: =\?UTF-8\?B\?/m.test(m.data) && !/^Bcc:/mi.test(m.data) && /^X-Note: a Bcc: v@x.y$/m.test(m.data), 'Mail: a subject outside ASCII is encoded, and a line break in a header value cannot start a header of its own');
+  ok(/^List-Unsubscribe: <https:\/\/api\.test\/u\?a=1>$/m.test(m.data) && !/Bad Header/.test(m.data) && /^From: "Jobs Every Hour" <support@site\.test>$/m.test(m.data) && /^Message-ID: <[a-f0-9]{24}@site\.test>$/m.test(m.data),
+    'Mail: extra headers go in as given (a malformed name is left out); From carries the name; the Message-ID is on the sender’s domain');
+  ok(/^Date: \w{3}, \d{2} \w{3} \d{4} \d{2}:\d{2}:\d{2} \+0000$/m.test(m.data) && /^Content-Transfer-Encoding: quoted-printable$/m.test(m.data) && /^Auto-Submitted: auto-generated$/m.test(m.data), 'Mail: Date, MIME and Auto-Submitted headers');
+  ok(m.data.slice(m.data.indexOf('\r\n\r\n') + 4).split('\r\n').every((l) => l.length <= 76), 'Mail: quoted-printable lines are 76 characters at most');
+  eq(bodyOf(m.data), '.dot first\r\nplain line\r\n' + 'é'.repeat(60) + '\r\n.', 'Mail: the text comes back exactly, letters outside ASCII included');
+  eq(MAILJS.parseAddress('Jobs Every Hour <support@site.test>'), { name: 'Jobs Every Hour', address: 'support@site.test' }, 'Mail: "Name <address>" is read into its parts');
+
+  let r = await MAILJS.smtpSend(SMTP, { from: 'support@site.test', to: 'reader@example.org', data: m.data }), got = smtpServer.letters.at(-1), sess = smtpServer.sessions.at(-1);
+  eq([r.code, got.from, got.to, got.data === m.data], [250, 'support@site.test', ['reader@example.org'], true], 'SMTP: the letter arrives as it was built, from and to as given; lines starting with a dot survive (dot-stuffing)');
+  ok(/^\.\.dot first$/m.test(got.raw) && /^\.\.$/m.test(got.raw), 'SMTP: on the wire a line that starts with a dot carries a second one, so "." alone cannot end the letter early');
+  eq(smtpServer.logins.at(-1), ['support@site.test', 'beget-box-pass'], 'SMTP: AUTH LOGIN sends the mailbox and its password, base64 as the protocol wants');
+  await new Promise((res) => setTimeout(res, 50));                         // the QUIT may still be on its way to the server
+  ok(sess.lines[0].startsWith('EHLO ') && sess.lines.at(-1) === 'QUIT', 'SMTP: EHLO first, QUIT last');
+  let e = null; try { await MAILJS.smtpSend({ ...SMTP, ca: undefined }, { from: 'support@site.test', to: 'x@example.org', data: m.data }); } catch (x) { e = x; }
+  ok(e && /SELF_SIGNED|certificate/i.test(e.message) && smtpServer.letters.length === 1 && smtpServer.logins.length === 1, 'SMTP: the server’s certificate is checked: one that cannot be trusted is told nothing, not even the login');
+  e = null; try { await MAILJS.smtpSend({ ...SMTP, pass: 'wrong-pass-123' }, { from: 'support@site.test', to: 'x@example.org', data: m.data }); } catch (x) { e = x; }
+  ok(e && e.code === 535 && e.permanent && !e.message.includes('wrong-pass-123') && !e.message.includes(Buffer.from('wrong-pass-123').toString('base64')),
+    'SMTP: a refused login is final (5xx), and the error carries the server’s answer, never the password');
+  const sessions0 = smtpServer.sessions.length;
+  e = null; try { await MAILJS.smtpSend(SMTP, { from: 'support@site.test', to: 'жена@пример.рф', data: 'x' }); } catch (x) { e = x; }
+  ok(e && e.permanent && smtpServer.sessions.length === sessions0, 'SMTP: an address outside ASCII is refused before connecting');
+  const tls = await import('node:tls'), { selfSigned } = await import('./cert.mjs'), pair = selfSigned('localhost');
+  const silent = tls.createServer({ cert: pair.cert, key: pair.key }, () => {}); await new Promise((res) => silent.listen(0, '127.0.0.1', res));
+  e = null; try { await MAILJS.smtpSend({ ...SMTP, port: silent.address().port, ca: pair.cert, timeout: 300 }, { from: 'support@site.test', to: 'x@example.org', data: 'x' }); } catch (x) { e = x; }
+  ok(e && /in time/.test(e.message) && !e.permanent, 'SMTP: a server that never answers is given up on after the time limit, as a failure that may pass');
+  await new Promise((res) => silent.close(res));
+
+  // the mailer: log, retries, cap
+  const env = newEnv(); let clock = 1800000000; const slept = [];
+  const mailer = MAILJS.createMailer({ db: env.DB, smtp: SMTP, from: 'Jobs Every Hour <support@site.test>', cap: 5, retries: 2, backoffMs: [10, 20], sleep: async (ms) => { slept.push(ms); }, now: () => clock });
+  const lastLog = () => env.DB.prepare('SELECT * FROM mail_log ORDER BY rowid DESC LIMIT 1').first();
+  r = await mailer.send({ to: 'Reader@Example.org', subject: 'Secret subject', text: 'SECRET-BODY https://site.test/account/#reset=abc', kind: 'reset' });
+  let row = await lastLog();
+  ok(r.sent && row.status === 'sent' && row.kind === 'reset' && row.to_addr === 'reader@example.org' && row.attempts === 1 && row.code === 250 && row.message_id === r.id && row.at === clock,
+    'Mailer: a letter sent is logged with when, to whom, what kind, the answer and its Message-ID');
+  ok(!JSON.stringify(await env.DB.prepare('SELECT * FROM mail_log').all()).match(/SECRET|Secret subject|reset=/), 'Mailer: the log holds neither the subject nor the text (a letter can carry a link that opens an account)');
+  smtpServer.failNext.push({ at: 'RCPT', reply: '451 4.7.1 Try again later' });
+  slept.length = 0; r = await mailer.send({ to: 'b@example.org', subject: 's', text: 't' }); row = await lastLog();
+  eq([r.sent, slept, row.attempts, row.status], [true, [10], 2, 'sent'], 'Mailer: a 4xx answer is tried again after a pause; the log says how many attempts it took');
+  smtpServer.dropNext = 1; slept.length = 0; r = await mailer.send({ to: 'c@example.org', subject: 's', text: 't' }); row = await lastLog();
+  eq([r.sent, slept, row.attempts], [true, [10], 2], 'Mailer: a connection that drops is tried again too');
+  smtpServer.failNext.push({ at: 'RCPT', reply: '550 5.1.1 No such user here' });
+  slept.length = 0; await quiet(async () => { r = await mailer.send({ to: 'nobody@example.org', subject: 's', text: 't' }); }); row = await lastLog();
+  eq([r.sent, r.status, r.permanent, slept.length, row.code, row.status, row.reply], [false, 'failed', true, 0, 550, 'failed', 'RCPT TO: 550 5.1.1 No such user here'], 'Mailer: a 5xx answer is final: no retry, logged as failed with the server’s answer');
+  for (let i = 0; i < 3; i++) smtpServer.failNext.push({ at: 'MAIL', reply: '421 4.3.2 Service shutting down' });
+  slept.length = 0; const quietLines = await quiet(async () => { r = await mailer.send({ to: 'd@example.org', subject: 's', text: 't' }); }); row = await lastLog();
+  eq([r.sent, r.permanent, slept, row.attempts, row.status], [false, false, [10, 20], 3, 'failed'], 'Mailer: a failure that may pass is tried retries + 1 times with growing pauses, then logged as failed');
+  ok(!quietLines.join(' ').includes('beget-box-pass'), 'Mailer: what it logs about a failure never carries the password');
+  eq(await mailer.sentToday(), 3, 'Mailer: the day’s count is the letters sent, not the attempts or failures');
+  // cap 5: bulk letters stop at 80% (4), so the last place stays for a link that confirms an address
+  r = await mailer.send({ to: 'e@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' });
+  const bulkHeld = await mailer.send({ to: 'f@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' });
+  const personal = await mailer.send({ to: 'g@example.org', subject: 's', text: 't', kind: 'confirm' });
+  const over = await mailer.send({ to: 'h@example.org', subject: 's', text: 't', kind: 'confirm' });
+  eq([r.sent, bulkHeld.sent, bulkHeld.status, personal.sent, over.status, (await lastLog()).status, smtpServer.letters.length], [true, false, 'capped', true, 'capped', 'capped', 6],
+    'Mailer: over the daily cap nothing is sent and the letter is logged as capped; bulk letters stop at 80% of it, so confirmations still go');
+  clock += 86400; r = await mailer.send({ to: 'f@example.org', subject: 's', text: 't', bulk: true });
+  ok(r.sent, 'Mailer: the cap counts per UTC day: the next day letters go again');
+  eq(await sendMail({ MAIL: { send: async () => ({ sent: false, status: 'capped' }) } }, 'a@b.co', 's', 't'), { sent: false }, 'sendMail: a mailer that answers "not sent" is reported as not sent');
+  const extra = []; await sendMail({ MAIL: { send: async (x) => { extra.push(x); } }, MAIL_FROM: 'x@site.test' }, 'a@b.co', 's', 't', { kind: 'confirm' });
+  eq(extra[0], { from: 'x@site.test', to: 'a@b.co', subject: 's', text: 't', kind: 'confirm' }, 'sendMail: the kind of letter is handed to the mailer for its log');
+}
+
+/* ---- 30. Job alerts: "Email me new jobs like these" (src/alerts.js and /api/alerts...) ---- */
+const ALERTS = await import('../src/alerts.js');
+const ALERT_SENT_TEXT = 'Check your inbox: we sent a link to confirm this alert. Nothing is sent until you open it.';
+const pageOf = async (env, method, p, { body, type, ip } = {}) => {
+  const headers = { 'CF-Connecting-IP': ip || '10.8.0.' + (++ipCounter % 250) }; if (type) headers['Content-Type'] = type;
+  const res = await worker.fetch(new Request(API + p, { method, headers, body }), env); return { status: res.status, text: await res.text(), headers: res.headers };
+};
+const linkIn = (text, kind) => { const m = new RegExp('https://api\\.test(/api/alerts/' + kind + '\\?a=a_[a-f0-9]{20}&t=[a-f0-9]{32})').exec(text); return m ? m[1] : ''; };
+const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen_at > top ? j.first_seen_at : top), ''), newSince: (iso) => jobs.filter((j) => j.first_seen_at > iso) });
+{
+  // cleanWords and readAlert
+  eq(ALERTS.cleanWords('Senior  PYTHON visit evil.com <b>hi</b> node.js .NET C++ c# jobs'), 'senior python visit evilcom bhi b', 'Alerts: the words of a search keep letters, digits, + and # and a few names with a dot; an address in them is broken up; six words at most');
+  eq(ALERTS.cleanWords('c++ c# .net asp.net remote job'), 'c++ c# .net asp.net', 'Alerts: C++, C#, .NET and ASP.NET survive; "remote" and "job" are not words to look for');
+  let e = null; try { ALERTS.readAlert({ cat: 'nope' }); } catch (x) { e = x; } eq(e && e.code, 'cat', 'Alerts: a category the site does not have is refused');
+  e = null; try { ALERTS.readAlert({ loc: 'Berlin, DE' }); } catch (x) { e = x; } eq(e && e.code, 'loc', 'Alerts: a place must be a place slug of the site');
+  e = null; try { ALERTS.readAlert({ freq: 'hourly' }); } catch (x) { e = x; } eq(e && e.code, 'freq', 'Alerts: daily or weekly only');
+  eq(ALERTS.readAlert({ q: 'Rust', cat: 'engineering', loc: 'united-states', remote: 'on', sal: '$95,500', freq: 'weekly' }), { q: 'rust', cat: 'engineering', loc: 'united-states', remote: 1, sal: 96000, freq: 'weekly' },
+    'Alerts: a form’s values are read as the search page writes them: remote "on", pay in dollars rounded to the thousand');
+  eq(ALERTS.describe({ q: 'rust', cat: 'engineering', loc: 'united-states', remote: 1, sal: 96000 }), '“rust” jobs in Engineering · United States · remote only · $96K+ a year', 'Alerts: an alert reads as a sentence');
+  eq(ALERTS.describe({ q: '', cat: 'sales-bd', loc: 'uk', remote: 0, sal: 0 }), 'Sales & Business Development jobs · UK', 'Alerts: a category alert reads with the category’s name');
+  eq(ALERTS.searchLink(SITE, { q: 'c++ dev', cat: '', loc: 'berlin', remote: 1, sal: 0 }), SITE + '/jobs/?q=c%2B%2B+dev&loc=berlin&remote=1', 'Alerts: the same search on the site, with the search page’s own parameters');
+  // matching
+  const M = (a, j) => ALERTS.matches({ q: '', cat: '', loc: '', remote: 0, sal: 0, ...a }, { title: 'Engineer', company: 'Acme', tags: [], places: [], ...j });
+  eq([M({ q: 'java' }, { title: 'JavaScript Engineer' }), M({ q: 'java' }, { title: 'Senior Java Developer' }), M({ q: 'go' }, { title: 'Google Ads Manager' }), M({ q: 'golang' }, { title: 'Go Engineer' }),
+    M({ q: 'engineer' }, { title: 'Engineering Manager' }), M({ q: 'designers' }, { title: 'Product Designer' }), M({ q: 'c++' }, { title: 'C++ Developer' }), M({ q: 'js' }, { title: 'JavaScript dev' }),
+    M({ q: 'python' }, { title: 'Data Engineer', tags: ['Python'] }), M({ q: 'stripe' }, { company: 'Stripe' }), M({ q: 'python data' }, { title: 'Python Engineer' })],
+    [false, true, false, true, true, true, true, true, true, true, false], 'Alerts: every word must be in the title, company or skills, as a whole word with its usual endings (java is not JavaScript, go is not Google)');
+  eq([M({ cat: 'engineering' }, { cat: 'engineering' }), M({ cat: 'engineering' }, { cat: 'design' }), M({ loc: 'berlin' }, { places: ['berlin', 'germany'] }), M({ loc: 'berlin' }, { places: ['munich'] }),
+    M({ remote: 1 }, { remote: true }), M({ remote: 1 }, { remote: false }), M({ sal: 100000 }, { usd: [80000, 120000] }), M({ sal: 100000 }, { usd: [60000, 90000] }), M({ sal: 100000 }, {}), M({}, { tg: true })],
+    [true, false, true, false, true, false, true, false, false, false], 'Alerts: category, place, remote and pay filter as on the search page; a job without pay is out when pay is asked for; posts from Telegram channels are never mailed');
+
+  // sign-up
+  const box = mailbox(), env = newEnv({ ...box });
+  const sign = (data, o = {}) => call(env, 'POST', '/api/alerts', { data, ...o });
+  let r = await sign({ email: 'Seeker@Example.org', q: 'Python  visit evil.com', loc: 'berlin', remote: '1', sal: '100000' });
+  let letter = box.outbox.at(-1), row = await env.DB.prepare('SELECT * FROM alerts').first();
+  eq([r.status, r.body.ok, r.body.message, r.body.alert, r.body.confirm_url], [200, true, 'Check your inbox: we sent a link to confirm this alert. Nothing is sent until you open it.', '“python visit evilcom” jobs · Berlin · remote only · $100K+ a year', undefined],
+    'Alerts: a sign-up is answered with what the alert is and that a link to confirm it was sent (outside test mode the link is in the letter only)');
+  eq([row.status, row.email, row.q, row.loc, row.remote, row.sal, row.freq, Object.keys(row).some((k) => /ip/.test(k))], ['pending', 'seeker@example.org', 'python visit evilcom', 'berlin', 1, 100000, 'daily', false],
+    'Alerts: the alert waits, pending, with the search cleaned; nothing about the visitor who asked is kept with it');
+  ok(letter.to === 'seeker@example.org' && letter.kind === 'alert_confirm' && linkIn(letter.text, 'confirm') && !/evil\.com/.test(letter.text + letter.subject) && !/https?:\/\/(?!api\.test|site\.test)/.test(letter.text),
+    'Alerts: the confirmation letter goes to the address with its link, and no address of anyone else’s choosing can be put into it');
+  const confirmPath = linkIn(letter.text, 'confirm'), alertId = row.id;
+  let pg = await pageOf(env, 'GET', confirmPath);
+  ok(pg.status === 200 && pg.text.includes('<form method="post"') && pg.text.includes('Yes, email me these jobs') && (await env.DB.prepare('SELECT status FROM alerts').first('status')) === 'pending',
+    'Alerts: opening the link shows a page with a button and changes nothing (mail scanners open links by themselves)');
+  ok(/default-src 'none'/.test(pg.headers.get('Content-Security-Policy')) && pg.headers.get('X-Robots-Tag') === 'noindex' && pg.headers.get('Referrer-Policy') === 'no-referrer' && !/<script/i.test(pg.text),
+    'Alerts: the page has no script, sends no referrer, is not for search engines and may load nothing from outside');
+  const bad1 = await pageOf(env, 'POST', confirmPath.slice(0, -1) + (confirmPath.endsWith('0') ? '1' : '0'));
+  const bad2 = await pageOf(env, 'POST', confirmPath.replace('/confirm?', '/confirm?x=1&').replace(/a=a_[a-f0-9]{20}/, 'a=a_' + '0'.repeat(20)));
+  eq([bad1.status, bad2.status, await env.DB.prepare('SELECT status FROM alerts').first('status')], [404, 404, 'pending'], 'Alerts: a link with a changed token or another alert’s id does nothing');
+  const t0 = Math.floor(Date.now() / 1000);
+  pg = await pageOf(env, 'POST', confirmPath); row = await env.DB.prepare('SELECT * FROM alerts').first();
+  ok(pg.status === 200 && pg.text.includes('Your job alert is on') && row.status === 'active' && Math.abs(row.confirmed_at - t0) < SLACK && Math.abs(row.due_at - (row.confirmed_at + 86400 - 1800)) < 2 && row.seen_through === ALERTS.isoTime(row.confirmed_at),
+    'Alerts: the button confirms it: active, the first letter due about a day later, with the jobs first seen after this moment');
+  pg = await pageOf(env, 'POST', confirmPath); ok(pg.status === 200 && pg.text.includes('Your job alert is on') && (await one(env, 'SELECT confirmed_at FROM alerts')) === row.confirmed_at, 'Alerts: confirming twice changes nothing');
+  const sentBefore = box.outbox.length;
+  r = await sign({ email: 'seeker@example.org', q: 'python visit evilcom', loc: 'berlin', remote: 1, sal: 100000, freq: 'weekly' });
+  eq([r.status, r.body.message, box.outbox.length, await one(env, 'SELECT freq FROM alerts')], [200, ALERT_SENT_TEXT, sentBefore, 'daily'],
+    'Alerts: signing up again for an alert that is on gets the same answer and changes and sends nothing (the answer tells nobody who is subscribed)');
+  // the plain form (no script) gets pages back
+  pg = await pageOf(env, 'POST', '/api/alerts', { type: 'application/x-www-form-urlencoded', body: 'email=form%40example.org&cat=engineering&freq=weekly&website=' });
+  ok(pg.status === 200 && pg.headers.get('Content-Type').startsWith('text/html') && pg.text.includes('Check your inbox') && pg.text.includes('form@example.org') && pg.text.includes('Engineering jobs'), 'Alerts: a form sent without a script gets a page that says what to do next');
+  pg = await pageOf(env, 'POST', '/api/alerts', { type: 'application/x-www-form-urlencoded', body: 'email=%3Cscript%3E&cat=engineering' });
+  ok(pg.status === 400 && pg.text.includes('The alert was not saved') && !pg.text.includes('<script>'), 'Alerts: and a page with the reason when it is refused, with what was sent escaped');
+  // refusals
+  r = await sign({ email: 'x@mailinator.com', q: 'go' }); eq([r.status, r.body.error], [400, 'throwaway_email'], 'Alerts: a throwaway mailbox is refused');
+  r = await sign({ email: 'not-an-address', q: 'go' }); eq([r.status, r.body.error], [400, 'email'], 'Alerts: an address is needed');
+  r = await sign({ email: 'ok@example.org', cat: 'astrology' }); eq([r.status, r.body.error], [400, 'cat'], 'Alerts: a category that does not exist is refused');
+  const rows0 = await one(env, 'SELECT COUNT(*) FROM alerts'), sent0 = box.outbox.length;
+  r = await sign({ email: 'bot@example.org', q: 'go', website: 'http://spam.example' });
+  eq([r.status, r.body.ok, await one(env, 'SELECT COUNT(*) FROM alerts'), box.outbox.length], [200, true, rows0, sent0], 'Alerts: a sign-up that filled in the field people do not see is answered as usual and dropped');
+  // limits: three confirmation letters a day to one address, five alerts per address, ten sign-ups an hour per visitor
+  for (const q of ['one', 'two', 'three', 'four']) r = await sign({ email: 'busy@example.org', q });
+  eq([r.status, box.outbox.filter((x) => x.to === 'busy@example.org').length, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'busy@example.org'")], [200, 3, 3],
+    'Alerts: one address gets at most three confirmation letters a day, whoever asks for them (the fourth sign-up gets the same answer and is dropped)');
+  for (let i = 0; i < 5; i++) await env.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, due_at) VALUES (?, 'full@example.org', ?, 'active', 1, 9999999999)").bind('a_' + String(i).repeat(20), 'w' + i).run();
+  r = await sign({ email: 'full@example.org', q: 'six' });
+  eq([r.status, r.body.error], [409, 'too_many'], 'Alerts: an address can have five alerts; the sixth is refused with the reason');
+  await env.DB.exec('DELETE FROM rate');
+  for (let i = 0; i < 10; i++) await sign({ email: 'v' + i + '@example.org', q: 'go' }, { ip: '6.7.8.9' });
+  r = await sign({ email: 'v10@example.org', q: 'go' }, { ip: '6.7.8.9' }); eq([r.status, r.body.error], [429, 'rate_limited'], 'Alerts: one visitor can sign up ten times an hour');
+  r = await call(newEnv(), 'POST', '/api/alerts', { data: { email: 'a@example.org', q: 'go' } }); eq([r.status, r.body.error], [503, 'mail_off'], 'Alerts: without a mail service no sign-up is taken (nobody could confirm it)');
+  r = await call(newEnv({ ...mailbox(), PAY_MODE: 'test' }), 'POST', '/api/alerts', { data: { email: 'a@example.org', q: 'go' } });
+  ok(/^https:\/\/api\.test\/api\/alerts\/confirm\?a=a_[a-f0-9]{20}&t=[a-f0-9]{32}$/.test(r.body.confirm_url), 'Alerts: in test mode (dev.mjs) the answer carries the confirmation link, as there is no mailbox');
+
+  // the periodic run
+  const conf = (row.confirmed_at), at = (min) => ALERTS.isoTime(conf + min * 60);
+  const J = (slug, over = {}) => ({ slug, title: 'Senior Python Engineer', company: 'Acme', location: 'Berlin, Germany', remote: true, salary: '$110K – $150K', usd: [110000, 150000], places: ['berlin', 'germany', 'europe'],
+    cat: 'engineering', tags: ['Python'], first_seen_at: at(60), ...over });
+  const jobs = [J('j1'), J('j2', { places: ['munich'] }), J('j3', { usd: [50000, 90000] }), J('j4', { usd: null, salary: '' }), J('j5', { title: 'Backend Engineer', tags: ['Go'] }),
+    J('j6', { title: 'Data Engineer', company: 'Globex', first_seen_at: at(120) }), J('j7', { first_seen_at: at(-60) }), J('j8', { tg: true }), J('j9', { first_seen_at: at(90) }), J('j10', { remote: false })];
+  await env.DB.prepare("UPDATE alerts SET q = 'python' WHERE id = ?").bind(alertId).run();
+  const atRun = conf + 86400;
+  let out = await ALERTS.runAlerts(env, recs(jobs), { now: atRun - 3600 });
+  eq([out.due, out.sent], [0, 0], 'Run: an alert is not looked at before it is due');
+  const outBefore = box.outbox.length;
+  out = await ALERTS.runAlerts(env, recs(jobs), { now: atRun });
+  letter = box.outbox.at(-1); row = await env.DB.prepare('SELECT * FROM alerts WHERE id = ?').bind(alertId).first();
+  eq([out.sent, box.outbox.length - outBefore, letter.to, letter.kind, letter.bulk], [1, 1, 'seeker@example.org', 'alert', true], 'Run: a due alert with new matching jobs gets one letter, sent as a bulk letter');
+  eq([...letter.text.matchAll(/https:\/\/site\.test\/job\/([a-z0-9]+)\//g)].map((x) => x[1]), ['j6', 'j9'], 'Run: only jobs that match, first seen after the alert was confirmed, newest first, one per title and company, never a Telegram post');
+  ok(letter.subject === '2 new jobs: “python” jobs · Berlin · remote only · $100K+ a year' && letter.text.includes('Senior Python Engineer — Acme\n   Berlin, Germany · Remote · $110K – $150K'), 'Run: the subject counts the jobs and names the alert; each job has its place, remote and pay');
+  const unsubUrl = 'https://api.test' + linkIn(letter.text, 'unsubscribe');
+  ok(linkIn(letter.text, 'unsubscribe') && letter.headers['List-Unsubscribe'] === '<' + unsubUrl + '>' && letter.headers['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click' &&
+    letter.headers['List-Id'] === 'Job alerts <alerts.site.test>' && letter.headers.Precedence === 'bulk', 'Run: every letter has the unsubscribe link, and the one-click headers mail services ask of bulk senders (RFC 8058)');
+  ok(!/<img|utm_|track|pixel|\?ref=/i.test(letter.text) && !/[?&](?!q=|loc=|remote=|sal=|cat=|a=|t=)\w+=/.test(letter.text), 'Run: no images, no tracking: the links are plain addresses of the site');
+  ok(row.seen_through === at(120) && Math.abs(row.due_at - (atRun + 86400 - 1800)) < 2 && row.last_sent_at === atRun && row.letters === 1, 'Run: the alert moves on to the newest record it saw and is due a day later');
+  out = await ALERTS.runAlerts(env, recs(jobs), { now: row.due_at });
+  eq([out.due, out.sent, out.empty, box.outbox.length - outBefore], [1, 0, 1, 1], 'Run: with nothing new no letter is sent, and the alert still moves on');
+  const many = Array.from({ length: 25 }, (_, i) => J('n' + i, { title: 'Python Developer ' + i, first_seen_at: at(200 + i) }));
+  await env.DB.prepare("UPDATE alerts SET due_at = 0, freq = 'weekly' WHERE id = ?").bind(alertId).run();
+  out = await ALERTS.runAlerts(env, recs([...jobs, ...many]), { now: atRun + 3 * 86400 }); letter = box.outbox.at(-1); row = await env.DB.prepare('SELECT * FROM alerts WHERE id = ?').bind(alertId).first();
+  eq([out.sent, (letter.text.match(/\/job\//g) || []).length, letter.subject.startsWith('25 new jobs'), letter.text.includes('The newest 20 are below.'), letter.text.includes('All 25 and older ones: https://site.test/jobs/?q=python&loc=berlin&remote=1&sal=100000')],
+    [1, 20, true, true, true], 'Run: a letter carries 20 jobs at most, and says how many there were and where the rest are');
+  ok(Math.abs(row.due_at - (atRun + 3 * 86400 + 7 * 86400 - 1800)) < 2 && letter.text.includes('get it daily instead'), 'Run: a weekly alert is due a week later');
+  // the cap, a refusal for good, records missing, pending alerts that nobody confirmed
+  const held = newEnv({ MAIL: { send: async () => ({ sent: false, status: 'capped' }) } });
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_00000000000000000001', 'x@example.org', 'python', 'active', 1, 1, 1, '')").run();
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_00000000000000000002', 'y@example.org', 'python', 'active', 1, 1, 2, '')").run();
+  out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
+  eq([out.capped, out.sent, await one(held, 'SELECT SUM(due_at) FROM alerts'), await one(held, "SELECT COUNT(*) FROM alerts WHERE seen_through = ''")], [true, 0, 3, 2], 'Run: a letter held back by the daily cap ends the run; nothing moves on, so nothing is lost');
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: true }) };
+  for (let i = 0; i < 3; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i });
+  eq([out.dropped, await one(held, 'SELECT COUNT(*) FROM alerts')], [2, 0], 'Run: an address the mail server refuses for good three times in a row loses its alert');
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at) VALUES ('a_00000000000000000003', 'z@example.org', 'go', 'pending', ?)").bind(atRun - 8 * 86400).run();
+  out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.expired, await one(held, 'SELECT COUNT(*) FROM alerts')], [1, 0], 'Run: an alert nobody confirmed in 7 days is deleted');
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_00000000000000000004', 'z@example.org', 'go', 'active', 1, 1, 1)").run();
+  out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.due, out.sent, await one(held, 'SELECT due_at FROM alerts')], [1, 0, 1], 'Run: without job records nothing is sent and the alert stays due');
+
+  // unsubscribe
+  const unsubPath = linkIn(letter.text, 'unsubscribe');
+  pg = await pageOf(env, 'GET', unsubPath);
+  ok(pg.status === 200 && (pg.text.match(/<form method="post"/g) || []).length === 3 && pg.text.includes('Send it daily instead') && pg.text.includes('Stop every job alert to this address') && (await one(env, 'SELECT COUNT(*) FROM alerts WHERE id = ?', alertId)) === 1,
+    'Unsubscribe: the link shows a page with three buttons (unsubscribe, change how often, stop every alert) and changes nothing by itself');
+  pg = await pageOf(env, 'POST', unsubPath, { type: 'application/x-www-form-urlencoded', body: 'freq=daily' });
+  ok(pg.text.includes('From now on: daily') && (await one(env, 'SELECT freq FROM alerts WHERE id = ?', alertId)) === 'daily', 'Unsubscribe: or it comes daily (or weekly) instead');
+  pg = await pageOf(env, 'POST', unsubPath.slice(0, -2) + (unsubPath.endsWith('00') ? '11' : '00'));
+  eq([pg.status, await one(env, 'SELECT COUNT(*) FROM alerts WHERE id = ?', alertId)], [404, 1], 'Unsubscribe: a made-up token does nothing');
+  pg = await pageOf(env, 'POST', confirmPath.replace('/confirm?', '/unsubscribe?'));
+  eq(pg.status, 404, 'Unsubscribe: the confirmation link’s token does not unsubscribe (each link does one thing)');
+  pg = await pageOf(env, 'POST', unsubPath, { type: 'application/x-www-form-urlencoded', body: 'List-Unsubscribe=One-Click' });
+  eq([pg.status, pg.text, await one(env, 'SELECT COUNT(*) FROM alerts WHERE id = ?', alertId)], [200, 'Unsubscribed.', 0], 'Unsubscribe: a mail client’s one-click POST unsubscribes at once, and the alert is deleted, not kept');
+  pg = await pageOf(env, 'POST', unsubPath); ok(pg.status === 200 && pg.text.includes('does not exist any more'), 'Unsubscribe: doing it again is fine');
+  // every alert of one address
+  const ids = (await env.DB.prepare("SELECT id FROM alerts WHERE email = 'busy@example.org' ORDER BY id").all()).results.map((x) => x.id);
+  pg = await pageOf(env, 'POST', '/api/alerts/unsubscribe?a=' + ids[0] + '&t=' + await ALERTS.alertToken(env, 'unsub', ids[0]), { type: 'application/x-www-form-urlencoded', body: 'all=1' });
+  ok(pg.text.includes('No more job alerts go to this address') && (await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'busy@example.org'")) === 0 && (await one(env, 'SELECT COUNT(*) FROM alerts')) > 0,
+    'Unsubscribe: "stop every alert" deletes every alert of that address and no one else’s');
+
+  // a signed-in account sees the alerts of its own confirmed address
+  await sign({ email: 'member@example.org', q: 'rust' });
+  const member = await fresh(env, 'member@example.org');
+  r = await call(env, 'GET', '/api/alerts', { token: member });
+  eq([r.status, r.body.alerts.length, r.body.alerts[0].alert, r.body.alerts[0].status], [200, 1, '“rust” jobs', 'pending'], 'Account: the alerts of the account’s address are listed');
+  r = await call(env, 'DELETE', '/api/alerts/' + r.body.alerts[0].id, { token: member }); eq([r.status, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'member@example.org'")], [200, 0], 'Account: and can be deleted');
+  const someone = await one(env, "SELECT id FROM alerts WHERE email = 'form@example.org'");
+  r = await call(env, 'DELETE', '/api/alerts/' + someone, { token: member }); eq(r.status, 404, 'Account: another address’s alert cannot be');
+
+  // the owner: counts, and erasing an address on request
+  const adminReq = async (method, p, data) => { const res = await worker.fetch(new Request(API + '/api/admin/' + p, { method, headers: { Authorization: 'Bearer admin-secret', 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined }), env); return { status: res.status, body: await res.json() }; };
+  r = await adminReq('GET', 'audience');
+  ok(r.status === 200 && r.body.alerts.waiting_for_confirmation >= 1 && r.body.accounts.job_seekers === 0 && r.body.accounts.employers === 1 && typeof r.body.mail.sent_today === 'number' && Array.isArray(r.body.by_day.accounts),
+    'Owner: /api/admin/audience counts accounts, alerts, claims and mail');
+  ok(!JSON.stringify(r.body).includes('@'), 'Owner: and gives no address');
+  eq((await call(env, 'GET', '/api/admin/audience', { token: member })).status, 403, 'Owner: an account’s session does not open it');
+  await env.DB.prepare("INSERT INTO mail_log (id, at, to_addr, kind, status) VALUES ('m_1', 1, 'form@example.org', 'alert_confirm', 'sent')").run();
+  const formUser = await fresh(env, 'form@example.org');
+  r = await adminReq('POST', 'erase', { email: 'FORM@example.org' });
+  eq([r.status, r.body.alerts_deleted, r.body.account_erased, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'form@example.org'"), await one(env, "SELECT COUNT(*) FROM mail_log WHERE to_addr = 'form@example.org'"),
+    await one(env, "SELECT COUNT(*) FROM users WHERE email = 'form@example.org'"), (await call(env, 'GET', '/api/me', { token: formUser })).status,
+    (await call(env, 'POST', '/api/auth/login', { data: { email: 'form@example.org', password: PASS } })).status], [200, 1, true, 0, 0, 0, 401, 401],
+    'Owner: erasing an address deletes its alerts and the mail log rows to it, and takes the address off its account, which can no longer be signed in to');
+  // the cron tidies the mail log and the alerts nobody confirmed
+  await env.DB.prepare("INSERT INTO mail_log (id, at, to_addr, kind, status) VALUES ('m_old', ?, 'old@example.org', 'alert', 'sent')").bind(t0 - 31 * 86400).run();
+  await env.DB.prepare("INSERT INTO alerts (id, email, status, created_at) VALUES ('a_00000000000000000009', 'stale@example.org', 'pending', ?)").bind(t0 - 8 * 86400).run();
+  await worker.scheduled({}, env);
+  eq([await one(env, "SELECT COUNT(*) FROM mail_log WHERE id = 'm_old'"), await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'stale@example.org'")], [0, 0], 'Cron: the mail log keeps 30 days; an alert nobody confirmed goes after 7');
+
+  // the whole way: the alert job, the mailer and the mail server
+  const wire = newEnv(), wireMailer = MAILJS.createMailer({ db: wire.DB, smtp: SMTP, from: 'Jobs Every Hour <support@site.test>', cap: 100 });
+  Object.assign(wire, { MAIL: wireMailer, MAIL_FROM: 'Jobs Every Hour <support@site.test>' });
+  await wire.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_0000000000000000000a', 'reader@example.org', 'python', 'active', 1, 1, 1, '')").run();
+  const lettersBefore = smtpServer.letters.length;
+  out = await ALERTS.runAlerts(wire, recs([J('w1', { first_seen_at: '2026-11-15T01:00:00Z' })]), { now: 1800000000 });
+  const raw = smtpServer.letters.at(-1).data;
+  ok(out.sent === 1 && smtpServer.letters.length === lettersBefore + 1 && /^List-Unsubscribe: <https:\/\/api\.test\/api\/alerts\/unsubscribe\?a=a_0000000000000000000a&t=[a-f0-9]{32}>$/m.test(raw) &&
+    /^List-Unsubscribe-Post: List-Unsubscribe=One-Click$/m.test(raw) && /^Precedence: bulk$/m.test(raw) && bodyOf(raw).includes('https://site.test/job/w1/') && (await wire.DB.prepare('SELECT kind, status FROM mail_log').first()).kind === 'alert',
+    'Alerts, end to end: the letter reaches the mail server with its unsubscribe headers, and the log says it was an alert');
+}
+
+/* ---- 31. Employers: "is this job already on the site?" before posting, and "Claim your company page" ---- */
+{
+  const realFetch = globalThis.fetch;
+  world.dup = { matches: [], down: false, asked: [] };
+  globalThis.fetch = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.startsWith('http://dup.test/')) {                               // the page server's /api/check-duplicate (dedupe.py)
+      world.dup.asked.push(Object.fromEntries(new URL(url).searchParams));
+      if (world.dup.down) throw new TypeError('fetch failed');
+      return Response.json({ duplicate: world.dup.matches.length > 0, checked: 130000, ms: 0.05, matches: world.dup.matches });
+    }
+    return realFetch(input, init);
+  };
+  const DUP = { DUPLICATE_URL: 'http://dup.test/api/check-duplicate' };
+  const env = newEnv({ ...DUP, COMPANY_SITES: { Stripe: 'stripe.com', Harvey: 'board:ashby/harvey', 'Crypto.com': 'https://crypto.com' } });
+  const acme = await fresh(env, 'hr@acme.dev');
+  let r = await call(env, 'POST', '/api/jobs', { token: acme, data: GOOD });
+  eq([r.status, r.body.job && r.body.job.status, world.dup.asked.at(-1)], [200, 'review', { company: 'Acme Robotics', title: 'Senior Rust Engineer', location: 'Berlin', remote: '1', url: GOOD.apply_url }],
+    'Duplicates: a new job is checked against the site first, by company, title, place and link to apply');
+  world.dup.matches = [{ title: 'Senior Rust Engineer', company: 'Acme Robotics', location: 'Berlin, Germany', why: 'the same company and role in the same place', page: 'https://site.test/job/senior-rust-engineer-acme-robotics/' }];
+  const opened = world.fetched.length;
+  const second = { ...GOOD, title: 'Rust Engineer (Senior)', apply_url: 'https://acme.dev/careers/senior-rust-engineer?x=2' };
+  r = await call(env, 'POST', '/api/jobs', { token: acme, data: second });
+  eq([r.status, r.body.error, r.body.matches.length, r.body.matches[0].page, r.body.claim, await one(env, 'SELECT COUNT(*) FROM jobs')], [409, 'already_listed', 1, 'https://site.test/job/senior-rust-engineer-acme-robotics/', { company: 'Acme Robotics' }, 1],
+    'Duplicates: a job that is on the site already is refused with the page it is on, and the employer is offered the claim of the company page');
+  ok(r.body.message.startsWith('This job is already on the site: “Senior Rust Engineer” at Acme Robotics (Berlin, Germany), https://site.test/job/senior-rust-engineer-acme-robotics/.') && /Claim the company page/i.test(r.body.message),
+    'Duplicates: the message says where it is and what to do instead');
+  ok(world.fetched.slice(opened).every((u) => !u.startsWith('https://acme.dev/')), 'Duplicates: the link to apply of a refused duplicate is not even opened');
+  r = await call(env, 'POST', '/api/jobs/preview', { token: acme, data: second }); eq([r.status, r.body.error], [409, 'already_listed'], 'Duplicates: the preview of a draft says it too');
+  const asked = world.dup.asked.length, live = await one(env, 'SELECT id FROM jobs');
+  r = await call(env, 'PATCH', '/api/jobs/' + live, { token: acme, data: { salary: '$150k' } });
+  eq([r.status, world.dup.asked.length], [200, asked], 'Duplicates: an edit is not checked again (the job would find itself)');
+  world.dup.matches = []; world.dup.down = true;
+  const trusted = await account(env, 'boss@globex.dev'), globex = employer('globex.dev', 'Globex');
+  r = await call(env, 'POST', '/api/jobs', { token: trusted, data: globex('Data Engineer') });
+  ok(r.status === 200 && r.body.job.status === 'review' && /check for the same job elsewhere on the site did not answer/.test(r.body.job.review_reason),
+    'Duplicates: when the check does not answer, even a trusted account’s job waits for a person, with the reason written on it');
+  world.dup.down = false;
+  r = await call(env, 'POST', '/api/jobs', { token: trusted, data: globex('Platform Engineer') }); eq(r.body.job.status, 'live', 'Duplicates: when it answers "not on the site", a trusted account’s job goes live as before');
+  r = await call(env, 'POST', '/api/jobs', { token: acme, data: { ...GOOD, company: 'Stripe', company_url: 'https://acme.dev' } });
+  eq([r.status, r.body.error, r.body.claim], [409, 'listed', { company: 'Stripe' }], 'Claim: a company the site reads from its hiring system cannot be posted under; the answer offers the claim of its page');
+
+  // claims
+  const stripe = await fresh(env, 'talent@stripe.com');
+  r = await call(env, 'POST', '/api/claims', { token: stripe, data: { company: 'STRIPE' } });
+  eq([r.status, r.body.claim.company, r.body.claim.status, r.body.claim.domain, r.body.claim.reason], [200, 'Stripe', 'verified', 'stripe.com', ''], 'Claim: an account on the domain the site knows for the company is verified at once');
+  const stripeClaim = r.body.claim.id;
+  eq((await call(env, 'GET', '/api/public/export.json')).body.claimed.map((c) => c.company), ['Stripe'], 'Claim: export.json lists the companies whose page is claimed, for the site to show');
+  r = await call(env, 'POST', '/api/claims', { token: stripe, data: { company: 'Stripe' } }); eq([r.status, r.body.claim.id], [200, stripeClaim], 'Claim: asking again answers with the same claim');
+  r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'other@stripe.com'), data: { company: 'Stripe' } }); eq([r.status, r.body.error], [409, 'claimed'], 'Claim: one company, one account that manages its page');
+  const stripeJob = { ...GOOD, company: 'Stripe', company_url: 'https://stripe.com', title: 'Staff Engineer, Ledger', apply_url: 'https://stripe.com/jobs/staff-engineer-ledger' };
+  world.pages[stripeJob.apply_url] = '<html><h1>Staff Engineer, Ledger</h1></html>';
+  r = await call(env, 'POST', '/api/jobs', { token: stripe, data: stripeJob });
+  eq([r.status, r.body.job && r.body.job.status], [200, 'review'], 'Claim: the account that manages the page may post a job its hiring system does not list (checked for duplicates and reviewed like any job)');
+  r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'me@gmail.com'), data: { company: 'Harvey' } }); eq([r.status, r.body.error], [403, 'work_email'], 'Claim: an account on a free mailbox cannot claim a company');
+  const unconfirmed = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'new@harvey.ai', password: PASS } })).body.token;
+  r = await call(env, 'POST', '/api/claims', { token: unconfirmed, data: { company: 'Harvey' } }); eq([r.status, r.body.error], [403, 'confirm_email'], 'Claim: nor one whose email is not confirmed');
+  const harvey = await fresh(env, 'people@harvey.ai');
+  r = await call(env, 'POST', '/api/claims', { token: harvey, data: { company: 'Initech' } }); eq([r.status, r.body.error], [404, 'not_listed'], 'Claim: only a company the site lists');
+  r = await call(env, 'POST', '/api/claims', { token: harvey, data: { company: 'Harvey' } });
+  eq([r.body.claim.status, r.body.claim.reason], ['pending', 'the site does not know Harvey’s own domain: check that harvey.ai is it'], 'Claim: a company whose domain the site does not know waits for a person');
+  const harveyClaim = r.body.claim.id;
+  const evil = await fresh(env, 'ceo@crypto-com.dev');
+  r = await call(env, 'POST', '/api/claims', { token: evil, data: { company: 'Crypto.com' } });
+  ok(r.body.claim.status === 'pending' && r.body.claim.reason.startsWith('the domain the site knows for Crypto.com is crypto.com, and the account is tied to crypto-com.dev'), 'Claim: a domain other than the one the site knows waits for a person, with both named');
+  const evilClaim = r.body.claim.id;
+  const adm = async (method, p, data) => { const res = await worker.fetch(new Request(API + '/api/admin/' + p, { method, headers: { Authorization: 'Bearer admin-secret', 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined }), env); return { status: res.status, body: await res.json() }; };
+  r = await adm('GET', 'claims');
+  eq(r.body.claims.map((c) => [c.company, c.domain, c.site_we_know, c.account.email_domain, c.account.proved_by]), [['Harvey', 'harvey.ai', '', 'harvey.ai', ['email_domain']], ['Crypto.com', 'crypto-com.dev', 'crypto.com', 'crypto-com.dev', ['email_domain']]],
+    'Claim: the owner’s queue shows each claim with the domain the account proved, how, and the domain the site knows');
+  r = await adm('POST', 'claims/' + evilClaim + '/reject', { reason: 'crypto-com.dev is not Crypto.com’s domain.' });
+  eq([r.status, (await call(env, 'GET', '/api/claims', { token: evil })).body.claims[0].status, (await call(env, 'GET', '/api/claims', { token: evil })).body.claims[0].reason], [200, 'rejected', 'crypto-com.dev is not Crypto.com’s domain.'],
+    'Claim: a rejected claim says why on the account');
+  r = await adm('POST', 'claims/' + harveyClaim + '/approve'); eq([r.status, (await call(env, 'GET', '/api/claims', { token: harvey })).body.claims[0].status], [200, 'verified'], 'Claim: an approved one is verified');
+  r = await adm('POST', 'claims/' + harveyClaim + '/approve'); eq(r.status, 404, 'Claim: approving twice finds nothing to approve');
+  // views and clicks on "Apply" of the claimed company's job pages
+  const hitC = (ip, job, kind, company = 'Stripe') => call(env, 'POST', '/api/public/hit', { ip, data: { job, kind, company } });
+  await hitC('7.1.1.1', 'staff-engineer-stripe', 'view'); await hitC('7.1.1.1', 'staff-engineer-stripe', 'view'); await hitC('7.1.1.2', 'staff-engineer-stripe', 'view');
+  await hitC('7.1.1.1', SITE + '/job/staff-engineer-stripe-2/', 'apply'); await hitC('7.1.1.3', 'staff-engineer-harvey', 'view', 'Harvey'); await hitC('7.1.1.4', 'designer-acme', 'view');
+  await hitC('7.1.1.5', 'staff-engineer-stripe', 'view', 'Harvey'); await hitC('7.1.1.6', 'lead-crypto-com', 'view', 'Crypto.com');
+  r = await call(env, 'GET', '/api/claims/' + stripeClaim + '/stats', { token: stripe });
+  eq(r.body.jobs.map((j) => [j.page, j.views, j.applies, j.by_day.length, j.by_day.at(-1).views]), [[SITE + '/job/staff-engineer-stripe/', 2, 0, 14, 2], [SITE + '/job/staff-engineer-stripe-2/', 0, 1, 14, 0]],
+    'Claim: the company sees views and clicks on "Apply" per job page, each visitor once a day, only on pages whose address ends with its own name');
+  eq([await one(env, "SELECT COUNT(*) FROM company_hits WHERE company_key = 'crypto.com'"), await one(env, "SELECT COUNT(*) FROM company_hits WHERE company_key = 'harvey'")], [0, 1],
+    'Claim: nothing is counted for a company whose page nobody manages, nor for a page that names another company');
+  eq((await call(env, 'GET', '/api/claims/' + stripeClaim + '/stats', { token: harvey })).status, 404, 'Claim: another account cannot read them');
+  await adm('POST', 'accounts/' + (await one(env, "SELECT id FROM users WHERE email = 'talent@stripe.com'")) + '/ban');
+  eq([await one(env, "SELECT COUNT(*) FROM company_claims WHERE company = 'Stripe'"), (await call(env, 'GET', '/api/public/export.json')).body.claimed.map((c) => c.company)], [0, ['Harvey']], 'Claim: a banned account loses its claims');
+  r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'cto@stripe.com'), data: { company: 'Stripe' } }); eq(r.body.claim.status, 'verified', 'Claim: and the company can be claimed again by its own people');
+  globalThis.fetch = realFetch;
+}
+
+/* ---- 32. The job records as the alert job reads them (src/records.mjs over data/jobs.db, the shape records.py writes) ---- */
+{
+  const { DatabaseSync } = await import('node:sqlite'), { mkdtempSync, rmSync } = await import('node:fs'), os = await import('node:os');
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'hrn-records-')), file = path.join(dir, 'jobs.db'), { openRecords } = await import('../src/records.mjs');
+  eq([openRecords(file).watermark(), openRecords(file).newSince('2026-11-14T00:00:00Z')], ['', []], 'Records: no file, no jobs (the run waits for the first upload)');
+  const db = new DatabaseSync(file);
+  db.exec('CREATE TABLE jobs (slug TEXT PRIMARY KEY, id TEXT NOT NULL, active INTEGER NOT NULL, company TEXT NOT NULL, cat TEXT NOT NULL, first_seen TEXT NOT NULL, rec TEXT NOT NULL, descr TEXT NOT NULL)');
+  const put = (slug, active, seen, at, extra = {}) => db.prepare('INSERT INTO jobs VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(slug, 'x-' + slug, active, 'Acme', 'engineering', seen,
+    JSON.stringify({ slug, title: 'T ' + slug, company: 'Acme', location: 'Berlin', remote: false, salary: '', usd: [1, 2], places: ['berlin'], cat: 'engineering', tags: ['Go'], first_seen: seen, first_seen_at: at, desc: 'long text', ...extra }), '<p>long</p>');
+  put('a', 1, '2026-11-14', '2026-11-14T10:17:00Z'); put('b', 1, '2026-11-15', '2026-11-15T01:17:00Z'); put('c', 1, '2026-11-15', '2026-11-15T02:17:00Z'); put('d', 0, '2026-11-15', '2026-11-15T03:17:00Z'); put('e', 1, '2026-11-13', '');
+  db.close();
+  const R = openRecords(file), since = R.newSince('2026-11-14T23:00:00Z');
+  eq([R.watermark(), since.map((j) => j.slug), Object.keys(since[0]).sort()], ['2026-11-15T03:17:00Z', ['b', 'c'], ['cat', 'company', 'first_seen_at', 'location', 'places', 'remote', 'salary', 'slug', 'tags', 'tg', 'title', 'usd']],
+    'Records: the newest first_seen_at, and the open jobs first seen after a moment, with only what a letter needs');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+/* ---- 33. The settings on our own server (src/config.mjs): payments stay off, PAY_MODE is refused, mail is on with a password ---- */
+{
+  const { readEnvFile, productionEnv, describeEnv } = await import('../src/config.mjs'), { writeFileSync, mkdtempSync, rmSync } = await import('node:fs'), os = await import('node:os');
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'hrn-env-')), file = path.join(dir, 'api.env');
+  writeFileSync(file, '# settings\nSITE_URL=https://jobs.example\nADMIN_TOKEN="tok en"\nexport SMTP_PASS=\'p#ss word\'\nMAIL_DAILY_CAP=200  # a comment\nbroken line\nCRYPTOMUS_MERCHANT=m\nCRYPTOMUS_API_KEY=k\nPLUS_LIVE=1\nDB_FILE=' + path.join(dir, 'api.db') + '\n');
+  const vars = readEnvFile(file);
+  eq([vars.SITE_URL, vars.ADMIN_TOKEN, vars.SMTP_PASS, vars.MAIL_DAILY_CAP, vars.broken], ['https://jobs.example', 'tok en', 'p#ss word', '200', undefined], 'Settings: KEY=value lines, quotes and comments as a shell would read them');
+  let env = productionEnv(vars, { serverDir: path.join(here, '..') });
+  eq([env.CRYPTOMUS_MERCHANT, env.CRYPTOMUS_API_KEY, env.PLUS_LIVE, env.API_URL, env.SITE_ORIGINS, env.SITE_INTERNAL, env.DUPLICATE_URL, env.MAIL.cap, env.MAIL_FROM],
+    [undefined, undefined, '0', 'https://jobs.example', 'https://jobs.example', 'http://127.0.0.1:8790', 'http://127.0.0.1:8790/api/check-duplicate', 200, 'Jobs Every Hour <support@jobseveryhour.com>'],
+    'Settings: payment keys in the file are dropped and Plus is not for sale until PAYMENTS_LIVE=1; the API is on the site’s own address; mail is on');
+  ok(!describeEnv(env).includes('p#ss') && !describeEnv(env).includes('tok en') && describeEnv(env).includes('payments off'), 'Settings: the line written to the log at start names what is on and no secret');
+  env.DB.close();
+  env = productionEnv({ ...vars, SMTP_PASS: '' }, { serverDir: path.join(here, '..') });                 // no mail here: nothing may try to reach a real mail server
+  let r = await call(env, 'GET', '/api/public/products'); eq([r.body.payments, r.body.products.some((p) => p.group === 'plus')], ['off', false], 'Settings: the site is told payments are off');
+  const tok = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'boss@jobs.example', password: PASS } })).body.token;
+  await env.DB.prepare('UPDATE users SET confirmed_at = 1').run();
+  r = await call(env, 'POST', '/api/orders', { token: tok, data: { product: 'pack5' } });
+  eq([r.status, r.body.error], [503, 'payments_off'], 'Settings: nobody can be charged: an order is refused');
+  env.DB.close();
+  env = productionEnv({ ...vars, PAYMENTS_LIVE: '1' }, { serverDir: path.join(here, '..') });
+  eq([env.CRYPTOMUS_MERCHANT, env.PLUS_LIVE], ['m', '1'], 'Settings: PAYMENTS_LIVE=1 is the one switch that turns payments on');
+  env.DB.close();
+  let e = null; try { productionEnv({ ...vars, PAY_MODE: 'test' }, { serverDir: path.join(here, '..') }); } catch (x) { e = x; }
+  ok(e && /PAY_MODE/.test(e.message), 'Settings: PAY_MODE (the fake checkout of dev.mjs) is refused on the server');
+  env = productionEnv({ DB_FILE: path.join(dir, 'b.db') }, { serverDir: path.join(here, '..') });
+  ok(!env.MAIL && env.SITE_URL === 'https://jobseveryhour.com', 'Settings: without SMTP_PASS mail is off; the site is jobseveryhour.com unless told otherwise');
+  env.DB.close();
+  rmSync(dir, { recursive: true, force: true });
+}
+await smtpServer.close();
+
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
 
 console.log(`${passed} passed, ${failed} failed`);

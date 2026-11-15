@@ -267,3 +267,82 @@ CREATE TABLE IF NOT EXISTS meta (
   k TEXT PRIMARY KEY,
   v TEXT NOT NULL
 );
+
+-- ---------------------------------------------------------------- added 15 Nov 2026: mail, job alerts, claimed company pages
+
+-- Every letter the mailer (src/mail.js) handed to the mail server, or held back: when, to whom, what kind (confirm, reset, device,
+-- alert_confirm, alert ...), the result (sent | failed | capped), how many attempts, the server's last answer and the Message-ID.
+-- Never the subject or the text. Kept MAIL_LOG_DAYS (30) days; the cron deletes older rows. The daily cap is counted from it.
+CREATE TABLE IF NOT EXISTS mail_log (
+  id TEXT PRIMARY KEY,
+  at INTEGER NOT NULL,
+  to_addr TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  code INTEGER NOT NULL DEFAULT 0,
+  reply TEXT NOT NULL DEFAULT '',
+  message_id TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS mail_log_at ON mail_log (at, status);
+
+-- A job alert: an address and a saved search (src/alerts.js). status: pending (the confirmation link was sent, nothing else is) |
+-- active (the address confirmed it). An alert that is unsubscribed is deleted, not kept; a pending one is deleted after 7 days.
+-- q: the words (title, company, skills); cat: a category slug (/jobs/<cat>/); loc: a place slug (/locations/<loc>/); remote: 1 = remote
+-- jobs only; sal: the least yearly pay in US dollars (0: any; above 0 only jobs that state pay reaching it); freq: daily | weekly.
+-- due_at: when it is next looked at; seen_through: the newest first_seen_at (ISO time, UTC) of the job records it was last matched
+-- against, so every job is offered once. letters: how many were sent; fails: letters the mail server refused for good in a row
+-- (three end the alert). Nothing about the visitor who asked is kept here (the limit on sign-ups per visitor lives in rate).
+CREATE TABLE IF NOT EXISTS alerts (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  q TEXT NOT NULL DEFAULT '',
+  cat TEXT NOT NULL DEFAULT '',
+  loc TEXT NOT NULL DEFAULT '',
+  remote INTEGER NOT NULL DEFAULT 0,
+  sal INTEGER NOT NULL DEFAULT 0,
+  freq TEXT NOT NULL DEFAULT 'daily',
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at INTEGER NOT NULL,
+  confirmed_at INTEGER NOT NULL DEFAULT 0,
+  due_at INTEGER NOT NULL DEFAULT 0,
+  seen_through TEXT NOT NULL DEFAULT '',
+  last_sent_at INTEGER NOT NULL DEFAULT 0,
+  letters INTEGER NOT NULL DEFAULT 0,
+  fails INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS alerts_email ON alerts (email);
+CREATE INDEX IF NOT EXISTS alerts_due ON alerts (status, due_at);
+CREATE UNIQUE INDEX IF NOT EXISTS alerts_same ON alerts (email, q, cat, loc, remote, sal);   -- the same search twice for one address is one alert
+
+-- "Claim your company page": an employer account says a company the site reads from its hiring system is theirs. company_key is the
+-- name as compared (companyKey), company the name as the site shows it, domain the company domain the account proved (users.domain).
+-- status: pending (a person looks first) | verified | rejected. One verified claim per company (the unique index), any number of
+-- pending ones. reason: why it waits (or why it was turned down, for the account to read). site: the company's own site as the site
+-- knows it (logos.json), '' when unknown.
+CREATE TABLE IF NOT EXISTS company_claims (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  company TEXT NOT NULL,
+  company_key TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  site TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',
+  reason TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  decided_at INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS claims_verified ON company_claims (company_key) WHERE status = 'verified';
+CREATE UNIQUE INDEX IF NOT EXISTS claims_mine ON company_claims (user_id, company_key);
+CREATE INDEX IF NOT EXISTS claims_status ON company_claims (status, created_at);
+
+-- Views and clicks on "Apply" for the jobs of a claimed company that the site reads from its hiring system, per job page (slug) and
+-- day: the same two counters as job_hits, counted the same way (hit_seen, once per visitor and day). Only while the claim is verified.
+CREATE TABLE IF NOT EXISTS company_hits (
+  company_key TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  day TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0,
+  applies INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (company_key, slug, day)
+);

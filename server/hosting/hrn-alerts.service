@@ -1,0 +1,23 @@
+# Jobs Every Hour: sends the job alerts that are due (server/alerts.mjs) and stops. Started by hrn-alerts.timer every hour.
+# Same user, settings and database as hrn-api; reads the job records in /srv/hrn/app/data/jobs.db.
+[Unit]
+Description=Jobs Every Hour job alerts
+After=network.target hrn-api.service
+
+[Service]
+Type=oneshot
+User=hrnapi
+Group=hrnapi
+WorkingDirectory=/srv/hrn/api
+Environment=API_ENV=/srv/hrn/api.env
+ExecStart=NODEBIN --no-warnings /srv/hrn/api/server/alerts.mjs
+TimeoutStartSec=50min
+MemoryMax=768M
+CPUQuota=50%
+Nice=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/hrn/api/data
+PrivateTmp=true
+PrivateDevices=true
