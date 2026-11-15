@@ -237,8 +237,8 @@ Seen there and not here, ranked by fit for a site without accounts:
 
 | # | Gap | Wellfound page | Our data supports it? | Status |
 |---|---|---|---|---|
-| 1 | Role x city and role x remote pages, linked to each other | /role/l/<role>/<city>, /role/r/<role> | Yes (roles, places, remote) | We have them for the first 25 roles; widen with a minimum job count |
-| 2 | Company directories: by city, A-Z, and an auto-dated "Companies hiring now, <month>" | /browse/startups-hiring, /browse/tech-hubs | Yes (industry filter: no) | Month in the title and heading of /companies/ done 15 Nov; by-city directory queued |
+| 1 | Role x city and role x remote pages, linked to each other | /role/l/<role>/<city>, /role/r/<role> | Yes (roles, places, remote) | Done 15 Nov: every role, in every place with 150+ jobs, where 25 or more of its jobs are (about 1,100 pages more) |
+| 2 | Company directories: by city, A-Z, and an auto-dated "Companies hiring now, <month>" | /browse/startups-hiring, /browse/tech-hubs | Yes (industry filter: no) | Month in the title and heading of /companies/ done 15 Nov; by-place directory done 15 Nov: /locations/<place>/companies/ for 82 places with 20+ employers |
 | 3 | "Growing fast" mark and a "Trending companies" block | /jobs | Posting dates yes; a month-on-month comparison needs ~2 months of our history (from 12 Nov) | Queued |
 | 4 | Self-updating collections: entry-level, internships, $200K+, no experience needed, visa sponsorship | /job-collections (newest list from Aug 2023) | Mostly (level, years asked, type, pay); visa needs the description | We have most lists separately; a collections hub is queued |
 | 5 | Work arrangement labels: remote anywhere / remote in one country / hybrid / office | job rows | Partly (remote, hybrid, "anywhere") | Queued |
