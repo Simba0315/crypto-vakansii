@@ -2,7 +2,7 @@
 // (server/prod.mjs), on a developer machine (server/dev.mjs) and in the tests, with the same SQL.
 //
 // On a file the database is opened in WAL mode: readers never wait for the writer, and two programs can share it. The API
-// (hrn-api.service) and the alert job (hrn-alerts.service) both write to /srv/hrn/api/data/api.db; when one is writing, the other
+// (hrn-api.service) and the alert job (hrn-alerts.service) both write to /var/lib/hrn-api/api.db; when one is writing, the other
 // waits up to busy_timeout milliseconds instead of failing. Statements run synchronously, so nothing of another request can run in
 // the middle of a batch (see batch).
 import { DatabaseSync } from 'node:sqlite';

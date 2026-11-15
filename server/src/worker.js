@@ -174,9 +174,12 @@ async function limit(env, key, max, windowSec) {
 const clientIp = (req) => req.headers.get('CF-Connecting-IP') || 'local';
 /* What is kept of a job seeker's address: a hash of it with a salt that exists only in this database (made on first use by a single
    statement, so two requests cannot make two salts). Enough to count one address once and to limit it; not enough to say whose it was. */
-async function ipHash(env, req) {
+async function ipHash(env, req, network = false) {
   const salt = await db(env, "INSERT INTO meta (k, v) VALUES ('ip_salt', ?) ON CONFLICT(k) DO UPDATE SET v = meta.v RETURNING v", rid('', 16)).first('v');
-  return (await sha256(salt + ':' + clientIp(req))).slice(0, 32);
+  // network: an IPv6 address counts by its /64, the block one household or one server is given, so a script cannot take a new
+  // address for every request
+  const ip = clientIp(req), key = network && ip.includes(':') ? ip.split(':').slice(0, 4).join(':') + '::/64' : ip;
+  return (await sha256(salt + ':' + key)).slice(0, 32);
 }
 /* The counters behind /api/public/transparency.json: one row per month and name, raised by a single statement. */
 const monthOf = (ts) => new Date(ts * 1000).toISOString().slice(0, 7);
@@ -1842,8 +1845,9 @@ const PAGE_CSS = ':root{color-scheme:light dark;--bg:#fff;--text:#121110;--muted
   'button{font:inherit;font-weight:600;border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink);border-radius:999px;padding:11px 22px;cursor:pointer}' +
   'button.ghost{background:transparent;color:var(--text);border-color:var(--line)}button:focus-visible,a:focus-visible{outline:3px solid var(--ac);outline-offset:2px}';
 function htmlPage(env, title, inner, status = 200) {
-  return new Response('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">' +
-    '<title>' + esc(title) + ' | ' + esc(env.SITE_NAME || 'Jobs Every Hour') + '</title><style>' + PAGE_CSS + '</style></head><body><main><p class="brand"><a href="' + esc(env.SITE_URL) + '/">' +
+  inner = inner.replace(/<a href=/g, '<a rel="noreferrer" href=');          // the address of these pages carries a token: it goes nowhere else
+  return new Response('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer">' +
+    '<title>' + esc(title) + ' | ' + esc(env.SITE_NAME || 'Jobs Every Hour') + '</title><style>' + PAGE_CSS + '</style></head><body><main><p class="brand"><a rel="noreferrer" href="' + esc(env.SITE_URL) + '/">' +
     esc(env.SITE_NAME || 'Jobs Every Hour') + '</a></p>' + inner + '</main></body></html>', { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" } });
 }
@@ -1851,8 +1855,12 @@ function htmlPage(env, title, inner, status = 200) {
 /* ---------------------------------------------------------------- job alerts: sign-up, confirmation, unsubscribe (rules in src/alerts.js)
    POST /api/alerts { email, q?, cat?, loc?, remote?, sal?, freq? } from the site's form, as JSON (the page's script) or as a plain form
    post (no script: the answer is then a page). The answer is the same whether or not the address already has alerts, so it tells nobody
-   who is subscribed; only the fifth alert of one address is refused with a reason. A hidden field people do not see ("website") is
-   filled in by programs only: such a sign-up is answered as usual and dropped. */
+   who is subscribed; only a sixth active alert of one address is refused with a reason. A hidden field people do not see ("website") is
+   filled in by programs only: such a sign-up is answered as usual and dropped.
+   Because anyone can type anyone's address, confirmation letters are held to little: three a day to one address, CONFIRMS_PER_HOUR an
+   hour in all, sign-ups per visitor counted by the /64 of an IPv6 address, and half of the day's mail cap at most (share 0.5), so a flood
+   of sign-ups can never take the room of password links or of the alerts people confirmed. */
+const CONFIRMS_PER_HOUR = 120;
 const ALERT_SENT = 'Check your inbox: we sent a link to confirm this alert. Nothing is sent until you open it.';
 const toAlertError = (err) => (err instanceof AlertInputError ? bad(err.code, err.message) : err);
 async function alertSignup(env, req, ctx) {
@@ -1873,7 +1881,7 @@ async function alertSignup(env, req, ctx) {
 }
 async function alertCreate(env, req, ctx, b) {
   if (!env.MAIL || typeof env.MAIL.send !== 'function') throw bad('mail_off', 'Email alerts are not switched on yet.', 503);
-  const who = await ipHash(env, req);
+  const who = await ipHash(env, req, true);
   await limit(env, 'alert-ip:' + who, SIGNUPS_PER_IP_HOUR, 3600);
   const email = cleanEmail(b.email);
   if (!email || !/^[\x21-\x7e]+$/.test(email)) throw bad('email', 'Enter a valid email address.');
@@ -1883,9 +1891,10 @@ async function alertCreate(env, req, ctx, b) {
   if (typeof b.website === 'string' && b.website.trim()) return done;
   const t = now(), same = await db(env, 'SELECT * FROM alerts WHERE email = ? AND q = ? AND cat = ? AND loc = ? AND remote = ? AND sal = ?', email, a.q, a.cat, a.loc, a.remote, a.sal).first();
   if (same && same.status === 'active') return done;                 // already on: nothing changes, nothing is sent
-  if (!same && Number(await db(env, 'SELECT COUNT(*) AS n FROM alerts WHERE email = ?', email).first('n')) >= ALERTS_PER_EMAIL)
+  if (!same && Number(await db(env, "SELECT COUNT(*) AS n FROM alerts WHERE email = ? AND status = 'active'", email).first('n')) >= ALERTS_PER_EMAIL)
     throw bad('too_many', 'This address has ' + ALERTS_PER_EMAIL + ' job alerts, the most one address can have. Unsubscribe from one of them (a link in each letter) to add another.', 409);
   if (!(await allowed(env, 'alert-mail:' + email, CONFIRMS_PER_EMAIL_DAY, DAY))) return done;      // no more than a few confirmation letters a day to one address, whoever asks
+  if (!(await allowed(env, 'alert-mail-all', CONFIRMS_PER_HOUR, 3600))) return done;                 // and not many an hour in all
   let id = same ? same.id : rid('a_');
   if (same) await db(env, 'UPDATE alerts SET freq = ?, created_at = ? WHERE id = ?', a.freq, t, id).run();
   else {
@@ -1894,7 +1903,7 @@ async function alertCreate(env, req, ctx, b) {
     } catch (err) { if (/UNIQUE/i.test(String(err && err.message))) return done; throw err; }   // the same sign-up twice at the same moment
   }
   const letter = await confirmLetter(env, { ...a, id });
-  await later(ctx, sendMail(env, email, letter.subject, letter.text, { kind: 'alert_confirm' }));
+  await later(ctx, sendMail(env, email, letter.subject, letter.text, { kind: 'alert_confirm', share: 0.5 }));
   if (env.PAY_MODE === 'test') done.confirm_url = await confirmLink(env, id);      // developer machines only: there is no mailbox to read the link from
   return done;
 }
@@ -1914,7 +1923,8 @@ async function alertConfirm(env, req, url) {
   }
   if (a.status === 'pending') {
     const t = now();
-    await db(env, "UPDATE alerts SET status = 'active', confirmed_at = ?, seen_through = ?, due_at = ? WHERE id = ? AND status = 'pending'", t, isoTime(t), t + PERIOD[a.freq] - 1800, id).run();
+    // the jobs first seen in the hour before count as new too: one read just before can reach the records only after this moment
+    await db(env, "UPDATE alerts SET status = 'active', confirmed_at = ?, seen_through = ?, due_at = ? WHERE id = ? AND status = 'pending'", t, isoTime(t - 3600), t + PERIOD[a.freq] - 1800, id).run();
   }
   return htmlPage(env, 'Your job alert is on', '<h1>Your job alert is on</h1><p class="what">' + esc(describe(a)) + '</p><p>The first letter comes ' + (a.freq === 'weekly' ? 'in a week' : 'tomorrow') +
     ' if new jobs match it, then ' + freqWords(a) + '. Each letter has a link to unsubscribe in one click.</p><p><a href="' + esc(searchLink(env.SITE_URL, a)) + '">See the jobs that match it now</a></p>');
@@ -1937,7 +1947,7 @@ async function alertUnsubscribe(env, req, url) {
   const p = /^application\/x-www-form-urlencoded/i.test(req.headers.get('Content-Type') || '') ? new URLSearchParams(text) : new URLSearchParams();
   const freq = oneClick ? '' : p.get('freq'), all = !oneClick && p.get('all') === '1';
   if (a && (freq === 'daily' || freq === 'weekly')) {
-    await db(env, 'UPDATE alerts SET freq = ? WHERE id = ?', freq, id).run();
+    await db(env, 'UPDATE alerts SET freq = ?, due_at = MIN(due_at, ?) WHERE id = ?', freq, now() + PERIOD[freq] - 1800, id).run();      // daily now: the next letter within a day
     return htmlPage(env, 'Changed', '<h1>From now on: ' + freq + '</h1><p class="what">' + esc(describe(a)) + '</p><p>The alert comes ' + freqWords({ ...a, freq }) + '.</p>' + toSite(env));
   }
   if (a) await (all ? db(env, 'DELETE FROM alerts WHERE email = ?', a.email) : db(env, 'DELETE FROM alerts WHERE id = ?', id)).run();
@@ -2260,7 +2270,8 @@ async function admin(env, req, seg, m) {
     const email = cleanEmail((await body(req)).email);
     if (!email) throw bad('email', 'Give the email address to erase.');
     const u = await db(env, 'SELECT id FROM users WHERE email = ?', email).first(), alerts = await db(env, 'SELECT COUNT(*) AS n FROM alerts WHERE email = ?', email).first('n');
-    const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email)];
+    const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email),
+      db(env, 'DELETE FROM rate WHERE k LIKE ?', '%:' + email)];                // limits kept under the address (sign-in, new password, alert letters)
     if (u) steps.push(...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
       ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id), db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
       db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));

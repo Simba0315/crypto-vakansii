@@ -1,4 +1,4 @@
-// The settings of the API on our own server, read from one file (/srv/hrn/api.env), and the env object the worker gets from them.
+// The settings of the API on our own server, read from one file (/etc/hrn-api/api.env), and the env object the worker gets from them.
 // Used by server/prod.mjs (the API) and server/alerts.mjs (the alert job), so both see the same database, mail and site.
 //
 // The file is KEY=value lines (# starts a comment, quotes around a value are taken off), owned by root and readable by the service's
@@ -43,7 +43,7 @@ export function productionEnv(vars, { serverDir }) {
   if (vars.PAY_MODE) throw new Error('PAY_MODE must not be set on the server (it is for server/dev.mjs only)');
   const site = String(vars.SITE_URL || 'https://jobseveryhour.com').replace(/\/+$/, '');
   const internal = String(vars.SITE_INTERNAL || 'http://127.0.0.1:8790').replace(/\/+$/, '');
-  const dbFile = vars.DB_FILE || '/srv/hrn/api/data/api.db';
+  const dbFile = vars.DB_FILE || '/var/lib/hrn-api/api.db';
   const DB = new D1(dbFile).applySchema(path.join(serverDir, 'schema.sql'));
   const env = {
     DB, SITE_URL: site, SITE_ORIGINS: vars.SITE_ORIGINS || new URL(site).origin, API_URL: String(vars.API_URL || site).replace(/\/+$/, ''), SITE_NAME: vars.SITE_NAME || 'Jobs Every Hour',

@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,073 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,093 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -39,20 +39,24 @@ must stay that way. The tests fake LinkedIn, the DNS resolver and the AI provide
 
 | File | What it does |
 |---|---|
-| `prod.mjs` | the API on 127.0.0.1:8787: the worker on Node 22, settings from `/srv/hrn/api.env`, the worker's cron every ten minutes, letters sent after the answer has gone |
+| `prod.mjs` | the API on 127.0.0.1:8787: the worker on Node 22, settings from `/etc/hrn-api/api.env`, the worker's cron every ten minutes, letters sent after the answer has gone |
 | `alerts.mjs` | one run of the job alerts (`--dry`: count only); `hrn-alerts.timer` starts it every hour at about :50 |
-| `mail-test.mjs` | sends one test letter through the mail settings: `sudo -u hrnapi /usr/local/bin/node --no-warnings /srv/hrn/api/server/mail-test.mjs you@example.com` |
+| `mail-test.mjs` | sends one test letter through the mail settings: `sudo -u hrnapi /usr/local/bin/node --no-warnings /opt/hrn-api/server/mail-test.mjs you@example.com` |
 | `src/config.mjs` | reads `api.env` and makes the worker's env: the database file, the mailer, the site's own addresses; payments off unless `PAYMENTS_LIVE=1` |
 | `src/d1.mjs` | the D1 stand-in on `node:sqlite` (moved here from `test/d1.mjs`); a file is opened in WAL mode with a busy timeout, so the API and the alert job share it |
 | `src/mail.js` | the SMTP client (`node:tls` only: TLS on 465, AUTH LOGIN) and the mailer: daily cap, retries with backoff, the log of letters |
 | `src/alerts.js` | job alerts: what a sign-up may say, matching, the letters, the hourly run |
 | `src/records.mjs` | reads the job records (`data/jobs.db`, written by `records.py`) for the alert job, read-only |
-| `hosting/hrn-api.service`, `hrn-alerts.service`, `hrn-alerts.timer` | the systemd units (user `hrnapi`, writes only `/srv/hrn/api/data`) |
+| `hosting/hrn-api.service`, `hrn-alerts.service`, `hrn-alerts.timer` | the systemd units (user `hrnapi`, writes only `/var/lib/hrn-api`) |
+
+Where it lives: code in `/opt/hrn-api/server`, settings in `/etc/hrn-api/api.env`, the database in `/var/lib/hrn-api/api.db`. Not under
+`/srv/hrn`: that folder belongs to the user `hrn` (the page server, the hourly upload, `live.py`), which could rename what is in it and so
+swap the API's code or settings for its own; these three places only root can change.
 | `hosting/nginx-hrn-api.conf` | nginx: the API's own addresses only; `/api/`, `/api/v1/*.json` and `/api/openapi.json` stay files, `/api/search`, `/api/latest` and `/api/check-duplicate` stay with `serve.py` |
 | `hosting/api-setup.sh` | installs or updates all of it, as root; takes back the code if the API does not start and the nginx files if nginx refuses them |
 | `hosting/api-secret.sh` | writes one setting (the mailbox password) into `api.env` without it showing anywhere, then restarts the API |
 
-Settings in `/srv/hrn/api.env` (KEY=value; root and the service user only):
+Settings in `/etc/hrn-api/api.env` (KEY=value; root and the service user only):
 
 | Key | Default | What |
 |---|---|---|
@@ -63,7 +67,7 @@ Settings in `/srv/hrn/api.env` (KEY=value; root and the service user only):
 | `MAIL_DAILY_CAP` | `300` | letters a day (UTC) at most; job alerts stop at 80% of it, so confirmation links always have room. Beget publishes no number; raise it only after asking them |
 | `ADMIN_TOKEN` | made at random by `api-setup.sh` | the key to `/api/admin/...` |
 | `PAYMENTS_LIVE` | none: payments off | `1` switches payments on (the owner, last); only then are `CRYPTOMUS_MERCHANT`, `CRYPTOMUS_API_KEY` and `PLUS_LIVE` read |
-| `DB_FILE` | `/srv/hrn/api/data/api.db` | the database |
+| `DB_FILE` | `/var/lib/hrn-api/api.db` | the database |
 | `SITE_INTERNAL`, `DUPLICATE_URL` | `http://127.0.0.1:8790`, its `/api/check-duplicate` | the page server on the same machine (`DUPLICATE_URL=off` stops the duplicate check) |
 | `COMPANY_SITES_FILE`, `RECORDS_FILE` | `/srv/hrn/app/logos.json`, `/srv/hrn/app/data/jobs.db` | what the build uploads every hour: companies' own sites, the job records |
 | `PORT`, `HOST` | `8787`, `127.0.0.1` | where the API listens |
@@ -80,9 +84,12 @@ sends an address and a search; the alert job mails the new jobs that match. Rule
 - `POST /api/alerts` `{ email, q?, cat?, loc?, remote?, sal?, freq? }`, as JSON or as a plain form post (then the answer is a page).
   `q` is cleaned to at most six words of letters, digits, `+` and `#` (C++, C#; a dot only in .NET, Node.js and the like), so no address can
   be planted in a letter to a stranger; `cat` must be a category slug, `loc` a place slug of the site, `sal` the least yearly pay in US
-  dollars, `freq` `daily` or `weekly`. The answer is the same whether or not the address already has alerts; only a sixth alert of one
-  address is refused (409 `too_many`). A hidden field (`website`) filled in means a program: answered as usual, dropped. Limits: ten
-  sign-ups an hour per visitor, three confirmation letters a day per address. Without mail: 503 `mail_off`.
+  dollars, `freq` `daily` or `weekly`. The answer is the same whether or not the address already has alerts; only a sixth
+  active alert of one address is refused (409 `too_many`; alerts nobody confirmed do not count, so nobody can lock an address out). A
+  hidden field (`website`) filled in means a program: answered as usual, dropped. Because anyone can type anyone's address, confirmation
+  letters are held to little: ten sign-ups an hour per visitor (an IPv6 address counts by its /64), three confirmation letters a day per
+  address, 120 an hour in all, and half of the day's mail cap at most; their subject leaves the words of the search out, and a word with
+  five digits or more (a phone number, an amount) is not taken. Without mail: 503 `mail_off`.
 - **Double opt-in.** The alert is `pending` and only the confirmation link (`/api/alerts/confirm?a=<id>&t=<token>`) can make it `active`.
   Opening the link shows a page with a button; the button's POST confirms (mail scanners open links by themselves). An unconfirmed
   alert is deleted after 7 days. Tokens are an HMAC of the alert id under a random key kept in the database: nothing to store, nothing
@@ -96,8 +103,13 @@ sends an address and a search; the alert job mails the new jobs that match. Rule
   dollars at or above `sal` (a job without pay is out when pay is asked for), and every word in the title, company or skills as a whole
   word with its usual endings ("engineer" finds "Engineering", "java" does not find "JavaScript"). Posts from Telegram channels are never mailed.
 - **The run** (`alerts.mjs`, hourly): each due alert gets the jobs first seen after its `seen_through` and up to the newest
-  `first_seen_at` in `data/jobs.db`, then moves on to that moment, so each job is offered once even when an upload is late. A letter
-  held back by the daily cap ends the run and nothing moves on; an address the mail server refuses for good three times loses its alert.
+  `first_seen_at` in `data/jobs.db`, then moves on to that moment (never back, should an older file turn up), so each job is offered
+  once even when an upload is late. At confirmation `seen_through` is an hour before the moment, so a job read just before but uploaded
+  just after is not missed. Each letter is tried once, and what happens next depends on whose fault it is: the daily cap or a failure of
+  the mail server itself (no connection, our login or sender refused) ends the run with nothing moved, so a bad hour or a changed password
+  costs no subscriber anything; a refusal for that address (mailbox full, no such user) makes the alert wait for its next period with the
+  jobs kept, and ends it after 3 final refusals in a row or 7 of any kind; no answer after the letter itself counts as sent (it may have
+  arrived) and ends the run. Each alert is read again just before its letter, so one unsubscribed during the run gets nothing.
 - A signed-in account sees the alerts of its own confirmed address: `GET /api/alerts`, `DELETE /api/alerts/<id>`.
 
 ## Is this job already on the site?
@@ -322,7 +334,7 @@ hrn "$HRN_API/api/admin/audience"                      # how many job seekers, e
 hrn -X POST -H 'Content-Type: application/json' -d '{"email":"person@example.com"}' "$HRN_API/api/admin/erase"   # a deletion request to privacy@
 ```
 
-On the server the token is in `/srv/hrn/api.env`; `sudo grep ^ADMIN_TOKEN= /srv/hrn/api.env` shows it to the owner (copy it into the
+On the server the token is in `/etc/hrn-api/api.env`; `sudo grep ^ADMIN_TOKEN= /etc/hrn-api/api.env` shows it to the owner (copy it into the
 password manager, not into a chat).
 
 How to read the queue. For each job look at `reason` (why it waits), open `apply_url` yourself and check that the page is this job
@@ -494,9 +506,12 @@ alerts nobody confirmed in 7 days.
 the link that confirms a new account (**without it nobody can post**), password resets, the notice of a sign-in from a new device, and
 job alerts (their confirmation links and the letters). On our own server `MAIL` is the mailer of `src/mail.js`, made by `src/config.mjs`
 once `SMTP_PASS` is in the settings: an SMTP client over TLS (port 465, AUTH LOGIN, the server's certificate checked) written with
-`node:tls` only, with a daily cap (`MAIL_DAILY_CAP`; job alerts stop at 80% of it), up to three retries with growing pauses for answers
-that may pass (4xx, a dropped connection, a time-out), none for a 5xx, and a log of every letter in `mail_log` (time, address, kind,
-result, attempts, the server's answer, Message-ID; never the subject or the text; kept 30 days). The tests run it against a fake mail
+`node:tls` only, with a daily cap (`MAIL_DAILY_CAP`; job alerts stop at 80% of it, alert confirmations at 50%), up to three retries
+with growing pauses for answers that may pass (4xx, a dropped connection, a time-out) for account letters, none for a 5xx and none for
+bulk letters (the alert run reschedules those itself, so one slow mailbox holds up nobody), and a log of every letter in `mail_log` (time,
+address, kind, result, attempts, the server's answer, Message-ID; never the subject or the text; kept 30 days). The answer to the letter
+itself may take up to 5 minutes (content scanning); with none, the letter counts as "unknown", is not sent again and counts against the
+cap. A log row that cannot be written never sends a letter twice. Non-ASCII subjects are folded into encoded words of 76 characters. The tests run it against a fake mail
 server on 127.0.0.1 with a certificate made when they run (`test/fake-smtp.mjs`, `test/cert.mjs`). On Cloudflare, bind `MAIL` to anything
 with `send({ from, to, subject, text })` and set `MAIL_FROM`.
 

@@ -50,6 +50,7 @@ export function cleanWords(q) {
     if (!DOTTED.has(w) && !DOTTED.has('.' + w)) w = w.replace(/\./g, '');
     else if (DOTTED.has('.' + w)) w = '.' + w;
     w = w.replace(/[^\p{L}\p{N}+#.\-]/gu, '').slice(0, 30);
+    if ((w.match(/\d/g) || []).length >= 5) continue;                  // a phone number, an amount: not a job word (web3, s3, 3d stay)
     if (w && !STOP.has(w) && !words.includes(w)) words.push(w);
     if (words.length === 6) break;
   }
@@ -133,8 +134,9 @@ const siteHost = (env) => { try { return new URL(env.SITE_URL).hostname; } catch
 const siteName = (env) => String(env.SITE_NAME || 'Jobs Every Hour');
 
 /* ---------------------------------------------------------------- the letters */
+// The subject leaves out the words of the search: it is what shows in a stranger's list of letters if someone typed their address.
 export async function confirmLetter(env, a) {
-  return { subject: 'Confirm your job alert: ' + describe(a).slice(0, 90),
+  return { subject: 'Confirm your job alert' + (a.cat || a.loc || a.remote || a.sal ? ': ' + describe({ ...a, q: '' }).replace(/^All new jobs/, 'Jobs').slice(0, 90) : ''),
     text: 'Someone, we hope you, asked ' + siteName(env) + ' to email new jobs to this address:\n\n  ' + describe(a) + '\n  ' + (a.freq === 'weekly' ? 'Once a week' : 'Once a day') +
       ', at most ' + ALERT_MAX_JOBS + ' jobs in a letter, only when there are new ones.\n\nTo confirm, open this link and press the button on the page:\n' + await confirmLink(env, a.id) +
       '\n\nNothing is sent until you confirm. If you did not ask for this, ignore this letter: the request is deleted in ' + PENDING_DAYS + ' days.\n\n' +
@@ -159,11 +161,17 @@ export async function alertLetter(env, a, jobs, total) {
    after it, each a record (slug, title, company, location, remote, salary, usd, places, cat, tags, first_seen_at) } (records.mjs).
    For each active alert that is due, in order of due time: the jobs first seen after its seen_through and up to the watermark that
    match it, newest first, one per title and company. None: nothing is sent. Some: one letter with the newest ALERT_MAX_JOBS. Either
-   way the alert moves on to the watermark and is due again a day (a week) later. A letter held back by the daily cap ends the run
-   (the rest wait for the next one, nothing is lost); a letter the mail server refused for good (5xx) three times in a row ends the
-   alert. Pending alerts older than PENDING_DAYS are deleted first. */
+   way the alert moves on to the watermark (never back, should an older file turn up) and is due again a day (a week) later.
+   When a letter does not go:
+   - held back by the daily cap, or a failure of the mail server itself (no connection, our login refused, our sender refused): the run
+     ends and nothing moves, so the next run sends it; one bad hour costs nothing and no subscriber pays for it;
+   - refused for this address (its mailbox is full, does not exist): the alert waits for its next period with the jobs kept, and is
+     deleted after 3 such refusals in a row that were final (5xx), or 7 of any kind;
+   - no answer after the letter itself (status "unknown"): it may have arrived, so it counts as sent (no second copy) and the run ends.
+   An alert is read again just before its letter goes, so one unsubscribed while the run was under way gets nothing.
+   Pending alerts older than PENDING_DAYS are deleted first. */
 export async function runAlerts(env, records, { now = Math.floor(Date.now() / 1000), batch = 5000 } = {}) {
-  const db = (sql, ...args) => env.DB.prepare(sql).bind(...args), out = { due: 0, sent: 0, empty: 0, failed: 0, capped: false, dropped: 0, expired: 0 };
+  const db = (sql, ...args) => env.DB.prepare(sql).bind(...args), out = { due: 0, sent: 0, empty: 0, failed: 0, capped: false, stopped: '', dropped: 0, expired: 0 };
   out.expired = (await db("DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", now - PENDING_DAYS * DAY).run()).meta.changes;
   const due = (await db("SELECT * FROM alerts WHERE status = 'active' AND due_at <= ? ORDER BY due_at LIMIT ?", now, batch).all()).results;
   out.due = due.length;
@@ -174,7 +182,7 @@ export async function runAlerts(env, records, { now = Math.floor(Date.now() / 10
   const fresh = records.newSince(due.map(start).sort()[0]).filter((j) => j.first_seen_at && j.first_seen_at <= top)
     .sort((x, y) => (x.first_seen_at < y.first_seen_at ? 1 : x.first_seen_at > y.first_seen_at ? -1 : 0));
   for (const a of due) {
-    const from = start(a), tests = wordTests(a.q), seen = new Set(), hits = [];
+    const from = start(a), upto = top > from ? top : from, tests = wordTests(a.q), seen = new Set(), hits = [];
     for (const j of fresh) {
       if (j.first_seen_at <= from || !matches(a, j, tests)) continue;
       const k = (j.title + '\n' + j.company).toLowerCase();
@@ -182,23 +190,25 @@ export async function runAlerts(env, records, { now = Math.floor(Date.now() / 10
     }
     const next = Math.max(now, a.due_at) + PERIOD[a.freq] - SLACK;
     if (!hits.length) {
-      await db("UPDATE alerts SET seen_through = ?, due_at = ? WHERE id = ? AND status = 'active'", top, next, a.id).run();
+      await db("UPDATE alerts SET seen_through = ?, due_at = ? WHERE id = ? AND status = 'active'", upto, next, a.id).run();
       out.empty++; continue;
     }
+    if ((await db('SELECT status FROM alerts WHERE id = ?', a.id).first('status')) !== 'active') continue;      // unsubscribed meanwhile
     const l = await alertLetter(env, a, hits.slice(0, ALERT_MAX_JOBS), hits.length);
     const r = env.MAIL && typeof env.MAIL.send === 'function'
       ? await env.MAIL.send({ from: String(env.MAIL_FROM || ''), to: a.email, subject: l.subject, text: l.text, kind: 'alert', bulk: true, headers: l.headers })
       : { sent: false, status: 'no_mail' };
-    if (!r || r.sent !== false) {                                                    // a mailer that answers nothing has taken it
-      await db("UPDATE alerts SET seen_through = ?, due_at = ?, last_sent_at = ?, letters = letters + 1, fails = 0 WHERE id = ? AND status = 'active'", top, next, now, a.id).run();
-      out.sent++; continue;
+    if (!r || r.sent !== false || r.status === 'unknown') {                         // a mailer that answers nothing has taken it
+      await db("UPDATE alerts SET seen_through = ?, due_at = ?, last_sent_at = ?, letters = letters + 1, fails = 0 WHERE id = ? AND status = 'active'", upto, next, now, a.id).run();
+      out.sent++;
+      if (r && r.status === 'unknown') { out.stopped = 'no answer from the mail server after a letter'; break; }
+      continue;
     }
-    if (r.status === 'capped' || r.status === 'no_mail') { out.capped = r.status === 'capped'; break; }  // the rest wait for the next run
+    if (r.status === 'capped' || r.status === 'no_mail') { out.capped = r.status === 'capped'; out.stopped = r.status; break; }   // the rest wait for the next run
     out.failed++;
-    if (r.permanent) {
-      const f = await db("UPDATE alerts SET fails = fails + 1 WHERE id = ? RETURNING fails", a.id).first('fails');
-      if (Number(f) >= 3) { await db('DELETE FROM alerts WHERE id = ?', a.id).run(); out.dropped++; }
-    }
+    if (!r.rejected) { out.stopped = 'the mail server failed'; break; }               // not this address's fault: nothing moves, the next run tries again
+    const f = Number(await db("UPDATE alerts SET fails = fails + 1, due_at = ? WHERE id = ? RETURNING fails", next, a.id).first('fails'));
+    if ((r.permanent && f >= 3) || f >= 7) { await db('DELETE FROM alerts WHERE id = ?', a.id).run(); out.dropped++; }
   }
   return out;
 }

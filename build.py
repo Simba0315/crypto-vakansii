@@ -839,7 +839,7 @@ def alert_form(what, cat="", loc="", search=False):
             '<button class="btn primary" type="submit">Email me new jobs</button></div>'
             '<p class="alertf-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>'
             f'{hid}<p class="note" role="status" aria-live="polite" data-alert-out></p>'
-            f'<p class="note">Only your address and this search are kept, until you unsubscribe. <a href="{P}/privacy/#alerts">How alerts handle your address</a></p></form>')
+            f'<p class="note">We keep your address and this search until you unsubscribe, and a note of each letter for 30 days. <a href="{P}/privacy/#alerts">How alerts handle your address</a></p></form>')
 
 
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live=""):
@@ -4211,7 +4211,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         + "<p>When you ask for job alerts we keep your email address and the search you chose: the words, the category, the place, remote only or not, the least pay, "
           "and daily or weekly. We also keep when you asked and confirmed, when the last letter went, how many letters were sent, and up to which moment jobs were already offered to you (a time, not a list of jobs).</p>"
           "<ul><li><b>Double opt-in.</b> Nothing is sent until you open the confirmation link we mail to the address and press the button on that page. "
-          "A request nobody confirms is deleted after 7 days, and one address gets at most three confirmation letters a day, whoever asks for them.</li>"
+          "A request nobody confirms is deleted after 7 days, and one address gets at most three confirmation letters a day, whoever asks for them. "
+          "The confirmation letter says what the alert is for, but leaves the words of the search out of its subject line.</li>"
           "<li><b>The letters.</b> Plain text, at most 20 jobs, no images, no tracking pixel, and the links are not counted: we do not know whether you opened a letter or what you clicked in it.</li>"
           "<li><b>Unsubscribing.</b> Every letter has a link that stops it in one click (mail apps that offer an Unsubscribe button use the same link). The alert is then deleted, not kept.</li>"
           "<li><b>What else the address is used for.</b> Nothing. It is not added to any other list, shown to employers, sold or passed on.</li></ul>"
@@ -4226,7 +4227,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         + "<p>For jobs posted here and for companies that manage their page here, we count views of a job page and clicks on “Apply”: two numbers per job and day. "
           "To count a visitor once a day, a salted hash of the IP address is kept until the end of that day (UTC), then deleted. "
           "A report about a job keeps its reason, the note you write, and a salted hash of the IP address, so one address counts once. "
-          "Limits on how often something can be done (signing up, posting, reporting) are counters under such hashes and vanish when their hour is over. "
+          "Limits on how often something can be done (signing in, signing up, asking for a link, posting, reporting) are counters kept under the IP address, "
+          "the email address or a hash of them, and are deleted when their time is over: mostly an hour, a day for the limit on confirmation letters to one address. "
           "The web server’s own log (IP address, page, time) is kept for 14 days for security.</p>"
         + h2p("The record of letters we send")
         + "<p>For every letter the site sends (an alert, a confirmation link, a new password link, a sign-in notice) we keep for 30 days: the address, the time, what kind of letter it was, "
@@ -4238,7 +4240,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "<li><b>Payments,</b> once they exist: the law, which says how long records of payments are kept. Nothing is sold yet.</li></ul>"
         + h2p("How long it is kept")
         + "<ul><li>A job alert: until you unsubscribe or ask us to delete it. An unconfirmed one: 7 days.</li><li>An account: until you ask us to delete it.</li>"
-          "<li>The record of letters: 30 days. The web server’s log: 14 days.</li><li>Visitor hashes for counting views: until the end of the day. Rate limit counters: an hour.</li>"
+          "<li>The record of letters: 30 days. The web server’s log: 14 days.</li><li>Visitor hashes for counting views: until the end of the day. Limit counters: an hour, or a day for confirmation letters.</li>"
           "<li>Sessions: 30 days. Confirmation links: 24 hours. New password links: 30 minutes.</li></ul>"
         + h2p("Who else handles it")
         + "<p>The data is kept on our own server, a virtual server rented from Hostinger. Requests to the site pass through Cloudflare, which protects it from attacks and, "
@@ -4247,7 +4249,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "When you press “Apply”, you go to the employer’s own site, which has its own privacy policy.</p>"
         + h2p("Seeing, correcting and deleting your data")
         + f"<p>You can stop any alert yourself from any of its letters. For anything else, write to {priv_who} from the address concerned: you can ask what we keep about it, "
-          "have it corrected, have it deleted, or object to its use. We answer within 30 days, usually much sooner. Deleting removes the alerts of that address, the record of letters to it, "
+          "have it corrected, have it deleted, or object to its use. We answer within 30 days, usually much sooner. Deleting removes the alerts of that address, the record of letters to it, the limit counters kept under it, "
           "and the account with its sessions and company pages; jobs it posted come down. Records of payments, once there are any, are kept as long as the law requires. "
           "You can also complain to the data protection authority where you live.</p>")
     page("privacy/", f"Privacy | {SITE}", ("What this site keeps: no tracking cookies, saved jobs stay in your browser; for job alerts and accounts your email and what you asked for, deleted on request."

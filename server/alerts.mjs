@@ -1,7 +1,7 @@
 // The job alert run: sends the letters that are due (src/alerts.js runAlerts) and stops. hrn-alerts.timer starts it every hour, after
 // the hourly upload of the job records has usually landed.
 //
-//   node server/alerts.mjs                  settings from /srv/hrn/api.env, records from /srv/hrn/app/data/jobs.db (RECORDS_FILE=...)
+//   node server/alerts.mjs                  settings from /etc/hrn-api/api.env, records from /srv/hrn/app/data/jobs.db (RECORDS_FILE=...)
 //   node server/alerts.mjs --dry            matches and counts, sends nothing, changes nothing
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,7 @@ import { openRecords } from './src/records.mjs';
 import { runAlerts, matches, wordTests } from './src/alerts.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const vars = readEnvFile(process.env.API_ENV || '/srv/hrn/api.env');
+const vars = readEnvFile(process.env.API_ENV || '/etc/hrn-api/api.env');
 const env = productionEnv(vars, { serverDir: here });
 const records = openRecords(vars.RECORDS_FILE || '/srv/hrn/app/data/jobs.db');
 const t0 = Date.now();

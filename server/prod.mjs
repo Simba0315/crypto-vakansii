@@ -1,7 +1,7 @@
 // The API on our own server (Hostinger, next to the page server): the worker of src/worker.js on Node 22, with its database in a file
 // (node:sqlite through the D1 stand-in of src/d1.mjs) and mail through the SMTP client of src/mail.js.
 //
-//   node server/prod.mjs                    settings from /srv/hrn/api.env (API_ENV=... for another file)
+//   node server/prod.mjs                    settings from /etc/hrn-api/api.env (API_ENV=... for another file)
 //
 // It listens on 127.0.0.1:8787 only; nginx hands it the API's own addresses (server/hosting/nginx-hrn-api.conf) and sets
 // CF-Connecting-IP to the visitor's address. Payments are off until the owner writes PAYMENTS_LIVE=1 and the keys into the settings
@@ -13,7 +13,7 @@ import worker from './src/worker.js';
 import { readEnvFile, productionEnv, describeEnv } from './src/config.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const vars = readEnvFile(process.env.API_ENV || '/srv/hrn/api.env');
+const vars = readEnvFile(process.env.API_ENV || '/etc/hrn-api/api.env');
 const HOST = vars.HOST || '127.0.0.1', PORT = Number(vars.PORT) || 8787, MAX_BODY = 65536;
 let env;
 try { env = productionEnv(vars, { serverDir: here }); } catch (err) { console.error('not started: ' + err.message); process.exit(1); }

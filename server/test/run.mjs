@@ -344,6 +344,7 @@ const one = async (env, sql, ...args) => { const row = await env.DB.prepare(sql)
 const nextDay = (env) => env.DB.exec("UPDATE jobs SET created_at = created_at - 90000; DELETE FROM rate WHERE k LIKE 'jobs:%'");
 const newIsolate = async (tag) => (await import('../src/worker.js?isolate=' + tag)).default;               // a fresh copy of the worker, as after Cloudflare recycles it: nothing cached
 const hook = (env, id, status = 'paid') => call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: id, status }) });
+const quietly = async (run) => { let out; await quiet(async () => { out = await run(); }); return out; };      // the same, for a value
 async function quiet(run) {                    // runs something that is expected to log an error; returns the lines it logged
   const real = console.error, lines = []; console.error = (...a) => lines.push(a.map(String).join(' '));
   try { await run(); } finally { console.error = real; }
@@ -2125,6 +2126,33 @@ const bodyOf = (data) => unqp(data.slice(data.indexOf('\r\n\r\n') + 4));
   clock += 86400; r = await mailer.send({ to: 'f@example.org', subject: 's', text: 't', bulk: true });
   ok(r.sent, 'Mailer: the cap counts per UTC day: the next day letters go again');
   eq(await sendMail({ MAIL: { send: async () => ({ sent: false, status: 'capped' }) } }, 'a@b.co', 's', 't'), { sent: false }, 'sendMail: a mailer that answers "not sent" is reported as not sent');
+  // after the review of 15 Nov: what a failure means, and what is never done twice
+  const env2 = newEnv(), slept2 = [];
+  const m2 = MAILJS.createMailer({ db: env2.DB, smtp: { ...SMTP, dataTimeout: 300 }, from: 'Jobs Every Hour <support@site.test>', cap: 10, retries: 2, backoffMs: [10, 20], sleep: async (ms) => { slept2.push(ms); } });
+  smtpServer.failNext.push({ at: 'RCPT', reply: '452 4.2.2 Mailbox full' });
+  r = await quietly(() => m2.send({ to: 'full@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' }));
+  eq([r.sent, r.status, r.rejected, r.permanent, slept2.length, (await env2.DB.prepare('SELECT attempts FROM mail_log').first('attempts'))], [false, 'failed', true, false, 0, 1],
+    'Mailer: a bulk letter is tried once, with no pauses (the alert run reschedules it), and a full mailbox is a failure of that recipient');
+  smtpServer.failNext.push({ at: 'AUTH_PASS', reply: '535 5.7.8 Authentication failed' });
+  r = await quietly(() => m2.send({ to: 'x@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' }));
+  eq([r.sent, r.permanent, r.rejected], [false, true, false], 'Mailer: a refused login is final but not the recipient’s fault (the alert run then stops instead of charging subscribers)');
+  smtpServer.failNext.push({ at: 'DATA_END', reply: '550 5.1.1 User unknown' });
+  r = await quietly(() => m2.send({ to: 'gone@example.org', subject: 's', text: 't', bulk: true })); eq([r.permanent, r.rejected], [true, true], 'Mailer: "user unknown" after the letter is the recipient’s');
+  const before2 = smtpServer.letters.length; smtpServer.silentAfterData = 1; slept2.length = 0;
+  r = await quietly(() => m2.send({ to: 'slow@example.org', subject: 's', text: 't', kind: 'confirm' }));
+  eq([r.sent, r.status, slept2.length, smtpServer.letters.length - before2, (await env2.DB.prepare("SELECT status FROM mail_log WHERE to_addr = 'slow@example.org'").first('status'))], [false, 'unknown', 0, 1, 'unknown'],
+    'Mailer: no answer after the letter itself (it may have arrived) is not sent again, even for a letter that is otherwise retried; it counts against the cap');
+  let failLog = 1; const flaky = { prepare: (sql) => (/INSERT INTO mail_log/.test(sql) && failLog-- > 0 ? { bind: () => ({ run: async () => { throw new Error('SQLITE_BUSY'); } }) } : env2.DB.prepare(sql)) };
+  const m3 = MAILJS.createMailer({ db: flaky, smtp: SMTP, from: 'support@site.test', cap: 10, sleep: async () => {} }), before3 = smtpServer.letters.length;
+  const logged = await quiet(async () => { r = await m3.send({ to: 'once@example.org', subject: 's', text: 't' }); });
+  eq([r.sent, smtpServer.letters.length - before3, logged.some((l) => /log could not be written/.test(l))], [true, 1, true], 'Mailer: a letter whose log row cannot be written is not sent a second time');
+  const m4 = MAILJS.createMailer({ db: newEnv().DB, smtp: SMTP, from: 'support@site.test', cap: 4, sleep: async () => {} });
+  const shares = [];
+  for (let i = 0; i < 3; i++) shares.push((await m4.send({ to: 'c' + i + '@example.org', subject: 's', text: 't', kind: 'alert_confirm', share: 0.5 })).status);
+  shares.push((await m4.send({ to: 'pw@example.org', subject: 's', text: 't', kind: 'reset' })).status);
+  eq(shares, ['sent', 'sent', 'capped', 'sent'], 'Mailer: a kind of letter given a share of the cap stops there, and the rest stays for the others');
+  const longSubject = MAILJS.buildMessage({ from: 'Работа на час <a@site.test>', to: 'b@example.org', subject: 'Подтвердите подписку: '.repeat(6), text: 'x' }).data.split('\r\n\r\n')[0];
+  ok(longSubject.split('\r\n').every((l) => l.length <= 76) && /^Subject: =\?UTF-8\?B\?[^\r]*\r\n =\?UTF-8\?B\?/m.test(longSubject), 'Mail: a long subject outside ASCII is folded into encoded words of their own lines, none over 76 characters');
   const extra = []; await sendMail({ MAIL: { send: async (x) => { extra.push(x); } }, MAIL_FROM: 'x@site.test' }, 'a@b.co', 's', 't', { kind: 'confirm' });
   eq(extra[0], { from: 'x@site.test', to: 'a@b.co', subject: 's', text: 't', kind: 'confirm' }, 'sendMail: the kind of letter is handed to the mailer for its log');
 }
@@ -2182,8 +2210,8 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   eq([bad1.status, bad2.status, await env.DB.prepare('SELECT status FROM alerts').first('status')], [404, 404, 'pending'], 'Alerts: a link with a changed token or another alert’s id does nothing');
   const t0 = Math.floor(Date.now() / 1000);
   pg = await pageOf(env, 'POST', confirmPath); row = await env.DB.prepare('SELECT * FROM alerts').first();
-  ok(pg.status === 200 && pg.text.includes('Your job alert is on') && row.status === 'active' && Math.abs(row.confirmed_at - t0) < SLACK && Math.abs(row.due_at - (row.confirmed_at + 86400 - 1800)) < 2 && row.seen_through === ALERTS.isoTime(row.confirmed_at),
-    'Alerts: the button confirms it: active, the first letter due about a day later, with the jobs first seen after this moment');
+  ok(pg.status === 200 && pg.text.includes('Your job alert is on') && row.status === 'active' && Math.abs(row.confirmed_at - t0) < SLACK && Math.abs(row.due_at - (row.confirmed_at + 86400 - 1800)) < 2 && row.seen_through === ALERTS.isoTime(row.confirmed_at - 3600),
+    'Alerts: the button confirms it: active, the first letter due about a day later, with the jobs first seen from an hour before this moment (one read just before may reach the records later)');
   pg = await pageOf(env, 'POST', confirmPath); ok(pg.status === 200 && pg.text.includes('Your job alert is on') && (await one(env, 'SELECT confirmed_at FROM alerts')) === row.confirmed_at, 'Alerts: confirming twice changes nothing');
   const sentBefore = box.outbox.length;
   r = await sign({ email: 'seeker@example.org', q: 'python visit evilcom', loc: 'berlin', remote: 1, sal: 100000, freq: 'weekly' });
@@ -2214,6 +2242,31 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   r = await call(newEnv(), 'POST', '/api/alerts', { data: { email: 'a@example.org', q: 'go' } }); eq([r.status, r.body.error], [503, 'mail_off'], 'Alerts: without a mail service no sign-up is taken (nobody could confirm it)');
   r = await call(newEnv({ ...mailbox(), PAY_MODE: 'test' }), 'POST', '/api/alerts', { data: { email: 'a@example.org', q: 'go' } });
   ok(/^https:\/\/api\.test\/api\/alerts\/confirm\?a=a_[a-f0-9]{20}&t=[a-f0-9]{32}$/.test(r.body.confirm_url), 'Alerts: in test mode (dev.mjs) the answer carries the confirmation link, as there is no mailbox');
+
+  // after the review of 15 Nov: what a stranger's sign-up can and cannot do
+  {
+    const bx = mailbox(), e2 = newEnv({ ...bx });
+    let q = await call(e2, 'POST', '/api/alerts', { data: { email: 'victim@example.org', q: 'call +79991234567 bitcoin doubling', loc: 'berlin' } });
+    const l2 = bx.outbox.at(-1);
+    eq([q.body.alert, l2.subject, l2.share], ['“call bitcoin doubling” jobs · Berlin', 'Confirm your job alert: Jobs · Berlin', 0.5],
+      'Alerts: a phone number or an amount is not a search word, the confirmation subject leaves the words out, and confirmations may fill half the day’s mail at most');
+    for (let i = 0; i < 5; i++) await e2.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at) VALUES (?, 'held@example.org', ?, 'pending', ?)").bind('a_' + 'f'.repeat(19) + i, 'p' + i, Math.floor(Date.now() / 1000)).run();
+    q = await call(e2, 'POST', '/api/alerts', { data: { email: 'held@example.org', q: 'rust' } });
+    eq([q.status, q.body.ok], [200, true], 'Alerts: alerts nobody confirmed do not count towards the five, so nobody can lock an address out by asking for alerts in its name');
+    for (let i = 0; i < 10; i++) await call(e2, 'POST', '/api/alerts', { ip: '2001:db8:1:2::' + (i + 1).toString(16), data: { email: 'six' + i + '@example.org', q: 'go' } });
+    q = await call(e2, 'POST', '/api/alerts', { ip: '2001:db8:1:2:ffff:ffff:ffff:fffe', data: { email: 'seven@example.org', q: 'go' } });
+    const other = await call(e2, 'POST', '/api/alerts', { ip: '2001:db8:1:3::1', data: { email: 'eight@example.org', q: 'go' } });
+    eq([q.status, other.status], [429, 200], 'Alerts: sign-ups are counted per /64 of an IPv6 address, so a new address per request does not help a script');
+    await e2.DB.prepare("INSERT OR REPLACE INTO rate (k, n, reset_at) VALUES ('alert-mail-all', 120, ?)").bind(Math.floor(Date.now() / 1000) + 3600).run();
+    const sentNow = bx.outbox.length; q = await call(e2, 'POST', '/api/alerts', { data: { email: 'late@example.org', q: 'go' } });
+    eq([q.status, bx.outbox.length - sentNow], [200, 0], 'Alerts: past 120 confirmation letters an hour in all, sign-ups get the usual answer and no letter goes');
+    const pend = await e2.DB.prepare("SELECT id FROM alerts WHERE email = 'victim@example.org'").first('id');
+    const cpage = await pageOf(e2, 'GET', '/api/alerts/confirm?a=' + pend + '&t=' + await ALERTS.alertToken(e2, 'confirm', pend));
+    ok(cpage.text.includes('<meta name="referrer" content="no-referrer">') && !/<a (?!rel="noreferrer")/.test(cpage.text), 'Alerts: the pages behind the links send no Referer, so the token in their address goes nowhere');
+    await e2.DB.prepare("UPDATE alerts SET status = 'active', freq = 'weekly', due_at = ? WHERE id = ?").bind(Math.floor(Date.now() / 1000) + 6 * 86400, pend).run();
+    await pageOf(e2, 'POST', '/api/alerts/unsubscribe?a=' + pend + '&t=' + await ALERTS.alertToken(e2, 'unsub', pend), { type: 'application/x-www-form-urlencoded', body: 'freq=daily' });
+    ok((await one(e2, 'SELECT due_at FROM alerts WHERE id = ?', pend)) <= Math.floor(Date.now() / 1000) + 86400, 'Alerts: switched from weekly to daily, the next letter comes within a day');
+  }
 
   // the periodic run
   const conf = (row.confirmed_at), at = (min) => ALERTS.isoTime(conf + min * 60);
@@ -2250,9 +2303,43 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_00000000000000000002', 'y@example.org', 'python', 'active', 1, 1, 2, '')").run();
   out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
   eq([out.capped, out.sent, await one(held, 'SELECT SUM(due_at) FROM alerts'), await one(held, "SELECT COUNT(*) FROM alerts WHERE seen_through = ''")], [true, 0, 3, 2], 'Run: a letter held back by the daily cap ends the run; nothing moves on, so nothing is lost');
-  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: true }) };
-  for (let i = 0; i < 3; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i });
+  // a failure of the mail server itself (our login refused, no connection) ends the run and costs no subscriber anything
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: true, rejected: false }) };
+  for (let i = 0; i < 4; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i * 86400 });
+  eq([out.failed, out.stopped, await one(held, 'SELECT COUNT(*) FROM alerts'), await one(held, 'SELECT SUM(fails) FROM alerts'), await one(held, 'SELECT SUM(due_at) FROM alerts')], [1, 'the mail server failed', 2, 0, 3],
+    'Run: when the mail server refuses us (a changed password, a blocked account), the run ends, nothing moves and no alert is charged for it, however often it happens');
+  // a refusal for this address: the alert waits for its next period with the jobs kept, and goes after three final refusals in a row
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: true, rejected: true }) };
+  out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
+  eq([out.failed, await one(held, 'SELECT SUM(fails) FROM alerts'), await one(held, "SELECT COUNT(*) FROM alerts WHERE due_at > 100 AND seen_through = ''")], [2, 2, 2],
+    'Run: a mailbox that refuses the letter makes its alert wait for the next period, the jobs kept for then, and the run goes on to the others');
+  for (let i = 1; i < 3; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i * 86400 });
   eq([out.dropped, await one(held, 'SELECT COUNT(*) FROM alerts')], [2, 0], 'Run: an address the mail server refuses for good three times in a row loses its alert');
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_0000000000000000000b', 'full@example.org', 'python', 'active', 1, 1, 1)").run();
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: false, rejected: true }) };
+  for (let i = 0; i < 7; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i * 86400 });
+  eq([out.dropped, await one(held, 'SELECT COUNT(*) FROM alerts')], [1, 0], 'Run: a mailbox that is full every time for seven letters in a row loses its alert too');
+  // no answer after the letter: it may have arrived, so it counts as sent and is not sent again; the run ends there
+  const sentTo = [];
+  held.MAIL = { send: async (m) => { sentTo.push(m.to); return { sent: false, status: 'unknown' }; } };
+  for (const [id, mail] of [['a_0000000000000000000c', 'u1@example.org'], ['a_0000000000000000000d', 'u2@example.org']])
+    await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES (?, ?, 'python', 'active', 1, 1, 1)").bind(id, mail).run();
+  out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
+  eq([sentTo, out.sent, out.stopped, await one(held, "SELECT letters FROM alerts WHERE email = 'u1@example.org'"), await one(held, "SELECT seen_through FROM alerts WHERE email = 'u1@example.org'")],
+    [['u1@example.org'], 1, 'no answer from the mail server after a letter', 1, '2026-01-01T00:00:00Z'], 'Run: a letter that got no answer after it was sent counts as sent (no second copy) and ends the run');
+  // unsubscribed while the run was under way: nothing goes to it
+  const got = [];
+  held.MAIL = { send: async (m) => { got.push(m.to); await held.DB.prepare("DELETE FROM alerts WHERE email = 'u2@example.org'").run(); } };
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_0000000000000000000e', 'u0@example.org', 'python', 'active', 1, 1, 0)").run();
+  await held.DB.prepare("UPDATE alerts SET due_at = 1 WHERE email = 'u1@example.org'").run();
+  out = await ALERTS.runAlerts(held, recs([J('k2', { first_seen_at: '2026-02-01T00:00:00Z' })]), { now: 100 });
+  eq(got, ['u0@example.org', 'u1@example.org'], 'Run: an alert unsubscribed while the run is under way gets nothing (each is read again just before its letter)');
+  // an older file of records turning up does not move an alert back
+  await held.DB.prepare("UPDATE alerts SET due_at = 1 WHERE email = 'u1@example.org'").run();
+  held.MAIL = { send: async () => {} };
+  out = await ALERTS.runAlerts(held, recs([J('k0', { first_seen_at: '2025-12-01T00:00:00Z' })]), { now: 100 });
+  eq(await one(held, "SELECT seen_through FROM alerts WHERE email = 'u1@example.org'"), '2026-02-01T00:00:00Z', 'Run: an older file of records never moves an alert back (no job is offered twice)');
+  await held.DB.exec('DELETE FROM alerts');
   await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at) VALUES ('a_00000000000000000003', 'z@example.org', 'go', 'pending', ?)").bind(atRun - 8 * 86400).run();
   out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.expired, await one(held, 'SELECT COUNT(*) FROM alerts')], [1, 0], 'Run: an alert nobody confirmed in 7 days is deleted');
   await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_00000000000000000004', 'z@example.org', 'go', 'active', 1, 1, 1)").run();
@@ -2295,12 +2382,14 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   ok(!JSON.stringify(r.body).includes('@'), 'Owner: and gives no address');
   eq((await call(env, 'GET', '/api/admin/audience', { token: member })).status, 403, 'Owner: an account’s session does not open it');
   await env.DB.prepare("INSERT INTO mail_log (id, at, to_addr, kind, status) VALUES ('m_1', 1, 'form@example.org', 'alert_confirm', 'sent')").run();
+  await env.DB.prepare("INSERT INTO rate (k, n, reset_at) VALUES ('alert-mail:form@example.org', 1, 9999999999), ('reset:form@example.org', 1, 9999999999)").run();
   const formUser = await fresh(env, 'form@example.org');
   r = await adminReq('POST', 'erase', { email: 'FORM@example.org' });
   eq([r.status, r.body.alerts_deleted, r.body.account_erased, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'form@example.org'"), await one(env, "SELECT COUNT(*) FROM mail_log WHERE to_addr = 'form@example.org'"),
     await one(env, "SELECT COUNT(*) FROM users WHERE email = 'form@example.org'"), (await call(env, 'GET', '/api/me', { token: formUser })).status,
     (await call(env, 'POST', '/api/auth/login', { data: { email: 'form@example.org', password: PASS } })).status], [200, 1, true, 0, 0, 0, 401, 401],
     'Owner: erasing an address deletes its alerts and the mail log rows to it, and takes the address off its account, which can no longer be signed in to');
+  eq(await one(env, "SELECT COUNT(*) FROM rate WHERE k IN ('alert-mail:form@example.org', 'reset:form@example.org')"), 0, 'Owner: and the limits kept under that address');
   // the cron tidies the mail log and the alerts nobody confirmed
   await env.DB.prepare("INSERT INTO mail_log (id, at, to_addr, kind, status) VALUES ('m_old', ?, 'old@example.org', 'alert', 'sent')").bind(t0 - 31 * 86400).run();
   await env.DB.prepare("INSERT INTO alerts (id, email, status, created_at) VALUES ('a_00000000000000000009', 'stale@example.org', 'pending', ?)").bind(t0 - 8 * 86400).run();

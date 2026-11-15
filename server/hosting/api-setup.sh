@@ -4,8 +4,10 @@
 #   bash server/hosting/api-setup.sh                 (DOMAIN=jobseveryhour.com unless given)
 # What it does, in order (each step can be run again):
 #   1. Node 22.13 or newer (node:sqlite without a flag): the official build from nodejs.org, its checksum checked, into /opt.
-#   2. The user hrnapi, /srv/hrn/api (code, owned by root) and /srv/hrn/api/data (the database, owned by hrnapi, 700).
-#   3. /srv/hrn/api.env, the settings, if it is missing: the site, the mail server, a random ADMIN_TOKEN. Never overwritten.
+#   2. The user hrnapi, /opt/hrn-api (code, owned by root) and /var/lib/hrn-api (the database, owned by hrnapi, 700). None of it is
+#      under /srv/hrn: that folder belongs to the user hrn (the page server, the uploads, live.py), who could otherwise swap the
+#      API's code or settings for its own.
+#   3. /etc/hrn-api/api.env (root:hrnapi 640, in a folder only root writes), the settings, if it is missing: the site, the mail server, a random ADMIN_TOKEN. Never overwritten.
 #      Secrets are added later with api-secret.sh, typed in by the owner (HOSTING.md).
 #   4. hrn-api.service (the API on 127.0.0.1:8787) and hrn-alerts.timer (the hourly alert run). If the new code does not answer
 #      /api/health within 20 seconds, the previous code is put back.
@@ -43,23 +45,24 @@ node_ok "$NODE" || { echo "$NODE is not Node 22.13 or newer"; exit 1; }
 echo "node: $NODE $("$NODE" -v)"
 
 # 2. user, folders, code
-id hrnapi >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /srv/hrn/api --shell /usr/sbin/nologin hrnapi
-[ -d /srv/hrn ] || { echo "/srv/hrn is missing: run setup.sh first"; exit 1; }
-install -d -m 755 -o root -g root /srv/hrn/api
-install -d -m 700 -o hrnapi -g hrnapi /srv/hrn/api/data
-new=/srv/hrn/api/server.new
+id hrnapi >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /var/lib/hrn-api --shell /usr/sbin/nologin hrnapi
+[ -d /srv/hrn/app ] || { echo "/srv/hrn/app is missing: run setup.sh first"; exit 1; }
+install -d -m 755 -o root -g root /opt/hrn-api
+install -d -m 700 -o hrnapi -g hrnapi /var/lib/hrn-api
+install -d -m 750 -o root -g hrnapi /etc/hrn-api
+new=/opt/hrn-api/server.new
 rm -rf "$new"; mkdir -p "$new"; cp -r "$src/." "$new/"
 chown -R root:root "$new"; chmod -R u+rwX,go+rX,go-w "$new"
-rm -rf /srv/hrn/api/server.old
-[ -d /srv/hrn/api/server ] && mv /srv/hrn/api/server /srv/hrn/api/server.old
-mv "$new" /srv/hrn/api/server
+rm -rf /opt/hrn-api/server.old
+[ -d /opt/hrn-api/server ] && mv /opt/hrn-api/server /opt/hrn-api/server.old
+mv "$new" /opt/hrn-api/server
 
 # 3. settings (kept if they exist; a missing ADMIN_TOKEN is added)
-envf=/srv/hrn/api.env
+envf=/etc/hrn-api/api.env
 if [ ! -f "$envf" ]; then
   (umask 027; cat > "$envf" <<EOF
 # Jobs Every Hour API settings, read by hrn-api and hrn-alerts. Readable by root and the service user only.
-# Add a secret without it showing anywhere:  sudo bash /srv/hrn/api/server/hosting/api-secret.sh NAME
+# Add a secret without it showing anywhere:  sudo bash /opt/hrn-api/server/hosting/api-secret.sh NAME
 # After editing by hand: systemctl restart hrn-api
 SITE_URL=https://$DOMAIN
 SMTP_HOST=smtp.beget.com
@@ -83,9 +86,9 @@ systemctl restart hrn-api.service
 healthy() { for _ in $(seq 1 20); do curl -fsS http://127.0.0.1:8787/api/health >/dev/null 2>&1 && return 0; sleep 1; done; return 1; }
 if ! healthy; then
   journalctl -u hrn-api -n 30 --no-pager || true
-  if [ -d /srv/hrn/api/server.old ]; then
-    rm -rf /srv/hrn/api/server.bad; mv /srv/hrn/api/server /srv/hrn/api/server.bad; mv /srv/hrn/api/server.old /srv/hrn/api/server
-    systemctl restart hrn-api.service; echo "the new API did not start: the previous code is back (the new one is in /srv/hrn/api/server.bad)"
+  if [ -d /opt/hrn-api/server.old ]; then
+    rm -rf /opt/hrn-api/server.bad; mv /opt/hrn-api/server /opt/hrn-api/server.bad; mv /opt/hrn-api/server.old /opt/hrn-api/server
+    systemctl restart hrn-api.service; echo "the new API did not start: the previous code is back (the new one is in /opt/hrn-api/server.bad)"
   else
     systemctl stop hrn-api.service; echo "the API did not start (see the log above); nginx was not changed"
   fi

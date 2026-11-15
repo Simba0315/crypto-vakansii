@@ -357,10 +357,11 @@ local size.
 
 
 
-## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,073 tests, not installed yet)
+## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,093 tests, not installed yet)
 
 - The owner: "we need to collect a database of employers and users". `server/prod.mjs` runs `src/worker.js` on Node 22 on the Hostinger
-  server (127.0.0.1:8787, service `hrn-api`, user `hrnapi`, database `/srv/hrn/api/data/api.db`, settings and secrets in `/srv/hrn/api.env`).
+  server (127.0.0.1:8787, service `hrn-api`, user `hrnapi`, code `/opt/hrn-api`, database `/var/lib/hrn-api/api.db`, settings and secrets
+  in `/etc/hrn-api/api.env`; never under `/srv/hrn`, which the user `hrn` owns and could swap things in).
   `server/hosting/api-setup.sh` installs or updates it; the steps, the owner's password command and the way back are in `HOSTING.md`
   ("The API on the same server"). It replaces the Cloudflare plan; the worker still runs on Cloudflare if ever wanted.
 - Payments stay off until `PAYMENTS_LIVE=1` is in `api.env` (the owner, last). `PAY_MODE=test` is refused on the server.

@@ -156,16 +156,21 @@ What Lucene gives here, checked on the server on 14 Nov 2026:
 ## The API on the same server: accounts, job alerts, free employer posting (code of 15 Nov 2026, not installed yet)
 
 The owner, 15 Nov: "we need to collect a database of employers and users". `server/` now runs on this server: `server/prod.mjs` is the
-API (Node 22, the database in `/srv/hrn/api/data/api.db`, 127.0.0.1:8787, service `hrn-api`), `server/alerts.mjs` sends the job alerts
+API (Node 22, the database in `/var/lib/hrn-api/api.db`, 127.0.0.1:8787, service `hrn-api`), `server/alerts.mjs` sends the job alerts
 every hour (`hrn-alerts.timer`), mail goes out through Beget's SMTP server from support@. Payments stay off. Details: `server/README.md`
 ("On our own server", "Job alerts", "Claim your company page").
 
 | | Where | Who can read it |
 |---|---|---|
-| code | `/srv/hrn/api/server` (a copy of the repository's `server/`) | everyone on the machine; owned by root |
-| database | `/srv/hrn/api/data/api.db` (SQLite, WAL) | only the user `hrnapi` |
-| settings and secrets | `/srv/hrn/api.env` | root and `hrnapi` |
+| code | `/opt/hrn-api/server` (a copy of the repository's `server/`) | everyone on the machine; owned by root |
+| database | `/var/lib/hrn-api/api.db` (SQLite, WAL) | only the user `hrnapi` |
+| settings and secrets | `/etc/hrn-api/api.env` | root and `hrnapi` |
 | what it reads from the site | `/srv/hrn/app/data/jobs.db`, `/srv/hrn/app/logos.json`, `http://127.0.0.1:8790` | (uploaded every hour) |
+
+Not under `/srv/hrn` (the place first planned for the settings, `/srv/hrn/api.env`): that folder belongs to the user `hrn`, which
+runs the page server and `live.py` and receives the hourly upload, and the owner of a folder can rename anything in it, so it could swap
+the API's code or settings (and with them the admin token) for its own. Code, settings and database are therefore in places only root
+can change.
 
 nginx sends only the API's own addresses to it (`server/hosting/nginx-hrn-api.conf`, included by `nginx-hrn.conf`): `/api/health`,
 `/api/auth/…`, `/api/me`, `/api/jobs…`, `/api/orders…`, `/api/placements`, `/api/domain…`, `/api/ai/…`, `/api/sync`, `/api/admin/…`,
@@ -180,7 +185,7 @@ nginx sends only the API's own addresses to it (`server/hosting/nginx-hrn-api.co
    sudo bash server/hosting/api-setup.sh
    ```
    It installs Node 22 from nodejs.org (checksum checked) if the machine has no Node 22.13+, makes the user `hrnapi` and the folders,
-   writes `/srv/hrn/api.env` with a random `ADMIN_TOKEN` (never overwritten later), starts `hrn-api` and `hrn-alerts.timer`, adds the
+   writes `/etc/hrn-api/api.env` with a random `ADMIN_TOKEN` (never overwritten later), starts `hrn-api` and `hrn-alerts.timer`, adds the
    nginx addresses and reloads nginx. If the API does not answer `/api/health` within 20 seconds the previous code is put back; if nginx
    refuses the new files both are put back and nothing is reloaded. Running it again updates the code the same way.
 2. Check:
@@ -193,17 +198,17 @@ nginx sends only the API's own addresses to it (`server/hosting/nginx-hrn-api.co
 ### The mailbox password (the owner; 2 minutes)
 
 Letters go out from support@jobseveryhour.com through `smtp.beget.com:465`. Its password is typed by the owner into a terminal on the
-server and goes into `/srv/hrn/api.env` and nowhere else: not into the repository, not into a chat, not into a command line. The command:
+server and goes into `/etc/hrn-api/api.env` and nowhere else: not into the repository, not into a chat, not into a command line. The command:
 
 ```
-sudo bash /srv/hrn/api/server/hosting/api-secret.sh SMTP_PASS
+sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS
 ```
 
 It asks for the value and shows nothing while it is typed: type the password of support@ (the one set in the Beget panel) and press
 Enter. The API restarts with mail on. Then a test letter to any address of yours:
 
 ```
-sudo -u hrnapi /usr/local/bin/node --no-warnings /srv/hrn/api/server/mail-test.mjs your-address@example.com
+sudo -u hrnapi /usr/local/bin/node --no-warnings /opt/hrn-api/server/mail-test.mjs your-address@example.com
 ```
 
 It prints `"sent":true` and the server's answer, or the reason it failed (a wrong password is `535`). The same script writes any other
@@ -220,8 +225,8 @@ address, and a Cloudflare rule "skip bot checks for `/api/public/export.json`" f
 ### Every day (the owner, or me with his go-ahead)
 
 The review queue and the claims of company pages wait for a person: `server/README.md`, "Reviewing held jobs" (the token:
-`sudo grep ^ADMIN_TOKEN= /srv/hrn/api.env`). How many people signed up: `/api/admin/audience`. Logs: `journalctl -u hrn-api`,
-`journalctl -u hrn-alerts`. What the next alert run would send: `sudo -u hrnapi /usr/local/bin/node --no-warnings /srv/hrn/api/server/alerts.mjs --dry`.
+`sudo grep ^ADMIN_TOKEN= /etc/hrn-api/api.env`). How many people signed up: `/api/admin/audience`. Logs: `journalctl -u hrn-api`,
+`journalctl -u hrn-alerts`. What the next alert run would send: `sudo -u hrnapi /usr/local/bin/node --no-warnings /opt/hrn-api/server/alerts.mjs --dry`.
 
 ### Taking it back
 
@@ -230,7 +235,7 @@ sudo systemctl disable --now hrn-api hrn-alerts.timer
 sudo rm /etc/nginx/snippets/hrn-api.conf && sudo nginx -t && sudo systemctl reload nginx
 ```
 
-and `"api_url": ""` in `config.json`: the site is as before (forms and account page gone), the database stays in `/srv/hrn/api/data`.
+and `"api_url": ""` in `config.json`: the site is as before (forms and account page gone), the database stays in `/var/lib/hrn-api`.
 
 ### Mail limits
 
@@ -241,5 +246,5 @@ and move DMARC to `p=quarantine` (see Email above).
 
 ## Later on the same server
 
-- Payments: `PAYMENTS_LIVE=1` and the gateway keys in `/srv/hrn/api.env` (the owner, last, when everything else is right).
+- Payments: `PAYMENTS_LIVE=1` and the gateway keys in `/etc/hrn-api/api.env` (the owner, last, when everything else is right).
 - More pages from records the same way: companies (115 MiB), locations (195 MiB), roles (109 MiB) are lists of jobs too.

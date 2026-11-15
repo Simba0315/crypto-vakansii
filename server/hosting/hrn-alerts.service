@@ -8,9 +8,9 @@ After=network.target hrn-api.service
 Type=oneshot
 User=hrnapi
 Group=hrnapi
-WorkingDirectory=/srv/hrn/api
-Environment=API_ENV=/srv/hrn/api.env
-ExecStart=NODEBIN --no-warnings /srv/hrn/api/server/alerts.mjs
+WorkingDirectory=/opt/hrn-api
+Environment=API_ENV=/etc/hrn-api/api.env
+ExecStart=NODEBIN --no-warnings /opt/hrn-api/server/alerts.mjs
 TimeoutStartSec=50min
 MemoryMax=768M
 CPUQuota=50%
@@ -18,6 +18,6 @@ Nice=10
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/srv/hrn/api/data
+ReadWritePaths=/var/lib/hrn-api
 PrivateTmp=true
 PrivateDevices=true

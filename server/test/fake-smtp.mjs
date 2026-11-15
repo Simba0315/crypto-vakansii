@@ -1,12 +1,13 @@
 // A mail server for the tests: TLS from the first byte (like port 465), EHLO, AUTH LOGIN, MAIL FROM, RCPT TO, DATA, QUIT. It keeps what
 // it was told and can be made to answer with an error at any step. It listens on 127.0.0.1 only and nothing leaves the machine.
-//   const s = await fakeSmtp({ user, pass }); ... s.port, s.ca, s.letters, s.sessions; s.failNext.push({ at: 'RCPT', reply: '450 try later' }); await s.close();
+//   const s = await fakeSmtp({ user, pass }); ... s.port, s.ca, s.letters, s.sessions; s.failNext.push({ at: 'RCPT', reply: '450 try later' });
+//   s.silentAfterData = 1 (the next letter is taken and never answered); await s.close();
 import tls from 'node:tls';
 import { selfSigned } from './cert.mjs';
 
 export async function fakeSmtp({ user = 'box@site.test', pass = 'mailbox-pass', greeting = '220 fake.smtp ESMTP ready' } = {}) {
   const { cert, key } = selfSigned('localhost');
-  const state = { letters: [], sessions: [], failNext: [], logins: [], dropNext: 0 };
+  const state = { letters: [], sessions: [], failNext: [], logins: [], dropNext: 0, silentAfterData: 0 };
   const server = tls.createServer({ cert, key }, (sock) => {
     if (state.dropNext > 0) { state.dropNext--; sock.destroy(); return; }
     const s = { lines: [], authed: false }; state.sessions.push(s);
@@ -23,6 +24,7 @@ export async function fakeSmtp({ user = 'box@site.test', pass = 'mailbox-pass', 
         if (mode === 'data') {
           if (line === '.') {
             mode = 'cmd';
+            if (state.silentAfterData > 0) { state.silentAfterData--; state.letters.push({ from, to: [...to], data: '', raw: '', unanswered: true }); data = []; continue; }   // takes the letter, never answers
             if (fail('DATA_END')) continue;
             state.letters.push({ from, to: [...to], data: data.map((l) => (l.startsWith('..') ? l.slice(1) : l)).join('\r\n'), raw: data.join('\r\n') }); data = [];
             say('250 2.0.0 Ok: queued as FAKE' + state.letters.length);

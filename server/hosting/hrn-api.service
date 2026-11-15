@@ -1,6 +1,6 @@
 # Jobs Every Hour: the API (accounts, job alerts, employer postings, company pages), server/prod.mjs on 127.0.0.1:8787.
 # Installed by api-setup.sh, which puts the path of Node 22 in place of NODEBIN. It runs as its own user (hrnapi), reads its settings
-# from /srv/hrn/api.env, writes only its database folder, and may take at most 512 MB of memory and half of one processor.
+# from /etc/hrn-api/api.env, writes only its database folder, and may take at most 512 MB of memory and half of one processor.
 [Unit]
 Description=Jobs Every Hour API
 After=network.target hrn-site.service
@@ -9,9 +9,9 @@ Wants=hrn-site.service
 [Service]
 User=hrnapi
 Group=hrnapi
-WorkingDirectory=/srv/hrn/api
-Environment=API_ENV=/srv/hrn/api.env
-ExecStart=NODEBIN --no-warnings /srv/hrn/api/server/prod.mjs
+WorkingDirectory=/opt/hrn-api
+Environment=API_ENV=/etc/hrn-api/api.env
+ExecStart=NODEBIN --no-warnings /opt/hrn-api/server/prod.mjs
 Restart=always
 RestartSec=2
 TimeoutStopSec=30
@@ -21,7 +21,7 @@ Nice=5
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/srv/hrn/api/data
+ReadWritePaths=/var/lib/hrn-api
 PrivateTmp=true
 PrivateDevices=true
 
