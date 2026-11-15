@@ -1475,6 +1475,27 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     def cards(items):
         return '<div class="feats">' + "".join(f'<a class="feat" href="{P}/{u}"><h3>{e(n)}</h3><p>{e(d)}</p></a>' for u, n, d in items) + "</div>"
 
+
+    # "In plain words" (owner's standard): two sentences, no jargon, for the tools whose subject is a technical or money term.
+    PLAIN = {
+        "boolean-search": "Recruiters find people by typing a search with the words AND, OR and NOT between the terms. This page writes that search for you, so you only list the job titles and skills.",
+        "jobposting-schema": "Google shows jobs in a special box only when the page describes the job in a fixed code format that its robot can read. This page fills that code in from a short form, and you paste the result into your job page.",
+        "equity-calculator": "Some companies pay part of your salary in options: the right to buy company shares at a fixed price later. This page turns the numbers in your offer letter into what the shares could be worth and what buying them would cost.",
+        "contractor-rate": "A contractor is paid per day or per hour and covers their own holidays, sick days and gaps between jobs. This page works out the rate to ask for so that you end up with the same yearly income as an employee.",
+        "job-description-keywords": "Many employers first read applications with a program that searches for the words in the posting. This page lists the words a posting uses most, so you can use the same ones in your resume where they are true.",
+        "resume-match": "Many employers first read applications with a program that searches for the words in the posting. This page compares your resume with one posting and shows which of its words your resume does not use yet.",
+        "time-zone-overlap": "A remote team can sit in different countries, and the clock is different in each. This page shows which hours of the working day fall inside the working hours of both places.",
+        "interview-answer-builder": "STAR is a way to answer “tell me about a time when…”: say the situation, the task, what you did and the result, in that order. This page puts your four parts together and tells you how long the answer takes to say.",
+        "interview-scorecard": "A scorecard is one list of what you are looking for, with a weight for each item, that every interviewer fills in for every candidate. This page builds that sheet and adds up the ratings into one score per candidate.",
+        "cost-of-vacancy": "A vacancy is a job with nobody in it yet, and the work still has to be done by someone. This page puts a price on each day the job stays empty.",
+        "cost-per-hire": "Cost per hire is everything spent to fill one job, divided by the number of people hired. This page adds the invoices and the time of your own staff, so that the figure is the full one.",
+        "job-description-checker": "A job description is the text of the posting that candidates read before they apply. This page reads yours for the things that make people skip a posting, such as a missing salary or too many requirements, and lists what to change.",
+        "compare-offers": "An offer is more than the base salary: bonus, shares, days off and the commute change what you take home. This page puts two or three offers on one scale, so you can see which one is worth more per year.",
+        "offer-check": "“Below the lower quarter” means lower than three of every four salaries posted for that work. This page places your offer among the salaries that open postings state, and says how many postings that is.",
+        "salary-checker": "The median is the middle figure: half of the postings pay more and half pay less. This page shows the median and the usual range for a kind of work and a level, and where your salary sits among them.",
+        "salary-converter": "Pay is quoted per hour, per day, per month or per year, and the figures cannot be compared until they are in one unit. This page converts one of them into all the others, using the hours you actually work.",
+        "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
+    }
     for t in TOOLS:
         path = f"tools/{t['slug']}/"
         faq_html, faq_ld = faq_block(t["faq"])
@@ -1485,7 +1506,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         extra = section("Advertised salaries by category and level", sal_table) if t["slug"] == "salary-checker" else ""
         sub = (f'<nav class="tsub" aria-label="{"Tools for people hiring" if t["group"] == "employers" else "Tools for job seekers"}"><a class="all" href="{P}/tools/">All tools</a>'
                + "".join(f'<a href="{P}/tools/{o["slug"]}/"' + (' aria-current="page"' if o is t else "") + f'>{e(o["name"])}</a>' for o in TOOLS if o["group"] == t["group"]) + "</nav>")
-        body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + t["html"]
+        body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + (f'<p class="plain"><b>In plain words:</b> {e(PLAIN[t["slug"]])}</p>' if t["slug"] in PLAIN else "") + t["html"]
                 + '<div class="tl-after">' + extra
                 + section(t["how_title"], f'<div class="tl-how">{t["how"]}</div>')
                 + section(f"Questions about the {t['name'][0].lower() + t['name'][1:]}", faq_html)
