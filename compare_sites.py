@@ -1,4 +1,4 @@
-"""Facts for the comparison pages "Hiring Right Now vs <job site>" (one page per site in SITES).
+"""Facts for the comparison pages "Jobs Every Hour vs <job site>" (one page per site in SITES).
 
 The page generator reads this module. Nothing here is written as page copy except the strings themselves; the layout is up to the
 generator.
@@ -16,7 +16,7 @@ Fields of each site:
   slug, name, url (home page), what (one neutral sentence),
   rows: list of (question, them, us), questions in QUESTIONS order, rows without a sourced fact left out,
   them_better / us_better: 2-3 short points each,
-  pick: one sentence "Use X if ..., use Hiring Right Now if ...",
+  pick: one sentence "Use X if ..., use Jobs Every Hour if ...",
   sources: list of (fact, url, date read).
 
 Each source fact starts with a tag in square brackets that names what it supports, for example
@@ -28,7 +28,7 @@ Run `python3 compare_sites.py` to check the data.
 
 import re
 
-OUR_NAME = "Hiring Right Now"
+OUR_NAME = "Jobs Every Hour"
 
 R13 = "2026-11-13"  # read by the research files
 R14 = "2026-11-14"  # read from the site's own page for this module
@@ -131,7 +131,7 @@ SITES = [
             "Our employer prices are public: featured $29 for 14 days, pinned $59 for 7 days. Indeed shows no fixed price for "
             "its paid levels.",
         ],
-        pick="Use Indeed if you want the largest general job site and employer tools like Indeed Apply, use Hiring Right Now "
+        pick="Use Indeed if you want the largest general job site and employer tools like Indeed Apply, use Jobs Every Hour "
              "if you want jobs checked every hour on employers' own careers pages and to apply there directly.",
         sources=[
             ("[what|them_better 1|pick] Calls itself \"the world's #1 job site\" (Comscore, Total Visits, March 2026) and "
@@ -199,7 +199,7 @@ SITES = [
             "Premium prices only after sign-in and publishes no job post prices.",
             "Every job sends you to apply on the employer's own page. Easy Apply keeps the application on LinkedIn.",
         ],
-        pick="Use LinkedIn Jobs if you want the biggest professional network and Easy Apply, use Hiring Right Now if you want "
+        pick="Use LinkedIn Jobs if you want the biggest professional network and Easy Apply, use Jobs Every Hour if you want "
              "jobs checked every hour on employers' careers pages and to apply on the employer's own page.",
         sources=[
             ("[what|them_better 1|pick] \"+1.4B Members\", \"71M Companies\"; \"~9K\" job applications are submitted every "
@@ -264,7 +264,7 @@ SITES = [
             "No account needed to search or apply. Wellfound asks you to sign in with a profile before you apply.",
             "You apply on the employer's own page. On Wellfound the application is sent inside Wellfound.",
         ],
-        pick="Use Wellfound if you want to reach many startups with one profile, use Hiring Right Now if you want to search "
+        pick="Use Wellfound if you want to reach many startups with one profile, use Jobs Every Hour if you want to search "
              "and apply on employers' own pages without an account.",
         sources=[
             ("[what|Where the jobs come from|them_better 1|pick] \"27,000+ startups hire on Wellfound\"; \"exclusive pool of "
@@ -318,7 +318,7 @@ SITES = [
             "We read every job again from the employer's careers page every hour. A We Work Remotely listing is bought for "
             "a fixed 30 days.",
         ],
-        pick="Use We Work Remotely if you want a board of remote listings that employers pay to post, use Hiring Right Now if "
+        pick="Use We Work Remotely if you want a board of remote listings that employers pay to post, use Jobs Every Hour if "
              "you want jobs read every hour from employers' own careers pages.",
         sources=[
             # PRICING_RESEARCH.md B.9
@@ -371,7 +371,7 @@ SITES = [
             "A standard listing is free for 30 days (self-serve posting is not open yet). Remote OK starts at $299 for 30 "
             "days and renews unless turned off.",
         ],
-        pick="Use Remote OK if you want a large remote-only board with wide reach for employers, use Hiring Right Now if you "
+        pick="Use Remote OK if you want a large remote-only board with wide reach for employers, use Jobs Every Hour if you "
              "want free salary data and no subscription.",
         sources=[
             ("[what|Who pays|Kinds of jobs|them_better 1|pick] \"100,000+ remote jobs\" \"from 10,000+ top companies\"; "
@@ -418,7 +418,7 @@ SITES = [
             "Plus is one payment and never renews: $3 for 1 month, $7 for 3 months, $12 for 12 months (not on sale yet). "
             "FlexJobs plans renew automatically, and the trial renews at $23.95 every 4 weeks.",
         ],
-        pick="Use FlexJobs if you are happy to pay for a membership with a 14-day refund window, use Hiring Right Now if you "
+        pick="Use FlexJobs if you are happy to pay for a membership with a 14-day refund window, use Jobs Every Hour if you "
              "want to search and apply for free.",
         sources=[
             # PRICING_RESEARCH.md A.3
@@ -463,7 +463,7 @@ SITES = [
             "depends on the budget and can change if another employer pays more.",
             "We take payment in crypto. CryptoJobsList offers crypto to selected customers only.",
         ],
-        pick="Use CryptoJobsList if you want a long-running board with a large Telegram following, use Hiring Right Now if you "
+        pick="Use CryptoJobsList if you want a long-running board with a large Telegram following, use Jobs Every Hour if you "
              "want jobs read every hour from employers' careers pages and fixed, low listing prices.",
         sources=[
             # PRICING_RESEARCH.md B.15, COMPANIES_RESEARCH.md C.24
@@ -513,7 +513,7 @@ SITES = [
             "Lower prices to stand out: pinned $59 for 7 days, featured $29 for 14 days (self-serve posting is not open "
             "yet). On Web3.career, 7 days at the top is +$149 and 14 days is +$199.",
         ],
-        pick="Use Web3.career if you want the widest list of web3 projects and a large crypto audience, use Hiring Right Now if "
+        pick="Use Web3.career if you want the widest list of web3 projects and a large crypto audience, use Jobs Every Hour if "
              "you want to pay in crypto and apply on employers' own careers pages.",
         sources=[
             ("[what|Kinds of jobs|them_better 1|pick] \"Browse 42,383 blockchain jobs in web3 at 7,389 projects.\" \"Filter "

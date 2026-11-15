@@ -1,12 +1,12 @@
 # Cloudflare Worker settings for the API. Fill in the two placeholders after "wrangler d1 create" and the first deploy.
-name = "hiring-right-now-api"
+name = "jobs-every-hour-api"
 main = "src/worker.js"
 compatibility_date = "2026-01-01"
 
 [vars]
 SITE_URL = "https://simba0315.github.io/crypto-vakansii"
 SITE_ORIGINS = "https://simba0315.github.io"
-API_URL = "https://hiring-right-now-api.YOUR-SUBDOMAIN.workers.dev"
+API_URL = "https://jobs-every-hour-api.YOUR-SUBDOMAIN.workers.dev"
 GITHUB_REPO = "Simba0315/crypto-vakansii"
 PLUS_LIVE = "0"
 # Sign In with LinkedIn (see README): the page LinkedIn sends people back to, exactly as registered in the LinkedIn app. Uncomment
@@ -16,7 +16,7 @@ PLUS_LIVE = "0"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "hiring-right-now"
+database_name = "jobs-every-hour"
 database_id = "PASTE-THE-ID-PRINTED-BY-d1-create"
 
 [triggers]

@@ -1,6 +1,6 @@
-/* Hiring Right Now — embeddable jobs widget.
-   <div data-hrn-jobs="skill:python" data-limit="6" data-layout="list" data-theme="auto" data-accent="#c93f18">
-     <a href="…">Python jobs on Hiring Right Now</a>
+/* Jobs Every Hour — embeddable jobs widget.
+   <div data-hrn-jobs="skill:python" data-limit="6" data-layout="list" data-theme="auto" data-accent="#15803d">
+     <a href="…">Python jobs on Jobs Every Hour</a>
    </div>
    <script src="…/widget.js" async></script>
    Layouts: list (default), cards, compact, ticker, careers. data-search="1" adds a search box and "show more".
@@ -20,12 +20,12 @@
   var MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,monospace';
   var CSS =
     ':host{all:initial;display:block}' +
-    '.w{--bg:#fff;--ink:#0e0e0c;--mut:#5d5b54;--line:#e2dfd5;--hov:#f8f5f2;--acc:#c93f18;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden}' +
-    '.w.dark{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#221d1a;--acc:#ff7a52}' +
-    '@media(prefers-color-scheme:dark){.w.auto{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#221d1a;--acc:#ff7a52}}' +
+    '.w{--bg:#fff;--ink:#0e0e0c;--mut:#5d5b54;--line:#e2dfd5;--hov:#f8f5f2;--acc:#15803d;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden}' +
+    '.w.dark{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#221d1a;--acc:#5fd486}' +
+    '@media(prefers-color-scheme:dark){.w.auto{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#221d1a;--acc:#5fd486}}' +
     '.h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}' +
     '.ht{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:-.01em}' +
-    '.dot{width:8px;height:8px;border-radius:50%;background:#e8552b;flex:none}' +
+    '.dot{width:8px;height:8px;border-radius:50%;background:#1f9d55;flex:none}' +
     '.n,.by{font-size:12.5px;color:var(--mut);white-space:nowrap}' +
     'a{color:inherit;text-decoration:none}' +
     '.r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);position:relative}' +
@@ -80,7 +80,7 @@
     var co = el.getAttribute('data-company') || '';
     jobs.forEach(function (j) { j.company = co; });
     var site = (S && S.src ? S.src : '').replace(/\/widget\.js.*$/, '') || src;
-    return { name: co ? 'Jobs at ' + co : 'Open roles', total: jobs.length, url: site + '/widgets/', site: 'Hiring Right Now', jobs: jobs, own: true };
+    return { name: co ? 'Jobs at ' + co : 'Open roles', total: jobs.length, url: site + '/widgets/', site: 'Jobs Every Hour', jobs: jobs, own: true };
   }
   function render(el) {
     if (!el || el.getAttribute('data-hrn-ready')) return;

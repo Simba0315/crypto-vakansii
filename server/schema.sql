@@ -1,4 +1,4 @@
--- Hiring Right Now API: D1 (SQLite) schema. Safe to run more than once.
+-- Jobs Every Hour API: D1 (SQLite) schema. Safe to run more than once.
 -- An account. domain: the company domain it is tied to (siteDomain in worker.js), which the company site and the link to apply of
 -- every job it posts as an employer must be on; empty for a job seeker or a recruiter on a free mailbox. domain_proof: how the domain
 -- was proved: '' (it is the domain of the email, confirmed by a link) | dns (a TXT record) | file (a file on the site).

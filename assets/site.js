@@ -807,7 +807,7 @@
         var d = new Date(); d.setDate(d.getDate() + 7); d.setHours(9, 0, 0, 0);
         var p2 = function (n) { return (n < 10 ? '0' : '') + n; }, stamp = function (x) { return x.getFullYear() + p2(x.getMonth() + 1) + p2(x.getDate()) + 'T' + p2(x.getHours()) + p2(x.getMinutes()) + '00'; };
         var clean = function (t) { return String(t).replace(/[\\;,]/g, ' ').replace(/\s+/g, ' ').trim(); };
-        var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hiring Right Now//EN', 'BEGIN:VEVENT', 'UID:' + Date.now() + '@hrn', 'DTSTAMP:' + stamp(new Date()), 'DTSTART:' + stamp(d),
+        var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Jobs Every Hour//EN', 'BEGIN:VEVENT', 'UID:' + Date.now() + '@hrn', 'DTSTAMP:' + stamp(new Date()), 'DTSTART:' + stamp(d),
           'DURATION:PT15M', 'SUMMARY:' + clean('Follow up: ' + title + (company ? ' at ' + company : '')), 'DESCRIPTION:' + clean('You applied a week ago. If there is no answer, write a short follow-up. ' + location.href),
           'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Follow up on your application', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
         var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = 'follow-up.ics';
@@ -1129,7 +1129,7 @@
         var g = cv.getContext('2d'), full = found.slice(0, nFull || found.length), paid = full.filter(function (j) { return j[13]; }).map(function (j) { return j[13]; }).sort(function (a, b) { return a - b; });
         var cos = {}; full.forEach(function (j) { cos[j[2]] = (cos[j[2]] || 0) + 1; });
         var top = Object.keys(cos).sort(function (a, b) { return cos[b] - cos[a]; }).slice(0, 3);
-        g.fillStyle = '#ffffff'; g.fillRect(0, 0, 1200, 630); g.fillStyle = '#e8552b'; g.fillRect(0, 0, 1200, 14);
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, 1200, 630); g.fillStyle = '#1f9d55'; g.fillRect(0, 0, 1200, 14);
         g.fillStyle = '#121110'; g.font = '600 30px system-ui, sans-serif'; g.fillText('My job market · ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 70, 96);
         g.font = '800 150px system-ui, sans-serif'; g.fillText(nf(nFull || found.length), 70, 270);
         g.font = '500 36px system-ui, sans-serif'; g.fillText((nFull ? 'open jobs fit all ' + asked + ' of my answers' : 'open jobs fit my answers in part'), 76, 326);
@@ -1140,7 +1140,7 @@
         g.fillStyle = '#121110'; g.font = '600 28px system-ui, sans-serif';
         if (paid.length >= 5) g.fillText('Half of them pay up to ' + kfmt(paid[Math.floor(paid.length / 2)]) + ' or more', 700, 392);
         if (top.length) g.fillText('Hiring most: ' + top.join(', ').slice(0, 34), 700, 432);
-        g.fillStyle = '#e8552b'; g.fillRect(70, 560, 60, 6); g.fillStyle = '#121110'; g.font = '700 26px system-ui, sans-serif'; g.fillText('Hiring Right Now', 146, 572);
+        g.fillStyle = '#1f9d55'; g.fillRect(70, 560, 60, 6); g.fillStyle = '#121110'; g.font = '700 26px system-ui, sans-serif'; g.fillText('Jobs Every Hour', 146, 572);
         g.fillStyle = '#6c6a62'; g.font = '500 22px system-ui, sans-serif'; g.fillText(location.host + P + '/for-you/', 380, 572);
         cv.toBlob(function (blob) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-job-market.png'; document.body.appendChild(a); a.click(); a.remove(); tell('The picture was saved to your downloads.'); });
         return;

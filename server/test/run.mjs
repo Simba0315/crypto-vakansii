@@ -1658,25 +1658,25 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   }
   r = await ask('https://www.Zenith.dev/careers?x=1', founder); const how = r.body;
   eq([r.status, how.domain, how.dns.type, how.dns.name, how.file.url, how.file.content === how.dns.value, how.expires],
-    [200, 'zenith.dev', 'TXT', '_hiringrightnow.zenith.dev', 'https://zenith.dev/.well-known/hiringrightnow.txt', true, new Date(Date.now() + 7 * 86400e3).toISOString().slice(0, 10)],
+    [200, 'zenith.dev', 'TXT', '_jobseveryhour.zenith.dev', 'https://zenith.dev/.well-known/jobseveryhour.txt', true, new Date(Date.now() + 7 * 86400e3).toISOString().slice(0, 10)],
     'Domain: the answer names the registrable domain, the DNS record and the file to publish, and the day the token runs out');
-  ok(/^hiringrightnow-verify=[a-f0-9]{32}$/.test(how.dns.value), 'Domain: the token is random');
+  ok(/^jobseveryhour-verify=[a-f0-9]{32}$/.test(how.dns.value), 'Domain: the token is random');
   eq([(await ask('zenith.dev', founder)).body.dns.value, (await call(env, 'GET', '/api/domain', { token: founder })).body.pending.dns.value, world.fetched.length - was], [how.dns.value, how.dns.value, 0],
     'Domain: asking again for the same domain gives the same token, the account page can read it back, and none of this opened an address');
 
-  r = await check('dns', founder); eq([r.status, r.body.error, r.body.dns.name], [422, 'not_proved', '_hiringrightnow.zenith.dev'], 'Domain: a check before the record exists says so and repeats what to publish');
+  r = await check('dns', founder); eq([r.status, r.body.error, r.body.dns.name], [422, 'not_proved', '_jobseveryhour.zenith.dev'], 'Domain: a check before the record exists says so and repeats what to publish');
   r = await check('file', founder); eq([r.status, r.body.error], [422, 'not_proved'], 'Domain: so does a check for a file that is not there');
   r = await check('carrier pigeon', founder); eq([r.status, r.body.error], [400, 'method'], 'Domain: the way of proving is "dns" or "file"');
   r = await check('dns', await fresh(env, 'other@gmail.com')); eq([r.status, r.body.error], [409, 'no_token'], 'Domain: an account that asked for no token has nothing to check');
   world.dnsDown = true; r = await check('dns', founder); world.dnsDown = false; eq([r.status, r.body.error], [502, 'no_answer'], 'Domain: a resolver that does not answer is not taken for "no record"');
-  world.dns['_hiringrightnow.zenith.dev'] = ['"v=spf1 -all"', '"hiringrightnow-verify=' + 'f'.repeat(32) + '"'];
+  world.dns['_jobseveryhour.zenith.dev'] = ['"v=spf1 -all"', '"jobseveryhour-verify=' + 'f'.repeat(32) + '"'];
   r = await check('dns', founder); eq([r.status, (await call(env, 'GET', '/api/me', { token: founder })).body.user.domain], [422, ''], 'Domain: a record with another token proves nothing');
   const rival = await fresh(env, 'rival@gmail.com'), theirs = (await ask('zenith.dev', rival)).body.dns.value;
-  world.dns['_hiringrightnow.zenith.dev'] = ['"v=spf1 -all"', '"' + how.dns.value + '"'];
+  world.dns['_jobseveryhour.zenith.dev'] = ['"v=spf1 -all"', '"' + how.dns.value + '"'];
   eq([theirs === how.dns.value, (await check('dns', rival)).status], [false, 422], 'Domain: a token belongs to one account: the record of one does not prove the domain for another');
   world.fetched = [];
   r = await check('dns', founder);
-  eq([r.status, r.body.user.domain, r.body.user.proved_by, r.body.user.posts_as, world.fetched], [200, 'zenith.dev', ['dns'], ['employer'], ['https://cloudflare-dns.com/dns-query?name=_hiringrightnow.zenith.dev&type=TXT']],
+  eq([r.status, r.body.user.domain, r.body.user.proved_by, r.body.user.posts_as, world.fetched], [200, 'zenith.dev', ['dns'], ['employer'], ['https://cloudflare-dns.com/dns-query?name=_jobseveryhour.zenith.dev&type=TXT']],
     'Domain: the record with the account’s token ties the account to the domain; one question was put to the resolver over HTTPS, for JSON');
   eq([await one(env, "SELECT domain || '|' || domain_proof FROM users WHERE email = 'founder@gmail.com'"), await one(env, 'SELECT COUNT(*) FROM domain_claims WHERE user_id = ?', fid)], ['zenith.dev|dns', 0],
     'Domain: the proof is written on the account and the token is gone');
@@ -1693,19 +1693,19 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
     'Domain: the review queue says how each poster proved who they are: a DNS record from an account on a free mailbox, or the domain of a work email');
 
   const split = await fresh(env, 'split@gmail.com'), sv = (await ask('quasar.dev', split)).body.dns.value;
-  world.dns['_hiringrightnow.quasar.dev'] = [{ name: '_hiringrightnow.quasar.dev', type: 5, TTL: 300, data: 'verify.quasar-dns.net.' }, '"' + sv.slice(0, 20) + '" "' + sv.slice(20) + '"'];
+  world.dns['_jobseveryhour.quasar.dev'] = [{ name: '_jobseveryhour.quasar.dev', type: 5, TTL: 300, data: 'verify.quasar-dns.net.' }, '"' + sv.slice(0, 20) + '" "' + sv.slice(20) + '"'];
   r = await check('dns', split); eq([r.status, (r.body.user || {}).domain], [200, 'quasar.dev'], 'Domain: a record that arrives in pieces, behind an alias, is read as one value');
 
-  const maker = await fresh(env, 'maker@gmail.com'), fv = (await ask('apex.dev', maker)).body, FILE = fv.file.url, LINE = fv.file.content, WWW = 'https://www.apex.dev/.well-known/hiringrightnow.txt';
+  const maker = await fresh(env, 'maker@gmail.com'), fv = (await ask('apex.dev', maker)).body, FILE = fv.file.url, LINE = fv.file.content, WWW = 'https://www.apex.dev/.well-known/jobseveryhour.txt';
   world.fetched = [];
   serve(FILE, '<html>\n' + LINE + '\n</html>', 'text/html; charset=utf-8'); r = await check('file', maker); eq([r.status, r.body.error], [422, 'not_proved'], 'Domain: a web page is not the file, whatever is written on it');
   serve(FILE, 'token: ' + LINE + ' (ours)'); r = await check('file', maker); eq(r.status, 422, 'Domain: the token inside a longer line is not the line');
   serve(FILE, 'x'.repeat(5000) + '\n' + LINE); r = await check('file', maker); eq(r.status, 422, 'Domain: only the start of the file is read');
-  delete world.pages[FILE]; world.redirects[FILE] = 'https://evil-files.com/hiringrightnow.txt'; serve('https://evil-files.com/hiringrightnow.txt', LINE);
-  r = await check('file', maker); eq([r.status, world.fetched.includes('https://evil-files.com/hiringrightnow.txt')], [422, false], 'Domain: a redirect off the domain is not followed: a file elsewhere proves nothing');
+  delete world.pages[FILE]; world.redirects[FILE] = 'https://evil-files.com/jobseveryhour.txt'; serve('https://evil-files.com/jobseveryhour.txt', LINE);
+  r = await check('file', maker); eq([r.status, world.fetched.includes('https://evil-files.com/jobseveryhour.txt')], [422, false], 'Domain: a redirect off the domain is not followed: a file elsewhere proves nothing');
   world.redirects[FILE] = WWW.replace('https:', 'http:'); serve(WWW.replace('https:', 'http:'), LINE);
   r = await check('file', maker); eq([r.status, world.fetched.some((x) => x.startsWith('http://'))], [422, false], 'Domain: nor is one to plain http');
-  world.redirects[FILE] = WWW; serve(WWW, '﻿# proof for Hiring Right Now\r\n' + LINE + '\r\n');
+  world.redirects[FILE] = WWW; serve(WWW, '﻿# proof for Jobs Every Hour\r\n' + LINE + '\r\n');
   r = await check('file', maker);
   eq([r.status, (r.body.user || {}).domain, (r.body.user || {}).proved_by, await one(env, "SELECT domain_proof FROM users WHERE email = 'maker@gmail.com'")], [200, 'apex.dev', ['file'], 'file'],
     'Domain: the file with the account’s line, reached by a redirect inside the domain, ties the account to the domain');
