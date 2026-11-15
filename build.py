@@ -2,7 +2,7 @@
 
 Closed jobs keep their pages forever (archive); only the JobPosting markup and the apply button are removed.
 """
-import datetime, hashlib, html, json, os, re, shutil
+import base64, datetime, hashlib, html, json, os, re, shutil
 from urllib.parse import quote
 from collections import Counter, defaultdict
 from email.utils import format_datetime
@@ -471,7 +471,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
-<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/work-from-home-jobs/">Work from home jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
@@ -1488,9 +1488,9 @@ def main():
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
     hero = (f'<section class="hero v2"><div class="wrap">'
-            f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
+            f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days · <b>{sum(1 for j in archived if (j.get("closed") or "") >= wk):,}</b> closed ones taken off this week</span></p>'
             f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
-            f'<p class="sub">Old listings stay online long after the job is filled. We read {m:,} company career pages' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and keep only what is still open.</p>'
+            f'<p class="sub">Old listings stay online long after the job is filled. Every job here is read from the employer’s own careers page ({m:,} companies' + (f', {m_hourly:,} of them every hour and the rest every four hours' if ROTATING else ', every hour') + ') and leaves the list when the employer closes it. Free, no account: you apply on the employer’s site.</p>'
             f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
             f'<p class="popular"><a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/entry-level/">Entry-level</a>'
@@ -1742,7 +1742,7 @@ def main():
     # the remote hub also answers "remote jobs in my field", "remote and part-time", "remote and well paid": one link each
     rfams = "".join(tile(f"categories/{fs}/remote/", fn, c) for fs, fn, _, _, js_ in fam_rows if (c := sum(j["remote"] for j in js_)) >= 20)
     rkinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
-        ("work-from-anywhere/", "Open to any country"), ("remote/new/", "Posted in the last 3 days"), ("remote/entry-level/", "Entry-level"), ("remote/full-time/", "Full-time"),
+        ("work-from-home-jobs/", "Customer service, call center, data, beginners, $20+ an hour"), ("work-from-anywhere/", "Open to any country"), ("remote/new/", "Posted in the last 3 days"), ("remote/entry-level/", "Entry-level"), ("remote/full-time/", "Full-time"),
         ("remote/part-time/", "Part-time"), ("remote/contract/", "Contract"), ("salary/100k/remote/", "Paying $100K or more"), ("salary/200k/remote/", "Paying $200K or more"),
         ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles")))
     remote_more = (section("Remote jobs by field", f'<ul class="tiles">{rfams}</ul>', ("categories/", "All categories")) if rfams else "") + \
@@ -3244,6 +3244,11 @@ def main():
     # "Jobs Every Hour vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
     # A site with fewer than 4 sourced rows gets no page: a comparison with gaps would not be fair.
     VS = [x for x in compare_sites.SITES if len(x["rows"]) >= 4]
+    # our side of each table from today's build, not the figures typed into compare_sites.py on 13 Nov (41,187 jobs, "every hour")
+    OUR_LIVE = {"Kinds of jobs": f"The jobs that {m:,} companies post on their own careers pages ({n:,} open jobs today). English only.",
+                "How fresh the listings are": f"Every job is read again from the employer's careers page {EVERY}; a closed job leaves the lists at the next check."}
+    for x in compare_sites.SITES:
+        x["rows"] = [(q_, th_, OUR_LIVE.get(q_, us_)) for q_, th_, us_ in x["rows"]]
     def vs_src(x):
         seen_, out_ = set(), []
         for fact, url, date in x["sources"]:
@@ -3310,7 +3315,7 @@ def main():
              f"Alternatives to {x['name']}: {', '.join(y['name'] for y in others[:4])} and more, each with who pays and where you apply, from their own pages. Every fact sourced and dated.",
              crumbs(("Compared with other job sites", "vs/"), (f"{x['name']} alternatives", "")) + f'<h1>{e(x["name"])} alternatives: <span class="hl">{len(others) + 1} job sites, with sources</span></h1>'
              f'<p class="lead">Other places to look for work than {e(x["name"])}, each described from its own pages, with who pays and where you apply. Open a pair to see every fact side by side.</p>'
-             + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read every hour from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
+             + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read {EVERY} from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
                        f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>')
              + section(f"Other alternatives to {x['name']}", '<div class="feats">' + alt_ + "</div>")
              + section("Sources", '<p class="note">Every fact on this page comes from the comparison pages linked above, where each one is listed with its source and the date it was read.</p>'))
@@ -3955,7 +3960,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     safety_qa = [("Will a real employer ever ask me to pay?", "No. A real employer does not charge for applying, training, equipment, a background check or a visa. A request for money at any stage of hiring is the clearest sign of a scam."),
                  ("Is it safe to do a take-home test?", "Usually, if it comes through the company’s own hiring process. Do not run code or open files from someone you cannot tie to the company’s official site, and never on a machine that holds your wallets, keys or work credentials."),
-                 (f"Does {SITE} check employers?", f"Every listing on {SITE} is read from the employer’s own hiring system and links to that posting, and it is re-checked every hour. {NO_ANON}. We cannot vouch for what happens after you leave the site, so the checks on this page still apply."),
+                 (f"Does {SITE} check employers?", f"Every listing on {SITE} is read from the employer’s own hiring system and links to that posting, and it is re-checked {EVERY}. {NO_ANON}. We cannot vouch for what happens after you leave the site, so the checks on this page still apply."),
                  ("What if the recruiter wants to continue in a messenger?", "Ask to continue by email from the company’s domain or through its hiring system. A recruiter who refuses, or whose address does not match the company’s site, is not acting for that company.")]
     safety_faq, safety_ld = qa_block(safety_qa)
     page("safety/", f"Is This Job Offer Real? A safety checklist for job seekers | {SITE}",
@@ -4064,7 +4069,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     code_slug_all = {rule: slug for _, slug, rule in PLACES if isinstance(rule, str) and rule != "region"}
     fy_places = "".join(f'<option value="{c_}" data-s="{code_slug_all.get(c_, "")}" data-r="{region_of.get(c_, "")}">{flag_of(c_)} {e(nm_)}</option>'
                         for c_, nm_ in sorted([("US", "United States")] + [(c_, nm_) for c_, nm_, _, _ in COUNTRIES if c_ != "US"], key=lambda x: x[1]))
-    fy_pay = "".join(fy_opt(v, lb) for v, lb in [(0, "Any pay"), (60000, "$60K"), (80000, "$80K"), (100000, "$100K"), (130000, "$130K"), (160000, "$160K"), (200000, "$200K"), (250000, "$250K")])
+    fy_pay = ("".join(fy_opt(v, lb) for v, lb in [(0, "Any pay"), (60000, "$60K"), (80000, "$80K"), (100000, "$100K"), (130000, "$130K"), (160000, "$160K"), (200000, "$200K"), (250000, "$250K")])
+              + '<span class="or">Or by the hour</span>' + "".join(fy_opt(h_ * 2080, f"${h_}/hr") for h_ in (15, 18, 20, 22, 25, 30, 40, 50)))     # stored as a year: 2,080 hours
+    et_n = Counter(j["etype"] for j in active)
+    fy_hours = (fy_opt("Full-time", "Full-time", "", et_n["Full-time"]) + fy_opt("Part-time", "Part-time", "", et_n["Part-time"])
+                + fy_opt("Contract", "Contract or freelance", "", et_n["Contract"]) + fy_opt("Internship", "Internship", "", et_n["Internship"]))
     def fy_chip(t):
         tip = skills_info.plain(t)
         return f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false"' + (f' title="{e(tip)}"' if tip else "") + f">{e(t)}</button>"
@@ -4080,7 +4089,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               "such as a posting with no pay, gets a question mark; a job that contradicts an answer is left out. Jobs with the most ticks come first."),
              ("Is my resume or any answer sent anywhere?", "No. The answers and the resume text are read by a script inside your browser and kept in this browser only. Clear my answers removes them."),
              ("Why do many jobs carry a question mark for pay?", f"About {pct_paid}% of the open jobs state pay in the posting. The rest are still listed, below the ones that state it, unless you choose to hide them."),
-             ("Why is pay in US dollars a year?", "Most postings that state pay give a yearly range in US dollars, so that is what can be compared. A posting that gives pay per hour or in another currency is shown with its own figure and a question mark."),
+             ("Why is pay in US dollars?", "Most postings that state pay give a range in US dollars, a year or an hour, so that is what can be compared. An hourly rate counts as 2,080 hours a year (40 a week, 52 weeks). A posting that gives pay in another currency is shown with its own figure and a question mark."),
              ("Does it cost anything?", "No. Matching, searching and applying are free, and applying always happens on the employer’s own page.")]
     fy_faq = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in fy_qa) + "</dl>"
     fy_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -4094,10 +4103,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div id="fy-root" class="fy"><div class="fy-form">'
          + ask(1, "What kind of work do you want?", "Pick one or several. Leave it empty to see every kind.", f'<div class="opts" id="fy-work">{fy_work}</div>')
          + ask(2, "How much experience do you have?", "", f'<div class="opts one" id="fy-exp">{fy_exp}</div>')
-         + ask(3, "Where do you want to work?", "", f'<div class="opts one" id="fy-where">{fy_where}</div>'
+         + ask(3, "Where and how do you want to work?", "", f'<div class="opts one" id="fy-where">{fy_where}</div>'
                f'<label class="ask-l" for="fy-place">Your country</label><select id="fy-place"><option value="">Any country</option>{fy_places}</select>'
-               '<p class="ask-h" id="fy-place-note">Remote roles are often open to some countries only, so the country matters for them too.</p>')
-         + ask(4, "How much do you need to earn?", "In US dollars a year, before tax. Jobs that pay less are left out.", f'<div class="opts one pay" id="fy-pay">{fy_pay}</div>'
+               '<p class="ask-h" id="fy-place-note">Remote roles are often open to some countries only, so the country matters for them too.</p>'
+               f'<p class="ask-l">Hours</p><div class="opts one" id="fy-hours">{fy_hours}</div>'
+               f'<p class="ask-h">{100 * et_n[""] // max(1, n)}% of postings do not say. They stay in the list with a question mark.</p>')
+         + ask(4, "How much do you need to earn?", "In US dollars before tax, a year or an hour (an hour counts as 2,080 a year: 40 a week). Jobs that pay less are left out.", f'<div class="opts one pay" id="fy-pay">{fy_pay}</div>'
                '<label class="ask-l" for="fy-pay-in">Or type your own figure</label><span class="payin">$<input type="number" id="fy-pay-in" min="0" max="2000000" step="5000" inputmode="numeric" placeholder="120000"> a year</span>'
                '<label class="check"><input type="checkbox" id="fy-nopay"> Hide jobs that do not state pay</label><p class="ask-h" id="fy-pay-note"></p>')
          + ask(5, "What can you do?", "Optional. These are tools and skills that postings ask for by name. If the names mean nothing to you, skip this question.",
@@ -4110,7 +4121,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<p class="fy-acts more"><button class="btn ghost sm" id="fy-alert" type="button">Tell me when new jobs fit</button> <button class="btn ghost sm" id="fy-share" type="button">Copy a link to these answers</button> '
          '<button class="btn ghost sm" id="fy-pic" type="button">Save the result as a picture</button></p><p class="note" id="fy-note" role="status" hidden></p></div>'
          '<div class="fy-out" id="fy-out"><div class="fy-sum" id="fy-count" aria-live="polite"></div><div id="fy-gap" hidden></div>'
-         '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p></div></div>'
+         '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p>'
+         + (f'<p class="note fy-plus">Want these by email the morning they are posted, with your resume reworded for each? That is <a href="{P}/plus/">Plus</a>'
+            + ("." if CFG.get("plus", {}).get("live") else ", not on sale yet. Today “Tell me when new jobs fit” does the alert in this browser, free.") + "</p>")
+         + '</div></div>'
          '<a class="fy-jump" id="fy-jump" href="#fy-out" hidden></a>'
          + section("Questions about this page", fy_faq), head=fy_ld)
     write("data/skills.json", json.dumps([[n_, rx] for n_, rx in SKILLS if n_ in skill_counts], ensure_ascii=False), sitemap=False)
@@ -4640,7 +4654,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Free and Plus, side by side", seek_pt + f'<p class="note">Hiring? Employers have their own table on the <a href="{P}/pricing/#employers">pricing page</a>.</p>')
          + section("What Plus adds", pcard_html)
          + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. '
-                   'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
+                   'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>'
+                   + (f'<div class="pvs"><div><p class="pvs-l">A trial elsewhere</p><p class="pvs-n">$2.95</p><p>FlexJobs’ 14-day trial. After it, the membership renews by itself at $23.95 every 4 weeks until you cancel.</p></div>'
+                      f'<div class="us"><p class="pvs-l">A month of Plus</p><p class="pvs-n">{e(plus["plans"][0]["price"])}</p><p>One payment for the whole month. When it ends, Plus ends: nothing renews, nothing to cancel.</p></div>'
+                      '<p class="pvs-s">FlexJobs’ prices from its public pricing page, read on 13 Nov 2026. The jobs themselves are free here, with or without Plus.</p></div>' if plus["plans"] else ""))
          + section("What the same things cost elsewhere", else_html)
          + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
          + section("Questions about Plus", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
@@ -4777,6 +4794,16 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     seek_vs = pvs(f"${MARKET['seeker_month']} a month", f"The median price of {len(MARKET['seeker_sites'])} job-search services that sell by the month. Almost all of them renew by themselves.",
                   f"{plus['plans'][0]['price']} for a month", "One payment that ends by itself. Longer plans cost less per month.",
                   f"Prices on the public pages of {', '.join(MARKET['seeker_sites'])}, read on {MARKET['date']}.") if plus["plans"] else ""
+    # What remote-job and resume sites charge a job seeker for, and what it costs here. Every figure is from the site's own public
+    # pricing page on the date given (PRICING_RESEARCH.md, CONVERSION_STUDY.md); re-read those pages before changing one.
+    PAID_ELSEWHERE = [("Remote jobs checked before they are listed", "FlexJobs: $2.95 for 14 days, then $23.95 every 4 weeks", "Free. Every job is read from the employer’s own careers page"),
+                      ("Matching jobs to your answers", "RemoteJobsFinder: a subscription that renews every month, about $52", "Free. Five questions, nothing sent anywhere"),
+                      ("Resume download as PDF", "Resume.io: $2.95 for 7 days, then $29.95 every 4 weeks", "Free, as many times as you like, PDF and Word"),
+                      ("What a role pays and whether an offer is fair", "RocketHunt Pro: 290 ₽ a month", "Free, from the pay ranges employers publish")]
+    seek_free = ('<h3 class="cmp-h">What other sites charge for, free here</h3><div class="tablewrap"><table class="grid"><tr><th>What you get</th><th>Elsewhere</th><th>Here</th></tr>'
+                 + "".join(f'<tr><td>{e(a_)}</td><td>{e(b_)}</td><td class="y2"><strong>{e(c_)}</strong></td></tr>' for a_, b_, c_ in PAID_ELSEWHERE)
+                 + f'</table></div><p class="note">“Elsewhere” is what each site published on its own pricing page on {MARKET["date"]}. Prices change; check theirs before you compare. '
+                 f'Plus does not unlock any of the free things above: it adds help with applying.</p>')
     seek_fit = fit([("1 month", "You are already interviewing and want the letters and the interview practice for these weeks."),
                     ("3 months", "You are starting a search and do not know how long it will take. This is the one we recommend."),
                     ("12 months", "You change jobs or take contracts through the year, or want the lowest price per month.")])
@@ -4793,7 +4820,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<p class="lead">Two sets of plans, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
          '<p class="tabs pswitch" id="pswitch" hidden><button class="tab" type="button" data-v="s" aria-pressed="true">I’m looking for work</button><button class="tab" type="button" data-v="e" aria-pressed="false">I’m hiring</button></p>'
          + LAUNCH
-         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_trust}{seek_cards}{seek_vs}<h3 class="cmp-h">Which plan fits</h3>{seek_fit}<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}'
+         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_trust}{seek_cards}{seek_vs}{seek_free}<h3 class="cmp-h">Which plan fits</h3>{seek_fit}<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}'
            f'<p><a class="btn primary" href="{P}/for-you/">Start free with five questions</a> <a class="btn ghost" style="margin-top:0" href="{P}/plus/">See Plus</a></p></section>'
          + f'<section class="sec" id="for-employers"><div class="sec-head"><h2>Hiring</h2><a href="{P}/post-a-job/">See a featured job</a></div>'
            + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_trust + emp_cards + emp_vs + '<h3 class="cmp-h">Which plan fits</h3>' + emp_fit + '<h3 class="cmp-h">Standard, Featured and Pinned, line by line</h3>' + emp_pt
@@ -5096,11 +5123,175 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f"Open jobs by the hourly pay they state, from $20 to $100 an hour or more ({hr_total:,} today), with what each rate is a week, a month and a year.",
              crumbs(("Jobs by hourly pay", "")) + "<h1>Jobs by hourly pay</h1>"
              f'<p class="lead">{hr_total:,} open jobs state their pay in US dollars. Here they are by the hourly rate they start at: an hourly rate as the employer wrote it, '
-             'or a yearly salary divided by 2,080 hours (40 a week, 52 weeks). Pick a rate to see the jobs.</p>'
+             'or a yearly salary divided by 2,080 hours (40 a week, 52 weeks). Pick a rate to see the jobs.'
+             + (f' Remote work paid by the hour: <a href="{P}/remote-jobs-that-pay-20-an-hour/">remote jobs that pay $20 an hour or more</a>.' if sum(1 for j in active if j["remote"] and hr_of.get(j["id"], (0, ""))[1] == "h" and hr_of[j["id"]][0] >= 20) >= 20 else "") + '</p>'
              + f'<figure class="pic" style="max-width:760px"><figcaption><b>Open jobs by starting hourly pay</b>Each job counted once, by the lowest pay its posting states.</figcaption>{hr_bars}</figure>'
              + section("Hourly pay in a week, a month and a year", '<div class="tablewrap"><table><thead><tr><th>An hour</th><th>A week (40 h)</th><th>A month</th><th>A year (2,080 h)</th></tr></thead><tbody>'
                        + conv_rows + f'</tbody></table></div><p class="note">Any other rate or number of hours: the <a href="{P}/tools/salary-converter/">pay converter</a>.</p>')
              + section("Questions about hourly pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hub_qa) + "</dl>"), head=hub_ld)
+
+    # Work-from-home landing pages (CONVERSION_STUDY.md, 15 Nov 2026). Paid remote-job sites buy Google ads on these searches and send
+    # the click to a page per search: "remote call center jobs", "remote customer service", "data entry", "no experience", "$20+/hr".
+    # Here each one is a page of real open jobs with its counts and pay recounted on every build. A page is built only when 20 jobs
+    # fill it; a search our employers hardly hire for (data entry) says so in the first line and shows the work that is hired.
+    def fy_link(o):          # a link that opens "For you" with these answers filled in (the same format as its "Copy a link" button)
+        return f"{P}/for-you/#a=" + base64.b64encode(json.dumps(o, separators=(",", ":")).encode()).decode()
+    WFH_TRUST = ["Read from the employer’s own careers page", f"Checked {EVERY}; a closed job leaves the list", "Company name and apply link always shown, free"]
+    wk_ago = (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=7)).isoformat()
+    closed_wk = sum(1 for j in archived if (j.get("closed") or "") >= wk_ago)
+    PHONE_RX = re.compile(r"\b(phone|phones|telephone|inbound calls?|outbound calls?|call cent(?:er|re)|contact cent(?:er|re)|answer(?:ing)? calls|customer calls|voice support|over the phone|by phone)\b", re.I)
+    DENTRY_RX = re.compile(r"data (entry|input|clerk)", re.I)
+    remote_all = [j for j in active if j["remote"]]
+    cs_r = [j for j in ROLE_JOBS.get("customer-support", []) if j["remote"]]
+    call_r = [j for j in cs_r if PHONE_RX.search(j["title"] + " " + j["excerpt"] + " " + (j.get("desc") or ""))]
+    de_r = [j for j in remote_all if DENTRY_RX.search(j["title"])]
+    ai_r = [j for j in ROLE_JOBS.get("ai-trainer", []) if j["remote"]]
+    de_ids = {j["id"] for j in de_r}
+    data_r = de_r + [j for j in ai_r if j["id"] not in de_ids]
+    beg_r = [j for j in remote_all if j["entry"] or j.get("years") == 1]
+    h20_r = [j for j in remote_all if hr_of.get(j["id"], (0, ""))[1] == "h" and hr_of[j["id"]][0] >= 20]
+    y20_n = sum(1 for j in remote_all if hr_of.get(j["id"], (0, ""))[1] == "y" and hr_of[j["id"]][0] >= 20)
+    pt_r = [j for j in remote_all if j["etype"] == "Part-time"]
+    ct_r = [j for j in remote_all if j["etype"] == "Contract"]
+    any_r = [j for j in remote_all if j.get("anywhere")]
+    per_hr = lambda js: sorted(hr_of[j["id"]][0] for j in js if j["id"] in hr_of)
+    hr_fmt = lambda v: f"${v:,.0f}" if v >= 10 else f"${v:,.2f}"
+    PAY_BANDS = [(0, 15), (15, 20), (20, 25), (25, 30), (30, 40), (40, 60), (60, None)]
+    def pay_fig(js, what):
+        hs = per_hr(js)
+        if len(hs) < 15: return ""
+        rows_ = [(f"${lo_} to ${hi_}" if lo_ and hi_ else f"Under ${hi_}" if hi_ else f"${lo_} or more", sum(1 for h_ in hs if lo_ <= h_ < (hi_ or 10 ** 6))) for lo_, hi_ in PAY_BANDS]
+        rows_ = [r_ for r_ in rows_ if r_[1]]
+        top_ = max(k_ for _, k_ in rows_)
+        return (f'<figure class="pic"><figcaption><b>What they pay, per hour</b>{len(hs):,} of these {len(js):,} {what} state pay in US dollars. A yearly salary is divided by 2,080 hours; '
+                f'each job counts once, by the lowest pay it states. The middle one starts at {hr_fmt(median(hs))} an hour.</figcaption><div class="hbars">'
+                + "".join(f'<a href="{P}/jobs-that-pay/"><span class="hn">{e(l_)}</span><span class="hb"><i style="width:{max(3, round(100 * k_ / top_))}%"></i></span><span class="hc">{k_:,}</span></a>' for l_, k_ in rows_)
+                + "</div></figure>")
+    def who_fig(js):
+        co_ = Counter(j["company"] for j in js).most_common(8)
+        if len(co_) < 4: return ""
+        return ('<figure class="pic"><figcaption><b>Who hires the most</b>Open jobs per employer today. Each name opens the employer’s page with all its jobs.</figcaption><div class="hbars">'
+                + "".join(f'<a href="{P}/companies/{slugify(c_)}/"><span class="hn">{e(c_)}</span><span class="hb"><i style="width:{max(3, round(100 * k_ / co_[0][1]))}%"></i></span><span class="hc">{k_:,}</span></a>' for c_, k_ in co_)
+                + "</div></figure>")
+    def wfh_tiles(js, third):
+        hs = per_hr(js)
+        cells = [("Open now", f"{len(js):,}", f"checked {fdate(TODAY, False)}"), ("New this week", f"{sum(1 for j in js if (j['posted'] or '') >= wk_ago):,}", "posted in the last 7 days"),
+                 third, ("Employers", f"{len({j['company'] for j in js}):,}", "hiring for this work")]
+        if hs and third is None: cells[2] = ("Middle pay", f"{hr_fmt(median(hs))}/hr", f"of {len(hs):,} that state pay")
+        cells = [c_ for c_ in cells if c_]
+        return '<div class="stats3 st4">' + "".join(f'<div class="st"><span class="st-l">{e(a_)}</span><b class="st-v">{e(b_)}</b><span class="st-s">{e(c_)}</span></div>' for a_, b_, c_ in cells) + "</div>"
+    WFH = []          # (slug, short name, jobs) of the pages built, for the hub and the links between them
+    def wfh_page(slug, name, h1_html, title, desc, js, lead, third, fy, qa, what="jobs", note=""):
+        if len(js) < 20: return
+        WFH.append((slug, name, js))
+        top_ = (crumbs(("Work from home jobs", "work-from-home-jobs/"), (name, ""))
+                + f'<p class="stamp">Checked {fdate(TODAY, False)} · <b>{len(js):,}</b> open · <b>{sum(1 for j in js if age(j["posted"])[1]):,}</b> new in 3 days</p>'
+                + f"<h1>{h1_html}</h1><p class=\"lead\">{lead}</p>"
+                + '<ul class="ptrust">' + "".join(f"<li>{e(x)}</li>" for x in WFH_TRUST) + "</ul>"
+                + wfh_tiles(js, third)
+                + f'<p class="wfh-act"><a class="btn primary" href="{fy}">Narrow them to my pay and hours</a> <a class="btn ghost" href="#wfh-list">See the jobs</a></p>')
+        figs = pay_fig(js, what) + who_fig(js)
+        qa_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        sib = [(s_, n_, j_) for s_, n_, j_ in WFH_LIST if s_ != slug and len(j_) >= 20]
+        listing(f"{slug}/", name, f"{title} ({len(js):,} open) | {SITE}", desc, js, max_pages=LIST_PAGES, more=False, head_html=top_,
+                extra=(f'<div class="pics">{figs}</div>' if figs else "") + note + '<div class="sec-head lst" id="wfh-list"><h2>Open jobs, newest first</h2></div>',
+                after=section("How every job here is checked", '<ol class="steps">'
+                              f"<li><b>Read at the source.</b> Each job comes from the employer’s own hiring system (Greenhouse, Lever, Ashby and others), the page the employer itself keeps up to date. We do not copy jobs from other job boards.</li>"
+                              f"<li><b>Checked again {EVERY}.</b> When the employer takes a job down, it leaves this list at the next check. Its page stays, marked closed. {closed_wk:,} jobs were taken off this way in the last 7 days.</li>"
+                              "<li><b>Nothing is locked.</b> The company name, the pay it states and the button that opens the employer’s own application page are on every job, free and without an account. Some paid job sites hide exactly these until you subscribe.</li></ol>"
+                              f'<p class="note">A real employer never asks you to pay for training, equipment or a check before you start. The <a href="{P}/safety/">safety checklist</a> shows how to spot a fake offer.</p>')
+                      + section(f"Questions about {name.lower()}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>")
+                      + (section("More work you can do from home", '<p class="rel">' + "".join(f'<a href="{P}/{s_}/">{e(n_)} ({len(j_):,})</a>' for s_, n_, j_ in sib)
+                                 + f'<a href="{P}/work-from-home-jobs/">All work-from-home jobs</a></p>') if sib else "") + qa_ld)
+    WFH_LIST = [("remote-customer-service-jobs", "Remote customer service jobs", cs_r), ("remote-call-center-jobs", "Remote call center jobs", call_r),
+                ("remote-data-entry-jobs", "Remote data entry and annotation jobs", data_r), ("remote-jobs-no-experience", "Remote jobs for beginners", beg_r),
+                ("remote-jobs-that-pay-20-an-hour", "Remote jobs paying $20 an hour or more", h20_r)]
+    cs_phone, cs_hs = len(call_r), per_hr(cs_r)
+    wfh_page("remote-customer-service-jobs", "Remote customer service jobs", 'Remote customer service jobs <span class="hl">straight from the employer</span>',
+             "Remote Customer Service Jobs", f"{len(cs_r):,} remote customer service and support jobs read from employers’ own careers pages {EVERY}: chat, email and phone support, with the pay each states. Free, no account.",
+             cs_r, f"Remote support jobs attract fake offers and old postings that were filled weeks ago. These {len(cs_r):,} come from the employers’ own careers pages: answering customers by chat, "
+             f"email or phone for companies like {', '.join(e(c_) for c_, _ in Counter(j['company'] for j in cs_r).most_common(3))}. {cs_phone:,} of them mention phone work. A job leaves this list when the employer closes it.",
+             None, fy_link({"c": ["support"], "w": "remote"}),
+             [("Do remote customer service jobs need experience?", f"Most postings ask for some. Of these {len(cs_r):,}, {sum(1 for j in cs_r if j['entry'] or j.get('years') == 1):,} have a junior or entry title or ask for one year at most. "
+               "Experience in retail, hospitality or a call center counts: it is the same work of calming people down and solving their problem."),
+              ("What do remote customer service jobs pay?", (f"{len(cs_hs):,} of them state pay in US dollars; the middle one starts at {hr_fmt(median(cs_hs))} an hour, or {dollars(median(cs_hs) * 2080)} a year full-time. " if len(cs_hs) >= 15 else "Few of them state pay today. ")
+               + "Support jobs at software companies tend to pay more than general call centers, and a second language often adds to it."),
+              ("Are these jobs real?", f"Each one is read from the hiring system of the company named on it, and checked again {EVERY}. Applying happens on the company’s own site. Nothing here asks you for money.")])
+    if len(call_r) >= 20:
+        wfh_page("remote-call-center-jobs", "Remote call center jobs", 'Remote call center jobs <span class="hl">you can do from home</span>',
+                 "Remote Call Center Jobs", f"{len(call_r):,} remote support jobs whose posting mentions phone work: inbound and outbound calls, a contact center or support by phone. Read from employers’ careers pages {EVERY}.",
+                 call_r, f"Call center work from home means answering customers by phone, and many listings for it are stale or fake. These {len(call_r):,} are remote customer support jobs whose posting mentions "
+                 f"phone work (calls, a phone line or a contact center), read from the employers’ own careers pages. The other {len(cs_r) - len(call_r):,} remote support jobs do not mention the phone: "
+                 f'they are on the <a href="{P}/remote-customer-service-jobs/">customer service page</a>.',
+                 None, fy_link({"c": ["support"], "w": "remote"}),
+                 [("What is a remote call center job?", "Customer service by phone, done from home: you take calls (inbound) or make them (outbound) through a headset and a program on your computer. Most also include chat and email."),
+                  ("What do I need to work in a call center from home?", "A quiet room, a computer, a headset and a fast, stable internet line. Some employers send the computer and headset; a real one never charges you for them."),
+                  ("How are these jobs chosen?", f"From {len(cs_r):,} remote customer support jobs, the ones whose title or posting mentions phone work: phone, telephone, calls, a call center or a contact center. Read the posting to see how much of the day is spent on the phone.")])
+    ai_hs = per_hr(ai_r)
+    wfh_page("remote-data-entry-jobs", "Remote data entry and annotation jobs", 'Remote data entry and <span class="hl">data annotation</span> jobs',
+             "Remote Data Entry and Annotation Jobs", f"Remote data jobs from employers’ own careers pages: {f'{len(de_r):,}' if de_r else 'none today'} called data entry, {len(data_r) - len(de_r):,} in data annotation and AI training, with the pay each states.",
+             data_r, (f"Employers’ own careers pages list few remote jobs called data entry: {len(de_r):,} today. " if de_r else "Employers’ own careers pages list almost no remote jobs called data entry today. ")
+             + f"The computer work that is hired from home in numbers is data annotation and AI training: checking, labelling and writing examples that AI models learn from. "
+             f"{len(data_r) - len(de_r):,} such jobs are open" + (f", and the middle one starts at {hr_fmt(median(ai_hs))} an hour" if len(ai_hs) >= 15 else "") + ". Most are contracts, paid by the hour.",
+             None, fy_link({"w": "remote"}),
+             [("Are there remote data entry jobs?", f"A few: {len(de_r):,} remote jobs called data entry are open on employers’ own careers pages today. Many listings elsewhere with that title are reposts or scams that ask for a fee. "
+               "The work that is hired instead is data annotation and AI training."),
+              ("What is data annotation?", "Reading, sorting and labelling text, pictures or audio, or writing and grading answers, so that an AI model can learn from them. Some projects want a degree or a skill such as coding, medicine or a language; others want care and attention only."),
+              ("What do data annotation jobs pay?", (f"{len(ai_hs):,} of the {len(ai_r):,} open ones state pay; the middle one starts at {hr_fmt(median(ai_hs))} an hour. " if len(ai_hs) >= 15 else "")
+               + "Most are contracts paid per hour, with hours that change from week to week.")], what="jobs")
+    wfh_page("remote-jobs-no-experience", "Remote jobs for beginners", 'Remote jobs for beginners with <span class="hl">little or no experience</span>',
+             "Entry-Level Remote Jobs", f"{len(beg_r):,} remote jobs open to beginners: junior and intern titles, and postings that ask for a year of experience at most. From employers’ careers pages, checked {EVERY}.",
+             beg_r, f"Most remote jobs ask for years of experience, and the ones that do not are hard to find among old listings. These {len(beg_r):,} come from employers’ own careers pages: "
+             f"{sum(1 for j in beg_r if j['entry']):,} have a junior or intern title and {sum(1 for j in beg_r if not j['entry']):,} ask for one year of experience at most. "
+             f"The most are in {', '.join(CAT[c_].lower() for c_, _ in Counter(j['cat'] for j in beg_r if j['cat'] != OTHER[0]).most_common(3))}.",
+             None, fy_link({"e": "0", "w": "remote"}),
+             [("Can I get a remote job with no experience?", f"Yes, but fewer remote jobs take beginners than office jobs do. Of the {len(remote_all):,} remote jobs open today, {len(beg_r):,} have a junior or intern title or ask for one year at most. "
+               "Sales development, customer support and AI training take the most beginners."),
+              ("Which remote jobs are easiest to get without experience?", "Ones where the work is learned on the job: sales development (booking meetings for a sales team), customer support, and data annotation. Internships are another way in, and some are paid."),
+              ("How are these jobs chosen?", "A job is listed when its title says junior, entry-level, graduate or intern, or when its posting asks for one year of experience at most. Read each posting: some still list skills they expect.")],
+             note=f'<p class="note">An entry title is not a promise: read what each posting asks for. All {len(remote_all):,} remote jobs are on the <a href="{P}/remote/">remote jobs page</a>.</p>')
+    wfh_page("remote-jobs-that-pay-20-an-hour", "Remote jobs paying $20 an hour or more", 'Remote jobs that pay <span class="hl">$20 an hour or more</span>',
+             "$20 an Hour Remote Jobs", f"{len(h20_r):,} remote jobs that state an hourly rate of $20 or more, from employers’ own careers pages. Plus how $20 an hour works out per week, month and year.",
+             h20_r, f"Ads promise remote work at $20 an hour and more; here is what employers actually post. These {len(h20_r):,} remote jobs state an hourly rate of at least $20 on the employer’s own careers page. "
+             f"Another {y20_n:,} remote jobs state a yearly salary of {dollars(20 * 2080)} or more, which is the same as $20 an hour full-time: find them with the salary filter in the "
+             f'<a href="{P}/jobs/?remote=1&amp;sal=41600">search</a>. $20 an hour is {dollars(20 * 40)} a week and {dollars(20 * 2080 / 12)} a month at 40 hours.',
+             None, fy_link({"w": "remote", "y": 41600}),
+             [("Which remote jobs pay $20 an hour?", f"Of the {len(h20_r):,} listed here, the most are in " + ", ".join(f"{CAT[c_].lower()} ({k_:,})" for c_, k_ in Counter(j['cat'] for j in h20_r if j['cat'] != OTHER[0]).most_common(3))
+               + ". Many are contracts paid by the hour."),
+              ("How much is $20 an hour a year?", f"At 40 hours a week for 52 weeks, $20 an hour is {dollars(20 * 2080)} a year, {dollars(20 * 2080 / 12)} a month or {dollars(20 * 40)} a week, before tax."),
+              ("Why only jobs that state an hourly rate?", "Because that is what a search for “$20 an hour” looks for: hourly work. Jobs that state a yearly salary are on the pay pages, where each is converted to an hourly rate.")],
+             note=f'<p class="note">Every rate, hourly or yearly: <a href="{P}/jobs-that-pay/">jobs by hourly pay</a>.</p>')
+    # the hub: every work-from-home page with its count and pay, and the kinds of remote work by field
+    if remote_all:
+        fam_ = Counter(j["cat"] for j in remote_all if j["cat"] != OTHER[0]).most_common(10)
+        doors = [(s_, n_, j_) for s_, n_, j_ in WFH] + [(p_, n_, j_) for p_, n_, j_ in (("remote/part-time", "Remote part-time jobs", pt_r), ("remote/contract", "Remote contract and freelance jobs", ct_r),
+                                                                                         ("work-from-anywhere", "Remote jobs open to any country", any_r)) if len(j_) >= 20]
+        def door(s_, n_, j_):
+            hs = per_hr(j_)
+            return (f'<a class="feat" href="{P}/{s_}/"><h3>{e(n_)}</h3><p><b>{len(j_):,} open</b> · {sum(1 for j in j_ if (j["posted"] or "") >= wk_ago):,} new this week'
+                    + (f" · middle pay {hr_fmt(median(hs))}/hr" if len(hs) >= 15 else "") + "</p></a>")
+        wfh_qa = [("Are work-from-home jobs real?", f"These are. Each of the {len(remote_all):,} is read from the employer’s own careers page and checked again {EVERY}; you apply on the employer’s site. "
+                   "A real employer never asks you to pay to apply, for training or for equipment."),
+                  ("Do I have to pay to see these jobs?", "No. Every job, its pay where the employer states it and the link to apply are free, with no account. Some remote-job sites charge a monthly fee to see their lists; nothing here is behind one."),
+                  ("Which work-from-home jobs take beginners?", f"{len(beg_r):,} remote jobs have a junior or intern title or ask for one year of experience at most. Customer support, sales development and data annotation take the most.")]
+        wfh_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in wfh_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        rhs = per_hr(remote_all)
+        page("work-from-home-jobs/", f"Work From Home Jobs: {len(remote_all):,} Open, From Employers | {SITE}",
+             f"{len(remote_all):,} work-from-home jobs read from employers’ own careers pages {EVERY}: customer service, call center, data annotation, jobs for beginners and jobs paying $20 an hour or more. Free, no account.",
+             crumbs(("Work from home jobs", "")) + f'<p class="stamp">Checked {fdate(TODAY, False)} · <b>{len(remote_all):,}</b> remote jobs open · <b>{closed_wk:,}</b> closed jobs taken off in 7 days</p>'
+             + '<h1>Work from home jobs read from <span class="hl">the employer’s own page</span></h1>'
+             f'<p class="lead">Work-from-home listings are where fake offers and long-filled jobs collect, and some sites charge a monthly fee to see theirs. '
+             f'These {len(remote_all):,} come straight from the careers pages of {len({j["company"] for j in remote_all}):,} employers, checked {EVERY}. A closed job leaves the list. Seeing them and applying is free.</p>'
+             + '<ul class="ptrust">' + "".join(f"<li>{e(x)}</li>" for x in WFH_TRUST) + "</ul>"
+             + wfh_tiles(remote_all, ("Middle pay", f"{hr_fmt(median(rhs))}/hr", f"of {len(rhs):,} that state pay") if len(rhs) >= 15 else None)
+             + f'<p class="wfh-act"><a class="btn primary" href="{fy_link({"w": "remote"})}">Show the ones that fit me</a> <a class="btn ghost" href="{P}/remote/">All {len(remote_all):,} remote jobs</a></p>'
+             + section("Popular kinds of work from home", '<div class="feats">' + "".join(door(*d_) for d_ in doors) + "</div>")
+             + section("Remote jobs by field", '<div class="hbars">' + "".join(
+                 f'<a href="{P}/remote/{c_}/"><span class="hn">{e(CAT[c_])}</span><span class="hb"><i style="width:{max(3, round(100 * k_ / fam_[0][1]))}%"></i></span><span class="hc">{k_:,}</span></a>' for c_, k_ in fam_)
+                       + "</div><p class=\"note\">Open remote jobs per field today. A field opens its own list.</p>")
+             + section("Questions about work-from-home jobs", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in wfh_qa) + "</dl>"), head=wfh_ld)
 
     # Resignation letters, one page per situation. In the Rezi study these pages bring that site about a fifth of its search visits.
     RL = resignation_pages.LETTERS

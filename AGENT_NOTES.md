@@ -431,3 +431,19 @@ plain HTML, so the page is readable without the map.
 - Email addresses: plain `mailto:` links through the department helper in `build.py` (`MAIL`); Cloudflare hides them from scrapers.
 - Copy check for the owner: the site says "every hour", but since 14 Nov the 2,994 boards in `sources_more.json` are read every four
   hours (`HRN_ROTATE`). The media kit says so; other pages still say "every hour".
+
+## Work-from-home landing pages and the conversion study (15 Nov 2026, `CONVERSION_STUDY.md`)
+
+- The study ranks why job seekers pay other sites; the strongest lever is a locked company name or Apply button. We never lock either, and the
+  landing pages say so in the first screen. Read section 3 of the study ("What we never copy") before writing any offer or ad.
+- `/work-from-home-jobs/` and five pages for the searches paid sites buy ads on are built in `build.py` (search "Work-from-home landing pages"),
+  right after the hourly-pay pages, from `hr_of`, `ROLE_JOBS["customer-support"]`, `ROLE_JOBS["ai-trainer"]` and the `years` field. A page is
+  built only with 20 jobs. Each says plainly what it counts: phone work is "the posting mentions phone, calls, a call or contact center";
+  beginners are junior or intern titles or postings asking one year at most; $20 an hour counts only jobs that state an hourly rate. If a
+  search has almost no jobs (data entry), the first line says so and shows the work that is hired.
+- "For you": question 3 has the hours (`#fy-hours`, index field `j[19]`), question 4 takes hourly answers stored as a year (rate x 2,080);
+  `hourOf()` in `assets/site.js` reads an hourly rate from the pay line. Share links carry `t` for the hours. `fy_link()` in `build.py`
+  makes a link that opens "For you" with answers filled in.
+- `/vs/` pages: our side of each row comes from the build (`OUR_LIVE`), not from `US_ANSWERS`. FlexJobs has 3 sourced rows and no page;
+  `python3 compare_sites.py` reports that, as it did before 15 Nov.
+

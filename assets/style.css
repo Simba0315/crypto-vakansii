@@ -819,6 +819,9 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .opts.pay{grid-template-columns:repeat(4,minmax(0,1fr))}
 .opts.pay .opt{display:block;text-align:center;padding:10px 4px}
 .opts.pay .opt b{font:600 13.5px var(--mono)}
+.opts .or{grid-column:1/-1;margin:8px 0 0;font-size:13px;font-weight:600;color:var(--muted)}
+.wfh-act{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 8px}
+.wfh-act .btn{margin-top:0}
 .ask-l{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px}
 .ask select{width:100%;max-width:none}
 .payin{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;color:var(--muted)}

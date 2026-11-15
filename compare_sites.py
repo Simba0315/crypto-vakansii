@@ -32,6 +32,7 @@ OUR_NAME = "Jobs Every Hour"
 
 R13 = "2026-11-13"  # read by the research files
 R14 = "2026-11-14"  # read from the site's own page for this module
+R15 = "2026-11-15"  # read from the site's own page for CONVERSION_STUDY.md
 
 QUESTIONS = [
     "Who pays",
@@ -84,8 +85,8 @@ US_ANSWERS = {
     "Where the jobs come from": "The employers' own careers pages (Greenhouse, Lever and Ashby boards).",
     "Where you apply": "On the employer's own page.",
     "Account needed to apply": "No. You can search and apply without an account.",
-    "How fresh the listings are": "Every job is read again from the employer's careers page every hour.",
-    "Kinds of jobs": "The jobs that 732 companies post on their own careers pages (41,187 open jobs). English only.",
+    "How fresh the listings are": "Every job is read again from the employer's careers page every one to four hours.",
+    "Kinds of jobs": "The jobs that companies post on their own careers pages. English only.",      # build.py puts today's counts in
     "Payment methods": "Crypto.",
 }
 
@@ -433,6 +434,100 @@ SITES = [
              "https://www.flexjobs.com/termsofuse.aspx", R13),
         ],
     ),
+    # ------------------------------------------------------------------ RemoteJobsFinder
+    dict(
+        slug="remotejobsfinder",
+        name="RemoteJobsFinder",
+        url="https://remotejobsfinder.co/",
+        what="RemoteJobsFinder is a paid subscription for job seekers that lists remote jobs and promises that AI applies "
+             "to jobs for them.",
+        rows=_rows(
+            ("Who pays", "Job seekers, through a subscription that renews by itself every month."),
+            ("Price for job seekers", "Shown per day after a quiz. On 13 Nov 2026 the monthly plan renewed at 1,348,132 "
+                                      "Vietnamese dong a month (about $52). A refund needs screenshots of at least 100 "
+                                      "applications made over 14 days."),
+            ("Where you apply", "Both Apply buttons on a job page lead to its subscription page, not to the employer."),
+            ("Account needed to apply", "Yes, and a paid plan: applying leads to the subscription page, whose checkout "
+                                        "starts by creating an account."),
+            ("Kinds of jobs", "Remote jobs in the United States by role, such as data entry and customer service. Its "
+                              "public sitemap lists 3,929 job pages."),
+        ),
+        them_better=[
+            "It promises to apply for you: its page text says \"AI sends 50+ applications daily\". We do not send "
+            "applications for anyone.",
+            "It can be bought today. Our Plus plan is not on sale yet.",
+        ],
+        us_better=[
+            "Free, and Apply opens the employer's own page. On RemoteJobsFinder both Apply buttons lead to its "
+            "subscription page.",
+            "Plus is one payment and never renews. RemoteJobsFinder renews every month, and its refund needs screenshots "
+            "of 100 applications.",
+        ],
+        pick="Use RemoteJobsFinder if you want a paid service that promises to apply for you, use Jobs Every Hour if you "
+             "want to see every employer and apply on its own page for free.",
+        sources=[
+            # PRICING_RESEARCH.md A.5 (browser)
+            ("[Who pays|Price for job seekers|Account needed to apply|them_better 2|us_better 2] Plans priced per day; "
+             "\"Without cancellation, before the selected discounted intro plan ends, I accept that RemoteJobsFinder will "
+             "automatically charge 1348132.00 VND every 1 Month until I cancel.\" Checkout starts with \"Create account: "
+             "E-mail\".",
+             "https://remotejobsfinder.co/en/onboarding/64/subscription/5", R13),
+            ("[what|Where you apply|Account needed to apply|us_better 1|pick] A job page shows the title, company, pay and "
+             "description; both \"Apply\" buttons link to /en/onboarding/64/subscription/5, the price page.",
+             "https://remotejobsfinder.co/en/remote-jobs/usa/data-entry-operator_09d874c2-ef6d-447b-a3dc-6270e10ab902", R15),
+            ("[Price for job seekers|us_better 2] \"100% Money-Back Guarantee\" only with screenshots of at least 100 "
+             "applications over 14 consecutive days (monthly plans); \"Meeting the aforementioned criteria is the sole "
+             "basis for qualifying for a refund.\"",
+             "https://remotejobsfinder.co/en/legal/money-back-policy", R15),
+            ("[Kinds of jobs] Sitemap index: 220 role hubs under /en/remote-jobs/usa/ (remote-data-entry, "
+             "remote-customer-service and others) and 3,929 job pages in sitemap_listings_active.xml.",
+             "https://remotejobsfinder.co/sitemap_index.xml", R15),
+            ("[what|them_better 1|pick] Text shipped with the site's pages: \"AI sends 50+ applications daily\", with a "
+             "resume and cover letter per job.",
+             "https://remotejobsfinder.co/en", R15),
+        ],
+    ),
+    # ------------------------------------------------------------------ remotejobs.io
+    dict(
+        slug="remotejobs-io",
+        name="remotejobs.io",
+        url="https://www.remotejobs.io/",
+        what="remotejobs.io is a remote job site that job seekers pay for through a subscription with a 14-day trial.",
+        rows=_rows(
+            ("Who pays", "Job seekers. Its terms describe charges paid in advance and renewed automatically, with a 14-day "
+                         "trial term."),
+            ("Where you apply", "Apply Now leads to its own registration page."),
+            ("Account needed to apply", "Yes. A job page says \"Sign Up to View and Apply to This Job\"."),
+            ("Kinds of jobs", "Work-from-home jobs by category: customer service, call center, data entry, virtual "
+                              "assistant, entry level and about 50 more."),
+        ),
+        them_better=[
+            "A resume review by a resume analyst is part of the paid service.",
+            "It can be bought today. Our Plus plan is not on sale yet.",
+        ],
+        us_better=[
+            "No account and no payment to see who is hiring: Apply opens the employer's own page. On remotejobs.io the "
+            "Apply button leads to registration.",
+            "Our prices are printed on the pricing page. remotejobs.io shows no price on its public pages.",
+        ],
+        pick="Use remotejobs.io if you want a paid list with a resume review, use Jobs Every Hour if you want to see the "
+             "employer and apply on its own page for free.",
+        sources=[
+            ("[what|Who pays|them_better 2] \"Charges incurred on a periodic basis are charged in advance and shall be "
+             "subject to automatic renewal\"; a \"14-day trial subscription term\"; seller Sonaga Tech Limited, Lucerne.",
+             "https://www.remotejobs.io/terms-of-service", R15),
+            ("[what|Where you apply|Account needed to apply|Kinds of jobs|us_better 1|pick] Category page \"1 to 50 of "
+             "2,083 for Call Center\"; \"Apply Now\" links to /registration; a job reads \"Sign Up to View and Apply to This "
+             "Job\". Category links: customer-service, call-center, data-entry, virtual-assistant, entry-level and others.",
+             "https://www.remotejobs.io/work-from-home/call-center", R15),
+            ("[them_better 1|pick] Sign-up page: \"Professional resume review: a resume analyst reviews and validates your "
+             "resume\".",
+             "https://www.remotejobs.io/registration", R15),
+            ("[us_better 2] Home page: headline \"Find Remote Jobs Faster\", buttons \"Get Started\"; no price on the "
+             "home, how-it-works, category or terms pages.",
+             "https://www.remotejobs.io/", R15),
+        ],
+    ),
     # ------------------------------------------------------------------ CryptoJobsList
     dict(
         slug="cryptojobslist",
@@ -537,6 +632,10 @@ SITES = [
 
 # What could not be sourced, per site (pages blocked or not answering on 13-14 Nov 2026; nothing was worked around).
 NOT_SOURCED = {
+    "remotejobsfinder": ["How fresh the listings are (the newest of 20 data-entry jobs was two days old; not enough to say)",
+                         "Payment methods", "its ad landing page /call-center returned 404 to a plain reader on 15 Nov 2026"],
+    "remotejobs-io": ["Price for job seekers (not published on its pages)", "How fresh the listings are", "Payment methods",
+                      "plain curl got 403; the pages were read with a text reader on 15 Nov 2026"],
     "indeed": ["Price for job seekers (Indeed Pro price not seen)", "Kinds of jobs"],
     "linkedin-jobs": ["Account needed to apply (not stated on the pages read)", "Kinds of jobs",
                       "about.linkedin.com returned 403"],
@@ -573,8 +672,8 @@ def site(slug):
 def test():
     problems = []
     slugs = [s["slug"] for s in SITES]
-    if len(SITES) != 8 or len(set(slugs)) != len(slugs):
-        problems.append(f"expected 8 unique sites, got {slugs}")
+    if len(SITES) != 10 or len(set(slugs)) != len(slugs):
+        problems.append(f"expected 10 unique sites, got {slugs}")
     for s in SITES:
         p = s["slug"]
         for field in ("slug", "name", "url", "what", "rows", "them_better", "us_better", "pick", "sources"):
@@ -591,7 +690,7 @@ def test():
             keys.update(source_keys(fact))
             if not url.startswith("https://"):
                 problems.append(f"{p}: bad url {url!r}")
-            if date not in (R13, R14):
+            if date not in (R13, R14, R15):
                 problems.append(f"{p}: bad date {date!r}")
         rows = s["rows"]
         if len(rows) < 4:
