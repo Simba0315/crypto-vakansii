@@ -1818,7 +1818,7 @@ h1,h2,h3,h4{font-variant-numeric:normal}
 .rep-more .tcard .tbody{padding-top:18px}
 table.grid tr.grp th{font-variant-numeric:normal}
 .tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
-.popular a.pop-tech{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}
+.popular a.pop-tech,.hero.v2 .popular a.pop-tech{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}
 
 /* live lists (site.js, /api/latest): a job found after the page was built slides in at its place, and its row says when we found it */
 .jf{display:block;margin-top:3px;font-size:12.5px;line-height:1.35;color:var(--muted)}
