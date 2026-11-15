@@ -3551,6 +3551,52 @@ def main():
              + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_)
     write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    cv_dir = defaultdict(list)
+    for slug_r, d in rex_data.items():
+        rname, rj = by_role[slug_r]
+        fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
+        low = rlow(rname)
+        uk_ = [j for j in rj if "united-kingdom" in j["places"]]
+        gbp_ = sorted(m_ for j in uk_ if (m_ := local_mid(j.get("salary"), "£")))
+        eu_ = [j for j in rj if "europe" in j["places"]]
+        d_cv = dict(d, summary=d["summary"].replace("five years of experience", "five years’ experience"))
+        paper_cv = paper(d_cv).replace('<p class="pp-h">Summary</p>', '<p class="pp-h">Personal profile</p>').replace('<p class="pp-h">Experience</p>', '<p class="pp-h">Employment history</p>')
+        cv_qa = [("What is the difference between a CV and a resume?", "In the UK, Ireland, most of Europe, Australia and New Zealand, “CV” is the usual name for the document you send with a job application; "
+                  "in the US and Canada it is called a resume, and “CV” means a long academic record. The content is the same idea: a short profile, your jobs with results, education and skills."),
+                 ("How long should a UK CV be?", "Two pages of A4 at most; one page is fine early in a career. Recruiters skim the first half page, so put the profile and your latest job there."),
+                 ("Should I put a photo on my CV?", "Not in the UK or Ireland, and leave out age, date of birth and marital status: employers there do not expect them and must not use them. "
+                  "Some countries in continental Europe still expect a photo, so check the custom of the country you apply in."),
+                 (f"What should a personal profile on {art(low)} {low} CV say?", "Three or four lines: your title and years of experience, two strengths employers in this work ask for, and one result with a number. Write it last, after the jobs.")]
+        if len(gbp_) >= 5:
+            cv_qa.append((f"What do {low} jobs pay in the UK?", f"{len(gbp_):,} open {low} postings in the United Kingdom state a yearly range in pounds: the median midpoint is £{median(gbp_):,.0f}."))
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cv_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        facts_cv = [("Open jobs in the UK", f"{len(uk_):,}"), ("Open in Europe", f"{len(eu_):,}")] + ([("Median UK pay stated", f"£{median(gbp_):,.0f}")] if len(gbp_) >= 5 else [])
+        cv_dir[fs].append((slug_r, rname, len(uk_)))
+        page(f"cv-examples/{slug_r}/", f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]}) | {SITE}",
+             f"A {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
+             crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} CV example <span class=\"hl\">(UK format)</span></h1>"
+             f'<p class="lead">The same document Americans call a resume, written the way UK and European employers expect it: a personal profile first, your employment history with results, '
+             f'no photo, age or marital status. Below, an example to start from and what {len(rj):,} open {e(low)} postings ask for.</p>'
+             '<div class="rexgrid"><div>' + paper_cv + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
+             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this CV in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/resume/examples/{slug_r}/">US resume version</a></p></div>'
+             '<div class="rexside"><div class="invf">' + "".join(f"<div><b>{e(v_)}</b><span>{e(k_)}</span></div>" for k_, v_ in facts_cv) + "</div>"
+             + '<h2>UK CV rules in one minute</h2><ol class="steps"><li><b>Two pages of A4 at most.</b> One is fine early on.</li>'
+               '<li><b>Personal profile, not objective.</b> Three or four lines on who you are and one result.</li>'
+               '<li><b>Leave out</b> photo, age, date of birth, marital status and national insurance number.</li>'
+               '<li><b>British spelling and dates</b> (organised, 03/2024), and pay in pounds if you mention it.</li>'
+               '<li><b>“References available on request”</b> can go; employers ask for them at the offer.</li></ol></div></div>'
+             + section(f"Questions about {art(low)} {low} CV", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cv_qa) + "</dl>")
+             + f'<p class="note cmpl">Next: <a href="{P}/locations/united-kingdom/">jobs in the United Kingdom</a> · <a href="{P}/cover-letter-examples/{slug_r}/">{e(low)} cover letter</a> · <a href="{P}/cv-examples/">all CV examples</a></p>', head=ld_)
+    cv_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(cv_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/cv-examples/{s_}/">{e(nm)}</a><span>{k:,} UK jobs</span></li>' for s_, nm, k in sorted(cv_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if cv_dir.get(fs)) + "</div>"
+    page("cv-examples/", f"CV Examples (UK Format) for {sum(len(v) for v in cv_dir.values())} Jobs, Free Template | {SITE}",
+         f"CV examples in UK format for {sum(len(v) for v in cv_dir.values())} kinds of work: personal profile, employment history with results, no photo. Free to open in the builder.",
+         crumbs(("Resume builder", "resume/"), ("CV examples", "")) + '<h1>CV examples <span class="hl">in UK format</span></h1>'
+         '<p class="lead">For jobs in the United Kingdom, Ireland and most of Europe: the same examples as our resume pages, laid out as a CV. Pick your work, open it in the free builder and replace every line with your own.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example accountant or designer" aria-label="Find a CV example"></p>'
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">builder</a> works for any job.</p>' + cv_html)
     rex_html = '<div class="dir" id="dir">' + "".join(
         f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(rex_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/resume/examples/{s_}/">{e(nm)}</a><span>{k:,} jobs</span></li>' for s_, nm, k in rex_dir[fs]) + "</ul></div>"
         for fs, fn, fd, live, js_ in fam_rows if rex_dir.get(fs)) + "</div>"
