@@ -1779,3 +1779,5 @@ a.pic.st-map:hover u{text-decoration-color:var(--text)}
 .bd-chart i{flex:1;max-width:34px;background:#2a78d6;border-radius:4px 4px 0 0}.bd-chart i.hi{background:var(--b-mark)}
 .bd-files{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
 .bd-files a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+/* example cards on sales pages: not links, so no hover and no pointer */
+a.eg{cursor:default}.job>a.eg:hover{background:none;box-shadow:none}.spot a.eg:hover b{text-decoration:none}

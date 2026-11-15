@@ -573,6 +573,11 @@ def card(j, extra=0):
             f'<span class="jr"><span class="jp{"" if j["salary"] else " none"}">{e(j["salary"][:28]) if j["salary"] else "—"}</span><span class="pills">{"".join(b)}</span><time {when(j)}{" class=\"new\"" if fresh and j["active"] else ""}>{label}</time></span></a></li>')
 
 
+def eg(html):
+    """An example card on a sales page: it must not look or act like a link (a click on `#` only threw the visitor to the top)."""
+    return html.replace(f'<a href="{P}/job//">', '<a class="eg">')
+
+
 def tile(url, name, count, avatar=False):
     return f'<li><a class="tile" href="{P}/{url}">{ava(name, "sm") if avatar else ""}{path_icon(url)}<span class="n">{path_fl(url)}{e(name)}</span><span class="c">{count:,}</span></a></li>'
 
@@ -4644,8 +4649,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     demo_rows = [dict(j) for j in latest[:4]]
     demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior", "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company",
                 "slug": "", "title": "Senior Backend Engineer (your job)", "posted": TODAY}
-    demo_html = ('<ul class="jobs demo">' + card(demo_job).replace(f'href="{P}/job//"', 'href="#"') + "".join(card(j) for j in demo_rows[:2])
-                 + card(dict(demo_job, title="Product Designer (your second job)", salary="", tags=["Figma"], level="")).replace(f'href="{P}/job//"', 'href="#"') + "".join(card(j) for j in demo_rows[2:4]) + "</ul>")
+    demo_html = ('<ul class="jobs demo">' + eg(card(demo_job)) + "".join(card(j) for j in demo_rows[:2])
+                 + eg(card(dict(demo_job, title="Product Designer (your second job)", salary="", tags=["Figma"], level=""))) + "".join(card(j) for j in demo_rows[2:4]) + "</ul>")
     emp_cab = ('<div class="tgrid">'
                '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Senior Backend Engineer</b></span><span class="rw"><span>Featured</span><span class="mt"><i style="width:64%"></i></span><b>9 days left</b></span>'
                '<span class="ln">Live since Nov 13 · <b>Renew</b> · <b>Close</b></span></span><span class="tbody"><b>The placement, switched on</b><span>The moment the network confirms the payment, the job is marked Featured and the account shows how many days are left. Nothing to send, nobody to wait for.</span></span></div>'
@@ -4664,17 +4669,17 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("How your job looks in the list", '<p class="note">The two highlighted rows are examples of featured jobs; the others are real listings from today.</p>' + demo_html)
          + section("What appears in your account at once", emp_cab)
          + f'{pain_html}' + section("Every plan and price", f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>')
-         + section("How a company spotlight looks", '<div class="spot"><a href="#">' + ava("Your company") + '<span><b>Your company</b><span class="s">42 open roles · featured</span></span></a></div>'
+         + section("How a company spotlight looks", '<div class="spot"><a class="eg">' + ava("Your company") + '<span><b>Your company</b><span class="s">42 open roles · featured</span></span></a></div>'
                    '<p class="note">Shown on the home page and at the top of the companies list.</p>')
-         + section("How a featured listing looks", '<ul class="jobs">' + card({"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior",
-                   "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company", "slug": "", "title": "Senior Backend Engineer", "posted": TODAY})
-                   .replace(f'href="{P}/job//"', 'href="#"') + "</ul>") + pay
+         + section("How a featured listing looks", '<ul class="jobs">' + eg(card({"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior",
+                   "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company", "slug": "", "title": "Senior Backend Engineer", "posted": TODAY}))
+                   + "</ul>") + pay
          + f''
-         '<section class="sec"><div class="sec-head"><h2>Questions</h2></div>'
+         '<section class="sec"><div class="sec-head"><h2>Paying, careers pages and refunds</h2></div>'
          "<h3>How do I pay?</h3><p>In crypto, on a checkout page: USDT, BTC, ETH and other coins. The placement switches on after the payment is confirmed. We do not take cards or bank transfers yet.</p>"
          "<h3>No careers page of your own?</h3><p>Use your company page here as one. Link your site's Careers button to it, or embed the list with one line of code: "
          f'<a href="{P}/widgets/">badge and widget</a>.</p>'
-         "<h3>What happens when the job closes?</h3><p>It moves to the archive and is marked as closed. The page stays online.</p>"
+         "<h3>What happens when the job closes?</h3><p>It is marked as closed and its page stays online.</p>"
          "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>")
     # Pricing: both sides on one page, each with its own table. A person looking for work and a company hiring buy different
     # things, so they never share a table (the owner: "for the job seeker and for the employer everything must be different").
