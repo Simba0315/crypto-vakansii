@@ -20,6 +20,7 @@ import compare_sites                    # sourced facts for "Jobs Every Hour vs 
 import builders_check                   # what a free user of each resume builder can download (/free-resume-builders/)
 import quiz_pages                        # skill self-tests (/skill-tests/)
 import glossary_terms                   # the glossary, one page per term (/glossary/)
+QUIZ_OF = {v["skill"]: (k, len(v["qs"])) for k, v in quiz_pages.QUIZZES.items()}     # skill -> (its test's slug, number of questions)
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "site"
@@ -2103,6 +2104,10 @@ def main():
         if len(co_) >= 4:
             out_ += section(f"Skills asked together with {t}", "<p>" + ", ".join(f'<a href="{P}/skills/{tslug(x)}/">{e(x)}</a> ({100 * k_ / len(js):.0f}%)' for x, k_ in co_)
                             + f" of the {len(js):,} open postings that name {e(t)}.</p>")
+        qk_, qn_ = QUIZ_OF.get(t, (None, 0))      # "sql jobs": people also search "SQL certification", "SQL test"
+        if qk_:
+            out_ += section(f"Test your {t}", f'<p>A free <a href="{P}/skill-tests/{qk_}/">{e(t)} test</a> of {qn_} questions, beginner to advanced, scored by topic in your browser. '
+                            f'Then the <a href="{P}/interview-questions/">interview questions</a> for the job you want.</p>')
         return out_
     for t, js in by_tag.items():
         listing(f"skills/{tslug(t)}/", f"{t} jobs", f"{t} Jobs ({len(js):,} open) | {SITE}",
@@ -3015,10 +3020,23 @@ def main():
         pj = [j for j in active if name in j.get("perks", [])]
         if name not in PERK_OK: continue
         perk_tiles += tile(f"perks/{slug}/", name, len(pj))
-        listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {name} ({len(pj):,} open) | {SITE}",
+        # SERP_WORK row 15 ("jobs with visa sponsorship"): title casing, the five views (who hires, where, which work, pay), and the
+        # questions people ask; the visa kinds named in the postings stay first
+        gl_p, tl_p = hub_sections(f"roles with {name.lower()}", pj, min_k=20)
+        pk_qa = []
+        if "visa" in name.lower() and pj:
+            rem_v = sum(1 for j in pj if j["remote"])
+            top_v = Counter(j["company"] for j in pj).most_common(5)
+            pk_qa = [("How can I get a job with visa sponsorship?", f"Start with employers that say they sponsor: {len(pj):,} open postings here mention it. Filter them by the country you want, "
+                      "check the official visa rules of that country, say in your resume that you need sponsorship, and ask in the first call which visa they would file. Apply on the employer’s own page."),
+                     ("Which companies sponsor visas?", "Among today’s postings, the employers that mention visa sponsorship most are " + ", ".join(f"{c} ({k:,})" for c, k in top_v)
+                      + ". A company that does not mention it may still sponsor, so ask."),
+                     ("Do remote jobs sponsor visas?", f"Rarely, since a remote job is done from where you already live: {rem_v:,} of the {len(pj):,} postings that mention sponsorship are remote. "
+                      "Sponsorship matters when the job is on site or hybrid in another country.")]
+        listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {tcase(name)} ({len(pj):,} open) | {SITE}",
                 f"{roles(len(pj), 'job')} where the posting mentions {name.lower()}. Updated hourly.", pj,
                 intro_for(pj, "", f" that mention {e(name.lower())} in the posting") + " We read this from the job text, so check the details with the employer.",
-                trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}",
+                trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}", faq_extra=pk_qa, extra=gl_p, hub=tl_p,
                 after=visa_kinds(pj) if "visa" in name.lower() else "")
     if perk_tiles:
         page("perks/", f"Jobs by Perk — visa sponsorship, equity, 4-day week | {SITE}", "Browse jobs by what the employer offers: visa sponsorship, relocation, equity, 4-day week and more.",
