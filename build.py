@@ -471,7 +471,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
-<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
@@ -792,7 +792,7 @@ def auto_more(path, h1):
     if seg == ["new"]: return "age=3"
     if seg == ["work-from-anywhere"]: return "any=1&remote=1"
     if seg[0] == "locations" and len(seg) == 2: return f"loc={seg[1]}"
-    if seg[0] == "skills" and len(seg) == 2 and h1.endswith(" jobs in tech"): return f"skills={q(h1[:-13])}"
+    if seg[0] == "skills" and len(seg) == 2 and h1.endswith(" jobs"): return f"skills={q(h1[:-5])}"
     if seg[0] == "roles" and len(seg) == 2 and h1.endswith(" jobs"): return f"q={q(h1[:-5])}"
     if seg[0] == "perks" and len(seg) == 2: return next((f"perk={q(nm)}" for nm, sl, _ in PERKS if sl == seg[1]), "")
     return {"contract": "etype=Contract", "part-time": "etype=Part-time", "internships": "etype=Internship"}.get(seg[0], "") if len(seg) == 1 else ""
@@ -1264,6 +1264,7 @@ def main():
             for j in by_role[s_][1]:
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
+    fam_show = sorted(fam_rows, key=lambda f: roles_info.SHOW_ORDER.index(f[0]) if f[0] in roles_info.SHOW_ORDER else 99)      # everyday work first, then tech
     def dir_block(fs, fn, fd, live, js_, top=None, tag="h2"):
         return (f'<div class="dirb"><{tag}><a href="{P}/categories/{fs}/">{icon(fs)}<u>{e(fn)}</u></a><span>{len(js_):,}</span></{tag}><p>{e(fd[0].upper() + fd[1:])}.</p><ul>'
                 + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/roles/{s_}/">{e(nm)}</a><span>{c:,}</span></li>' for s_, nm, c in (live if top is None else live[:top]))
@@ -1500,10 +1501,10 @@ def main():
             f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
             f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
             f'<p class="sub">Old listings stay online long after the job is filled. We read {m:,} company career pages' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and keep only what is still open.</p>'
-            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="What: job title, skill or company">'
+            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
             f'<p class="popular"><a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/entry-level/">Entry-level</a>'
-            f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/crypto/">Crypto</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
+            f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/tech/">Tech</a><a href="{P}/crypto/">Crypto</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
@@ -1528,7 +1529,7 @@ def main():
             f'<p>A standard listing costs nothing and sits next to {n:,} open jobs from {m:,} companies. Want it first in its list? A featured listing, from {price_of("Featured job")}, paid in crypto.</p></div>'
             f'<a class="btn primary" href="{P}/post-a-job/">Post a job — free</a></div>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
-    FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of tech companies. Every listing links to the original posting, and you apply on the employer's own site."),
+    FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of companies. Every listing links to the original posting, and you apply on the employer's own site."),
            ("How often is the site updated?", "Every hour. New roles are added. A role the company has closed keeps its page at the same address, marked as closed, and leaves the lists of open jobs."),
            ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with email alerts and AI resume tools is on the way; no job will be held back for it."),
            ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
@@ -1573,9 +1574,9 @@ def main():
         f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{GO.get(u, "Open")}</u></i></span></a>' for t_, d_, u, scr in FUTURE[:3]) + "</div>",
         ("ahead/", "Everything else the site does"), sub="No account, nothing sent to us: each one works in your browser.")
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
-            + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
+            + (section("Featured employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
 
-            + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.")
+            + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_show) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.")
             + section("The job market today", market_pics, ("insights/", "All rankings and charts"), sub="Counted from the open jobs on every update.")
             + pulse + anatomy
             + section("Highest paid right now", paid_board, ("salaries/", "Salary data"), sub="Only jobs that state a yearly pay, converted to US dollars. The bar shows the range against the top one.")
@@ -1605,13 +1606,13 @@ def main():
                       '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
                       '</div>')
             + section("Where the jobs come from and how the site works", faq_html))
-    home_desc = f"Tired of job listings that closed weeks ago? {roles(n)} at {m:,} tech companies, checked against their career pages {EVERY}. Remote and salary filters."
+    home_desc = f"Tired of job listings that closed weeks ago? {roles(n)} at {m:,} companies, checked against their career pages {EVERY}. Remote and salary filters."
     if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
-    page("", f"Tech Jobs — {roles(n, 'open role')} at {m:,} companies | {SITE}",
+    page("", f"{roles(n, 'Open Job')} at {m:,} Companies | {SITE}",
          home_desc, home, hero=hero,
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
                "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>" + faq_ld + ORG_LD[0])
-    rss("feed.xml", f"{SITE} — latest tech jobs", "", active)
+    rss("feed.xml", f"{SITE} — latest jobs", "", active)
 
     # Search page
     opts = "".join(f'<option value="{s}">{e(CAT[s])}</option>' for s in CAT if by_cat[s])
@@ -1620,8 +1621,8 @@ def main():
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     group = lambda label, inner: f'<div class="fgroup"><span class="flabel">{label}</span>{inner}</div>'
-    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">Search tech jobs</h1>'
-              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Job title, skill or company" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
+    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">Search jobs</h1>'
+              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
@@ -1651,8 +1652,8 @@ def main():
               '<aside class="pane" id="pane" aria-label="Job preview"><p class="pane-empty">Select a job to preview it here.</p></aside></div>'
               + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in dict.fromkeys(top_skills + [rlow(nm) for nm, s_, _ in ROLES if s_ in by_role] + [c for c, _ in comp_items[:200]])) + "</datalist>"
               + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
-    page("jobs/", f"Search {roles(n, 'Tech Job')} | {SITE}",
-         "Search tech jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search,
+    page("jobs/", f"Search {roles(n, 'Job')} | {SITE}",
+         "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search,
          head=f'<link rel="preload" href="{P}/data/head.json" as="fetch" crossorigin><link rel="preload" href="{P}/data/index.json" as="fetch" crossorigin>')
 
     # Long-tail landing pages: skill x remote, skill x place, category x place, place x remote, category x level
@@ -1680,7 +1681,7 @@ def main():
                 [("tag:" + t, f"{t} in {short}"), ("place:" + slug, f"{t} jobs")])
     for name, slug, pj in places:
         short = name.removeprefix("the ")
-        add(f"locations/{slug}/remote/", f"Remote tech jobs in {name}", [j for j in pj if j["remote"]], (("Locations", "locations/"), (short, f"locations/{slug}/")),
+        add(f"locations/{slug}/remote/", f"Remote jobs in {name}", [j for j in pj if j["remote"]], (("Locations", "locations/"), (short, f"locations/{slug}/")),
             f"loc={slug}&remote=1", "remote ", f" in {e(name)}", [("place:" + slug, "Remote"), ("remote", f"Remote in {short}")])
         for cs, cname in CAT.items():
             if cs == OTHER[0]: continue
@@ -1708,22 +1709,22 @@ def main():
         if slug_r in ROLE_BASE or len(new_) >= 20:
             add(f"roles/{slug_r}/new/", f"{rname} jobs posted in the last 3 days", new_, (("Categories", "categories/"), (rname, f"roles/{slug_r}/")),
                 f"age=3&q={quote(rname)}", "", " posted in the last three days", [("role:" + slug_r, "Last 3 days")])
-    add("remote/new/", "Remote tech jobs posted in the last 3 days", [j for j in remote if (j["posted"] or "") >= cut3], (("Remote", "remote/"),), "remote=1&age=3", "remote ", " posted in the last three days", [("remote", "Last 3 days")])
-    add("remote/entry-level/", "Remote entry-level tech jobs", [j for j in remote if j["entry"]], (("Remote", "remote/"),), "remote=1&entry=1", "remote entry-level ", "", [("remote", "Entry-level")])
+    add("remote/new/", "Remote jobs posted in the last 3 days", [j for j in remote if (j["posted"] or "") >= cut3], (("Remote", "remote/"),), "remote=1&age=3", "remote ", " posted in the last three days", [("remote", "Last 3 days")])
+    add("remote/entry-level/", "Remote entry-level jobs", [j for j in remote if j["entry"]], (("Remote", "remote/"),), "remote=1&entry=1", "remote entry-level ", "", [("remote", "Entry-level")])
     for t, js in by_tag.items():
         add(f"skills/{tslug(t)}/entry-level/", f"Entry-level {t} jobs", [j for j in js if j["entry"]], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
             f"entry=1&skills={quote(t)}", "entry-level ", f" mentioning {e(t)}", [("tag:" + t, "Entry-level")])
     for perk_name, perk_slug in (("Visa sponsorship", "visa-sponsorship"), ("Relocation support", "relocation")):
         pk = [j for j in active if perk_name in j.get("perks", [])]
-        add(f"perks/{perk_slug}/remote/", f"Remote tech jobs with {perk_name.lower()}", [j for j in pk if j["remote"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
+        add(f"perks/{perk_slug}/remote/", f"Remote jobs with {perk_name.lower()}", [j for j in pk if j["remote"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
             f"remote=1&perk={quote(perk_name)}", "remote ", f" that mention {perk_name.lower()}", [])
         for name, slug, _ in big_places:
-            add(f"perks/{perk_slug}/{slug}/", f"Tech jobs with {perk_name.lower()} in {name}", [j for j in pk if slug in j["places"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
+            add(f"perks/{perk_slug}/{slug}/", f"Jobs with {perk_name.lower()} in {name}", [j for j in pk if slug in j["places"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
                 f"loc={slug}&perk={quote(perk_name)}", "", f" in {e(name)} that mention {perk_name.lower()}", [("place:" + slug, perk_name)])
     for k_ in (100, 150, 200, 250, 300):                       # "jobs that pay 100k": the low end of the advertised range is at least that much
         rich = [j for j in active if j["usd"] and j["usd"][0] >= k_ * 1000]
-        add(f"salary/{k_}k/", f"Tech jobs that pay ${k_}K or more", rich, (("Salaries", "salaries/"),), f"sal={k_ * 1000}", "", f" whose advertised range starts at ${k_}K or more", [("pay", f"${k_}K+")])
-        add(f"salary/{k_}k/remote/", f"Remote tech jobs that pay ${k_}K or more", [j for j in rich if j["remote"]], (("Salaries", "salaries/"), (f"${k_}K+", f"salary/{k_}k/")),
+        add(f"salary/{k_}k/", f"Jobs that pay ${k_}K or more", rich, (("Salaries", "salaries/"),), f"sal={k_ * 1000}", "", f" whose advertised range starts at ${k_}K or more", [("pay", f"${k_}K+")])
+        add(f"salary/{k_}k/remote/", f"Remote jobs that pay ${k_}K or more", [j for j in rich if j["remote"]], (("Salaries", "salaries/"), (f"${k_}K+", f"salary/{k_}k/")),
             f"sal={k_ * 1000}&remote=1", "remote ", f" whose advertised range starts at ${k_}K or more", [("pay", f"Remote ${k_}K+"), ("remote", f"${k_}K+")])
     for cs, cname in CAT.items():
         if cs == OTHER[0]: continue
@@ -1731,21 +1732,21 @@ def main():
             add(f"jobs/{cs}/{ls}/", f"{ll} {cname} jobs", [j for j in by_cat[cs] if j["level"] == lv], (("All jobs", "jobs/"), (cname, f"jobs/{cs}/")),
                 f"cat={cs}&lvl={lv}", f"{e(ll)} {e(cname)} ", "", [("cat:" + cs, ll)])
     for path, h1, js, trail, qs, pre, post in combos:
-        listing(path, h1, f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at tech companies. Updated hourly.",
+        listing(path, h1, f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
                 js, intro_for(js, pre, post), trail=trail, per=50, max_pages=3, more=qs, faq=h1[0].lower() + h1[1:] if h1.split()[0] in ("Remote", "Senior", "Junior", "Internship", "Lead") else h1)
 
     # Listings
     for s, name in CAT.items():
         js = by_cat[s]
         if not js: continue
-        listing(f"jobs/{s}/", f"{name} jobs in tech", f"{name} Jobs in Tech ({len(js):,} open) | {SITE}",
-                f"{roles(len(js), name + ' job')} at tech companies. Remote and on-site roles, updated hourly.",
+        listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open) | {SITE}",
+                f"{roles(len(js), name + ' job')} at companies. Remote and on-site roles, updated hourly.",
                 js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s], ("categories/", "All categories")) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
                 hub=hub_sections(f"{name} roles", js)[1], accent=CAT_ACCENT.get(s), list_title=f"Newest {name} jobs")
         rj = [j for j in js if j["remote"]]
         if len(rj) >= 5:
-            listing(f"remote/{s}/", f"Remote {name} jobs in tech", f"Remote {name} Jobs in Tech ({len(rj):,} open) | {SITE}",
-                    f"{roles(len(rj), 'remote ' + name + ' job')} at tech companies. Work from anywhere, updated hourly.",
+            listing(f"remote/{s}/", f"Remote {name} jobs", f"Remote {name} Jobs ({len(rj):,} open) | {SITE}",
+                    f"{roles(len(rj), 'remote ' + name + ' job')} at companies. Work from anywhere, updated hourly.",
                     rj, intro_for(rj, f"remote {e(name)} "), trail=(("Remote", "remote/"),))
     rcats = "".join(tile(f"remote/{s}/", CAT[s], c) for s in CAT if (c := sum(j["remote"] for j in by_cat[s])) >= 5)
     # the remote hub also answers "remote jobs in my field", "remote and part-time", "remote and well paid": one link each
@@ -1756,9 +1757,9 @@ def main():
         ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles")))
     remote_more = (section("Remote jobs by field", f'<ul class="tiles">{rfams}</ul>', ("categories/", "All categories")) if rfams else "") + \
         f'<div class="dir"><div class="dirb"><h2><span>Kinds of remote work</span></h2><ul>{rkinds}</ul></div></div>'
-    listing("remote/", "Remote tech jobs", f"Remote Tech Jobs — {roles(len(remote), 'open role')} | {SITE}",
-            f"{roles(len(remote), 'remote job')} at tech companies: engineering, marketing, support, compliance and more.",
-            remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}{remote_more}<div class="sec"><div class="sec-head"><h2>All remote tech jobs</h2></div></div>', feed=True, faq="remote tech jobs")
+    listing("remote/", "Remote jobs", f"Remote Jobs — {roles(len(remote), 'open role')} | {SITE}",
+            f"{roles(len(remote), 'remote job')} at companies: engineering, marketing, support, compliance and more.",
+            remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}{remote_more}<div class="sec"><div class="sec-head"><h2>All remote jobs</h2></div></div>', feed=True, faq="remote jobs")
     BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
     # Crypto: the hub answers the search "crypto jobs" (and "web3 jobs", "blockchain jobs"), so it shows what these jobs pay, who
     # hires, and links to every narrower list people search for by name: by kind, by profession, by place.
@@ -1807,15 +1808,15 @@ def main():
                         f"{roles(len(cj), name + ' job')} at crypto and web3 companies. Remote and on-site roles, updated hourly.",
                         cj, intro_for(cj, f"{e(name)} ", " at crypto and web3 companies"), trail=ctrail)
     sal = [j for j in active if j["salary"]]
-    listing("with-salary/", "Tech jobs with salary listed", f"Tech Jobs With Salary Listed ({len(sal):,}) | {SITE}",
-            "Tech jobs where the employer publishes the salary range up front.", sal, intro_for(sal, "", " with a published salary range"))
+    listing("with-salary/", "Jobs with salary listed", f"Jobs With Salary Listed ({len(sal):,}) | {SITE}",
+            "Jobs where the employer publishes the salary range up front.", sal, intro_for(sal, "", " with a published salary range"))
     jr = [j for j in active if j["entry"]]
-    listing("entry-level/", "Entry-level tech jobs & internships", f"Entry-Level Tech Jobs & Internships ({len(jr):,}) | {SITE}",
-            "Internships and junior roles at tech companies: a way into the industry without years of experience.", jr,
+    listing("entry-level/", "Entry-level jobs & internships", f"Entry-Level Jobs & Internships ({len(jr):,}) | {SITE}",
+            "Internships and junior roles at companies: a way into the industry without years of experience.", jr,
             intro_for(jr, "entry-level "))
     for t, js in by_tag.items():
-        listing(f"skills/{tslug(t)}/", f"{t} jobs in tech", f"{t} Jobs in Tech ({len(js):,} open) | {SITE}",
-                f"{roles(len(js))} at tech companies that ask for {t}.", js,
+        listing(f"skills/{tslug(t)}/", f"{t} jobs", f"{t} Jobs ({len(js):,} open) | {SITE}",
+                f"{roles(len(js))} at companies that ask for {t}.", js,
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + hub_stats(js) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t) + hub_sections(f"{t} roles", js, "skills")[0], hub=hub_sections(f"{t} roles", js, "skills")[1], list_title=f"Newest {t} jobs",
                 faq=f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
@@ -1890,7 +1891,27 @@ def main():
                 f'<div class="dirb"><h2><a href="{P}/skills/"><u>By skill or tool</u></a><span>{len(skill_counts)}</span></h2><p>Jobs that ask for a language, a program or a method by name.</p><ul>'
                 + "".join(f'<li data-n="{e(t.lower())}"><a href="{P}/skills/{tslug(t)}/">{e(t)} jobs</a><span>{c:,}</span></li>' for t, c in skill_counts.most_common(14))
                 + f'<li class="more"><a href="{P}/skills/">All {len(skill_counts)} skills</a></li></ul></div>')
-    dir_html = '<div class="dir" id="dir">' + "".join(dir_block(*f) for f in fam_rows) + dir_tail + "</div>"
+    # The tech hub (/tech/): since 15 Nov 2026 the site covers every profession, so tech gets a page of its own, as crypto has: its
+    # categories, its newest jobs, the tech-skill rankings and comparisons.
+    TECH_FAMS = ["software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering"]
+    tech_fams = [f for f in fam_rows if f[0] in TECH_FAMS]
+    tech_seen, tech_js = set(), []
+    for f in tech_fams:
+        for j in f[4]:
+            if j["id"] not in tech_seen: tech_seen.add(j["id"]); tech_js.append(j)
+    if tech_js:
+        tech_links = labrow("Tech rankings and tools", [f'<a href="{P}/insights/highest-paying-tech-skills/">Highest-paying tech skills</a>',
+                                                        f'<a href="{P}/insights/most-in-demand-tech-skills/">Most in-demand tech skills</a>',
+                                                        f'<a href="{P}/compare/">Compare two skills</a>', f'<a href="{P}/skills/">Every skill explained</a>',
+                                                        f'<a href="{P}/salaries/explorer/">Salary explorer</a>'])
+        listing("tech/", "Tech jobs", f"Tech Jobs ({len(tech_js):,} open) | {SITE}",
+                f"{len(tech_js):,} open tech jobs in software, AI, data, cloud, security, product and hardware, read from employers’ own careers pages. Pay, skills and rankings.",
+                tech_js, f"Software, AI, data, cloud, security, product and hardware: {len(tech_js):,} open jobs in {len(tech_fams)} tech categories, "
+                f"{100 * sum(1 for j in tech_js if j['remote']) // max(1, len(tech_js))}% of them remote. The rest of the site covers every other kind of work too.",
+                per=50, max_pages=3, more=False, feed=True,
+                extra=hub_stats(tech_js) + mini_pics(tech_js) + tech_links + section("Tech categories", '<div class="dir">' + "".join(dir_block(*f, top=6, tag="h3") for f in tech_fams) + "</div>"),
+                list_title="Newest tech jobs", faq="tech jobs")
+    dir_html = '<div class="dir" id="dir">' + "".join(dir_block(*f) for f in fam_show) + dir_tail + "</div>"
     dir_filter = ('<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, lawyer or designer" aria-label="Find a category"></p>'
                   '<p class="lead" id="dirnone" hidden>No category with these words. Try the <a href="' + P + '/jobs/">job search</a>: it looks through every title.</p>')
     dir_qa = [("How are jobs sorted into categories?", "By the job title. Each kind of work has a list of the titles employers use for it, and a posting whose title matches is listed there. A posting can sit in two categories when its title belongs to both, for example a staff backend engineer."),
@@ -1933,10 +1954,10 @@ def main():
                 hub=secs[1], after=others)
     for name, slug, js in places:
         short = name.removeprefix("the ")
-        listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
-                f"{roles(len(js), 'tech job')} in {name}. Startups and established tech companies hiring now.",
-                js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug], ("locations/", "All locations")) + hub_sections(f"tech roles in {short}", js, "places")[0], faq=f"tech jobs in {name}", feed=True,
-                hub=hub_sections(f"tech roles in {short}", js, "places")[1], list_title=f"Newest tech jobs in {short}")
+        listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {short} ({len(js):,} open) | {SITE}",
+                f"{roles(len(js), 'job')} in {name}. Startups and established companies hiring now.",
+                js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug], ("locations/", "All locations")) + hub_sections(f"roles in {short}", js, "places")[0], faq=f"jobs in {name}", feed=True,
+                hub=hub_sections(f"roles in {short}", js, "places")[1], list_title=f"Newest jobs in {short}")
     rule_of = {slug: rule for _, slug, rule in PLACES}
     WORLD = (("North America", {"US", "CA"}), ("Europe", REGIONS["europe"][0]), ("Asia-Pacific", REGIONS["asia-pacific"][0]), ("Latin America", REGIONS["latin-america"][0]))
     def world(code): return next((nm for nm, codes in WORLD if code in codes), "Middle East and Africa")
@@ -1992,7 +2013,7 @@ def main():
                ("States the pay", "At least half of its open roles state the pay (employers with 5 open roles or more).", mk_p),
                ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f)]
     page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {len(companies):,} employers | {SITE}",
-         "Tech companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
+         "Companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
          crumbs(("Companies", "")) + f'<h1>Companies hiring now, {MONTH_YEAR}</h1><p class="lead">{co_lead}</p>'
          '<input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">'
          '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
@@ -2116,15 +2137,15 @@ def main():
         URLS.extend(f"job/{j['slug']}/" for j in jobs if not j.get("tg"))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
     else:
         for j in jobs: job_page(j, by_cat)
-    listing("archive/", "Closed tech jobs archive", f"Closed Tech Jobs Archive ({len(archived):,}) | {SITE}",
-            "Closed jobs at tech companies: see which roles teams were hiring for and when.", archived,
+    listing("archive/", "Closed jobs archive", f"Closed Jobs Archive ({len(archived):,}) | {SITE}",
+            "Closed jobs at companies: see which roles teams were hiring for and when.", archived,
             "Closed jobs stay here so you can see which roles companies were hiring for in the past.")
 
     # New jobs
     cutoff = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
     fresh = [j for j in active if (j["posted"] or "") >= cutoff]
-    listing("new/", "New tech jobs", f"New Tech Jobs — {roles(len(fresh), 'role')} posted in the last 3 days | {SITE}",
-            f"{roles(len(fresh), 'tech job')} posted in the last three days. Be among the first to apply.",
+    listing("new/", "New jobs", f"New Jobs — {roles(len(fresh), 'role')} posted in the last 3 days | {SITE}",
+            f"{roles(len(fresh), 'job')} posted in the last three days. Be among the first to apply.",
             fresh, intro_for(fresh, "", " posted in the last three days"), feed=True)
 
     # Salaries
@@ -2158,10 +2179,10 @@ def main():
     def level_section(title, group):
         t_ = level_table(group)
         return section(title, t_) if t_ else ""
-    page("salaries/", f"Tech Salaries From Live Job Postings ({len(paid):,} roles) | {SITE}",
-         "Median salaries in tech by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
-         crumbs(("Salaries", "")) + '<h1>Tech salaries from <span class="hl">live job postings</span></h1>'
-         f'<p class="lead">{100 - SALPCT}% of open tech postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
+    page("salaries/", f"Salaries From Live Job Postings ({len(paid):,} roles) | {SITE}",
+         "Median salaries by role, skill and company, calculated from salary ranges in open job postings. Updated daily.",
+         crumbs(("Salaries", "")) + '<h1>Salaries from <span class="hl">live job postings</span></h1>'
+         f'<p class="lead">{100 - SALPCT}% of open postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
          f'Each figure is a <a href="{P}/glossary/median/">median</a>: half of the postings advertise more than it, half less. These are advertised ranges, not what people are actually paid.</p>'
          f'<p class="cta2"><a class="btn primary" href="{P}/salaries/explorer/">Open the salary explorer</a> <span class="note">Filter by role, place, skill and level, free.</span></p>'
          + (lambda mids_: f'<div class="statrow"><div class="stat"><b>{money(median(mids_))}</b><span>median advertised salary</span></div>'
@@ -2169,12 +2190,12 @@ def main():
                           f'<div class="stat"><b>{SALPCT}%</b><span>of open postings state pay</span></div>'
                           f'<div class="stat"><b>{len(mids_):,}</b><span>roles counted today</span></div></div>')(sorted((lo + hi) / 2 for _, (lo, hi) in paid))
          + section("By category", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10))
-         + level_section("Tech salaries by level, intern to lead", paid)
+         + level_section("Salaries by level, intern to lead", paid)
          + section("By skill", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"))
          + section("By company", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8))
          + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary"))
-         + cite("salaries/", "Tech salaries from live job postings",
-                f"Tech job postings that state pay advertise a median of {money(median([(lo + hi) / 2 for _, (lo, hi) in paid]))} a year; {100 - SALPCT}% of open postings state no pay at all. "
+         + cite("salaries/", "Salaries from live job postings",
+                f"Job postings that state pay advertise a median of {money(median([(lo + hi) / 2 for _, (lo, hi) in paid]))} a year; {100 - SALPCT}% of open postings state no pay at all. "
                 f"Counted from {len(paid):,} open postings, {MONTH_YEAR}."))
 
     def salary_page(slug, label, group, back, role=False):
@@ -2194,7 +2215,7 @@ def main():
         top_jobs = diverse_pairs(sorted(group, key=lambda x: -x[1][1]), 20)
         # People type "average <job> salary" and writers quote the answer: the page states it in words, as questions, and for search engines.
         best_c = sorted(((median([(lo + hi) / 2 for _, (lo, hi) in v]), k) for k, v in comp.items() if len(v) >= 3), reverse=True)[:3]
-        sal_qa = [(f"What is the average {label} salary?", f"{money(mean_)} a year on average and {money(median(mids))} at the median, across {len(mids):,} open {label} postings at tech companies that state pay "
+        sal_qa = [(f"What is the average {label} salary?", f"{money(mean_)} a year on average and {money(median(mids))} at the median, across {len(mids):,} open {label} postings at companies that state pay "
                    f"({MONTH_YEAR}). The median is the better guide: a few very high offers pull the average up."),
                   ("What is the typical range?", f"The middle half of the postings offer {money(pct(.25))} to {money(pct(.75))} a year. A quarter offer less and a quarter offer more."),
                   ("Where do these figures come from?", "From the pay ranges employers print in their own job postings, read from their careers pages every hour. The midpoint of each range is counted. "
@@ -2205,22 +2226,22 @@ def main():
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sal_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         if role:      # a kind of work, so the page can also be read as an occupation with its pay
             sal_ld += ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Occupation", "name": label,
-                "description": f"Advertised pay for {label} roles at tech companies, from {len(mids):,} open job postings that state a yearly range in US dollars.",
+                "description": f"Advertised pay for {label} roles at companies, from {len(mids):,} open job postings that state a yearly range in US dollars.",
                 "mainEntityOfPage": {"@type": "WebPage", "url": f"{FULL}/salaries/{slug}/", "lastReviewed": TODAY},
                 "estimatedSalary": [{"@type": "MonetaryAmountDistribution", "name": "base", "currency": "USD", "duration": "P1Y",
                                      "percentile25": round(pct(.25)), "median": round(median(mids)), "percentile75": round(pct(.75))}]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         # the figures are the reason to click, so they stay in the title and the site name gives way (a title holds about 65 characters)
         t_long = f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})"
         page(f"salaries/{slug}/", t_long if len(t_long) <= 65 else f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median",
-             f"The average {label} salary at tech companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
+             f"The average {label} salary at companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
              f'<p class="lead">From {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>{stats}'
              + cut + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
              + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
-             + cite(f"salaries/{slug}/", f"{label} salaries in tech",
-                    f"The median advertised salary for {label} roles at tech companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
+             + cite(f"salaries/{slug}/", f"{label} salaries",
+                    f"The median advertised salary for {label} roles at companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
                     f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld)
     for t, group in g_tag.items():
         if len(group) >= 30:
@@ -2321,11 +2342,11 @@ def main():
     cat_rows = [trow([f'<a href="{P}/jobs/{cs}/">{e(CAT[cs])}</a>', f"{len(by_cat[cs]):,}", barc(len(by_cat[cs]), top_cat, pctf(len(by_cat[cs]), n)), pctf(sum(j["remote"] for j in by_cat[cs]), len(by_cat[cs])), med(by_cat[cs])])
                 for cs in sorted(CAT, key=lambda k: -len(by_cat[k])) if by_cat[cs]]
     place_rows = [trow([f'<a href="{P}/locations/{slug}/">{pfl(slug)}{e(name.removeprefix("the "))}</a>', f"{len(js):,}", barc(len(js), max(len(x[2]) for x in places), pctf(len(js), n))]) for name, slug, js in sorted(places, key=lambda x: -len(x[2]))]
-    page("trends/", f"Tech Job Market {TODAY[:4]}: hiring trends from {n:,} open roles | {SITE}",
-         "Which skills, companies, roles and cities are hiring in tech right now. Live numbers from open job postings, updated daily.",
-         crumbs(("Hiring trends", "")) + "<h1>Tech hiring trends</h1>"
-         '<p class="plain"><b>In plain words:</b> the tech job market in numbers, counted from the jobs that are open today: which skills employers ask for, who is hiring, where.</p>'
-         f'<p class="lead">Live numbers from {n:,} open roles at {m:,} tech companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
+    page("trends/", f"Job Market {TODAY[:4]}: hiring trends from {n:,} open roles | {SITE}",
+         "Which skills, companies, roles and cities are hiring right now. Live numbers from open job postings, updated daily.",
+         crumbs(("Hiring trends", "")) + "<h1>Hiring trends</h1>"
+         '<p class="plain"><b>In plain words:</b> the job market in numbers, counted from the jobs that are open today: which skills employers ask for, who is hiring, where.</p>'
+         f'<p class="lead">Live numbers from {n:,} open roles at {m:,} companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
          f'<div class="statrow"><div class="stat"><b>{n:,}</b><span>open roles</span></div><div class="stat"><b>{len(new7):,}</b><span>posted in the last 7 days</span></div>'
          f'<div class="stat"><b>{pctf(len(remote), n)}</b><span>are remote</span></div><div class="stat"><b>{pctf(sum(bool(j["salary"]) for j in active), n)}</b><span>publish a salary</span></div></div>'
          + section("Most in-demand skills", ttable(["Skill", "Open roles", "Share of all roles", "Remote", "Median salary"], skills_rows))
@@ -2334,7 +2355,7 @@ def main():
          + section("Roles by location", ttable(["Location", "Open roles", "Share"], place_rows), ("locations/", "All locations"))
          + '<p class="note">Salary figures are medians of advertised US-dollar ranges and are shown only where at least 15 roles publish one. A role that lists several locations is counted in each.</p>'
          + f'<p class="note">Download the numbers: <a href="{P}/data/open/skills.csv">skills.csv</a>, <a href="{P}/data/open/companies.csv">companies.csv</a>, '
-           f'<a href="{P}/data/open/categories.csv">categories.csv</a>, <a href="{P}/data/open/locations.csv">locations.csv</a>.</p>' + cite("trends/", "Tech hiring trends"))
+           f'<a href="{P}/data/open/categories.csv">categories.csv</a>, <a href="{P}/data/open/locations.csv">locations.csv</a>.</p>' + cite("trends/", "Hiring trends"))
 
     # Compare: two skills head to head, from the same live postings. Every number on these pages is ours.
     def skill_facts(t):
@@ -2363,7 +2384,7 @@ def main():
             comp = lambda F: ", ".join(f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a> ({k:,})' for c, k in F["top"])
             mx = max(A["n"], B["n"])
             rows_c = [trow(["Open roles", barc(A["n"], mx, f"{A['n']:,}"), barc(B["n"], mx, f"{B['n']:,}")]),
-                      trow(["Share of all open tech roles", pctf(A["n"], n), pctf(B["n"], n)]),
+                      trow(["Share of all open roles", pctf(A["n"], n), pctf(B["n"], n)]),
                       trow(["Posted in the last 7 days", f"{A['new']:,}", f"{B['new']:,}"]),
                       trow(["Remote roles", barc(ra, 100, f"{ra:.0f}%"), barc(rb, 100, f"{rb:.0f}%")]),
                       trow(["Entry-level roles", pctf(A["entry"], A["n"]), pctf(B["entry"], B["n"])]),
@@ -2372,7 +2393,7 @@ def main():
                       trow(["Roles that publish a salary", f"{A['paid']:,}", f"{B['paid']:,}"]),
                       trow(["Most often asked for with", e(", ".join(A["co"])), e(", ".join(B["co"]))]),
                       trow(["Hiring the most", comp(A), comp(B)])]
-            qa = [(f"Which has more jobs, {a} or {b}?", demand + f" Counted on {fdate(TODAY)} across {n:,} open roles at {m:,} tech companies."),
+            qa = [(f"Which has more jobs, {a} or {b}?", demand + f" Counted on {fdate(TODAY)} across {n:,} open roles at {m:,} companies."),
                   (f"Which pays more, {a} or {b}?", pay + " These are advertised ranges from job postings, not verified pay."),
                   (f"Is {a} or {b} better for remote work?", rem),
                   (f"Do employers ask for {a} and {b} together?", together)]
@@ -2383,7 +2404,7 @@ def main():
             page(path, f"{a} vs {b} Jobs — demand, salary, remote | {SITE}",
                  f"{a} vs {b} in live job postings: {A['n']:,} against {B['n']:,} open roles, median advertised salaries, remote share and who is hiring. Updated daily.",
                  crumbs(("Compare skills", "compare/"), (f"{a} vs {b}", "")) + f"<h1>{e(a)} vs {e(b)}: jobs, salaries and remote work</h1>"
-                 f'<p class="lead">{e(a)} and {e(b)} side by side in {n:,} live tech job postings on {fdate(TODAY)}: how many roles ask for each, what they pay and how many are remote.</p>'
+                 f'<p class="lead">{e(a)} and {e(b)} side by side in {n:,} live job postings on {fdate(TODAY)}: how many roles ask for each, what they pay and how many are remote.</p>'
                  f'<div class="card verdict"><p><strong>Demand.</strong> {e(demand)}</p><p><strong>Pay.</strong> {e(pay)}</p><p><strong>Remote.</strong> {e(rem)}</p><p><strong>Together.</strong> {e(together)}</p></div>'
                  + section(f"{a} and {b} side by side", ttable(["", f'<a href="{P}/skills/{tslug(a)}/">{e(a)}</a>', f'<a href="{P}/skills/{tslug(b)}/">{e(b)}</a>'], rows_c)
                            + f'<p class="note">Source: open roles on {e(SITE)}, collected from companies\' own careers pages and recounted every day. Salary medians need at least 30 published ranges. '
@@ -2393,9 +2414,9 @@ def main():
                  + section("More skill comparisons", '<ul class="tiles">' + "".join(tile(cmp_path(x, o), f"{x} vs {o}", len(facts[x]["ids"] | facts[o]["ids"])) for x in (a, b) for o in others[:3]) + "</ul>", ("compare/", "All comparisons"))
                  + cite(path, f"{a} vs {b}: jobs, salaries and remote work"), head=ld_c + crumbs_ld([("Compare skills", "compare/"), (f"{a} vs {b}", "")]))
     cmp_opts = "".join(f'<option value="{tslug(t)}">{e(t)}</option>' for t in CMP)
-    page("compare/", f"Compare Tech Skills by Jobs, Salary and Remote Share | {SITE}",
+    page("compare/", f"Compare Skills by Jobs, Salary and Remote Share | {SITE}",
          f"Put two tech skills head to head: open roles, median advertised salary, remote share and top employers, counted from {n:,} live job postings every day.",
-         crumbs(("Compare skills", "")) + "<h1>Compare tech skills by jobs and pay</h1>"
+         crumbs(("Compare skills", "")) + "<h1>Compare skills by jobs and pay</h1>"
          '<p class="plain"><b>In plain words:</b> pick two skills, for example Python and Java, and see which one more employers ask for and which one pays more.</p>'
          f'<p class="lead">Pick two skills and see how many open roles ask for each, what those roles pay and how many are remote. Counted from {n:,} live postings, and counted again every day.</p>'
          f'<div class="card"><div class="fbar" style="margin:0;align-items:flex-end"><label class="wl">First skill<select id="cmp-a">{cmp_opts}</select></label>'
@@ -2427,21 +2448,21 @@ def main():
         pj = [j for j in active if name in j.get("perks", [])]
         if name not in PERK_OK: continue
         perk_tiles += tile(f"perks/{slug}/", name, len(pj))
-        listing(f"perks/{slug}/", f"Tech jobs with {name[0].lower() + name[1:]}", f"Tech Jobs With {name} ({len(pj):,} open) | {SITE}",
-                f"{roles(len(pj), 'tech job')} where the posting mentions {name.lower()}. Updated hourly.", pj,
+        listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {name} ({len(pj):,} open) | {SITE}",
+                f"{roles(len(pj), 'job')} where the posting mentions {name.lower()}. Updated hourly.", pj,
                 intro_for(pj, "", f" that mention {e(name.lower())} in the posting") + " We read this from the job text, so check the details with the employer.",
-                trail=(("Perks", "perks/"),), feed=True, faq=f"tech jobs with {name[0].lower() + name[1:]}")
+                trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}")
     if perk_tiles:
-        page("perks/", f"Tech Jobs by Perk — visa sponsorship, equity, 4-day week | {SITE}", "Browse tech jobs by what the employer offers: visa sponsorship, relocation, equity, 4-day week and more.",
-             crumbs(("Perks", "")) + f'<h1>Tech jobs by perk</h1><p class="lead">What employers mention in their postings. Detected from the job text, so always confirm with the company.</p><ul class="tiles">{perk_tiles}</ul>')
-    for et, path, h1 in (("Contract", "contract/", "Contract tech jobs"), ("Part-time", "part-time/", "Part-time tech jobs"), ("Internship", "internships/", "Tech internships")):
+        page("perks/", f"Jobs by Perk — visa sponsorship, equity, 4-day week | {SITE}", "Browse jobs by what the employer offers: visa sponsorship, relocation, equity, 4-day week and more.",
+             crumbs(("Perks", "")) + f'<h1>Jobs by perk</h1><p class="lead">What employers mention in their postings. Detected from the job text, so always confirm with the company.</p><ul class="tiles">{perk_tiles}</ul>')
+    for et, path, h1 in (("Contract", "contract/", "Contract jobs"), ("Part-time", "part-time/", "Part-time jobs"), ("Internship", "internships/", "Internships")):
         ej = [j for j in active if j.get("etype") == et]
         if len(ej) >= 8:
             yr = f" {TODAY[:4]}–{int(TODAY[:4]) + 1}" if et == "Internship" else ""
             if et == "Internship" and len(ej) >= 40:
                 intern_hub(path, h1, yr, ej)
                 continue
-            listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at tech companies, straight from their careers pages. Updated hourly.", ej,
+            listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
                     intro_for(ej, f"{et.lower()} "), trail=(("All jobs", "jobs/"),))
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
                                 ("Part-time", "remote/part-time/", "Remote part-time jobs", "work from home for fewer hours than a full week"),
@@ -2453,8 +2474,8 @@ def main():
                     extra=hub_stats(ej))
     aw = [j for j in active if j.get("anywhere") and j["remote"]]
     if len(aw) >= 8:
-        listing("work-from-anywhere/", "Work-from-anywhere tech jobs", f"Work From Anywhere Tech Jobs ({len(aw):,} open) | {SITE}",
-                f"{roles(len(aw), 'remote tech job')} open to candidates worldwide, with no country restriction in the listing.", aw,
+        listing("work-from-anywhere/", "Work-from-anywhere jobs", f"Work From Anywhere Jobs ({len(aw):,} open) | {SITE}",
+                f"{roles(len(aw), 'remote job')} open to candidates worldwide, with no country restriction in the listing.", aw,
                 intro_for(aw, "remote ", " listed as open worldwide"), trail=(("Remote", "remote/"),))
 
     # Insights: ranked lists recalculated from live data every day
@@ -2489,23 +2510,23 @@ def main():
     cl = lambda c: f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a>'
     tl = lambda t: f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>'
     INS = [
-        insight("highest-paying-tech-skills", "Highest-paying tech skills", "Which programming languages and tools come with the highest advertised salaries in open tech jobs right now.",
+        insight("highest-paying-tech-skills", "Highest-paying tech skills", "Which programming languages and tools come with the highest advertised salaries in open jobs right now.",
                 "The skills attached to the highest advertised salaries.", ["#", "Skill", "Median salary", "Roles with a salary"],
                 [trow([rank(i), tl(t), f"<strong>{money(m_)}</strong>", f"{k:,}"]) for i, (t, m_, k) in enumerate(sal_by_tag[:30])], ("salaries/", "All salary data")),
-        insight("most-in-demand-tech-skills", "Most in-demand tech skills", "The skills that appear in the most open tech job postings right now, with their share and remote rate.",
+        insight("most-in-demand-tech-skills", "Most in-demand tech skills", "The skills that appear in the most open job postings right now, with their share and remote rate.",
                 "The skills employers ask for most often.", ["#", "Skill", "Open roles", "Share of all roles", "Posted this week"],
                 [trow([rank(i), tl(t), f"{len(js):,}", pctf(len(js), n), f"{sum(1 for j in js if (j['posted'] or '') >= week):,}"]) for i, (t, js) in enumerate(sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:30])],
                 ("skills/", "Browse jobs by skill")),
-        insight("companies-hiring-remotely", "Tech companies hiring the most remote workers", "The tech companies with the most open remote roles right now and how remote-friendly each one is.",
+        insight("companies-hiring-remotely", "Companies hiring the most remote workers", "The companies with the most open remote roles right now and how remote-friendly each one is.",
                 "Companies ranked by the number of open remote roles.", ["#", "Company", "Remote roles", "Share of its roles"],
                 [trow([rank(i), cl(c), f"{r_:,}", pctf(r_, a_)]) for i, (c, r_, a_) in enumerate(x for x in remote_co[:30] if x[1])], ("remote/", "All remote jobs")),
-        insight("companies-hiring-entry-level", "Tech companies hiring interns and juniors", "The tech companies with the most open internships and junior roles right now.",
+        insight("companies-hiring-entry-level", "Companies hiring interns and juniors", "The companies with the most open internships and junior roles right now.",
                 "Companies ranked by open internships and junior roles.", ["#", "Company", "Entry-level roles"],
                 [trow([rank(i), cl(c), f"{k:,}"]) for i, (c, k) in enumerate(x for x in entry_co[:30] if x[1])], ("entry-level/", "All entry-level jobs")),
-        insight("companies-hiring-this-week", "Tech companies hiring the most this week", "Which tech companies posted the most new roles in the last seven days.",
+        insight("companies-hiring-this-week", "Companies hiring the most this week", "Which companies posted the most new roles in the last seven days.",
                 "Companies ranked by roles posted in the last seven days.", ["#", "Company", "Posted this week", "Open roles in total"],
                 [trow([rank(i), cl(c), f"{k:,}", f"{a_:,}"]) for i, (c, k, a_) in enumerate(x for x in week_co[:30] if x[1])], ("new/", "See new jobs")),
-        insight("fastest-growing-tech-skills", "Skills with the most new job postings this week", "The skills that showed up in the most tech job postings published in the last seven days.",
+        insight("fastest-growing-tech-skills", "Skills with the most new job postings this week", "The skills that showed up in the most job postings published in the last seven days.",
                 "Skills ranked by postings published in the last seven days.", ["#", "Skill", "Posted this week", "Open roles in total"],
                 [trow([rank(i), tl(t), f"{k:,}", f"{a_:,}"]) for i, (t, k, a_) in enumerate(x for x in week_tag[:30] if x[1])], ("new/", "See new jobs")),
     ]
@@ -2515,22 +2536,22 @@ def main():
     co_act = {c: [j for j in js if j["active"]] for c, js in companies.items()}
     big = {c: js for c, js in co_act.items() if len(js) >= 20}
     pay_rank = sorted(((c, len(js), sum(bool(j["salary"]) for j in js)) for c, js in big.items()), key=lambda x: (-x[2] / x[1], -x[1]))
-    INS.append(insight("pay-transparency", "Pay transparency: which tech companies publish salaries", "Which tech employers state the salary in their job postings and which never do, counted from live openings.",
-                       f"{SALPCT}% of open tech roles state a salary where our reader can find it: in the hiring system's pay field or next to a word such as “salary” in the text. "
+    INS.append(insight("pay-transparency", "Pay transparency: which companies publish salaries", "Which employers state the salary in their job postings and which never do, counted from live openings.",
+                       f"{SALPCT}% of open roles state a salary where our reader can find it: in the hiring system's pay field or next to a word such as “salary” in the text. "
                        f"These are the employers, among {len(pay_rank)} with 20 or more open roles, that state it most often. A missing salary here can also mean a wording our rules do not recognise.",
                        ["#", "Company", "Open roles", "With a salary", "Share"],
                        [trow([rank(i), cl(c), f"{k_:,}", f"{s_:,}", barc(s_, k_, pctf(s_, k_))]) for i, (c, k_, s_) in enumerate(pay_rank[:50]) if s_],
                        ("with-salary/", "Jobs with the salary listed"), chart=(1, 4)))
     linger = sorted(((c, len(js), sum(age_days(j) >= LONG_OPEN for j in js), int(median([age_days(j) for j in js]))) for c, js in big.items()), key=lambda x: (-x[2] / x[1], -x[1]))
     long_all = sum(age_days(j) >= LONG_OPEN for j in active)
-    INS.append(insight("long-open-roles", f"Tech roles open {LONG_OPEN} days or more: where postings linger", "How many tech job postings have been open for three months or longer, and at which companies they pile up.",
+    INS.append(insight("long-open-roles", f"Roles open {LONG_OPEN} days or more: where postings linger", "How many job postings have been open for three months or longer, and at which companies they pile up.",
                        f"{long_all:,} of {n:,} open roles ({pctf(long_all, n)}) were posted {LONG_OPEN} or more days ago. A posting that stays up for months proves nothing by itself, since some employers hire for the same title all year, "
                        "but it is worth knowing before you spend an evening on an application.",
                        ["#", "Company", "Open roles", f"Open {LONG_OPEN}+ days", "Share", "Median days open"],
                        [trow([rank(i), cl(c), f"{k_:,}", f"{l_:,}", barc(l_, k_, pctf(l_, k_)), f"{md_:,}"]) for i, (c, k_, l_, md_) in enumerate(linger[:50]) if l_],
                        ("new/", "Jobs posted in the last 3 days"), chart=(1, 4)))
     pulse_rank = sorted(((c, *PULSE[c]) for c in PULSE if PULSE[c][0] or PULSE[c][1]), key=lambda x: -(x[1] - x[2]))
-    INS.append(insight("hiring-pulse", "Hiring pulse: who is ramping up and who is slowing down", "Which tech companies opened and closed the most roles in the last seven days, from daily snapshots of their careers pages.",
+    INS.append(insight("hiring-pulse", "Hiring pulse: who is ramping up and who is slowing down", "Which companies opened and closed the most roles in the last seven days, from daily snapshots of their careers pages.",
                        "Roles each company opened and closed in the last seven days. Closed counts are tracked from the day we started watching a company.",
                        ["#", "Company", "Opened", "Closed", "Net", "Trend"],
                        [trow([rank(i), cl(c), f"+{o_}", f"−{k_}", f"<strong>{o_ - k_:+d}</strong>", mood]) for i, (c, o_, k_, mood) in enumerate(pulse_rank[:40])], ("companies/", "All companies")))
@@ -3995,7 +4016,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         vs = lambda key: (f' <span class="note">({R[key] - prev[key]:+,} against {mlabel(prev_k)})</span>' if prev and key in prev else "")
         two = lambda rows_, head: ttable(head, [trow([e(str(a)), f"{b:,}", pctf(b, R["open"])]) for a, b in rows_])
         top_skill, top_emp = R["skills"][0], R["employers"][0]
-        findings = (f'<ul><li>{R["open"]:,} tech roles were open at {R["companies"]:,} companies{vs("open")}.</li>'
+        findings = (f'<ul><li>{R["open"]:,} roles were open at {R["companies"]:,} companies{vs("open")}.</li>'
                     f'<li>{pctf(R["remote"], R["open"])} of them were remote and {pctf(R["with_salary"], R["open"])} stated a salary.</li>'
                     + (f'<li>The median advertised salary was {money(R["median_salary"])}.</li>' if R["median_salary"] else "")
                     + f'<li>The most requested skill was {e(top_skill[0])}, named in {top_skill[1]:,} postings ({pctf(top_skill[1], R["open"])}).</li>'
@@ -4003,10 +4024,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                     f'<li>{pctf(R["long_open"], R["open"])} of open roles had been up for {LONG_OPEN} days or more.</li></ul>')
         state = ("This month is still running: the page is recounted every day and stops changing after the last day of the month." if k == ym
                  else "This report is final: the figures are the last count of that month and will not change.")
-        page(f"reports/{k}/", f"Tech Hiring Report, {mlabel(k)}: jobs, pay, skills | {SITE}",
-             f"Tech hiring in {mlabel(k)}: {R['open']:,} open roles at {R['companies']:,} companies, remote share, advertised pay, most requested skills and biggest employers.",
-             crumbs(("Hiring reports", "reports/"), (mlabel(k), "")) + f"<h1>Tech hiring report: {mlabel(k)}</h1>"
-             '<p class="lead">Headlines about the tech job market contradict each other every week. This report counts what employers actually posted on their own careers pages, nothing else.</p>'
+        page(f"reports/{k}/", f"Hiring Report, {mlabel(k)}: jobs, pay, skills | {SITE}",
+             f"Hiring in {mlabel(k)}: {R['open']:,} open roles at {R['companies']:,} companies, remote share, advertised pay, most requested skills and biggest employers.",
+             crumbs(("Hiring reports", "reports/"), (mlabel(k), "")) + f"<h1>Hiring report: {mlabel(k)}</h1>"
+             '<p class="lead">Headlines about the job market contradict each other every week. This report counts what employers actually posted on their own careers pages, nothing else.</p>'
              f'<div class="statrow"><div class="stat"><b>{R["open"]:,}</b><span>open roles</span></div><div class="stat"><b>{R["companies"]:,}</b><span>companies</span></div>'
              f'<div class="stat"><b>{pctf(R["remote"], R["open"])}</b><span>remote</span></div><div class="stat"><b>{pctf(R["with_salary"], R["open"])}</b><span>state a salary</span></div>'
              + (f'<div class="stat"><b>{money(R["median_salary"])}</b><span>median advertised salary</span></div>' if R["median_salary"] else "") + "</div>"
@@ -4019,10 +4040,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              + (section("Median advertised salary by category", ttable(["Category", "Median salary", "Roles counted"], [trow([e(a), f"<strong>{money(b)}</strong>", f"{c_:,}"]) for a, b, c_ in R["pay"]])
                         + '<p class="note">Medians of the midpoints of advertised yearly US-dollar ranges. Advertised, not verified pay.</p>') if R["pay"] else "")
              + f'<p class="cta2"><a class="btn" href="{P}/trends/">Today’s live numbers</a> <a class="btn ghost" style="margin-top:0" href="{P}/reports/">All monthly reports</a></p>'
-             + cite(f"reports/{k}/", f"Tech hiring report, {mlabel(k)}"))
-    page("reports/", f"Tech Hiring Reports by Month — jobs, pay, skills | {SITE}",
-         "Monthly tech hiring reports built from live job postings: open roles, remote share, advertised pay, most requested skills and biggest employers. Free to quote.",
-         crumbs(("Hiring reports", "")) + "<h1>Tech hiring reports, month by month</h1>"
+             + cite(f"reports/{k}/", f"Hiring report, {mlabel(k)}"))
+    page("reports/", f"Hiring Reports by Month — jobs, pay, skills | {SITE}",
+         "Monthly hiring reports built from live job postings: open roles, remote share, advertised pay, most requested skills and biggest employers. Free to quote.",
+         crumbs(("Hiring reports", "")) + "<h1>Hiring reports, month by month</h1>"
          '<p class="lead">One page per month, with the jobs, the pay, the skills and the employers of that month. A month’s page stops changing when the month ends, '
          'so a figure you quote from it stays where you found it. Free to quote with a link.</p>'
          + (lambda R_, k_: (f'<a class="rep-now" href="{P}/reports/{k_}/"><span class="rep-h"><b>{mlabel(k_)}</b><span>{"so far, updated every hour" if k_ == TODAY[:7] else "final"}</span></span>'
@@ -4181,8 +4202,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     fy_faq = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in fy_qa) + "</dl>"
     fy_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in fy_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("for-you/", f"Tech Jobs That Match Your Skills and Pay | {SITE}",
-         f"Say what work you want, your experience, where you live and the pay you need. {n:,} open tech jobs are checked against your answers and the ones that fit are listed first, with the reason.",
+    page("for-you/", f"Jobs That Match Your Skills and Pay | {SITE}",
+         f"Say what work you want, your experience, where you live and the pay you need. {n:,} open jobs are checked against your answers and the ones that fit are listed first, with the reason.",
          crumbs(("For you", "")) + f'<h1>Answer five questions and see the jobs that <span class="hl">fit you</span></h1>'
          f'<p class="lead">Reading {n:,} postings to find the twenty worth applying to takes days. Say what work you want, how much experience you have, where you live and what you need to earn. '
          'Every open job is checked against your answers, and next to each one you see what fits and what does not.</p>'
@@ -4222,16 +4243,16 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     groups_ = [(g, nm, d) for g, nm, d in skills_info.GROUPS if by_group.get(g)] + ([("other", "Other skills", "")] if by_group.get("other") else [])
     skills_body = "".join(f'<section class="sec" id="{g}"><div class="sec-head"><h2>{e(nm)}</h2></div>' + (f'<p class="note" style="margin:-4px 0 8px">{e(d)}</p>' if d else "")
                           + gloss(by_group[g]) + "</section>" for g, nm, d in groups_)
-    page("skills/", f"Tech Jobs by Skill — {len(skill_counts)} skills explained | {SITE}",
-         f"Open tech jobs by skill, with a plain-English line on what each of the {len(skill_counts)} skills is: languages, AI, data, cloud, design and business tools.",
-         crumbs(("Skills", "")) + '<h1>Tech jobs by skill</h1>'
+    page("skills/", f"Jobs by Skill — {len(skill_counts)} skills explained | {SITE}",
+         f"Open jobs by skill, with a plain-English line on what each of the {len(skill_counts)} skills is: languages, AI, data, cloud, design and business tools.",
+         crumbs(("Skills", "")) + '<h1>Jobs by skill</h1>'
          '<p class="lead">Job postings are full of names like Kubernetes or dbt. Here each one comes with a line that says what it is in plain words, '
          'and the number of open roles that ask for it today. Pick one to see the jobs, the pay and who is hiring.</p>'
          '<p class="rel"><span>Jump to:</span>' + "".join(f'<a href="#{g}">{e(nm)}</a>' for g, nm, _ in groups_) + "</p>" + skills_body)
 
     # Resume builder: stays in the browser, prints to PDF
     page("resume/", f"Free Resume Builder — free PDF and Word download | {SITE}",
-         "Build an ATS-friendly resume in your browser: five templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open tech jobs.",
+         "Build an ATS-friendly resume in your browser: five templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
          crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Two-column templates with icons look good to people and can turn into scrambled text in applicant tracking systems. '
          'And many builders let you write for free, then charge for the download. Here you get five plain one-column templates that parse cleanly, and the PDF and the Word file are free. '
          'Fill in the form, watch the page update, download. Everything stays in this browser: no account, nothing is uploaded.</p>'
@@ -4380,7 +4401,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # Bare page for iframe embeds: /embed/?jobs=skill:python&limit=6&layout=cards&theme=dark&accent=%23ff5500
     write("embed/", f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>Jobs widget | {e(SITE)}</title><style>html,body{{margin:0;background:transparent}}body{{padding:2px 8px 8px 2px}}</style></head><body>
-<div id="w"><a href="{FULL}/" target="_blank" rel="noopener">Tech jobs on {e(SITE)}</a></div>
+<div id="w"><a href="{FULL}/" target="_blank" rel="noopener">Jobs on {e(SITE)}</a></div>
 <script>(function(){{var p=new URLSearchParams(location.search),el=document.getElementById('w');
 el.setAttribute('data-hrn-jobs',p.get('jobs')||'latest');['limit','layout','theme','accent','title','search','company'].forEach(function(k){{if(p.get(k))el.setAttribute('data-'+k,p.get(k));}});
 el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js?v={V}"></script></body></html>""", sitemap=False)
@@ -4389,7 +4410,7 @@ el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js
     # found it on 14 Nov with no idea what it was for: it now says so on top, has back / pause / next and a page count, is a plain
     # scrolling list on phones, is no longer linked from the home page (only from /widgets/) and is kept out of search results.
     write("board/", f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Board — live tech jobs wall | {e(SITE)}</title><meta name="description" content="A full-screen live board of the freshest tech jobs, rotating automatically. Put it on a second monitor, an office screen or a classroom wall.">
+<title>The Board — live jobs wall | {e(SITE)}</title><meta name="description" content="A full-screen live board of the freshest jobs, rotating automatically. Put it on a second monitor, an office screen or a classroom wall.">
 <meta name="robots" content="noindex"><link rel="canonical" href="{FULL}/board/"><link rel="icon" type="image/svg+xml" href="{P}/favicon.svg">
 <style>@font-face{{font-family:"Public Sans";font-weight:100 900;font-display:swap;src:url({P}/fonts/publicsans-latin.woff2) format("woff2")}}
 @font-face{{font-family:"JetBrains Mono";font-weight:500 700;font-display:swap;src:url({P}/fonts/jbmono-latin.woff2) format("woff2")}}
@@ -4445,21 +4466,21 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     w_faq_html = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in w_faq) + "</dl>"
     w_ld = ('<script type="application/ld+json">' + json.dumps([
         {"@context": "https://schema.org", "@type": "WebApplication", "name": f"{SITE} job widget", "url": f"{FULL}/widgets/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any",
-         "description": "A free embeddable job widget: self-updating tech jobs by skill, city, category or company, or a company’s own jobs read from Greenhouse, Lever or Ashby.",
+         "description": "A free embeddable job widget: self-updating jobs by skill, city, category or company, or a company’s own jobs read from Greenhouse, Lever or Ashby.",
          "isAccessibleForFree": True, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/"}},
         {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in w_faq]}],
         ensure_ascii=False).replace("</", "<\\/") + "</script>" + crumbs_ld([("Job widget", "")]))
     wt = lambda head, rows_: ('<div class="tablewrap"><table><tr>' + "".join(f"<th>{h_}</th>" for h_ in head) + "</tr>"
                               + "".join("<tr>" + "".join(f"<td>{c_}</td>" for c_ in r_) + "</tr>" for r_ in rows_) + "</table></div>")
     page("widgets/", f"Free Job Widget for Your Website | {SITE}",
-         "A free job widget for any website: one snippet shows self-updating tech jobs by skill or city, or your own company’s jobs from Greenhouse, Lever or Ashby. No sign-up.",
+         "A free job widget for any website: one snippet shows self-updating jobs by skill or city, or your own company’s jobs from Greenhouse, Lever or Ashby. No sign-up.",
          crumbs(("Job widget", "")) + '<h1>Free job widget for your website</h1>'
          f'<p class="plain"><b>In plain words:</b> a widget is a small box with a list of jobs that sits on your own website or blog. You choose what it shows, copy a short piece of code from this page and paste it into your site. '
          f'After that the list keeps itself up to date. Looking for a job yourself? You do not need this page: <a href="{P}/jobs/">go to the job search</a>.</p>'
-         '<p class="lead">It is free and needs no account. The list can show tech jobs from our index, by skill, city, category or company, '
+         '<p class="lead">It is free and needs no account. The list can show jobs from our index, by skill, city, category or company, '
          'or your own company’s jobs, read straight from the hiring software you already use (Greenhouse, Lever or Ashby), so nobody has to type them in.</p>'
          f'<div id="wb" data-full="{FULL}" data-base="{P}"><div class="card"><div class="fbar" style="margin:0">'
-         '<label class="wl">What to show<select id="wb-type"><optgroup label="Tech jobs from our index"><option value="skill">Jobs by skill</option><option value="category">Jobs by category</option><option value="location">Jobs by location</option>'
+         '<label class="wl">What to show<select id="wb-type"><optgroup label="Jobs from our index"><option value="skill">Jobs by skill</option><option value="category">Jobs by category</option><option value="location">Jobs by location</option>'
          '<option value="company">Jobs at a company we list</option><option value="remote">Remote jobs</option><option value="latest">Latest jobs</option></optgroup>'
          '<optgroup label="Your own company’s jobs"><option value="greenhouse">From Greenhouse</option><option value="lever">From Lever</option><option value="ashby">From Ashby</option></optgroup></select></label>'
          '<label class="wl">Which one<select id="wb-val"></select></label>'
@@ -4508,7 +4529,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<code>data-title</code>", "Your own heading for the widget", "the name of the list"],
              ["<code>data-company</code>", "Your company name, shown in the heading of your own board", "none"]]))
          + section("How it differs from other job widgets", wt(["", "This widget", "Widget builders", "Hiring-system embeds"], [
-             ["Where the jobs come from", f"Our index of {n:,} open tech jobs, or your own board", "You type each job in by hand", "Your own board only"],
+             ["Where the jobs come from", f"Our index of {n:,} open jobs, or your own board", "You type each job in by hand", "Your own board only"],
              ["Jobs from other companies, by skill or city", "Yes", "No", "No"],
              ["Stays up to date by itself", "Yes", "Only when you edit it", "Yes"],
              ["Account", "None", "Required", "You are already a customer"],
@@ -4529,8 +4550,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + '<script type="application/json" id="wb-data">' + json.dumps(wb_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>',
          head=w_ld)
     # One page per site builder: the same widget, with the steps and the catches of that platform
-    snip_script = e(f'<div data-hrn-jobs="latest" data-limit="6"><a href="{FULL}/jobs/">Tech jobs on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
-    snip_iframe = e(f'<iframe src="{FULL}/embed/?jobs=latest&limit=6" title="Tech jobs" loading="lazy" style="width:100%;max-width:720px;height:470px;border:0"></iframe>\n<p><a href="{FULL}/jobs/">Tech jobs on {SITE}</a></p>')
+    snip_script = e(f'<div data-hrn-jobs="latest" data-limit="6"><a href="{FULL}/jobs/">Jobs on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
+    snip_iframe = e(f'<iframe src="{FULL}/embed/?jobs=latest&limit=6" title="Jobs" loading="lazy" style="width:100%;max-width:720px;height:470px;border:0"></iframe>\n<p><a href="{FULL}/jobs/">Jobs on {SITE}</a></p>')
     PLATFORMS = [
         ("wordpress", "WordPress", "script",
          ["Open the page or post in the editor and press the plus sign where the jobs should appear.", "Choose the <b>Custom HTML</b> block and paste the code below.",
@@ -4584,7 +4605,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         p_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in p_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"widgets/{pslug}/", f"Job Widget for {pname}: free, no account | {SITE}",
-             f"How to add a free job widget to a {pname} site: where to paste the code, what to watch for, and a live preview. Tech jobs by skill or city, or your own company’s jobs.",
+             f"How to add a free job widget to a {pname} site: where to paste the code, what to watch for, and a live preview. Jobs by skill or city, or your own company’s jobs.",
              crumbs(("Job widget", "widgets/"), (pname, "")) + f"<h1>Job widget for {e(pname)}</h1>"
              f'<p class="lead">A self-updating list of open jobs on your {e(pname)} site, in a few clicks. It is the same free widget as on the <a href="{P}/widgets/">job widget page</a>; this page has the steps for {e(pname)}.</p>'
              + section(f"Add it to {pname}", '<ol class="steps">' + "".join(f"<li>{x}</li>" for x in steps_p) + f'</ol><p class="note">{catch}</p>')
@@ -4592,8 +4613,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        '<p><button class="btn sm" type="button" data-copy="pw-a">Copy the code</button></p>'
                        f'<span class="flabel">{second[0]}</span><textarea id="pw-b" rows="3" readonly aria-label="{second[0]}">{second[1]}</textarea>'
                        '<p><button class="btn sm ghost" type="button" data-copy="pw-b" style="margin-top:0">Copy the code</button></p>'
-                       f'<p>This snippet shows the latest tech jobs. To show one skill, a city, one company or your own board, with your colours and layout, <a href="{P}/widgets/">build your own on the job widget page</a>.</p>')
-             + section("What your visitors will see", f'<div data-hrn-jobs="latest" data-limit="5" data-hrn-base="{P}"><a href="{P}/jobs/">Tech jobs on {e(SITE)}</a></div>')
+                       f'<p>This snippet shows the latest jobs. To show one skill, a city, one company or your own board, with your colours and layout, <a href="{P}/widgets/">build your own on the job widget page</a>.</p>')
+             + section("What your visitors will see", f'<div data-hrn-jobs="latest" data-limit="5" data-hrn-base="{P}"><a href="{P}/jobs/">Jobs on {e(SITE)}</a></div>')
              + section(f"Questions about the job widget for {pname}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in p_faq) + "</dl>")
              + section("Other platforms", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in PLATFORMS if x[0] != pslug) + f'<a href="{P}/widgets/">All options</a></p>')
              + f'<script src="{P}/widget.js?v={V}" defer></script>'
@@ -4605,15 +4626,15 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     sample = json.dumps({"name": "Rust jobs", "url": f"{FULL}/skills/rust/", "site": SITE, "updated": TODAY, "total": 1100,
                          "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
     js_example = f'const feed = await fetch("{FULL}/api/v1/skills/python.json").then(r => r.json());\nconsole.log(feed.total, feed.jobs[0].title);'
-    api_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Dataset", "name": f"{SITE}: open tech jobs",
-               "description": f"Open tech job postings collected from the official careers pages of {m:,} companies, each read {EVERY}: title, employer, location, remote flag, advertised salary and posting date, with aggregate counts and salary medians by skill, category, location and company.",
+    api_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Dataset", "name": f"{SITE}: open jobs",
+               "description": f"Open job postings collected from the official careers pages of {m:,} companies, each read {EVERY}: title, employer, location, remote flag, advertised salary and posting date, with aggregate counts and salary medians by skill, category, location and company.",
                "url": f"{FULL}/api/", "dateModified": TODAY, "isAccessibleForFree": True, "creator": {"@type": "Organization", "name": SITE, "url": FULL + "/"}, "license": f"{FULL}/terms/",
-               "keywords": ["tech jobs", "job postings", "salaries", "remote jobs", "hiring trends"],
+               "keywords": ["jobs", "job postings", "salaries", "remote jobs", "hiring trends"],
                "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/api/v1/index.json"}]
                                + [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/open/{x}.csv"} for x in ("skills", "companies", "categories", "locations")]}) + "</script>")
-    page("api/", f"Free Tech Jobs API — JSON feeds, no key | {SITE}",
-         "A free JSON API of open tech jobs by skill, category, location and company. No API key, CORS enabled, updated hourly.",
-         crumbs(("API", "")) + '<h1>Free tech jobs API</h1>' + f'<p class="plain"><b>In plain words:</b> this page is for programmers. An API is a way for a program to read our list of jobs by itself. To show jobs on a website without programming, use the <a href="{P}/widgets/">job widget</a>. To look for a job, use the <a href="{P}/jobs/">search</a>.</p>' + '<p class="lead">Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every hour.</p>'
+    page("api/", f"Free Jobs API — JSON feeds, no key | {SITE}",
+         "A free JSON API of open jobs by skill, category, location and company. No API key, CORS enabled, updated hourly.",
+         crumbs(("API", "")) + '<h1>Free jobs API</h1>' + f'<p class="plain"><b>In plain words:</b> this page is for programmers. An API is a way for a program to read our list of jobs by itself. To show jobs on a website without programming, use the <a href="{P}/widgets/">job widget</a>. To look for a job, use the <a href="{P}/jobs/">search</a>.</p>' + '<p class="lead">Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every hour.</p>'
          + section("Endpoints", ttable(["Feed", "Address"], [
              trow(["Everything available", f"<code>{FULL}/api/v1/index.json</code>"]), trow(["Latest jobs", f"<code>{FULL}/api/v1/latest.json</code>"]),
              trow(["Remote jobs", f"<code>{FULL}/api/v1/remote.json</code>"]), trow(["By skill", f"<code>{FULL}/api/v1/skills/rust.json</code>"]),
@@ -4791,10 +4812,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the placement did.</span></span></div>'
                '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · ' + price_of("Featured job") + '</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
                '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the period ends, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
-    page("post-a-job/", f"Post a Tech Job — free listing, featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Tech Job — plans and prices for employers | {SITE}",
-         (f"Post a tech job for free, or feature it from {price_of('Featured job')} so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
+    page("post-a-job/", f"Post a Job — free listing, featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Job — free listing, plans and prices for employers | {SITE}",
+         (f"Post a job for free, or feature it from {price_of('Featured job')} so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
           f"Plans and prices for employers: free standard listings, featured jobs from {price_of('Featured job')}, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
-         crumbs(("For employers", "")) + "<h1>Post a tech job that doesn’t get buried</h1>"
+         crumbs(("For employers", "")) + "<h1>Post a job that doesn’t get buried</h1>"
          f'<p class="lead">There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
          'A featured one stays at the top instead of sliding down as new roles arrive.</p>'
          + LAUNCH + emp_tiers
@@ -4982,7 +5003,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          crumbs(("Jobs map", "")) + '<h1>Jobs on a map: <span class="hl">see where they are hiring</span></h1>'
          f'<p class="lead">{map_total:,} open jobs in {len(map_keys)} cities, each read from the employer’s own careers page within the last hour. '
          'Type a job or a skill to count the dots again; click a dot for the newest jobs there.</p>'
-         '<form class="mapform" id="mapform" role="search"><input type="search" id="mapq" name="q" placeholder="A job, a skill or a company, for example python" aria-label="Search the map">'
+         '<form class="mapform" id="mapform" role="search"><input type="search" id="mapq" name="q" placeholder="A job, a skill or a company, for example nurse or python" aria-label="Search the map">'
          '<button class="btn primary" type="submit">Show on map</button></form>'
          '<div class="mapwrap"><div class="jobmap" id="jobmap" role="region" aria-label="Map of open jobs by city"></div>'
          '<aside class="mappanel" id="mappanel" aria-live="polite" hidden></aside></div><p class="note" id="mapnote">The map needs JavaScript. Every city is listed below.</p>'
@@ -5071,14 +5092,14 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         tile_ = lambda label, value, sub: f'<div class="st"><span class="st-l">{label}</span><b class="st-v">{value}</b><span class="st-s">{sub}</span></div>'
         est_note = (f"{'Early estimate: ' if early else 'Estimate: '}from {SURV['closed']:,} closings seen in {days_s} days of hourly checks (since {since_s}). "
                     f"It reaches {reach} days for now" + (", and the 90-day figure appears once the record covers 30 days" if reach < 90 else "") + ". It will move as the record grows.")
-        quote_s = (f"Of {len(active):,} open tech job postings checked on {fdate(TODAY)}, {pc(old90 / max(1, len(active)))} had been up for more than 90 days; "
+        quote_s = (f"Of {len(active):,} open job postings checked on {fdate(TODAY)}, {pc(old90 / max(1, len(active)))} had been up for more than 90 days; "
                    f"the postings that closed since {since_s} had been open a median of {med_cl} days.")
         lead_s = (f"Of the {len(age_cl):,} postings that employers took down since {since_s}, half had been open {med_cl} days or more. "
                   + (f"At the closing rates seen in {'the first ' if early else ''}{days_s} days of records, about {pc(c7)} of new postings close within 7 days and {pc(c30)} within 30" + (f", {pc(c90)} within 90" if c90 is not None else "") + ". " if c7 is not None and c30 is not None else "")
                   + f"{pc(old90 / max(1, len(active)))} of the {len(active):,} jobs open today were posted more than 90 days ago.")
         st_qa = [
             ("How long do job postings stay open?", lead_s),
-            ("How many job postings are entry level?", f"{len(ent):,} of {len(active):,} open tech postings ({pc(len(ent) / max(1, len(active)))}) are marked junior or intern in the title or by the employer: "
+            ("How many job postings are entry level?", f"{len(ent):,} of {len(active):,} open postings ({pc(len(ent) / max(1, len(active)))}) are marked junior or intern in the title or by the employer: "
              f"{ent_int:,} internships and {len(ent) - ent_int:,} junior roles. {ent_exp2:,} of them ({pc(ent_exp2 / max(1, len(ent)))}) still ask for two years of experience or more."),
             ("Why are some postings open for months?", f"The page does not say why: a posting stays open as long as the employer keeps it on its careers page. "
              f"Some roles are hard to fill, some are kept up to collect applications all year. {old90:,} of today’s open jobs were posted more than 90 days ago; each of their pages says so."),
@@ -5088,13 +5109,13 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f"while the record is short they reach only {reach} days ahead.")]
         st_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@graph": [
             {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in st_qa]},
-            {"@type": "Dataset", "name": "How long job postings stay open", "description": f"Daily closing rates of tech job postings by age, measured from hourly checks of employers’ careers pages since {since_s}.",
+            {"@type": "Dataset", "name": "How long job postings stay open", "description": f"Daily closing rates of job postings by age, measured from hourly checks of employers’ careers pages since {since_s}.",
              "url": f"{FULL}/how-long-job-postings-stay-open/", "dateModified": TODAY, "creator": {"@type": "Organization", "name": SITE, "url": FULL + "/"},
              "isAccessibleForFree": True, "license": "https://creativecommons.org/licenses/by/4.0/",
              "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/data/survival.json"}]}]},
             ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page("how-long-job-postings-stay-open/", f"How Long Do Job Postings Stay Open? Our Hourly Data | {SITE}",
-             f"How long tech job postings stay open, from hourly checks of {len({j['company'] for j in active}):,} employers’ careers pages: closings, open jobs by age, entry-level jobs, the map.",
+             f"How long job postings stay open, from hourly checks of {len({j['company'] for j in active}):,} employers’ careers pages: closings, open jobs by age, entry-level jobs, the map.",
              crumbs(("Hiring reports", "reports/"), ("How long postings stay open", "")) + '<h1>How long job postings stay open</h1>'
              f'<p class="lead">{e(lead_s)}</p>'
              f'<p class="note">Counted from the careers pages of the employers we read every hour; updated {fdate(TODAY)}. Free to quote with a link.</p>'
@@ -5276,7 +5297,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in men_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     men_apply = ("Mentor application\nName:\nCurrent role and company:\nYears in this kind of work:\nLinkedIn or GitHub profile:\nWhat I can help with (resume, interviews, changing field, pay talks):\n"
                  "Languages:\nTime zone and hours I can offer a week:")
-    page("mentors/", f"Career Mentors for Tech Job Seekers: how it will work | {SITE}",
+    page("mentors/", f"Career Mentors for Job Seekers: how it will work | {SITE}",
          "One-to-one sessions with people who do the job you want: a resume read, a mock interview, a plan for changing field. The first mentors are being selected; applications are open.",
          crumbs(("Mentors", "")) + '<h1>A mentor who has done <span class="hl">the job you want</span></h1>'
          '<p class="lead">One hour with a person who hires for your kind of role, or was hired for it recently, saves weeks of guessing. That is what this page will offer.</p>'
@@ -5304,8 +5325,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     if CFG["api_url"]:
         acc_data = {"site": FULL, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
                     "what": {p["name"]: p["what"] for p in CFG["prices"]}}
-        page("account/", f"Employer Account — post and promote tech jobs | {SITE}",
-             "Post a tech job for free or put it in front of candidates. Pay in crypto at checkout: the placement switches on by itself once the payment is confirmed.",
+        page("account/", f"Employer Account — post and promote jobs | {SITE}",
+             "Post a job for free or put it in front of candidates. Pay in crypto at checkout: the placement switches on by itself once the payment is confirmed.",
              crumbs(("For employers", "post-a-job/"), ("Account", "")) + "<h1>Employer account</h1>"
              '<p class="lead">Post a job, promote it, or put your company on the home page. What you buy here switches on by itself; there is nobody to wait for.</p>'
              f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
@@ -5469,7 +5490,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # Hiring badges: small live pictures with a count of open roles, for a README, a footer or a post
     top_co = next((c for c, _ in comp_items if OPEN[c]), "")
     top_sk = skill_counts.most_common(1)[0][0] if skill_counts else ""
-    badges = [("Tech jobs", "badge/jobs.svg", "jobs/"), ("Remote tech jobs", "badge/remote.svg", "remote/")]
+    badges = [("Jobs", "badge/jobs.svg", "jobs/"), ("Remote jobs", "badge/remote.svg", "remote/")]
     if top_sk: badges.append((f"{top_sk} jobs", f"badge/skills/{tslug(top_sk)}.svg", f"skills/{tslug(top_sk)}/"))
     if top_co: badges.append((f"{top_co} is hiring", f"badge/companies/{slugify(top_co)}.svg", f"companies/{slugify(top_co)}/"))
     badge_rows = "".join(
@@ -5481,7 +5502,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
               ("Is there a badge for my company?", f"If your company is among the {m:,} whose career pages we read, yes: its badge shows its current number of open roles. Pick it in the widget builder."),
               ("Is it free?", "Yes. Copy the code and use it; the badge links back to the list it counts.")]
     page("hiring-badge/", f"Free Hiring Badge with a Live Count of Open Roles | {SITE}",
-         "Free hiring badges for a README, a footer or a post: a small live image with today’s number of open roles for tech jobs, a skill, a city or your company. Copy and paste.",
+         "Free hiring badges for a README, a footer or a post: a small live image with today’s number of open roles for jobs, a skill, a city or your company. Copy and paste.",
          crumbs(("Job widget", "widgets/"), ("Hiring badge", "")) + '<h1>Free hiring badge with a live count</h1>'
          '<p class="lead">A “we’re hiring” picture says nothing new after the first week. These badges carry today’s number of open roles and update themselves. '
          f'Copy one below, or <a href="{P}/widgets/">pick any skill, city, category or company in the builder</a>.</p>'
@@ -5490,10 +5511,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
              {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hb_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     org_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
-              "logo": FULL + "/og.jpg", "description": "An hourly-updated index of open tech jobs collected from companies' official careers pages."}) + "</script>")
-    page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} tech job listings come from, how often they are checked and what the site does not do.",
+              "logo": FULL + "/og.jpg", "description": "An hourly-updated index of open jobs collected from companies' official careers pages."}) + "</script>")
+    page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} job listings come from, how often they are checked and what the site does not do.",
          crumbs(("About", "")) + f"<h1>About {e(SITE)}</h1>"
-         f'<p class="lead">{e(SITE)} is an index of open tech jobs. Every hour it reads the public hiring feeds of {N_FEEDS} tech companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.</p>'
+         f'<p class="lead">{e(SITE)} is an index of open jobs. Every hour it reads the public hiring feeds of {N_FEEDS} companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.</p>'
          f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>From the companies\' own careers systems, not from other job boards. Every listing links to the original posting, and you apply there. '
          f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p>'
          f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Every hour. The date of the last check is shown on every job page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p>'
@@ -5507,7 +5528,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 ("press", "Press: data, quotes, interviews"), ("privacy", "Your data"), ("abuse", "A scam job or a fake recruiter"),
                 ("security", "A security problem on the site")] if MAIL.get(k))
             + "</table></div>" if MAIL else ""), head=org_ld)
-    page("methodology/", f"How {SITE} Collects and Checks Tech Jobs — methodology", f"How {SITE} collects job listings, detects salary, skills, perks and remote status, calculates salary medians and handles closed jobs.",
+    page("methodology/", f"How {SITE} Collects and Checks Jobs — methodology", f"How {SITE} collects job listings, detects salary, skills, perks and remote status, calculates salary medians and handles closed jobs.",
          crumbs(("Methodology", "")) + f"<h1>How {e(SITE)} collects and checks jobs</h1>"
          f'<p class="plain"><b>In plain words:</b> where the jobs on this site come from, how we know a job is still open, and what each label and number means. Unfamiliar word? See the <a href="{P}/glossary/">glossary</a>.</p>'
          f'<p class="lead">Last updated {fdate(TODAY)}. This page explains where every number and label on the site comes from, so you can judge how far to trust it.</p>'
@@ -5525,20 +5546,21 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     tools_md = "; ".join(f"[{nm}]({FULL}/{u})" for u, nm, _ in TOOLS)
     write("llms.txt", f"""# {SITE}
 
-> {SITE} is an hourly-updated index of {n:,} open tech jobs at {m:,} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
+> {SITE} is an hourly-updated index of {n:,} open jobs at {m:,} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
 
 ## Main sections
-- [All tech jobs]({FULL}/jobs/): search with filters for level, location, salary, perks and remote
-- [Remote tech jobs]({FULL}/remote/)
+- [All jobs]({FULL}/jobs/): search with filters for level, location, salary, perks and remote
+- [Remote jobs]({FULL}/remote/)
 - [Jobs by skill]({FULL}/skills/)
 - [Jobs by location]({FULL}/locations/)
 - [Companies hiring]({FULL}/companies/)
 - [Jobs by perk]({FULL}/perks/): visa sponsorship, relocation, equity and more
+- [Tech jobs]({FULL}/tech/): software, AI, data, cloud, security, product and hardware
 - [Crypto and web3 jobs]({FULL}/crypto/)
 
 ## Data
-- [Tech salaries from live job postings]({FULL}/salaries/)
-- [Tech hiring trends]({FULL}/trends/)
+- [Salaries from live job postings]({FULL}/salaries/)
+- [Hiring trends]({FULL}/trends/)
 - [Insights and rankings]({FULL}/insights/)
 - [Free JSON API]({FULL}/api/): {FULL}/api/v1/index.json
 - [Monthly hiring reports]({FULL}/reports/): one dated page per month that stops changing when the month ends
@@ -5574,9 +5596,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [What is free and what we will never do]({FULL}/promise/) · [Job offer safety checklist]({FULL}/safety/)
 - [About]({FULL}/about/) · [Privacy]({FULL}/privacy/) · [Terms]({FULL}/terms/)
 """, sitemap=False)
-    page("404.html", f"Page not found | {SITE}", "This page does not exist: the address may have changed or the job may have been renamed. Search open tech jobs by title, skill or company instead.",
+    page("404.html", f"Page not found | {SITE}", "This page does not exist: the address may have changed or the job may have been renamed. Search open jobs by title, skill or company instead.",
          f'<h1>Page not found</h1><p class="lead">The address may have changed, or the job may have been renamed. Search for it here:</p>'
-         f'<form class="searchbar wide" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
+         f'<form class="searchbar wide" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs"><button class="btn primary">Search</button></form>'
          f'<p class="note">Or browse <a href="{P}/jobs/">all jobs</a>, <a href="{P}/companies/">companies</a> and <a href="{P}/skills/">skills</a>.</p>', sitemap=False)
 
     # Data + static files
@@ -5610,8 +5632,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         write(f"api/v1/{path}.json", json.dumps({"name": name, "url": f"{FULL}/{page_path}", "site": SITE, "site_url": FULL + "/", "updated": TODAY, "total": len(js), "jobs": jobs_},
                                                 ensure_ascii=False, separators=(",", ":")), sitemap=False)
         api_index.append({"name": name, "feed": f"{FULL}/api/v1/{path}.json", "page": f"{FULL}/{page_path}", "total": len(js)})
-    api("latest", "Tech jobs", "jobs/", active); write("badge/jobs.svg", badge_svg("Tech jobs", f"{n:,} open"), sitemap=False)
-    api("remote", "Remote tech jobs", "remote/", remote); write("badge/remote.svg", badge_svg("Remote tech jobs", f"{len(remote):,} open"), sitemap=False)
+    api("latest", "Jobs", "jobs/", active); write("badge/jobs.svg", badge_svg("Jobs", f"{n:,} open"), sitemap=False)
+    api("remote", "Remote jobs", "remote/", remote); write("badge/remote.svg", badge_svg("Remote jobs", f"{len(remote):,} open"), sitemap=False)
     for t, js in by_tag.items():
         api(f"skills/{tslug(t)}", f"{t} jobs", f"skills/{tslug(t)}/", js); write(f"badge/skills/{tslug(t)}.svg", badge_svg(f"{t} jobs", f"{len(js):,} open"), sitemap=False)
     for cs in CAT:
@@ -5619,7 +5641,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             api(f"categories/{cs}", f"{CAT[cs]} jobs", f"jobs/{cs}/", by_cat[cs]); write(f"badge/categories/{cs}.svg", badge_svg(f"{CAT[cs]} jobs", f"{len(by_cat[cs]):,} open"), sitemap=False)
     for name, slug, js in places:
         short = name.removeprefix("the ")
-        api(f"locations/{slug}", f"Tech jobs in {short}", f"locations/{slug}/", js); write(f"badge/locations/{slug}.svg", badge_svg(f"Tech jobs in {short}", f"{len(js):,} open"), sitemap=False)
+        api(f"locations/{slug}", f"Jobs in {short}", f"locations/{slug}/", js); write(f"badge/locations/{slug}.svg", badge_svg(f"Jobs in {short}", f"{len(js):,} open"), sitemap=False)
     for c, js in companies.items():
         act = [j for j in js if j["active"]]
         api(f"companies/{slugify(c)}", f"Jobs at {c}", f"companies/{slugify(c)}/", act, cap=1500)
@@ -5632,10 +5654,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                  "salary": {"type": "string", "description": "Advertised range as published by the employer, empty if none"}, "posted": {"type": "string", "format": "date"},
                  "url": {"type": "string", "format": "uri", "description": "The job's page; the apply button there leads to the employer's own site"}, "logo": {"type": "string"}}
     write("api/openapi.json", json.dumps({"openapi": "3.1.0", "info": {"title": f"{SITE} jobs API", "version": "1", "description":
-        f"Open tech jobs collected hourly from employers' official careers pages. Read-only JSON files, no key, CORS enabled. Updated {TODAY}."}, "servers": [{"url": FULL}],
+        f"Open jobs collected hourly from employers' official careers pages. Read-only JSON files, no key, CORS enabled. Updated {TODAY}."}, "servers": [{"url": FULL}],
         "paths": {"/api/v1/index.json": {"get": {"operationId": "listFeeds", "summary": "Every feed that exists (skills, categories, locations, companies) with its address and job count",
                                                  "responses": {"200": {"description": "Feed directory", "content": {"application/json": {"schema": {"type": "object"}}}}}}},
-                  "/api/v1/latest.json": op("latestJobs", "The newest open tech jobs"), "/api/v1/remote.json": op("remoteJobs", "The newest remote tech jobs"),
+                  "/api/v1/latest.json": op("latestJobs", "The newest open jobs"), "/api/v1/remote.json": op("remoteJobs", "The newest remote jobs"),
                   "/api/v1/skills/{slug}.json": op("jobsBySkill", "Open jobs that ask for a skill", slug_param("skill")),
                   "/api/v1/categories/{slug}.json": op("jobsByCategory", "Open jobs in a category", slug_param("category")),
                   "/api/v1/locations/{slug}.json": op("jobsByLocation", "Open jobs in a country, region or city", slug_param("location")),
