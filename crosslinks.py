@@ -58,6 +58,9 @@ def parents(u, have):
         add("salaries/", "pages")
     elif p[0] == "relocate" and len(p) == 2:
         add("relocate/", "places"); add(f"locations/{p[1]}/", "pages")
+    elif p[0] == "compare" and len(p) == 2 and "-vs-" in p[1]:             # compare/data-analyst-vs-data-scientist/, compare/python-vs-sql/
+        for x_ in p[1].split("-vs-", 1):
+            add(f"roles/{x_}/" if f"roles/{x_}/" in have else f"skills/{x_}/", "pages")
     elif p[0] == "companies" and len(p) == 3 and p[2].isdigit():           # companies/cloudflare/3/  (later pages of a company's jobs)
         add(f"companies/{p[1]}/", "pages")
     elif p[0] == "companies" and len(p) == 3 and p[1] == "compare" and "-vs-" in p[2]:    # companies/compare/shield-ai-vs-cloudflare/
