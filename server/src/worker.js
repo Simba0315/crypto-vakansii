@@ -1,4 +1,4 @@
-/* Hiring Right Now — API. One file, no dependencies. Runs on Cloudflare Workers with a D1 database.
+/* Jobs Every Hour — API. One file, no dependencies. Runs on Cloudflare Workers with a D1 database.
 
    What it does: accounts, self-serve purchases (featured / pinned jobs, company spotlight, page sponsorship, job packs, Plus),
    crypto checkout through Cryptomus, and automatic activation the moment a payment is confirmed. Nobody has to answer an email.
@@ -578,8 +578,8 @@ async function linkedinCallback(env, req, user) {
 
 /* ---------------------------------------------------------------- a company domain proved without a mailbox on it
    For a founder who signed up with a private mailbox, or a company whose mail lives elsewhere. The account names the domain and gets a
-   token; it publishes the line "hiringrightnow-verify=<token>" either in a DNS TXT record named _hiringrightnow.<domain> or in a file at
-   https://<domain>/.well-known/hiringrightnow.txt, and asks for a check. Only someone who controls the domain's DNS or the root of its
+   token; it publishes the line "jobseveryhour-verify=<token>" either in a DNS TXT record named _jobseveryhour.<domain> or in a file at
+   https://<domain>/.well-known/jobseveryhour.txt, and asks for a check. Only someone who controls the domain's DNS or the root of its
    site can do either. When the check finds the line, the account is tied to the domain (users.domain, domain_proof) exactly as an
    account that signed up with an address on it: it posts as an employer, and its first jobs wait for a person like anyone's.
    - The domain is the registrable one (siteDomain), so "careers.acme.com" asks for a proof of acme.com, at acme.com.
@@ -590,10 +590,10 @@ async function linkedinCallback(env, req, user) {
      start of the answer is read. A page (HTML) is not taken for the file.
    - The email of the account must be confirmed first, and checks are limited (DOMAIN_CHECKS_PER_HOUR): each one makes this service
      open an address somebody typed. */
-const proofLine = (token) => 'hiringrightnow-verify=' + token;
+const proofLine = (token) => 'jobseveryhour-verify=' + token;
 const proofHow = (c) => ({ domain: c.domain, expires: isoDay(c.expires_at),
-  dns: { type: 'TXT', name: '_hiringrightnow.' + c.domain, value: proofLine(c.token) },
-  file: { url: 'https://' + c.domain + '/.well-known/hiringrightnow.txt', content: proofLine(c.token) } });
+  dns: { type: 'TXT', name: '_jobseveryhour.' + c.domain, value: proofLine(c.token) },
+  file: { url: 'https://' + c.domain + '/.well-known/jobseveryhour.txt', content: proofLine(c.token) } });
 const openClaim = (env, user, t) => db(env, 'SELECT * FROM domain_claims WHERE user_id = ? AND expires_at > ?', user.id, t).first();
 async function domainToken(env, req, user) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
@@ -623,7 +623,7 @@ async function dnsTxt(name) {
 // the file at the root of the site: true when one of its lines is the proof, false when it is not there, null when the site did not answer
 async function proofFile(domain, wanted) {
   try {
-    const got = await openCarefully(publicUrl('https://' + domain + '/.well-known/hiringrightnow.txt'), (u) => (!u || siteDomain(u.hostname) !== domain ? 'off the domain' : ''), 'text/plain');
+    const got = await openCarefully(publicUrl('https://' + domain + '/.well-known/jobseveryhour.txt'), (u) => (!u || siteDomain(u.hostname) !== domain ? 'off the domain' : ''), 'text/plain');
     if (got.problem || !got.res.ok || /^\s*(text\/html|application\/xhtml\+xml)\s*(;|$)/i.test(got.res.headers.get('Content-Type') || '')) { try { if (got.res && got.res.body) await got.res.body.cancel(); } catch {} return false; }
     return (await readStart(got.res, 2000)).replace(/^﻿/, '').split(/\r?\n/).some((l) => l.trim() === wanted);
   } catch { return null; }
@@ -1428,7 +1428,7 @@ async function requestRebuild(env, fromTimer) {
   try {
     await fetch('https://api.github.com/repos/' + env.GITHUB_REPO + '/actions/workflows/update.yml/dispatches', {
       method: 'POST', body: JSON.stringify({ ref: 'main' }),
-      headers: { Authorization: 'Bearer ' + env.GITHUB_TOKEN, Accept: 'application/vnd.github+json', 'User-Agent': 'hiring-right-now-api', 'Content-Type': 'application/json' },
+      headers: { Authorization: 'Bearer ' + env.GITHUB_TOKEN, Accept: 'application/vnd.github+json', 'User-Agent': 'jobs-every-hour-api', 'Content-Type': 'application/json' },
     });
   } catch {}
 }

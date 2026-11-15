@@ -1,5 +1,7 @@
-/* Hiring Right Now. The brand since 15 Nov 2026 (brand.py, /brand/): ink, white paper, hairlines and one persimmon orange-red.
-   The notes below still say green in places: the tokens kept their names, the colour changed.
+/* Jobs Every Hour. The brand (brand.py, /brand/): ink, paper, hairlines and one green, the site's colour from the start
+   (persimmon orange-red was tried on 15 Nov 2026 and dropped the same day: "the site is green, why is the brand red?").
+   Buttons are ink on light pages and paper on dark ones; green is a marker under words, a line under links, the mark. Never a
+   large green fill, never green blocks on black.
    Earlier: paper, ink, hairlines and one green. Lists are flat like a printed index.
    --hl: green as a fill under text (marker, selected, the employer panel). --ac: green as a line (underlines, bars, focus).
    --pop: the same green on the dark surfaces (the board, tool screens, footer). */
@@ -15,7 +17,7 @@
 @font-face{font-family:"Inter Fallback";src:local("Arial");size-adjust:107.06%;ascent-override:90.49%;descent-override:22.56%;line-gap-override:0%}
 :root{
   --bg:#f6f5f0;--bg2:#eeece5;--card:#ffffff;--text:#0e0e0c;--muted:#55534c;--faint:#6c6a62;--line:#e2dfd5;--line2:#c9c5b8;
-  --hl:#ffd9ca;--hl-ink:#5a1a06;--ac:#c93f18;--ac-ink:#ffffff;--brand:#e8552b;--brand-ink:#ffffff;--pop:#ff7a52;--btn:#121110;--btn-ink:#ffffff;--btn-h:#c93f18;--btn-h-ink:#ffffff;--accent:#121110;--accent-soft:#fdeee8;
+  --hl:#b7eec3;--hl-ink:#06361c;--ac:#15803d;--ac-ink:#ffffff;--brand:#1f9d55;--brand-ink:#ffffff;--pop:#5fd486;--btn:#121110;--btn-ink:#ffffff;--btn-h:#15803d;--btn-h-ink:#ffffff;--accent:#121110;--accent-soft:#e8f6eb;
   --green:#0a6d38;--green-soft:#e0f3e3;--amber:#7d4a00;--amber-soft:#f9ecc9;
   --shadow:0 1px 0 rgba(14,14,12,.04),0 10px 24px -14px rgba(14,14,12,.22);
   --radius:4px;--ava-bg-l:90%;--ava-bg-s:45%;--ava-fg-l:24%;
@@ -23,14 +25,14 @@
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){
   --bg:#121110;--bg2:#191715;--card:#1b1917;--text:#f4f1ec;--muted:#aca69c;--faint:#8f897f;--line:#2a2723;--line2:#3b3732;
-  --hl:#ff7a52;--hl-ink:#121110;--ac:#ff7a52;--ac-ink:#121110;--brand:#ff7a52;--brand-ink:#121110;--pop:#ff7a52;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#ff7a52;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#3a1a10;
+  --hl:#5fd486;--hl-ink:#121110;--ac:#5fd486;--ac-ink:#121110;--brand:#5fd486;--brand-ink:#121110;--pop:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#5fd486;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#12301d;
   --green:#6fdd95;--green-soft:#12301d;--amber:#f2c14e;--amber-soft:#302509;
   --shadow:0 1px 0 rgba(0,0,0,.5),0 14px 30px -18px rgba(0,0,0,.9);
   --ava-bg-l:18%;--ava-bg-s:35%;--ava-fg-l:82%;color-scheme:dark;
 }}
 :root[data-theme=dark]{
   --bg:#121110;--bg2:#191715;--card:#1b1917;--text:#f4f1ec;--muted:#aca69c;--faint:#8f897f;--line:#2a2723;--line2:#3b3732;
-  --hl:#ff7a52;--hl-ink:#121110;--ac:#ff7a52;--ac-ink:#121110;--brand:#ff7a52;--brand-ink:#121110;--pop:#ff7a52;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#ff7a52;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#3a1a10;
+  --hl:#5fd486;--hl-ink:#121110;--ac:#5fd486;--ac-ink:#121110;--brand:#5fd486;--brand-ink:#121110;--pop:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#5fd486;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#12301d;
   --green:#6fdd95;--green-soft:#12301d;--amber:#f2c14e;--amber-soft:#302509;
   --shadow:0 1px 0 rgba(0,0,0,.5),0 14px 30px -18px rgba(0,0,0,.9);
   --ava-bg-l:18%;--ava-bg-s:35%;--ava-fg-l:82%;color-scheme:dark;
@@ -731,7 +733,7 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .side .sideact+dl.meta{padding-top:16px;border-top:1px solid var(--line)}
 
 /* a section on a dark band the full width of the window: everything inside takes the dark values by itself */
-.inkband{--bg:#0e0e0c;--bg2:#1c1c19;--card:#171715;--text:#f3f2ec;--muted:#b9b7ad;--faint:#8b897f;--line:#2b2b27;--line2:#3d3d37;--accent-soft:#3a1a10;--ac:#ff7a52;--hl:#ff7a52;--hl-ink:#121110;--green:#6fdd95;--green-soft:#12301d;
+.inkband{--bg:#0e0e0c;--bg2:#1c1c19;--card:#171715;--text:#f3f2ec;--muted:#b9b7ad;--faint:#8b897f;--line:#2b2b27;--line2:#3d3d37;--accent-soft:#12301d;--ac:#5fd486;--hl:#5fd486;--hl-ink:#121110;--green:#6fdd95;--green-soft:#12301d;
   background:var(--bg);color:var(--text);margin:56px calc(50% - 50vw) 0;padding:46px calc(50vw - 50%) 54px}
 .inkband .sec{margin-top:0}
 .inkband+.sec{margin-top:56px}
@@ -1068,14 +1070,14 @@ td s.was{font-size:.92em}
 
 /* ===== The look since 13 Nov 2026: light, large, rounded; the product is on show. Everything below overrides the paper look above. ===== */
 :root{--bg:#ffffff;--bg2:#f6f4f1;--card:#ffffff;--text:#121110;--muted:#5c5852;--faint:#77726a;--line:#ebe8e3;--line2:#d6d1c9;
-  --hl:#ffd9ca;--hl-ink:#5a1a06;--ac:#c93f18;--btn:#121110;--btn-ink:#ffffff;--btn-h:#c93f18;--btn-h-ink:#ffffff;--accent-soft:#fdeee8;
+  --hl:#b7eec3;--hl-ink:#06361c;--ac:#15803d;--btn:#121110;--btn-ink:#ffffff;--btn-h:#15803d;--btn-h-ink:#ffffff;--accent-soft:#e8f6eb;
   --display:"Schibsted Grotesk","Public Sans","Public Sans Fallback",system-ui,sans-serif}
 :root{--radius:12px;--shadow:0 1px 2px rgba(16,24,40,.05),0 14px 34px -18px rgba(16,24,40,.22)}
 header.site{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
 .logo{font-weight:800;letter-spacing:-.022em}
 .logo .mk circle{fill:var(--brand)}.logo .mk path{stroke:var(--brand-ink)}
 .btn{border-radius:999px;padding:11px 20px;font-size:15px}
-.btn.primary{background:var(--ac);border-color:var(--ac);color:var(--ac-ink,#fff)}
+.btn.primary{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}       /* ink on light pages, paper on dark ones: the green is never a large fill or green on black */
 .btn.primary:hover{background:var(--btn-h);border-color:var(--btn-h);color:var(--btn-h-ink,#fff)}
 .btn.ghost{border-radius:999px}
 .btn.lg{padding:14px 26px;font-size:16px}

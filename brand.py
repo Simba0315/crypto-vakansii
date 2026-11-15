@@ -1,4 +1,4 @@
-"""The brand of Hiring Right Now (owner, 15 Nov 2026: "a corporate design of our own, like Indeed and other brands").
+"""The brand of the site (owner, 15 Nov 2026: "a corporate design of our own, like Indeed and other brands").
 
 Three directions are defined here and shown side by side on /brand/directions/ (not indexed), so the owner can switch later;
 the site uses the one marked "applied". Every logo file is drawn here: the letters of the wordmark are turned into outlines,
@@ -15,7 +15,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "assets" / "brand"
-NAME = "Hiring Right Now"
+import json as _json
+NAME = _json.loads((ROOT / "config.json").read_text())["site_name"]     # "Jobs Every Hour", the name of jobseveryhour.com
 
 FONTS = {   # family, file in assets/fonts (OFL-1.1, from Fontsource), weight used for headlines and the wordmark
     "schibsted": ("Schibsted Grotesk", "schibsted-latin.woff2", 800),
@@ -26,8 +27,17 @@ FONTS = {   # family, file in assets/fonts (OFL-1.1, from Fontsource), weight us
 # mark: the colour of the mark and of large shapes; ui: buttons and link lines on light pages (white text on it passes 4.5:1);
 # ui_dark: the same on dark pages, with dark text on it; ink, paper: text and page.
 DIRECTIONS = {
+    "green": {
+        "name": "Evergreen", "applied": True, "shape": "clock",
+        "idea": "The clock at 17 minutes past (the minute every employer’s careers page is read, every hour) in the green the site "
+                "has used from the start: the marker under words and the line under links. Green reads as “open”: the job is still "
+                "open. Buttons stay ink, so the green is never a large fill and never a green block on black (the owner, 15 Nov 2026: "
+                "“the site is green, why is the brand red?”).",
+        "mark": "#1F9D55", "ui": "#15803D", "ui_hover": "#116932", "ui_dark": "#5FD486", "ui_dark_hover": "#A3F0B8", "tint": "#B7EEC3", "tint_dark": "#12301D",
+        "ink": "#0E0E0C", "paper": "#FFFFFF", "paper2": "#F6F5F0", "dark_bg": "#121110", "dark_card": "#1B1917",
+        "head": "schibsted", "text": "publicsans"},
     "persimmon": {
-        "name": "Persimmon", "applied": True,
+        "name": "Persimmon", "applied": False, "shape": "clock",
         "idea": "A clock set at 17 minutes past: the minute every employer’s careers page is read, every hour. Orange-red says “now” "
                 "and stands apart from the blue of Indeed and LinkedIn, the green of Glassdoor, Upwork and ZipRecruiter, the yellow of "
                 "Welcome to the Jungle and the red of Dice. It is also the colour our charts already use for the one mark that matters.",
@@ -35,14 +45,14 @@ DIRECTIONS = {
         "ink": "#121110", "paper": "#FFFFFF", "paper2": "#F6F4F1", "dark_bg": "#121110", "dark_card": "#1B1917",
         "head": "schibsted", "text": "publicsans"},
     "berry": {
-        "name": "Berry", "applied": False,
+        "name": "Berry", "applied": False, "shape": "h",
         "idea": "An H whose bar is a dot: the live dot of a listing checked a minute ago. A deep berry is warm and human and is not "
                 "used by any large job site.",
         "mark": "#B3245E", "ui": "#B3245E", "ui_hover": "#931B4C", "ui_dark": "#F47CA9", "ui_dark_hover": "#F79DBF", "tint": "#FBEAF1", "tint_dark": "#3A1226",
         "ink": "#14101A", "paper": "#FFFFFF", "paper2": "#F7F4F6", "dark_bg": "#141016", "dark_card": "#1D1820",
         "head": "hanken", "text": "hanken"},
     "brick": {
-        "name": "Brick and sand", "applied": False,
+        "name": "Brick and sand", "applied": False, "shape": "rows",
         "idea": "Three rows of a list, the first one fresh: an index of jobs, set like a printed paper. Brick red on sand reads as "
                 "editorial and calm.",
         "mark": "#A63A2B", "ui": "#A63A2B", "ui_hover": "#8A2F22", "ui_dark": "#E27A62", "ui_dark_hover": "#EA957F", "tint": "#F6E7E1", "tint_dark": "#36191A",
@@ -54,12 +64,13 @@ APPLIED = next(k for k, d in DIRECTIONS.items() if d["applied"])
 
 def mark(key, bg, fg):
     """The mark on a 32 x 32 grid: `bg` is the shape, `fg` the drawing on it."""
-    if key == "persimmon":                         # a clock face: the hour hand at 12, the minute hand at 17 past
+    shape = DIRECTIONS[key].get("shape")
+    if shape == "clock":                           # a clock face: the hour hand at 12, the minute hand at 17 past
         a = math.radians(17 / 60 * 360)
         x, y = 16 + 9.6 * math.sin(a), 16 - 9.6 * math.cos(a)
         return (f'<circle cx="16" cy="16" r="16" fill="{bg}"/><path d="M16 16V8.6M16 16L{x:.2f} {y:.2f}" fill="none" stroke="{fg}" '
                 f'stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>')
-    if key == "berry":                             # an H whose bar is a dot
+    if shape == "h":                               # an H whose bar is a dot
         return (f'<rect width="32" height="32" rx="8" fill="{bg}"/><rect x="8" y="7.5" width="3.8" height="17" rx="1.9" fill="{fg}"/>'
                 f'<rect x="20.2" y="7.5" width="3.8" height="17" rx="1.9" fill="{fg}"/><circle cx="16" cy="16" r="3" fill="{fg}"/>')
     return (f'<rect width="32" height="32" rx="7" fill="{bg}"/><rect x="7" y="8.8" width="12.5" height="3.4" rx="1.7" fill="{fg}"/>'   # three list rows

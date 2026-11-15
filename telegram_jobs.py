@@ -28,7 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 TG_DAYS = int(os.environ.get("HRN_TG_DAYS") or 30)     # how long a post stays an open job (a smaller number for a quick local try)
-UA = {"User-Agent": "Mozilla/5.0 (compatible; HiringRightNow/1.0; +https://jobseveryhour.com/about/)"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; JobsEveryHour/1.0; +https://jobseveryhour.com/about/)"}
 
 # ---------------------------------------------------------------------------------------------------------------- reading
 
