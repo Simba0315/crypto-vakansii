@@ -261,7 +261,10 @@
     var host = ''; try { host = new URL(apply.href).hostname.replace(/^www\./, ''); } catch (e) {}
     var ats = /greenhouse\.io$/.test(host) ? 'Greenhouse' : /lever\.co$/.test(host) ? 'Lever' : /ashbyhq\.com$/.test(host) ? 'Ashby' : '';
     var pills = document.querySelector('.jhead .pills');
-    if (pills && !pills.querySelector('.pill.src')) pills.insertAdjacentHTML('afterbegin', '<span class="pill ok src" title="Read from ' + (ats ? ats + ', the hiring system the employer itself uses' : 'the employer’s own careers site') + ', and re-checked every hour">✓ Employer’s own posting</span>');
+    var tg = host === 't.me';                 // a post read from a public Telegram channel: said plainly, no check mark
+    if (pills && !pills.querySelector('.pill.src')) pills.insertAdjacentHTML('afterbegin', tg
+      ? '<span class="pill src" title="Read from the public page of a Telegram job channel; not checked with the employer">From a Telegram channel</span>'
+      : '<span class="pill ok src" title="Read from ' + (ats ? ats + ', the hiring system the employer itself uses' : 'the employer’s own careers site') + ', and re-checked every hour">✓ Employer’s own posting</span>');
     var title = h1.textContent.trim(), company = co ? co.textContent.trim() : '', url = location.href.split('#')[0].split('?')[0];
     var ask = 'I am looking at this job: "' + title + '"' + (company ? ' at ' + company : '') + ' (' + url + '). Explain in plain words what the role involves and what it requires, which interview questions I should prepare for, and what I should ask the employer. Then ask me about my experience and tell me how well I fit.';
     var q = encodeURIComponent(ask);

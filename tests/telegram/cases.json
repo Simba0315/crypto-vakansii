@@ -1,0 +1,146 @@
+[
+ {
+  "name": "digest: title в company, place on the next line",
+  "text": "📍Backend\n\nMiddle+ Бэкенд-разработчик в команду Платежей в Рогакопыта\nМосква, офис\n\nSenior Data Analyst в Example Corp\nот 3 000 до 4 000$\nУдалённо (Мир)\n\n———\nРазместить вакансию",
+  "want": [
+   {
+    "title": "Middle+ Бэкенд-разработчик",
+    "company": "Рогакопыта",
+    "location": "Moscow, Russia",
+    "remote": false
+   },
+   {
+    "title": "Senior Data Analyst",
+    "company": "Example Corp",
+    "location": "Remote, worldwide",
+    "salary": "$3,000 - $4,000 a month"
+   }
+  ]
+ },
+ {
+  "name": "one line with a link",
+  "text": "Product Owner (CX) в Example Group: https://example.com/jobs/1\n\nМожно работать удалённо. Зарплата в валюте.",
+  "want": [
+   {
+    "title": "Product Owner (CX)",
+    "company": "Example Group",
+    "remote": true
+   }
+  ]
+ },
+ {
+  "name": "title / company, pay below",
+  "text": "Лучшее за неделю\n\nВедущий бизнес-аналитик / Орбита Плюс (удалёнка)\nЗарплата: от 373 000 ₽ /на руки\nПодробнее\n\nФинансовый директор / BioExample\nЗарплата: до 255 000 ₽\nПодробнее",
+  "want": [
+   {
+    "title": "Ведущий бизнес-аналитик",
+    "company": "Орбита Плюс",
+    "remote": true,
+    "salary": "from ₽373,000 a month"
+   },
+   {
+    "title": "Финансовый директор",
+    "company": "BioExample",
+    "salary": "up to ₽255,000 a month"
+   }
+  ]
+ },
+ {
+  "name": "title, then 'в Company — about'",
+  "text": "Джуниор Бизнес-аналитик\nв Example Pay — финтех-платформа в Латинской Америке.\nИщет Анна, её пост на LinkedIn.",
+  "want": [
+   {
+    "title": "Джуниор Бизнес-аналитик",
+    "company": "Example Pay"
+   }
+  ]
+ },
+ {
+  "name": "title, then 'Company — about', office city",
+  "text": "Миддл .NET Разработчик\nExample Bank — коммерческий банк.\nОфис (Бишкек, Кыргызстан).",
+  "want": [
+   {
+    "title": "Миддл .NET Разработчик",
+    "company": "Example Bank",
+    "location": "Bishkek, Kyrgyzstan"
+   }
+  ]
+ },
+ {
+  "name": "title, company, link (international)",
+  "text": "Global Partnerships BD Lead\nFukuExample\nhttps://example.com/remote-jobs/1",
+  "want": [
+   {
+    "title": "Global Partnerships BD Lead",
+    "company": "FukuExample"
+   }
+  ]
+ },
+ {
+  "name": "labelled post",
+  "text": "#вакансия #python #remote\n\n✅Вакансия: Senior Python Developer\n✅Компания: Example Labs\n✅Формат: удалённо\n✅ЗП: 250 000 – 320 000 ₽ на руки\n\nОбязанности:\n• писать код",
+  "want": [
+   {
+    "title": "Senior Python Developer",
+    "company": "Example Labs",
+    "remote": true,
+    "salary": "₽250,000 - ₽320,000 a month"
+   }
+  ]
+ },
+ {
+  "name": "labelled, company in 'Мы, X,'",
+  "text": "Вакансия: Пиксель-арт художник (Middle)\nЛокация работы: #Удаленка\nО нас:\nМы, EXAMPLEHOUSE, делаем игры.",
+  "want": [
+   {
+    "title": "Пиксель-арт художник (Middle)",
+    "company": "EXAMPLEHOUSE",
+    "remote": true
+   }
+  ]
+ },
+ {
+  "name": "no company named: skipped",
+  "text": "#вакансия #DevOps\n\n✅Вакансия: Senior DevOps\n✅Формат: офис в Ташкенте\n\nSenior DevOps Engineer в стабильный финтех проект\n\nТребования: опыт от 5 лет",
+  "want": []
+ },
+ {
+  "name": "NDA: skipped",
+  "text": "Middle Системный аналитик в NDA\nУдалённо",
+  "want": []
+ },
+ {
+  "name": "advert: skipped",
+  "text": "Стать аналитиком данных за 10 недель — реально! Курс-буткемп от школы Example. Реклама. erid: 2Vtzqx",
+  "want": []
+ },
+ {
+  "name": "résumé: skipped",
+  "text": "Unity Developer в поиске новых проектов\nРезюме: https://example.github.io/\nПривет! Меня зовут Артур, ищу удалённую работу.",
+  "want": []
+ },
+ {
+  "name": "article: skipped",
+  "text": "Треть сотрудников саботируют внедрение ИИ в своей компании.\nОпросили 2400 человек.",
+  "want": []
+ },
+ {
+  "name": "a city is not a company",
+  "text": "Стажёр-разработчик в Москве\nПосле стажировки — работа в офисе",
+  "want": []
+ },
+ {
+  "name": "digest: 'Company is hiring Title'",
+  "text": "- Examplepay is hiring Operations Analyst\n- Foo Labs is hiring Staff Product Security Engineer",
+  "want": [
+   {
+    "title": "Operations Analyst",
+    "company": "Examplepay"
+   },
+   {
+    "title": "Staff Product Security Engineer",
+    "company": "Foo Labs"
+   }
+  ]
+ }
+]

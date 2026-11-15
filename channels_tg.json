@@ -1,0 +1,189 @@
+[
+ {
+  "channel": "evacuatejobs",
+  "name": "Remocate",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "careerspace",
+  "name": "careerspace",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "it_vakansii_jobs",
+  "name": "СЕТИ — IT & Digital вакансии",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "jobforjunior",
+  "name": "Job for Junior",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "habr_career",
+  "name": "Хабр Карьера",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "devjobs",
+  "name": "Game Development Jobs",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "gamedevjob",
+  "name": "Работа в геймдеве",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forfrontend",
+  "name": "Job for Frontend",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forhr",
+  "name": "Job for HR",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "Getitrussia",
+  "name": "Get IT",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "datajobschannel",
+  "name": "Data jobs feed",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "devops_jobs_feed",
+  "name": "Devops Jobs",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "unityjobs_pub",
+  "name": "Unity Jobs",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "ue_pub",
+  "name": "Unreal Engine Jobs",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "jobs_cg",
+  "name": "CG Work",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "rust_jobs_feed",
+  "name": "Rust Jobs",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forallqa",
+  "name": "Job for QA",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "foranalysts",
+  "name": "Job for Analysts & Data Scientists",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forallsales",
+  "name": "Job for Sales & BizDev",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forproducts",
+  "name": "Job for Products and Projects",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forpython",
+  "name": "Job for Python",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "fordevops",
+  "name": "Job for Sysadmin & DevOps",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forgamedev",
+  "name": "Job for Gamedev",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forallmarketing",
+  "name": "Job for Marketing",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forcsharp",
+  "name": "Job for C#, .NET",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "forcpp",
+  "name": "Job for C, C++ Developers",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "remotejobsy",
+  "name": "Remote Jobs",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "hellonewjob",
+  "name": "Hello New Job!",
+  "lang": "ru",
+  "off": true
+ },
+ {
+  "channel": "remoteok",
+  "name": "Remote OK",
+  "remote": true,
+  "lang": "en",
+  "off": true
+ },
+ {
+  "channel": "web3hiring",
+  "name": "Web3 Jobs",
+  "lang": "en",
+  "off": true
+ },
+ {
+  "channel": "seo_jobs",
+  "name": "SEO Vacancies | SEO Jobs",
+  "lang": "ru",
+  "off": true
+ }
+]

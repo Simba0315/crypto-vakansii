@@ -56,7 +56,13 @@ COUNTRIES = [   # (ISO code, name, the country written out, well-known cities)
     ("NO", "Norway", r"\bnorway\b", r"\boslo\b"), ("FI", "Finland", r"\bfinland\b", r"helsinki"), ("BE", "Belgium", r"\bbelgium\b", r"brussels"),
     ("CZ", "Czechia", r"czech", r"\bprague\b"), ("RO", "Romania", r"\bromania\b", r"bucharest|\bcluj\b"), ("UA", "Ukraine", r"\bukraine\b", r"\bkyiv\b"),
     ("EE", "Estonia", r"\bestonia\b", r"tallinn"), ("LT", "Lithuania", r"lithuania", r"vilnius"), ("GR", "Greece", r"\bgreece\b", r"\bathens\b"),
-    ("BG", "Bulgaria", r"\bbulgaria\b", r"\bsofia\b"), ("HU", "Hungary", r"\bhungary\b", r"budapest"), ("RS", "Serbia", r"\bserbia\b", r"belgrade"),
+    ("BG", "Bulgaria", r"\bbulgaria\b", r"\bsofia\b"), ("HU", "Hungary", r"\bhungary\b", r"budapest"), ("RS", "Serbia", r"\bserbia\b", r"belgrade|novi sad"),
+    ("RU", "Russia", r"\brussia\b|russian federation", r"\bmoscow\b|saint petersburg|st\.? petersburg|novosibirsk|yekaterinburg|\bkazan\b|nizhny novgorod|innopolis"),
+    ("BY", "Belarus", r"\bbelarus\b", r"\bminsk\b"), ("KZ", "Kazakhstan", r"kazakhstan", r"almaty|astana"),
+    ("UZ", "Uzbekistan", r"uzbekistan", r"tashkent"), ("KG", "Kyrgyzstan", r"kyrgyzstan", r"bishkek"), ("AM", "Armenia", r"\barmenia\b", r"yerevan"),
+    ("GE", "Georgia (country)", r"georgia \(country\)|sakartvelo", r"tbilisi|batumi"), ("AZ", "Azerbaijan", r"azerbaijan", r"\bbaku\b"),
+    ("CY", "Cyprus", r"\bcyprus\b", r"limassol|larnaca|nicosia"), ("ME", "Montenegro", r"montenegro", r"podgorica|budva"),
+    ("LV", "Latvia", r"\blatvia\b", r"\briga\b"), ("MD", "Moldova", r"moldova", r"chisinau|chi[șs]in[ăa]u"),
     ("IN", "India", r"\bindia\b", r"bangalore|bengaluru|mumbai|hyderabad|\bpune\b|\bdelhi\b|gurgaon|gurugram|chennai|\bnoida\b"),
     ("SG", "Singapore", r"singapore", r""), ("HK", "Hong Kong", r"hong kong", r""), ("JP", "Japan", r"\bjapan\b", r"\btokyo\b|\bosaka\b"),
     ("KR", "South Korea", r"\bkorea\b", r"\bseoul\b"), ("TW", "Taiwan", r"\btaiwan\b", r"taipei"), ("CN", "China", r"\bchina\b", r"shanghai|beijing|shenzhen"),
@@ -70,7 +76,7 @@ COUNTRIES = [   # (ISO code, name, the country written out, well-known cities)
     ("ZA", "South Africa", r"south africa", r"cape town|johannesburg"), ("NG", "Nigeria", r"nigeria", r"\blagos\b"), ("KE", "Kenya", r"\bkenya\b", r"nairobi"),
 ]
 US_NAME = r"united states|\busa\b|\bu\.s\.(a\.)?|(?-i:\bUS\b)(?! ?\$)"
-US_STATES = (r"alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|\bgeorgia\b|hawaii|idaho|illinois|\bindiana\b|\biowa\b|kansas|kentucky|louisiana|"
+US_STATES = (r"alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|\bgeorgia\b(?! \(country\))|hawaii|idaho|illinois|\bindiana\b|\biowa\b|kansas|kentucky|louisiana|"
              r"\bmaine\b|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|"
              r"\bohio\b|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|\btexas\b|\butah\b|vermont|virginia|\bwashington\b|wisconsin|wyoming|district of columbia")
 US_ABBR = re.compile(r"(?:,|-|–|\()\s?(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)\b")
@@ -120,7 +126,7 @@ def loc_flags(loc, limit=3):
     return "".join(fl(c) for c, _ in countries_of(loc)[:limit]) if loc else ""
 
 
-REGIONS = {"europe": ({"GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS"}, r"\beurope\b|\bemea\b|\beu\b"),
+REGIONS = {"europe": ({"GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS", "LV", "CY", "ME", "MD"}, r"\beurope\b|\bemea\b|\beu\b"),
            "asia-pacific": ({"IN", "SG", "HK", "JP", "KR", "TW", "CN", "AU", "NZ", "MY", "PH", "ID", "TH", "VN"}, r"\bapac\b|\basia\b"),
            "latin-america": ({"BR", "MX", "AR", "CO", "CL"}, r"\blatam\b|latin america"),
            "africa": ({"ZA", "NG", "KE"}, r"\bafrica\b")}
@@ -969,7 +975,8 @@ def job_page(j, active_by_cat):
     if j["active"] and j.get("last_seen"): rows.append(("Last checked", fdate(j["last_seen"])))
     ats = j["id"].split("-", 1)[0]
     if j["active"]:
-        rows.append(("Source", (f"{e(j['company'])}’s own posting, read from {SOURCE_NAME[ats]}, the hiring software it uses" if ats in SOURCE_NAME else "Posted here by the employer; the link was checked" if j.get("direct")
+        rows.append(("Source", (f'A post in the public Telegram channel <a href="https://t.me/{e(j["tg"])}" rel="nofollow noopener">@{e(j["tg"])}</a>; not checked with {e(j["company"])}' if j.get("tg") else
+                                f"{e(j['company'])}’s own posting, read from {SOURCE_NAME[ats]}, the hiring software it uses" if ats in SOURCE_NAME else "Posted here by the employer; the link was checked" if j.get("direct")
                                 else f"{e(j['company'])}’s own posting")))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
@@ -1009,12 +1016,12 @@ def job_page(j, active_by_cat):
         ld["validThrough"] = VALID_TO
         # Google reads a remote posting only with the countries it is open to. A remote job that names none ("Remote", "Global")
         # gets no markup at all rather than a guessed country; its page is still found by ordinary search.
-        mark_ok = (not j["remote"] or "applicantLocationRequirements" in ld) and ("jobLocation" in ld or "applicantLocationRequirements" in ld)
+        mark_ok = (not j["remote"] or "applicantLocationRequirements" in ld) and ("jobLocation" in ld or "applicantLocationRequirements" in ld) and not j.get("tg")
         if not mark_ok: head, micro = "", ""
         elif full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
         else: head, micro = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>", ""
         host_ = re.sub(r"^www\.", "", re.sub(r"^https?://([^/?#]+).*$", r"\1", j["url"] or "")).lower()
-        apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a>'
+        apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a>'
                      + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else "")
                      + '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>'
                      # Rezi's best-converting box, done our way: no account, the posting goes straight into the checker
@@ -1036,7 +1043,11 @@ def job_page(j, active_by_cat):
         pay_line = (f" The posting gives a salary of {e(j['salary'])}." if j["salary"] else
                     f" The posting gives no salary; similar roles in the United States advertise a median of {money(EST.get((j['cat'], j['level'])) or CATMED[j['cat']])}."
                     if est_ok and (EST.get((j["cat"], j["level"])) or CATMED.get(j["cat"])) else "")
-        tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> is open at {e(j["company"])}{where}.{pay_line}'
+        if j.get("tg"):                       # a channel post: no US pay estimate, no "careers page" claim
+            pay_line = f" The post gives a salary of {e(j['salary'])}." if j["salary"] else ""
+        tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> at {e(j["company"])}{where} was posted in the Telegram channel @{e(j["tg"])}'
+                + (f' on {fdate(j["posted"])}' if j["posted"] else "") + f'.{pay_line} We read it from the channel’s public page; it was not checked with {e(j["company"])}.</p>') if j.get("tg") else \
+               (f'<p class="tldr"><strong>{e(j["title"])}</strong> is open at {e(j["company"])}{where}.{pay_line}'
                 + (f' Posted on {fdate(j["posted"])}' if j["posted"] else " It is")
                 + (f'{", and" if j["posted"] else ""} still on {e(j["company"])}’s careers page when we last checked, on {fdate(j["last_seen"])}.' if j.get("last_seen") else (". It is open now." if j["posted"] else " open now.")) + "</p>")
     else:
@@ -1045,7 +1056,8 @@ def job_page(j, active_by_cat):
     about = tldr + ((f'<div itemscope itemtype="https://schema.org/JobPosting">{micro}<h2>About the role</h2><div class="prose desc" itemprop="description">{full}</div></div>'
                      if micro else f'<h2>About the role</h2><div class="prose desc">{full}</div>')
                     + f'<p class="note">The employer’s own description, as published on {e(j["company"])}’s careers page.</p>' if full else
-                    f'<h2>About the role</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">The opening lines of the posting. The rest is on {e(j["company"])}’s careers page.</p>'
+                    f'<h2>About the role</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">'
+                    + ("A few lines of the post. The whole post, with the contact to apply, is in the Telegram channel.</p>" if j.get("tg") else f"The opening lines of the posting. The rest is on {e(j['company'])}’s careers page.</p>")
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all its roles</a></p></div>'
@@ -1065,8 +1077,9 @@ def job_page(j, active_by_cat):
     glance = (f'<p class="note"><a href="{comp_url}">{roles(more_roles, "more open role")} at {e(j["company"])}</a></p>' if more_roles > 0 else "")
     save_btn = ((f'<div class="sideact"><button class="btn ghost" id="save" type="button" {data}>Save job</button>'
                  f'<button class="btn ghost" id="applied" type="button">Mark as applied</button></div>'
-                 f'<p class="note">You apply on the employer’s own page, free.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>'
-                 '<p class="share" id="share"></p>'
+                 + (f'<p class="note">You apply through the contact in the channel post, free. The post was read from a public Telegram channel and not checked with the employer.</p>' if j.get("tg") else
+                  f'<p class="note">You apply on the employer’s own page, free.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>')
+                 + '<p class="share" id="share"></p>'
                  f'<p class="note"><a href="{P}/safety/">How to check that a job offer is real</a>'
                  + (f' · <a href="mailto:{e(MAIL["abuse"])}?subject={e(quote("Listing: " + j["title"] + " at " + j["company"] + " (" + FULL + "/job/" + j["slug"] + "/)"))}" rel="nofollow">Report a problem with this listing</a>' if MAIL.get("abuse")
                     else f' · <a href="https://t.me/{e(CFG["contact_telegram"])}" rel="nofollow noopener">Report a problem with this listing</a>' if CFG.get("contact_telegram") else "") + "</p>") if j["active"] else "") + glance
@@ -1076,15 +1089,16 @@ def job_page(j, active_by_cat):
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
-            + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">Apply on company site</a></div>' if j["active"] else ""))
+            + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = f"{j['title']} at {j['company']}"
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
     if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= 65: title += f" ({place_})"
     if not j["active"]: title += " (closed)"
     desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + f". {CAT[j['cat']]} role"
-            + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply on the company site."))
-    page(f"job/{j['slug']}/", title, desc, body, head, compact=True)
+            + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply through the Telegram post." if j.get("tg") else ". Apply on the company site."))
+    # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
+    page(f"job/{j['slug']}/", title, desc, body, head + ('<meta name="robots" content="noindex">' if j.get("tg") else ""), sitemap=not j.get("tg"), compact=True)
 
 
 def embed_code(spec, label, page_path, limit=6):
@@ -1355,7 +1369,7 @@ def main():
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
     logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS][:10]
     # one real, open listing taken apart: what a visitor can read on every job page
-    aj = next((j for j in latest if j["salary"] and j["remote"] and j.get("years") and j["location"] and len(j["title"]) <= 46 and j.get("usd") and j["cat"] in CATMED
+    aj = next((j for j in latest if not j.get("tg") and j["salary"] and j["remote"] and j.get("years") and j["location"] and len(j["title"]) <= 46 and j.get("usd") and j["cat"] in CATMED
                and j["id"].split("-", 1)[0] in SOURCE_NAME and slugify(j["company"]) in LOGOS), None)
     anatomy = ""
     if aj:
@@ -2080,7 +2094,7 @@ def main():
         size = records.save(ROOT / "data" / "jobs.db", jobs, sys.modules[__name__])
         print(f"job records: {len(jobs):,} in data/jobs.db, {size / 2**20:.0f} MiB")
     if rec_mode == "1":
-        URLS.extend(f"job/{j['slug']}/" for j in jobs)        # the pages are not files, but they are in the sitemap all the same
+        URLS.extend(f"job/{j['slug']}/" for j in jobs if not j.get("tg"))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
     else:
         for j in jobs: job_page(j, by_cat)
     listing("archive/", "Closed tech jobs archive", f"Closed Tech Jobs Archive ({len(archived):,}) | {SITE}",
@@ -4013,7 +4027,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
          "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically every hour. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
          "<h2 class='h2s'>Applying</h2><p>Applications are made on the employer's site. Viewing jobs and applying is free.</p>"
-         "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
+         + ("<h2 class='h2s'>Listings from Telegram channels</h2><p>Some listings are read from public Telegram job channels. Each one names its channel, "
+            "links to the original post and shows only the facts of the job and a few lines of the post. They are not checked with the employer. "
+            f"A channel owner who does not want the channel's posts here can write to {mail_a('partners')}; they are taken off at the next update.</p>"
+            if any(j_.get("tg") for j_ in active) else "")       # only while channel posts are shown (telegram_jobs.py)
+         + "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
          "<h2 class='h2s'>Job descriptions</h2><p>Descriptions are the employers’ own text, read from the hiring feeds they publish for display on other sites. They are shown unchanged, with the employer named and a link to the original posting.</p>"
          "<h2 class='h2s'>Removing a listing</h2><p>" + (f"Employers who want a listing or company page removed can write to {mail_a("jobs")}. It is taken down at the next update." if contact

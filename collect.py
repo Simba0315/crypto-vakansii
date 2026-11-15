@@ -517,7 +517,7 @@ def main():
     seen_at = utc_now()                                     # when this run finished reading the feeds: the "first seen" time of every job that is new in it
     open_by_co = defaultdict(list)                          # the open jobs of each company, found once instead of once per board
     for jid, old in db.items():
-        if old["active"]: open_by_co[old["company"]].append(jid)
+        if old["active"] and not old.get("tg"): open_by_co[old["company"]].append(jid)       # a Telegram job is not closed by the company's own board
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
@@ -551,10 +551,17 @@ def main():
             stats["emptied"].append(name)                   # the whole board went empty at once: often a move to another hiring system
     known = {s["name"] for s in sources} | resting             # a company we no longer read cannot keep "open" jobs forever; one resting this hour can
     for old in db.values():
-        if old["active"] and not old.get("direct") and old["company"] not in known:
+        if old["active"] and not old.get("direct") and not old.get("tg") and old["company"] not in known:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
     DATA.parent.mkdir(exist_ok=True)
     direct_and_paid(db, used_slugs, {s["name"].lower() for s in sources}, stats)
+    if os.environ.get("HRN_TELEGRAM", "1") != "0":                 # jobs from public Telegram job channels (telegram_jobs.py)
+        try:
+            import telegram_jobs
+            telegram_jobs.collect(db, used_slugs, {s["name"].lower() for s in sources} | {n.lower() for n in resting}, stats,
+                                  norm, slugify, excerpt, classify, level, etype, TODAY, utc_now())
+        except Exception as ex:                                     # the channels never stop the hourly update
+            print(f"telegram: skipped this run: {type(ex).__name__}: {ex}")
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
