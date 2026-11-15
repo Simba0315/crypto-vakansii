@@ -46,7 +46,7 @@ for a, b in SAME:
     db = {a["id"]: dict(a), b["id"]: dict(b)}
     n = dedupe.run(db)
     kept = [j for j in db.values() if not j.get("dup_of")]
-    check(f"same: {a['title']} / {b['title']}", n == 1 and len(kept) == 1, (dedupe.title_key(a["title"], a["location"]), dedupe.title_key(b["title"], b["location"])))
+    check(f"same: {a['title']} / {b['title']}", n == 1 and len(kept) == 1, (dedupe.prepared(a)["w"], dedupe.prepared(b)["w"]))
     if len(kept) == 1:
         check(f"kept the employer's own record: {a['id']}", kept[0]["id"] == a["id"], kept[0]["id"])
         check("the other source is named on it", kept[0]["seen_on"] and kept[0]["seen_on"][0]["url"] == b["url"], kept[0].get("seen_on"))
@@ -73,13 +73,13 @@ del db["greenhouse-acme-3"]
 dedupe.run(db)
 check("the twin closed: the next best comes back", [j["id"] for j in db.values() if not j.get("dup_of")] == ["direct-acme-1"])
 
-# normalising
-check("title key", dedupe.title_key("Sr. Software Eng. (f/m/d) – Remote") == "senior software engineer", dedupe.title_key("Sr. Software Eng. (f/m/d) – Remote"))
-check("company key", dedupe.company_key("The Acme Company, Inc.") == dedupe.company_key("ACME") == "acme")
+# normalising (the shared rules of dedupe.py: company_key, title_words, same_title)
+check("title words", dedupe.title_words("Sr. Software Eng. (f/m/d) – Remote") == ["senior", "software", "engineer"], dedupe.title_words("Sr. Software Eng. (f/m/d) – Remote"))
+check("company key", dedupe.company_key("The Acme Company, Inc.") == dedupe.company_key("ACME") == "acme", dedupe.company_key("The Acme Company, Inc."))
 check("alias", dedupe.company_key("Meta Platforms, Inc.") == dedupe.company_key("Meta"))
-check("token set", dedupe.token_set_ratio("senior data engineer", "data engineer senior") == 1.0)
-check("a title inside a longer one is not the same", dedupe.token_set_ratio("product manager", "product marketing manager") < 0.9)
-check("one word more in a long title is", dedupe.token_set_ratio("senior backend engineer payments platform team", "senior backend engineer payments platform") >= 0.9)
+check("word order does not count", dedupe.same_title(dedupe.title_words("Senior Data Engineer"), dedupe.title_words("Data Engineer, Senior")))
+check("a title inside a longer one is not the same", not dedupe.same_title(dedupe.title_words("Product Manager"), dedupe.title_words("Product Marketing Manager")))
+check("the city in a title is not a word of the role", dedupe.prepared({"title": "Product Designer - New York", "location": "New York, NY"})["w"] == ["product", "designer"])
 
 print(f"{ok} passed, {bad} failed")
 sys.exit(1 if bad else 0)
