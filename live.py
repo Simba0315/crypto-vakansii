@@ -136,8 +136,10 @@ class Live:
             if not j.get("title") or not j.get("url"): continue
             seen.add(j["id"])
             if j["id"] in self.known or j["id"] in live_ids: continue
-            if any(m.get("id") != j["id"] for m in self.idx.find(j["company"], j["title"], j["location"], j["remote"], j["url"], limit=1)):
-                dup += 1; continue                                  # the same job is on the site already, from this or another source
+            ats = j["id"].split("-", 1)[0]
+            if any(m.get("id") != j["id"] and (m.get("id", "").split("-", 1)[0] != ats or m["why"] == "the same link to apply")
+                   for m in self.idx.find(j["company"], j["title"], j["location"], j["remote"], j["url"], limit=3)):
+                dup += 1; continue          # the same job from another source (or the same link): two postings on one board are two jobs
             desc = j.pop("desc", "") or ""
             j.update(slug=self.slug_for(j), crypto=bool(src.get("crypto")), first_seen=today, first_seen_at=collect.utc_now(), last_seen=today,
                      active=True, pinned=False, featured=False, entry=j["level"] in ("Junior", "Intern"), pool=bool(build.POOL_RX.search(j["title"])),
@@ -189,9 +191,13 @@ class Live:
     def run(self):
         srcs, srcs_at = sources(), time.time()
         log(f"live: {len(srcs):,} boards, {WORKERS} at a time; store {LIVE_DB}")
+        tally, tally_at = [0, 0, 0, 0, 0], time.time()          # boards read, failed, new jobs, closed, duplicates skipped
         with cf.ThreadPoolExecutor(WORKERS) as ex:
             running = {}
             while True:
+                if time.time() - tally_at >= 300:
+                    log(f"last 5 min: {tally[0]} boards read, {tally[1]} did not answer, +{tally[2]} new, {tally[3]} closed, {tally[4]} duplicates skipped")
+                    tally, tally_at = [0, 0, 0, 0, 0], time.time()
                 if self.reload(): srcs = sources()
                 if time.time() - srcs_at > 600: srcs, srcs_at = sources(), time.time()
                 self.resync_search()
@@ -207,8 +213,9 @@ class Live:
                     s = running.pop(fut)
                     _, jobs = fut.result()
                     if jobs is None:
-                        self.done(s, False, False); continue
+                        self.done(s, False, False); tally[1] += 1; continue
                     new, closed, dup = self.apply(s, jobs)
+                    tally = [tally[0] + 1, tally[1], tally[2] + new, tally[3] + closed, tally[4] + dup]
                     self.done(s, True, bool(new or closed))
                     if new or closed: log(f"{s['name']}: +{new} new, {closed} closed" + (f", {dup} duplicates skipped" if dup else ""))
 
