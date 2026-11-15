@@ -1084,9 +1084,11 @@ def main():
     # named on it as "Also listed on" (dedupe.py; the owner, 15 Nov: "one company can advertise in 20 places").
     for old in db.values():                                 # a closed job keeps its record and its page, not its full text
         if not old["active"] and old.get("desc"): old["desc"] = ""
-    # A safety cap on memory: the build holds every description at once (measured 15 Nov: 116,000 open jobs with full text, 4.6 GB).
-    # Above HRN_DESC_MAX_JOBS open jobs, only the most recently found keep their full text; the others keep their opening lines.
-    cap = int(os.environ.get("HRN_DESC_MAX_JOBS") or 250000)
+    # A safety cap on memory: the build holds every description at once. Measured 15 Nov 2026 with full text on all 116,465 open jobs:
+    # build 12.8 min instead of 5.5, peak memory 7.7 GB instead of 2.6, data/jobs.db 1.36 GB instead of 0.45 (the runner has 16 GB).
+    # Above HRN_DESC_MAX_JOBS open jobs only the most recently found keep their full text; the others keep their opening lines.
+    # More needs the build to read the texts from their own file instead of holding them (ROADMAP 113).
+    cap = int(os.environ.get("HRN_DESC_MAX_JOBS") or 100000)
     with_text = sorted((j for j in db.values() if j["active"] and j.get("desc")), key=lambda j: j.get("first_seen_at") or j.get("first_seen") or "", reverse=True)
     for j in with_text[cap:]: j["desc"] = ""
     import dedupe
