@@ -212,7 +212,7 @@
   }
   function card(j, more, badge) {
     var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
-      (j[4] ? '<span class="pill ok">Remote</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6] === 'Lead' ? 'Lead and above' : j[6]) + '</span>' : '') +
+      (j[4] ? '<span class="pill ok">' + (j[20] ? 'Remote, anywhere' : 'Remote') + '</span>' : j[25] ? '<span class="pill">Hybrid</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6] === 'Lead' ? 'Lead and above' : j[6]) + '</span>' : '') +
       tagPills(j[7]);
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
     var ag = ageOf(j[16]);
@@ -299,6 +299,7 @@
       var p = isoDay(o.posted), j = [];                       // the same row as every list: card() reads these places of a job
       j[0] = o.slug; j[1] = o.title; j[2] = o.company; j[3] = o.location || ''; j[4] = o.remote ? 1 : 0; j[6] = o.level || '';
       j[7] = o.tags || []; j[8] = o.salary || ''; j[11] = o.featured ? 1 : 0; j[16] = p ? p[0] * 10000 + p[1] * 100 + p[2] : 0;
+      j[20] = o.anywhere ? 1 : 0; j[25] = o.hybrid ? 1 : 0;
       j[21] = o.logo || ''; j[23] = o.t && Date.now() / 1000 - o.t < 7 * 86400 ? Math.floor(o.t / 60) : 0; j[24] = o.cc || [];
       var box = document.createElement('ul'); box.innerHTML = card(j);
       var li = box.firstChild, ft = foundText(o);

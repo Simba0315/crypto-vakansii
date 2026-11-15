@@ -1839,6 +1839,8 @@ table.grid tr.grp th{font-variant-numeric:normal}
 .lact span{flex:1 1 240px;line-height:1.45}
 .lact .btn[aria-pressed="true"],.lact .btn[aria-pressed="true"]:hover{background:var(--card);color:var(--text);border-color:var(--line2)}
 .lact a.btn{text-decoration:none}
+/* companies hiring in a place: on a phone the kinds of work give way, so three columns fit the screen */
+@media(max-width:600px){.cotab th:nth-child(4),.cotab td:nth-child(4){display:none}.cotab th{white-space:normal}.cotab th,.cotab td{padding-right:12px}}
 
 /* Job alert sign-up (alert_form in build.py, server/src/alerts.js). Kept small on purpose: the design work may restyle it. */
 .alertf{margin:32px 0;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}

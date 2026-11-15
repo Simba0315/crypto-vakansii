@@ -288,6 +288,7 @@ FOOT = {"cats": ""}
 SIM = {"cat": {}, "comp": {}}
 OPEN = Counter()   # open roles per company
 FACT = {}          # one-paragraph hiring summary per company
+TB = {}            # trust marks per company: [(name, the number behind it)], shown on its page and on each of its job pages
 CATMED = {}        # median advertised salary per category slug
 EST = {}           # median advertised salary per (category slug, level)
 PERK_SLUG = {name: slug for name, slug, _ in PERKS}
@@ -576,7 +577,8 @@ def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
-    if j["remote"]: b.append('<span class="pill ok">Remote</span>')
+    if j["remote"]: b.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')   # how the work is done
+    elif j.get("hybrid"): b.append('<span class="pill">Hybrid</span>')
     if j["level"]: b.append(f'<span class="pill">{e(LVL_NAME[j["level"]])}</span>')
     b += [f'<span class="pill">{e(t)}</span>' for t in j["tags"][:3]]
     loc = j["location"] if len(j["location"]) <= 60 else j["location"][:57].rstrip(" ,;") + "…"
@@ -1026,7 +1028,7 @@ def job_page(j, active_by_cat):
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
-    if j["remote"]: pills.append('<span class="pill ok">Remote</span>')
+    if j["remote"]: pills.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')
     elif j.get("hybrid"): pills.append('<span class="pill">Hybrid</span>')
     if j["salary"]: pills.append(f'<span class="pill sal">{e(j["salary"])}</span>')
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
@@ -1106,6 +1108,9 @@ def job_page(j, active_by_cat):
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all its roles</a></p></div>'
+    if j["active"] and TB.get(j["company"]):        # the employer's marks, the same as on its page: each with its rule and today's number
+        about += ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in TB[j["company"]])
+                  + f'<a href="{P}/companies/#marks">What the marks mean</a></p>')
     # Pay at a glance: the range from the posting on a scale, with the median of its category marked
     paybar = ""
     if j["active"] and j.get("usd") and j["cat"] in CATMED and j["cat"] != OTHER[0] and j["usd"][1] >= j["usd"][0] > 0:
@@ -1750,7 +1755,7 @@ def main():
         rem_, ent_ = [j for j in rj if j["remote"]], [j for j in rj if j["entry"]]
         if base_r or len(rem_) >= 20: add(f"roles/{slug_r}/remote/", f"Remote {low} jobs", rem_, trail_r, f"remote=1&q={quote(rname)}", "remote ", f" for {e(many)}", [("role:" + slug_r, "Remote")])
         if base_r or len(ent_) >= 20: add(f"roles/{slug_r}/entry-level/", f"Entry-level {low} jobs", ent_, trail_r, f"entry=1&q={quote(rname)}", "entry-level ", f" for {e(many)}", [("role:" + slug_r, "Entry-level")])
-        for name, slug, _ in (big_places if base_r else big_places[:6]):
+        for name, slug, _ in big_places:          # every big place, not only the first six (Wellfound's role x city pages); 25 jobs or more
             here_ = [j for j in rj if slug in j["places"]]
             if base_r or len(here_) >= 25:
                 add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", here_, trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(many)} in {e(name)}",
@@ -2006,12 +2011,49 @@ def main():
                 extra=hub_stats(js_) + mini_pics(js_) + vers_line + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
                 faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
                 hub=secs[1], after=others)
+    # Companies hiring in each place (Wellfound's "startups hiring in <city>"): every employer with open jobs there, most jobs first.
+    # Written for places with 20 employers or more; the place's own page links to it.
+    co_in = {slug: Counter(j["company"] for j in js) for _, slug, js in places}
+    co_in = {s_: c_ for s_, c_ in co_in.items() if len(c_) >= 20}
     for name, slug, js in places:
         short = name.removeprefix("the ")
+        co_link = (f'<p class="note"><a href="{P}/locations/{slug}/companies/">All {len(co_in[slug]):,} companies hiring in {e(short)}</a>, most open jobs first.</p>'
+                   if slug in co_in else "")
         listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {short} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'job')} in {name}. Startups and established companies hiring now.",
-                js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + rel(REL["place:" + slug], ("locations/", "All locations")) + hub_sections(f"roles in {short}", js, "places")[0], faq=f"jobs in {name}", feed=True,
+                js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), extra=hub_stats(js) + co_link + rel(REL["place:" + slug], ("locations/", "All locations")) + hub_sections(f"roles in {short}", js, "places")[0], faq=f"jobs in {name}", feed=True,
                 hub=hub_sections(f"roles in {short}", js, "places")[1], list_title=f"Newest jobs in {short}", after=alert_form(f"new jobs in {short}", loc=slug))
+    week7 = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    for name, slug, js in places:
+        if slug not in co_in: continue
+        short = name.removeprefix("the ")
+        by_co = defaultdict(list)
+        for j in js: by_co[j["company"]].append(j)
+        cos_ = sorted(by_co, key=lambda c: (-len(by_co[c]), c.lower()))
+        new_ = {c for c in cos_ if any((j["posted"] or "") >= week7 for j in by_co[c])}
+        kinds = lambda cj: ", ".join(CAT[k] for k, _ in Counter(j["cat"] for j in cj if j["cat"] != OTHER[0]).most_common(2))
+        top_ = ", ".join(f"{c} ({len(by_co[c]):,})" for c in cos_[:5])
+        shown_ = cos_[:300]
+        rows_ = "".join(f'<tr><td><a href="{P}/companies/{slugify(c)}/">{e(c)}</a></td><td>{len(by_co[c]):,}</td>'
+                        f'<td>{sum(1 for j in by_co[c] if (j["posted"] or "") >= week7):,}</td><td>{e(kinds(by_co[c]))}</td></tr>' for c in shown_)
+        qa_ = [(f"Which companies are hiring in {short}?", f"The most open jobs in {short} on {SITE} as of {fdate(TODAY)}: {top_}. {len(cos_):,} companies have at least one."),
+               (f"How many companies are hiring in {short}?", f"{len(cos_):,} companies have open jobs in {short} as of {fdate(TODAY)}; {len(new_):,} of them posted at least one in the last seven days."),
+               ("Where does this list come from?", f"From the employers’ own careers pages, read {EVERY}. A company leaves the list when its last open job in {short} closes.")]
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
+               + crumbs_ld([("Locations", "locations/"), (short, f"locations/{slug}/"), ("Companies hiring", "")]))
+        t_ = f"Companies Hiring in {short}: {len(cos_):,} With Open Jobs ({MONTH_YEAR})"          # the month only where the title still fits
+        page(f"locations/{slug}/companies/", t_ if len(t_) <= 65 else t_.rsplit(" (", 1)[0],
+             f"{len(cos_):,} companies have open jobs in {name} as of {fdate(TODAY)}, {len(new_):,} of them posted in the last seven days. The most: {', '.join(cos_[:3])}.",
+             crumbs(("Locations", "locations/"), (short, f"locations/{slug}/"), ("Companies hiring", "")) + f'<h1>{path_fl(f"locations/{slug}/")}Companies hiring in {e(name)}</h1>'
+             f'<p class="lead">{len(cos_):,} employers have open jobs in {e(name)} on {fdate(TODAY)}, and {len(new_):,} of them posted one in the last seven days. '
+             f'Most open jobs first; each name opens all of that company’s roles.</p>'
+             + act_row(f"locations/{slug}/", f"See all {len(js):,} jobs in {short}")
+             + '<div class="tablewrap"><table class="cotab"><tr><th>Company</th><th>Open jobs here</th><th>New in 7 days</th><th>Kinds of work</th></tr>' + rows_ + "</table></div>"
+             + (f'<p class="note">The {len(shown_):,} with the most open jobs here; the other {len(cos_) - len(shown_):,} are on the <a href="{P}/companies/">companies page</a>.</p>' if len(cos_) > len(shown_) else "")
+             + f'<p class="note">Counted on {fdate(TODAY)} from the employers’ own careers pages; recounted on every update.</p>'
+             + section(f"Questions about companies in {short}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>"),
+             head=ld_)
     rule_of = {slug: rule for _, slug, rule in PLACES}
     WORLD = (("North America", {"US", "CA"}), ("Europe", REGIONS["europe"][0]), ("Asia-Pacific", REGIONS["asia-pacific"][0]), ("Latin America", REGIONS["latin-america"][0]))
     def world(code): return next((nm for nm, codes in WORLD if code in codes), "Middle East and Africa")
@@ -2075,7 +2117,8 @@ def main():
          '<button class="tab" type="button" data-s="w" aria-pressed="false">Most new this week</button>'
          '<button class="tab" type="button" data-s="n" aria-pressed="false">A–Z</button></div>'
          + (section("Featured employers", spot_tiles(spot_cos)) if spot_cos else "") +
-         f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>'
+         labrow("Hiring in", [f'<a href="{P}/locations/{s_}/companies/">{e(nm_.removeprefix("the "))}</a>' for nm_, s_, _ in sorted(places, key=lambda x: -len(co_in.get(x[1], ()))) if s_ in co_in][:14])
+         + f'<ul class="tiles" id="clist" style="margin-top:14px">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>'
          + section("What the marks on company pages mean", '<dl class="qa">' + "".join(f"<div><dt>✓ {e(nm)}</dt><dd>{e(rule)} Today: {k_:,} employers.</dd></div>" for nm, rule, k_ in mk_rows) + "</dl>"
                    '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"))
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
@@ -2109,6 +2152,7 @@ def main():
             old5 = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
             if pay_s >= len(act) / 2: tb_.append(("States the pay", f"{round(100 * pay_s / len(act))}% of its open roles state it"))
             if old5 < len(act) / 4: tb_.append(("Few old postings", f"{round(100 * old5 / len(act))}% open {LONG_OPEN} days or more"))
+        TB[c] = tb_
         tbadges = ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in tb_)
                    + f'<a href="{P}/companies/#marks">What the marks mean</a></p>') if tb_ else ""
         cats_txt = [e(name) for name, _ in top_cats if name != OTHER[1]]
