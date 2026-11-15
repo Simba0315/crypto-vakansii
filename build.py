@@ -1371,7 +1371,16 @@ def main():
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
                    for s in sorted((s for s in CAT if by_cat[s]), key=lambda s: (s == OTHER[0], -len(by_cat[s]))))
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
-    place_top = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in sorted(places, key=lambda x: -len(x[2]))[:28])
+    # the owner, 15 Nov: "United States, then California separately, though that is the US": countries first, then the US
+    # states and cities as their own group, cities elsewhere, and parts of the world last
+    RULE_ = {slug_: rule_ for _, slug_, rule_ in PLACES}
+    p_sorted = sorted(places, key=lambda x: -len(x[2]))
+    p_groups = [("Countries", [x for x in p_sorted if isinstance(RULE_[x[1]], str) and RULE_[x[1]] != "region"], 12),
+                (f"{fl('US')}United States: states and cities", [x for x in p_sorted if isinstance(RULE_[x[1]], tuple) and RULE_[x[1]][1] == "US"], 8),
+                ("Cities in other countries", [x for x in p_sorted if isinstance(RULE_[x[1]], tuple) and RULE_[x[1]][1] != "US"], 6),
+                ("Parts of the world", [x for x in p_sorted if RULE_[x[1]] == "region"], 4)]
+    place_top = "".join(f'<h3 class="tgroup">{t_}</h3><ul class="tiles">' + "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in xs[:k_]) + "</ul>"
+                        for t_, xs, k_ in p_groups if xs)
     comp_top = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items[:12])
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
     logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS][:10]
@@ -1575,7 +1584,7 @@ def main():
               '<input type="radio" name="dir" id="dir-loc"><label for="dir-loc">By location</label>'
               '<input type="radio" name="dir" id="dir-co"><label for="dir-co">By company</label>'
               '<div class="tabp" id="p-role"><ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + f'</ul><p class="tabmore"><a href="{P}/categories/">All {len(by_role)} roles, by category</a></p></div>'
-              + f'<div class="tabp" id="p-loc"><ul class="tiles">{place_top}</ul><p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
+              + f'<div class="tabp" id="p-loc">{place_top}<p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
               + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
             + plus_band + band
             + future_home
@@ -1936,13 +1945,14 @@ def main():
     lgroups = defaultdict(list)
     for name, slug, js in places:
         r_ = rule_of.get(slug)
-        lgroups[world(r_) if isinstance(r_, str) and r_ != "region" else "Parts of the world" if r_ == "region" else "Cities and states"].append((name, slug, js))
-    lorder = [nm for nm, _ in WORLD] + ["Middle East and Africa", "Parts of the world", "Cities and states"]
+        lgroups[world(r_) if isinstance(r_, str) and r_ != "region" else "Parts of the world" if r_ == "region"
+                else "US states and cities" if r_[1] == "US" else "Cities in other countries"].append((name, slug, js))
+    lorder = [nm for nm, _ in WORLD] + ["Middle East and Africa", "US states and cities", "Cities in other countries", "Parts of the world"]
     ldir = '<div class="dir" id="dir">' + "".join(
         f'<div class="dirb"><h2><span>{e(g)}</span><span>{len(lgroups[g])}</span></h2><ul>' + "".join(lrow(*x) for x in sorted(lgroups[g], key=lambda x: -len(x[2]))) + "</ul></div>" for g in lorder if lgroups.get(g)) + "</div>"
     n_ctry = sum(len(lgroups[g]) for g in lorder[:5] if lgroups.get(g))
     ltop = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in sorted((x for g in lorder[:5] for x in lgroups.get(g, [])), key=lambda x: -len(x[2]))[:8])
-    page("locations/", f"Jobs by Country: {n_ctry} Countries and {len(lgroups.get('Cities and states', []))} Cities | {SITE}",
+    page("locations/", f"Jobs by Country: {n_ctry} Countries and {len(lgroups.get('US states and cities', [])) + len(lgroups.get('Cities in other countries', []))} Cities | {SITE}",
          f"Choose a country: open jobs in {n_ctry} countries, each with the number that can be done from home. Also by part of the world and by city.",
          crumbs(("Locations", "")) + f'<h1>Jobs by country: <span class="hl">choose yours</span></h1>'
          f'<p class="lead">Open jobs in {n_ctry} countries, counted today. A job that lists several places appears in each of them. Jobs that are not tied to one country are under <a href="{P}/work-from-anywhere/">work from anywhere</a>.</p>'

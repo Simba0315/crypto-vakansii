@@ -1816,3 +1816,4 @@ h1,h2,h3,h4{font-variant-numeric:normal}
 .rep-now u{font-weight:600;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
 .rep-more .tcard .tbody{padding-top:18px}
 table.grid tr.grp th{font-variant-numeric:normal}
+.tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
