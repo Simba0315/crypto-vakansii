@@ -13,7 +13,8 @@ What is taken (decided 15 Nov 2026, ROADMAP 112):
 - never a contact person, phone or e-mail: only the job, the employer, the place, the pay and the text. Sole traders (ИП) are left
   out, because their business name is a private person's full name;
 
-The file (vacancy.csv, about 1.9 GB, "|"-separated) is read as a stream once a day; collect.py runs this in the daily run only.
+The file (vacancy.csv, about 1.9 GB, "|"-separated) is read as a stream once a day by portals.py (.github/workflows/portals.yml);
+the hourly run only applies the snapshot it leaves.
 """
 import csv, io, json, os, re, subprocess, sys
 from collections import Counter, defaultdict
@@ -162,8 +163,8 @@ def fetch(limit=None):
     if os.environ.get("HRN_TRUDVSEM_FILE"):                    # a copy of the file already on disk (for measuring a build locally)
         return read(open(os.environ["HRN_TRUDVSEM_FILE"], encoding="utf-8", errors="replace", newline=""), limit)
     try:
-        # at most 15 minutes, and given up if it crawls below 200 KB/s for a minute (the file is 1.9 GB: that would not finish in time)
-        p = subprocess.Popen(["curl", "-s", "-4", "--fail", "--connect-timeout", "30", "--speed-limit", "200000", "--speed-time", "60", "--max-time", "900",
+        # at most 40 minutes (portals.yml runs apart from the hourly run), and given up if it crawls below 100 KB/s for two minutes
+        p = subprocess.Popen(["curl", "-s", "-4", "--fail", "--connect-timeout", "30", "--speed-limit", "100000", "--speed-time", "120", "--max-time", "2400",
                               "-A", "Mozilla/5.0 (job-board aggregator)", CSV_URL], stdout=subprocess.PIPE)
         jobs = read(io.TextIOWrapper(p.stdout, encoding="utf-8", errors="replace", newline=""), limit)
         if p.wait() != 0 or len(jobs) < 1000: return None          # a cut-off download must not close the jobs it no longer lists

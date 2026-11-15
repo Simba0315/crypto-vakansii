@@ -8,7 +8,7 @@ What is taken (15 Nov 2026, ROADMAP 112), the same rule as for the other sources
   culture/media/design, natural science. Healthcare, hotels and restaurants, transport and warehouses, building, cleaning and
   security are left out;
 - employers whose name says staffing or recruitment ("bemanning", "rekrytering", the big agencies) are left out.
-Read once a day by collect.py (with the daily run), like Russia's portal.
+Read once a day by portals.py (.github/workflows/portals.yml), like Russia's portal; the hourly run applies the snapshot.
 """
 import concurrent.futures as cf, json, os, re, sys
 
