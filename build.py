@@ -320,6 +320,27 @@ CATMED = {}        # median advertised salary per category slug
 EST = {}           # median advertised salary per (category slug, level)
 PERK_SLUG = {name: slug for name, slug, _ in PERKS}
 PERK_OK = set()    # perks with enough jobs to have their own page
+# What each perk means in plain words, and what to ask before counting on it (shown on /perks/ and on each perk's page).
+PERK_INFO = {
+    "Visa sponsorship": ("The employer files the papers that let a foreigner work in the country, and usually pays the fees.",
+                         "Ask which visa they file, whether they cover the fees, and whether sponsorship is for this role or only for some."),
+    "Relocation support": ("The employer pays part or all of the cost of moving to the city where the job is.",
+                           "Ask for the amount in writing, what it covers (flights, shipping, rent) and whether you repay it if you leave early."),
+    "Equity": ("A share of the company, or the right to buy one at a fixed price (stock options, RSUs), on top of the salary.",
+               "Ask how many shares, over how many years they vest, and what happens to them if you leave. Shares in a private company cannot be sold freely."),
+    "4-day week": ("The working week is four days instead of five, with the same pay or close to it.",
+                   "Ask whether the hours are the same squeezed into four days or really fewer, and whether the pay is cut."),
+    "Unlimited PTO": ("There is no fixed number of paid days off; you take time off when your manager agrees.",
+                      "Ask how many days people on the team really took last year. With no fixed number, some people take fewer days."),
+    "Parental leave": ("Paid time off work after a child is born or adopted.",
+                       "Ask how many weeks, whether it is paid in full, and whether it is the same for every parent."),
+    "Learning budget": ("Money the employer gives each year for courses, books or conferences.",
+                        "Ask the yearly amount and whether you need approval for each purchase."),
+    "No degree required": ("The posting says a college degree is not needed.",
+                           "Read the list of skills and years of experience instead: they decide whether you are considered."),
+    "Home office stipend": ("Money to set up a desk and equipment at home when you work remotely.",
+                            "Ask whether it is paid once or every year, and who keeps the equipment when you leave."),
+}
 PULSE = {}         # company -> (opened in 7 days, closed in 7 days, label)
 CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from closed roles)
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
@@ -3218,19 +3239,24 @@ def main():
             out_ += section("Companies that mention sponsorship most", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in cos_) + "</ul>")
         return out_
     # Perks, employment type, work from anywhere
-    perk_tiles = ""
+    perk_tiles, perk_rows = "", []
     for name, slug, _ in PERKS:
         pj = [j for j in active if name in j.get("perks", [])]
         if name not in PERK_OK: continue
         perk_tiles += tile(f"perks/{slug}/", name, len(pj))
+        perk_rows.append((name, slug, len(pj)))
         # SERP_WORK row 15 ("jobs with visa sponsorship"): title casing, the five views (who hires, where, which work, pay), and the
         # questions people ask; the visa kinds named in the postings stay first
         gl_p, tl_p = hub_sections(f"roles with {name.lower()}", pj, min_k=20)
         pk_qa = []
+        if name in PERK_INFO:
+            nm_l = name[0].lower() + name[1:]
+            pk_qa = [(f"What does {nm_l} mean in a job posting?", f"{PERK_INFO[name][0]} {len(pj):,} open postings on {SITE} mention it as of {fdate(TODAY)}; we read it from the posting text."),
+                     (f"What should I ask an employer about {nm_l}?", PERK_INFO[name][1])]
         if "visa" in name.lower() and pj:
             rem_v = sum(1 for j in pj if j["remote"])
             top_v = Counter(j["company"] for j in pj).most_common(5)
-            pk_qa = [("How can I get a job with visa sponsorship?", f"Start with employers that say they sponsor: {len(pj):,} open postings here mention it. Filter them by the country you want, "
+            pk_qa += [("How can I get a job with visa sponsorship?", f"Start with employers that say they sponsor: {len(pj):,} open postings here mention it. Filter them by the country you want, "
                       "check the official visa rules of that country, say in your resume that you need sponsorship, and ask in the first call which visa they would file. Apply on the employer’s own page."),
                      ("Which companies sponsor visas?", "Among today’s postings, the employers that mention visa sponsorship most are " + ", ".join(f"{c} ({k:,})" for c, k in top_v)
                       + ". A company that does not mention it may still sponsor, so ask."),
@@ -3238,12 +3264,19 @@ def main():
                       "Sponsorship matters when the job is on site or hybrid in another country.")]
         listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {tcase(name)} ({len(pj):,} open) | {SITE}",
                 f"{roles(len(pj), 'job')} where the posting mentions {name.lower()}. Updated hourly.", pj,
-                intro_for(pj, "", f" that mention {e(name.lower())} in the posting") + " We read this from the job text, so check the details with the employer.",
+                (f"<strong>{e(name)}</strong>: {e(PERK_INFO[name][0])} " if name in PERK_INFO else "") + intro_for(pj, "", f" that mention {e(name.lower())} in the posting") + " We read this from the job text, so check the details with the employer.",
                 trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}", faq_extra=pk_qa, extra=gl_p, hub=tl_p,
                 after=visa_kinds(pj) if "visa" in name.lower() else "")
     if perk_tiles:
         page("perks/", f"Jobs by Perk — visa sponsorship, equity, 4-day week | {SITE}", "Browse jobs by what the employer offers: visa sponsorship, relocation, equity, 4-day week and more.",
-             crumbs(("Perks", "")) + f'<h1>Jobs by perk</h1><p class="lead">What employers mention in their postings. Detected from the job text, so always confirm with the company.</p><ul class="tiles">{perk_tiles}</ul>')
+             crumbs(("Perks", "")) + f'<h1>Jobs by perk</h1><p class="lead">A perk is something the employer offers besides pay, such as help with a visa or a shorter week. We find the ones employers write in the posting, so always confirm with the company.</p>'
+             + section("How many open jobs mention each perk", '<div class="hbars">' + "".join(
+                 f'<a href="{P}/perks/{sl_}/"><span class="hn">{e(nm_)}</span><span class="hb"><i style="width:{max(3, round(100 * k_ / max(c_ for _, _, c_ in perk_rows)))}%"></i></span><span class="hc">{k_:,} · {100 * k_ / len(active):.1f}%</span></a>'
+                 for nm_, sl_, k_ in sorted(perk_rows, key=lambda x: -x[2])) + "</div>"
+               + f'<p class="note">Counted from the text of {len(active):,} open postings on {fdate(TODAY)}. Only perks named in at least 8 postings have a page.</p>')
+             + section("What each perk means, and what to ask", '<div class="feats">' + "".join(
+                 f'<div class="feat"><h3><a href="{P}/perks/{sl_}/">{e(nm_)}</a></h3><p>{e(PERK_INFO[nm_][0])} <b>Before you count on it:</b> {e(PERK_INFO[nm_][1])}</p></div>'
+                 for nm_, sl_, _ in perk_rows if nm_ in PERK_INFO) + "</div>"))
     for et, path, h1 in (("Contract", "contract/", "Contract jobs"), ("Part-time", "part-time/", "Part-time jobs"), ("Internship", "internships/", "Internships")):
         ej = [j for j in active if j.get("etype") == et]
         if len(ej) >= 8:
