@@ -975,7 +975,11 @@ def main():
     ats_file = ROOT / "sources_ats.json"
     flat = int(os.environ.get("HRN_ROTATE_ATS") or 0)
     names = {co_key(n) for n in taken if isinstance(n, str)}
+    # Staged: boards that listed more than HRN_ATS_MAX_BOARD jobs when found (100 by default, 15 Nov 2026) wait, so the first runs
+    # bring many companies but not 650,000 jobs at once; raise it when the hourly run has room (ROADMAP 112).
+    max_board = int(os.environ.get("HRN_ATS_MAX_BOARD") or 100)
     for s in (json.loads(ats_file.read_text()) if ats_file.exists() else []):
+        if s.get("count", 0) > max_board: continue
         k = co_key(s["name"])
         if (s["ats"], s["token"]) in taken or k in names or s["name"] in EXCLUDE_TECH: continue
         taken.add((s["ats"], s["token"])); names.add(k)
@@ -1080,6 +1084,11 @@ def main():
     # named on it as "Also listed on" (dedupe.py; the owner, 15 Nov: "one company can advertise in 20 places").
     for old in db.values():                                 # a closed job keeps its record and its page, not its full text
         if not old["active"] and old.get("desc"): old["desc"] = ""
+    # A safety cap on memory: the build holds every description at once (measured 15 Nov: 116,000 open jobs with full text, 4.6 GB).
+    # Above HRN_DESC_MAX_JOBS open jobs, only the most recently found keep their full text; the others keep their opening lines.
+    cap = int(os.environ.get("HRN_DESC_MAX_JOBS") or 250000)
+    with_text = sorted((j for j in db.values() if j["active"] and j.get("desc")), key=lambda j: j.get("first_seen_at") or j.get("first_seen") or "", reverse=True)
+    for j in with_text[cap:]: j["desc"] = ""
     import dedupe
     stats["dupes"] = dedupe.run(db, label=lambda j: ("tg:" + j["tg"]) if j.get("tg") else j["id"].split("-", 1)[0])
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))

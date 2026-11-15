@@ -1,278 +1,302 @@
 {
  "date": "2026-11-15",
- "seconds": 646,
- "boards": 10930,
- "jobs": 368168,
+ "seconds": 1958,
+ "boards": 19761,
+ "jobs": 657905,
  "by_system": {
   "workday": [
-   1424,
-   205318
+   2922,
+   396399
   ],
   "smartrecruiters": [
-   707,
-   54143
+   1167,
+   83410
   ],
   "greenhouse": [
-   1736,
-   33725
+   2652,
+   48517
   ],
   "bamboohr": [
-   3006,
-   22287
-  ],
-  "rippling": [
-   927,
-   11136
+   6084,
+   43736
   ],
   "breezy": [
-   736,
-   9690
+   1551,
+   20162
   ],
-  "lever": [
-   149,
-   6064
-  ],
-  "ashby": [
-   735,
-   5425
+  "rippling": [
+   1423,
+   17450
   ],
   "teamtailor": [
-   400,
-   5232
+   824,
+   9319
   ],
-  "personio": [
-   712,
-   4998
+  "ashby": [
+   1157,
+   8955
+  ],
+  "lever": [
+   174,
+   7512
   ],
   "recruitee": [
-   270,
-   4560
+   531,
+   7218
+  ],
+  "personio": [
+   1083,
+   7051
   ],
   "pinpoint": [
-   72,
-   3699
+   129,
+   5651
   ],
   "lever-eu": [
-   56,
-   1891
+   64,
+   2525
   ]
  },
  "by_country": {
   "US": [
-   5671,
-   285753
-  ],
-  "IN": [
-   272,
-   23999
-  ],
-  "CA": [
-   746,
-   19681
+   10802,
+   407875
   ],
   "GB": [
-   686,
-   19541
+   1143,
+   31273
+  ],
+  "CA": [
+   1380,
+   28311
+  ],
+  "IN": [
+   362,
+   19756
   ],
   "FR": [
-   127,
-   13463
+   215,
+   16784
   ],
   "DE": [
-   499,
-   9384
-  ],
-  "SG": [
-   50,
-   6742
+   727,
+   12438
   ],
   "AU": [
-   116,
-   5350
+   224,
+   11283
   ],
-  "CN": [
-   34,
-   4636
-  ],
-  "ES": [
-   122,
-   4480
-  ],
-  "AE": [
-   45,
-   3039
+  "SG": [
+   74,
+   6385
   ],
   "NL": [
-   161,
-   2835
+   275,
+   4822
   ],
   "PL": [
-   75,
-   2835
+   119,
+   4332
   ],
-  "MY": [
-   26,
-   2577
+  "ES": [
+   169,
+   4223
   ],
-  "SE": [
-   68,
-   2523
-  ],
-  "PH": [
-   74,
-   2386
-  ],
-  "MK": [
-   5,
-   2031
-  ],
-  "BR": [
-   42,
-   1915
-  ],
-  "ZA": [
-   81,
-   1903
-  ],
-  "TH": [
-   29,
-   1574
-  ],
-  "JP": [
-   32,
-   1291
-  ],
-  "HK": [
-   17,
-   1286
-  ],
-  "IT": [
-   29,
-   1270
-  ],
-  "ID": [
-   23,
-   1267
-  ],
-  "PT": [
-   37,
-   1108
-  ],
-  "BE": [
+  "CN": [
    43,
-   1084
-  ],
-  "AR": [
-   28,
-   1080
-  ],
-  "IL": [
-   28,
-   1069
-  ],
-  "AT": [
-   24,
-   905
-  ],
-  "CO": [
-   24,
-   868
-  ],
-  "NZ": [
-   66,
-   772
-  ],
-  "EG": [
-   22,
-   751
-  ],
-  "IE": [
-   57,
-   728
-  ],
-  "LT": [
-   23,
-   700
-  ],
-  "CH": [
-   67,
-   662
-  ],
-  "PE": [
-   11,
-   615
-  ],
-  "JO": [
-   2,
-   613
+   3608
   ],
   "MX": [
-   40,
-   589
+   74,
+   3434
   ],
-  "RO": [
-   26,
-   586
+  "BR": [
+   67,
+   3299
   ],
-  "CZ": [
-   22,
-   529
+  "SE": [
+   110,
+   3019
+  ],
+  "MY": [
+   37,
+   2864
+  ],
+  "PH": [
+   103,
+   2767
+  ],
+  "ZA": [
+   124,
+   2250
+  ],
+  "ID": [
+   36,
+   2072
+  ],
+  "JP": [
+   47,
+   1771
+  ],
+  "CO": [
+   34,
+   1721
+  ],
+  "IT": [
+   46,
+   1644
+  ],
+  "AE": [
+   66,
+   1600
+  ],
+  "HK": [
+   28,
+   1567
+  ],
+  "TW": [
+   20,
+   1556
+  ],
+  "BE": [
+   72,
+   1487
+  ],
+  "PT": [
+   55,
+   1476
+  ],
+  "IE": [
+   86,
+   1473
+  ],
+  "NZ": [
+   110,
+   1419
+  ],
+  "PE": [
+   15,
+   1220
+  ],
+  "AR": [
+   45,
+   1205
+  ],
+  "IL": [
+   36,
+   1164
+  ],
+  "AT": [
+   35,
+   1135
   ],
   "NG": [
-   28,
-   511
+   44,
+   1106
   ],
-  "SK": [
-   10,
-   506
+  "CH": [
+   96,
+   988
   ],
-  "SA": [
-   12,
-   503
+  "LT": [
+   36,
+   975
   ],
-  "BG": [
-   19,
-   474
+  "TH": [
+   40,
+   919
   ],
-  "RS": [
-   15,
-   418
-  ],
-  "CY": [
+  "EG": [
    31,
-   399
+   825
+  ],
+  "RO": [
+   33,
+   726
+  ],
+  "FI": [
+   103,
+   724
   ],
   "CL": [
-   7,
-   395
+   10,
+   690
   ],
-  "SI": [
-   7,
-   391
+  "SA": [
+   20,
+   654
   ],
-  "VN": [
-   26,
-   383
+  "JO": [
+   5,
+   649
   ],
   "GR": [
-   18,
-   379
+   34,
+   635
+  ],
+  "CZ": [
+   32,
+   602
+  ],
+  "PA": [
+   7,
+   584
+  ],
+  "SK": [
+   15,
+   530
+  ],
+  "RS": [
+   25,
+   496
+  ],
+  "CY": [
+   40,
+   488
+  ],
+  "BG": [
+   24,
+   482
+  ],
+  "VN": [
+   32,
+   451
   ],
   "HU": [
-   19,
-   372
+   27,
+   442
+  ],
+  "SI": [
+   11,
+   418
+  ],
+  "DK": [
+   51,
+   418
   ],
   "UA": [
-   26,
-   345
+   33,
+   410
   ],
   "TN": [
-   2,
-   331
+   4,
+   392
+  ],
+  "MT": [
+   38,
+   383
   ],
   "PK": [
-   14,
-   313
+   24,
+   364
+  ],
+  "RU": [
+   2,
+   353
+  ],
+  "MA": [
+   9,
+   319
   ],
   "KH": [
    1,
@@ -282,137 +306,149 @@
    3,
    284
   ],
-  "MA": [
-   5,
-   274
-  ],
-  "MT": [
-   25,
-   256
-  ],
-  "FI": [
-   29,
-   249
-  ],
   "HR": [
-   12,
-   235
+   16,
+   247
+  ],
+  "NO": [
+   45,
+   245
   ],
   "TL": [
    1,
    229
   ],
-  "DK": [
-   24,
-   226
+  "MU": [
+   7,
+   203
+  ],
+  "AM": [
+   16,
+   198
   ],
   "AZ": [
    2,
    189
   ],
-  "TW": [
+  "LU": [
    12,
-   187
-  ],
-  "NO": [
-   23,
-   164
-  ],
-  "KE": [
-   20,
-   147
-  ],
-  "AM": [
-   12,
-   141
-  ],
-  "CR": [
-   6,
-   132
+   183
   ],
   "KR": [
-   9,
-   130
+   16,
+   167
+  ],
+  "KE": [
+   29,
+   167
+  ],
+  "CR": [
+   10,
+   155
+  ],
+  "LV": [
+   14,
+   141
+  ],
+  "TR": [
+   19,
+   135
+  ],
+  "GT": [
+   5,
+   131
   ],
   "BO": [
    3,
    127
   ],
-  "LU": [
-   7,
-   120
+  "EE": [
+   23,
+   126
   ],
   "TZ": [
    9,
    120
   ],
-  "MU": [
+  "GE": [
    5,
-   115
+   118
   ],
-  "PA": [
-   2,
-   114
-  ],
-  "TR": [
-   11,
-   111
+  "MO": [
+   1,
+   117
   ],
   "IQ": [
-   5,
-   107
-  ],
-  "LV": [
    6,
-   93
+   117
   ],
-  "GE": [
-   3,
-   86
+  "LK": [
+   6,
+   97
+  ],
+  "PR": [
+   7,
+   89
+  ],
+  "GH": [
+   6,
+   77
   ],
   "SR": [
    1,
    74
   ],
-  "EE": [
-   14,
-   73
+  "QA": [
+   9,
+   74
   ],
-  "LK": [
-   4,
-   66
+  "BB": [
+   5,
+   61
   ],
-  "GH": [
+  "BZ": [
    4,
-   60
+   58
   ],
   "SV": [
    2,
    53
   ],
   "KW": [
-   6,
-   48
+   7,
+   51
   ],
-  "QA": [
-   5,
-   42
-  ],
-  "BZ": [
+  "XK": [
    3,
-   41
+   45
+  ],
+  "ET": [
+   3,
+   44
+  ],
+  "MD": [
+   4,
+   44
+  ],
+  "BD": [
+   6,
+   40
   ],
   "OM": [
    3,
    39
   ],
-  "BD": [
-   4,
-   36
-  ],
-  "PR": [
-   3,
+  "CG": [
+   2,
    35
+  ],
+  "MW": [
+   3,
+   34
+  ],
+  "MK": [
+   4,
+   31
   ],
   "GY": [
    2,
@@ -422,13 +458,13 @@
    6,
    31
   ],
-  "ZM": [
-   3,
-   25
+  "IS": [
+   5,
+   30
   ],
-  "GT": [
-   2,
-   24
+  "ZM": [
+   4,
+   28
   ],
   "SY": [
    2,
@@ -442,23 +478,35 @@
    1,
    20
   ],
+  "SN": [
+   2,
+   20
+  ],
+  "CI": [
+   2,
+   18
+  ],
+  "UG": [
+   5,
+   18
+  ],
   "LA": [
    2,
    17
   ],
-  "BB": [
+  "RW": [
    2,
    17
   ],
-  "UG": [
+  "JM": [
    4,
    17
   ],
-  "NI": [
-   2,
+  "SM": [
+   1,
    16
   ],
-  "XK": [
+  "NI": [
    2,
    16
   ],
@@ -466,33 +514,21 @@
    2,
    16
   ],
-  "MD": [
-   1,
-   15
-  ],
-  "ET": [
-   1,
-   13
-  ],
   "SD": [
    1,
    13
   ],
-  "IS": [
+  "DZ": [
+   1,
+   12
+  ],
+  "NP": [
+   3,
+   12
+  ],
+  "FJ": [
    3,
    11
-  ],
-  "RW": [
-   1,
-   9
-  ],
-  "CG": [
-   1,
-   9
-  ],
-  "SN": [
-   1,
-   8
   ],
   "ML": [
    1,
@@ -502,11 +538,11 @@
    1,
    7
   ],
-  "DO": [
+  "LB": [
    2,
    7
   ],
-  "FJ": [
+  "DO": [
    2,
    7
   ],
@@ -518,23 +554,31 @@
    1,
    6
   ],
-  "GM": [
+  "UZ": [
+   2,
+   6
+  ],
+  "BF": [
    1,
    5
   ],
-  "NP": [
-   2,
+  "GM": [
+   1,
    5
   ],
   "MC": [
    1,
    4
   ],
-  "EC": [
+  "SO": [
    1,
    3
   ],
-  "CI": [
+  "LC": [
+   1,
+   3
+  ],
+  "EC": [
    1,
    3
   ],
@@ -542,7 +586,7 @@
    1,
    3
   ],
-  "LB": [
+  "MG": [
    1,
    2
   ],
@@ -550,9 +594,9 @@
    1,
    2
   ],
-  "UZ": [
+  "ZW": [
    1,
-   2
+   1
   ],
   "MV": [
    1,
@@ -568,198 +612,291 @@
   ]
  },
  "jobs_by_country": {
-  "US": 126997,
-  "IN": 11891,
-  "CA": 10180,
-  "GB": 6734,
-  "FR": 3761,
-  "MX": 3186,
-  "SG": 3115,
-  "CN": 3064,
-  "ES": 2544,
-  "DE": 2364,
-  "BR": 2113,
-  "PL": 1609,
-  "IE": 1394,
-  "MY": 1380,
-  "NL": 1289,
-  "IT": 1288,
-  "AU": 1230,
-  "JP": 1203,
-  "AE": 1172,
-  "PH": 1109,
-  "HK": 992,
-  "TH": 851,
-  "CO": 796,
-  "CR": 761,
-  "VN": 704,
-  "AR": 696,
-  "SE": 537,
-  "CH": 520,
-  "PT": 485,
-  "SA": 447,
-  "KR": 444,
-  "TW": 400,
-  "RO": 387,
-  "CL": 380,
-  "CZ": 374,
-  "ID": 352,
-  "BE": 312,
-  "HU": 306,
-  "IL": 298,
-  "ZA": 266,
-  "EC": 249,
-  "PE": 236,
-  "NZ": 235,
-  "DK": 198,
-  "TL": 195,
-  "KH": 183,
-  "TR": 180,
-  "LT": 178,
-  "SK": 166,
-  "AT": 165,
-  "LK": 147,
-  "KE": 146,
-  "PR": 145,
-  "BG": 143,
-  "RS": 138,
-  "EG": 124,
-  "GR": 122,
-  "NG": 110,
-  "NO": 107,
-  "MK": 101,
-  "AM": 82,
-  "SI": 72,
-  "LB": 70,
-  "JO": 64,
-  "KZ": 62,
-  "HT": 59,
-  "PK": 55,
-  "MA": 51,
-  "LU": 49,
-  "CG": 45,
-  "SV": 45,
-  "FI": 42,
-  "HR": 42,
-  "BO": 40,
-  "PA": 38,
-  "TN": 33,
-  "EE": 28,
-  "SY": 24,
-  "UG": 23,
-  "MM": 23,
-  "QA": 22,
-  "RU": 18,
-  "TD": 18,
-  "GT": 17,
-  "GE": 15,
-  "DO": 14,
-  "MZ": 14,
-  "CF": 14,
-  "UA": 13,
-  "MT": 13,
-  "UY": 12,
-  "NI": 12,
-  "TZ": 8,
-  "LV": 8,
-  "BD": 7,
-  "CY": 6,
-  "PY": 6,
-  "MN": 5,
-  "ET": 3,
-  "SN": 2,
+  "US": 151771,
+  "CA": 12515,
+  "GB": 9235,
+  "FR": 6159,
+  "AU": 4570,
+  "IN": 2105,
+  "MX": 2004,
+  "DE": 1926,
+  "NL": 1868,
+  "ES": 1400,
+  "SG": 1126,
+  "PL": 1067,
+  "ID": 941,
+  "BR": 820,
+  "IE": 795,
+  "TW": 775,
+  "CN": 726,
+  "IT": 689,
+  "NZ": 653,
+  "PH": 556,
+  "CO": 480,
+  "SE": 462,
+  "AE": 460,
+  "MY": 456,
+  "JP": 452,
+  "NG": 447,
+  "CH": 443,
+  "ZA": 400,
+  "BE": 381,
+  "FI": 379,
+  "PT": 359,
+  "DK": 279,
+  "PE": 277,
+  "TH": 255,
+  "LT": 247,
+  "GR": 244,
+  "HK": 232,
+  "SA": 206,
+  "AR": 199,
+  "HU": 195,
+  "CL": 187,
+  "RO": 177,
+  "VN": 167,
+  "CR": 167,
+  "CZ": 163,
+  "TR": 137,
+  "NO": 129,
+  "CY": 129,
+  "BG": 126,
+  "AT": 119,
+  "KR": 119,
+  "MA": 118,
+  "LV": 109,
+  "RU": 106,
+  "IL": 105,
+  "LU": 86,
+  "QA": 81,
+  "EE": 81,
+  "EC": 78,
+  "MT": 73,
+  "UA": 70,
+  "EG": 70,
+  "MU": 70,
+  "PK": 66,
+  "SK": 57,
+  "AM": 57,
+  "RS": 54,
+  "PA": 52,
+  "KE": 49,
+  "TN": 47,
+  "SI": 42,
+  "UY": 40,
+  "GE": 39,
+  "PR": 38,
+  "LK": 36,
+  "MO": 35,
+  "HR": 34,
+  "XK": 32,
+  "JO": 28,
+  "BH": 27,
+  "KW": 25,
+  "GT": 23,
+  "GH": 21,
+  "IS": 21,
+  "AL": 20,
+  "MW": 18,
+  "LA": 17,
+  "ET": 16,
+  "BJ": 16,
+  "SM": 16,
+  "OM": 15,
+  "LB": 15,
+  "CI": 15,
+  "UZ": 13,
+  "IQ": 12,
+  "BZ": 12,
+  "BD": 11,
+  "SC": 11,
+  "KZ": 10,
+  "MG": 10,
+  "RW": 9,
+  "HN": 9,
+  "DZ": 8,
+  "JM": 8,
+  "BB": 7,
+  "NP": 7,
+  "VE": 6,
+  "MD": 5,
+  "PY": 5,
+  "NA": 5,
+  "MK": 5,
+  "DO": 4,
+  "TZ": 4,
+  "CG": 4,
+  "ME": 4,
+  "SN": 4,
+  "AF": 4,
+  "AZ": 4,
+  "MV": 3,
+  "KH": 3,
+  "BO": 3,
+  "SV": 3,
+  "CM": 3,
+  "UG": 3,
+  "ZM": 3,
+  "SO": 2,
+  "FJ": 2,
   "GN": 2,
-  "MG": 2,
-  "LI": 2,
-  "HN": 2,
-  "RW": 2,
-  "BF": 1,
-  "LA": 1,
-  "GH": 1,
-  "BB": 1
+  "SR": 2,
+  "BF": 2,
+  "MM": 2,
+  "SZ": 2,
+  "IR": 1,
+  "CU": 1,
+  "NE": 1,
+  "SD": 1,
+  "ZW": 1,
+  "AO": 1,
+  "MZ": 1,
+  "MC": 1,
+  "BW": 1,
+  "NI": 1,
+  "TJ": 1,
+  "BY": 1,
+  "KG": 1,
+  "SL": 1,
+  "GY": 1,
+  "ML": 1,
+  "BS": 1,
+  "LC": 1
  },
  "left_out": {
-  "workday: another public site of the same employer": 4736,
-  "workday: under 40% office or tech work": 577,
-  "workday: mostly shop, warehouse or clinic work": 106,
-  "workday: no answer": 90,
-  "workday: mostly not in English": 49,
-  "workday: no open jobs": 38,
-  "workday: over 2000 jobs (Workday lists no more)": 17,
-  "workday: company already read elsewhere": 10,
-  "workday: agency (name)": 5
+  "workday: another public site of the same employer": 4773,
+  "greenhouse: no answer": 2170,
+  "bamboohr: no open jobs": 1815,
+  "bamboohr: kept: mostly frontline work, read once a day (wave 2)": 1639,
+  "personio: no answer": 1552,
+  "bamboohr: no answer": 1504,
+  "personio: mostly not in English": 1412,
+  "breezy: no open jobs": 1161,
+  "teamtailor: mostly not in English": 917,
+  "ashby: no answer": 846,
+  "breezy: no answer": 742,
+  "recruitee: mostly not in English": 644,
+  "greenhouse: no open jobs": 644,
+  "workday: kept: mostly frontline work, read once a day (wave 2)": 617,
+  "recruitee: no answer": 543,
+  "smartrecruiters: no open jobs": 516,
+  "teamtailor: no open jobs": 417,
+  "breezy: kept: mostly frontline work, read once a day (wave 2)": 385,
+  "personio: no open jobs": 371,
+  "rippling: no open jobs": 354,
+  "ashby: no open jobs": 352,
+  "greenhouse: kept: mostly frontline work, read once a day (wave 2)": 296,
+  "teamtailor: no answer": 288,
+  "rippling: no answer": 263,
+  "workday: company already read elsewhere": 247,
+  "rippling: kept: mostly frontline work, read once a day (wave 2)": 245,
+  "teamtailor: kept: mostly frontline work, read once a day (wave 2)": 239,
+  "personio: kept: mostly frontline work, read once a day (wave 2)": 214,
+  "smartrecruiters: kept: mostly frontline work, read once a day (wave 2)": 209,
+  "workday: no open jobs": 175,
+  "recruitee: no open jobs": 149,
+  "personio: company already read elsewhere": 147,
+  "smartrecruiters: mostly not in English": 115,
+  "workday: over 1000 jobs (a chain or a big enterprise)": 113,
+  "recruitee: kept: mostly frontline work, read once a day (wave 2)": 92,
+  "greenhouse: mostly not in English": 84,
+  "breezy: mostly not in English": 76,
+  "workday: mostly not in English": 71,
+  "bamboohr: company already read elsewhere": 70,
+  "greenhouse: company already read elsewhere": 70,
+  "ashby: company already read elsewhere": 63,
+  "smartrecruiters: over 1000 jobs (a chain or a big enterprise)": 60,
+  "ashby: kept: mostly frontline work, read once a day (wave 2)": 59,
+  "workday: 2000 jobs or more (Workday lists no more)": 59,
+  "workday: no answer": 59,
+  "breezy: company already read elsewhere": 56,
+  "smartrecruiters: company already read elsewhere": 43,
+  "lever: no answer": 37,
+  "rippling: company already read elsewhere": 33,
+  "teamtailor: agency (name)": 31,
+  "breezy: agency (name)": 30,
+  "pinpoint: no open jobs": 29,
+  "teamtailor: agency (postings)": 24,
+  "bamboohr: mostly not in English": 24,
+  "lever-eu: no answer": 24,
+  "teamtailor: company already read elsewhere": 23,
+  "pinpoint: kept: mostly frontline work, read once a day (wave 2)": 21,
+  "smartrecruiters: the same few titles repeated (mass hiring)": 20,
+  "bamboohr: agency (name)": 20,
+  "rippling: the same few titles repeated (mass hiring)": 19,
+  "smartrecruiters: agency (name)": 16,
+  "greenhouse: agency (name)": 16,
+  "ashby: mostly not in English": 16,
+  "breezy: the same few titles repeated (mass hiring)": 15,
+  "lever: kept: mostly frontline work, read once a day (wave 2)": 15,
+  "recruitee: agency (postings)": 14,
+  "greenhouse: the same few titles repeated (mass hiring)": 13,
+  "recruitee: company already read elsewhere": 12,
+  "breezy: agency (staffing terms)": 10,
+  "lever: no open jobs": 10,
+  "lever-eu: no open jobs": 9,
+  "greenhouse: agency (staffing terms)": 9,
+  "greenhouse: over 1000 jobs (a chain or a big enterprise)": 9,
+  "recruitee: agency (name)": 8,
+  "personio: agency (name)": 8,
+  "workday: agency (name)": 7,
+  "recruitee: agency (staffing terms)": 6,
+  "greenhouse: agency (postings)": 6,
+  "teamtailor: the same few titles repeated (mass hiring)": 5,
+  "breezy: agency (postings)": 5,
+  "lever: company already read elsewhere": 5,
+  "lever: mostly not in English": 5,
+  "pinpoint: company already read elsewhere": 4,
+  "lever-eu: mostly not in English": 4,
+  "lever-eu: kept: mostly frontline work, read once a day (wave 2)": 4,
+  "lever: the same few titles repeated (mass hiring)": 4,
+  "ashby: agency (staffing terms)": 4,
+  "teamtailor: agency (staffing terms)": 3,
+  "ashby: agency (name)": 3,
+  "breezy: over 1000 jobs (a chain or a big enterprise)": 2,
+  "pinpoint: mostly not in English": 2,
+  "pinpoint: no answer": 2,
+  "rippling: mostly not in English": 2,
+  "lever: over 1000 jobs (a chain or a big enterprise)": 2,
+  "recruitee: the same few titles repeated (mass hiring)": 1,
+  "smartrecruiters: no answer": 1,
+  "personio: agency (postings)": 1,
+  "personio: agency (staffing terms)": 1,
+  "personio: the same few titles repeated (mass hiring)": 1,
+  "pinpoint: the same few titles repeated (mass hiring)": 1,
+  "rippling: over 1000 jobs (a chain or a big enterprise)": 1,
+  "lever-eu: agency (staffing terms)": 1,
+  "lever: agency (name)": 1,
+  "ashby: agency (postings)": 1
  },
  "asked": {
-  "workday": 7121
+  "recruitee": 1638,
+  "smartrecruiters": 1231,
+  "teamtailor": 2132,
+  "personio": 3864,
+  "bamboohr": 6511,
+  "breezy": 2912,
+  "pinpoint": 95,
+  "rippling": 1168,
+  "lever-eu": 46,
+  "greenhouse": 3937,
+  "lever": 89,
+  "ashby": 1707,
+  "workday": 7002
  },
  "answered": {
-  "workday": 7031
- },
- "workday_jobs_by_main_country": {
-  "US": 138321,
-  "IN": 11204,
-  "GB": 7147,
-  "CA": 6165,
-  "SG": 3837,
-  "AU": 2440,
-  "MY": 1267,
-  "PL": 1182,
-  "ES": 1150,
-  "PH": 1149,
-  "FR": 1076,
-  "HK": 1063,
-  "DE": 927,
-  "AR": 875,
-  "NL": 870,
-  "SE": 869,
-  "CN": 857,
-  "IT": 768,
-  "BR": 738,
-  "JP": 728,
-  "ZA": 672,
-  "JO": 613,
-  "PT": 598,
-  "CO": 555,
-  "IL": 553,
-  "SA": 405,
-  "SI": 359,
-  "CL": 306,
-  "ID": 296,
-  "KH": 287,
-  "CZ": 282,
-  "LT": 236,
-  "TL": 229,
-  "PE": 199,
-  "IE": 189,
-  "GR": 184,
-  "AE": 183,
-  "CH": 183,
-  "SK": 181,
-  "RS": 172,
-  "HR": 157,
-  "BO": 120,
-  "PA": 113,
-  "MX": 99,
-  "TH": 82,
-  "GE": 77,
-  "PK": 76,
-  "VN": 59,
-  "CR": 58,
-  "BE": 42,
-  "HU": 37,
-  "LU": 35,
-  "NG": 34,
-  "EG": 32,
-  "FI": 26,
-  "GT": 21,
-  "BG": 16,
-  "NO": 15,
-  "BD": 12,
-  "NZ": 12,
-  "SY": 11,
-  "DK": 11,
-  "TR": 9,
-  "TW": 2
- },
- "note": "15 Nov 2026: small-company systems from the re-check; Workday added the same day (1,000 jobs at most per employer; names tidied; only office and tech jobs are kept when collected). jobs_by_country counts the re-checked boards, workday_jobs_by_main_country puts each Workday employer's jobs in its main country."
+  "recruitee": 1095,
+  "smartrecruiters": 1230,
+  "teamtailor": 1844,
+  "personio": 2312,
+  "bamboohr": 5007,
+  "breezy": 2170,
+  "pinpoint": 93,
+  "rippling": 905,
+  "lever-eu": 22,
+  "greenhouse": 1767,
+  "lever": 52,
+  "ashby": 861,
+  "workday": 6943
+ }
 }
