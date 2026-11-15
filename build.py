@@ -864,7 +864,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else ""))
         body = (top + (extra if n == 1 else "") + (f'<div class="sec-head lst"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                 + (f'<ul class="jobs">{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
-                + pager_html(path, n, pages) + note + ((hub + faq_html + after) if n == 1 else ""))
+                + pager_html(path, n, pages) + note + ((hub + after + faq_html) if n == 1 else ""))      # questions last, after what the page shows
         if n == 1:
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
             page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open, {MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld)
@@ -1429,7 +1429,16 @@ def main():
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
                    for s in sorted((s for s in CAT if by_cat[s]), key=lambda s: (s == OTHER[0], -len(by_cat[s]))))
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
-    place_top = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in sorted(places, key=lambda x: -len(x[2]))[:28])
+    # the owner, 15 Nov: "United States, then California separately, though that is the US": countries first, then the US
+    # states and cities as their own group, cities elsewhere, and parts of the world last
+    RULE_ = {slug_: rule_ for _, slug_, rule_ in PLACES}
+    p_sorted = sorted(places, key=lambda x: -len(x[2]))
+    p_groups = [("Countries", [x for x in p_sorted if isinstance(RULE_[x[1]], str) and RULE_[x[1]] != "region"], 12),
+                (f"{fl('US')}United States: states and cities", [x for x in p_sorted if isinstance(RULE_[x[1]], tuple) and RULE_[x[1]][1] == "US"], 8),
+                ("Cities in other countries", [x for x in p_sorted if isinstance(RULE_[x[1]], tuple) and RULE_[x[1]][1] != "US"], 6),
+                ("Parts of the world", [x for x in p_sorted if RULE_[x[1]] == "region"], 4)]
+    place_top = "".join(f'<h3 class="tgroup">{t_}</h3><ul class="tiles">' + "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in xs[:k_]) + "</ul>"
+                        for t_, xs, k_ in p_groups if xs)
     comp_top = "".join(tile(f"companies/{slugify(c)}/", c, sum(j["active"] for j in js), True) for c, js in comp_items[:12])
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
     logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS][:10]
@@ -1633,7 +1642,7 @@ def main():
               '<input type="radio" name="dir" id="dir-loc"><label for="dir-loc">By location</label>'
               '<input type="radio" name="dir" id="dir-co"><label for="dir-co">By company</label>'
               '<div class="tabp" id="p-role"><ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, k_) for nm, s_, k_ in ROLE_TOP) + f'</ul><p class="tabmore"><a href="{P}/categories/">All {len(by_role)} roles, by category</a></p></div>'
-              + f'<div class="tabp" id="p-loc"><ul class="tiles">{place_top}</ul><p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
+              + f'<div class="tabp" id="p-loc">{place_top}<p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
               + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
             + plus_band + band
             + future_home
@@ -1964,7 +1973,7 @@ def main():
         rank_ = (labrow("Ranking", [f'<a href="{P}/insights/companies-hiring-{fs}/">Companies hiring for {e(low_f)} jobs, with remote roles and pay</a>'], ("insights/", "All rankings"))
                  if len({j["company"] for j in js_}) >= 8 else "")
         others = rank_ + labrow("Other categories", [f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs], ("categories/", "All categories"))
-        secs = hub_sections(low_f, js_, "roles")
+        secs = hub_sections(f"{low_f} roles", js_, "roles")       # a noun at the end: "Where software development roles are"
         vers = []
         for vslug, vname, vjs in (("remote", "Remote", [j for j in js_ if j["remote"]]), ("entry-level", "Entry-level", [j for j in js_ if j["entry"]])):
             if len(vjs) < 20: continue
@@ -1979,7 +1988,7 @@ def main():
                 js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
                 extra=hub_stats(js_) + mini_pics(js_) + vers_line + section(f"Kinds of work in {low_f}", role_list), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
                 faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
-                hub=secs[1], after=section(f"Who is hiring in {low_f}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js_).most_common(12)) + "</ul>") + others)
+                hub=secs[1], after=others)
     for name, slug, js in places:
         short = name.removeprefix("the ")
         listing(f"locations/{slug}/", f"Tech jobs in {name}", f"Tech Jobs in {short} ({len(js):,} open) | {SITE}",
@@ -1994,13 +2003,14 @@ def main():
     lgroups = defaultdict(list)
     for name, slug, js in places:
         r_ = rule_of.get(slug)
-        lgroups[world(r_) if isinstance(r_, str) and r_ != "region" else "Parts of the world" if r_ == "region" else "Cities and states"].append((name, slug, js))
-    lorder = [nm for nm, _ in WORLD] + ["Middle East and Africa", "Parts of the world", "Cities and states"]
+        lgroups[world(r_) if isinstance(r_, str) and r_ != "region" else "Parts of the world" if r_ == "region"
+                else "US states and cities" if r_[1] == "US" else "Cities in other countries"].append((name, slug, js))
+    lorder = [nm for nm, _ in WORLD] + ["Middle East and Africa", "US states and cities", "Cities in other countries", "Parts of the world"]
     ldir = '<div class="dir" id="dir">' + "".join(
         f'<div class="dirb"><h2><span>{e(g)}</span><span>{len(lgroups[g])}</span></h2><ul>' + "".join(lrow(*x) for x in sorted(lgroups[g], key=lambda x: -len(x[2]))) + "</ul></div>" for g in lorder if lgroups.get(g)) + "</div>"
     n_ctry = sum(len(lgroups[g]) for g in lorder[:5] if lgroups.get(g))
     ltop = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in sorted((x for g in lorder[:5] for x in lgroups.get(g, [])), key=lambda x: -len(x[2]))[:8])
-    page("locations/", f"Jobs by Country: {n_ctry} Countries and {len(lgroups.get('Cities and states', []))} Cities | {SITE}",
+    page("locations/", f"Jobs by Country: {n_ctry} Countries and {len(lgroups.get('US states and cities', [])) + len(lgroups.get('Cities in other countries', []))} Cities | {SITE}",
          f"Choose a country: open jobs in {n_ctry} countries, each with the number that can be done from home. Also by part of the world and by city.",
          crumbs(("Locations", "")) + f'<h1>Jobs by country: <span class="hl">choose yours</span></h1>'
          f'<p class="lead">Open jobs in {n_ctry} countries, counted today. A job that lists several places appears in each of them. Jobs that are not tied to one country are under <a href="{P}/work-from-anywhere/">work from anywhere</a>.</p>'
@@ -2021,7 +2031,7 @@ def main():
     top_open = [(c, sum(j["active"] for j in js)) for c, js in comp_items[:3]]
     top_new = [(c, n) for c, n in sorted(fresh_n.items(), key=lambda kv: -kv[1])[:3] if n]
     names = lambda xs: " and ".join(filter(None, [", ".join(f"{e(c)} ({n:,})" for c, n in xs[:-1]), f"{e(xs[-1][0])} ({xs[-1][1]:,})"])) if xs else ""
-    co_lead = f"{len(companies)} employers with open roles today. {names(top_open)} have the most." if len(top_open) > 1 else f"{len(companies)} employers with open roles today."
+    co_lead = f"{len(companies):,} employers with open roles today. {names(top_open)} have the most." if len(top_open) > 1 else f"{len(companies):,} employers with open roles today."
     if top_new:
         co_lead += (f" {sum(1 for n in fresh_n.values() if n):,} of them posted new roles in the last 7 days, led by {names(top_new)}."
                     ' The <span class="up">+N</span> mark in the list is that weekly number.')
@@ -2039,9 +2049,9 @@ def main():
     mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days.", mk_a),
                ("States the pay", "At least half of its open roles state the pay (employers with 5 open roles or more).", mk_p),
                ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f)]
-    page("companies/", f"Tech Companies Hiring Now — {len(companies)} employers | {SITE}",
+    page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {len(companies):,} employers | {SITE}",
          "Tech companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
-         crumbs(("Companies", "")) + f'<h1>Tech companies hiring now</h1><p class="lead">{co_lead}</p>'
+         crumbs(("Companies", "")) + f'<h1>Companies hiring now, {MONTH_YEAR}</h1><p class="lead">{co_lead}</p>'
          '<input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">'
          '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
          '<button class="tab" type="button" data-s="o" aria-pressed="true">Most open roles</button>'
@@ -4075,12 +4085,26 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     page("reports/", f"Tech Hiring Reports by Month — jobs, pay, skills | {SITE}",
          "Monthly tech hiring reports built from live job postings: open roles, remote share, advertised pay, most requested skills and biggest employers. Free to quote.",
          crumbs(("Hiring reports", "")) + "<h1>Tech hiring reports, month by month</h1>"
-         '<p class="plain"><b>In plain words:</b> a summary of the tech job market for each month. A finished month never changes, so it can be quoted.</p>'
-         '<p class="lead">One page per month. A month’s page stops changing when the month ends, so a figure you quote from it stays where you found it.</p>'
-         '<ul class="tiles">' + "".join(tile(f"reports/{k}/", mlabel(k), REPORTS[k]["open"]) for k in rep_months) + "</ul>"
-         '<p class="note">The number on each tile is the count of open roles in that month’s report.</p>'
-         + section("Studies from the same data", f'<ul class="feats"><li><a href="{P}/how-long-job-postings-stay-open/"><b><u>How long job postings stay open</u></b></a> '
-                   'Closings seen every hour, open jobs by age, entry-level jobs and where the jobs are on the map.</li></ul>'))
+         '<p class="lead">One page per month, with the jobs, the pay, the skills and the employers of that month. A month’s page stops changing when the month ends, '
+         'so a figure you quote from it stays where you found it. Free to quote with a link.</p>'
+         + (lambda R_, k_: (f'<a class="rep-now" href="{P}/reports/{k_}/"><span class="rep-h"><b>{mlabel(k_)}</b><span>{"so far, updated every hour" if k_ == TODAY[:7] else "final"}</span></span>'
+                           '<span class="stats3 st4">'
+                           f'<span class="st"><span class="st-l">Open jobs</span><b class="st-v">{R_["open"]:,}</b><span class="st-s">at {R_["companies"]:,} companies</span></span>'
+                           f'<span class="st"><span class="st-l">Remote</span><b class="st-v">{round(100 * R_["remote"] / max(1, R_["open"]))}%</b><span class="st-s">{R_["remote"]:,} jobs</span></span>'
+                           f'<span class="st"><span class="st-l">State the pay</span><b class="st-v">{round(100 * R_["with_salary"] / max(1, R_["open"]))}%</b><span class="st-s">{R_["with_salary"]:,} jobs</span></span>'
+                           f'<span class="st"><span class="st-l">Median advertised pay</span><b class="st-v">{money(R_["median_salary"])}</b><span class="st-s">a year, in US dollars</span></span></span>'
+                           + ('<span class="rep-sk"><span class="flabel">Skills asked for most</span>' + "".join(f'<span class="rep-skr"><span>{e(t_)}</span><i style="width:{max(4, round(100 * c_ / R_["skills"][0][1]))}%"></i><b>{c_:,}</b></span>' for t_, c_ in R_["skills"][:6]) + "</span>" if R_.get("skills") else "")
+                           + '<u>Read the report</u></a>'))(REPORTS[rep_months[0]], rep_months[0])
+         + (section("Earlier months", '<ul class="tiles">' + "".join(tile(f"reports/{k}/", mlabel(k), REPORTS[k]["open"]) for k in rep_months[1:]) + "</ul>"
+                    '<p class="note">The number on each tile is the count of open jobs in that month’s report.</p>') if len(rep_months) > 1 else
+            '<p class="note">Reports start in November 2026. Each new month gets its own page on the 1st.</p>')
+         + section("Studies and tools from the same data", '<div class="tgrid rep-more">'
+                   + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{e(go_)}</u></i></span></a>' for u, t_, d_, go_ in (
+                       ("how-long-job-postings-stay-open/", "How long job postings stay open", "Closings seen every hour, open jobs by age, entry-level jobs and the map.", "Read the study"),
+                       ("salaries/explorer/", "Salary explorer", "Pay by role, place, skill and level, with the bands and the counts behind them.", "Open the explorer"),
+                       ("jobs-that-pay/", "Jobs by hourly pay", "Open jobs from $20 to $100 an hour or more, with each rate a week, a month and a year.", "See the rates"),
+                       ("insights/", "Rankings", "Who hires the most, which skills are asked for, where the pay is highest.", "See the rankings")))
+                   + "</div>"))
 
     # Safety: how to tell a real job offer from a fake one, and what this site does about it
     def qa_block(qa):

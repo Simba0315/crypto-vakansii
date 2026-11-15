@@ -291,6 +291,9 @@
       if (current !== href) return;
       var main = new DOMParser().parseFromString(html, 'text/html').querySelector('main');
       if (!main) return;
+      Array.prototype.forEach.call(main.querySelectorAll('h1'), function (h) {       // one H1 per page: the job's title becomes an H2 in the preview
+        var h2 = main.ownerDocument.createElement('h2'); h2.className = 'pane-h'; h2.innerHTML = h.innerHTML; h.replaceWith(h2);
+      });
       pane.innerHTML = '<p><a class="pane-open" href="' + href + '">Open full page ↗</a></p>' + main.innerHTML;
       pane.scrollTop = 0; H.bindJob(pane); H.decorate(list);
     }).catch(function () { pane.innerHTML = '<p class="pane-empty">Could not load this job. <a href="' + href + '">Open it in a new page</a>.</p>'; });

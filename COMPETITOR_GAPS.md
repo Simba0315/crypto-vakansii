@@ -226,3 +226,31 @@ is the closest feature I saw, so the owner can judge how new each idea is.
   locations, employer statistics in the written account, a "source checked" line on job pages.
 - `build.py` was being edited by other work during this review (comparison pages appeared). Anything added after 2026-11-13 is not
   reflected here.
+
+---
+
+## Wellfound, read again on 15 Nov 2026 (logged out)
+
+Logged-out Wellfound pages are built for search engines: no filters or sorting, a sentence search ("Show me [role] roles hiring in
+[city]") and page numbers. 136 of 186 listing records on the pages read came from Ashby (94) and Greenhouse (42), the same sources we read.
+Seen there and not here, ranked by fit for a site without accounts:
+
+| # | Gap | Wellfound page | Our data supports it? | Status |
+|---|---|---|---|---|
+| 1 | Role x city and role x remote pages, linked to each other | /role/l/<role>/<city>, /role/r/<role> | Yes (roles, places, remote) | We have them for the first 25 roles; widen with a minimum job count |
+| 2 | Company directories: by city, A-Z, and an auto-dated "Companies hiring now, <month>" | /browse/startups-hiring, /browse/tech-hubs | Yes (industry filter: no) | Month in the title and heading of /companies/ done 15 Nov; by-city directory queued |
+| 3 | "Growing fast" mark and a "Trending companies" block | /jobs | Posting dates yes; a month-on-month comparison needs ~2 months of our history (from 12 Nov) | Queued |
+| 4 | Self-updating collections: entry-level, internships, $200K+, no experience needed, visa sponsorship | /job-collections (newest list from Aug 2023) | Mostly (level, years asked, type, pay); visa needs the description | We have most lists separately; a collections hub is queued |
+| 5 | Work arrangement labels: remote anywhere / remote in one country / hybrid / office | job rows | Partly (remote, hybrid, "anywhere") | Queued |
+| 6 | Results grouped by company (company card + its top 3 jobs) on role and location pages | /role, /location | Yes | Queued (design) |
+| 7 | Company jobs tab with counts by team, location, type, a "New" label, similar companies when none open | company page | Yes | Queued |
+| 8 | Salary: medians by level, three bands, city ranking, quarterly trend | /hiring-data | Yes; trend after 60 days | Done 15 Nov: /salaries/explorer/ (trend appears at 60 days) |
+| 9 | Job facts: visa, relocation, equity | job page | Partly (perks); needs full descriptions | Queued |
+| 10 | Two-card home ("For candidates" / "For companies") and sentence search | home | Design only | Not planned: the owner likes the current hero |
+
+Needs data we do not have: response-time badges ("Responds within a day"), funding, stage, valuation, investors, YC, company size,
+Glassdoor ratings, "Employees joined from", founders, company industries.
+
+Their data problems, worth avoiding: titles that say "2027", 13 of 35 San Francisco software engineer jobs older than 60 days (the
+oldest about 4.9 years), "3 -1 years of exp", "27 years" average experience, an "expert" median below "senior", industries such as
+"Babies", "Cron" as a top-paying skill, duplicate hubs (Bangalore/Bengaluru), funding from 2021, "Actively hiring" on 14-19 of 20 cards.
