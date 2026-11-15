@@ -517,6 +517,16 @@
     var nav = $('nav');
     if (!nav || !header) return;
     var M = {
+      '/jobs/': ['Find jobs', [
+        ['/jobs/', 'All jobs', 'Search every open job, checked every hour.'],
+        ['/remote/', 'Remote jobs', 'Work from home, by country and kind of work.'],
+        ['/new/', 'New this week', 'Jobs posted in the last seven days.'],
+        ['/for-you/', 'Jobs that fit you', 'Five questions; the jobs that match, with the reasons.'],
+        ['/tech/', 'Tech jobs', 'Engineering, data, product and design.'],
+        ['/entry-level/', 'Entry-level jobs', 'Internships and first jobs.'],
+        ['/categories/', 'All categories', '25 fields and every kind of work in them.'],
+        ['/jobs-near-me/', 'Jobs near me', 'Open jobs in your city.'],
+        ['/my-jobs/', 'My jobs', 'Saved jobs, applications and searches.']]],
       '/resume/': ['Resume and letters', [
         ['/resume/', 'Resume builder', 'A one-page resume in your browser, no account.'],
         ['/resume/examples/', 'Resume examples', 'A written example for each kind of work.'],
@@ -543,7 +553,7 @@
         ['/widgets/', 'Jobs for your website', 'A widget with your jobs or any list.'],
         ['/api/', 'Data for developers', 'Every open job as free JSON.']]]
     };
-    var wideQ = window.matchMedia('(min-width: 1181px)'), cur = null, timer = 0;
+    var wideQ = window.matchMedia('(min-width: 981px)'), cur = null, timer = 0;
     var panel = document.createElement('div');
     panel.className = 'navpanel'; panel.id = 'navpanel'; panel.hidden = true;
     header.appendChild(panel);
@@ -1065,6 +1075,11 @@
     // the answers stay in this browser; an older profile (one category, a level name, "remote only") is carried over
     if (!profile.skills) profile.skills = [];
     if (!profile.cats) profile.cats = profile.cat ? [profile.cat] : [];
+    if (!profile.roles) profile.roles = [];
+    // exact job titles, picked by typing: the same patterns the role pages use
+    var roleRx = {};
+    try { JSON.parse(($('fy-role-data') || {}).textContent || '[]').forEach(function (r) { try { roleRx[r[0]] = new RegExp(r[1], 'i'); } catch (e) {} }); } catch (e) {}
+    var roleHit = function (title, roles) { for (var i = 0; i < roles.length; i++) if (roleRx[roles[i]] && roleRx[roles[i]].test(title)) return roles[i]; return ''; };
     if (profile.exp == null) profile.exp = { Intern: '0', Junior: '0', Senior: '2', Lead: '3' }[profile.lvl] || '';
     if (profile.where == null) profile.where = profile.remote ? 'remote' : '';
     if (profile.pay == null) profile.pay = profile.sal > 1 ? profile.sal : 0;
@@ -1109,11 +1124,11 @@
       var o = place.options[place.selectedIndex], set_ = {};
       if (o && profile.placeGuess && !profile.whereSet) o = null;          // a country guessed from the time zone counts only once question 3 is answered
       profile.skills.forEach(function (s) { set_[s] = 1; });
-      var A = { cats: skip === 'work' ? [] : profile.cats, exp: skip === 'exp' || profile.exp === '' ? '' : Number(profile.exp),
+      var A = { cats: skip === 'work' ? [] : profile.cats, roles: skip === 'work' ? [] : (profile.roles || []), exp: skip === 'exp' || profile.exp === '' ? '' : Number(profile.exp),
         where: skip === 'where' ? '' : profile.where || '', slug: skip === 'where' || skip === 'country' || !o ? '' : o.getAttribute('data-s') || '', reg: o ? o.getAttribute('data-r') || '' : '',
         cname: o && o.value ? o.textContent : '', pay: skip === 'pay' ? 0 : profile.pay || 0, nopay: skip === 'pay' ? false : !!profile.nopay,
         skills: skip === 'skills' ? [] : profile.skills, set: set_ };
-      A.n = (A.cats.length ? 1 : 0) + (A.exp !== '' ? 1 : 0) + (A.where || A.slug ? 1 : 0) + (A.pay || A.nopay ? 1 : 0) + (A.skills.length ? 1 : 0);
+      A.n = (A.cats.length || A.roles.length ? 1 : 0) + (A.exp !== '' ? 1 : 0) + (A.where || A.slug ? 1 : 0) + (A.pay || A.nopay ? 1 : 0) + (A.skills.length ? 1 : 0);
       return A;
     };
     // one job against the answers: null when it contradicts one, otherwise ticks, question marks and the reasons to show
@@ -1121,7 +1136,11 @@
       if (mute.c[j[2]] || hidden[j[0]]) return null;
       if (mute.w.length) { var low = j[1].toLowerCase(); for (var w = 0; w < mute.w.length; w++) if (low.indexOf(mute.w[w]) >= 0) return null; }
       var ok = 0, half = 0, bits = [], k = 0, edge = 0, i;
-      if (A.cats.length) { if (A.cats.indexOf(j[5]) < 0) return null; ok++; bits.push([1, catName[j[5]] || j[5]]); }
+      if (A.cats.length || A.roles.length) {
+        var byRole = A.roles.length ? roleHit(j[1], A.roles) : '';
+        if (!byRole && A.cats.indexOf(j[5]) < 0) return null;
+        ok++; bits.push([1, byRole || catName[j[5]] || j[5]]);
+      }
       if (A.exp !== '') {
         var lv = LV[j[6]] == null ? 1 : LV[j[6]], d = A.exp === 0 && lv <= 0 ? 0 : Math.abs(A.exp - lv);
         if (d > 1) return null;
@@ -1174,7 +1193,29 @@
       });
       list.innerHTML = html; more.hidden = found.length <= shown; decorate(list);
     };
+    var roleBox = $('fy-roles'), roleIn = $('fy-role'), skillIn = $('fy-skill-q');
+    var drawRoles = function () {
+      if (!roleBox) return;
+      roleBox.innerHTML = (profile.roles || []).map(function (r, i) { return '<button class="chipbtn" type="button" aria-pressed="true" data-role-i="' + i + '">' + esc(r) + ' <span aria-hidden="true">×</span></button>'; }).join('');
+    };
+    if (roleIn) roleIn.addEventListener('change', function () {
+      var v = roleIn.value.trim(), name = Object.keys(roleRx).filter(function (k) { return k.toLowerCase() === v.toLowerCase(); })[0];
+      if (name && profile.roles.indexOf(name) < 0) { profile.roles.push(name); drawRoles(); run(); }
+      roleIn.value = '';
+    });
+    if (roleBox) roleBox.addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('[data-role-i]');
+      if (!b) return;
+      profile.roles.splice(Number(b.getAttribute('data-role-i')), 1); drawRoles(); run();
+    });
+    if (skillIn) skillIn.addEventListener('change', function () {
+      var v = skillIn.value.trim().toLowerCase(), c = chips.filter(function (x) { return x.getAttribute('data-skill').toLowerCase() === v; })[0];
+      if (c) { var s = c.getAttribute('data-skill'); if (profile.skills.indexOf(s) < 0) profile.skills.push(s); chips.forEach(function (x) { x.setAttribute('aria-pressed', profile.skills.indexOf(x.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); run(); }
+      skillIn.value = '';
+    });
     var run = function () {
+      if (!profile.roles) profile.roles = [];
+      drawRoles();
       if (!fromLink) set('hrn_profile', profile);
       paint();
       var A = answers(); asked = A.n;
@@ -1310,7 +1351,7 @@
       }
       if (t.id === 'fy-clear' || t.id === 'fy-example') {
         var txt = $('fy-text'), sn = $('fy-scan-note');
-        profile = { skills: [], cats: [], exp: '', where: '', place: '', pay: 0, nopay: false };
+        profile = { skills: [], cats: [], roles: [], exp: '', where: '', place: '', pay: 0, nopay: false };
         if (t.id === 'fy-example') profile = { skills: ['Python', 'SQL'].filter(function (s) { return chips.some(function (c) { return c.getAttribute('data-skill') === s; }); }), cats: ['data-research'], exp: '1', where: 'remote', whereSet: true, place: '', pay: 100000, paySet: true, nopay: false };
         if (txt) txt.value = ''; if (sn) sn.textContent = '';
         run(); return;

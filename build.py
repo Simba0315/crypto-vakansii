@@ -526,8 +526,8 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/tech/">Tech jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
-<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button>{ACCT_HEAD}<a class="btn" href="{P}/post-a-job/">Post a job</a>
+<a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Career help</a><a class="nl" href="{P}/pricing/">For employers</a>{NAV_PLUS}<a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl only-m" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button>{ACCT_HEAD}<a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
 {MINI_FOOT if compact else FULL_FOOT()}
@@ -542,7 +542,7 @@ def FULL_FOOT():
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
-</div>{FOOT.get("pop", "")}<p class="fine">© {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
+</div>{FOOT.get("pop", "")}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
 def age(iso):
@@ -5411,7 +5411,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                ("sales-bd", "Sales", "finding customers and partners"), ("marketing", "Marketing", "making a product known"),
                ("support", "Helping customers", "support and customer success"), ("finance", "Finance", "accounting, planning, trading"),
                ("people", "Hiring and HR", "recruiters and people teams"), ("compliance-legal", "Legal and compliance", "lawyers, risk and policy"),
-               ("operations", "Operations and IT", "keeping the business running"), ("security", "Security", "protecting systems and data")]
+               ("operations", "Operations and IT", "keeping the business running"), ("security", "Security", "protecting systems and data"),
+               ("healthcare", "Healthcare", "nurses, doctors, care and clinical staff"), ("manufacturing", "Manufacturing", "engineers and technicians in plants"),
+               ("supply-chain", "Supply chain and logistics", "buying, warehouses, transport"), ("retail", "Retail and stores", "shops, store managers, merchandising"),
+               ("education", "Education", "teachers, trainers, course designers"), ("consulting", "Consulting", "advisers to other companies")]
     pct_paid = round(100 * sum(bool(j["salary"]) for j in active) / max(1, n))
     def fy_opt(v, label, hint="", count=None):
         return (f'<button class="opt" type="button" data-v="{e(str(v))}" aria-pressed="false"><b>{e(label)}</b>' + (f"<span>{e(hint)}</span>" if hint else "")
@@ -5427,7 +5430,17 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     def fy_chip(t):
         tip = skills_info.plain(t)
         return f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false"' + (f' title="{e(tip)}"' if tip else "") + f">{e(t)}</button>"
-    fy_top = "".join(fy_chip(t) for t, _ in skill_counts.most_common(18))
+    fy_top = "".join(fy_chip(t) for t, _ in skill_counts.most_common(40))
+    # every kind of work with a page, to be picked by typing (owner: "too few, pull them out as a list")
+    fy_role_data = [[rn_, ROLE_RX[rn_].pattern, len(rj_)] for _, (rn_, rj_) in sorted(by_role.items(), key=lambda kv: -len(kv[1][1])) if rn_ in ROLE_RX]
+    fy_role_json = json.dumps([[r_[0], r_[1]] for r_ in fy_role_data], ensure_ascii=False).replace("</", "<\\/")
+    fy_roles_html = ('<label class="ask-l" for="fy-role">Or pick exact job titles, out of ' + f"{len(fy_role_data):,}" + '</label>'
+                     '<input type="search" id="fy-role" list="fy-role-list" placeholder="Type a job title, for example data analyst" autocomplete="off">'
+                     '<datalist id="fy-role-list">' + "".join(f'<option value="{e(r_[0])}">{r_[2]:,} open</option>' for r_ in fy_role_data) + '</datalist>'
+                     '<div class="fy-roles" id="fy-roles"></div><script type="application/json" id="fy-role-data">' + fy_role_json + '</script>')
+    fy_skill_find = ('<label class="ask-l" for="fy-skill-q">Or type any skill, out of ' + f"{len(skill_counts):,}" + '</label>'
+                     '<input type="search" id="fy-skill-q" list="fy-skill-list" placeholder="Type a skill, for example Excel" autocomplete="off">'
+                     '<datalist id="fy-skill-list">' + "".join(f'<option value="{e(t)}">{c_:,} jobs</option>' for t, c_ in skill_counts.most_common()) + '</datalist>')
     fy_groups = defaultdict(list)
     for t, _ in skill_counts.most_common():
         fy_groups[skills_info.INFO.get(t, ("other", ""))[0]].append(t)
@@ -5451,7 +5464,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          'Every open job is checked against your answers, and next to each one you see what fits and what does not.</p>'
          '<p class="plain"><b>In plain words:</b> this page is a short form. Nothing you answer leaves your browser, there is no account, and you can skip any question.</p>'
          '<div id="fy-root" class="fy"><div class="fy-form">'
-         + ask(1, "What kind of work do you want?", "Pick one or several. Leave it empty to see every kind.", f'<div class="opts" id="fy-work">{fy_work}</div>')
+         + ask(1, "What kind of work do you want?", "Pick one or several. Leave it empty to see every kind.", f'<div class="opts" id="fy-work">{fy_work}</div>' + fy_roles_html)
          + ask(2, "How much experience do you have?", "", f'<div class="opts one" id="fy-exp">{fy_exp}</div>')
          + ask(3, "Where do you want to work?", "", f'<div class="opts one" id="fy-where">{fy_where}</div>'
                f'<label class="ask-l" for="fy-place">Your country</label><select id="fy-place"><option value="">Any country</option>{fy_places}</select>'
@@ -5460,7 +5473,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                '<label class="ask-l" for="fy-pay-in">Or type your own figure</label><span class="payin">$<input type="number" id="fy-pay-in" min="0" max="2000000" step="5000" inputmode="numeric" placeholder="120000"> a year</span>'
                '<label class="check"><input type="checkbox" id="fy-nopay"> Hide jobs that do not state pay</label><p class="ask-h" id="fy-pay-note"></p>')
          + ask(5, "What can you do?", "Optional. These are tools and skills that postings ask for by name. If the names mean nothing to you, skip this question.",
-               f'<div id="fy-skills"><div class="skillbar">{fy_top}</div>'
+               f'<div id="fy-skills">{fy_skill_find}<div class="skillbar">{fy_top}</div>'
                f'<details class="scan"><summary>All {len(skill_counts)} skills, in groups</summary>{fy_all}</details></div>'
                '<details class="scan"><summary>Paste your resume and have the skills found for you</summary>'
                '<textarea id="fy-text" rows="7" placeholder="Paste the text of your resume here" aria-label="Resume text"></textarea>'

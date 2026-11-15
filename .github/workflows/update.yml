@@ -61,9 +61,13 @@ jobs:
             if [ "$code" != "2" ]; then echo "could not reach the repository (exit $code): stopping instead of starting empty"; exit 1; fi
             echo "no data branch yet, starting empty"
           fi
+      # A push is a change of the site's code or design: it is built from the jobs the last hourly run saved, without reading every
+      # careers page again, so a change reaches the site in minutes instead of waiting a whole collection (owner, 15 Nov 2026).
       - name: Collect jobs (closed ones move to the archive)
+        if: github.event_name != 'push'
         run: python3 collect.py
       - name: Save jobs database
+        if: github.event_name != 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -185,7 +189,7 @@ jobs:
           print("any=" + ("true" if c.get("telegram") or (c.get("x") or {}).get("enabled") else "false"))
           PY
       - name: Post new jobs to the channels
-        if: steps.channels.outputs.any == 'true' && steps.deploy.outcome == 'success'
+        if: github.event_name != 'push' && steps.channels.outputs.any == 'true' && steps.deploy.outcome == 'success'
         continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
