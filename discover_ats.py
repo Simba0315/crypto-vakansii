@@ -113,6 +113,33 @@ def shown_name(system, token, jobs, feed):
     return re.sub(r"[-_.]+", " ", token).strip().title() if token.lower() == token else token
 
 
+PAGE = {"bamboohr": "https://{t}.bamboohr.com/careers", "personio": "https://{t}.jobs.personio.de/", "pinpoint": "https://{t}.pinpointhq.com/",
+        "rippling": "https://ats.rippling.com/{t}/jobs", "lever-eu": "https://jobs.eu.lever.co/{t}", "lever": "https://jobs.lever.co/{t}",
+        "ashby": "https://jobs.ashbyhq.com/{t}"}
+
+
+def page_name(system, token):
+    """The company's name from its own careers page (og:site_name, og:title or the title), for feeds that do not carry it:
+    "Careers at ARIA" -> "ARIA". '' when the page names only the hiring system."""
+    if system not in PAGE: return ""
+    try:
+        s = subprocess.run(["curl", "-s", "-L", "--max-time", "20", "-A", "Mozilla/5.0 (job-board aggregator)", PAGE[system].format(t=token)],
+                           capture_output=True, timeout=25).stdout.decode("utf-8", "replace")
+    except Exception:
+        return ""
+    import html as h
+    for rx in (r'property="og:site_name"\s+content="([^"]+)"', r'property="og:title"\s+content="([^"]+)"', r"<title[^>]*>(.*?)</title>"):
+        m = re.search(rx, s, re.S | re.I)
+        if not m: continue
+        n = h.unescape(m.group(1)).strip()
+        n = re.sub(r"^(jobs|careers|career|vacancies|open positions|current openings|work) (at|with|bei|chez) ", "", n, flags=re.I)
+        n = re.split(r"\s+[|–—-]\s+", n)[0]
+        n = re.sub(r"\s+(careers|jobs|career site|job board|vacatures|karriere|stellenangebote)$", "", n, flags=re.I).strip()
+        if n and not re.fullmatch(r"bamboohr|personio|pinpoint|rippling|lever|ashby|page not found|not found|jobs|careers|home|error.*", n, re.I) and len(n) <= 80:
+            return n
+    return ""
+
+
 def probe(system, token):
     """(jobs, name) for one board, or (None, None) when the feed did not answer."""
     src = {"name": token, "ats": system, "token": token}
@@ -146,6 +173,7 @@ def probe(system, token):
         elif system == "greenhouse":
             d = get_json(f"https://boards-api.greenhouse.io/v1/boards/{token}", 30)
             feed_name = (d or {}).get("name") if isinstance(d, dict) else None
+    if jobs and not (feed_name or "").strip(): feed_name = page_name(system, token)
     return jobs, (feed_name or "").strip() or shown_name(system, token, jobs, None)
 
 
