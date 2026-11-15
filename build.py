@@ -4395,10 +4395,16 @@ out.innerHTML='<h2>Your best fits</h2><ol class="qz-res">'+top.map(function(k){v
 out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();</script>"""
     qz_qa = [("Which job is right for me?", "The one that matches what you enjoy, what you are already good at and how you like to work. This quiz scores fields of work on those three, then shows how many jobs each field has today and how many take beginners."),
              ("Is the career quiz free?", "Yes, and it needs no account, no email and no phone number. Your answers stay in your browser."),
-             ("What should I do after the quiz?", "Open “How to become…” for the field you pick: it lists the skills employers name first and the jobs open to beginners today.")]
+             ("What should I do after the quiz?", "Open “How to become…” for the field you pick: it lists the skills employers name first and the jobs open to beginners today."),
+             # "free career quiz" (checked 15 Nov 2026): people also search "for adults", "for students", "no sign up"; top results state questions and minutes
+             ("Is this career quiz for adults or for students?", f"Both. The {len(QZ)} questions ask what you enjoy and how you like to work, not your age or degree, so they fit a student choosing a first job "
+              "and an adult changing careers alike. The results show jobs open to beginners as well as the rest."),
+             ("How long does the career quiz take?", f"About two minutes: {len(QZ)} questions with a few answers each, and the results appear at once."),
+             ("How accurate is a career quiz?", "A quiz narrows the choice; it cannot decide for you. That is why each result here comes with today’s open jobs, what they pay and how many take beginners, "
+              "so you can check the fit against real postings before you spend time on training.")]
     qz_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in qz_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("career-quiz/", f"Career Quiz: Which Job Fits Me? Free, No Sign-Up | {SITE}",
+    page("career-quiz/", f"Free Career Quiz: {len(QZ)} Questions, 2 Minutes, No Sign-Up | {SITE}",
          "A free career quiz with seven plain questions. It shows the three fields of work that fit you best, with today’s open jobs, jobs open to beginners and median pay. No email, no sign-up.",
          crumbs(("Career quiz", "")) + '<h1>Which job fits me? <span class="hl">A seven-question career quiz</span></h1>'
          '<p class="lead">Seven plain questions about what you enjoy, what you already do well and how you like to work. You get the three fields that fit you best, with how many jobs they have today and how to get in. No email, no sign-up: your answers stay in your browser.</p>'
@@ -5007,12 +5013,22 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         html_ = "".join(f"<details class='faq'><summary>{e(q_)}</summary><p>{e(a_)}</p></details>" for q_, a_ in qa)
         return html_, ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    safety_qa = [("Will a real employer ever ask me to pay?", "No. A real employer does not charge for applying, training, equipment, a background check or a visa. A request for money at any stage of hiring is the clearest sign of a scam."),
+    # "how to spot a fake job offer" (checked 15 Nov 2026): Google's answer adds free email addresses, early requests for an SSN or bank
+    # details, and the fake-check scheme; People also ask "What are red flags in a job offer?", "Can an offer letter be fake?",
+    # "What does a fake job posting look like?"
+    safety_qa = [("What are red flags in a job offer?", "Being asked to pay for anything; pay far above the market for simple work; an offer without a live interview; an interview held only by "
+                  "text on Telegram or WhatsApp; a recruiter writing from a free email address (Gmail, Outlook, Yahoo) instead of the company’s domain; a request for your Social Security number "
+                  "or bank details before a formal offer; a check you are told to deposit and partly send back, or spend on gift cards or equipment."),
+                 ("Can an offer letter be fake?", "Yes. Check the sender’s address against the company’s own domain, call the company on the number on its website (not the one in the letter), "
+                  "and look for the job on its careers page. A real offer comes after real interviews, and it never asks you to pay."),
+                 ("What does a fake job posting look like?", "Vague duties, no company name or address, very high pay for simple tasks, pressure to reply today, and a contact by chat app or a link that "
+                  "is not the company’s own site. Every job on this site links to the employer’s own careers page, so you can see where it comes from."),
+                 ("Will a real employer ever ask me to pay?", "No. A real employer does not charge for applying, training, equipment, a background check or a visa. A request for money at any stage of hiring is the clearest sign of a scam."),
                  ("Is it safe to do a take-home test?", "Usually, if it comes through the company’s own hiring process. Do not run code or open files from someone you cannot tie to the company’s official site, and never on a machine that holds your wallets, keys or work credentials."),
                  (f"Does {SITE} check employers?", f"Every listing on {SITE} is read from the employer’s own hiring system and links to that posting, and it is re-checked every hour. {NO_ANON}. We cannot vouch for what happens after you leave the site, so the checks on this page still apply."),
                  ("What if the recruiter wants to continue in a messenger?", "Ask to continue by email from the company’s domain or through its hiring system. A recruiter who refuses, or whose address does not match the company’s site, is not acting for that company.")]
     safety_faq, safety_ld = qa_block(safety_qa)
-    page("safety/", f"Is This Job Offer Real? A safety checklist for job seekers | {SITE}",
+    page("safety/", f"How to Spot a Fake Job Offer: Red Flags and Checks | {SITE}",
          "How to tell a real job offer from a fake one: seven warning signs, four schemes spreading now, how to check a recruiter, extra checks for crypto hiring, and what to do if you already paid.",
          crumbs(("Safety", "")) + "<h1>How to check that a job offer is real</h1>"
          '<p class="lead">Fake recruiters borrow the names of real companies, hold “interviews” in a chat app and ask for money, documents or wallet access before any contract exists. '
@@ -5596,7 +5612,18 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                "keywords": ["jobs", "job postings", "salaries", "remote jobs", "hiring trends"],
                "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/api/v1/index.json"}]
                                + [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/open/{x}.csv"} for x in ("skills", "companies", "categories", "locations")]}) + "</script>")
-    page("api/", f"Free Jobs API — JSON feeds, no key | {SITE}",
+    # "free job listings api" (checked 15 Nov 2026): Google's answer puts first a free API with no key that reads hiring systems
+    # directly (Arbeitnow); People also ask "Is there any free API to use?". Ours is the same kind, so the page says so in those words.
+    api_qa = [("Is there a free job listings API?", f"Yes: this one is free, needs no API key and no sign-up, and serves {n:,} open jobs as JSON, by skill, category, place and company. "
+               "It is fine for personal and commercial projects with a link back."),
+              ("Where do the jobs in this API come from?", f"From the careers pages of {m:,} employers, read every hour through their own hiring systems (Greenhouse, Lever, Ashby and others), "
+               "not from other job boards, so every job links to the employer’s own page."),
+              ("Do I need an API key?", "No. Fetch the JSON address you need; CORS is open, so it works from a web page too. Please fetch each feed at most once an hour: it changes hourly."),
+              ("Can I show these jobs on my own site?", "Yes, with a link to the job page or to this site wherever you show them. The ready-made widget does it for you without code.")]
+    api_faq = section("Questions about the jobs API", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in api_qa) + "</dl>")
+    api_ld = api_ld + ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in api_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("api/", f"Free Job Listings API: JSON, No Key, From Employers | {SITE}",
          "A free JSON API of open jobs by skill, category, location and company. No API key, CORS enabled, updated hourly.",
          crumbs(("API", "")) + '<h1>Free jobs API</h1>' + f'<p class="plain"><b>In plain words:</b> this page is for programmers. An API is a way for a program to read our list of jobs by itself. To show jobs on a website without programming, use the <a href="{P}/widgets/">job widget</a>. To look for a job, use the <a href="{P}/jobs/">search</a>.</p>' + '<p class="lead">Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every hour.</p>'
          + section("Endpoints", ttable(["Feed", "Address"], [
@@ -5607,7 +5634,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Response", f'<pre><code>{e(sample)}</code></pre><p class="note">Skill, category, location, latest and remote feeds hold the 30 newest matching jobs and the total count; a company feed holds all of that company’s open jobs. The slugs are the same as in the page addresses.</p>')
          + section("Example", f"<pre><code>{e(js_example)}</code></pre>")
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than once an hour (it changes once an hour).</p>'
-                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>'), head=api_ld)
+                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>') + api_faq, head=api_ld)
 
     # Plus (paid plan for job seekers; one-time payments, no subscription). The page sells the problem first, shows each
     # feature as a small screen (marked as an example), and does the price arithmetic for the visitor.
