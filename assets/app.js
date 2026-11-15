@@ -5,7 +5,17 @@
   var H = window.HRN;
   var $ = function (id) { return document.getElementById(id); };
   var q = $('q'), cat = $('cat'), lvl = $('lvl'), loc = $('loc'), sal = $('sal'), age = $('age'), sort = $('sort');
+  var city = $('city') || { value: '', addEventListener: function () {} };      // a city typed by the visitor (any city in a posting's place line)
   var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
+  var fHa = $('f-ha'); if (fHa) { fHa.checked = !!H.get('hrn_hide_applied', false); fHa.addEventListener('change', function () { H.set('hrn_hide_applied', fHa.checked); run(); }); }
+  var fRc = $('f-rc'), rcCC = (new URLSearchParams(location.search).get('rc') || '').toUpperCase();
+  if (fRc) { fRc.checked = !!rcCC; if (rcCC) $('f-rc-w').hidden = false; }
+  var lastQ = H.get('hrn_lastq', null);
+  if (lastQ && lastQ.qs && !location.search) {          // back on the search page with no filters: one tap brings the last search back
+    var lq = document.createElement('p'); lq.className = 'lastq note';
+    lq.innerHTML = 'Continue your last search: <a href="?' + H.esc(lastQ.qs) + '">' + H.esc(lastQ.label || 'your filters') + '</a>';
+    var cnt0 = $('count'); if (cnt0 && cnt0.parentNode) cnt0.parentNode.insertBefore(lq, cnt0);
+  }
   var fReal = $('f-real'), fTi = $('f-ti'), fNosal = $('f-nosal'), xwords = $('xwords'), xcos = $('xcos'), fHybrid = $('f-hybrid');
   var xlBoxes = Array.prototype.slice.call(document.querySelectorAll('.f-xl'));
   var xlOf = function () { return xlBoxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }); };
@@ -16,7 +26,7 @@
   });
 
   var f0 = H.parse(location.search.slice(1));
-  q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; sal.value = f0.sal ? String(f0.sal) : ''; age.value = f0.age ? String(f0.age) : ''; sort.value = f0.sort;
+  q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; city.value = f0.city || ''; sal.value = f0.sal ? String(f0.sal) : ''; age.value = f0.age ? String(f0.age) : ''; sort.value = f0.sort;
   fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto; fAny.checked = f0.any; perk.value = f0.perk; etype.value = f0.etype;
   if (fReal) fReal.checked = f0.real;
   if (fHybrid) fHybrid.checked = f0.hybrid;
@@ -39,6 +49,8 @@
     if (cat.value) p.set('cat', cat.value);
     if (lvl.value) p.set('lvl', lvl.value);
     if (loc.value) p.set('loc', loc.value);
+    if (city.value.trim()) p.set('city', city.value.trim());
+    if (fRc && fRc.checked && rcCC) p.set('rc', rcCC);
     if (sal.value) p.set('sal', sal.value);
     if (age.value) p.set('age', age.value);
     if (fRemote.checked) p.set('remote', '1');
@@ -61,6 +73,7 @@
     var parts = [];
     if (q.value.trim()) parts.push('“' + q.value.trim() + '”');
     [cat, lvl, loc, age, sal, perk, etype].forEach(function (el) { if (el.value) parts.push(text(el)); });
+    if (city.value.trim()) parts.push('in ' + city.value.trim());
     if (fAny.checked) parts.push('Work from anywhere');
     if (fReal && fReal.checked) parts.push('Fresh openings only');
     if (fRemote.checked) parts.push('Remote');
@@ -112,7 +125,7 @@
       rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
     }
     total = full ? rows.length : Math.max(allTotal, rows.length); extra = new Map(); found = H.collapse(rows, extra);
-    var active = [cat, lvl, loc, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
+    var active = [cat, lvl, loc, city, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     if (!keepShown) shown = 50;
     render();
@@ -126,6 +139,7 @@
       }
     }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    if (qs) H.set('hrn_lastq', { qs: qs, label: describe() });
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
     paintApplied();
     relax(rows.length, qs);
@@ -142,6 +156,7 @@
     var items = [];
     if (q.value.trim()) items.push(['q', '“' + q.value.trim() + '”']);
     [['cat', cat], ['lvl', lvl], ['loc', loc], ['sal', sal], ['age', age], ['perk', perk], ['etype', etype]].forEach(function (x) { if (x[1].value) items.push([x[0], text(x[1])]); });
+    if (city.value.trim()) items.push(['city', city.value.trim()]);
     [['remote', fRemote, 'Remote'], ['hybrid', fHybrid, 'Hybrid'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['real', fReal, 'Fresh openings only']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
     if (xlOf().length) items.push(['xl', 'No ' + xlOf().join(', ').toLowerCase()]);
     skills.forEach(function (s) { items.push(['skill:' + s, s]); });
@@ -152,7 +167,7 @@
   applied.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-rm]'); if (!b) return;
     var k = b.getAttribute('data-rm');
-    var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, city: city, sal: sal, age: age, perk: perk, etype: etype };
     if (k === 'xl' || k === '*') xlBoxes.forEach(function (x) { x.checked = false; });
     if (k === '*') { q.value = ''; skills = []; Object.keys(boxes).forEach(function (n) { if (boxes[n]) boxes[n].checked = false; }); Object.keys(sels).forEach(function (n) { sels[n].value = ''; }); if (!sortTouched) sort.value = 'new'; }
     else if (k === 'q') { q.value = ''; if (!sortTouched) sort.value = 'new'; }
@@ -215,7 +230,7 @@
         }
       }
     }
-    var p = new URLSearchParams(qs), names = { q: 'the words “' + q.value.trim() + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
+    var p = new URLSearchParams(qs), names = { q: 'the words “' + q.value.trim() + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), city: city.value.trim(), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
       remote: 'Remote', hybrid: 'Hybrid', xl: 'the levels left out', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'Fresh openings only', skills: skills.join(' + ') }, out = [];
     p.forEach(function (_, k) {
       if (!names[k] || (k === 'q' && mean)) return;           // a spelling fix is the better way out than dropping the words
@@ -236,7 +251,7 @@
     var fixQ = ev.target.getAttribute && ev.target.getAttribute('data-q');
     if (fixQ) { q.value = fixQ; run(); return; }
     var k = ev.target.getAttribute && ev.target.getAttribute('data-drop'); if (!k) return;
-    var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, sal: sal, age: age, perk: perk, etype: etype };
+    var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, city: city, sal: sal, age: age, perk: perk, etype: etype };
     if (k === 'xl') xlBoxes.forEach(function (x) { x.checked = false; });
     if (k === 'q') q.value = ''; else if (k === 'skills') { skills = []; paintChips(); } else if (boxes[k]) boxes[k].checked = false; else if (sels[k]) sels[k].value = '';
     run();
@@ -245,6 +260,7 @@
   // typing a query switches to "best match" unless the visitor picked a sort order themselves
   q.addEventListener('input', function () { autoFixed = ''; if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
   sort.addEventListener('change', function () { sortTouched = true; });
+  var ctimer; city.addEventListener('input', function () { clearTimeout(ctimer); ctimer = setTimeout(run, 250); });
   [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fHybrid, fEntry, fCrypto, fAny, fReal, fTi, fNosal].concat(xlBoxes).forEach(function (el) { if (el) el.addEventListener('change', run); });
   // words and companies the visitor never wants to see: remembered in this browser, applied to every list
   var drawMuted = function () {
@@ -274,7 +290,7 @@
   more.addEventListener('click', function () { shown += 50; render(); });
   var clearBtn = $('fclear');
   if (clearBtn) clearBtn.addEventListener('click', function () {
-    [cat, lvl, loc, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
+    [cat, lvl, loc, city, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
     [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].concat(xlBoxes).forEach(function (el) { if (el) el.checked = false; });
     skills = []; paintChips(); run();
   });
@@ -306,13 +322,14 @@
   // Smart search: words that are really filters move out of the text box and into the filters, where the visitor can see and undo them.
   // "remote senior python jobs in berlin 150k" becomes: text "python", Remote, Senior, Berlin, $150K+.
   var places = Array.prototype.slice.call(loc.options).filter(function (o) { return o.value; }).map(function (o) {
-    var t = o.text.toLowerCase(), names = [t];
+    var t = o.text.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').toLowerCase(), names = [t];
     t.split(' & ').forEach(function (part) { names.push(part.replace(/^the /, '')); });
-    ({ 'united-states': ['usa', 'united states', 'the us', 'america'], 'united-kingdom': ['uk', 'britain', 'england', 'london'], 'san-francisco': ['san francisco', 'bay area', 'sf'],
+    ({ 'united-states': ['usa', 'united states', 'the us', 'america'], 'united-kingdom': ['uk', 'britain', 'england', 'united kingdom'], 'san-francisco': ['san francisco', 'bay area', 'sf'],
        'new-york': ['nyc', 'new york city'], 'washington-dc': ['washington dc', 'dc'], 'uae': ['dubai', 'uae', 'emirates'] }[o.value] || []).forEach(function (a) { names.push(a); });
     return { v: o.value, names: names.filter(function (x, i, a) { return x.length > 1 && a.indexOf(x) === i; }) };
   });
   var rxEsc = function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
+  var cityNames = [];               // the cities in today's postings, filled once the full list has arrived (suggestions under the City box)
   var smart = function () {
     var text = ' ' + q.value + ' ', took = false;
     var take = function (rx, fn) { if (rx.test(text)) { text = text.replace(rx, ' '); fn(); took = true; } };
@@ -340,6 +357,10 @@
       }); });
       if (hit) { loc.value = hit.v; text = text.replace(hit.rx, ' '); took = true; }
     }
+    if (!loc.value && !city.value.trim() && cityNames.length) {
+      var cm = text.match(/\b(?:in|near|at)\s+([a-z][a-z .'-]{1,38}?)\s*$/i);
+      if (cm && cityNames.indexOf(cm[1].trim().toLowerCase()) >= 0) { city.value = cm[1].trim(); text = text.replace(cm[0], ' '); took = true; }
+    }
     if (took || /\b(?:jobs?|roles|positions?|vacanc(?:y|ies)|openings?)\b/i.test(text)) {
       text = text.replace(/\b(?:jobs?|roles|positions?|vacanc(?:y|ies)|openings?)\b/gi, ' ').replace(/\s+(?:in|at|near|for|with|and|paying|that pay)\s*$/i, ' ').replace(/^\s*(?:in|at|near|for|with|and)\s+/i, ' ');
       q.value = text.replace(/\s+/g, ' ').trim();
@@ -365,11 +386,27 @@
   try { jobs = await whole; }
   catch (e) { if (!jobs.length) count.textContent = 'Could not load the list. Please reload the page.'; return; }
   full = true;
+  (function () {                    // suggestions for the City box: the first part of each posting's place line, most frequent first
+    var cnt = {};
+    jobs.forEach(function (j) { (j[3] || '').split(/[;|·]| \/ |\bor\b/).forEach(function (part) {
+      var c = part.split(',')[0].replace(/\(.*?\)/g, '').replace(/\b(?:remote|hybrid|on-?site|office)\b.*$/i, '').trim();
+      if (c.length > 2 && c.length < 30 && !/\d/.test(c)) cnt[c] = (cnt[c] || 0) + 1;
+    }); });
+    var top = Object.keys(cnt).filter(function (c) { return cnt[c] >= 3; }).sort(function (a, b) { return cnt[b] - cnt[a]; }).slice(0, 600);
+    cityNames = top.map(function (c) { return c.toLowerCase(); });
+    var dl = $('city-list'); if (dl) dl.innerHTML = top.map(function (c) { return '<option value="' + H.esc(c) + '">'; }).join('');
+  })();
   // keep the visitor's place: same order, same number of rows, unless they were waiting for results
   // Near you: one click narrows the list to the visitor's country (taken from the time zone, or the place they picked on the home page)
   fetch(H.base + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
     var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
-    var c = G.c[H.get('hrn_place', '') || G.tz[tz] || ''];
+    var cc0 = H.get('hrn_place', '') || G.tz[tz] || '', c = G.c[cc0];
+    if (fRc && cc0 && G.c[cc0]) {        // "hide remote jobs closed to my country": the label names the country
+      if (!rcCC) rcCC = cc0;
+      $('f-rc-l').textContent = 'Hide remote jobs closed to ' + (G.c[rcCC] || G.c[cc0])[0];
+      $('f-rc-w').hidden = false;
+      fRc.addEventListener('change', run);
+    }
     if (!c || !c[1] || !c[2] || !Array.prototype.some.call(loc.options, function (o) { return o.value === c[1]; })) return;
     var b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn nearbtn';
     b.textContent = 'Near you: only ' + c[0] + ' (' + Number(c[2]).toLocaleString('en-US') + ')';

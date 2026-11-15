@@ -59,15 +59,23 @@
     if (!headCache) headCache = fetch(P + '/data/head.json').then(function (r) { return r.json(); }).then(function (d) { return { rows: expand(d), total: d.n }; });
     return headCache;
   }
+  function doneSet() {             // the jobs the visitor applied to (any status after "saved"), only when "leave out jobs I applied to" is on
+    if (!get('hrn_hide_applied', false)) return null;
+    var mine = get('hrn_jobs', {}), o = {};
+    Object.keys(mine).forEach(function (k) { if (mine[k] && mine[k].st && mine[k].st !== 'saved') o[k] = 1; });
+    return o;
+  }
   function parse(qs) {
     var p = new URLSearchParams(qs || '');
     var sal = p.get('sal') ? Number(p.get('sal')) : (p.has('salary') ? 1 : 0), age = Number(p.get('age')) || 0;
     return {
       q: p.get('q') || '', words: (p.get('q') || '').toLowerCase().split(/\s+/).filter(Boolean),
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
+      rc: (p.get('rc') || '').toUpperCase(), city: (p.get('city') || '').trim(), cityRx: (p.get('city') || '').trim() ? new RegExp('(^|[^a-z])' + (p.get('city') || '').trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null,
       remote: p.has('remote'), hybrid: p.has('hybrid'), xl: (p.get('xl') || '').split(',').filter(Boolean), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
       skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new',
-      titles: p.has('ti'), nosal: p.has('nosal'), real: p.has('real'), realSince: since(90)          // "fresh openings only": no talent pools, nothing open 90+ days
+      titles: p.has('ti'), nosal: p.has('nosal'), real: p.has('real'), realSince: since(90),         // "fresh openings only": no talent pools, nothing open 90+ days
+      done: doneSet()                                                                               // jobs already applied to, when the visitor hides them
     };
   }
   // words people type for the same thing: a query word also matches its other spellings ("js" finds JavaScript jobs)
@@ -84,11 +92,14 @@
   var EXEC = /\b(director|vp|svp|evp|vice president|head of|chief|cto|ceo|cfo|coo|cmo|cpo|ciso|cro)\b/i;      // "Director and above" in the level list
   function match(j, f) {
     if (mute.c[j[2]]) return false;
+    if (f.done && f.done[j[0]]) return false;
     if (f.real && (j[22] || !(j[16] >= f.realSince))) return false;
     if (mute.w.length) { var low = j[1].toLowerCase(); for (var w = 0; w < mute.w.length; w++) if (low.indexOf(mute.w[w]) >= 0) return false; }
     if (f.cat && j[5] !== f.cat) return false;
     if (f.lvl && (f.lvl === 'Exec' ? !EXEC.test(j[1]) : j[6] !== f.lvl)) return false;
     if (f.loc && j[14].indexOf(f.loc) < 0) return false;
+    if (f.cityRx && !f.cityRx.test(j[3] || '')) return false;
+    if (f.rc && j[4] && !j[20] && j[24] && j[24].length && j[24].indexOf(f.rc) < 0) return false;    // remote, but only for other countries                                        // a city typed by the visitor, matched in the posting's own place line
     if ((f.remote || f.hybrid) && !((f.remote && j[4]) || (f.hybrid && j[25]))) return false;     // both ticked: either kind
     if (f.xl && f.xl.length && f.xl.indexOf(j[6]) >= 0) return false;                             // levels the visitor leaves out
     if (f.entry && !j[10]) return false;

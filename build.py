@@ -1787,6 +1787,12 @@ def main():
                       f'<li><b>Old postings are marked.</b> {old90:,} open jobs were posted {LONG_OPEN} or more days ago; their pages say so.</li>'
                       '<li><b>Reposts are shown.</b> When a company reposts a role it closed, the job page says when the earlier posting closed.</li>'
                       f'<li><b>Scam signs are listed.</b> Requests for money, chat apps or software installs: <a href="{P}/safety/">how to check an offer</a>.</li></ol>')
+            + section("What people hate about job sites, and what we do instead", '<div class="feats">'
+                      '<div class="feat"><h3>Redirects and second forms</h3><p>“Apply” here opens the employer’s own page, and the button says which address it opens. No middle site, no lead form.</p></div>'
+                      '<div class="feat"><h3>Sign-up walls and phone numbers</h3><p>No account and no phone number to search, save or apply: nothing to get locked out of, and nothing to sell to call centres.</p></div>'
+                      f'<div class="feat"><h3>Jobs that closed long ago</h3><p>Every job is re-read {EVERY}; a closed one leaves the list, and every job shows how old it is.</p></div>'
+                      '<div class="feat"><h3>Trials that turn into a yearly charge</h3><p>Every price is a single payment. Nothing renews by itself, and there is no card on file to cancel.</p></div></div>',
+                      ("promise/", "What we will never do"))
             + section("Where the jobs come from and how the site works", faq_html))
     home_desc = f"Job search without ghost jobs: {n:,} jobs hiring now at {m:,} companies, read from their own career pages {EVERY}. {new_today:,} new today. Free, no account."
     if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
@@ -1798,7 +1804,17 @@ def main():
 
     # Search page
     opts = "".join(f'<option value="{s}">{e(CAT[s])}</option>' for s in CAT if by_cat[s])
-    loc_opts = "".join(f'<option value="{slug}">{e(name.removeprefix("the "))}</option>' for name, slug, _ in places)
+    # places grouped like the home page, each country with its flag (the owner's rule), A to Z inside a group
+    rule_l = {sl_: r_ for _, sl_, r_ in PLACES}
+    flag_t = lambda cc: "".join(chr(0x1F1E6 + ord(ch) - 65) for ch in cc) + " " if cc and len(cc) == 2 and cc.isalpha() and cc.isupper() else ""
+    cc_of = lambda sl_: (rule_l.get(sl_) if isinstance(rule_l.get(sl_), str) and len(rule_l.get(sl_)) == 2 else rule_l.get(sl_)[1] if isinstance(rule_l.get(sl_), tuple) else "")
+    grp_l = {"Countries": [], "US states": [], "Cities": [], "Parts of the world": []}
+    for name, slug, _ in places:
+        r_ = rule_l.get(slug)
+        grp_l["Parts of the world" if r_ == "region" else "Countries" if isinstance(r_, str) else
+              "US states" if r_[1] == "US" and ", " not in name and slug != "san-francisco" else "Cities"].append((name, slug))
+    loc_opts = "".join(f'<optgroup label="{g_}">' + "".join(f'<option value="{sl_}">{flag_t(cc_of(sl_))}{e(nm_.removeprefix("the "))}</option>'
+                                                         for nm_, sl_ in sorted(v_, key=lambda x: x[0].removeprefix("the "))) + "</optgroup>" for g_, v_ in grp_l.items() if v_)
     skill_counts = Counter(t for j in active for t in j["tags"])
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
@@ -1810,7 +1826,10 @@ def main():
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
               + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
               + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option value="Lead">Lead and above</option><option value="Exec">Director and above</option></select>')
-              + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>')
+              + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
+                      '<input type="search" id="city" list="city-list" placeholder="Any city, e.g. Leeds" aria-label="City" autocomplete="off" style="margin-top:8px;width:100%">'
+                      '<datalist id="city-list"></datalist>'
+                      '<label class="check" id="f-rc-w" hidden style="margin-top:8px"><input type="checkbox" id="f-rc"> <span id="f-rc-l">Hide remote jobs closed to my country</span></label>')
               + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
                                 '<option value="250000">$250K+</option><option value="300000">$300K+</option></select>'
@@ -1820,6 +1839,7 @@ def main():
               + '<details class="morefilters"><summary>More filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
               + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'
+                                   '<div class="filters"><label><input type="checkbox" id="f-ha"> Jobs I already applied to</label></div>'
                                    '<div class="filters xlv"><span class="note">Levels:</span>' + "".join(f'<label><input type="checkbox" class="f-xl" value="{x}"> {LVL_NAME[x]}</label>' for x in ("Intern", "Junior", "Senior", "Lead")) + '</div>'
                                    '<input type="text" id="xwords" class="xin" placeholder="Words in the title, e.g. senior, sales" aria-label="Words to leave out of results" autocomplete="off">'
                                    '<div id="xcos" class="xcos"></div>')
@@ -1827,7 +1847,9 @@ def main():
               + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
               + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
               + '</div></details><div class="fgroup fclear"><button class="linkbtn" id="fclear" type="button">Clear all filters</button></div></aside>'
-              '<div><div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
+              '<div><p class="note srch-promise">Every job opens on the employer’s own page · no account, no phone number · closed jobs leave the list within the hour · '
+              f'<a href="{P}/promise/">what we never do</a></p>'
+              '<div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select>'
               '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'
               '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'

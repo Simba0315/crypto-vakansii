@@ -192,6 +192,7 @@ dl.meta time.new{color:var(--green)}
 .fgroup:first-child{border-top:0;padding-top:0}
 .flabel{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:7px}
 .fgroup select{width:100%;max-width:none;padding:8px 10px;font-size:14px;border-radius:8px}
+.fgroup #city{padding:8px 10px;font-size:14px;border-radius:8px}
 .filters{display:flex;flex-direction:column;gap:6px;margin:0}
 .filters label{display:flex;align-items:center;gap:9px;font-size:14.5px;cursor:pointer;user-select:none;padding:2px 0}
 .filters input{accent-color:var(--text);margin:0;width:16px;height:16px}
@@ -788,6 +789,7 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
   #fwrap{grid-column:1/-1;position:static;max-height:none;overflow:visible;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid var(--line)}
   #fwrap .fgroup{border:0;padding:0}
   #fwrap .fgroup select{width:auto;max-width:210px;padding:8px 10px;font-size:14px}
+  #fwrap .fgroup #city{width:auto;max-width:210px}
   #fwrap .flabel{font-size:12px;font-weight:500;color:var(--faint);margin-bottom:4px}
   #fwrap .filters{flex-direction:row;flex-wrap:wrap;gap:4px 16px;align-items:center;min-height:38px}
   #fwrap .fclear{margin-left:auto;align-self:center}
@@ -1844,6 +1846,9 @@ table.grid tr.grp th{font-variant-numeric:normal}
 
 /* crosslinks.py: narrower and related pages, a compact list in columns */
 .xlinks h3{font-size:15px;font-weight:650;margin:18px 0 8px;color:var(--muted)}.xl{columns:3 230px;column-gap:28px;list-style:none;padding:0;margin:0 0 6px}.xl li{break-inside:avoid;margin:0 0 7px;line-height:1.35}.xl a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line2)}.xl a:hover{border-bottom-color:var(--ac)}.xl span{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;margin-left:4px}
+.srch-promise{margin:0 0 6px;font-size:13px}
+@media (max-width:700px){.srch-promise{display:none}}      /* on a phone the first screen is for the jobs; the home page carries the same promises */
+
 
 /* Job alert sign-up (alert_form in build.py, server/src/alerts.js). Kept small on purpose: the design work may restyle it. */
 .alertf{margin:32px 0;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
