@@ -155,3 +155,9 @@ td.tl-best{background:var(--accent-soft)}
 .tsub a:hover{background:var(--hl);color:var(--hl-ink);border-color:transparent}
 .tsub a.all{text-decoration:none;font-weight:600}
 .tsub a[aria-current]{background:var(--hl);color:var(--hl-ink);border-color:transparent;text-decoration:none;font-weight:600}
+/* drop-down lists: our own arrow, 12 px inside the right edge, the same in every browser (owner, 15 Nov 2026: "the arrows almost
+   go past the frame, too far right") */
+select:not([multiple]){-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%2355534c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 13px center!important;background-size:12px 8px!important;padding-right:38px!important;text-overflow:ellipsis}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) select:not([multiple]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%23aca69c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}}
+:root[data-theme=dark] select:not([multiple]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%23aca69c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}
+select:not([multiple]):hover{border-color:var(--text)}
