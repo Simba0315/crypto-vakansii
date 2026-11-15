@@ -1832,6 +1832,14 @@ table.grid tr.grp th{font-variant-numeric:normal}
 @keyframes lv-glow{from{background:var(--accent-soft)}to{background:transparent}}
 @media(prefers-reduced-motion:reduce){.job.lv-in,.job.lv-out,.job.lv>a{animation:none}}
 
+/* a page's main action under its opening paragraph (act_row and list_save in build.py): on the first phone screen */
+.lact{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:4px 0 22px;font-size:14px;color:var(--muted)}
+.lact .btn{margin:0;flex:none}
+.lact>a:not(.btn){color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
+.lact span{flex:1 1 240px;line-height:1.45}
+.lact .btn[aria-pressed="true"],.lact .btn[aria-pressed="true"]:hover{background:var(--card);color:var(--text);border-color:var(--line2)}
+.lact a.btn{text-decoration:none}
+
 /* Job alert sign-up (alert_form in build.py, server/src/alerts.js). Kept small on purpose: the design work may restyle it. */
 .alertf{margin:32px 0;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
 .alertf h2{margin-top:0}

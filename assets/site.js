@@ -240,6 +240,22 @@
   }
   window.HRN = { mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
+  /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
+     the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-save-list]'), function (btn) {
+    var qs = btn.getAttribute('data-save-list'), label = btn.getAttribute('data-label') || document.title;
+    var paint = function () {
+      var on = get('hrn_searches', []).some(function (x) { return x.qs === qs; });
+      btn.textContent = on ? 'Saved to My jobs ✓' : 'Save this list'; btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    };
+    paint();
+    btn.addEventListener('click', function () {
+      var all = get('hrn_searches', []), had = all.some(function (x) { return x.qs === qs; });
+      all = had ? all.filter(function (x) { return x.qs !== qs; }) : [{ qs: qs, label: label, seen: today() }].concat(all);
+      set('hrn_searches', all.slice(0, 30)); paint();
+    });
+  });
+
   /* ---------- live lists: the home "Latest jobs" window and the first page of /new/ take the newest jobs from /api/latest, on load
      and then once a minute while the tab is in view. A job the server found after the page was built slides in where its posting
      time puts it (for a new job, the top), one row at a time. Its row says when we found it ("Found 3 minutes ago") and, when the
@@ -389,7 +405,7 @@
     if (!qs.length) return;
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition, say = window.speechSynthesis;
     var box = document.createElement('section');
-    box.className = 'sec voicepr';
+    box.className = 'sec voicepr'; box.id = 'practise';               // the "Practise out loud" button under the opening paragraph jumps here
     box.innerHTML = '<div class="vp-card"><p class="vp-h"><b>Practise out loud</b><span>' + (SR ? 'The page reads a question, listens to your answer and checks it. Nothing is recorded or sent anywhere.' : 'The page reads a question; type your answer and it is checked. This browser cannot listen; Chrome and Edge can.') + '</span></p>'
       + '<p class="vp-q" id="vp-q"></p><div class="vp-row"><button class="btn primary sm" type="button" id="vp-start">Start question 1</button><button class="btn ghost sm" type="button" id="vp-stop" hidden>I have finished</button>'
       + '<button class="btn ghost sm" type="button" id="vp-next" hidden>Next question</button><span class="note" id="vp-time"></span></div>'
