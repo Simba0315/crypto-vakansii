@@ -1729,3 +1729,6 @@ a.pic.st-map:hover u{text-decoration-color:var(--text)}
 .tb{display:inline-flex;align-items:baseline;gap:6px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:13px;color:var(--muted)}
 .tb b{color:var(--text);font-weight:650}
 .tbadges a{font-size:13px;color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+
+/* example cards on sales pages: not links, so no hover and no pointer */
+a.eg{cursor:default}.job>a.eg:hover{background:none;box-shadow:none}.spot a.eg:hover b{text-decoration:none}
