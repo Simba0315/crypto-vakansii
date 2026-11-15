@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,261 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,313 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -179,6 +179,50 @@ Google and LinkedIn (`?code=&state=`). Tested in section 35.
   text, the site on the claimed domain); `export.json` `claimed` carries `about` and `website` for the site's company page (the build
   does not show them yet).
 - **Receipts:** `GET /api/orders/<id>/receipt` for a paid order: what, for how long, how it was paid, "nothing renews".
+
+## Posting as easy as on Indeed: unverified employers, the work-email link, LinkedIn as a sign-in (15 Nov 2026; tested in section 37)
+
+The owner: "DNS or a file — nobody will do that"; posting must be as easy as on Indeed. Three changes:
+
+**An account on a free mailbox posts.** An account with a confirmed email but no company domain and no LinkedIn identity is an
+employer not verified yet (`AS_UNVERIFIED` in `src/worker.js`). `POST /api/jobs` takes its job when it gives the company's site
+(`company_url`, required; not a mailbox service, a hiring system, a chat or social page) and the link to apply is on that site's domain
+or on a listed hiring system. The job is stored with `status: "review"`, `posted_by: "unverified"` and the reason
+`the employer is not verified yet`, every time: when posted, edited and published again. It has the limits of a new account for good
+(1 a day, 3 on the site or waiting), takes no company name (a stranger must not hold a real company's name), cannot post under a name
+another account holds (409 `company_taken`) nor for a company the site lists by itself (409 `listed`, with `claim`). A person's approval
+puts it on the site, marked `posted_by: "unverified"` in `export.json`, and does not count towards trust. Promotions for it can be
+bought; they are held until the approval, like any placement of a job in review. `previewJob` answers `posted_by: "unverified"` too.
+
+**A work email confirmed by a link** ties such an account to its company, as signing up with that address would:
+- `POST /api/domain/email { email }` (signed in, email confirmed, no domain yet) → `{ ok, email, domain, expires, message }`. The letter
+  goes to the work address, names the account that asks, and carries `<SITE_URL>/account/#work=<token>` (24 hours, one use, only its
+  hash kept; asking again replaces it). Refused: a free mailbox (422 `free_mail`), a throwaway one (400 `throwaway_email`), a hiring
+  system, a chat or social host or a shared host (422 `email`), an account already tied to a domain (409 `has_domain`). Limits: 5 an hour
+  per account (429), 3 letters a day per address and 120 an hour in all (past those the answer is the same and nothing is sent).
+- `POST /api/domain/email/confirm { token }` (no session needed: the link is the proof) → `{ ok, domain, email, user }`; the account gets
+  `users.domain`, `domain_proof: "work_email"` and `users.work_email`; a pending DNS or file token is dropped. 400 `confirm` for a token
+  that is wrong, used or old.
+- From then on its jobs follow the rules of a verified employer (a new account's first jobs still wait for a person); an edit of an
+  earlier unverified job makes it the company's own. A team invitation sent to the work address finds the account.
+- `GET /api/domain` now also gives `work_email` and `pending_email: { email, expires } | null`. `proved_by` can be `work_email`.
+
+The messages that ask for a company domain (claims, team, the resume database, `listed`) now name the work-email link first; DNS and a
+file stay as other ways (`WORK_LINK` in `src/worker.js`).
+
+`GET /api/me`: `user` has `can_post` (the email is confirmed: any such account may post), `verified` (tied to a company domain, by its
+email, a confirmed work email, a DNS record or a file) and `work_email`.
+
+**LinkedIn as a sign-in, like Google.**
+- `POST /api/auth/linkedin/start` with no session, or with `{ signin: true }` → `{ url, secret }` (the page keeps the secret; the state is
+  in `signin_states` with provider `linkedin`, 15 minutes, one use).
+- `POST /api/auth/linkedin/callback { code, state, secret }` with no session → `{ token, user, created }`: a known LinkedIn identity
+  signs in; else the account with the same verified address gets LinkedIn attached (409 `linkedin_attached` if it has another profile)
+  and signs in; else a new account is made, confirmed at once, with `linkedin_sub`, `linkedin_name` and `linkedin_email`. Only an
+  address LinkedIn calls verified (403 `linkedin_email`). A company address makes an account tied to its domain, as with Google Workspace;
+  a free mailbox makes an account that posts as a recruiter (it has a LinkedIn identity). 401 `state` without the page's secret, 502
+  `linkedin` when LinkedIn does not confirm. A sign-in from a new browser gets the usual notice.
+- With a session and no `secret`, both calls attach the profile to that account as before.
 
 ## The product line of 15 Nov 2026 (the owner's prices; tested in section 36)
 

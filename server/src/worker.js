@@ -233,8 +233,10 @@ const FREE_MAIL_NAMES = new Set('gmail googlemail yahoo ymail rocketmail outlook
 const FREE_MAIL_DOMAINS = new Set('me.com mac.com proton.me pm.me mail.com email.com mail.ru bk.ru list.ru inbox.ru ya.ru hey.com qq.com foxmail.com 163.com 126.com yeah.net'.split(' ').concat(THROWAWAY_DOMAINS));
 export const freeMail = (host) => { const d = siteDomain(host); return FREE_MAIL_NAMES.has(d.split('.')[0]) || FREE_MAIL_DOMAINS.has(d); };
 export const throwawayMail = (host) => { const d = siteDomain(host); return THROWAWAY_NAMES.includes(d.split('.')[0]) || THROWAWAY_DOMAINS.includes(d); };
-const WORK_EMAIL = 'Jobs can be posted only from an account whose email is on the company’s own domain (you@yourcompany.com). An account on a free mailbox such as gmail.com cannot post jobs as it is. ' +
-  'Sign up with your work address, or prove your company’s domain with a DNS record or a file on its site, or attach your LinkedIn profile to post as a recruiter.';
+// What to do to be tied to a company's domain, first the easy way: a link to one's work address (workEmailRequest). DNS and a file stay as other ways.
+const WORK_LINK = 'Confirm your work email on the account page: we send a link to you@yourcompany.com, and opening it ties your account to the company’s domain. ' +
+  'Other ways: sign up with that address, or prove the domain with a DNS record or a file on the company’s site.';
+const WORK_EMAIL = 'This needs an account tied to the company’s own domain. ' + WORK_LINK;
 const THROWAWAY = 'This address is a throwaway mailbox. Sign up with an address you keep: the confirmation link and your receipts go to it.';
 
 /* Hiring systems: the only places a link to apply may be on when it is not on the account's own domain. These exact hosts and no
@@ -312,7 +314,7 @@ const domainOf = (u) => { if (u.domain) return u.domain; const host = u.email.sl
    What each is worth: the first three tie the account to a domain somebody controls; LinkedIn says only that the person signed in to a
    LinkedIn profile with that name (LinkedIn itself says its sign-in does not verify identities), which is why a recruiter's job is
    never shown before a person has looked at it. */
-const proofsOf = (u) => [...(domainOf(u) ? [u.domain_proof === 'dns' || u.domain_proof === 'file' ? u.domain_proof : 'email_domain'] : []), ...(u.linkedin_sub ? ['linkedin'] : [])];
+const proofsOf = (u) => [...(domainOf(u) ? [['dns', 'file', 'work_email'].includes(u.domain_proof) ? u.domain_proof : 'email_domain'] : []), ...(u.linkedin_sub ? ['linkedin'] : [])];
 
 /* ---------------------------------------------------------------- MD5 and the gateway's signature
    Cryptomus signs with md5(base64(json) + key), where json is PHP's json_encode output (slashes escaped). */
@@ -405,7 +407,10 @@ async function userView(env, u) {
   return { id: u.id, email: u.email, company: u.company, plus: u.plus_until > t, plus_until: u.plus_until > t ? isoDay(u.plus_until) : '', credits: Number(credits) || 0,
     domain: domainOf(u), confirmed: u.confirmed_at > 0, trusted: trusted(u, t), proved_by: proofsOf(u),
     linkedin: u.linkedin_sub ? { name: u.linkedin_name, attached: isoDay(u.linkedin_at) } : null,
-    posts_as: [...(domainOf(u) ? ['employer'] : []), ...(u.linkedin_sub ? ['recruiter'] : [])] };
+    posts_as: [...(domainOf(u) ? ['employer'] : []), ...(u.linkedin_sub ? ['recruiter'] : [])],
+    // can_post: an account with a confirmed email may post a job (one not tied to a company domain: always looked at by a person first,
+    // see AS_UNVERIFIED); verified: the account is tied to a company domain (its email, a confirmed work email, a DNS record or a file)
+    can_post: u.confirmed_at > 0 && !u.banned, verified: !!domainOf(u), work_email: u.work_email || '' };
 }
 const bearer = (req) => (/^Bearer ([a-f0-9]{64})$/.exec(req.headers.get('Authorization') || '') || [])[1] || '';      // the session token of a request, or ''
 /* The browser a sign-in comes from, as far as it shows: a hash of the account and the User-Agent with the version numbers taken out, so
@@ -573,26 +578,24 @@ function linkedinApp(env) {
   return app;
 }
 async function linkedinStart(env, req, user) {
-  const app = linkedinApp(env);
+  const app = linkedinApp(env), b = await body(req).catch(() => ({}));
+  if (!user || b.signin === true) {             // a sign-in, as with Google: the state is tied to a secret the page keeps (no login CSRF)
+    await limit(env, 'linkedin-signin:' + clientIp(req), 30, 3600);
+    const state = rid('', 32), secret = rid('', 32), t = now();
+    await db(env, "INSERT INTO signin_states (state_hash, provider, secret_hash, created_at, expires_at) VALUES (?, 'linkedin', ?, ?, ?)", await sha256(state), await sha256(secret), t, t + SIGNIN_MINUTES * 60).run();
+    return { url: LINKEDIN_AUTHORIZE + '?response_type=code&client_id=' + encodeURIComponent(app.id) + '&redirect_uri=' + encodeURIComponent(app.redirect) + '&state=' + state + '&scope=' + encodeURIComponent('openid profile email'), secret };
+  }
   await limit(env, 'linkedin:' + user.id, 10, 3600);
   const state = rid('', 32), t = now();
   await db(env, 'INSERT INTO oauth_states (state_hash, user_id, session_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)', await sha256(state), user.id, await sha256(bearer(req)), t, t + OAUTH_STATE_MINUTES * 60).run();
   // the scopes are the three of the OpenID Connect product: openid (an ID token), profile (the name), email
   return { url: LINKEDIN_AUTHORIZE + '?response_type=code&client_id=' + encodeURIComponent(app.id) + '&redirect_uri=' + encodeURIComponent(app.redirect) + '&state=' + state + '&scope=' + encodeURIComponent('openid profile email') };
 }
-// what an ID token says, read without checking its signature: it is only ever read here straight from LinkedIn's token endpoint over TLS
-const idTokenClaims = (jwt) => {
-  try { const v = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(String(jwt).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)))); return v && typeof v === 'object' ? v : null; }
-  catch { return null; }
-};
-async function linkedinCallback(env, req, user) {
-  const app = linkedinApp(env);
-  await limit(env, 'linkedin-back:' + user.id, 10, 3600);
-  const b = await body(req), state = typeof b.state === 'string' && /^[a-f0-9]{64}$/.test(b.state) ? b.state : '', code = typeof b.code === 'string' && b.code.length <= 2000 && !/\s/.test(b.code) ? b.code : '';
-  const t = now(), stale = bad('state', 'This sign-in with LinkedIn was not started in this browser session, or it took too long. Start it again from the account page.', 401);
-  // the state is used up whoever brings it back (one statement finds it and deletes it), and counts only for the session that made it
-  const started = state ? await db(env, 'DELETE FROM oauth_states WHERE state_hash = ? RETURNING user_id, session_hash, expires_at', await sha256(state)).first() : null;
-  if (!started || started.user_id !== user.id || started.session_hash !== await sha256(bearer(req)) || started.expires_at <= t) throw stale;
+/* The member a code stands for: the code is changed for an access token at LinkedIn's token endpoint, the profile is read from userinfo,
+   and what userinfo says is used only when its subject is the one in the ID token, made for this application and not run out (OpenID
+   Connect). Gives { sub, name, email }; email only when LinkedIn calls it verified, '' otherwise. The access token is used for that one
+   request and kept nowhere. */
+async function linkedinIdentity(env, app, code, t) {
   const failed = bad('linkedin', 'LinkedIn did not confirm the sign-in. Please start it again.', 502);
   if (!code) throw failed;
   let who = null, claims = null;
@@ -607,13 +610,74 @@ async function linkedinCallback(env, req, user) {
       who = info.ok ? await info.json() : null;
     }
   } catch {}
-  // OpenID Connect: what userinfo says is used only when its subject is the one in the ID token, and that token was made for this
-  // application and has not run out
   const sub = who ? line(who.sub, 255, 1) : null;
   if (!sub || !claims || claims.sub !== who.sub || ![].concat(claims.aud).includes(app.id) || !(Number(claims.exp) > t)) throw failed;
   const name = line(who.name, 120, 1) || line([who.given_name, who.family_name].filter((x) => typeof x === 'string').join(' '), 120, 1);
-  if (!name) throw bad('linkedin', 'LinkedIn did not give us your name, so the profile cannot be attached.', 502);
-  const email = who.email_verified === true ? cleanEmail(who.email) || '' : '';      // an address LinkedIn does not call verified is not kept
+  if (!name) throw bad('linkedin', 'LinkedIn did not give us your name, so the profile cannot be used.', 502);
+  return { sub, name, email: who.email_verified === true ? cleanEmail(who.email) || '' : '' };      // an address LinkedIn does not call verified is not kept
+}
+/* Sign in with LinkedIn, as with Google (googleCallback): the state started without a session is used up here, and only with the secret
+   the page kept. A known LinkedIn identity signs in; else the account with the same verified address gets LinkedIn attached and signs in;
+   else a new account is made, confirmed at once (LinkedIn verified the address). A company address makes an account tied to its domain,
+   exactly as signing up with it or signing in with Google Workspace does; a free mailbox makes a job seeker's account, which posts as a
+   recruiter (it has a LinkedIn identity). Only an address LinkedIn calls verified is taken. */
+async function linkedinSignin(env, req, app, b, ctx) {
+  await limit(env, 'linkedin-signin-back:' + clientIp(req), 30, 3600);
+  const hex64 = (v) => (typeof v === 'string' && /^[a-f0-9]{64}$/.test(v) ? v : ''), state = hex64(b.state), secret = hex64(b.secret), t = now();
+  const code = typeof b.code === 'string' && b.code.length <= 2000 && !/\s/.test(b.code) ? b.code : '';
+  const stale = bad('state', 'This sign-in with LinkedIn was not started on this page, or it took too long. Please start it again.', 401);
+  const started = state ? await db(env, "DELETE FROM signin_states WHERE state_hash = ? AND provider = 'linkedin' RETURNING secret_hash, expires_at", await sha256(state)).first() : null;
+  if (!started || !secret || started.secret_hash !== await sha256(secret) || started.expires_at <= t) throw stale;
+  const id = await linkedinIdentity(env, app, code, t);
+  if (!id.email || !/^[\x21-\x7e]+$/.test(id.email)) throw bad('linkedin_email', 'LinkedIn did not give us a verified email address for this profile.', 403);
+  const host = id.email.slice(id.email.lastIndexOf('@') + 1), gone = bad('credentials', 'Wrong email or password.', 401);
+  if (throwawayMail(host)) throw bad('throwaway_email', THROWAWAY);
+  const taken = bad('linkedin_taken', 'This LinkedIn profile is already attached to another account. Sign in to that account instead.', 409);
+  let user = await db(env, 'SELECT * FROM users WHERE linkedin_sub = ?', id.sub).first(), created = false;
+  if (!user) {
+    user = await db(env, 'SELECT * FROM users WHERE email = ?', id.email).first();
+    if (!user) {
+      const uid = rid('u_');
+      try {
+        await db(env, "INSERT INTO users (id, email, domain, pass_hash, pass_salt, company, confirmed_at, created_at, linkedin_sub, linkedin_name, linkedin_email, linkedin_at) VALUES (?, ?, ?, '', '', '', ?, ?, ?, ?, ?, ?)",
+          uid, id.email, freeMail(host) ? '' : siteDomain(host), t, t, id.sub, id.name, id.email, t).run();
+      } catch (err) { if (!/UNIQUE/i.test(String(err && err.message))) throw err; }      // the same person signing up at the same moment another way
+      user = await db(env, 'SELECT * FROM users WHERE linkedin_sub = ?', id.sub).first() || await db(env, 'SELECT * FROM users WHERE email = ?', id.email).first();
+      created = !!user && user.id === uid;
+    }
+    if (!user || user.banned) throw gone;
+    if (!created) {
+      if (user.linkedin_sub && user.linkedin_sub !== id.sub) throw bad('linkedin_attached', 'The account with this email already has another LinkedIn profile attached. Sign in with your email instead.', 409);
+      try {
+        await db(env, "UPDATE users SET linkedin_sub = ?, linkedin_name = ?, linkedin_email = ?, linkedin_at = CASE WHEN linkedin_sub = '' THEN ? ELSE linkedin_at END, " +
+          "confirmed_at = CASE WHEN confirmed_at = 0 THEN ? ELSE confirmed_at END WHERE id = ? AND linkedin_sub IN ('', ?)", id.sub, id.name, id.email, t, t, user.id, id.sub).run();
+      } catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw taken; throw err; }
+      user = await db(env, 'SELECT * FROM users WHERE id = ?', user.id).first();
+    }
+  }
+  if (user.banned) throw gone;
+  if (!created && !(await knownDevice(env, req, user.id))) {
+    await later(ctx, sendMail(env, user.email, 'A new sign-in to your account', 'Your account at ' + env.SITE_URL + ' was just signed in to with LinkedIn from a browser it has not been used in before (' +
+      new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC).\n\nIf that was you, there is nothing to do. If it was not, secure your LinkedIn account first.\n', { kind: 'device' }));
+  } else if (created) await knownDevice(env, req, user.id);
+  return { token: await openSession(env, user.id), user: await userView(env, user), created };
+}
+// what an ID token says, read without checking its signature: it is only ever read here straight from LinkedIn's token endpoint over TLS
+const idTokenClaims = (jwt) => {
+  try { const v = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(String(jwt).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)))); return v && typeof v === 'object' ? v : null; }
+  catch { return null; }
+};
+async function linkedinCallback(env, req, user, ctx) {
+  const app = linkedinApp(env), b = await body(req);
+  if (typeof b.secret === 'string' && b.secret) return linkedinSignin(env, req, app, b, ctx);      // a sign-in started without a session
+  if (!user) throw bad('sign_in', 'Please sign in.', 401);
+  await limit(env, 'linkedin-back:' + user.id, 10, 3600);
+  const state = typeof b.state === 'string' && /^[a-f0-9]{64}$/.test(b.state) ? b.state : '', code = typeof b.code === 'string' && b.code.length <= 2000 && !/\s/.test(b.code) ? b.code : '';
+  const t = now(), stale = bad('state', 'This sign-in with LinkedIn was not started in this browser session, or it took too long. Start it again from the account page.', 401);
+  // the state is used up whoever brings it back (one statement finds it and deletes it), and counts only for the session that made it
+  const started = state ? await db(env, 'DELETE FROM oauth_states WHERE state_hash = ? RETURNING user_id, session_hash, expires_at', await sha256(state)).first() : null;
+  if (!started || started.user_id !== user.id || started.session_hash !== await sha256(bearer(req)) || started.expires_at <= t) throw stale;
+  const { sub, name, email } = await linkedinIdentity(env, app, code, t);
   if (user.linkedin_sub && user.linkedin_sub !== sub) throw bad('linkedin_attached', 'This account already has another LinkedIn profile attached. An account keeps the profile it has.', 409);
   const taken = bad('linkedin_taken', 'This LinkedIn profile is already attached to another account. Sign in to that account instead.', 409);
   if (await db(env, 'SELECT 1 AS x FROM users WHERE linkedin_sub = ? AND id != ?', sub, user.id).first()) throw taken;
@@ -657,6 +721,51 @@ async function domainToken(env, req, user) {
   const claim = { domain, token: rid('', 16), expires_at: t + DOMAIN_TOKEN_DAYS * DAY };
   await db(env, 'INSERT OR REPLACE INTO domain_claims (user_id, domain, token, created_at, expires_at) VALUES (?, ?, ?, ?, ?)', user.id, claim.domain, claim.token, t, claim.expires_at).run();
   return proofHow(claim);
+}
+/* ---------------------------------------------------------------- a work email, confirmed by a link (the easy way to be verified)
+   An account on a free mailbox names its address at the company (POST /api/domain/email { email }); a link goes to that address, and
+   opening it (POST /api/domain/email/confirm { token }: no session needed, the link is the proof, as for the email of a new account) ties
+   the account to that address's domain exactly as signing up with it would: users.domain, domain_proof "work_email", users.work_email.
+   From then on its jobs follow the rules of a verified employer (looked at by a person until the account is trusted, like anyone's).
+   The letter says which account asks, so a person who did not ask can ignore it; the link works once and for CONFIRM_HOURS, and asking
+   again replaces it. Limits, as for the other letters to an address someone typed: WORK_LINKS_PER_HOUR per account, CONFIRMS_PER_EMAIL_DAY
+   a day per address, CONFIRMS_PER_HOUR an hour in all; past the last two the answer is the same and nothing is sent. Only the hash of the
+   token is kept. Mailbox services, hiring systems, throwaway mailboxes and shared hosts cannot be a company's domain. */
+const WORK_LINKS_PER_HOUR = 5;
+async function workEmailRequest(env, req, user, ctx) {
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  if (domainOf(user)) throw bad('has_domain', 'This account is already tied to ' + domainOf(user) + '.', 409);
+  const email = cleanEmail((await body(req)).email);
+  if (!email || !/^[\x21-\x7e]+$/.test(email)) throw bad('email', 'Enter your work email address (you@yourcompany.com).');
+  const host = email.slice(email.lastIndexOf('@') + 1), u = publicUrl('https://' + host, 300), domain = siteDomain(host);
+  if (throwawayMail(host)) throw bad('throwaway_email', THROWAWAY);
+  if (freeMail(host)) throw bad('free_mail', 'That is a personal mailbox. Give the address you have at your company (you@yourcompany.com).', 422);
+  if (!u || hiringSystem(host) || BLOCKED_HOSTS.test(host) || badLink(u, '') || SHARED_HOSTS.test(domain.split('.').slice(-2).join('.')))
+    throw bad('email', domain + ' is a service many people share, not a company’s own domain.', 422);
+  await limit(env, 'work-email:' + user.id, WORK_LINKS_PER_HOUR, 3600);
+  const t = now(), token = rid('', 32);
+  const out = { ok: true, email, domain, expires: new Date((t + CONFIRM_HOURS * 3600) * 1000).toISOString(), message: 'A link is on its way to ' + email + '. Open it within ' + CONFIRM_HOURS + ' hours: your account is then tied to ' + domain + '.' };
+  if (!(await allowed(env, 'work-email-to:' + email, CONFIRMS_PER_EMAIL_DAY, DAY)) || !(await allowed(env, 'work-email-all', CONFIRMS_PER_HOUR, 3600))) return out;
+  await env.DB.batch([db(env, 'DELETE FROM work_links WHERE user_id = ?', user.id),
+    db(env, 'INSERT INTO work_links (token_hash, user_id, email, domain, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)', await sha256(token), user.id, email, domain, t, t + CONFIRM_HOURS * 3600)]);
+  await later(ctx, sendMail(env, email, 'Confirm your work email', 'The account ' + user.email + ' at ' + env.SITE_URL + ' asked to be tied to ' + domain + ' with this address, so that it can post jobs for the company.\n\n' +
+    'If that is you, open this link within ' + CONFIRM_HOURS + ' hours and press the button on the page:\n' + env.SITE_URL + '/account/#work=' + token + '\n\n' +
+    'If you do not know this account, ignore this letter: nothing changes, and the account gets nothing from it.\n', { kind: 'work_email' }));
+  if (env.PAY_MODE === 'test') out.token = token;       // developer machines only: there is no mailbox to read the link from
+  return out;
+}
+async function workEmailConfirm(env, req) {
+  await limit(env, 'confirm-try:' + clientIp(req), 10, 600);
+  const b = await body(req), token = typeof b.token === 'string' && /^[a-f0-9]{64}$/.test(b.token) ? b.token : '', t = now();
+  const stale = bad('confirm', 'This link does not work any more. Ask for a new one on the account page.');
+  const link = token ? await db(env, 'SELECT w.*, u.domain AS had FROM work_links w JOIN users u ON u.id = w.user_id WHERE w.token_hash = ? AND w.expires_at > ? AND u.banned = 0', await sha256(token), t).first() : null;
+  if (!link) throw stale;
+  if (link.had && link.had !== link.domain) throw bad('has_domain', 'This account is already tied to ' + link.had + '.', 409);
+  const done = await env.DB.batch([
+    db(env, "UPDATE users SET domain = ?, domain_proof = 'work_email', work_email = ? WHERE id = ? AND domain IN ('', ?)", link.domain, link.email, link.user_id, link.domain),
+    db(env, 'DELETE FROM work_links WHERE user_id = ?', link.user_id), db(env, 'DELETE FROM domain_claims WHERE user_id = ?', link.user_id)]);
+  if (!done[0].meta.changes) throw stale;
+  return { ok: true, domain: link.domain, email: link.email, user: await userView(env, await db(env, 'SELECT * FROM users WHERE id = ?', link.user_id).first()) };
 }
 /* The TXT records of a name, as Cloudflare's resolver gives them over HTTPS (JSON): [] when the name has none or does not exist, null
    when the resolver could not be asked. A record's text arrives in quotes and, when long, in several quoted pieces: they are joined. */
@@ -761,7 +870,7 @@ const marks = (list) => list.map(() => '?').join(', ');
 async function teamOf(env, user, manage = false) {
   const ids = [user.id], own = domainOf(user);
   if (!own || !user.confirmed_at) return ids;
-  for (const r of (await db(env, 'SELECT m.owner_id, m.role, u.domain, u.email FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email = ? AND u.banned = 0', user.email).all()).results)
+  for (const r of (await db(env, 'SELECT m.owner_id, m.role, u.domain, u.email FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email IN (?, ?) AND u.banned = 0', user.email, user.work_email || user.email).all()).results)
     if (domainOf(r) === own && (!manage || r.role === 'owner') && !ids.includes(r.owner_id)) ids.push(r.owner_id);
   return ids;
 }
@@ -1268,6 +1377,19 @@ const NO_ROOM = 'A new account can have ' + NEW_LIVE_JOBS + ' jobs on the site a
      right to post unseen. */
 const AS_RECRUITER = 'recruiter';
 const RECRUITER_ROOM = 'A recruiter can have ' + NEW_LIVE_JOBS + ' jobs on the site or waiting at a time. Close one to post another.';
+/* An employer that is not verified yet: an account on a free mailbox (gmail and the like) with no LinkedIn identity and no company domain
+   proved. The owner: posting must be as easy as on Indeed. It may post a job of its company, with these rules, each where it is enforced:
+   - it must give the company's site; the link to apply must be on that site's domain or on a listed hiring system (readJob), and the
+     site must be the company's own, not a mailbox service, a hiring system or a page on someone else's site (as for a recruiter);
+   - the job always waits for a person, with the reason UNVERIFIED_REASON, every time: when posted, edited or published again;
+   - the limits of a new account, for good (NEW_JOBS_PER_DAY, NEW_LIVE_JOBS), and a person's approval does not count towards trust;
+   - it takes no company name (a stranger must not hold a real company's name) and cannot post under one an account holds; a company
+     the site lists by itself needs its page claimed, as for anyone;
+   - the site is told (posted_by "unverified"); what is bought for the job is held until a person approves it (held placements);
+   - once the account confirms a work email (workEmailConfirm) its next jobs follow the rules of a verified employer, and an edit of an
+     unverified job by then makes it the company's own. */
+const AS_UNVERIFIED = 'unverified', UNVERIFIED_REASON = 'the employer is not verified yet';
+const postedBy = (j) => (j.posted_by === AS_RECRUITER || j.posted_by === AS_UNVERIFIED ? j.posted_by : 'employer');
 const recruiterReason = (name) => 'posted by a recruiter (' + name + ', by LinkedIn sign-in) for a company the account is not part of: such a job is always looked at by a person';
 /* Checks a job as sent, for a new one and for an edit alike, in this order: the fields; the company name (one account per name, not a
    company the site lists by itself); the company site, which must be on the account's domain, or for a recruiter the hiring company's
@@ -1279,17 +1401,18 @@ const recruiterReason = (name) => 'posted by a recruiter (' + name + ', by Linke
    live at once). A reject by the screen never gets that far. */
 async function readJob(env, user, b, existing, dry) {
   const own = domainOf(user), company = line(b.company, 80, 2), title = line(b.title, 120, 4), apply = publicUrl(b.apply_url);
-  if (!own && !user.linkedin_sub) throw bad('work_email', WORK_EMAIL, 403);
+  const unverified = !own && !user.linkedin_sub;              // an employer not verified yet (see AS_UNVERIFIED)
   const companyUrl = publicUrl(b.company_url == null || b.company_url === '' ? (own ? 'https://' + own : '') : b.company_url, 200);      // not given: the account's own domain
   const description = prose(b.description, 1500, 80), key = companyKey(company);
   if (!company || !key || key.length > 100) throw bad('company', 'Enter the company name.');
-  if (!companyUrl) throw bad('company_url', own ? 'Enter the address of the company site, starting with https://' : 'A recruiter must give the site of the company that is hiring, starting with https://');
+  if (!companyUrl) throw bad('company_url', own ? 'Enter the address of the company site, starting with https://' : unverified ? 'Enter your company’s site, starting with https://: the link to apply must be on it or on a hiring system.'
+    : 'A recruiter must give the site of the company that is hiring, starting with https://');
   if (!title) throw bad('title', 'Enter the job title (4 to 120 characters).');
   if (!apply) throw bad('apply_url', 'Enter the link where people apply, starting with https://');
   if (!description) throw bad('description', 'Describe the role in 80 to 1,500 characters.');
   if ((description.match(/https?:\/\//g) || []).length > 2) throw bad('description', 'Please keep links out of the description: candidates apply through the link above.');
   // home: the domain this job is tied to. A company site off the account's own domain makes it a recruiter's job, if the account may post as one.
-  const home = siteDomain(companyUrl.hostname), recruiter = !!user.linkedin_sub && home !== own;
+  const home = siteDomain(companyUrl.hostname), recruiter = !!user.linkedin_sub && home !== own, outside = recruiter || unverified;      // outside: not on a domain the account proved
   const held = await db(env, 'SELECT name, user_id FROM companies WHERE k = ?', key).first();
   if (held && (recruiter || !(await actsFor(env, user, held.user_id)))) throw bad('company_taken', recruiter ? 'This company posts its own jobs here, so a recruiter cannot post under its name.' : COMPANY_TAKEN, 409);
   // The site's list of companies also holds the ones that got there through jobs posted here, so a company this account already posts
@@ -1302,14 +1425,16 @@ async function readJob(env, user, b, existing, dry) {
   const claimHolder = listed && !recruiter ? await db(env, "SELECT user_id FROM company_claims WHERE company_key = ? AND status = 'verified'", key).first('user_id') : null;
   if (listed && (recruiter || !claimHolder || !(await actsFor(env, user, claimHolder)))) throw bad('listed', company + ' is already listed here automatically from its careers page: its jobs appear here within an hour of being posted there. ' +
     (recruiter ? 'You can promote any of its jobs instead of posting again.' : CLAIM_HOW), 409, recruiter ? undefined : { claim: { company: (await indexedCompanies(env)).get(key) } });
-  if (!recruiter && home !== own) throw bad('company_url', 'The company site must be on the domain of your account’s email (' + own + ').', 422);
-  if (recruiter && (freeMail(companyUrl.hostname) || hiringSystem(companyUrl.hostname) || BLOCKED_HOSTS.test(companyUrl.hostname) || badLink(companyUrl, '')))
+  if (!outside && home !== own) throw bad('company_url', 'The company site must be on the domain of your account’s email (' + own + ').', 422);
+  if (outside && (freeMail(companyUrl.hostname) || hiringSystem(companyUrl.hostname) || BLOCKED_HOSTS.test(companyUrl.hostname) || badLink(companyUrl, '')))
     throw bad('company_url', 'Give the hiring company’s own site, not a mailbox service, a hiring system or a page on someone else’s site.', 422);
-  if (existing && (existing.posted_by === AS_RECRUITER) !== recruiter) throw bad('company_url', 'This job was posted ' + (recruiter ? 'for your own company' : 'as a recruiter, for another company') + ', and an edit cannot change that. Post it as a new job instead.', 422);
+  const kind = recruiter ? AS_RECRUITER : unverified ? AS_UNVERIFIED : '';
+  // a job keeps the way it was posted; the one change allowed: an unverified job becomes the company's own once the account is verified
+  if (existing && existing.posted_by !== kind && !(existing.posted_by === AS_UNVERIFIED && kind === '')) throw bad('company_url', 'This job was posted ' + (recruiter ? 'for your own company' : 'as a recruiter, for another company') + ', and an edit cannot change that. Post it as a new job instead.', 422);
   const etype = ETYPES.includes(b.etype) ? b.etype : '', salary = line(b.salary, 60) || '', t = now();
-  const j = { company: recruiter && here ? here.name : held ? held.name : company, company_key: key, company_url: companyUrl.origin, title, title_key: titleKey(title), apply_url: apply.href,
+  const j = { company: outside && here ? here.name : held ? held.name : company, company_key: key, company_url: companyUrl.origin, title, title_key: titleKey(title), apply_url: apply.href,
     apply_host: existing ? existing.apply_host : '', location: line(b.location, 120) || '', remote: b.remote ? 1 : 0, salary, etype, description,
-    posted_by: recruiter ? AS_RECRUITER : '', recruiter_name: recruiter ? user.linkedin_name : '', reasons: [] };
+    posted_by: kind, recruiter_name: recruiter ? user.linkedin_name : '', reasons: [] };
   const screen = screenPosting({ title, description, company, applyUrl: apply.href, accountDomain: home, salary });
   if (!existing && !dry) await bump(env, 'screened', t).run();
   if (screen.verdict === 'reject') {
@@ -1336,15 +1461,16 @@ async function readJob(env, user, b, existing, dry) {
   }
   // why a person has to look before it is shown
   if (recruiter) j.reasons.push(recruiterReason(user.linkedin_name));
+  if (unverified) j.reasons.push(UNVERIFIED_REASON);
   if (screen.verdict === 'review') j.reasons.push(...screen.reasons);
   const odd = lookalike(home) || (recruiter && own ? lookalike(own) : '') || (hiringSystem(apply.hostname) ? '' : lookalike(apply.hostname)) || lookalike(companyUrl.hostname), brand = brandIn(company);
   if (odd) j.reasons.push(odd);
-  if (brand && !BRANDS[brand].includes(home)) j.reasons.push('the company is named “' + company + '”, and the ' + (recruiter ? 'company site given' : 'account') + ' is not on a domain of ' + brand[0].toUpperCase() + brand.slice(1));
-  else if (brand && recruiter) j.reasons.push(brand[0].toUpperCase() + brand.slice(1) + ' is a well-known employer whose name is often borrowed: check that this recruiter really hires for it');
-  if (recruiter && SHARED_HOSTS.test(home.split('.').slice(-2).join('.'))) j.reasons.push('the company site is on a shared host (' + home + '), where anyone can publish a page');
-  if (!recruiter && !trusted(user, t)) j.reasons.push(user.upheld_reports ? 'a report about a job of this account was upheld' : 'the account is not trusted yet: its first jobs are looked at by a person');
-  if (recruiter && user.upheld_reports) j.reasons.push('a report about a job of this account was upheld');
-  if (recruiter || !trusted(user, t)) {
+  if (brand && !BRANDS[brand].includes(home)) j.reasons.push('the company is named “' + company + '”, and the ' + (outside ? 'company site given' : 'account') + ' is not on a domain of ' + brand[0].toUpperCase() + brand.slice(1));
+  else if (brand && outside) j.reasons.push(brand[0].toUpperCase() + brand.slice(1) + ' is a well-known employer whose name is often borrowed: check that this ' + (recruiter ? 'recruiter really hires for it' : 'person really works there'));
+  if (outside && SHARED_HOSTS.test(home.split('.').slice(-2).join('.'))) j.reasons.push('the company site is on a shared host (' + home + '), where anyone can publish a page');
+  if (!outside && !trusted(user, t)) j.reasons.push(user.upheld_reports ? 'a report about a job of this account was upheld' : 'the account is not trusted yet: its first jobs are looked at by a person');
+  if (outside && user.upheld_reports) j.reasons.push('a report about a job of this account was upheld');
+  if (outside || !trusted(user, t)) {
     const ats = hiringSystem(apply.hostname) ? apply.hostname : hiringSystem(j.apply_host) ? j.apply_host : '';
     if (ats) j.reasons.push('the link to apply is on a hiring system (' + ats + '), which cannot be tied to ' + home);
   }
@@ -1356,7 +1482,7 @@ async function readJob(env, user, b, existing, dry) {
 const jobView = (j, t) => ({ id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, location: j.location, remote: !!j.remote, salary: j.salary, etype: j.etype,
   description: j.description, status: j.status === 'live' && j.expires_at <= t ? 'expired' : j.status, posted: isoDay(j.created_at), until: isoDay(j.expires_at),
   page: '/job/' + jobSlug(j.title, j.company) + '/', review_reason: j.status === 'review' ? j.review_reason : '', reject_reason: j.status === 'rejected' ? j.reject_reason : '',
-  posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' });
+  posted_by: postedBy(j), recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' });
 /* What an account that has not confirmed its email can do with a job: have it checked as a draft. The fields, the company name, the
    domain rules and the screen run as for a real posting; nothing is stored, no link is opened, and the draft itself stays in the browser. */
 async function previewJob(env, req, user) {
@@ -1375,19 +1501,19 @@ async function previewJob(env, req, user) {
 async function createJob(env, req, user) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
   await limit(env, 'post:' + user.id, POSTS_PER_HOUR, 3600);
-  const t = now(), j = await readJob(env, user, await body(req), null), recruiter = j.posted_by === AS_RECRUITER, fresh = recruiter || !trusted(user, t);
+  const t = now(), j = await readJob(env, user, await body(req), null), recruiter = j.posted_by === AS_RECRUITER, unverified = j.posted_by === AS_UNVERIFIED, fresh = recruiter || unverified || !trusted(user, t);
   const perDay = fresh ? NEW_JOBS_PER_DAY : FREE_JOBS_PER_DAY, cap = fresh ? NEW_LIVE_JOBS : 1e9, room = recruiter ? ROOM_AS_RECRUITER : ROOM, full = bad('limit', recruiter ? RECRUITER_ROOM : NO_ROOM, 429);
   if (!(await db(env, 'SELECT ' + room + ' AS ok', user.id, t, cap).first('ok'))) throw full;
   if (!(await allowed(env, (recruiter ? 'jobs:r:' : 'jobs:') + user.id, perDay, DAY))) throw bad('limit', recruiter ? 'A recruiter can post ' + perDay + ' job a day. Please come back tomorrow.'
     : 'You can post ' + perDay + (perDay === 1 ? ' job a day until your account is trusted' : ' jobs a day') + '. Please come back tomorrow.', 429);
-  if (!recruiter) j.company = await claimCompany(env, user, j.company, j.company_key);      // a recruiter takes no company name: it is not theirs
+  if (!recruiter && !unverified) j.company = await claimCompany(env, user, j.company, j.company_key);      // a recruiter or an employer not verified yet takes no company name
   const id = rid('j_', 6), status = j.reasons.length ? 'review' : 'live';
   const made = await db(env, 'INSERT INTO jobs (id, user_id, company, company_key, company_url, title, title_key, slug, apply_url, apply_host, location, remote, salary, etype, description, status, review_reason, ' +
     'held_at, approved_at, checked_at, created_at, expires_at, posted_by, recruiter_name) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM jobs d WHERE ' + DUPLICATE + ') AND ' + room,
     id, user.id, j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype, j.description, status,
     clip(j.reasons.join('; '), 500), status === 'review' ? t : 0, status === 'live' ? t : 0, t, t, t + FREE_JOB_DAYS * DAY, j.posted_by, j.recruiter_name, ...duplicateOf(user.id, j, '', t), user.id, t, cap).run();
   if (!made.meta.changes) throw (await db(env, 'SELECT 1 AS x FROM jobs d WHERE ' + DUPLICATE, ...duplicateOf(user.id, j, '', t)).first()) ? bad('duplicate', SAME_JOB, 409) : full;
-  if (!user.company && !recruiter) await db(env, 'UPDATE users SET company = ? WHERE id = ?', j.company, user.id).run();
+  if (!user.company && !recruiter && !unverified) await db(env, 'UPDATE users SET company = ? WHERE id = ?', j.company, user.id).run();
   if (status === 'review') await bump(env, 'held', t).run(); else await requestRebuild(env);
   return { job: jobView(await db(env, 'SELECT * FROM jobs WHERE id = ?', id).first(), t) };
 }
@@ -1417,21 +1543,22 @@ async function updateJob(env, req, user, id, action) {
   else if (action === 'renew') {
     // a job that comes back to the site or to the queue counts against the cap of an account that is not trusted yet; the count is
     // part of the statement that brings it back, so two renewals sent together cannot both get in
-    const back = (old.status !== 'live' && old.status !== 'review') || old.expires_at <= t, recruiter = old.posted_by === AS_RECRUITER, cap = back && (recruiter || !trusted(user, t)) ? NEW_LIVE_JOBS : 1e9;
-    const why = recruiter ? recruiterReason(old.recruiter_name) + ' (published again)' : '';      // given only where the job has no reason of its own
+    const back = (old.status !== 'live' && old.status !== 'review') || old.expires_at <= t, recruiter = old.posted_by === AS_RECRUITER, always = recruiter || old.posted_by === AS_UNVERIFIED;
+    const cap = back && (always || !trusted(user, t)) ? NEW_LIVE_JOBS : 1e9;
+    const why = recruiter ? recruiterReason(old.recruiter_name) + ' (published again)' : always ? UNVERIFIED_REASON + ' (published again)' : '';      // given only where the job has no reason of its own
     const done = await env.DB.batch([db(env, "UPDATE jobs SET held_at = CASE WHEN (review_reason != '' OR ? != '') AND status != 'review' THEN ? ELSE held_at END, " +
       "status = CASE WHEN review_reason != '' OR ? != '' THEN 'review' ELSE 'live' END, review_reason = CASE WHEN review_reason = '' THEN ? ELSE review_reason END, expires_at = ? " +
       "WHERE id = ? AND status IN ('live', 'review', 'closed') AND (SELECT COUNT(*) FROM jobs c WHERE c.user_id = ? AND c.id != ? AND c.status IN ('live', 'review') AND c.expires_at > ? AND (? = 0 OR c.posted_by = 'recruiter')) < ?",
-      why, t, why, clip(why, 500), t + FREE_JOB_DAYS * DAY, id, user.id, id, t, recruiter ? 1 : 0, cap), ...(recruiter ? [holdPlacements(env, id, t)] : [])]);
+      why, t, why, clip(why, 500), t + FREE_JOB_DAYS * DAY, id, user.id, id, t, recruiter ? 1 : 0, cap), ...(always ? [holdPlacements(env, id, t)] : [])]);
     if (!done[0].meta.changes) throw bad('limit', recruiter ? RECRUITER_ROOM : NO_ROOM, 429);
   } else if (action === 'delete') await env.DB.batch(takeDown(env, 'id = ?', id, t));
   else {
     const j = await readJob(env, user, { ...jobView(old, t), ...(await body(req)) }, old), why = j.reasons.length ? 1 : 0;
-    if (j.company_key !== old.company_key && j.posted_by !== AS_RECRUITER) j.company = await claimCompany(env, user, j.company, j.company_key);
-    await env.DB.batch([db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, ' +
+    if ((j.company_key !== old.company_key || old.posted_by === AS_UNVERIFIED) && j.posted_by === '') j.company = await claimCompany(env, user, j.company, j.company_key);
+    await env.DB.batch([db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
       "held_at = CASE WHEN ? = 1 AND status = 'live' THEN ? ELSE held_at END, status = CASE WHEN ? = 1 AND status = 'live' THEN 'review' ELSE status END, review_reason = CASE WHEN ? = 1 THEN ? ELSE review_reason END " +
       "WHERE id = ? AND status IN ('live', 'review', 'closed')", j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype,
-      j.description, j.recruiter_name, why, t, why, why, clip(j.reasons.join('; '), 500), id), holdPlacements(env, id, t)]);
+      j.description, j.recruiter_name, j.posted_by, why, t, why, why, clip(j.reasons.join('; '), 500), id), holdPlacements(env, id, t)]);
   }
   await requestRebuild(env);
   if (action === 'delete') return { ok: true };
@@ -1451,7 +1578,7 @@ export async function recheckLinks(env) {
   for (const j of due) {
     try {
       if (!(await db(env, 'UPDATE jobs SET checked_at = ? WHERE id = ? AND checked_at <= ?', t, j.id, t - DAY).run()).meta.changes) continue;
-      const home = j.posted_by === AS_RECRUITER ? siteDomain(new URL(j.company_url).hostname) : domainOf(j);      // a recruiter's job is tied to the hiring company's domain, not to the account's
+      const home = j.posted_by === AS_RECRUITER || j.posted_by === AS_UNVERIFIED ? siteDomain(new URL(j.company_url).hostname) : domainOf(j);      // a recruiter's job is tied to the hiring company's domain, not to the account's
       const apply = publicUrl(j.apply_url), link = apply ? await checkApplyLink(apply, home, j.title) : { host: '' };
       seen.checked++;
       if (!link.host || !j.apply_host || link.host === j.apply_host) continue;
@@ -1616,7 +1743,7 @@ async function exportForSite(env) {
       cover: (d.premium || {}).cover || '', logo: logoOf.get(j.company_key) || '',
       // who posted it: "employer" (an account tied to the company's own domain) or "recruiter" (a person with a LinkedIn identity, whose
       // name is given, posting for a company they are not part of: the site says "posted by a recruiter, not verified by the employer")
-      posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' };
+      posted_by: postedBy(j), recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' };
   });
   // companies whose page is managed by the company itself (a verified claim): for the site to say so on the company page, with what
   // the company wrote there (about, site, logo, where it hires)
@@ -2174,7 +2301,7 @@ async function alreadyOnSite(env, j) {
    against the site for duplicates and reviewed like any job), and the mark "claimed" in export.json for the site to show.
    One account may hold CLAIMS_PER_ACCOUNT claims; one company has one verified claim (the unique index in schema.sql). */
 const CLAIMS_PER_ACCOUNT = 5;
-const CLAIM_HOW = 'Claim the company page instead: sign in with an account on the company’s domain and ask for it on the account page.';
+const CLAIM_HOW = 'Claim the company page instead: confirm your work email on the account page (we send a link to you@yourcompany.com), then ask for the page there.';
 async function companySite(env, company) {
   const s = env.COMPANY_SITES;
   let v = '';
@@ -2189,7 +2316,7 @@ const verifiedClaim = (env, userId, key) => db(env, "SELECT * FROM company_claim
 async function claimCompanyPage(env, req, user) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
   const own = domainOf(user);
-  if (!own) throw bad('work_email', 'To claim a company page the account must be tied to the company’s domain: sign up with your work email, or prove the domain with a DNS record or a file on the account page.', 403);
+  if (!own) throw bad('work_email', 'To claim a company page the account must be tied to the company’s domain. ' + WORK_LINK, 403);
   await limit(env, 'claim:' + user.id, 10, 3600);
   const wanted = line((await body(req)).company, 80, 2);
   if (!wanted) throw bad('company', 'Enter the company name as the site shows it.');
@@ -2323,7 +2450,7 @@ async function talentDelete(env, user) {
 const talentRefund = (env, where, arg) => db(env, "UPDATE talent_credits SET n = n + (SELECT COUNT(*) FROM talent_requests r WHERE r.employer_id = talent_credits.user_id AND r.status = 'sent' AND " + where + ')', arg);
 function talentEmployer(user) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
-  if (!domainOf(user)) throw bad('employer_only', 'The resume database is open to employers whose account is tied to their company’s domain (an email on it, a DNS record or a file).', 403);
+  if (!domainOf(user)) throw bad('employer_only', 'The resume database is open to employers whose account is tied to their company’s domain. ' + WORK_LINK, 403);
   return domainOf(user);
 }
 async function talentSearch(env, user, url) {
@@ -2512,10 +2639,10 @@ function eraseSteps(env, u, email, t) {
     db(env, 'DELETE FROM rate WHERE k LIKE ?', '%:' + email), db(env, 'DELETE FROM team_members WHERE email = ?', email)];          // limits kept under the address (sign-in, new password, alert letters)
   if (u) steps.push(talentRefund(env, 'r.candidate_id = ?', u.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ? OR employer_id = ?', u.id, u.id),
     ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits', 'identities',
-      'resumes', 'invite_prefs', 'invites', 'media', 'listing_media'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
+      'resumes', 'invite_prefs', 'invites', 'media', 'listing_media', 'work_links'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
     db(env, 'DELETE FROM team_members WHERE owner_id = ?', u.id), ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id),
     db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
-    db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
+    db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', work_email = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
   return steps;
 }
 async function deleteMe(env, req, user) {
@@ -2545,12 +2672,12 @@ async function teamHolder(env, user, team) {                      // the account
 async function teamAdd(env, req, user, ctx) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
   const b = await body(req), holder = await teamHolder(env, user, b.team), own = domainOf(holder);
-  if (!own) throw bad('work_email', 'A team needs an account tied to the company’s domain.', 403);
+  if (!own) throw bad('work_email', 'A team needs an account tied to the company’s domain. ' + WORK_LINK, 403);
   const holds = await db(env, "SELECT name AS company FROM companies WHERE user_id = ? UNION SELECT company FROM company_claims WHERE user_id = ? AND status = 'verified'", holder.id, holder.id).first();
   if (!holds) throw bad('no_company', 'Post your company’s first job or claim its page first: the team posts under that name.', 409);
   await limit(env, 'team:' + user.id, 30, 3600);
   const email = cleanEmail(b.email), role = b.role === undefined ? 'member' : String(b.role);
-  if (!email || email === holder.email) throw bad('email', 'Enter a colleague’s work address.');
+  if (!email || email === holder.email || email === holder.work_email) throw bad('email', 'Enter a colleague’s work address.');
   if (!TEAM_ROLES.includes(role)) throw bad('role', 'The role is "owner" or "member".');
   if (siteDomain(email.slice(email.lastIndexOf('@') + 1)) !== own) throw bad('email', 'A colleague’s address must be on ' + own + '.', 422);
   if (Number(await db(env, 'SELECT COUNT(*) AS n FROM team_members WHERE owner_id = ?', holder.id).first('n')) >= TEAM_MAX) throw bad('limit', 'A team can have ' + TEAM_MAX + ' people.', 429);
@@ -2578,8 +2705,8 @@ async function teamDel(env, user, email, team) {
 }
 async function teamList(env, user, holderId = user.id) {
   if (holderId !== user.id && !(await managesFor(env, user, holderId))) throw bad('not_found', 'No team of yours with this id.', 404);
-  const rows = (await db(env, "SELECT m.email, m.added_at, m.role, u.id AS uid, u.confirmed_at, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live') AS live FROM team_members m LEFT JOIN users u ON u.email = m.email WHERE m.owner_id = ? ORDER BY m.added_at", holderId).all()).results;
-  const of = (await db(env, "SELECT m.owner_id, m.role, u.company, u.email, u.domain FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email = ? AND u.banned = 0", user.email).all()).results;
+  const rows = (await db(env, "SELECT m.email, m.added_at, m.role, u.id AS uid, u.confirmed_at, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live') AS live FROM team_members m LEFT JOIN users u ON u.id = (SELECT x.id FROM users x WHERE x.email = m.email OR (x.work_email = m.email AND x.work_email != '') LIMIT 1) WHERE m.owner_id = ? ORDER BY m.added_at", holderId).all()).results;
+  const of = (await db(env, "SELECT m.owner_id, m.role, u.company, u.email, u.domain FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email IN (?, ?) AND u.banned = 0", user.email, user.work_email || user.email).all()).results;
   return { team: holderId, members: rows.map((r) => ({ email: r.email, role: r.role || 'member', added: isoDay(r.added_at), has_account: !!r.uid, confirmed: !!r.confirmed_at, live_jobs: r.live || 0 })),
     member_of: of.filter((r) => domainOf(r) === domainOf(user) && user.confirmed_at).map((r) => ({ team: r.owner_id, company: r.company, role: r.role || 'member' })) };
 }
@@ -2895,6 +3022,10 @@ async function route(env, req, url, ctx) {
   if (path === '/api/webhooks/cryptomus' && m === 'POST') return cryptomusWebhook(env, req);
   if (path === '/api/auth/google/start' && m === 'POST') return googleStart(env, req);                // sign in with Google: no session yet
   if (path === '/api/auth/google/callback' && m === 'POST') return googleCallback(env, req, ctx);
+  if (path === '/api/domain/email/confirm' && m === 'POST') return workEmailConfirm(env, req);       // the link in the letter is the proof: no session
+  // LinkedIn: without a session (or with { signin: true }) a sign-in like Google's; with one, its profile is attached to that account
+  if (path === '/api/auth/linkedin/start' && m === 'POST') return linkedinStart(env, req, await currentUser(env, req, false));
+  if (path === '/api/auth/linkedin/callback' && m === 'POST') return linkedinCallback(env, req, await currentUser(env, req, false), ctx);
   if (path === '/api/alerts' && m === 'POST') return alertSignup(env, req, ctx);                       // job alerts: no account needed
   if (path === '/api/alerts/confirm' && (m === 'GET' || m === 'POST')) return alertConfirm(env, req, url);
   if (path === '/api/alerts/unsubscribe' && (m === 'GET' || m === 'POST')) return alertUnsubscribe(env, req, url);
@@ -2926,9 +3057,12 @@ async function route(env, req, url, ctx) {
   if (path === '/api/invites' && ['GET', 'PUT', 'DELETE'].includes(m)) return invitePrefs(env, req, user, m);
   if (seg[0] === 'orders' && seg[1] && seg[2] === 'receipt' && m === 'GET') return receipt(env, user, seg[1]);
   if (path === '/api/auth/confirm/request' && m === 'POST') return confirmRequest(env, user, ctx);
-  if (path === '/api/auth/linkedin/start' && m === 'POST') return linkedinStart(env, req, user);
-  if (path === '/api/auth/linkedin/callback' && m === 'POST') return linkedinCallback(env, req, user);
-  if (path === '/api/domain' && m === 'GET') { const claim = domainOf(user) ? null : await openClaim(env, user, t); return { domain: domainOf(user), proved_by: proofsOf(user), pending: claim ? proofHow(claim) : null }; }
+  if (path === '/api/domain' && m === 'GET') {
+    const claim = domainOf(user) ? null : await openClaim(env, user, t), link = domainOf(user) ? null : await db(env, 'SELECT email, expires_at FROM work_links WHERE user_id = ? AND expires_at > ?', user.id, t).first();
+    return { domain: domainOf(user), proved_by: proofsOf(user), pending: claim ? proofHow(claim) : null, work_email: user.work_email || '',
+      pending_email: link ? { email: link.email, expires: new Date(link.expires_at * 1000).toISOString() } : null };
+  }
+  if (path === '/api/domain/email' && m === 'POST') return workEmailRequest(env, req, user, ctx);
   if (path === '/api/domain/token' && m === 'POST') return domainToken(env, req, user);
   if (path === '/api/domain/check' && m === 'POST') return domainCheck(env, req, user);
   if (seg[0] === 'ai') return ai(env, req, user, seg.slice(1).join('/'), m);
@@ -3020,7 +3154,7 @@ async function admin(env, req, seg, m) {
     const hits = await hitsOf(env, 'j.status = ?', 'review', t);            // a job that was on the site before it was held: how many saw it and clicked through
     return { jobs: rows.map((j) => ({ ...hits(j.id), id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, apply_host: j.apply_host, location: j.location, salary: j.salary,
       description: j.description, reason: j.review_reason, posted: isoDay(j.created_at), held: isoDay(j.held_at || j.created_at), open_reports: j.open_reports, report_reasons: j.report_reasons || '',
-      held_placements: j.held_placements, posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '',
+      held_placements: j.held_placements, posted_by: postedBy(j), recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '',
       // email_domain: the company domain the account is tied to ('' for a recruiter on a free mailbox); proved_by: how (see proofsOf)
       account: { id: j.user_id, email_domain: domainOf(j), age_days: Math.floor((t - j.account_created) / DAY), confirmed: j.confirmed_at > 0,
         approved_jobs: j.approved_jobs, upheld_reports: j.upheld_reports, proved_by: proofsOf(j), free_mailbox: freeMail(j.email.slice(j.email.lastIndexOf('@') + 1)),
@@ -3186,6 +3320,7 @@ export default {
     await step('states', () => db(env, 'DELETE FROM oauth_states WHERE expires_at < ?', t).run());
     await step('claims', () => db(env, 'DELETE FROM domain_claims WHERE expires_at < ?', t).run());
     await step('sign-ins', () => db(env, 'DELETE FROM signin_states WHERE expires_at < ?', t).run());
+    await step('work links', () => db(env, 'DELETE FROM work_links WHERE expires_at < ?', t).run());
     await step('ai', () => db(env, 'DELETE FROM ai_usage WHERE month < ?', monthOf(t - 62 * DAY)).run());      // counts of months gone by: this month and the last are kept
     await step('rate', () => db(env, 'DELETE FROM rate WHERE reset_at < ?', t).run());
     await step('mail log', () => db(env, 'DELETE FROM mail_log WHERE at < ?', t - MAIL_LOG_DAYS * DAY).run());

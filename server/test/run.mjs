@@ -843,11 +843,13 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
       eq([r.status, r.body.user.company], [200, ''], 'A: a job seeker’s account does not take a company name');
       const seeker = r.body.token;
       await seekers.DB.prepare("UPDATE users SET confirmed_at = created_at WHERE email = 'someone@gmail.com'").run();
+      // since 15 Nov 2026 (the owner: "posting as easy as on Indeed") an account on a free mailbox may post, as an employer not verified
+      // yet: every such job waits for a person (section 37 has the rest)
       r = await call(seekers, 'POST', '/api/jobs/preview', { token: seeker, data: NOVA });
-      eq([r.status, r.body.error], [403, 'work_email'], 'A: a job seeker’s account cannot preview a job');
+      eq([r.status, r.body.posted_by, r.body.review], [200, 'unverified', true], 'A: an account on a free mailbox can have a job checked, as an employer not verified yet');
       r = await call(seekers, 'POST', '/api/jobs', { token: seeker, data: NOVA });
-      eq([r.status, r.body.error, await one(seekers, 'SELECT COUNT(*) FROM jobs')], [403, 'work_email', 0], 'A: a job seeker’s account cannot post a job, confirmed or not');
-      ok(/company’s own domain/.test(r.body.message), "A: the refusal says an address on the company's own domain is needed");
+      eq([r.status, r.body.job.status, r.body.job.posted_by, await one(seekers, 'SELECT COUNT(*) FROM jobs')], [200, 'review', 'unverified', 1], 'A: and post it, but it waits for a person, confirmed or not');
+      ok(/^the employer is not verified yet/.test(r.body.job.review_reason), "A: the reason it waits says the employer is not verified yet");
       r = await call(seekers, 'GET', '/api/me', { token: seeker });
       eq([r.status, r.body.user.domain], [200, ''], 'A: the account page is told that this account has no company domain');
     }
@@ -1448,8 +1450,10 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
     eq([r.status, r.body.error, /not configured/.test(r.body.message), cb.status, cb.body.error, world.fetched.length - was, (await call(off, 'GET', '/api/public/products')).body.linkedin], [409, 'not_configured', true, 409, 'not_configured', 0, 'off'],
       'LinkedIn: when ' + what + ', start and callback answer 409 "not configured", LinkedIn is not called, and the site is told the sign-in is off');
   }
-  eq([(await call(env, 'POST', '/api/auth/linkedin/start')).status, (await call(env, 'POST', '/api/auth/linkedin/callback', { data: { code: 'c', state: 'a'.repeat(64) } })).status, (await call(env, 'GET', '/api/public/products')).body.linkedin],
-    [401, 401, 'on'], 'LinkedIn: both steps need a session; the site is told that the sign-in is switched on');
+  // without a session the start is a sign-in (section 37) and answers a secret for the page; a callback without that secret needs a session
+  const anon = await call(env, 'POST', '/api/auth/linkedin/start');
+  eq([anon.status, /^[a-f0-9]{64}$/.test(anon.body.secret), (await call(env, 'POST', '/api/auth/linkedin/callback', { data: { code: 'c', state: 'a'.repeat(64) } })).status, (await call(env, 'GET', '/api/public/products')).body.linkedin],
+    [200, true, 401, 'on'], 'LinkedIn: without a session the start is a sign-in with a secret, and the attaching callback needs a session; the site is told that the sign-in is switched on');
 
   r = await start(); const u = new URL(r.body.url), state = u.searchParams.get('state'), stored = await env.DB.prepare('SELECT * FROM oauth_states').first();
   eq([r.status, u.origin + u.pathname, u.searchParams.get('response_type'), u.searchParams.get('client_id'), u.searchParams.get('redirect_uri'), u.searchParams.get('scope')],
@@ -1527,8 +1531,9 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   const ORBIT = employer('orbit.dev', 'Orbit Labs'), post = (job, who, isolate) => call(env, 'POST', '/api/jobs', { token: who, data: job, isolate });
   const seeker = await fresh(env, 'seeker@gmail.com');
   let r = await post(ORBIT('Senior Rust Engineer'), seeker);
-  eq([r.status, r.body.error, /LinkedIn/.test(r.body.message) && /DNS record/.test(r.body.message), await one(env, 'SELECT COUNT(*) FROM jobs')], [403, 'work_email', true, 0],
-    'Recruiter: an account on a free mailbox without a LinkedIn profile still cannot post, and is told the other ways there are');
+  eq([r.status, r.body.job.posted_by, r.body.job.status, await one(env, 'SELECT COUNT(*) FROM jobs')], [200, 'unverified', 'review', 1],
+    'Recruiter: an account on a free mailbox without a LinkedIn profile posts as an employer not verified yet, never as a recruiter, and waits for a person');
+  await env.DB.prepare('DELETE FROM jobs WHERE id = ?').bind(r.body.job.id).run();      // the rest of this section is about recruiters
   const jane = await fresh(env, 'jane@gmail.com'), janeId = await one(env, "SELECT id FROM users WHERE email = 'jane@gmail.com'");
   eq((await attach(env, jane, JANE)).status, 200, 'Recruiter: (a LinkedIn profile is attached to an account on a free mailbox)');
 
@@ -1648,7 +1653,7 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   const ask = (domain, who) => call(env, 'POST', '/api/domain/token', { token: who, data: { domain } }), check = (method, who) => call(env, 'POST', '/api/domain/check', { token: who, data: { method } });
   const serve = (url, text, type = 'text/plain') => { world.pages[url] = text; world.types[url] = type; };
   const founder = await fresh(env, 'founder@gmail.com'), fid = await one(env, "SELECT id FROM users WHERE email = 'founder@gmail.com'");
-  let r = await call(env, 'GET', '/api/domain', { token: founder }); eq([r.status, r.body], [200, { domain: '', proved_by: [], pending: null }], 'Domain: an account on a free mailbox starts with no domain and nothing pending');
+  let r = await call(env, 'GET', '/api/domain', { token: founder }); eq([r.status, r.body], [200, { domain: '', proved_by: [], pending: null, work_email: '', pending_email: null }], 'Domain: an account on a free mailbox starts with no domain and nothing pending');
   eq([(await call(env, 'POST', '/api/domain/token', { data: { domain: 'zenith.dev' } })).status, (await call(env, 'POST', '/api/domain/check', { data: { method: 'dns' } })).status], [401, 401], 'Domain: both steps need a session');
   const raw = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'raw@gmail.com', password: PASS } })).body.token;
   r = await ask('zenith.dev', raw); eq([r.status, r.body.error], [403, 'confirm_email'], 'Domain: the email of the account must be confirmed first');
@@ -2989,6 +2994,119 @@ await smtpServer.close();
     'CREATE TABLE orders (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, product TEXT NOT NULL, target TEXT NOT NULL DEFAULT \'{}\', label TEXT NOT NULL DEFAULT \'\', amount_usd INTEGER NOT NULL, status TEXT NOT NULL DEFAULT \'pending\', provider TEXT NOT NULL DEFAULT \'\', provider_uuid TEXT NOT NULL DEFAULT \'\', pay_url TEXT NOT NULL DEFAULT \'\', created_at INTEGER NOT NULL, paid_at INTEGER NOT NULL DEFAULT 0, checked_at INTEGER NOT NULL DEFAULT 0, activation TEXT NOT NULL DEFAULT \'\')');
   old2.applySchema(path.join(here, '../schema.sql')); old2.applySchema(path.join(here, '../schema.sql'));
   eq([old2.sqlite.prepare('SELECT role FROM team_members').get().role, old2.sqlite.prepare('PRAGMA table_info(orders)').all().some((c) => c.name === 'credits')], ['member', true], 'Schema: a database made from an earlier schema.sql gets the new columns, once, keeping its rows');
+}
+
+/* ---- 37. Posting as easy as on Indeed (the owner: "DNS or a file — nobody will do that"): an employer not verified yet posts from a
+   free mailbox and every job of it waits for a person; a work email confirmed by a link ties an account to its company; LinkedIn as a
+   sign-in like Google's ---- */
+{
+  const box = mailbox(), env = newEnv(box), admin = (method, p, data) => call(env, method, '/api/admin/' + p, { token: ADMIN, data });
+  const ZETA = employer('zeta.dev', 'Zeta Labs'), me = async (tk) => (await call(env, 'GET', '/api/me', { token: tk })).body.user;
+  const founder = await fresh(env, 'founder@gmail.com');
+  let u = await me(founder);
+  eq([u.can_post, u.verified, u.posts_as, u.domain], [true, false, [], ''], 'Me: an account on a free mailbox can post, and is not verified');
+  const unconfirmed = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'later@gmail.com', password: PASS } })).body.token;
+  const cto = await account(env, 'cto@acme.dev'); await call(env, 'POST', '/api/jobs', { token: cto, data: GOOD });      // Acme Robotics: a name an account holds
+  eq([(await me(unconfirmed)).can_post, (await me(cto)).verified], [false, true], 'Me: an account cannot post before its email is confirmed; one on a company domain is verified');
+
+  // the rules of an employer not verified yet
+  const post = (job, who = founder) => call(env, 'POST', '/api/jobs', { token: who, data: job });
+  let r = await post({ ...ZETA('Data Engineer'), company_url: '' });
+  eq([r.status, r.body.error, /your company’s site/.test(r.body.message)], [400, 'company_url', true], 'Unverified: the company site is required');
+  for (const [site, what] of [['https://gmail.com', 'a mailbox service'], ['https://boards.greenhouse.io/zeta', 'a hiring system'], ['https://t.me/zetajobs', 'a chat or social page']]) {
+    r = await post({ ...ZETA('Data Engineer'), company_url: site }); eq([r.status, r.body.error], [422, 'company_url'], 'Unverified: the company site may not be ' + what);
+  }
+  r = await post({ ...ZETA('Data Engineer'), apply_url: 'https://acme.dev/careers/senior-rust-engineer' });
+  eq([r.status, r.body.error, /your company site \(zeta\.dev\)/.test(r.body.message)], [422, 'apply_url', true], 'Unverified: the link to apply must be on the company site’s domain or a hiring system');
+  r = await post(ZETA('Data Engineer'));
+  eq([r.status, r.body.job.status, r.body.job.posted_by, /^the employer is not verified yet/.test(r.body.job.review_reason)], [200, 'review', 'unverified', true],
+    'Unverified: the job is posted and always waits for a person, with the reason that the employer is not verified yet');
+  const z1 = r.body.job.id;
+  eq([await one(env, "SELECT COUNT(*) FROM companies WHERE k = 'zeta labs'"), (await me(founder)).company], [0, ''], 'Unverified: it takes no company name (a stranger must not hold a real company’s name)');
+  r = await post(ZETA('Platform Engineer')); eq([r.status, r.body.error], [429, 'limit'], 'Unverified: the limits of a new account (one job a day)');
+  r = await post(employer('acme-robotics.io', 'Acme Robotics')('Rust Engineer'));
+  eq([r.status, r.body.error], [409, 'company_taken'], 'Unverified: a name another account holds cannot be posted under');
+  r = await post({ ...employer('stripe.com', 'Stripe')('Staff Engineer') });
+  eq([r.status, r.body.error, r.body.claim && r.body.claim.company, /confirm your work email/.test(r.body.message)], [409, 'listed', 'Stripe', true], 'Unverified: a company the site lists by itself needs its page claimed, and the answer says how (the work email first)');
+  r = await call(env, 'POST', '/api/orders', { token: founder, data: { product: 'featured', target: { job_id: z1 } } }); await hook(env, r.body.order.id);
+  eq([await one(env, 'SELECT held FROM placements WHERE target = ?', 'direct:' + z1), (await exportedJobs(env)).some((j) => j.id === z1)], [1, false], 'Unverified: a promotion can be bought; it is held, and the job is not on the site');
+  await admin('POST', 'jobs/' + z1 + '/approve');
+  const live = (await exportedJobs(env)).find((j) => j.id === z1);
+  eq([live && live.posted_by, live && live.featured_until > '2026', await one(env, 'SELECT held FROM placements WHERE target = ?', 'direct:' + z1), await one(env, "SELECT approved_jobs FROM users WHERE email = 'founder@gmail.com'")],
+    ['unverified', true, 0, 0], 'Unverified: once a person approves it the job is on the site, marked, its promotion runs; the approval does not count towards trust');
+  r = await call(env, 'PATCH', '/api/jobs/' + z1, { token: founder, data: { location: 'Lisbon' } }); eq(r.body.job.status, 'review', 'Unverified: an edit takes it back to a person');
+  await call(env, 'POST', '/api/jobs/' + z1 + '/close', { token: founder }); r = await call(env, 'POST', '/api/jobs/' + z1 + '/renew', { token: founder });
+  eq([r.body.job.status, /published again/.test(r.body.job.review_reason) || /not verified/.test(r.body.job.review_reason)], ['review', true], 'Unverified: so does publishing it again');
+
+  // a work email confirmed by a link
+  const ask = (email, who = founder) => call(env, 'POST', '/api/domain/email', { token: who, data: { email } });
+  eq([(await ask('founder@zeta.dev', unconfirmed)).body.error], ['confirm_email'], 'Work email: the account’s own email is confirmed first');
+  for (const [email, code, err] of [['me@gmail.com', 422, 'free_mail'], ['me@mailinator.com', 400, 'throwaway_email'], ['jobs@boards.greenhouse.io', 422, 'email'], ['me@zeta.github.io', 422, 'email'], ['not an address', 400, 'email']]) {
+    r = await ask(email); eq([r.status, r.body.error], [code, err], 'Work email: refused: ' + email);
+  }
+  r = await ask('Founder@Zeta.dev');
+  eq([r.status, r.body.ok, r.body.email, r.body.domain], [200, true, 'founder@zeta.dev', 'zeta.dev'], 'Work email: a link goes to the work address');
+  const letter = box.outbox.filter((m) => m.to === 'founder@zeta.dev').pop(), token = (/#work=([a-f0-9]{64})/.exec(letter.text) || [])[1];
+  ok(token && letter.text.includes('founder@gmail.com') && /ignore this letter/.test(letter.text) && letter.kind === 'work_email', 'Work email: the letter names the account that asks, carries a one-time link, and says to ignore it if it is not yours');
+  eq((await call(env, 'GET', '/api/domain', { token: founder })).body.pending_email.email, 'founder@zeta.dev', 'Work email: the account page sees the link on its way');
+  ok(!JSON.stringify(await env.DB.prepare('SELECT * FROM work_links').all()).includes(token), 'Work email: only the hash of the token is kept');
+  r = await call(env, 'POST', '/api/domain/email/confirm', { data: { token: 'f'.repeat(64) } }); eq([r.status, r.body.error], [400, 'confirm'], 'Work email: a made-up token does nothing');
+  r = await call(env, 'POST', '/api/domain/email/confirm', { data: { token } });
+  eq([r.status, r.body.domain, r.body.user.verified, r.body.user.proved_by, r.body.user.work_email, r.body.user.posts_as], [200, 'zeta.dev', true, ['work_email'], 'founder@zeta.dev', ['employer']],
+    'Work email: opening the link (no session needed) ties the account to the domain, as signing up with that address would');
+  eq((await call(env, 'POST', '/api/domain/email/confirm', { data: { token } })).status, 400, 'Work email: the link works once');
+  eq((await ask('other@zeta.dev')).body.error, 'has_domain', 'Work email: an account tied to a domain cannot ask for another');
+  await nextDay(env);
+  r = await post(ZETA('Platform Engineer'));
+  eq([r.status, r.body.job.posted_by, r.body.job.status, /not trusted yet/.test(r.body.job.review_reason) && !/not verified/.test(r.body.job.review_reason)], [200, 'employer', 'review', true],
+    'Work email: from then on its jobs are the company’s own, under the rules of a verified employer (a new account’s first jobs still wait for a person)');
+  eq(await one(env, "SELECT user_id = (SELECT id FROM users WHERE email = 'founder@gmail.com') FROM companies WHERE k = 'zeta labs'"), 1, 'Work email: and it now holds the company’s name');
+  r = await call(env, 'PATCH', '/api/jobs/' + z1, { token: founder, data: { location: 'Porto' } }); eq(r.body.job.posted_by, 'employer', 'Work email: an edit of its earlier job makes it the company’s own too');
+  const spam = await fresh(env, 'spam@gmail.com'); for (let i = 0; i < 4; i++) await ask('x@omega.dev', spam);
+  eq([box.outbox.filter((m) => m.to === 'x@omega.dev').length, (await ask('x@omega.dev', spam)).status, (await ask('x@omega.dev', spam)).status], [3, 200, 429],
+    'Work email: three letters a day to one address whoever asks (the answer stays the same), five requests an hour per account');
+  // a team invitation to the work address reaches the account that confirmed it
+  const omega = await account(env, 'ceo@omega.dev');
+  await call(env, 'POST', '/api/jobs', { token: omega, data: employer('omega.dev', 'Omega')('Backend Engineer') });
+  await call(env, 'POST', '/api/team', { token: omega, data: { email: 'pat@omega.dev' } });
+  const pat = await fresh(env, 'pat@gmail.com'); await ask('pat@omega.dev', pat);
+  await call(env, 'POST', '/api/domain/email/confirm', { data: { token: /#work=([a-f0-9]{64})/.exec(box.outbox.filter((m) => m.to === 'pat@omega.dev').pop().text)[1] } });
+  r = await call(env, 'GET', '/api/team', { token: pat }); eq(r.body.member_of.map((m) => m.company), ['Omega'], 'Work email: the team of the company finds the account by its work address');
+  r = await call(env, 'GET', '/api/team', { token: omega }); eq(r.body.members.map((m) => [m.email, m.has_account, m.confirmed]), [['pat@omega.dev', true, true]], 'Work email: and the holder sees that colleague’s account');
+  // the messages put the work email first, DNS and a file as other ways
+  r = await call(env, 'POST', '/api/claims', { token: spam, data: { company: 'Harvey' } });
+  ok(r.body.error === 'work_email' && r.body.message.indexOf('Confirm your work email') >= 0 && r.body.message.indexOf('Confirm your work email') < r.body.message.indexOf('DNS record'), 'Messages: a claim names the work email first, DNS as another way');
+  r = await call(env, 'POST', '/api/team', { token: spam, data: { email: 'a@b.dev' } }); ok(/Confirm your work email/.test(r.body.message), 'Messages: so does the team');
+
+  // LinkedIn as a sign-in
+  const le = newEnv({ ...LI, ...mailbox() }), li = world.linkedin;
+  const lstart = async (e = le, opts = {}) => (await call(e, 'POST', '/api/auth/linkedin/start', opts)).body;
+  const lsignin = async (member, { e = le, secret } = {}) => { const s = await lstart(e); return call(e, 'POST', '/api/auth/linkedin/callback', { data: { code: linkedinCode(member), state: stateIn({ body: s }), secret: secret || s.secret } }); };
+  eq((await call(newEnv(), 'POST', '/api/auth/linkedin/start')).body.error, 'not_configured', 'LinkedIn sign-in: off until its three settings are set');
+  let s = await lstart(), lu = new URL(s.url);
+  eq([lu.origin + lu.pathname, lu.searchParams.get('client_id'), lu.searchParams.get('redirect_uri'), lu.searchParams.get('scope'), /^[a-f0-9]{64}$/.test(s.secret), await one(le, "SELECT provider FROM signin_states")],
+    ['https://www.linkedin.com/oauth/v2/authorization', 'li-client', SITE + '/account/', 'openid profile email', true, 'linkedin'], 'LinkedIn sign-in: without a session the start answers LinkedIn’s address and a secret for the page to keep');
+  r = await lsignin({ ...JANE, sub: 'li-a1', email: 'ann.lee@gmail.com' }, { secret: 'f'.repeat(64) });
+  eq([r.status, r.body.error, await one(le, "SELECT COUNT(*) FROM users")], [401, 'state', 0], 'LinkedIn sign-in: without the page’s secret nothing happens (no login CSRF)');
+  const before = li.asked.length;
+  r = await lsignin({ ...JANE, sub: 'li-a1', email: 'Ann.Lee@Gmail.com' });
+  eq([r.status, r.body.created, r.body.user.email, r.body.user.confirmed, r.body.user.linkedin.name, r.body.user.posts_as, r.body.user.domain, (await call(le, 'GET', '/api/me', { token: r.body.token })).status],
+    [200, true, 'ann.lee@gmail.com', true, 'Jane Roe', ['recruiter'], '', 200], 'LinkedIn sign-in: a new verified address makes a confirmed account with the LinkedIn identity on it, and signs it in');
+  eq([li.asked.length - before, await one(le, "SELECT linkedin_sub || ' ' || linkedin_name FROM users WHERE email = 'ann.lee@gmail.com'")], [2, 'li-a1 Jane Roe'], 'LinkedIn sign-in: the code is changed and userinfo read; the subject and the name are kept');
+  const annId = r.body.user.id;
+  r = await lsignin({ ...JANE, sub: 'li-a1', email: 'ann.lee@gmail.com' }); eq([r.status, r.body.created, r.body.user.id], [200, false, annId], 'LinkedIn sign-in: the next time it is the same account');
+  r = await lsignin({ ...JANE, sub: 'li-c1', name: 'Cy Tor', email: 'cto@vega.dev' });
+  eq([r.body.created, r.body.user.domain, r.body.user.verified, r.body.user.posts_as], [true, 'vega.dev', true, ['employer', 'recruiter']], 'LinkedIn sign-in: a company address makes an account tied to its domain, as Google Workspace does');
+  const pw = await fresh(le, 'boss@globex.dev');
+  r = await lsignin({ ...JANE, sub: 'li-b1', name: 'Bo Ss', email: 'boss@globex.dev' });
+  eq([r.status, r.body.created, r.body.user.email, await one(le, "SELECT linkedin_sub FROM users WHERE email = 'boss@globex.dev'")], [200, false, 'boss@globex.dev', 'li-b1'], 'LinkedIn sign-in: an account with that verified address is signed in and gets LinkedIn attached');
+  r = await lsignin({ ...JANE, sub: 'li-b2', email: 'boss@globex.dev' }); eq([r.status, r.body.error], [409, 'linkedin_attached'], 'LinkedIn sign-in: an account keeps the LinkedIn profile it has');
+  r = await lsignin({ ...JANE, sub: 'li-u1', email: 'u1@gmail.com', email_verified: false });
+  eq([r.status, r.body.error, await one(le, "SELECT COUNT(*) FROM users WHERE email = 'u1@gmail.com'")], [403, 'linkedin_email', 0], 'LinkedIn sign-in: only an address LinkedIn calls verified');
+  r = await lsignin({ ...JANE, sub: 'li-u2', email: 'u2@gmail.com', claims: { aud: 'someone-else' } }); eq([r.status, r.body.error], [502, 'linkedin'], 'LinkedIn sign-in: an ID token made for another application is refused');
+  li.down = true; r = await lsignin({ ...JANE, sub: 'li-u3', email: 'u3@gmail.com' }); li.down = false; eq([r.status, r.body.error], [502, 'linkedin'], 'LinkedIn sign-in: nothing while LinkedIn is not answering');
+  s = await lstart(le, { token: pw }); eq([!!s.url, s.secret === undefined, await one(le, 'SELECT COUNT(*) FROM oauth_states')], [true, true, 1], 'LinkedIn: with a session the start attaches, as before');
+  s = await lstart(le, { token: pw, data: { signin: true } }); ok(/^[a-f0-9]{64}$/.test(s.secret), 'LinkedIn: with { signin: true } a signed-in page can start a sign-in too');
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
