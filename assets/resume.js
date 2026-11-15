@@ -5,7 +5,7 @@
   var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }],
     proj: [], cert: [], lang: [] };
   var copy = function (x) { return JSON.parse(JSON.stringify(x)); };
-  var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive'];
+  var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive', 'timeline'];
   var fill = function (d) {                                                         // a damaged, old or foreign value must not break the builder
     if (!d || typeof d !== 'object' || Array.isArray(d)) d = {};
     Object.keys(blank).forEach(function (k) {
@@ -255,7 +255,8 @@
   };
   /* Finish up: the template gallery with small pictures, and the format (size and spacing), saved with the resume. */
   var TPL_NAMES = { classic: ['Classic', 'Serif, calm, for any field'], modern: ['Modern', 'Clean sans-serif, a bar on each heading'], compact: ['Compact', 'Fits more on one page'],
-    developer: ['Developer', 'Monospace headings, for engineers'], executive: ['Executive', 'Centred name, for senior roles'] };
+    developer: ['Developer', 'Monospace headings, for engineers'], executive: ['Executive', 'Centred name, for senior roles'],
+    timeline: ['Timeline', 'Dates and time in each job on the left, as on hh.ru'] };
   var finishUp = function () {
     return '<span class="flabel">Template</span><div class="tplgal">' + TPLS.map(function (t) {
         return '<button type="button" class="tplcard' + (data.tpl === t ? ' on' : '') + '" data-pick="' + t + '"><span class="tplmini tpl-' + t + '"><b>Alex Example</b><i></i><i class="s"></i><u></u><i></i><i class="s"></i></span>'
@@ -268,9 +269,44 @@
   };
   var linesOf = function (t) { return String(t || '').split('\n').map(function (l) { return l.replace(/^[-•*\s]+/, '').trim(); }).filter(Boolean); };
   var ulOf = function (t) { var lines = linesOf(t); return lines.length ? '<ul>' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : ''; };
+  // "Jan 2021 – Mar 2023", "2019–2021", "03/2020 – present", "2022 – now" -> months spent (the last month counts), or 0
+  var MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  var ym = function (t, end) {
+    t = String(t || '').trim().toLowerCase();
+    if (/now|present|current|today/.test(t)) { var d = new Date(); return [d.getFullYear(), d.getMonth() + 1]; }
+    var m = t.match(/(\d{1,2})\s*[\/.]\s*(\d{4})/); if (m) return [+m[2], +m[1]];
+    m = t.match(/([a-z]{3})[a-z]*\.?\s+(\d{4})/); if (m && MON[m[1]]) return [+m[2], MON[m[1]]];
+    m = t.match(/(\d{4})/); if (m) return [+m[1], end ? 12 : 1];
+    return null;
+  };
+  var range = function (dates) {          // [first month, last month] as month numbers since year 0, or null
+    var parts = String(dates || '').split(/\s*(?:–|—|-|\bto\b)\s*(?=[a-z0-9])/i);
+    if (parts.length < 2) return null;
+    var a = ym(parts[0], false), b = ym(parts[parts.length - 1], true);
+    if (!a || !b) return null;
+    var r = [a[0] * 12 + a[1], b[0] * 12 + b[1]];
+    return r[1] >= r[0] && r[1] - r[0] < 600 ? r : null;
+  };
+  var months = function (dates) { var r = range(dates); return r ? r[1] - r[0] + 1 : 0; };
+  var union = function (rs) {             // total months worked, overlapping jobs counted once (as hh.ru counts experience)
+    rs = rs.filter(Boolean).sort(function (x, y) { return x[0] - y[0]; });
+    var n = 0, cur = null;
+    rs.forEach(function (r) { if (cur && r[0] <= cur[1] + 1) cur[1] = Math.max(cur[1], r[1]); else { if (cur) n += cur[1] - cur[0] + 1; cur = r.slice(); } });
+    return cur ? n + cur[1] - cur[0] + 1 : n;
+  };
+  var span = function (n) {
+    var y = Math.floor(n / 12), m = n % 12;
+    return (y ? y + (y === 1 ? ' yr' : ' yrs') : '') + (y && m ? ' ' : '') + (m ? m + (m === 1 ? ' mo' : ' mos') : '');
+  };
   var drawPreview = function () {
     var contact = [data.email, data.phone, data.place].concat(String(data.links || '').split(',').map(function (s) { return s.trim(); })).filter(Boolean).map(esc).join(' · ');
+    var tl = data.tpl === 'timeline', spans = [];
     var exp = data.exp.filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
+      if (tl) {
+        var n = months(x.dates); spans.push(range(x.dates));
+        return '<div class="pv-item pv-tl"><div class="pv-when">' + esc(x.dates) + (n ? '<span>' + span(n) + '</span>' : '') + '</div><div class="pv-what">'
+          + (x.org ? '<strong>' + esc(x.org) + '</strong>' : '') + (x.role ? '<b>' + esc(x.role) + '</b>' : '') + ulOf(x.text) + '</div></div>';
+      }
       return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.role) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.dates) + '</span></div>' + ulOf(x.text) + '</div>';
     }).join('');
     var proj = data.proj.filter(function (x) { return x.name || x.text; }).map(function (x) {
@@ -287,8 +323,8 @@
     $('rb-preview').innerHTML = (data.name || data.title || contact || exp || edu || skills.length || proj || cert || lang.length)
       ? '<h2 class="pv-name">' + esc(data.name || 'Your name') + '</h2>' + (data.title ? '<p class="pv-title">' + esc(data.title) + '</p>' : '') +
         (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + (data.summary ? '<h3>Summary</h3><p>' + esc(data.summary) + '</p>' : '') +
-        (exp ? '<h3>Experience</h3>' + exp : '') + (proj ? '<h3>Projects</h3>' + proj : '') + (edu ? '<h3>Education</h3>' + edu : '') + (cert ? '<h3>Certifications</h3>' + cert : '') +
-        (skills.length ? '<h3>Skills</h3><p>' + skills.map(esc).join(' · ') + '</p>' : '') + (lang.length ? '<h3>Languages</h3><p>' + lang.join(' · ') + '</p>' : '')
+        (exp ? '<h3>Experience' + (tl && union(spans) ? ' <small>' + span(union(spans)) + '</small>' : '') + '</h3>' + exp : '') + (proj ? '<h3>Projects</h3>' + proj : '') + (edu ? '<h3>Education</h3>' + edu : '') + (cert ? '<h3>Certifications</h3>' + cert : '') +
+        (skills.length ? '<h3>Skills</h3>' + (tl ? '<p class="pv-tags">' + skills.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</p>' : '<p>' + skills.map(esc).join(' · ') + '</p>') : '') + (lang.length ? '<h3>Languages</h3><p>' + lang.join(' · ') + '</p>' : '')
       : '<p class="pane-empty">Start typing on the left. Your resume appears here.</p>';
     applyTpl();
   };
@@ -305,13 +341,15 @@
     var css = 'body{font-family:' + (data.tpl === 'classic' ? 'Georgia,serif' : data.tpl === 'developer' ? 'Consolas,monospace' : 'Arial,sans-serif') + ';font-size:11pt;line-height:1.4;color:#111}' +
       'h2{font-size:20pt;margin:0}h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;border-bottom:1px solid #111;margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}';
     var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Resume</title><style>' + css + '</style></head><body>' +
-      $('rb-preview').innerHTML.replace(/<div class="pv-top"><strong>(.*?)<\/strong><span>(.*?)<\/span><\/div>/g, '<p><strong>$1</strong> &nbsp; <span>$2</span></p>') + '</body></html>';
+      $('rb-preview').innerHTML.replace(/<div class="pv-top"><strong>(.*?)<\/strong><span>(.*?)<\/span><\/div>/g, '<p><strong>$1</strong> &nbsp; <span>$2</span></p>')
+        .replace(/<div class="pv-item pv-tl"><div class="pv-when">(.*?)<\/div><div class="pv-what">(.*?)<\/div><\/div>/g,
+                 '<table width="100%" style="margin:0 0 8pt"><tr><td width="27%" valign="top" style="color:#555;font-size:10pt">$1</td><td valign="top">$2</td></tr></table>') + '</body></html>';
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\ufeff' + html], { type: 'application/msword' }));
     a.download = (data.name ? data.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '-' : '') + 'resume.doc';
     document.body.appendChild(a); a.click(); a.remove();
   };
-  root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-tpl') { data.tpl = ev.target.value; save(); applyTpl(); } });
+  root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-tpl') { data.tpl = ev.target.value; save(); drawPreview(); } });      // a template can change the markup (Timeline), not only the style
   var htimer;
   root.addEventListener('input', function (ev) {
     var t = ev.target, blk = t.closest('.rblock');
@@ -358,7 +396,7 @@
       var nx = SET.items[0]; data = fill(nx.data); setJd(nx.jd); delete nx.data; delete nx.jd; SET.cur = nx.id; keepSet(); save(); redraw();
     }
     else if (t.closest && t.closest('[data-tab]')) setTab(t.closest('[data-tab]').getAttribute('data-tab'));
-    else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); applyTpl(); }
+    else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); drawPreview(); }
     else if (t.getAttribute('data-fs')) { data.fs = Math.max(11, Math.min(16, (data.fs || 14) + Number(t.getAttribute('data-fs')) * 0.5)); save(); applyTpl(); $('rb-fs').textContent = data.fs; }
     else if (t.getAttribute('data-lh')) { data.lh = Math.max(1.2, Math.min(1.8, Math.round(((data.lh || 1.5) + Number(t.getAttribute('data-lh'))) * 100) / 100)); save(); applyTpl(); $('rb-lh').textContent = data.lh.toFixed(2); }
     else if (t.id === 'rb-print' || t.id === 'rb-print2') window.print();

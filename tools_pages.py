@@ -589,7 +589,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     both = ' data-for="counter raise"'
     tool("negotiation-email", "seekers", "Negotiation email writer",
          "A polite, specific email to counter an offer, ask for a raise or ask for more time. A template, not AI.",
-         "Salary Negotiation Email Template Builder",
+         "Salary Negotiation Email: Template & Generator",
          "Write a salary negotiation or counter-offer email from a few fields: the offer, your figure and your reasons. Three tones. Template-based, private, free.",
          "Write the salary negotiation email you keep putting off",
          "Asking for more money feels awkward, so the reply sits in drafts while the deadline gets closer. Pick the situation, enter the offer and the figure you want, add your reasons, "
@@ -620,7 +620,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "an alternative if the salary cannot move, and a direct question that is easy to answer. The first line of the output is the subject.</p>"
          "<p>“Collaborative” looks for a way to say yes, “firm” states the figure you would sign at, “brief” says it in a few sentences. If you give no reasons, a line in [brackets] reminds you to add them. "
          "The tool does not suggest a figure: it uses the two numbers you enter and shows the difference in percent under the email. No AI is involved, and nothing is sent anywhere.</p>",
-         [("How do I counter a job offer by email?",
+         [('Can I lose a job offer for negotiating salary?', 'It is rare when the request is polite and backed by figures: most employers expect a counteroffer. Name one number with a reason (the market range for the role, your experience), and say you are excited about the job.'),
+          ('What is a good email format for salary negotiation?', 'Thanks for the offer; that you are excited about the role; the figure you ask for and why, from market data; and a warm close asking if they can meet it. This builder writes it in that order.'),
+          ("How do I counter a job offer by email?",
            "Thank them, say you want the job, name the one thing you would like to change and the exact figure, give one or two reasons, and end with a direct question. Keep it short and send it to the person who made the offer."),
           ("How much more can I ask for?",
            "Ask for a figure you can back with evidence: what similar roles advertise, another offer, or the scope of the job. This tool does not pick a number for you; the salary checker shows what open postings advertise for your category and level."),
@@ -655,7 +657,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<li><code>day rate = yearly invoices ÷ billable days</code>, <code>hourly rate = day rate ÷ hours per day</code></li></ul>"
          "<p>The comparison with a salaried job divides the same income by 2,080 paid hours (40 hours × 52 weeks). All figures are before income tax and before any sales tax or VAT. "
          "The percentages are yours to enter, because employer-side costs differ from country to country.</p>",
-         [("How do I turn a salary into a contractor day rate?",
+         [('How much should I charge as a contractor?', 'Start from the salary you would take as an employee, add what an employer would pay on top (taxes, insurance, paid leave, equipment) and divide by the days you can really bill in a year, not 260. This calculator does it step by step.'),
+          ('How do I convert a salary to a contractor day rate?', 'A common rule of thumb is the yearly salary divided by 220 to 230 billable days, plus 20 to 50% for the costs and gaps an employee does not carry. The calculator shows the full working.'),
+          ("How do I turn a salary into a contractor day rate?",
            "Add the costs an employer would have covered to the salary, then divide by the days you can actually bill. With a target of $100,000, 25% for employer-side costs, $5,000 of business costs, 35 days off and 80% of working days billed, that is $130,000 ÷ 180 days, about $722 a day."),
           ("How many billable days are there in a year?",
            "Start from 260 weekdays, subtract public holidays, vacation and sick days, then multiply by the share of time you can bill. 260 minus 35 days off is 225 working days; if 80% of them are billable, that is 180 days."),
@@ -943,7 +947,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # ------------------------------------------------------------ 17. thank-you email
     tool("thank-you-email", "seekers", "Thank-you email after an interview",
          "Who you met, the role and one thing you discussed become a short thank-you email in one of three tones. A template, not AI.",
-         "Thank-You Email After an Interview: Template",
+         "Thank-You Email After an Interview: Template & Timing",
          "Write a thank-you email after a job interview from a few fields: who you met, the role and one thing you discussed. Three tones. Template-based, private, free.",
          "Write the thank-you email on the day of the interview",
          "A thank-you email is four or five sentences, and it still sits unsent when the wording feels awkward. A generic note says nothing about the conversation you had. "
@@ -965,7 +969,10 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<p>Every version has the same three parts: thanks for the person’s time, one specific point from the conversation, and a clear line that you still want the job. The first line of the output is the subject.</p>"
          "<p>“Short” is one paragraph, “warm” is friendlier and a little longer, “formal” suits banks, law firms and the public sector. The one thing you discussed cannot come from a template, "
          "so it stays in [brackets] until you fill it in. The tone changes the wording, never the facts. No AI is involved and nothing is sent anywhere: copy the text into your own email and send it yourself.</p>",
-         [("When should I send a thank-you email after an interview?",
+         [('How soon should a thank-you email be sent after an interview?', 'Within 24 hours, ideally the same afternoon or the next morning. Send a separate, personal note to each person who interviewed you.'),
+          ('Are you supposed to reply to a thank-you email after an interview?', 'The interviewer may not reply, and that says nothing about your chances. If they do, a one-line answer is enough; there is no need to keep the thread going.'),
+          ('What should I write in an email after an interview?', 'Thanks for their time, one specific thing you discussed, one sentence on why you fit, and when you are available. Two or three short paragraphs, under 200 words.'),
+          ("When should I send a thank-you email after an interview?",
            "The same day or the next morning, while the conversation is still fresh for both of you. If you met several people, send each of them a separate short email and change the detail you mention."),
           ("What should a thank-you email say?",
            "Three things: thanks for the person’s time, one specific point from your conversation, and that you are still interested in the job. The specific point shows that the email was written after this interview and not copied."),
@@ -1085,7 +1092,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<li><code>more per month = difference per year ÷ 12</code>, or the difference itself when you enter monthly pay</li></ul>"
          "<p>The email follows one order: the request, what you have delivered as a short list, the two figures with the percent, the market figure if you gave one, and a question that is easy to answer. "
          "If you list no results, a reminder in [brackets] takes their place. The tool does not suggest how much to ask for and does not know what your employer can pay: the figures and the final wording are yours. All amounts are before tax.</p>",
-         [("How do I ask for a raise by email?",
+         [('Is a 3% raise really a raise?', 'Only if prices rose by less than 3% over the year. Compare the raise with inflation where you live: the pay raise calculator on this site shows the raise after inflation.'),
+          ('How do I ask for a raise politely?', 'Ask for a meeting rather than putting the whole request in one message, bring two or three results with numbers and a figure based on the market, and say you want to keep growing in the role.'),
+          ("How do I ask for a raise by email?",
            "State the request in the first line, list two or three results since your pay last changed, give your pay now and the figure you are asking for, and end by asking for a time to talk. Keep it short enough to read in a minute."),
           ("How much of a raise should I ask for?",
            "A figure you can back with evidence: your results, a job that has grown since you were hired, or what similar roles advertise. This tool works out the percent for the figure you enter; it does not pick the figure. The salary checker on this site shows what open postings advertise."),
@@ -1122,7 +1131,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "optional points that matter for this job, and a sentence that makes it easy to decline. The first line of the output is the subject.</p>"
          "<p>“Warm” suits someone you know well, “formal” a former manager you have not spoken to for a while or a professor, “short” a close colleague. Fields you leave empty drop their sentences. "
          "The text is assembled in your browser, and you send it yourself.</p>",
-         [("Who should I ask to be a reference?",
+         [('Is it okay to ask for a reference by email?', 'Yes, and it is the most common way. Ask early, say which job it is for, remind them what you worked on together, and make it easy to say no.'),
+          ('Can I lose a job offer because of a reference?', 'It can happen when a reference contradicts what you said, so pick people who know your work well and tell them what the role needs before the employer calls.'),
+          ("Who should I ask to be a reference?",
            "Someone who saw your work closely and can describe it: a former manager first, then a senior colleague, a client or a teacher. Ask before you give their name to an employer."),
           ("When should I ask for a reference?",
            "Before you hand over the person’s name, and with enough time for them to prepare. The email names the date so they can see whether it fits their calendar."),
@@ -1135,7 +1146,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # ------------------------------------------------------------ 21. LinkedIn headline and About
     tool("linkedin-headline", "seekers", "LinkedIn headline and About builder",
          "Role, years, three strengths and what you want next become three headlines inside the 220-character limit and a short About text.",
-         "LinkedIn Headline & About Section Builder",
+         "LinkedIn Headline Generator & About Section, Free",
          "Build three LinkedIn headlines within the 220-character limit and a short About paragraph from your role, years, strengths and goal. Live character count.",
          "Write a LinkedIn headline that says what you do",
          "The headline is the line that appears next to your name in LinkedIn search results, comments and messages, and LinkedIn cuts it at 220 characters. Left alone, it repeats your current job title. "
@@ -1159,7 +1170,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "and is cut at a word only as a last resort. Variants that come out identical are shown once.</p>"
          "<p>The About paragraph is built from the same fields in a fixed order: who you are, your strengths, one result, what you are looking for, how to reach you. It is a starting point of a few sentences, "
          "so add the story only you can tell. No AI is involved, and nothing is sent to LinkedIn or anywhere else.</p>",
-         [("How long can a LinkedIn headline be?",
+         [('What is a good headline for LinkedIn?', 'Your target role, your strongest skill or specialty, and one proof: “Data Analyst | SQL, Tableau | Cut reporting time 60%”. Up to 220 characters; the first 60 or so show in search.'),
+          ("What should my LinkedIn headline be if I don't have a job?", 'The role you want and what you bring, not “unemployed”: “Junior UX Designer | User Research, Figma | Open to work”. Recruiters search headlines by job title and skill.'),
+          ("How long can a LinkedIn headline be?",
            "220 characters, including spaces. The builder counts the characters of each variant as you type and keeps every variant inside the limit."),
           ("What should a LinkedIn headline say?",
            "Your role and what you are good at, in words a recruiter would type into search: the job title, two or three skills or fields and, if you are looking, what you are open to. “Open to work” alone says nothing about what you do."),
@@ -1454,7 +1467,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<p>Use one period for everything, for example a quarter or a year: the costs of that period and the people hired in it. For the hourly cost of staff time, take salary plus employer-side costs "
          "and divide by the hours worked in a year; the salary converter on this site does that division. Hours entered without an hourly cost are not counted, and the page says so. "
          "The calculator holds no benchmark: what a hire costs depends on the role, the country and how you hire, so compare the result with your own earlier periods.</p>",
-         [("How is cost per hire calculated?",
+         [('How do I calculate cost per hire?', "Add the internal costs (recruiters' time, interviews, referral bonuses) and the external costs (ads, agencies, assessments, background checks), then divide by the number of hires in the same period: the same structure as the ANSI/SHRM cost-per-hire standard, and how this calculator adds them up."),
+          ('How can I estimate the cost of hiring an employee?', 'Cost per hire covers the hiring itself. The full first-year cost adds salary, benefits and taxes, equipment and the months it takes to be fully productive.'),
+          ("How is cost per hire calculated?",
            "Add up everything spent on hiring in a period, both money paid to others and the time of your own staff, and divide by the number of people hired in that period. $36,600 spent to hire six people is $6,100 per hire."),
           ("Which costs belong in cost per hire?",
            "Money paid to others: job advertising, agency fees, software, background checks, referral bonuses, travel and relocation. And the time of your own people: recruiters, hiring managers and everyone who interviews, each at what an hour of their time costs the company."),
