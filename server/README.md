@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,093 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,100 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -110,6 +110,11 @@ sends an address and a search; the alert job mails the new jobs that match. Rule
   costs no subscriber anything; a refusal for that address (mailbox full, no such user) makes the alert wait for its next period with the
   jobs kept, and ends it after 3 final refusals in a row or 7 of any kind; no answer after the letter itself counts as sent (it may have
   arrived) and ends the run. Each alert is read again just before its letter, so one unsubscribed during the run gets nothing.
+- **One letter a day per address** ("too many emails" is the top complaint about other job sites, `REVIEWS_STUDY.md`): the alerts of one
+  address that have new jobs in a run share one letter (`combinedLetter`: a part per alert with its own unsubscribe link, jobs shared out in
+  turns, a job matching two alerts listed once, 20 in all; the one-click header carries `&all=1` and stops every alert of the address), and
+  an alert that falls due within 20 hours of the address's last letter waits until a day after it. "Instant" alerts are not offered: the
+  records are hourly and the mail cap is small.
 - A signed-in account sees the alerts of its own confirmed address: `GET /api/alerts`, `DELETE /api/alerts/<id>`.
 
 ## Is this job already on the site?

@@ -150,28 +150,55 @@ export async function alertLetter(env, a, jobs, total) {
     (total > n ? ' The newest ' + n + ' are below.' : '') + '\n\n' + jobs.map((j, i) => jobLine(env, j, i)).join('\n\n') + '\n\n' +
     (total > n ? 'All ' + total + ' and older ones: ' : 'The same search on the site: ') + searchLink(env.SITE_URL, a) + '\n\n' +
     '—\nYou get this letter because this address asked for ' + (a.freq === 'weekly' ? 'weekly' : 'daily') + ' job alerts at ' + siteHost(env) + ' and confirmed it.\n' +
-    'Unsubscribe, or get it ' + (a.freq === 'weekly' ? 'daily' : 'weekly') + ' instead: ' + unsub + '\n' +
+    'Unsubscribe, or get it ' + (a.freq === 'weekly' ? 'daily' : 'weekly') + ' instead: ' + unsub + '\n' + 'This address gets one letter a day at most, whatever alerts it has.\n' +
     siteName(env) + ' reads open jobs from employers’ own careers pages every hour. The letter has no images and its links are not counted.\n';
   return { subject: (total === 1 ? '1 new job: ' : total + ' new jobs: ') + describe(a).slice(0, 80), text,
     headers: { 'List-Unsubscribe': '<' + unsub + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'List-Id': 'Job alerts <alerts.' + siteHost(env) + '>', Precedence: 'bulk' } };
+}
+/* One letter for every alert of an address that has new jobs in this run: "too many emails" is what people hold most against job sites,
+   so an address gets one letter a day at most, however many alerts it has. Each alert gets its own part (with its own unsubscribe link),
+   the jobs are shared out in turns so every alert shows some, a job matching two alerts is listed once, ALERT_MAX_JOBS in all. The
+   one-click header stops every alert of the address: that is what the letter is. parts: [{ a, hits }], newest first in each. */
+export async function combinedLetter(env, parts) {
+  const shown = parts.map(() => []), pos = parts.map(() => 0), taken = new Set();
+  for (let n = 0, any = true; any && n < ALERT_MAX_JOBS;) {                     // one job from each alert in turn, newest first
+    any = false;
+    parts.forEach((p, i) => {
+      while (pos[i] < p.hits.length && taken.has(p.hits[pos[i]].slug)) pos[i]++;
+      if (n >= ALERT_MAX_JOBS || pos[i] >= p.hits.length) return;
+      const j = p.hits[pos[i]++]; shown[i].push(j); taken.add(j.slug); n++; any = true;
+    });
+  }
+  const total = new Set(parts.flatMap((p) => p.hits.map((j) => j.slug))).size, links = await Promise.all(parts.map((p) => unsubLink(env, p.a.id)));
+  const all = links[0] + '&all=1', first = parts.map((p) => p.a.last_sent_at || p.a.confirmed_at).sort()[0];
+  const text = (total === 1 ? '1 new job' : total + ' new jobs') + ' for your ' + parts.length + ' job alerts since ' + new Date(first * 1000).toUTCString().slice(5, 16) + ', in one letter.\n\n' +
+    parts.map((p, i) => describe(p.a) + ': ' + (p.hits.length === 1 ? '1 new job' : p.hits.length + ' new jobs') + (p.hits.length > shown[i].length ? ', the newest ' + shown[i].length + ' below' : '') + '\n\n' +
+      shown[i].map((j, k) => jobLine(env, j, k)).join('\n\n') + (shown[i].length ? '\n\n' : '') + 'All of them on the site: ' + searchLink(env.SITE_URL, p.a) + '\nStop this alert, or change how often it comes: ' + links[i]).join('\n\n\n') +
+    '\n\n—\nYou get this letter because this address asked for job alerts at ' + siteHost(env) + ' and confirmed them. It gets one letter a day at most, whatever alerts it has.\n' +
+    'Stop every job alert to this address: ' + all + '\n' + siteName(env) + ' reads open jobs from employers’ own careers pages every hour. The letter has no images and its links are not counted.\n';
+  return { subject: (total === 1 ? '1 new job' : total + ' new jobs') + ' for your ' + parts.length + ' job alerts', text,
+    headers: { 'List-Unsubscribe': '<' + all + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'List-Id': 'Job alerts <alerts.' + siteHost(env) + '>', Precedence: 'bulk' } };
 }
 
 /* ---------------------------------------------------------------- the periodic run (hrn-alerts.timer, every hour)
    records: { watermark(): the newest first_seen_at in the job records ('' when there are none), newSince(iso): the open jobs first seen
    after it, each a record (slug, title, company, location, remote, salary, usd, places, cat, tags, first_seen_at) } (records.mjs).
    For each active alert that is due, in order of due time: the jobs first seen after its seen_through and up to the watermark that
-   match it, newest first, one per title and company. None: nothing is sent. Some: one letter with the newest ALERT_MAX_JOBS. Either
+   match it, newest first, one per title and company. None: nothing is sent. Some: a letter with the newest ALERT_MAX_JOBS. Either
    way the alert moves on to the watermark (never back, should an older file turn up) and is due again a day (a week) later.
-   When a letter does not go:
+   One letter a day per address: the alerts of one address that have jobs in this run share one letter (combinedLetter), and an alert
+   that falls due within 20 hours of the last letter to its address waits until a day after that letter, when it goes out together with
+   the others. When a letter does not go:
    - held back by the daily cap, or a failure of the mail server itself (no connection, our login refused, our sender refused): the run
      ends and nothing moves, so the next run sends it; one bad hour costs nothing and no subscriber pays for it;
-   - refused for this address (its mailbox is full, does not exist): the alert waits for its next period with the jobs kept, and is
+   - refused for this address (its mailbox is full, does not exist): its alerts wait for their next period with the jobs kept, and are
      deleted after 3 such refusals in a row that were final (5xx), or 7 of any kind;
    - no answer after the letter itself (status "unknown"): it may have arrived, so it counts as sent (no second copy) and the run ends.
-   An alert is read again just before its letter goes, so one unsubscribed while the run was under way gets nothing.
+   Alerts are read again just before their letter goes, so one unsubscribed while the run was under way gets nothing.
    Pending alerts older than PENDING_DAYS are deleted first. */
+const ONE_LETTER_GAP = 20 * 3600;          // an address gets a letter, then none for this long
 export async function runAlerts(env, records, { now = Math.floor(Date.now() / 1000), batch = 5000 } = {}) {
-  const db = (sql, ...args) => env.DB.prepare(sql).bind(...args), out = { due: 0, sent: 0, empty: 0, failed: 0, capped: false, stopped: '', dropped: 0, expired: 0 };
+  const db = (sql, ...args) => env.DB.prepare(sql).bind(...args), out = { due: 0, sent: 0, empty: 0, failed: 0, waited: 0, capped: false, stopped: '', dropped: 0, expired: 0 };
   out.expired = (await db("DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", now - PENDING_DAYS * DAY).run()).meta.changes;
   const due = (await db("SELECT * FROM alerts WHERE status = 'active' AND due_at <= ? ORDER BY due_at LIMIT ?", now, batch).all()).results;
   out.due = due.length;
@@ -181,6 +208,7 @@ export async function runAlerts(env, records, { now = Math.floor(Date.now() / 10
   const start = (a) => a.seen_through || isoTime(a.confirmed_at);
   const fresh = records.newSince(due.map(start).sort()[0]).filter((j) => j.first_seen_at && j.first_seen_at <= top)
     .sort((x, y) => (x.first_seen_at < y.first_seen_at ? 1 : x.first_seen_at > y.first_seen_at ? -1 : 0));
+  const byEmail = new Map(), lastLetter = new Map();
   for (const a of due) {
     const from = start(a), upto = top > from ? top : from, tests = wordTests(a.q), seen = new Set(), hits = [];
     for (const j of fresh) {
@@ -193,13 +221,25 @@ export async function runAlerts(env, records, { now = Math.floor(Date.now() / 10
       await db("UPDATE alerts SET seen_through = ?, due_at = ? WHERE id = ? AND status = 'active'", upto, next, a.id).run();
       out.empty++; continue;
     }
-    if ((await db('SELECT status FROM alerts WHERE id = ?', a.id).first('status')) !== 'active') continue;      // unsubscribed meanwhile
-    const l = await alertLetter(env, a, hits.slice(0, ALERT_MAX_JOBS), hits.length);
+    if (!lastLetter.has(a.email)) lastLetter.set(a.email, Number(await db("SELECT MAX(last_sent_at) AS t FROM alerts WHERE email = ? AND status = 'active'", a.email).first('t')) || 0);
+    const last = lastLetter.get(a.email);
+    if (last && last > now - ONE_LETTER_GAP) {                                               // the address had its letter today: this one joins the next
+      await db("UPDATE alerts SET due_at = ? WHERE id = ? AND status = 'active'", last + DAY - SLACK, a.id).run();
+      out.waited++; continue;
+    }
+    if (!byEmail.has(a.email)) byEmail.set(a.email, []);
+    byEmail.get(a.email).push({ a, hits, next, upto });
+  }
+  for (const [email, group] of byEmail) {
+    const still = [];
+    for (const g of group) if ((await db('SELECT status FROM alerts WHERE id = ?', g.a.id).first('status')) === 'active') still.push(g);      // unsubscribed meanwhile
+    if (!still.length) continue;
+    const l = still.length === 1 ? await alertLetter(env, still[0].a, still[0].hits.slice(0, ALERT_MAX_JOBS), still[0].hits.length) : await combinedLetter(env, still);
     const r = env.MAIL && typeof env.MAIL.send === 'function'
-      ? await env.MAIL.send({ from: String(env.MAIL_FROM || ''), to: a.email, subject: l.subject, text: l.text, kind: 'alert', bulk: true, headers: l.headers })
+      ? await env.MAIL.send({ from: String(env.MAIL_FROM || ''), to: email, subject: l.subject, text: l.text, kind: 'alert', bulk: true, headers: l.headers })
       : { sent: false, status: 'no_mail' };
     if (!r || r.sent !== false || r.status === 'unknown') {                         // a mailer that answers nothing has taken it
-      await db("UPDATE alerts SET seen_through = ?, due_at = ?, last_sent_at = ?, letters = letters + 1, fails = 0 WHERE id = ? AND status = 'active'", upto, next, now, a.id).run();
+      for (const g of still) await db("UPDATE alerts SET seen_through = ?, due_at = ?, last_sent_at = ?, letters = letters + 1, fails = 0 WHERE id = ? AND status = 'active'", g.upto, g.next, now, g.a.id).run();
       out.sent++;
       if (r && r.status === 'unknown') { out.stopped = 'no answer from the mail server after a letter'; break; }
       continue;
@@ -207,8 +247,10 @@ export async function runAlerts(env, records, { now = Math.floor(Date.now() / 10
     if (r.status === 'capped' || r.status === 'no_mail') { out.capped = r.status === 'capped'; out.stopped = r.status; break; }   // the rest wait for the next run
     out.failed++;
     if (!r.rejected) { out.stopped = 'the mail server failed'; break; }               // not this address's fault: nothing moves, the next run tries again
-    const f = Number(await db("UPDATE alerts SET fails = fails + 1, due_at = ? WHERE id = ? RETURNING fails", next, a.id).first('fails'));
-    if ((r.permanent && f >= 3) || f >= 7) { await db('DELETE FROM alerts WHERE id = ?', a.id).run(); out.dropped++; }
+    for (const g of still) {
+      const f = Number(await db("UPDATE alerts SET fails = fails + 1, due_at = ? WHERE id = ? RETURNING fails", g.next, g.a.id).first('fails'));
+      if ((r.permanent && f >= 3) || f >= 7) { await db('DELETE FROM alerts WHERE id = ?', g.a.id).run(); out.dropped++; }
+    }
   }
   return out;
 }

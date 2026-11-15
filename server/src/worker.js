@@ -1945,7 +1945,8 @@ async function alertUnsubscribe(env, req, url) {
   }
   const text = (await req.text()).slice(0, 4000), oneClick = /List-Unsubscribe=One-Click/i.test(text);
   const p = /^application\/x-www-form-urlencoded/i.test(req.headers.get('Content-Type') || '') ? new URLSearchParams(text) : new URLSearchParams();
-  const freq = oneClick ? '' : p.get('freq'), all = !oneClick && p.get('all') === '1';
+  // all: every alert of the address, from the button or from the one-click link of a letter that carried several alerts (?all=1)
+  const freq = oneClick ? '' : p.get('freq'), all = url.searchParams.get('all') === '1' || (!oneClick && p.get('all') === '1');
   if (a && (freq === 'daily' || freq === 'weekly')) {
     await db(env, 'UPDATE alerts SET freq = ?, due_at = MIN(due_at, ?) WHERE id = ?', freq, now() + PERIOD[freq] - 1800, id).run();      // daily now: the next letter within a day
     return htmlPage(env, 'Changed', '<h1>From now on: ' + freq + '</h1><p class="what">' + esc(describe(a)) + '</p><p>The alert comes ' + freqWords({ ...a, freq }) + '.</p>' + toSite(env));
@@ -2063,7 +2064,8 @@ async function route(env, req, url, ctx) {
   if (path === '/api/report' && m === 'POST') return report(env, req);
   if (path === '/api/public/hit' && m === 'POST') return hit(env, req);
   if (path === '/api/public/products' && m === 'GET') {
-    return { products: Object.entries(PRODUCTS).filter(([, p]) => p.group !== 'plus' || env.PLUS_LIVE === '1').map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || 0, target: p.target, group: p.group })),
+    // billing: every product is one payment for a stated time; nothing renews by itself and no card or wallet is kept (a promise: /promise/)
+    return { products: Object.entries(PRODUCTS).filter(([, p]) => p.group !== 'plus' || env.PLUS_LIVE === '1').map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || 0, target: p.target, group: p.group, billing: 'one-time', renews: false })),
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
       // for the pages to know which buttons to show: sign-in with LinkedIn, and the AI tools of Plus
       linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off' };

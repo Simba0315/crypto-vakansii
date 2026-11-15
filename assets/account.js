@@ -73,7 +73,9 @@
     var p = products[id]; if (!p) return '';
     return '<form class="acc-card" data-product="' + id + '" novalidate><p class="pname">' + esc(p.name) + '</p><p class="price">' + money(p.usd) + '</p>' +
       '<p class="what">' + esc(D.what[p.name] || '') + '</p>' + fields + '<p class="acc-err" role="alert" hidden></p>' +
-      '<button class="btn primary" type="submit"' + (payments === 'off' ? ' disabled' : '') + '>Continue to payment</button>' + (extra || '') + '</form>';
+      '<button class="btn primary" type="submit"' + (payments === 'off' ? ' disabled' : '') + '>Continue to payment</button>' +
+      // what employers hate most on other job sites is a charge they did not expect: say plainly that this is one payment and nothing renews
+      '<p class="note">One payment' + (p.days ? ' for ' + p.days + ' days' : '') + '. Nothing renews: no trial, no subscription, no card kept on file.</p>' + (extra || '') + '</form>';
   }
   function draw() {
     var liveJobs = jobs.filter(function (j) { return j.status === 'live'; });

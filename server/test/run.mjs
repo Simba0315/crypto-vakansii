@@ -2332,18 +2332,43 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   held.MAIL = { send: async (m) => { got.push(m.to); await held.DB.prepare("DELETE FROM alerts WHERE email = 'u2@example.org'").run(); } };
   await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_0000000000000000000e', 'u0@example.org', 'python', 'active', 1, 1, 0)").run();
   await held.DB.prepare("UPDATE alerts SET due_at = 1 WHERE email = 'u1@example.org'").run();
-  out = await ALERTS.runAlerts(held, recs([J('k2', { first_seen_at: '2026-02-01T00:00:00Z' })]), { now: 100 });
+  out = await ALERTS.runAlerts(held, recs([J('k2', { first_seen_at: '2026-02-01T00:00:00Z' })]), { now: 100 + 86400 });
   eq(got, ['u0@example.org', 'u1@example.org'], 'Run: an alert unsubscribed while the run is under way gets nothing (each is read again just before its letter)');
   // an older file of records turning up does not move an alert back
   await held.DB.prepare("UPDATE alerts SET due_at = 1 WHERE email = 'u1@example.org'").run();
   held.MAIL = { send: async () => {} };
-  out = await ALERTS.runAlerts(held, recs([J('k0', { first_seen_at: '2025-12-01T00:00:00Z' })]), { now: 100 });
+  out = await ALERTS.runAlerts(held, recs([J('k0', { first_seen_at: '2025-12-01T00:00:00Z' })]), { now: 100 + 2 * 86400 });
   eq(await one(held, "SELECT seen_through FROM alerts WHERE email = 'u1@example.org'"), '2026-02-01T00:00:00Z', 'Run: an older file of records never moves an alert back (no job is offered twice)');
   await held.DB.exec('DELETE FROM alerts');
   await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at) VALUES ('a_00000000000000000003', 'z@example.org', 'go', 'pending', ?)").bind(atRun - 8 * 86400).run();
   out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.expired, await one(held, 'SELECT COUNT(*) FROM alerts')], [1, 0], 'Run: an alert nobody confirmed in 7 days is deleted');
   await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_00000000000000000004', 'z@example.org', 'go', 'active', 1, 1, 1)").run();
   out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.due, out.sent, await one(held, 'SELECT due_at FROM alerts')], [1, 0, 1], 'Run: without job records nothing is sent and the alert stays due');
+
+  // one letter a day per address, however many alerts it has (reviews of other job sites: "too many emails" is the top complaint)
+  {
+    const bx = mailbox(), e3 = newEnv({ ...bx }), T = 1800000000;
+    const add3 = (id, q, due, extra = '') => e3.DB.prepare("INSERT INTO alerts (id, email, q, loc, status, created_at, confirmed_at, due_at, seen_through) VALUES (?, 'two@example.org', ?, ?, 'active', 1, 1, ?, '')").bind(id, q, extra, due).run();
+    await add3('a_' + '1'.repeat(20), 'python', T - 10); await add3('a_' + '2'.repeat(20), 'engineer', T - 5, 'berlin');
+    const many3 = Array.from({ length: 30 }, (_, i) => J('m' + i, { title: (i % 2 ? 'Python Engineer ' : 'Python Developer ') + i, first_seen_at: ALERTS.isoTime(T - 3600 + i) }));
+    let o3 = await ALERTS.runAlerts(e3, recs(many3), { now: T });
+    const L = bx.outbox.at(-1), slugs = [...L.text.matchAll(/\/job\/([a-z0-9]+)\//g)].map((x) => x[1]);
+    eq([o3.sent, bx.outbox.length, L.to, L.subject, slugs.length, new Set(slugs).size], [1, 1, 'two@example.org', '30 new jobs for your 2 job alerts', 20, 20],
+      'One letter: two alerts of one address with new jobs share one letter, 20 jobs in all, a job matching both listed once');
+    ok(L.text.includes('“python” jobs: 30 new jobs, the newest') && L.text.includes('“engineer” jobs · Berlin: 15 new jobs, the newest') && (L.text.match(/Stop this alert, or change how often it comes: https:/g) || []).length === 2 &&
+      /^<https:\/\/api\.test\/api\/alerts\/unsubscribe\?a=a_1{20}&t=[a-f0-9]{32}&all=1>$/.test(L.headers['List-Unsubscribe']), 'One letter: each alert has its part and its own unsubscribe link; the one-click header stops every alert of the address');
+    eq(await one(e3, "SELECT COUNT(*) FROM alerts WHERE last_sent_at = ? AND letters = 1", T), 2, 'One letter: both alerts count it as sent');
+    await add3('a_' + '3'.repeat(20), 'developer', T + 3 * 3600);
+    o3 = await ALERTS.runAlerts(e3, recs([...many3, J('late1', { title: 'Python Developer late', first_seen_at: ALERTS.isoTime(T + 3000) })]), { now: T + 4 * 3600 });
+    eq([o3.sent, o3.waited, bx.outbox.length, await one(e3, "SELECT due_at FROM alerts WHERE id = ?", 'a_' + '3'.repeat(20))], [0, 1, 1, T + 86400 - 1800],
+      'One letter: an alert that falls due a few hours after the address had its letter waits for the next one');
+    o3 = await ALERTS.runAlerts(e3, recs([...many3, J('late1', { title: 'Python Developer late', first_seen_at: ALERTS.isoTime(T + 3000) })]), { now: T + 86400 - 1800 });
+    eq([o3.sent, bx.outbox.length, bx.outbox.at(-1).subject, await one(e3, "SELECT letters FROM alerts WHERE id = ?", 'a_' + '3'.repeat(20))], [1, 2, '31 new jobs for your 2 job alerts', 1],
+      'One letter: the next day the alert that waited goes out in one letter with the others that have new jobs');
+    const allLink = new URL(bx.outbox.at(-1).headers['List-Unsubscribe'].slice(1, -1));
+    const pg3 = await pageOf(e3, 'POST', allLink.pathname + allLink.search, { type: 'application/x-www-form-urlencoded', body: 'List-Unsubscribe=One-Click' });
+    eq([pg3.text, await one(e3, "SELECT COUNT(*) FROM alerts WHERE email = 'two@example.org'")], ['Unsubscribed.', 0], 'One letter: its one-click unsubscribe stops every alert of the address');
+  }
 
   // unsubscribe
   const unsubPath = linkIn(letter.text, 'unsubscribe');
@@ -2550,6 +2575,7 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
 await smtpServer.close();
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
+{ const r = await call(newEnv(), 'GET', '/api/public/products'); ok(r.body.products.length > 0 && r.body.products.every((p) => p.billing === 'one-time' && p.renews === false), 'every product is one payment and renews nothing, and the list says so'); }
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
