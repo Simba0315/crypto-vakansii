@@ -546,6 +546,7 @@
         ['/ahead/', 'From the future', 'Things no other job site does yet, working today.'],
         ['/tools/', 'All free tools', 'Offer check, raise calculator, letters and more.']]],
       '/pricing/': ['For employers', [
+        ['/account/?as=employer', 'Employer sign in', 'Your jobs, their views and clicks, promotion and billing.'],
         ['/post-a-job/', 'Post a job', 'Free, with paid options to stand out.'],
         ['/pricing/', 'Pricing', 'Every plan and what it includes.'],
         ['/how-to-hire/', 'How to hire…', 'Who else is hiring each role, and what they pay.'],

@@ -293,8 +293,8 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   let r = await post({ company: 'Stripe' }); eq(r.status, 409, 'cannot post under a company that is already indexed');
   r = await post({ apply_url: 'https://t.me/acme_hr' }); eq(r.status, 422, 'messenger link refused');
   r = await post({ apply_url: 'https://other-site.com/job' }); eq(r.status, 422, 'link on an unrelated site refused');
-  r = await post({ apply_url: 'https://acme.dev/careers' }); eq(r.status, 422, 'link that does not show this job refused');
   r = await post({ apply_url: 'https://acme.dev/gone' }); eq(r.status, 422, 'dead link refused');
+  // a page that opens but does not show the title is no longer refused (owner, 15 Nov 2026): see the link tests further down
   r = await post({ apply_url: 'http://acme.dev/careers/senior-rust-engineer' }); eq(r.status, 400, 'plain http refused');
   r = await post({ description: 'too short' }); eq(r.status, 400, 'thin description refused');
   r = await post({ description: good.description + ' https://a.b https://c.d https://e.f' }); eq(r.status, 400, 'link-stuffed description refused');
@@ -436,7 +436,6 @@ async function quiet(run) {                    // runs something that is expecte
   world.pages[GOOD.apply_url] = page;
   r = await edit({ company_url: 'https://evil-corp.com' }); eq(r.status, 422, 'an edit that changes the company site runs the link check');
   r = await edit({ apply_url: 'https://t.me/acme_hr' }); eq(r.status, 422, 'an edit that changes the link runs the link check');
-  r = await edit({ apply_url: 'https://acme.dev/careers' }); eq(r.status, 422, 'an edit to a link that does not show the job is refused');
   r = await edit({ company: 'Stripe' }); eq([r.status, r.body.error], [409, 'listed'], 'an edit cannot move a job to a listed company');
   r = await edit({ company: 'Stripe!' }); eq([r.status, r.body.error], [409, 'listed'], 'however it is spelled');
   r = await call(env, 'GET', '/api/jobs', { token });
@@ -697,8 +696,10 @@ async function quiet(run) {                    // runs something that is expecte
   r = await post({ apply_url: PDF }); eq(r.status, 422, 'a file is not a job page, whatever is written in it');
   r = await post({ apply_url: 'https://acme.dev/careers/job.json' }); eq(r.status, 422, 'neither is a data feed');
   r = await post({ apply_url: XHTML }); eq(r.status, 200, 'an XHTML page is a page');
-  r = await post({ apply_url: 'https://acme.dev/careers/engineers' }); eq(r.status, 422, 'a page with only some words of the title is not the page of that job');
-  r = await post({ apply_url: 'https://acme.dev/careers/long-tail' }); eq(r.status, 422, 'only the start of a very long page is read');
+  // a page that opens but does not show the whole title: not refused, held for a person with the reason (owner, 15 Nov 2026: posting must be easy)
+  r = await post({ apply_url: 'https://acme.dev/careers/engineers' });
+  eq([r.status, r.body.job && r.body.job.status, /does not show this job title/.test((r.body.job && r.body.job.review_reason) || '')], [200, 'review', true], 'a page with only some words of the title: the job waits for a person');
+  r = await post({ apply_url: 'https://acme.dev/careers/long-tail' }); eq([r.status, r.body.job && r.body.job.status], [200, 'review'], 'only the start of a very long page is read: the title past it is not seen, so a person checks');
   r = await post({ apply_url: 'https://acme.dev/careers/long-head' }); eq(r.status, 200, 'a very long page with the job at the top is accepted');
 
   Object.assign(world.pages, { 'https://evil.co.uk/senior-rust-engineer': H1, 'https://jobs.britworks.co.uk/senior-rust-engineer': H1, 'https://badco.github.io/senior-rust-engineer': H1, 'https://goodco.github.io/jobs/senior-rust-engineer': H1 });

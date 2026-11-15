@@ -8,6 +8,8 @@
   var H = window.HRN, esc = H.esc, API = root.getAttribute('data-api').replace(/\/+$/, '');
   var D = JSON.parse(document.getElementById('acc-data').textContent);
   var token = H.get('hrn_token', ''), me = null, pub = { products: [], payments: 'off' }, products = {}, S = {}, notice = '';
+  var ROLE = (function () { var q = ''; try { q = new URLSearchParams(location.search).get('as') || ''; } catch (e) {} return q === 'employer' || q === 'seeker' ? q : H.get('hrn_role', 'seeker'); })();
+  H.set('hrn_role', ROLE);
   var SYNC_KEYS = ['hrn_jobs', 'hrn_saved', 'hrn_searches', 'hrn_follow', 'hrn_hidden', 'hrn_mute'];   // what "My jobs" keeps in this browser
 
   function api(method, path, data) {
@@ -66,21 +68,29 @@
         '<p class="note"><a href="#" data-mode="in">Back to sign in</a></p></div>';
       submit(root.querySelector('form'), function (v) { return api('POST', '/api/auth/reset/request', v).then(function (r) { notice = esc(r.message); drawAuth('in'); }); });
     } else {
-      root.innerHTML = '<div class="acc-gate"><div class="card acc-auth">' + (notice ? '<div class="banner">' + notice + '</div>' : '') + '<div class="tabs" role="tablist" style="margin-top:0">' +
+      var emp = ROLE === 'employer';
+      root.innerHTML = '<div class="acc-who" role="tablist" aria-label="Who is signing in"><button type="button" role="tab" data-role="seeker" aria-selected="' + !emp + '"><b>I’m looking for a job</b><span>Resumes, saved jobs, alerts</span></button>' +
+        '<button type="button" role="tab" data-role="employer" aria-selected="' + emp + '"><b>I’m hiring</b><span>Post jobs free, see views and clicks, promote</span></button></div>' +
+        '<div class="acc-gate"><div class="card acc-auth">' + (notice ? '<div class="banner">' + notice + '</div>' : '') + '<h2 class="acc-auth-h">' + (emp ? (up ? 'Create an employer account' : 'Employer sign in') : (up ? 'Create your free account' : 'Sign in')) + '</h2>' +
+        '<div class="tabs" role="tablist" style="margin-top:0">' +
         '<button class="tab" type="button" role="tab" data-mode="up" aria-selected="' + up + '">Create account</button>' +
         '<button class="tab" type="button" role="tab" data-mode="in" aria-selected="' + !up + '">Sign in</button></div>' +
         '<div class="acc-sso">' + (google ? '<button class="btn sso" type="button" id="acc-google"><span class="sso-i g">G</span>Continue with Google</button>' : '') +
         (pub.linkedin === 'on' ? '<button class="btn sso" type="button" id="acc-li"><span class="sso-i in">in</span>Continue with LinkedIn</button>' : '') + '</div>' +
         (google || pub.linkedin === 'on' ? '<p class="acc-or"><span>or with your email</span></p>' : '') +
-        '<form novalidate>' + field('Email', 'email', 'type="email" autocomplete="email" required', up ? 'To post jobs for your company, use your work address (you@yourcompany.com).' : '') +
+        '<form novalidate>' + field(emp ? 'Work email' : 'Email', 'email', 'type="email" autocomplete="email" required', up ? (emp ? 'Your address at your company (you@yourcompany.com): your jobs go live without waiting. A personal address works too; its jobs are read by a person first.' : '') : '') +
         field('Password', 'password', 'type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" required minlength="8"', up ? 'At least 8 characters.' : '') +
         (up ? field('Company (optional)', 'company', 'type="text" autocomplete="organization" maxlength="80"') : '') +
         err + '<button class="btn primary lg" type="submit" style="width:100%">' + (up ? 'Create account' : 'Sign in') + '</button></form>' +
         '<p class="note" style="margin:14px 0 0">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address.' : '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>' +
-        '<ul class="acc-why"><li><b>Your resumes in one place</b>Keep up to ten versions and open any of them in the builder on any device.</li>' +
-        '<li><b>Saved jobs and applications everywhere</b>What you save on your phone is on your computer too.</li>' +
-        '<li><b>Job alerts</b>New jobs that match a search, once an hour, a day or a week. One click stops them.</li>' +
-        '<li><b>Hiring? Post jobs free</b>See each job’s status, views and clicks on Apply, and promote it in one click.</li></ul></div>';
+        (emp ? '<ul class="acc-why"><li><b>Post jobs free</b>30 days in the list and in search, with its own page in Google’s job box.</li>' +
+          '<li><b>See what each job brings</b>Status, views and clicks on Apply, day by day, for every job you post.</li>' +
+          '<li><b>Promote in one click</b>From $5. Pick one of your jobs from a list: nothing to copy, nothing renews.</li>' +
+          '<li><b>Your company page</b>Your logo, your text and every open job, read from your careers page every hour.</li></ul></div>'
+        : '<ul class="acc-why"><li><b>Your resumes in one place</b>Keep up to ten versions and open any of them in the builder on any device.</li>' +
+          '<li><b>Saved jobs and applications everywhere</b>What you save on your phone is on your computer too.</li>' +
+          '<li><b>Job alerts</b>New jobs that match a search, once an hour, a day or a week. One click stops them.</li>' +
+          '<li><b>Free, and nothing to sell</b>No phone number asked, no data sold, no subscription.</li></ul></div>');
       submit(root.querySelector('form'), function (v) {
         return api('POST', up ? '/api/auth/signup' : '/api/auth/login', v).then(function (r) { token = r.token; H.set('hrn_token', token); notice = ''; return load(); });
       });
@@ -96,6 +106,7 @@
       });
     }
     Array.prototype.forEach.call(root.querySelectorAll('[data-mode]'), function (t) { t.addEventListener('click', function (ev) { ev.preventDefault(); drawAuth(t.getAttribute('data-mode')); }); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-role]'), function (t) { t.addEventListener('click', function () { ROLE = t.getAttribute('data-role'); H.set('hrn_role', ROLE); drawAuth(mode === 'forgot' ? 'in' : mode); }); });
   }
   function drawReset(resetToken) {
     root.innerHTML = '<div class="card acc-auth"><h2 style="margin-top:0">Choose a new password</h2><form novalidate>' +
@@ -152,8 +163,11 @@
 
   function productCard(id, fields, extra) {
     var p = products[id]; if (!p) return '';
-    return '<form class="acc-card" data-product="' + id + '" novalidate><p class="pname">' + esc(p.name) + '</p><p class="price">' + money(p.usd) + '</p>' +
-      '<p class="what">' + esc(D.what[p.name] || '') + '</p>' + fields + err +
+    var pl = (D.plans || {})[p.name];
+    return '<form class="acc-card' + (id === 'premium' || id === 'pass' ? ' best' : '') + '" data-product="' + id + '" novalidate>' + (id === 'premium' ? '<span class="pc-flag">Most chosen</span>' : id === 'pass' ? '<span class="pc-flag">Best value</span>' : '') +
+      '<p class="pname">' + esc(p.name) + '</p><p class="price">' + money(p.usd) + (p.days ? ' <small>for ' + p.days + ' days</small>' : '') + '</p>' +
+      (pl ? '<ul class="pc-inc">' + pl[0].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' + (pl[1] ? '<p class="pc-vs"><b>Elsewhere:</b> ' + esc(pl[1]) + '</p>' : '')
+        : '<p class="what">' + esc(D.what[p.name] || '') + '</p>') + fields + err +
       '<button class="btn primary" type="submit"' + (pub.payments === 'off' ? ' disabled' : '') + '>Continue to payment</button>' +
       // what employers hate most on other job sites is a charge they did not expect: say plainly that this is one payment and nothing renews
       '<p class="note">One payment' + (p.days ? ' for ' + p.days + ' days' : '') + '. Nothing renews: no trial, no subscription, no card kept on file.</p>' + (extra || '') + '</form>';
@@ -252,7 +266,9 @@
     if (me.posts_as.indexOf('employer') >= 0) {
       html += sec('Your company pages', (S.claims.length ? '<div class="card" style="padding:0">' + S.claims.map(function (c) {
         return '<div class="trow"><span>' + state(c.status) + '</span><div class="main"><strong>' + esc(c.company) + '</strong><span class="js">' + esc(c.domain) + ' · since ' + esc(c.since) + (c.reason ? ' · ' + esc(c.reason) : '') + '</span>' +
-          (c.status === 'verified' ? '<form class="claim-page" data-id="' + esc(c.id) + '" novalidate>' + '<label class="fld">About the company (shown on its page)<textarea name="about" rows="3" maxlength="1000"></textarea></label>' +
+          (c.status === 'verified' ? '<form class="claim-page" data-id="' + esc(c.id) + '" novalidate>' +
+            '<div class="logo-up"><span class="logo-prev" aria-hidden="true">' + esc(c.company.charAt(0)) + '</span><label class="fld">Company logo (PNG, JPG or WebP, square, up to 150 KB)<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label></div>' +
+            '<label class="fld">About the company (shown on its page)<textarea name="about" rows="3" maxlength="1000"></textarea></label>' +
             field('Company site', 'website', 'type="url" placeholder="https://' + esc(c.domain) + '"') + err + '<button class="btn sm" type="submit">Save the page</button> <button class="btn ghost sm" type="button" data-stats="' + esc(c.id) + '">Views and clicks</button><div class="stats-out"></div></form>' : '') + '</div></div>';
       }).join('') + '</div>' : '') +
         '<form class="card" id="claim" novalidate><p>We read the jobs of thousands of companies from their own hiring systems. If one of them is yours, claim its page: you see how many people view each job and click Apply, write the text of the page, and can add jobs your hiring system does not list.</p>' +
@@ -334,7 +350,7 @@
       '<div><dt>LinkedIn</dt><dd>' + (me.linkedin ? 'Connected' : pub.linkedin === 'on' ? '<button class="btn ghost sm" type="button" id="li-start">Connect LinkedIn</button>' : 'Not connected') + '</dd></div></dl>', 'account');
   }
   function showTab() {
-    var want = location.hash.slice(1), panels = root.querySelectorAll('.acc-panel'), ok = false;
+    var want = location.hash.slice(1) || (ROLE === 'employer' ? (S.jobs.length ? 'jobs' : 'post') : ''), panels = root.querySelectorAll('.acc-panel'), ok = false;
     Array.prototype.forEach.call(panels, function (p) { if (p.getAttribute('data-tab') === want) ok = true; });
     if (!ok) want = 'overview';
     Array.prototype.forEach.call(panels, function (p) { p.hidden = p.getAttribute('data-tab') !== want; });
@@ -435,7 +451,19 @@
     on('[data-act]', function (b) { b.disabled = true; api('POST', '/api/jobs/' + b.getAttribute('data-id') + '/' + b.getAttribute('data-act')).then(load, function (e) { b.disabled = false; alert(e.message); }); });
     submit(document.getElementById('claim'), function (v) { return api('POST', '/api/claims', v).then(load); });
     Array.prototype.forEach.call(root.querySelectorAll('form.claim-page'), function (f) {
-      submit(f, function (v) { return api('PUT', '/api/claims/' + f.getAttribute('data-id') + '/page', v).then(function () { notice = 'The company page is saved; it shows after the next update.'; return load(); }); });
+      var fileIn = f.querySelector('input[name=logo_file]');
+      if (fileIn) fileIn.addEventListener('change', function () {
+        var file = fileIn.files && fileIn.files[0]; f._logo = '';
+        if (!file) return;
+        if (file.size > 150000) { alert('The logo is larger than 150 KB. Save it smaller (for example 400 × 400 pixels) and try again.'); fileIn.value = ''; return; }
+        var rd = new FileReader();
+        rd.onload = function () { f._logo = rd.result; var pv = f.querySelector('.logo-prev'); if (pv) pv.innerHTML = '<img src="' + rd.result + '" alt="">'; };
+        rd.readAsDataURL(file);
+      });
+      submit(f, function (v) {
+        delete v.logo_file; if (f._logo) v.logo = f._logo;
+        return api('PUT', '/api/claims/' + f.getAttribute('data-id') + '/page', v).then(function () { notice = 'The company page is saved' + (f._logo ? ', with your logo' : '') + '; it shows after the next update.'; return load(); });
+      });
     });
     on('[data-stats]', function (b) {
       var out = b.parentNode.querySelector('.stats-out');

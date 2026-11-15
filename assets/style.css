@@ -1426,7 +1426,7 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .navpanel a:hover b{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
 .navpanel span{display:block;margin-top:3px;font-size:13.5px;line-height:1.4;color:var(--muted)}
 .navsub{display:none}
-@media(max-width:1180px){
+@media(max-width:980px){
   .navpanel{display:none!important}
   nav a.nl.hasmenu::after{display:none}
   nav a.nl.hasmenu{border-bottom:0}
@@ -2132,3 +2132,55 @@ select:not([multiple]):hover{border-color:var(--text)}
 .has-toc .sec-head{margin-bottom:16px}
 .guide h2{margin:44px 0 12px}
 @media(max-width:560px){.has-toc .sec-head h2,.guide h2{font-size:26px}}
+/* the resume builder works like an app on wide screens: the form, the page and the score each stay on screen and scroll on their own,
+   so the page itself does not have to be scrolled (owner, 15 Nov 2026: "I don't like having to scroll here") */
+@media(min-width:1181px){.rb-mid{position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto;scrollbar-width:thin}}
+.rb-opened{margin:0 0 14px}
+/* sign-in: job seeker or employer, chosen first (as on hh.ru and Indeed) */
+.acc-who{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:900px;margin:6px 0 18px}
+.acc-who button{display:grid;gap:3px;text-align:left;padding:16px 18px;border:1px solid var(--line2);border-radius:14px;background:var(--card);color:var(--text);cursor:pointer;font:inherit}
+.acc-who button b{font-size:17px}.acc-who button span{font-size:14px;color:var(--muted)}
+.acc-who button[aria-selected=true]{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.acc-auth-h{margin:0 0 14px;font-size:22px}
+@media(max-width:560px){.acc-who{grid-template-columns:1fr}}
+/* paid products in the account: what each includes, and what others charge */
+.acc-card{position:relative}
+.acc-card.best{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.pc-flag{position:absolute;top:-11px;left:16px;padding:3px 10px;border-radius:999px;background:var(--text);color:var(--bg);font:700 11.5px/1.4 "Public Sans",system-ui,sans-serif;letter-spacing:.02em}
+.acc-card .price small{font-size:13px;font-weight:500;color:var(--muted)}
+.pc-inc{list-style:none;margin:6px 0 10px;padding:0;display:grid;gap:6px}
+.pc-inc li{position:relative;padding-left:24px;font-size:14px;line-height:1.4}
+.pc-inc li::before{content:"✓";position:absolute;left:0;top:1px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);font:700 10px/1 system-ui}
+.pc-vs{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:var(--bg2);font-size:13px;color:var(--muted)}
+.pc-vs b{color:var(--text)}
+.logo-up{display:flex;gap:14px;align-items:center;margin:8px 0}
+.logo-prev{flex:none;width:64px;height:64px;border-radius:12px;border:1px solid var(--line2);background:var(--bg2);display:grid;place-items:center;font:800 24px/1 var(--display);color:var(--muted);overflow:hidden}
+.logo-prev img{width:100%;height:100%;object-fit:contain;background:#fff}
+.logo-up .fld{flex:1;margin:0}
+/* salary explorer: the pictures in an even two-column grid, cards in a row the same height, lists of the same length (owner: "the design is awful") */
+.ex-pics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:stretch;max-width:none;margin:16px 0 28px}
+.ex-pics .pic{display:flex;flex-direction:column;margin:0}
+.ex-pics .pic .vc{margin-top:auto}
+@media(max-width:860px){.ex-pics{grid-template-columns:minmax(0,1fr)}}
+/* career-advice articles (advice_pages.py): the short answer first, numbered steps, today's figures, examples as cards, the tool */
+.adv-short{border-left:4px solid var(--ac);background:var(--accent-soft);padding:16px 20px;border-radius:0 12px 12px 0;margin:18px 0 8px}
+.adv-short span{display:block;font:600 11.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.adv-short p{margin:0;font-size:17.5px;line-height:1.55;color:var(--text)}
+.adv-steps{counter-reset:s;list-style:none;padding:0;display:grid;gap:10px;margin:12px 0}
+.adv-steps li{counter-increment:s;position:relative;padding:12px 14px 12px 50px;background:var(--card);border:1px solid var(--line);border-radius:12px;line-height:1.5}
+.adv-steps li::before{content:counter(s);position:absolute;left:14px;top:12px;width:24px;height:24px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;font:700 12px/1 var(--display)}
+.adv-figs{list-style:none;padding:0;margin:12px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.adv-figs li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+.adv-figs li>:last-child{font:600 13px var(--mono);color:var(--muted);white-space:nowrap}
+.adv-ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px;margin:12px 0}
+.adv-ex figure{margin:0;padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.adv-ex figcaption{font:600 11.5px/1.3 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.adv-ex blockquote{margin:0;font-size:15.5px;line-height:1.55}
+.adv-ex blockquote::before{content:"“"}.adv-ex blockquote::after{content:"”"}
+.adv-list{padding-left:20px;display:grid;gap:6px;margin:10px 0}
+.adv-tool{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:18px 20px;margin:28px 0;border-radius:14px;background:var(--text);color:var(--bg)}
+.adv-tool b{font-size:18px}.adv-tool p{margin:4px 0 0;color:var(--bg);opacity:.85;max-width:60ch}
+.adv-tool .btn.primary{background:var(--bg);color:var(--text);border-color:var(--bg)}
+.adv-jobs{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:28px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
+.adv-jobs p{margin:0;color:var(--muted)}.adv-jobs .btn{margin-top:0}
+.adv-prev{display:block;font-size:13.5px;line-height:1.45;color:var(--muted);padding:6px}

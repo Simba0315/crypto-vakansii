@@ -64,7 +64,7 @@
     var hist = '<div class="exh" role="img" aria-label="Postings by pay band">' + steps.map(function (s_, i) {
       return '<i class="' + (i === mi ? 'hi' : '') + '" style="height:' + Math.max(2, Math.round(100 * cnt[i] / mx)) + '%" title="' + k(s_) + ' to ' + k(s_ + 25) + ': ' + nf(cnt[i]) + ' postings"></i>';
     }).join('') + '</div><div class="exhx"><span>' + k(lo) + '</span><span>' + k(hi) + '</span></div>';
-    var panels = pic('How the pay is spread', 'Postings by the middle of their range, in $25K steps. The orange column holds the median.', hist);
+    var panels = pic('How the pay is spread', 'Postings by the middle of their range, in $25K steps. The dark column holds the median.', hist);
     // pay by the years of experience the posting asks for
     var bands = [['Entry, 1–2 years', 1, 2], ['Mid, 3–5 years', 3, 5], ['Senior, 6–9 years', 6, 9], ['Expert, 10+ years', 10, 99]].map(function (b) {
       var g = yrs.filter(function (r) { return r[4] >= b[1] && r[4] <= b[2]; }); return [b[0], g.length >= MIN ? med(g.map(mid)) : 0, nf(g.length) + ' postings'];
@@ -74,7 +74,7 @@
     // the best-paid skills here
     var bySkill = {}; rows.forEach(function (r) { r[7].forEach(function (i) { (bySkill[i] = bySkill[i] || []).push(mid(r)); }); });
     var sk = Object.keys(bySkill).filter(function (i) { return bySkill[i].length >= MIN && +i !== f.skill; }).map(function (i) { return [+i, med(bySkill[i]), bySkill[i].length]; })
-      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 10);
+      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8);
     if (sk.length) panels += pic('Best-paid skills here', 'Skills named in at least ' + MIN + ' of these postings, by their median pay.', bars(sk.map(function (x) { return [link(d.skills[x[0]][1], esc(d.skills[x[0]][0])), x[1], nf(x[2])]; }), k));
     // where, and in which fields
     var byPlace = {}; rows.forEach(function (r) { r[6].forEach(function (i) { (byPlace[i] = byPlace[i] || []).push(mid(r)); }); });
@@ -88,7 +88,7 @@
       var ct = Object.keys(byCat).filter(function (i) { return byCat[i].length >= MIN; }).map(function (i) { return [+i, byCat[i].length, med(byCat[i])]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8);
       if (ct.length) panels += pic('Top fields', 'The fields with the most of these postings, with their median pay.', bars(ct.map(function (x) { return [link(d.cats[x[0]][1], esc(d.cats[x[0]][0])), x[1], k(x[2]) + ' median']; }), nf));
     }
-    out.innerHTML = html + '<div class="pics two">' + panels + '</div>';
+    out.innerHTML = html + '<div class="pics ex-pics">' + panels + '</div>';
     if (H.decorate) try { H.decorate(out); } catch (e) {}
   };
 

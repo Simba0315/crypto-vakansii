@@ -4707,14 +4707,14 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.
     GUIDES = []
     PUBLISHED = "2026-11-13"
-    def guide(slug, title, desc, cat, lead, body, prev, more=()):
+    def guide(slug, title, desc, cat, lead, body, prev, more=(), extra_head=""):
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
                "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
                "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": FULL + "/og.jpg"}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         links = ('<p class="note cmpl">Next: ' + " · ".join(f'<a href="{P}/{u_}">{e(t_)}</a>' for u_, t_ in more) + "</p>") if more else ""
         page(f"guides/{slug}/", f"{title} | {SITE}", desc,
              crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
-             f'<p class="lead">{lead}</p>{body}{links}</article>', head=ld_)
+             f'<p class="lead">{lead}</p>{body}{links}</article>', head=ld_ + extra_head)
         GUIDES.append((slug, title, desc, cat, prev))
     fam_stats = []
     for fs, fn, fd, live, js_ in fam_rows:
@@ -4979,6 +4979,26 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               "<h2>Why Senior does not always pay more</h2><p>A posting with no level in the title can be a manager, a specialist or a mid-level role, and some fields mix very different jobs under one name, so the group with no level can sit above the Senior group. Advertised pay is what an employer offers new hires, not what people already in the job earn. The title is the employer’s word: a Senior at a small company and a Senior at a large one can do very different work.</p>",
               '' + mini([(a_[0], a_[3] / a_[2], sg_(a_)) for a_ in lad_]),
               (("salaries/", "Salary data"), ("guides/job-levels-explained/", "What the level in a title means"), ("tools/raise-calculator/", "Raise calculator")))
+
+    # Career advice: the questions job seekers type most (BLOGS_STUDY.md), each with today's figures, a tool on this site and FAQ markup
+    import advice_pages
+    adv_desc = [j for j in active if j.get("desc")]
+    adv_soft = [("Communication", r"communicat"), ("Working with others", r"collaborat|teamwork|team player"), ("Problem solving", r"problem[- ]solv"),
+                ("Attention to detail", r"attention to detail|detail[- ]oriented"), ("Ownership", r"\bownership\b"), ("Self-starter", r"self[- ](?:starter|motivated|directed)"),
+                ("Organisation", r"\borgani[sz](?:ed|ational skills)\b"), ("Adaptability", r"adaptab|comfortable with ambiguity"), ("Leadership", r"\bleadership\b"),
+                ("Customer focus", r"customer[- ](?:focus|obsess|centric)")]
+    adv_soft_n = sorted(((nm_, pc_(sum(1 for j in adv_desc if re.search(rx_, j["desc"], re.I)), len(adv_desc))) for nm_, rx_ in adv_soft), key=lambda x: -x[1])
+    adv_mids = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in active if j["usd"])
+    adv_ages = sorted(max(0, (datetime.date.fromisoformat(TODAY) - datetime.date.fromisoformat(j["posted"][:10])).days) for j in active if j.get("posted"))
+    advice_ctx = {"n": n, "n_desc": len(adv_desc), "soft": adv_soft_n,
+                  "skills": [(t_, tslug(t_), pc_(c_, n)) for t_, c_ in skill_counts.most_common(10)],
+                  "paid_pct": pc_(sum(bool(j["salary"]) for j in active), n),
+                  "med": money(median(adv_mids)) if adv_mids else "–", "p25": money(adv_mids[len(adv_mids) // 4]) if adv_mids else "–", "p75": money(adv_mids[3 * len(adv_mids) // 4]) if adv_mids else "–",
+                  "age_med": adv_ages[len(adv_ages) // 2] if adv_ages else 0, "old_pct": pc_(sum(1 for d_ in adv_ages if d_ >= 90), max(1, len(adv_ages))),
+                  "entry_n": sum(1 for j in active if j["entry"]), "entry_pct": pc_(sum(1 for j in active if j["entry"]), n)}
+    for a_ in advice_pages.ARTICLES:
+        guide(a_["slug"], a_["title"], a_["desc"], a_["cat"], a_["lead"], advice_pages.render(a_, advice_ctx, e, P),
+              f'<span class="adv-prev">{e(a_["short"][:120].rsplit(" ", 1)[0])}…</span>', a_["more"], extra_head=advice_pages.faq_ld(a_, json))
 
     gcats = []
     for g_ in GUIDES:
@@ -6975,7 +6995,23 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Questions about mentors", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in men_qa) + "</dl>"), head=men_ld)
     # Employer account: only exists once the API is deployed, so the site never shows a form that goes nowhere
     if CFG["api_url"]:
-        acc_data = {"site": FULL, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
+        # what each paid product includes and what others charge for the same (figures from the comparison on /post-a-job/, with their sources there)
+        ACC_PLANS = {
+            "Standard boost": (["30 days above the free jobs in its category, role, place and search lists", "A “Featured” mark on the job", "Views and clicks on Apply, day by day",
+                                "A free 30-day rerun if it gets fewer than 10 clicks on Apply in its first 14 days"], "Indeed: about $150–$750 for 30 days of sponsoring"),
+            "Premium boost": (["Everything in the Standard boost", "A turn in the top 3 of its lists", "“Urgently hiring” for 14 days", "Your logo and a cover picture on the job",
+                               "An invitation to up to 50 matching job seekers who asked for them"], "We Work Remotely’s top post: $458; Indeed Premium: no public price"),
+            "Urgently hiring badge": (["“Urgently hiring” on the job for 14 days, in every list and on its page"], ""),
+            "Bump to top": (["The job back at the top of its lists, as if posted today"], ""),
+            "Extend a boost by 30 days": (["30 more days for a boost that is running"], ""),
+            "Company spotlight": (["Your company in “Featured employers” on the home page", "At the top of the companies list", "A badge on your company page"], ""),
+            "Hiring Pass": (["Unlimited Standard boosts for every job of your company", "3 Premium boosts", "The company spotlight", "30 days, one payment"],
+                            "Indeed: a typical $500–$2,000 a month for 1–10 roles; Jobright: $499 a month for one role"),
+            "Category or skill sponsor": (["Your company named at the top of one category or skill page", "For 30 days, seen by everyone browsing that work"], ""),
+            "100 credits": (["$100 to spend on anything here", "Valid for 12 months"], ""), "250 credits": (["$250 to spend on anything here", "Valid for 12 months"], ""),
+            "550 credits": (["$550 to spend for $500: 10% more", "Valid for 12 months"], ""), "1,200 credits": (["$1,200 to spend for $1,000: 20% more", "Valid for 12 months"], ""),
+        }
+        acc_data = {"site": FULL, "plans": ACC_PLANS, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
                     "what": {p["name"]: p["what"] for p in CFG["prices"]}}
         page("account/", f"Your Account: Alerts, Saved Jobs, Posting | {SITE}",
              "Your free account: job alerts, saved jobs on every device and your resume for employers; for employers, free job posting, company pages, team and receipts.",

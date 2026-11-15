@@ -641,11 +641,43 @@
   var exq = ''; try { exq = new URLSearchParams(location.search).get('example') || ''; } catch (e) {}
   if (exq) fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (all) {
     var ex = all[exq]; if (!ex) return;
-    if (hasContent(data)) {                                 // a resume in progress is never replaced: the example opens as another resume
-      if (!confirm('Open the example as a new resume? The one you have now stays in the list above the form.')) return;
+    var kept = hasContent(data);
+    if (kept) {                                             // a resume in progress is never replaced: the example opens as another resume, no question asked
       if (!addResume(Object.assign({ tpl: data.tpl }, ex), (ex.title || 'Example') + ' (example)')) return;
     } else { data = fill(Object.assign({ tpl: data.tpl }, copy(ex))); save(); }
     redraw();
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    // say what happened and bring the form into view (owner, 15 Nov 2026: "nothing happened" when the example opened below the fold)
+    var form = document.getElementById('rb'), note = document.createElement('div');
+    note.className = 'banner ok rb-opened'; note.setAttribute('role', 'status');
+    note.innerHTML = 'Opened the example: <b>' + H.esc(ex.title || 'resume') + '</b>. Replace the details with yours, then download it.' +
+      (kept ? ' Your own resume is kept: pick it in “Your resume”.' : '');
+    if (form && form.parentNode) { form.parentNode.insertBefore(note, form); note.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }).catch(function () {});
+})();
+
+/* "Save to my account": once signed in (the header keeps the session in this browser), the resume being edited is kept as a version in
+   the account, up to ten, and opens on any device from the account's Resumes. */
+(function () {
+  var bar = document.querySelector('#rb .rb-actions'); if (!bar) return;
+  var token = null; try { token = JSON.parse(localStorage.getItem('hrn_token')); } catch (e) {}
+  var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'rb-acc';
+  b.textContent = token ? 'Save to my account' : 'Sign in to keep it in your account';
+  bar.appendChild(b);
+  b.addEventListener('click', function () {
+    var base = (window.HRN && window.HRN.base) || '';
+    if (!token) { location.href = base + '/account/'; return; }
+    var data = null; try { data = JSON.parse(localStorage.getItem('hrn_resume')); } catch (e) {}
+    if (!data) { b.textContent = 'Fill in the resume first'; return; }
+    b.disabled = true; b.textContent = 'Saving…';
+    var title = ((data.basics && (data.basics.title || data.basics.name)) || data.title || 'My resume');
+    fetch(location.origin + '/api/resumes', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ name: String(title).slice(0, 50) + ' · ' + new Date().toISOString().slice(0, 10), resume: data }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (x) { return { ok: r.ok, x: x }; }); })
+      .then(function (res) {
+        b.disabled = false;
+        b.textContent = res.ok ? 'Saved to your account ✓' : (res.x && res.x.message) || 'Could not save: try again';
+        if (res.ok) setTimeout(function () { b.textContent = 'Save to my account'; }, 4000);
+      }, function () { b.disabled = false; b.textContent = 'No connection: try again'; });
+  });
 })();

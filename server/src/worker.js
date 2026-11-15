@@ -1317,6 +1317,7 @@ async function openCarefully(start, refused, accept) {
    The answer is { problem, host }. problem is '' when all is well. host is where the walk ended: the host of the page that opened, or
    of the address a redirect was refused for; '' when it is not known where the link leads now (it did not open, it timed out). The
    host is kept with the job (jobs.apply_host) and the daily recheck compares with it. */
+const TITLE_UNSEEN = 'the page at the link to apply does not show this job title, so a person checks that it is the right job';
 async function checkApplyLink(apply, home, title) {
   const refused = (u, hop) => {
     if (!u) return 'The link to apply redirects to an address we cannot open. It must stay on https and on a public site.';
@@ -1337,7 +1338,8 @@ async function checkApplyLink(apply, home, title) {
   const host = url.hostname;
   if (hiringSystem(host)) return { problem: '', host };
   const words = [...new Set(title.toLowerCase().match(/[\p{L}\p{N}+#]{3,}/gu) || [])].slice(0, 8);
-  return { problem: words.length && words.every((w) => text.includes(w)) ? '' : 'We could not find this job at the link. It must open the page of this exact job, with the same title.', host };
+  // the page opened but does not show the title: not refused (owner, 15 Nov 2026: posting must be easy), the job waits for a person instead
+  return words.length && words.every((w) => text.includes(w)) ? { problem: '', host } : { problem: '', host, unseen: true };
 }
 /* One company name, one account. A name is taken by the first account that posts a checked job under it (a job a person then turns
    down gives the name back, see the reject endpoint); signing up with a name takes nothing. Names are compared by companyKey, both the
@@ -1457,6 +1459,7 @@ async function readJob(env, user, b, existing, dry) {
     await limit(env, 'linkcheck:' + user.id, LINK_CHECKS_PER_HOUR, 3600);      // each check makes this service open an address someone typed
     const link = await checkApplyLink(apply, home, title);
     if (link.problem) throw bad('apply_url', link.problem, 422);
+    if (link.unseen) j.reasons.push(TITLE_UNSEEN);
     j.apply_host = clip(link.host, 255);
   }
   // why a person has to look before it is shown
