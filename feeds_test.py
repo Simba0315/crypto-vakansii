@@ -28,6 +28,9 @@ SAMPLES = {   # address pattern -> saved response
     r"ats\.rippling\.com/api/v2/board/aalo-atomics/jobs\?page=0": lambda: load("rippling_list.json"),
     r"ats\.rippling\.com/api/v2/board/aalo-atomics/jobs/[0-9a-f-]+$": lambda: load("rippling_detail.json"),
     r"api\.eu\.lever\.co/v0/postings/abzena": lambda: load("lever_eu_abzena.json"),
+    r"arbeitnow\.com/api/job-board-api\?page=1$": lambda: load("arbeitnow.json"),
+    r"jobicy\.com/api/v2/remote-jobs": lambda: load("jobicy.json"),
+    r"remoteok\.com/api$": lambda: load("remoteok.json"),
 }
 WORKABLE = sorted(S.glob("workable_*.json"))         # saved by the discovery run in GitHub Actions (this cloud machine is rate-limited by Workable)
 if WORKABLE: SAMPLES[r"apply\.workable\.com/api/v1/widget/accounts/" + WORKABLE[0].stem.split("_", 1)[1] + r"\?details=true"] = lambda: load(WORKABLE[0].name)
@@ -163,6 +166,19 @@ if WORKABLE:
     check("workable: apply link", all("workable.com" in j["url"] for j in jobs), [j["url"] for j in jobs][:2])
 else:
     print("note: no Workable sample yet (feeds_samples/workable_<company>.json is saved by the discovery workflow)")
+
+# Job sites with open APIs (jobboards.py): their own page is the link, the site is named, Remote OK's address tag never shows
+import jobboards     # noqa: E402
+for m, prefix, n in ((jobboards.ARBEITNOW, "arbeitnow", 3), (jobboards.JOBICY, "jobicy", 3), (jobboards.REMOTEOK, "remoteok", 3)):
+    jobs = m.fetch()
+    check(f"{prefix}: jobs read", jobs is not None and len(jobs) == n, jobs and len(jobs))
+    for j in jobs or []:
+        check(f"{prefix}: id", re.fullmatch(prefix + r"-[\w-]+", j["id"]) is not None, j["id"])
+        check(f"{prefix}: link to the site's own page", prefix.replace("remoteok", "remoteok.com") in j["url"].lower() or prefix in j["url"].lower(), j["url"])
+        check(f"{prefix}: source named", j["src"] == m.SOURCE)
+        check(f"{prefix}: no address tag", "TRUSTWORTHY" not in j["desc"] + j["excerpt"] and "RMMTI3" not in j["desc"] + j["excerpt"], j["excerpt"][-80:])
+check("jobicy: yearly pay", (jobboards.JOBICY.fetch() or [{}])[0].get("salary", "").startswith("$145K"))
+check("remoteok: remote", all(j["remote"] and j["location"].startswith("Remote") for j in jobboards.REMOTEOK.fetch()))
 
 # A feed that does not answer leaves the company as it was
 for ats in collect.FEEDS:

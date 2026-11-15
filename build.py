@@ -319,6 +319,8 @@ SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby",  
 # as its terms ask ("при копировании информации ссылка на trudvsem.ru обязательна").
 PORTAL_SOURCE = {"trudvsem": ("https://trudvsem.ru/", "«Работа России» (trudvsem.ru)", "Russia’s federal job portal"),
                  "platsbanken": ("https://arbetsformedlingen.se/platsbanken/", "Platsbanken (Arbetsförmedlingen)", "Sweden’s public employment service")}
+# Job sites with open APIs (jobboards.py): the job page names the site and links its page, followed (Remote OK asks for that).
+BOARD_SOURCE = {"arbeitnow": ("Arbeitnow", "a job site for Europe"), "jobicy": ("Jobicy", "a remote job site"), "remoteok": ("Remote OK", "a remote job site")}
 BOARD_NAME = {"remotive": "Remotive", "remoteok": "Remote OK", "arbeitnow": "Arbeitnow", "himalayas": "Himalayas", "jobicy": "Jobicy", "themuse": "The Muse",
               "hn": "Hacker News", "usajobs": "USAJOBS", "direct": "this site"}
 
@@ -1009,11 +1011,14 @@ def job_page(j, active_by_cat):
     if again and again < (j.get("first_seen") or ""): rows.append(("History", f"Posted again: an earlier posting of this role closed on {fdate(again)}"))
     if j["active"] and j.get("last_seen"): rows.append(("Last checked", fdate(j["last_seen"])))
     ats = j["id"].split("-", 1)[0]
+    via = BOARD_SOURCE[ats][0] if ats in BOARD_SOURCE else PORTAL_SOURCE[ats][1] if ats in PORTAL_SOURCE else ""     # a job site or portal, not the employer's page
     if j["active"]:
         rows.append(("Source", (f'A post in the public Telegram channel <a href="https://t.me/{e(j["tg"])}" rel="nofollow noopener">@{e(j["tg"])}</a>; not checked with {e(j["company"])}' if j.get("tg") else
                                 f"{e(j['company'])}’s own posting, read from {SOURCE_NAME[ats]}, the hiring software it uses" if ats in SOURCE_NAME else "Posted here by the employer; the link was checked" if j.get("direct")
                                 else (f'Posted by the employer on <a href="{PORTAL_SOURCE[ats][0]}" rel="nofollow">{e(PORTAL_SOURCE[ats][1])}</a>, {PORTAL_SOURCE[ats][2]}; '
                                       f'republished from its open data with a link to the source') if ats in PORTAL_SOURCE
+                                else (f'Listed on <a href="{e(j["url"])}" target="_blank">{e(BOARD_SOURCE[ats][0])}</a>, {BOARD_SOURCE[ats][1]}, '
+                                      f'which publishes its jobs for other sites; not read from {e(j["company"])}’s own careers page') if ats in BOARD_SOURCE
                                 else f"{e(j['company'])}’s own posting")))
     if j["active"] and j.get("seen_on"):                    # the same opening elsewhere (dedupe.py)
         rows.append(("Also listed on", ", ".join(f'<a href="{e(x["url"])}" rel="nofollow noopener" target="_blank">{e(source_label(x["source"], j))}</a>' for x in j["seen_on"][:6])))
@@ -1060,7 +1065,7 @@ def job_page(j, active_by_cat):
         elif full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
         else: head, micro = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>", ""
         host_ = re.sub(r"^www\.", "", re.sub(r"^https?://([^/?#]+).*$", r"\1", j["url"] or "")).lower()
-        apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a>'
+        apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else ("Apply on " + via) if via else "Apply on company site"}</a>'
                      + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else "")
                      + '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>'
                      # Rezi's best-converting box, done our way: no account, the posting goes straight into the checker
@@ -1088,15 +1093,15 @@ def job_page(j, active_by_cat):
                 + (f' on {fdate(j["posted"])}' if j["posted"] else "") + f'.{pay_line} We read it from the channel’s public page; it was not checked with {e(j["company"])}.</p>') if j.get("tg") else \
                (f'<p class="tldr"><strong>{e(j["title"])}</strong> is open at {e(j["company"])}{where}.{pay_line}'
                 + (f' Posted on {fdate(j["posted"])}' if j["posted"] else " It is")
-                + (f'{", and" if j["posted"] else ""} still on {e(j["company"])}’s careers page when we last checked, on {fdate(j["last_seen"])}.' if j.get("last_seen") else (". It is open now." if j["posted"] else " open now.")) + "</p>")
+                + (f'{", and" if j["posted"] else ""} still {"listed on " + e(via) if via else "on " + e(j["company"]) + "’s careers page"} when we last checked, on {fdate(j["last_seen"])}.' if j.get("last_seen") else (". It is open now." if j["posted"] else " open now.")) + "</p>")
     else:
         tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> at {e(j["company"])}{where} is closed. '
                 f'{"It closed on " + fdate(j["closed"]) if j.get("closed") else "The employer took it down"} and it no longer takes applications.</p>')
     about = tldr + ((f'<div itemscope itemtype="https://schema.org/JobPosting">{micro}<h2>About the role</h2><div class="prose desc" itemprop="description">{full}</div></div>'
                      if micro else f'<h2>About the role</h2><div class="prose desc">{full}</div>')
-                    + f'<p class="note">The employer’s own description, as published on {e(j["company"])}’s careers page.</p>' if full else
+                    + (f'<p class="note">The description as published on {e(via)}.</p>' if via else f'<p class="note">The employer’s own description, as published on {e(j["company"])}’s careers page.</p>') if full else
                     f'<h2>About the role</h2><div class="prose"><p>{e(j["excerpt"])}</p></div><p class="note">'
-                    + ("A few lines of the post. The whole post, with the contact to apply, is in the Telegram channel.</p>" if j.get("tg") else f"The opening lines of the posting. The rest is on {e(j['company'])}’s careers page.</p>")
+                    + ("A few lines of the post. The whole post, with the contact to apply, is in the Telegram channel.</p>" if j.get("tg") else f"The opening lines of the posting. The rest is on {e(via)}.</p>" if via else f"The opening lines of the posting. The rest is on {e(j['company'])}’s careers page.</p>")
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all its roles</a></p></div>'
@@ -1117,7 +1122,8 @@ def job_page(j, active_by_cat):
     save_btn = ((f'<div class="sideact"><button class="btn ghost" id="save" type="button" {data}>Save job</button>'
                  f'<button class="btn ghost" id="applied" type="button">Mark as applied</button></div>'
                  + (f'<p class="note">You apply through the contact in the channel post, free. The post was read from a public Telegram channel and not checked with the employer.</p>' if j.get("tg") else
-                  f'<p class="note">You apply on the employer’s own page, free.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>')
+                  (f'<p class="note">You apply through {e(via)}, free.</p>' if via else
+                   f'<p class="note">You apply on the employer’s own page, free.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>'))
                  + '<p class="share" id="share"></p>'
                  f'<p class="note"><a href="{P}/safety/">How to check that a job offer is real</a>'
                  + (f' · <a href="mailto:{e(MAIL["abuse"])}?subject={e(quote("Listing: " + j["title"] + " at " + j["company"] + " (" + FULL + "/job/" + j["slug"] + "/)"))}" rel="nofollow">Report a problem with this listing</a>' if MAIL.get("abuse")
@@ -1128,14 +1134,14 @@ def job_page(j, active_by_cat):
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
-            + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
+            + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else ("Apply on " + via) if via else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = f"{j['title']} at {j['company']}"
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
     if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= 65: title += f" ({place_})"
     if not j["active"]: title += " (closed)"
     desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + f". {CAT[j['cat']]} role"
-            + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply through the Telegram post." if j.get("tg") else ". Apply on the company site."))
+            + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply through the Telegram post." if j.get("tg") else f". Apply on {via}." if via else ". Apply on the company site."))
     # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
     page(f"job/{j['slug']}/", title, desc, body, head + ('<meta name="robots" content="noindex">' if j.get("tg") else ""), sitemap=not j.get("tg"), compact=True)
 

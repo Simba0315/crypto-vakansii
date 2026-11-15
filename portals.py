@@ -1,4 +1,4 @@
-"""Snapshots of the public employment portals, made once a day apart from the hourly run.
+"""Snapshots of the public employment portals and of the job sites with open APIs (jobboards.py), made once a day apart from the hourly run.
 
     python3 portals.py            # read every portal, write data/portals/<name>.json.gz for each one that answered
     python3 portals.py trudvsem   # one of them
@@ -10,11 +10,11 @@ restores them and collect.py reads them with load(): a few seconds. A portal tha
 import concurrent.futures as cf, datetime, gzip, json, sys
 from pathlib import Path
 
-import jobtech, trudvsem
+import jobboards, jobtech, trudvsem
 
 ROOT = Path(__file__).parent
 DIR = ROOT / "data" / "portals"
-MODULES = {"trudvsem": trudvsem, "jobtech": jobtech}
+MODULES = {"trudvsem": trudvsem, "jobtech": jobtech, "arbeitnow": jobboards.ARBEITNOW, "jobicy": jobboards.JOBICY, "remoteok": jobboards.REMOTEOK}
 STALE_DAYS = 4          # an older snapshot is not used: its jobs then stay exactly as they were, as for a feed that failed
 
 

@@ -1,6 +1,7 @@
 name: Read public job portals
 
-# Russia's «Работа России» (trudvsem.py: a 1.9 GB open-data file) and Sweden's Platsbanken (jobtech.py: about 150 calls) take
+# Russia's «Работа России» (trudvsem.py: a 1.9 GB open-data file), Sweden's Platsbanken (jobtech.py: about 150 calls) and the job
+# sites with open APIs (jobboards.py: Arbeitnow, Jobicy, Remote OK; their terms ask for few calls) take
 # minutes, so they are read here once a day, not in the hourly run. portals.py writes one small snapshot per portal; they are kept
 # on the one-commit branch "portals", and the hourly run (update.yml) restores them for collect.py. A portal that fails keeps
 # yesterday's snapshot. 01:47 UTC: done before the 03:17 daily run, away from the :17 hourly runs.
@@ -9,7 +10,7 @@ on:
     - cron: "47 1 * * *"
   push:
     branches: [main]
-    paths: [portals.py, trudvsem.py, jobtech.py, .github/workflows/portals.yml]
+    paths: [portals.py, trudvsem.py, jobtech.py, jobboards.py, .github/workflows/portals.yml]
   workflow_dispatch:
 
 permissions:

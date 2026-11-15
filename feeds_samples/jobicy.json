@@ -1,0 +1,85 @@
+{
+ "apiVersion": "2.2.19",
+ "documentationUrl": "https://jobi.cy/apidocs",
+ "friendlyNotice": "Thanks for using Jobicy API! Please ensure Jobicy is clearly credited with a direct link to the source, and all application buttons redirect to the original job URL provided in this feed. That’s all! You might be building something amazing, we wish you the best of luck!",
+ "jobCount": 100,
+ "lastUpdate": "2026-11-14T16:07:57+00:00",
+ "nextCursor": null,
+ "hasMore": false,
+ "appliedFilters": {
+  "count": 100
+ },
+ "jobs": [
+  {
+   "id": 162244,
+   "url": "https://jobicy.com/jobs/162244-navy-account-executive-public-sector",
+   "jobSlug": "162244-navy-account-executive-public-sector",
+   "jobTitle": "Navy Account Executive - Public Sector",
+   "companyName": "Unstructured Technologies Inc.",
+   "companyLogo": "https://jobicy.com/data/server-nyc0409/galaxy/mercury/2026/11/13a01f46dc9d-221.webp",
+   "jobIndustry": [
+    "Sales"
+   ],
+   "jobType": [
+    "Full-Time"
+   ],
+   "jobGeo": "USA",
+   "jobLevel": "Director",
+   "jobExcerpt": "Unstructured is defining the standard for enterprise data transformation in the age of LLMs and generative AI. In just two years, we've raised over $65M from world-class investors, including Menlo Ventures, Bain Capital, Databricks, NVIDIA, Microsoft, and IBM. Our open-source toolkit has been downloaded 97M+ times and is used by 90% of the Fortune 1000.&hellip;",
+   "jobDescription": "<p>Unstructured is defining the standard for enterprise data transformation in the age of LLMs and generative AI. In just two years, we've raised over $65M from world-class investors, including Menlo Ventures, Bain Capital, Databricks, NVIDIA, Microsoft, and IBM.</p>\n<p>Our open-source toolkit has been downloaded 97M+ times and is used by 90% of the Fortune 1000. We power production AI workflows across commercial and federal sectors — transforming PDFs, HTML, Word docs, images, emails, and more into AI-ready data pipelines that scale.</p>\n<p>We're not just building tools; we're building the backbone of generative AI and the infrastructure that unlocks intelligence across industries.</p>\n</p>\n\n<h3>About the Role</h3>\n</p>\n<p>We are seeking a <strong>Strategic Navy Account Executive</strong> to drive revenue growth and adoption of our recently FedRAMP High certified software across the Department of the Navy — Navy and Marine Corps. You will be our dedicated seller in this space, owning a greenfield territory and building pipeline, partnerships, and customer wins from the ground up.</p>\n<p>This role requires a hunter mentality, deep Navy procurement fluency, and the ability to position modern AI infrastructure solutions to both technical and mission-focused stakeholders.</p>\n</p>\n<h3>What You'll Own &amp; Drive</h3>\n</p>\n<ul>\n<li>\n<p>Own and execute territory and account plans to hit revenue and pipeline targets across the US Navy and Marine Corps</p>\n</li>\n<li>\n<p>Build pipeline from scratch through proactive outbound prospecting across program managers, contracting officers, and senior acquisition stakeholders</p>\n</li>\n<li>\n<p>Develop teaming relationships with Navy-focused primes, systems integrators, and ISVs</p>\n</li>\n<li>\n<p>Navigate complex, multi-stakeholder DoD sales cycles with a capture mindset</p>\n</li>\n<li>\n<p>Partner with solutions engineering and product teams to deliver tailored, compliance-aligned solutions</p>\n</li>\n<li>\n<p>Manage pipeline, forecasts, and CRM hygiene with discipline and accuracy</p>\n</li>\n<li>\n<p>Represent Unstructured at key Navy and defense industry events including Sea-Air-Space, AFCEA WEST, NDIA, and PAE/PEO industry days</p>\n</p>\n</li>\n</ul>\n<h3>What We're Looking For</h3>\n</p>\n<ul>\n<li>\n<p>5+ years selling into DoD / Navy accounts with a proven track record of landing net-new logos</p>\n</li>\n<li>\n<p>Full-cycle quota ownership — this is not an overlay or pre-sales role</p>\n</li>\n<li>\n<p>Strong understanding of Navy/Do",
+   "pubDate": "2026-11-14T16:07:57+00:00",
+   "salaryMin": 145000,
+   "salaryMax": 215000,
+   "salaryCurrency": "USD",
+   "salaryPeriod": "yearly"
+  },
+  {
+   "id": 162253,
+   "url": "https://jobicy.com/jobs/162253-director-strategic-engagements-northeast",
+   "jobSlug": "162253-director-strategic-engagements-northeast",
+   "jobTitle": "Director, Strategic Engagements (Northeast)",
+   "companyName": "Xenon Pharmaceuticals Inc.",
+   "companyLogo": "https://jobicy.com/data/server-nyc0409/galaxy/mercury/2026/11/2c3fd54cd2e8-221.webp",
+   "jobIndustry": [
+    "Marketing & Sales"
+   ],
+   "jobType": [
+    "Full-Time"
+   ],
+   "jobGeo": "USA",
+   "jobLevel": "Director",
+   "jobExcerpt": "Who We Are: Xenon Pharmaceuticals (NASDAQ:XENE) is a neuroscience-focused biopharmaceutical company dedicated to drug discovery, clinical development, and commercialization of life-changing therapeutics for patients in need. We are looking for great people who thrive in a respectful, collaborative, inclusive, and productive culture to join the Xenon team. What We Do: We are advancing an exciting&hellip;",
+   "jobDescription": "<p><em><strong>Who We Are:</strong></em></p>\n<p>Xenon Pharmaceuticals (<a href=\"https://www.nasdaq.com/market-activity/stocks/xene\" rel=\"nofollow ugc noopener\" target=\"_blank\">NASDAQ:XENE</a>) is a neuroscience-focused biopharmaceutical company dedicated to drug discovery, clinical development, and commercialization of life-changing therapeutics for patients in need. We are looking for great people who thrive in a respectful, collaborative, inclusive, and productive culture to join the Xenon team.</p>\n<p><em><strong>What We Do:</strong></em></p>\n<p>We are advancing an <a href=\"https://xenon-pharma.com/pipeline\" rel=\"nofollow ugc noopener\" target=\"_blank\">exciting product pipeline</a> to address indications with high unmet medical need, including epilepsy, depression and pain. Our Phase 3 azetukalner program represents the most advanced, clinically validated potassium channel modulator in late-stage clinical development for multiple indications. In March 2026, we announced positive topline data from our Phase 3 X-TOLE2 study of azetukalner in focal onset seizures (FOS), and we submitted a New Drug Application to the Food and Drug Administration in the third quarter of 2026. Our Phase 3 epilepsy program also includes a second FOS study, X-TOLE3, which would support regulatory submissions outside the U.S., and the X-ACKT study in primary generalized tonic-clonic seizures, which would support regulatory submissions for an additional epilepsy indication. We also have multiple Phase 3 azetukalner clinical trials underway in major depressive disorder (MDD) and bipolar depression (BPD), based on topline data from our Phase 2 X-NOVA clinical trial. In addition, we are proud of our strong heritage in human genetics, deep understanding of ion channel biology, and expertise in novel chemistries to enable potent, selective ion channel targeting. We continue to advance an early-stage pipeline of novel therapeutic candidates, including Phase 1 studies for XEN1701 and XEN1720 (targeting Nav1.7) and XEN1120 (targeting Kv7), which are being developed for pain. Backed by a strong balance sheet to support our growth plans, we continue to build a fully integrated, premier neuroscience company with strong discovery, clinical development, corporate, and commercial operations.</p>\n<p><em><strong>About the Role:</strong></em></p>\n<p>We are seeking a <strong>Director, Strategic Engagements, Northeast, </strong>to join our team. The individual will be an integral member of the Comme",
+   "pubDate": "2026-11-14T16:07:54+00:00",
+   "salaryMin": 245000,
+   "salaryMax": 270000,
+   "salaryCurrency": "USD",
+   "salaryPeriod": "yearly"
+  },
+  {
+   "id": 162252,
+   "url": "https://jobicy.com/jobs/162252-city-manager-new-york",
+   "jobSlug": "162252-city-manager-new-york",
+   "jobTitle": "City Manager, New York",
+   "companyName": "Flex",
+   "companyLogo": "https://jobicy.com/data/server-nyc0409/galaxy/mercury/2025/06/7bfdefe3-221.jpeg",
+   "jobIndustry": [
+    "Sales"
+   ],
+   "jobType": [
+    "Full-Time"
+   ],
+   "jobGeo": "USA",
+   "jobLevel": "Senior",
+   "jobExcerpt": "Flex is building AI-native financial services for business owners. We’re re-architecting the entire financial system for entrepreneurs—from the first dollar a business earns to how that value compounds, moves, and is ultimately spent in real life. Banking, credit, payments, personal finance, and financial operations—rebuilt from the ground up as a single, intelligent system. Flex is&hellip;",
+   "jobDescription": "<p><a href=\"https://jobicy.com/company/flex\" target=\"_blank\" rel=\"noopener\">Flex</a> is building <strong>AI-native financial services for business owners</strong>.</p>\n<p>We’re re-architecting the entire financial system for entrepreneurs—from the first dollar a business earns to how that value compounds, moves, and is ultimately spent in real life. Banking, credit, payments, personal finance, and financial operations—rebuilt from the ground up as a single, intelligent system. <strong>Flex is the full financial home for ambitious owners.</strong></p>\n<p>Since launching publicly in <strong>September 2023</strong>, Flex has scaled from <strong>zero to nine-figure annualized revenue</strong>, with a clear path to <strong>profitability by late 2026</strong>. We move fast, ship relentlessly, and operate with extreme ownership.</p>\n<p>Our customers are <strong>affluent business owners ($3–$200M in revenue)</strong>—the backbone of the economy and one of the most underserved segments in finance. They’re stuck with outdated banks and fragmented tools. We’re replacing all of it. The opportunity is massive: a <strong>~$1T+ revenue market</strong> hiding in plain sight. Our ambition is to build a <strong>$100B+ company</strong> by delivering a product that is fundamentally better—not incrementally improved.</p>\n<p>Flex has raised $100M+ in equity and $300M+ in debt.</p>\n<p><strong>- Mission-critical problems</strong>: We build software that directly controls how money moves at scale.</p>\n<p><strong>- High bar, low ego</strong>: Small teams, exceptional people, real ownership.</p>\n<p><strong>- Speed over comfort</strong>: We prioritize execution, quality, clarity, and results.</p>\n<p><strong>- Enduring impact</strong>: What we’re building will define how a generation of owners runs their businesses.</p>\n<p><strong>Team &amp; Locations</strong></p>\n<p>We hire exceptional people who want to build hard things and see their work matter immediately. Roles are available in: San Francisco, Miami, New York, and fully remote.</p>\n<p><strong>Flex Fuels Ambition.</strong></p>\n<h3>About the Role</h3>\n<p>We're seeking an ambitious problem solver with a record of achievement on an exponential trajectory.</p>\n<p>As City Manager, you'll lead Flex's growth in New York. You know the business owners, the culture, and which rooms matter. Your job is to turn that into new Flex customers.</p>\n<p>You'll build a target list of 50 business owners you'd most like to bring to Flex. From that li",
+   "pubDate": "2026-11-14T16:07:52+00:00",
+   "salaryMin": 100000,
+   "salaryMax": 140000,
+   "salaryCurrency": "USD",
+   "salaryPeriod": "yearly"
+  }
+ ],
+ "statusCode": 200,
+ "success": true
+}

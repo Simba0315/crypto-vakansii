@@ -99,6 +99,24 @@ def cc_addresses(crawl, prefixes, tmp):
     return out
 
 
+def hn_addresses(months=3):
+    """Links in the last few monthly "Ask HN: Who is hiring?" threads (official Algolia HN API). Only the addresses of employers' own
+    job boards are taken from them; the comments themselves are never shown (Y Combinator's terms do not allow republishing them)."""
+    import html as h
+    stories = get_json("https://hn.algolia.com/api/v1/search_by_date?tags=story,author_whoishiring&hitsPerPage=20", 30)
+    ids = [x["objectID"] for x in (stories or {}).get("hits", []) if "who is hiring" in (x.get("title") or "").lower()][:months]
+    urls = set()
+    for sid in ids:
+        for page in range(10):
+            d = get_json(f"https://hn.algolia.com/api/v1/search?tags=comment,story_{sid}&hitsPerPage=500&page={page}", 30)
+            if not isinstance(d, dict): break
+            for x in d.get("hits", []):
+                urls |= set(re.findall(r"https?://[^\s\"'<>]+", h.unescape(x.get("comment_text") or "")))
+            if page + 1 >= d.get("nbPages", 0): break
+    print(f"Hacker News: {len(urls)} links in {len(ids)} threads")
+    return urls
+
+
 def tokens(system, urls):
     _, rx, skip = SYSTEMS[system]
     out = set()
@@ -259,6 +277,9 @@ def main():
         for s in a.systems:
             for p in SYSTEMS[s][0]: found[s] |= tokens(s, got.get(p, ()))
     todo = []
+    if not a.recheck:            # every day: employers' boards linked from Hacker News hiring threads, on every system we read
+        hn = hn_addresses()
+        for sys_ in a.systems: found[sys_] |= tokens(sys_, hn)
     if a.recheck:
         for p in prev:
             if p["count"] <= MAX_JOBS: found[p["ats"]].add(p["token"])
