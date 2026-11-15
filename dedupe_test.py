@@ -38,6 +38,8 @@ DIFFERENT = [   # (a, b): two openings, or not the same company
     (rec("lever-x-1", "Example", "Account Executive", "Paris, France"), rec("lever-x-2", "Example", "Account Executive", "Paris, France")),   # one board, twice
     (rec("ashby-t-1", "Tandem Health", "Product Manager", "Stockholm"), rec("platsbanken-1", "Tandem Health AB", "Product Marketing Manager", "Stockholm, Sweden", src="Platsbanken")),
     (rec("ashby-t-1", "Tandem Health", "Software Engineer", "Stockholm"), rec("platsbanken-2", "Tandem Health AB", "Senior Software Engineer", "Stockholm", src="Platsbanken")),
+    (rec("greenhouse-n-1", "Nebius", "Staff Machine Learning Engineer, LLM", "London, UK"), rec("arbeitnow-n-2", "Nebius", "Senior Machine Learning Engineer, LLM", "London")),
+    (rec("greenhouse-d-1", "Databricks", "Lead Solutions Architect - GenAI", "Remote - Sweden", True), rec("jobicy-d-2", "Databricks", "Lead Solutions Architect - GenAI", "Remote, UK", True)),
 ]
 
 for a, b in SAME:
@@ -52,6 +54,14 @@ for a, b in SAME:
 for a, b in DIFFERENT:
     db = {a["id"]: dict(a), b["id"]: dict(b)}
     check(f"different: {a['title']} ({a['location']}) / {b['title']} ({b['location']})", dedupe.run(db) == 0)
+
+# two postings of one board never merge, even through a third listing that matches both
+db = {x["id"]: x for x in (rec("ashby-h-1", "Horizon3.ai", "Enterprise Account Executive", "Norway", True), rec("ashby-h-2", "Horizon3.ai", "Enterprise Account Executive", "Belgium", True),
+                            rec("jobicy-h-3", "Horizon3.ai", "Enterprise Account Executive", "Remote", True))}
+dedupe.run(db)
+check("one board's two postings stay two", not db["ashby-h-1"].get("dup_of") and not db["ashby-h-2"].get("dup_of") and db["jobicy-h-3"].get("dup_of") == "ashby-h-1",
+      [(j["id"], j.get("dup_of")) for j in db.values()])
+check("remote US spellings agree", dedupe.lands({"usa", "*remote"}) == dedupe.lands({"united states (remote)"}) == {"united states"})
 
 # a job posted on our site ranks above a job board, below the employer's own system
 db = {x["id"]: x for x in (rec("direct-acme-1", "Acme", "QA Engineer", "Remote", True, direct=True), rec("remotive-acme-2", "Acme", "QA Engineer", "Remote", True),

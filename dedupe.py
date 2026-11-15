@@ -83,11 +83,44 @@ def day(j):
     except ValueError: return None
 
 
-def same(a, b):
-    ta, tb = title_key(a["title"], a.get("location")), title_key(b["title"], b.get("location"))
-    if ta != tb and token_set_ratio(ta, tb) < 0.9: return False
-    if not overlap(a, b): return False
-    da, dbb = day(a), day(b)
+LEVELS = {"intern", "internship", "junior", "senior", "staff", "principal", "lead", "head", "director", "chief", "vice", "i", "ii", "iii", "iv", "entry"}
+COUNTRY_WORDS = {"usa": "united states", "us": "united states", "u s": "united states", "united states of america": "united states", "america": "united states",
+                 "uk": "united kingdom", "u k": "united kingdom", "england": "united kingdom", "great britain": "united kingdom", "britain": "united kingdom"}
+
+
+def lands(p):
+    """The countries among a record's place words ("Remote - Sweden" -> {"sweden"}), US and UK spellings made one."""
+    import countries
+    names = {n.lower() for n in countries.NAMES.values()} | set(COUNTRY_WORDS.values())
+    out = set()
+    for x in p:
+        x = re.sub(r"\bremote\b|[-–—()\[\]]", " ", x).strip()
+        x = re.sub(r"\s+", " ", re.sub(r"\.", " ", x)).strip()
+        x = COUNTRY_WORDS.get(x, x)
+        if x in names: out.add(x)
+    return out
+
+
+def prepared(j):
+    """What the comparison needs, worked out once per record (a company with 2,000 jobs on its board and 50 on a job site
+    means 100,000 pairs)."""
+    t = title_key(j["title"], j.get("location"))
+    w = set(t.split())
+    p = places(j)
+    return {"t": t, "w": w, "lv": w & LEVELS, "p": p, "c": lands(p), "d": day(j)}
+
+
+def same(a, b, pa=None, pb=None):
+    pa, pb = pa or prepared(a), pb or prepared(b)
+    if pa["t"] != pb["t"]:
+        wa, wb = pa["w"], pb["w"]
+        if not wa or not wb or len(wa & wb) < 0.75 * max(len(wa), len(wb)): return False      # far apart: no need for the slow comparison
+        if pa["lv"] != pb["lv"]: return False                                    # "Senior …" and "Staff …" are two openings
+        if token_set_ratio(pa["t"], pb["t"]) < 0.9: return False
+    xa, xb = pa["p"], pb["p"]
+    if pa["c"] and pb["c"] and not pa["c"] & pb["c"]: return False             # "Remote, UK" and "Remote - Sweden"
+    if xa and xb and not ("*remote" in xa and "*remote" in xb) and not ((xa - {"*remote"}) & (xb - {"*remote"})) and not (pa["c"] & pb["c"]): return False
+    da, dbb = pa["d"], pb["d"]
     return not (da and dbb and abs((da - dbb).days) > DAYS)
 
 
@@ -114,25 +147,30 @@ def run(db, label=lambda j: j["id"].split("-", 1)[0]):
     marked = 0
     for jobs in by_co.values():
         if len({source(j) for j in jobs}) < 2: continue          # one source only: nothing to compare (almost every company)
-        parent = {j["id"]: j["id"] for j in jobs}
-        def find(x):
-            while parent[x] != x:
-                parent[x] = parent[parent[x]]; x = parent[x]
-            return x
-        by_src = defaultdict(list)
-        for j in jobs: by_src[source(j)].append(j)
-        srcs = list(by_src)
-        for i, s1 in enumerate(srcs):
-            for s2 in srcs[i + 1:]:
-                for a in by_src[s1]:
-                    for b in by_src[s2]:
-                        if find(a["id"]) != find(b["id"]) and same(a, b): parent[find(a["id"])] = find(b["id"])
-        clusters = defaultdict(list)
-        for j in jobs: clusters[find(j["id"])].append(j)
-        for cl in clusters.values():
-            if len(cl) < 2: continue
-            keep = min(cl, key=lambda j: (rank(j), j.get("first_seen_at") or j.get("first_seen") or "9", j["id"]))
-            keep["seen_on"] = [{"source": label(j), "url": j["url"]} for j in cl if j is not keep]
-            for j in cl:
-                if j is not keep: j["dup_of"] = keep["id"]; marked += 1
+        prep = {j["id"]: prepared(j) for j in jobs}
+        # Records are taken best source first. Each either matches a record already kept from another source and is attached to it,
+        # or is kept itself. Kept records never merge with each other, so two postings of one board ("Account Executive, Norway"
+        # and "…, Belgium") stay two even when a job site lists a third copy that matches both.
+        keepers, by_word = [], defaultdict(list)
+        for j in sorted(jobs, key=lambda j: (rank(j), j.get("first_seen_at") or j.get("first_seen") or "9", j["id"])):
+            pj, src = prep[j["id"]], source(j)
+            best, seen = None, set()
+            for w in pj["w"]:
+                for k in by_word.get(w, ()):
+                    if id(k) in seen: continue
+                    seen.add(id(k))
+                    if source(k) == src or any(x["src_key"] == src for x in k.get("_dups", ())): continue
+                    if same(j, k, pj, prep[k["id"]]) and (best is None or (pj["t"] == prep[k["id"]]["t"]) > (pj["t"] == prep[best["id"]]["t"])):
+                        best = k
+            if best is None:
+                keepers.append(j)
+                for w in pj["w"]: by_word[w].append(j)
+            else:
+                best.setdefault("_dups", []).append({"src_key": src, "job": j})
+        for k in keepers:
+            dups = k.pop("_dups", None)
+            if not dups: continue
+            k["seen_on"] = [{"source": label(x["job"]), "url": x["job"]["url"]} for x in dups]
+            for x in dups:
+                x["job"]["dup_of"] = k["id"]; marked += 1
     return marked
