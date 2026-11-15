@@ -920,6 +920,13 @@ def microdata(props):
     return "".join(out)
 
 
+def job_indexable(j):
+    """A job page goes to search engines only while the job is open and the page carries the employer's full text. A closed job's page
+    stays online for visitors, and a page with only the opening lines of the posting is too thin to rank: both are noindex and left out
+    of the sitemap, so Google spends its visits on the pages that can rank (categories, places, salaries, open jobs with their text)."""
+    return bool(j["active"] and j.get("desc") and not j.get("tg"))
+
+
 def job_page(j, active_by_cat):
     canonical = f"{FULL}/job/{j['slug']}/"
     # the full description comes from the collector already reduced to a few plain tags; anything else falls back to the excerpt
@@ -1098,7 +1105,8 @@ def job_page(j, active_by_cat):
     desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + f". {CAT[j['cat']]} role"
             + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply through the Telegram post." if j.get("tg") else ". Apply on the company site."))
     # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
-    page(f"job/{j['slug']}/", title, desc, body, head + ('<meta name="robots" content="noindex">' if j.get("tg") else ""), sitemap=not j.get("tg"), compact=True)
+    ok_ = job_indexable(j)
+    page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=ok_, compact=True)
 
 
 def embed_code(spec, label, page_path, limit=6):
@@ -2134,7 +2142,7 @@ def main():
         size = records.save(ROOT / "data" / "jobs.db", jobs, sys.modules[__name__])
         print(f"job records: {len(jobs):,} in data/jobs.db, {size / 2**20:.0f} MiB")
     if rec_mode == "1":
-        URLS.extend(f"job/{j['slug']}/" for j in jobs if not j.get("tg"))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
+        URLS.extend(f"job/{j['slug']}/" for j in jobs if job_indexable(j))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
     else:
         for j in jobs: job_page(j, by_cat)
     listing("archive/", "Closed jobs archive", f"Closed Jobs Archive ({len(archived):,}) | {SITE}",
@@ -5725,11 +5733,19 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                            + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{job_mod.get(u, TODAY)}</lastmod></url>" for u in urls) + "</urlset>")
     job_urls = [u for u in URLS if u.startswith("job/")]
-    parts = [("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/")])]
+    # the pages the site is built to rank with: the home page, one-level hubs (jobs/, salaries/, remote/ ...), every category, every
+    # country and part of the world, every role; listed first and in a file of their own, so they are the first thing to read
+    countryish = {slug_ for _, slug_, rule_ in PLACES if isinstance(rule_, str)}
+    is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles)/[a-z0-9-]+/", u) is not None
+                         or (u.startswith("locations/") and u.count("/") == 2 and u.split("/")[1] in countryish))
+    core_urls = [u for u in URLS if not u.startswith("job/") and is_core(u)]
+    parts = [("sitemaps/core.xml", core_urls), ("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/") and not is_core(u)])]
     parts += [(f"sitemaps/jobs-{i // 20000 + 1}.xml", job_urls[i:i + 20000]) for i in range(0, len(job_urls), 20000)]
     for name, urls in parts: write(name, urlset(urls), sitemap=False)
     write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-          + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{TODAY}</lastmod></sitemap>" for name, _ in parts) + "</sitemapindex>", sitemap=False)
+          + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{max([job_mod.get(u, TODAY) for u in urls] or [TODAY])}</lastmod></sitemap>" for name, urls in parts if urls)
+          + "</sitemapindex>", sitemap=False)
+    print(f"sitemaps: {len(core_urls):,} main pages, {sum(len(u) for n, u in parts[1:2]):,} other pages, {len(job_urls):,} open jobs with their full text")
     ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
                "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
     if MAIL.get("security"):

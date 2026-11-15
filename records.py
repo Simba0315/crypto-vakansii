@@ -81,6 +81,21 @@ def index(con):
     con.execute("INSERT INTO jobs_fts (jobs_fts) VALUES ('optimize')")
 
 
+LIVE_DB = Path(os.environ.get("HRN_LIVE_DB") or Path(__file__).parent.parent / "live.db")     # live.py: jobs seen since the last upload
+
+
+def live_row(sql, args):
+    """One query against the live store (live.py), or None when there is none yet."""
+    if not LIVE_DB.exists(): return None
+    con = sqlite3.connect(f"file:{LIVE_DB}?mode=ro", uri=True)
+    try:
+        return con.execute(sql, args).fetchall()
+    except sqlite3.Error:
+        return None
+    finally:
+        con.close()
+
+
 class Store:
     """Reads data/jobs.db and builds job pages from it. When the hourly build puts a new file in place, the next request opens it."""
 
@@ -147,6 +162,24 @@ class Store:
             got = {s: json.loads(r) for s, r in self.con.execute(f"SELECT slug, rec FROM jobs WHERE slug IN ({','.join('?' * len(slugs))})", list(slugs))}
         return [got[s] for s in slugs if s in got]
 
+    def moved(self, slug):
+        """The address the hourly record gave a job first published live under this one, or None."""
+        got = live_row("SELECT to_slug FROM moved WHERE slug = ?", (slug,))
+        return got[0][0] if got else None
+
+    def latest(self, limit=30):
+        """The newest open jobs, those found live first: [record], newest first by the time we first saw them."""
+        rows = [json.loads(r) for (r,) in (live_row("SELECT rec FROM live WHERE closed = '' ORDER BY seen_at DESC LIMIT ?", (limit,)) or [])]
+        rows = [r for r in rows if not r.get("closed_only")]
+        with self.lock:
+            self._fresh()
+            rows += [json.loads(r) for (r,) in self.con.execute("SELECT rec FROM jobs WHERE active = 1 ORDER BY first_seen DESC, rowid DESC LIMIT ?", (limit,))]
+        rows.sort(key=lambda r: (r.get("ts") or 0, r.get("first_seen_at") or ""), reverse=True)    # newest posting first; a job we only now noticed but posted in August is not "new"
+        seen, out = set(), []
+        for r in rows:
+            if r["slug"] not in seen: seen.add(r["slug"]); out.append(r)
+        return out[:limit]
+
     def record(self, slug):
         """One job as stored, with its text, or None."""
         with self.lock:
@@ -162,12 +195,17 @@ class Store:
 
         Built as of the build that wrote the records (records_test.py compares it with that build's file), or, for a live server, as of
         now: the age of a posting and "posted 20 minutes ago" are then right when the page is opened, not when the site was built."""
+        live = live_row("SELECT rec, descr, closed FROM live WHERE slug = ?", (slug,)) if slug else None
         with self.lock:
             self._fresh()
             row = self.con.execute("SELECT rec, descr FROM jobs WHERE slug = ?", (slug,)).fetchone()
+            if row is None and live and not json.loads(live[0][0]).get("closed_only"):
+                row = live[0][:2]                       # a job live.py found after the last upload
             if row is None: return None
             j = json.loads(row[0])
             if row[1]: j["desc"] = row[1]
+            if live and live[0][2] and j.get("active"):  # live.py saw it leave its board: closed now, not at the next upload
+                j.update(active=False, closed=live[0][2])
             b, out = self.b, {}
             if self.live:
                 b.NOW = int(time.time())
