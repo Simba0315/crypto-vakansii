@@ -1126,18 +1126,18 @@
         var g = cv.getContext('2d'), full = found.slice(0, nFull || found.length), paid = full.filter(function (j) { return j[13]; }).map(function (j) { return j[13]; }).sort(function (a, b) { return a - b; });
         var cos = {}; full.forEach(function (j) { cos[j[2]] = (cos[j[2]] || 0) + 1; });
         var top = Object.keys(cos).sort(function (a, b) { return cos[b] - cos[a]; }).slice(0, 3);
-        g.fillStyle = '#f6f5f0'; g.fillRect(0, 0, 1200, 630); g.fillStyle = '#b7eec3'; g.fillRect(0, 0, 1200, 14);
-        g.fillStyle = '#0e0e0c'; g.font = '600 30px system-ui, sans-serif'; g.fillText('My job market · ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 70, 96);
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, 1200, 630); g.fillStyle = '#e8552b'; g.fillRect(0, 0, 1200, 14);
+        g.fillStyle = '#121110'; g.font = '600 30px system-ui, sans-serif'; g.fillText('My job market · ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 70, 96);
         g.font = '800 150px system-ui, sans-serif'; g.fillText(nf(nFull || found.length), 70, 270);
         g.font = '500 36px system-ui, sans-serif'; g.fillText((nFull ? 'open jobs fit all ' + asked + ' of my answers' : 'open jobs fit my answers in part'), 76, 326);
         g.fillStyle = '#55534c'; g.font = '500 28px system-ui, sans-serif';
         var lines = [profile.cats.length ? 'Work: ' + profile.cats.map(function (c) { return catName[c] || c; }).join(', ') : '', profile.where === 'remote' ? 'From home' : profile.where === 'office' ? 'At an office' : '',
           profile.pay ? 'Pay from ' + kfmt(profile.pay) + ' a year' : '', profile.skills.length ? 'Skills: ' + profile.skills.slice(0, 5).join(', ') : ''].filter(Boolean);
         lines.forEach(function (ln, i) { g.fillText(ln.slice(0, 70), 76, 392 + i * 40); });
-        g.fillStyle = '#0e0e0c'; g.font = '600 28px system-ui, sans-serif';
+        g.fillStyle = '#121110'; g.font = '600 28px system-ui, sans-serif';
         if (paid.length >= 5) g.fillText('Half of them pay up to ' + kfmt(paid[Math.floor(paid.length / 2)]) + ' or more', 700, 392);
         if (top.length) g.fillText('Hiring most: ' + top.join(', ').slice(0, 34), 700, 432);
-        g.fillStyle = '#1f9d55'; g.fillRect(70, 560, 60, 6); g.fillStyle = '#0e0e0c'; g.font = '700 26px system-ui, sans-serif'; g.fillText('Hiring Right Now', 146, 572);
+        g.fillStyle = '#e8552b'; g.fillRect(70, 560, 60, 6); g.fillStyle = '#121110'; g.font = '700 26px system-ui, sans-serif'; g.fillText('Hiring Right Now', 146, 572);
         g.fillStyle = '#6c6a62'; g.font = '500 22px system-ui, sans-serif'; g.fillText(location.host + P + '/for-you/', 380, 572);
         cv.toBlob(function (blob) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-job-market.png'; document.body.appendChild(a); a.click(); a.remove(); tell('The picture was saved to your downloads.'); });
         return;

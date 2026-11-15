@@ -1,5 +1,5 @@
 /* Hiring Right Now — embeddable jobs widget.
-   <div data-hrn-jobs="skill:python" data-limit="6" data-layout="list" data-theme="auto" data-accent="#1f9d55">
+   <div data-hrn-jobs="skill:python" data-limit="6" data-layout="list" data-theme="auto" data-accent="#c93f18">
      <a href="…">Python jobs on Hiring Right Now</a>
    </div>
    <script src="…/widget.js" async></script>
@@ -20,12 +20,12 @@
   var MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,monospace';
   var CSS =
     ':host{all:initial;display:block}' +
-    '.w{--bg:#fff;--ink:#0e0e0c;--mut:#5d5b54;--line:#e2dfd5;--hov:#f4f8f4;--acc:#1f9d55;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden}' +
-    '.w.dark{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#1b211c;--acc:#5fd486}' +
-    '@media(prefers-color-scheme:dark){.w.auto{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#1b211c;--acc:#5fd486}}' +
+    '.w{--bg:#fff;--ink:#0e0e0c;--mut:#5d5b54;--line:#e2dfd5;--hov:#f8f5f2;--acc:#c93f18;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden}' +
+    '.w.dark{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#221d1a;--acc:#ff7a52}' +
+    '@media(prefers-color-scheme:dark){.w.auto{--bg:#141412;--ink:#f3f2ec;--mut:#a5a399;--line:#2b2b27;--hov:#221d1a;--acc:#ff7a52}}' +
     '.h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}' +
     '.ht{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:-.01em}' +
-    '.dot{width:8px;height:8px;border-radius:50%;background:#3ecf5f;flex:none}' +
+    '.dot{width:8px;height:8px;border-radius:50%;background:#e8552b;flex:none}' +
     '.n,.by{font-size:12.5px;color:var(--mut);white-space:nowrap}' +
     'a{color:inherit;text-decoration:none}' +
     '.r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);position:relative}' +

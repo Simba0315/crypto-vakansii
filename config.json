@@ -4,6 +4,14 @@
   "base_path": "",
   "contact_telegram": "orderbulkreviews",
   "contact_email": "support@jobseveryhour.com",
+  "emails": {
+    "jobs": "jobs@jobseveryhour.com",
+    "partners": "partners@jobseveryhour.com",
+    "press": "press@jobseveryhour.com",
+    "privacy": "privacy@jobseveryhour.com",
+    "abuse": "abuse@jobseveryhour.com",
+    "security": "security@jobseveryhour.com"
+  },
   "prices": [
     {
       "name": "Standard listing",

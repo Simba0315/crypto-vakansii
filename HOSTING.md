@@ -108,6 +108,28 @@ once the owner allows it.
 
 ### Email
 
+**Mailboxes by department (the owner, 15 Nov: "like large companies, for different departments; not hello").** Beget, domain
+jobseveryhour.com. Each box is created by the owner, who sets its password; each one forwards a copy to support@ so one inbox
+sees everything. All eight created by the owner on 15 Nov 2026; `config.json` `emails` lists the ones the site shows:
+
+| Address | For | Where it appears |
+|---|---|---|
+| support@ | job seekers' questions, everything else | ✅ exists; footer, about, safety |
+| jobs@ | employers: posting a job, a wrong listing, removing a job | post-a-job, terms, about |
+| partners@ | Telegram channels, sites with our widget, list sites, API users | partners, about |
+| press@ | journalists: data requests, quotes, interviews | media kit, about |
+| privacy@ | data requests (GDPR / CCPA: see, export, delete) | privacy, about |
+| abuse@ | reports of scam jobs and fake recruiters | safety, about, "Report a problem" on every job page (the subject names the job) |
+| adam@ | letters written by a person: outreach to partners and list sites, signed with a name | not on the site |
+| security@ | reports of security holes | `/.well-known/security.txt`, about |
+
+Later, with payments: billing@. postmaster@ is kept by Beget for the domain.
+
+Keeping the addresses out of spam lists: Cloudflare's Email Address Obfuscation is on (checked 15 Nov: on /about/ and /safety/
+the address is served as `__cf_email__`, so scrapers that read the HTML do not see it, while people do). Beget's spam filter is on
+for each box. Keeping our letters out of Gmail's spam: SPF and DMARC are set; DKIM is added when Beget's panel shows it, and then
+DMARC moves from `p=none` to `p=quarantine`. An address goes on the site only after its box exists, so no letter bounces.
+
 - **Mailbox (hello@, support@):** Beget mail is fine for a mailbox people write to: MX, SPF and DKIM records go into Cloudflare
   DNS. A free alternative with no new account: Cloudflare Email Routing forwards hello@jobseveryhour.com to an existing inbox
   (receiving only; replies would come from that inbox).
