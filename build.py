@@ -460,7 +460,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/tech/">Tech jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
@@ -1272,7 +1272,15 @@ def main():
             for j in by_role[s_][1]:
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
-    fam_show = sorted(fam_rows, key=lambda f: roles_info.SHOW_ORDER.index(f[0]) if f[0] in roles_info.SHOW_ORDER else 99)      # everyday work first, then tech
+    fam_show = sorted(fam_rows, key=lambda f: -len(f[4]))      # by open jobs, so the order follows the jobs as sources grow (owner, 15 Nov: "IT first")
+    TECH_FAMS = ["software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering"]
+    # the hero's shortcut chips: among the roles people search for most, the three tech ones with the most open jobs, then two others
+    # (the owner, 15 Nov: "IT first: people mostly look for IT"); the order follows the counts
+    CHIP_TECH = ["software-engineer", "product-manager", "data-analyst", "data-scientist", "machine-learning-engineer", "devops-engineer", "cloud-engineer",
+                 "cybersecurity", "frontend-engineer", "backend-engineer", "product-designer"]
+    CHIP_OTHER = ["account-executive", "customer-support", "sales-representative", "marketing-manager", "project-manager", "recruiter", "accounting", "operations-manager"]
+    by_n = lambda slugs: sorted((s_ for s_ in slugs if s_ in by_role), key=lambda s_: -len(by_role[s_][1]))
+    hero_chips = "".join(f'<a href="{P}/roles/{s_}/">{e(by_role[s_][0][0].upper() + by_role[s_][0][1:])}</a>' for s_ in by_n(CHIP_TECH)[:3] + by_n(CHIP_OTHER)[:2])
     def dir_block(fs, fn, fd, live, js_, top=None, tag="h2"):
         return (f'<div class="dirb"><{tag}><a href="{P}/categories/{fs}/">{icon(fs)}<u>{e(fn)}</u></a><span>{len(js_):,}</span></{tag}><p>{e(fd[0].upper() + fd[1:])}.</p><ul>'
                 + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/roles/{s_}/">{e(nm)}</a><span>{c:,}</span></li>' for s_, nm, c in (live if top is None else live[:top]))
@@ -1509,10 +1517,10 @@ def main():
             f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
             f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
             f'<p class="sub">Old listings stay online long after the job is filled. We read {m:,} company career pages' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and keep only what is still open.</p>'
-            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="What: job title, skill or company">'
+            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Software engineer, data analyst, customer service…" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
-            f'<p class="popular"><a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/entry-level/">Entry-level</a>'
-            f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/tech/">Tech</a><a href="{P}/crypto/">Crypto</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
+            f'<p class="popular"><a class="pop-tech" href="{P}/tech/">Tech jobs</a>{hero_chips}<a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a>'
+            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
@@ -1901,7 +1909,6 @@ def main():
                 + f'<li class="more"><a href="{P}/skills/">All {len(skill_counts)} skills</a></li></ul></div>')
     # The tech hub (/tech/): since 15 Nov 2026 the site covers every profession, so tech gets a page of its own, as crypto has: its
     # categories, its newest jobs, the tech-skill rankings and comparisons.
-    TECH_FAMS = ["software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering"]
     tech_fams = [f for f in fam_rows if f[0] in TECH_FAMS]
     tech_seen, tech_js = set(), []
     for f in tech_fams:

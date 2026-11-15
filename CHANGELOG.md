@@ -2,6 +2,8 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-15 — Owner's correction, "IT first": the home page's categories are ordered by open jobs (counted at build, so the order follows the jobs), the shortcut chips start with Tech jobs and the biggest tech roles, the search placeholder leads with tech, and "Tech jobs" is in the header. The header no longer overflows between 1,100 and 1,400 px (the menu folds below 1,180 px, links sit closer above).
+
 - 2026-11-15 — All professions, not only tech (owner's decision): "tech" removed from page titles, descriptions, H1s, the tools pages and the templates (about 140 places; URLs unchanged), kept only where the subject is tech (tech-skill rankings, a company's tech stack). New `/tech/` hub like `/crypto/` (66,534 jobs in seven tech categories, charts, tech-skill rankings). The category directory starts with everyday work (customer service, admin, healthcare, education, finance, legal, sales…), then tech. Search placeholders show non-tech roles.
 
 - 2026-11-15 — Design pass by page type (light, dark, phone): no space before colons and commas in headings (equal-width figures now only on number columns), one H1 on the search page, the category heading "Where … roles are" and no repeated "who is hiring" block, questions moved to the end of list pages, a fuller reports hub (this month's figures and skills, studies as cards), pricing without green fills, the light green tint replaced by a neutral one site-wide, the month in the companies title. Wellfound read again and its gaps recorded in COMPETITOR_GAPS.md.
