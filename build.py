@@ -29,6 +29,14 @@ LVL_NAME = {"Intern": "Intern", "Junior": "Junior", "Senior": "Senior", "Lead": 
 FULL = BASE + P
 TODAY = datetime.date.today().isoformat()
 e = html.escape
+MAIL = {k: v for k, v in (CFG.get("emails") or {}).items() if v}       # one address per department: jobs, partners, press, privacy, abuse, security
+
+
+def mail_a(kind, subject=""):
+    """A department's address as a mail link; support@ when that department has none. Cloudflare hides addresses in the HTML
+    from scrapers (Email Address Obfuscation), so they are written plainly here."""
+    addr = MAIL.get(kind) or CFG.get("contact_email", "")
+    return f'<a href="mailto:{e(addr)}{e("?subject=" + quote(subject)) if subject else ""}">{e(addr)}</a>' if addr else ""
 CAT = {s: n for s, n, _ in CATS} | {OTHER[0]: OTHER[1]}
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 # ---------------------------------------------------------------- where a job is
@@ -1058,7 +1066,8 @@ def job_page(j, active_by_cat):
                  f'<p class="note">You apply on the employer’s own page, free.{" This job was posted here by the employer; the link was checked when it was published." if j.get("direct") else ""}</p>'
                  '<p class="share" id="share"></p>'
                  f'<p class="note"><a href="{P}/safety/">How to check that a job offer is real</a>'
-                 + (f' · <a href="https://t.me/{e(CFG["contact_telegram"])}" rel="nofollow noopener">Report a problem with this listing</a>' if CFG.get("contact_telegram") else "") + "</p>") if j["active"] else "") + glance
+                 + (f' · <a href="mailto:{e(MAIL["abuse"])}?subject={e(quote("Listing: " + j["title"] + " at " + j["company"] + " (" + FULL + "/job/" + j["slug"] + "/)"))}" rel="nofollow">Report a problem with this listing</a>' if MAIL.get("abuse")
+                    else f' · <a href="https://t.me/{e(CFG["contact_telegram"])}" rel="nofollow noopener">Report a problem with this listing</a>' if CFG.get("contact_telegram") else "") + "</p>") if j["active"] else "") + glance
     loc = f" · {e(j['location'])}" if j["location"] else ""
     body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
@@ -3945,7 +3954,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + section("What this site checks, and what it cannot", "<p><b>Checked every hour:</b> that each job still exists on the employer’s own hiring system, where it came from, and when it was posted. "
                    "The address the Apply button opens is written under the button on every job page, so you can see where you are going before you click.</p>"
                    "<p><b>Not checked:</b> what happens after you leave this site, how an employer treats applicants, and whether a company can pay. "
-                   + (f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access. Our only contact is {contact}.</p>" if contact else
+                   + (f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access. Our only contacts are {contact}, and {mail_a("abuse")} for reports of scam jobs and fake recruiters.</p>" if contact else
                       f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access.</p>")
                    + "<p><b>Something looks wrong?</b> Every job page has a “Report a problem with this listing” link. A report about money, an install request or a move to a chat app is looked at first.</p>")
          + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever or Ashby), links straight to that posting and is checked again every hour; "
@@ -3985,7 +3994,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "<h2 class='h2s'>What we do not do</h2><p>No advertising trackers, no analytics cookies, no selling of data.</p>"
          "<h2 class='h2s'>Third parties</h2><p>The site is served by a hosting provider that, like any web server, sees your IP address when you load a page. Fonts, scripts and images are served from this site, not from other companies. "
          "When you press “Apply”, you go to the employer's own site, which has its own privacy policy.</p>"
-         "<h2 class='h2s'>Changes</h2><p>If paid accounts or email alerts are added, this page will be updated before they go live.</p>")
+         + (f"<h2 class='h2s'>Questions and requests about your data</h2><p>Write to {mail_a('privacy')}. As nothing about you is stored on our side, there is usually nothing to see or erase; we answer every request within 30 days.</p>" if MAIL.get("privacy") else "")
+         + "<h2 class='h2s'>Changes</h2><p>If paid accounts or email alerts are added, this page will be updated before they go live.</p>")
     page("terms/", f"Terms of use | {SITE}", f"The terms for using {SITE}: what the site is, how accurate the listings are, where you apply, how job descriptions are used and how to get a listing removed.",
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
@@ -3994,7 +4004,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
          "<h2 class='h2s'>Job descriptions</h2><p>Descriptions are the employers’ own text, read from the hiring feeds they publish for display on other sites. They are shown unchanged, with the employer named and a link to the original posting.</p>"
-         "<h2 class='h2s'>Removing a listing</h2><p>" + (f"Employers who want a listing or company page removed can write to us: {contact}. It is taken down at the next update." if contact
+         "<h2 class='h2s'>Removing a listing</h2><p>" + (f"Employers who want a listing or company page removed can write to {mail_a("jobs")}. It is taken down at the next update." if contact
                                                         else "Employers who want a listing or company page removed can ask through the contact details on the employers page.") + "</p>")
 
     # For you: five plain questions; the answers stay in the browser and every open job is checked against them
@@ -4229,7 +4239,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          f'<a class="feat" href="{P}/post-a-job/"><h2>Employers and recruiters</h2><p>Featured jobs, a company spotlight, or sponsorship of one skill or category page.</p></a>'
          f'<a class="feat" href="{P}/trends/"><h2>Writers and researchers</h2><p>Hiring and salary data you can quote, with CSV downloads and ready citations.</p></a>'
          '<div class="feat"><h2>Career services</h2><p>Resume review, interview coaching, courses. We plan a page that recommends services visitors find useful; write to us if you run one.</p></div></div>'
-         + ('<section class="sec"><div class="sec-head"><h2>Get in touch</h2></div><p>Write to us: ' + contact + ".</p></section>" if contact else
+         + ('<section class="sec"><div class="sec-head"><h2>Get in touch</h2></div><p>Write to ' + mail_a("partners") + ".</p></section>" if MAIL.get("partners") or contact else
             '<div class="banner" style="margin-top:24px">Contact details will be published here shortly. The widgets, feeds and data above already work without asking anyone.</div>'))
 
     # Bare page for iframe embeds: /embed/?jobs=skill:python&limit=6&layout=cards&theme=dark&accent=%23ff5500
@@ -4608,7 +4618,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     else:
         pay = (f'<section class="sec"><div class="sec-head"><h2>How posting a job will work</h2></div>{steps}'
                '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.'
-               + (f" Questions in the meantime: {contact}." if contact else "") + "</div></section>")
+               + (f" Questions in the meantime: {mail_a('jobs')}." if MAIL.get("jobs") or contact else "") + "</div></section>")
     pains = [("Lists are sorted by date", f"{WEEKNEW:,} roles were posted here in the last 7 days, so a job that is not pinned leaves the first page within days."),
              ("Roles without pay get filtered out", f"{100 - SALPCT}% of postings here show no salary. Anyone who filters or sorts by pay never sees them. Adding a range costs nothing."),
              ("Company spotlight", "Your logo and your open roles on the home page and at the top of the companies list.")]
@@ -5240,7 +5250,13 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p>'
          f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p>'
          f'<h2 class="h2s">How to contact {e(SITE)}</h2><p>' + (f"Write to us: {contact}." if contact else "Contact details will be published on this page shortly.")
-         + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>.</p>', head=org_ld)
+         + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>.</p>'
+         + ('<div class="tablewrap"><table><tr><th>About</th><th>Address</th></tr>'
+            + "".join(f"<tr><td>{what}</td><td>{mail_a(k)}</td></tr>" for k, what in [
+                ("jobs", "Posting, correcting or removing a job"), ("partners", "Widgets, the API, job channels and communities"),
+                ("press", "Press: data, quotes, interviews"), ("privacy", "Your data"), ("abuse", "A scam job or a fake recruiter"),
+                ("security", "A security problem on the site")] if MAIL.get(k))
+            + "</table></div>" if MAIL else ""), head=org_ld)
     page("methodology/", f"How {SITE} Collects and Checks Tech Jobs — methodology", f"How {SITE} collects job listings, detects salary, skills, perks and remote status, calculates salary medians and handles closed jobs.",
          crumbs(("Methodology", "")) + f"<h1>How {e(SITE)} collects and checks jobs</h1>"
          f'<p class="plain"><b>In plain words:</b> where the jobs on this site come from, how we know a job is still open, and what each label and number means. Unfamiliar word? See the <a href="{P}/glossary/">glossary</a>.</p>'
@@ -5443,6 +5459,9 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
           + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{TODAY}</lastmod></sitemap>" for name, _ in parts) + "</sitemapindex>", sitemap=False)
     ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
                "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
+    if MAIL.get("security"):
+        write(".well-known/security.txt", f"Contact: mailto:{MAIL['security']}\nExpires: {(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=180)).strftime('%Y-%m-%dT00:00:00Z')}\n"
+              f"Preferred-Languages: en, ru\nCanonical: {FULL}/.well-known/security.txt\n", sitemap=False)
     write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
           f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     # IndexNow: the key file, and the list of pages that changed for the workflow to send (Bing, and the assistants that search through it).
