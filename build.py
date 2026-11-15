@@ -288,6 +288,7 @@ FOOT = {"cats": ""}
 SIM = {"cat": {}, "comp": {}}
 OPEN = Counter()   # open roles per company
 FACT = {}          # one-paragraph hiring summary per company
+TB = {}            # trust marks per company: [(name, the number behind it)], shown on its page and on each of its job pages
 CATMED = {}        # median advertised salary per category slug
 EST = {}           # median advertised salary per (category slug, level)
 PERK_SLUG = {name: slug for name, slug, _ in PERKS}
@@ -576,7 +577,8 @@ def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
-    if j["remote"]: b.append('<span class="pill ok">Remote</span>')
+    if j["remote"]: b.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')   # how the work is done
+    elif j.get("hybrid"): b.append('<span class="pill">Hybrid</span>')
     if j["level"]: b.append(f'<span class="pill">{e(LVL_NAME[j["level"]])}</span>')
     b += [f'<span class="pill">{e(t)}</span>' for t in j["tags"][:3]]
     loc = j["location"] if len(j["location"]) <= 60 else j["location"][:57].rstrip(" ,;") + "…"
@@ -1006,7 +1008,7 @@ def job_page(j, active_by_cat):
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
-    if j["remote"]: pills.append('<span class="pill ok">Remote</span>')
+    if j["remote"]: pills.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')
     elif j.get("hybrid"): pills.append('<span class="pill">Hybrid</span>')
     if j["salary"]: pills.append(f'<span class="pill sal">{e(j["salary"])}</span>')
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
@@ -1086,6 +1088,9 @@ def job_page(j, active_by_cat):
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all its roles</a></p></div>'
+    if j["active"] and TB.get(j["company"]):        # the employer's marks, the same as on its page: each with its rule and today's number
+        about += ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in TB[j["company"]])
+                  + f'<a href="{P}/companies/#marks">What the marks mean</a></p>')
     # Pay at a glance: the range from the posting on a scale, with the median of its category marked
     paybar = ""
     if j["active"] and j.get("usd") and j["cat"] in CATMED and j["cat"] != OTHER[0] and j["usd"][1] >= j["usd"][0] > 0:
@@ -2126,6 +2131,7 @@ def main():
             old5 = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
             if pay_s >= len(act) / 2: tb_.append(("States the pay", f"{round(100 * pay_s / len(act))}% of its open roles state it"))
             if old5 < len(act) / 4: tb_.append(("Few old postings", f"{round(100 * old5 / len(act))}% open {LONG_OPEN} days or more"))
+        TB[c] = tb_
         tbadges = ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in tb_)
                    + f'<a href="{P}/companies/#marks">What the marks mean</a></p>') if tb_ else ""
         cats_txt = [e(name) for name, _ in top_cats if name != OTHER[1]]
