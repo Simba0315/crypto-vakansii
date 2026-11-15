@@ -2120,3 +2120,10 @@ select:not([multiple]){-webkit-appearance:none!important;-moz-appearance:none!im
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) select:not([multiple]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%23aca69c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}}
 :root[data-theme=dark] select:not([multiple]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%23aca69c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}
 select:not([multiple]):hover{border-color:var(--text)}
+
+/* Two heading sizes by purpose (DESIGN_STUDY 10): pages that explain read like articles, pages that list stay compact */
+.has-toc .sec-head h2,.guide h2{font-size:clamp(28px,3.2vw,36px);line-height:1.12;letter-spacing:-.03em}
+.has-toc .sec{margin-top:64px}
+.has-toc .sec-head{margin-bottom:16px}
+.guide h2{margin:44px 0 12px}
+@media(max-width:560px){.has-toc .sec-head h2,.guide h2{font-size:26px}}
