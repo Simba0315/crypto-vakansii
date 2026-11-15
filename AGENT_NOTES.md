@@ -244,7 +244,7 @@ that is not the employer's own hiring system must be labelled as such and kept o
    change prices or contacts in `config.json` on your own (the Telegram contact was given by the owner).
 3. Closed jobs stay as archive pages.
 4. Real company logos only, from the company's own site.
-5. Design: warm paper, ink, hairlines and ONE calm green (tokens in `style.css`: `--hl` green as a fill under text, `--ac`
+5. Design (the colour part is replaced since 15 Nov 2026 by the brand: persimmon instead of green, see "The brand" at the end): warm paper, ink, hairlines and ONE calm green (tokens in `style.css`: `--hl` green as a fill under text, `--ac`
    green as a line, `--pop` the same green on dark surfaces). History, 2026-11-13: the owner asked to remove the "AI look", said
    he liked the green marker under words and the green underlines on links, then left the colour to us ("decide yourself, maybe
    neutral; what matters is that people like it, it is convenient, simple, clear, and nobody thinks it is AI"). The acid lime on
@@ -405,3 +405,22 @@ plain HTML, so the page is readable without the map.
 - `/how-long-job-postings-stay-open/` states measured counts first; the estimate's reach grows with the record (`reach`: 30 days
   while the record is under 30 days, 90 under 90, then 180) and says "early" for the first two weeks. Do not show longer horizons
   sooner: on 14 Nov three days of closings projected 2% of postings alive at 180 days while 33% of open jobs were over 90 days old.
+
+## The brand (15 Nov 2026; `brand.py`, `/brand/`, `/brand/directions/`, `/media-kit/`)
+
+- Owner: "a corporate design of our own, like Indeed". Direction in use: **Persimmon**. Mark: a clock at 17 past the hour (the minute
+  the hourly run reads the careers pages). Colours: mark `#E8552B`, buttons and links `#C93F18` (white text 4.99:1), on dark pages
+  `#FF7A52` with dark text, ink `#121110`, white paper, sand `#F6F4F1`, tint `#FDEEE8`. Type: Schibsted Grotesk (headlines),
+  Public Sans (text and numbers, `font-variant-numeric: tabular-nums`), JetBrains Mono only for code (`--code`). Inter stays only
+  for the resume paper and its templates. All fonts OFL, self-hosted, from Fontsource.
+- `brand.py` holds the three directions (Persimmon, Berry, Brick and sand) and draws every logo file into `assets/brand/` with the
+  letters as outlines (`python3 brand.py`, needs `pip install fonttools brotli`; `--test` checks contrast without packages). To
+  switch direction: set `"applied"` in `brand.py`, update the tokens in `assets/style.css` (search "--brand"), run `python3 brand.py`
+  and `python3 og.py`. The build only copies `assets/brand/`.
+- Tokens: `--brand` (the mark), `--ac` (buttons, link lines), `--ac-ink` (text on `--ac`), `--btn` (the dark button; light in dark
+  mode), `--hl` (tint under one phrase). No orange areas: orange marks the one thing that matters. Green only for states (open, yes).
+- Media kit pictures (`assets/brand/screen-*.jpg`, `banner-*.png`, `persimmon-mark-96.png` for email signatures) are made with
+  Playwright from the built site; redo them after a visible change of the home, search or resume builder pages.
+- Email addresses are written `user [at] domain` with `class="ml" data-u data-d`; `site.js` turns them into links (support@, press@).
+- Copy check for the owner: the site says "every hour", but since 14 Nov the 2,994 boards in `sources_more.json` are read every four
+  hours (`HRN_ROTATE`). The media kit says so; other pages still say "every hour".

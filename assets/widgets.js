@@ -31,7 +31,7 @@
     if (own) { page = 'widgets/'; label = 'Jobs widget'; }
     var link = own ? '<a href="' + FULL + '/widgets/">Jobs widget by ' + D.site + '</a>' : '<a href="' + FULL + '/' + page + '">' + label.replace(/&/g, '&amp;') + ' on ' + D.site + '</a>';
     var extra = (search.checked ? ' data-search="1"' : '') + (own && company ? ' data-company="' + company.replace(/&/g, '&amp;') + '"' : '');
-    var acc = accent.value && accent.value.toLowerCase() !== '#1f9d55' ? accent.value : '';
+    var acc = accent.value && accent.value.toLowerCase() !== '#c93f18' ? accent.value : '';
     var attrs = ' data-limit="' + limit.value + '"' + (layout.value !== 'list' ? ' data-layout="' + layout.value + '"' : '') + (theme.value !== 'auto' ? ' data-theme="' + theme.value + '"' : '') + (acc ? ' data-accent="' + acc + '"' : '') + extra;
     var q = 'jobs=' + encodeURIComponent(spec) + '&limit=' + limit.value + (layout.value !== 'list' ? '&layout=' + layout.value : '') + (theme.value !== 'auto' ? '&theme=' + theme.value : '') + (acc ? '&accent=' + encodeURIComponent(acc) : '') + (search.checked ? '&search=1' : '') + (own && company ? '&company=' + encodeURIComponent(company) : '');
     var rowsH = layout.value === 'careers' ? 1300 : layout.value === 'ticker' ? 150 : layout.value === 'cards' ? 150 + Math.ceil(limit.value / 3) * 120 : 120 + limit.value * (layout.value === 'compact' ? 38 : 58);

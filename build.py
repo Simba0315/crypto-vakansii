@@ -9,6 +9,7 @@ from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
 import tools_pages                      # the free tools section: /tools/ and one page per tool
+import brand                            # the brand: three directions, the logo files, the colours (brand.py, /brand/)
 import roles_info
 import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
@@ -304,9 +305,10 @@ def region_lands(loc):
     for rx, codes in REGION_LANDS:
         if re.search(rx, loc or "", re.I): return [(c, names[c]) for c in codes if c in names]
     return []
-MARK = '<rect width="32" height="32" rx="8" fill="#0e0e0c"/><circle cx="16" cy="16" r="6.5" fill="#3ecf5f"/>'
+BR = brand.DIRECTIONS[brand.APPLIED]
+MARK = brand.mark(brand.APPLIED, BR["mark"], "#FFFFFF")                     # the favicon and every file that carries the mark
 GRAD = ""
-LOGO = '<i class="live" aria-hidden="true"></i>'
+LOGO = f'<svg class="mk" viewBox="0 0 32 32" aria-hidden="true">{brand.mark(brand.APPLIED, BR["mark"], "#FFFFFF")}</svg>'      # coloured by --brand in style.css
 ICON_THEME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg>'
 ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
 ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
@@ -438,10 +440,10 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="canonical" href="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:type" content="website">{"" if compact else f'<meta property="og:url" content="{e(url)}">'}<meta property="og:site_name" content="{e(SITE)}">
-<meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#0e0e0c">
+<meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#121110">
 <link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="manifest" href="{P}/manifest.json">
 {"" if compact else f'<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">'}
-<link rel="preload" href="{P}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
 <a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
@@ -1121,9 +1123,9 @@ def badge_svg(label, value):
     lw, vw = int(34 + 7.7 * len(label)), int(18 + 7.7 * len(value))
     w = lw + vw
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="28" viewBox="0 0 {w} 28" role="img" aria-label="{e(label)}: {e(value)}">'
-            f'<rect width="{w}" height="28" rx="6" fill="#0e0e0c"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#7ee39a"/><rect x="{lw}" width="8" height="28" fill="#7ee39a"/>'
-            f'<circle cx="14" cy="14" r="4" fill="#3ecf5f"/><text x="25" y="18.5" fill="#fff" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(label)}</text>'
-            f'<text x="{lw + 9}" y="18.5" fill="#06361c" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(value)}</text></svg>')
+            f'<rect width="{w}" height="28" rx="6" fill="#121110"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#ff7a52"/><rect x="{lw}" width="8" height="28" fill="#ff7a52"/>'
+            f'<circle cx="14" cy="14" r="4" fill="#ff7a52"/><text x="25" y="18.5" fill="#fff" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(label)}</text>'
+            f'<text x="{lw + 9}" y="18.5" fill="#121110" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(value)}</text></svg>')
 
 
 def main():
@@ -1169,7 +1171,7 @@ def main():
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
     contact = " or ".join(x for x in [f'Telegram <a href="https://t.me/{e(CFG["contact_telegram"])}">@{e(CFG["contact_telegram"])}</a>' if CFG["contact_telegram"] else "",
-                                      f'email <a href="mailto:{e(CFG["contact_email"])}">{e(CFG["contact_email"])}</a>' if CFG["contact_email"] else ""] if x)
+                                      f'email <a class="ml" data-u="{e(CFG["contact_email"].split("@")[0])}" data-d="{e(CFG["contact_email"].split("@")[-1])}">{e(CFG["contact_email"].split("@")[0])} [at] {e(CFG["contact_email"].split("@")[-1])}</a>' if CFG["contact_email"] else ""] if x)
     places = [(name, slug, js) for name, slug, rx in PLACES if len(js := [j for j in active if slug in j["places"]]) >= 5]
     OPEN.update(Counter(j["company"] for j in active))
     PERK_OK.update(x for x, k in Counter(x for j in active for x in j.get("perks", [])).items() if k >= 8)
@@ -1499,28 +1501,38 @@ def main():
         for i, (j, u) in enumerate(top_paid, 1)) + "</ol>"
     # From the future: what this site does that no job site does yet (the owner: "think 30 years ahead, I do not see it").
     # Defined here so the home page shows them; /ahead/ lists them first, then the earlier ten.
+    # The previews show real figures, so they need no "example" label: the 7-day chance for a posting 8 to 30 days old, from the
+    # closings we saw, and the skill GPS counted for a resume that names Python and SQL.
+    still7 = round(100 * (1 - SURV["all"][1]) ** 7) if SURV and SURV["all"][1] is not None else None
+    gps_have, gps_gain = {"Python", "SQL"}, Counter()
+    for j in active:
+        if len(gps_have & set(j["tags"])) == 1: gps_gain.update(t for t in j["tags"] if t not in gps_have)
+    gps_top = gps_gain.most_common(2)
+    gps_rows = "".join(f'<span class="rw"><span>{e(t)}</span><span class="mt"><i style="width:{max(8, round(100 * k / gps_top[0][1]))}%"></i></span><b>+{k:,}</b></span>' for t, k in gps_top)
     FUTURE = [
         ("Will it still be open next week?", "Every job page estimates the chance the posting is still open in 7 days, from the closings we see every hour. No job site shows this.", "jobs/",
-         '<span class="ex">example</span><span class="big">92%<small>still open in 7 days</small></span><span class="ln">From the postings we saw close, at this age, in this field</span>'),
+         (f'<span class="big">{still7}%<small>still open in 7 days</small></span><span class="ln">A posting 8 to 30 days old, from the closings we see every hour</span>' if still7
+          else '<span class="ln"><b>Still open in 7 days?</b></span><span class="ln">Counted from the closings we see every hour</span>')),
         ("Skill GPS: the one skill to learn next", "The resume builder counts, across every open job, which single skill would bring the most jobs within your reach, and what they pay.", "resume/",
-         '<span class="ex">example</span><span class="rw"><span>AWS</span><span class="mt"><i style="width:100%"></i></span><b>+509</b></span><span class="rw"><span>Java</span><span class="mt"><i style="width:86%"></i></span><b>+439</b></span><span class="ln">more jobs within reach</span>'),
+         gps_rows + '<span class="ln">more open jobs within reach of a resume with Python and SQL</span>'),
         ("Practise the interview out loud", "On every interview questions page the browser reads a question, listens to your answer and checks its length, the numbers and whether you said what you did.", "interview-questions/",
-         '<span class="ex">example</span><span class="ln"><b>“Walk me through a project where you used SQL.”</b></span><span class="ln">✓ 74 seconds · ✓ a number · → more “I”, less “we”</span>'),
+         '<span class="ln"><b>“Walk me through a project where you used SQL.”</b></span><span class="ln">✓ length · ✓ a number · ✓ pace · → more “I”, less “we”</span>'),
         ("Your AI assistant, already briefed", "One click opens ChatGPT, Claude or Perplexity with your resume and the job in a ready request: tailor the resume, write the letter, rehearse the interview.", "resume/",
          '<span class="ln"><b>Tailor it to the target job</b></span><span class="ln">ChatGPT · Claude · Perplexity</span><span class="sk" style="width:70%"></span>'),
         ("A resume that targets one job", "Open a job, press “Tailor my resume to this job”: the builder shows the match in percent and the missing skills, each one button away.", "resume/",
-         '<span class="ex">example</span><span class="big">29% → 41%<small>match after one skill</small></span><span class="ln">+ Salesforce · + Excel · + AI</span>'),
+         '<span class="ln"><b>Match with this job</b></span><span class="ln">Add a skill it asks for and watch the match rise</span><span class="sk" style="width:55%"></span>'),
         ("Every job straight from the employer", "Each posting is read from the employer’s own hiring system and re-checked every hour; your own browser can ask that system whether the job is still there.", "jobs/",
-         '<span class="ex">example</span><span class="ln"><b>✓ Employer’s own posting</b></span><span class="ln">Read from Greenhouse · checked 14:02</span>'),
+         '<span class="ln"><b>✓ Employer’s own posting</b></span><span class="ln">Read from the employer’s hiring system · checked this hour</span>'),
     ]
-    future_home = section("From the future, working today", '<div class="tgrid">' + "".join(
-        f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in FUTURE[:3]) + "</div>",
-        ("ahead/", "All the things others do not do yet"), sub="No account, nothing sent to us: each one works in your browser.")
+    GO = {"jobs/": "Open a job", "resume/": "Open the resume builder", "interview-questions/": "Pick a role"}
+    future_home = section("Free extras on every job", '<div class="tgrid">' + "".join(
+        f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{GO.get(u, "Open")}</u></i></span></a>' for t_, d_, u, scr in FUTURE[:3]) + "</div>",
+        ("ahead/", "Everything else the site does"), sub="No account, nothing sent to us: each one works in your browser.")
     home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
             + (section("Featured tech employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
 
             + section("Browse jobs by category", '<div class="dir">' + "".join(dir_block(*f, top=4, tag="h3") for f in fam_rows) + "</div>", ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.")
-            + section("The job market today, in four pictures", market_pics, ("insights/", "All rankings and charts"), sub="Counted from today’s open jobs, redone on every update.")
+            + section("The job market today", market_pics, ("insights/", "All rankings and charts"), sub="Counted from the open jobs on every update.")
             + pulse + anatomy
             + section("Highest paid right now", paid_board, ("salaries/", "Salary data"), sub="Only jobs that state a yearly pay, converted to US dollars. The bar shows the range against the top one.")
             + '<section class="sec"><div class="sec-head"><h2>Browse the jobs</h2></div><div class="tabs2">'
@@ -1532,10 +1544,10 @@ def main():
               + f'<div class="tabp" id="p-co"><ul class="tiles">{comp_top}</ul><p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div></section>'
             + plus_band + band
             + future_home
-            + section("Free tools", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u in tools_pages.EXTRA + [u for u, nm, d_ in TOOLS[:3]]) + "</div>",
-                      ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"), sub="Each one opens with a worked example, free and without sign-up.")
-            + section("For your own site", '<div class="tgrid own">'
-                      f'<a class="tcard" href="{P}/widgets/"><span class="tprev" aria-hidden="true"><span class="ex">widget</span>'
+            + section("Free tools, no sign-up", '<div class="tgrid">' + "".join(tools_pages.TILES[u] for u in tools_pages.EXTRA + [u for u, nm, d_ in TOOLS[:3]]) + "</div>",
+                      ("tools/", f"All {len(TOOLS) + len(tools_pages.EXTRA)} tools"))
+            + section("Our jobs on your site, free", '<div class="tgrid own">'
+                      f'<a class="tcard" href="{P}/widgets/"><span class="tprev" aria-hidden="true">'
                       '<span class="wl"><b>Senior Data Engineer</b><span>Spotify · Remote</span></span><span class="wl"><b>Product Designer</b><span>Monzo · London</span></span>'
                       '<span class="wl"><b>DevOps Engineer</b><span>GitLab · Remote</span></span></span>'
                       '<span class="tbody"><b>A list of jobs for your site</b><span>For a blog, a community or a company site: paste a short code once and the list stays fresh by itself.</span><i><u>Make yours</u></i></span></a>'
@@ -1547,8 +1559,8 @@ def main():
                       '<span class="tbody"><b>A live wall for an office screen</b><span>For a TV in the office, a coworking space or a classroom: fresh jobs fill the screen and turn the page every 9 seconds.</span><i><u>Open the wall</u></i></span></a>'
                       f'<a class="tcard" href="{P}/api/"><span class="tprev" aria-hidden="true"><code>GET /api/v1/latest.json\n{{ "total": {n},\n  "jobs": [{{ "title": "…",\n    "company": "…" }}] }}</code></span>'
                       '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
-                      '</div>', sub="Free, no account: put our jobs where your readers already are.")
-            + section("Common questions", faq_html, sub="Short answers about where the jobs come from and how to use the site."))
+                      '</div>')
+            + section("Where the jobs come from and how the site works", faq_html))
     page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
          f"Tired of job listings that closed weeks ago? {roles(n)} at {m} tech companies, checked against their career pages every hour. Remote and salary filters.", home, hero=hero,
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
@@ -2598,7 +2610,7 @@ def main():
          "The chance a job is still open next week, a skill GPS, interview practice out loud, an AI assistant briefed with your resume, and more things job sites do not do yet.",
          crumbs(("From the future", "")) + f'<h1>From the future: <span class="hl">{len(ahead_cards)} things job sites do not do yet</span></h1>'
          '<p class="lead">Each of them works in your browser, with no account and nothing sent to us. Open any of them and try.</p>'
-         '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>Try it</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
+         '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{GO.get(u, "Open it")}</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
          f'<p class="note">Some of these depend on what your browser can do: speech recognition and background checks are not in every browser. Where one is missing, its button does not appear.</p>')
 
     pc_ = lambda a_, b_: round(100 * a_ / max(1, b_))
@@ -3444,7 +3456,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              + bars_([(f["fn"], f["rmed"], money(f["rmed"]), f'categories/{f["fs"]}/remote/') for f in rem_pay]) if rem_pay else "")
           + f"<h2>Remote does not mean “from any country”</h2><p>Most remote jobs are open in some countries only: the employer must be able to hire you where you live. Of the {len(remote):,} remote jobs here, "
             f"{len(aw):,} name no country at all. Those are on the <a href=\"{P}/work-from-anywhere/\">work-from-anywhere list</a>. For the rest, the <a href=\"{P}/for-you/\">match by five answers</a> asks for your country and leaves out the jobs that do not hire there.</p>",
-          '<span class="ex">today</span>' + mini([(f["fn"], f["rem"] / f["n"], f'{pc_(f["rem"], f["n"])}%') for f in by_rem]),
+          '' + mini([(f["fn"], f["rem"] / f["n"], f'{pc_(f["rem"], f["n"])}%') for f in by_rem]),
           (("remote/", "All remote jobs"), ("insights/highest-paying-remote-jobs/", "The 40 best paid remote jobs"), ("guides/who-states-the-pay/", "Who states the pay")))
 
     # 2. how long postings stay open
@@ -3459,7 +3471,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           f"with no opening behind it; we mark those “talent pool”. And some are simply forgotten. A posting that is {LONG_OPEN} days old carries a mark on this site so you can decide before spending an evening on it.</p>"
           f"<h2>How to check one</h2><p>Open the job page and press “Check with the employer right now”. Your browser asks the employer’s own hiring system whether the job is still there and shows the answer. "
           f"Today {closed_today_h:,} postings were closed by employers; their pages stay online, marked as closed.</p>",
-          '<span class="ex">today</span>' + mini([(lb, v_, f"{v_:,}") for lb, v_ in age_cols]),
+          '' + mini([(lb, v_, f"{v_:,}") for lb, v_ in age_cols]),
           (("insights/long-open-roles/", "Where postings linger"), ("new/", "Jobs posted in the last 3 days"), ("guides/is-this-job-still-open/", "Is this job still open?")))
 
     # 3. who states the pay
@@ -3473,7 +3485,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             f"A missing figure here can also mean a wording our reader does not recognise.</p>"
             f"<h2>When a posting is silent</h2><p>Look at what the same kind of work pays where it is stated: the <a href=\"{P}/tools/salary-checker/\">salary checker</a> shows the range for a role and level from postings that publish it, "
             f"and the <a href=\"{P}/tools/offer-check/\">offer check</a> places a figure you were offered among them. The list of <a href=\"{P}/with-salary/\">jobs that state pay</a> leaves the silent ones out.</p>",
-          '<span class="ex">today</span>' + mini([(f["fn"], f["pay"] / f["n"], f'{pc_(f["pay"], f["n"])}%') for f in by_pay]),
+          '' + mini([(f["fn"], f["pay"] / f["n"], f'{pc_(f["pay"], f["n"])}%') for f in by_pay]),
           (("insights/pay-transparency/", "Employers that state pay most often"), ("salaries/", "Salary data"), ("guides/job-levels-explained/", "What the level in a title means")))
 
     # 4. entry level
@@ -3487,7 +3499,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           + "<h2>Employers with the most entry-level jobs</h2>" + bars_([(c, k, f"{k:,} jobs", f"companies/{slugify(c)}/") for c, k in entry_co[:10] if k])
           + f"<h2>Jobs that do not say “junior”</h2><p>A posting with no level in the title is usually a mid-level one, but not always: read how many years it asks for. In the <a href=\"{P}/for-you/\">match by five answers</a>, “I am starting out” lists the entry-level jobs first "
             f"and then the ones that name no level, each marked as such. Kinds of work that often take beginners: sales development, customer support, and AI training and data annotation.</p>",
-          '<span class="ex">today</span>' + mini([(f["fn"], f["ent"], f'{f["ent"]:,}') for f in by_ent]),
+          '' + mini([(f["fn"], f["ent"], f'{f["ent"]:,}') for f in by_ent]),
           (("entry-level/", "All entry-level jobs"), ("internships/", "Internships"), ("categories/internships-entry-level/", "Internships and first jobs")))
 
     # 5. skills in demand
@@ -3498,7 +3510,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "<h2>Asked for in the most postings</h2>" + bars_([(t, k, f"{k:,} jobs · {pc_(k, n)}%", f"skills/{tslug(t)}/") for t, k in top_sk])
           + '<h2>What each one is</h2><dl class="qa">' + "".join(f"<div><dt>{e(t)}</dt><dd>{e(skills_info.plain(t)) or 'No plain description yet.'}</dd></div>" for t, _ in top_sk) + "</dl>"
           + f"<h2>Using this</h2><p>Write the skills you have by the names postings use: screening software looks for the word. The <a href=\"{P}/resume/\">resume builder</a> shows, while you type, how many open jobs ask for each skill it finds in your text.</p>",
-          '<span class="ex">today</span>' + mini([(t, k, f"{k:,}") for t, k in top_sk]),
+          '' + mini([(t, k, f"{k:,}") for t, k in top_sk]),
           (("skills/", "All skills"), ("insights/highest-paying-tech-skills/", "The skills with the highest advertised pay"), ("compare/", "Compare two skills")))
 
     # 6. levels
@@ -3517,7 +3529,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           + '<h2>What each level means</h2><dl class="qa">' + "".join(f"<div><dt>{e(lab_)} · {k:,} open jobs</dt><dd>{e(what_[0].upper() + what_[1:])}.</dd></div>" for lab_, what_, k, _ in lvl_rows) + "</dl>"
           + f"<h2>Titles differ between companies</h2><p>A “senior” at one company is a “staff” at another, and banks call most people “vice president”. Read the years of experience and the tasks in the posting, not only the word. "
             f"The <a href=\"{P}/salaries/\">salary pages</a> show the pay ladder for each kind of work.</p>",
-          '<span class="ex">today</span>' + mini([(lab_.split(",")[0], md_, money(md_)) for lab_, _, _, md_ in lvl_rows if md_]),
+          '' + mini([(lab_.split(",")[0], md_, money(md_)) for lab_, _, _, md_ in lvl_rows if md_]),
           (("salaries/", "Salary data by role and level"), ("guides/entry-level-jobs/", "Where beginners are hired"), ("glossary/", "Glossary of job-search terms")))
 
     # 7–9. how-to guides
@@ -3593,7 +3605,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 "<li><b>What does the commute cost?</b> Count the time and the fare for the days asked, and ask whether the employer pays any of it.</li>"
                 "<li><b>What if you move?</b> Ask whether the role could become remote later, and what happens if it cannot.</li></ol>"
               + f"<p>The <a href=\"{P}/tools/remote-work-savings/\">remote work savings</a> tool puts a figure on the days you would commute.</p>",
-              '<span class="ex">today</span>' + mini([(f"{d_} days", k, f"{pc_(k, n_od)}%") for d_, k in od_.most_common(4)]),
+              '' + mini([(f"{d_} days", k, f"{pc_(k, n_od)}%") for d_, k in od_.most_common(4)]),
               (("hybrid/", "All hybrid jobs"), ("remote/", "Remote jobs"), ("glossary/hybrid/", "Hybrid, explained")))
 
     # 11. what postings ask for besides tools: the situations of the interview question pages, counted over every full description
@@ -3615,7 +3627,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 "<li><b>Use their words.</b> If a posting says “stakeholders”, a resume line that says “worked with other departments” is found less often by a recruiter’s search.</li>"
                 f"<li><b>Prepare one real example for each.</b> A situation, what you did and a result with a number. The <a href=\"{P}/tools/interview-answer-builder/\">interview answer builder</a> shapes it into a 60 to 90 second answer.</li>"
                 f"<li><b>Check a posting in seconds.</b> The <a href=\"{P}/tools/job-description-keywords/\">keyword finder</a> lists the terms a posting repeats.</li></ol>",
-              '<span class="ex">today</span>' + mini([(lab, k, f"{pc_(k, nd_)}%") for k, lab in th_all[:4]]),
+              '' + mini([(lab, k, f"{pc_(k, nd_)}%") for k, lab in th_all[:4]]),
               (("interview-questions/", "Interview questions by job"), ("guides/skills-in-demand/", "The skills asked for most"), ("tools/job-description-keywords/", "Keyword finder")))
 
     # 12. years of experience: what postings ask, by level and by field
@@ -3651,7 +3663,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               + "<h2>When you have fewer years than asked</h2><p>The number is a filter the employer chose, not a test. If you can do the duties the posting lists, "
                 "apply, and put the evidence first: results with numbers from work, projects or study that match those duties. "
                 f"The <a href=\"{P}/entry-level/\">entry-level list</a> and the “How to become…” pages show where beginners are hired today.</p>",
-              '<span class="ex">today</span>' + mini([(f"{lb} yrs", k, f"{pc_(k, len(yrs_all))}%") for lb, k in sorted(yb_, key=lambda x: -x[1])[:4]]),
+              '' + mini([(f"{lb} yrs", k, f"{pc_(k, len(yrs_all))}%") for lb, k in sorted(yb_, key=lambda x: -x[1])[:4]]),
               (("entry-level/", "Entry-level jobs"), ("how-to-become/", "How to become…"), ("guides/job-levels-explained/", "What the level in a title means")))
 
     # what moving up a level is worth, from advertised pay (the raise guide asked for in the plan)
@@ -3682,7 +3694,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               f"<p>The <a href=\"{P}/tools/raise-calculator/\">raise calculator</a> shows what a percentage means in money, the <a href=\"{P}/tools/raise-request-email/\">raise request email</a> writes the message, "
               f"and the <a href=\"{P}/salaries/\">salary pages</a> hold the range for your role and level.</p>"
               "<h2>Why Senior does not always pay more</h2><p>A posting with no level in the title can be a manager, a specialist or a mid-level role, and some fields mix very different jobs under one name, so the group with no level can sit above the Senior group. Advertised pay is what an employer offers new hires, not what people already in the job earn. The title is the employer’s word: a Senior at a small company and a Senior at a large one can do very different work.</p>",
-              '<span class="ex">today</span>' + mini([(a_[0], a_[3] / a_[2], sg_(a_)) for a_ in lad_]),
+              '' + mini([(a_[0], a_[3] / a_[2], sg_(a_)) for a_ in lad_]),
               (("salaries/", "Salary data"), ("guides/job-levels-explained/", "What the level in a title means"), ("tools/raise-calculator/", "Raise calculator")))
 
     gcats = []
@@ -4241,21 +4253,21 @@ el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js
     write("board/", f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Board — live tech jobs wall | {e(SITE)}</title><meta name="description" content="A full-screen live board of the freshest tech jobs, rotating automatically. Put it on a second monitor, an office screen or a classroom wall.">
 <meta name="robots" content="noindex"><link rel="canonical" href="{FULL}/board/"><link rel="icon" type="image/svg+xml" href="{P}/favicon.svg">
-<style>@font-face{{font-family:"Inter";font-weight:400 700;font-display:swap;src:url({P}/fonts/inter-latin.woff2) format("woff2")}}
+<style>@font-face{{font-family:"Public Sans";font-weight:100 900;font-display:swap;src:url({P}/fonts/publicsans-latin.woff2) format("woff2")}}
 @font-face{{font-family:"JetBrains Mono";font-weight:500 700;font-display:swap;src:url({P}/fonts/jbmono-latin.woff2) format("woff2")}}
 html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;overflow:hidden}}
 .top{{display:flex;justify-content:space-between;align-items:center;padding:2.2vh 3vw;border-bottom:1px solid #2b2b27;font-size:clamp(12px,1.5vw,20px);letter-spacing:.08em;text-transform:uppercase;color:#a5a399}}
 .top a{{color:#f3f2ec;text-decoration:none;font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;text-transform:none;font-size:clamp(16px,2vw,28px)}}
-.top b{{color:#7ee39a;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#3ecf5f;margin-right:.6em}}
+.top b{{color:#ff7a52;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#e8552b;margin-right:.6em}}
 #rows{{padding:1vh 3vw}}.r{{display:grid;grid-template-columns:7ch minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.7fr);gap:2vw;align-items:baseline;padding:1.55vh 0;border-bottom:1px solid #1f1f1c;animation:in .5s backwards}}
-@keyframes in{{from{{opacity:0;transform:translateY(8px)}}}}.a{{color:#7ee39a;font-size:clamp(11px,1.3vw,18px)}}
+@keyframes in{{from{{opacity:0;transform:translateY(8px)}}}}.a{{color:#ff7a52;font-size:clamp(11px,1.3vw,18px)}}
 .t{{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.1vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3f2ec;text-decoration:none}}
 .c,.l{{font-size:clamp(11px,1.4vw,20px);color:#a5a399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.c{{color:#e9e7de}}
 .foot{{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:1.6vh 3vw;font-size:clamp(10px,1.1vw,15px);color:#77756c;letter-spacing:.06em;text-transform:uppercase;background:#0b0b0a}}
-.foot a{{color:#7ee39a;text-decoration:none}}
+.foot a{{color:#ff7a52;text-decoration:none}}
 .bar{{display:flex;justify-content:space-between;align-items:center;gap:2vw;padding:1.2vh 3vw;font-family:Inter,system-ui,sans-serif;font-size:clamp(12px,1.1vw,16px);color:#a5a399;border-bottom:1px solid #1f1f1c}}
 .ctl{{display:flex;align-items:center;gap:.6em;white-space:nowrap}}.ctl button{{font:inherit;color:#f3f2ec;background:#1a1a17;border:1px solid #2b2b27;border-radius:8px;padding:.35em .8em;cursor:pointer}}
-.ctl button:hover{{border-color:#7ee39a}}#pg{{font-family:"JetBrains Mono",ui-monospace,monospace;color:#7ee39a;min-width:9ch;text-align:right}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#7ee39a}}@media(max-width:700px){{html,body{{height:auto;overflow:auto}}.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}.ctl{{display:none}}.foot{{position:static}}.bar{{display:block}}}}</style></head><body>
+.ctl button:hover{{border-color:#ff7a52}}#pg{{font-family:"JetBrains Mono",ui-monospace,monospace;color:#ff7a52;min-width:9ch;text-align:right}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#ff7a52}}@media(max-width:700px){{html,body{{height:auto;overflow:auto}}.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}.ctl{{display:none}}.foot{{position:static}}.bar{{display:block}}}}</style></head><body>
 <div class="top"><a href="{P}/"><span class="dot"></span>{e(SITE)}</a><h1 id="what" style="all:unset">Fresh on the board</h1><b id="clock"></b></div>
 <div class="bar"><span>A live wall for an office screen, a TV or a second monitor: a new page of jobs every 9 seconds. Press F11 for full screen. <a href="{P}/widgets/" style="color:#7ee39a">Pick a skill, city or company</a> · <a href="{P}/jobs/" style="color:#7ee39a">Search all jobs</a></span>
 <span class="ctl"><button id="prev" type="button" aria-label="Previous page">‹</button><button id="pause" type="button">Pause</button><button id="next" type="button" aria-label="Next page">›</button><span id="pg"></span></span></div><div id="rows"></div>
@@ -4318,7 +4330,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<label class="wl">How many jobs<select id="wb-limit"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>15</option></select></label>'
          '<label class="wl">How it looks<select id="wb-layout"><option value="list">List</option><option value="cards">Cards</option><option value="compact">Compact (sidebar)</option><option value="ticker">Ticker</option><option value="careers">Careers page (all jobs, with search)</option></select></label>'
          '<label class="wl">Light or dark<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label>'
-         '<label class="wl">Colour<input type="color" id="wb-accent" value="#1f9d55" aria-label="Accent colour"></label>'
+         '<label class="wl">Colour<input type="color" id="wb-accent" value="#c93f18" aria-label="Accent colour"></label>'
          '<label class="wl">Kind of code<select id="wb-mode"><option value="script">Standard (works on most sites)</option><option value="iframe">For Notion and builders that block scripts</option></select></label>'
          '<label class="check"><input type="checkbox" id="wb-search"> Search box and “Show more”</label></div>'
          '<p class="note" id="wb-hint" hidden style="margin:12px 0 0">The board name is the last part of your careers page address: boards.greenhouse.io/<b>acme</b>, jobs.lever.co/<b>acme</b> or jobs.ashbyhq.com/<b>acme</b>.</p></div>'
@@ -4353,7 +4365,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<code>data-limit</code>", "Rows to show, 1 to 20. With the search box on, rows per page", "6"],
              ["<code>data-layout</code>", "<code>list</code>, <code>cards</code>, <code>compact</code>, <code>ticker</code> or <code>careers</code>", "<code>list</code>"],
              ["<code>data-theme</code>", "<code>auto</code> follows the visitor’s system, or force <code>light</code> or <code>dark</code>", "<code>auto</code>"],
-             ["<code>data-accent</code>", "Any hex colour for the hover bar and the link underline", "<code>#1f9d55</code>"],
+             ["<code>data-accent</code>", "Any hex colour for the hover bar and the link underline", "<code>#c93f18</code>"],
              ["<code>data-search</code>", "<code>1</code> adds a search box, a team filter where teams exist, and “Show more”", "off"],
              ["<code>data-title</code>", "Your own heading for the widget", "the name of the list"],
              ["<code>data-company</code>", "Your company name, shown in the heading of your own board", "none"]]))
@@ -5161,46 +5173,162 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
              '<script type="application/json" id="acc-data">' + json.dumps(acc_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/account.js?v={V}" defer></script>',
              head='<meta name="robots" content="noindex">', sitemap=False)
-    # Media kit: what the site is, live numbers, brand assets and placements, for press and advertisers
-    wordmark = lambda ink, dot: (f'<svg xmlns="http://www.w3.org/2000/svg" width="420" height="80" viewBox="0 0 420 80" role="img" aria-label="{e(SITE)}">'
-                                 f'<circle cx="22" cy="40" r="10" fill="{dot}"/><text x="46" y="52" fill="{ink}" font-family="Bricolage Grotesque, Inter, Helvetica, Arial, sans-serif" '
-                                 f'font-size="38" font-weight="800" letter-spacing="-1">{e(SITE)}</text></svg>')
-    write("brand/logo-mark.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 32 32" role="img" aria-label="{e(SITE)}">{MARK}</svg>', sitemap=False)
-    write("brand/logo-wordmark.svg", wordmark("#0e0e0c", "#3ecf5f"), sitemap=False)
-    write("brand/logo-wordmark-dark.svg", wordmark("#f3f2ec", "#3ecf5f"), sitemap=False)
-    swatch = lambda hexv, name, ink="#0e0e0c": f'<div class="swatch" style="background:{hexv};color:{ink}"><b>{name}</b><span>{hexv}</span></div>'
-    short_bp = f"{SITE} is an hourly-updated index of open tech jobs, collected from employers' own careers pages."
-    long_bp = (f"{SITE} lists {n:,} open tech jobs from {m} companies and re-checks every one of them against the employer's careers page every hour. Each listing links to the original posting, "
-               "closed roles move to a public archive, and salary and hiring data from the postings is free to use with a link back.")
-    page("media-kit/", f"Media Kit — brand assets, live numbers, advertising | {SITE}",
-         f"{SITE} media kit: what the site is, live numbers, logos and colours to download, ready-to-paste descriptions, and placements for employers and sponsors.",
+    # The brand (owner, 15 Nov 2026: "a corporate design of our own, like Indeed and other brands"). brand.py defines three
+    # directions and draws every logo file; /brand/ is the guide, /brand/directions/ shows all three (not indexed), and the
+    # media kit has the files, the colours, the descriptions and today's numbers for press and partners.
+    BD = brand.DIRECTIONS
+    n_hourly = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})
+    n_rot = len(json.loads((ROOT / "sources_more.json").read_text())) if (ROOT / "sources_more.json").exists() else 0
+    read_line = (f"{n_hourly:,} employers’ careers pages are read every hour and {n_rot:,} more every four hours" if n_rot else f"{n_hourly:,} employers’ careers pages are read every hour")
+    bp50 = (f"{SITE} (jobseveryhour.com) is a free job search site built from employers’ own careers pages. It lists {n:,} open jobs at {m:,} companies today. "
+            "A job the employer takes down leaves the list, every listing links to the original posting, and nobody needs an account to search or apply.")
+    bp100 = (bp50 + f" {read_line}. Each job page shows the pay when the employer states it, how long the job has been open and when it was last checked. "
+             "The salary and hiring figures are counted from the open postings, free to quote.")
+    wc = lambda t: len(t.split())
+    top_city, top_city_n = ((geo_cities.CITIES[map_n.most_common(1)[0][0]][0], map_n.most_common(1)[0][1]) if map_n else ("London", 0))      # for the example sentence
+    mail = lambda user: (f'<a class="ml" data-u="{user}" data-d="jobseveryhour.com">{user} [at] jobseveryhour.com</a>')      # site.js turns it into a link
+    def logo_tile(file_, label, dark=False, h=40):
+        size_ = f'width="{h}" height="{h}"' if "-mark" in file_ else f'height="{h}"'           # a mark is square; a logo keeps its own width
+        return (f'<a class="brandtile{" dark" if dark else ""}" href="{P}/brand/{file_}" download><img src="{P}/brand/{file_}" alt="{e(label)}" {size_} loading="lazy">'
+                f'<span>{e(label)} · SVG</span></a>')
+    A_ = brand.APPLIED
+    swatch = lambda hexv, name, use, ink="#121110": (f'<div class="swatch"><i style="background:{hexv}"></i><b>{name}</b><span>{hexv.upper()}</span><small>{use}</small></div>')
+    SWATCHES = (swatch(BD[A_]["mark"], "Persimmon", "The mark and large shapes")
+                + swatch(BD[A_]["ui"], "Persimmon deep", "Buttons and links on white: white text on it passes 4.5:1")
+                + swatch(BD[A_]["ui_dark"], "Persimmon light", "The same on dark pages, with dark text on it")
+                + swatch(BD[A_]["ink"], "Ink", "Text, the dark button, dark pages")
+                + swatch("#FFFFFF", "Paper", "The page")
+                + swatch(BD[A_]["paper2"], "Sand", "Quiet panels and table heads")
+                + swatch(BD[A_]["tint"], "Tint", "A marker under one phrase, a selected row")
+                + swatch("#2A78D6", "Data blue", "Amounts in charts")
+                + swatch("#EB6834", "Data orange", "The one mark a chart is about"))
+    TYPES = ('<div class="types"><div><span class="t1">Jobs that are still open</span><small>Headlines and the name: Schibsted Grotesk, 700–800</small></div>'
+             '<div><span class="t2">Every job here comes from the employer’s own careers page. A job the employer takes down leaves the list.</span><small>Text: Public Sans, 400–700</small></div>'
+             f'<div><span class="t3">{n:,} open jobs · {money(med_all)} median · 17 past the hour</span><small>Numbers: Public Sans with figures of equal width, so columns line up</small></div>'
+             '<div><span class="t4">GET /api/v1/latest.json</span><small>Code only: JetBrains Mono</small></div></div>'
+             '<p class="note">All three typefaces are open source (SIL Open Font License) and served from this site.</p>')
+    brand_qa = [("What does the mark mean?", "A clock face at 17 minutes past the hour: the minute every employer’s careers page is read in each hourly run. "
+                 "The hour hand points up, the minute hand to 17 past."),
+                ("Why orange-red?", "It stands apart from the blue of Indeed and LinkedIn, the green of Glassdoor, Upwork and ZipRecruiter, the yellow of Welcome to the Jungle "
+                 "and the red of Dice, and it is the colour our charts already used for the one mark that matters."),
+                ("Can I use the logo?", "Yes, to link to the site or to write about it. Use the files on this page as they are: do not recolour, stretch, outline or "
+                 "animate them, and do not put the mark on a photo without a plain plate behind it.")]
+    page("brand/", f"Brand Guide — logo, colours, type and voice | {SITE}",
+         f"The {SITE} brand in one page: the mark and its meaning, logo files, colours with hex codes, typefaces, charts, pictures and the way we write.",
+         crumbs(("Brand", "")) + f'<h1>{e(SITE)} brand guide</h1>'
+         '<p class="lead">How the site looks and sounds, in one page: the mark and what it means, the files, the colours, the type, charts, pictures and words. '
+         f'Logos and today’s numbers for an article are in the <a href="{P}/media-kit/">media kit</a>.</p>'
+         + f'<div class="bmark"><div class="bm-l"><img src="{P}/brand/{A_}-logo.svg" alt="{e(SITE)} logo" height="56"></div><div class="bm-d"><img src="{P}/brand/{A_}-logo-dark.svg" alt="{e(SITE)} logo on a dark background" height="56"></div></div>'
+         + section("The mark", f'<div class="bgrid"><div><img class="bbig" src="{P}/brand/{A_}-mark.svg" alt="The mark" width="120" height="120"></div>'
+                   '<div><p>A clock face at <b>17 minutes past the hour</b>: the minute every employer’s careers page is read in each hourly run. It says the one thing the site '
+                   'promises, that a job here was checked a moment ago, and it still reads as a clock at 16 pixels.</p>'
+                   '<ul class="rules"><li>Leave clear space around the mark of at least half its height.</li><li>The smallest mark is 16 px; the smallest logo with the name, 120 px wide.</li>'
+                   '<li>On white use the persimmon mark; on dark pages the light one; in one colour, ink or white.</li>'
+                   '<li>Do not recolour, stretch, rotate, outline or animate it, and do not set the name in another typeface.</li></ul></div></div>')
+         + section("Logo files", '<div class="brandrow">' + logo_tile(f"{A_}-logo.svg", "Logo, light") + logo_tile(f"{A_}-logo-dark.svg", "Logo, dark", True)
+                   + logo_tile(f"{A_}-logo-mono.svg", "Logo, one colour") + logo_tile(f"{A_}-logo-mono-white.svg", "Logo, white", True)
+                   + logo_tile(f"{A_}-mark.svg", "Mark", h=56) + logo_tile(f"{A_}-mark-dark.svg", "Mark, dark", True, h=56) + "</div>"
+                   '<p class="note">The letters are outlines, so the files look the same on a computer without the typeface.</p>')
+         + section("Colour", f'<div class="swatches">{SWATCHES}</div>'
+                   '<p>One brand colour, used sparingly: the mark, the main button, link underlines and the one thing on a page that matters most. '
+                   'Large areas are white or ink, never orange. Green is only for “yes”, “open” and other states, never for decoration.</p>')
+         + section("Type", TYPES)
+         + section("Charts", '<p>Light cards with a thin border. One blue for amounts and one orange for the single mark the chart is about, checked for colour '
+                   'blindness in light and dark. Labels only where they help, a tooltip on every mark, and one caption that says what is counted and from where. '
+                   'Every figure is counted from the open postings on the day the page is built; no decorative charts.</p>'
+                   f'<p class="note">Examples: <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, <a href="{P}/jobs-that-pay/">jobs by hourly pay</a>, <a href="{P}/insights/">rankings</a>.</p>')
+         + section("Pictures", '<ul class="rules"><li><b>The product, not stock photos.</b> Show the site itself: a list of jobs, a chart, the resume builder.</li>'
+                   '<li><b>No invented people.</b> No stock models, no AI-made faces or offices, no 3D shapes or glowing gradients.</li>'
+                   '<li><b>Company logos only from the company’s own site</b>, and none at all when there is no official one.</li>'
+                   '<li><b>Icons:</b> simple line drawings in ink, with one persimmon detail at most.</li></ul>')
+         + section("How we write", '<ul class="rules"><li>Plain words. Say the problem, then the fact, then what the page does.</li>'
+                   '<li>Every number comes from our own data, with its date and what it counts.</li>'
+                   '<li>“Free” is said plainly wherever something is free.</li>'
+                   '<li>No hype: no “amazing opportunities”, “revolutionary”, “AI-powered” for its own sake, countdowns or invented reviews.</li></ul>'
+                   f'<div class="dodont"><div class="do"><b>Write</b><p>“{top_city_n:,} open jobs in {e(top_city)}, read from the employers’ own pages.”</p></div>'
+                   '<div class="dont"><b>Not</b><p>“Thousands of amazing opportunities await you!”</p></div>'
+                   '<div class="do"><b>Do</b><p>Orange on the one button or number that matters.</p></div>'
+                   '<div class="dont"><b>Not</b><p>Orange behind whole sections, or several colours competing.</p></div></div>')
+         + section("Other directions", f'<p>Two more directions were drawn before this one was chosen: Berry and Brick and sand. They are kept, with their files, on '
+                   f'<a href="{P}/brand/directions/">the directions page</a>, so the brand can be switched in one place (brand.py).</p>')
+         + section("Questions about the brand", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in brand_qa) + "</dl>"),
+         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in brand_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    # The three directions side by side, each in light and dark, so the owner can compare and switch later
+    def bd_panel(k, dark):
+        d = BD[k]
+        fam_h, fam_t = brand.FONTS[d["head"]][0], brand.FONTS[d["text"]][0]
+        v = (f'--b-bg:{d["dark_bg"] if dark else d["paper"]};--b-card:{d["dark_card"] if dark else "#FFFFFF"};--b-ink:{"#F4F1EC" if dark else d["ink"]};'
+             f'--b-muted:{"#ACA69C" if dark else "#5C5852"};--b-line:{"#2C2925" if dark else "#E7E3DC"};--b-ui:{d["ui_dark"] if dark else d["ui"]};'
+             f'--b-ui-ink:{d["dark_bg"] if dark else "#FFFFFF"};--b-mark:{d["ui_dark"] if dark else d["mark"]};--b-tint:{d["tint_dark"] if dark else d["tint"]};'
+             f"--b-head:'{fam_h}';--b-text:'{fam_t}'")
+        bars = [(62, False), (100, True), (78, False), (41, False)]
+        return (f'<div class="bd-panel" style="{v}"><div class="bd-top"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">'
+                f'{brand.mark(k, d["ui_dark"] if dark else d["mark"], d["dark_bg"] if dark else "#FFFFFF")}</svg><b>{e(SITE)}</b><span>Jobs</span><span>Companies</span><span>Salaries</span></div>'
+                '<p class="bd-h">Jobs that are <span>still open</span></p><p class="bd-p">Every job here comes from the employer’s own careers page. A job the employer takes down leaves the list.</p>'
+                '<p class="bd-b"><span class="bd-btn">Search jobs</span><span class="bd-btn2">Build a resume — free</span><span class="bd-a">See salaries</span></p>'
+                '<div class="bd-job"><b>Senior Data Engineer</b><span>Remote · United States</span><em>$150K – $190K</em></div>'
+                '<div class="bd-chart">' + "".join(f'<i class="{"hi" if hi else ""}" style="height:{h}%"></i>' for h, hi in bars) + "</div></div>")
+    dir_secs = ""
+    for k, d in BD.items():
+        dir_secs += (f'<section class="sec bd-dir" id="{k}"><div class="sec-head"><h2>{e(d["name"])}{" · in use" if d["applied"] else ""}</h2></div>'
+                     f'<p class="bd-idea">{e(d["idea"])}</p><p class="note">Headlines: {e(brand.FONTS[d["head"]][0])}. Text: {e(brand.FONTS[d["text"]][0])}. '
+                     f'Colours: {d["mark"]} (mark), {d["ui"]} (buttons), {d["ui_dark"]} (on dark), ink {d["ink"]}.</p>'
+                     f'<div class="bd-pair">{bd_panel(k, False)}{bd_panel(k, True)}</div>'
+                     f'<p class="bd-files"><a href="{P}/brand/{k}-logo.svg">Logo</a> <a href="{P}/brand/{k}-logo-dark.svg">Logo, dark</a> <a href="{P}/brand/{k}-mark.svg">Mark</a> '
+                     f'<a href="{P}/brand/{k}-logo-mono.svg">One colour</a></p></section>')
+    page("brand/directions/", f"Brand Directions: three looks for the site | {SITE}",
+         f"Three brand directions for {SITE}, each with its mark, colours and type in light and dark: Persimmon (in use), Berry, Brick and sand.",
+         crumbs(("Brand", "brand/"), ("Directions", "")) + "<h1>Three brand directions</h1>"
+         f'<p class="lead">The site uses <b>Persimmon</b>. The other two stay here, drawn and ready, so the look can be changed later in one place '
+         f'(<code>brand.py</code>). <a href="{P}/brand/">The brand guide</a> explains the one in use.</p>'
+         '<style>@font-face{font-family:"Hanken Grotesk";font-weight:100 900;font-display:swap;src:url(' + P + '/fonts/hanken-latin.woff2) format("woff2")}</style>'
+         + dir_secs, head='<meta name="robots" content="noindex">', sitemap=False)
+    # Media kit: for journalists, partners and advertisers
+    shots = [("screen-home.jpg", "The home page"), ("screen-search.jpg", "Search"), ("screen-resume.jpg", "The resume builder")]
+    shots = [(f_, l_) for f_, l_ in shots if (ROOT / "assets" / "brand" / f_).exists()]
+    banners = [("banner-x.png", "X / Twitter header, 1500 × 500"), ("banner-linkedin.png", "LinkedIn cover, 1584 × 396"), ("banner-square.png", "Square post, 1080 × 1080")]
+    banners = [(f_, l_) for f_, l_ in banners if (ROOT / "assets" / "brand" / f_).exists()]
+    sig = (f'<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#121110"><tr>'
+           f'<td style="padding-right:12px;vertical-align:top"><img src="{FULL}/brand/{A_}-mark-96.png" width="40" height="40" alt="{SITE}"></td>'
+           f'<td style="vertical-align:top"><b style="font-size:14px">Your Name</b><br>Your role, {SITE}<br>'
+           f'<a href="{FULL}/" style="color:#C93F18;text-decoration:none">jobseveryhour.com</a></td></tr></table>')
+    page("media-kit/", f"Media Kit — logos, numbers and descriptions | {SITE}",
+         f"{SITE} media kit: logo files, colours with hex codes, a 50 and a 100-word description, today’s numbers, screenshots, social banners and the press contact.",
          crumbs(("Media kit", "")) + f"<h1>{e(SITE)} media kit</h1>"
-         '<p class="plain"><b>In plain words:</b> logos, facts and prices for journalists and for companies that want to write about this site or advertise on it. Job seekers do not need this page.</p>'
-         '<p class="lead">For journalists, partners and advertisers: what the site is, today’s numbers, logos to download, and what can be bought.</p>'
-         f'<div class="statrow"><div class="stat"><b>{n:,}</b><span>open roles today</span></div><div class="stat"><b>{m}</b><span>companies</span></div>'
-         f'<div class="stat"><b>{len(remote):,}</b><span>remote roles</span></div><div class="stat"><b>{WEEKNEW:,}</b><span>posted in the last 7 days</span></div></div>'
-         f'<p class="note">Counted on {fdate(TODAY)}; these numbers are rebuilt every day. Audience figures are not published yet: measurement starts when the site moves to its own domain, and we do not publish estimates.</p>'
-         + section(f"What {SITE} is", f'<p>{e(short_bp)}</p><p>{e(long_bp)}</p><p class="note">Both paragraphs may be quoted as they are. How the data is collected: <a href="{P}/methodology/">methodology</a>.</p>')
-         + section("Logos to download", '<div class="brandrow">'
-                   f'<a class="brandtile" href="{P}/brand/logo-wordmark.svg" download><img src="{P}/brand/logo-wordmark.svg" alt="{e(SITE)} wordmark on a light background" width="210" height="40"><span>Wordmark, light · SVG</span></a>'
-                   f'<a class="brandtile dark" href="{P}/brand/logo-wordmark-dark.svg" download><img src="{P}/brand/logo-wordmark-dark.svg" alt="{e(SITE)} wordmark on a dark background" width="210" height="40"><span>Wordmark, dark · SVG</span></a>'
-                   f'<a class="brandtile" href="{P}/brand/logo-mark.svg" download><img src="{P}/brand/logo-mark.svg" alt="{e(SITE)} mark" width="56" height="56"><span>Mark · SVG</span></a>'
-                   f'<a class="brandtile" href="{P}/og.jpg" download><img src="{P}/og.jpg" alt="{e(SITE)} share image" width="210" height="110" loading="lazy"><span>Share image · JPG 1200×630</span></a></div>'
-                   '<p class="note">Keep the mark and the name together, leave clear space around them, and do not recolour, stretch or redraw them. The wordmark is set in Bricolage Grotesque ExtraBold.</p>')
-         + section("Colours and type", '<div class="swatches">' + swatch("#f6f5f0", "Paper") + swatch("#0e0e0c", "Ink", "#f3f2ec") + swatch("#b7eec3", "Marker green") + swatch("#1f9d55", "Line green", "#ffffff") + swatch("#3ecf5f", "Live green") + swatch("#e2dfd5", "Line") + "</div>"
-                   '<div class="types"><div><span class="t1">Hiring Right Now</span><small>Headlines: Bricolage Grotesque, 700–800</small></div>'
-                   '<div><span class="t2">Every role here comes from the company’s own careers page and is checked again every hour.</span><small>Text: Inter, 400–700</small></div>'
-                   f'<div><span class="t3">{n:,} · $196K · {fdate(TODAY, False)}</span><small>Numbers: JetBrains Mono, 500–700</small></div></div>'
-                   '<p class="note">All three are open-source typefaces.</p>')
+         '<p class="lead">Everything needed to write about the site or link to it: the description, today’s numbers, the logo, screenshots and the press contact. '
+         f'Free to use. The rules for the logo and colours are in the <a href="{P}/brand/">brand guide</a>.</p>'
+         f'<div class="stats3 st4"><div class="st"><span class="st-l">Open jobs</span><b class="st-v">{n:,}</b><span class="st-s">on {fdate(TODAY)}</span></div>'
+         f'<div class="st"><span class="st-l">Companies</span><b class="st-v">{m:,}</b><span class="st-s">with open jobs today</span></div>'
+         f'<div class="st"><span class="st-l">Remote jobs</span><b class="st-v">{len(remote):,}</b><span class="st-s">can be done from home</span></div>'
+         f'<div class="st"><span class="st-l">New this week</span><b class="st-v">{WEEKNEW:,}</b><span class="st-s">posted in the last 7 days</span></div></div>'
+         '<p class="note">Counted from the open postings when this page was built. Visitor numbers are not published yet: they will be, once they have been measured for a full month.</p>'
+         + section("About the site", f'<p class="flabel">In {wc(bp50)} words</p><blockquote class="bp" id="bp50">{e(bp50)}</blockquote>'
+                   f'<p><button class="btn ghost sm" type="button" data-clip="bp50" style="margin-top:0">Copy</button></p>'
+                   f'<p class="flabel">In {wc(bp100)} words</p><blockquote class="bp" id="bp100">{e(bp100)}</blockquote>'
+                   f'<p><button class="btn ghost sm" type="button" data-clip="bp100" style="margin-top:0">Copy</button></p>'
+                   f'<p class="note">The numbers in both are today’s and change every day. How the data is collected: <a href="{P}/methodology/">methodology</a>.</p>')
+         + section("Logo", '<div class="brandrow">' + logo_tile(f"{A_}-logo.svg", "Logo, light") + logo_tile(f"{A_}-logo-dark.svg", "Logo, dark", True)
+                   + logo_tile(f"{A_}-logo-mono.svg", "Logo, one colour") + logo_tile(f"{A_}-mark.svg", "Mark", h=56) + "</div>"
+                   f'<p class="note">More versions and the rules: <a href="{P}/brand/">brand guide</a>.</p>', ("brand/", "Brand guide"))
+         + section("Colours", f'<div class="swatches">{SWATCHES}</div>')
+         + (section("Screenshots", '<div class="shots">' + "".join(f'<a href="{P}/brand/{f_}" download><img src="{P}/brand/{f_}" alt="{e(l_)}" loading="lazy" width="640" height="400"><span>{e(l_)}</span></a>' for f_, l_ in shots)
+                    + "</div>" f'<p class="note">Taken on {fdate(TODAY)} at 1280 × 800. The site changes every hour; open it for a current picture.</p>') if shots else "")
+         + section("Social banners and the share picture", '<div class="shots">' + "".join(f'<a href="{P}/brand/{f_}" download><img src="{P}/brand/{f_}" alt="{e(l_)}" loading="lazy"><span>{e(l_)}</span></a>' for f_, l_ in banners)
+                   + f'<a href="{P}/og.jpg" download><img src="{P}/og.jpg" alt="Share picture" loading="lazy" width="600" height="315"><span>Share picture, 1200 × 630</span></a></div>'
+                   '<p class="note">The share picture is what social networks show when a page of the site is shared: white paper, the logo, one headline with a tinted marker, '
+                   'and a dark panel of real job titles. No figures that change daily: networks keep the picture for a long time.</p>')
+         + section("Email signature", f'<div class="sigprev">{sig}</div><textarea rows="5" readonly aria-label="Email signature HTML">{e(sig)}</textarea>'
+                   '<p class="note">Paste the HTML into the signature settings of your mail app and put in your name and role.</p>')
          + section("Placements for employers and sponsors", f'<div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What it is</th></tr>{rows}</table></div>'
                    + ("<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout." if CFG["api_url"] else
                       "<p>Placements will be bought and switched on in a self-serve employer account, paid in crypto at checkout. The account is not open yet, so nothing can be bought today.")
-                   + f' Details and examples: <a href="{P}/post-a-job/">for employers</a>.</p>')
-         + section("For journalists and researchers", f'<p>Numbers you can quote, each with its method and date: <a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from live postings</a>, '
-                   f'<a href="{P}/insights/">rankings</a>, <a href="{P}/compare/">skill comparisons</a>. Raw data: <a href="{P}/api/">free JSON API</a> and CSV files. Every data page has a “Cite or link to this page” box.</p>'
-                   + (f"<p>Questions: {contact}.</p>" if contact else "")),
-         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": f"{FULL}/brand/logo-mark.svg",
-               "description": short_bp}) + "</script>")
+                   + f' Posting a job is free: <a href="{P}/post-a-job/">for employers</a>.</p>')
+         + section("Press contact", f'<p>Email {mail("press")}. Numbers you can quote, each with its method and date: <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, '
+                   f'<a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from open postings</a>, <a href="{P}/reports/">monthly reports</a>. '
+                   f'Raw data: the <a href="{P}/api/">free JSON API</a>.</p>'),
+         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
+               "logo": f"{FULL}/brand/{A_}-mark.svg", "description": bp50}) + "</script>")
     # Hiring badges: small live pictures with a count of open roles, for a README, a footer or a post
     top_co = next((c for c, _ in comp_items if OPEN[c]), "")
     top_sk = skill_counts.most_common(1)[0][0] if skill_counts else ""
@@ -5391,6 +5519,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
+    shutil.copytree(ROOT / "assets" / "brand", OUT / "brand", dirs_exist_ok=True)
     # service worker: keeps versioned scripts and styles, fonts and logos in the browser, so repeat views skip the network for them
     # Offline page: shown only when a page was never opened before and there is no connection
     page("offline/", f"You are offline | {SITE}", "This page is shown when there is no connection and the page you asked for was not opened before.",
@@ -5421,11 +5550,11 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
 """, encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
-          f'<rect width="220" height="48" rx="10" fill="#0e0e0c"/><circle cx="26" cy="24" r="7" fill="#7ee39a"/>'
+          f'<rect width="220" height="48" rx="10" fill="#121110"/><g transform="translate(15 13) scale(.69)">{brand.mark(brand.APPLIED, "#ff7a52", "#121110")}</g>'
           '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
           f'<text x="46" y="37" fill="#b9b7ad" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")
-    write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#f6f5f0", "theme_color": "#0e0e0c",
+    write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#ffffff", "theme_color": "#121110",
                                        "icons": [{"src": P + "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}), sitemap=False)
     job_mod = {f"job/{j['slug']}/": (j.get("last_seen") if j["active"] else j.get("closed")) or TODAY for j in jobs}      # a closed job's page last changed the day it closed
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'

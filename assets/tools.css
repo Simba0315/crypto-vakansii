@@ -23,7 +23,7 @@
 .tl-in::placeholder,.tl textarea::placeholder{color:var(--faint);opacity:.8}
 .tl textarea{line-height:1.5;min-height:88px;resize:vertical}
 .tl textarea.tl-tall{min-height:260px}
-.tl-code{font-family:var(--mono)!important;font-size:12.5px!important;line-height:1.55!important;background:var(--bg2)!important;min-height:300px!important;white-space:pre;overflow:auto;tab-size:2}
+.tl-code{font-family:var(--code)!important;font-size:12.5px!important;line-height:1.55!important;background:var(--bg2)!important;min-height:300px!important;white-space:pre;overflow:auto;tab-size:2}
 .tl-checks{display:flex;flex-wrap:wrap;gap:2px 16px}
 .tl-checks label.check{min-height:44px;padding:9px 4px 9px 0}
 .tl-checks input,.tl label.check input{width:18px;height:18px;margin:0;flex:none}
@@ -35,16 +35,16 @@
 
 /* result board: big display numeral, mono labels */
 .tl-board{margin-top:18px;background:#0e0e0c;color:#f3f2ec;border:1px solid #2b2b27;border-top:4px solid var(--pop);border-radius:6px;padding:14px 20px 20px;min-height:150px}
-.tl-board-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;font:500 13px "Inter","Inter Fallback",system-ui,sans-serif;color:#a5a399;padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid #2b2b27}
+.tl-board-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;font:500 13px "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:#a5a399;padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid #2b2b27}
 .tl-board-h b{color:var(--pop);font-weight:500}
 .tl-big{margin:0;font:800 clamp(38px,10vw,64px)/1 var(--display);letter-spacing:-.035em;color:var(--pop);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.tl-big small{font:400 13.5px "Inter","Inter Fallback",system-ui,sans-serif;color:#a5a399;white-space:nowrap}
+.tl-big small{font:400 13.5px "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:#a5a399;white-space:nowrap}
 .tl-big.tl-dim{color:#55534c}
 .tl-sub{margin:10px 0 0;max-width:74ch;font-size:15px;line-height:1.55;color:#cfcdc3;overflow-wrap:anywhere}
 .tl-sub b{color:#f3f2ec;font-weight:650}
 .tl-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:0 18px;margin:16px 0 0;padding:0;border-top:1px solid #2b2b27}
 .tl-kv div{padding-top:12px;min-width:0}
-.tl-kv dt{font:400 13px/1.35 "Inter","Inter Fallback",system-ui,sans-serif;color:#a5a399}
+.tl-kv dt{font:400 13px/1.35 "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:#a5a399}
 .tl-kv dd{margin:3px 0 0;font:700 20px/1.2 var(--display);letter-spacing:-.015em;color:#f3f2ec;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .tl-meter{position:relative;height:10px;margin:16px 0 4px;border-radius:5px;background:#2b2b27;overflow:hidden}
 .tl-meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--pop);transition:width .25s}
@@ -52,7 +52,7 @@
 .tl-range i{position:absolute;top:0;bottom:0;border-radius:6px;background:#2f6b45}
 .tl-range u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:2px;background:var(--pop)}
 .tl-range b{position:absolute;top:-6px;bottom:-6px;width:4px;margin-left:-2px;border-radius:2px;background:#f3f2ec}
-.tl-range b span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding-bottom:2px;font:600 11.5px "Inter","Inter Fallback",system-ui,sans-serif;white-space:nowrap;color:#f3f2ec}
+.tl-range b span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding-bottom:2px;font:600 11.5px "Public Sans","Public Sans Fallback",system-ui,sans-serif;white-space:nowrap;color:#f3f2ec}
 .tl-scale{display:flex;justify-content:space-between;gap:12px;font:500 11.5px var(--mono);color:#a5a399}
 @media(prefers-reduced-motion:reduce){.tl-meter i{transition:none}}
 
