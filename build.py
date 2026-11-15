@@ -345,9 +345,16 @@ def region_lands(loc):
         if re.search(rx, loc or "", re.I): return [(c, names[c]) for c in codes if c in names]
     return []
 BR = brand.DIRECTIONS[brand.APPLIED]
-MARK = brand.mark(brand.APPLIED, BR["mark"], "#FFFFFF")                     # the favicon and every file that carries the mark
+MARK = brand.mark_light()                     # the favicon and every file that carries the mark: the clock-o on a white tile
 GRAD = ""
-LOGO = f'<svg class="mk" viewBox="0 0 32 32" aria-hidden="true">{brand.mark(brand.APPLIED, BR["mark"], "#FFFFFF")}</svg>'      # coloured by --brand in style.css
+_WM = re.search(r'width="(\d+)" height="(\d+)"', (ROOT / "assets" / "brand" / f"{brand.APPLIED}-logo.svg").read_text())
+WM_W, WM_H = (int(_WM.group(1)), int(_WM.group(2))) if _WM else (271, 40)
+# the wordmark: light file on light pages, dark file on dark ones (style.css swaps them); the link carries the name
+LOGO = (f'<img class="wm-l" src="{P}/brand/{brand.APPLIED}-logo.svg?v=WMV" alt="" width="{WM_W}" height="{WM_H}">'
+        f'<img class="wm-d" src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="" width="{WM_W}" height="{WM_H}">')
+LOGO_DARK = f'<img src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="" width="{WM_W}" height="{WM_H}">'
+LOGO_V = hashlib.md5((ROOT / "assets" / "brand" / f"{brand.APPLIED}-logo.svg").read_bytes()).hexdigest()[:8]
+LOGO, LOGO_DARK = LOGO.replace("WMV", LOGO_V), LOGO_DARK.replace("WMV", LOGO_V)
 ICON_THEME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg>'
 ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
 ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
@@ -511,11 +518,11 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:type" content="website">{"" if compact else f'<meta property="og:url" content="{e(url)}">'}<meta property="og:site_name" content="{e(SITE)}">
 <meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#121110">
-<link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="manifest" href="{P}/manifest.json">
+<link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="apple-touch-icon" href="{P}/brand/apple-touch-icon.png"><link rel="manifest" href="{P}/manifest.json">
 {"" if compact else f'<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">'}
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
-<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
+<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav">
 <a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/tech/">Tech jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
@@ -526,7 +533,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
-<div><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
+<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO_DARK}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
@@ -1703,7 +1710,7 @@ def main():
     band = (f'<div class="band"><div><p class="band-k">For employers</p><h2>Post a job for <span class="free">free</span></h2>'
             f'<p>A standard listing costs nothing and sits next to {n:,} open jobs from {m:,} companies. Want it first in its list? A featured listing, from {price_of("Featured job")}, paid in crypto.</p></div>'
             f'<a class="btn primary" href="{P}/post-a-job/">Post a job — free</a></div>')
-    ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
+    ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/brand/icon-512.png"}) + "</script>")
     wk_ = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     co_top = Counter(j["company"] for j in active).most_common(10)
     co_new = Counter(j["company"] for j in active if (j.get("first_seen") or "") >= wk_)
@@ -6687,13 +6694,13 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 + swatch(BD[A_]["tint"], "Tint", "A marker under one phrase, a selected row")
                 + swatch(BD[A_]["mark"], "Data green", "Amounts in charts")
                 + swatch(BD[A_]["ink"], "Data ink", "The one mark a chart is about"))
-    TYPES = ('<div class="types"><div><span class="t1">Jobs that are still open</span><small>Headlines and the name: Schibsted Grotesk, 700–800</small></div>'
+    TYPES = ('<div class="types"><div><span class="t1">Jobs that are still open</span><small>Headlines: Schibsted Grotesk, 700–800. The name in the logo: Outfit Bold, lower case, drawn as outlines</small></div>'
              '<div><span class="t2">Every job here comes from the employer’s own careers page. A job the employer takes down leaves the list.</span><small>Text: Public Sans, 400–700</small></div>'
              f'<div><span class="t3">{n:,} open jobs · {money(med_all)} median · 17 past the hour</span><small>Numbers: Public Sans with figures of equal width, so columns line up</small></div>'
              '<div><span class="t4">GET /api/v1/latest.json</span><small>Code only: JetBrains Mono</small></div></div>'
-             '<p class="note">All three typefaces are open source (SIL Open Font License) and served from this site.</p>')
-    brand_qa = [("What does the mark mean?", "A clock face at 17 minutes past the hour: the minute every employer’s careers page is read in each hourly run. "
-                 "The hour hand points up, the minute hand to 17 past."),
+             '<p class="note">All four typefaces are open source (SIL Open Font License) and served from this site.</p>')
+    brand_qa = [("What does the logo mean?", "The name is the logo: “jobs every hour” in lower case, and the o of “jobs” is a clock face, because every "
+                 "job here is read again from the employer’s own careers page every hour. On its own, the clock-o is the mark: the tab icon and the app icon."),
                 ("Why green?", "Green reads as “open”: the job is still open. It is the colour the site has used from the start, for the marker under words "
                  "and the line under links, and it stays small: buttons are ink, and green is never a large fill."),
                 ("Can I use the logo?", "Yes, to link to the site or to write about it. Use the files on this page as they are: do not recolour, stretch, outline or "
@@ -6705,11 +6712,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'Logos and today’s numbers for an article are in the <a href="{P}/media-kit/">media kit</a>.</p>'
          + f'<div class="bmark"><div class="bm-l"><img src="{P}/brand/{A_}-logo.svg" alt="{e(SITE)} logo" height="56"></div><div class="bm-d"><img src="{P}/brand/{A_}-logo-dark.svg" alt="{e(SITE)} logo on a dark background" height="56"></div></div>'
          + section("The mark", f'<div class="bgrid"><div><img class="bbig" src="{P}/brand/{A_}-mark.svg" alt="The mark" width="120" height="120"></div>'
-                   '<div><p>A clock face at <b>17 minutes past the hour</b>: the minute every employer’s careers page is read in each hourly run. It says the one thing the site '
-                   'promises, that a job here was checked a moment ago, and it still reads as a clock at 16 pixels.</p>'
+                   '<div><p>The name is the logo: <b>“jobs every hour”</b> in lower case, and the <b>o of “jobs” is a clock face</b>. It says the one thing the site '
+                   'promises, that a job here was checked within the hour. On its own the clock-o is the mark: the browser tab, the app icon and the avatar; it still reads as a clock at 16 pixels.</p>'
                    '<ul class="rules"><li>Leave clear space around the mark of at least half its height.</li><li>The smallest mark is 16 px; the smallest logo with the name, 120 px wide.</li>'
                    f'<li>On white use the {BD[A_]["name"].lower()} mark; on dark pages the light one; in one colour, ink or white.</li>'
-                   '<li>Do not recolour, stretch, rotate, outline or animate it, and do not set the name in another typeface.</li></ul></div></div>')
+                   '<li>Do not recolour, stretch, rotate, outline or animate it, do not set the name in another typeface, and keep it in lower case.</li></ul></div></div>')
          + section("Logo files", '<div class="brandrow">' + logo_tile(f"{A_}-logo.svg", "Logo, light") + logo_tile(f"{A_}-logo-dark.svg", "Logo, dark", True)
                    + logo_tile(f"{A_}-logo-mono.svg", "Logo, one colour") + logo_tile(f"{A_}-logo-mono-white.svg", "Logo, white", True)
                    + logo_tile(f"{A_}-mark.svg", "Mark", h=56) + logo_tile(f"{A_}-mark-dark.svg", "Mark, dark", True, h=56) + "</div>"
@@ -6748,8 +6755,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f'--b-ui-ink:{d["dark_bg"] if dark else "#FFFFFF"};--b-mark:{d["ui_dark"] if dark else d["mark"]};--b-tint:{d["tint_dark"] if dark else d["tint"]};'
              f"--b-head:'{fam_h}';--b-text:'{fam_t}'")
         bars = [(62, False), (100, True), (78, False), (41, False)]
-        return (f'<div class="bd-panel" style="{v}"><div class="bd-top"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">'
-                f'{brand.mark(k, d["ui_dark"] if dark else d["mark"], d["dark_bg"] if dark else "#FFFFFF")}</svg><b>{e(SITE)}</b><span>Jobs</span><span>Companies</span><span>Salaries</span></div>'
+        top_ = (f'<img src="{P}/brand/{k}-logo{"-dark" if dark else ""}.svg?v={LOGO_V}" alt="{e(SITE)}" height="22" style="height:22px;width:auto">' if d.get("shape") == "clocko" else
+                f'<svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">{brand.mark(k, d["ui_dark"] if dark else d["mark"], d["dark_bg"] if dark else "#FFFFFF")}</svg><b>{e(SITE)}</b>')
+        return (f'<div class="bd-panel" style="{v}"><div class="bd-top">{top_}<span>Jobs</span><span>Companies</span><span>Salaries</span></div>'
                 '<p class="bd-h">Jobs that are <span>still open</span></p><p class="bd-p">Every job here comes from the employer’s own careers page. A job the employer takes down leaves the list.</p>'
                 '<p class="bd-b"><span class="bd-btn">Search jobs</span><span class="bd-btn2">Build a resume — free</span><span class="bd-a">See salaries</span></p>'
                 '<div class="bd-job"><b>Senior Data Engineer</b><span>Remote · United States</span><em>$150K – $190K</em></div>'
@@ -6813,7 +6821,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from open postings</a>, <a href="{P}/reports/">monthly reports</a>. '
                    f'Raw data: the <a href="{P}/api/">free JSON API</a>.</p>'),
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
-               "logo": f"{FULL}/brand/{A_}-mark.svg", "description": bp50}) + "</script>")
+               "logo": f"{FULL}/brand/icon-512.png", "description": bp50}) + "</script>")
     # Hiring badges: small live pictures with a count of open roles, for a README, a footer or a post
     top_co = next((c for c, _ in comp_items if OPEN[c]), "")
     top_sk = skill_counts.most_common(1)[0][0] if skill_counts else ""
@@ -6838,7 +6846,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
              {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hb_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     org_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
-              "logo": FULL + "/og.jpg", "description": "An hourly-updated index of open jobs collected from companies' official careers pages."}) + "</script>")
+              "logo": FULL + "/brand/icon-512.png", "description": "An hourly-updated index of open jobs collected from companies' official careers pages."}) + "</script>")
     page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} job listings come from, how often they are checked and what the site does not do.",
          crumbs(("About", "")) + f"<h1>About {e(SITE)}</h1>"
          f'<p class="lead">{e(SITE)} is an index of open jobs. Every hour it reads the public hiring feeds of {N_FEEDS} companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.</p>'
@@ -7045,12 +7053,14 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
 """, encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
-          f'<rect width="220" height="48" rx="10" fill="#121110"/><g transform="translate(15 13) scale(.69)">{brand.mark(brand.APPLIED, "#5fd486", "#121110")}</g>'
+          f'<rect width="220" height="48" rx="10" fill="#121110"/><g transform="translate(13 11) scale(.82)">{brand.mark_dark()}</g>'
           '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
           f'<text x="46" y="37" fill="#b9b7ad" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")
     write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#ffffff", "theme_color": "#121110",
-                                       "icons": [{"src": P + "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}), sitemap=False)
+                                       "icons": [{"src": P + "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+                                                + [{"src": f"{P}/brand/icon-{n_}.png", "sizes": f"{n_}x{n_}", "type": "image/png", "purpose": "any maskable"}
+                                                   for n_ in (192, 512) if (ROOT / "assets" / "brand" / f"icon-{n_}.png").exists()]}), sitemap=False)
     # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
     import crosslinks
     n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")])

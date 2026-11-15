@@ -1940,3 +1940,12 @@ ul.crosses li::before{content:"✕";background:var(--bg2);color:var(--text)}
 .nf-links{display:flex;flex-wrap:wrap;gap:8px}
 .nf-links a{display:inline-flex;align-items:center;min-height:38px;padding:7px 14px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:14.5px;font-weight:600}
 .nf-links a:hover{border-color:var(--text)}
+/* the logo: the wordmark "jobs every hour" with the clock-o (variant 2, chosen by the owner on 15 Nov 2026); light file on light
+   pages, dark file on dark ones; the footer is always dark */
+.logo img{display:block;height:26px;width:auto}
+.logo .wm-d{display:none}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .logo .wm-l{display:none}:root:not([data-theme=light]) .logo .wm-d{display:block}}
+:root[data-theme=dark] .logo .wm-l{display:none}:root[data-theme=dark] .logo .wm-d{display:block}
+footer .logo img{height:28px}
+@media(max-width:560px){.logo img{height:23px}}
+.bmark .bm-l{background:#ffffff}

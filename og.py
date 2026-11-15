@@ -18,7 +18,7 @@ HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
 *{box-sizing:border-box;margin:0}
 body{width:1200px;height:630px;background:#ffffff;color:#121110;font-family:P,sans-serif;overflow:hidden;position:relative;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 .logo{position:absolute;left:64px;top:52px;display:flex;align-items:center;gap:14px;font:800 34px/1 S;letter-spacing:-.02em}
-.logo svg{width:44px;height:44px}
+.logo svg{height:50px;width:auto}
 h1{position:absolute;left:62px;top:150px;font:800 90px/.98 S;letter-spacing:-.035em;width:580px}
 h1 span{background:linear-gradient(transparent 64%,#b7eec3 64%);padding:0 .06em}
 p{position:absolute;left:64px;top:470px;font-size:26px;line-height:1.5;color:#5c5852;width:580px}
@@ -45,7 +45,7 @@ SQUARE = """<!doctype html><html><head><meta charset="utf-8"><style>
 *{box-sizing:border-box;margin:0}
 body{width:1080px;height:1080px;background:#ffffff;color:#121110;font-family:P,sans-serif;overflow:hidden;position:relative;-webkit-font-smoothing:antialiased}
 .logo{position:absolute;left:96px;top:100px;display:flex;align-items:center;gap:22px;font:800 56px/1 S;letter-spacing:-.02em}
-.logo svg{width:72px;height:72px}
+.logo svg{height:80px;width:auto}
 h1{position:absolute;left:92px;top:390px;font:800 150px/.98 S;letter-spacing:-.04em;width:900px}
 h1 span{background:linear-gradient(transparent 62%,#b7eec3 62%);padding:0 .04em}
 p{position:absolute;left:96px;top:880px;font-size:34px;line-height:1.4;color:#5c5852;width:820px}
@@ -76,15 +76,31 @@ p{position:absolute;left:442px;top:186px;font-size:26px;color:#aca69c}
 <svg class="big" viewBox="0 0 32 32">DARKMARK</svg></body></html>"""
 
 
+def logo_html():
+    """The logo as it sits on a light picture: the wordmark when the name is the logo, else the mark and the name."""
+    d = brand.DIRECTIONS[brand.APPLIED]
+    if d.get("shape") == "clocko": return brand.wordmark_svg("")
+    return f'<svg viewBox="0 0 32 32">{brand.mark(brand.APPLIED, d["mark"], "#FFFFFF")}</svg> {brand.NAME}'
+
+
+ICON = """<!doctype html><html><head><meta charset="utf-8"><style>*{margin:0}body{width:SIZEpx;height:SIZEpx;background:#ffffff;overflow:hidden}
+svg{display:block;width:SIZEpx;height:SIZEpx}</style></head><body><svg viewBox="0 0 32 32">MARKSVG</svg></body></html>"""
+
+
+def icons():
+    """The square icons: phones (180, 192, 512), the e-mail signature (96) and the LinkedIn page (400), the clock-o on white."""
+    out = ROOT / "assets" / "brand"
+    for name, n in (("apple-touch-icon.png", 180), ("icon-192.png", 192), ("icon-512.png", 512), (f"{brand.APPLIED}-mark-96.png", 96), ("linkedin-logo-400.png", 400)):
+        shoot(ICON.replace("SIZE", str(n)).replace("MARKSVG", brand.mark_light()), n, n, out / name, jpeg=False); print(f"assets/brand/{name} written")
+
+
 def shoot(html, w, h, out, jpeg=True):
     """Photographs one HTML page with headless Chrome at w×h and saves it to out (JPEG or PNG)."""
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp) / "p.html", Path(tmp) / "p.png"
-        mark = f'<svg viewBox="0 0 32 32">{brand.mark(brand.APPLIED, brand.DIRECTIONS[brand.APPLIED]["mark"], "#FFFFFF")}</svg>'
         d = brand.DIRECTIONS[brand.APPLIED]
-        html = (html.replace("BIGMARK", brand.mark(brand.APPLIED, d["mark"], "#FFFFFF")).replace("DARKMARK", brand.mark(brand.APPLIED, d["ui_dark"], d["dark_bg"]))
-                .replace("TINT", d["tint"]))
-        page.write_text(html.replace("FONTS", (ROOT / "assets" / "fonts").as_uri()).replace("MARK", mark).replace("SITENAME", brand.NAME), encoding="utf8")
+        html = (html.replace("BIGMARK", brand.mark_light()).replace("DARKMARK", brand.mark_dark()).replace("TINT", d["tint"]))
+        page.write_text(html.replace("FONTS", (ROOT / "assets" / "fonts").as_uri()).replace("MARK SITENAME", logo_html()), encoding="utf8")
         subprocess.run([CHROMES[0], "--headless=new", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1", f"--user-data-dir={tmp}/profile",
                         f"--window-size={w},{h}", "--virtual-time-budget=4000", f"--screenshot={shot}", page.as_uri()], check=True, capture_output=True, timeout=90)
         if jpeg: subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "86", str(shot), "--out", str(out)], check=True, capture_output=True)
@@ -95,8 +111,7 @@ def main():
     rows = "".join(f'<div class="r"><i>Today</i><div><b>{t}</b><span>{p}</span></div></div>' for t, p in ROWS)
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp) / "og.html", Path(tmp) / "og.png"
-        mark = f'<svg viewBox="0 0 32 32">{brand.mark(brand.APPLIED, brand.DIRECTIONS[brand.APPLIED]["mark"], "#FFFFFF")}</svg>'
-        page.write_text(HTML.replace("FONTS", (ROOT / "assets" / "fonts").as_uri()).replace("ROWS", rows).replace("MARK", mark).replace("SITENAME", brand.NAME), encoding="utf8")
+        page.write_text(HTML.replace("FONTS", (ROOT / "assets" / "fonts").as_uri()).replace("ROWS", rows).replace("MARK SITENAME", logo_html()), encoding="utf8")
         if not Path(CHROMES[0]).exists():                      # the cloud machine: Playwright's Chromium, driven from Node
             js = ("const{chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1200,height:630}});"
                   f"await p.goto('{page.as_uri()}',{{waitUntil:'networkidle'}});await p.screenshot({{path:'{shot}'}});await b.close();}})();")
@@ -112,7 +127,8 @@ def main():
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["--banners"]:          # the three covers of the media kit, in the applied brand
+    if sys.argv[1:] == ["--icons"]: icons()
+    elif sys.argv[1:] == ["--banners"]:          # the three covers of the media kit, in the applied brand
         for tpl, w, h, name in ((SQUARE, 1080, 1080, "banner-square.png"), (XCOVER, 1500, 500, "banner-x.png"), (LICOVER, 1584, 396, "banner-linkedin.png")):
             shoot(tpl, w, h, ROOT / "assets" / "brand" / name, jpeg=False); print(f"assets/brand/{name} written")
     else:

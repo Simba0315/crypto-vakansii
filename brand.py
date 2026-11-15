@@ -10,6 +10,7 @@ so the files look the same on a computer that does not have the font.
 The build only copies assets/brand/ to the site; it does not need fonttools.
 """
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -22,17 +23,18 @@ FONTS = {   # family, file in assets/fonts (OFL-1.1, from Fontsource), weight us
     "schibsted": ("Schibsted Grotesk", "schibsted-latin.woff2", 800),
     "publicsans": ("Public Sans", "publicsans-latin.woff2", 800),
     "hanken": ("Hanken Grotesk", "hanken-latin.woff2", 800),
+    "outfit": ("Outfit", "outfit-latin.woff2", 700),          # the wordmark of the applied direction (owner, 15 Nov 2026: "ставь вариант 2")
 }
 
 # mark: the colour of the mark and of large shapes; ui: buttons and link lines on light pages (white text on it passes 4.5:1);
 # ui_dark: the same on dark pages, with dark text on it; ink, paper: text and page.
 DIRECTIONS = {
     "green": {
-        "name": "Evergreen", "applied": True, "shape": "clock",
-        "idea": "The clock at 17 minutes past (the minute every employer’s careers page is read, every hour) in the green the site "
-                "has used from the start: the marker under words and the line under links. Green reads as “open”: the job is still "
-                "open. Buttons stay ink, so the green is never a large fill and never a green block on black (the owner, 15 Nov 2026: "
-                "“the site is green, why is the brand red?”).",
+        "name": "Evergreen", "applied": True, "shape": "clocko", "word": "outfit",
+        "idea": "The name is the logo: “jobs every hour” in lower case, and the o of “jobs” is a clock face, because every job here is "
+                "checked again every hour. The green is the colour the site has used from the start: the marker under words and the line "
+                "under links. Green reads as “open”: the job is still open. Buttons stay ink, so the green is never a large fill and never "
+                "a green block on black. Chosen by the owner on 15 Nov 2026 from eight designs.",
         "mark": "#1F9D55", "ui": "#15803D", "ui_hover": "#116932", "ui_dark": "#5FD486", "ui_dark_hover": "#A3F0B8", "tint": "#B7EEC3", "tint_dark": "#12301D",
         "ink": "#0E0E0C", "paper": "#FFFFFF", "paper2": "#F6F5F0", "dark_bg": "#121110", "dark_card": "#1B1917",
         "head": "schibsted", "text": "publicsans"},
@@ -62,9 +64,25 @@ DIRECTIONS = {
 APPLIED = next(k for k, d in DIRECTIONS.items() if d["applied"])
 
 
-def mark(key, bg, fg):
-    """The mark on a 32 x 32 grid: `bg` is the shape, `fg` the drawing on it."""
+DARK_TILE = "#1E211D"          # the tile of the mark on dark pages
+
+
+def clock(cx, cy, r, sw, ring, hands):
+    """The clock face of the wordmark's o: a ring (centre line radius r, stroke sw), the hour hand at 12 and the minute hand at 20 past."""
+    a = math.radians(120)
+    mx, my = cx + .52 * r * math.sin(a), cy - .52 * r * math.cos(a)
+    return (f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r:.2f}" fill="none" stroke="{ring}" stroke-width="{sw:.2f}"/>'
+            f'<path d="M{cx:.2f} {cy:.2f}V{cy - .57 * r:.2f}M{cx:.2f} {cy:.2f}L{mx:.2f} {my:.2f}" fill="none" stroke="{hands}" '
+            f'stroke-width="{.67 * sw:.2f}" stroke-linecap="round" stroke-linejoin="round"/>')
+
+
+def mark(key, bg, fg, ring=None):
+    """The mark on a 32 x 32 grid: `bg` is the shape, `fg` the drawing on it. For the clock-o mark `bg` is the tile ("none" for
+    no tile), `fg` the hands and `ring` the ring (the brand green unless given)."""
     shape = DIRECTIONS[key].get("shape")
+    if shape == "clocko":
+        tile = f'<rect width="32" height="32" rx="8" fill="{bg}"/>' if bg != "none" else ""
+        return tile + clock(16, 16, 8.25, 3.4, ring or DIRECTIONS[key]["mark"], fg)
     if shape == "clock":                           # a clock face: the hour hand at 12, the minute hand at 17 past
         a = math.radians(17 / 60 * 360)
         x, y = 16 + 9.6 * math.sin(a), 16 - 9.6 * math.cos(a)
@@ -81,8 +99,76 @@ def mark(key, bg, fg):
 def variants(key):
     """(file suffix, shape colour, drawing colour, text colour, page the file is meant for)"""
     d = DIRECTIONS[key]
+    if d.get("shape") == "clocko":       # tile, hands, letters; the ring is set in ring_of()
+        return [("", "#FFFFFF", d["ink"], d["ink"], "light"), ("-dark", DARK_TILE, d["ui_dark"], "#FFFFFF", "dark"),
+                ("-mono", "none", d["ink"], d["ink"], "light"), ("-mono-white", "none", "#FFFFFF", "#FFFFFF", "dark")]
     return [("", d["mark"], "#FFFFFF", d["ink"], "light"), ("-dark", d["ui_dark"], d["dark_bg"], "#FFFFFF", "dark"),
             ("-mono", d["ink"], "#FFFFFF", d["ink"], "light"), ("-mono-white", "#FFFFFF", d["ink"], "#FFFFFF", "dark")]
+
+
+def ring_of(key, sfx):
+    """The colour of the clock ring in each file: green on light pages, white on dark ones, one colour in the mono files."""
+    d = DIRECTIONS[key]
+    return {"": d["mark"], "-dark": "#FFFFFF", "-mono": d["ink"], "-mono-white": "#FFFFFF"}[sfx]
+
+
+def mark_light():
+    """The applied mark as it sits on light pages and in the browser tab (32 x 32, no <svg> wrapper)."""
+    d = DIRECTIONS[APPLIED]
+    return mark(APPLIED, "#FFFFFF", d["ink"]) if d.get("shape") == "clocko" else mark(APPLIED, d["mark"], "#FFFFFF")
+
+
+def mark_dark():
+    d = DIRECTIONS[APPLIED]
+    return mark(APPLIED, DARK_TILE, d["ui_dark"], "#FFFFFF") if d.get("shape") == "clocko" else mark(APPLIED, d["ui_dark"], d["dark_bg"])
+
+
+def wordmark(ink, ring, hands, size=40, tracking=-0.03):
+    """“jobs every hour” in Outfit Bold, lower case, with the o of “jobs” drawn as a clock face sized to the real o.
+    Returns (svg inner, width, height): letters as one path, so the file looks the same without the typeface."""
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib.instancer import instantiateVariableFont
+    from fontTools.pens.svgPathPen import SVGPathPen
+    from fontTools.pens.transformPen import TransformPen
+    from fontTools.pens.boundsPen import BoundsPen
+    fam, ffile, wght = FONTS["outfit"]
+    font = instantiateVariableFont(TTFont(ROOT / "assets" / "fonts" / ffile), {"wght": wght})
+    upm, cmap, gs, hmtx = font["head"].unitsPerEm, font.getBestCmap(), font.getGlyphSet(), font["hmtx"]
+    asc = font["hhea"].ascent
+    sc, x, parts = size / upm, 0.0, []
+    bp = BoundsPen(gs)
+    o_box = None
+    stem = BoundsPen(gs); gs[cmap[ord("l")]].draw(stem)
+    stem_w = (stem.bounds[2] - stem.bounds[0]) * sc
+    for i, ch in enumerate(NAME.lower()):
+        g = cmap[ord(ch)]
+        tr = (sc, 0, 0, -sc, x, asc * sc)
+        if i == 1 and ch == "o":                       # the o of "jobs": measured, not drawn
+            ob = BoundsPen(gs); gs[g].draw(TransformPen(ob, tr)); o_box = ob.bounds
+            gs[g].draw(TransformPen(bp, tr))
+        else:
+            pen = SVGPathPen(gs)
+            gs[g].draw(TransformPen(pen, tr)); gs[g].draw(TransformPen(bp, tr))
+            parts.append(re.sub(r"-?\d+\.\d+", lambda m_: (f"{float(m_.group()):.2f}".rstrip("0").rstrip(".") or "0"), pen.getCommands()))
+        x += hmtx[g][0] * sc + tracking * size
+    x0, y0, x1, y1 = bp.bounds
+    ox0, oy0, ox1, oy1 = o_box
+    cx, cy = (ox0 + ox1) / 2, (oy0 + oy1) / 2
+    outer = ((ox1 - ox0) + (oy1 - oy0)) / 4
+    sw = stem_w * .98
+    pad = 1.0
+    inner = (f'<g transform="translate({pad - x0:.2f} {pad - y0:.2f})"><path d="{" ".join(p for p in parts if p)}" fill="{ink}"/>'
+             + clock(cx, cy, outer - sw / 2, sw, ring, hands) + "</g>")
+    return inner, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad
+
+
+def wordmark_svg(sfx=""):
+    """The applied wordmark as a whole SVG file: "" for light pages, "-dark" for dark ones, "-mono", "-mono-white"."""
+    d = DIRECTIONS[APPLIED]
+    _, _, hands, ink, _ = next(v for v in variants(APPLIED) if v[0] == sfx)
+    inner, w, h = wordmark(ink, ring_of(APPLIED, sfx), hands)
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w:.0f}" height="{h:.0f}" viewBox="0 0 {w:.2f} {h:.2f}" role="img" '
+            f'aria-label="{NAME}">{inner}</svg>\n')
 
 
 def outline(text, font_file, wght, size, tracking=-0.015):
@@ -109,6 +195,14 @@ def write_all():
     OUT.mkdir(parents=True, exist_ok=True)
     made = []
     for key, d in DIRECTIONS.items():
+        if d.get("shape") == "clocko":                 # the name is the logo: the wordmark files, and the clock-o mark on its own
+            for sfx, bg, fg, ink, _ in variants(key):
+                (OUT / f"{key}-mark{sfx}.svg").write_text(f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 32 32" role="img" aria-label="{NAME}">{mark(key, bg, fg, ring_of(key, sfx))}</svg>\n')
+                (OUT / f"{key}-logo{sfx}.svg").write_text(wordmark_svg(sfx) if key == APPLIED else "")
+                made += [f"{key}-mark{sfx}.svg", f"{key}-logo{sfx}.svg"]
+            (OUT / f"{key}-wordmark.svg").write_text(wordmark_svg(""))
+            made.append(f"{key}-wordmark.svg")
+            continue
         fam, ffile, wght = FONTS[d["head"]]
         path, w, asc = outline(NAME, ffile, wght, 40)
         for sfx, bg, fg, ink, _ in variants(key):
