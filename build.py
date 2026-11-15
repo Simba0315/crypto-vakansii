@@ -495,6 +495,9 @@ def with_toc(path, body):
             f'<ol>{"".join(links)}</ol><a class="toc-top" href="#main">Back to top</a></aside></div>')
 
 
+ACCT_HEAD = (f'<a class="hsign" id="hsign" href="{P}/account/" data-api="{e(CFG["api_url"])}">Sign in</a>' if CFG.get("api_url") else "")
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False):
     url = f"{FULL}/{path}"
     body = with_toc(path, body)
@@ -524,7 +527,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav">
 <a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/tech/">Tech jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
-<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><a class="btn" href="{P}/post-a-job/">Post a job</a>
+<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button>{ACCT_HEAD}<a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
 {MINI_FOOT if compact else FULL_FOOT()}

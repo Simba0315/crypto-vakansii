@@ -1741,3 +1741,34 @@
   }, { rootMargin: '-90px 0px -65% 0px' });
   Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
 })();
+
+// the account in the header: "Sign in" for everyone, and once signed in a round button with the first letter and a menu
+(function () {
+  var a = document.getElementById('hsign');
+  if (!a) return;
+  var api = (a.getAttribute('data-api') || '').replace(/\/+$/, ''), base = (window.HRN && window.HRN.base) || '';
+  var get = function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  var token = get('hrn_token'), email = get('hrn_me_email') || '';
+  if (!token) return;                                   // signed out: the link "Sign in" stays as it is
+  var acc = base + '/account/';
+  var wrap = document.createElement('div'); wrap.className = 'hacc';
+  wrap.innerHTML = '<button class="hacc-b" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Your account">' +
+    (email ? email.charAt(0).toUpperCase() : '•') + '</button><div class="hacc-m" role="menu" hidden>' +
+    (email ? '<p class="hacc-e">' + email.replace(/[<>&"]/g, '') + '</p>' : '') +
+    '<a role="menuitem" href="' + acc + '#overview">Your account</a><a role="menuitem" href="' + acc + '#resumes">Resumes</a>' +
+    '<a role="menuitem" href="' + base + '/my-jobs/">Saved jobs and applications</a><a role="menuitem" href="' + acc + '#alerts">Job alerts</a>' +
+    '<a role="menuitem" href="' + acc + '#jobs">Jobs you posted</a><a role="menuitem" href="' + acc + '#settings">Settings</a>' +
+    '<button role="menuitem" type="button" class="hacc-out">Sign out</button></div>';
+  a.replaceWith(wrap);
+  var b = wrap.querySelector('.hacc-b'), m = wrap.querySelector('.hacc-m');
+  var close = function () { m.hidden = true; b.setAttribute('aria-expanded', 'false'); };
+  b.addEventListener('click', function (ev) { ev.stopPropagation(); m.hidden = !m.hidden; b.setAttribute('aria-expanded', String(!m.hidden)); });
+  document.addEventListener('click', function (ev) { if (!wrap.contains(ev.target)) close(); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') close(); });
+  wrap.querySelector('.hacc-out').addEventListener('click', function () {
+    fetch(api + '/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(function () {}).then(function () {
+      try { localStorage.removeItem('hrn_token'); localStorage.removeItem('hrn_me_email'); } catch (e) {}
+      location.href = acc;
+    });
+  });
+})();

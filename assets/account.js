@@ -29,6 +29,7 @@
     var out = {};
     Array.prototype.forEach.call(form.elements, function (el) {
       if (!el.name) return;
+      if (el.type === 'radio') { if (el.checked) out[el.name] = el.value; return; }
       if (el.type === 'checkbox' && el.hasAttribute('data-many')) { (out[el.name] = out[el.name] || []); if (el.checked) out[el.name].push(el.value); }
       else out[el.name] = el.type === 'checkbox' ? el.checked : el.value.trim();
     });
@@ -49,7 +50,9 @@
   }
   function on(sel, fn) { Array.prototype.forEach.call(root.querySelectorAll(sel), function (el) { el.addEventListener('click', function () { fn(el); }); }); }
   var money = function (n) { return '$' + Number(n).toLocaleString('en-US'); };
-  var state = function (s) { return '<span class="state ' + esc(s) + '">' + esc(s) + '</span>'; };
+  var STATE = { live: 'Live', review: 'Waiting for review', closed: 'Closed', rejected: 'Not accepted', expired: 'Expired', pending: 'Waiting for payment', paid: 'Paid',
+    held: 'Starts after review', scheduled: 'Scheduled', ended: 'Ended', paused: 'Paused', verified: 'Verified', sent: 'New', accepted: 'Accepted', declined: 'Declined' };
+  var state = function (s) { return '<span class="state ' + esc(s) + '">' + esc(STATE[s] || s) + '</span>'; };
   var sec = function (title, inner, id) { return '<section class="sec"' + (id ? ' id="' + id + '"' : '') + '><div class="sec-head"><h2>' + title + '</h2></div>' + inner + '</section>'; };
   var err = '<p class="acc-err" role="alert" hidden></p>';
   var cleanUrl = function () { try { history.replaceState(null, '', location.pathname); } catch (e) {} };
@@ -63,17 +66,28 @@
         '<p class="note"><a href="#" data-mode="in">Back to sign in</a></p></div>';
       submit(root.querySelector('form'), function (v) { return api('POST', '/api/auth/reset/request', v).then(function (r) { notice = esc(r.message); drawAuth('in'); }); });
     } else {
-      root.innerHTML = '<div class="card acc-auth">' + (notice ? '<div class="banner">' + notice + '</div>' : '') + '<div class="tabs" role="tablist" style="margin-top:0">' +
+      root.innerHTML = '<div class="acc-gate"><div class="card acc-auth">' + (notice ? '<div class="banner">' + notice + '</div>' : '') + '<div class="tabs" role="tablist" style="margin-top:0">' +
         '<button class="tab" type="button" role="tab" data-mode="up" aria-selected="' + up + '">Create account</button>' +
         '<button class="tab" type="button" role="tab" data-mode="in" aria-selected="' + !up + '">Sign in</button></div>' +
-        (google ? '<button class="btn lg" type="button" id="acc-google" style="width:100%;margin:4px 0 14px">Continue with Google</button><p class="note" style="text-align:center;margin:0 0 10px">or with your email</p>' : '') +
+        '<div class="acc-sso">' + (google ? '<button class="btn sso" type="button" id="acc-google"><span class="sso-i g">G</span>Continue with Google</button>' : '') +
+        (pub.linkedin === 'on' ? '<button class="btn sso" type="button" id="acc-li"><span class="sso-i in">in</span>Continue with LinkedIn</button>' : '') + '</div>' +
+        (google || pub.linkedin === 'on' ? '<p class="acc-or"><span>or with your email</span></p>' : '') +
         '<form novalidate>' + field('Email', 'email', 'type="email" autocomplete="email" required', up ? 'To post jobs for your company, use your work address (you@yourcompany.com).' : '') +
         field('Password', 'password', 'type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" required minlength="8"', up ? 'At least 8 characters.' : '') +
         (up ? field('Company (optional)', 'company', 'type="text" autocomplete="organization" maxlength="80"') : '') +
         err + '<button class="btn primary lg" type="submit" style="width:100%">' + (up ? 'Create account' : 'Sign in') + '</button></form>' +
-        '<p class="note" style="margin:14px 0 0">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address.' : '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>';
+        '<p class="note" style="margin:14px 0 0">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address.' : '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>' +
+        '<ul class="acc-why"><li><b>Your resumes in one place</b>Keep up to ten versions and open any of them in the builder on any device.</li>' +
+        '<li><b>Saved jobs and applications everywhere</b>What you save on your phone is on your computer too.</li>' +
+        '<li><b>Job alerts</b>New jobs that match a search, once an hour, a day or a week. One click stops them.</li>' +
+        '<li><b>Hiring? Post jobs free</b>See each job’s status, views and clicks on Apply, and promote it in one click.</li></ul></div>';
       submit(root.querySelector('form'), function (v) {
         return api('POST', up ? '/api/auth/signup' : '/api/auth/login', v).then(function (r) { token = r.token; H.set('hrn_token', token); notice = ''; return load(); });
+      });
+      var li = document.getElementById('acc-li');
+      if (li) li.addEventListener('click', function () {
+        li.disabled = true;
+        api('POST', '/api/auth/linkedin/start', { signin: true }).then(function (r) { try { if (r.secret) sessionStorage.setItem('hrn_li', r.secret); } catch (e) {} location.href = r.url; }, function (e) { li.disabled = false; alert(e.message); });
       });
       var g = document.getElementById('acc-google');
       if (g) g.addEventListener('click', function () {
@@ -93,7 +107,7 @@
   }
   function signOut() {
     api('POST', '/api/auth/logout').catch(function () {});
-    token = ''; me = null; H.set('hrn_token', ''); notice = ''; drawAuth('in');
+    token = ''; me = null; H.set('hrn_token', ''); H.set('hrn_me_email', ''); notice = ''; drawAuth('in');
   }
 
   /* ---------- signed in ---------- */
@@ -105,12 +119,35 @@
         talent ? quiet(api('GET', '/api/talent/profile'), { profile: null }) : null, talent ? quiet(api('GET', '/api/talent/requests'), { requests: [] }) : null,
         quiet(api('GET', '/api/jobs'), { jobs: [] }), quiet(api('GET', '/api/placements'), { placements: [] }), quiet(api('GET', '/api/orders'), { orders: [] }),
         emp ? quiet(api('GET', '/api/claims'), { claims: [] }) : null, emp ? quiet(api('GET', '/api/team'), { members: [] }) : null, quiet(api('GET', '/api/domain'), {}),
-        talent && emp ? quiet(api('GET', '/api/talent/sent'), { requests: [], credits: 0 }) : null]);
+        talent && emp ? quiet(api('GET', '/api/talent/sent'), { requests: [], credits: 0 }) : null,
+        me.confirmed ? quiet(api('GET', '/api/resumes'), { resumes: [], max: 10 }) : { resumes: [], max: 10 }, quiet(api('GET', '/api/billing'), null)]);
     }).then(function (r) {
       S = { alerts: r[0].alerts, sync: r[1], talent: r[2], incoming: r[3] ? r[3].requests : [], jobs: r[4].jobs, placements: r[5].placements, orders: r[6].orders,
-        claims: r[7] ? r[7].claims : [], team: r[8], domain: r[9], sent: r[10] };
+        claims: r[7] ? r[7].claims : [], team: r[8], domain: r[9], sent: r[10], resumes: r[11], billing: r[12] };
+      H.set('hrn_me_email', me.email);
+      autoSync();
       draw();
     });
+  }
+
+  /* saved jobs, statuses, searches and follows: kept the same on every device by themselves, merged, never one copy over the other */
+  function mergeLists(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) { var seen = {}, out = []; a.concat(b).forEach(function (x) { var k = JSON.stringify(x); if (!seen[k]) { seen[k] = 1; out.push(x); } }); return out; }
+    if (a && b && typeof a === 'object' && typeof b === 'object') return Object.assign({}, a, b);
+    return b != null ? b : a;
+  }
+  function autoSync() {
+    if (!me.confirmed) return;
+    var srv = (S.sync && S.sync.data) || {}, merged = {}, changed = false;
+    SYNC_KEYS.forEach(function (k) {
+      var v = mergeLists(srv[k], H.get(k, null));
+      if (v == null) return;
+      merged[k] = v;
+      if (JSON.stringify(v) !== JSON.stringify(srv[k])) changed = true;
+      H.set(k, v);
+    });
+    S.syncCount = SYNC_KEYS.reduce(function (n, k) { var v = merged[k]; return n + (v ? (Array.isArray(v) ? v.length : Object.keys(v).length) : 0); }, 0);
+    if (changed) api('PUT', '/api/sync', { data: merged }).then(function (r) { S.sync = { data: merged, updated: r.updated }; }, function () {});
   }
 
   function productCard(id, fields, extra) {
@@ -131,9 +168,9 @@
       '<p class="note">One letter a day at most, whatever alerts you have; every letter has a one-click unsubscribe.</p>', 'alerts');
 
     var synced = S.sync && S.sync.updated ? new Date(S.sync.updated * 1000).toISOString().slice(0, 10) : '';
-    html += sec('Saved jobs on every device', '<p>Your saved jobs, application statuses, saved searches and followed companies live in this browser. Keep a copy in your account to have them on your phone and computer alike.' +
-      (synced ? ' Last copy: ' + esc(synced) + '.' : '') + '</p><p><button class="btn" type="button" id="sync-up">Copy this browser’s lists to my account</button> ' +
-      (synced ? '<button class="btn ghost" type="button" id="sync-down">Bring my account’s lists to this browser</button>' : '') + '</p>', 'sync');
+    html += sec('Saved jobs and applications', (me.confirmed ? '<div class="acc-ok"><b>Synced on all your devices.</b> Saved jobs, application statuses, saved searches and followed companies follow you to every browser where you sign in.' +
+      (synced ? ' Last sync ' + esc(synced) + '.' : '') + '</div>' : '<div class="banner">Confirm your email to keep your saved jobs on every device.</div>') +
+      '<p><a class="btn" href="' + esc(D.site) + '/my-jobs/">Open saved jobs and applications</a></p>', 'sync');
 
     if (pub.talent === 'on' && S.talent) {
       var t = S.talent.profile, local = H.get('hrn_resume', null), inner;
@@ -174,33 +211,42 @@
 
   // posting, what a job brought, company pages, team, resume search, promotions, receipts
   function employerPart() {
-    if (!me.posts_as.length) return hiringPart();
-    var liveJobs = S.jobs.filter(function (j) { return j.status === 'live'; }), html = '';
-    var own = liveJobs.length ? '<label class="fld">Or a job you posted here<select name="job_id"><option value="">—</option>' +
-      liveJobs.map(function (j) { return '<option value="' + esc(j.id) + '">' + esc(j.title) + '</option>'; }).join('') + '</select></label>' : '';
-    var jobField = field('Link to the job on this site', 'job', 'type="url" placeholder="' + esc(D.site) + '/job/…/"') + own;
+    if (!me.posts_as.length && !me.can_post) return hiringPart();
+    var html = '', mine = S.jobs.filter(function (j) { return j.status === 'live' || j.status === 'review'; });
+    var claimed = S.claims.some(function (c) { return c.status === 'verified'; });
+    var jobField = (mine.length ? '<label class="fld">Your job<select name="job_id">' + mine.map(function (j) {
+      return '<option value="' + esc(j.id) + '">' + esc(j.title) + (j.status === 'review' ? ' (waiting for review)' : '') + '</option>'; }).join('') + '</select></label>' : '') +
+      (claimed ? '<details class="acc-more"><summary>Or a job we list from your careers page</summary>' + field('Its page on this site', 'job', 'type="url" placeholder="' + esc(D.site) + '/job/…/"') + '</details>' : '');
     var companyField = field('Company, as it is named on the site', 'company', 'type="text" list="acc-companies" value="' + esc(me.company || '') + '" maxlength="80"');
     var pages = '<label class="fld">Page to sponsor<select name="page"><optgroup label="Categories">' +
       D.categories.map(function (c) { return '<option value="category:' + esc(c[0]) + '">' + esc(c[1]) + ' jobs</option>'; }).join('') + '</optgroup><optgroup label="Skills">' +
       D.skills.map(function (s) { return '<option value="skill:' + esc(s[0]) + '">' + esc(s[1]) + ' jobs</option>'; }).join('') + '</optgroup></select></label>';
-    var credit = me.credits ? '<button class="btn ghost" type="submit" data-credit="1">Use a pack credit (' + me.credits + ' left)</button>' : '';
+    var credit = me.credits ? '<button class="btn ghost" type="submit" data-credit="1">Pay from my credits ($' + me.credits + ' left)</button>' : '';
 
-    html += sec('Post a job for free', '<form class="card" id="acc-job" novalidate><div class="acc-two">' +
+    html += sec('Post a job for free', (!me.verified && !me.posts_as.length ? '<div class="banner">You can post now. Jobs from a personal address (gmail and the like) are read by a person before they go live, usually within a day. ' +
+      'Add your work email below and they go live without the wait.</div>' : '') + '<form class="card" id="acc-job" novalidate><div class="acc-two">' +
       field('Company', 'company', 'type="text" maxlength="80" required value="' + esc(me.company || '') + '"') + field('Company site', 'company_url', 'type="url" placeholder="https://" required') +
       field('Job title', 'title', 'type="text" maxlength="120" required') + field('Link where people apply', 'apply_url', 'type="url" placeholder="https://" required', 'The page of this exact job on your site or hiring system.') +
       field('Location', 'location', 'type="text" maxlength="120" placeholder="Berlin, or Remote, Europe"') + field('Salary range (optional)', 'salary', 'type="text" maxlength="60" placeholder="$120K - $150K"', 'Jobs with a range are found by people who filter by pay.') +
       '</div><label class="fld">Employment type<select name="etype"><option value="">Not specified</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select></label>' +
       '<label class="check"><input type="checkbox" name="remote"> Remote</label>' +
       '<label class="fld" style="margin-top:8px">About the role<textarea name="description" rows="6" maxlength="1500" required placeholder="What the person will do, with whom, and what you need from them. 80 to 1,500 characters."></textarea></label>' +
+      (products.featured ? '<fieldset class="fld acc-boost"><legend>Get more applicants (optional)</legend>' +
+        '<label><input type="radio" name="boost" value="" checked><span><b>Free</b>30 days in the list and in search</span></label>' +
+        '<label><input type="radio" name="boost" value="featured"><span><b>Standard boost · ' + money(products.featured.usd) + '</b>Highlighted and above the free jobs for ' + (products.featured.days || 30) + ' days</span></label>' +
+        (products.premium ? '<label><input type="radio" name="boost" value="premium"><span><b>Premium · ' + money(products.premium.usd) + '</b>Top of its lists, “Urgently hiring”, your logo and an invitation to matching job seekers</span></label>' : '') +
+        '</fieldset>' : '') +
       err + '<button class="btn primary" type="submit">Publish the job</button>' +
       '<p class="note" style="margin:12px 0 0">Free for 30 days. We check that the job is not on the site already and open your link to make sure it is really there. The first jobs of a new account are read by a person before they appear, usually within a day.</p></form>', 'post');
 
     if (S.jobs.length) html += sec('Jobs you posted', '<div class="card" style="padding:0">' + S.jobs.map(function (j) {
       return '<div class="trow"><span>' + state(j.status) + '</span><div class="main"><a class="tt" href="' + esc(D.site + j.page) + '">' + esc(j.title) + '</a><span class="js">' + esc(j.company) +
         (j.location ? ' · ' + esc(j.location) : '') + ' · until ' + esc(j.until) + ' · ' + (j.views || 0) + ' views · ' + (j.applies || 0) + ' clicks on Apply</span>' +
+        (j.by_day && j.by_day.length ? '<span class="spark" title="Views, last 14 days">' + j.by_day.map(function (v) { var mx = Math.max.apply(null, j.by_day.concat([1])); return '<i style="height:' + Math.max(6, Math.round(100 * v / mx)) + '%"></i>'; }).join('') + '</span>' : '') +
         (j.review_reason ? '<span class="js">Waiting for a person: ' + esc(j.review_reason) + '</span>' : '') + (j.reject_reason ? '<span class="js">Not accepted: ' + esc(j.reject_reason) + '</span>' : '') + '</div><div class="ctl">' +
+        ((j.status === 'live' || j.status === 'review') && products.featured ? '<button class="btn sm" type="button" style="margin:0" data-promote="' + esc(j.id) + '">Promote</button> ' : '') +
         (j.status === 'live' ? '<button class="btn ghost sm" type="button" style="margin:0" data-act="close" data-id="' + esc(j.id) + '">Close</button>' :
-          j.status !== 'rejected' ? '<button class="btn ghost sm" type="button" style="margin:0" data-act="renew" data-id="' + esc(j.id) + '">Publish again</button>' : '') + '</div></div>';
+          (j.status === 'closed' || j.status === 'expired') ? '<button class="btn ghost sm" type="button" style="margin:0" data-act="renew" data-id="' + esc(j.id) + '">Publish again</button>' : '') + '</div></div>';
     }).join('') + '</div><p class="note" style="margin-top:10px">Views and clicks count each visitor once a day. A new job appears on the site after the next update.</p>', 'jobs');
 
     if (me.posts_as.indexOf('employer') >= 0) {
@@ -222,18 +268,20 @@
           field('Place', 'place', 'type="text" placeholder="remote, germany"') + '</div>' + err + '<button class="btn" type="submit">Search</button><span class="note"> ' + S.sent.credits + ' contact requests left; you pay only for people who accept.</span></form><div id="talent-out"></div>' +
           (S.sent.requests.length ? '<h3>Your requests</h3><ul class="feats">' + S.sent.requests.map(function (q) {
             var c = q.candidate; return '<li>' + state(q.status) + ' ' + esc(c.headline || 'Candidate') + (q.status === 'accepted' && c.contact ? ': <strong>' + esc(c.contact.name) + '</strong>, <a href="mailto:' + esc(c.contact.email) + '">' + esc(c.contact.email) + '</a>' + (c.contact.phone ? ', ' + esc(c.contact.phone) : '') : '') + ' · ' + esc(q.sent) + '</li>';
-          }).join('') + '</ul>' : ''), 'resumes');
+          }).join('') + '</ul>' : ''), 'find');
       }
     } else html += hiringPart();
 
-    if (products.featured || products.pinned) html += sec('Put a job or your company in front', '<div class="acc-grid">' +
-      productCard('featured', jobField, credit) + productCard('pinned', jobField) + productCard('spotlight', companyField) + productCard('sponsor', companyField + pages) + productCard('pack5', '') +
-      '</div>' + (pub.payments === 'off' ? '<div class="banner">Paid placements are not on sale yet. Everything else on this page is free.</div>' : '<p class="note" style="margin-top:12px">You pay on a crypto checkout page. The placement switches on by itself when the network confirms the payment.</p>') +
+    var jobCards = (mine.length || claimed) ? ['featured', 'premium', 'urgent', 'bump', 'extend'].map(function (id) { return productCard(id, jobField, credit); }).join('') :
+      '<div class="acc-card acc-empty"><p class="pname">Promote a job</p><p>Post a job first. Then pick it here, or press “Promote” next to it in Your jobs: no link to copy.</p><a class="btn primary" href="#post">Post a job free</a></div>';
+    if (products.featured) html += sec('Get more applicants', '<h3 class="acc-h3">For one job</h3><div class="acc-grid">' + jobCards + '</div>' +
+      '<h3 class="acc-h3">For your company</h3><div class="acc-grid">' + productCard('spotlight', companyField, credit) + productCard('pass', companyField) + productCard('sponsor', companyField + pages, credit) + '</div>' +
+      '<h3 class="acc-h3">Credits: pay once, use on anything for 12 months</h3><div class="acc-grid">' + ['credits100', 'credits250', 'credits550', 'credits1200'].map(function (id) { return productCard(id, ''); }).join('') + '</div>' + (pub.payments === 'off' ? '<div class="banner">Paid placements are not on sale yet. Everything else on this page is free.</div>' : '<p class="note" style="margin-top:12px">You pay on a crypto checkout page. The placement switches on by itself when the network confirms the payment.</p>') +
       '<datalist id="acc-companies">' + D.companies.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>', 'promote');
     else html += '<datalist id="acc-companies">' + D.companies.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>';
 
     if (S.placements.length) html += sec('What is running', '<div class="tablewrap"><table><tr><th>Placement</th><th>For</th><th>From</th><th>Until</th><th>State</th></tr>' +
-      S.placements.map(function (p) { return '<tr><td><strong>' + esc(p.kind) + '</strong></td><td>' + esc(p.label) + '</td><td>' + esc(p.from) + '</td><td>' + esc(p.until) + '</td><td>' + state(p.state) + '</td></tr>'; }).join('') + '</table></div>');
+      S.placements.map(function (p) { return '<tr><td><strong>' + esc(p.kind) + '</strong></td><td>' + esc(p.label) + '</td><td>' + esc(p.from) + '</td><td>' + esc(p.until) + '</td><td>' + state(p.state) + '</td></tr>'; }).join('') + '</table></div>', 'running');
     if (S.orders.length) html += sec('Payments and receipts', '<div class="tablewrap"><table><tr><th>Date</th><th>What</th><th>Amount</th><th>Status</th><th></th></tr>' +
       S.orders.map(function (o) {
         return '<tr><td>' + esc(o.created) + '</td><td><strong>' + esc(o.name) + '</strong>' + (o.label && o.label !== o.name ? '<br><span class="note">' + esc(o.label) + '</span>' : '') + '</td><td>' +
@@ -245,28 +293,100 @@
 
   // an account with no company domain yet: how to get one (the site's own rules for who may post)
   function hiringPart() {
-    return sec('Hiring? Post jobs for free', '<p>Jobs are posted from an account tied to the company’s own domain: sign up with your work address, or prove the domain here with a DNS record or a file on the company site.</p>' +
-      '<form class="card" id="domain" novalidate>' + field('Your company’s domain', 'domain', 'type="text" placeholder="yourcompany.com" required') + err + '<button class="btn" type="submit">Get the code to publish</button><div id="domain-out"></div></form>' +
+    return sec('Hiring? Post jobs for free', '<p>Add your work email and press the link we send to it: your account is then tied to your company, and your jobs go live without waiting. One minute, nothing to install.</p>' +
+      '<form class="card acc-inline" id="work-email" novalidate>' + field('Your work email', 'email', 'type="email" autocomplete="email" placeholder="you@yourcompany.com" required') + err + '<button class="btn primary" type="submit">Send me the link</button></form>' +
+      '<details class="acc-more"><summary>Other ways to show the company is yours</summary><form class="card" id="domain" novalidate>' + field('Your company’s domain', 'domain', 'type="text" placeholder="yourcompany.com" required') + err + '<button class="btn" type="submit">Get the code to publish</button><div id="domain-out"></div></form></details>' +
       (pub.linkedin === 'on' && !me.linkedin ? '<p><button class="btn ghost" type="button" id="li-start">Recruiter? Attach your LinkedIn profile</button></p>' : ''), 'hiring');
   }
+  var TABS = [['overview', 'Overview'], ['saved', 'Saved jobs'], ['resumes', 'Resumes'], ['alerts', 'Job alerts'],
+    ['jobs', 'Your jobs'], ['post', 'Post a job'], ['promote', 'Promote'], ['company', 'Company page'], ['team', 'Team'], ['find', 'Find candidates'], ['billing', 'Billing'], ['settings', 'Settings']];
+  var EMP_FROM = 'jobs';
+  var SEC_TAB = { alerts: 'alerts', sync: 'saved', talent: 'resumes', myresumes: 'resumes', post: 'post', hiring: 'post', jobs: 'jobs', company: 'company', team: 'team', find: 'find',
+    promote: 'promote', payments: 'billing', running: 'billing', data: 'settings', account: 'settings', ov: 'overview' };
+  function overview() {
+    var emp = me.posts_as.length > 0, live = 0, views = 0, applies = 0;
+    S.jobs.forEach(function (j) { if (j.status === 'live') live++; views += j.views || 0; applies += j.applies || 0; });
+    var c = function (n, label, href) { return '<a class="ov-c" href="' + href + '"><b>' + n + '</b><span>' + label + '</span></a>'; };
+    var steps = [];
+    if (!me.confirmed) steps.push(['Confirm your email', 'One click in the letter we sent to ' + esc(me.email) + '.', '#settings']);
+    if (!(S.resumes && S.resumes.resumes.length)) steps.push(['Keep your resume here', 'Make it in the free builder, then save it to your account.', '#resumes']);
+    if (!S.alerts.length) steps.push(['Get new jobs by email', 'Search, then press “Free job alerts”.', D.site + '/jobs/']);
+    steps.push(emp || S.jobs.length ? ['Promote a job', 'More views and clicks on Apply, from ' + (products.bump ? money(products.bump.usd) : '$5') + '.', '#promote'] : ['Hiring? Post a job free', 'It goes live in minutes; you see its views and clicks on Apply.', '#post']);
+    return '<section class="sec" id="ov"><div class="ov-hi"><h2>Overview</h2><p class="note">' + esc(me.email) + '</p></div><div class="ov-grid">' +
+      c(S.syncCount || 0, 'saved jobs and applications', '#saved') + c(S.resumes ? S.resumes.resumes.length : 0, 'resumes', '#resumes') + c(S.alerts.length, 'job alerts', '#alerts') +
+      (emp || S.jobs.length ? c(live, 'of your jobs live', '#jobs') + c(views, 'views of your jobs', '#jobs') + c(applies, 'clicks on Apply', '#jobs') : '') + '</div>' +
+      '<h3 class="acc-h3">Next steps</h3><div class="ov-next">' + steps.map(function (x) { return '<a href="' + x[2] + '"><b>' + x[0] + '</b><span>' + x[1] + '</span></a>'; }).join('') + '</div></section>';
+  }
+  function resumesPanel() {
+    var R = S.resumes || { resumes: [], max: 10 }, local = H.get('hrn_resume', null);
+    var save = !me.confirmed ? '<div class="banner">Confirm your email to keep resumes in your account.</div>' : local ?
+      '<form id="res-save" class="card acc-inline" novalidate>' + field('Name for this version', 'name', 'type="text" maxlength="60" value="Resume ' + new Date().toISOString().slice(0, 10) + '"') + err +
+      '<button class="btn primary" type="submit">Save the resume from the builder</button></form>' : '<p><a class="btn primary" href="' + esc(D.site) + '/resume/">Make a resume in the free builder</a></p>';
+    var list = R.resumes.length ? '<div class="card" style="padding:0">' + R.resumes.map(function (r) {
+      return '<div class="trow"><span class="rs-i">CV</span><div class="main"><strong>' + esc(r.name) + '</strong><span class="js">' + (r.title ? esc(r.title) + ' · ' : '') + 'updated ' + esc(r.updated) + '</span></div>' +
+        '<div class="ctl"><button class="btn sm" type="button" data-res-open="' + esc(r.id) + '">Open in the builder</button> <button class="btn ghost sm" type="button" data-res-del="' + esc(r.id) + '">Delete</button></div></div>';
+    }).join('') + '</div>' : '<p class="note">No resume in your account yet.</p>';
+    return sec('Your resumes', '<p>Up to ' + R.max + ' versions, one for each kind of job you apply for. Open any of them in the builder on any device.</p>' + save + list, 'myresumes');
+  }
+  function settingsPanel() {
+    return sec('Account', '<dl class="acc-dl"><div><dt>Email</dt><dd>' + esc(me.email) + (me.confirmed ? ' <span class="state live">Confirmed</span>' : ' <span class="state review">Not confirmed</span> <button class="btn ghost sm" type="button" id="acc-confirm">Send the link again</button>') + '</dd></div>' +
+      (me.domain ? '<div><dt>Company domain</dt><dd>' + esc(me.domain) + '</dd></div>' : '') +
+      '<div><dt>LinkedIn</dt><dd>' + (me.linkedin ? 'Connected' : pub.linkedin === 'on' ? '<button class="btn ghost sm" type="button" id="li-start">Connect LinkedIn</button>' : 'Not connected') + '</dd></div></dl>', 'account');
+  }
+  function showTab() {
+    var want = location.hash.slice(1), panels = root.querySelectorAll('.acc-panel'), ok = false;
+    Array.prototype.forEach.call(panels, function (p) { if (p.getAttribute('data-tab') === want) ok = true; });
+    if (!ok) want = 'overview';
+    Array.prototype.forEach.call(panels, function (p) { p.hidden = p.getAttribute('data-tab') !== want; });
+    Array.prototype.forEach.call(root.querySelectorAll('.acc-nav a'), function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + want); if (a.getAttribute('href') === '#' + want) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  }
+  var hashWired = false;
   function draw() {
     var emp = me.posts_as.length > 0;
-    var html = '<div class="acc-top"><p class="note" style="margin:0">Signed in as <strong>' + esc(me.email) + '</strong>' + (emp ? ' · ' + esc(me.domain || 'recruiter') : '') +
-      '</p><button class="btn ghost sm" type="button" id="acc-out" style="margin:0">Sign out</button></div><div id="acc-pay"></div>' + (notice ? '<div class="banner ok">' + notice + '</div>' : '') +
-      (!me.confirmed ? '<div class="banner">Confirm your email: open the link we sent to ' + esc(me.email) + '. <button class="btn ghost sm" type="button" id="acc-confirm">Send a new link</button></div>' : '') +
-      (pub.payments === 'test' ? '<div class="banner">Test mode: payments are simulated on this machine. No money moves.</div>' : '');
-    html += emp ? employerPart() + seekerPart() : seekerPart() + employerPart();
-    html += sec('Your data', '<p>Download everything we keep about your account, or delete the account. Deleting removes your alerts, your resume, your synced lists and everything you posted, at once.</p>' +
+    var body = overview() + seekerPart() + resumesPanel() + employerPart() + settingsPanel() +
+      sec('Your data', '<p>Download everything we keep about your account, or delete the account. Deleting removes your alerts, your resumes, your synced lists and everything you posted, at once.</p>' +
       '<p><button class="btn ghost" type="button" id="me-export">Download my data</button> <button class="btn ghost" type="button" id="me-delete">Delete my account</button></p>' +
       '<p class="note"><a href="' + esc(D.site) + '/privacy/">What we keep and why</a></p>', 'data');
+    var tmp = document.createElement('div'), byTab = {}, extra = '';
+    tmp.innerHTML = body;
+    Array.prototype.forEach.call(tmp.children, function (el) {
+      var t = SEC_TAB[el.id];
+      if (t) (byTab[t] = byTab[t] || []).push(el.outerHTML); else extra += el.outerHTML;
+    });
+    var nav = '', panels = '', empAt = TABS.map(function (t) { return t[0]; }).indexOf(EMP_FROM), headed = false;
+    TABS.forEach(function (t, i) {
+      if (!byTab[t[0]]) return;
+      if (i >= empAt && t[0] !== 'settings' && !headed) { headed = true; nav += '<p class="acc-navh">For employers</p>'; }
+      nav += '<a href="#' + t[0] + '">' + t[1] + '</a>';
+      panels += '<div class="acc-panel" data-tab="' + t[0] + '" hidden>' + byTab[t[0]].join('') + '</div>';
+    });
+    root.innerHTML = '<div class="acc-shell"><aside class="acc-side"><div class="acc-me"><span class="acc-av">' + esc(me.email.charAt(0).toUpperCase()) + '</span><div><b>' + esc(me.email) + '</b><span>' +
+      (emp ? esc(me.domain || 'Recruiter') : 'Job seeker') + '</span></div></div><div class="acc-nav" role="navigation" aria-label="Your account">' + nav + '</div>' +
+      '<button class="btn ghost sm acc-out" type="button" id="acc-out">Sign out</button></aside><div class="acc-main"><div id="acc-pay"></div>' + (notice ? '<div class="banner ok">' + notice + '</div>' : '') +
+      (!me.confirmed ? '<div class="banner">Confirm your email: open the link we sent to ' + esc(me.email) + '.</div>' : '') +
+      (pub.payments === 'test' ? '<div class="banner">Test mode: payments are simulated on this machine. No money moves.</div>' : '') + panels + '<div hidden>' + extra + '</div></div></div>';
     notice = '';
-    root.innerHTML = html;
+    showTab();
+    if (!hashWired) { hashWired = true; window.addEventListener('hashchange', function () { showTab(); window.scrollTo(0, 0); }); }
     wire();
     watchOrder();
   }
 
   function wire() {
     document.getElementById('acc-out').addEventListener('click', signOut);
+    submit(document.getElementById('res-save'), function (v) {
+      return api('POST', '/api/resumes', { name: v.name || 'My resume', resume: H.get('hrn_resume', null) }).then(function () { notice = 'Your resume is saved in your account.'; location.hash = '#resumes'; return load(); });
+    });
+    on('[data-res-open]', function (b) {
+      var cur = H.get('hrn_resume', null);
+      if (cur && !confirm('Open this version in the builder? It replaces the resume that is in the builder now.')) return;
+      b.disabled = true;
+      api('GET', '/api/resumes/' + b.getAttribute('data-res-open')).then(function (r) { H.set('hrn_resume', r.resume.resume); location.href = D.site + '/resume/'; }, function (e) { b.disabled = false; alert(e.message); });
+    });
+    on('[data-res-del]', function (b) {
+      if (!confirm('Delete this version from your account?')) return;
+      api('DELETE', '/api/resumes/' + b.getAttribute('data-res-del')).then(load, function (e) { alert(e.message); });
+    });
     on('#acc-confirm', function (b) { b.disabled = true; api('POST', '/api/auth/confirm/request').then(function (r) { b.textContent = 'Sent'; }, function (e) { b.disabled = false; alert(e.message); }); });
     on('[data-alert-del]', function (b) { b.disabled = true; api('DELETE', '/api/alerts/' + b.getAttribute('data-alert-del')).then(load, function (e) { b.disabled = false; alert(e.message); }); });
     on('#sync-up', function (b) {
@@ -291,10 +411,26 @@
     });
     on('[data-q]', function (b) { b.disabled = true; api('POST', '/api/talent/requests/' + b.getAttribute('data-id') + '/' + b.getAttribute('data-q')).then(load, function (e) { b.disabled = false; alert(e.message); }); });
     submit(document.getElementById('acc-job'), function (v) {
-      return api('POST', '/api/jobs', v).then(load, function (e) {
+      var boost = v.boost; delete v.boost;
+      return api('POST', '/api/jobs', v).then(function (r) {
+        var j = r.job;
+        notice = j.status === 'live' ? 'Your job is live: ' + esc(j.title) + '. It is on the site after the next update, within the hour.' :
+          'Your job “' + esc(j.title) + '” is saved and waiting for a quick check by a person, usually within a day. Its status is below.';
+        var done = function () { location.hash = '#jobs'; return load(); };
+        if (!boost) return done();
+        return api('POST', '/api/orders', { product: boost, target: { job_id: j.id } }).then(function (o) {
+          if (o.order.status === 'pending' && o.order.pay_url) { location.href = o.order.pay_url; return new Promise(function () {}); }
+          return done();
+        }, function (e2) { notice += ' The promotion was not ordered: ' + esc(e2.message); return done(); });
+      }, function (e) {
         if (e.code === 'already_listed' || e.code === 'listed') e.message += e.body && e.body.claim ? ' You can claim the page of ' + e.body.claim.company + ' below.' : '';
         throw e;
       });
+    });
+    on('[data-promote]', function (b) {
+      var id = b.getAttribute('data-promote');
+      Array.prototype.forEach.call(root.querySelectorAll('select[name=job_id]'), function (sl) { sl.value = id; });
+      location.hash = '#promote';
     });
     on('[data-act]', function (b) { b.disabled = true; api('POST', '/api/jobs/' + b.getAttribute('data-id') + '/' + b.getAttribute('data-act')).then(load, function (e) { b.disabled = false; alert(e.message); }); });
     submit(document.getElementById('claim'), function (v) { return api('POST', '/api/claims', v).then(load); });
@@ -310,6 +446,9 @@
     });
     submit(document.getElementById('team-add'), function (v) { return api('POST', '/api/team', v).then(load); });
     on('[data-team-del]', function (b) { api('DELETE', '/api/team/' + encodeURIComponent(b.getAttribute('data-team-del'))).then(load, function (e) { alert(e.message); }); });
+    submit(document.getElementById('work-email'), function (v) {
+      return api('POST', '/api/domain/email', { email: v.email }).then(function (r) { notice = esc(r.message || ('We sent a link to ' + v.email + '. Open it to tie your account to your company.')); return load(); });
+    });
     submit(document.getElementById('domain'), function (v) {
       return api('POST', '/api/domain/token', v).then(function (r) {
         document.getElementById('domain-out').innerHTML = '<p>Publish one of these, then press a button:</p><p><strong>DNS:</strong> a TXT record named <code>' + esc(r.dns.name) + '</code> with the value <code>' + esc(r.dns.value) + '</code></p>' +
@@ -352,8 +491,11 @@
     });
     Array.prototype.forEach.call(root.querySelectorAll('form[data-product]'), function (form) {
       submit(form, function (v, btn) {
-        var data = { product: form.getAttribute('data-product'), target: v };
-        if (btn && btn.getAttribute('data-credit')) data.use_credit = true;
+        var t = {};
+        Object.keys(v).forEach(function (k) { if (v[k] !== '' && v[k] != null) t[k] = v[k]; });
+        if (t.job_id) delete t.job;
+        var data = { product: form.getAttribute('data-product'), target: t };
+        if (btn && btn.getAttribute('data-credit')) data.pay = 'wallet';
         return api('POST', '/api/orders', data).then(function (r) {
           if (r.order.status === 'pending' && r.order.pay_url) { location.href = r.order.pay_url; return new Promise(function () {}); }   // on to the checkout
           return load();
@@ -390,10 +532,16 @@
       return api('POST', '/api/auth/confirm', { token: m[1] }).then(function () { notice = 'Your email is confirmed.'; }, function (e) { notice = esc(e.message); }).then(begin);
     }
     if ((m = /^#reset=([a-f0-9]{64})$/.exec(hash))) { cleanUrl(); return drawReset(m[1]); }
+    if ((m = /^#work=([a-f0-9]{64})$/.exec(hash))) {
+      cleanUrl();
+      return api('POST', '/api/domain/email/confirm', { token: m[1] }).then(function (r) { notice = esc(r.message || 'Your work email is confirmed: your account is tied to your company.'); }, function (e) { notice = esc(e.message); }).then(begin);
+    }
     if (q.get('error') && q.get('state')) { cleanUrl(); notice = 'The sign-in was cancelled.'; return begin(); }
     if (q.get('code') && q.get('state')) {
       var secret = ''; try { secret = sessionStorage.getItem('hrn_google') || ''; sessionStorage.removeItem('hrn_google'); } catch (e) {}
       var code = q.get('code'), st = q.get('state'); cleanUrl();
+      var liSecret = ''; try { liSecret = sessionStorage.getItem('hrn_li') || ''; sessionStorage.removeItem('hrn_li'); } catch (e) {}
+      if (liSecret && !token) return api('POST', '/api/auth/linkedin/callback', { code: code, state: st, secret: liSecret }).then(function (r) { token = r.token; H.set('hrn_token', token); notice = r.created ? 'Welcome: your account is ready.' : ''; }, function (e) { notice = esc(e.message); }).then(begin);
       if (secret) return api('POST', '/api/auth/google/callback', { code: code, state: st, secret: secret }).then(function (r) { token = r.token; H.set('hrn_token', token); notice = r.created ? 'Welcome: your account is ready.' : ''; }, function (e) { notice = esc(e.message); }).then(begin);
       if (token) return api('POST', '/api/auth/linkedin/callback', { code: code, state: st }).then(function () { notice = 'Your LinkedIn profile is attached.'; }, function (e) { notice = esc(e.message); }).then(begin);
     }
