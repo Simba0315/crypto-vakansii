@@ -270,7 +270,7 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   let env = newEnv(), token = await account(env);
   let r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus3' } }); eq(r.status, 409, 'Plus cannot be bought before it is on sale');
   r = await call(env, 'GET', '/api/public/products'); ok(!r.body.products.some((p) => p.group === 'plus') && r.body.payments === 'on', 'Plus is not listed before it is on sale');
-  r = await call(env, 'PUT', '/api/sync', { token, data: { data: { a: 1 } } }); eq(r.status, 402, 'sync needs Plus');
+  r = await call(env, 'PUT', '/api/sync', { token, data: { data: { a: 1 } } }); eq(r.status, 200, 'sync between devices is free for an account with a confirmed email (it was a Plus feature until 15 Nov 2026)');
   env = newEnv({ PLUS_LIVE: '1' }); token = await account(env);
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus3' } });
   await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: r.body.order.id, status: 'paid' }) });
@@ -344,6 +344,7 @@ const one = async (env, sql, ...args) => { const row = await env.DB.prepare(sql)
 const nextDay = (env) => env.DB.exec("UPDATE jobs SET created_at = created_at - 90000; DELETE FROM rate WHERE k LIKE 'jobs:%'");
 const newIsolate = async (tag) => (await import('../src/worker.js?isolate=' + tag)).default;               // a fresh copy of the worker, as after Cloudflare recycles it: nothing cached
 const hook = (env, id, status = 'paid') => call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: id, status }) });
+const quietly = async (run) => { let out; await quiet(async () => { out = await run(); }); return out; };      // the same, for a value
 async function quiet(run) {                    // runs something that is expected to log an error; returns the lines it logged
   const real = console.error, lines = []; console.error = (...a) => lines.push(a.map(String).join(' '));
   try { await run(); } finally { console.error = real; }
@@ -2054,7 +2055,721 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   eq([heldJob.views, heldJob.applies, heldJob.reason], [8, 2, 'reported'], 'Hits: a job taken off the site by a report shows the reviewer how many people saw it and clicked through');
 }
 
+/* ---- 29. Mail: the SMTP client over TLS (node:tls only), the mailer with its daily cap, retries and log (src/mail.js) ----
+   Against a fake mail server on 127.0.0.1 (test/fake-smtp.mjs) with a certificate made when the test runs (test/cert.mjs). */
+const { fakeSmtp } = await import('./fake-smtp.mjs');
+const MAILJS = await import('../src/mail.js');
+const smtpServer = await fakeSmtp({ user: 'support@site.test', pass: 'beget-box-pass' });
+const SMTP = { host: 'localhost', port: smtpServer.port, user: 'support@site.test', pass: 'beget-box-pass', ca: smtpServer.ca, timeout: 3000 };
+const unqp = (t) => { const out = []; t = t.replace(/=\r\n/g, ''); for (let i = 0; i < t.length; i++) { if (t[i] === '=') { out.push(parseInt(t.substr(i + 1, 2), 16)); i += 2; } else out.push(t.charCodeAt(i)); } return Buffer.from(out).toString('utf8'); };
+const bodyOf = (data) => unqp(data.slice(data.indexOf('\r\n\r\n') + 4));
+{
+  const m = MAILJS.buildMessage({ from: 'Jobs Every Hour <support@site.test>', to: 'reader@example.org', subject: 'Résumé tips\r\nBcc: victim@x.y', text: '.dot first\nplain line\n' + 'é'.repeat(60) + '\n.',
+    headers: { 'List-Unsubscribe': '<https://api.test/u?a=1>', 'Bad Header': 'x', 'X-Note': 'a\r\nBcc: v@x.y' } });
+  ok(/^Subject: =\?UTF-8\?B\?/m.test(m.data) && !/^Bcc:/mi.test(m.data) && /^X-Note: a Bcc: v@x.y$/m.test(m.data), 'Mail: a subject outside ASCII is encoded, and a line break in a header value cannot start a header of its own');
+  ok(/^List-Unsubscribe: <https:\/\/api\.test\/u\?a=1>$/m.test(m.data) && !/Bad Header/.test(m.data) && /^From: "Jobs Every Hour" <support@site\.test>$/m.test(m.data) && /^Message-ID: <[a-f0-9]{24}@site\.test>$/m.test(m.data),
+    'Mail: extra headers go in as given (a malformed name is left out); From carries the name; the Message-ID is on the sender’s domain');
+  ok(/^Date: \w{3}, \d{2} \w{3} \d{4} \d{2}:\d{2}:\d{2} \+0000$/m.test(m.data) && /^Content-Transfer-Encoding: quoted-printable$/m.test(m.data) && /^Auto-Submitted: auto-generated$/m.test(m.data), 'Mail: Date, MIME and Auto-Submitted headers');
+  ok(m.data.slice(m.data.indexOf('\r\n\r\n') + 4).split('\r\n').every((l) => l.length <= 76), 'Mail: quoted-printable lines are 76 characters at most');
+  eq(bodyOf(m.data), '.dot first\r\nplain line\r\n' + 'é'.repeat(60) + '\r\n.', 'Mail: the text comes back exactly, letters outside ASCII included');
+  eq(MAILJS.parseAddress('Jobs Every Hour <support@site.test>'), { name: 'Jobs Every Hour', address: 'support@site.test' }, 'Mail: "Name <address>" is read into its parts');
+
+  let r = await MAILJS.smtpSend(SMTP, { from: 'support@site.test', to: 'reader@example.org', data: m.data }), got = smtpServer.letters.at(-1), sess = smtpServer.sessions.at(-1);
+  eq([r.code, got.from, got.to, got.data === m.data], [250, 'support@site.test', ['reader@example.org'], true], 'SMTP: the letter arrives as it was built, from and to as given; lines starting with a dot survive (dot-stuffing)');
+  ok(/^\.\.dot first$/m.test(got.raw) && /^\.\.$/m.test(got.raw), 'SMTP: on the wire a line that starts with a dot carries a second one, so "." alone cannot end the letter early');
+  eq(smtpServer.logins.at(-1), ['support@site.test', 'beget-box-pass'], 'SMTP: AUTH LOGIN sends the mailbox and its password, base64 as the protocol wants');
+  await new Promise((res) => setTimeout(res, 50));                         // the QUIT may still be on its way to the server
+  ok(sess.lines[0].startsWith('EHLO ') && sess.lines.at(-1) === 'QUIT', 'SMTP: EHLO first, QUIT last');
+  let e = null; try { await MAILJS.smtpSend({ ...SMTP, ca: undefined }, { from: 'support@site.test', to: 'x@example.org', data: m.data }); } catch (x) { e = x; }
+  ok(e && /SELF_SIGNED|certificate/i.test(e.message) && smtpServer.letters.length === 1 && smtpServer.logins.length === 1, 'SMTP: the server’s certificate is checked: one that cannot be trusted is told nothing, not even the login');
+  e = null; try { await MAILJS.smtpSend({ ...SMTP, pass: 'wrong-pass-123' }, { from: 'support@site.test', to: 'x@example.org', data: m.data }); } catch (x) { e = x; }
+  ok(e && e.code === 535 && e.permanent && !e.message.includes('wrong-pass-123') && !e.message.includes(Buffer.from('wrong-pass-123').toString('base64')),
+    'SMTP: a refused login is final (5xx), and the error carries the server’s answer, never the password');
+  const sessions0 = smtpServer.sessions.length;
+  e = null; try { await MAILJS.smtpSend(SMTP, { from: 'support@site.test', to: 'жена@пример.рф', data: 'x' }); } catch (x) { e = x; }
+  ok(e && e.permanent && smtpServer.sessions.length === sessions0, 'SMTP: an address outside ASCII is refused before connecting');
+  const tls = await import('node:tls'), { selfSigned } = await import('./cert.mjs'), pair = selfSigned('localhost');
+  const silent = tls.createServer({ cert: pair.cert, key: pair.key }, () => {}); await new Promise((res) => silent.listen(0, '127.0.0.1', res));
+  e = null; try { await MAILJS.smtpSend({ ...SMTP, port: silent.address().port, ca: pair.cert, timeout: 300 }, { from: 'support@site.test', to: 'x@example.org', data: 'x' }); } catch (x) { e = x; }
+  ok(e && /in time/.test(e.message) && !e.permanent, 'SMTP: a server that never answers is given up on after the time limit, as a failure that may pass');
+  await new Promise((res) => silent.close(res));
+
+  // the mailer: log, retries, cap
+  const env = newEnv(); let clock = 1800000000; const slept = [];
+  const mailer = MAILJS.createMailer({ db: env.DB, smtp: SMTP, from: 'Jobs Every Hour <support@site.test>', cap: 5, retries: 2, backoffMs: [10, 20], sleep: async (ms) => { slept.push(ms); }, now: () => clock });
+  const lastLog = () => env.DB.prepare('SELECT * FROM mail_log ORDER BY rowid DESC LIMIT 1').first();
+  r = await mailer.send({ to: 'Reader@Example.org', subject: 'Secret subject', text: 'SECRET-BODY https://site.test/account/#reset=abc', kind: 'reset' });
+  let row = await lastLog();
+  ok(r.sent && row.status === 'sent' && row.kind === 'reset' && row.to_addr === 'reader@example.org' && row.attempts === 1 && row.code === 250 && row.message_id === r.id && row.at === clock,
+    'Mailer: a letter sent is logged with when, to whom, what kind, the answer and its Message-ID');
+  ok(!JSON.stringify(await env.DB.prepare('SELECT * FROM mail_log').all()).match(/SECRET|Secret subject|reset=/), 'Mailer: the log holds neither the subject nor the text (a letter can carry a link that opens an account)');
+  smtpServer.failNext.push({ at: 'RCPT', reply: '451 4.7.1 Try again later' });
+  slept.length = 0; r = await mailer.send({ to: 'b@example.org', subject: 's', text: 't' }); row = await lastLog();
+  eq([r.sent, slept, row.attempts, row.status], [true, [10], 2, 'sent'], 'Mailer: a 4xx answer is tried again after a pause; the log says how many attempts it took');
+  smtpServer.dropNext = 1; slept.length = 0; r = await mailer.send({ to: 'c@example.org', subject: 's', text: 't' }); row = await lastLog();
+  eq([r.sent, slept, row.attempts], [true, [10], 2], 'Mailer: a connection that drops is tried again too');
+  smtpServer.failNext.push({ at: 'RCPT', reply: '550 5.1.1 No such user here' });
+  slept.length = 0; await quiet(async () => { r = await mailer.send({ to: 'nobody@example.org', subject: 's', text: 't' }); }); row = await lastLog();
+  eq([r.sent, r.status, r.permanent, slept.length, row.code, row.status, row.reply], [false, 'failed', true, 0, 550, 'failed', 'RCPT TO: 550 5.1.1 No such user here'], 'Mailer: a 5xx answer is final: no retry, logged as failed with the server’s answer');
+  for (let i = 0; i < 3; i++) smtpServer.failNext.push({ at: 'MAIL', reply: '421 4.3.2 Service shutting down' });
+  slept.length = 0; const quietLines = await quiet(async () => { r = await mailer.send({ to: 'd@example.org', subject: 's', text: 't' }); }); row = await lastLog();
+  eq([r.sent, r.permanent, slept, row.attempts, row.status], [false, false, [10, 20], 3, 'failed'], 'Mailer: a failure that may pass is tried retries + 1 times with growing pauses, then logged as failed');
+  ok(!quietLines.join(' ').includes('beget-box-pass'), 'Mailer: what it logs about a failure never carries the password');
+  eq(await mailer.sentToday(), 3, 'Mailer: the day’s count is the letters sent, not the attempts or failures');
+  // cap 5: bulk letters stop at 80% (4), so the last place stays for a link that confirms an address
+  r = await mailer.send({ to: 'e@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' });
+  const bulkHeld = await mailer.send({ to: 'f@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' });
+  const personal = await mailer.send({ to: 'g@example.org', subject: 's', text: 't', kind: 'confirm' });
+  const over = await mailer.send({ to: 'h@example.org', subject: 's', text: 't', kind: 'confirm' });
+  eq([r.sent, bulkHeld.sent, bulkHeld.status, personal.sent, over.status, (await lastLog()).status, smtpServer.letters.length], [true, false, 'capped', true, 'capped', 'capped', 6],
+    'Mailer: over the daily cap nothing is sent and the letter is logged as capped; bulk letters stop at 80% of it, so confirmations still go');
+  clock += 86400; r = await mailer.send({ to: 'f@example.org', subject: 's', text: 't', bulk: true });
+  ok(r.sent, 'Mailer: the cap counts per UTC day: the next day letters go again');
+  eq(await sendMail({ MAIL: { send: async () => ({ sent: false, status: 'capped' }) } }, 'a@b.co', 's', 't'), { sent: false }, 'sendMail: a mailer that answers "not sent" is reported as not sent');
+  // after the review of 15 Nov: what a failure means, and what is never done twice
+  const env2 = newEnv(), slept2 = [];
+  const m2 = MAILJS.createMailer({ db: env2.DB, smtp: { ...SMTP, dataTimeout: 300 }, from: 'Jobs Every Hour <support@site.test>', cap: 10, retries: 2, backoffMs: [10, 20], sleep: async (ms) => { slept2.push(ms); } });
+  smtpServer.failNext.push({ at: 'RCPT', reply: '452 4.2.2 Mailbox full' });
+  r = await quietly(() => m2.send({ to: 'full@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' }));
+  eq([r.sent, r.status, r.rejected, r.permanent, slept2.length, (await env2.DB.prepare('SELECT attempts FROM mail_log').first('attempts'))], [false, 'failed', true, false, 0, 1],
+    'Mailer: a bulk letter is tried once, with no pauses (the alert run reschedules it), and a full mailbox is a failure of that recipient');
+  smtpServer.failNext.push({ at: 'AUTH_PASS', reply: '535 5.7.8 Authentication failed' });
+  r = await quietly(() => m2.send({ to: 'x@example.org', subject: 's', text: 't', bulk: true, kind: 'alert' }));
+  eq([r.sent, r.permanent, r.rejected], [false, true, false], 'Mailer: a refused login is final but not the recipient’s fault (the alert run then stops instead of charging subscribers)');
+  smtpServer.failNext.push({ at: 'DATA_END', reply: '550 5.1.1 User unknown' });
+  r = await quietly(() => m2.send({ to: 'gone@example.org', subject: 's', text: 't', bulk: true })); eq([r.permanent, r.rejected], [true, true], 'Mailer: "user unknown" after the letter is the recipient’s');
+  const before2 = smtpServer.letters.length; smtpServer.silentAfterData = 1; slept2.length = 0;
+  r = await quietly(() => m2.send({ to: 'slow@example.org', subject: 's', text: 't', kind: 'confirm' }));
+  eq([r.sent, r.status, slept2.length, smtpServer.letters.length - before2, (await env2.DB.prepare("SELECT status FROM mail_log WHERE to_addr = 'slow@example.org'").first('status'))], [false, 'unknown', 0, 1, 'unknown'],
+    'Mailer: no answer after the letter itself (it may have arrived) is not sent again, even for a letter that is otherwise retried; it counts against the cap');
+  let failLog = 1; const flaky = { prepare: (sql) => (/INSERT INTO mail_log/.test(sql) && failLog-- > 0 ? { bind: () => ({ run: async () => { throw new Error('SQLITE_BUSY'); } }) } : env2.DB.prepare(sql)) };
+  const m3 = MAILJS.createMailer({ db: flaky, smtp: SMTP, from: 'support@site.test', cap: 10, sleep: async () => {} }), before3 = smtpServer.letters.length;
+  const logged = await quiet(async () => { r = await m3.send({ to: 'once@example.org', subject: 's', text: 't' }); });
+  eq([r.sent, smtpServer.letters.length - before3, logged.some((l) => /log could not be written/.test(l))], [true, 1, true], 'Mailer: a letter whose log row cannot be written is not sent a second time');
+  const m4 = MAILJS.createMailer({ db: newEnv().DB, smtp: SMTP, from: 'support@site.test', cap: 4, sleep: async () => {} });
+  const shares = [];
+  for (let i = 0; i < 3; i++) shares.push((await m4.send({ to: 'c' + i + '@example.org', subject: 's', text: 't', kind: 'alert_confirm', share: 0.5 })).status);
+  shares.push((await m4.send({ to: 'pw@example.org', subject: 's', text: 't', kind: 'reset' })).status);
+  eq(shares, ['sent', 'sent', 'capped', 'sent'], 'Mailer: a kind of letter given a share of the cap stops there, and the rest stays for the others');
+  const longSubject = MAILJS.buildMessage({ from: 'Работа на час <a@site.test>', to: 'b@example.org', subject: 'Подтвердите подписку: '.repeat(6), text: 'x' }).data.split('\r\n\r\n')[0];
+  ok(longSubject.split('\r\n').every((l) => l.length <= 76) && /^Subject: =\?UTF-8\?B\?[^\r]*\r\n =\?UTF-8\?B\?/m.test(longSubject), 'Mail: a long subject outside ASCII is folded into encoded words of their own lines, none over 76 characters');
+  const extra = []; await sendMail({ MAIL: { send: async (x) => { extra.push(x); } }, MAIL_FROM: 'x@site.test' }, 'a@b.co', 's', 't', { kind: 'confirm' });
+  eq(extra[0], { from: 'x@site.test', to: 'a@b.co', subject: 's', text: 't', kind: 'confirm' }, 'sendMail: the kind of letter is handed to the mailer for its log');
+}
+
+/* ---- 30. Job alerts: "Email me new jobs like these" (src/alerts.js and /api/alerts...) ---- */
+const ALERTS = await import('../src/alerts.js');
+const ALERT_SENT_TEXT = 'Check your inbox: we sent a link to confirm this alert. Nothing is sent until you open it.';
+const pageOf = async (env, method, p, { body, type, ip } = {}) => {
+  const headers = { 'CF-Connecting-IP': ip || '10.8.0.' + (++ipCounter % 250) }; if (type) headers['Content-Type'] = type;
+  const res = await worker.fetch(new Request(API + p, { method, headers, body }), env); return { status: res.status, text: await res.text(), headers: res.headers };
+};
+const linkIn = (text, kind) => { const m = new RegExp('https://api\\.test(/api/alerts/' + kind + '\\?a=a_[a-f0-9]{20}&t=[a-f0-9]{32})').exec(text); return m ? m[1] : ''; };
+const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen_at > top ? j.first_seen_at : top), ''), newSince: (iso) => jobs.filter((j) => j.first_seen_at > iso) });
+{
+  // cleanWords and readAlert
+  eq(ALERTS.cleanWords('Senior  PYTHON visit evil.com <b>hi</b> node.js .NET C++ c# jobs'), 'senior python visit evilcom bhi b', 'Alerts: the words of a search keep letters, digits, + and # and a few names with a dot; an address in them is broken up; six words at most');
+  eq(ALERTS.cleanWords('c++ c# .net asp.net remote job'), 'c++ c# .net asp.net', 'Alerts: C++, C#, .NET and ASP.NET survive; "remote" and "job" are not words to look for');
+  let e = null; try { ALERTS.readAlert({ cat: 'nope' }); } catch (x) { e = x; } eq(e && e.code, 'cat', 'Alerts: a category the site does not have is refused');
+  e = null; try { ALERTS.readAlert({ loc: 'Berlin, DE' }); } catch (x) { e = x; } eq(e && e.code, 'loc', 'Alerts: a place must be a place slug of the site');
+  e = null; try { ALERTS.readAlert({ freq: 'hourly' }); } catch (x) { e = x; } eq(e && e.code, 'freq', 'Alerts: daily or weekly only');
+  eq(ALERTS.readAlert({ q: 'Rust', cat: 'engineering', loc: 'united-states', remote: 'on', sal: '$95,500', freq: 'weekly' }), { q: 'rust', cat: 'engineering', loc: 'united-states', remote: 1, sal: 96000, freq: 'weekly' },
+    'Alerts: a form’s values are read as the search page writes them: remote "on", pay in dollars rounded to the thousand');
+  eq(ALERTS.describe({ q: 'rust', cat: 'engineering', loc: 'united-states', remote: 1, sal: 96000 }), '“rust” jobs in Engineering · United States · remote only · $96K+ a year', 'Alerts: an alert reads as a sentence');
+  eq(ALERTS.describe({ q: '', cat: 'sales-bd', loc: 'uk', remote: 0, sal: 0 }), 'Sales & Business Development jobs · UK', 'Alerts: a category alert reads with the category’s name');
+  eq(ALERTS.searchLink(SITE, { q: 'c++ dev', cat: '', loc: 'berlin', remote: 1, sal: 0 }), SITE + '/jobs/?q=c%2B%2B+dev&loc=berlin&remote=1', 'Alerts: the same search on the site, with the search page’s own parameters');
+  // matching
+  const M = (a, j) => ALERTS.matches({ q: '', cat: '', loc: '', remote: 0, sal: 0, ...a }, { title: 'Engineer', company: 'Acme', tags: [], places: [], ...j });
+  eq([M({ q: 'java' }, { title: 'JavaScript Engineer' }), M({ q: 'java' }, { title: 'Senior Java Developer' }), M({ q: 'go' }, { title: 'Google Ads Manager' }), M({ q: 'golang' }, { title: 'Go Engineer' }),
+    M({ q: 'engineer' }, { title: 'Engineering Manager' }), M({ q: 'designers' }, { title: 'Product Designer' }), M({ q: 'c++' }, { title: 'C++ Developer' }), M({ q: 'js' }, { title: 'JavaScript dev' }),
+    M({ q: 'python' }, { title: 'Data Engineer', tags: ['Python'] }), M({ q: 'stripe' }, { company: 'Stripe' }), M({ q: 'python data' }, { title: 'Python Engineer' })],
+    [false, true, false, true, true, true, true, true, true, true, false], 'Alerts: every word must be in the title, company or skills, as a whole word with its usual endings (java is not JavaScript, go is not Google)');
+  eq([M({ cat: 'engineering' }, { cat: 'engineering' }), M({ cat: 'engineering' }, { cat: 'design' }), M({ loc: 'berlin' }, { places: ['berlin', 'germany'] }), M({ loc: 'berlin' }, { places: ['munich'] }),
+    M({ remote: 1 }, { remote: true }), M({ remote: 1 }, { remote: false }), M({ sal: 100000 }, { usd: [80000, 120000] }), M({ sal: 100000 }, { usd: [60000, 90000] }), M({ sal: 100000 }, {}), M({}, { tg: true })],
+    [true, false, true, false, true, false, true, false, false, false], 'Alerts: category, place, remote and pay filter as on the search page; a job without pay is out when pay is asked for; posts from Telegram channels are never mailed');
+
+  // sign-up
+  const box = mailbox(), env = newEnv({ ...box });
+  const sign = (data, o = {}) => call(env, 'POST', '/api/alerts', { data, ...o });
+  let r = await sign({ email: 'Seeker@Example.org', q: 'Python  visit evil.com', loc: 'berlin', remote: '1', sal: '100000' });
+  let letter = box.outbox.at(-1), row = await env.DB.prepare('SELECT * FROM alerts').first();
+  eq([r.status, r.body.ok, r.body.message, r.body.alert, r.body.confirm_url], [200, true, 'Check your inbox: we sent a link to confirm this alert. Nothing is sent until you open it.', '“python visit evilcom” jobs · Berlin · remote only · $100K+ a year', undefined],
+    'Alerts: a sign-up is answered with what the alert is and that a link to confirm it was sent (outside test mode the link is in the letter only)');
+  eq([row.status, row.email, row.q, row.loc, row.remote, row.sal, row.freq, Object.keys(row).some((k) => /ip/.test(k))], ['pending', 'seeker@example.org', 'python visit evilcom', 'berlin', 1, 100000, 'daily', false],
+    'Alerts: the alert waits, pending, with the search cleaned; nothing about the visitor who asked is kept with it');
+  ok(letter.to === 'seeker@example.org' && letter.kind === 'alert_confirm' && linkIn(letter.text, 'confirm') && !/evil\.com/.test(letter.text + letter.subject) && !/https?:\/\/(?!api\.test|site\.test)/.test(letter.text),
+    'Alerts: the confirmation letter goes to the address with its link, and no address of anyone else’s choosing can be put into it');
+  const confirmPath = linkIn(letter.text, 'confirm'), alertId = row.id;
+  let pg = await pageOf(env, 'GET', confirmPath);
+  ok(pg.status === 200 && pg.text.includes('<form method="post"') && pg.text.includes('Yes, email me these jobs') && (await env.DB.prepare('SELECT status FROM alerts').first('status')) === 'pending',
+    'Alerts: opening the link shows a page with a button and changes nothing (mail scanners open links by themselves)');
+  ok(/default-src 'none'/.test(pg.headers.get('Content-Security-Policy')) && pg.headers.get('X-Robots-Tag') === 'noindex' && pg.headers.get('Referrer-Policy') === 'no-referrer' && !/<script/i.test(pg.text),
+    'Alerts: the page has no script, sends no referrer, is not for search engines and may load nothing from outside');
+  const bad1 = await pageOf(env, 'POST', confirmPath.slice(0, -1) + (confirmPath.endsWith('0') ? '1' : '0'));
+  const bad2 = await pageOf(env, 'POST', confirmPath.replace('/confirm?', '/confirm?x=1&').replace(/a=a_[a-f0-9]{20}/, 'a=a_' + '0'.repeat(20)));
+  eq([bad1.status, bad2.status, await env.DB.prepare('SELECT status FROM alerts').first('status')], [404, 404, 'pending'], 'Alerts: a link with a changed token or another alert’s id does nothing');
+  const t0 = Math.floor(Date.now() / 1000);
+  pg = await pageOf(env, 'POST', confirmPath); row = await env.DB.prepare('SELECT * FROM alerts').first();
+  ok(pg.status === 200 && pg.text.includes('Your job alert is on') && row.status === 'active' && Math.abs(row.confirmed_at - t0) < SLACK && Math.abs(row.due_at - (row.confirmed_at + 86400 - 1800)) < 2 && row.seen_through === ALERTS.isoTime(row.confirmed_at - 3600),
+    'Alerts: the button confirms it: active, the first letter due about a day later, with the jobs first seen from an hour before this moment (one read just before may reach the records later)');
+  pg = await pageOf(env, 'POST', confirmPath); ok(pg.status === 200 && pg.text.includes('Your job alert is on') && (await one(env, 'SELECT confirmed_at FROM alerts')) === row.confirmed_at, 'Alerts: confirming twice changes nothing');
+  const sentBefore = box.outbox.length;
+  r = await sign({ email: 'seeker@example.org', q: 'python visit evilcom', loc: 'berlin', remote: 1, sal: 100000, freq: 'weekly' });
+  eq([r.status, r.body.message, box.outbox.length, await one(env, 'SELECT freq FROM alerts')], [200, ALERT_SENT_TEXT, sentBefore, 'daily'],
+    'Alerts: signing up again for an alert that is on gets the same answer and changes and sends nothing (the answer tells nobody who is subscribed)');
+  // the plain form (no script) gets pages back
+  pg = await pageOf(env, 'POST', '/api/alerts', { type: 'application/x-www-form-urlencoded', body: 'email=form%40example.org&cat=engineering&freq=weekly&website=' });
+  ok(pg.status === 200 && pg.headers.get('Content-Type').startsWith('text/html') && pg.text.includes('Check your inbox') && pg.text.includes('form@example.org') && pg.text.includes('Engineering jobs'), 'Alerts: a form sent without a script gets a page that says what to do next');
+  pg = await pageOf(env, 'POST', '/api/alerts', { type: 'application/x-www-form-urlencoded', body: 'email=%3Cscript%3E&cat=engineering' });
+  ok(pg.status === 400 && pg.text.includes('The alert was not saved') && !pg.text.includes('<script>'), 'Alerts: and a page with the reason when it is refused, with what was sent escaped');
+  // refusals
+  r = await sign({ email: 'x@mailinator.com', q: 'go' }); eq([r.status, r.body.error], [400, 'throwaway_email'], 'Alerts: a throwaway mailbox is refused');
+  r = await sign({ email: 'not-an-address', q: 'go' }); eq([r.status, r.body.error], [400, 'email'], 'Alerts: an address is needed');
+  r = await sign({ email: 'ok@example.org', cat: 'astrology' }); eq([r.status, r.body.error], [400, 'cat'], 'Alerts: a category that does not exist is refused');
+  const rows0 = await one(env, 'SELECT COUNT(*) FROM alerts'), sent0 = box.outbox.length;
+  r = await sign({ email: 'bot@example.org', q: 'go', website: 'http://spam.example' });
+  eq([r.status, r.body.ok, await one(env, 'SELECT COUNT(*) FROM alerts'), box.outbox.length], [200, true, rows0, sent0], 'Alerts: a sign-up that filled in the field people do not see is answered as usual and dropped');
+  // limits: three confirmation letters a day to one address, five alerts per address, ten sign-ups an hour per visitor
+  for (const q of ['one', 'two', 'three', 'four']) r = await sign({ email: 'busy@example.org', q });
+  eq([r.status, box.outbox.filter((x) => x.to === 'busy@example.org').length, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'busy@example.org'")], [200, 3, 3],
+    'Alerts: one address gets at most three confirmation letters a day, whoever asks for them (the fourth sign-up gets the same answer and is dropped)');
+  for (let i = 0; i < 5; i++) await env.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, due_at) VALUES (?, 'full@example.org', ?, 'active', 1, 9999999999)").bind('a_' + String(i).repeat(20), 'w' + i).run();
+  r = await sign({ email: 'full@example.org', q: 'six' });
+  eq([r.status, r.body.error], [409, 'too_many'], 'Alerts: an address can have five alerts; the sixth is refused with the reason');
+  await env.DB.exec('DELETE FROM rate');
+  for (let i = 0; i < 10; i++) await sign({ email: 'v' + i + '@example.org', q: 'go' }, { ip: '6.7.8.9' });
+  r = await sign({ email: 'v10@example.org', q: 'go' }, { ip: '6.7.8.9' }); eq([r.status, r.body.error], [429, 'rate_limited'], 'Alerts: one visitor can sign up ten times an hour');
+  r = await call(newEnv(), 'POST', '/api/alerts', { data: { email: 'a@example.org', q: 'go' } }); eq([r.status, r.body.error], [503, 'mail_off'], 'Alerts: without a mail service no sign-up is taken (nobody could confirm it)');
+  r = await call(newEnv({ ...mailbox(), PAY_MODE: 'test' }), 'POST', '/api/alerts', { data: { email: 'a@example.org', q: 'go' } });
+  ok(/^https:\/\/api\.test\/api\/alerts\/confirm\?a=a_[a-f0-9]{20}&t=[a-f0-9]{32}$/.test(r.body.confirm_url), 'Alerts: in test mode (dev.mjs) the answer carries the confirmation link, as there is no mailbox');
+
+  // after the review of 15 Nov: what a stranger's sign-up can and cannot do
+  {
+    const bx = mailbox(), e2 = newEnv({ ...bx });
+    let q = await call(e2, 'POST', '/api/alerts', { data: { email: 'victim@example.org', q: 'call +79991234567 bitcoin doubling', loc: 'berlin' } });
+    const l2 = bx.outbox.at(-1);
+    eq([q.body.alert, l2.subject, l2.share], ['“call bitcoin doubling” jobs · Berlin', 'Confirm your job alert: Jobs · Berlin', 0.5],
+      'Alerts: a phone number or an amount is not a search word, the confirmation subject leaves the words out, and confirmations may fill half the day’s mail at most');
+    for (let i = 0; i < 5; i++) await e2.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at) VALUES (?, 'held@example.org', ?, 'pending', ?)").bind('a_' + 'f'.repeat(19) + i, 'p' + i, Math.floor(Date.now() / 1000)).run();
+    q = await call(e2, 'POST', '/api/alerts', { data: { email: 'held@example.org', q: 'rust' } });
+    eq([q.status, q.body.ok], [200, true], 'Alerts: alerts nobody confirmed do not count towards the five, so nobody can lock an address out by asking for alerts in its name');
+    for (let i = 0; i < 10; i++) await call(e2, 'POST', '/api/alerts', { ip: '2001:db8:1:2::' + (i + 1).toString(16), data: { email: 'six' + i + '@example.org', q: 'go' } });
+    q = await call(e2, 'POST', '/api/alerts', { ip: '2001:db8:1:2:ffff:ffff:ffff:fffe', data: { email: 'seven@example.org', q: 'go' } });
+    const other = await call(e2, 'POST', '/api/alerts', { ip: '2001:db8:1:3::1', data: { email: 'eight@example.org', q: 'go' } });
+    eq([q.status, other.status], [429, 200], 'Alerts: sign-ups are counted per /64 of an IPv6 address, so a new address per request does not help a script');
+    await e2.DB.prepare("INSERT OR REPLACE INTO rate (k, n, reset_at) VALUES ('alert-mail-all', 120, ?)").bind(Math.floor(Date.now() / 1000) + 3600).run();
+    const sentNow = bx.outbox.length; q = await call(e2, 'POST', '/api/alerts', { data: { email: 'late@example.org', q: 'go' } });
+    eq([q.status, bx.outbox.length - sentNow], [200, 0], 'Alerts: past 120 confirmation letters an hour in all, sign-ups get the usual answer and no letter goes');
+    const pend = await e2.DB.prepare("SELECT id FROM alerts WHERE email = 'victim@example.org'").first('id');
+    const cpage = await pageOf(e2, 'GET', '/api/alerts/confirm?a=' + pend + '&t=' + await ALERTS.alertToken(e2, 'confirm', pend));
+    ok(cpage.text.includes('<meta name="referrer" content="no-referrer">') && !/<a (?!rel="noreferrer")/.test(cpage.text), 'Alerts: the pages behind the links send no Referer, so the token in their address goes nowhere');
+    await e2.DB.prepare("UPDATE alerts SET status = 'active', freq = 'weekly', due_at = ? WHERE id = ?").bind(Math.floor(Date.now() / 1000) + 6 * 86400, pend).run();
+    await pageOf(e2, 'POST', '/api/alerts/unsubscribe?a=' + pend + '&t=' + await ALERTS.alertToken(e2, 'unsub', pend), { type: 'application/x-www-form-urlencoded', body: 'freq=daily' });
+    ok((await one(e2, 'SELECT due_at FROM alerts WHERE id = ?', pend)) <= Math.floor(Date.now() / 1000) + 86400, 'Alerts: switched from weekly to daily, the next letter comes within a day');
+  }
+
+  // the periodic run
+  const conf = (row.confirmed_at), at = (min) => ALERTS.isoTime(conf + min * 60);
+  const J = (slug, over = {}) => ({ slug, title: 'Senior Python Engineer', company: 'Acme', location: 'Berlin, Germany', remote: true, salary: '$110K – $150K', usd: [110000, 150000], places: ['berlin', 'germany', 'europe'],
+    cat: 'engineering', tags: ['Python'], first_seen_at: at(60), ...over });
+  const jobs = [J('j1'), J('j2', { places: ['munich'] }), J('j3', { usd: [50000, 90000] }), J('j4', { usd: null, salary: '' }), J('j5', { title: 'Backend Engineer', tags: ['Go'] }),
+    J('j6', { title: 'Data Engineer', company: 'Globex', first_seen_at: at(120) }), J('j7', { first_seen_at: at(-60) }), J('j8', { tg: true }), J('j9', { first_seen_at: at(90) }), J('j10', { remote: false })];
+  await env.DB.prepare("UPDATE alerts SET q = 'python' WHERE id = ?").bind(alertId).run();
+  const atRun = conf + 86400;
+  let out = await ALERTS.runAlerts(env, recs(jobs), { now: atRun - 3600 });
+  eq([out.due, out.sent], [0, 0], 'Run: an alert is not looked at before it is due');
+  const outBefore = box.outbox.length;
+  out = await ALERTS.runAlerts(env, recs(jobs), { now: atRun });
+  letter = box.outbox.at(-1); row = await env.DB.prepare('SELECT * FROM alerts WHERE id = ?').bind(alertId).first();
+  eq([out.sent, box.outbox.length - outBefore, letter.to, letter.kind, letter.bulk], [1, 1, 'seeker@example.org', 'alert', true], 'Run: a due alert with new matching jobs gets one letter, sent as a bulk letter');
+  eq([...letter.text.matchAll(/https:\/\/site\.test\/job\/([a-z0-9]+)\//g)].map((x) => x[1]), ['j6', 'j9'], 'Run: only jobs that match, first seen after the alert was confirmed, newest first, one per title and company, never a Telegram post');
+  ok(letter.subject === '2 new jobs: “python” jobs · Berlin · remote only · $100K+ a year' && letter.text.includes('Senior Python Engineer — Acme\n   Berlin, Germany · Remote · $110K – $150K'), 'Run: the subject counts the jobs and names the alert; each job has its place, remote and pay');
+  const unsubUrl = 'https://api.test' + linkIn(letter.text, 'unsubscribe');
+  ok(linkIn(letter.text, 'unsubscribe') && letter.headers['List-Unsubscribe'] === '<' + unsubUrl + '>' && letter.headers['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click' &&
+    letter.headers['List-Id'] === 'Job alerts <alerts.site.test>' && letter.headers.Precedence === 'bulk', 'Run: every letter has the unsubscribe link, and the one-click headers mail services ask of bulk senders (RFC 8058)');
+  ok(!/<img|utm_|track|pixel|\?ref=/i.test(letter.text) && !/[?&](?!q=|loc=|remote=|sal=|cat=|a=|t=)\w+=/.test(letter.text), 'Run: no images, no tracking: the links are plain addresses of the site');
+  ok(row.seen_through === at(120) && Math.abs(row.due_at - (atRun + 86400 - 1800)) < 2 && row.last_sent_at === atRun && row.letters === 1, 'Run: the alert moves on to the newest record it saw and is due a day later');
+  out = await ALERTS.runAlerts(env, recs(jobs), { now: row.due_at });
+  eq([out.due, out.sent, out.empty, box.outbox.length - outBefore], [1, 0, 1, 1], 'Run: with nothing new no letter is sent, and the alert still moves on');
+  const many = Array.from({ length: 25 }, (_, i) => J('n' + i, { title: 'Python Developer ' + i, first_seen_at: at(200 + i) }));
+  await env.DB.prepare("UPDATE alerts SET due_at = 0, freq = 'weekly' WHERE id = ?").bind(alertId).run();
+  out = await ALERTS.runAlerts(env, recs([...jobs, ...many]), { now: atRun + 3 * 86400 }); letter = box.outbox.at(-1); row = await env.DB.prepare('SELECT * FROM alerts WHERE id = ?').bind(alertId).first();
+  eq([out.sent, (letter.text.match(/\/job\//g) || []).length, letter.subject.startsWith('25 new jobs'), letter.text.includes('The newest 20 are below.'), letter.text.includes('All 25 and older ones: https://site.test/jobs/?q=python&loc=berlin&remote=1&sal=100000')],
+    [1, 20, true, true, true], 'Run: a letter carries 20 jobs at most, and says how many there were and where the rest are');
+  ok(Math.abs(row.due_at - (atRun + 3 * 86400 + 7 * 86400 - 1800)) < 2 && letter.text.includes('get it daily instead'), 'Run: a weekly alert is due a week later');
+  // the cap, a refusal for good, records missing, pending alerts that nobody confirmed
+  const held = newEnv({ MAIL: { send: async () => ({ sent: false, status: 'capped' }) } });
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_00000000000000000001', 'x@example.org', 'python', 'active', 1, 1, 1, '')").run();
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_00000000000000000002', 'y@example.org', 'python', 'active', 1, 1, 2, '')").run();
+  out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
+  eq([out.capped, out.sent, await one(held, 'SELECT SUM(due_at) FROM alerts'), await one(held, "SELECT COUNT(*) FROM alerts WHERE seen_through = ''")], [true, 0, 3, 2], 'Run: a letter held back by the daily cap ends the run; nothing moves on, so nothing is lost');
+  // a failure of the mail server itself (our login refused, no connection) ends the run and costs no subscriber anything
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: true, rejected: false }) };
+  for (let i = 0; i < 4; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i * 86400 });
+  eq([out.failed, out.stopped, await one(held, 'SELECT COUNT(*) FROM alerts'), await one(held, 'SELECT SUM(fails) FROM alerts'), await one(held, 'SELECT SUM(due_at) FROM alerts')], [1, 'the mail server failed', 2, 0, 3],
+    'Run: when the mail server refuses us (a changed password, a blocked account), the run ends, nothing moves and no alert is charged for it, however often it happens');
+  // a refusal for this address: the alert waits for its next period with the jobs kept, and goes after three final refusals in a row
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: true, rejected: true }) };
+  out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
+  eq([out.failed, await one(held, 'SELECT SUM(fails) FROM alerts'), await one(held, "SELECT COUNT(*) FROM alerts WHERE due_at > 100 AND seen_through = ''")], [2, 2, 2],
+    'Run: a mailbox that refuses the letter makes its alert wait for the next period, the jobs kept for then, and the run goes on to the others');
+  for (let i = 1; i < 3; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i * 86400 });
+  eq([out.dropped, await one(held, 'SELECT COUNT(*) FROM alerts')], [2, 0], 'Run: an address the mail server refuses for good three times in a row loses its alert');
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_0000000000000000000b', 'full@example.org', 'python', 'active', 1, 1, 1)").run();
+  held.MAIL = { send: async () => ({ sent: false, status: 'failed', permanent: false, rejected: true }) };
+  for (let i = 0; i < 7; i++) out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 + i * 86400 });
+  eq([out.dropped, await one(held, 'SELECT COUNT(*) FROM alerts')], [1, 0], 'Run: a mailbox that is full every time for seven letters in a row loses its alert too');
+  // no answer after the letter: it may have arrived, so it counts as sent and is not sent again; the run ends there
+  const sentTo = [];
+  held.MAIL = { send: async (m) => { sentTo.push(m.to); return { sent: false, status: 'unknown' }; } };
+  for (const [id, mail] of [['a_0000000000000000000c', 'u1@example.org'], ['a_0000000000000000000d', 'u2@example.org']])
+    await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES (?, ?, 'python', 'active', 1, 1, 1)").bind(id, mail).run();
+  out = await ALERTS.runAlerts(held, recs([J('k1', { first_seen_at: '2026-01-01T00:00:00Z' })]), { now: 100 });
+  eq([sentTo, out.sent, out.stopped, await one(held, "SELECT letters FROM alerts WHERE email = 'u1@example.org'"), await one(held, "SELECT seen_through FROM alerts WHERE email = 'u1@example.org'")],
+    [['u1@example.org'], 1, 'no answer from the mail server after a letter', 1, '2026-01-01T00:00:00Z'], 'Run: a letter that got no answer after it was sent counts as sent (no second copy) and ends the run');
+  // unsubscribed while the run was under way: nothing goes to it
+  const got = [];
+  held.MAIL = { send: async (m) => { got.push(m.to); await held.DB.prepare("DELETE FROM alerts WHERE email = 'u2@example.org'").run(); } };
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_0000000000000000000e', 'u0@example.org', 'python', 'active', 1, 1, 0)").run();
+  await held.DB.prepare("UPDATE alerts SET due_at = 1 WHERE email = 'u1@example.org'").run();
+  out = await ALERTS.runAlerts(held, recs([J('k2', { first_seen_at: '2026-02-01T00:00:00Z' })]), { now: 100 + 86400 });
+  eq(got, ['u0@example.org', 'u1@example.org'], 'Run: an alert unsubscribed while the run is under way gets nothing (each is read again just before its letter)');
+  // an older file of records turning up does not move an alert back
+  await held.DB.prepare("UPDATE alerts SET due_at = 1 WHERE email = 'u1@example.org'").run();
+  held.MAIL = { send: async () => {} };
+  out = await ALERTS.runAlerts(held, recs([J('k0', { first_seen_at: '2025-12-01T00:00:00Z' })]), { now: 100 + 2 * 86400 });
+  eq(await one(held, "SELECT seen_through FROM alerts WHERE email = 'u1@example.org'"), '2026-02-01T00:00:00Z', 'Run: an older file of records never moves an alert back (no job is offered twice)');
+  await held.DB.exec('DELETE FROM alerts');
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at) VALUES ('a_00000000000000000003', 'z@example.org', 'go', 'pending', ?)").bind(atRun - 8 * 86400).run();
+  out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.expired, await one(held, 'SELECT COUNT(*) FROM alerts')], [1, 0], 'Run: an alert nobody confirmed in 7 days is deleted');
+  await held.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at) VALUES ('a_00000000000000000004', 'z@example.org', 'go', 'active', 1, 1, 1)").run();
+  out = await ALERTS.runAlerts(held, recs([]), { now: atRun }); eq([out.due, out.sent, await one(held, 'SELECT due_at FROM alerts')], [1, 0, 1], 'Run: without job records nothing is sent and the alert stays due');
+
+  // one letter a day per address, however many alerts it has (reviews of other job sites: "too many emails" is the top complaint)
+  {
+    const bx = mailbox(), e3 = newEnv({ ...bx }), T = 1800000000;
+    const add3 = (id, q, due, extra = '') => e3.DB.prepare("INSERT INTO alerts (id, email, q, loc, status, created_at, confirmed_at, due_at, seen_through) VALUES (?, 'two@example.org', ?, ?, 'active', 1, 1, ?, '')").bind(id, q, extra, due).run();
+    await add3('a_' + '1'.repeat(20), 'python', T - 10); await add3('a_' + '2'.repeat(20), 'engineer', T - 5, 'berlin');
+    const many3 = Array.from({ length: 30 }, (_, i) => J('m' + i, { title: (i % 2 ? 'Python Engineer ' : 'Python Developer ') + i, first_seen_at: ALERTS.isoTime(T - 3600 + i) }));
+    let o3 = await ALERTS.runAlerts(e3, recs(many3), { now: T });
+    const L = bx.outbox.at(-1), slugs = [...L.text.matchAll(/\/job\/([a-z0-9]+)\//g)].map((x) => x[1]);
+    eq([o3.sent, bx.outbox.length, L.to, L.subject, slugs.length, new Set(slugs).size], [1, 1, 'two@example.org', '30 new jobs for your 2 job alerts', 20, 20],
+      'One letter: two alerts of one address with new jobs share one letter, 20 jobs in all, a job matching both listed once');
+    ok(L.text.includes('“python” jobs: 30 new jobs, the newest') && L.text.includes('“engineer” jobs · Berlin: 15 new jobs, the newest') && (L.text.match(/Stop this alert, or change how often it comes: https:/g) || []).length === 2 &&
+      /^<https:\/\/api\.test\/api\/alerts\/unsubscribe\?a=a_1{20}&t=[a-f0-9]{32}&all=1>$/.test(L.headers['List-Unsubscribe']), 'One letter: each alert has its part and its own unsubscribe link; the one-click header stops every alert of the address');
+    eq(await one(e3, "SELECT COUNT(*) FROM alerts WHERE last_sent_at = ? AND letters = 1", T), 2, 'One letter: both alerts count it as sent');
+    await add3('a_' + '3'.repeat(20), 'developer', T + 3 * 3600);
+    o3 = await ALERTS.runAlerts(e3, recs([...many3, J('late1', { title: 'Python Developer late', first_seen_at: ALERTS.isoTime(T + 3000) })]), { now: T + 4 * 3600 });
+    eq([o3.sent, o3.waited, bx.outbox.length, await one(e3, "SELECT due_at FROM alerts WHERE id = ?", 'a_' + '3'.repeat(20))], [0, 1, 1, T + 86400 - 1800],
+      'One letter: an alert that falls due a few hours after the address had its letter waits for the next one');
+    o3 = await ALERTS.runAlerts(e3, recs([...many3, J('late1', { title: 'Python Developer late', first_seen_at: ALERTS.isoTime(T + 3000) })]), { now: T + 86400 - 1800 });
+    eq([o3.sent, bx.outbox.length, bx.outbox.at(-1).subject, await one(e3, "SELECT letters FROM alerts WHERE id = ?", 'a_' + '3'.repeat(20))], [1, 2, '31 new jobs for your 2 job alerts', 1],
+      'One letter: the next day the alert that waited goes out in one letter with the others that have new jobs');
+    const allLink = new URL(bx.outbox.at(-1).headers['List-Unsubscribe'].slice(1, -1));
+    const pg3 = await pageOf(e3, 'POST', allLink.pathname + allLink.search, { type: 'application/x-www-form-urlencoded', body: 'List-Unsubscribe=One-Click' });
+    eq([pg3.text, await one(e3, "SELECT COUNT(*) FROM alerts WHERE email = 'two@example.org'")], ['Unsubscribed.', 0], 'One letter: its one-click unsubscribe stops every alert of the address');
+  }
+
+  // unsubscribe
+  const unsubPath = linkIn(letter.text, 'unsubscribe');
+  pg = await pageOf(env, 'GET', unsubPath);
+  ok(pg.status === 200 && (pg.text.match(/<form method="post"/g) || []).length === 3 && pg.text.includes('Send it daily instead') && pg.text.includes('Stop every job alert to this address') && (await one(env, 'SELECT COUNT(*) FROM alerts WHERE id = ?', alertId)) === 1,
+    'Unsubscribe: the link shows a page with three buttons (unsubscribe, change how often, stop every alert) and changes nothing by itself');
+  pg = await pageOf(env, 'POST', unsubPath, { type: 'application/x-www-form-urlencoded', body: 'freq=daily' });
+  ok(pg.text.includes('From now on: daily') && (await one(env, 'SELECT freq FROM alerts WHERE id = ?', alertId)) === 'daily', 'Unsubscribe: or it comes daily (or weekly) instead');
+  pg = await pageOf(env, 'POST', unsubPath.slice(0, -2) + (unsubPath.endsWith('00') ? '11' : '00'));
+  eq([pg.status, await one(env, 'SELECT COUNT(*) FROM alerts WHERE id = ?', alertId)], [404, 1], 'Unsubscribe: a made-up token does nothing');
+  pg = await pageOf(env, 'POST', confirmPath.replace('/confirm?', '/unsubscribe?'));
+  eq(pg.status, 404, 'Unsubscribe: the confirmation link’s token does not unsubscribe (each link does one thing)');
+  pg = await pageOf(env, 'POST', unsubPath, { type: 'application/x-www-form-urlencoded', body: 'List-Unsubscribe=One-Click' });
+  eq([pg.status, pg.text, await one(env, 'SELECT COUNT(*) FROM alerts WHERE id = ?', alertId)], [200, 'Unsubscribed.', 0], 'Unsubscribe: a mail client’s one-click POST unsubscribes at once, and the alert is deleted, not kept');
+  pg = await pageOf(env, 'POST', unsubPath); ok(pg.status === 200 && pg.text.includes('does not exist any more'), 'Unsubscribe: doing it again is fine');
+  // every alert of one address
+  const ids = (await env.DB.prepare("SELECT id FROM alerts WHERE email = 'busy@example.org' ORDER BY id").all()).results.map((x) => x.id);
+  pg = await pageOf(env, 'POST', '/api/alerts/unsubscribe?a=' + ids[0] + '&t=' + await ALERTS.alertToken(env, 'unsub', ids[0]), { type: 'application/x-www-form-urlencoded', body: 'all=1' });
+  ok(pg.text.includes('No more job alerts go to this address') && (await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'busy@example.org'")) === 0 && (await one(env, 'SELECT COUNT(*) FROM alerts')) > 0,
+    'Unsubscribe: "stop every alert" deletes every alert of that address and no one else’s');
+
+  // a signed-in account sees the alerts of its own confirmed address
+  await sign({ email: 'member@example.org', q: 'rust' });
+  const member = await fresh(env, 'member@example.org');
+  r = await call(env, 'GET', '/api/alerts', { token: member });
+  eq([r.status, r.body.alerts.length, r.body.alerts[0].alert, r.body.alerts[0].status], [200, 1, '“rust” jobs', 'pending'], 'Account: the alerts of the account’s address are listed');
+  r = await call(env, 'DELETE', '/api/alerts/' + r.body.alerts[0].id, { token: member }); eq([r.status, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'member@example.org'")], [200, 0], 'Account: and can be deleted');
+  const someone = await one(env, "SELECT id FROM alerts WHERE email = 'form@example.org'");
+  r = await call(env, 'DELETE', '/api/alerts/' + someone, { token: member }); eq(r.status, 404, 'Account: another address’s alert cannot be');
+
+  // the owner: counts, and erasing an address on request
+  const adminReq = async (method, p, data) => { const res = await worker.fetch(new Request(API + '/api/admin/' + p, { method, headers: { Authorization: 'Bearer admin-secret', 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined }), env); return { status: res.status, body: await res.json() }; };
+  r = await adminReq('GET', 'audience');
+  ok(r.status === 200 && r.body.alerts.waiting_for_confirmation >= 1 && r.body.accounts.job_seekers === 0 && r.body.accounts.employers === 1 && typeof r.body.mail.sent_today === 'number' && Array.isArray(r.body.by_day.accounts),
+    'Owner: /api/admin/audience counts accounts, alerts, claims and mail');
+  ok(!JSON.stringify(r.body).includes('@'), 'Owner: and gives no address');
+  eq((await call(env, 'GET', '/api/admin/audience', { token: member })).status, 403, 'Owner: an account’s session does not open it');
+  await env.DB.prepare("INSERT INTO mail_log (id, at, to_addr, kind, status) VALUES ('m_1', 1, 'form@example.org', 'alert_confirm', 'sent')").run();
+  await env.DB.prepare("INSERT INTO rate (k, n, reset_at) VALUES ('alert-mail:form@example.org', 1, 9999999999), ('reset:form@example.org', 1, 9999999999)").run();
+  const formUser = await fresh(env, 'form@example.org');
+  r = await adminReq('POST', 'erase', { email: 'FORM@example.org' });
+  eq([r.status, r.body.alerts_deleted, r.body.account_erased, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'form@example.org'"), await one(env, "SELECT COUNT(*) FROM mail_log WHERE to_addr = 'form@example.org'"),
+    await one(env, "SELECT COUNT(*) FROM users WHERE email = 'form@example.org'"), (await call(env, 'GET', '/api/me', { token: formUser })).status,
+    (await call(env, 'POST', '/api/auth/login', { data: { email: 'form@example.org', password: PASS } })).status], [200, 1, true, 0, 0, 0, 401, 401],
+    'Owner: erasing an address deletes its alerts and the mail log rows to it, and takes the address off its account, which can no longer be signed in to');
+  eq(await one(env, "SELECT COUNT(*) FROM rate WHERE k IN ('alert-mail:form@example.org', 'reset:form@example.org')"), 0, 'Owner: and the limits kept under that address');
+  // the cron tidies the mail log and the alerts nobody confirmed
+  await env.DB.prepare("INSERT INTO mail_log (id, at, to_addr, kind, status) VALUES ('m_old', ?, 'old@example.org', 'alert', 'sent')").bind(t0 - 31 * 86400).run();
+  await env.DB.prepare("INSERT INTO alerts (id, email, status, created_at) VALUES ('a_00000000000000000009', 'stale@example.org', 'pending', ?)").bind(t0 - 8 * 86400).run();
+  await worker.scheduled({}, env);
+  eq([await one(env, "SELECT COUNT(*) FROM mail_log WHERE id = 'm_old'"), await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'stale@example.org'")], [0, 0], 'Cron: the mail log keeps 30 days; an alert nobody confirmed goes after 7');
+
+  // the whole way: the alert job, the mailer and the mail server
+  const wire = newEnv(), wireMailer = MAILJS.createMailer({ db: wire.DB, smtp: SMTP, from: 'Jobs Every Hour <support@site.test>', cap: 100 });
+  Object.assign(wire, { MAIL: wireMailer, MAIL_FROM: 'Jobs Every Hour <support@site.test>' });
+  await wire.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at, due_at, seen_through) VALUES ('a_0000000000000000000a', 'reader@example.org', 'python', 'active', 1, 1, 1, '')").run();
+  const lettersBefore = smtpServer.letters.length;
+  out = await ALERTS.runAlerts(wire, recs([J('w1', { first_seen_at: '2026-11-15T01:00:00Z' })]), { now: 1800000000 });
+  const raw = smtpServer.letters.at(-1).data;
+  ok(out.sent === 1 && smtpServer.letters.length === lettersBefore + 1 && /^List-Unsubscribe: <https:\/\/api\.test\/api\/alerts\/unsubscribe\?a=a_0000000000000000000a&t=[a-f0-9]{32}>$/m.test(raw) &&
+    /^List-Unsubscribe-Post: List-Unsubscribe=One-Click$/m.test(raw) && /^Precedence: bulk$/m.test(raw) && bodyOf(raw).includes('https://site.test/job/w1/') && (await wire.DB.prepare('SELECT kind, status FROM mail_log').first()).kind === 'alert',
+    'Alerts, end to end: the letter reaches the mail server with its unsubscribe headers, and the log says it was an alert');
+}
+
+/* ---- 31. Employers: "is this job already on the site?" before posting, and "Claim your company page" ---- */
+{
+  const realFetch = globalThis.fetch;
+  world.dup = { matches: [], down: false, asked: [] };
+  globalThis.fetch = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.startsWith('http://dup.test/')) {                               // the page server's /api/check-duplicate (dedupe.py)
+      world.dup.asked.push(Object.fromEntries(new URL(url).searchParams));
+      if (world.dup.down) throw new TypeError('fetch failed');
+      return Response.json({ duplicate: world.dup.matches.length > 0, checked: 130000, ms: 0.05, matches: world.dup.matches });
+    }
+    return realFetch(input, init);
+  };
+  const DUP = { DUPLICATE_URL: 'http://dup.test/api/check-duplicate' };
+  const env = newEnv({ ...DUP, COMPANY_SITES: { Stripe: 'stripe.com', Harvey: 'board:ashby/harvey', 'Crypto.com': 'https://crypto.com' } });
+  const acme = await fresh(env, 'hr@acme.dev');
+  let r = await call(env, 'POST', '/api/jobs', { token: acme, data: GOOD });
+  eq([r.status, r.body.job && r.body.job.status, world.dup.asked.at(-1)], [200, 'review', { company: 'Acme Robotics', title: 'Senior Rust Engineer', location: 'Berlin', remote: '1', url: GOOD.apply_url }],
+    'Duplicates: a new job is checked against the site first, by company, title, place and link to apply');
+  world.dup.matches = [{ title: 'Senior Rust Engineer', company: 'Acme Robotics', location: 'Berlin, Germany', why: 'the same company and role in the same place', page: 'https://site.test/job/senior-rust-engineer-acme-robotics/' }];
+  const opened = world.fetched.length;
+  const second = { ...GOOD, title: 'Rust Engineer (Senior)', apply_url: 'https://acme.dev/careers/senior-rust-engineer?x=2' };
+  r = await call(env, 'POST', '/api/jobs', { token: acme, data: second });
+  eq([r.status, r.body.error, r.body.matches.length, r.body.matches[0].page, r.body.claim, await one(env, 'SELECT COUNT(*) FROM jobs')], [409, 'already_listed', 1, 'https://site.test/job/senior-rust-engineer-acme-robotics/', { company: 'Acme Robotics' }, 1],
+    'Duplicates: a job that is on the site already is refused with the page it is on, and the employer is offered the claim of the company page');
+  ok(r.body.message.startsWith('This job is already on the site: “Senior Rust Engineer” at Acme Robotics (Berlin, Germany), https://site.test/job/senior-rust-engineer-acme-robotics/.') && /Claim the company page/i.test(r.body.message),
+    'Duplicates: the message says where it is and what to do instead');
+  ok(world.fetched.slice(opened).every((u) => !u.startsWith('https://acme.dev/')), 'Duplicates: the link to apply of a refused duplicate is not even opened');
+  r = await call(env, 'POST', '/api/jobs/preview', { token: acme, data: second }); eq([r.status, r.body.error], [409, 'already_listed'], 'Duplicates: the preview of a draft says it too');
+  const asked = world.dup.asked.length, live = await one(env, 'SELECT id FROM jobs');
+  r = await call(env, 'PATCH', '/api/jobs/' + live, { token: acme, data: { salary: '$150k' } });
+  eq([r.status, world.dup.asked.length], [200, asked], 'Duplicates: an edit is not checked again (the job would find itself)');
+  world.dup.matches = []; world.dup.down = true;
+  const trusted = await account(env, 'boss@globex.dev'), globex = employer('globex.dev', 'Globex');
+  r = await call(env, 'POST', '/api/jobs', { token: trusted, data: globex('Data Engineer') });
+  ok(r.status === 200 && r.body.job.status === 'review' && /check for the same job elsewhere on the site did not answer/.test(r.body.job.review_reason),
+    'Duplicates: when the check does not answer, even a trusted account’s job waits for a person, with the reason written on it');
+  world.dup.down = false;
+  r = await call(env, 'POST', '/api/jobs', { token: trusted, data: globex('Platform Engineer') }); eq(r.body.job.status, 'live', 'Duplicates: when it answers "not on the site", a trusted account’s job goes live as before');
+  r = await call(env, 'POST', '/api/jobs', { token: acme, data: { ...GOOD, company: 'Stripe', company_url: 'https://acme.dev' } });
+  eq([r.status, r.body.error, r.body.claim], [409, 'listed', { company: 'Stripe' }], 'Claim: a company the site reads from its hiring system cannot be posted under; the answer offers the claim of its page');
+
+  // claims
+  const stripe = await fresh(env, 'talent@stripe.com');
+  r = await call(env, 'POST', '/api/claims', { token: stripe, data: { company: 'STRIPE' } });
+  eq([r.status, r.body.claim.company, r.body.claim.status, r.body.claim.domain, r.body.claim.reason], [200, 'Stripe', 'verified', 'stripe.com', ''], 'Claim: an account on the domain the site knows for the company is verified at once');
+  const stripeClaim = r.body.claim.id;
+  eq((await call(env, 'GET', '/api/public/export.json')).body.claimed.map((c) => c.company), ['Stripe'], 'Claim: export.json lists the companies whose page is claimed, for the site to show');
+  r = await call(env, 'POST', '/api/claims', { token: stripe, data: { company: 'Stripe' } }); eq([r.status, r.body.claim.id], [200, stripeClaim], 'Claim: asking again answers with the same claim');
+  r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'other@stripe.com'), data: { company: 'Stripe' } }); eq([r.status, r.body.error], [409, 'claimed'], 'Claim: one company, one account that manages its page');
+  const stripeJob = { ...GOOD, company: 'Stripe', company_url: 'https://stripe.com', title: 'Staff Engineer, Ledger', apply_url: 'https://stripe.com/jobs/staff-engineer-ledger' };
+  world.pages[stripeJob.apply_url] = '<html><h1>Staff Engineer, Ledger</h1></html>';
+  r = await call(env, 'POST', '/api/jobs', { token: stripe, data: stripeJob });
+  eq([r.status, r.body.job && r.body.job.status], [200, 'review'], 'Claim: the account that manages the page may post a job its hiring system does not list (checked for duplicates and reviewed like any job)');
+  r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'me@gmail.com'), data: { company: 'Harvey' } }); eq([r.status, r.body.error], [403, 'work_email'], 'Claim: an account on a free mailbox cannot claim a company');
+  const unconfirmed = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'new@harvey.ai', password: PASS } })).body.token;
+  r = await call(env, 'POST', '/api/claims', { token: unconfirmed, data: { company: 'Harvey' } }); eq([r.status, r.body.error], [403, 'confirm_email'], 'Claim: nor one whose email is not confirmed');
+  const harvey = await fresh(env, 'people@harvey.ai');
+  r = await call(env, 'POST', '/api/claims', { token: harvey, data: { company: 'Initech' } }); eq([r.status, r.body.error], [404, 'not_listed'], 'Claim: only a company the site lists');
+  r = await call(env, 'POST', '/api/claims', { token: harvey, data: { company: 'Harvey' } });
+  eq([r.body.claim.status, r.body.claim.reason], ['pending', 'the site does not know Harvey’s own domain: check that harvey.ai is it'], 'Claim: a company whose domain the site does not know waits for a person');
+  const harveyClaim = r.body.claim.id;
+  const evil = await fresh(env, 'ceo@crypto-com.dev');
+  r = await call(env, 'POST', '/api/claims', { token: evil, data: { company: 'Crypto.com' } });
+  ok(r.body.claim.status === 'pending' && r.body.claim.reason.startsWith('the domain the site knows for Crypto.com is crypto.com, and the account is tied to crypto-com.dev'), 'Claim: a domain other than the one the site knows waits for a person, with both named');
+  const evilClaim = r.body.claim.id;
+  const adm = async (method, p, data) => { const res = await worker.fetch(new Request(API + '/api/admin/' + p, { method, headers: { Authorization: 'Bearer admin-secret', 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined }), env); return { status: res.status, body: await res.json() }; };
+  r = await adm('GET', 'claims');
+  eq(r.body.claims.map((c) => [c.company, c.domain, c.site_we_know, c.account.email_domain, c.account.proved_by]), [['Harvey', 'harvey.ai', '', 'harvey.ai', ['email_domain']], ['Crypto.com', 'crypto-com.dev', 'crypto.com', 'crypto-com.dev', ['email_domain']]],
+    'Claim: the owner’s queue shows each claim with the domain the account proved, how, and the domain the site knows');
+  r = await adm('POST', 'claims/' + evilClaim + '/reject', { reason: 'crypto-com.dev is not Crypto.com’s domain.' });
+  eq([r.status, (await call(env, 'GET', '/api/claims', { token: evil })).body.claims[0].status, (await call(env, 'GET', '/api/claims', { token: evil })).body.claims[0].reason], [200, 'rejected', 'crypto-com.dev is not Crypto.com’s domain.'],
+    'Claim: a rejected claim says why on the account');
+  r = await adm('POST', 'claims/' + harveyClaim + '/approve'); eq([r.status, (await call(env, 'GET', '/api/claims', { token: harvey })).body.claims[0].status], [200, 'verified'], 'Claim: an approved one is verified');
+  r = await adm('POST', 'claims/' + harveyClaim + '/approve'); eq(r.status, 404, 'Claim: approving twice finds nothing to approve');
+  // views and clicks on "Apply" of the claimed company's job pages
+  const hitC = (ip, job, kind, company = 'Stripe') => call(env, 'POST', '/api/public/hit', { ip, data: { job, kind, company } });
+  await hitC('7.1.1.1', 'staff-engineer-stripe', 'view'); await hitC('7.1.1.1', 'staff-engineer-stripe', 'view'); await hitC('7.1.1.2', 'staff-engineer-stripe', 'view');
+  await hitC('7.1.1.1', SITE + '/job/staff-engineer-stripe-2/', 'apply'); await hitC('7.1.1.3', 'staff-engineer-harvey', 'view', 'Harvey'); await hitC('7.1.1.4', 'designer-acme', 'view');
+  await hitC('7.1.1.5', 'staff-engineer-stripe', 'view', 'Harvey'); await hitC('7.1.1.6', 'lead-crypto-com', 'view', 'Crypto.com');
+  r = await call(env, 'GET', '/api/claims/' + stripeClaim + '/stats', { token: stripe });
+  eq(r.body.jobs.map((j) => [j.page, j.views, j.applies, j.by_day.length, j.by_day.at(-1).views]), [[SITE + '/job/staff-engineer-stripe/', 2, 0, 14, 2], [SITE + '/job/staff-engineer-stripe-2/', 0, 1, 14, 0]],
+    'Claim: the company sees views and clicks on "Apply" per job page, each visitor once a day, only on pages whose address ends with its own name');
+  eq([await one(env, "SELECT COUNT(*) FROM company_hits WHERE company_key = 'crypto.com'"), await one(env, "SELECT COUNT(*) FROM company_hits WHERE company_key = 'harvey'")], [0, 1],
+    'Claim: nothing is counted for a company whose page nobody manages, nor for a page that names another company');
+  eq((await call(env, 'GET', '/api/claims/' + stripeClaim + '/stats', { token: harvey })).status, 404, 'Claim: another account cannot read them');
+  await adm('POST', 'accounts/' + (await one(env, "SELECT id FROM users WHERE email = 'talent@stripe.com'")) + '/ban');
+  eq([await one(env, "SELECT COUNT(*) FROM company_claims WHERE company = 'Stripe'"), (await call(env, 'GET', '/api/public/export.json')).body.claimed.map((c) => c.company)], [0, ['Harvey']], 'Claim: a banned account loses its claims');
+  r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'cto@stripe.com'), data: { company: 'Stripe' } }); eq(r.body.claim.status, 'verified', 'Claim: and the company can be claimed again by its own people');
+  globalThis.fetch = realFetch;
+}
+
+/* ---- 32. The job records as the alert job reads them (src/records.mjs over data/jobs.db, the shape records.py writes) ---- */
+{
+  const { DatabaseSync } = await import('node:sqlite'), { mkdtempSync, rmSync } = await import('node:fs'), os = await import('node:os');
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'hrn-records-')), file = path.join(dir, 'jobs.db'), { openRecords } = await import('../src/records.mjs');
+  eq([openRecords(file).watermark(), openRecords(file).newSince('2026-11-14T00:00:00Z')], ['', []], 'Records: no file, no jobs (the run waits for the first upload)');
+  const db = new DatabaseSync(file);
+  db.exec('CREATE TABLE jobs (slug TEXT PRIMARY KEY, id TEXT NOT NULL, active INTEGER NOT NULL, company TEXT NOT NULL, cat TEXT NOT NULL, first_seen TEXT NOT NULL, rec TEXT NOT NULL, descr TEXT NOT NULL)');
+  const put = (slug, active, seen, at, extra = {}) => db.prepare('INSERT INTO jobs VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(slug, 'x-' + slug, active, 'Acme', 'engineering', seen,
+    JSON.stringify({ slug, title: 'T ' + slug, company: 'Acme', location: 'Berlin', remote: false, salary: '', usd: [1, 2], places: ['berlin'], cat: 'engineering', tags: ['Go'], first_seen: seen, first_seen_at: at, desc: 'long text', ...extra }), '<p>long</p>');
+  put('a', 1, '2026-11-14', '2026-11-14T10:17:00Z'); put('b', 1, '2026-11-15', '2026-11-15T01:17:00Z'); put('c', 1, '2026-11-15', '2026-11-15T02:17:00Z'); put('d', 0, '2026-11-15', '2026-11-15T03:17:00Z'); put('e', 1, '2026-11-13', '');
+  db.close();
+  const R = openRecords(file), since = R.newSince('2026-11-14T23:00:00Z');
+  eq([R.watermark(), since.map((j) => j.slug), Object.keys(since[0]).sort()], ['2026-11-15T03:17:00Z', ['b', 'c'], ['cat', 'company', 'first_seen_at', 'location', 'places', 'remote', 'salary', 'slug', 'tags', 'tg', 'title', 'usd']],
+    'Records: the newest first_seen_at, and the open jobs first seen after a moment, with only what a letter needs');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+/* ---- 33. The settings on our own server (src/config.mjs): payments stay off, PAY_MODE is refused, mail is on with a password ---- */
+{
+  const { readEnvFile, productionEnv, describeEnv } = await import('../src/config.mjs'), { writeFileSync, mkdtempSync, rmSync } = await import('node:fs'), os = await import('node:os');
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'hrn-env-')), file = path.join(dir, 'api.env');
+  writeFileSync(file, '# settings\nSITE_URL=https://jobs.example\nADMIN_TOKEN="tok en"\nexport SMTP_PASS=\'p#ss word\'\nMAIL_DAILY_CAP=200  # a comment\nbroken line\nCRYPTOMUS_MERCHANT=m\nCRYPTOMUS_API_KEY=k\nPLUS_LIVE=1\nDB_FILE=' + path.join(dir, 'api.db') + '\n');
+  const vars = readEnvFile(file);
+  eq([vars.SITE_URL, vars.ADMIN_TOKEN, vars.SMTP_PASS, vars.MAIL_DAILY_CAP, vars.broken], ['https://jobs.example', 'tok en', 'p#ss word', '200', undefined], 'Settings: KEY=value lines, quotes and comments as a shell would read them');
+  let env = productionEnv(vars, { serverDir: path.join(here, '..') });
+  eq([env.CRYPTOMUS_MERCHANT, env.CRYPTOMUS_API_KEY, env.PLUS_LIVE, env.API_URL, env.SITE_ORIGINS, env.SITE_INTERNAL, env.DUPLICATE_URL, env.MAIL.cap, env.MAIL_FROM],
+    [undefined, undefined, '0', 'https://jobs.example', 'https://jobs.example', 'http://127.0.0.1:8790', 'http://127.0.0.1:8790/api/check-duplicate', 200, 'Jobs Every Hour <support@jobseveryhour.com>'],
+    'Settings: payment keys in the file are dropped and Plus is not for sale until PAYMENTS_LIVE=1; the API is on the site’s own address; mail is on');
+  ok(!describeEnv(env).includes('p#ss') && !describeEnv(env).includes('tok en') && describeEnv(env).includes('payments off'), 'Settings: the line written to the log at start names what is on and no secret');
+  env.DB.close();
+  env = productionEnv({ ...vars, SMTP_PASS: '' }, { serverDir: path.join(here, '..') });                 // no mail here: nothing may try to reach a real mail server
+  let r = await call(env, 'GET', '/api/public/products'); eq([r.body.payments, r.body.products.some((p) => p.group === 'plus')], ['off', false], 'Settings: the site is told payments are off');
+  const tok = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'boss@jobs.example', password: PASS } })).body.token;
+  await env.DB.prepare('UPDATE users SET confirmed_at = 1').run();
+  r = await call(env, 'POST', '/api/orders', { token: tok, data: { product: 'pack5' } });
+  eq([r.status, r.body.error], [503, 'payments_off'], 'Settings: nobody can be charged: an order is refused');
+  env.DB.close();
+  env = productionEnv({ ...vars, PAYMENTS_LIVE: '1' }, { serverDir: path.join(here, '..') });
+  eq([env.CRYPTOMUS_MERCHANT, env.PLUS_LIVE], ['m', '1'], 'Settings: PAYMENTS_LIVE=1 is the one switch that turns payments on');
+  env.DB.close();
+  let e = null; try { productionEnv({ ...vars, PAY_MODE: 'test' }, { serverDir: path.join(here, '..') }); } catch (x) { e = x; }
+  ok(e && /PAY_MODE/.test(e.message), 'Settings: PAY_MODE (the fake checkout of dev.mjs) is refused on the server');
+  env = productionEnv({ DB_FILE: path.join(dir, 'b.db') }, { serverDir: path.join(here, '..') });
+  ok(!env.MAIL && env.SITE_URL === 'https://jobseveryhour.com', 'Settings: without SMTP_PASS mail is off; the site is jobseveryhour.com unless told otherwise');
+  env.DB.close();
+  rmSync(dir, { recursive: true, force: true });
+}
+await smtpServer.close();
+
+/* ---- 34. The resume database: opt-in only (the owner: sell employers access to resumes; the legal way is people who put theirs there) ---- */
+{
+  const { TALENT_CONSENT, redact } = await import('../src/worker.js');
+  eq(redact('Call me at +1 (415) 555-0199 or write to jane.doe@mail.com, see https://janedoe.dev and @janedoe. Worked 2019 - 2022 on 12 teams.'),
+    'Call me at [hidden] or write to [hidden], see [hidden] and [hidden]. Worked 2019 - 2022 on 12 teams.', 'Resumes: emails, phone numbers, addresses and handles are taken out of what employers read; dates and numbers stay');
+  eq((await call(newEnv(), 'GET', '/api/talent/profile', { token: 'x'.repeat(64) })).status, 401, 'Resumes: the endpoints need a session');
+  const off = newEnv(), offTok = await fresh(off, 'me@gmail.com');
+  eq([(await call(off, 'GET', '/api/talent/profile', { token: offTok })).body.error, (await call(off, 'GET', '/api/public/products')).body.talent], ['not_configured', 'off'], 'Resumes: off until TALENT_DB=on');
+  const box = mailbox(), env = newEnv({ ...box, TALENT_DB: 'on' }), adm = async (method, p, data) => { const res = await worker.fetch(new Request(API + '/api/admin/' + p, { method, headers: { Authorization: 'Bearer admin-secret', 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined }), env); return { status: res.status, body: await res.json() }; };
+  const RES = { name: 'Jane Roe', title: 'Senior Rust Engineer', email: 'jane.roe@gmail.com', phone: '+44 20 7946 0958', place: 'London', links: 'https://janeroe.dev', summary: 'Rust engineer, 8 years. Reach me at jane.roe@gmail.com.',
+    skills: 'Rust, Go, Kubernetes', exp: [{ role: 'Senior Rust Engineer', org: 'Initech', dates: '2019 - 2026', text: 'Built the payments core in Rust.\nCall +44 20 7946 0958 for references.' }], edu: [{ what: 'BSc Computer Science', org: 'UCL', dates: '2015' }] };
+  const jane = await fresh(env, 'jane.roe@gmail.com');
+  let r = await call(env, 'GET', '/api/talent/profile', { token: jane });
+  eq([r.status, r.body.profile, r.body.consent_text === TALENT_CONSENT, (await call(env, 'GET', '/api/public/products')).body.talent], [200, null, true, 'on'], 'Resumes: nothing is stored to start with; the page gets the consent line to show');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES } });
+  const r2 = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES, consent: true, consent_text: 'I agree' } });
+  eq([r.status, r.body.error, r2.status, await one(env, 'SELECT COUNT(*) FROM talent')], [400, 'consent', 400, 0], 'Resumes: without the tick and the exact consent line shown, nothing is stored');
+  const unconf = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'new@gmail.com', password: PASS } })).body.token;
+  eq((await call(env, 'PUT', '/api/talent/profile', { token: unconf, data: { resume: RES, consent: true, consent_text: TALENT_CONSENT } })).body.error, 'confirm_email', 'Resumes: an account must confirm its email first');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES, consent: true, consent_text: TALENT_CONSENT, level: 'senior', years: 8, roles: ['engineering'], places: ['united-kingdom', 'remote'] } });
+  const seen = r.body.profile && r.body.profile.as_employers_see, row = await env.DB.prepare('SELECT * FROM talent').first();
+  ok(r.status === 200 && row.consent_text === TALENT_CONSENT && row.consented_at > 0 && /^t_[a-f0-9]{16}$/.test(row.pid) && JSON.parse(row.resume).name === 'Jane Roe', 'Resumes: with the tick the resume is stored, with the consent line and its time, under a public id that is not the account id');
+  ok(seen.name === '' && !JSON.stringify(seen).match(/jane|Roe|7946|janeroe|Initech/i) && seen.experience[0].org === '' && seen.summary.includes('[hidden]') && seen.skills.join() === 'rust,go,kubernetes',
+    'Resumes: the person sees exactly what employers see: no name, email, phone, links or employer names');
+
+  const acme = await fresh(env, 'hr@acme.dev'), seeker = await fresh(env, 'looking@gmail.com');
+  r = await call(env, 'GET', '/api/talent/search?skill=rust', { token: seeker }); eq([r.status, r.body.error], [403, 'employer_only'], 'Resumes: only an employer tied to a company domain can search');
+  r = await call(env, 'GET', '/api/talent/search?skill=rust&role=engineering&place=united-kingdom&level=senior&years=5', { token: acme });
+  eq([r.status, r.body.total, r.body.results[0].id, r.body.results[0].name, r.body.credits], [200, 1, row.pid, '', 0], 'Resumes: an employer finds a person by skill, kind of work, place, level and years, without a name');
+  eq([(await call(env, 'GET', '/api/talent/search?q=rust+engineer', { token: acme })).body.total, (await call(env, 'GET', '/api/talent/search?place=germany', { token: acme })).body.total,
+    (await call(env, 'GET', '/api/talent/search?years=10', { token: acme })).body.total, (await call(env, 'GET', '/api/talent/search?q=initech', { token: acme })).body.total],
+    [1, 0, 0, 0], 'Resumes: only where the person wants to work, and an employer name the person hid cannot be searched for');
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Hello Jane, we are hiring a Rust engineer for our robotics team in London; would you like to talk?' } });
+  eq([r.status, r.body.error], [402, 'no_credits'], 'Resumes: a request needs a credit; the answer says a pack is one payment and nothing renews');
+  ok(/nothing renews/.test(r.body.message), 'Resumes: the refusal says nothing renews');
+  const acmeId = await one(env, "SELECT id FROM users WHERE email = 'hr@acme.dev'");
+  r = await adm('POST', 'talent/credits', { account: acmeId, n: 3 }); eq([r.status, r.body.credits], [200, 3], 'Resumes: the owner can give an employer contact requests (until a pack is on sale)');
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Great job for you! Pay a registration fee of $50 to start, then contact us on Telegram @acmehr.' } });
+  eq([r.status, r.body.error, await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', acmeId)], [422, 'rejected', 3], 'Resumes: a message that asks for money or moves people to a chat is refused, and costs nothing');
+  const mailsBefore = box.outbox.length;
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Hello, we are hiring a Rust engineer for our robotics team in London. Would you like to talk?', job_url: 'https://acme.dev/careers/senior-rust-engineer' } });
+  const note = box.outbox.at(-1);
+  eq([r.status, r.body.credits, box.outbox.length - mailsBefore, note.to, note.kind], [200, 2, 1, 'jane.roe@gmail.com', 'talent_request'], 'Resumes: a request takes a credit and tells the person by email');
+  ok(note.text.includes('Hello, we are hiring a Rust engineer') && /only if you accept/.test(note.text) && !note.text.includes('hr@acme.dev'), 'Resumes: the letter carries the message and says they learn nothing unless the person accepts');
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Hello again, we are hiring a Rust engineer for our robotics team in London. Would you like to talk?' } });
+  eq([r.status, r.body.error, await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', acmeId)], [409, 'already_asked', 2], 'Resumes: one request per employer and person, and a refused second one costs nothing');
+  r = await call(env, 'GET', '/api/talent/sent', { token: acme });
+  eq([r.body.requests[0].status, r.body.requests[0].candidate.name, r.body.requests[0].candidate.contact], ['sent', '', undefined], 'Resumes: before the answer the employer has no name and no contact');
+  r = await call(env, 'GET', '/api/talent/requests', { token: jane });
+  const reqId = r.body.requests[0].id;
+  eq([r.body.requests.length, r.body.requests[0].company, r.body.requests[0].domain, r.body.requests[0].status], [1, 'acme.dev', 'acme.dev', 'sent'], 'Resumes: the person sees who asked, from which domain, and the message');
+  r = await call(env, 'POST', '/api/talent/requests/' + reqId + '/accept', { token: acme }); eq(r.status, 404, 'Resumes: only the person can answer');
+  r = await call(env, 'POST', '/api/talent/requests/' + reqId + '/accept', { token: jane });
+  const sent = (await call(env, 'GET', '/api/talent/sent', { token: acme })).body;
+  eq([r.body.status, sent.requests[0].candidate.contact, sent.requests[0].candidate.name, sent.credits, box.outbox.at(-1).kind, box.outbox.at(-1).to],
+    ['accepted', { name: 'Jane Roe', email: 'jane.roe@gmail.com', resume_email: 'jane.roe@gmail.com', phone: '+44 20 7946 0958', links: 'https://janeroe.dev' }, 'Jane Roe', 2, 'talent_accepted', 'hr@acme.dev'],
+    'Resumes: on acceptance that employer, and only that one, gets the name and contact details; the credit is spent');
+  // a decline and a request nobody answers give the credit back
+  const globex = await fresh(env, 'hr@globex.dev'), globexId = await one(env, "SELECT id FROM users WHERE email = 'hr@globex.dev'");
+  await adm('POST', 'talent/credits', { account: globexId, n: 2 });
+  await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: globex, data: { message: 'Hello, Globex is hiring a platform engineer who knows Rust and Kubernetes. Can we talk this week?' } });
+  const gReq = (await call(env, 'GET', '/api/talent/requests', { token: jane })).body.requests.find((x) => x.domain === 'globex.dev').id;
+  r = await call(env, 'POST', '/api/talent/requests/' + gReq + '/decline', { token: jane });
+  eq([r.body.status, await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', globexId), (await call(env, 'GET', '/api/talent/sent', { token: globex })).body.requests[0].candidate.contact],
+    ['declined', 2, undefined], 'Resumes: a declined request gives the credit back and gives the employer nothing');
+  const initech = await fresh(env, 'hr@initech.com'), initechId = await one(env, "SELECT id FROM users WHERE email = 'hr@initech.com'");
+  await adm('POST', 'talent/credits', { account: initechId, n: 1 });
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { blocked: ['careers.initech.com'] } });
+  eq([r.body.profile.blocked, (await call(env, 'GET', '/api/talent/search?skill=rust', { token: initech })).body.total,
+    (await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: initech, data: { message: 'Hello Jane, Initech would like to talk to you about a senior Rust role here.' } })).status],
+    [['initech.com'], 0, 404], 'Resumes: a company the person blocks (their own employer, say) never finds them and cannot ask');
+  await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { blocked: [] } });
+  await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: initech, data: { message: 'Hello Jane, Initech would like to talk to you about a senior Rust role here.' } });
+  await env.DB.prepare('UPDATE talent_requests SET created_at = created_at - 15 * 86400 WHERE employer_id = ?').bind(initechId).run();
+  await worker.scheduled({}, env);
+  eq([await one(env, 'SELECT status FROM talent_requests WHERE employer_id = ?', initechId), await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', initechId)], ['expired', 1],
+    'Resumes: a request with no answer in 14 days ends and gives the credit back');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { paused: true } });
+  eq([r.body.profile.paused, (await call(env, 'GET', '/api/talent/search', { token: acme })).body.total, r.body.profile.resume.name], [true, 0, 'Jane Roe'], 'Resumes: paused, it is hidden from search and kept');
+  await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { paused: false, show_name: true } });
+  eq((await call(env, 'GET', '/api/talent/search', { token: globex })).body.results[0].name, 'Jane Roe', 'Resumes: the person may choose to show the name before accepting');
+  // one employer still waiting when the person deletes: the credit comes back, and nothing of the resume is left
+  const hooli = await fresh(env, 'hr@hooli.dev'), hooliId = await one(env, "SELECT id FROM users WHERE email = 'hr@hooli.dev'");
+  await adm('POST', 'talent/credits', { account: hooliId, n: 1 });
+  await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: hooli, data: { message: 'Hello Jane, Hooli would like to talk to you about a senior Rust role on our team.' } });
+  r = await call(env, 'DELETE', '/api/talent/profile', { token: jane });
+  eq([r.body.deleted, await one(env, 'SELECT COUNT(*) FROM talent'), await one(env, 'SELECT COUNT(*) FROM talent_requests'), await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', hooliId),
+    (await call(env, 'GET', '/api/talent/profile', { token: jane })).body.profile, (await call(env, 'GET', '/api/talent/search', { token: acme })).body.total],
+    [true, 0, 0, 1, null, 0], 'Resumes: delete is for good: the resume and every request about it are gone at once, and open requests give their credits back');
+  ok(/Employers who were given your contact details earlier keep what they were given/.test(r.body.message), 'Resumes: and the answer says plainly what deleting cannot take back');
+  // a pack of contact requests, once the owner has set a price, is bought like any product: one payment, nothing renews
+  PRODUCTS.talent_test = { name: 'Resume database: 5 contact requests', usd: 9, talentCredits: 5, target: 'none', group: 'employer' };
+  const testEnv = newEnv({ PAY_MODE: 'test', TALENT_DB: 'on' }), boss = await account(testEnv, 'boss@acme.dev');
+  r = await call(testEnv, 'POST', '/api/orders', { token: boss, data: { product: 'talent_test' } });
+  await call(testEnv, 'GET', new URL(r.body.order.pay_url).pathname);
+  eq(await one(testEnv, 'SELECT n FROM talent_credits'), 5, 'Resumes: a paid pack adds its contact requests');
+  delete PRODUCTS.talent_test;
+  // erasing an account takes its resume with it
+  const tom = await fresh(env, 'tom@gmail.com');
+  await call(env, 'PUT', '/api/talent/profile', { token: tom, data: { resume: RES, consent: true, consent_text: TALENT_CONSENT } });
+  await adm('POST', 'erase', { email: 'tom@gmail.com' });
+  eq(await one(env, 'SELECT COUNT(*) FROM talent'), 0, 'Resumes: erasing an account on request deletes its resume');
+  r = await adm('GET', 'talent'); ok(r.status === 200 && r.body.resumes === 0 && typeof r.body.credits_held === 'number', 'Resumes: the owner sees counts');
+}
+
+/* ---- 35. Sign in with Google; the person's own export and delete; free sync; an employer's team, page text and receipts ---- */
+{
+  const GO = { GOOGLE_CLIENT_ID: 'g-client', GOOGLE_CLIENT_SECRET: 'g-secret', GOOGLE_REDIRECT_URL: SITE + '/account/' };
+  const realFetch = globalThis.fetch, google = { codes: {}, asked: [] };
+  globalThis.fetch = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url === 'https://oauth2.googleapis.com/token') {
+      const p = new URLSearchParams(init.body), who = google.codes[p.get('code')]; google.asked.push(Object.fromEntries(p));
+      if (!who || p.get('client_secret') !== 'g-secret' || p.get('redirect_uri') !== SITE + '/account/' || p.get('grant_type') !== 'authorization_code') return Response.json({ error: 'invalid_grant' }, { status: 400 });
+      delete google.codes[p.get('code')];
+      const t = Math.floor(Date.now() / 1000);
+      return Response.json({ access_token: 'ya29.x', id_token: idToken({ iss: 'https://accounts.google.com', aud: 'g-client', iat: t, exp: t + 3600, email_verified: true, ...who }) });
+    }
+    return realFetch(input, init);
+  };
+  let gc = 0;
+  const signIn = async (env, who, { secret: wrong } = {}) => {
+    const s = (await call(env, 'POST', '/api/auth/google/start')).body, code = 'gcode-' + (++gc); google.codes[code] = who;
+    const state = new URL(s.url).searchParams.get('state');
+    return call(env, 'POST', '/api/auth/google/callback', { data: { code, state, secret: wrong || s.secret } });
+  };
+  eq((await call(newEnv(), 'POST', '/api/auth/google/start')).body.error, 'not_configured', 'Google: off until its three settings are set');
+  const box = mailbox(), env = newEnv({ ...GO, ...box });
+  let r = await call(env, 'POST', '/api/auth/google/start'), u = new URL(r.body.url);
+  eq([u.origin + u.pathname, u.searchParams.get('client_id'), u.searchParams.get('redirect_uri'), u.searchParams.get('scope'), u.searchParams.get('response_type'), /^[a-f0-9]{64}$/.test(r.body.secret), (await call(env, 'GET', '/api/public/products')).body.google],
+    ['https://accounts.google.com/o/oauth2/v2/auth', 'g-client', SITE + '/account/', 'openid email profile', 'code', true, 'on'], 'Google: the start answers Google’s authorization address and a secret for the page to keep');
+  r = await signIn(env, { sub: 'g-1', email: 'Ann.Lee@Gmail.com', name: 'Ann Lee' });
+  eq([r.status, r.body.created, r.body.user.email, r.body.user.confirmed, r.body.user.posts_as, (await call(env, 'GET', '/api/me', { token: r.body.token })).status], [200, true, 'ann.lee@gmail.com', true, [], 200],
+    'Google: a new address makes a confirmed job seeker’s account and signs it in');
+  r = await signIn(env, { sub: 'g-2', email: 'cto@acme.dev', name: 'Cto', hd: 'acme.dev' });
+  eq([r.body.created, r.body.user.domain, r.body.user.posts_as], [true, 'acme.dev', ['employer']], 'Google: a company (Workspace) address makes an employer account tied to that domain');
+  const pw = await fresh(env, 'boss@globex.dev');
+  r = await signIn(env, { sub: 'g-3', email: 'boss@globex.dev', name: 'Boss' });
+  eq([r.body.created, r.body.user.email, await one(env, "SELECT COUNT(*) FROM identities WHERE sub = 'g-3'")], [false, 'boss@globex.dev', 1], 'Google: an account with that verified address is signed in and gets Google attached');
+  r = await signIn(env, { sub: 'g-3', email: 'boss@globex.dev' }); eq([r.status, r.body.created], [200, false], 'Google: the next time it is the same account');
+  r = await signIn(env, { sub: 'g-9', email: 'x@gmail.com' }, { secret: 'f'.repeat(64) });
+  eq([r.status, r.body.error, await one(env, "SELECT COUNT(*) FROM users WHERE email = 'x@gmail.com'")], [401, 'state', 0], 'Google: without the secret of the page that started it, nothing happens (no login CSRF)');
+  r = await signIn(env, { sub: 'g-10', email: 'y@gmail.com', email_verified: false }); eq([r.status, r.body.error], [403, 'google_email'], 'Google: an address Google has not verified is refused');
+  r = await signIn(env, { sub: 'g-11', email: 'z@gmail.com', aud: 'someone-else' }); eq([r.status, r.body.error], [502, 'google'], 'Google: a token made for another application is refused');
+  ok((await call(env, 'POST', '/api/auth/login', { data: { email: 'ann.lee@gmail.com', password: '' } })).status === 401, 'Google: an account made through Google has no password anyone can guess');
+
+  // the person's own data
+  const ann = (await signIn(env, { sub: 'g-1', email: 'ann.lee@gmail.com' })).body.token;
+  await call(env, 'PUT', '/api/sync', { token: ann, data: { data: { saved: ['senior-rust-engineer-acme'], applied: ['data-analyst-globex'] } } });
+  r = await call(env, 'GET', '/api/sync', { token: ann }); eq(r.body.data, { saved: ['senior-rust-engineer-acme'], applied: ['data-analyst-globex'] }, 'Sync: saved and applied jobs are kept for the account, free');
+  await env.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at) VALUES ('a_" + 'c'.repeat(20) + "', 'ann.lee@gmail.com', 'rust', 'active', 1, 1)").run();
+  r = await call(env, 'GET', '/api/me/export', { token: ann });
+  ok(r.status === 200 && r.body.account.email === 'ann.lee@gmail.com' && r.body.sign_in.google[0].email === 'ann.lee@gmail.com' && r.body.alerts[0].alert === '“rust” jobs' && r.body.synced.data.saved.length === 1 &&
+    !/pass_hash|pass_salt|token_hash|ip_hash/.test(JSON.stringify(r.body)), 'Export: the account, how it signs in, its alerts and synced lists, and no hashes or tokens');
+  r = await call(env, 'DELETE', '/api/me', { token: ann, data: {} }); eq([r.status, r.body.error], [400, 'confirm'], 'Delete: it asks for the words "delete my account"');
+  r = await call(env, 'DELETE', '/api/me', { token: ann, data: { confirm: 'Delete my account' } });
+  eq([r.body.deleted, (await call(env, 'GET', '/api/me', { token: ann })).status, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'ann.lee@gmail.com'"), await one(env, "SELECT COUNT(*) FROM identities WHERE sub = 'g-1'"),
+    await one(env, "SELECT COUNT(*) FROM users WHERE email = 'ann.lee@gmail.com'"), await one(env, 'SELECT COUNT(*) FROM sync')], [true, 401, 0, 0, 0, 0], 'Delete: the person deletes the account themselves: sessions, alerts, Google, synced lists, all gone');
+
+  // an employer's team
+  const acme = (await signIn(env, { sub: 'g-2', email: 'cto@acme.dev' })).body.token;
+  r = await call(env, 'POST', '/api/team', { token: acme, data: { email: 'hr@acme.dev' } }); eq([r.status, r.body.error], [409, 'no_company'], 'Team: an account adds colleagues once it holds a company name here');
+  await env.DB.prepare("UPDATE users SET approved_jobs = 2, created_at = created_at - 15 * 86400 WHERE email = 'cto@acme.dev'").run();
+  r = await call(env, 'POST', '/api/jobs', { token: acme, data: GOOD }); eq(r.body.job && r.body.job.status, 'live', 'Team: the company’s first job takes its name');
+  r = await call(env, 'POST', '/api/team', { token: acme, data: { email: 'someone@gmail.com' } }); eq([r.status, r.body.error], [422, 'email'], 'Team: only addresses on the company’s domain');
+  r = await call(env, 'POST', '/api/team', { token: acme, data: { email: 'HR@acme.dev' } });
+  eq([r.status, r.body.members.map((m) => [m.email, m.has_account])], [200, [['hr@acme.dev', false]]], 'Team: a colleague is added by address');
+  const hr = await fresh(env, 'hr@acme.dev'), stranger = await fresh(env, 'dev@acme.dev'), job2 = employer('acme.dev', 'Acme Robotics')('Firmware Engineer');
+  r = await call(env, 'POST', '/api/jobs', { token: stranger, data: job2 }); eq([r.status, r.body.error], [409, 'company_taken'], 'Team: someone not added cannot post under the company’s name, even on its domain');
+  r = await call(env, 'POST', '/api/jobs', { token: hr, data: job2 });
+  eq([r.status, r.body.job.company, r.body.job.status], [200, 'Acme Robotics', 'review'], 'Team: a colleague posts under the company’s name from their own account, and a person looks at a new account’s first jobs');
+  r = await call(env, 'GET', '/api/team', { token: acme }); eq([r.body.members[0].has_account, r.body.members[0].confirmed], [true, true], 'Team: the owner sees who has an account');
+  r = await call(env, 'DELETE', '/api/team/' + encodeURIComponent('hr@acme.dev'), { token: acme });
+  eq([r.body.members.length, (await call(env, 'POST', '/api/jobs', { token: hr, data: employer('acme.dev', 'Acme Robotics')('Hardware Engineer') })).body.error], [0, 'company_taken'], 'Team: a colleague taken off the team can no longer post under the name');
+
+  // company page text after a claim, and receipts
+  const claimEnv = newEnv({ COMPANY_SITES: { Stripe: 'stripe.com' } }), st = await fresh(claimEnv, 'talent@stripe.com');
+  const claim = (await call(claimEnv, 'POST', '/api/claims', { token: st, data: { company: 'Stripe' } })).body.claim;
+  r = await call(claimEnv, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { about: 'Stripe builds payments infrastructure for the internet. We hire engineers, designers and operators worldwide.', website: 'https://stripe.com/jobs' } });
+  eq([r.status, r.body.page.website, (await call(claimEnv, 'GET', '/api/public/export.json')).body.claimed[0].about.startsWith('Stripe builds')], [200, 'https://stripe.com', true], 'Company page: the company writes its own text, which the export carries for the site');
+  r = await call(claimEnv, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { about: 'Earn $500 a day from home! Contact us on Telegram @stripejobs now, no interview needed.' } });
+  eq([r.status, r.body.error], [422, 'rejected'], 'Company page: the text is screened like a posting');
+  r = await call(claimEnv, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { website: 'https://evil.com' } }); eq([r.status, r.body.error], [422, 'website'], 'Company page: the site must be on the claimed domain');
+  const payEnv = newEnv(), boss = await account(payEnv);
+  r = await call(payEnv, 'POST', '/api/orders', { token: boss, data: { product: 'featured', target: { job: SITE + '/job/staff-engineer-stripe/' } } });
+  const oid = r.body.order.id;
+  eq((await call(payEnv, 'GET', '/api/orders/' + oid + '/receipt', { token: boss })).status, 404, 'Receipt: none before the payment');
+  await hook(payEnv, oid);
+  r = await call(payEnv, 'GET', '/api/orders/' + oid + '/receipt', { token: boss });
+  eq([r.status, r.body.receipt.amount_usd, r.body.receipt.period_days, r.body.receipt.paid_with, r.body.receipt.note], [200, 29, 14, 'cryptocurrency, through Cryptomus', 'One payment for a fixed period. Nothing renews and nothing more is charged.'],
+    'Receipt: a paid order has a receipt that says what was bought, for how long, how it was paid, and that nothing renews');
+  globalThis.fetch = realFetch;
+}
+
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
+{ const r = await call(newEnv(), 'GET', '/api/public/products'); ok(r.body.products.length > 0 && r.body.products.every((p) => p.billing === 'one-time' && p.renews === false), 'every product is one payment and renews nothing, and the list says so'); }
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

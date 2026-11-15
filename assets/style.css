@@ -1860,3 +1860,14 @@ table.grid tr.grp th{font-variant-numeric:normal}
 .xlinks h3{font-size:15px;font-weight:650;margin:18px 0 8px;color:var(--muted)}.xl{columns:3 230px;column-gap:28px;list-style:none;padding:0;margin:0 0 6px}.xl li{break-inside:avoid;margin:0 0 7px;line-height:1.35}.xl a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line2)}.xl a:hover{border-bottom-color:var(--ac)}.xl span{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;margin-left:4px}
 .srch-promise{margin:0 0 6px;font-size:13px}
 @media (max-width:700px){.srch-promise{display:none}}      /* on a phone the first screen is for the jobs; the home page carries the same promises */
+
+
+/* Job alert sign-up (alert_form in build.py, server/src/alerts.js). Kept small on purpose: the design work may restyle it. */
+.alertf{margin:32px 0;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.alertf h2{margin-top:0}
+.alertf-row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.alertf-row input[type=email]{flex:1 1 14rem;min-width:0;font:inherit;padding:11px 13px;border:1px solid var(--line2);border-radius:6px;background:var(--card);color:var(--text)}
+.alertf-hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+/* account page: the kinds of work a resume is found for, as a compact grid of small ticks (assets/account.js) */
+.acc-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px 14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.acc-roles legend{padding:0 4px}.acc-roles label{display:flex;gap:8px;align-items:center;font-size:14px;margin:0}.acc-roles input{width:auto;height:auto;margin:0;flex:none}

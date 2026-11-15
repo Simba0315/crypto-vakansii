@@ -1,0 +1,12 @@
+# Every hour at about :50, after the hourly upload of the job records has usually landed (the build starts at :17). A job that lands
+# later is not lost: each alert remembers the newest record it saw and takes the rest in the next run.
+[Unit]
+Description=Send due job alerts every hour
+
+[Timer]
+OnCalendar=*-*-* *:50:00
+RandomizedDelaySec=120
+Persistent=true
+
+[Install]
+WantedBy=timers.target

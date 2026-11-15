@@ -267,3 +267,172 @@ CREATE TABLE IF NOT EXISTS meta (
   k TEXT PRIMARY KEY,
   v TEXT NOT NULL
 );
+
+-- ---------------------------------------------------------------- added 15 Nov 2026: mail, job alerts, claimed company pages
+
+-- Every letter the mailer (src/mail.js) handed to the mail server, or held back: when, to whom, what kind (confirm, reset, device,
+-- alert_confirm, alert ...), the result (sent | failed | capped), how many attempts, the server's last answer and the Message-ID.
+-- Never the subject or the text. Kept MAIL_LOG_DAYS (30) days; the cron deletes older rows. The daily cap is counted from it.
+CREATE TABLE IF NOT EXISTS mail_log (
+  id TEXT PRIMARY KEY,
+  at INTEGER NOT NULL,
+  to_addr TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  status TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  code INTEGER NOT NULL DEFAULT 0,
+  reply TEXT NOT NULL DEFAULT '',
+  message_id TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS mail_log_at ON mail_log (at, status);
+
+-- A job alert: an address and a saved search (src/alerts.js). status: pending (the confirmation link was sent, nothing else is) |
+-- active (the address confirmed it). An alert that is unsubscribed is deleted, not kept; a pending one is deleted after 7 days.
+-- q: the words (title, company, skills); cat: a category slug (/jobs/<cat>/); loc: a place slug (/locations/<loc>/); remote: 1 = remote
+-- jobs only; sal: the least yearly pay in US dollars (0: any; above 0 only jobs that state pay reaching it); freq: daily | weekly.
+-- due_at: when it is next looked at; seen_through: the newest first_seen_at (ISO time, UTC) of the job records it was last matched
+-- against, so every job is offered once. letters: how many were sent; fails: letters the mail server refused for good in a row
+-- (three end the alert). Nothing about the visitor who asked is kept here (the limit on sign-ups per visitor lives in rate).
+CREATE TABLE IF NOT EXISTS alerts (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  q TEXT NOT NULL DEFAULT '',
+  cat TEXT NOT NULL DEFAULT '',
+  loc TEXT NOT NULL DEFAULT '',
+  remote INTEGER NOT NULL DEFAULT 0,
+  sal INTEGER NOT NULL DEFAULT 0,
+  freq TEXT NOT NULL DEFAULT 'daily',
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at INTEGER NOT NULL,
+  confirmed_at INTEGER NOT NULL DEFAULT 0,
+  due_at INTEGER NOT NULL DEFAULT 0,
+  seen_through TEXT NOT NULL DEFAULT '',
+  last_sent_at INTEGER NOT NULL DEFAULT 0,
+  letters INTEGER NOT NULL DEFAULT 0,
+  fails INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS alerts_email ON alerts (email);
+CREATE INDEX IF NOT EXISTS alerts_due ON alerts (status, due_at);
+CREATE UNIQUE INDEX IF NOT EXISTS alerts_same ON alerts (email, q, cat, loc, remote, sal);   -- the same search twice for one address is one alert
+
+-- "Claim your company page": an employer account says a company the site reads from its hiring system is theirs. company_key is the
+-- name as compared (companyKey), company the name as the site shows it, domain the company domain the account proved (users.domain).
+-- status: pending (a person looks first) | verified | rejected. One verified claim per company (the unique index), any number of
+-- pending ones. reason: why it waits (or why it was turned down, for the account to read). site: the company's own site as the site
+-- knows it (logos.json), '' when unknown.
+CREATE TABLE IF NOT EXISTS company_claims (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  company TEXT NOT NULL,
+  company_key TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  site TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',
+  reason TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  decided_at INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS claims_verified ON company_claims (company_key) WHERE status = 'verified';
+CREATE UNIQUE INDEX IF NOT EXISTS claims_mine ON company_claims (user_id, company_key);
+CREATE INDEX IF NOT EXISTS claims_status ON company_claims (status, created_at);
+
+-- Views and clicks on "Apply" for the jobs of a claimed company that the site reads from its hiring system, per job page (slug) and
+-- day: the same two counters as job_hits, counted the same way (hit_seen, once per visitor and day). Only while the claim is verified.
+CREATE TABLE IF NOT EXISTS company_hits (
+  company_key TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  day TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0,
+  applies INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (company_key, slug, day)
+);
+
+-- ---------------------------------------------------------------- the resume database: opt-in only (15 Nov 2026)
+-- A person's resume, stored only after they ticked "Let employers find my resume" (consent_text: the exact line they agreed to, and
+-- when). resume: the builder's object as JSON, contact details included, which no employer sees before the person accepts its request.
+-- pid: the public id employers see (never the account id). headline, level (entry | mid | senior | lead), years (as the person states
+-- them), skills (lower case, one per line), roles (category slugs) and places (place slugs, "remote") are what search reads. show_name,
+-- show_employers: what the person chose to show before accepting (both off by default). blocked: company domains that never see it (one
+-- per line). paused: hidden from search, kept. Deleting it deletes the row and the requests about it; nothing is kept.
+CREATE TABLE IF NOT EXISTS talent (
+  user_id TEXT PRIMARY KEY,
+  pid TEXT NOT NULL UNIQUE,
+  resume TEXT NOT NULL,
+  headline TEXT NOT NULL DEFAULT '',
+  level TEXT NOT NULL DEFAULT '',
+  years INTEGER NOT NULL DEFAULT 0,
+  skills TEXT NOT NULL DEFAULT '',
+  roles TEXT NOT NULL DEFAULT '',
+  places TEXT NOT NULL DEFAULT '',
+  show_name INTEGER NOT NULL DEFAULT 0,
+  show_employers INTEGER NOT NULL DEFAULT 0,
+  blocked TEXT NOT NULL DEFAULT '',
+  paused INTEGER NOT NULL DEFAULT 0,
+  consent_text TEXT NOT NULL,
+  consented_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+-- An employer's request to contact a person in the resume database. status: sent | accepted | declined | expired (no answer in 14 days).
+-- One request per employer and person, ever (a decline is final). The employer gets the person's name and email only on "accepted".
+CREATE TABLE IF NOT EXISTS talent_requests (
+  id TEXT PRIMARY KEY,
+  employer_id TEXT NOT NULL,
+  candidate_id TEXT NOT NULL,
+  company TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  message TEXT NOT NULL,
+  job_url TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'sent',
+  created_at INTEGER NOT NULL,
+  answered_at INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS talent_requests_once ON talent_requests (employer_id, candidate_id);
+CREATE INDEX IF NOT EXISTS talent_requests_candidate ON talent_requests (candidate_id, status);
+CREATE INDEX IF NOT EXISTS talent_requests_open ON talent_requests (status, created_at);
+-- Contact requests an employer can send: bought as a one-time pack (nothing renews) or given by the owner. A request takes one when it
+-- is sent and gives it back when the person declines or does not answer in 14 days: an employer pays only for people who said yes.
+CREATE TABLE IF NOT EXISTS talent_credits (
+  user_id TEXT PRIMARY KEY,
+  n INTEGER NOT NULL DEFAULT 0
+);
+
+-- ---------------------------------------------------------------- sign-in with Google, teams, company pages (15 Nov 2026)
+-- New tables only, so a database made by an earlier install needs no change.
+-- A way to sign in other than the password: provider 'google' and the subject id it gives this application, with the address it
+-- verified and the name. One identity, one account; an account has at most one per provider.
+CREATE TABLE IF NOT EXISTS identities (
+  provider TEXT NOT NULL,
+  sub TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  email TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (provider, sub)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS identities_user ON identities (user_id, provider);
+-- A sign-in with Google that was started: the hash of the state and of the secret the page keeps, one use, 15 minutes. The secret is
+-- what stops a stranger from signing someone into the stranger's account (login CSRF): only the page that started it holds it.
+CREATE TABLE IF NOT EXISTS signin_states (
+  state_hash TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  secret_hash TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+-- Colleagues an employer account lets post under its company names: addresses on the same company domain. They post from their own
+-- accounts, which go through the same checks (a new account's jobs are looked at by a person).
+CREATE TABLE IF NOT EXISTS team_members (
+  owner_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  added_at INTEGER NOT NULL,
+  PRIMARY KEY (owner_id, email)
+);
+CREATE INDEX IF NOT EXISTS team_email ON team_members (email);
+-- What a company that claimed its page says about itself, for the site's company page: a short text and its site.
+CREATE TABLE IF NOT EXISTS company_pages (
+  company_key TEXT PRIMARY KEY,
+  about TEXT NOT NULL DEFAULT '',
+  website TEXT NOT NULL DEFAULT '',
+  updated_by TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
