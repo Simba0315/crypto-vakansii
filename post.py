@@ -101,7 +101,7 @@ def run(dry=False):
     cfg_file = ROOT / "channels.json"
     ch = json.loads(cfg_file.read_text()) if cfg_file.exists() else {}
     jobs = json.loads((ROOT / "data" / "jobs.json").read_text())
-    jobs = jobs if isinstance(jobs, list) else list(jobs.values())
+    jobs = [j for j in (jobs if isinstance(jobs, list) else jobs.values()) if not j.get("dup_of")]     # one post per opening (dedupe.py)
     state = json.loads(STATE.read_text()) if STATE.exists() else {}
     cut = (datetime.date.today() - datetime.timedelta(days=KEEP_DAYS)).isoformat()
     new, sent = fresh(jobs), 0

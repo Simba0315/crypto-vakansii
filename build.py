@@ -319,6 +319,18 @@ SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby",  
 # as its terms ask ("при копировании информации ссылка на trudvsem.ru обязательна").
 PORTAL_SOURCE = {"trudvsem": ("https://trudvsem.ru/", "«Работа России» (trudvsem.ru)", "Russia’s federal job portal"),
                  "platsbanken": ("https://arbetsformedlingen.se/platsbanken/", "Platsbanken (Arbetsförmedlingen)", "Sweden’s public employment service")}
+BOARD_NAME = {"remotive": "Remotive", "remoteok": "Remote OK", "arbeitnow": "Arbeitnow", "himalayas": "Himalayas", "jobicy": "Jobicy", "themuse": "The Muse",
+              "hn": "Hacker News", "usajobs": "USAJOBS", "direct": "this site"}
+
+
+def source_label(src, j):
+    """How "Also listed on" names another source of the same job: a channel, a job site, a portal, or the employer's own system."""
+    if src.startswith("tg:"): return "Telegram @" + src[3:]
+    if src in PORTAL_SOURCE: return PORTAL_SOURCE[src][1]
+    if src in BOARD_NAME: return BOARD_NAME[src]
+    return f"{j['company']}’s page on {SOURCE_NAME.get(src, src.title())}"
+
+
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
@@ -1003,6 +1015,8 @@ def job_page(j, active_by_cat):
                                 else (f'Posted by the employer on <a href="{PORTAL_SOURCE[ats][0]}" rel="nofollow">{e(PORTAL_SOURCE[ats][1])}</a>, {PORTAL_SOURCE[ats][2]}; '
                                       f'republished from its open data with a link to the source') if ats in PORTAL_SOURCE
                                 else f"{e(j['company'])}’s own posting")))
+    if j["active"] and j.get("seen_on"):                    # the same opening elsewhere (dedupe.py)
+        rows.append(("Also listed on", ", ".join(f'<a href="{e(x["url"])}" rel="nofollow noopener" target="_blank">{e(source_label(x["source"], j))}</a>' for x in j["seen_on"][:6])))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
@@ -1185,7 +1199,7 @@ def main():
     if OUT.exists(): shutil.rmtree(OUT)
     OUT.mkdir()
     db = json.loads((ROOT / "data" / "jobs.json").read_text())
-    jobs = list(db.values())
+    jobs = [j for j in db.values() if not j.get("dup_of")]       # the same job from a second source is shown once (dedupe.py, "Also listed on")
     paid_file = ROOT / "paid.json"  # employer-submitted listings, kept in the main branch
     for p in (json.loads(paid_file.read_text()) if paid_file.exists() else []):
         base = f"{slugify(p['title'])}-{slugify(p['company'])}"

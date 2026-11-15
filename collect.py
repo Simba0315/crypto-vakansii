@@ -948,11 +948,8 @@ def main():
     seen_at = utc_now()                                     # when this run finished reading the feeds: the "first seen" time of every job that is new in it
     board = lambda j: j.get("src") or j["company"]          # what a job is read from: its company's board, or a portal with many employers
     open_by_co = defaultdict(list)                          # the open jobs of each board, found once instead of once per board
-    owner = {}                                              # the same job (company, title, place) from two sources: the first one keeps it
     for jid, old in db.items():
-        if old["active"]:
-            if not old.get("tg"): open_by_co[board(old)].append(jid)       # a Telegram job is not closed by the company's own board
-            owner.setdefault(dup_key(old), board(old))
+        if old["active"] and not old.get("tg"): open_by_co[board(old)].append(jid)       # a Telegram job is not closed by the company's own board
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
@@ -965,9 +962,6 @@ def main():
             if not j["title"] or not j["url"]: continue
             if name in en_only and not english(j):
                 stats["not_english"] += 1; continue         # waits for a language edition of the site
-            k = dup_key(j)
-            if owner.setdefault(k, name) != name:
-                stats["dupes"] += 1; continue               # already listed from another source
             seen.add(j["id"])
             old = db.get(j["id"])
             if old:
@@ -1003,9 +997,13 @@ def main():
                                   norm, slugify, excerpt, classify, level, etype, TODAY, utc_now())
         except Exception as ex:                                     # the channels never stop the hourly update
             print(f"telegram: skipped this run: {type(ex).__name__}: {ex}")
+    # The same opening from several sources (an employer's board, a job site, a channel): one record is shown, the others are
+    # named on it as "Also listed on" (dedupe.py; the owner, 15 Nov: "one company can advertise in 20 places").
+    import dedupe
+    stats["dupes"] = dedupe.run(db, label=lambda j: ("tg:" + j["tg"]) if j.get("tg") else j["id"].split("-", 1)[0])
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
-    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, left out as listed by another source {stats['dupes']}, not in English {stats['not_english']}")
+    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, the same job from another source (shown once) {stats['dupes']}, not in English {stats['not_english']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
                                                           "failed": stats["failed"], "emptied": stats["emptied"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
