@@ -1195,6 +1195,13 @@ def main():
     NO_ANON = ("Employers can also post a job themselves; such a posting is published only after its link has been checked automatically, and it is labelled as posted by the employer"
                if CFG["api_url"] else "We do not accept anonymous postings")
     N_FEEDS = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})     # employer feeds read in each run
+    # How often a careers page is read: the boards in sources.json and sources_tech.json every hour, those in sources_more.json in
+    # turn (HRN_ROTATE in collect.py: every four hours). The copy says exactly that, never "every hour" for all of them.
+    HOURLY_SET = {s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())}
+    ROT_SET = {s_["name"] for s_ in json.loads((ROOT / "sources_more.json").read_text())} if (ROOT / "sources_more.json").exists() else set()
+    m_hourly = len({j["company"] for j in active if j["company"] in HOURLY_SET or j["company"] not in ROT_SET})
+    ROTATING = m_hourly < len({j["company"] for j in active})
+    EVERY = "every one to four hours" if ROTATING else "every hour"
     remote = [j for j in active if j["remote"]]
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
@@ -1483,13 +1490,13 @@ def main():
     hero = (f'<section class="hero v2"><div class="wrap">'
             f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
             f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
-            f'<p class="sub">Old listings stay online long after the job is filled. We read {m} company career pages every hour and keep only what is still open.</p>'
+            f'<p class="sub">Old listings stay online long after the job is filled. We read {m:,} company career pages' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and keep only what is still open.</p>'
             f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
             f'<p class="popular"><a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/entry-level/">Entry-level</a>'
             f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/crypto/">Crypto</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
-            f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read every hour</span></div>'
+            f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
             f'<div class="wrap"><div class="shot"><div class="shot-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'
             f'<div class="shot-tabs" id="shot-tabs">{shot_nav}</div></div>'
@@ -1500,7 +1507,7 @@ def main():
             f'<a class="scard" href="{P}/salaries/"><b>What jobs pay</b><span>{paid_n:,} postings state the pay. See the median for your work.</span><em>Check salaries</em></a>'
             f'<a class="scard" href="{P}/tools/"><b>{len(TOOLS)} free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
             f'</aside></div></div></div>'
-            f'<div class="wrap0 hero-logos"><p>Read every hour from the career pages of</p><div class="logorow">'
+            f'<div class="wrap0 hero-logos"><p>Read from the career pages of</p><div class="logorow">'
             + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
             + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos)} more</a></div></div></section>')
     plus_band = ""
@@ -1589,8 +1596,10 @@ def main():
                       '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
                       '</div>')
             + section("Where the jobs come from and how the site works", faq_html))
-    page("", f"Tech Jobs — {roles(n, 'open role')} at {m} companies | {SITE}",
-         f"Tired of job listings that closed weeks ago? {roles(n)} at {m} tech companies, checked against their career pages every hour. Remote and salary filters.", home, hero=hero,
+    home_desc = f"Tired of job listings that closed weeks ago? {roles(n)} at {m:,} tech companies, checked against their career pages {EVERY}. Remote and salary filters."
+    if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
+    page("", f"Tech Jobs — {roles(n, 'open role')} at {m:,} companies | {SITE}",
+         home_desc, home, hero=hero,
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
                "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>" + faq_ld + ORG_LD[0])
     rss("feed.xml", f"{SITE} — latest tech jobs", "", active)
@@ -2234,7 +2243,7 @@ def main():
          "Which skills, companies, roles and cities are hiring in tech right now. Live numbers from open job postings, updated daily.",
          crumbs(("Hiring trends", "")) + "<h1>Tech hiring trends</h1>"
          '<p class="plain"><b>In plain words:</b> the tech job market in numbers, counted from the jobs that are open today: which skills employers ask for, who is hiring, where.</p>'
-         f'<p class="lead">Live numbers from {n:,} open roles at {m} tech companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
+         f'<p class="lead">Live numbers from {n:,} open roles at {m:,} tech companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
          f'<div class="statrow"><div class="stat"><b>{n:,}</b><span>open roles</span></div><div class="stat"><b>{len(new7):,}</b><span>posted in the last 7 days</span></div>'
          f'<div class="stat"><b>{pctf(len(remote), n)}</b><span>are remote</span></div><div class="stat"><b>{pctf(sum(bool(j["salary"]) for j in active), n)}</b><span>publish a salary</span></div></div>'
          + section("Most in-demand skills", ttable(["Skill", "Open roles", "Share of all roles", "Remote", "Median salary"], skills_rows))
@@ -2281,7 +2290,7 @@ def main():
                       trow(["Roles that publish a salary", f"{A['paid']:,}", f"{B['paid']:,}"]),
                       trow(["Most often asked for with", e(", ".join(A["co"])), e(", ".join(B["co"]))]),
                       trow(["Hiring the most", comp(A), comp(B)])]
-            qa = [(f"Which has more jobs, {a} or {b}?", demand + f" Counted on {fdate(TODAY)} across {n:,} open roles at {m} tech companies."),
+            qa = [(f"Which has more jobs, {a} or {b}?", demand + f" Counted on {fdate(TODAY)} across {n:,} open roles at {m:,} tech companies."),
                   (f"Which pays more, {a} or {b}?", pay + " These are advertised ranges from job postings, not verified pay."),
                   (f"Is {a} or {b} better for remote work?", rem),
                   (f"Do employers ask for {a} and {b} together?", together)]
@@ -2565,7 +2574,7 @@ def main():
     page("insights/", f"Job Market in Charts: rankings from {n:,} open jobs — {month} | {SITE}",
          "The job market in pictures: where the jobs are, what they pay, who is hiring in each field, which skills pay most. Charts and rankings counted from today’s open postings.",
          crumbs(("Insights", "")) + f'<h1>The job market <span class="hl">in pictures</span></h1>'
-         f'<p class="lead">Charts and rankings counted from {n:,} open jobs at {m} employers, redrawn each time the jobs are read again. Every chart links to the list behind it.</p>'
+         f'<p class="lead">Charts and rankings counted from {n:,} open jobs at {m:,} employers, redrawn each time the jobs are read again. Every chart links to the list behind it.</p>'
          + market_pics
          + section("Rankings", '<div class="tgrid">' + "".join(icard(u, t, d) for u, t, d in INS)
                    + f'<a class="tcard" href="{P}/trends/"><span class="tbody"><b>Hiring trends dashboard</b><span>The headline numbers on one page: skills, companies, categories and locations.</span><i><u>Open the dashboard</u></i></span></a></div>')
@@ -4331,7 +4340,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     wsize = round(len((ROOT / "assets" / "widget.js").read_bytes()) / 1024)
     w_faq = [("Is the job widget free?", "Yes. There is no plan, no account and no limit on page views. The snippet keeps a small link back to this site, which is how the widget stays free."),
              ("Do I need to sign up or get a key?", "No. Choose what to show in the builder on this page, copy the code and paste it into your site."),
-             ("How often do the jobs update?", f"Lists from our index are rebuilt every hour from the career pages of {m} companies, so closed roles drop out by themselves. A list of your own company’s jobs is read live from your hiring system every time the page opens."),
+             ("How often do the jobs update?", f"Lists from our index are rebuilt every hour from the career pages of {m:,} companies, each read {EVERY}, so closed roles drop out by themselves. A list of your own company’s jobs is read live from your hiring system every time the page opens."),
              ("Can I show only my own company’s jobs?", "Yes. If you post jobs through Greenhouse, Lever or Ashby, pick that system in the builder and type the name of your board. The widget reads your public board directly, with no account and nothing to keep in sync by hand."),
              ("Does it work with WordPress, Webflow, Wix, Squarespace, Shopify and Framer?", "Yes. Anything that lets you paste HTML works with the script version. Builders that strip scripts, such as Notion, take the iframe version. The table on this page says where to paste the code on each platform."),
              ("Will the widget slow my page down?", f"The script is about {wsize} KB, loads asynchronously and draws inside its own container, so it does not block your page and your styles do not leak into it or out of it."),
@@ -4501,7 +4510,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                          "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
     js_example = f'const feed = await fetch("{FULL}/api/v1/skills/python.json").then(r => r.json());\nconsole.log(feed.total, feed.jobs[0].title);'
     api_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Dataset", "name": f"{SITE}: open tech jobs",
-               "description": f"Open tech job postings collected every hour from the official careers pages of {m} companies: title, employer, location, remote flag, advertised salary and posting date, with aggregate counts and salary medians by skill, category, location and company.",
+               "description": f"Open tech job postings collected from the official careers pages of {m:,} companies, each read {EVERY}: title, employer, location, remote flag, advertised salary and posting date, with aggregate counts and salary medians by skill, category, location and company.",
                "url": f"{FULL}/api/", "dateModified": TODAY, "isAccessibleForFree": True, "creator": {"@type": "Organization", "name": SITE, "url": FULL + "/"}, "license": f"{FULL}/terms/",
                "keywords": ["tech jobs", "job postings", "salaries", "remote jobs", "hiring trends"],
                "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/api/v1/index.json"}]
@@ -4540,7 +4549,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          ex_ + '<span class="ln">Before: worked on the product catalogue</span><span class="ln"><b>After: cut catalogue load time by 40% by moving rendering to the server</b></span><span class="ln">Matches “performance” in the posting</span>'),
         ("Cover letter for the posting", "A draft built from your resume and the posting: a full letter for email, or four lines for a message to the recruiter. Ready to edit, so a letter stops costing an evening.",
          '<span class="ln"><b>Dear hiring team,</b></span><span class="sk" style="width:94%"></span><span class="sk h" style="width:58%"></span><span class="sk" style="width:88%"></span><span class="sk" style="width:40%"></span>'),
-        ("An email when a job fits", f"Nobody can check {m} career pages a day. Answer the five questions once; when an employer posts a job that fits, the email arrives the same day.",
+        ("An email when a job fits", f"Nobody can check {m:,} career pages a day. Answer the five questions once; when an employer posts a job that fits, the email arrives the same day.",
          ex_ + '<span class="ln"><b>3 new jobs fit your answers</b></span><span class="rw"><span>Remote</span><span class="mt"><i style="width:100%"></i></span><b>3 of 3</b></span>'
                '<span class="rw"><span>Pay</span><span class="mt"><i style="width:66%"></i></span><b>2 of 3</b></span><span class="ln">Sent 08:10, the morning they were posted</span>'),
         ("Interview prep for one job", "Likely questions taken from the posting’s own requirements, each with the points from your resume that answer it.",
@@ -5373,7 +5382,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         f'<span class="flabel">Markdown</span><textarea rows="2" readonly aria-label="Markdown for the {e(lbl)} badge">{e(f"[![{lbl} on {SITE}]({FULL}/{img})]({FULL}/{pg})")}</textarea></div>' for lbl, img, pg in badges)
     hb_faq = [("What is a hiring badge?", "A small picture that says a company or a field is hiring, usually with a number. These badges are live: the number of open roles on each one is recounted every day."),
               ("Where can I use a hiring badge?", "In a GitHub README, a site footer, a blog post, an email signature or a community page: anywhere an image with a link works."),
-              ("Is there a badge for my company?", f"If your company is among the {m} whose career pages we read, yes: its badge shows its current number of open roles. Pick it in the widget builder."),
+              ("Is there a badge for my company?", f"If your company is among the {m:,} whose career pages we read, yes: its badge shows its current number of open roles. Pick it in the widget builder."),
               ("Is it free?", "Yes. Copy the code and use it; the badge links back to the list it counts.")]
     page("hiring-badge/", f"Free Hiring Badge with a Live Count of Open Roles | {SITE}",
          "Free hiring badges for a README, a footer or a post: a small live image with today’s number of open roles for tech jobs, a skill, a city or your company. Copy and paste.",
@@ -5420,7 +5429,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     tools_md = "; ".join(f"[{nm}]({FULL}/{u})" for u, nm, _ in TOOLS)
     write("llms.txt", f"""# {SITE}
 
-> {SITE} is an hourly-updated index of {n:,} open tech jobs at {m} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
+> {SITE} is an hourly-updated index of {n:,} open tech jobs at {m:,} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
 
 ## Main sections
 - [All tech jobs]({FULL}/jobs/): search with filters for level, location, salary, perks and remote
