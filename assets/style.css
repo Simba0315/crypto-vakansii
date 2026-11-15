@@ -1797,3 +1797,7 @@ a.eg{cursor:default}.job>a.eg:hover{background:none;box-shadow:none}.spot a.eg:h
 .exhx{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
 .exl{margin:0 0 14px}.exl .rel{display:flex;flex-wrap:wrap;gap:4px 14px;margin:4px 0 0;font-size:14.5px}
 .exl .rel a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}.exl .rel a:hover{text-decoration-color:var(--ac)}
+#ex-out .pics.two{max-width:none;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));align-items:start}
+#ex-out .hbars .hn a{display:inline;padding:0;margin:0;min-height:0;border:0;border-radius:0;background:none;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+#ex-out .hbars .hn a:hover{text-decoration-color:var(--ac)}
+#ex-out .hbars .hn .fl{margin-right:6px}

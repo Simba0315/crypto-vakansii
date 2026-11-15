@@ -251,7 +251,7 @@ that is not the employer's own hiring system must be labelled as such and kept o
    change prices or contacts in `config.json` on your own (the Telegram contact was given by the owner).
 3. Closed jobs stay as archive pages.
 4. Real company logos only, from the company's own site.
-5. Design (the colour part is replaced since 15 Nov 2026 by the brand: persimmon instead of green, see "The brand" at the end): warm paper, ink, hairlines and ONE calm green (tokens in `style.css`: `--hl` green as a fill under text, `--ac`
+5. Design (the brand of 15 Nov 2026 keeps this green: "Evergreen" in brand.py, see "The brand" at the end): warm paper, ink, hairlines and ONE calm green (tokens in `style.css`: `--hl` green as a fill under text, `--ac`
    green as a line, `--pop` the same green on dark surfaces). History, 2026-11-13: the owner asked to remove the "AI look", said
    he liked the green marker under words and the green underlines on links, then left the colour to us ("decide yourself, maybe
    neutral; what matters is that people like it, it is convenient, simple, clear, and nobody thinks it is AI"). The acid lime on
@@ -415,19 +415,22 @@ plain HTML, so the page is readable without the map.
 
 ## The brand (15 Nov 2026; `brand.py`, `/brand/`, `/brand/directions/`, `/media-kit/`)
 
-- Owner: "a corporate design of our own, like Indeed". Direction in use: **Persimmon**. Mark: a clock at 17 past the hour (the minute
-  the hourly run reads the careers pages). Colours: mark `#E8552B`, buttons and links `#C93F18` (white text 4.99:1), on dark pages
-  `#FF7A52` with dark text, ink `#121110`, white paper, sand `#F6F4F1`, tint `#FDEEE8`. Type: Schibsted Grotesk (headlines),
-  Public Sans (text and numbers, `font-variant-numeric: tabular-nums`), JetBrains Mono only for code (`--code`). Inter stays only
-  for the resume paper and its templates. All fonts OFL, self-hosted, from Fontsource.
-- `brand.py` holds the three directions (Persimmon, Berry, Brick and sand) and draws every logo file into `assets/brand/` with the
+- Owner: "a corporate design of our own, like Indeed". Direction in use: **Evergreen** (key `green` in `brand.py`): the site's own
+  green. Persimmon (orange-red) was applied for a few hours on 15 Nov and rejected by the owner ("the site is green, why is the brand
+  red?"): never bring red or orange back as the brand colour; the orange `--viz-2` stays only in charts. Mark: a clock at 17 past the
+  hour (the minute the hourly run reads the careers pages). Type: Schibsted Grotesk (headlines), Public Sans (text and numbers,
+  `font-variant-numeric: tabular-nums`), JetBrains Mono only for code (`--code`). Inter stays only for the resume paper and its
+  templates. All fonts OFL, self-hosted, from Fontsource. Buttons are ink on light pages and paper on dark pages; green is the
+  marker under words, the line under links and the mark, never a large fill or a green block on black.
+- `brand.py` holds the directions (Evergreen in use; Persimmon, Berry, Brick and sand as alternatives) and draws every logo file into `assets/brand/` with the
   letters as outlines (`python3 brand.py`, needs `pip install fonttools brotli`; `--test` checks contrast without packages). To
   switch direction: set `"applied"` in `brand.py`, update the tokens in `assets/style.css` (search "--brand"), run `python3 brand.py`
   and `python3 og.py`. The build only copies `assets/brand/`.
 - Tokens: `--brand` (the mark), `--ac` (buttons, link lines), `--ac-ink` (text on `--ac`), `--btn` (the dark button; light in dark
-  mode), `--hl` (tint under one phrase). No orange areas: orange marks the one thing that matters. Green only for states (open, yes).
-- Media kit pictures (`assets/brand/screen-*.jpg`, `banner-*.png`, `persimmon-mark-96.png` for email signatures) are made with
+  mode), `--hl` (tint under one phrase). No large coloured areas: the brand colour marks the one thing that matters.
+- Media kit pictures (`assets/brand/screen-*.jpg`, `banner-*.png`, the 96 px PNG mark for email signatures) are made with
   Playwright from the built site; redo them after a visible change of the home, search or resume builder pages.
 - Email addresses: plain `mailto:` links through the department helper in `build.py` (`MAIL`); Cloudflare hides them from scrapers.
-- Copy check for the owner: the site says "every hour", but since 14 Nov the 2,994 boards in `sources_more.json` are read every four
-  hours (`HRN_ROTATE`). The media kit says so; other pages still say "every hour".
+- How often pages are read: the boards in `sources.json` and `sources_tech.json` every hour, the ~3,000 in `sources_more.json` every
+  four hours (`HRN_ROTATE`). `build.py` counts both (`m_hourly`, `ROTATING`, `EVERY`) and the home page, media kit, widget answer and
+  dataset description say it exactly. Other pages that say "every hour" (job pages, methodology, status) need the same care.
