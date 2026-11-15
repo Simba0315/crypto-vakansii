@@ -1,0 +1,55 @@
+{
+ "uuid": "638c7936-836b-499c-a3eb-30a0dd871ec6",
+ "name": " Summer 2027 Mechanical Engineering Internship - Idaho Falls, ID",
+ "description": {
+  "company": "<div><body><p style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;'><b><strong style=\"font-size:18pt;white-space:pre-wrap;\">About Aalo Atomics</strong></b></p><p style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:start;'><span style=\"font-size:11pt;white-space:pre-wrap;\">Aalo Atomics is on a mission to revolutionize clean energy through cutting-edge nuclear technology. We are passionate about innovation, safety, and sustainability, and we are looking for talented individuals to join us in reshaping the future of energy. As part of our team, you’ll have the opportunity to work on impactful projects that contribute to the advancement of nuclear power.</span></p></body></div>",
+  "role": "<div><body><p style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.38;letter-spacing:0.25px;margin:0px;padding:0px;text-align:start;'><b><strong style=\"font-size:18pt;white-space:pre-wrap;\">At a glance</strong></b></p><ul style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;'><li style=\"margin:3px 0px;font-size:11pt;line-height:1.6;letter-spacing:0.25px;text-align:start;\"><span style=\"white-space:pre-wrap;\">Anticipated Time Frame: May - August</span></li><li style=\"margin:3px 0px;font-size:11pt;line-height:1.6;letter-spacing:0.25px;text-align:start;\"><span style=\"white-space:pre-wrap;\">Willing to work on-site in Idaho Falls, ID</span></li></ul><p style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:18pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;'><b><strong style=\"font-size:18pt;white-space:pre-wrap;\">What you'll do</strong></b></p><p style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;'><span style=\"white-space:pre-wrap;\">As a Mechanical Engineering Intern, you’ll play a vital role in our design, prototyping, and testing efforts. Your responsibilities will include:</span></p><ul style='font-family:\"Basel Grotesk\",Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-heigh"
+ },
+ "workLocations": [
+  "Idaho Falls, ID"
+ ],
+ "department": {
+  "name": "Engineering",
+  "base_department": "Engineering",
+  "department_tree": [
+   "Engineering"
+  ]
+ },
+ "employmentType": {
+  "label": "TEMP",
+  "id": "Temporary / Intern"
+ },
+ "createdOn": "2026-03-24T05:42:06.443000-07:00",
+ "eeocQuestionnaireEnabled": true,
+ "eeocQuestionnaireEnabledForJobPost": true,
+ "url": "https://ats.rippling.com/aalo-atomics/jobs/638c7936-836b-499c-a3eb-30a0dd871ec6",
+ "board": {
+  "boardType": "RIPPLING",
+  "slug": "aalo-atomics",
+  "banner": {
+   "name": "",
+   "url": null,
+   "type": ""
+  },
+  "title": "Aalo Atomics",
+  "subtitle": "We build factory-manufactured nuclear reactors that will power anything from a datacenter to a large city.",
+  "boardURL": "https://ats.rippling.com/aalo-atomics/jobs",
+  "fontType": "ARIAL_SANS_SERIF",
+  "linkColor": null,
+  "buttonColor": null,
+  "buttonTextColor": null,
+  "legalNotice": null,
+  "noOpeningsMessage": null,
+  "groupJobsByLocation": false,
+  "showBoardLogoOnJobPost": false,
+  "showCompanyInfoUnderJobPost": false,
+  "companyName": "Aalo Atomics",
+  "isTest": false
+ },
+ "payRangeDetails": [],
+ "applicationConfirmationTemplate": "679697e2e7ea6182e8773365",
+ "hasAIEvaluationsEnabled": false,
+ "companyName": "Aalo Atomics",
+ "unlistedFromSearch": false,
+ "jsonLd": null
+}

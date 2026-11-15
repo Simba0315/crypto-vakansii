@@ -1,0 +1,198 @@
+{
+ "offers": [
+  {
+   "category_code": "banking",
+   "careers_apply_url": "https://careers.bunq.com/o/security-engineer-3/c/new",
+   "position": 1658,
+   "sharing_title": "Security Engineer",
+   "sharing_image": null,
+   "careers_url": "https://careers.bunq.com/o/security-engineer-3",
+   "postal_code": null,
+   "slug": "security-engineer-3",
+   "close_at": null,
+   "updated_at": "2026-11-13 08:01:29 UTC",
+   "salary": {
+    "max": null,
+    "min": null,
+    "period": null,
+    "currency": null
+   },
+   "min_hours": 40,
+   "state_code": "NH",
+   "title": "Security Engineer",
+   "location_question_visible": false,
+   "options_photo": "off",
+   "hybrid": true,
+   "highlight": null,
+   "city": "Amsterdam",
+   "experience_code": "experienced",
+   "on_site": false,
+   "options_phone": "required",
+   "sharing_description": "At bunq, we’re on a mission to Make Life Easy for our users by creating the most user-centric banking experience out there. That starts with keeping their data safe. As AI makes attackers faster, we’r",
+   "employment_type_code": "fulltime_permanent",
+   "cover_image": null,
+   "country": "Netherlands",
+   "translations": {
+    "en": {
+     "description": "<p style=\"text-align:start;\">At bunq, we’re on a mission to Make Life Easy for our users by creating the most user-centric banking experience out there. That starts with keeping their data safe. As AI makes attackers faster, we’re seeing more critical zero-day vulnerabilities than ever, and we need to stay ahead of them.</p><p style=\"text-align:start;\">That’s where you come in. As our&nbsp;<strong>Security Engineer</strong>, you’ll own how 700 colleagues get secure access to our systems, and you’ll help defend bunq against attacks as they happen. You’ll design and build security processes that AI can’t run on its own, and automate everything that it can.</p><p style=\"min-height: 1.7em;\"></p><p style=\"text-align:start;\"><strong>Take Ownership 🚀</strong></p><p style=\"text-align:start;\">You’ll keep bunq secure, from access control to incident response. Here’s how you’ll do it:</p><ul><li><p>Own access control governance in Okta Identity Governance, automating how access is granted, revoked and reviewed, so every employee and contractor has the right access from day one. </p></li><li><p>Investigate and triage security incidents and vulnerability findings, decide whether they’re malicious, and escalate or fix them fast. </p></li><li><p>Drive the replacement of our security monitoring system with an AI-based platform that detects and stops threats automatically, and build automations so the team can focus on real security issues.</p></li></ul>",
+     "title": "Security Engineer",
+     "highlight": null,
+     "sharing_image": null,
+     "requirements": "<ul><li><p>You’ve worked hands-on as a security engineer, investigating and triaging security incidents.</p></li><li><p>You write code to automate security work, not just to run scripts.</p></li><li><p>You’ve worked with identity governance and know how to build secure login and access solutions.</p></li><li><p>You communicate clearly with stakeholders, especially under pressure when someone is locked out or an incident hits.</p></li><li><p>You bring engineering experience. Consultancy experience alone isn’t the right fit.</p></li></ul><p style=\"min-height: 1.7em;\"></p><p style=\"text-align:start;\"><em>Curious to see how we make life easy? - try the <a rel=\"noopener\" target=\"_blank\" href=\"https://app.adjust.com/1tyd4x67?fallback=https%3A%2F%2Fwww.bunq.com%2F&redirect_macos=https%3A%2F%2Fwww.bunq.com%2F\">bunq app</a>, it only takes 5 minutes to sign up.</em></p><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\"><strong>Your space to perform</strong></p><p style=\"text-align:start;\">We give you the space and the tools you need to succeed 💪</p><p style=\"text-align:start;\">🤟 Great, international colleagues who share your mindset</p><p style=\"text-align:start;\">👩‍💻 Hybrid setup: after 3 months in-office, work 2 days remote, 3 days in-office weekly.</p><p style=\"text-align:start;\">🧳 Digital Nomad Program: After your first year, enjoy up to 20 days per year to work while traveling, combining flexibility with strong team collaboration</p><p style=\"text-alig",
+     "locations_question": "What is your preferred work location?",
+     "sharing_description": "At bunq, we’re on a mission to Make Life Easy for our users by creating the most user-centric banking experience out there. That starts with keeping their data safe. As AI makes attackers faster, we’r",
+     "sharing_title": "Security Engineer"
+    }
+   },
+   "options_cv": "off",
+   "tags": [
+    "E2",
+    "E3",
+    "Enablers"
+   ],
+   "location": "Amsterdam, Noord-Holland, Netherlands",
+   "requirements": "<ul><li><p>You’ve worked hands-on as a security engineer, investigating and triaging security incidents.</p></li><li><p>You write code to automate security work, not just to run scripts.</p></li><li><p>You’ve worked with identity governance and know how to build secure login and access solutions.</p></li><li><p>You communicate clearly with stakeholders, especially under pressure when someone is locked out or an incident hits.</p></li><li><p>You bring engineering experience. Consultancy experience alone isn’t the right fit.</p></li></ul><p style=\"min-height: 1.7em;\"></p><p style=\"text-align:start;\"><em>Curious to see how we make life easy? - try the <a rel=\"noopener\" target=\"_blank\" href=\"https://app.adjust.com/1tyd4x67?fallback=https%3A%2F%2Fwww.bunq.com%2F&redirect_macos=https%3A%2F%2Fwww.bunq.com%2F\">bunq app</a>, it only takes 5 minutes to sign up.</em></p><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\"><strong>Your space to perform</strong></p><p style=\"text-align:start;\">We give you the space and the tools you need to succeed 💪</p><p style=\"text-align:start;\">🤟 Great, international colleagues who share your mindset</p><p style=\"text-align:start;\">👩‍💻 Hybrid setup: after 3 months in-office, work 2 days remote, 3 days in-office weekly.</p><p style=\"text-align:start;\">🧳 Digital Nomad Program: After your first year, enjoy up to 20 days per year to work while traveling, combining flexibility with strong team collaboration</p><p style=\"text-alig",
+   "max_hours": 40,
+   "locations_question_type": "single_choice",
+   "published_at": "2026-11-11 13:21:40 UTC",
+   "description": "<p style=\"text-align:start;\">At bunq, we’re on a mission to Make Life Easy for our users by creating the most user-centric banking experience out there. That starts with keeping their data safe. As AI makes attackers faster, we’re seeing more critical zero-day vulnerabilities than ever, and we need to stay ahead of them.</p><p style=\"text-align:start;\">That’s where you come in. As our&nbsp;<strong>Security Engineer</strong>, you’ll own how 700 colleagues get secure access to our systems, and you’ll help defend bunq against attacks as they happen. You’ll design and build security processes that AI can’t run on its own, and automate everything that it can.</p><p style=\"min-height: 1.7em;\"></p><p style=\"text-align:start;\"><strong>Take Ownership 🚀</strong></p><p style=\"text-align:start;\">You’ll keep bunq secure, from access control to incident response. Here’s how you’ll do it:</p><ul><li><p>Own access control governance in Okta Identity Governance, automating how access is granted, revoked and reviewed, so every employee and contractor has the right access from day one. </p></li><li><p>Investigate and triage security incidents and vulnerability findings, decide whether they’re malicious, and escalate or fix them fast. </p></li><li><p>Drive the replacement of our security monitoring system with an AI-based platform that detects and stops threats automatically, and build automations so the team can focus on real security issues.</p></li></ul>",
+   "options_title": "off",
+   "options_cover_letter": "off",
+   "created_at": "2026-11-11 13:06:54 UTC",
+   "locations": [
+    {
+     "id": 39979,
+     "name": "Amsterdam",
+     "state": "Noord-Holland",
+     "country": "Netherlands",
+     "city": "Amsterdam",
+     "translations": {
+      "en": {
+       "name": "Amsterdam",
+       "city": "Amsterdam",
+       "postal_code": null,
+       "street": null,
+       "note": null
+      }
+     },
+     "country_code": "NL",
+     "postal_code": null,
+     "state_code": "NH",
+     "street": null,
+     "note": null
+    }
+   ],
+   "remote": false,
+   "min_hours_per_week": "40",
+   "dynamic_fields": [],
+   "company_name": "bunq",
+   "max_hours_per_week": "40",
+   "country_code": "NL",
+   "id": 2823928,
+   "department": "Technology",
+   "state_name": "Noord-Holland",
+   "options_salutation": "off",
+   "locations_question_required": true,
+   "guid": "t979p",
+   "locations_question": "What is your preferred work location?",
+   "status": "published",
+   "education_code": "professional",
+   "mailbox_email": "job.t979p@bunq.recruitee.com"
+  },
+  {
+   "category_code": "banking",
+   "careers_apply_url": "https://careers.bunq.com/o/reporting-agent-france-3/c/new",
+   "position": 1656,
+   "sharing_title": "Reporting Agent (France)",
+   "sharing_image": null,
+   "careers_url": "https://careers.bunq.com/o/reporting-agent-france-3",
+   "postal_code": null,
+   "slug": "reporting-agent-france-3",
+   "close_at": null,
+   "updated_at": "2026-11-10 12:07:38 UTC",
+   "salary": {
+    "max": null,
+    "min": null,
+    "period": null,
+    "currency": null
+   },
+   "min_hours": 40,
+   "state_code": "IDF",
+   "title": "Reporting Agent (France)",
+   "location_question_visible": false,
+   "options_photo": "off",
+   "hybrid": false,
+   "highlight": null,
+   "city": "Paris",
+   "experience_code": "mid_level",
+   "on_site": false,
+   "options_phone": "required",
+   "sharing_description": "Our users trust bunq to keep their money safe. That means spotting, reporting, and preventing bad actors before they can do harm. Your challenge in this mission is to strengthen our reporting operatio",
+   "employment_type_code": "fulltime_permanent",
+   "cover_image": null,
+   "country": "France",
+   "translations": {
+    "en": {
+     "description": "<p style=\"text-align:start;\">Our users trust bunq to keep their money safe. That means spotting, reporting, and preventing bad actors before they can do harm. Your challenge in this mission is to strengthen our reporting operations, and ensure that we meet local laws and regulations — helping us keep Making Life Easy for our users 🚀</p><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\">Up for it? Kick off your application by taking our assessment and find out if bunq is your perfect match!</p><h4 style=\"text-align:start;\"></h4><p style=\"text-align:start;\"><strong>Take ownership</strong></p><p style=\"text-align:start;\">Your mission is to protect our users by making sure suspicious activity is flagged and reported in line with legal and regulatory requirements 🔎 As our Reporting Agent in User Quality, you will:</p><ol><li><p>Ensure compliance by reporting suspicious activity to the appropriate FIUs and implementing country-specific financial crime reporting requirements.</p></li><li><p>Establish clear procedures and continuously improve reporting processes through gap analysis and automation to enhance scalability, accuracy, and regulatory alignment.</p></li><li><p>Monitor reporting performance using analytics tools like Retool, Looker, and GSheets, while managing all open CAP items within required deadlines.</p></li></ol><p style=\"min-height: 1.7em;\"></p>",
+     "title": "Reporting Agent (France)",
+     "highlight": null,
+     "sharing_image": null,
+     "requirements": "<ul><li><p>Familiar with AML, EDD, and financial crime reporting requirements — through work or studies 📕</p></li><li><p>Skilled in investigation, problem solving, and critical thinking, with a strong sense of ethics in line with responsible banking</p></li><li><p>Data-driven and detail-oriented, with experience using reporting or analytics tools 👩🏻‍💻</p></li><li><p>A solution-based thinker who keeps the user’s trust front and center 🌱</p></li><li><p>An effective and quick communicator in English and French💬</p></li></ul><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\"><strong>Your space to perform:</strong></p><p style=\"text-align:start;\">💪 We give you the space and the tools you need to succeed<br>🤟 Great, international colleagues who share your mindset<br>🌟 Make a lasting impact by working on complex &amp; exciting challenges<br>👩‍💻 Remote setup: after 3 weeks onboarding in our AMS office, work 2 weeks a quarter in AMS – the rest of the time you can work in France<br>📚 We support growth with bunq Academy and a €1500 annual learning budget<br>🚌 Travel expenses are covered for AMS visits<br>💻 A MacBook so you can Get Shit Done with us<br>💸 Monthly contribution to your phone and internet bills<br>🍹 Frequent epic events, including an annual bunq weekend away</p><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\"><em>All new hires are subject to Pre-employment Screening (PES), which includes checks conducted by our thir",
+     "locations_question": "What is your preferred work location?",
+     "sharing_description": "Our users trust bunq to keep their money safe. That means spotting, reporting, and preventing bad actors before they can do harm. Your challenge in this mission is to strengthen our reporting operatio",
+     "sharing_title": "Reporting Agent (France)"
+    }
+   },
+   "options_cv": "off",
+   "tags": [],
+   "location": "Remote job",
+   "requirements": "<ul><li><p>Familiar with AML, EDD, and financial crime reporting requirements — through work or studies 📕</p></li><li><p>Skilled in investigation, problem solving, and critical thinking, with a strong sense of ethics in line with responsible banking</p></li><li><p>Data-driven and detail-oriented, with experience using reporting or analytics tools 👩🏻‍💻</p></li><li><p>A solution-based thinker who keeps the user’s trust front and center 🌱</p></li><li><p>An effective and quick communicator in English and French💬</p></li></ul><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\"><strong>Your space to perform:</strong></p><p style=\"text-align:start;\">💪 We give you the space and the tools you need to succeed<br>🤟 Great, international colleagues who share your mindset<br>🌟 Make a lasting impact by working on complex &amp; exciting challenges<br>👩‍💻 Remote setup: after 3 weeks onboarding in our AMS office, work 2 weeks a quarter in AMS – the rest of the time you can work in France<br>📚 We support growth with bunq Academy and a €1500 annual learning budget<br>🚌 Travel expenses are covered for AMS visits<br>💻 A MacBook so you can Get Shit Done with us<br>💸 Monthly contribution to your phone and internet bills<br>🍹 Frequent epic events, including an annual bunq weekend away</p><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\"><em>All new hires are subject to Pre-employment Screening (PES), which includes checks conducted by our thir",
+   "max_hours": 40,
+   "locations_question_type": "single_choice",
+   "published_at": "2026-11-10 07:45:05 UTC",
+   "description": "<p style=\"text-align:start;\">Our users trust bunq to keep their money safe. That means spotting, reporting, and preventing bad actors before they can do harm. Your challenge in this mission is to strengthen our reporting operations, and ensure that we meet local laws and regulations — helping us keep Making Life Easy for our users 🚀</p><p style=\"text-align:start;min-height: 1.7em;\"></p><p style=\"text-align:start;\">Up for it? Kick off your application by taking our assessment and find out if bunq is your perfect match!</p><h4 style=\"text-align:start;\"></h4><p style=\"text-align:start;\"><strong>Take ownership</strong></p><p style=\"text-align:start;\">Your mission is to protect our users by making sure suspicious activity is flagged and reported in line with legal and regulatory requirements 🔎 As our Reporting Agent in User Quality, you will:</p><ol><li><p>Ensure compliance by reporting suspicious activity to the appropriate FIUs and implementing country-specific financial crime reporting requirements.</p></li><li><p>Establish clear procedures and continuously improve reporting processes through gap analysis and automation to enhance scalability, accuracy, and regulatory alignment.</p></li><li><p>Monitor reporting performance using analytics tools like Retool, Looker, and GSheets, while managing all open CAP items within required deadlines.</p></li></ol><p style=\"min-height: 1.7em;\"></p>",
+   "options_title": "off",
+   "options_cover_letter": "off",
+   "created_at": "2026-11-10 07:31:31 UTC",
+   "locations": [
+    {
+     "id": 39996,
+     "name": "Paris",
+     "state": "Île-de-France",
+     "country": "France",
+     "city": "Paris",
+     "translations": {
+      "en": {
+       "name": "Paris",
+       "city": "Paris",
+       "postal_code": null,
+       "street": null,
+       "note": null
+      }
+     },
+     "country_code": "FR",
+     "postal_code": null,
+     "state_code": "IDF",
+     "street": null,
+     "note": null
+    }
+   ],
+   "remote": true,
+   "min_hours_per_week": "40",
+   "dynamic_fields": [],
+   "company_name": "bunq",
+   "max_hours_per_week": "40",
+   "country_code": "FR",
+   "id": 2821648,
+   "department": "Support & Operations",
+   "state_name": "Île-de-France",
+   "options_salutation": "off",
+   "locations_question_required": true,
+   "guid": "du6op",
+   "locations_question": "What is your preferred work location?",
+   "status": "published",
+   "education_code": "bachelor_degree",
+   "mailbox_email": "job.du6op@bunq.recruitee.com"
+  }
+ ]
+}

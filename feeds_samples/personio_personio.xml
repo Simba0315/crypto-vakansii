@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<workzag-jobs>
+
+<position>
+    <id>2885178</id>
+    <office>Berlin</office>
+    <department>Go to Market</department>
+    <name>Business Development Representative (d/f/m)</name>
+    <jobDescriptions>
+        <jobDescription>
+            <name>The Role: How you&#039;ll make an impact at Personio</name>
+            <value>
+                <![CDATA[<p>This role requires 3 days per week in the office and is based in Munich.</p><p>If you're excited by the prospect of joining a company with vast untapped market potential, a career at Personio could perfectly align with your ambitions. You’ll use your deep understanding of customer needs to drive the growth of a transformative product in an HR technology industry set to soar, offering a lifeline to millions of organizations still stuck in Excel chaos, paperwork and manual processes.</p><p>As the initial point of contact for our most strategic prospect accounts, you will play a pivotal role in driving Personio’s growth. Leveraging thorough account and industry research, you will develop and deliver tailored messaging that resonates with key stakeholders across different regions and sectors. Your industry expertise will inspire and engage decision makers at Germany’s leading Mittelstand companies—opening doors, identifying opportunities, and initiating high-impact HR transformation projects that set the foundation for long-term partnerships.</p>]]>
+            </value>
+        </jobDescription>
+        <jobDescription>
+            <name>Role Responsibilities: What you&#039;ll do</name>
+            <value>
+                <![CDATA[<ul><li><p>Prospect into strategic accounts via cold call, email and social selling strategies, to achieve a monthly quota of qualified opportunities and pipeline value</p></li><li><p>Handling typical outbound sales objections, to remove obstacles from the selling landscape and ensure that opportunities progress</p></li><li><p>Qualifying potential value drivers and solution fit b y engaging with key decision makers to discover pains and company goals</p></li><li><p>Generate sales pipeline and develop opportunities for a team of Account Executives</p></li><li><p>Do thorough account and industry research, to maintain and organize an annual book of business</p></li><li><p>Be a subject matter expert on state-of-the-art HR technology and processes<br>Develop and execute creative multi-threading strategies for targeting different decision-makers at prospect accounts</p></li></ul>]]>
+            </value>
+        </jobDescription>
+        <jobDescription>
+            <name>Role Requirements: What you need to succeed</name>
+            <value>
+                <![CDATA[<ul><li><p>approx. 1 years of outbound sales experience in B2B SaaS, tech or cloud solution sales</p></li><li><p>Bachelor’s degree (or equivalent) is required</p></li><li><p>Languages required: fluency in German &amp; English</p></li><li><p>You are competitive, resilient, and highly driven - you thrive in a fast-paced sales environment</p></li><li><p>Proactivity, strong communication &amp; problem-solving skills – comfortable handling objections and driving conversations</p></li><li><p>Experience in Salesforce is a plus</p></li><li><p>Strong business acumen is a plus - being able to speak the language of C-level executive</p></li><li><p>AI Fluency: You have hands-on experience using AI to improve your workflow, and the sound judgment to know exactly when to rely on it and when to step in yourself.</p></li></ul>]]>
+            </value>
+        </jobDescription>
+    </jobDescriptions>
+    <employmentType>permanent</employmentType>
+    <seniority>entry-level</seniority>
+    <schedule>full-time</schedule>
+    <occupation>business_development_and_new_accounts</occupation>
+    <occupationCategory>sales_and_business_development</occupationCategory>
+    <createdAt>2026-11-11T17:43:42+00:00</createdAt>
+</position>
+
+<position>
+    <id>2884392</id>
+    <office>Munich</office>
+    <department>Product and Tech</department>
+    <name>Test Job</name>
+    <jobDescriptions>
+        <jobDescription>
+            <name>The Role: How you&#039;ll make an impact at Personio</name>
+            <value>
+                <![CDATA[<p>Test Test</p>]]>
+            </value>
+        </jobDescription>
+        <jobDescription>
+            <name>Role Responsibilities: What you&#039;ll do</name>
+            <value>
+                <![CDATA[<p>Test Test</p>]]>
+            </value>
+        </jobDescription>
+        <jobDescription>
+            <name>Role Requirements: What you need to succeed</name>
+            <value>
+                <![CDATA[<p>Test Test</p>]]>
+            </value>
+        </jobDescription>
+        <jobDescription>
+            <name>Why Personio</name>
+            <value>
+                <![CDATA[<p>Test Test</p>]]>
+            </value>
+        </jobDescription>
+    </jobDescriptions>
+    <employmentType>permanent</employmentType>
+    <seniority>experienced</seniority>
+    <schedule>full-time</schedule>
+    <occupation>other</occupation>
+    <occupationCategory>other</occupationCategory>
+    <createdAt>2026-11-11T10:53:10+00:00</createdAt>
+</position>
+
+</workzag-jobs>

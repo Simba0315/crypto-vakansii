@@ -1,0 +1,200 @@
+[
+ {
+  "id": "0004e4c9ef36",
+  "friendly_id": "0004e4c9ef36-portfolio-management-data-operations-reconciliation-specialist-contract",
+  "name": "Portfolio Management Data Operations & Reconciliation Specialist (Contract)",
+  "url": "https://advisorengine.breezy.hr/p/0004e4c9ef36-portfolio-management-data-operations-reconciliation-specialist-contract",
+  "published_date": "2026-11-13T22:28:45.208Z",
+  "type": {
+   "id": "contract",
+   "name": "Contract"
+  },
+  "location": {
+   "id": "ac3108a437df",
+   "country": {
+    "id": "US",
+    "name": "United States"
+   },
+   "state": {
+    "id": "NC",
+    "name": "North Carolina"
+   },
+   "city": "Raleigh",
+   "primary": true,
+   "is_remote": false,
+   "streetAddress": {
+    "location": "1616 E Millbrook Rd, Raleigh, NC 27609, USA",
+    "components": [
+     {
+      "long_name": "1616",
+      "short_name": "1616",
+      "types": [
+       "street_number"
+      ]
+     },
+     {
+      "long_name": "East Millbrook Road",
+      "short_name": "E Millbrook Rd",
+      "types": [
+       "route"
+      ]
+     },
+     {
+      "long_name": "North Hills",
+      "short_name": "North Hills",
+      "types": [
+       "neighborhood",
+       "political"
+      ]
+     },
+     {
+      "long_name": "Raleigh",
+      "short_name": "Raleigh",
+      "types": [
+       "locality",
+       "political"
+      ]
+     },
+     {
+      "long_name": "Wake County",
+      "short_name": "Wake County",
+      "types": [
+       "administrative_area_level_2",
+       "political"
+      ]
+     },
+     {
+      "long_name": "North Carolina",
+      "short_name": "NC",
+      "types": [
+       "administrative_area_level_1",
+       "political"
+      ]
+     },
+     {
+      "long_name": "United States",
+      "short_name": "US",
+      "types": [
+       "country",
+       "political"
+      ]
+     },
+     {
+      "long_name": "27609",
+      "short_name": "27609",
+      "types": [
+       "postal_code"
+      ]
+     },
+     {
+      "long_name": "4968",
+      "short_name": "4968",
+      "types": [
+       "postal_code_suffix"
+      ]
+     }
+    ]
+   },
+   "name": "Raleigh, NC"
+  },
+  "department": "",
+  "salary": "",
+  "company": {
+   "name": "AdvisorEngine",
+   "logo_url": "https://nimble-media.s3.amazonaws.com/attachments/8f911/Vanare-LogoV2-Hires-Blk.jpg",
+   "friendly_id": "advisorengine",
+   "isMultipleLocationsEnabled": false
+  },
+  "locations": [
+   {
+    "id": "ac3108a437df",
+    "country": {
+     "id": "US",
+     "name": "United States"
+    },
+    "state": {
+     "id": "NC",
+     "name": "North Carolina"
+    },
+    "city": "Raleigh",
+    "primary": true,
+    "is_remote": false,
+    "streetAddress": {
+     "location": "1616 E Millbrook Rd, Raleigh, NC 27609, USA",
+     "components": [
+      {
+       "long_name": "1616",
+       "short_name": "1616",
+       "types": [
+        "street_number"
+       ]
+      },
+      {
+       "long_name": "East Millbrook Road",
+       "short_name": "E Millbrook Rd",
+       "types": [
+        "route"
+       ]
+      },
+      {
+       "long_name": "North Hills",
+       "short_name": "North Hills",
+       "types": [
+        "neighborhood",
+        "political"
+       ]
+      },
+      {
+       "long_name": "Raleigh",
+       "short_name": "Raleigh",
+       "types": [
+        "locality",
+        "political"
+       ]
+      },
+      {
+       "long_name": "Wake County",
+       "short_name": "Wake County",
+       "types": [
+        "administrative_area_level_2",
+        "political"
+       ]
+      },
+      {
+       "long_name": "North Carolina",
+       "short_name": "NC",
+       "types": [
+        "administrative_area_level_1",
+        "political"
+       ]
+      },
+      {
+       "long_name": "United States",
+       "short_name": "US",
+       "types": [
+        "country",
+        "political"
+       ]
+      },
+      {
+       "long_name": "27609",
+       "short_name": "27609",
+       "types": [
+        "postal_code"
+       ]
+      },
+      {
+       "long_name": "4968",
+       "short_name": "4968",
+       "types": [
+        "postal_code_suffix"
+       ]
+      }
+     ]
+    },
+    "name": "Raleigh, NC"
+   }
+  ],
+  "description": "<p><b><strong>About AdvisorEngine</strong></b></p><p><span style=\"\">We believe that the future of financial advice is personal, scientific and beautiful – these three ideals drive everything that we do.</span></p><p><span style=\"\">AdvisorEngine technology creates a unified experience across financial advisors, clients, and business management personnel. While our journey is in the early phases, we’ve already started turning our vision into reality. We have already delivered a wealth management platform that enables financial advisors to deliver an engaging personalized client experience to drive growth and to operate at scale through smart automation. We have also completed four acquisitions and raised over $62 million in investor capital to help fuel our future growth.</span></p><p><span style=\"\">Our team is made up of designers, enterprise technologists, data scientists, futurists, and business builders. We are based in Tribeca, New York If you are driven to create the future of financial advice, we’d love to hear from you.</span></p><p><b><strong>About the Role</strong></b></p><p><span style=\"\">We are looking for a meticulous Data Operations &amp; Reconciliation Specialist to own our daily portfolio and performance data integrity. In this role, you will be the final line of defense ensuring that custodial data flows seamlessly into our portfolio accounting systems, and performance and billing calculations are accurate. If you actually enjoy hunting down a missing penny in a multi-million-dollar cash reconciliation, this is the role for you. This role works with multiple departments to ensure the timely resolution of client and product issues while maintaining established procedures for an elevated level of service and data quality in line with AdvisorEngine(AE) standards.</span></p><p><b><strong>Overall Responsibilities</strong></b></p><ul class=\"editor-list-ul\"><li value=\"1\" class=\"editor-listitem\" dir=\"ltr\"><b><strong>Daily Batch Data Reconciliation:</strong></b><span style=\"\"> Execute daily cash, position, market value, and transaction reconciliations between custodial data feeds and the AdvisorEngine portfolio management system. Investigate, troubleshoot, and resolve daily reconciliation issues, trade breaks, pricing anomalies, etc..&nbsp;</span></li><li value=\"2\" class=\"editor-listitem\" dir=\"ltr\"><b><strong>Performance Auditing:</strong></b><span style=\"\"> Proactively audit daily, monthly, YTD, and ITD performance returns to identify anomalies, out-of-tolerance outliers, or data spikes. Reverse engineer outliers to provide root cause analysis.&nbsp; Validating UMA and Sleeve performance.</span></li><li value=\"3\" class=\"editor-listitem\" dir=\"ltr\"><b><strong>Fee Billing &amp; Revenue Operations: </strong></b><span style=\"\">Monitor and review the monthly/quarterly advisory fee billing cycle per client. Reconcile complex fee schedules, householding rules, and tier structures within the AdvisorEngine portfolio management system.&nbsp;</span></"
+ }
+]

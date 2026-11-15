@@ -1,0 +1,50 @@
+{
+ "items": [
+  {
+   "id": "638c7936-836b-499c-a3eb-30a0dd871ec6",
+   "name": " Summer 2027 Mechanical Engineering Internship - Idaho Falls, ID",
+   "url": "https://ats.rippling.com/aalo-atomics/jobs/638c7936-836b-499c-a3eb-30a0dd871ec6",
+   "department": {
+    "name": "Engineering",
+    "displayName": "Engineering"
+   },
+   "locations": [
+    {
+     "name": "Idaho Falls, ID",
+     "country": "United States",
+     "countryCode": "US",
+     "state": "Idaho",
+     "stateCode": "ID",
+     "city": "Idaho Falls",
+     "workplaceType": "ON_SITE"
+    }
+   ],
+   "language": "en-US"
+  },
+  {
+   "id": "8d4783fb-b22c-4cfd-ae34-81d4b2ad628f",
+   "name": "AI Platform Architect",
+   "url": "https://ats.rippling.com/aalo-atomics/jobs/8d4783fb-b22c-4cfd-ae34-81d4b2ad628f",
+   "department": {
+    "name": "Engineering",
+    "displayName": "Engineering"
+   },
+   "locations": [
+    {
+     "name": "Austin, TX",
+     "country": "United States",
+     "countryCode": "US",
+     "state": "Texas",
+     "stateCode": "TX",
+     "city": "Austin",
+     "workplaceType": "ON_SITE"
+    }
+   ],
+   "language": "en-US"
+  }
+ ],
+ "page": 0,
+ "pageSize": 20,
+ "totalItems": 2,
+ "totalPages": 1
+}

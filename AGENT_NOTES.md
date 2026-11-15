@@ -405,3 +405,31 @@ plain HTML, so the page is readable without the map.
 - `/how-long-job-postings-stay-open/` states measured counts first; the estimate's reach grows with the record (`reach`: 30 days
   while the record is under 30 days, 90 under 90, then 180) and says "early" for the first two weeks. Do not show longer horizons
   sooner: on 14 Nov three days of closings projected 2% of postings alive at 180 days while 33% of open jobs were over 90 days old.
+
+## More sources: small companies, every country, Russia (15 Nov 2026, ROADMAP 112)
+
+- `collect.FEEDS`: Workable, Recruitee, SmartRecruiters, Teamtailor, Personio, BambooHR, Breezy, Pinpoint, Rippling; `lever-eu` uses the
+  Lever code with `api.eu.lever.co`. Feed addresses and what was left out (JOIN, Workday…): `SOURCES_RESEARCH.md` section 7.
+  SmartRecruiters, BambooHR and Rippling list jobs without text: the text is read per job only for jobs not stored yet, at most
+  `HRN_DETAILS` (25) per board per run (`KNOWN`, `stored()`); a job over the budget is listed now and gets its text later.
+- `sources_ats.json` (boards on those systems, plus Greenhouse/Lever/Ashby boards not in the older lists) comes from `discover_ats.py`
+  (Common Crawl index files, then each board's own feed; no agencies, no board that is mostly shop/warehouse/clinic work).
+  `.github/workflows/discover.yml` reruns it when the script changes and every Monday, and commits the list and
+  `sources_ats_report.json` (boards and jobs by system and country). It runs in Actions because Workable rate-limits cloud machines.
+  The boards rotate on their own: `HRN_ROTATE_ATS` (8) shares, so each is read every 8 hours.
+- Two public employment portals, many employers each: `trudvsem.py` (Russia, «Работа России», open data with a link required) and
+  `jobtech.py` (Sweden, Platsbanken, CC0). `.github/workflows/portals.yml` reads them once a day (`portals.py`) into snapshots on the
+  one-commit branch `portals`, because Russia's 1.9 GB file does not fit the hourly run; `update.yml` restores them and every run
+  applies the latest one (`portals.load`, ignored after 4 days). `HRN_PORTALS=1` reads them live instead. Their jobs carry `src` (the
+  portal), close only when the snapshot no longer lists them, and their job page names and links the source (`PORTAL_SOURCE` in
+  build.py). Only vacancies the employer posted itself; no agencies; no sole traders (a person's name); no contact names, phones or
+  e-mails; trudvsem's regions of Ukraine (Crimea, Donetsk, Luhansk, Zaporizhzhia, Kherson) are left out. hh.ru, Habr Career,
+  getmatch and Germany's Arbeitsagentur forbid reuse: never add them (`SOURCES_RESEARCH.md` section 6).
+- The same job from two sources (company without its legal form, title, place: `dup_key`) is kept once, by the source read first.
+- Russian titles: `slugify` transliterates Cyrillic (otherwise every Russian address was "job"); `CATS_INTL` and `level()` read
+  titles in German, French, Spanish, Dutch, Swedish, Polish, Italian, Portuguese and Russian when the English patterns find nothing.
+- Every country now has a flag and, with 5 open jobs, a place page: `build.COUNTRIES` gets every ISO country from `countries.py`;
+  those added on 15 Nov are `WEAK` (ignored in a part that also names a US state or abbreviation: "Lebanon, PA", "Moscow, ID").
+- The data branch: `jobs.json.gz` is split into `jobs.json.gz.00`, `.01`, … once it passes 90 MB (GitHub refuses files over 100 MB);
+  `update.yml` joins the pieces when it restores.
+- `python3 feeds_test.py` (saved real responses in `feeds_samples/`) must end with "0 failed".

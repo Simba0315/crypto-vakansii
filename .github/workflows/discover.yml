@@ -1,0 +1,47 @@
+name: Find company job boards
+
+# discover_ats.py finds the job boards of companies on the hiring systems small and mid-size companies use (Workable, Recruitee,
+# SmartRecruiters, Teamtailor, Personio, BambooHR, Breezy, Pinpoint, Rippling, Lever Europe, and Greenhouse/Lever/Ashby boards not
+# read yet) and writes sources_ats.json; collect.py reads those boards every 8 hours. It runs here, not on a cloud machine, because
+# Workable answers "too many requests" to shared cloud addresses. Runs when the script changes, every Monday, and by hand.
+on:
+  push:
+    branches: [main]
+    paths: [discover_ats.py, .github/workflows/discover.yml]
+  schedule:
+    - cron: "41 1 * * 1"      # Mondays 01:41 UTC, away from the :17 hourly run
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: discover
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Find boards
+        run: python3 discover_ats.py --crawls 3 --workers 24 --samples
+      - name: Check the feeds still read the saved samples
+        run: python3 feeds_test.py
+      - name: Commit the list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sources_ats.json sources_ats_report.json feeds_samples/
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          msg=$(python3 -c "import json; r = json.load(open('sources_ats_report.json')); print(f\"Company boards on more hiring systems: {r['boards']:,} boards, {r['jobs']:,} jobs\")")
+          git commit -q -m "$msg"
+          for i in 1 2 3 4; do
+            if git pull -q --rebase origin main && git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 20))
+          done
+          exit 1

@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
+import countries
 import tools_pages                      # the free tools section: /tools/ and one page per tool
 import roles_info
 import resume_examples
@@ -59,7 +60,28 @@ COUNTRIES = [   # (ISO code, name, the country written out, well-known cities)
     ("MY", "Malaysia", r"malaysia", r"kuala lumpur"), ("PH", "Philippines", r"philippines", r"\bmanila\b"), ("ID", "Indonesia", r"indonesia", r"jakarta"),
     ("TH", "Thailand", r"thailand", r"bangkok"), ("VN", "Vietnam", r"vietnam", r"ho chi minh|hanoi|da nang"),
     ("ZA", "South Africa", r"south africa", r"cape town|johannesburg"), ("NG", "Nigeria", r"nigeria", r"\blagos\b"), ("KE", "Kenya", r"\bkenya\b", r"nairobi"),
+    # 15 Nov 2026: Russia and its neighbours (jobs from Russia's federal job portal and from European hiring systems)
+    ("RU", "Russia", r"\brussia\b|russian federation|росси[яи]", r"москва|санкт-петербург|новосибирск|екатеринбург|казань|нижний новгород"),
+    ("KZ", "Kazakhstan", r"kazakhstan|казахстан", r"almaty|astana|алматы|астана"), ("BY", "Belarus", r"belarus|беларусь", r"\bminsk\b|минск"),
+    ("UZ", "Uzbekistan", r"uzbekistan|узбекистан", r"tashkent|ташкент"), ("AM", "Armenia", r"\barmenia\b|армения", r"yerevan|ереван"),
+    ("AZ", "Azerbaijan", r"azerbaijan|азербайджан", r"\bbaku\b"), ("KG", "Kyrgyzstan", r"kyrgyz|кыргызстан|киргизия", r"bishkek|бишкек"),
+    ("MD", "Moldova", r"moldova", r"chi[sș]in[aă]u"), ("LV", "Latvia", r"\blatvia\b", r"\briga\b"), ("SK", "Slovakia", r"slovakia", r"bratislava"),
+    ("SI", "Slovenia", r"slovenia", r"ljubljana"), ("HR", "Croatia", r"croatia", r"zagreb"), ("LU", "Luxembourg", r"luxembourg", r""),
+    ("CY", "Cyprus", r"\bcyprus\b", r"limassol|nicosia|larnaca"), ("MT", "Malta", r"\bmalta\b", r"valletta"), ("IS", "Iceland", r"iceland", r"reykjav[ií]k"),
+    ("PE", "Peru", r"\bper[uú]\b", r"\blima\b"), ("UY", "Uruguay", r"uruguay", r"montevideo"), ("EC", "Ecuador", r"ecuador", r"\bquito\b|guayaquil"),
+    ("CR", "Costa Rica", r"costa rica", r"san jos[eé], costa"), ("EG", "Egypt", r"\begypt\b", r"\bcairo\b"), ("MA", "Morocco", r"morocco|maroc", r"casablanca|rabat"),
+    ("PK", "Pakistan", r"pakistan", r"karachi|lahore|islamabad"), ("BD", "Bangladesh", r"bangladesh", r"dhaka"), ("LK", "Sri Lanka", r"sri lanka", r"colombo"),
+    ("QA", "Qatar", r"\bqatar\b", r"\bdoha\b"),
 ]
+# Every other country, by its name only (countries.py): weaker than the list above, so a US town of the same name ("Lebanon, PA",
+# "Moscow, ID", "Paris, TX") stays in the United States. Each still gets its flag, and a place page once it has 5 open jobs.
+# The countries added on 15 Nov are weak too, and Tbilisi is in Georgia the country, not the state.
+WEAK = {"RU", "KZ", "BY", "UZ", "AM", "AZ", "KG", "MD", "LV", "SK", "SI", "HR", "LU", "CY", "MT", "IS", "PE", "UY", "EC", "CR", "EG", "MA", "PK", "BD", "LK", "QA"}
+COUNTRIES.append(("GE", "Georgia", r"tbilisi|batumi|грузия|sakartvelo", r""))
+for _c, _n in countries.NAMES.items():
+    if _c != "US" and _c not in {c for c, *_ in COUNTRIES}:
+        COUNTRIES.append((_c, _n, r"\b" + re.escape(_n.lower()) + r"\b" + (("|" + countries.OTHER_NAMES[_c]) if _c in countries.OTHER_NAMES else ""), r""))
+        WEAK.add(_c)
 US_NAME = r"united states|\busa\b|\bu\.s\.(a\.)?|(?-i:\bUS\b)(?! ?\$)"
 US_STATES = (r"alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|\bgeorgia\b|hawaii|idaho|illinois|\bindiana\b|\biowa\b|kansas|kentucky|louisiana|"
              r"\bmaine\b|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|"
@@ -79,8 +101,8 @@ def countries_of(loc):
         named = [(c, nm) for c, nm, rx, _ in COUNTRIES if re.search(rx, part, re.I)]
         province = bool(CA_PROVINCE.search(part))
         if province and ("CA", "Canada") not in named: named.append(("CA", "Canada"))
-        us = bool(re.search(US_NAME, part, re.I) or re.search(US_STATES, part, re.I) or (US_ABBR.search(part) and not province))
-        if us: named.append(("US", "United States"))
+        us = bool(re.search(US_NAME, part, re.I) or re.search(US_STATES, part, re.I) or (US_ABBR.search(part) and not province)) and not re.search(r"tbilisi|batumi", part, re.I)
+        if us: named = [x for x in named if x[0] not in WEAK] + [("US", "United States")]
         if not named:                                           # nothing written out: fall back to cities everyone knows
             named = [(c, nm) for c, nm, _, city in COUNTRIES if city and re.search(city, part, re.I)]
             if re.search(US_CITY, part, re.I): named.append(("US", "United States"))
@@ -111,10 +133,11 @@ def loc_flags(loc, limit=3):
     return "".join(fl(c) for c, _ in countries_of(loc)[:limit]) if loc else ""
 
 
-REGIONS = {"europe": ({"GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS"}, r"\beurope\b|\bemea\b|\beu\b"),
+REGIONS = {"europe": ({"GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS",
+                        "LV", "SK", "SI", "HR", "LU", "CY", "MT", "IS", "MD", "BA", "MK", "AL", "ME", "XK", "LI", "MC", "AD", "SM"}, r"\beurope\b|\bemea\b|\beu\b"),
            "asia-pacific": ({"IN", "SG", "HK", "JP", "KR", "TW", "CN", "AU", "NZ", "MY", "PH", "ID", "TH", "VN"}, r"\bapac\b|\basia\b"),
-           "latin-america": ({"BR", "MX", "AR", "CO", "CL"}, r"\blatam\b|latin america"),
-           "africa": ({"ZA", "NG", "KE"}, r"\bafrica\b")}
+           "latin-america": ({"BR", "MX", "AR", "CO", "CL", "PE", "UY", "EC", "CR", "PA", "GT", "DO", "BO", "PY", "VE", "SV", "HN", "NI", "PR", "CU", "JM", "TT"}, r"\blatam\b|latin america"),
+           "africa": ({"ZA", "NG", "KE", "EG", "MA", "GH", "TZ", "UG", "RW", "ET", "SN", "CI", "TN", "DZ", "CM", "ZM", "ZW", "BW", "MU", "NA", "MZ", "AO"}, r"\bafrica\b")}
 # (name, slug, rule). A rule is a country code, a region key, or (pattern, country the match must agree with).
 PLACES = [
     ("the United States", "united-states", "US"), ("Canada", "canada", "CA"), ("London & the UK", "united-kingdom", "GB"), ("Europe", "europe", "region"),
@@ -280,7 +303,13 @@ PERK_OK = set()    # perks with enough jobs to have their own page
 PULSE = {}         # company -> (opened in 7 days, closed in 7 days, label)
 CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from closed roles)
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
-SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}     # hiring systems the listings are read from
+SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby",     # hiring systems the listings are read from
+               "workable": "Workable", "recruitee": "Recruitee", "smartrecruiters": "SmartRecruiters", "teamtailor": "Teamtailor", "personio": "Personio",
+               "bamboohr": "BambooHR", "breezy": "Breezy HR", "pinpoint": "Pinpoint", "rippling": "Rippling"}
+# Public job portals that publish their vacancies as open data (collect.py, trudvsem.py): the job page names the portal and links it,
+# as its terms ask ("при копировании информации ссылка на trudvsem.ru обязательна").
+PORTAL_SOURCE = {"trudvsem": ("https://trudvsem.ru/", "«Работа России» (trudvsem.ru)", "Russia’s federal job portal"),
+                 "platsbanken": ("https://arbetsformedlingen.se/platsbanken/", "Platsbanken (Arbetsförmedlingen)", "Sweden’s public employment service")}
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
@@ -955,6 +984,8 @@ def job_page(j, active_by_cat):
     ats = j["id"].split("-", 1)[0]
     if j["active"]:
         rows.append(("Source", (f"{e(j['company'])}’s own posting, read from {SOURCE_NAME[ats]}, the hiring software it uses" if ats in SOURCE_NAME else "Posted here by the employer; the link was checked" if j.get("direct")
+                                else (f'Posted by the employer on <a href="{PORTAL_SOURCE[ats][0]}" rel="nofollow">{e(PORTAL_SOURCE[ats][1])}</a>, {PORTAL_SOURCE[ats][2]}; '
+                                      f'republished from its open data with a link to the source') if ats in PORTAL_SOURCE
                                 else f"{e(j['company'])}’s own posting")))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
@@ -1165,12 +1196,19 @@ def main():
     NO_ANON = ("Employers can also post a job themselves; such a posting is published only after its link has been checked automatically, and it is labelled as posted by the employer"
                if CFG["api_url"] else "We do not accept anonymous postings")
     N_FEEDS = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})     # employer feeds read in each run
+    N_TURNS = len({s_["name"] for f_ in ("sources_more.json", "sources_ats.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})  # read in turns (collect.py)
+    FEEDS_TXT = (f"We read {N_FEEDS:,} company feeds every hour and {N_TURNS:,} more in turns, each every 4 or 8 hours. " if N_TURNS else f"We read {N_FEEDS} company feeds every hour. ")
+    PORTALS_TXT = ("Once a day we also read two public employment services that publish the vacancies employers post with them as open data: Russia’s «Работа России» "
+                   "and Sweden’s Platsbanken; each such job names its source and links to it. ")
     remote = [j for j in active if j["remote"]]
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
     contact = " or ".join(x for x in [f'Telegram <a href="https://t.me/{e(CFG["contact_telegram"])}">@{e(CFG["contact_telegram"])}</a>' if CFG["contact_telegram"] else "",
                                       f'email <a href="mailto:{e(CFG["contact_email"])}">{e(CFG["contact_email"])}</a>' if CFG["contact_email"] else ""] if x)
-    places = [(name, slug, js) for name, slug, rx in PLACES if len(js := [j for j in active if slug in j["places"]]) >= 5]
+    by_place = defaultdict(list)                            # once per job, not once per place: about 200 places since every country has one
+    for j in active:
+        for s_ in j["places"]: by_place[s_].append(j)
+    places = [(name, slug, js) for name, slug, rx in PLACES if len(js := by_place.get(slug, [])) >= 5]
     OPEN.update(Counter(j["company"] for j in active))
     PERK_OK.update(x for x, k in Counter(x for j in active for x in j.get("perks", [])).items() if k >= 8)
     wk = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
@@ -5240,7 +5278,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          crumbs(("Methodology", "")) + f"<h1>How {e(SITE)} collects and checks jobs</h1>"
          f'<p class="plain"><b>In plain words:</b> where the jobs on this site come from, how we know a job is still open, and what each label and number means. Unfamiliar word? See the <a href="{P}/glossary/">glossary</a>.</p>'
          f'<p class="lead">Last updated {fdate(TODAY)}. This page explains where every number and label on the site comes from, so you can judge how far to trust it.</p>'
-         f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read {N_FEEDS} company feeds every hour. We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
+         f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. {FEEDS_TXT}{PORTALS_TXT}We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
          '<h2 class="h2s">How do you know a job is still open?</h2><p>A job stays listed as open only while it is present in the employer\'s feed. When it disappears from the feed, it is marked as closed the same day and moved to the archive. '
          'If a company\'s feed cannot be read on a given day, its jobs are left unchanged rather than closed by mistake.</p>'
          '<h2 class="h2s">How are salary, skills, perks and remote status detected?</h2><p>Salary is shown only when the employer publishes a range. We read it from the pay field of the employer\'s hiring system or, failing that, from the posting text when a yearly range stands next to a word such as “salary” or “compensation”. '

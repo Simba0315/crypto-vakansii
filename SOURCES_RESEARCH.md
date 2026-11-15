@@ -142,3 +142,43 @@ The template pages carry Article, FAQPage, Occupation and MonetaryAmountDistribu
 - Indeed's Smart Sourcing, hiring-events and sponsored-jobs pages (404 from Vietnam).
 - Reuse terms of Himalayas (read in part), SmartRecruiters, Recruitee, Comeet and Y Combinator.
 - Hirify's recruiter cabinet behind login and the names of its Telegram sources (login only).
+
+## 6. Public employment portals and their reuse terms (read 15 Nov 2026)
+
+The question for each: may a free job site show the vacancies (title, employer, place, pay, text, link) on its own pages?
+Verdicts from the terms pages themselves; "unclear" means the page could not be read, not that it allows it.
+
+| Source | Feed | Key | Verdict | Condition or quote | Used |
+|---|---|---|---|---|---|
+| «Работа России» trudvsem.ru (RU) | `opendata.trudvsem.ru/csv/vacancy.csv` (1.9 GB, daily; 480,769 vacancies); API `opendata.trudvsem.ru/api/v1/vacancies` (100 a page, about 10 s a call) | no | allowed with a link | Footer: «При копировании информации – ссылка на trudvsem.ru обязательна»; the open-data «Типовые условия» allow commercial use and ask for the source to be named | yes, `trudvsem.py`, daily |
+| Platsbanken / JobTech (SE) | `jobsearch.api.jobtechdev.se/search` (43,061 ads) | no | allowed | swagger.json: «Ads are licensed under CC0» | yes, `jobtech.py`, daily |
+| MPSV volná místa (CZ) | `data.mpsv.cz/od/soubory/volna-mista/volna-mista.json.gz` (39,628 jobs) | no | allowed | «není autorskoprávně chráněnou databází»; but places are codes and there is no link to the ad | not yet: needs the code lists and a checked ad address |
+| Ukraine DSZ (UA) | data.gov.ua dataset a95174b2-ff4b-43f8-bee2-a89d3a258215 (daily XML, 33,324 jobs) | no | CC BY | the "company" field is the employment-centre branch, not the employer | no: the employer is not named |
+| NVA (LV) | data.gov.lv "vakances" | no | CC0 | 1,337 jobs, public sector only | not yet (small) |
+| USAJOBS (US) | `data.usajobs.gov/api/search` | yes | allowed | «Public Data may be copied, stored, reformatted, adapted, analyzed, published, redistributed»; linking back encouraged | waits for the owner's key (ROADMAP 112) |
+| NAV (NO) | `pam-stilling-feed.nav.no/api/v1/feed` | token | allowed with conditions | remove inactive ads at once, link to the employer's application page, no contact details | waits for the owner's agreement e-mail (ROADMAP 112) |
+| Työmarkkinatori (FI) | Kipa search API | credentials | allowed with conditions | show «Lähde: Työmarkkinatorin asiakastietojärjestelmä»; no onward transfer | waits for the owner (ROADMAP 112) |
+| France Travail (FR) | `api.francetravail.io/partenaire/offresdemploi/v2/offres/search` | OAuth | unclear | data.gouv.fr: the API «n'est actuellement plus exposée… le temps d'une analyse des modalités de distribution et de réutilisation» | no: closed to new users |
+| Adzuna | `api.adzuna.com/v1/api/jobs/{cc}/search/{page}` | yes | trial only | «a licence agreement is required» for any use that earns money; an aggregator, not employers | no |
+| Bundesagentur für Arbeit (DE) | `rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v6/jobs` | public client id | not allowed | Nutzungsbedingungen (3): no unauthorised use of interfaces to read content for collection; copying needs BA's written permission | no |
+| Habr Career (RU) | OAuth API for a company's own vacancies | OAuth | not allowed | agreement §5.4: «не вправе воспроизводить, повторять и копировать… Контент» | no |
+| getmatch (RU) | none public (`/api/` is disallowed in robots.txt) | — | not allowed | ToS §3.2, the same wording | no |
+| SuperJob (RU) | `api.superjob.ru/2.0/vacancies/` | yes | unclear | the API rules page answers 404 or asks for a login; 120 calls a minute | no, until the rules can be read |
+| enbek.kz (KZ) | none found | — | unclear | the site could not be reached; data.egov.kz has no vacancy set | no |
+| hh.ru (RU) | — | — | not allowed | developer agreement §4.3: no downloading data to build another database for third parties | never |
+
+## 7. Hiring systems of small and mid-size companies (15 Nov 2026)
+
+The public feeds collect.py now reads (`FEEDS`), all meant for showing one company's jobs on its own site, none behind a login or a
+bot check: Workable `apply.workable.com/api/v1/widget/accounts/<c>?details=true` (also what `www.workable.com/api/accounts/<c>`
+redirects to), Recruitee `<c>.recruitee.com/api/offers/`, SmartRecruiters `api.smartrecruiters.com/v1/companies/<C>/postings`
+(+ `/postings/<id>` for the text), Teamtailor `<c>.teamtailor.com/jobs.json`, Personio `<c>.jobs.personio.de/xml`, BambooHR
+`<c>.bamboohr.com/careers/list` (+ `/careers/<id>/detail`), Breezy `<c>.breezy.hr/json?verbose=true`, Pinpoint
+`<c>.pinpointhq.com/postings.json`, Rippling `ats.rippling.com/api/v2/board/<c>/jobs` (+ `/jobs/<id>`), Lever's European site
+`api.eu.lever.co/v0/postings/<c>`. Greenhouse boards on `boards.eu.greenhouse.io` are served by the usual `boards-api.greenhouse.io`.
+
+Not added: JOIN (join.com) has no public feed (its public API needs the company's own token, and company pages show Cloudflare bot
+checks); Workday (undocumented POST, capped lists); JazzHR (no publishing date); Comeet (token inside the page).
+
+Addresses come from Common Crawl's index files (`discover_ats.py`): the index server answered 504 for hours on 15 Nov, but the
+files at `data.commoncrawl.org/cc-index/collections/<crawl>/indexes/` (cluster.idx, then byte ranges of cdx-*.gz) always answer.

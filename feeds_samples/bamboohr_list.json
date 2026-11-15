@@ -1,0 +1,67 @@
+{
+ "meta": {
+  "totalCount": 3
+ },
+ "result": [
+  {
+   "id": "489",
+   "jobOpeningName": "Security Engineer 資訊安全工程師",
+   "departmentId": "22364",
+   "departmentLabel": "HQ/Fundamental",
+   "employmentStatusLabel": "Full-Time",
+   "employmentType": null,
+   "location": {
+    "city": "Taipei",
+    "state": "中山區"
+   },
+   "atsLocation": {
+    "country": null,
+    "state": null,
+    "province": null,
+    "city": null
+   },
+   "isRemote": null,
+   "locationType": "2"
+  },
+  {
+   "id": "740",
+   "jobOpeningName": "Jr./Sr. Site Reliability Engineer Jr./Sr. 網站可靠性工程師",
+   "departmentId": "22364",
+   "departmentLabel": "HQ/Fundamental",
+   "employmentStatusLabel": "Full-Time",
+   "employmentType": null,
+   "location": {
+    "city": "Taipei",
+    "state": "中山區"
+   },
+   "atsLocation": {
+    "country": null,
+    "state": null,
+    "province": null,
+    "city": null
+   },
+   "isRemote": null,
+   "locationType": "2"
+  },
+  {
+   "id": "753",
+   "jobOpeningName": "Streamer （Liver）Consultant 直播主招募顧問",
+   "departmentId": "18918",
+   "departmentLabel": "TW/Liver",
+   "employmentStatusLabel": "Full-Time",
+   "employmentType": null,
+   "location": {
+    "city": "Taipei",
+    "state": "中山區"
+   },
+   "atsLocation": {
+    "country": null,
+    "state": null,
+    "province": null,
+    "city": null
+   },
+   "isRemote": null,
+   "locationType": "2"
+  }
+ ]
+}

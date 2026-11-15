@@ -1,0 +1,53 @@
+name: Read public job portals
+
+# Russia's «Работа России» (trudvsem.py: a 1.9 GB open-data file) and Sweden's Platsbanken (jobtech.py: about 150 calls) take
+# minutes, so they are read here once a day, not in the hourly run. portals.py writes one small snapshot per portal; they are kept
+# on the one-commit branch "portals", and the hourly run (update.yml) restores them for collect.py. A portal that fails keeps
+# yesterday's snapshot. 01:47 UTC: done before the 03:17 daily run, away from the :17 hourly runs.
+on:
+  schedule:
+    - cron: "47 1 * * *"
+  push:
+    branches: [main]
+    paths: [portals.py, trudvsem.py, jobtech.py, .github/workflows/portals.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: portals
+  cancel-in-progress: false
+
+jobs:
+  portals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Yesterday's snapshots
+        run: |
+          mkdir -p data/portals
+          if git ls-remote --exit-code --heads origin portals >/dev/null 2>&1; then
+            git fetch -q --depth=1 origin portals
+            for f in $(git ls-tree --name-only FETCH_HEAD | grep '\.json\.gz$'); do git show "FETCH_HEAD:$f" > "data/portals/$f"; done
+          fi
+      - name: Read the portals
+        run: python3 portals.py
+      - name: Save the snapshots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tmp="$(mktemp -d)"
+          cp data/portals/*.json.gz "$tmp/"
+          for f in "$tmp"/*.json.gz; do [ "$(wc -c < "$f")" -lt 95000000 ] || { echo "$f is too large for GitHub"; exit 1; }; done
+          cd "$tmp"
+          git init -q -b portals
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Public job portal snapshots"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" portals

@@ -6,12 +6,14 @@ import datetime, hashlib, html, json, os, re, sys, concurrent.futures as cf
 from collections import defaultdict
 from html.parser import HTMLParser
 from pathlib import Path
-from net import get_json
+from net import get_json, get_text
+import countries
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data" / "jobs.json"
 TODAY = datetime.date.today().isoformat()
 DESC_SINCE = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()     # full descriptions are stored for postings newer than this
+KNOWN = {}          # the stored jobs by id (set by main): unchanged postings and texts read earlier are reused, see norm() and FEEDS
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
 EXCLUDE = {"Casa", "Swan", "Sei", "Safe", "Circle", "Compound", "Ramp", "Robinhood Crypto",
@@ -58,6 +60,37 @@ DEPT_CATS = [
     ("operations", r"operations|\bops\b|admin|workplace"),
 ]
 OTHER = ("other", "Other")
+# Titles in other languages (added 15 Nov 2026 with the hiring systems small European companies use, and with Russia). Read only
+# when the English patterns above find nothing, so every English title keeps the field it had. Shop, warehouse and clinic words come
+# first: "Verkäufer" and "продавец" are shop work, "Vertrieb" and "менеджер по продажам" are sales.
+CATS_INTL = [
+    ("retail", r"verkäufer|kassierer|\bfiliale|vendeu[rs]|vendeuse|caissi[eè]r|vendedor|cajer[oa]|verkoper|sprzedawc|kasjer|commess[oa]|cassier[ea]|продав|кассир|официант|\bповар|бармен|"
+               r"\bkoch\b|köchin|kellner|магазин|cuisinier|serveu[rs]|camarer[oa]|cociner[oa]|кондитер|пекарь|горничн|администратор (магазина|зала|ресторана)"),
+    ("supply-chain", r"\blager|logistik|\bfahrer|kommissionier|logistique|cariste|chauffeur|logístic|almac[eé]n|conductor|magazijn|kierowc|magazyn|magazzin|autista|motorista|"
+                     r"склад|кладовщ|водител|логист|грузчик|экспедитор|курьер|снабжен|закуп"),
+    ("healthcare", r"pflege|\barzt\b|ärztin|medizin|therapeut|apothek|infirmi[eè]r|médecin|enfermer|médic[oa]|verpleeg|sjuksköterska|läkare|pielęgniar|lekarz|infermier|"
+                   r"врач|медсестр|медицин|фельдшер|санитар|фармацевт|провизор|стоматолог|акушер|ветеринар"),
+    ("education", r"lehrer|erzieher|ausbilder|dozent|enseignant|formateur|profesor|docente|leraar|lärare|nauczyciel|insegnante|учител|преподават|воспитател|педагог|"
+                  r"методист|логопед|психолог"),
+    ("design", r"дизайнер|gestalter|grafiker|художник|graphiste|diseñador|ontwerper|projektant graficzn"),
+    ("engineering", r"entwickler|ingenieur|informatiker|développeu|ingénieu|desarrollador|ingenier[oa]|programador|ontwikkelaar|utvecklare|programist|inżynier|sviluppator|"
+                    r"ingegner|desenvolvedor|engenheir|ingenjör|systemutvecklare|разработчик|программист|инженер|тестировщик|системный администратор|сисадмин|архитектор|конструктор|технолог"),
+    ("sales-bd", r"vertrieb|außendienst|säljare|aussendienst|commercia(l|le|ux)\b|chargée? d'affaires|comercial|\bventas\b|verkoop|säljare|handlowiec|sprzedaż|vendite|\bvendas\b|"
+                 r"продаж|коммерческ|торгов(ый|ого) представител|менеджер по работе с клиентами"),
+    ("marketing", r"kommunikation|communicatie|marknadsför|comunicaci[oó]n|маркетолог|маркетинг|реклам|\bsmm\b|контент|копирайтер|пиар"),
+    ("support", r"kundenservice|kundendienst|kundenbetreuung|service client|atenci[oó]n al cliente|klantenservice|kundtjänst|obsługi? klienta|assistenza clienti|atendimento|"
+                r"колл-центр|call-центр|оператор (call|колл|контакт)|поддержк"),
+    ("compliance-legal", r"\bjurist|rechtsanwalt|juriste|avocat|abogad|jur[ií]dic|advocaat|prawnik|avvocat|advogad|юрист|юрисконсульт|нотариус"),
+    ("finance", r"buchhalt|finanz|steuer|comptab|contab|financ|boekhoud|redovis|księgow|\bekonom|löneadministr|lönespecialist|бухгалтер|экономист|финанс|казначей|аудитор|кассир-операционист"),
+    ("people", r"personalreferent|personalsachbearbeiter|personalwesen|recrut|ressources humaines|recursos humanos|personeelszaken|rekryter|kadr|risorse umane|"
+               r"кадр|персонал|рекрутер|hr-"),
+    ("data-research", r"\bаналитик|forschung|recherche|investigador|onderzoek|научн|исследоват|лаборант"),
+    ("manufacturing", r"techniker|mechaniker|monteur|elektriker|schlosser|produktion|fertigung|technicien|ouvrier|t[eé]cnic[oa]|operari[oa]|operador|tekniker|mechanik|operai[oa]|"
+                      r"техник|слесар|сварщ|токар|электри|механик|оператор|монтажник|рабоч|станочник|наладчик|машинист|строител|маляр|плотник|каменщик|сантехник"),
+    ("operations", r"sachbearbeiter|handläggare|samordnare|koordinator|assistenz|\bbüro|kaufm[aä]nn|kauffrau|assistant|administrati[fv]|secretari|sekret|assistent|administratör|asystent|amministrativ|"
+                   r"офис-менеджер|секретар|делопроизвод|администратор|руководител|директор|начальник|заведующ|управляющ"),
+    ("consulting", r"\bberater|consultor|adviseur|konsult|consulent|консультант"),
+]
 
 SKILLS = [
     ("Solidity", r"solidity"), ("Rust", r"\brust\b"), ("Go", r"golang|\bgoroutines?\b|(?<!to )\bgo[,/)]|[,/(] ?go\b(?![- ](?:to|live)\b)|\b(?:python|rust|java|c\+\+|typescript|javascript|node(?:\.js)?|kotlin|scala|ruby|php|c#|elixir|swift)(?:,| and| or| &) go\b(?![- ](?:to|live|ahead|above)\b)|\bgo (?:and|or|&) (?:python|rust|java|c\+\+|typescript|javascript|node(?:\.js)?|kotlin|scala|ruby|php|c#|elixir|swift)\b|\b(?:in|using|with|know|knows|write|writing|written in) go\b(?=[.;:)]|\s+(?:and|or)\b|$)|\bgo (?:developer|engineer|programmer|programming|microservices?|services|backend|codebase|code|modules?|stdlib|runtime)\b"), ("Python", r"python"),
@@ -236,8 +269,16 @@ def excerpt(text, n=420):
     return cut[:cut.rfind(" ")].rstrip(",.;:") + "…"
 
 
+# Russian letters in web addresses (15 Nov 2026, jobs from Russia): "Инженер-программист" -> "inzhener-programmist". Without this every
+# Cyrillic title and employer would become "job". Other scripts are left as they were, so no address that already exists changes.
+CYR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюяіїєґўқғңүұһәө",
+               "a b v g d e e zh z i y k l m n o p r s t u f kh ts ch sh shch _ y _ e yu ya i yi ye g u q g n u u h a o".replace("_", "").split(" ")))
+
+
 def slugify(s):
-    s = re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+    s = s.lower()
+    if re.search("[а-яёіїєґўқғңүұһәө]", s): s = "".join(CYR.get(ch, ch) for ch in s)
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
     return s[:60].strip("-") or "job"
 
 
@@ -257,12 +298,20 @@ def classify_title(title):
     for slug, name, rx in CATS:
         if re.search(rx, title, re.I):
             return slug
+    for slug, rx in CATS_INTL:
+        if re.search(rx, title, re.I):
+            return slug
     return OTHER[0]
 
 
 def level(title):
     t = title.lower()
-    if re.search(r"\bintern(ship)?s?\b|\btrainee\b|\bco-?op\b|\bapprentice", t): return "Intern"
+    if re.search(r"\bintern(ship)?s?\b|\btrainee\b|\bco-?op\b|\bapprentice|стаж[её]р|практикант|praktikant|stagiaire|becario|stagiair", t): return "Intern"
+    if re.search("[а-яё]", t):                               # Russian titles (Работа России): the same four grades in Russian words
+        if re.search(r"руководител|начальник|директор|главный|заведующ", t): return "Lead"
+        if re.search(r"ведущ|старш", t): return "Senior"
+        if re.search(r"младш|начинающ", t): return "Junior"
+        return ""
     staff = re.search(r"\bstaff\b", t) and not re.search(r"of (technical )?staff|technical staff|staff (accountant|attorney|nurse|writer|assistant|associate|counsel|auditor)", t)
     if re.search(r"head of|\bdirector\b|\bvp\b|vice president|\bchief\b(?! of staff)|\bprincipal\b|\blead\b", t) or staff: return "Lead"
     if re.search(r"\bsenior\b|\bsr\b\.?", t): return "Senior"
@@ -330,7 +379,8 @@ def tidy_pay(s):
     if not s: return ""
     unit = ("an hour" if re.search(r"hour|/ ?hr\b", s, re.I) else "a month" if re.search(r"month", s, re.I) else "a week" if re.search(r"week", s, re.I)
             else "a day" if re.search(r"\bday\b|daily", s, re.I) else "")
-    cur = re.search(r"US\$|CA\$|C\$|A\$|\$|£|€|\b(USD|CAD|AUD|GBP|EUR|SGD|INR|CHF|JPY|BRL|MXN|PLN|SEK|ILS|AED|HKD|NZD)\b", s)
+    cur = re.search(r"US\$|CA\$|C\$|A\$|\$|£|€|\b(USD|CAD|AUD|GBP|EUR|SGD|INR|CHF|JPY|BRL|MXN|PLN|SEK|ILS|AED|HKD|NZD|RUB|KZT|UAH|BYN|UZS|GEL|AMD|AZN|KGS|"
+                    r"TRY|ZAR|NGN|KES|EGP|PHP|IDR|THB|VND|MYR|KRW|TWD|CNY|CZK|HUF|RON|BGN|DKK|NOK|ISK|CLP|COP|ARS|PEN|SAR|QAR|PKR|BDT|LKR|MAD|RSD)\b", s)
     nums = [float(re.sub(r"[\s,]", "", n)) * (1000 if k else 1) for n, k in re.findall(r"(\d[\d,]*(?:\.\d+)?|\d[\d ]*\d)\s?([kK])?(?![\d%])", s)][:2]
     if not nums or not cur: return ""
     lo, hi = nums[0], nums[-1]
@@ -363,7 +413,24 @@ def utc_iso(v):
         return ""
 
 
+# Reading a posting (the patterns above) costs about 20 ms, and an hourly run used to spend 17 minutes re-reading postings that had
+# not changed. A record keeps a fingerprint of what the feed said ("h") and of this file (NORM_VER): when both match, the stored
+# record is reused as it is. Any change to collect.py changes NORM_VER, so a changed rule is applied to every job in the next runs.
+NORM_VER = hashlib.md5(Path(__file__).read_bytes()).hexdigest()[:6]
+
+
 def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False, posted_at=None):
+    key = hashlib.md5(repr((NORM_VER, company, ats, jid, title, url, location, remote, dept, posted, text, salary, hint, desc, hybrid, posted_at)).encode("utf-8", "replace")).hexdigest()[:12]
+    old = KNOWN.get(f"{ats}-{slugify(company)}-{jid}")
+    if old and old.get("h") == key:
+        j = dict(old)
+        if j.get("desc") and (j.get("posted") or "")[:10] < DESC_SINCE: j["desc"] = ""      # as below: the full text only while recent
+        j["_crypto"] = bool(j.get("xc"))
+        return j
+    return dict(_norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary, hint, desc, hybrid, posted_at), h=key)
+
+
+def _norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False, posted_at=None):
     title = re.sub(r"\s+", " ", str(title or "")).strip()
     location = re.sub(r"\s+", " ", str(location or "")).strip()
     hybrid = bool(hybrid) or bool(re.search(r"\bhybrid\b", location, re.I))
@@ -385,8 +452,269 @@ def norm(company, ats, jid, title, url, location, remote, dept, posted, text, sa
         # the full description is kept only for recent postings: that is where it matters most, and the hosting has a size limit
         "desc": clean_html(desc) if desc and (posted or "")[:10] >= DESC_SINCE else "",
         "anywhere": bool(re.search(r"worldwide|world-wide|\banywhere\b|\bglobal\b|any location", location, re.I)) and not limited,
+        "xc": bool(CRYPTO_RE.search(blob)),            # the posting's text mentions crypto (kept, so a reused record still answers it)
         "_crypto": bool(CRYPTO_RE.search(blob)),
     }
+
+
+# ---------------------------------------------------------------- hiring systems of small and mid-size companies (15 Nov 2026)
+# Each reads the public feed a hiring system offers for showing one company's open jobs on its own careers page or website:
+# no login, no key, nothing behind a bot check. The addresses and what each feed holds are in SOURCES_RESEARCH.md, section 4.
+# A feed function returns the company's jobs, or None when the feed could not be read (the company's jobs then stay as they were).
+# Three feeds list jobs without their text (SmartRecruiters, BambooHR, Rippling): the text is read from each job's own address,
+# only for jobs not stored yet, at most DETAILS of them per board per run; a job over that number is listed now and gets its text
+# on a later run. KNOWN (set by main) holds the stored jobs.
+DETAILS = int(os.environ.get("HRN_DETAILS") or 25)
+
+
+def place(*parts):
+    """'City, Region, Country' from the parts a feed gives, without empty or repeated parts."""
+    out = []
+    for p in parts:
+        p = re.sub(r"\s+", " ", str(p or "")).strip(" ,;")
+        if p and p.lower() not in (x.lower() for x in out): out.append(p)
+    return ", ".join(out)
+
+
+def stamp(v):
+    """'2026-11-11 13:21:40 UTC' (Recruitee) as ISO text that utc_iso() reads."""
+    v = str(v or "").strip()
+    return v.replace(" UTC", "Z").replace(" ", "T", 1) if re.match(r"\d{4}-\d\d-\d\d \d", v) else v
+
+
+def pay(lo, hi, cur, per=""):
+    """A pay string for tidy_pay() from structured figures; '' when either end is missing or zero."""
+    try:
+        lo, hi = float(lo or 0), float(hi or 0)
+    except (TypeError, ValueError):
+        return ""
+    if not lo or not hi or not cur: return ""
+    per = str(per or "").lower()
+    unit = " per hour" if "hour" in per else " per month" if "month" in per else " per week" if "week" in per else " per day" if "day" in per else ""
+    return f"{lo:.0f} - {hi:.0f} {str(cur).upper()}{unit}"
+
+
+def stored(ats, name, jid):
+    """The job as stored by an earlier run, if that run read its text: it is reused instead of asking for the text again."""
+    old = KNOWN.get(f"{ats}-{slugify(name)}-{jid}")
+    if old and old.get("excerpt"):
+        j = dict(old); j["_crypto"] = False
+        return j
+    return None
+
+
+def feed_workable(src):
+    name, tok = src["name"], src["token"]
+    d = get_json(f"https://apply.workable.com/api/v1/widget/accounts/{tok}?details=true", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("jobs"), list): return None
+    out = []
+    for j in d["jobs"]:
+        if not j.get("shortcode"): continue
+        locs = [l for l in (j.get("locations") or []) if isinstance(l, dict) and not l.get("hidden")] or [{"city": j.get("city"), "region": j.get("state"), "country": j.get("country")}]
+        loc = "; ".join(filter(None, (place(l.get("city"), l.get("region"), l.get("country") or countries.name(l.get("countryCode"))) for l in locs)))
+        desc = j.get("description") or ""
+        out.append(norm(name, "workable", j["shortcode"], j.get("title"), j.get("url") or j.get("shortlink") or f"https://apply.workable.com/{tok}/j/{j['shortcode']}/",
+                        loc, j.get("telecommuting"), j.get("department") or j.get("function"), j.get("published_on") or j.get("created_at"),
+                        strip_html(desc), "", j.get("employment_type") or "", desc))
+    return out
+
+
+def feed_recruitee(src):
+    name, tok = src["name"], src["token"]
+    d = get_json(f"https://{tok}.recruitee.com/api/offers/", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("offers"), list): return None
+    out = []
+    for o in d["offers"]:
+        if o.get("status") not in (None, "published"): continue
+        en = (o.get("translations") or {}).get("en") or {}
+        desc = (en.get("description") or o.get("description") or "") + (en.get("requirements") or o.get("requirements") or "")
+        loc = "; ".join(filter(None, (place(l.get("city"), l.get("state"), l.get("country")) for l in (o.get("locations") or []) if isinstance(l, dict))))
+        loc = loc or place(o.get("city"), o.get("state_name"), o.get("country") or countries.name(o.get("country_code")))
+        s = o.get("salary") or {}
+        out.append(norm(name, "recruitee", o["id"], en.get("title") or o.get("title"), o.get("careers_url"), loc, o.get("remote"), o.get("department"),
+                        str(o.get("published_at") or o.get("created_at") or "")[:10], strip_html(desc), pay(s.get("min"), s.get("max"), s.get("currency"), s.get("period")),
+                        o.get("employment_type_code") or "", desc, bool(o.get("hybrid")), posted_at=stamp(o.get("published_at"))))
+    return out
+
+
+def feed_smartrecruiters(src):
+    name, tok = src["name"], src["token"]
+    items, off = [], 0
+    while True:                                                   # 100 a page; a page that fails leaves the whole company as it was
+        d = get_json(f"https://api.smartrecruiters.com/v1/companies/{tok}/postings?limit=100&offset={off}", 60)
+        if not isinstance(d, dict) or not isinstance(d.get("content"), list): return None
+        items += d["content"]; off += 100
+        if not d["content"] or off >= int(d.get("totalFound") or 0) or off >= 5000: break
+    out, budget = [], DETAILS
+    for p in items:
+        jid = p.get("id")
+        if not jid: continue
+        old = stored("smartrecruiters", name, jid)
+        if old:
+            out.append(old); continue
+        l = p.get("location") or {}
+        loc = l.get("fullLocation") or place(l.get("city"), l.get("region"), countries.name(l.get("country")))
+        if l.get("remote") and not re.search(r"\bremote\b", loc, re.I): loc = place("Remote", loc)
+        url, text, desc, sal = f"https://jobs.smartrecruiters.com/{tok}/{jid}", "", "", ""
+        if budget > 0:
+            budget -= 1
+            det = get_json(f"https://api.smartrecruiters.com/v1/companies/{tok}/postings/{jid}", 30)
+            if isinstance(det, dict):
+                secs = ((det.get("jobAd") or {}).get("sections") or {})
+                desc = "".join(f"<h3>{html.escape(s.get('title') or '')}</h3>{s.get('text') or ''}" for k in ("jobDescription", "qualifications", "additionalInformation", "companyDescription")
+                               for s in [secs.get(k) or {}] if strip_html(s.get("text")))
+                text, url = strip_html(desc), det.get("postingUrl") or url
+                c = det.get("compensation") or {}
+                sal = pay(c.get("min"), c.get("max"), c.get("currency"), c.get("period"))
+        out.append(norm(name, "smartrecruiters", jid, p.get("name"), url, loc, l.get("remote"), (p.get("department") or {}).get("label") or (p.get("function") or {}).get("label"),
+                        str(p.get("releasedDate") or "")[:10], text, sal, (p.get("typeOfEmployment") or {}).get("label") or "", desc, bool(l.get("hybrid")), posted_at=p.get("releasedDate")))
+    return out
+
+
+def feed_teamtailor(src):
+    name, tok = src["name"], src["token"]
+    d = get_json(f"https://{tok}.teamtailor.com/jobs.json", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("items"), list): return None
+    out = []
+    for it in d["items"]:
+        jp = it.get("_jobposting") or {}
+        locs = jp.get("jobLocation") or []
+        locs = locs if isinstance(locs, list) else [locs]
+        loc = "; ".join(filter(None, (place(a.get("addressLocality"), countries.name(a.get("addressCountry")) or a.get("addressCountry"))
+                                      for a in ((x or {}).get("address") or {} for x in locs) if isinstance(a, dict))))
+        remote = str(jp.get("jobLocationType") or "").upper() == "TELECOMMUTE"
+        if remote and not re.search(r"\bremote\b", loc, re.I): loc = place("Remote", loc)
+        desc = it.get("content_html") or jp.get("description") or ""
+        jid = re.search(r"/jobs/(\d+)", it.get("url") or "")
+        out.append(norm(name, "teamtailor", jid.group(1) if jid else it.get("id"), it.get("title"), it.get("url"), loc, remote, "",
+                        str(it.get("date_published") or "")[:10], strip_html(desc), "", jp.get("employmentType") or "", desc, posted_at=it.get("date_published")))
+    return out
+
+
+def feed_personio(src):
+    import xml.etree.ElementTree as ET
+    name, tok = src["name"], src["token"]
+    raw = get_text(f"https://{tok}.jobs.personio.de/xml?language=en", 60, "application/xml")
+    try:
+        root = ET.fromstring(raw) if raw else None
+    except ET.ParseError:
+        root = None
+    if root is None or root.tag != "workzag-jobs": return None
+    out = []
+    for p in root.findall("position"):
+        g = lambda k: (p.findtext(k) or "").strip()
+        if not g("id"): continue
+        offices = [g("office")] + [(o.text or "").strip() for o in p.findall("additionalOffices/office")]
+        desc = "".join(f"<h3>{html.escape((d.findtext('name') or '').strip())}</h3>{d.findtext('value') or ''}" for d in p.findall("jobDescriptions/jobDescription"))
+        out.append(norm(name, "personio", g("id"), g("name"), f"https://{tok}.jobs.personio.de/job/{g('id')}?language=en", "; ".join(dict.fromkeys(o for o in offices if o)),
+                        False, g("department") or g("recruitingCategory"), g("createdAt")[:10], strip_html(desc), "", g("schedule") or g("employmentType"), desc,
+                        posted_at=g("createdAt")))
+    return out
+
+
+def feed_bamboohr(src):
+    name, tok = src["name"], src["token"]
+    d = get_json(f"https://{tok}.bamboohr.com/careers/list", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("result"), list): return None
+    out, budget = [], DETAILS
+    for j in d["result"]:
+        jid = j.get("id")
+        if not jid: continue
+        old = stored("bamboohr", name, jid)
+        if old:
+            out.append(old); continue
+        a, l = j.get("atsLocation") or {}, j.get("location") or {}
+        loc = place(a.get("city") or l.get("city"), a.get("state") or a.get("province") or l.get("state"), a.get("country"))
+        remote, hybrid = str(j.get("locationType")) == "1" or bool(j.get("isRemote")), str(j.get("locationType")) == "2"
+        text = desc = sal = posted = ""
+        if budget > 0:
+            budget -= 1
+            det = get_json(f"https://{tok}.bamboohr.com/careers/{jid}/detail", 30)
+            jo = ((det or {}).get("result") or {}).get("jobOpening") if isinstance(det, dict) else None
+            if isinstance(jo, dict):
+                desc, posted = jo.get("description") or "", jo.get("datePosted") or ""
+                dl = jo.get("location") or {}
+                loc = place(dl.get("city"), dl.get("state"), dl.get("addressCountry")) or loc
+                text, sal = strip_html(desc), str(jo.get("compensation") or "")
+        if remote and not re.search(r"\bremote\b", loc, re.I): loc = place("Remote", loc)
+        out.append(norm(name, "bamboohr", jid, j.get("jobOpeningName"), f"https://{tok}.bamboohr.com/careers/{jid}", loc, remote, j.get("departmentLabel"),
+                        posted, text, sal, j.get("employmentStatusLabel") or "", desc, hybrid))
+    return out
+
+
+def feed_breezy(src):
+    name, tok = src["name"], src["token"]
+    d = get_json(f"https://{tok}.breezy.hr/json?verbose=true", 60)
+    if not isinstance(d, list): return None
+    out = []
+    for j in d:
+        if not isinstance(j, dict) or not j.get("id"): continue
+        locs = [x for x in (j.get("locations") or [j.get("location") or {}]) if isinstance(x, dict)]
+        loc = "; ".join(filter(None, (place("Remote" if x.get("is_remote") else "", x.get("city"), (x.get("state") or {}).get("name"), (x.get("country") or {}).get("name")) for x in locs)))
+        desc = j.get("description") or ""
+        out.append(norm(name, "breezy", j["id"], j.get("name"), j.get("url") or f"https://{tok}.breezy.hr/p/{j.get('friendly_id') or j['id']}", loc,
+                        any(x.get("is_remote") for x in locs), j.get("department"), str(j.get("published_date") or "")[:10], strip_html(desc), str(j.get("salary") or ""),
+                        (j.get("type") or {}).get("id") or "", desc, posted_at=j.get("published_date")))
+    return out
+
+
+def feed_pinpoint(src):
+    name, tok = src["name"], src["token"]
+    d = get_json(f"https://{tok}.pinpointhq.com/postings.json", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("data"), list): return None
+    out = []
+    for j in d["data"]:
+        if not j.get("id"): continue
+        l = j.get("location") or {}
+        wt = str(j.get("workplace_type") or "").lower()
+        loc = place("Remote" if wt == "remote" else "", l.get("city") or l.get("name"), l.get("province"))
+        desc = "".join(f"{'<h3>' + html.escape(j.get(k + '_header') or '') + '</h3>' if j.get(k + '_header') else ''}{j.get(k) or ''}"
+                       for k in ("description", "key_responsibilities", "skills_knowledge_expertise", "benefits"))
+        sal = pay(j.get("compensation_minimum"), j.get("compensation_maximum"), j.get("compensation_currency"), j.get("compensation_frequency")) if j.get("compensation_visible") else ""
+        # no publishing date in this feed: the day our run first saw the job stands in for it (main fills it)
+        out.append(norm(name, "pinpoint", j["id"], j.get("title"), j.get("url"), loc, wt == "remote", ((j.get("job") or {}).get("department") or {}).get("name"),
+                        "", strip_html(desc), sal, j.get("employment_type") or "", desc, wt == "hybrid"))
+    return out
+
+
+def feed_rippling(src):
+    name, tok = src["name"], src["token"]
+    items, page = [], 0
+    while True:
+        d = get_json(f"https://ats.rippling.com/api/v2/board/{tok}/jobs?page={page}&pageSize=100", 60)
+        if not isinstance(d, dict) or not isinstance(d.get("items"), list): return None
+        items += d["items"]; page += 1
+        if page >= int(d.get("totalPages") or 1) or page >= 30: break
+    out, budget = [], DETAILS
+    for j in items:
+        jid = j.get("id")
+        if not jid: continue
+        old = stored("rippling", name, jid)
+        if old:
+            out.append(old); continue
+        locs = [x for x in (j.get("locations") or []) if isinstance(x, dict)]
+        remote = bool(locs) and all(x.get("workplaceType") == "REMOTE" for x in locs)
+        loc = "; ".join(filter(None, (place("Remote" if x.get("workplaceType") == "REMOTE" else "", x.get("city"), x.get("state"), x.get("country")) for x in locs)))
+        text = desc = sal = posted = ""
+        hint = ""
+        if budget > 0:
+            budget -= 1
+            det = get_json(f"https://ats.rippling.com/api/v2/board/{tok}/jobs/{jid}", 30)
+            if isinstance(det, dict):
+                parts = det.get("description") or {}           # {"role": ..., "company": ...}: the role first, the company's own blurb last
+                desc = "".join(str(v or "") for _, v in sorted(parts.items(), key=lambda kv: kv[0] == "company")) if isinstance(parts, dict) else str(parts)
+                text, posted = strip_html(desc), str(det.get("createdOn") or "")
+                hint = (det.get("employmentType") or {}).get("label") or ""
+                pr = [r for r in (det.get("payRangeDetails") or []) if isinstance(r, dict)]
+                if pr: sal = pay(pr[0].get("rangeStart"), pr[0].get("rangeEnd"), pr[0].get("currency"), pr[0].get("frequency"))
+        out.append(norm(name, "rippling", jid, j.get("name"), j.get("url") or f"https://ats.rippling.com/{tok}/jobs/{jid}", loc, remote,
+                        (j.get("department") or {}).get("name"), posted[:10], text, sal, {"TEMP": "temporary", "INTERN": "intern"}.get(hint, hint), desc,
+                        any(x.get("workplaceType") == "HYBRID" for x in locs), posted_at=posted or None))
+    return out
+
+
+FEEDS = {"workable": feed_workable, "recruitee": feed_recruitee, "smartrecruiters": feed_smartrecruiters, "teamtailor": feed_teamtailor,
+         "personio": feed_personio, "bamboohr": feed_bamboohr, "breezy": feed_breezy, "pinpoint": feed_pinpoint, "rippling": feed_rippling}
 
 
 def fetch(src):
@@ -408,8 +736,8 @@ def fetch_feed(src):
             out.append(norm(name, ats, j["id"], j.get("title"), j.get("absolute_url"), (j.get("location") or {}).get("name"),
                             False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges")), "", html.unescape(j.get("content") or ""),
                             posted_at=j.get("first_published")))          # the publishing time; "updated_at" moves with every edit, so it is never used as the exact time
-    elif ats == "lever":
-        d = get_json(f"https://api.lever.co/v0/postings/{tok}?mode=json", 60)
+    elif ats in ("lever", "lever-eu"):                         # lever-eu: the same feed for companies Lever hosts in Europe
+        d = get_json(f"https://api.{'eu.' if ats == 'lever-eu' else ''}lever.co/v0/postings/{tok}?mode=json", 60)
         if not isinstance(d, list): return name, None
         for j in d:
             c = j.get("categories") or {}
@@ -423,6 +751,9 @@ def fetch_feed(src):
                             c.get("team") or c.get("department"), posted, text, sal, c.get("commitment") or "",
                             (j.get("description") or "") + "".join(f"<h3>{html.escape(l.get('text', ''))}</h3><ul>{l.get('content', '')}</ul>" for l in (j.get("lists") or [])) + (j.get("additional") or ""),
                             posted_at=j.get("createdAt")))                # milliseconds; the only time Lever's public feed has
+    elif ats in FEEDS:
+        got = FEEDS[ats](src)
+        return name, got
     else:
         d = get_json(f"https://api.ashbyhq.com/posting-api/job-board/{tok}?includeCompensation=true", 60)
         if not d or "jobs" not in d: return name, None
@@ -479,6 +810,25 @@ def direct_and_paid(db, used_slugs, indexed, stats):
     print(f"placements: {len(seen)} posted jobs, {len(exp.get('boosts') or [])} promoted, {len(exp.get('sponsors') or [])} sponsors")
 
 
+LEGAL = re.compile(r"[,.]?\s+\b(inc|incorporated|llc|l\.l\.c|ltd|limited|gmbh|ag|se|sa|s\.a|sas|sarl|srl|s\.r\.l|bv|b\.v|nv|n\.v|ab|oy|oyj|as|a/s|aps|asa|plc|pty|"
+                   r"corp|corporation|co|company|kg|gmbh & co\.? kg|ug|sp\. z o\.o|sp z o o|s\.p\.a|spa|kft|zrt|d\.o\.o|doo|ooo|ооо|ао|пао|group|holding|holdings)\.?$", re.I)
+
+
+def co_key(name):
+    """A company name without its legal form, case and punctuation: "Acme GmbH", "ACME" and "Acme, Inc." are one company."""
+    s = re.sub(r"^(ооо|ао|пао|зао|оао)\s+", "", re.sub(r"\s+", " ", str(name or "")).strip(), flags=re.I)
+    for _ in range(3):
+        s2 = LEGAL.sub("", s).strip()
+        if s2 == s or not s2: break
+        s = s2
+    return re.sub(r"[^\w]+", "", s.lower())
+
+
+def dup_key(j):
+    """One job, whichever source lists it: the same company, title and place."""
+    return (co_key(j["company"]), re.sub(r"\s+", " ", j["title"].lower()).strip(), re.sub(r"\s+", " ", (j.get("location") or "").lower()).strip())
+
+
 def main():
     sources = [dict(s, crypto=True) for s in json.loads((ROOT / "sources.json").read_text()) if s["name"] not in EXCLUDE]
     tech_file = ROOT / "sources_tech.json"
@@ -493,7 +843,8 @@ def main():
     resting = set()
     more_file = ROOT / "sources_more.json"
     rot = max(1, int(os.environ.get("HRN_ROTATE") or 4))
-    slot = datetime.datetime.now(datetime.timezone.utc).hour % rot
+    hour = datetime.datetime.now(datetime.timezone.utc).hour
+    slot = hour % rot
     for s in (json.loads(more_file.read_text()) if more_file.exists() else []):
         if (s["ats"], s["token"]) in taken or s["name"].lower() in taken or s["name"] in EXCLUDE_TECH: continue
         taken |= {(s["ats"], s["token"]), s["name"].lower()}
@@ -501,23 +852,58 @@ def main():
             sources.append(dict(s, crypto=False))
         else:
             resting.add(s["name"])
+    # Boards on the hiring systems small and mid-size companies use (15 Nov 2026: Workable, Recruitee, SmartRecruiters, Teamtailor,
+    # Personio, BambooHR, Breezy, Pinpoint, Rippling, Lever's European site), found by discover_ats.py and listed in sources_ats.json.
+    # They have their own rotation (HRN_ROTATE_ATS shares, 8 by default: every board every 8 hours, three times a day). A board whose
+    # company is already read from another system is skipped by its name with the legal form taken off ("Acme GmbH" is "Acme").
+    ats_file = ROOT / "sources_ats.json"
+    rot_a = max(1, int(os.environ.get("HRN_ROTATE_ATS") or 8))
+    names = {co_key(n) for n in taken if isinstance(n, str)}
+    for s in (json.loads(ats_file.read_text()) if ats_file.exists() else []):
+        k = co_key(s["name"])
+        if (s["ats"], s["token"]) in taken or k in names or s["name"] in EXCLUDE_TECH: continue
+        taken.add((s["ats"], s["token"])); names.add(k)
+        if int(hashlib.md5((s["ats"] + s["token"]).encode()).hexdigest(), 16) % rot_a == hour % rot_a:
+            sources.append(dict(s, crypto=False))
+        else:
+            resting.add(s["name"])
     is_crypto = {s["name"]: s["crypto"] for s in sources}
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
+    KNOWN.update(db)                                        # feeds without the text in their list reuse what an earlier run read (see FEEDS)
     used_slugs = {j["slug"] for j in db.values()}
-    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": []}
-    with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 20)) as ex:      # 12 for the first 784 boards; 20 with a quarter of the new ones
+    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "dupes": 0}
+    # Public job portals with open data, many employers each (15 Nov 2026): Russia's federal portal (trudvsem.py) and Sweden's
+    # Platsbanken (jobtech.py). .github/workflows/portals.yml reads them once a day into snapshots (portals.py) because Russia's file
+    # alone takes minutes to download; every run applies the latest snapshot, which takes seconds. A portal without a usable
+    # snapshot rests like a board out of turn. HRN_PORTALS=1 reads them live instead (to check locally).
+    import portals as snapshots
+    live = os.environ.get("HRN_PORTALS") == "1"
+    pool = cf.ThreadPoolExecutor(2)
+    portals = {m.SOURCE: pool.submit(m.fetch if live else (lambda k=k: snapshots.load(k))) for k, m in snapshots.MODULES.items()}
+    with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 24)) as ex:      # 12 for the first 784 boards; 20 with a quarter of sources_more; 24 with the new systems
         results = list(ex.map(fetch, sources))
     # second, gentler pass for feeds that timed out or were rate-limited the first time
     by_name = {s["name"]: s for s in sources}
-    retry = [by_name[name] for name, jobs in results if jobs is None]
+    retry = [by_name[name] for name, jobs in results if jobs is None][:400]
     if retry:
-        with cf.ThreadPoolExecutor(3) as ex:
+        with cf.ThreadPoolExecutor(4) as ex:
             again = dict(ex.map(fetch, retry))
         results = [(name, again.get(name) if jobs is None else jobs) for name, jobs in results]
+    for src_name, fut in list(portals.items()):
+        jobs = fut.result()
+        if jobs is None:
+            resting.add(src_name); del portals[src_name]   # no snapshot: its jobs stay as they were
+        else:
+            results.append((src_name, jobs)); is_crypto[src_name] = False
+    pool.shutdown()
     seen_at = utc_now()                                     # when this run finished reading the feeds: the "first seen" time of every job that is new in it
-    open_by_co = defaultdict(list)                          # the open jobs of each company, found once instead of once per board
+    board = lambda j: j.get("src") or j["company"]          # what a job is read from: its company's board, or a portal with many employers
+    open_by_co = defaultdict(list)                          # the open jobs of each board, found once instead of once per board
+    owner = {}                                              # the same job (company, title, place) from two sources: the first one keeps it
     for jid, old in db.items():
-        if old["active"]: open_by_co[old["company"]].append(jid)
+        if old["active"]:
+            open_by_co[board(old)].append(jid)
+            owner.setdefault(dup_key(old), board(old))
     for name, jobs in results:
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
@@ -525,22 +911,26 @@ def main():
             stats["dropped"].append(name); continue          # same-name company that is not crypto
         seen = set()
         for j in jobs:
-            j.pop("_crypto")
+            j.pop("_crypto", None)
             j["crypto"] = is_crypto[name]
             if not j["title"] or not j["url"]: continue
+            k = dup_key(j)
+            if owner.setdefault(k, name) != name:
+                stats["dupes"] += 1; continue               # already listed from another source
             seen.add(j["id"])
             old = db.get(j["id"])
             if old:
                 j.update(slug=old["slug"], first_seen=old["first_seen"])
                 if old.get("first_seen_at"): j["first_seen_at"] = old["first_seen_at"]      # jobs first seen before exact times were kept have none
             else:
-                base = f"{slugify(j['title'])}-{slugify(name)}"
+                base = f"{slugify(j['title'])}-{slugify(j['company'])}"
                 slug, i = base, 2
                 while slug in used_slugs:
                     slug, i = f"{base}-{i}", i + 1
                 used_slugs.add(slug)
                 j.update(slug=slug, first_seen=TODAY, first_seen_at=seen_at)
                 stats["new"] += 1
+            if not j.get("posted"): j["posted"] = (old or {}).get("posted") or j["first_seen"]      # feeds without a publishing date: the day we first saw it
             j.update(last_seen=TODAY, active=True)
             j.pop("closed", None)
             db[j["id"]] = j
@@ -549,15 +939,15 @@ def main():
             old.update(active=False, closed=TODAY); stats["closed"] += 1
         if not jobs and len(gone) >= 20:
             stats["emptied"].append(name)                   # the whole board went empty at once: often a move to another hiring system
-    known = {s["name"] for s in sources} | resting             # a company we no longer read cannot keep "open" jobs forever; one resting this hour can
+    known = {s["name"] for s in sources} | resting | set(portals)   # a board we no longer read cannot keep "open" jobs forever; one resting this hour can
     for old in db.values():
-        if old["active"] and not old.get("direct") and old["company"] not in known:
+        if old["active"] and not old.get("direct") and board(old) not in known:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
     DATA.parent.mkdir(exist_ok=True)
     direct_and_paid(db, used_slugs, {s["name"].lower() for s in sources}, stats)
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
-    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
+    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, left out as listed by another source {stats['dupes']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
                                                           "failed": stats["failed"], "emptied": stats["emptied"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))

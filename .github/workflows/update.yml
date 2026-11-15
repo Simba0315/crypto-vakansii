@@ -51,7 +51,8 @@ jobs:
           # be confused: starting empty after a network error would overwrite everything a few steps later.
           if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
             git fetch --depth=1 origin data
-            git show FETCH_HEAD:jobs.json.gz | gunzip > data/jobs.json
+            # one file, or pieces jobs.json.gz.00, .01, … once it passes 90 MB (GitHub refuses files over 100 MB); the pieces join into one gzip stream
+            for f in $(git ls-tree --name-only FETCH_HEAD | grep -E '^jobs\.json\.gz(\.[0-9]+)?$' | sort); do git show "FETCH_HEAD:$f"; done | gunzip > data/jobs.json
             git show FETCH_HEAD:reports.json > data/reports.json 2>/dev/null || rm -f data/reports.json
             git show FETCH_HEAD:posted.json > data/posted.json 2>/dev/null || rm -f data/posted.json      # what post.py already sent to the channels
             echo "restored $(wc -c < data/jobs.json) bytes"
@@ -60,6 +61,17 @@ jobs:
             code=$?
             if [ "$code" != "2" ]; then echo "could not reach the repository (exit $code): stopping instead of starting empty"; exit 1; fi
             echo "no data branch yet, starting empty"
+          fi
+      # Snapshots of the public job portals (portals.yml, once a day): collect.py applies them in every run.
+      - name: Restore portal snapshots
+        run: |
+          mkdir -p data/portals
+          if git ls-remote --exit-code --heads origin portals >/dev/null 2>&1; then
+            git fetch -q --depth=1 origin portals
+            for f in $(git ls-tree --name-only FETCH_HEAD | grep '\.json\.gz$'); do git show "FETCH_HEAD:$f" > "data/portals/$f"; done
+            ls -la data/portals
+          else
+            echo "no portal snapshots yet"
           fi
       - name: Collect jobs (closed ones move to the archive)
         run: python3 collect.py
@@ -72,7 +84,7 @@ jobs:
             echo "the new database ($new bytes) is less than half of the previous one ($PREV_BYTES bytes): not saving it"; exit 1
           fi
           tmp="$(mktemp -d)"
-          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          gzip -9 -c data/jobs.json | split -b 90m -d -a 2 - "$tmp/jobs.json.gz."; [ -e "$tmp/jobs.json.gz.01" ] || mv "$tmp/jobs.json.gz.00" "$tmp/jobs.json.gz"   # pieces under GitHub's 100 MB limit
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
           cd "$tmp"
@@ -102,7 +114,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tmp="$(mktemp -d)"
-          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          gzip -9 -c data/jobs.json | split -b 90m -d -a 2 - "$tmp/jobs.json.gz."; [ -e "$tmp/jobs.json.gz.01" ] || mv "$tmp/jobs.json.gz.00" "$tmp/jobs.json.gz"   # pieces under GitHub's 100 MB limit
           cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
           cd "$tmp"
@@ -198,7 +210,7 @@ jobs:
           python3 post.py
           # keep the record of what was posted next to the jobs database, or the next run would post the same jobs again
           tmp="$(mktemp -d)"
-          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          gzip -9 -c data/jobs.json | split -b 90m -d -a 2 - "$tmp/jobs.json.gz."; [ -e "$tmp/jobs.json.gz.01" ] || mv "$tmp/jobs.json.gz.00" "$tmp/jobs.json.gz"   # pieces under GitHub's 100 MB limit
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
           cd "$tmp"
