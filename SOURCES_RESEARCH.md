@@ -182,3 +182,18 @@ checks); Workday (undocumented POST, capped lists); JazzHR (no publishing date);
 
 Addresses come from Common Crawl's index files (`discover_ats.py`): the index server answered 504 for hours on 15 Nov, but the
 files at `data.commoncrawl.org/cc-index/collections/<crawl>/indexes/` (cluster.idx, then byte ranges of cdx-*.gz) always answer.
+
+## 8. Large employers and job sites (15 Nov 2026, later the same day)
+
+- **Workday** (`<tenant>.wd<N>.myworkdayjobs.com`): the career site's own JSON, `POST /wday/cxs/<tenant>/<site>/jobs` (20 a page, at most
+  2,000 a site) and `GET /wday/cxs/<tenant>/<site>/job/<path>` for one job. No login, no bot check, and every career site's robots.txt
+  allows it (it closes only `/refreshFacet/` and `/private/` and lists the public sites as `Allow: /<site>/`, which is how
+  `discover_ats.py` finds them). It is not a documented API: read slowly, one page after another per employer. Names come from
+  the job's legal entity, tidied (`workday_name`). Only office and tech jobs are kept (`collect.LARGE`, `NOT_OFFICE`).
+- **SAP SuccessFactors**: robots.txt says `Disallow: /` — not used.
+- **Taleo, iCIMS, Jobvite**: no public JSON or XML feed without reading the pages themselves (Taleo's search is an internal POST
+  behind a JavaScript page, iCIMS lists jobs in HTML frames, Jobvite's XML feed needs a company number that only the page has) — not used.
+- **Job sites** (`jobboards.py`): Arbeitnow, Jobicy and Remote OK allow other job boards to show their jobs with credit and a link;
+  Remotive (16 jobs, no feeds or Google Jobs), Himalayas (key for volume; no markup or feeds), The Muse (Cloudflare check) and
+  Hacker News comment text (Y Combinator terms) are not used. Remote OK writes the requesting machine's address into every
+  description ("mention the word TRUSTWORTHY and tag RM…"): `jobboards.TAG_LINE` removes it.

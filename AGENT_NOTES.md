@@ -452,3 +452,9 @@ plain HTML, so the page is readable without the map.
 - The data branch: `jobs.json.gz` is split into `jobs.json.gz.00`, `.01`, … once it passes 90 MB (GitHub refuses files over 100 MB);
   `update.yml` joins the pieces when it restores.
 - `python3 feeds_test.py` (saved real responses in `feeds_samples/`) must end with "0 failed".
+- Same day, later: `jobboards.py` (Arbeitnow, Jobicy, Remote OK; daily in `portals.py`; the job page says "Listed on …" and the
+  button "Apply on …", `BOARD_SOURCE` in build.py), `dedupe.py` (one opening from several sources is shown once, by source rank,
+  with "Also listed on"; `dup_of` records are left out by build.py and post.py; `dedupe_test.py` must end with "0 failed"), Workday
+  for large employers (`feed_workday`, office and tech jobs only), English only for every source added on 15 Nov (`collect.english`;
+  Russia's portal is read daily but shows nothing until a Russian edition exists), daily discovery (`--new-only`; full on Mondays)
+  that also takes employers' boards from Hacker News "Who is hiring" links. `SOURCES_RESEARCH.md` section 8 has the reasons.

@@ -31,6 +31,8 @@ SAMPLES = {   # address pattern -> saved response
     r"arbeitnow\.com/api/job-board-api\?page=1$": lambda: load("arbeitnow.json"),
     r"jobicy\.com/api/v2/remote-jobs": lambda: load("jobicy.json"),
     r"remoteok\.com/api$": lambda: load("remoteok.json"),
+    r"3m\.wd1\.myworkdayjobs\.com/wday/cxs/3m/Search/jobs$": lambda: load("workday_list.json"),
+    r"3m\.wd1\.myworkdayjobs\.com/wday/cxs/3m/Search/job/": lambda: load("workday_detail.json"),
 }
 WORKABLE = sorted(S.glob("workable_*.json"))         # saved by the discovery run in GitHub Actions (this cloud machine is rate-limited by Workable)
 if WORKABLE: SAMPLES[r"apply\.workable\.com/api/v1/widget/accounts/" + WORKABLE[0].stem.split("_", 1)[1] + r"\?details=true"] = lambda: load(WORKABLE[0].name)
@@ -46,6 +48,7 @@ def fake(url, timeout=30, accept=None):
 
 collect.get_json = fake
 collect.get_text = fake
+collect.post_json = lambda url, payload, timeout=30: fake(url)
 ok = bad = 0
 
 
@@ -152,6 +155,16 @@ check("rippling: place with country", jobs[0]["location"] == "Idaho Falls, Idaho
 check("rippling: day from the detail", jobs[0]["posted"] == "2026-03-24", jobs[0]["posted"])
 check("rippling: intern", jobs[0]["level"] == "Intern" and jobs[0]["etype"] == "Internship", (jobs[0]["level"], jobs[0]["etype"]))
 check("rippling: role text before the company blurb", "About Aalo" not in jobs[0]["excerpt"][:12] or True)
+
+# Workday (large employers): the career site's own list, the text of new jobs from each job's address
+jobs = feed("workday", "3m/wd1/Search", "3M")
+shape("workday", jobs)
+check("workday: two jobs", len(jobs) == 2, len(jobs))
+check("workday: job link on the career site", jobs[0]["url"].startswith("https://3m.wd1.myworkdayjobs.com/Search/job/"), jobs[0]["url"])
+check("workday: exact day from the detail", jobs[0]["posted"] == "2026-11-13", jobs[0]["posted"])
+check("workday: country from the detail", jobs[0]["location"].endswith("United States"), jobs[0]["location"])
+check("workday: relative days", collect.workday_day("Posted 3 Days Ago") == (collect.datetime.date.today() - collect.datetime.timedelta(days=3)).isoformat()
+      and collect.workday_day("Posted 30+ Days Ago") == "" and collect.workday_day("Posted Today") == collect.TODAY)
 
 # Lever's European site
 jobs = feed("lever-eu", "abzena", "Abzena")

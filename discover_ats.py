@@ -46,6 +46,8 @@ SYSTEMS = {
                    r"(?:boards|job-boards)(?:\.eu)?\.greenhouse\.io/(?:embed/job_board\?for=)?([a-z0-9][a-z0-9]*)", {"embed", "api", "v1", "assets", "static"}),
     "lever": (["co,lever,jobs)/"], r"//jobs\.lever\.co/([a-z0-9][a-z0-9.-]*)", {"api", "static"}),
     "ashby": (["com,ashbyhq,jobs)/"], r"jobs\.ashbyhq\.com/([^/?#\s\"]+)", {"api", "static", "favicon.ico", "robots.txt", "_next"}),
+    # large employers: the host gives tenant/wdN; the public career sites are then read from each host's robots.txt (workday_sites)
+    "workday": (["com,myworkdayjobs,"], r"//([a-z0-9-]+\.wd\d+)\.myworkdayjobs\.com", {"www"}),
 }
 AGENCY_NAME = re.compile(r"staffing|recruit|personnel|personal(service|dienst|vermittlung|beratung)|zeitarbeit|arbeitnehmerüberlassung|headhunt|executive search|"
                          r"talent (solutions|partners|acquisition)|placement|uitzend|detacher|bemanning|rekryter|interim|manpower|employment (agency|services)|"
@@ -132,6 +134,55 @@ def tokens(system, urls):
     return out
 
 
+def workday_sites(host_tokens):
+    """tenant.wdN hosts -> tokens tenant/wdN/site for each public career site its robots.txt allows ("Allow: /External/")."""
+    def sites(ht):
+        tenant, wd = ht.split(".", 1)
+        try:
+            txt = subprocess.run(["curl", "-s", "--max-time", "20", "-A", "Mozilla/5.0 (job-board aggregator)", f"https://{tenant}.{wd}.myworkdayjobs.com/robots.txt"],
+                                 capture_output=True, timeout=25).stdout.decode("utf-8", "replace")
+        except Exception:
+            return []
+        out = []
+        for m in re.finditer(r"(?im)^allow:\s*/([A-Za-z0-9_.-]+)/\s*$", txt):
+            site = m.group(1)
+            if site.lower() in ("refreshfacet", "private", "wday") or re.fullmatch(r"[a-z]{2}-[A-Z]{2}", site): continue
+            out.append(f"{tenant}/{wd}/{site}")
+        return out
+    with cf.ThreadPoolExecutor(16) as ex:
+        return {t for ts in ex.map(sites, sorted(host_tokens)) for t in ts}
+
+
+def probe_workday(token):
+    """One page of a Workday site: (sample of up to 20 jobs, total, the employer's name), or (None, 0, None)."""
+    from net import post_json
+    tenant, wd, site = token.split("/", 2)
+    host = f"https://{tenant}.{wd}.myworkdayjobs.com"
+    d = post_json(f"{host}/wday/cxs/{tenant}/{site}/jobs", {"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""}, 45)
+    if not isinstance(d, dict) or not isinstance(d.get("jobPostings"), list): return None, 0, None
+    jobs = [collect.norm(tenant, "workday", p.get("externalPath") or p.get("title"), p.get("title"), host, p.get("locationsText") or "", False, "", "", "")
+            for p in d["jobPostings"] if p.get("title")]
+    name = None
+    if jobs and d["jobPostings"][0].get("externalPath"):
+        det = get_json(f"{host}/wday/cxs/{tenant}/{site}{d['jobPostings'][0]['externalPath']}", 30)
+        name = workday_name((((det or {}).get("hiringOrganization") or {}).get("name") or "") if isinstance(det, dict) else "")
+    return jobs, int(d.get("total") or 0), name or (tenant.upper() if len(tenant) <= 4 else tenant.replace("-", " ").title())
+
+
+def workday_name(legal):
+    """Workday gives the legal entity of the job's country ("APTIV INDIA PRIVATE LIMITED", "USA 3M Company", "0200 Ares Operations LLC"):
+    the company's name is what is left without codes, country words and legal forms ("Aptiv", "3M", "Ares Operations")."""
+    import countries
+    words = re.sub(r"[,.]", " ", str(legal or "")).split()
+    lands = {n.lower() for n in countries.NAMES.values()} | {"usa", "us", "uk", "u s", "america", "india", "emea", "apac", "global"}
+    legal_w = {"private", "pvt", "limited", "ltd", "llc", "inc", "corp", "corporation", "company", "co", "gmbh", "ag", "sa", "bv", "nv", "plc", "llp", "lp",
+               "pte", "pty", "srl", "sas", "kk", "sdn", "bhd", "holdings", "the"}
+    kept = [w for i, w in enumerate(words) if not (re.fullmatch(r"\d+", w) and i == 0) and w.lower() not in legal_w and w.lower() not in lands]
+    name = " ".join(kept).strip()
+    if name.upper() == name and len(name) > 4: name = " ".join(w if len(w) <= 3 else w.title() for w in name.split())
+    return name
+
+
 def shown_name(system, token, jobs, feed):
     """The company's name as its own feed writes it, else the token made readable ("acme-labs" -> "Acme Labs")."""
     if isinstance(feed, dict):
@@ -204,19 +255,19 @@ def probe(system, token):
     return jobs, (feed_name or "").strip() or shown_name(system, token, jobs, None)
 
 
-def judge(name, jobs):
+def judge(name, jobs, large=False):
     """Why a board is left out, or '' when it is kept. The rules of sources_more.json (14 Nov 2026), made stricter on 15 Nov after the
     first run let in chains whose titles are not in English (Domino's, Accor, JYSK) and IT staffing firms."""
     n = len(jobs)
     if not n: return "no open jobs"
-    if n > MAX_JOBS: return f"over {MAX_JOBS} jobs (a chain or a big enterprise)"
+    if n > MAX_JOBS and not large: return f"over {MAX_JOBS} jobs (a chain or a big enterprise)"
     if AGENCY_NAME.search(name): return "agency (name)"
     if sum(bool(AGENCY_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * n): return "agency (postings)"
     if sum(bool(STAFFING_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * n): return "agency (staffing terms)"
     if sum(collect.english(j) for j in jobs) < n / 2: return "mostly not in English"        # the site is in English (owner, 15 Nov)
     if sum(j["cat"] in BLUE for j in jobs) > n / 2: return "mostly shop, warehouse or clinic work"
     if sum(j["cat"] in OFFICE for j in jobs) < 0.4 * n: return "under 40% office or tech work"
-    if n >= 60 and len({re.sub(r"\W+", " ", j["title"].lower()).strip() for j in jobs}) < 0.25 * n: return "the same few titles repeated (mass hiring)"
+    if n >= 60 and not large and len({re.sub(r"\W+", " ", j["title"].lower()).strip() for j in jobs}) < 0.25 * n: return "the same few titles repeated (mass hiring)"
     return ""
 
 
@@ -233,6 +284,11 @@ def lands(jobs):
 def examine(st):
     """Ask one board and judge it, in a worker process: (system, token, name, number of jobs, jobs by country, reason left out or '')."""
     s, t = st
+    if s == "workday":                 # large employers: judged on the first page of 20, sized by the total the site reports
+        jobs, total, name = probe_workday(t)
+        if jobs is None: return s, t, None, 0, {}, "no answer"
+        if total > collect.WD_MAX: return s, t, name, total, {}, f"over {collect.WD_MAX} jobs (Workday lists no more)"
+        return s, t, name, total, {k: round(v * total / max(1, len(jobs))) for k, v in by_country(jobs).items()}, judge(name, jobs, large=True)
     jobs, name = probe(s, t)
     if jobs is None: return s, t, None, 0, {}, "no answer"
     return s, t, name, len(jobs), dict(by_country(jobs)), judge(name, jobs)
@@ -285,6 +341,10 @@ def main():
         for p in prev:
             if p["count"] <= MAX_JOBS: found[p["ats"]].add(p["token"])
         prev = []
+    if "workday" in found and found["workday"] and not a.recheck:
+        hosts = {t for t in found["workday"] if "/" not in t}
+        found["workday"] = (found["workday"] - hosts) | workday_sites(hosts)
+        print(f"workday: {len(hosts)} employers, {len(found['workday'])} public career sites")
     if a.new_only:
         have |= {(p["ats"], p["token"].lower()) for p in prev}
         names |= {collect.co_key(p["name"]) for p in prev}
@@ -297,7 +357,15 @@ def main():
     # worker processes, not threads: reading the postings is CPU work (about 20 ms a job), and every core is used
     import multiprocessing
     with cf.ProcessPoolExecutor(a.workers, mp_context=multiprocessing.get_context("fork")) as ex:
-        for s, t, name, count, countries_n, reason in ex.map(examine, todo, chunksize=8):
+        results = list(ex.map(examine, todo, chunksize=8))
+        biggest = {}                  # one Workday employer, several public sites ("External", "External-Ada"): its largest one only
+        for r in results:
+            if r[0] == "workday" and r[5] != "no answer":
+                k = r[1].split("/")[0]
+                if k not in biggest or r[3] > biggest[k][3]: biggest[k] = r
+        for s, t, name, count, countries_n, reason in results:
+            if s == "workday" and reason != "no answer" and biggest.get(t.split("/")[0], (None, t))[1] != t:
+                why[(s, "another public site of the same employer")] += 1; asked[s] += 1; answered[s] += 1; continue
             asked[s] += 1
             if reason == "no answer": why[(s, reason)] += 1; continue
             answered[s] += 1

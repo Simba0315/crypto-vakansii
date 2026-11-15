@@ -1,0 +1,26 @@
+{
+ "total": 2,
+ "jobPostings": [
+  {
+   "title": "Senior Product Development Engineer",
+   "externalPath": "/job/US-Minnesota-Maplewood/Senior-Product-Development-Engineer_R01173498",
+   "locationsText": "US, Minnesota, Maplewood",
+   "postedOn": "Posted Yesterday",
+   "remoteType": "On-site",
+   "bulletFields": [
+    "R01173498"
+   ]
+  },
+  {
+   "title": "RepairStack Sales Leader (m/f/*)",
+   "externalPath": "/job/NL-NETHERLANDS-VIRTUAL/RepairStack-Sales-Leader--m-f---_R01173853-1",
+   "locationsText": "4 Locations",
+   "postedOn": "Posted Yesterday",
+   "remoteType": "Remote",
+   "bulletFields": [
+    "R01173853"
+   ]
+  }
+ ],
+ "userAuthenticated": false
+}

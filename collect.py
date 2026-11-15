@@ -6,7 +6,7 @@ import datetime, hashlib, html, json, os, re, sys, concurrent.futures as cf
 from collections import defaultdict
 from html.parser import HTMLParser
 from pathlib import Path
-from net import get_json, get_text
+from net import get_json, get_text, post_json
 import countries
 
 ROOT = Path(__file__).parent
@@ -754,8 +754,69 @@ def feed_rippling(src):
     return out
 
 
+LARGE = {"workday"}       # hiring systems of large employers: only their office and tech jobs are kept (the owner, 15 Nov)
+NOT_OFFICE = {"retail", "supply-chain", "healthcare", "manufacturing"}
+WD_MAX = 2000           # Workday lists at most this many jobs of one career site; a larger site is not read (discover_ats.py leaves it out)
+
+
+def workday_day(text):
+    """Workday's "Posted Today", "Posted Yesterday", "Posted 3 Days Ago" as a day; "Posted 30+ Days Ago" says too little: ''."""
+    t = str(text or "").lower()
+    if "today" in t: n = 0
+    elif "yesterday" in t: n = 1
+    else:
+        m = re.search(r"(\d+) days? ago", t)
+        if not m or "+" in t: return ""
+        n = int(m.group(1))
+    return (datetime.date.today() - datetime.timedelta(days=n)).isoformat()
+
+
+def feed_workday(src):
+    """A Workday career site: the JSON its own public page loads (POST …/wday/cxs/<tenant>/<site>/jobs, 20 a page), read one page
+    at a time. robots.txt on every Workday career site allows it (only /refreshFacet/ and /private/ are closed). Token: tenant/wdN/site."""
+    name = src["name"]
+    if src["token"].count("/") != 2: return None
+    tenant, wd, site = src["token"].split("/", 2)
+    host = f"https://{tenant}.{wd}.myworkdayjobs.com"
+    items, off, total = [], 0, None
+    while True:
+        d = post_json(f"{host}/wday/cxs/{tenant}/{site}/jobs", {"appliedFacets": {}, "limit": 20, "offset": off, "searchText": ""}, 45)
+        if not isinstance(d, dict) or not isinstance(d.get("jobPostings"), list): return None
+        if total is None: total = int(d.get("total") or 0)
+        if total > WD_MAX: return None
+        items += d["jobPostings"]; off += 20
+        if not d["jobPostings"] or off >= total: break
+    out, budget = [], DETAILS
+    for p in items:
+        path = p.get("externalPath") or ""
+        jid = (p.get("bulletFields") or [None])[0] or path.rsplit("_", 1)[-1]
+        if not jid or not path: continue
+        old = stored("workday", name, jid)
+        if old:
+            out.append(old); continue
+        rt = str(p.get("remoteType") or "").lower()
+        loc, text, desc, posted, hint, at = p.get("locationsText") or "", "", "", workday_day(p.get("postedOn")), "", None
+        url = f"{host}/{site}{path}"
+        if budget > 0:
+            budget -= 1
+            det = get_json(f"{host}/wday/cxs/{tenant}/{site}{path}", 30)
+            info = (det or {}).get("jobPostingInfo") if isinstance(det, dict) else None
+            if isinstance(info, dict):
+                desc, url = info.get("jobDescription") or "", info.get("externalUrl") or url
+                text, hint = strip_html(desc), info.get("timeType") or ""
+                posted = info.get("startDate") or posted
+                ctry = (info.get("country") or {}).get("descriptor") or ""
+                if info.get("location"): loc = info["location"]
+                if ctry and ctry.lower() not in loc.lower(): loc = place(loc, ctry.replace("United States of America", "United States"))
+        if re.fullmatch(r"\d+ locations?", loc.strip(), re.I): loc = ""
+        if rt == "remote" and not re.search(r"\bremote\b", loc, re.I): loc = place("Remote", loc)
+        out.append(norm(name, "workday", jid, p.get("title"), url, loc, rt == "remote", "", posted, text, "", hint, desc, rt == "hybrid", posted_at=at))
+    return out
+
+
 FEEDS = {"workable": feed_workable, "recruitee": feed_recruitee, "smartrecruiters": feed_smartrecruiters, "teamtailor": feed_teamtailor,
-         "personio": feed_personio, "bamboohr": feed_bamboohr, "breezy": feed_breezy, "pinpoint": feed_pinpoint, "rippling": feed_rippling}
+         "personio": feed_personio, "bamboohr": feed_bamboohr, "breezy": feed_breezy, "pinpoint": feed_pinpoint, "rippling": feed_rippling,
+         "workday": feed_workday}
 
 
 def fetch(src):
@@ -905,15 +966,16 @@ def main():
         if (s["ats"], s["token"]) in taken or k in names or s["name"] in EXCLUDE_TECH: continue
         taken.add((s["ats"], s["token"])); names.add(k)
         if int(hashlib.md5((s["ats"] + s["token"]).encode()).hexdigest(), 16) % rot_a == hour % rot_a:
-            sources.append(dict(s, crypto=False, en_only=True))
+            sources.append(dict(s, crypto=False, en_only=True, office_only=s["ats"] in LARGE))
         else:
             resting.add(s["name"])
     is_crypto = {s["name"]: s["crypto"] for s in sources}
     en_only = {s["name"] for s in sources if s.get("en_only")}      # boards added on 15 Nov and the portals: English postings only
+    office_only = {s["name"] for s in sources if s.get("office_only")}   # large employers (Workday): their office and tech jobs only
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
     KNOWN.update(db)                                        # feeds without the text in their list reuse what an earlier run read (see FEEDS)
     used_slugs = {j["slug"] for j in db.values()}
-    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "dupes": 0, "not_english": 0}
+    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "dupes": 0, "not_english": 0, "not_office": 0}
     # Public job portals with open data, many employers each (15 Nov 2026): Russia's federal portal (trudvsem.py) and Sweden's
     # Platsbanken (jobtech.py). .github/workflows/portals.yml reads them once a day into snapshots (portals.py) because Russia's file
     # alone takes minutes to download; every run applies the latest snapshot, which takes seconds. A portal without a usable
@@ -962,6 +1024,8 @@ def main():
             if not j["title"] or not j["url"]: continue
             if name in en_only and not english(j):
                 stats["not_english"] += 1; continue         # waits for a language edition of the site
+            if name in office_only and j["cat"] in NOT_OFFICE:
+                stats["not_office"] += 1; continue          # a hospital's nurses or a manufacturer's plant jobs: not what the site lists
             seen.add(j["id"])
             old = db.get(j["id"])
             if old:
@@ -1003,7 +1067,7 @@ def main():
     stats["dupes"] = dedupe.run(db, label=lambda j: ("tg:" + j["tg"]) if j.get("tg") else j["id"].split("-", 1)[0])
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
-    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, the same job from another source (shown once) {stats['dupes']}, not in English {stats['not_english']}")
+    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, the same job from another source (shown once) {stats['dupes']}, not in English {stats['not_english']}, not office or tech work (large employers) {stats['not_office']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
                                                           "failed": stats["failed"], "emptied": stats["emptied"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))

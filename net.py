@@ -45,3 +45,20 @@ def get_json(url, timeout=30):
         return None
     finally:
         if gate: gate.release()
+
+
+def post_json(url, payload, timeout=30):
+    """POST a JSON body and return the parsed JSON answer, or None on any failure (Workday's career sites list jobs this way)."""
+    gate = _gate(url)
+    try:
+        if gate: gate.acquire()
+        out = subprocess.run(
+            ["curl", "-s", "-4", "-L", "--max-time", str(timeout), "-X", "POST", "-H", "Content-Type: application/json", "-H", "Accept: application/json",
+             "-A", "Mozilla/5.0 (job-board aggregator)", "--data-binary", json.dumps(payload), url],
+            capture_output=True, timeout=timeout + 5,
+        ).stdout
+        return json.loads(out.decode("utf-8", "replace"))
+    except Exception:
+        return None
+    finally:
+        if gate: gate.release()
