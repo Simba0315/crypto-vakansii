@@ -1530,6 +1530,103 @@
   show(location.hash === '#employers');
 })();
 
+/* a resume read from a file, in the browser: <input type="file" data-into="id of a textarea">. A .docx is unzipped here (its
+   word/document.xml), a PDF is read with pdf.js, fetched only when someone picks a PDF; a .txt is read as it is. The file never
+   leaves the device; only the text is put into the box, where the person can check it before running the tool. */
+(function () {
+  var u16 = function (b, o) { return b[o] | (b[o + 1] << 8); };
+  var u32 = function (b, o) { return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16)) + b[o + 3] * 16777216; };
+  var inflate = async function (bytes) {
+    var s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(s).arrayBuffer());
+  };
+  var docx = async function (buf) {
+    var b = new Uint8Array(buf), end = -1, i, k;
+    for (i = b.length - 22; i >= Math.max(0, b.length - 66000); i--) if (u32(b, i) === 0x06054b50) { end = i; break; }
+    if (end < 0) throw new Error('not a zip');
+    var n = u16(b, end + 10), off = u32(b, end + 16);
+    for (k = 0; k < n && u32(b, off) === 0x02014b50; k++) {
+      var method = u16(b, off + 10), size = u32(b, off + 20), nl = u16(b, off + 28), xl = u16(b, off + 30), cl = u16(b, off + 32), lho = u32(b, off + 42);
+      if (new TextDecoder().decode(b.subarray(off + 46, off + 46 + nl)) === 'word/document.xml') {
+        var start = lho + 30 + u16(b, lho + 26) + u16(b, lho + 28), data = b.subarray(start, start + size);
+        var xml = new TextDecoder().decode(method === 8 ? await inflate(data) : data);
+        return xml.replace(/<w:tab\/>/g, '\t').replace(/<w:br[^>]*\/>/g, '\n').replace(/<\/w:p>/g, '\n').replace(/<[^>]+>/g, '')
+          .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+      }
+      off += 46 + nl + xl + cl;
+    }
+    throw new Error('no document.xml');
+  };
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  var pdfjs = function () {
+    return new Promise(function (ok, no) {
+      if (window.pdfjsLib) return ok(window.pdfjsLib);
+      var s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+      s.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); };
+      s.onerror = no; document.head.appendChild(s);
+    });
+  };
+  var pdf = async function (buf) {
+    var lib = await pdfjs(), doc = await lib.getDocument({ data: buf }).promise, out = [], p;
+    for (p = 1; p <= doc.numPages; p++) {
+      var items = (await (await doc.getPage(p)).getTextContent()).items, line = '', lastY = null;
+      items.forEach(function (it) {
+        var y = it.transform[5];
+        if (lastY !== null && Math.abs(y - lastY) > 2) { out.push(line); line = ''; }
+        line += (line && !/\s$/.test(line) && !/^\s/.test(it.str) ? ' ' : '') + it.str; lastY = y;
+        if (it.hasEOL) { out.push(line); line = ''; lastY = null; }
+      });
+      if (line) out.push(line);
+      out.push('');
+    }
+    return out.join('\n').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  };
+  document.addEventListener('change', async function (ev) {
+    var inp = ev.target;
+    if (!inp.matches || !inp.matches('input[type=file][data-into]')) return;
+    var f = inp.files && inp.files[0], box = document.getElementById(inp.getAttribute('data-into')), wrap = inp.closest('.tl-file'), msg = wrap && wrap.querySelector('.tl-fmsg');
+    if (!f || !box) return;
+    var say = function (t) { if (msg) msg.textContent = t; };
+    say('Reading ' + f.name + '…');
+    try {
+      var buf = await f.arrayBuffer(), nm = f.name.toLowerCase(), text;
+      if (/\.docx$/.test(nm)) text = await docx(buf);
+      else if (/\.pdf$/.test(nm)) text = await pdf(buf);
+      else text = new TextDecoder().decode(buf);
+      if (!text || text.length < 20) throw new Error('no text');
+      box.value = text; box.dispatchEvent(new Event('input', { bubbles: true }));
+      say('Read ' + f.name + ' in your browser; nothing was uploaded. Check the text below, then run the check.');
+    } catch (e) { say('This file could not be read here (a scanned PDF has no text to read). Copy the text from it and paste it below.'); }
+    inp.value = '';
+  });
+})();
+
+/* a letter template as a file: <button data-doc="id of the element" data-name="file name"> downloads a Word file made in the browser,
+   <button data-pdf="id"> opens the letter alone in a print window, where "Save as PDF" is a printer. Nothing is sent anywhere. */
+(function () {
+  var esc = function (x) { return x.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+  var body = function (text) {
+    return text.replace(/\r/g, '').split(/\n{2,}/).map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join('');
+  };
+  var css = 'body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.45;max-width:640px;margin:40px auto;color:#111}p{margin:0 0 12pt}';
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('[data-doc],[data-pdf]') : null; if (!b) return;
+    var src = document.getElementById(b.getAttribute('data-doc') || b.getAttribute('data-pdf')); if (!src) return;
+    var text = src.textContent, name = (b.getAttribute('data-name') || 'letter').replace(/[^a-z0-9-]+/gi, '-');
+    if (b.hasAttribute('data-doc')) {
+      var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>' + esc(name) + '</title><style>' + css + '</style></head><body>' + body(text) + '</body></html>';
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['\ufeff' + html], { type: 'application/msword' }));
+      a.download = name + '.doc'; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    } else {
+      var w = window.open('', '_blank'); if (!w) return;
+      w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(name) + '</title><style>' + css + '@media print{body{margin:0 auto}}</style></head><body>' + body(text) + '</body></html>');
+      w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 250);
+    }
+  });
+})();
+
 /* a "copy" button for a sentence or a block of text on the page: <button data-clip="id of the element"> */
 (function () {
   document.addEventListener('click', function (ev) {

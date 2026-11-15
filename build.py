@@ -2023,6 +2023,31 @@ def main():
         for name, slug, pj in places:
             short = name.removeprefix("the ")
             cadd(cplaces, f"crypto/in/{slug}/", f"Crypto jobs in {short}", [j for j in pj if j.get("crypto")], "{n} at crypto and web3 companies in " + name + ".", "", f" at crypto and web3 companies in {e(name)}", least=10, label=short)
+        # By blockchain ("ethereum jobs", "solana jobs": Cryptocurrency Jobs and Web3.career have a page per chain). A posting counts when
+        # its own text names the chain; the patterns avoid ordinary words ("optimism") and other products ("Azure Cosmos DB").
+        CHAINS = [("Ethereum", "ethereum", r"\bethereum\b|\bEVM\b|\bsolidity\b", "the largest smart-contract blockchain; its contracts are written in Solidity and run on the EVM"),
+                  ("Bitcoin", "bitcoin", r"\bbitcoin\b|\blightning network\b", "the first and largest cryptocurrency network"),
+                  ("Solana", "solana", r"\bsolana\b", "a fast, low-fee blockchain whose programs are mostly written in Rust"),
+                  ("Arbitrum", "arbitrum", r"\barbitrum\b", "a layer-2 network that runs Ethereum contracts more cheaply"),
+                  ("Optimism", "optimism", r"\bOP (?:Stack|Mainnet)\b|\bOptimism (?:Collective|Foundation|network)\b|\bSuperchain\b", "a layer-2 network built on the OP Stack, shared by the Superchain"),
+                  ("Polygon", "polygon", r"\bpolygon (?:pos|zkevm|labs|network|chain)\b|\bpolygon\b(?= .{0,40}(?:blockchain|chain|layer))", "a family of networks that scale Ethereum"),
+                  ("Base", "base", r"\bBase (?:chain|network|L2|mainnet)\b", "Coinbase's layer-2 network on the OP Stack"),
+                  ("Cosmos", "cosmos", r"\bcosmos (?:sdk|hub|ecosystem|network)\b|\bIBC\b|\bcometbft\b|\btendermint\b", "a network of blockchains built with the Cosmos SDK and linked by IBC"),
+                  ("Polkadot", "polkadot", r"\bpolkadot\b|\bsubstrate framework\b", "a network of chains built with the Substrate framework"),
+                  ("Avalanche", "avalanche", r"\bavalanche (?:network|c-chain|subnet|blockchain)\b|\bAVAX\b", "a smart-contract platform with its own subnets"),
+                  ("Aptos", "aptos", r"\baptos\b", "a blockchain whose contracts are written in Move"),
+                  ("Sui", "sui", r"\bSui (?:network|blockchain|ecosystem|foundation)\b|\bon Sui\b", "a blockchain whose contracts are written in Move"),
+                  ("XRP Ledger", "xrp-ledger", r"\bXRP\b|\bXRPL\b", "the open ledger behind the XRP currency"),
+                  ("Cardano", "cardano", r"\bcardano\b", "a proof-of-stake blockchain with contracts in Plutus"),
+                  ("TON", "ton", r"\bTON (?:blockchain|network|ecosystem|foundation)\b|\bThe Open Network\b", "the blockchain built around Telegram"),
+                  ("Starknet", "starknet", r"\bstarknet\b", "a layer-2 network whose contracts are written in Cairo")]
+        cchains = []
+        ctext = {j["id"]: " ".join((j["title"], j.get("excerpt") or "", j.get("desc") or "")) for j in crypto}
+        for nm_c, sl_c, rx_c, what_c in CHAINS:
+            rx_ = re.compile(rx_c, re.I if nm_c not in ("Base", "XRP Ledger", "Sui", "TON", "Optimism") else 0)
+            cadd(cchains, f"crypto/chains/{sl_c}/", f"{nm_c} jobs", [j for j in crypto if rx_.search(ctext[j["id"]])],
+                 "{n} at crypto and web3 companies whose postings name " + nm_c + ", " + what_c.replace("{", "").replace("}", "") + ".", "", f" that name {e(nm_c)}", least=10, label=nm_c)
+        cchains.sort(key=lambda x: -x[2])
         croles.sort(key=lambda x: -x[2]); cplaces.sort(key=lambda x: -x[2])
         cdir = lambda title, rows_: (f'<div class="dirb"><h2><span>{e(title)}</span><span>{len(rows_)}</span></h2><ul>'
                                      + "".join(f'<li><a href="{P}/{u}">{path_fl(u)}{e(nm)}</a><span>{k:,} jobs</span></li>' for u, nm, k in rows_) + "</ul></div>") if rows_ else ""
@@ -2043,7 +2068,7 @@ def main():
                 crypto, intro_for(crypto, "", " at crypto, web3 and blockchain companies"),
                 extra=mini_pics(crypto) + f'<ul class="tiles">{ccats}</ul>'
                 + section("Who is hiring in crypto", f'<ul class="tiles">{chire}</ul>', ("companies/", "All companies"))
-                + '<div class="dir">' + cdir("Kinds of crypto jobs", ckinds) + cdir("By profession", croles) + cdir("By place", cplaces) + "</div>"
+                + '<div class="dir">' + cdir("Kinds of crypto jobs", ckinds) + cdir("By profession", croles) + cdir("By place", cplaces) + cdir("By blockchain", cchains) + "</div>"
                 + '<div class="sec"><div class="sec-head"><h2>All crypto jobs</h2></div></div>', feed=True, faq="crypto jobs", faq_extra=crypto_qa,
                 faq_first=("What counts as a crypto job here?", f"A job at a company whose business is crypto, web3 or blockchain: exchanges, wallets, custody, blockchain infrastructure, DeFi and analytics. "
                            f"Of the {len(crypto):,} open today, {eng_pc}% are engineering jobs; the rest are in compliance, marketing, support, finance, design and other fields, so the list is not only for programmers."))
@@ -3582,10 +3607,10 @@ def main():
              crumbs(("Cover letter examples", "cover-letter-examples/"), (rname, "")) + f'<h1>{e(rname)} cover letter example: <span class="hl">results first</span></h1>'
              f'<p class="lead">A cover letter for {e(low)} jobs that leads with what you achieved, not with what you were responsible for. Copy it, replace the parts in [brackets] and use the words of the posting you answer.</p>'
              + facts_
-             + f'<div class="rl-paper"><pre id="letter">{e(letter_)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> '
+             + f'<div class="rl-paper"><pre id="letter">{e(letter_)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-cover-letter" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-cover-letter" style="margin-top:0">PDF</button> '
                f'<a class="btn ghost sm" href="{P}/tools/cover-letter/" style="margin-top:0">Write yours with the free builder</a></p></div>'
-             + section(f"Entry-level {low} cover letter (no experience)", f'<div class="rl-paper"><pre id="letter2">{e(entry_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter2" data-raw="1" style="margin-top:0">Copy the letter</button></p></div>')
-             + section(f"Senior {low} cover letter", f'<div class="rl-paper"><pre id="letter3">{e(senior_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter3" data-raw="1" style="margin-top:0">Copy the letter</button></p></div>')
+             + section(f"Entry-level {low} cover letter (no experience)", f'<div class="rl-paper"><pre id="letter2">{e(entry_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter2" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">PDF</button></p></div>')
+             + section(f"Senior {low} cover letter", f'<div class="rl-paper"><pre id="letter3">{e(senior_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter3" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">PDF</button></p></div>')
              + how_cl + tips_cl
              + section(f"Questions about {art(low)} {low} cover letter", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cl_qa) + "</dl>")
              + section("Use it with", '<div class="feats">'
@@ -3680,7 +3705,7 @@ def main():
              + f'A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
              + act_row("post-a-job/", "Post this job free", [("#letter", "Jump to the template")])
              + facts_
-             + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> '
+             + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-job-description" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-job-description" style="margin-top:0">PDF</button> '
                f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div>'
              + section(f"What today’s {low} postings say", '<div class="tablewrap"><table>' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p>')
@@ -4384,6 +4409,40 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
     # Skill self-tests: ten questions per skill, scored in the browser. Planned in ROADMAP section 96 (interview tests for traffic).
     SK_N = Counter(t for j in active for t in j["tags"])
     sk_cards, sk_items = [], []
+    SQL_SCHEMA = ("CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, country TEXT, joined DATE);"
+                  "CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL, ordered DATE);"
+                  "INSERT INTO customers VALUES (1,'Ana','Spain','2025-01-10'),(2,'Ben','USA','2025-02-03'),(3,'Chloe','France','2025-02-20'),(4,'Dev','India','2025-03-05'),"
+                  "(5,'Emma','USA','2025-03-18'),(6,'Farid','UAE','2025-04-01'),(7,'Gia','Spain','2025-04-22');"
+                  "INSERT INTO orders VALUES (1,1,120,'2025-02-01'),(2,1,80,'2025-03-15'),(3,2,200,'2025-02-10'),(4,3,45,'2025-03-01'),(5,3,60,'2025-03-20'),"
+                  "(6,3,30,'2025-04-02'),(7,5,500,'2025-04-05'),(8,2,150,'2025-04-10'),(9,7,90,'2025-05-01'),(10,5,75,'2025-05-03');")
+    SQL_T = [("Beginner", "List the names of customers from the USA, in alphabetical order.", "SELECT name FROM customers WHERE country = 'USA' ORDER BY name;"),
+             ("Beginner", "How many orders are there in total? Return one number.", "SELECT COUNT(*) FROM orders;"),
+             ("Intermediate", "For each customer who has ordered, show the name and the total amount spent, largest first.",
+              "SELECT c.name, SUM(o.amount) AS total FROM customers c JOIN orders o ON o.customer_id = c.id GROUP BY c.id, c.name ORDER BY total DESC;"),
+             ("Intermediate", "List the names of customers who have never placed an order.", "SELECT c.name FROM customers c LEFT JOIN orders o ON o.customer_id = c.id WHERE o.id IS NULL ORDER BY c.name;"),
+             ("Intermediate", "Show each country with more than one customer, and how many customers it has.", "SELECT country, COUNT(*) AS n FROM customers GROUP BY country HAVING COUNT(*) > 1 ORDER BY country;"),
+             ("Advanced", "For every order, show the order id, the customer’s name and the running total of that customer’s spending up to that order (by date).",
+              "SELECT o.id, c.name, SUM(o.amount) OVER (PARTITION BY o.customer_id ORDER BY o.ordered) AS running FROM orders o JOIN customers c ON c.id = o.customer_id ORDER BY o.id;")]
+    SQL_TASKS = (section("Write the query: six tasks you can run", '<p>A small shop database runs here in your browser: <code>customers(id, name, country, joined)</code> and '
+                         '<code>orders(id, customer_id, amount, ordered)</code>, 7 customers and 10 orders. Write a query, press Run, and the page checks your rows against the expected ones '
+                         '(column names may differ; the order of rows counts only where the task asks for one). The database engine is fetched the first time you press Run; nothing you write is sent anywhere.</p>'
+                         + "".join(f'<div class="card sqlt" data-i="{i_}" style="margin:12px 0"><p><b>{i_ + 1}. {e(lv_)}.</b> {e(t_)}</p>'
+                                   f'<textarea class="sqlq" rows="3" spellcheck="false" style="width:100%;font-family:ui-monospace,Menlo,monospace" aria-label="Your query for task {i_ + 1}">SELECT </textarea>'
+                                   f'<p><button class="btn primary sm sqlrun" type="button" style="margin-top:6px">Run</button> <button class="btn ghost sm sqlshow" type="button" style="margin-top:6px">Show a solution</button></p>'
+                                   '<div class="sqlout" aria-live="polite"></div></div>' for i_, (lv_, t_, _) in enumerate(SQL_T)))
+                 + '<script type="application/json" id="sql-data">' + json.dumps({"schema": SQL_SCHEMA, "sol": [x[2] for x in SQL_T], "ord": [True, False, True, False, False, False]},
+                                                                                  ensure_ascii=False).replace("</", "<\\/") + "</script>"
+                 + r"""<script>(function(){var D=JSON.parse(document.getElementById('sql-data').textContent),db=null,V='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/';
+var esc=function(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+function load(){return new Promise(function(ok,no){if(db)return ok(db);var s=document.createElement('script');s.src=V+'sql-wasm.js';s.onload=function(){initSqlJs({locateFile:function(f){return V+f;}}).then(function(S){db=new S.Database();db.run(D.schema);ok(db);},no);};s.onerror=no;document.head.appendChild(s);});}
+function rows(q){var r=db.exec(q);return r.length?r[r.length-1]:{columns:[],values:[]};}
+function table(r){if(!r.columns.length)return '<p class="note">No rows.</p>';return '<div class="tablewrap"><table><tr>'+r.columns.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'</tr>'+r.values.slice(0,30).map(function(v){return '<tr>'+v.map(function(x){return '<td>'+esc(x===null?'NULL':x)+'</td>';}).join('')+'</tr>';}).join('')+'</table></div>';}
+function key(r,ord){var v=r.values.map(function(x){return JSON.stringify(x.map(function(y){return typeof y==='number'?Math.round(y*100)/100:y;}));});if(!ord)v.sort();return v.join('|');}
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('.sqlrun,.sqlshow');if(!b)return;var box=b.closest('.sqlt'),i=+box.getAttribute('data-i'),out=box.querySelector('.sqlout'),ta=box.querySelector('.sqlq');
+if(b.classList.contains('sqlshow')){ta.value=D.sol[i];return;}
+out.innerHTML='<p class="note">Running…</p>';load().then(function(){try{var mine=rows(ta.value),want=rows(D.sol[i]),good=key(mine,D.ord[i])===key(want,D.ord[i]);
+out.innerHTML=(good?'<p><b>Right.</b> Your rows match the expected result.</p>':'<p><b>Not yet.</b> Your rows differ from the expected '+want.values.length+' row'+(want.values.length===1?'':'s')+'. Compare them below.</p>')+table(mine);}
+catch(e){out.innerHTML='<p><b>The query did not run:</b> '+esc(e.message)+'</p>';}},function(){out.innerHTML='<p>The database engine could not be loaded. Check your connection and try again.</p>';});});})();</script>""")
     for qs_, q_ in quiz_pages.QUIZZES.items():
         sk_t = q_["skill"]; sk_slug = TAG_SLUG.get(sk_t, slugify(sk_t)); sk_n = SK_N.get(sk_t, 0)
         sk_med = [(j["usd"][0] + j["usd"][1]) / 2 for j in active if sk_t in j["tags"] and j["usd"]]
@@ -4426,6 +4485,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              + (f'<p class="lead">{sk_n:,} open jobs name {e(q_["name"])} today' + (f', with a median advertised pay of {sk_pay}' if sk_pay else "") + f". {n_q} questions from beginner to advanced, about 10 to 15 minutes, the kind that come up in interviews.</p>" if sk_n else f'<p class="lead">{n_q} questions of the kind that come up in interviews.</p>')
              + f'<form id="st" class="qz">{ihtml}<p><button class="btn primary" type="submit">Check my answers</button></p></form>'
              f'<section class="sec qz-out" id="st-out" aria-live="polite" hidden></section><script type="application/json" id="st-data">{idata}</script>{ijs}'
+             + (SQL_TASKS if qs_ == "sql" else "")
              + section("Questions about this test", '<dl class="qa">' + "".join(f"<div><dt>{e(a_)}</dt><dd>{e(b_)}</dd></div>" for a_, b_ in iqa) + "</dl>")
              + '<p class="rel">More tests: ' + " ".join(f'<a href="{P}/skill-tests/{o_}/">{e(quiz_pages.QUIZZES[o_]["name"])}</a>' for o_ in quiz_pages.QUIZZES if o_ != qs_) + f' <a href="{P}/skill-tests/">All tests</a></p>', head=ild)
         sk_cards.append((qs_, q_["name"], q_["plain"], sk_n))
@@ -6174,12 +6234,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         others_ = [y for y in RL if y["slug"] != x["slug"]]
-        page(f"resignation-letters/{x['slug']}/", f"{tcase(x['name'])}: Template and Example ({rl_year}) | {SITE}",
+        page(f"resignation-letters/{x['slug']}/", f"{tcase(x['name'])}: Free Template, Word & PDF ({rl_year}) | {SITE}",
              f"A {low_} you can copy: {x['when'][0].lower() + x['when'][1:]}",
              crumbs(("Resignation letters", "resignation-letters/"), (x["name"], "")) + f'<h1>{e(x["name"])}: <span class="hl">template and example</span></h1>'
              f'<p class="lead">{e(x["when"])} Copy the letter below, replace the parts in [brackets], and send it to your manager.</p>'
              f'<div class="rl-paper"><pre id="letter">{e(x["letter"])}</pre>'
-             '<p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> '
+             '<p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="resignation-letter" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="resignation-letter" style="margin-top:0">PDF</button> '
              f'<a class="btn ghost sm" href="{P}/tools/resignation-letter/" style="margin-top:0">Fill it in with the free builder</a></p></div>'
              + section(f"What to put in a {low_}", '<ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["include"]) + "</ul>"
                        '<p class="note">Notice periods depend on your contract and on the law where you work. This page is general guidance, not legal advice.</p>')
@@ -6196,13 +6256,13 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     RS = resignation_pages.STANDARD
     rl_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("resignation-letters/", f"Resignation Letter Template: Standard + {len(RL)} Examples ({rl_year}) | {SITE}",
+    page("resignation-letters/", f"Resignation Letter Template: {len(RL) + 1} Free Letters, Word & PDF ({rl_year}) | {SITE}",
          f"{len(RL)} resignation letter templates you can copy: two weeks notice, effective immediately, by email, for a new job, relocation, health or family reasons, retirement and more.",
          crumbs(("Resignation letters", "")) + f'<h1>Resignation letter templates: <span class="hl">{len(RL)} examples</span></h1>'
          '<p class="lead">Pick the letter that fits your case. Each one is complete: copy it, replace the parts in [brackets], and send it. '
          f'Or build your own in the <a href="{P}/tools/resignation-letter/">free resignation letter builder</a>.</p>'
          + section(f"{RS['name']}", f'<div class="rl-paper"><pre id="letter">{e(RS["letter"])}</pre>'
-                   '<p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> '
+                   '<p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="resignation-letter-two-weeks-notice" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="resignation-letter-two-weeks-notice" style="margin-top:0">PDF</button> '
                    f'<a class="btn ghost sm" href="{P}/tools/resignation-letter/" style="margin-top:0">Fill it in with the free builder</a></p></div>')
          + section("Choose your situation", f'<ul class="tiles">{"".join(rl_tile(y) for y in RL)}</ul>')
          + section("Tips before you send it", '<ul class="ticks">' + "".join(f"<li>{e(t_)}</li>" for t_ in resignation_pages.HUB_TIPS) + "</ul>"

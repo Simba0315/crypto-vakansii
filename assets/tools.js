@@ -51,6 +51,25 @@
     return { hour: year / hoursYear, day: year / daysYear, week: year / w, month: year / 12, year: year, hoursYear: hoursYear, daysYear: daysYear };
   };
 
+  /* ---------- take-home pay (US, tax year 2026) ---------- */
+  // Federal income tax on (salary − pre-tax contributions − standard deduction), Social Security 6.2% up to the wage base, Medicare
+  // 1.45% plus 0.9% above the threshold. Sources: IRS Rev. Proc. 2025-32 (brackets, standard deduction), SSA contribution and benefit
+  // base for 2026 ($184,500). State and local income tax are not included.
+  T.TAX2026 = {
+    std: { single: 16100, joint: 32200 },
+    brackets: { single: [[12400, 0.10], [50400, 0.12], [105700, 0.22], [201775, 0.24], [256225, 0.32], [640600, 0.35], [Infinity, 0.37]],
+                joint: [[24800, 0.10], [100800, 0.12], [211400, 0.22], [403550, 0.24], [512450, 0.32], [768700, 0.35], [Infinity, 0.37]] },
+    ssBase: 184500, ss: 0.062, med: 0.0145, addMed: 0.009, addMedAt: { single: 200000, joint: 250000 }
+  };
+  T.takeHome = function (salary, status, pretax) {
+    var g = num(salary), k = clean(pretax) === '' ? 0 : num(pretax), X = T.TAX2026, st = status === 'joint' ? 'joint' : 'single';
+    if (!(g > 0) || g > 1e8 || !(k >= 0) || k > g) return null;
+    var taxable = Math.max(0, g - k - X.std[st]), fed = 0, lo = 0, marg = 0;
+    X.brackets[st].forEach(function (b) { if (taxable > lo) { fed += (Math.min(taxable, b[0]) - lo) * b[1]; marg = b[1]; } lo = b[0]; });
+    var ss = Math.min(g, X.ssBase) * X.ss, med = g * X.med + Math.max(0, g - X.addMedAt[st]) * X.addMed, net = g - k - fed - ss - med;
+    return { gross: g, pretax: k, taxable: taxable, fed: fed, ss: ss, med: med, net: net, eff: (fed + ss + med) / g, marg: marg };
+  };
+
   /* ---------- pay raise ---------- */
   // o.by says which figure the visitor typed last: 'pct', 'amount' or 'next' (the new salary); the other two follow from it.
   T.raise = function (o) {
@@ -1767,6 +1786,22 @@
         big(toYear ? money(r.year, s, 0) : money(r.hour, s, 2), toYear ? 'per year' : 'per hour') +
         sub('Before tax, for ' + esc(fmt(num(v.hours), 2)) + ' hours a week over ' + esc(fmt(num(v.days), 1)) + ' days, ' + esc(fmt(num(v.weeks), 1)) + ' paid weeks a year.') +
         kv([['Per hour', money(r.hour, s, 2)], ['Per day', cash(r.day, s)], ['Per week', cash(r.week, s)], ['Per month', cash(r.month, s)], ['Per year', money(r.year, s, 0)]]));
+    });
+  };
+
+  tools['take-home-pay'] = function () {
+    var out = $('tl-out'), title = 'Your take-home pay';
+    var per = { week: 52, biweek: 26, semimonth: 24, month: 12 }, perName = { week: 'weekly', biweek: 'every two weeks', semimonth: 'twice a month', month: 'monthly' };
+    form(function (v) {
+      if (!clean(v.salary)) return idle(out, title, 'Enter a yearly salary to see what is left after federal tax, Social Security and Medicare.');
+      var r = T.takeHome(v.salary, v.status, v.pretax), n = per[v.freq] || 26;
+      if (!r) return idle(out, title, 'Check the figures: the salary must be a number above zero, and pre-tax contributions cannot be more than the salary.');
+      board(out, title, 'Tax year 2026',
+        big(money(r.net / n, '$', 2), 'per paycheck, ' + perName[v.freq || 'biweek']) +
+        sub(esc(money(r.net, '$', 0)) + ' a year after federal income tax, Social Security and Medicare; ' + esc(fmt(r.eff * 100, 1)) + '% of the salary goes to them. State and local tax are not included.') +
+        kv([['Salary', money(r.gross, '$', 0)], r.pretax ? ['Pre-tax contributions', '−' + money(r.pretax, '$', 0)] : null,
+            ['Federal income tax', '−' + money(r.fed, '$', 0)], ['Social Security (6.2%)', '−' + money(r.ss, '$', 0)], ['Medicare', '−' + money(r.med, '$', 0)],
+            ['Take-home per year', money(r.net, '$', 0)], ['Take-home per month', money(r.net / 12, '$', 0)], ['Top federal rate on your next dollar', fmt(r.marg * 100, 0) + '%']]));
     });
   };
 

@@ -24,7 +24,7 @@ TAG = re.compile(r"<[^>]+>")
 FLAG = re.compile("[\U0001F1E6-\U0001F1FF]{2}")
 
 GROUP = {"skills": "By skill", "kind": "By kind of work", "roles": "By role", "level": "By level", "places": "By place", "pages": "More pages",
-         "remote": "Remote"}
+         "remote": "Remote", "chains": "By blockchain"}
 LEVELS = {"intern", "junior", "senior", "lead", "entry-level", "new"}
 
 
@@ -49,6 +49,8 @@ def parents(u, have):
         add(f"perks/{p[1]}/", "places"); add(f"locations/{p[2]}/", "pages")
     elif p[0] == "remote" and len(p) == 3 and p[1] == "skills":            # remote/skills/kubernetes/
         add("remote/", "skills"); add(f"skills/{p[2]}/", "remote")
+    elif p[0] == "crypto" and len(p) == 3 and p[1] == "chains":             # crypto/chains/ethereum/
+        add("crypto/", "chains")
     elif p[0] == "crypto" and len(p) == 3:                                 # crypto/in/chicago/, crypto/roles/backend-engineer/
         add("crypto/", "places" if p[1] == "in" else "roles")
         add(f"locations/{p[2]}/" if p[1] == "in" else f"roles/{p[2]}/", "pages")
@@ -94,7 +96,7 @@ def run(site, urls):
     for parent, groups in down.items():                 # broad page: its narrower pages
         title = meta(parent)[0]
         body = ""
-        for g in ("skills", "kind", "roles", "places", "level", "remote", "pages"):
+        for g in ("skills", "kind", "roles", "places", "chains", "level", "remote", "pages"):
             xs = sorted(groups.get(g, ()), key=lambda u: -meta(u)[1])[:60]
             if xs: body += f'<h3>{GROUP[g]}</h3><ul class="xl">' + "".join(f"<li>{a(u)}</li>" for u in xs) + "</ul>"
         if body: blocks[parent] += f'<section class="sec xlinks"><div class="sec-head"><h2>Narrow down {html.escape(title)}</h2></div>{body}</section>'

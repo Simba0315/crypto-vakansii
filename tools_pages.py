@@ -37,10 +37,13 @@ def _sel(k, label, options, hint="", cls="", attrs="", show=""):
             + (f'<p class="tl-h">{hint}</p>' if hint else "") + "</div>")
 
 
-def _area(k, label, rows, ph="", hint="", cls="full", tall=False, show="", ex=""):
-    """`ex` is the text the "Show an example" button puts in; without it the placeholder is used when it is itself an example."""
+def _area(k, label, rows, ph="", hint="", cls="full", tall=False, show="", ex="", file=False):
+    """`ex` is the text the "Show an example" button puts in; without it the placeholder is used when it is itself an example.
+    `file`: a button that reads a PDF, Word or text file into the box, in the browser (site.js); the file is never uploaded."""
     return (f'<div class="tl-f{" " + cls if cls else ""}"{show}><label class="tl-l" for="tl-{k}">{label}</label>'
-            f'<textarea id="tl-{k}" data-k="{k}" rows="{rows}"{" class=" + chr(34) + "tl-tall" + chr(34) if tall else ""}' + (f' placeholder="{_e(ph)}"' if ph else "")
+            + (f'<p class="tl-file"><label class="btn ghost sm" style="margin:0 0 8px">Open a PDF or Word file<input type="file" accept=".pdf,.docx,.txt" data-into="tl-{k}" hidden></label> '
+               '<span class="tl-fmsg note">Read in your browser; the file is never uploaded.</span></p>' if file else "")
+            + f'<textarea id="tl-{k}" data-k="{k}" rows="{rows}"{" class=" + chr(34) + "tl-tall" + chr(34) if tall else ""}' + (f' placeholder="{_e(ph)}"' if ph else "")
             + (f' data-ex="{_e(ex)}"' if ex else "") + "></textarea>"
             + (f'<p class="tl-h">{hint}</p>' if hint else "") + "</div>")
 
@@ -187,7 +190,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Paste your resume and the job description: you get a match score, the skills and repeated terms you are missing, and a short list of fixes. Nothing is uploaded.",
          wrap("resume-match",
               '<div class="card tl-form"><div class="tl-grid wide">'
-              + _area("resume", "Your resume (plain text)", 12, "Paste the text of your resume here", cls="", tall=True, ex=EX_RESUME)
+              + _area("resume", "Your resume", 12, "Paste the text of your resume here, or open the file above", cls="", tall=True, ex=EX_RESUME, file=True)
               + _area("jd", "The job description", 12, "Paste the full text of the job posting here", cls="", tall=True, ex=EX_JD) + "</div>"
               + '<div class="tl-grid one">' + _f("title", "Job title in the posting (optional)", "Senior Backend Engineer", mode="", hint="We check that your resume uses the same title.") + "</div>"
               + '<div class="tl-actions"><button class="btn" type="button" id="tl-run">Check the match</button>'
@@ -316,7 +319,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "For contract work, enter the number of weeks you expect to bill.</p>",
          [('How much is $60,000 a year per hour?', 'About $28.85 an hour at 40 hours a week for 52 weeks (2,080 hours): divide the yearly figure by 2,080. Monthly it is $5,000 and weekly $1,153.85, before tax.'),
           ('What is a bi-weekly paycheck on $60,000 a year?', '$2,307.69 before tax: there are 26 bi-weekly pay periods in a year. Paid twice a month (semi-monthly, 24 periods) it is $2,500. This calculator works before tax; take-home pay depends on where you live and your deductions.'),
-          ('Does this calculator show take-home pay after tax?', 'No. Every figure here is before tax and deductions, the way job postings state pay. Use it to compare offers in the same unit; for take-home pay, use your country’s official tax calculator.'),
+          ('Does this calculator show take-home pay after tax?', 'No: every figure here is before tax, the way job postings state pay. For a US salary after federal tax, Social Security and Medicare, use the take-home pay calculator on this site.'),
           ("How do I convert an hourly rate to a yearly salary?",
            "Multiply the hourly rate by the hours you work in a week and by the weeks you are paid in a year. At 40 hours and 52 weeks that is the hourly rate times 2,080, so $50 an hour is $104,000 a year."),
           ("How many working hours are there in a year?",
@@ -325,7 +328,46 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Because a contractor is paid only for the hours billed. Holidays, sick days, gaps between contracts, equipment and employer-side taxes all come out of the rate. Lower “paid weeks per year” to see what a rate adds up to, or use the contractor rate calculator."),
           ("Is the result before or after tax?",
            "Before tax. The converter only changes the unit of time. Tax depends on the country, the state and your personal situation, so it is not estimated here.")],
-         ["raise-calculator", "contractor-rate", "compare-offers"], ["salaries/"])
+         ["take-home-pay", "raise-calculator", "contractor-rate", "compare-offers"], ["salaries/"])
+
+    # ------------------------------------------------------------ 3b. take-home pay ("salary calculator": the first intent on Google is pay after tax,
+    # SERP_WORK 35b, 15 Nov 2026). US federal tax and FICA for 2026, figures from the IRS and the SSA; state tax is not estimated.
+    tool("take-home-pay", "seekers", "Take-home pay calculator",
+         "A US salary after federal income tax, Social Security and Medicare for 2026: per paycheck, per month and per year.",
+         "Take-Home Pay Calculator 2026: Salary After Tax",
+         "Work out your US take-home pay for 2026: federal income tax, Social Security and Medicare taken off, per paycheck, month and year. Free, no sign-up, nothing sent.",
+         "Salary after tax: your take-home pay in 2026",
+         "Enter a yearly salary and how you file. The calculator takes off federal income tax with the 2026 brackets and standard deduction, Social Security and Medicare, "
+         "and shows what lands in each paycheck. State and local income tax are not included: nine states have no income tax on wages, the others add their own.",
+         wrap("take-home-pay",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _f("salary", "Yearly salary (US dollars)", "75000")
+              + _sel("status", "Filing status", [("single", "Single", True), ("joint", "Married filing jointly")])
+              + _sel("freq", "Paid", [("biweek", "Every two weeks (26)", True), ("semimonth", "Twice a month (24)"), ("month", "Monthly (12)"), ("week", "Weekly (52)")])
+              + "</div>" + '<div class="tl-grid c2">'
+              + _f("pretax", "Pre-tax contributions a year (optional)", "0", hint="401(k), HSA and similar amounts taken before income tax.") + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _private(" The figures are worked out inside your browser and never sent anywhere.")
+              + _board("Your take-home pay", "Enter a yearly salary to see what is left after federal tax, Social Security and Medicare.")),
+         "How the take-home pay is calculated",
+         "<ul><li><strong>Federal income tax</strong> on the salary minus pre-tax contributions minus the 2026 standard deduction ($16,100 single, $32,200 married filing jointly), "
+         "with the 2026 brackets: 10%, 12%, 22%, 24%, 32%, 35% and 37% (single: up to $12,400, $50,400, $105,700, $201,775, $256,225, $640,600 and above; "
+         "married filing jointly: $24,800, $100,800, $211,400, $403,550, $512,450, $768,700 and above). Source: IRS Revenue Procedure 2025-32.</li>"
+         "<li><strong>Social Security</strong>: 6.2% of wages up to $184,500 (the 2026 wage base, Social Security Administration).</li>"
+         "<li><strong>Medicare</strong>: 1.45% of all wages, plus 0.9% above $200,000 single or $250,000 married filing jointly.</li></ul>"
+         "<p>Not included: state and local income tax, credits (child tax credit and others), itemized deductions, bonuses taxed at a flat rate, and benefits taken from pay "
+         "such as health insurance. Your employer’s withholding can differ a little from this year-end figure. This is an estimate, not tax advice.</p>",
+         [("How much is $75,000 a year after taxes?", "For a single filer with no pre-tax contributions, $61,593 a year after 2026 federal income tax ($7,670), Social Security ($4,650) "
+           "and Medicare ($1,088): about $2,369 every two weeks, before any state tax."),
+          ("How much is $100,000 a year after taxes?", "For a single filer with no pre-tax contributions, $79,180 a year after 2026 federal income tax ($13,170), Social Security ($6,200) and Medicare ($1,450), "
+           "before state tax: about $3,045 every two weeks."),
+          ("Does this include state tax?", "No. Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming have no state income tax on wages; "
+           "elsewhere, take off your state’s tax as well."),
+          ("Why is my paycheck different from this?", "Your employer withholds tax through the year from the W-4 you filled in, and takes off benefits such as health insurance. "
+           "This calculator works out the year’s federal tax itself, so the two can differ by a little."),
+          ("Do 401(k) contributions lower my taxes?", "Traditional 401(k) contributions lower your income tax, because they are taken off before it; Social Security and Medicare are still due on them. "
+           "Enter them as pre-tax contributions to see the difference.")],
+         ["salary-converter", "raise-calculator", "compare-offers"], ["salaries/"])
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",
@@ -782,7 +824,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "strengths, weaknesses and a list of fixes, each quoting your own line. It works by rules, not AI, and nothing is uploaded.",
          wrap("resume-review",
               '<div class="card tl-form">'
-              + _area("text", "Your resume (plain text)", 16, "Paste the text of your resume here, with its headings and dates", tall=True, ex=EX_REVIEW)
+              + _area("text", "Your resume", 16, "Paste the text of your resume here, with its headings and dates, or open the file above", tall=True, ex=EX_REVIEW, file=True)
               + '<div class="tl-actions">' + run_btn("Review the resume") + _clear(True) + "</div></div>"
               + _private(" The text is read inside your browser and is never sent anywhere.")
               + _board("Resume review", "Paste the text of your resume to see its score and what to fix.")
@@ -848,7 +890,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<p>The buzzword list is short and ours: passionate, results-driven, guru, ninja, rockstar, wizard, synergy, thought leader, visionary, team player, self-starter, motivated, innovative, "
          "proven track record, outside the box and a few more. Points marked “Fix” and “Check” are counted as things to fix; “Note” is a smaller suggestion. "
          "The page reads words and patterns. It cannot judge your photo, your experience entries or whether a claim is true, and an unusual job title may not be on its list.</p>",
-         [("How long can a LinkedIn headline be?",
+         [('Can I upload my resume as a PDF or Word file?', 'Yes: open the file and the page reads its text right here in your browser, then shows it in the box so you can check it. The file itself is never uploaded. A scanned PDF is a picture with no text in it, so copy the text instead.'),
+          ("How long can a LinkedIn headline be?",
            "220 characters, including spaces. There is no need to fill them: a job title, a field and two or three skills are enough. The check flags a headline over the limit and notes one under 30 characters."),
           ("What is “the opening” of the About section?",
            "LinkedIn shows only the first lines of the About text until a reader clicks “see more”. This page treats the first 300 characters as that opening and checks that they say what you do and for whom, because a reader may never see the rest."),
