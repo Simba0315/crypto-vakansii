@@ -1,18 +1,20 @@
 // Runs the API on this machine for trying the whole flow without Cloudflare:  node --no-warnings server/dev.mjs
 // Payments are simulated (PAY_MODE=test): opening the "payment link" marks the order as paid. Data lives in memory unless DB_FILE is set.
-// There is no mailbox either: a sign-up answers with confirm_token (send it to POST /api/auth/confirm), a password reset with its token.
+// There is no mailbox either: a sign-up answers with confirm_token (send it to POST /api/auth/confirm), a password reset with its token,
+// a job alert sign-up with confirm_url. Letters are printed here instead of being sent (job alerts: node server/alerts.mjs needs the server's settings).
 // The owner's token for /api/admin/... is "dev-admin".
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import worker from './src/worker.js';
-import { D1 } from './test/d1.mjs';
+import { D1 } from './src/d1.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787), SITE = process.env.SITE_URL || 'http://localhost:8765/crypto-vakansii';
 const env = {
   DB: new D1(process.env.DB_FILE || ':memory:').applySchema(path.join(here, 'schema.sql')),
   SITE_URL: SITE, SITE_ORIGINS: new URL(SITE).origin, API_URL: 'http://localhost:' + PORT, PAY_MODE: 'test', ADMIN_TOKEN: 'dev-admin', PLUS_LIVE: '0',
+  MAIL: { send: async (m) => { console.log('--- letter (' + (m.kind || 'mail') + ') to ' + m.to + ': ' + m.subject + '\n' + m.text); } }, MAIL_FROM: 'Jobs Every Hour <dev@localhost>',
 };
 http.createServer(async (req, res) => {
   const chunks = []; for await (const c of req) chunks.push(c);

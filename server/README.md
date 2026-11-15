@@ -123,6 +123,9 @@ A verified claim gives:
   ends with the company's name as the site writes it in addresses. `GET /api/claims/<id>/stats`: per job page, totals and the last 14 days.
 - **posting jobs its hiring system does not list**: the `listed` refusal no longer applies to that account (screening, the duplicate check
   and review still do). Anyone else who tries gets 409 `listed` with `claim: { company }`.
+  **Not on the site yet:** `collect.py` (`direct_and_paid`) drops every posted job whose company is one of the companies it reads
+  ("a posting may not pass itself off as an indexed company"), so such a job is accepted here and then left out of the build. It needs
+  one change there: let through the companies listed in `export.json` `claimed`. `collect.py` belongs to the sources work; not changed here.
 - **the mark**: `export.json` has `claimed: [{ company, since }]` for the site to say "managed by the company" (not shown by the build yet).
 
 What the site's pages still need for this: the account page (claim form, stats), and the job page's call to `/api/public/hit` with the
