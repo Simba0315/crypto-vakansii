@@ -16,7 +16,7 @@ import skills_info                      # what each skill is, in plain words, an
 import geo_cities                       # where the cities in postings are, for the jobs map
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
-import compare_sites                    # sourced facts for "Hiring Right Now vs <job site>" (/vs/)
+import compare_sites                    # sourced facts for "Jobs Every Hour vs <job site>" (/vs/)
 import builders_check                   # what a free user of each resume builder can download (/free-resume-builders/)
 import quiz_pages                        # skill self-tests (/skill-tests/)
 import glossary_terms                   # the glossary, one page per term (/glossary/)
@@ -1151,8 +1151,8 @@ def badge_svg(label, value):
     lw, vw = int(34 + 7.7 * len(label)), int(18 + 7.7 * len(value))
     w = lw + vw
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="28" viewBox="0 0 {w} 28" role="img" aria-label="{e(label)}: {e(value)}">'
-            f'<rect width="{w}" height="28" rx="6" fill="#121110"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#ff7a52"/><rect x="{lw}" width="8" height="28" fill="#ff7a52"/>'
-            f'<circle cx="14" cy="14" r="4" fill="#ff7a52"/><text x="25" y="18.5" fill="#fff" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(label)}</text>'
+            f'<rect width="{w}" height="28" rx="6" fill="#121110"/><rect x="{lw}" width="{vw}" height="28" rx="6" fill="#5fd486"/><rect x="{lw}" width="8" height="28" fill="#5fd486"/>'
+            f'<circle cx="14" cy="14" r="4" fill="#5fd486"/><text x="25" y="18.5" fill="#fff" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(label)}</text>'
             f'<text x="{lw + 9}" y="18.5" fill="#121110" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(value)}</text></svg>')
 
 
@@ -3232,7 +3232,7 @@ def main():
              + '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/relocate/{sl}/"><span class="n">{fl(c)}{e(cname_.get(c, c))}</span><span class="c">{k:,} jobs</span></a></li>' for sl, c, _, k, _ in sorted(rl_rows, key=lambda x: -x[3])) + "</ul>"
              + f'<p class="note">Also: <a href="{P}/perks/visa-sponsorship/">all jobs with visa sponsorship</a> · <a href="{P}/perks/relocation/">all jobs with relocation support</a></p>')
 
-    # "Hiring Right Now vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
+    # "Jobs Every Hour vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
     # A site with fewer than 4 sourced rows gets no page: a comparison with gaps would not be fair.
     VS = [x for x in compare_sites.SITES if len(x["rows"]) >= 4]
     def vs_src(x):
@@ -4291,16 +4291,16 @@ el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js
 html,body{{margin:0;height:100%;background:#0b0b0a;color:#f3f2ec;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;overflow:hidden}}
 .top{{display:flex;justify-content:space-between;align-items:center;padding:2.2vh 3vw;border-bottom:1px solid #2b2b27;font-size:clamp(12px,1.5vw,20px);letter-spacing:.08em;text-transform:uppercase;color:#a5a399}}
 .top a{{color:#f3f2ec;text-decoration:none;font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;text-transform:none;font-size:clamp(16px,2vw,28px)}}
-.top b{{color:#ff7a52;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#e8552b;margin-right:.6em}}
+.top b{{color:#5fd486;font-weight:500}}.dot{{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:#1f9d55;margin-right:.6em}}
 #rows{{padding:1vh 3vw}}.r{{display:grid;grid-template-columns:7ch minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.7fr);gap:2vw;align-items:baseline;padding:1.55vh 0;border-bottom:1px solid #1f1f1c;animation:in .5s backwards}}
-@keyframes in{{from{{opacity:0;transform:translateY(8px)}}}}.a{{color:#ff7a52;font-size:clamp(11px,1.3vw,18px)}}
+@keyframes in{{from{{opacity:0;transform:translateY(8px)}}}}.a{{color:#5fd486;font-size:clamp(11px,1.3vw,18px)}}
 .t{{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:clamp(15px,2.1vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3f2ec;text-decoration:none}}
 .c,.l{{font-size:clamp(11px,1.4vw,20px);color:#a5a399;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.c{{color:#e9e7de}}
 .foot{{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:1.6vh 3vw;font-size:clamp(10px,1.1vw,15px);color:#77756c;letter-spacing:.06em;text-transform:uppercase;background:#0b0b0a}}
-.foot a{{color:#ff7a52;text-decoration:none}}
+.foot a{{color:#5fd486;text-decoration:none}}
 .bar{{display:flex;justify-content:space-between;align-items:center;gap:2vw;padding:1.2vh 3vw;font-family:Inter,system-ui,sans-serif;font-size:clamp(12px,1.1vw,16px);color:#a5a399;border-bottom:1px solid #1f1f1c}}
 .ctl{{display:flex;align-items:center;gap:.6em;white-space:nowrap}}.ctl button{{font:inherit;color:#f3f2ec;background:#1a1a17;border:1px solid #2b2b27;border-radius:8px;padding:.35em .8em;cursor:pointer}}
-.ctl button:hover{{border-color:#ff7a52}}#pg{{font-family:"JetBrains Mono",ui-monospace,monospace;color:#ff7a52;min-width:9ch;text-align:right}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#ff7a52}}@media(max-width:700px){{html,body{{height:auto;overflow:auto}}.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}.ctl{{display:none}}.foot{{position:static}}.bar{{display:block}}}}</style></head><body>
+.ctl button:hover{{border-color:#5fd486}}#pg{{font-family:"JetBrains Mono",ui-monospace,monospace;color:#5fd486;min-width:9ch;text-align:right}}.foot .m{{color:#e9e7de}}.n{{padding:6vh 0;font-size:clamp(14px,1.8vw,24px);color:#a5a399}}.n a{{color:#5fd486}}@media(max-width:700px){{html,body{{height:auto;overflow:auto}}.r{{grid-template-columns:5ch minmax(0,1fr)}}.c,.l{{grid-column:2}}.ctl{{display:none}}.foot{{position:static}}.bar{{display:block}}}}</style></head><body>
 <div class="top"><a href="{P}/"><span class="dot"></span>{e(SITE)}</a><h1 id="what" style="all:unset">Fresh on the board</h1><b id="clock"></b></div>
 <div class="bar"><span>A live wall for an office screen, a TV or a second monitor: a new page of jobs every 9 seconds. Press F11 for full screen. <a href="{P}/widgets/" style="color:#7ee39a">Pick a skill, city or company</a> · <a href="{P}/jobs/" style="color:#7ee39a">Search all jobs</a></span>
 <span class="ctl"><button id="prev" type="button" aria-label="Previous page">‹</button><button id="pause" type="button">Pause</button><button id="next" type="button" aria-label="Next page">›</button><span id="pg"></span></span></div><div id="rows"></div>
@@ -4363,7 +4363,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<label class="wl">How many jobs<select id="wb-limit"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>15</option></select></label>'
          '<label class="wl">How it looks<select id="wb-layout"><option value="list">List</option><option value="cards">Cards</option><option value="compact">Compact (sidebar)</option><option value="ticker">Ticker</option><option value="careers">Careers page (all jobs, with search)</option></select></label>'
          '<label class="wl">Light or dark<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label>'
-         '<label class="wl">Colour<input type="color" id="wb-accent" value="#c93f18" aria-label="Accent colour"></label>'
+         '<label class="wl">Colour<input type="color" id="wb-accent" value="#15803d" aria-label="Accent colour"></label>'
          '<label class="wl">Kind of code<select id="wb-mode"><option value="script">Standard (works on most sites)</option><option value="iframe">For Notion and builders that block scripts</option></select></label>'
          '<label class="check"><input type="checkbox" id="wb-search"> Search box and “Show more”</label></div>'
          '<p class="note" id="wb-hint" hidden style="margin:12px 0 0">The board name is the last part of your careers page address: boards.greenhouse.io/<b>acme</b>, jobs.lever.co/<b>acme</b> or jobs.ashbyhq.com/<b>acme</b>.</p></div>'
@@ -4398,7 +4398,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<code>data-limit</code>", "Rows to show, 1 to 20. With the search box on, rows per page", "6"],
              ["<code>data-layout</code>", "<code>list</code>, <code>cards</code>, <code>compact</code>, <code>ticker</code> or <code>careers</code>", "<code>list</code>"],
              ["<code>data-theme</code>", "<code>auto</code> follows the visitor’s system, or force <code>light</code> or <code>dark</code>", "<code>auto</code>"],
-             ["<code>data-accent</code>", "Any hex colour for the hover bar and the link underline", "<code>#c93f18</code>"],
+             ["<code>data-accent</code>", "Any hex colour for the hover bar and the link underline", "<code>#15803d</code>"],
              ["<code>data-search</code>", "<code>1</code> adds a search box, a team filter where teams exist, and “Show more”", "off"],
              ["<code>data-title</code>", "Your own heading for the widget", "the name of the list"],
              ["<code>data-company</code>", "Your company name, shown in the heading of your own board", "none"]]))
@@ -5225,9 +5225,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 f'<span>{e(label)} · SVG</span></a>')
     A_ = brand.APPLIED
     swatch = lambda hexv, name, use, ink="#121110": (f'<div class="swatch"><i style="background:{hexv}"></i><b>{name}</b><span>{hexv.upper()}</span><small>{use}</small></div>')
-    SWATCHES = (swatch(BD[A_]["mark"], "Persimmon", "The mark and large shapes")
-                + swatch(BD[A_]["ui"], "Persimmon deep", "Buttons and links on white: white text on it passes 4.5:1")
-                + swatch(BD[A_]["ui_dark"], "Persimmon light", "The same on dark pages, with dark text on it")
+    SWATCHES = (swatch(BD[A_]["mark"], BD[A_]["name"], "The mark, the marker under words and lines under links")
+                + swatch(BD[A_]["ui"], BD[A_]["name"] + " deep", "Links and the hover of buttons on white: white text on it passes 4.5:1")
+                + swatch(BD[A_]["ui_dark"], BD[A_]["name"] + " light", "The same on dark pages, with dark text on it")
                 + swatch(BD[A_]["ink"], "Ink", "Text, the dark button, dark pages")
                 + swatch("#FFFFFF", "Paper", "The page")
                 + swatch(BD[A_]["paper2"], "Sand", "Quiet panels and table heads")
@@ -5255,7 +5255,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    '<div><p>A clock face at <b>17 minutes past the hour</b>: the minute every employer’s careers page is read in each hourly run. It says the one thing the site '
                    'promises, that a job here was checked a moment ago, and it still reads as a clock at 16 pixels.</p>'
                    '<ul class="rules"><li>Leave clear space around the mark of at least half its height.</li><li>The smallest mark is 16 px; the smallest logo with the name, 120 px wide.</li>'
-                   '<li>On white use the persimmon mark; on dark pages the light one; in one colour, ink or white.</li>'
+                   f'<li>On white use the {BD[A_]["name"].lower()} mark; on dark pages the light one; in one colour, ink or white.</li>'
                    '<li>Do not recolour, stretch, rotate, outline or animate it, and do not set the name in another typeface.</li></ul></div></div>')
          + section("Logo files", '<div class="brandrow">' + logo_tile(f"{A_}-logo.svg", "Logo, light") + logo_tile(f"{A_}-logo-dark.svg", "Logo, dark", True)
                    + logo_tile(f"{A_}-logo-mono.svg", "Logo, one colour") + logo_tile(f"{A_}-logo-mono-white.svg", "Logo, white", True)
@@ -5272,7 +5272,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Pictures", '<ul class="rules"><li><b>The product, not stock photos.</b> Show the site itself: a list of jobs, a chart, the resume builder.</li>'
                    '<li><b>No invented people.</b> No stock models, no AI-made faces or offices, no 3D shapes or glowing gradients.</li>'
                    '<li><b>Company logos only from the company’s own site</b>, and none at all when there is no official one.</li>'
-                   '<li><b>Icons:</b> simple line drawings in ink, with one persimmon detail at most.</li></ul>')
+                   f'<li><b>Icons:</b> simple line drawings in ink, with one {BD[A_]["name"].lower()} detail at most.</li></ul>')
          + section("How we write", '<ul class="rules"><li>Plain words. Say the problem, then the fact, then what the page does.</li>'
                    '<li>Every number comes from our own data, with its date and what it counts.</li>'
                    '<li>“Free” is said plainly wherever something is free.</li>'
@@ -5310,9 +5310,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                      f'<p class="bd-files"><a href="{P}/brand/{k}-logo.svg">Logo</a> <a href="{P}/brand/{k}-logo-dark.svg">Logo, dark</a> <a href="{P}/brand/{k}-mark.svg">Mark</a> '
                      f'<a href="{P}/brand/{k}-logo-mono.svg">One colour</a></p></section>')
     page("brand/directions/", f"Brand Directions: three looks for the site | {SITE}",
-         f"Three brand directions for {SITE}, each with its mark, colours and type in light and dark: Persimmon (in use), Berry, Brick and sand.",
-         crumbs(("Brand", "brand/"), ("Directions", "")) + "<h1>Three brand directions</h1>"
-         f'<p class="lead">The site uses <b>Persimmon</b>. The other two stay here, drawn and ready, so the look can be changed later in one place '
+         f"{len(BD)} brand directions for {SITE}, each with its mark, colours and type in light and dark: " + ", ".join(d["name"] + (" (in use)" if d["applied"] else "") for d in BD.values()) + ".",
+         crumbs(("Brand", "brand/"), ("Directions", "")) + f"<h1>{len(BD)} brand directions</h1>"
+         f'<p class="lead">The site uses <b>{BD[A_]["name"]}</b>. The others stay here, drawn and ready, so the look can be changed later in one place '
          f'(<code>brand.py</code>). <a href="{P}/brand/">The brand guide</a> explains the one in use.</p>'
          '<style>@font-face{font-family:"Hanken Grotesk";font-weight:100 900;font-display:swap;src:url(' + P + '/fonts/hanken-latin.woff2) format("woff2")}</style>'
          + dir_secs, head='<meta name="robots" content="noindex">', sitemap=False)
@@ -5324,7 +5324,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     sig = (f'<table cellpadding="0" cellspacing="0" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#121110"><tr>'
            f'<td style="padding-right:12px;vertical-align:top"><img src="{FULL}/brand/{A_}-mark-96.png" width="40" height="40" alt="{SITE}"></td>'
            f'<td style="vertical-align:top"><b style="font-size:14px">Your Name</b><br>Your role, {SITE}<br>'
-           f'<a href="{FULL}/" style="color:#C93F18;text-decoration:none">jobseveryhour.com</a></td></tr></table>')
+           f'<a href="{FULL}/" style="color:#15803D;text-decoration:none">jobseveryhour.com</a></td></tr></table>')
     page("media-kit/", f"Media Kit — logos, numbers and descriptions | {SITE}",
          f"{SITE} media kit: logo files, colours with hex codes, a 50 and a 100-word description, today’s numbers, screenshots, social banners and the press contact.",
          crumbs(("Media kit", "")) + f"<h1>{e(SITE)} media kit</h1>"
@@ -5588,7 +5588,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
 """, encoding="utf-8")
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
-          f'<rect width="220" height="48" rx="10" fill="#121110"/><g transform="translate(15 13) scale(.69)">{brand.mark(brand.APPLIED, "#ff7a52", "#121110")}</g>'
+          f'<rect width="220" height="48" rx="10" fill="#121110"/><g transform="translate(15 13) scale(.69)">{brand.mark(brand.APPLIED, "#5fd486", "#121110")}</g>'
           '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
           f'<text x="46" y="37" fill="#b9b7ad" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")

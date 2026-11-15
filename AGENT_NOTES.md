@@ -3,6 +3,13 @@
 Tech job board, English, static site on GitHub Pages. Owner: Simba0315. Live: https://simba0315.github.io/crypto-vakansii/
 (the repo name and the address are temporary until a domain is bought).
 
+## The name: Jobs Every Hour (owner, 15 Nov 2026)
+
+The site and the brand are **Jobs Every Hour**, the name of its domain jobseveryhour.com. "Hiring Right Now" was the working name
+before the domain was bought and must not appear on the site, in logos, pictures, emails or new copy. The name lives in one place,
+`config.json` `site_name`: `build.py` (SITE), `brand.py` (the logo files) and `og.py` (the share picture and the square banner) read
+it from there. After a change of name or palette: `python3 brand.py`, `python3 og.py`, `python3 og.py --banners`.
+
 ## How it works
 
 - `collect.py` reads public hiring feeds (Greenhouse, Lever, Ashby) listed in `sources.json` (crypto companies) and
