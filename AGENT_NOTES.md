@@ -421,6 +421,6 @@ plain HTML, so the page is readable without the map.
   mode), `--hl` (tint under one phrase). No orange areas: orange marks the one thing that matters. Green only for states (open, yes).
 - Media kit pictures (`assets/brand/screen-*.jpg`, `banner-*.png`, `persimmon-mark-96.png` for email signatures) are made with
   Playwright from the built site; redo them after a visible change of the home, search or resume builder pages.
-- Email addresses are written `user [at] domain` with `class="ml" data-u data-d`; `site.js` turns them into links (support@, press@).
+- Email addresses: plain `mailto:` links through the department helper in `build.py` (`MAIL`); Cloudflare hides them from scrapers.
 - Copy check for the owner: the site says "every hour", but since 14 Nov the 2,994 boards in `sources_more.json` are read every four
   hours (`HRN_ROTATE`). The media kit says so; other pages still say "every hour".

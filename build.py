@@ -1185,7 +1185,7 @@ def main():
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
     contact = " or ".join(x for x in [f'Telegram <a href="https://t.me/{e(CFG["contact_telegram"])}">@{e(CFG["contact_telegram"])}</a>' if CFG["contact_telegram"] else "",
-                                      f'email <a class="ml" data-u="{e(CFG["contact_email"].split("@")[0])}" data-d="{e(CFG["contact_email"].split("@")[-1])}">{e(CFG["contact_email"].split("@")[0])} [at] {e(CFG["contact_email"].split("@")[-1])}</a>' if CFG["contact_email"] else ""] if x)
+                                      f'email <a href="mailto:{e(CFG["contact_email"])}">{e(CFG["contact_email"])}</a>' if CFG["contact_email"] else ""] if x)
     places = [(name, slug, js) for name, slug, rx in PLACES if len(js := [j for j in active if slug in j["places"]]) >= 5]
     OPEN.update(Counter(j["company"] for j in active))
     PERK_OK.update(x for x, k in Counter(x for j in active for x in j.get("perks", [])).items() if k >= 8)
@@ -5201,7 +5201,6 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              "The salary and hiring figures are counted from the open postings, free to quote.")
     wc = lambda t: len(t.split())
     top_city, top_city_n = ((geo_cities.CITIES[map_n.most_common(1)[0][0]][0], map_n.most_common(1)[0][1]) if map_n else ("London", 0))      # for the example sentence
-    mail = lambda user: (f'<a class="ml" data-u="{user}" data-d="jobseveryhour.com">{user} [at] jobseveryhour.com</a>')      # site.js turns it into a link
     def logo_tile(file_, label, dark=False, h=40):
         size_ = f'width="{h}" height="{h}"' if "-mark" in file_ else f'height="{h}"'           # a mark is square; a logo keeps its own width
         return (f'<a class="brandtile{" dark" if dark else ""}" href="{P}/brand/{file_}" download><img src="{P}/brand/{file_}" alt="{e(label)}" {size_} loading="lazy">'
@@ -5339,7 +5338,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    + ("<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout." if CFG["api_url"] else
                       "<p>Placements will be bought and switched on in a self-serve employer account, paid in crypto at checkout. The account is not open yet, so nothing can be bought today.")
                    + f' Posting a job is free: <a href="{P}/post-a-job/">for employers</a>.</p>')
-         + section("Press contact", f'<p>Email {mail("press")}. Numbers you can quote, each with its method and date: <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, '
+         + section("Press contact", f'<p>Email {mail_a("press")}. Numbers you can quote, each with its method and date: <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, '
                    f'<a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from open postings</a>, <a href="{P}/reports/">monthly reports</a>. '
                    f'Raw data: the <a href="{P}/api/">free JSON API</a>.</p>'),
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",

@@ -240,11 +240,6 @@
   }
   window.HRN = { mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
-  /* ---------- email addresses are written "press [at] jobseveryhour.com" in the page, so address harvesters do not read them;
-     here they become ordinary links ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('a.ml[data-u][data-d]'), function (a) {
-    var addr = a.getAttribute('data-u') + '@' + a.getAttribute('data-d'); a.href = 'mailto:' + addr; a.textContent = addr;
-  });
   /* ---------- theme + mobile menu + shortcuts ---------- */
   var themeBtn = $('theme');
   if (themeBtn) themeBtn.addEventListener('click', function () {
