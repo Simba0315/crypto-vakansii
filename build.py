@@ -4632,7 +4632,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              + '<p class="rel">More tests: ' + " ".join(f'<a href="{P}/skill-tests/{o_}/">{e(quiz_pages.QUIZZES[o_]["name"])}</a>' for o_ in quiz_pages.QUIZZES if o_ != qs_) + f' <a href="{P}/skill-tests/">All tests</a></p>', head=ild)
         sk_cards.append((qs_, q_["name"], q_["plain"], sk_n))
     page("skill-tests/", f"Skill Tests for Job Interviews: SQL, Excel, Python and More | {SITE}",
-         "Free tests of 24 questions, beginner to advanced, for the skills employers ask for most: SQL, Excel, Python, JavaScript, Linux and Docker. Scored in your browser by topic, with the reason behind each answer.",
+         "Free tests of 24 questions, beginner to advanced, for the skills employers ask for most: SQL, Excel, Python, JavaScript, React, Linux and Docker. Scored in your browser by topic, with the reason behind each answer.",
          crumbs(("Skill tests", "")) + '<h1>Skill tests: <span class="hl">check yourself before the interview</span></h1>'
          '<p class="plain"><b>In plain words:</b> a skill test is a short quiz. You answer 24 questions about one skill, such as SQL or Excel, and see which answers were right, why, and your score by topic.</p>'
          '<p class="lead">A first interview often starts with questions on the skills listed in the posting. These tests cover the questions that come up most, so you find your gaps at home and not in the call. Free, no sign-up, nothing leaves your browser.</p>'
