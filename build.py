@@ -472,15 +472,31 @@ def ld_small(m_):
 TOC_FAMILIES = ("how-to-become/", "interview-questions/", "job-descriptions/", "how-to-hire/", "guides/", "insights/", "relocate/",
                 "vs/", "compare/", "salaries/", "resignation-letters/", "resume-words/", "glossary/")
 SEC_H2 = re.compile(r'<section class="sec"(?: id="([^"]+)")?><div class="sec-head[^"]*"><h2>(.*?)</h2>')
+TOC_PAGES = {"safety/", "promise/", "methodology/", "privacy/", "terms/"}      # single long pages that read like documents
+H2S = re.compile(r"""<h2 class=["']h2s["'](?: id="([^"]+)")?>(.*?)</h2>""")
 
 
 def with_toc(path, body):
     """An "On this page" list beside a long article (4 or more sections): sticky on the right on wide screens, hidden on phones.
     Sections without an id get one from their heading, so the links also work as jump links in search results."""
-    if not any(path.startswith(f) and path != f for f in TOC_FAMILIES): return body
+    if not (any(path.startswith(f) and path != f for f in TOC_FAMILIES) or path in TOC_PAGES): return body
     heads = SEC_H2.findall(body)
-    if len(heads) < 4: return body
     used, links = set(), []
+    if len(heads) < 4 and path in TOC_PAGES and len(H2S.findall(body)) >= 4:      # a text page: plain headings, read at a comfortable width
+        def add_h2s(m_):
+            txt = m_.group(2)
+            sid = m_.group(1)
+            if not sid:
+                base = "s-" + (slugify(html.unescape(re.sub(r"<[^>]+>", "", txt)))[:48].strip("-") or "part")
+                sid, k = base, 2
+                while sid in used: sid, k = f"{base}-{k}", k + 1
+            used.add(sid)
+            links.append(f'<li><a href="#{sid}">{re.sub(r"<[^>]+>", "", txt)}</a></li>')
+            return f'<h2 class="h2s" id="{sid}">{txt}</h2>'
+        body = H2S.sub(add_h2s, body)
+        return (f'<div class="has-toc doc"><div class="toc-main">{body}</div><aside class="toc" aria-label="On this page"><p>On this page</p>'
+                f'<ol>{"".join(links)}</ol><a class="toc-top" href="#main">Back to top</a></aside></div>')
+    if len(heads) < 4: return body
     def add_id(m_):
         sid, h2 = m_.group(1), m_.group(2)
         if not sid:

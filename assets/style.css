@@ -2184,3 +2184,9 @@ select:not([multiple]):hover{border-color:var(--text)}
 .adv-jobs{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:28px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
 .adv-jobs p{margin:0;color:var(--muted)}.adv-jobs .btn{margin-top:0}
 .adv-prev{display:block;font-size:13.5px;line-height:1.45;color:var(--muted);padding:6px}
+/* text pages (methodology, privacy, terms): a comfortable reading width and room between parts */
+.has-toc.doc .toc-main p,.has-toc.doc .toc-main ul,.has-toc.doc .toc-main ol,.has-toc.doc .toc-main .lead{max-width:72ch}
+.has-toc.doc .toc-main h2.h2s{margin:44px 0 10px;font-size:23px;scroll-margin-top:84px}
+.has-toc.doc .toc-main p{line-height:1.65}
+/* tile names wrap to a second line instead of being cut ("San Francisco Bay ...") */
+.tile .n{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}

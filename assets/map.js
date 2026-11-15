@@ -66,8 +66,10 @@
     recount();
     map.addSource('jobs', { type: 'geojson', data: geo() });
     map.addLayer({ id: 'jobs', type: 'circle', source: 'jobs', paint: {
-      'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 4, 10, 10, 70, 30],
-      'circle-color': '#2a78d6', 'circle-opacity': 0.72, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 } });
+      // brand green, smaller at the world view and growing with the zoom, so big cities stop merging into one blot (owner: "looks like a bug")
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 2.5, 10, 6, 70, 18],
+                                                         5, ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 4, 10, 10, 70, 30]],
+      'circle-color': '#1f9d55', 'circle-opacity': 0.62, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 } });
     var tip = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
     map.on('mouseenter', 'jobs', function (ev) {
       map.getCanvas().style.cursor = 'pointer';
