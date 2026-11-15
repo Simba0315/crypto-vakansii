@@ -1819,3 +1819,15 @@ h1,h2,h3,h4{font-variant-numeric:normal}
 table.grid tr.grp th{font-variant-numeric:normal}
 .tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
 .popular a.pop-tech{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}
+
+/* live lists (site.js, /api/latest): a job found after the page was built slides in at its place, and its row says when we found it */
+.jf{display:block;margin-top:3px;font-size:12.5px;line-height:1.35;color:var(--muted)}
+.jf::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);margin:0 7px 0 1px;vertical-align:1px}
+.job.lv-in,.job.lv-out{overflow:hidden}
+.job.lv-in{animation:lv-in .45s ease-out both}
+.job.lv-out{animation:lv-out .4s ease-in both}
+.job.lv>a{animation:lv-glow 2.6s ease-out}
+@keyframes lv-in{from{max-height:0;opacity:0}to{max-height:180px;opacity:1}}
+@keyframes lv-out{from{max-height:180px;opacity:1}to{max-height:0;opacity:0}}
+@keyframes lv-glow{from{background:var(--accent-soft)}to{background:transparent}}
+@media(prefers-reduced-motion:reduce){.job.lv-in,.job.lv-out,.job.lv>a{animation:none}}

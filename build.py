@@ -805,7 +805,7 @@ def auto_more(path, h1):
 LIST_PAGES = 2
 
 
-def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None):
+def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live=""):
     jobs = order(jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
     rows = collapse(jobs)
@@ -826,7 +826,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         chunk = rows[(n - 1) * per:n * per]
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else ""))
         body = (top + (extra if n == 1 else "") + (f'<div class="sec-head lst"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
-                + (f'<ul class="jobs">{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
+                + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                 + pager_html(path, n, pages) + note + ((hub + after + faq_html) if n == 1 else ""))      # questions last, after what the page shows
         if n == 1:
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
@@ -1510,7 +1510,7 @@ def main():
         if len(pool_) >= 7:
             shot_tabs.append((lab_, href_, "".join(card(j) for j in diverse(order(pool_), 7, 1))))
     shot_nav = "".join(f'<a{" class=on" if i_ == 0 else ""} href="{P}/{h_}/" data-tab="{i_}" data-more="{SHOT_MORE.get(h_, "")}">{l_}</a>' for i_, (l_, h_, _) in enumerate(shot_tabs))
-    shot_panels = "".join(f'<ul class="jobs" data-panel="{i_}"{"" if i_ == 0 else " hidden"}>{r_}</ul>' for i_, (_, _, r_) in enumerate(shot_tabs))
+    shot_panels = "".join(f'<ul class="jobs" data-panel="{i_}"{" data-live=home" if i_ == 0 else " hidden"}>{r_}</ul>' for i_, (_, _, r_) in enumerate(shot_tabs))   # "Latest jobs" takes new jobs live (site.js)
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
     hero = (f'<section class="hero v2"><div class="wrap">'
@@ -2161,7 +2161,8 @@ def main():
     fresh = [j for j in active if (j["posted"] or "") >= cutoff]
     listing("new/", "New jobs", f"New Jobs — {roles(len(fresh), 'role')} posted in the last 3 days | {SITE}",
             f"{roles(len(fresh), 'job')} posted in the last three days. Be among the first to apply.",
-            fresh, intro_for(fresh, "", " posted in the last three days"), feed=True)
+            fresh, intro_for(fresh, "", " posted in the last three days"), feed=True,
+            live=f' data-live="new" data-since="{cutoff}"')       # site.js adds the jobs found since this page was built (/api/latest)
 
     # Salaries
     paid = [(j, j["usd"]) for j in active if j["usd"]]
