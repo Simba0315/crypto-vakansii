@@ -1,51 +1,52 @@
-# Personal accounts: ours against Indeed, LinkedIn, Glassdoor, ZipRecruiter, hh.ru, Teal (15 Nov 2026)
+# Личные кабинеты: наши и у Indeed, LinkedIn, Glassdoor, ZipRecruiter, hh.ru, Teal (15 нояб. 2026)
 
-The owner: "are the personal accounts fully worked out? did you check how all the other sites do it? log in with a work email or
-LinkedIn to post; job seekers need an account too". Status of ours: **live** = on jobseveryhour.com now; **server** = the API is
-installed on our server (15 Nov) and the code is tested (948 tests), the pages come with the accounts session's merge; **keys** =
-built, switched on when the owner sets his own key; **to build** = not written yet (passed to the accounts session).
+Владелец: «личные кабинеты проработаны полностью? ты проверил, как это сделано на всех остальных сайтах? вход через рабочую почту или
+LinkedIn для публикации; соискателям тоже нужен аккаунт». Статус наших функций: **live** = уже на jobseveryhour.com; **server** = API
+установлен на нашем сервере (15 нояб.), код протестирован (948 тестов), страницы придут со слиянием сессии по аккаунтам; **keys** =
+написано, включится, когда владелец задаст свой ключ; **to build** = ещё не написано (передано сессии по аккаунтам).
 
-The features below are the ones those sites show to every user on their public pages and help centers; nothing here is a guess
-about their internals.
+Функции ниже — те, что эти сайты показывают всем пользователям на публичных страницах и в справочных центрах; о их внутреннем
+устройстве здесь ничего не угадывается.
 
-## Job seeker
+## Соискатель
 
-| Feature | Indeed | LinkedIn | Glassdoor | ZipRecruiter | hh.ru | Teal | Ours |
+| Функция | Indeed | LinkedIn | Glassdoor | ZipRecruiter | hh.ru | Teal | У нас |
 |---|---|---|---|---|---|---|---|
-| Search, save jobs, track applications without an account | — | — | — | — | — | — | **live** (in the browser) |
-| Account with email + password, email confirmation, password reset | yes | yes | yes | yes | yes | yes | **server** |
-| Sign in with Google | yes | yes | yes | yes | — | yes | **to build** (owner's Google OAuth client) |
-| Sign in with LinkedIn | — | (is LinkedIn) | — | — | — | yes | **keys** |
-| Saved and applied jobs synced across devices | yes | yes | yes | yes | yes | yes | **server** (/api/sync) |
-| Job alerts by email, frequency choice, one-click unsubscribe | yes | yes | yes | yes | yes | — | **server** (double opt-in, one letter a day) |
-| Resume stored in the account, several versions | yes | yes | yes | yes | yes | yes | in the browser now; **to build** in the account |
-| "Let employers find my resume" (searchable profile, hidden contacts) | yes | yes | — | yes | yes | — | **to build** (opt-in, contacts only on acceptance) |
-| Application status from the employer ("viewed", "rejected") | yes | partly | — | yes | yes | — | not possible: people apply on the employer's own page |
-| Recommended jobs from the profile | yes | yes | yes | yes | yes | yes | **live** (/for-you/, in the browser) |
-| Salary and company insights inside the account | yes | Premium | yes | — | — | — | live as public pages |
-| AI resume / cover letter / tailoring | yes | Premium | — | — | — | Teal+ | **keys** (Plus, AI key) |
-| Export my data, delete account for good | yes | yes | yes | yes | yes | yes | **to build** (delete exists in the API plan; export to add) |
+| Поиск, сохранение вакансий, учёт откликов без аккаунта | — | — | — | — | — | — | **live** (в браузере) |
+| Аккаунт по email + пароль, подтверждение email, сброс пароля | да | да | да | да | да | да | **server** |
+| Вход через Google | да | да | да | да | — | да | **to build** (нужен OAuth-клиент Google владельца) |
+| Вход через LinkedIn | — | (это LinkedIn) | — | — | — | да | **keys** |
+| Сохранённые и отправленные вакансии синхронизируются между устройствами | да | да | да | да | да | да | **server** (/api/sync) |
+| Оповещения о вакансиях по почте, выбор частоты, отписка в один клик | да | да | да | да | да | — | **server** (двойное подтверждение, одно письмо в день) |
+| Резюме в аккаунте, несколько версий | да | да | да | да | да | да | пока в браузере; **to build** в аккаунте |
+| «Пусть работодатели находят моё резюме» (профиль для поиска, скрытые контакты) | да | да | — | да | да | — | **to build** (по согласию, контакты только после принятия) |
+| Статус отклика от работодателя («просмотрено», «отказ») | да | частично | — | да | да | — | невозможно: люди откликаются на странице самого работодателя |
+| Рекомендованные вакансии по профилю | да | да | да | да | да | да | **live** (/for-you/, в браузере) |
+| Данные о зарплатах и компаниях в аккаунте | да | Premium | да | — | — | — | live как публичные страницы |
+| ИИ для резюме / сопроводительного письма / адаптации | да | Premium | — | — | — | Teal+ | **keys** (Plus, ключ ИИ) |
+| Выгрузить свои данные, удалить аккаунт навсегда | да | да | да | да | да | да | **to build** (удаление есть в плане API; выгрузку добавить) |
 
-## Employer / recruiter
+## Работодатель / рекрутёр
 
-| Feature | Indeed | LinkedIn | Glassdoor | ZipRecruiter | hh.ru | Ours |
+| Функция | Indeed | LinkedIn | Glassdoor | ZipRecruiter | hh.ru | У нас |
 |---|---|---|---|---|---|---|
-| Post a job free | yes | 1 free | via Indeed | trial | paid | **server** (reviewed first, fraud checks) |
-| Prove who is posting: work email / company domain | email | company page | via Indeed | email | company check | **server** (work email; DNS record or file on the site) |
-| Recruiter posting for a client, marked as such | yes | yes | — | yes | yes | **server** (with LinkedIn sign-in, always reviewed, marked) |
-| Sign in with LinkedIn / Google | — / yes | yes | — | — / yes | — | **keys** / **to build** |
-| Job dashboard: views, clicks on Apply | yes | yes | yes | yes | yes | **server** |
-| Paid promotion (sponsored / featured / urgent badge) | yes (per click) | yes (budget) | via Indeed | yes | yes | featured and pinned built; **to build**: "Urgently hiring" badge, top-3 rotation, boost per job (research) |
-| Claim and edit the company page | yes | yes | yes | — | yes | **server** (claim) ; editing **to build** |
-| Team members posting for one company | yes | yes | yes | yes | yes | **to build** |
-| Invoices and receipts | yes | yes | yes | yes | yes | **to build** (crypto receipts) |
-| Resume search, contact requests | paid | paid (Recruiter) | — | paid | paid | **to build** (after seekers opt in) |
-| Applicants inside the site (ATS) | yes | yes | — | yes | yes | not planned: apply on the employer's own page is our promise |
+| Бесплатно разместить вакансию | да | 1 бесплатно | через Indeed | пробный период | платно | **server** (сначала проверка, защита от мошенничества) |
+| Подтверждение, кто публикует: рабочая почта / домен компании | email | страница компании | через Indeed | email | проверка компании | **server** (рабочая почта; запись DNS или файл на сайте) |
+| Рекрутёр публикует за клиента, с пометкой | да | да | — | да | да | **server** (при входе через LinkedIn, всегда проверка, с пометкой) |
+| Вход через LinkedIn / Google | — / да | да | — | — / да | — | **keys** / **to build** |
+| Панель вакансий: просмотры, клики на «Apply» | да | да | да | да | да | **server** |
+| Платное продвижение (спонсорская / избранная / значок «срочно») | да (за клик) | да (бюджет) | через Indeed | да | да | избранные и закреплённые сделаны; **to build**: значок «Urgently hiring», ротация топ-3, буст на вакансию (исследование) |
+| Заявить права на страницу компании и править её | да | да | да | — | да | **server** (заявка); правка **to build** |
+| Сотрудники публикуют от одной компании | да | да | да | да | да | **to build** |
+| Счета и квитанции | да | да | да | да | да | **to build** (крипто-квитанции) |
+| Поиск по резюме, запросы контактов | платно | платно (Recruiter) | — | платно | платно | **to build** (после согласия соискателей) |
+| Отклики внутри сайта (ATS) | да | да | — | да | да | не планируется: отклик на странице самого работодателя — наше обещание |
 
-## What only the owner can do (one-time)
+## Что может сделать только владелец (один раз)
 
-1. The mailbox password of support@: typed into the terminal tab, never seen by anyone else. Without it no confirmation letters.
-2. Sign In with LinkedIn: an app in the LinkedIn Developer Portal (developer.linkedin.com → Create app, product "Sign In with LinkedIn
-   using OpenID Connect", redirect URL `https://jobseveryhour.com/account/`), then the Client ID and Secret typed in the same way.
-3. Sign in with Google (when built): an OAuth client in Google Cloud Console, redirect URL the same account page.
-4. Payments: the Cryptomus merchant keys, last.
+1. Пароль от почтового ящика support@: вводится во вкладке терминала, никто другой его не видит. Без него не будет писем с
+   подтверждением.
+2. Вход через LinkedIn: приложение в LinkedIn Developer Portal (developer.linkedin.com → Create app, продукт «Sign In with LinkedIn
+   using OpenID Connect», redirect URL `https://jobseveryhour.com/account/`), затем Client ID и Secret вводятся тем же способом.
+3. Вход через Google (когда будет написан): OAuth-клиент в Google Cloud Console, redirect URL — та же страница аккаунта.
+4. Платежи: ключи продавца Cryptomus, в последнюю очередь.

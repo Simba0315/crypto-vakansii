@@ -1,58 +1,61 @@
-# Jooble's app pages and reviews (read 15 Nov 2026)
+# Страницы приложения Jooble и отзывы о нём (прочитано 15 нояб. 2026)
 
-The owner sent the Google Play and App Store pages of the Jooble app: "study the description and the reviews, maybe something is
-wrong on our site; they add 300,000 jobs every day, how, we need the same".
+Владелец прислал страницы приложения Jooble в Google Play и App Store: «изучи описание и отзывы, возможно, что-то не так на нашем
+сайте; они добавляют 300 000 вакансий каждый день, как, нам нужно столько же».
 
-Sources: play.google.com/store/apps/details?id=jooble.org (US, English) and apps.apple.com/us/app/jooble-easy-job-search-app/id1605813568,
-both read on 15 Nov 2026 in the built-in browser.
+Источники: play.google.com/store/apps/details?id=jooble.org (США, английский) и apps.apple.com/us/app/jooble-easy-job-search-app/id1605813568,
+обе прочитаны 15 нояб. 2026 во встроенном браузере.
 
-## What the pages say
+## Что говорят страницы
 
-- Google Play: 3.8 stars from 47.7K reviews, 5M+ downloads, updated 4 Nov 2026. App Store: 4.7 from 566 ratings, version 1.48.0.
-- Same description on both. Their own words:
-  - "pulls listings from many job sites into one search"; "listings from job boards and classifieds";
-  - "Every day, 300,000 new jobs are added to Jooble, more than 3 every second"; "available in 66 countries"; "20 years";
-  - "we review postings and work to filter out spam, phishing, and inappropriate listings";
-  - features: search by title and place, filters (salary, distance, employment type), recent and popular searches, saved searches with
-    push alerts, saved jobs with a reminder "before a good opening is gone", full description in the app, similar jobs under each listing;
-  - "Jooble is a job search engine ... apply on the employer's or job site's page where it was posted";
-  - audience: first job, teens, students, part-time, weekend shifts, warehouse, delivery, driver, retail, customer service, healthcare,
-    office and tech; an in-app event "Peak Season: Warehouse Jobs".
-- App Store privacy label: identifiers used to track across other companies' apps; contact info and browsing history linked to the user.
+- Google Play: 3.8 звезды по 47.7K отзывов, 5M+ загрузок, обновлено 4 нояб. 2026. App Store: 4.7 по 566 оценкам, версия 1.48.0.
+- На обеих одно и то же описание. Их собственные слова:
+  - «pulls listings from many job sites into one search»; «listings from job boards and classifieds»;
+  - «Every day, 300,000 new jobs are added to Jooble, more than 3 every second»; «available in 66 countries»; «20 years»;
+  - «we review postings and work to filter out spam, phishing, and inappropriate listings»;
+  - функции: поиск по должности и месту, фильтры (зарплата, расстояние, тип занятости), недавние и популярные запросы, сохранённые
+    запросы с push-оповещениями, сохранённые вакансии с напоминанием «before a good opening is gone», полное описание в приложении,
+    похожие вакансии под каждым объявлением;
+  - «Jooble is a job search engine ... apply on the employer's or job site's page where it was posted»;
+  - аудитория: первая работа, подростки, студенты, подработка, смены на выходные, склад, доставка, водитель, розница, поддержка
+    клиентов, здравоохранение, офис и IT; событие в приложении «Peak Season: Warehouse Jobs».
+- Метка конфиденциальности в App Store: идентификаторы, по которым ведётся отслеживание в приложениях других компаний; контактные
+  данные и история просмотров, привязанные к пользователю.
 
-## Where the 300,000 a day come from
+## Откуда берутся 300 000 в день
 
-From their own description: job boards and classifieds in 66 countries, in each country's language, every kind of work (most of the
-volume is shift work: warehouse, delivery, retail, care). A listing that is on five boards can count up to five times, and a job that is
-reposted counts again. We count something stricter: unique jobs read from employers' own careers pages. The live site on 15 Nov:
-130,719 open, about 1,500 new a day (4,598 posted in the last 3 days on /new/).
+Из их собственного описания: сайты вакансий и доски объявлений в 66 странах, на языке каждой страны, любая работа (основной объём —
+сменная работа: склад, доставка, розница, уход). Вакансия, которая лежит на пяти площадках, может считаться до пяти раз, а
+переопубликованная вакансия считается снова. Мы считаем строже: уникальные вакансии, прочитанные со страниц карьеры самих
+работодателей. Живой сайт на 15 нояб.: 130,719 открытых, около 1,500 новых в день (4,598 опубликовано за последние 3 дня на /new/).
 
-The gap is about 200 times. The ways to close it, best first:
-1. **More employers' careers pages** (the sources cloud session, under way): 20,000+ companies, and the big hiring systems of large
-   employers with shift work (Workday, SuccessFactors, iCIMS, Taleo, SmartRecruiters). One retailer or logistics company has thousands
-   of open roles and posts hundreds a day.
-2. **Public job APIs of governments**, in English first: USAJOBS (US federal; needs an API key, so an account by the owner), Canada's
-   Job Bank (open data). Others are in the local language (Germany's Bundesagentur, Sweden's JobTech, Norway's NAV, France Travail): only
-   if the owner allows non-English jobs or with an English-only filter.
-3. **XML feeds from partners**: the way Jooble, Adzuna and Talent.com receive jobs from job boards, staffing agencies and ATS vendors.
-   Needs letters in the owner's name (his approval first) and a feed reader (easy: dedupe.py already merges sources).
-4. Classifieds: not for us. They are where the spam and phishing the reviews complain about come from.
+Разрыв примерно в 200 раз. Способы его закрыть, лучшие первыми:
+1. **Больше страниц карьеры работодателей** (облачная сессия по источникам, в работе): 20 000+ компаний и большие системы найма у
+   крупных работодателей со сменной работой (Workday, SuccessFactors, iCIMS, Taleo, SmartRecruiters). У одной розничной или
+   логистической компании тысячи открытых ролей, а публикуют они сотни в день.
+2. **Публичные API вакансий от государств**, сначала на английском: USAJOBS (федеральные вакансии США; нужен API-ключ, значит
+   аккаунт от владельца), Job Bank Канады (открытые данные). Остальные — на местном языке (Bundesagentur Германии, JobTech Швеции,
+   NAV Норвегии, France Travail): только если владелец разрешит вакансии не на английском или с фильтром «только английский».
+3. **XML-фиды от партнёров**: так Jooble, Adzuna и Talent.com получают вакансии от сайтов вакансий, кадровых агентств и поставщиков
+   ATS. Нужны письма от имени владельца (сначала его одобрение) и читалка фидов (просто: dedupe.py уже объединяет источники).
+4. Доски объявлений: не для нас. Именно оттуда берутся спам и фишинг, на которые жалуются в отзывах.
 
-## What the reviews complain about, and what we do
+## На что жалуются в отзывах и что у нас
 
-| Complaint (reviews) | Our site |
+| Жалоба (отзывы) | Наш сайт |
 |---|---|
-| The app's language is locked to the country of the search ("looking in Denmark, everything is in Danish") | One English site, any country by filter. Keep it that way. |
-| "Redirects to Lensa", "to other sites that gather data and put you on mailing lists" | Every job links to the employer's own page; the job page names the address it opens ("Opens boards.greenhouse.io"). Say it louder on the home and alert pages. |
-| "The jobs ... were no longer available" | Every page re-read hourly; closed jobs are marked; the home page explains ghost jobs. |
-| "Telemarketing calls and emails", "selling data" | No account needed, nothing sold. Say on the alert sign-up: "we never share or sell your email". |
-| "Many not in the area you select", "irrelevant results" | Places are matched to the posting's own location line; still open: "only my country" and "my city" in the search (ROADMAP 116). |
-| "A thousand applications, one call" | Not something a board fixes; our resume match and "how long jobs stay open" data help apply where it counts. |
+| Язык приложения привязан к стране поиска («ищу в Дании, всё на датском») | Один английский сайт, любая страна через фильтр. Так и оставить. |
+| «Redirects to Lensa», «to other sites that gather data and put you on mailing lists» | Каждая вакансия ведёт на страницу самого работодателя; страница вакансии называет адрес, который откроется («Opens boards.greenhouse.io»). Сказать об этом громче на главной и на страницах оповещений. |
+| «The jobs ... were no longer available» | Каждая страница перечитывается каждый час; закрытые вакансии помечены; главная объясняет, что такое «призрачные» вакансии. |
+| «Telemarketing calls and emails», «selling data» | Аккаунт не нужен, ничего не продаём. В форме подписки на оповещения написать: «we never share or sell your email». |
+| «Many not in the area you select», «irrelevant results» | Места сопоставляются со строкой места в самом объявлении; ещё открыто: «только моя страна» и «мой город» в поиске (ROADMAP 116). |
+| «A thousand applications, one call» | Это не то, что исправляет сайт вакансий; наше совпадение с резюме и данные «как долго вакансии остаются открытыми» помогают откликаться там, где это имеет смысл. |
 
-## What they have that we do not (yet)
+## Что есть у них и нет у нас (пока)
 
-- A phone app with push alerts. Cheapest path: make the site installable (a PWA) with web push; Google Play accepts a PWA wrapped as
-  a Trusted Web Activity. The owner decides; no account is opened without him.
-- Saved jobs with a reminder before the job closes: we have My jobs (saved in the browser) and the "chance it is still open next week";
-  a reminder needs the alerts service (accounts-alerts cloud session).
-- Shift-work audience pages (warehouse, delivery, retail, seasonal "peak season"): only once those jobs are collected (point 1 above).
+- Мобильное приложение с push-оповещениями. Самый дешёвый путь: сделать сайт устанавливаемым (PWA) с web push; Google Play принимает
+  PWA, упакованный как Trusted Web Activity. Решает владелец; без него аккаунты не открываются.
+- Сохранённые вакансии с напоминанием до закрытия: у нас есть My jobs (сохраняются в браузере) и «шанс, что вакансия ещё будет
+  открыта на следующей неделе»; для напоминания нужен сервис оповещений (облачная сессия accounts-alerts).
+- Страницы для аудитории сменной работы (склад, доставка, розница, сезонная «peak season»): только когда такие вакансии будут
+  собираться (пункт 1 выше).

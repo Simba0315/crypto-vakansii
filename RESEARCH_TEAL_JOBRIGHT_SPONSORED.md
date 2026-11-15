@@ -1,117 +1,117 @@
-# Teal, Jobright, Indeed/Glassdoor Sponsored Jobs: what to copy, and a $1M/year plan
+# Teal, Jobright, Sponsored Jobs от Indeed/Glassdoor: что скопировать и план на $1 млн в год
 
-Read on **15 Nov 2026** using WebSearch and WebFetch only. No browser tool was used.
+Прочитано **15 нояб. 2026** только через WebSearch и WebFetch. Браузер не использовался.
 
-**How sure each fact is:**
-- **[opened]**: I fetched and read the page.
-- **[search]**: the fact comes only from a search-result summary.
-- **[3rd]**: a third-party page (review site, tracker, vendor blog) that I opened.
-- **[unverified]**: sources conflict, or the number is someone's estimate.
+**Насколько надёжен каждый факт:**
+- **[открыто]**: я загрузил и прочитал страницу.
+- **[поиск]**: факт взят только из краткого описания в результатах поиска.
+- **[сторонний]**: сторонняя страница (сайт отзывов, трекер, блог поставщика), которую я открыл.
+- **[не проверено]**: источники расходятся или число — чья-то оценка.
 
-**Pages that blocked me.** I did not try to get around any of these blocks.
-- **Teal:** tealhq.com returned HTTP 403 for every page I tried: /pricing, /sitemap.xml, /tools and help.tealhq.com. Instead I used:
-  - Teal's help center on intercom.help, which opened;
-  - search snippets of Teal pages;
-  - reviews, press and the Chrome Web Store.
-  - The Teal prices also agree with `PRICING_RESEARCH.md` §A.9, where an earlier session opened tealhq.com/pricing on 13 Nov 2026.
-- **Jobright:** jobright.ai/pricing returned 404, so its seeker prices come from third-party reviews.
+**Страницы, которые меня не пустили.** Ни одну из этих блокировок я не обходил.
+- **Teal:** tealhq.com отвечал HTTP 403 на каждую страницу, которую я пробовал: /pricing, /sitemap.xml, /tools и help.tealhq.com. Вместо этого я использовал:
+  - справочный центр Teal на intercom.help, он открылся;
+  - фрагменты страниц Teal из поиска;
+  - отзывы, прессу и Chrome Web Store.
+  - Цены Teal также совпадают с `PRICING_RESEARCH.md` §A.9, где более ранняя сессия открыла tealhq.com/pricing 13 нояб. 2026.
+- **Jobright:** jobright.ai/pricing вернул 404, поэтому цены для соискателей взяты из сторонних обзоров.
 - **Indeed:**
-  - indeed.com/hire/pricing served a Vietnamese page. The US version, /hire/cs/pricing?co=US, opened.
-  - /employers/sponsored-jobs and /employers/smart-sourcing returned 404.
-- **Business Wire:** returned 403.
+  - indeed.com/hire/pricing показал страницу на вьетнамском. Американская версия /hire/cs/pricing?co=US открылась.
+  - /employers/sponsored-jobs и /employers/smart-sourcing вернули 404.
+- **Business Wire:** вернул 403.
 
-**Teal page counts.** The sitemap was blocked, so I could not count Teal's SEO pages. The counts below are Teal's own claims, such as "2,000+ resume examples".
+**Число страниц Teal.** Карта сайта была закрыта, поэтому посчитать SEO-страницы Teal я не смог. Цифры ниже — собственные заявления Teal, например «2,000+ resume examples».
 
 ---
 
-## 0. Where we stand (for comparison)
+## 0. Где мы сейчас (для сравнения)
 
-Sources: `SEO_MAP.md`, `config.json` and `assets/site.js`, all read on 15 Nov 2026.
+Источники: `SEO_MAP.md`, `config.json` и `assets/site.js`, всё прочитано 15 нояб. 2026.
 
-**What we already have:**
-- Pages: 166 role pages, 86 location pages, 244 salary pages, 113 skill pages and 734 company pages.
-- Per-role page families for about 143 roles: resume examples, cover-letter examples, interview questions, job descriptions, how to become, and how to hire.
-- 33 free tools, including resume match, resume review, LinkedIn review, cover letter, offer check, negotiation email and take-home pay.
-- Skill tests, a career quiz and a glossary.
-- The "My jobs" tracker with five statuses (Saved, Applied, Interviewing, Offer, Not moving forward), notes and a follow-up reminder file (.ics).
-- Visa terms detected in the posting text, and a `/perks/visa-sponsorship/` page.
+**Что у нас уже есть:**
+- Страницы: 166 страниц должностей, 86 страниц мест, 244 страницы зарплат, 113 страниц навыков и 734 страницы компаний.
+- Наборы страниц на каждую должность, примерно для 143 должностей: примеры резюме, примеры сопроводительных писем, вопросы на интервью, описания вакансий, как стать, как нанимать.
+- 33 бесплатных инструмента, в том числе совпадение с резюме, разбор резюме, разбор LinkedIn, сопроводительное письмо, проверка оффера, письмо для торга и расчёт зарплаты на руки.
+- Тесты навыков, карьерный тест и глоссарий.
+- Трекер «My jobs» с пятью статусами (Saved, Applied, Interviewing, Offer, Not moving forward), заметками и файлом напоминания о follow-up (.ics).
+- Визовые условия, найденные в тексте объявления, и страница `/perks/visa-sponsorship/`.
 
-**Money is not switched on.** It cannot come in yet:
-- `config.json` has `"plus": {"live": false}` and every wallet address is empty.
-- `api_url` is empty, so there are no accounts, no email alerts and no AI features.
+**Приём денег не включён.** Деньги пока прийти не могут:
+- В `config.json` стоит `"plus": {"live": false}`, а все адреса кошельков пусты.
+- `api_url` пуст, значит нет аккаунтов, почтовых оповещений и ИИ-функций.
 
-**Prices today are launch prices:**
-- Plus: $3 for 1 month, $7 for 3 months, $12 for 12 months.
-- Employers: featured $29, pinned $59, 5-job pack $119, spotlight $149/month, category sponsor $89/month, branded listing $49.
+**Сегодняшние цены — стартовые:**
+- Plus: $3 за 1 месяц, $7 за 3 месяца, $12 за 12 месяцев.
+- Работодатели: featured $29, pinned $59, пакет из 5 вакансий $119, spotlight $149/месяц, спонсор категории $89/месяц, branded listing $49.
 
 ---
 
 ## 1. Teal (tealhq.com)
 
-### 1.1 Facts and numbers
-- **Users and team, January 2025:** "over 2 million members", "over 100,000 paying Teal Plus users", 30 employees on a fully remote team, about 30% of members outside the US, and $19M raised in total ($7.5M Series A). Source: Refresh Miami, 22 Jan 2025 [opened]: https://refreshmiami.com/news/teal-raises-7-5m-to-expand-ai-powered-career-platform/
-  - New tools announced in the same article: an AI Interview Coach, an Offer Evaluation tool and Negotiation Support.
-  - Plans named in the article: "a job board that is not paid for by employers", and AI agents that do career tasks for the user.
-- **Members, late 2025:** about 4 million [search, unverified].
-- **Revenue, 2024:** $4.2M according to CB Insights [search, estimate].
-  - **This does not fit the "100,000 paying" figure.** 100,000 subscribers at $29 a month would be more than $30M a year. So "100,000 paying" is probably everyone who has ever paid, not the number paying today. I could not verify either figure.
-- **Acquisitions:**
-  - Ramped, on 11 Dec 2025. Its "Autopilot" tool tailors and submits applications, and it is being built into Teal [opened]: https://www.privsource.com/acquisitions/deal/EMS9D2
-  - Earlier: Riva (salary-negotiation coaching, 2023) and OwnTrail (date not found) [search].
-- **Chrome extension:** about 200,000 users, rated 4.9 from about 3.1K ratings, and named a Chrome Web Store "Favorite of 2023" [search]: https://chromewebstore.google.com/detail/opafjjlpbiaicbbgifbejoochmmeikep
-- **Organic traffic:** about 523K organic visits a month from about 724K keywords. This is an AirOps estimate seen only in a search summary [search, unverified]. When I opened the AirOps page itself, it no longer contained Teal data.
+### 1.1 Факты и цифры
+- **Пользователи и команда, январь 2025:** «over 2 million members», «over 100,000 paying Teal Plus users», 30 сотрудников в полностью удалённой команде, около 30% участников вне США, всего привлечено $19M ($7.5M серия A). Источник: Refresh Miami, 22 янв. 2025 [открыто]: https://refreshmiami.com/news/teal-raises-7-5m-to-expand-ai-powered-career-platform/
+  - Новые инструменты из той же статьи: AI Interview Coach, Offer Evaluation tool и Negotiation Support.
+  - Планы из статьи: «a job board that is not paid for by employers» и ИИ-агенты, которые выполняют карьерные задачи за пользователя.
+- **Участники, конец 2025:** около 4 миллионов [поиск, не проверено].
+- **Выручка, 2024:** $4.2M по данным CB Insights [поиск, оценка].
+  - **Это не сходится с цифрой «100,000 paying».** 100 000 подписчиков по $29 в месяц дали бы больше $30M в год. Скорее всего, «100,000 paying» — это все, кто когда-либо платил, а не те, кто платит сейчас. Проверить ни одну из цифр я не смог.
+- **Покупки компаний:**
+  - Ramped, 11 дек. 2025. Его инструмент «Autopilot» адаптирует и отправляет отклики, его встраивают в Teal [открыто]: https://www.privsource.com/acquisitions/deal/EMS9D2
+  - Раньше: Riva (коучинг по торгу о зарплате, 2023) и OwnTrail (дату не нашёл) [поиск].
+- **Расширение для Chrome:** около 200 000 пользователей, оценка 4.9 по примерно 3.1K оценок, отмечено в Chrome Web Store как «Favorite of 2023» [поиск]: https://chromewebstore.google.com/detail/opafjjlpbiaicbbgifbejoochmmeikep
+- **Органический трафик:** около 523K органических визитов в месяц по примерно 724K ключевых слов. Это оценка AirOps, увиденная только в кратком описании поиска [поиск, не проверено]. Когда я открыл саму страницу AirOps, данных о Teal там уже не было.
 
-### 1.2 Prices
-| Plan | Price | What it includes |
+### 1.2 Цены
+| Тариф | Цена | Что входит |
 |---|---|---|
-| Free ("Free Forever") | $0 | Unlimited resumes, unlimited job tracking, 11 templates, limited daily AI credits. The summary generator is limited to 2 AI summaries. |
-| Teal+ weekly | **$13 every 7 days** (about $56 a month) | The same features as every Teal+ plan |
-| Teal+ monthly | **$29 every 30 days** | Unlimited AI resume and cover-letter text, full keyword matching, tailoring to a specific job, a resume score with ATS feedback |
-| Teal+ quarterly | **$79 every 90 days** (about $26.33 a month) | The same |
+| Free («Free Forever») | $0 | Безлимит резюме, безлимит учёта вакансий, 11 шаблонов, ограниченные ежедневные кредиты ИИ. Генератор summary ограничен 2 ИИ-summary. |
+| Teal+ weekly | **$13 каждые 7 дней** (около $56 в месяц) | Те же функции, что во всех тарифах Teal+ |
+| Teal+ monthly | **$29 каждые 30 дней** | Безлимитный ИИ-текст для резюме и писем, полное сопоставление ключевых слов, адаптация под конкретную вакансию, оценка резюме с отзывом ATS |
+| Teal+ quarterly | **$79 каждые 90 дней** (около $26.33 в месяц) | То же самое |
 
-- There is no annual plan. Payments renew automatically, and cancelling takes effect at the end of the paid period.
-- An older Teal blog post quoted "$9 per week".
-- Sources:
-  - https://frontdeskreview.com/software/resume-builders/teal.md [3rd, checked there 26 Sep 2026]
-  - https://makerstack.co/reviews/teal-review/ [3rd, 20 Jul 2026]
-  - `PRICING_RESEARCH.md` §A.9 (tealhq.com/pricing opened 13 Nov 2026)
+- Годового тарифа нет. Платежи продлеваются автоматически, отмена действует с конца оплаченного периода.
+- В более старом блоге Teal упоминалось «$9 per week».
+- Источники:
+  - https://frontdeskreview.com/software/resume-builders/teal.md [сторонний, проверено там 26 сент. 2026]
+  - https://makerstack.co/reviews/teal-review/ [сторонний, 20 июля 2026]
+  - `PRICING_RESEARCH.md` §A.9 (tealhq.com/pricing открыт 13 нояб. 2026)
 
-### 1.3 Teal features we likely lack (one line each)
-1. **Chrome extension that saves any job from any site** (LinkedIn, Indeed, company careers pages) into the tracker. Our tracker only saves jobs on our own site.
-2. **Contact tracker:** recruiters and hiring managers linked to each job, with follow-up dates. Help center: https://intercom.help/tealhq-9a9274919b13/en/
-3. **Company tracker:** a list of target companies with notes and status.
-4. **LinkedIn profile review that reads the profile directly** through the extension: photo, headline, summary and skills. Our /tools/linkedin-review needs the text pasted in. Source: https://tealhq.helpscoutdocs.com/article/40-reviewing-your-linkedin-profile [search]
-5. **"Matching mode" inside the builder:** a specific resume version is scored against a specific saved job, and the missing keywords are shown inline. We have a stand-alone /tools/resume-match that is not linked to My jobs.
-6. **Several resume versions per job**, each one tailored to one posting and kept with that job.
-7. **AI writing:** achievement bullets, summary, skills, headline, and an email or cover letter tied to one job and one resume. This needs Plus and a server.
-8. **AI interview coach:** "Interview Hub", "Mock Mode" (the AI asks follow-up questions, then gives feedback), a "Scenario Library", and questions taken from the job description. Our /interview-practice has no AI feedback. Source: https://help.tealhq.com/en/articles/14435728-how-to-prepare-for-interviews-using-teal [search]
-9. **Career goal tracker:** set career goals and track progress against them [search].
-10. **Work Styles assessment:** 17 questions based on DISC, plus a **"360" option that invites colleagues to rate you**, which brings new people to the site. Also a career personality test at /tool/career-personality-test [search].
-11. **Autopilot:** submits applications for the user (from Ramped). **Do not copy the sending part.** `COMPETITOR_GAPS.md` explains that mass auto-apply floods employers and gets tools blocked. Copy autofill only: the extension fills the form and the user presses submit.
-12. **Webinars and virtual events, a newsletter** (Teal cites "500K+" readers [search]), and a "Teal stories" success-story category.
-13. **Excitement rating and more stages** (for example Applying and Negotiating) on each tracked job. This is a small addition to our five statuses.
+### 1.3 Функции Teal, которых у нас, вероятно, нет (по одной строке)
+1. **Расширение для Chrome, которое сохраняет любую вакансию с любого сайта** (LinkedIn, Indeed, страницы карьеры компаний) в трекер. Наш трекер сохраняет вакансии только с нашего сайта.
+2. **Трекер контактов:** рекрутёры и нанимающие менеджеры, привязанные к каждой вакансии, с датами follow-up. Справочный центр: https://intercom.help/tealhq-9a9274919b13/en/
+3. **Трекер компаний:** список целевых компаний с заметками и статусом.
+4. **Разбор профиля LinkedIn, который читает профиль напрямую** через расширение: фото, заголовок, summary и навыки. Наш /tools/linkedin-review требует вставить текст. Источник: https://tealhq.helpscoutdocs.com/article/40-reviewing-your-linkedin-profile [поиск]
+5. **«Matching mode» внутри конструктора:** конкретная версия резюме оценивается против конкретной сохранённой вакансии, недостающие ключевые слова показываются прямо в тексте. У нас есть отдельный /tools/resume-match, не связанный с My jobs.
+6. **Несколько версий резюме на вакансию**, каждая адаптирована под одно объявление и хранится вместе с этой вакансией.
+7. **ИИ-письмо:** пункты о достижениях, summary, навыки, заголовок, а также письмо или сопроводительное письмо, привязанное к одной вакансии и одному резюме. Нужны Plus и сервер.
+8. **ИИ-тренер по интервью:** «Interview Hub», «Mock Mode» (ИИ задаёт уточняющие вопросы, потом даёт отзыв), «Scenario Library» и вопросы из описания вакансии. В нашем /interview-practice нет ИИ-отзыва. Источник: https://help.tealhq.com/en/articles/14435728-how-to-prepare-for-interviews-using-teal [поиск]
+9. **Трекер карьерных целей:** ставишь цели и отслеживаешь прогресс [поиск].
+10. **Оценка Work Styles:** 17 вопросов по DISC, плюс **вариант «360», где можно пригласить коллег оценить тебя**, и это приводит на сайт новых людей. Также тест карьерной личности на /tool/career-personality-test [поиск].
+11. **Autopilot:** отправляет отклики за пользователя (от Ramped). **Часть с отправкой не копируем.** `COMPETITOR_GAPS.md` объясняет, что массовая автоотправка заваливает работодателей, а такие инструменты блокируют. Копируем только автозаполнение: расширение заполняет форму, а кнопку отправки нажимает пользователь.
+12. **Вебинары и онлайн-события, рассылка** (Teal называет «500K+» читателей [поиск]) и рубрика «Teal stories» с историями успеха.
+13. **Оценка интереса и больше этапов** (например Applying и Negotiating) для каждой отслеживаемой вакансии. Это небольшое дополнение к нашим пяти статусам.
 
-### 1.4 Teal page types (SEO). ✅ = we have it, ⚠️ = partly, ❌ = missing
-| Teal URL pattern | What it is | Teal's claimed size | Us |
+### 1.4 Типы страниц Teal (SEO). ✅ = у нас есть, ⚠️ = частично, ❌ = нет
+| Шаблон URL Teal | Что это | Заявленный размер у Teal | У нас |
 |---|---|---|---|
-| `/resume-examples/{role}`, `/resume-example/{role}` | Example resume per role | "2,000+" | ⚠️ about 143 roles |
-| `/resume-templates/{style}` (e.g. /resume-templates/technical) | Template landing pages by style or field | "100+ templates" | ❌ our templates exist only inside the builder |
-| `/cover-letter-examples/{role}` | Cover-letter example per role | "1,500+" | ⚠️ about 143 roles |
-| `/interview-questions/{role}` | Questions and sample answers per role | not stated | ✅ 144 |
-| `/career-paths/{role}` | Career path: steps and years of experience | not stated | ✅ /how-to-become/ (144) |
-| `/career-paths/{role}-certifications` and `/certifications/{role}` | Best certifications for a role | not stated | ❌ |
-| `/career-paths/{role}-interview-questions` | A second, duplicate interview page | — | not worth copying (duplicate content) |
-| `/skills/{role}` (e.g. /skills/software-engineer) | Skills a role needs, for the resume | not stated | ❌ our /skills/ pages go the other way: skill → jobs |
-| `/professional-goals/{role}` | Example professional goals per role | not stated | ❌ |
-| `/job-titles/{role}` | Job-title guide: levels, similar titles, what the title means | not stated | ⚠️ partly covered on role pages |
-| `/best-resume-builders/{role}` | "Best resume builder for {role}" | not stated | ❌ |
-| `/tool/{name}` | Single-purpose generators: resume bullet points, summary, headline, skills, career personality test, … | about 15–20 | ⚠️ we have 33 tools; missing are a summary generator, a resume-headline generator, a personality test and a skills generator (we have job-description keywords) |
-| `/post/{slug}` + `/category/{resume, interviews, job-search, teal-stories}` | "Career Hub" blog | hundreds of articles (from search results) | ⚠️ we have /guides/ with about 12 |
-| `/job/{slug}` | Job pages from Teal's own job board | not stated | ✅ /job/ |
-| `/women-led-companies` | Curated list of companies | 1 | ❌ (needs a trustworthy data source) |
-| `/careers/{role}` | Teal's own job openings | — | n/a |
+| `/resume-examples/{role}`, `/resume-example/{role}` | Пример резюме по должности | «2,000+» | ⚠️ около 143 должностей |
+| `/resume-templates/{style}` (напр. /resume-templates/technical) | Посадочные страницы шаблонов по стилю или сфере | «100+ templates» | ❌ наши шаблоны есть только внутри конструктора |
+| `/cover-letter-examples/{role}` | Пример сопроводительного письма по должности | «1,500+» | ⚠️ около 143 должностей |
+| `/interview-questions/{role}` | Вопросы и образцы ответов по должности | не указано | ✅ 144 |
+| `/career-paths/{role}` | Карьерный путь: шаги и годы опыта | не указано | ✅ /how-to-become/ (144) |
+| `/career-paths/{role}-certifications` и `/certifications/{role}` | Лучшие сертификаты для должности | не указано | ❌ |
+| `/career-paths/{role}-interview-questions` | Вторая, дублирующая страница с интервью | — | копировать не стоит (дублирующий контент) |
+| `/skills/{role}` (напр. /skills/software-engineer) | Навыки, нужные должности, для резюме | не указано | ❌ наши страницы /skills/ идут в обратную сторону: навык → вакансии |
+| `/professional-goals/{role}` | Примеры профессиональных целей по должности | не указано | ❌ |
+| `/job-titles/{role}` | Справочник названий: уровни, похожие названия, что значит название | не указано | ⚠️ частично есть на страницах должностей |
+| `/best-resume-builders/{role}` | «Лучший конструктор резюме для {role}» | не указано | ❌ |
+| `/tool/{name}` | Одноцелевые генераторы: пункты резюме, summary, заголовок, навыки, тест карьерной личности и т. д. | около 15–20 | ⚠️ у нас 33 инструмента; нет генератора summary, генератора заголовка резюме, теста личности и генератора навыков (у нас есть ключевые слова из описания вакансии) |
+| `/post/{slug}` + `/category/{resume, interviews, job-search, teal-stories}` | Блог «Career Hub» | сотни статей (по результатам поиска) | ⚠️ у нас /guides/ с примерно 12 |
+| `/job/{slug}` | Страницы вакансий с собственной доски Teal | не указано | ✅ /job/ |
+| `/women-led-companies` | Подборка компаний | 1 | ❌ (нужен надёжный источник данных) |
+| `/careers/{role}` | Собственные вакансии Teal | — | не применимо |
 
-Sources for page patterns: search results for site:tealhq.com, for example
+Источники по шаблонам страниц: результаты поиска по site:tealhq.com, например
 - https://tealhq.com/resume-examples
 - https://tealhq.com/cover-letter-examples/marine-engineer
 - https://tealhq.com/certifications/teacher
@@ -120,353 +120,353 @@ Sources for page patterns: search results for site:tealhq.com, for example
 - https://www.tealhq.com/best-resume-builders/chief-talent-officer
 - https://tealhq.com/tool/resume-summary-generator
 
-All [search].
+Все [поиск].
 
-**How Teal grows** (as far as can be seen without the sitemap):
-- Per-role page families. They have about 10 page types per role; we have 6.
-- A large blog.
-- Free tools that require a free account. A free account then becomes Teal+ when the daily AI credits run out.
-- The Chrome extension.
-- Buying products that bring their users with them (Riva, OwnTrail, Ramped).
+**Как растёт Teal** (насколько видно без карты сайта):
+- Наборы страниц по должностям. У них около 10 типов страниц на должность, у нас 6.
+- Большой блог.
+- Бесплатные инструменты, для которых нужен бесплатный аккаунт. Потом бесплатный аккаунт становится Teal+, когда заканчиваются ежедневные ИИ-кредиты.
+- Расширение для Chrome.
+- Покупка продуктов, которые приводят с собой своих пользователей (Riva, OwnTrail, Ramped).
 
 ---
 
 ## 2. Jobright (jobright.ai)
 
-### 2.1 Facts and numbers
-- **Company:** founded 2023 in Santa Clara. Co-founder Eric Cheng was an early engineer at Box. Source: TechCrunch, 25 Jun 2024 [opened]: https://techcrunch.com/2024/06/25/jobright-uses-ai-to-help-foreign-workers-navigate-the-us-job-market
-- **Early users:** about 50,000 two months after the April 2024 launch. About 30% were foreign workers, mainly from India and China. **Growth came without marketing spend; the H-1B filter was the main draw** [opened, TechCrunch].
-- **Funding:** about $7.7M raised. That is a $4.5M seed round (Lanchi Ventures) plus $3.2M in June 2025 (Translink Capital, with Indeed's venture arm taking part) [search].
-- **Revenue:**
+### 2.1 Факты и цифры
+- **Компания:** основана в 2023 в Санта-Кларе. Сооснователь Eric Cheng был одним из первых инженеров в Box. Источник: TechCrunch, 25 июня 2024 [открыто]: https://techcrunch.com/2024/06/25/jobright-uses-ai-to-help-foreign-workers-navigate-the-us-job-market
+- **Первые пользователи:** около 50 000 через два месяца после запуска в апреле 2024. Около 30% — иностранные работники, в основном из Индии и Китая. **Рост пришёл без трат на маркетинг; главной приманкой был фильтр H-1B** [открыто, TechCrunch].
+- **Финансирование:** привлечено около $7.7M. Это seed-раунд $4.5M (Lanchi Ventures) плюс $3.2M в июне 2025 (Translink Capital, с участием венчурного подразделения Indeed) [поиск].
+- **Выручка:**
 
-| When | Figure | Source |
+| Когда | Цифра | Источник |
 |---|---|---|
-| Dec 2024 or mid-2025 (sources disagree) | $1M ARR | ARR Club / Latka |
-| 28 Feb 2026 | **"$430K+ MRR" with 9 people** | Henry Shi's newsletter [opened]: https://henrythe9th.substack.com/p/how-jobright-hit-5m-arr-with-9-people |
-| Jun 2026 | $7M ARR | ARR Club |
-| 2 Oct 2026 | $8M ARR | ARR Club |
-| **13 Oct 2026** | **$10M ARR** | Co-founder's LinkedIn post, as quoted by ARR Club [opened]: https://www.arr.club/signal/jobright-arr-hit-10m-up-from-1m-in-10-months — the LinkedIn post itself was not opened |
+| Дек. 2024 или середина 2025 (источники расходятся) | $1M ARR | ARR Club / Latka |
+| 28 фев. 2026 | **«$430K+ MRR» при 9 людях** | рассылка Henry Shi [открыто]: https://henrythe9th.substack.com/p/how-jobright-hit-5m-arr-with-9-people |
+| Июнь 2026 | $7M ARR | ARR Club |
+| 2 окт. 2026 | $8M ARR | ARR Club |
+| **13 окт. 2026** | **$10M ARR** | Пост сооснователя в LinkedIn, цитата из ARR Club [открыто]: https://www.arr.club/signal/jobright-arr-hit-10m-up-from-1m-in-10-months — сам пост в LinkedIn не открывали |
 
-- **Users:** "3,000,000" users claimed on the home page [opened]. ARR Club also cites "2M job seekers globally".
-- **How they run growth:** "Almost all growth was organic" in the $1M phase, driven by referrals. Every step of the funnel has one owner metric. Cost per new customer is tracked by channel, and channels that miss the payback target get throttled. Experiments must ship or be killed within 7 days [opened, newsletter].
+- **Пользователи:** «3,000,000» пользователей заявлено на главной странице [открыто]. ARR Club также приводит «2M job seekers globally».
+- **Как они ведут рост:** «Almost all growth was organic» на этапе $1M, за счёт рекомендаций. У каждого шага воронки один ответственный показатель. Стоимость нового клиента отслеживается по каналам, а каналы, не укладывающиеся в срок окупаемости, притормаживают. Эксперименты должны быть запущены или закрыты в течение 7 дней [открыто, рассылка].
 
-### 2.2 Prices
-**Job seekers.** These prices are from August 2026 reports, because jobright.ai/pricing returned 404:
+### 2.2 Цены
+**Соискатели.** Эти цены из отчётов за август 2026, потому что jobright.ai/pricing вернул 404:
 
-| Plan | Price | 2025 price |
+| Тариф | Цена | Цена в 2025 |
 |---|---|---|
 | Free | $0 | |
-| Turbo weekly | **$17.99** | was $14.99 |
-| Turbo monthly | **$39.99** | was $29.99 |
-| Turbo quarterly | **$89.99** | was $69.99 |
+| Turbo weekly | **$17.99** | было $14.99 |
+| Turbo monthly | **$39.99** | было $29.99 |
+| Turbo quarterly | **$89.99** | было $69.99 |
 
-- A 6-month plan is named in the refund policy, but its price is not known.
-- **.edu sign-ups got Turbo "for half the price"** (founder AMA, 2025) [3rd].
-- **Free-plan daily limits:**
-  - 2 AI-tailored resumes;
-  - 4 one-click autofills;
-  - 2 AI cover letters;
-  - 2 email-finder lookups;
-  - 1 instant job alert;
-  - 1 saved filter.
-  - Orion chat is unlimited. Turbo makes the other limits unlimited, and the limits reset at midnight [3rd].
-- **Interview-question packs are sold separately:** **$19.99 for one company for 7 days**, or **$39.99 for all companies for 30 days** [3rd].
-- Sources:
-  - https://careery.pro/blog/ai-job-search/jobright-ai-review [3rd, Oct 2026, quoting FavTutor 21 Aug 2026 and Jobity 31 Aug 2026]
-  - https://jobstrack.io/blog/jobright-review-2026 [3rd, 15 Oct 2026]
+- В политике возврата назван 6-месячный тариф, но его цена неизвестна.
+- **Регистрации с .edu получали Turbo «for half the price»** (AMA основателя, 2025) [сторонний].
+- **Ежедневные лимиты бесплатного тарифа:**
+  - 2 резюме, адаптированных ИИ;
+  - 4 автозаполнения в один клик;
+  - 2 сопроводительных письма от ИИ;
+  - 2 поиска email;
+  - 1 мгновенное оповещение о вакансиях;
+  - 1 сохранённый фильтр.
+  - Чат Orion безлимитный. Turbo снимает остальные лимиты, а лимиты обнуляются в полночь [сторонний].
+- **Пакеты вопросов для интервью продаются отдельно:** **$19.99 за одну компанию на 7 дней** или **$39.99 за все компании на 30 дней** [сторонний].
+- Источники:
+  - https://careery.pro/blog/ai-job-search/jobright-ai-review [сторонний, окт. 2026, со ссылкой на FavTutor 21 авг. 2026 и Jobity 31 авг. 2026]
+  - https://jobstrack.io/blog/jobright-review-2026 [сторонний, 15 окт. 2026]
 
-**Employers** [opened]: https://jobright.ai/employers/pricing
-- **AI Recruiter: $499 per recruiter per month.**
-  - One recruiter works on one active role at a time.
-  - It sources and checks candidates, contacts them, and delivers "10 to 20 interview-ready candidates every week", synced to the employer's ATS (applicant tracking system).
-  - Two-week free trial with no card.
-- An annual plan with several roles at once is priced only on request.
-- Jobright claims a 15% reply rate against 4–5% for cold outreach, and "120+ companies hired" [opened, ARR Club].
+**Работодатели** [открыто]: https://jobright.ai/employers/pricing
+- **AI Recruiter: $499 за рекрутёра в месяц.**
+  - Один рекрутёр ведёт одну активную роль за раз.
+  - Он ищет и проверяет кандидатов, связывается с ними и каждую неделю выдаёт «10 to 20 interview-ready candidates», синхронизируя их с ATS работодателя (системой учёта кандидатов).
+  - Две недели бесплатно, без карты.
+- Годовой тариф с несколькими ролями одновременно — цена только по запросу.
+- Jobright заявляет 15% ответов против 4–5% при холодной рассылке и «120+ companies hired» [открыто, ARR Club].
 
-### 2.3 Jobright features we likely lack (one line each)
-1. **A match score on every job card, with the reason** (we have matching only on /for-you/). Source: https://jobright.ai/jobs/h1b-visa-sponsored-software-engineer-jobs-in-united-states [opened]
-2. **Signals on each job card:** "Early applicant", applicant count, "H1B Sponsor Likely", "Unicorn", "Top Investors", "Culture & Values", "Comp. & Benefits" [opened].
-3. **H-1B sponsorship history per company,** from US Department of Labor data, with yearly counts and job fields. The "Sponsor Likely" label means the company sponsored similar roles in the last 3 years [opened]: https://jobright.ai/h1b-jobs
-4. **One-click autofill extension** for the major applicant-tracking systems. About 200K users and 4.7★ per a tracker [3rd, unverified]: https://jobright.ai/job-autofill
-5. **"Tailor my resume to this job" in about 6 seconds,** straight from the job card [opened].
-6. **Insider Connections:** the user connects LinkedIn; Jobright suggests alumni and past colleagues on the hiring team, finds their email addresses, and writes the outreach message [opened]: https://jobright.ai/job-referral
-7. **Orion:** an AI career chat for resume help, interview prep and company insights [opened]: https://jobright.ai/orion-copilot
-8. **AI Agent that applies for the user,** launched June 2025. Free users get a waitlist; it is tied to Turbo [opened / 3rd]: https://jobright.ai/ai-agent. Copy autofill only, not the sending.
-9. **Job tabs: Recommended, Liked, Applied, External,** and "early alerts" [opened].
-10. **TNT (Top Talent Network):** a private profile that hiring teams review. Claims: "200,000+" talents and "150+" AI startups [opened]: https://jobright.ai/tnt
-11. **For employers:** fake-candidate detection (/fake-candidate-detection) and the AI Recruiter [opened].
-12. **Live career coaching** (charged per session in one test) [3rd].
+### 2.3 Функции Jobright, которых у нас, вероятно, нет (по одной строке)
+1. **Оценка совпадения на каждой карточке вакансии, с причиной** (у нас совпадение только на /for-you/). Источник: https://jobright.ai/jobs/h1b-visa-sponsored-software-engineer-jobs-in-united-states [открыто]
+2. **Сигналы на каждой карточке:** «Early applicant», число откликнувшихся, «H1B Sponsor Likely», «Unicorn», «Top Investors», «Culture & Values», «Comp. & Benefits» [открыто].
+3. **История спонсирования H-1B по компаниям** по данным Министерства труда США, с числами по годам и сферам. Метка «Sponsor Likely» значит, что компания спонсировала похожие роли за последние 3 года [открыто]: https://jobright.ai/h1b-jobs
+4. **Расширение с автозаполнением в один клик** для основных систем учёта кандидатов. Около 200K пользователей и 4.7★ по данным трекера [сторонний, не проверено]: https://jobright.ai/job-autofill
+5. **«Tailor my resume to this job» примерно за 6 секунд**, прямо с карточки вакансии [открыто].
+6. **Insider Connections:** пользователь подключает LinkedIn; Jobright предлагает выпускников и бывших коллег в команде найма, находит их email и пишет сообщение [открыто]: https://jobright.ai/job-referral
+7. **Orion:** ИИ-чат по карьере для помощи с резюме, подготовки к интервью и сведений о компаниях [открыто]: https://jobright.ai/orion-copilot
+8. **ИИ-агент, который откликается за пользователя**, запущен в июне 2025. Бесплатным пользователям — список ожидания; привязан к Turbo [открыто / сторонний]: https://jobright.ai/ai-agent. Копируем только автозаполнение, не отправку.
+9. **Вкладки вакансий: Recommended, Liked, Applied, External** и «early alerts» [открыто].
+10. **TNT (Top Talent Network):** закрытый профиль, который просматривают команды найма. Заявлено: «200,000+» талантов и «150+» ИИ-стартапов [открыто]: https://jobright.ai/tnt
+11. **Для работодателей:** обнаружение фальшивых кандидатов (/fake-candidate-detection) и AI Recruiter [открыто].
+12. **Живой карьерный коучинг** (в одном тесте — плата за сессию) [сторонний].
 
-### 2.4 Jobright page types
-| Pattern | What it is | Us |
+### 2.4 Типы страниц Jobright
+| Шаблон | Что это | У нас |
 |---|---|---|
-| `/jobs/info/{id}` | Job page | ✅ |
-| `/jobs/h1b-visa-sponsored-{role}-jobs-in-{city-state}` and `...-in-united-states` | Lists of H-1B jobs by role, and by role plus city [opened] | ❌ |
-| `/h1b-jobs` (+ `/blog/category/h1b/`) | H-1B hub with sponsor history | ❌ (we have /perks/visa-sponsorship/, based on posting text only) |
-| `/entry-level-jobs`, `/remote-jobs` | Topic hubs, updated hourly, with an alert signup | ✅ (/entry-level/, /remote/) |
-| `/tools/{tool}`: ai-job-assistant, cover-letter-generator, resume-helper, job-tracker, ai-job-apply, resume-tailor | Tool landing pages | ⚠️ we lack "resume tailor" and "AI job assistant" |
-| Feature landing pages: /ai-resume-builder, /ai-job-match, /job-referral, /orion-copilot, /job-autofill, /interview-landing, /ai-agent | One page per feature, each with an FAQ | ⚠️ |
-| `/blog/` incl. "Is Jobright legit?" and success stories | Blog, trust pages, rival reviews | ⚠️ |
-| `/employers`, `/employers/pricing`, `/tnt`, `/partners` | Employer side | ⚠️ |
-| Company pages | **Not found.** Company names on job cards are plain text, not links [unverified] | ✅ we have 734 (an advantage) |
+| `/jobs/info/{id}` | Страница вакансии | ✅ |
+| `/jobs/h1b-visa-sponsored-{role}-jobs-in-{city-state}` и `...-in-united-states` | Списки вакансий H-1B по должности и по должности плюс городу [открыто] | ❌ |
+| `/h1b-jobs` (+ `/blog/category/h1b/`) | Хаб H-1B с историей спонсоров | ❌ (у нас /perks/visa-sponsorship/, только по тексту объявлений) |
+| `/entry-level-jobs`, `/remote-jobs` | Тематические хабы, обновляются каждый час, с подпиской на оповещения | ✅ (/entry-level/, /remote/) |
+| `/tools/{tool}`: ai-job-assistant, cover-letter-generator, resume-helper, job-tracker, ai-job-apply, resume-tailor | Посадочные страницы инструментов | ⚠️ нет «resume tailor» и «AI job assistant» |
+| Посадочные страницы функций: /ai-resume-builder, /ai-job-match, /job-referral, /orion-copilot, /job-autofill, /interview-landing, /ai-agent | Одна страница на функцию, у каждой FAQ | ⚠️ |
+| `/blog/`, в том числе «Is Jobright legit?» и истории успеха | Блог, страницы доверия, обзоры конкурентов | ⚠️ |
+| `/employers`, `/employers/pricing`, `/tnt`, `/partners` | Сторона работодателей | ⚠️ |
+| Страницы компаний | **Не найдены.** Названия компаний на карточках — простой текст, не ссылки [не проверено] | ✅ у нас 734 (наше преимущество) |
 
-### 2.5 How Jobright gets users (copyable)
-- **A niche nobody served:** the H-1B filter brought in foreign workers and international students [opened, TechCrunch].
-- **37 GitHub repositories with job lists updated daily,** for example:
-  - "2026-Software-Engineer-New-Grad": 504★
-  - "Daily-H1B-Jobs-In-Tech": 326★
-  - "2026-Data-Analysis-Internship": 223★
-  - internship lists by field (HR, legal, marketing and others), updated 15 Nov 2026
-  - Source [opened]: https://github.com/jobright-ai
-- **Sister sites:** intern-list.com, entrylevel-jobs.com and careerin.ai, all linked from /entry-level-jobs. Also custom GPTs in ChatGPT [opened].
-- **Referrals and word of mouth,** a student discount, a Product Hunt launch, a "featured by OpenAI" badge, and accounts on TikTok, Instagram and YouTube [opened home page].
+### 2.5 Как Jobright получает пользователей (можно скопировать)
+- **Ниша, которую никто не обслуживал:** фильтр H-1B привёл иностранных работников и международных студентов [открыто, TechCrunch].
+- **37 репозиториев на GitHub со списками вакансий, обновляемыми ежедневно**, например:
+  - «2026-Software-Engineer-New-Grad»: 504★
+  - «Daily-H1B-Jobs-In-Tech»: 326★
+  - «2026-Data-Analysis-Internship»: 223★
+  - списки стажировок по сферам (HR, право, маркетинг и другие), обновлены 15 нояб. 2026
+  - Источник [открыто]: https://github.com/jobright-ai
+- **Сайты-сёстры:** intern-list.com, entrylevel-jobs.com и careerin.ai, все со ссылками с /entry-level-jobs. Также кастомные GPT в ChatGPT [открыто].
+- **Рекомендации и сарафанное радио,** скидка студентам, запуск на Product Hunt, значок «featured by OpenAI» и аккаунты в TikTok, Instagram и YouTube [открыто, главная страница].
 
 ---
 
-## 3. Indeed and Glassdoor: Sponsored Jobs and Premium Sponsored Jobs
+## 3. Indeed и Glassdoor: Sponsored Jobs и Premium Sponsored Jobs
 
-### 3.1 How it works
-**Pricing page** [opened]: https://www.indeed.com/hire/cs/pricing?co=US
+### 3.1 Как это работает
+**Страница цен** [открыто]: https://www.indeed.com/hire/cs/pricing?co=US
 
-**Tiers and what each adds:**
-| Tier | What it adds | Indeed's claim |
+**Уровни и что добавляет каждый:**
+| Уровень | Что добавляет | Заявление Indeed |
 |---|---|---|
-| Free | Shown in search results, candidates managed on Indeed. "Some jobs must be sponsored." | — |
-| Standard | Visibility boost, email advertising, a place in the job-seeker feed, automatic messages to candidates | "3X more applications than free" |
-| **Premium** | First-page boost and priority over similar posts; advanced matching; **"Urgently hiring" label**; brand promotion (logo and images); **matched-candidate invitations ("invite to apply")**; SMS messages; targeting by skills, certifications, licences, degrees and location; promotion across Indeed's media network | "2X as often in top search results", "90% more quality applications" (Indeed's own US data) |
-| **Premium Plus** (beta) | Automatic invites, **application scores and summaries**, gathering of licences and certifications, AI follow-up questions | — |
+| Free | Показ в результатах поиска, кандидатами управляют на Indeed. «Some jobs must be sponsored.» | — |
+| Standard | Усиление видимости, рекламные письма, место в ленте соискателей, автоматические сообщения кандидатам | «3X more applications than free» |
+| **Premium** | Усиление на первой странице и приоритет над похожими объявлениями; расширенный подбор; **метка «Urgently hiring»**; продвижение бренда (логотип и изображения); **приглашения подходящим кандидатам («invite to apply»)**; SMS; таргетинг по навыкам, сертификатам, лицензиям, степеням и месту; продвижение по медийной сети Indeed | «2X as often in top search results», «90% more quality applications» (собственные данные Indeed по США) |
+| **Premium Plus** (бета) | Автоматические приглашения, **оценки и краткие сводки откликов**, сбор лицензий и сертификатов, дополнительные вопросы от ИИ | — |
 
-**How Indeed charges:**
-- **Two billing models:**
-  - **Pay per click (PPC):** "You may be charged when someone clicks to view your job post". Used with a daily budget.
-  - **Pay per started application (PPSA):** charged when someone clicks to apply or starts an application. It depends on the account and market.
-  - Source [opened]: https://www.indeed.com/hire/resources/howtohub/how-pricing-works-on-indeed
-  - Pay per application, where an employer could reject an application within 72 hours and not pay, **ended 18 Dec 2023** [3rd].
-- **The price is a live auction.**
-  - Indeed recommends a budget from the job title, location and description.
-  - The Premium price is always set above the Standard price.
-  - The employer can set a custom amount above a minimum, and that minimum is different for each job [opened].
-- **Budget and billing:**
-  - The daily budget is an average. A job can spend up to 7.5× its daily budget in a week [3rd].
-  - An invoice is sent on the 1st of the month or when spending reaches $500, whichever comes first.
-  - First-time sponsors may get a $25 invoice to check the payment method.
-  - **New US accounts get a $75 credit** for their first sponsored job [opened].
-- **Free posts:** 3 free direct posts a month per US company, each live for up to 30 days [3rd]: https://100hires.com/indeed-job-posting-cost.html (updated 12 Oct 2026)
+**Как Indeed берёт деньги:**
+- **Две модели оплаты:**
+  - **Плата за клик (PPC):** «You may be charged when someone clicks to view your job post». Работает с дневным бюджетом.
+  - **Плата за начатый отклик (PPSA):** списание, когда кто-то нажимает «откликнуться» или начинает отклик. Зависит от аккаунта и рынка.
+  - Источник [открыто]: https://www.indeed.com/hire/resources/howtohub/how-pricing-works-on-indeed
+  - Плата за отклик, когда работодатель мог отклонить отклик в течение 72 часов и не платить, **закончилась 18 дек. 2023** [сторонний].
+- **Цена — живой аукцион.**
+  - Indeed рекомендует бюджет по названию должности, месту и описанию.
+  - Цена Premium всегда выше цены Standard.
+  - Работодатель может задать свою сумму выше минимума, и этот минимум для каждой вакансии свой [открыто].
+- **Бюджет и счета:**
+  - Дневной бюджет — средний. За неделю вакансия может потратить до 7,5× дневного бюджета [сторонний].
+  - Счёт выставляется 1-го числа месяца или когда расход достигает $500, смотря что раньше.
+  - Тем, кто спонсирует впервые, могут выставить счёт на $25 для проверки способа оплаты.
+  - **Новые аккаунты в США получают кредит $75** на первую спонсируемую вакансию [открыто].
+- **Бесплатные публикации:** 3 бесплатные прямые публикации в месяц на компанию в США, каждая живёт до 30 дней [сторонний]: https://100hires.com/indeed-job-posting-cost.html (обновлено 12 окт. 2026)
 
-### 3.2 Prices
-Indeed publishes no list price.
+### 3.2 Цены
+Прайс-листа Indeed не публикует.
 
 **Sponsored Jobs:**
-- **Cost per click:** about $0.25–$5, most often $0.50–$3 (Vendr guide, Feb 2026) [3rd].
-- **Starting point:** some guides say "$5 a day or $150 a month". 100hires says "there is no universal $5-a-day minimum"; one job needed $12 a day [3rd, unverified].
-- **Typical spend:** Vendr's median is about $15,000 a year. Monthly bands are about $500–$2,000 for 1–10 roles and $8,000–$25,000+ for 50 or more roles [3rd].
+- **Цена за клик:** около $0.25–$5, чаще всего $0.50–$3 (руководство Vendr, фев. 2026) [сторонний].
+- **Отправная точка:** в некоторых руководствах «$5 a day or $150 a month». 100hires пишет: «there is no universal $5-a-day minimum»; одной вакансии потребовалось $12 в день [сторонний, не проверено].
+- **Типичные траты:** медиана Vendr около $15,000 в год. Месячные диапазоны около $500–$2,000 на 1–10 ролей и $8,000–$25,000+ на 50 и более ролей [сторонний].
 
-**Smart Sourcing (résumé search):**
-- Professional: **$400 a month or $3,840 a year for 100 contacts**, with extra contacts at $4 each (US page, as quoted in a search summary).
-- 100hires instead gives $520 a month.
-- Standard: $120 a month for 30 contacts.
-- 14-day trial [search / 3rd, conflicting].
+**Smart Sourcing (поиск резюме):**
+- Professional: **$400 в месяц или $3,840 в год за 100 контактов**, дополнительные контакты по $4 (американская страница, цитата из краткого описания в поиске).
+- 100hires вместо этого называет $520 в месяц.
+- Standard: $120 в месяц за 30 контактов.
+- 14 дней пробного периода [поиск / сторонний, данные расходятся].
 
-**Other employer products:**
-- Hiring events: from $500 per event [3rd].
-- Employer branding (Glassdoor Enhanced Profile plus Indeed Company Pages): **priced only on request**. One reported quote was **$15,000 a year** for a bundle covering 21–50 jobs; add-ons run about $500–$2,000+ a month [3rd, unverified].
+**Другие продукты для работодателей:**
+- Hiring events: от $500 за событие [сторонний].
+- Бренд работодателя (Glassdoor Enhanced Profile плюс Indeed Company Pages): **цена только по запросу**. Одна названная котировка — **$15,000 в год** за пакет на 21–50 вакансий; дополнения стоят около $500–$2,000+ в месяц [сторонний, не проверено].
 
 ### 3.3 Glassdoor
-- Glassdoor's operations were folded into Indeed (announced July 2025).
-- **Job posts now start on Indeed** and appear on Glassdoor either organically or as sponsored jobs. A sponsored Indeed job is shown on Glassdoor automatically.
-- There is no separate Glassdoor price for job posts [search]: https://www.noon.ai/blog/articles/346-glassdoor-pricing-2026
+- Работа Glassdoor влита в Indeed (объявлено в июле 2025).
+- **Публикации теперь начинаются на Indeed** и появляются на Glassdoor либо органически, либо как спонсируемые. Спонсируемая вакансия Indeed показывается на Glassdoor автоматически.
+- Отдельной цены Glassdoor за публикацию нет [поиск]: https://www.noon.ai/blog/articles/346-glassdoor-pricing-2026
 
-### 3.4 Revenue facts (Recruit Holdings)
-**Source:** "Full-Year 2025" release, dated 15 May 2026 [opened]: https://recruit-holdings.com/en/ir/library/upload/Recruit_202603Q4_summary_en.html
+### 3.4 Данные о выручке (Recruit Holdings)
+**Источник:** релиз «Full-Year 2025» от 15 мая 2026 [открыто]: https://recruit-holdings.com/en/ir/library/upload/Recruit_202603Q4_summary_en.html
 
-The fiscal year FY2025 runs from April 2025 to March 2026.
+Финансовый год FY2025 идёт с апреля 2025 по март 2026.
 
-**HR Technology segment, FY2025:**
-- Revenue: ¥1,458.4bn (+6.3%), or **US$9.674bn (+7.6%)**.
-- EBITDA+S margin: **37.7%**, a record.
+**Сегмент HR Technology, FY2025:**
+- Выручка: ¥1,458.4bn (+6.3%), или **US$9.674bn (+7.6%)**.
+- Маржа EBITDA+S: **37.7%**, рекорд.
 
-**US, FY2025:**
-- Revenue: **$5.31bn (+8.8%)**.
-- **Revenue per job in the US (Recruit calls it ARPJ): +17%.** This is the "+17%" figure.
+**США, FY2025:**
+- Выручка: **$5.31bn (+8.8%)**.
+- **Выручка на одну вакансию в США (Recruit называет ARPJ): +17%.** Это та самая цифра «+17%».
 
 **Q4 FY2025:**
-- US revenue +19% to $1.41bn.
-- US revenue per job **+25%**.
+- Выручка в США +19% до $1.41bn.
+- Выручка на вакансию в США **+25%**.
 
-**FY2026 guidance:**
-- US revenue $6.03bn (+13.6%), "based on an 18% increase" in US revenue per job.
-- Growth expected from "further growth of Premium Sponsored Jobs".
+**Прогноз на FY2026:**
+- Выручка в США $6.03bn (+13.6%), «based on an 18% increase» выручки на вакансию в США.
+- Рост ожидается от «further growth of Premium Sponsored Jobs».
 
-**What this means:** Indeed's revenue grows mostly by charging **more per job** (the Premium tier, better matching), not by selling more jobs.
+**Что это значит:** выручка Indeed растёт в основном за счёт того, что **с каждой вакансии берут больше** (уровень Premium, лучший подбор), а не за счёт продажи большего числа вакансий.
 
-### 3.5 What a small board can copy with one-time crypto payments and no automatic billing
-| Indeed feature | Our version (one payment, no auto-renew) |
+### 3.5 Что может скопировать небольшая доска при разовых платежах в крипте и без автосписаний
+| Функция Indeed | Наша версия (один платёж, без автопродления) |
 |---|---|
-| Sponsoring any job, including jobs Indeed found itself | **"Boost this job" on every job we already list** (about 130,000 from employers' careers pages). The company proves it owns the job (company email or DNS, already in `server/`) and pays once. We already hold the stock; nobody has to post anything. |
-| Standard vs Premium | **Two fixed-price boosts, each for 30 days:** Standard (highlighted row, above free jobs in its lists, included in alert emails) and Premium (see the next rows). |
-| Top-3 placement, "2X as often in top results" | Premium boosts rotate through the first 3 slots of matching search results, category, role and location pages. |
-| "Urgently hiring" label | An "Urgently hiring" badge that the employer declares and that switches off by itself after 14 days. |
-| Branding (logo, images) | Logo is already shown; add a cover image and a "why work here" block (the branded listing, $49 today, marked "soon"). |
-| Invite matched candidates | One email per job to seekers who **opted in** and match it (role, place, pay), capped at for example 50 per job. Needs accounts and email. |
-| Recommended budget | **Recommended tier per job**, from our data: how many similar open jobs exist in that role and place. |
-| $75 credit for new accounts | First boost at half price, or the first 7 days free, for companies already listed with us. |
-| Daily budget / pay per click | **Prepaid credit balance in crypto:** spent per day while the boost runs, unused credit kept, never charged automatically. Do it later; fixed 30-day boosts are simpler to sell first. |
-| Premium Plus: application scores and summaries | Later: AI summary of each application for jobs posted on our site. |
-| Performance report | Views and apply clicks per job (the counters already exist in `server/`), plus a public "proof of reach" number on /post-a-job/. |
-| Smart Sourcing (résumé search) | Opt-in résumé search (ROADMAP §119): **contacts only with the candidate's consent**. Slow to build up, so it comes last. |
-| **Not copyable** | Auction prices with monthly invoices (needs card billing); Indeed's media network. |
+| Спонсирование любой вакансии, включая найденные самим Indeed | **«Boost this job» на каждой вакансии, которую мы уже показываем** (около 130 000 со страниц карьеры работодателей). Компания доказывает, что вакансия её (рабочая почта или DNS, уже есть в `server/`), и платит один раз. Запас у нас уже есть; никому не нужно ничего публиковать. |
+| Standard и Premium | **Два буста с фиксированной ценой, каждый на 30 дней:** Standard (выделенная строка, выше бесплатных вакансий в своих списках, включена в письма-оповещения) и Premium (см. следующие строки). |
+| Топ-3, «2X as often in top results» | Премиум-бусты по кругу занимают первые 3 места в подходящих результатах поиска, на страницах категорий, должностей и мест. |
+| Метка «Urgently hiring» | Значок «Urgently hiring», который объявляет работодатель и который сам выключается через 14 дней. |
+| Бренд (логотип, изображения) | Логотип уже показывается; добавить обложку и блок «почему у нас работать» (branded listing, сейчас $49, помечен «скоро»). |
+| Приглашение подходящих кандидатов | Одно письмо на вакансию соискателям, которые **дали согласие** и подходят (должность, место, оплата), с ограничением, например 50 на вакансию. Нужны аккаунты и почта. |
+| Рекомендованный бюджет | **Рекомендованный уровень на вакансию** по нашим данным: сколько похожих открытых вакансий есть в этой роли и месте. |
+| Кредит $75 для новых аккаунтов | Первый буст за полцены или первые 7 дней бесплатно для компаний, которые у нас уже есть. |
+| Дневной бюджет / плата за клик | **Предоплаченный баланс в крипте:** списывается по дням, пока идёт буст, неиспользованное сохраняется, автоматически ничего не списывается. Сделать позже; сначала проще продавать фиксированные бусты на 30 дней. |
+| Premium Plus: оценки и сводки откликов | Позже: ИИ-сводка каждого отклика для вакансий, размещённых на нашем сайте. |
+| Отчёт об эффективности | Просмотры и клики на «Apply» по вакансии (счётчики уже есть в `server/`), плюс публичная цифра «proof of reach» на /post-a-job/. |
+| Smart Sourcing (поиск резюме) | Поиск резюме по согласию (ROADMAP §119): **контакты только с согласия кандидата**. Набирается медленно, поэтому в последнюю очередь. |
+| **Нельзя скопировать** | Аукционные цены с ежемесячными счетами (нужна оплата картой); медийная сеть Indeed. |
 
 ---
 
-## 4. Revenue plan to reach US$1M+ a year
+## 4. План выручки: US$1M+ в год
 
-**Target:** $1,000,000 a year ≈ **$83,400 a month** ≈ $2,740 a day.
+**Цель:** $1,000,000 в год ≈ **$83,400 в месяц** ≈ $2,740 в день.
 
-### 4.1 What the three companies charge (benchmarks)
-| Product type | Benchmark |
+### 4.1 Что берут три компании (ориентиры)
+| Тип продукта | Ориентир |
 |---|---|
-| Seeker, per week | Teal $13 · Jobright $17.99 |
-| Seeker, per month | Teal $29 · Jobright $39.99 |
-| Seeker, per 3 months | Teal $79 · Jobright $89.99 |
-| Interview pack | Jobright $19.99 for one company for 7 days · $39.99 for everything for 30 days |
-| One sponsored job for 30 days | Indeed ≈ $5–$25 a day ≈ **$150–$750** · niche remote boards $299 (`REVENUE_RESEARCH.md`) |
-| Small employer, monthly | Indeed $500–$2,000 for 1–10 roles · Jobright AI Recruiter **$499 per role** |
-| Résumé search | Indeed $400–$520 a month for 100 contacts |
-| Employer branding | Indeed/Glassdoor quote about $15,000 a year |
+| Соискатель, в неделю | Teal $13 · Jobright $17.99 |
+| Соискатель, в месяц | Teal $29 · Jobright $39.99 |
+| Соискатель, за 3 месяца | Teal $79 · Jobright $89.99 |
+| Пакет для интервью | Jobright $19.99 за одну компанию на 7 дней · $39.99 за всё на 30 дней |
+| Одна спонсируемая вакансия на 30 дней | Indeed ≈ $5–$25 в день ≈ **$150–$750** · нишевые remote-доски $299 (`REVENUE_RESEARCH.md`) |
+| Небольшой работодатель, в месяц | Indeed $500–$2,000 на 1–10 ролей · Jobright AI Recruiter **$499 за роль** |
+| Поиск резюме | Indeed $400–$520 в месяц за 100 контактов |
+| Бренд работодателя | Indeed/Glassdoor около $15,000 в год |
 
-**Our launch prices are 3–13× below these benchmarks:**
-- Plus at $3 a month is 1/10 of Teal's $29 and less than 1/13 of Jobright's $39.99.
-- A featured job at $29 is a fraction of $150–$750.
+**Наши стартовые цены в 3–13 раз ниже этих ориентиров:**
+- Plus за $3 в месяц — 1/10 от $29 у Teal и меньше 1/13 от $39.99 у Jobright.
+- Featured-вакансия за $29 — малая доля от $150–$750.
 
-At today's prices, $1M a year would need about **27,800 Plus purchases a month**. The plan below goes back to roughly the old "was" prices, still below Teal and Jobright.
+При сегодняшних ценах для $1M в год нужно около **27 800 покупок Plus в месяц**. План ниже возвращается примерно к прежним ценам «было», всё равно ниже, чем у Teal и Jobright.
 
-### 4.2 Paid products, ranked by how fast they can bring money
-| Rank | Product (one payment, no auto-renew) | Price | Why this price | Buyers per month for the target | Revenue a month |
+### 4.2 Платные продукты, по скорости, с которой они могут принести деньги
+| Место | Продукт (один платёж, без автопродления) | Цена | Почему такая цена | Покупателей в месяц для цели | Выручка в месяц |
 |---|---|---|---|---|---|
-| 1 | **Boost on an existing or posted job: Standard, 30 days** | **$99** | Below Indeed's ≈$150–$750 for 30 days and below niche boards' $299 | 200 | $19,800 |
-| 1 | **Premium boost, 30 days** (top-3 slot, "Urgently hiring", cover image, invites to matched seekers, stats) | **$249** | Indeed's Premium is priced above Standard; still below WWR's top tier ($458) | 100 | $24,900 |
-| 2 | **Hiring Pass, 30 days** (unlimited Standard boosts for one company, 3 Premium boosts, spotlight, stats) | **$499** | Same as Jobright's $499 per role per month; at the bottom of Indeed's $500–$2,000 a month | 40 | $19,960 |
-| 3 | **Plus pass for seekers:** 7 days $9 · 30 days $19 · 90 days $39 (AI tailoring, cover letters, unlimited alerts, match score, interview feedback) | **average about $20** | 30–50% below Teal and Jobright, because there is no auto-renew and the cards ask for crypto | 800 | $16,000 |
-| 4 | **Interview pack for one company** (questions, the company's pay and openings, practice) | **$9** (included in Plus) | Half of Jobright's $19.99 | 150 | $1,350 |
-| 5 | **Company spotlight / category or skill sponsor, 30 days** | **$299 / $199** | Indeed and Glassdoor branding costs $500–$2,000+ a month | 10 + 10 | $4,980 |
-| 6 | **Opt-in résumé search, 30 days, 50 contacts** | **$199** | About half of Indeed's $400–$520 for 100 contacts | 20 | $3,980 |
-| | **Total** | | | | **≈ $91,000 a month ≈ $1.09M a year** |
+| 1 | **Буст существующей или размещённой вакансии: Standard, 30 дней** | **$99** | Ниже ≈$150–$750 у Indeed за 30 дней и ниже $299 нишевых досок | 200 | $19,800 |
+| 1 | **Premium-буст, 30 дней** (место в топ-3, «Urgently hiring», обложка, приглашения подходящим соискателям, статистика) | **$249** | Premium у Indeed дороже Standard; всё равно ниже верхнего тарифа WWR ($458) | 100 | $24,900 |
+| 2 | **Hiring Pass, 30 дней** (безлимит бустов Standard для одной компании, 3 Premium-буста, spotlight, статистика) | **$499** | Как $499 за роль в месяц у Jobright; на нижней границе $500–$2,000 в месяц у Indeed | 40 | $19,960 |
+| 3 | **Plus-пропуск для соискателей:** 7 дней $9 · 30 дней $19 · 90 дней $39 (ИИ-адаптация, сопроводительные письма, безлимит оповещений, оценка совпадения, отзыв по интервью) | **в среднем около $20** | На 30–50% ниже Teal и Jobright, потому что нет автопродления и в карточках просят крипту | 800 | $16,000 |
+| 4 | **Пакет для интервью по одной компании** (вопросы, зарплаты и вакансии компании, практика) | **$9** (входит в Plus) | Вдвое меньше $19.99 у Jobright | 150 | $1,350 |
+| 5 | **Spotlight компании / спонсор категории или навыка, 30 дней** | **$299 / $199** | Брендинг Indeed и Glassdoor стоит $500–$2,000+ в месяц | 10 + 10 | $4,980 |
+| 6 | **Поиск резюме по согласию, 30 дней, 50 контактов** | **$199** | Примерно половина от $400–$520 у Indeed за 100 контактов | 20 | $3,980 |
+| | **Итого** | | | | **≈ $91,000 в месяц ≈ $1.09M в год** |
 
-**Arithmetic:**
-- Boosts: 200 × $99 = $19,800 and 100 × $249 = $24,900.
+**Арифметика:**
+- Бусты: 200 × $99 = $19,800 и 100 × $249 = $24,900.
 - Hiring Pass: 40 × $499 = $19,960.
 - Plus: 800 × $20 = $16,000.
-- Interview packs: 150 × $9 = $1,350.
-- Spotlight and sponsor: 10 × $299 + 10 × $199 = $4,980.
-- Résumé search: 20 × $199 = $3,980.
-- Sum: $90,970 a month × 12 = **$1,091,640 a year**.
+- Пакеты для интервью: 150 × $9 = $1,350.
+- Spotlight и спонсор: 10 × $299 + 10 × $199 = $4,980.
+- Поиск резюме: 20 × $199 = $3,980.
+- Сумма: $90,970 в месяц × 12 = **$1,091,640 в год**.
 
-**What these numbers require:**
-- **Employers (ranks 1–2):** 340 purchases a month, about 11 a day.
-  - We already list jobs from thousands of companies, so the buyers are known and can be contacted by email. Letters need the owner's go-ahead.
-  - Evidence from small boards is sobering: Remote Rocketship sold one post at 60,000 visitors a month (`REVENUE_RESEARCH.md`). Employers pay once they can see applications coming from us. So **show apply-click numbers per company first**, and sell boosts with those numbers in the letter.
-- **Seekers (rank 3):** 800 buyers a month.
-  - At 0.3% of monthly visitors buying (crypto only, my assumption) that needs about 270,000 visitors a month.
-  - At 1% (if cards were possible) it needs about 80,000.
-  - Teal reached "100,000 paying" from 2M+ members (≈5%, probably counted since launch).
-- **Fallback if seekers will not pay in crypto:** employers alone at 450 boosts (average $150) + 50 Hiring Passes = $67,500 + $24,950 = $92,450 a month ≈ $1.11M a year.
+**Что для этого нужно:**
+- **Работодатели (места 1–2):** 340 покупок в месяц, около 11 в день.
+  - Мы уже показываем вакансии тысяч компаний, так что покупатели известны, и им можно писать на почту. Письма требуют согласия владельца.
+  - Опыт небольших досок отрезвляет: Remote Rocketship продал одну публикацию при 60 000 посетителей в месяц (`REVENUE_RESEARCH.md`). Работодатели платят, когда видят, что отклики идут от нас. Поэтому **сначала показываем число кликов на отклик по каждой компании** и продаём бусты с этими цифрами в письме.
+- **Соискатели (место 3):** 800 покупателей в месяц.
+  - При 0,3% посетителей в месяц, которые покупают (только крипта, это моё допущение), нужно около 270 000 посетителей в месяц.
+  - При 1% (если бы можно было картой) — около 80 000.
+  - Teal дошёл до «100,000 paying» из 2M+ участников (≈5%, вероятно, считая с запуска).
+- **Запасной вариант, если соискатели не будут платить криптой:** только работодатели, 450 бустов (в среднем $150) + 50 Hiring Pass = $67,500 + $24,950 = $92,450 в месяц ≈ $1.11M в год.
 
-**Rough check against Teal and Jobright:**
-- Teal: about $4.2M a year (2024 estimate) from about 523K organic visits a month ≈ $0.67 per visit (estimates only).
-- At that rate, $1M a year needs about 125,000 visits a month. That is Teal's rate, with cards and auto-renewing subscriptions; ours will be lower.
-- Jobright made $10M a year from about 3M users ≈ $3.3 per user per year.
+**Грубая проверка по Teal и Jobright:**
+- Teal: около $4.2M в год (оценка 2024) при примерно 523K органических визитов в месяц ≈ $0.67 за визит (только оценки).
+- При такой ставке для $1M в год нужно около 125 000 визитов в месяц. Это ставка Teal с картами и автопродлеваемыми подписками; у нас будет ниже.
+- Jobright заработал $10M в год примерно на 3M пользователей ≈ $3.3 на пользователя в год.
 
-**Biggest risks, stated plainly:**
-1. **No payment can be taken today:** wallets are empty, Plus has `live: false`, and `api_url` is empty. Revenue is $0 until checkout and automatic activation run in production.
-2. **Paying only in crypto** will cut seeker conversion hard, because most US job seekers do not hold crypto. Employers in tech and crypto are likelier to pay this way. That is one reason the plan leans on employers.
-3. **No auto-renew** means every buyer has to be won again each month. Email reminders before a pass runs out partly make up for this.
+**Главные риски, прямо:**
+1. **Сегодня нельзя принять ни одного платежа:** кошельки пусты, у Plus `live: false`, а `api_url` пуст. Выручка $0, пока в проде не заработают оплата и автоматическая активация.
+2. **Оплата только криптой** сильно снизит конверсию соискателей, потому что у большинства американских соискателей нет крипты. Работодатели из tech и крипты скорее заплатят так. Это одна из причин, почему план опирается на работодателей.
+3. **Без автопродления** каждого покупателя нужно завоёвывать заново каждый месяц. Письма-напоминания до окончания пропуска частично это компенсируют.
 
 ---
 
-## 5. The 10 things to build first
-1. **Make money possible:** a live crypto checkout with automatic activation for boosts, passes and Plus. This needs wallet addresses or merchant keys from the owner; the code is in `server/`.
-2. **"Boost this job" on every listed job, plus an employer claim flow** (proof by company email or DNS, which already exists): Standard $99 and Premium $249 for 30 days, a recommended tier per job, and the first boost at half price. This sells to companies whose jobs we already show.
-3. **Premium boost features copied from Indeed:**
-   - a rotating top-3 slot;
-   - an "Urgently hiring" badge that expires after 14 days;
-   - a cover image and logo;
-   - an invite-to-apply email to opted-in matched seekers;
-   - a stats page per job (views and apply clicks).
-4. **Hiring Pass at $499 for 30 days** (one company, unlimited boosts, spotlight, stats; one payment). Matches Jobright's $499 and the bottom of Indeed's $500–$2,000.
-5. **Plus passes at $9 / $19 / $39 with AI:**
-   - one-click "tailor my resume to this job";
-   - AI bullets, summary and cover letter;
-   - match score with the missing keywords on every job;
-   - AI feedback in interview practice;
-   - Jobright-style free daily limits (2 tailored resumes and 2 cover letters a day) so that free users meet the paywall.
-6. **Accounts and email job alerts:** a daily digest, at most one email a day, and a reminder before a pass ends. Teal and Jobright both rely on coming back by email, and this is also how Premium invites get delivered.
-7. **Browser extension:** save a job from any site into My jobs, plus autofill of application forms where the user still presses submit (no mass auto-apply). Teal's extension has about 200K users and Jobright's about 200K.
-8. **H-1B and visa sponsorship history per company** from Department of Labor data:
-   - a "Sponsor likely" badge on job cards;
-   - pages at `/h1b/{role}-jobs-in-{city}/`;
-   - a daily public GitHub list (new grad, internships, H-1B) copied from Jobright's 37 repositories, which act as a free acquisition channel.
-9. **My jobs upgrade, copied from Teal**, all kept in the browser:
-   - a contacts tracker (recruiter, follow-up date, outreach templates);
-   - a company tracker;
-   - excitement rating and extra stages;
-   - a career-goals page;
-   - a "work style" quiz with a "360" link that invites colleagues to rate you (brings new visitors).
-10. **The page families Teal has and we lack:**
+## 5. Первые 10 вещей, которые надо сделать
+1. **Сделать деньги возможными:** рабочая крипто-оплата с автоматической активацией бустов, пропусков и Plus. Нужны адреса кошельков или ключи продавца от владельца; код в `server/`.
+2. **«Boost this job» на каждой показанной вакансии, плюс поток заявки работодателя** (подтверждение рабочей почтой или DNS, это уже есть): Standard $99 и Premium $249 на 30 дней, рекомендованный уровень на вакансию и первый буст за полцены. Это продаётся компаниям, чьи вакансии мы уже показываем.
+3. **Функции Premium-буста, скопированные у Indeed:**
+   - вращающийся слот в топ-3;
+   - значок «Urgently hiring», который истекает через 14 дней;
+   - обложка и логотип;
+   - письмо «invite to apply» подходящим соискателям, давшим согласие;
+   - страница статистики по вакансии (просмотры и клики на «Apply»).
+4. **Hiring Pass за $499 на 30 дней** (одна компания, безлимит бустов, spotlight, статистика; один платёж). Совпадает с $499 у Jobright и нижней границей $500–$2,000 у Indeed.
+5. **Plus-пропуска за $9 / $19 / $39 с ИИ:**
+   - «tailor my resume to this job» в один клик;
+   - ИИ-пункты, summary и сопроводительное письмо;
+   - оценка совпадения с недостающими ключевыми словами на каждой вакансии;
+   - ИИ-отзыв в практике интервью;
+   - бесплатные дневные лимиты в стиле Jobright (2 адаптированных резюме и 2 письма в день), чтобы бесплатные пользователи упирались в платный барьер.
+6. **Аккаунты и почтовые оповещения о вакансиях:** ежедневная сводка, не больше одного письма в день, и напоминание до окончания пропуска. И Teal, и Jobright рассчитывают на возвращение по почте; так же доставляются приглашения Premium.
+7. **Расширение для браузера:** сохранять вакансию с любого сайта в My jobs, плюс автозаполнение форм отклика, где кнопку отправки всё равно нажимает пользователь (никакой массовой автоотправки). У расширения Teal около 200K пользователей и у Jobright около 200K.
+8. **История спонсирования H-1B и виз по компаниям** по данным Министерства труда:
+   - значок «Sponsor likely» на карточках вакансий;
+   - страницы `/h1b/{role}-jobs-in-{city}/`;
+   - ежедневный публичный список на GitHub (new grad, стажировки, H-1B), скопированный с 37 репозиториев Jobright, которые работают как бесплатный канал привлечения.
+9. **Обновление My jobs по Teal**, всё хранится в браузере:
+   - трекер контактов (рекрутёр, дата follow-up, шаблоны писем);
+   - трекер компаний;
+   - оценка интереса и дополнительные этапы;
+   - страница карьерных целей;
+   - тест «work style» со ссылкой «360», которая приглашает коллег оценить тебя (приводит новых посетителей).
+10. **Семейства страниц, которые есть у Teal и нет у нас:**
     - `/certifications/{role}/`
-    - `/skills-for/{role}/` (resume skills per role)
+    - `/skills-for/{role}/` (навыки для резюме по должности)
     - `/resume-templates/{style}/`
     - `/professional-goals/{role}/`
     - `/job-titles/{role}/`
-    - Also take resume and cover-letter examples from about 143 roles to 500+. Size the pages first against the hosting budget.
+    - Также довести примеры резюме и сопроводительных писем с примерно 143 должностей до 500+. Сначала прикинуть размер страниц по бюджету хостинга.
 
 ---
 
-## 6. What I could not verify
-- **Teal:** current pricing-page text (403 today; the 13 Nov 2026 session saw it); the sitemap and per-type page counts; the 4M-member figure; real 2024–2026 revenue (the CB Insights $4.2M conflicts with "100,000 paying"); the Autopilot price.
-- **Jobright:** official seeker prices (pricing page 404; third-party prices from August 2026); whether company pages exist; the extension's user count (tracker data only); the $10M ARR claim (the LinkedIn post was not opened).
+## 6. Что я не смог проверить
+- **Teal:** текущий текст страницы цен (сегодня 403; сессия 13 нояб. 2026 её видела); карту сайта и число страниц по типам; цифру 4M участников; реальную выручку 2024–2026 (оценка CB Insights $4.2M противоречит «100,000 paying»); цену Autopilot.
+- **Jobright:** официальные цены для соискателей (страница цен 404; сторонние цены за август 2026); есть ли страницы компаний; число пользователей расширения (только данные трекера); заявление о $10M ARR (пост в LinkedIn не открывали).
 - **Indeed:**
-  - any list price for Standard or Premium;
-  - the "$5 a day" minimum (contradicted by 100hires);
-  - the current US Smart Sourcing price ($400 vs $520);
-  - Glassdoor and Indeed branding prices (quotes only).
-- **Our own estimates:** the visitor-to-buyer rates in §4 (0.3% with crypto only, 1% with cards) are my assumptions, not measured figures.
+  - любую прайс-цену Standard или Premium;
+  - минимум «$5 a day» (его опровергает 100hires);
+  - текущую цену Smart Sourcing в США ($400 против $520);
+  - цены брендинга Glassdoor и Indeed (только котировки).
+- **Наши собственные оценки:** доли «посетитель → покупатель» в §4 (0,3% только с криптой, 1% с картами) — мои допущения, не измеренные цифры.
 
-## 7. Sources (read 15 Nov 2026)
+## 7. Источники (прочитано 15 нояб. 2026)
 **Teal:**
-- https://refreshmiami.com/news/teal-raises-7-5m-to-expand-ai-powered-career-platform/ [opened]
-- https://frontdeskreview.com/software/resume-builders/teal.md [opened]
-- https://makerstack.co/reviews/teal-review/ [opened]
-- https://intercom.help/tealhq-9a9274919b13/en/ [opened]
-- https://www.privsource.com/acquisitions/deal/EMS9D2 [opened]
-- https://chromewebstore.google.com/detail/opafjjlpbiaicbbgifbejoochmmeikep [search]
-- tealhq.com page patterns [search]
+- https://refreshmiami.com/news/teal-raises-7-5m-to-expand-ai-powered-career-platform/ [открыто]
+- https://frontdeskreview.com/software/resume-builders/teal.md [открыто]
+- https://makerstack.co/reviews/teal-review/ [открыто]
+- https://intercom.help/tealhq-9a9274919b13/en/ [открыто]
+- https://www.privsource.com/acquisitions/deal/EMS9D2 [открыто]
+- https://chromewebstore.google.com/detail/opafjjlpbiaicbbgifbejoochmmeikep [поиск]
+- шаблоны страниц tealhq.com [поиск]
 
 **Jobright:**
-- https://jobright.ai/ [opened]
-- https://jobright.ai/employers/pricing [opened]
-- https://jobright.ai/ai-agent [opened]
-- https://jobright.ai/h1b-jobs [opened]
-- https://jobright.ai/jobs/h1b-visa-sponsored-software-engineer-jobs-in-united-states [opened]
-- https://jobright.ai/entry-level-jobs [opened]
-- https://jobright.ai/tools [opened]
-- https://jobright.ai/tnt [opened]
-- https://jobright.ai/job-referral [opened]
-- https://jobright.ai/orion-copilot [opened]
-- https://github.com/jobright-ai [opened]
-- https://techcrunch.com/2024/06/25/jobright-uses-ai-to-help-foreign-workers-navigate-the-us-job-market [opened]
-- https://henrythe9th.substack.com/p/how-jobright-hit-5m-arr-with-9-people [opened, partly paywalled]
-- https://www.arr.club/jobright/jobright-arr-hit-7m-with-fewer-than-10-employees-and-2m-job-seekers-globally [opened]
-- https://www.arr.club/jobright/jobright-arr-hit-8m-amid-rapid-team-growth [opened]
-- https://www.arr.club/signal/jobright-arr-hit-10m-up-from-1m-in-10-months [opened]
-- https://careery.pro/blog/ai-job-search/jobright-ai-review [opened]
-- https://jobstrack.io/blog/jobright-review-2026 [opened]
+- https://jobright.ai/ [открыто]
+- https://jobright.ai/employers/pricing [открыто]
+- https://jobright.ai/ai-agent [открыто]
+- https://jobright.ai/h1b-jobs [открыто]
+- https://jobright.ai/jobs/h1b-visa-sponsored-software-engineer-jobs-in-united-states [открыто]
+- https://jobright.ai/entry-level-jobs [открыто]
+- https://jobright.ai/tools [открыто]
+- https://jobright.ai/tnt [открыто]
+- https://jobright.ai/job-referral [открыто]
+- https://jobright.ai/orion-copilot [открыто]
+- https://github.com/jobright-ai [открыто]
+- https://techcrunch.com/2024/06/25/jobright-uses-ai-to-help-foreign-workers-navigate-the-us-job-market [открыто]
+- https://henrythe9th.substack.com/p/how-jobright-hit-5m-arr-with-9-people [открыто, частично за платным доступом]
+- https://www.arr.club/jobright/jobright-arr-hit-7m-with-fewer-than-10-employees-and-2m-job-seekers-globally [открыто]
+- https://www.arr.club/jobright/jobright-arr-hit-8m-amid-rapid-team-growth [открыто]
+- https://www.arr.club/signal/jobright-arr-hit-10m-up-from-1m-in-10-months [открыто]
+- https://careery.pro/blog/ai-job-search/jobright-ai-review [открыто]
+- https://jobstrack.io/blog/jobright-review-2026 [открыто]
 
-**Indeed, Glassdoor and Recruit:**
-- https://www.indeed.com/hire/cs/pricing?co=US [opened]
-- https://www.indeed.com/hire/resources/howtohub/how-pricing-works-on-indeed [opened]
-- https://100hires.com/indeed-job-posting-cost.html [opened, 3rd]
-- https://recruit-holdings.com/en/ir/library/upload/Recruit_202603Q4_summary_en.html [opened]
-- https://www.noon.ai/blog/articles/346-glassdoor-pricing-2026 [search]
-- Indeed Smart Sourcing figures [search]
+**Indeed, Glassdoor и Recruit:**
+- https://www.indeed.com/hire/cs/pricing?co=US [открыто]
+- https://www.indeed.com/hire/resources/howtohub/how-pricing-works-on-indeed [открыто]
+- https://100hires.com/indeed-job-posting-cost.html [открыто, сторонний]
+- https://recruit-holdings.com/en/ir/library/upload/Recruit_202603Q4_summary_en.html [открыто]
+- https://www.noon.ai/blog/articles/346-glassdoor-pricing-2026 [поиск]
+- цифры Indeed Smart Sourcing [поиск]
 
-**Our own files:** `PRICING_RESEARCH.md`, `REVENUE_RESEARCH.md`, `COMPETITOR_GAPS.md`, `SEO_MAP.md` and `config.json` (read, not edited).
+**Наши собственные файлы:** `PRICING_RESEARCH.md`, `REVENUE_RESEARCH.md`, `COMPETITOR_GAPS.md`, `SEO_MAP.md` и `config.json` (прочитаны, не изменялись).

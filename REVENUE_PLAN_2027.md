@@ -1,64 +1,65 @@
-# US$1,000,000 by the end of 2027: the plan and the fallback
+# 1 000 000 долларов США к концу 2027 года: план и запасной вариант
 
-The owner, 15 Nov 2026: "let's set the goal: one million in revenue by the end of next year, [planning for] if things do not go to
-plan". Built from two studies made the same day: `RESEARCH_TEAL_JOBRIGHT_SPONSORED.md` (Teal, Jobright, Indeed Sponsored Jobs) and
-`RESEARCH_ZHIPIN_NAUKRI_SEEK.md` (BOSS Zhipin, Naukri, SEEK). Every price below is anchored to what those companies charge.
+Владелец, 15 нояб. 2026: «давай поставим цель: миллион выручки к концу следующего года, [планируем] на случай, если всё пойдёт не по
+плану». План построен на двух исследованиях, сделанных в тот же день: `RESEARCH_TEAL_JOBRIGHT_SPONSORED.md` (Teal, Jobright, Indeed
+Sponsored Jobs) и `RESEARCH_ZHIPIN_NAUKRI_SEEK.md` (BOSS Zhipin, Naukri, SEEK). Каждая цена ниже привязана к тому, что берут эти компании.
 
-## What the market shows
+## Что показывает рынок
 
-- **Employers pay almost all the money.** BOSS Zhipin gets ~0.9% of revenue from job seekers, Naukri ~7%, SEEK nothing. SEEK grew
-  revenue 12% while ad volume fell, because the average price per ad rose 14% (more Premium). Indeed's US revenue per job rose 17%
-  on "Premium Sponsored Jobs". So the plan leans on employers; seeker money is a top-up.
-- **Seekers pay for speed and AI:** Teal+ $29/month, Jobright $39.99/month, Naukri Pro ₹999–2,999. Paying seekers at Naukri: 2.2–2.6%
-  of monthly users.
-- **Prices we can charge, all below the benchmarks:** a 30-day boost $99 (Indeed ≈ $150–750), Premium $249, a 30-day Hiring Pass
-  $499 (Jobright $499 per role), resume search $199 for 50 contacts (Indeed $400–520 for 100), Plus $9 / $19 / $39 for 7 / 30 / 90
-  days (Teal $13 / $29 / $79).
+- **Почти все деньги платят работодатели.** BOSS Zhipin получает ~0,9% выручки от соискателей, Naukri ~7%, SEEK ничего. Выручка SEEK
+  выросла на 12%, хотя число объявлений упало: средняя цена объявления выросла на 14% (стали чаще брать Premium). Выручка Indeed в США
+  на одну вакансию выросла на 17% благодаря «Premium Sponsored Jobs». Поэтому план опирается на работодателей, а деньги соискателей —
+  добавка.
+- **Соискатели платят за скорость и ИИ:** Teal+ $29/месяц, Jobright $39,99/месяц, Naukri Pro ₹999–2 999. Платящие соискатели в Naukri:
+  2,2–2,6% месячной аудитории.
+- **Цены, которые можем ставить мы, все ниже ориентиров:** буст на 30 дней $99 (Indeed ≈ $150–750), Premium $249, Hiring Pass на 30 дней
+  $499 (Jobright $499 за одну роль), поиск резюме $199 за 50 контактов (Indeed $400–520 за 100), Plus $9 / $19 / $39 на 7 / 30 / 90
+  дней (Teal $13 / $29 / $79).
 
-## The target, month by month (total for 2027 = $1,000,000)
+## Цель по месяцам (всего за 2027 год = $1 000 000)
 
-| 2027 | Jan | Feb | Mar | Apr | May | Jun | Jul | Aug | Sep | Oct | Nov | Dec |
+| 2027 | Янв | Фев | Мар | Апр | Май | Июн | Июл | Авг | Сен | Окт | Ноя | Дек |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Revenue, $k | 5 | 10 | 20 | 30 | 45 | 60 | 75 | 90 | 110 | 140 | 185 | 230 |
+| Выручка, тыс. $ | 5 | 10 | 20 | 30 | 45 | 60 | 75 | 90 | 110 | 140 | 185 | 230 |
 
-The year starts slow because nothing can be sold until payments are live, and employers buy once they see apply clicks from us.
+Год начинается медленно: пока не работают платежи, продавать нечего, а работодатели покупают, когда видят от нас клики на отклик.
 
-## The main plan (steady state ≈ $91k a month, reached by summer 2027, then above it)
+## Основной план (устойчивый уровень ≈ $91 тыс. в месяц, выходим на него к лету 2027, потом выше)
 
-| Stream | Price | Buyers a month | $ a month |
+| Источник | Цена | Покупателей в месяц | $ в месяц |
 |---|---|---|---|
-| Boost a listed or posted job, Standard 30 days | $99 | 200 | 19,800 |
-| Premium boost (top-3 slot, "Urgently hiring", logo and cover, invite to matched seekers who opted in, stats) | $249 | 100 | 24,900 |
-| Hiring Pass, 30 days, one company (unlimited boosts, 3 Premium, spotlight) | $499 | 40 | 19,960 |
-| Plus for seekers (AI tailoring, cover letters, match score, interview feedback), average | ~$20 | 800 | 16,000 |
-| Single AI passes (one mock interview, one tailored resume) | $5–9 | 300 | 2,100 |
-| Company spotlight / category or skill sponsor | $299 / $199 | 10 + 10 | 4,980 |
-| Opt-in resume search, 50 contacts | $199 | 20 | 3,980 |
-| Hiring data and API subscription | $100 | 20 → 100 | 2,000 → 10,000 |
-| **Total** | | | **≈ $93,700 → $101,700** |
+| Буст вакансии (из нашей базы или размещённой), Standard на 30 дней | $99 | 200 | 19 800 |
+| Premium-буст (место в топ-3, «Urgently hiring», логотип и обложка, приглашение подходящим соискателям, давшим согласие, статистика) | $249 | 100 | 24 900 |
+| Hiring Pass на 30 дней, одна компания (безлимит бустов, 3 Premium, spotlight) | $499 | 40 | 19 960 |
+| Plus для соискателей (ИИ-адаптация резюме, письма, оценка совпадения, разбор интервью), в среднем | ~$20 | 800 | 16 000 |
+| Разовые ИИ-пакеты (одно пробное интервью, одно адаптированное резюме) | $5–9 | 300 | 2 100 |
+| Spotlight компании / спонсор категории или навыка | $299 / $199 | 10 + 10 | 4 980 |
+| Поиск по резюме (по согласию), 50 контактов | $199 | 20 | 3 980 |
+| Подписка на данные о найме и API | $100 | 20 → 100 | 2 000 → 10 000 |
+| **Итого** | | | **≈ $93 700 → $101 700** |
 
-What has to be true: about 11 employer purchases a day (we already list thousands of companies, so the buyers are known) and about
-1,100 seeker purchases a month (≈ 1% of 110,000 monthly visitors, or 0.3% of 370,000 with crypto only).
+Что для этого должно выполниться: около 11 покупок работодателей в день (тысячи компаний у нас уже в базе, так что покупатели известны)
+и около 1 100 покупок соискателей в месяц (≈ 1% от 110 000 посетителей в месяц или 0,3% от 370 000 при оплате только криптой).
 
-## If things do not go to plan (the fallback)
+## Если всё пойдёт не по плану (запасной вариант)
 
-| What goes wrong | What we do instead |
+| Что пошло не так | Что делаем вместо этого |
 |---|---|
-| Seekers will not pay in crypto | Employers only: 450 boosts (average $150) + 50 Hiring Passes ≈ $92k a month ≈ $1.1M a year. Seeker tools stay free and grow traffic. |
-| Employers do not buy boosts | Show every company its own apply-click numbers from us first, then sell; a free re-run if a paid job gets fewer than N apply clicks in 14 days (SEEK's guarantee); cheap $5–9 add-ons (bump, extend, urgent badge) like BOSS. |
-| Google traffic grows slower | Direct outreach to the companies we list, with their own stats (letters only with the owner's approval of the text); public daily job lists on GitHub (Jobright's channel); a monthly "Jobs Every Hour Hiring Index" for press; partnerships with bootcamps and universities (the widget). |
-| One stream stalls completely | Data and API (Naukri sells salary and talent data to 600–700 customers), affiliate links to courses on skill pages, a sponsored weekly newsletter. |
-| Payments are not live by January | Every month without payments costs the plan; this is the first item below. |
+| Соискатели не платят криптой | Только работодатели: 450 бустов (в среднем $150) + 50 Hiring Pass ≈ $92 тыс. в месяц ≈ $1,1 млн в год. Инструменты для соискателей остаются бесплатными и растят трафик. |
+| Работодатели не покупают бусты | Сначала показываем каждой компании её собственные клики на отклик от нас, потом продаём; бесплатный повторный запуск, если платная вакансия получила меньше N кликов на отклик за 14 дней (гарантия SEEK); дешёвые допы за $5–9 (поднять, продлить, значок «срочно») как у BOSS. |
+| Трафик из Google растёт медленнее | Прямая рассылка компаниям из нашей базы с их собственной статистикой (письма только после того, как владелец утвердит текст); публичные ежедневные списки вакансий на GitHub (канал Jobright); ежемесячный «Jobs Every Hour Hiring Index» для прессы; партнёрства с буткемпами и университетами (виджет). |
+| Один источник дохода полностью встал | Данные и API (Naukri продаёт данные о зарплатах и талантах 600–700 клиентам), партнёрские ссылки на курсы на страницах навыков, спонсорская еженедельная рассылка. |
+| К январю платежи не работают | Каждый месяц без платежей бьёт по плану; это первый пункт ниже. |
 
-## What blocks revenue today, in order
+## Что сегодня блокирует выручку, по порядку
 
-1. **Payments (owner):** the Cryptomus merchant keys typed into the server like the mail password. Until then revenue is $0.
-2. **Accounts live (in progress today):** the API is installed on our server and sends mail; the account pages arrive with the
-   accounts session's merge.
-3. **"Boost this job" + claim on company pages**, the Premium features, the Hiring Pass and prepaid credits (1 credit = $1) in the
-   account.
-4. **Plus with AI (owner):** the AI provider key typed in the same way.
-5. **Opt-in resume database** (seekers tick "let employers find me"); then resume search for employers.
+1. **Платежи (владелец):** ключи продавца Cryptomus вводятся на сервере так же, как пароль от почты. Пока этого нет, выручка $0.
+2. **Аккаунты в работе (идёт сегодня):** API установлен на нашем сервере и отправляет почту; страницы аккаунтов появятся после слияния
+   сессии по аккаунтам.
+3. **«Boost this job» + заявка на компанию на страницах компаний**, функции Premium, Hiring Pass и предоплаченные кредиты (1 кредит =
+   $1) в аккаунте.
+4. **Plus с ИИ (владелец):** ключ ИИ-провайдера вводится тем же способом.
+5. **База резюме по согласию** (соискатель отмечает «пусть работодатели находят меня»); потом поиск резюме для работодателей.
 
-Honest note: no one can promise $1M. The plan shows what has to happen each month; the monthly table above is the measure, and the
-fallback says what changes when a month falls short.
+Честно: никто не может обещать $1 млн. План показывает, что должно происходить каждый месяц; мерка — таблица по месяцам выше, а
+запасной вариант говорит, что меняем, если месяц провален.

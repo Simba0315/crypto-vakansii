@@ -1,13 +1,13 @@
-# What people like and hate about job sites (reviews read 15 Nov 2026)
+# Что людям нравится и не нравится на сайтах вакансий (отзывы прочитаны 15 нояб. 2026)
 
-The owner: "look at the reviews and improve our site: what people like and dislike"; "look at Trustpilot for all these sites".
-Read in the built-in browser: Google Play and App Store pages of Jooble, Indeed, ZipRecruiter; Trustpilot pages of Indeed, ZipRecruiter,
-Jooble, LinkedIn, Glassdoor, FlexJobs, Monster, Wellfound, We Work Remotely (Remote OK's Trustpilot page did not load). Trustpilot
-showed its "verifying connection" page for a few seconds and then the page itself; nothing was worked around.
+Владелец: «посмотри отзывы и улучши наш сайт: что людям нравится и не нравится»; «посмотри Trustpilot по всем этим сайтам».
+В встроенном браузере прочитаны: страницы Google Play и App Store у Jooble, Indeed, ZipRecruiter; страницы Trustpilot у Indeed,
+ZipRecruiter, Jooble, LinkedIn, Glassdoor, FlexJobs, Monster, Wellfound, We Work Remotely (страница Remote OK на Trustpilot не загрузилась).
+Trustpilot несколько секунд показывал страницу «verifying connection», потом саму страницу; ничего не обходили.
 
-## Ratings
+## Рейтинги
 
-| Site | Trustpilot | Reviews | App store |
+| Сайт | Trustpilot | Отзывов | Магазин приложений |
 |---|---|---|---|
 | Indeed | 1.8 | 13,112 | Google Play 4.7 (14.3M) |
 | LinkedIn | 1.1 | 4,016 | Google Play 3.8 |
@@ -17,35 +17,35 @@ showed its "verifying connection" page for a few seconds and then the page itsel
 | Jooble | 4.2 | 2,640 | Google Play 3.8 (47.7K), App Store 4.7 (566) |
 | FlexJobs | 4.1 | 8,367 | |
 | Monster | 4.1 | 26,616 | |
-| ZipRecruiter | mostly positive (AI summary) | | Google Play 4.9 |
+| ZipRecruiter | в основном положительные (сводка ИИ) | | Google Play 4.9 |
 
-The high Trustpilot scores (Monster, FlexJobs, ZipRecruiter, Jooble) are mostly **invited** reviews: the site asks for a review after a
-support call or after a resume is finished, and replies to every review. The low ones (Indeed, LinkedIn, Glassdoor) are unprompted.
+Высокие оценки на Trustpilot (Monster, FlexJobs, ZipRecruiter, Jooble) — это в основном **отзывы по приглашению**: сайт просит отзыв
+после звонка в поддержку или после готового резюме и отвечает на каждый отзыв. Низкие (Indeed, LinkedIn, Glassdoor) — без приглашений.
 
-## What people dislike (and what we do)
+## Что людям не нравится (и что у нас)
 
-| Complaint | Where | Our site |
+| Жалоба | Где | Наш сайт |
 |---|---|---|
-| Fake, scam and "ghost" jobs; jobs that closed long ago | Indeed, Wellfound ("a graveyard"), Jooble ("some jobs were old") | Read from employers' own pages every hour; closed jobs leave; age shown; 90+ day filter; safety page |
-| Recommendations not in my field or above my qualifications | Indeed, ZipRecruiter | No "recommended" feed pushed on anyone; filters, mute words/companies, levels to leave out |
-| "Not interested" does not stick; settings reset (distance) | Indeed | Hidden jobs and muted words kept in the browser; **new: "continue your last search"** |
-| Jobs in the wrong place, 25 miles away; remote jobs I cannot take from my country | Indeed, Wellfound, Jooble | Places from the posting's own line; **new: any city filter, places grouped with flags, "hide remote jobs closed to my country"** |
-| Repeat hits on jobs I already applied to | ZipRecruiter | Applied jobs marked; **new: "leave out jobs I already applied to"** |
-| Saved and applied mixed up | Indeed | One status per job in My jobs (saved, applied, interviewing, offer) |
-| Redirects to other sites, second application forms ("Apply on Indeed is a lead form") | Jooble (Lensa), Indeed | "Apply" opens the employer's page, address shown under the button |
-| Sign-up walls, phone numbers demanded, data sold to call centres | Glassdoor, Indeed, Jooble | No account, no phone number; /promise/ page — **now shown on the home page and the search page** |
-| Account locked, verification loops | LinkedIn, Wellfound | No account needed for anything a job seeker does |
-| Trials that become yearly charges, no way to cancel, surprise bills | We Work Remotely, LinkedIn, ZipRecruiter, Indeed (employers) | One-time prices, nothing renews (pricing page and promise page) |
-| Too many emails | Wellfound, ZipRecruiter | Alerts are being built: passed to the accounts session (one email a day at most by default, frequency choice, one-click unsubscribe) |
+| Фальшивые, мошеннические и «призрачные» вакансии; вакансии, закрытые давным-давно | Indeed, Wellfound («кладбище»), Jooble («некоторые вакансии были старые») | Читаем страницы самих работодателей каждый час; закрытые вакансии уходят; показан возраст; фильтр 90+ дней; страница о безопасности |
+| Рекомендации не из моей сферы или выше моей квалификации | Indeed, ZipRecruiter | Никому не навязываем ленту «рекомендованных»; фильтры, скрытие слов и компаний, уровни, которые надо исключить |
+| «Не интересно» не запоминается; настройки сбрасываются (расстояние) | Indeed | Скрытые вакансии и заглушённые слова хранятся в браузере; **новое: «продолжить прошлый поиск»** |
+| Вакансии не там, за 25 миль; удалённые вакансии, на которые нельзя из моей страны | Indeed, Wellfound, Jooble | Места берутся из строки самого объявления; **новое: фильтр по любому городу, места сгруппированы с флагами, «скрыть удалённые вакансии, закрытые для моей страны»** |
+| Повторные показы вакансий, на которые я уже откликался | ZipRecruiter | Отправленные вакансии помечены; **новое: «не показывать вакансии, на которые я уже откликался»** |
+| Сохранённые и отправленные перемешаны | Indeed | Один статус на вакансию в My jobs (saved, applied, interviewing, offer) |
+| Перенаправления на другие сайты, вторые анкеты («Apply on Indeed — это форма для лидов») | Jooble (Lensa), Indeed | «Apply» открывает страницу работодателя, адрес показан под кнопкой |
+| Обязательная регистрация, требуют телефон, данные продают колл-центрам | Glassdoor, Indeed, Jooble | Без аккаунта, без телефона; страница /promise/ — **теперь показана на главной и на странице поиска** |
+| Аккаунт заблокирован, бесконечная верификация | LinkedIn, Wellfound | Для всего, что делает соискатель, аккаунт не нужен |
+| Пробный период превращается в годовое списание, отменить нельзя, неожиданные счета | We Work Remotely, LinkedIn, ZipRecruiter, Indeed (работодатели) | Цены разовые, ничего не продлевается (страница цен и страница обещаний) |
+| Слишком много писем | Wellfound, ZipRecruiter | Оповещения в разработке: переданы сессии по аккаунтам (по умолчанию не больше одного письма в день, выбор частоты, отписка в один клик) |
 
-## What people like
+## Что людям нравится
 
-Simple search and helpful filters; many fresh jobs every day; a daily reminder of new matches; the resume builder (Monster); stated
-salary and full duties (Indeed, ZipRecruiter); separate saved and applied lists; human help. Most of it we have; the daily alert is the
-accounts session's work.
+Простой поиск и удобные фильтры; много свежих вакансий каждый день; ежедневное напоминание о новых подходящих; конструктор резюме
+(Monster); указанная зарплата и полный список обязанностей (Indeed, ZipRecruiter); отдельные списки «сохранённые» и «отправленные»;
+помощь живого человека. Большая часть у нас есть; ежедневное оповещение — работа сессии по аккаунтам.
 
-## Later (needs the owner)
+## Позже (нужен владелец)
 
-Invited reviews are how competitors reach 4+ on Trustpilot. Once real users arrive, a short "Did this help? Leave a review" after a
-resume download or a found job, sent to everyone (Trustpilot does not allow choosing only happy users), and a reply to every review. The
-Trustpilot business account is the owner's to open.
+Приглашённые отзывы — так конкуренты набирают 4+ на Trustpilot. Когда придут реальные пользователи: короткое «Помогло? Оставьте отзыв»
+после скачивания резюме или найденной вакансии, отправленное всем (Trustpilot не разрешает выбирать только довольных), и ответ на
+каждый отзыв. Бизнес-аккаунт Trustpilot владелец открывает сам.
