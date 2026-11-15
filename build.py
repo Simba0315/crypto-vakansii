@@ -1856,7 +1856,7 @@ def main():
     skill_counts = Counter(t for j in active for t in j["tags"])
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
-    group = lambda label, inner: f'<div class="fgroup"><span class="flabel">{label}</span>{inner}</div>'
+    group = lambda label, inner, cls="": f'<div class="fgroup{" " + cls if cls else ""}"><span class="flabel">{label}</span>{inner}</div>'
     search = (crumbs(("All jobs", "")) + '<h1 class="h1s">Search jobs</h1>'
               f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
@@ -1864,16 +1864,16 @@ def main():
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
               + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
               + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option value="Lead">Lead and above</option><option value="Exec">Director and above</option></select>')
-              + group("Location", f'<select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
-                      '<input type="search" id="city" list="city-list" placeholder="Any city, e.g. Leeds" aria-label="City" autocomplete="off" style="margin-top:8px;width:100%">'
+              + group("Location", f'<div class="floc"><select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
+                      '<input type="search" id="city" list="city-list" placeholder="Any city, e.g. Leeds" aria-label="City" autocomplete="off"></div>'
                       '<datalist id="city-list"></datalist>'
-                      '<label class="check" id="f-rc-w" hidden style="margin-top:8px"><input type="checkbox" id="f-rc"> <span id="f-rc-l">Hide remote jobs closed to my country</span></label>')
+                      '<label class="check" id="f-rc-w" hidden style="margin-top:8px"><input type="checkbox" id="f-rc"> <span id="f-rc-l">Hide remote jobs closed to my country</span></label>', "f-loc")
               + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
                                 '<option value="250000">$250K+</option><option value="300000">$300K+</option></select>'
                                 '<div class="filters" style="margin-top:8px"><label hidden><input type="checkbox" id="f-nosal"> Also show jobs that do not state pay</label></div>')
               + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-hybrid"> Hybrid</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
-                                    '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>')
+                                    '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>', "f-work")
               + '<details class="morefilters"><summary>More filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
               + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'

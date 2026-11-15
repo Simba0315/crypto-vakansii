@@ -1949,3 +1949,24 @@ ul.crosses li::before{content:"✕";background:var(--bg2);color:var(--text)}
 footer .logo img{height:28px}
 @media(max-width:560px){.logo img{height:23px}}
 .bmark .bm-l{background:#ffffff}
+/* search filters on wide screens: one even grid (owner, 15 Nov: the gap after "Level" and the lone "Salary" looked broken) */
+.floc{display:grid;gap:8px}
+.floc #city{width:100%}
+@media(min-width:861px){
+  #fwrap{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 14px;align-items:start}
+  #fwrap>.fgroup{min-width:0}
+  #fwrap .fgroup select,#fwrap .fgroup #city{width:100%;max-width:none}
+  #fwrap>.f-loc{grid-column:span 2}
+  #fwrap .floc{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  #fwrap>.f-work{grid-column:1/-2}
+  #fwrap>.fclear{grid-column:-2/-1;justify-self:end;align-self:center}
+  #fwrap>.morefilters{grid-column:1/-1}
+}
+@media(min-width:861px) and (max-width:1100px){#fwrap{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* every company gets a square: its own logo, or its first letter on a quiet tile (owner, 15 Nov 2026: "some with a picture, some
+   without, it looks like a bug"). Job pages keep their header as it was. */
+.ava:not(.has):not(.keep){visibility:visible;background:var(--bg2);color:var(--muted);border:1px solid var(--line)}
+.tiles .ava:not(.has),.logorow .ava:not(.has),.chead .ava:not(.has),.anat .ava:not(.has),.board .ava:not(.has){display:inline-flex}
+.board .ava:not(.has){background:#1f1d1a;border-color:#2b2b27;color:#a5a399}
+.jobs:not(:has(.ava.has)) .job .ava{display:inline-flex}
+.jobs:not(:has(.ava.has)) .job>a>span:nth-child(2){grid-column:auto}
