@@ -3499,7 +3499,42 @@ def main():
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         w_ = roles_info.INFO.get(slug_r, ("", ""))[1]
-        page(f"resume/examples/{slug_r}/", f"{tcase(rname)} Resume Example | {SITE}",
+        named_ = [t for t, _ in top_]
+        fill_ = lambda m: next((t for t in named_ if t in resume_examples.KIND.get(m.group(1), ())), m.group(2))
+        ent_l = [resume_examples.SLOT.sub(fill_, ln) for ln in getattr(resume_examples, "ENTRY", {}).get(slug_r, [])]
+        sen_l = [resume_examples.SLOT.sub(fill_, ln) for ln in getattr(resume_examples, "SENIOR", {}).get(slug_r, [])]
+        levels_ = ""
+        if len(ent_l) >= 3:
+            et_ = getattr(resume_examples, "ENTRY_TITLE", {}).get(slug_r) or f"Junior {d['title']}"
+            d_e = dict(d, title=et_, summary=f"{et_} starting out, with project and internship experience in {', '.join(skills_[:3])}.",
+                       exp=[{"role": f"{d['title']} Intern", "org": "Example Company", "dates": "Summer 2026", "text": ent_l[0]},
+                            {"role": "Projects", "org": "Course and personal projects", "dates": "2025 – 2026", "text": "\n".join(ent_l[1:3])}],
+                       edu=[{"what": "Bachelor’s degree", "org": "Example University", "dates": "2022 – 2026"}])
+            levels_ += section(f"Entry-level {low} resume example (no experience)", paper(d_e) + '<p class="note">With no job of this kind yet, lead with projects, an internship or part-time work, each with a number.</p>')
+        if len(sen_l) >= 3 and slug_r != "intern":
+            # "Senior" goes in front only where it reads right: not "Senior Senior Accountant", "Senior Chief of Staff" or "Senior Tech Lead"
+            st_ = d["title"] if re.match(r"(?i)(senior|lead|head|chief|principal|director|vp|vice)\b", d["title"]) or slug_r in ("engineering-manager", "tech-lead", "software-architect", "chief-of-staff", "staff-engineer") else f"Senior {d['title']}"
+            d_s = dict(d, title=st_, summary=f"{st_} with ten years of experience, leading teams and programs. Strongest in {', '.join(skills_[:3])}.",
+                       exp=[{"role": st_, "org": "Example Company", "dates": "2021 – now", "text": "\n".join(sen_l)},
+                            {"role": d["title"], "org": "Another Example Ltd", "dates": "2016 – 2021", "text": d["exp"][0]["text"].split("\n")[0] if d["exp"] else ""}])
+            levels_ += section(f"Experienced {low} resume example" if st_ == d["title"] else f"Senior {low} resume example", paper(d_s) + '<p class="note">At this level the lines are about people led, budgets owned and results across teams.</p>')
+        n_ex = 1 + (len(ent_l) >= 3) + (len(sen_l) >= 3 and slug_r != "intern")
+        how_ = section(f"How to write {art(low)} {low} resume", '<ol class="steps">'
+                       "<li><b>One column, standard headings.</b> Summary, Skills, Experience, Education: screening software reads these in order; tables, icons and two columns can come out scrambled.</li>"
+                       "<li><b>Every line: action, tool, result.</b> “Built a churn dashboard in Tableau from SQL data; weekly reporting went from two days to one hour.” A verb first, the tool the posting names, one number.</li>"
+                       + (f"<li><b>Lead the skills line with what postings ask for.</b> For this work today: {', '.join(e(t) for t, _ in top_[:5])}. Only the ones you really have.</li>" if top_ else "")
+                       + "<li><b>Send it as a PDF unless the form asks for Word.</b> Name the file with your name and the role.</li></ol>"
+                       f'<p class="note">Check it before you send: the <a href="{P}/tools/resume-review/">resume checker</a> and the <a href="{P}/tools/resume-match/">match against a posting</a>.</p>')
+        if top_:
+            qa_.insert(0, (f"What are the top 3 skills for {art(low)} {low}?", "By today’s postings for this work: " + ", ".join(f"{t} ({pc_(k, len(rj))}%)" for t, k in top_[:3]) + "."))
+        qa_.append((f"How do I write {art(low)} {low} resume with no experience?", "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number; "
+                    "put the skills the postings ask for near the top. The entry-level example on this page is written that way." if len(ent_l) >= 3 else
+                    "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number, and the skills the postings ask for near the top."))
+        if len(mids_) >= 30:
+            qa_.append((f"Is {art(low)} {low} a high salary?", f"Today’s {low} postings that state a yearly range advertise a median of {money(median(mids_))}. Most employers here are technology companies, so this runs above the wider market."))
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page(f"resume/examples/{slug_r}/", (f"{tcase(rname)} Resume Examples: Entry-Level, Mid & Senior ({TODAY[:4]})" if n_ex == 3 else f"{tcase(rname)} Resume Example ({TODAY[:4]})") + f" | {SITE}",
              (f"{art(low).capitalize()} {low} resume example with the skills employers name in {len(rj):,} open postings today: {', '.join(t for t, _ in top_[:5])}. Open it in the free builder and make it yours." if tech_ and top_ else
               f"{art(low).capitalize()} {low} resume example with measured results, next to what {len(rj):,} open postings for this work offer today. Open it in the free builder and make it yours."),
              crumbs(("Resume builder", "resume/"), ("Examples", "resume/examples/"), (rname, "")) + f"<h1>{e(rname)} resume example</h1>"
@@ -3511,6 +3546,7 @@ def main():
              + '<h2>Make it yours</h2><ol class="steps"><li><b>Keep the form, change every fact.</b> A verb first, what changed, one number.</li>'
                f'<li><b>Use the posting’s words.</b> The <a href="{P}/tools/resume-match/">match checker</a> shows which of them your resume lacks.</li>'
                f'<li><b>Put the strongest result first.</b> The <a href="{P}/tools/resume-review/">resume review</a> tells you what a first read finds.</li></ol></div></div>'
+             + levels_ + how_
              + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_)
     write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
