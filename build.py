@@ -805,6 +805,23 @@ def auto_more(path, h1):
 LIST_PAGES = 2
 
 
+def act_row(href, label, more=(), note=""):
+    """A page's main action right under its opening paragraph, so it is on the first phone screen (SEO_MAP.md): one ink button,
+    then at most a couple of plain links and one short line. An href starting with "#" stays on the page."""
+    u = lambda h: h if h.startswith(("#", "http")) else f"{P}/{h}"
+    return (f'<p class="lact"><a class="btn primary sm" href="{u(href)}">{e(label)}</a>' + "".join(f'<a href="{u(h)}">{e(t)}</a>' for h, t in more)
+            + (f"<span>{e(note)}</span>" if note else "") + "</p>")
+
+
+def list_save(h1, qs, feed_path=""):
+    """A list page's main action on the first phone screen: keep the list. It goes into My jobs as the search that gives the same
+    jobs, and My jobs counts the jobs posted since the last look (site.js; nothing is sent anywhere). The list's RSS feed beside it."""
+    if not qs: return ""
+    rss = f'<a href="{P}/{feed_path}feed.xml">RSS feed</a>' if feed_path else ""
+    return (f'<p class="lact"><button class="btn primary sm" type="button" data-save-list="{e(qs)}" data-label="{e(h1)}">Save this list</button>{rss}'
+            '<span>My jobs then shows how many are new each time you come back. No account, no email.</span></p>')
+
+
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live=""):
     jobs = order(jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
@@ -824,8 +841,9 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     faq_html, faq_ld = faq_for(faq, jobs, faq_first) if faq else ("", "")
     for n in range(1, pages + 1):
         chunk = rows[(n - 1) * per:n * per]
-        top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else ""))
-        body = (top + (extra if n == 1 else "") + (f'<div class="sec-head lst"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
+        top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
+                                                       + (list_save(h1, more, path if feed else "") if n == 1 else ""))
+        body = (top + (extra if n == 1 else "") + (f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                 + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                 + pager_html(path, n, pages) + note + ((hub + after + faq_html) if n == 1 else ""))      # questions last, after what the page shows
         if n == 1:
@@ -2252,7 +2270,9 @@ def main():
              f"The average {label} salary at companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
-             f'<p class="lead">From {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>{stats}'
+             f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}: '
+             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>'
+             + act_row("tools/offer-check/", "Check an offer against these figures", [back] if isinstance(back, tuple) else ()) + f'{stats}'
              + cut + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
              + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
@@ -2963,6 +2983,7 @@ def main():
              f"A {low} job description template with the figures from {n_:,} open postings: experience asked, pay, skills and benefits employers name. Copy it and post your job free.",
              crumbs(("For employers", "post-a-job/"), ("Job descriptions", "job-descriptions/"), (rname, "")) + f'<h1>{e(rname)} job description: <span class="hl">template and real figures</span></h1>'
              f'<p class="lead">A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
+             + act_row("post-a-job/", "Post this job free", [("#letter", "Jump to the template")])
              + facts_
              + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> '
                f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div>'
@@ -3031,6 +3052,7 @@ def main():
              f"How to become {art(low)} {low}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
              crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
+             + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
              + facts_ + section(f"Five steps to your first {low} job", steps)
              + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
@@ -3172,6 +3194,7 @@ def main():
              crumbs(("Interview questions", "interview-questions/"), (rname, "")) + f'<h1>{e(rname)} interview questions: <span class="hl">{n_q} to prepare for</span></h1>'
              f'<p class="lead">Each question says why it is likely to come up, from what today’s {n_:,} open {e(low)} postings ask for, and what a good answer shows. '
              f'Prepare a real example for each, then practise it with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>'
+             + act_row("#practise", "Practise out loud", note="The page reads each question and checks your answer. Nothing is recorded.")
              + facts_ + body_
              + section("Questions to ask them", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in ask_) + "</dl>")
              + section(f"Questions about {art(low)} {low} interview", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in iq_qa) + "</dl>")
@@ -3381,6 +3404,7 @@ def main():
              f"{x['name']} and {ours} side by side: who pays, prices, where the jobs come from, where you apply and how fresh the listings are. Every fact about {x['name']} comes with its source.",
              crumbs(("Compared with other job sites", "vs/"), (x["name"], "")) + f'<h1>{e(x["name"])} vs {e(ours)}: <span class="hl">a fair comparison</span></h1>'
              f'<p class="lead">{e(x["what"])} Below, the two side by side. Every fact about {e(x["name"])} comes from its own pages or a named source, read on the date shown; where we could not check a fact, the row is left out.</p>'
+             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account; you apply on the employer’s own site.")
              + f'<p class="vs-pick"><b>In short:</b> {e(x["pick"])}</p>'
              + section(f"{x['name']} and {ours}, side by side", table_)
              + '<div class="vs-two"><div><h2>Where ' + e(x["name"]) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["them_better"]) + "</ul></div>"
@@ -3411,6 +3435,7 @@ def main():
                  f"{a_['name']} and {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:4]) + ". Every fact comes with its source and the date it was read.",
                  crumbs(("Compared with other job sites", "vs/"), (f"{a_['name']} vs {b_['name']}", "")) + f'<h1>{e(a_["name"])} vs {e(b_["name"])}: <span class="hl">the facts side by side</span></h1>'
                  f'<p class="lead">{e(a_["what"])} {e(b_["what"])} Below, what each one says about itself, with the source of every fact. The third column shows how {e(compare_sites.OUR_NAME)} works, for reference.</p>'
+                 + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account; you apply on the employer’s own site.")
                  + section(f"{a_['name']} and {b_['name']}, side by side", table_)
                  + '<div class="vs-two"><div><h2>Where ' + e(a_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(a_)) + "</ul></div>"
                    '<div><h2>Where ' + e(b_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(b_)) + "</ul></div></div>"
@@ -3429,7 +3454,8 @@ def main():
              f"Alternatives to {x['name']}: {', '.join(y['name'] for y in others[:4])} and more, each with who pays and where you apply, from their own pages. Every fact sourced and dated.",
              crumbs(("Compared with other job sites", "vs/"), (f"{x['name']} alternatives", "")) + f'<h1>{e(x["name"])} alternatives: <span class="hl">{len(others) + 1} job sites, with sources</span></h1>'
              f'<p class="lead">Other places to look for work than {e(x["name"])}, each described from its own pages, with who pays and where you apply. Open a pair to see every fact side by side.</p>'
-             + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read every hour from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
+             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account; you apply on the employer’s own site.")
+             + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read {EVERY} from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
                        f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>')
              + section(f"Other alternatives to {x['name']}", '<div class="feats">' + alt_ + "</div>")
              + section("Sources", '<p class="note">Every fact on this page comes from the comparison pages linked above, where each one is listed with its source and the date it was read.</p>'))
@@ -4269,9 +4295,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # Resume builder: stays in the browser, prints to PDF
     page("resume/", f"Free Resume Builder — free PDF and Word download | {SITE}",
          "Build an ATS-friendly resume in your browser: five templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
-         crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Two-column templates with icons look good to people and can turn into scrambled text in applicant tracking systems. '
-         'And many builders let you write for free, then charge for the download. Here you get five plain one-column templates that parse cleanly, and the PDF and the Word file are free. '
-         'Fill in the form, watch the page update, download. Everything stays in this browser: no account, nothing is uploaded.</p>'
+         crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Five plain one-column templates that applicant tracking systems read cleanly '
+         '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
+         'Fill in the form, watch the page update, download. No account; nothing leaves this browser.</p>'
+         + act_row("#rb", "Start your resume", [("resume/examples/", "Examples by job")]) +
          f'<p class="note no-print">Which builders charge for the download? <a href="{P}/free-resume-builders/">We read the pricing pages of {len(builders_check.BUILDERS)} of them</a>.</p>'
          '<p class="note no-print">“Save as PDF” opens your browser’s print window: choose “Save as PDF” as the printer.</p>'
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF — free</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
@@ -4384,9 +4411,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": f"What is {term[0].lower() + term[1:] if not term[:2].isupper() else term}?",
                                                                               "acceptedAnswer": {"@type": "Answer", "text": d}}]}], ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"glossary/{sl}/", f"{term}: What It Means in a Job Search | {SITE}",
-             f"{term}, explained in plain English: {d[0].lower() + d[1:] if not d[:2].isupper() else d}",
+             f"{term}, explained in plain English: {d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]}",
              crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(term)}</h1>'
-             f'<p class="lead gl-def">{e(d)}</p>'
+             f'<p class="lead gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
              + (f'<p class="gl-fig">{e(fig)} <span class="note">Counted on {fdate(TODAY)}.</span></p>' if fig else "")
              + section("What to do about it", f"<p>{e(tip)}</p>")
              + section("Useful next", '<div class="rel">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>")
@@ -5211,7 +5238,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         listing(f"jobs-that-pay/{lo_}-an-hour/", f"Jobs that pay {hr_label(lo_, hi_)}", f"Jobs That Pay ${lo_} an Hour ({len(js_):,} open) | {SITE}",
                 f"{len(js_):,} open jobs whose stated pay starts at {hr_label(lo_, hi_)} ({span_}), from employers’ own careers pages. What ${lo_} an hour is a week, a month, a year.",
                 js_, intro=lead_, trail=(("Jobs by hourly pay", "jobs-that-pay/"),), more=False,
-                extra=conv + hr_chips(lo_) + f'<p class="note">Work out any other rate with the <a href="{P}/tools/salary-converter/">pay converter</a>, or see <a href="{P}/salaries/">what each job pays</a>.</p>',
+                extra=act_row("#list", f"See the {len(js_):,} jobs", [("tools/salary-converter/", "Pay converter")]) + conv + hr_chips(lo_) + f'<p class="note">Work out any other rate with the <a href="{P}/tools/salary-converter/">pay converter</a>, or see <a href="{P}/salaries/">what each job pays</a>.</p>',
                 list_title=f"Open jobs from {hr_label(lo_, hi_)}",
                 after=section(f"Questions about ${lo_} an hour", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>") + qa_ld)
     hr_rows = [(lo_, hi_, len(hr_jobs[lo_])) for lo_, hi_ in HR_BANDS if len(hr_jobs[lo_]) >= 20]

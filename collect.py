@@ -27,10 +27,10 @@ CATS = [
     ("design", "Design", r"\bdesign(er|ers)?\b|\bux\b|\bui\b|creative|illustrat|motion"),
     ("sales-bd", "Sales & Business Development", r"\bsales\b|business development|\bbd\b|partnership|account (executive|manage)|institutional|relationship manager|listing"),
     ("marketing", "Marketing & Community", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|\bseo\b|copywrit|\bkol\b|运营"),
-    ("support", "Customer Support", r"support|customer (service|success|experience)|client service|helpdesk"),
+    ("support", "Customer Service & Support", r"support|customer (service|success|experience)|client service|helpdesk"),
     ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel|attorney|\brisk\b|regulatory|fraud|investigat|mlro|audit"),
     ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|accounts? (payable|receivable)|treasury|controller|\btax\b|payroll|trader|trading|billing|\bfp&a\b"),
-    ("people", "People & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
+    ("people", "HR & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
     ("data-research", "Data & Research", r"analyst|\bdata\b|research|quant|scientist|economist|strategy"),
     ("operations", "Operations", r"operations|project manager|program manager|chief of staff|executive assistant|office|administrat"),
     # Added 13 Nov 2026 (the owner asked for the fields other job sites have). They stand after the older ones on purpose:
