@@ -132,7 +132,7 @@ REGIONS = {"europe": ({"GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH
            "africa": ({"ZA", "NG", "KE"}, r"\bafrica\b")}
 # (name, slug, rule). A rule is a country code, a region key, or (pattern, country the match must agree with).
 PLACES = [
-    ("the United States", "united-states", "US"), ("Canada", "canada", "CA"), ("London & the UK", "united-kingdom", "GB"), ("Europe", "europe", "region"),
+    ("the United States", "united-states", "US"), ("Canada", "canada", "CA"), ("the United Kingdom", "united-kingdom", "GB"), ("Europe", "europe", "region"),
     ("Germany", "germany", "DE"), ("France", "france", "FR"), ("Switzerland", "switzerland", "CH"), ("Austria", "austria", "AT"), ("Poland", "poland", "PL"),
     ("Ireland", "ireland", "IE"), ("the Netherlands", "netherlands", "NL"), ("Spain", "spain", "ES"), ("Portugal", "portugal", "PT"), ("Sweden", "sweden", "SE"), ("Israel", "israel", "IL"),
     ("Asia-Pacific", "asia-pacific", "region"), ("India", "india", "IN"), ("Singapore", "singapore", "SG"), ("Hong Kong", "hong-kong", "HK"), ("Japan", "japan", "JP"),
@@ -151,6 +151,13 @@ PLACES = [
     ("Texas", "texas", (r"\btexas\b|(?-i:, TX\b)|\baustin\b|\bdallas\b|\bhouston\b|san antonio", "US")), ("Florida", "florida", (r"\bflorida\b|(?-i:, FL\b)|\bmiami\b|orlando|\btampa\b", "US")),
     ("Toronto", "toronto", (r"toronto", "CA")), ("Vancouver", "vancouver", (r"vancouver", "CA")), ("Berlin", "berlin", (r"\bberlin\b", "DE")), ("Munich", "munich", (r"munich|münchen", "DE")),
     ("Bangalore", "bangalore", (r"bangalore|bengaluru", "IN")), ("Sydney", "sydney", (r"\bsydney\b", "AU")),
+    # "python jobs london", "jobs in paris": the city is the query, and a country page mixes every city (SERP_WORK row 8, 15 Nov 2026)
+    ("London", "london", (r"\blondon\b(?!, on\b)", "GB")), ("Manchester", "manchester", (r"\bmanchester\b(?!, nh\b)", "GB")), ("Paris", "paris", (r"\bparis\b", "FR")),
+    ("Amsterdam", "amsterdam", (r"amsterdam", "NL")), ("Dublin", "dublin", (r"\bdublin\b(?!, (?:ca|oh)\b)", "IE")), ("Madrid", "madrid", (r"\bmadrid\b", "ES")),
+    ("Barcelona", "barcelona", (r"barcelona", "ES")), ("Lisbon", "lisbon", (r"lisbon|lisboa", "PT")), ("Zurich", "zurich", (r"z[uü]rich", "CH")),
+    ("Stockholm", "stockholm", (r"stockholm", "SE")), ("Warsaw", "warsaw", (r"warsaw|warszawa", "PL")), ("Tel Aviv", "tel-aviv", (r"tel[ -]aviv", "IL")),
+    ("Tokyo", "tokyo", (r"\btokyo\b", "JP")), ("Montreal", "montreal", (r"montr[eé]al", "CA")), ("Hyderabad", "hyderabad", (r"hyderabad", "IN")),
+    ("Melbourne", "melbourne", (r"\bmelbourne\b(?!, fl\b)", "AU")),
 ]
 
 
@@ -261,6 +268,19 @@ def usd_range(s):
     if len(vals) < 2: return None
     lo, hi = vals[0], vals[1]
     return (lo, hi) if 30000 <= lo <= hi <= 1500000 else None
+
+
+def local_mid(s, sym):
+    """The midpoint of a yearly pay range stated in pounds (sym "£") or euros ("€"), or None. Hourly, daily and monthly figures are left out."""
+    if not s or sym not in s or "$" in s or re.search(r"hour|/hr|hourly|\bday\b|daily|month|/mo\b", s, re.I): return None
+    vals = []
+    for num, k in SAL_NUM.findall(s):
+        try: v = float(re.sub(r"[.,\s](?=\d{3}(?!\d))", "", num).replace(",", "."))
+        except ValueError: continue
+        vals.append(v * 1000 if k else v)
+    if len(vals) < 2: return None
+    lo, hi = vals[0], vals[1]
+    return (lo + hi) / 2 if 15000 <= lo <= hi <= 1000000 else None
 
 
 def usd_hourly(s):
@@ -711,6 +731,11 @@ def faq_for(label, jobs, first=None, extra=()):
         qa.append((f"Are there remote {label}?",
                    (f"{r:,} of the {n_:,} open {label} ({100 * r / n_:.0f}%) are listed as remote. Remote roles are often limited to certain countries or time zones, so check the location line of each job."
                     if r else f"None of the {n_:,} open {label} are listed as remote at the moment. Remote roles appear here as soon as employers post them.")))
+    for sym_, word_ in (("£", "pounds"), ("€", "euros")):
+        lm_ = sorted(m_ for j in jobs if (m_ := local_mid(j.get("salary"), sym_)))
+        if len(lm_) >= 10:
+            qa.append((f"What do {label} pay in {word_}?", f"{len(lm_):,} of the open postings state a yearly range in {word_}: the median midpoint is {sym_}{median(lm_):,.0f}, and the middle half "
+                       f"advertise {sym_}{lm_[len(lm_) // 4]:,.0f} to {sym_}{lm_[3 * len(lm_) // 4]:,.0f}. These are advertised ranges as each employer wrote them, not verified pay."))
     if len(mids) >= 15:
         qa.append((f"What is the median salary of {label}?" if " pay " in f" {label} " else f"What do {label} pay?",
                    f"The median advertised salary is {money(median(mids))}, based on {len(mids):,} open roles that publish a yearly US-dollar range. The middle half of those roles advertise between "
@@ -2002,13 +2027,22 @@ def main():
         ccats = "".join(tile(f"crypto/{s}/", CAT[s], c) for s in CAT if (c := sum(1 for j in crypto if j["cat"] == s)) >= 5)
         chire = "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in crypto).most_common(12))
         eng_pc = round(100 * sum(1 for j in crypto if j["cat"] == "engineering") / len(crypto))
-        listing("crypto/", "Crypto jobs", f"Crypto Jobs: {len(crypto):,} Open Web3 and Blockchain Roles | {SITE}",
+        new7_c = sum(1 for j in crypto if (j["posted"] or "") >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
+        tok_rx = re.compile(r"paid in (?:crypto|usdc|usdt|stablecoins?|tokens?|btc|eth)|salary in (?:crypto|usdc|usdt|tokens?)|token (?:grants?|allocation|options)|(?:crypto|usdc) (?:salary|payroll)", re.I)
+        n_tok = sum(1 for j in crypto if tok_rx.search(" ".join((j.get("salary") or "", j.get("excerpt") or "", j.get("desc") or ""))))
+        crypto_qa = [("Are there jobs that pay in crypto?", f"Some: {n_tok:,} of the {len(crypto):,} open crypto jobs here mention pay in crypto, stablecoins or token grants in the posting. "
+                      "Most pay a normal salary; tokens, when offered, usually come on top, like equity."),
+                     ("How do I get a crypto job with no experience?", f"{sum(1 for j in crypto if j['entry']):,} open crypto roles are junior roles or internships, and non-engineering work (support, compliance, marketing, operations) "
+                      "is a common way in. Show you know the product: use the exchange or wallet, read the docs, and say so in your letter."),
+                     ("Are crypto job offers safe?", "Fake recruiters are common in crypto: a real employer never asks you to pay, to install a wallet or a program for an interview, or to move to a chat app before a proper interview. "
+                      "Every job here links to the employer’s own careers page, so you apply where the company itself takes applications.")]
+        listing("crypto/", "Crypto jobs", f"Crypto Jobs: {len(crypto):,} Web3 & Blockchain Roles, {new7_c:,} New This Week | {SITE}",
                 f"{roles(len(crypto), 'open job')} at crypto, web3 and blockchain companies: exchanges, wallets, infrastructure and DeFi. Remote and on-site, with pay where the employer states it. Updated hourly.",
                 crypto, intro_for(crypto, "", " at crypto, web3 and blockchain companies"),
                 extra=mini_pics(crypto) + f'<ul class="tiles">{ccats}</ul>'
                 + section("Who is hiring in crypto", f'<ul class="tiles">{chire}</ul>', ("companies/", "All companies"))
                 + '<div class="dir">' + cdir("Kinds of crypto jobs", ckinds) + cdir("By profession", croles) + cdir("By place", cplaces) + "</div>"
-                + '<div class="sec"><div class="sec-head"><h2>All crypto jobs</h2></div></div>', feed=True, faq="crypto jobs",
+                + '<div class="sec"><div class="sec-head"><h2>All crypto jobs</h2></div></div>', feed=True, faq="crypto jobs", faq_extra=crypto_qa,
                 faq_first=("What counts as a crypto job here?", f"A job at a company whose business is crypto, web3 or blockchain: exchanges, wallets, custody, blockchain infrastructure, DeFi and analytics. "
                            f"Of the {len(crypto):,} open today, {eng_pc}% are engineering jobs; the rest are in compliance, marketing, support, finance, design and other fields, so the list is not only for programmers."))
         for s, name in CAT.items():
@@ -2482,9 +2516,12 @@ def main():
     if len(life_) >= 50:
         new_qa.append(("Should I apply on the day a job is posted?", f"Earlier is safer: of the {len(life_):,} closed jobs on this site with both dates known, {100 * wk1_ / len(life_):.0f}% came down within a week of being posted. "
                        "Saving a search in My jobs shows what is new each time you come back."))
-    listing("new/", "New jobs", f"New Jobs Posted Today: {len(day_):,} in the Last 24 Hours ({len(fresh):,} in 3 Days) | {SITE}",
+    new_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in new_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    listing("new/", "New jobs", (f"New Jobs Posted Today: {len(day_):,} in 24 Hours, {len(fresh):,} in 3 Days" if day_ else f"New Jobs: {len(fresh):,} Posted in the Last 3 Days") + f" | {SITE}",
             f"{len(day_):,} jobs posted in the last 24 hours and {len(fresh):,} in the last three days, from employers’ own careers pages. Updated every hour.",
-            fresh, intro_for(fresh, "", " posted in the last three days"), feed=True, extra=new_top, faq="new jobs", faq_extra=new_qa,
+            fresh, intro_for(fresh, "", " posted in the last three days"), feed=True, extra=new_top,
+            after=section("Questions about new jobs", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in new_qa) + "</dl>") + new_ld,
             live=f' data-live="new" data-since="{cutoff}"')       # site.js adds the jobs found since this page was built (/api/latest)
 
     # Salaries
@@ -3840,7 +3877,30 @@ def main():
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         flagged = lambda t: e(t).replace(e(nm), flg + e(nm))      # a country is never shown without its flag
         rl_rows.append((slug, c, nm, len(both), len(cj)))
-        page(f"relocate/{slug}/", f"Relocate to {nm} for Work: {len(both):,} Jobs with Visa or Relocation Help ({TODAY[:4]}) | {SITE}",
+        lang_ = {"DE": "German", "AT": "German", "CH": "German", "NL": "Dutch", "FR": "French", "ES": "Spanish", "IT": "Italian", "PT": "Portuguese", "PL": "Polish", "SE": "Swedish",
+                 "DK": "Danish", "NO": "Norwegian", "FI": "Finnish", "CZ": "Czech", "JP": "Japanese", "KR": "Korean", "BR": "Portuguese", "MX": "Spanish", "TW": "Chinese", "IL": "Hebrew"}.get(c)
+        txt_ = lambda j: " ".join((j["title"], j.get("excerpt") or "", j.get("desc") or ""))
+        n_lang = sum(1 for j in cj if re.search(rf"\b{lang_}\b", txt_(j), re.I)) if lang_ else 0
+        cur_ = {"GB": "£"}.get(c) or ("€" if c in {"DE", "AT", "NL", "FR", "ES", "IT", "PT", "IE", "FI", "BE", "LU", "GR", "SK", "SI", "EE", "LV", "LT", "CY", "MT", "HR"} else "")
+        lm_ = sorted(m_ for j in cj if (m_ := local_mid(j.get("salary"), cur_))) if cur_ else []
+        kind_p = {sl_: r_ for _, sl_, r_ in PLACES}
+        cities_ = [(p_, k_) for p_, k_ in Counter(p_ for j in cj for p_ in j["places"] if p_ != slug and isinstance(kind_p.get(p_), tuple) and p_ in PLACE_LIVE).most_common(6)]
+        roles_txt = ", ".join(f"{rlow(rn)} ({k})" for k, _, rn in roles_[:5])
+        qa_ = [(f"How can a foreigner get a job in {nm}?", f"Start with the {len(both):,} open jobs in {nm} whose postings mention visa sponsorship or relocation help: those employers have said they hire from abroad. "
+                f"Check the official visa rules, say in your resume that you need sponsorship, and ask about relocation support in the first call. The five steps are above.")] + qa_
+        if roles_txt: qa_.append((f"What jobs are in demand in {nm} for foreigners?", f"Among today’s postings that mention visa sponsorship or relocation: {roles_txt}. Counted by job title on {fdate(TODAY)}."))
+        if lang_ and cj:
+            qa_.append((f"Can I work in {nm} if I only speak English?", f"Often, in tech and international companies: {len(cj) - n_lang:,} of the {len(cj):,} open postings in {nm} here do not mention {lang_} at all, "
+                        f"while {n_lang:,} do, as a requirement or a plus. Read the language line of each posting."))
+        if len(lm_) >= 10:
+            qa_.append((f"What do jobs in {nm} pay?", f"{len(lm_):,} open postings in {nm} state a yearly range in {'pounds' if cur_ == '£' else 'euros'}: the median midpoint is {cur_}{median(lm_):,.0f}, the middle half {cur_}{lm_[len(lm_) // 4]:,.0f} to {cur_}{lm_[3 * len(lm_) // 4]:,.0f}."
+                        + (f" Postings in US dollars: median {money(median(mids_))}." if len(mids_) >= 10 else "")))
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        facts_ = facts_.replace("</dl>", (f"<div><dt>Do not mention {lang_}</dt><dd>{len(cj) - n_lang:,}</dd></div>" if lang_ else "")
+                                + (f"<div><dt>Median pay stated in {'pounds' if cur_ == '£' else 'euros'}</dt><dd>{cur_}{median(lm_):,.0f}</dd></div>" if len(lm_) >= 10 else "") + "</dl>")
+        city_row = ("<p>" + " · ".join(f'<a href="{P}/locations/{p_}/">{e(PLACE_NAME.get(p_, p_))} · {k_:,} jobs</a>' for p_, k_ in cities_) + "</p>") if cities_ else ""
+        page(f"relocate/{slug}/", f"Jobs in {nm[0].upper() + nm[1:]} for Foreigners: {len(both):,} Visa & Relocation Jobs | {SITE}",
              f"Moving to {nm} for a job: {len(visa_):,} open jobs mention visa sponsorship and {len(relo_):,} relocation support today. The employers, the kinds of work, the pay and the official visa site.",
              crumbs(("Relocation guides", "relocate/"), (cname_.get(c, c), "")) + f'<h1>Work and relocate to {flg}{e(nm)}: <span class="hl">{len(both):,} jobs that help you move</span></h1>'
              f'<p class="lead">Today’s open jobs in {flg}{e(nm)} that mention visa sponsorship or help with relocation, counted from employers’ own careers pages: who offers it, for which work, what it pays, and where to read the official rules.</p>'
@@ -3848,6 +3908,7 @@ def main():
              + section("Employers that mention visa sponsorship or relocation", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(co)}/", co, k, True) for co, k in cos_) + "</ul>")
              + (section("The kinds of work they hire for", '<div class="hbars">' + "".join(
                  f'<a href="{P}/roles/{sr}/"><span class="hn">{e(rn)}</span><span class="hb"><i style="width:{max(4, round(100 * k / roles_[0][0]))}%"></i></span><span class="hc">{k} jobs</span></a>' for k, sr, rn in roles_) + "</div>") if roles_ else "")
+             + (section(f"Cities in {cname_.get(c, c)} with the most open jobs", city_row) if city_row else "")
              + section(f"Five steps to a job in {cname_.get(c, c)}", steps)
              + section("The newest of these jobs", '<ul class="jobs">' + "".join(card(j) for j in newest) + "</ul>"
                        + ("<p>" + " · ".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in lists_) + "</p>" if lists_ else ""))
@@ -4164,7 +4225,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
 
     # 5. skills in demand
     top_sk = skill_counts.most_common(15)
-    guide("skills-in-demand", "The skills employers ask for most, in plain words",
+    guide("skills-in-demand", f"The {len(top_sk)} Most In-Demand Job Skills in {TODAY[:4]} (from {n:,} Jobs)",
           f"The 15 skills named in the most open job postings today, each explained in one line: from {top_sk[0][0]} ({top_sk[0][1]:,} jobs) down.", "Skills",
           f"Job postings name tools and methods as if everyone knew them. These are the fifteen named most often in {n:,} open postings, with a plain line for each.",
           "<h2>Asked for in the most postings</h2>" + bars_([(t, k, f"{k:,} jobs · {pc_(k, n)}%", f"skills/{tslug(t)}/") for t, k in top_sk])
@@ -5447,6 +5508,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                "washington-dc": (38.91, -77.04), "denver": (39.74, -104.99), "los-angeles": (34.05, -118.24), "dallas": (32.78, -96.80), "atlanta": (33.75, -84.39), "san-diego": (32.72, -117.16),
                "pittsburgh": (40.44, -80.00), "portland": (45.52, -122.68), "miami": (25.76, -80.19), "phoenix": (33.45, -112.07), "raleigh-durham": (35.78, -78.64), "houston": (29.76, -95.37),
                "toronto": (43.65, -79.38), "vancouver": (49.28, -123.12), "berlin": (52.52, 13.40), "munich": (48.14, 11.58), "bangalore": (12.97, 77.59), "sydney": (-33.87, 151.21),
+               "london": (51.51, -0.13), "manchester": (53.48, -2.24), "paris": (48.86, 2.35), "amsterdam": (52.37, 4.90), "dublin": (53.35, -6.26), "madrid": (40.42, -3.70),
+               "barcelona": (41.39, 2.17), "lisbon": (38.72, -9.14), "zurich": (47.38, 8.54), "stockholm": (59.33, 18.07), "warsaw": (52.23, 21.01), "tel-aviv": (32.08, 34.78),
+               "tokyo": (35.68, 139.69), "montreal": (45.50, -73.57), "hyderabad": (17.39, 78.49), "melbourne": (-37.81, 144.96),
                "united-kingdom": (51.51, -0.13), "singapore": (1.35, 103.82), "hong-kong": (22.32, 114.17), "uae": (25.20, 55.27), "ireland": (53.35, -6.26), "france": (48.86, 2.35),
                "netherlands": (52.37, 4.90), "japan": (35.68, 139.69), "israel": (32.08, 34.78), "poland": (52.23, 21.01), "spain": (40.42, -3.70), "portugal": (38.72, -9.14),
                "sweden": (59.33, 18.07), "switzerland": (47.38, 8.54), "brazil": (-23.55, -46.63), "mexico": (19.43, -99.13), "south-korea": (37.57, 126.98), "taiwan": (25.03, 121.57)}
@@ -5618,7 +5682,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                     f"It reaches {reach} days for now" + (", and the 90-day figure appears once the record covers 30 days" if reach < 90 else "") + ". It will move as the record grows.")
         quote_s = (f"Of {len(active):,} open job postings checked on {fdate(TODAY)}, {pc(old90 / max(1, len(active)))} had been up for more than 90 days; "
                    f"the postings that closed since {since_s} had been open a median of {med_cl} days.")
-        lead_s = (f"Of the {len(age_cl):,} postings that employers took down since {since_s}, half had been open {med_cl} days or more. "
+        lead_s = (f"About {med_cl} days at the median, on employers’ own careers pages. "
+                  f"Of the {len(age_cl):,} postings that employers took down since {since_s}, half had been open {med_cl} days or more. "
                   + (f"At the closing rates seen in {'the first ' if early else ''}{days_s} days of records, about {pc(c7)} of new postings close within 7 days and {pc(c30)} within 30" + (f", {pc(c90)} within 90" if c90 is not None else "") + ". " if c7 is not None and c30 is not None else "")
                   + f"{pc(old90 / max(1, len(active)))} of the {len(active):,} jobs open today were posted more than 90 days ago.")
         st_qa = [
@@ -5638,7 +5703,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              "isAccessibleForFree": True, "license": "https://creativecommons.org/licenses/by/4.0/",
              "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": f"{FULL}/data/survival.json"}]}]},
             ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        page("how-long-job-postings-stay-open/", f"How Long Do Job Postings Stay Open? Our Hourly Data | {SITE}",
+        page("how-long-job-postings-stay-open/", f"How Long Do Job Postings Stay Open? About {med_cl} Days (Hourly Data) | {SITE}",
              f"How long job postings stay open, from hourly checks of {len({j['company'] for j in active}):,} employers’ careers pages: closings, open jobs by age, entry-level jobs, the map.",
              crumbs(("Hiring reports", "reports/"), ("How long postings stay open", "")) + '<h1>How long job postings stay open</h1>'
              f'<p class="lead">{e(lead_s)}</p>'
@@ -5800,7 +5865,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     RS = resignation_pages.STANDARD
     rl_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("resignation-letters/", f"Resignation Letter Template: a Standard Letter + {len(RL)} Examples to Copy ({rl_year}) | {SITE}",
+    page("resignation-letters/", f"Resignation Letter Template: Standard + {len(RL)} Examples ({rl_year}) | {SITE}",
          f"{len(RL)} resignation letter templates you can copy: two weeks notice, effective immediately, by email, for a new job, relocation, health or family reasons, retirement and more.",
          crumbs(("Resignation letters", "")) + f'<h1>Resignation letter templates: <span class="hl">{len(RL)} examples</span></h1>'
          '<p class="lead">Pick the letter that fits your case. Each one is complete: copy it, replace the parts in [brackets], and send it. '
