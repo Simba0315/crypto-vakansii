@@ -4843,6 +4843,36 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           f"{long_all:,} open ones carry the “open {LONG_OPEN} days or more” mark.</p>",
           '<span class="ln"><b>Still open</b> · confirmed 14:02</span>' + skel,
           (("guides/how-long-jobs-stay-open/", "How long postings stay open"), ("safety/", "How to check that an offer is real"), ("status/", "Is the data fresh?")))
+    # How the hourly check works: counted from the build's own data, written as a plain account of the method (ROADMAP: engineering-style post).
+    ats_name = {"greenhouse": "Greenhouse", "ashby": "Ashby", "lever": "Lever"}
+    ats_jobs, ats_cos = Counter(), defaultdict(set)
+    for j_ in active:
+        k_ = str(j_.get("id", "")).split("-")[0]
+        if k_ in ats_name:
+            ats_jobs[k_] += 1
+            ats_cos[k_].add(j_["company"])
+    ats_tab = "".join(f"<tr><td>{ats_name[k_]}</td><td>{ats_cos[k_].__len__():,}</td><td>{v_:,}</td></tr>" for k_, v_ in ats_jobs.most_common())
+    n_closed_all = len(archived)
+    guide("how-we-check-jobs-every-hour", f"How we check {n:,} job postings every hour",
+          f"How the hourly check works: where postings are read, how a closed job is told from an unreadable feed, and what the figures cover. Counted from {n:,} open jobs at {m:,} companies.", "Reading postings",
+          f"Every open job on this site is read from the employer’s own hiring system, {m:,} companies in all, " + (f"{m_hourly:,} of them every hour and the rest every four hours." if ROTATING else "each of them every hour.") +
+          f" This page describes the check step by step, so you can judge how far to trust what the lists say.",
+          '<p class="plain"><b>In plain words:</b> companies publish their open jobs in a hiring system, a program that holds every opening and its application form. '
+          "We read what those systems publish, compare it with what we saw the last time and update the lists. Nothing is typed in by hand and nothing is copied from another job site.</p>"
+          "<h2>Step 1: read the employer’s own list</h2><p>Three hiring systems cover the companies here. Each publishes a public list of a company’s open jobs, the same list that feeds the “Careers” page of the company.</p>"
+          '<div class="tablewrap"><table class="t4"><thead><tr><th>Hiring system</th><th>Companies</th><th>Open jobs</th></tr></thead><tbody>' + ats_tab + "</tbody></table></div>"
+          "<h2>Step 2: compare with the last reading</h2><p>A job that is in the list and was not there before is new, and its first-seen time is saved. A job that was in the list and is now missing is closed, and the closing date is saved. "
+          f"Closed jobs keep their pages: {n_closed_all:,} closed postings are on file, {closed_today_h:,} of them closed today.</p>"
+          "<h2>Step 3: tell a closed job from a list that could not be read</h2><p>If an employer’s list does not load at all, the jobs of that company are left as they were until the next hour. "
+          "A job is marked closed only when the list was read and the job was not in it. When a company’s whole list empties at once (20 jobs or more), it is flagged as a probable move to another hiring system rather than as filled jobs, "
+          "and those closings stay out of the closing statistics.</p>"
+          "<h2>Step 4: read the details by fixed rules</h2><p>Pay, level, skills and remote status are read from the posting by written rules, not guessed. A rule can miss a wording, so “pay not listed” here does not prove the employer hides it. "
+          f'The rules are listed on the <a href="{P}/methodology/">methodology page</a>.</p>'
+          f"<h2>What the hourly check does not do</h2><p>It does not check that the role is still being filled, only that the employer still lists it. It does not cover companies that hire only through a recruiter or on a site we do not read. "
+          f'Of the open postings, {long_all:,} have been listed for {LONG_OPEN} days or more and carry a mark for it; the <a href="{P}/guides/is-this-job-still-open/">guide to old postings</a> says what to do about them.</p>'
+          f'<p>The last run, its length and the companies whose lists failed are on the <a href="{P}/status/">data status page</a>.</p>',
+          '<span class="ln"><b>Read from the employer</b> · every hour</span>' + skel,
+          (("status/", "Is the data fresh?"), ("methodology/", "Methodology"), ("guides/is-this-job-still-open/", "Is this job still open?")))
     guide("how-to-read-a-job-posting", "How to read a job posting: what each part tells you",
           "The six parts of a job posting and what to look for in each: the title, the place, the pay, what you must have, what is nice to have, and how to apply.", "Reading postings",
           "A posting is written by a busy person from a template. Knowing what each part usually means saves you from applying to the wrong jobs and from skipping the right ones.",
