@@ -2125,3 +2125,10 @@ select:not([multiple]):hover{border-color:var(--text)}
 .fy-roles{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
 .fy-roles:empty{display:none}
 #fy-skills .ask-l{margin-top:4px}
+
+/* Two heading sizes by purpose (DESIGN_STUDY 10): pages that explain read like articles, pages that list stay compact */
+.has-toc .sec-head h2,.guide h2{font-size:clamp(28px,3.2vw,36px);line-height:1.12;letter-spacing:-.03em}
+.has-toc .sec{margin-top:64px}
+.has-toc .sec-head{margin-bottom:16px}
+.guide h2{margin:44px 0 12px}
+@media(max-width:560px){.has-toc .sec-head h2,.guide h2{font-size:26px}}

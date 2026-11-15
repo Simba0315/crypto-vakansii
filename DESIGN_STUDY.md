@@ -24,7 +24,7 @@ RemoteOK, Wise, NerdWallet, GitHub. Nothing is copied from them; these are patte
    a sample result on the right.
 9. ✅ **Home pacing:** the second list of new jobs is gone; categories, roles, locations and companies share one tabbed block;
    the highest-paid list sits on a full-width dark band. ✅ Section headers with the heading left, one plain sentence beside it and the "all" link right (2026-11-14, five home sections; `section(..., sub=)`).
-10. 📋 **Two type sizes by purpose:** 36–40px section headings on pages that explain, 24–28px on pages that list.
+10. ✅ **Two type sizes by purpose:** 28–36px section headings on pages that explain (pages with the "On this page" list, guides), 24–32px on pages that list (2026-11-15).
 11. ✅ **The board in the hero shows pay**, and its tabs (Latest, Remote, With salary, Entry-level) swap the list in place (2026-11-14).
 12. ✅ **A line of provenance instead of badges and ratings:** "checked on … against employer career pages", linked to the method.
 13. ✅ **Header:** six items (was eight). ✅ Menus under Resume, Tools and Pricing (2026-11-14): a panel with a line of plain text per link on wide screens, the links under each item in the phone menu; built by `site.js`, so the 49,000 pages carry no extra bytes. ✅ "/" puts the cursor in the search box.
