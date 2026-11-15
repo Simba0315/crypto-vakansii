@@ -754,6 +754,7 @@ def feed_rippling(src):
     return out
 
 
+ATS_TIERS = [(300, 6), (50, 8), (0, 12)]   # (at least this many jobs when found, read every N hours): sources_ats.json, see main()
 LARGE = {"workday"}       # hiring systems of large employers: only their office and tech jobs are kept (the owner, 15 Nov)
 NOT_OFFICE = {"retail", "supply-chain", "healthcare", "manufacturing"}
 WD_MAX = 2000           # Workday lists at most this many jobs of one career site; a larger site is not read (discover_ats.py leaves it out)
@@ -956,15 +957,17 @@ def main():
             resting.add(s["name"])
     # Boards on the hiring systems small and mid-size companies use (15 Nov 2026: Workable, Recruitee, SmartRecruiters, Teamtailor,
     # Personio, BambooHR, Breezy, Pinpoint, Rippling, Lever's European site), found by discover_ats.py and listed in sources_ats.json.
-    # They have their own rotation (HRN_ROTATE_ATS shares, 8 by default: every board every 8 hours, three times a day). A board whose
-    # company is already read from another system is skipped by its name with the legal form taken off ("Acme GmbH" is "Acme").
+    # They rotate by size (the jobs a board had when found): 300 or more every 6 hours, 50 to 299 every 8, fewer every 12
+    # (ATS_TIERS), so that 20,000 boards, most of them small, still fit the hourly run; HRN_ROTATE_ATS=N reads every board every N
+    # hours instead. A board whose company is already read from another system is skipped by its name without the legal form.
     ats_file = ROOT / "sources_ats.json"
-    rot_a = max(1, int(os.environ.get("HRN_ROTATE_ATS") or 8))
+    flat = int(os.environ.get("HRN_ROTATE_ATS") or 0)
     names = {co_key(n) for n in taken if isinstance(n, str)}
     for s in (json.loads(ats_file.read_text()) if ats_file.exists() else []):
         k = co_key(s["name"])
         if (s["ats"], s["token"]) in taken or k in names or s["name"] in EXCLUDE_TECH: continue
         taken.add((s["ats"], s["token"])); names.add(k)
+        rot_a = flat or next(n for least, n in ATS_TIERS if s.get("count", 0) >= least)
         if int(hashlib.md5((s["ats"] + s["token"]).encode()).hexdigest(), 16) % rot_a == hour % rot_a:
             sources.append(dict(s, crypto=False, en_only=True, office_only=s["ats"] in LARGE))
         else:

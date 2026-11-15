@@ -448,7 +448,8 @@ plain HTML, so the page is readable without the map.
   (Common Crawl index files, then each board's own feed; no agencies, no board that is mostly shop/warehouse/clinic work).
   `.github/workflows/discover.yml` reruns it when the script changes and every Monday, and commits the list and
   `sources_ats_report.json` (boards and jobs by system and country). It runs in Actions because Workable rate-limits cloud machines.
-  The boards rotate on their own: `HRN_ROTATE_ATS` (8) shares, so each is read every 8 hours.
+  The boards rotate by size (`collect.ATS_TIERS`: 300+ jobs every 6 hours, 50–299 every 8, fewer every 12); `HRN_ROTATE_ATS=N`
+  reads all of them every N hours instead.
 - Two public employment portals, many employers each: `trudvsem.py` (Russia, «Работа России», open data with a link required) and
   `jobtech.py` (Sweden, Platsbanken, CC0). `.github/workflows/portals.yml` reads them once a day (`portals.py`) into snapshots on the
   one-commit branch `portals`, because Russia's 1.9 GB file does not fit the hourly run; `update.yml` restores them and every run

@@ -1241,7 +1241,7 @@ def main():
                if CFG["api_url"] else "We do not accept anonymous postings")
     N_FEEDS = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})     # employer feeds read in each run
     # How often a careers page is read: the boards in sources.json and sources_tech.json every hour, those in sources_more.json in
-    # turn (HRN_ROTATE in collect.py: every four hours) and those in sources_ats.json every eight (HRN_ROTATE_ATS). Jobs from public
+    # turn (HRN_ROTATE in collect.py: every four hours) and those in sources_ats.json every 6 to 12 hours (ATS_TIERS). Jobs from public
     # portals and job sites (a "src") are read once a day and are not counted as careers pages. The copy says exactly that.
     HOURLY_SET = {s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())}
     ROT4_SET = {s_["name"] for s_ in json.loads((ROOT / "sources_more.json").read_text())} if (ROOT / "sources_more.json").exists() else set()
@@ -1250,10 +1250,10 @@ def main():
     board_cos = {j["company"] for j in active if not j.get("src") and not j.get("tg")}
     m_hourly = len({c_ for c_ in board_cos if c_ in HOURLY_SET or c_ not in ROT_SET})
     ROTATING = m_hourly < len(board_cos)
-    REST = "four to eight" if board_cos & ROT8_SET else "four"
-    EVERY = f"every one to {'eight' if board_cos & ROT8_SET else 'four'} hours" if ROTATING else "every hour"
+    REST = "four to twelve" if board_cos & ROT8_SET else "four"           # collect.ATS_TIERS: every 6, 8 or 12 hours by size
+    EVERY = f"every one to {'twelve' if board_cos & ROT8_SET else 'four'} hours" if ROTATING else "every hour"
     N_TURNS = len({s_["name"] for f_ in ("sources_more.json", "sources_ats.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})  # read in turns (collect.py)
-    FEEDS_TXT = (f"We read {N_FEEDS:,} company feeds every hour and {N_TURNS:,} more in turns, each every 4 or 8 hours. " if N_TURNS else f"We read {N_FEEDS} company feeds every hour. ")
+    FEEDS_TXT = (f"We read {N_FEEDS:,} company feeds every hour and {N_TURNS:,} more in turns, each every 4 to 12 hours. " if N_TURNS else f"We read {N_FEEDS} company feeds every hour. ")
     PORTALS_TXT = ("Once a day we also read Sweden’s public employment service, Platsbanken, which publishes the vacancies employers post with it as open data; "
                    "its jobs written in English are listed, and each names its source and links to it. "
                    if any(j["id"].startswith("platsbanken-") for j in active) else "")
@@ -5357,7 +5357,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     n_rot = len(json.loads((ROOT / "sources_more.json").read_text())) if (ROOT / "sources_more.json").exists() else 0
     n_rot8 = len(json.loads((ROOT / "sources_ats.json").read_text())) if (ROOT / "sources_ats.json").exists() else 0      # collect.py: HRN_ROTATE_ATS
     read_line = ((f"{n_hourly:,} employers’ careers pages are read every hour and {n_rot:,} more every four hours" if n_rot else f"{n_hourly:,} employers’ careers pages are read every hour")
-                 + (f", {n_rot8:,} more every eight hours" if n_rot8 else "")
+                 + (f", {n_rot8:,} more every six to twelve hours" if n_rot8 else "")
                  + ("; Sweden’s public employment service (Platsbanken) is read once a day" if any(j["id"].startswith("platsbanken-") for j in active) else ""))
     bp50 = (f"{SITE} (jobseveryhour.com) is a free job search site built from employers’ own careers pages. It lists {n:,} open jobs at {m:,} companies today. "
             "A job the employer takes down leaves the list, every listing links to the original posting, and nobody needs an account to search or apply.")

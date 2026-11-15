@@ -2,7 +2,7 @@ name: Find company job boards
 
 # discover_ats.py finds the job boards of companies on the hiring systems small and mid-size companies use (Workable, Recruitee,
 # SmartRecruiters, Teamtailor, Personio, BambooHR, Breezy, Pinpoint, Rippling, Lever Europe, and Greenhouse/Lever/Ashby boards not
-# read yet) and writes sources_ats.json; collect.py reads those boards in turns (HRN_ROTATE_ATS). It runs here, not on a cloud machine, because
+# read yet) and writes sources_ats.json; collect.py reads those boards in turns (ATS_TIERS: every 6 to 12 hours by size). It runs here, not on a cloud machine, because
 # Workable answers "too many requests" to shared cloud addresses. Runs every day, when the script changes, and by hand.
 on:
   push:
