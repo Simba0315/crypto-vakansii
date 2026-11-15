@@ -139,15 +139,15 @@ PLACES = [
     ("South Korea", "south-korea", "KR"), ("Taiwan", "taiwan", "TW"), ("Australia", "australia", "AU"), ("Malaysia", "malaysia", "MY"), ("the Philippines", "philippines", "PH"),
     ("Dubai & UAE", "uae", "AE"), ("Turkey", "turkey", "TR"), ("Latin America", "latin-america", "region"), ("Brazil", "brazil", "BR"), ("Mexico", "mexico", "MX"), ("Africa", "africa", "region"),
     # cities and states people search for by name ("tech jobs seattle", "tech jobs in austin")
-    ("New York", "new-york", (r"new york|\bnyc\b|brooklyn|manhattan|(?-i:, NY\b)", "US")),
+    ("New York, NY", "new-york", (r"new york|\bnyc\b|brooklyn|manhattan|(?-i:, NY\b)", "US")),
     ("San Francisco Bay Area", "san-francisco", (r"san francisco|bay area|palo alto|san jose|mountain view|sunnyvale|santa clara|menlo park|redwood city|\bsf\b|oakland|san mateo", "US")),
     ("California", "california", (r"california|(?-i:, CA\b)|san francisco|bay area|palo alto|san jose|mountain view|los angeles|san diego|sunnyvale|santa clara|irvine|hawthorne", "US")),
-    ("Seattle", "seattle", (r"seattle|bellevue|redmond|kirkland", "US")), ("Austin", "austin", (r"\baustin\b", "US")), ("Chicago", "chicago", (r"\bchicago\b", "US")),
-    ("Boston", "boston", (r"\bboston\b|cambridge, ma", "US")), ("Washington, DC", "washington-dc", (r"washington,? ?d\.?c\.?|(?-i:\bDC\b)|arlington, va|mclean|reston", "US")),
-    ("Denver", "denver", (r"\bdenver\b|boulder", "US")), ("Los Angeles", "los-angeles", (r"los angeles|santa monica|culver city|el segundo|hawthorne|irvine", "US")),
-    ("Dallas", "dallas", (r"\bdallas\b|plano|fort worth", "US")), ("Atlanta", "atlanta", (r"\batlanta\b", "US")), ("San Diego", "san-diego", (r"san diego", "US")),
-    ("Pittsburgh", "pittsburgh", (r"pittsburgh", "US")), ("Portland", "portland", (r"\bportland\b", "US")), ("Miami", "miami", (r"\bmiami\b", "US")),
-    ("Phoenix", "phoenix", (r"\bphoenix\b|scottsdale|tempe", "US")), ("Raleigh-Durham", "raleigh-durham", (r"raleigh|durham|research triangle", "US")), ("Houston", "houston", (r"\bhouston\b", "US")),
+    ("Seattle, WA", "seattle", (r"seattle|bellevue|redmond|kirkland", "US")), ("Austin, TX", "austin", (r"\baustin\b", "US")), ("Chicago, IL", "chicago", (r"\bchicago\b", "US")),
+    ("Boston, MA", "boston", (r"\bboston\b|cambridge, ma", "US")), ("Washington, DC", "washington-dc", (r"washington,? ?d\.?c\.?|(?-i:\bDC\b)|arlington, va|mclean|reston", "US")),
+    ("Denver, CO", "denver", (r"\bdenver\b|boulder", "US")), ("Los Angeles, CA", "los-angeles", (r"los angeles|santa monica|culver city|el segundo|hawthorne|irvine", "US")),
+    ("Dallas, TX", "dallas", (r"\bdallas\b|plano|fort worth", "US")), ("Atlanta, GA", "atlanta", (r"\batlanta\b", "US")), ("San Diego, CA", "san-diego", (r"san diego", "US")),
+    ("Pittsburgh, PA", "pittsburgh", (r"pittsburgh", "US")), ("Portland, OR", "portland", (r"\bportland\b", "US")), ("Miami, FL", "miami", (r"\bmiami\b", "US")),
+    ("Phoenix, AZ", "phoenix", (r"\bphoenix\b|scottsdale|tempe", "US")), ("Raleigh-Durham, NC", "raleigh-durham", (r"raleigh|durham|research triangle", "US")), ("Houston, TX", "houston", (r"\bhouston\b", "US")),
     ("Texas", "texas", (r"\btexas\b|(?-i:, TX\b)|\baustin\b|\bdallas\b|\bhouston\b|san antonio", "US")), ("Florida", "florida", (r"\bflorida\b|(?-i:, FL\b)|\bmiami\b|orlando|\btampa\b", "US")),
     ("Toronto", "toronto", (r"toronto", "CA")), ("Vancouver", "vancouver", (r"vancouver", "CA")), ("Berlin", "berlin", (r"\bberlin\b", "DE")), ("Munich", "munich", (r"munich|münchen", "DE")),
     ("Bangalore", "bangalore", (r"bangalore|bengaluru", "IN")), ("Sydney", "sydney", (r"\bsydney\b", "AU")),
@@ -682,7 +682,7 @@ AI_TAGS = ("AI", "LLM", "Machine Learning", "PyTorch", "TensorFlow", "LangChain"
 ALL_OPEN = [0]          # every open job on the site, set once the jobs are read: "this field is 2.1% of all open jobs"
 
 
-def faq_for(label, jobs, first=None):
+def faq_for(label, jobs, first=None, extra=()):
     """Questions people actually ask about a set of jobs, answered from today's data. Returns (html, json-ld)."""
     if len(jobs) < 5: return "", ""
     n_, r = len(jobs), sum(j["remote"] for j in jobs)
@@ -695,11 +695,15 @@ def faq_for(label, jobs, first=None):
     qa = [(f"How many {label} are open right now?",
            f"There are {n_:,} open {label}{f' at {n_co:,} companies' if n_co > 1 else ''} on {SITE} as of {fdate(TODAY)}. {new7:,} of them were posted in the last seven days. The list is rebuilt every hour from the employers' own careers pages.")]
     if first: qa.insert(0, first)
+    qa[1:1] = list(extra)                       # questions only this page can answer (a company's own hiring, say)
     if len(top) > 1:
         qa.append((f"Which companies have the most {label}?",
                    "Right now the most openings are at " + ", ".join(f"{c} ({k:,})" for c, k in top[:-1]) + f" and {top[-1][0]} ({top[-1][1]:,}). The ranking changes as companies open and close roles."))
     if "remote" in label.lower():
         aw = sum(1 for j in jobs if j.get("anywhere"))
+        lands_ = Counter(nm for j in jobs for _, nm in countries_of(j["location"] or "")).most_common(5)
+        qa.append((f"Which countries are {label} open to?", ", ".join(f"{nm} ({k:,})" for nm, k in lands_) + f": the countries named most in the location lines of the {n_:,} open {label}; "
+                   f"{aw:,} say anywhere or worldwide.")) if len(lands_) >= 2 else None
         qa.append((f"Can I do {label} from any country?",
                    (f"Mostly not. {aw:,} of the {n_:,} open {label} are listed as open worldwide; the rest are limited to certain countries or time zones, so check the location line of each job." if aw else
                     f"Mostly not. None of the {n_:,} open {label} is listed as open worldwide today; each is limited to certain countries or time zones, named in its location line.")))
@@ -708,9 +712,10 @@ def faq_for(label, jobs, first=None):
                    (f"{r:,} of the {n_:,} open {label} ({100 * r / n_:.0f}%) are listed as remote. Remote roles are often limited to certain countries or time zones, so check the location line of each job."
                     if r else f"None of the {n_:,} open {label} are listed as remote at the moment. Remote roles appear here as soon as employers post them.")))
     if len(mids) >= 15:
-        qa.append((f"What do {label} pay?",
+        qa.append((f"What is the median salary of {label}?" if " pay " in f" {label} " else f"What do {label} pay?",
                    f"The median advertised salary is {money(median(mids))}, based on {len(mids):,} open roles that publish a yearly US-dollar range. The middle half of those roles advertise between "
-                   f"{money(mids[len(mids) // 4])} and {money(mids[min(len(mids) - 1, 3 * len(mids) // 4)])}. These are advertised ranges, not verified pay."))
+                   f"{money(mids[len(mids) // 4])} and {money(mids[min(len(mids) - 1, 3 * len(mids) // 4)])}. These are advertised ranges, not verified pay. "
+                   "Most employers here are technology companies, so the figures run above the wider market for the same work."))
     # What Google's "People also ask" asks about a field (checked 15 Nov 2026 for "data analyst jobs": "Is it hard to get a data analyst
     # job?", "Will AI replace data analysts?", "Is a data analyst still worth it in 2026?"), answered with today's counts, never opinion.
     yrs = sorted(j["years"] for j in jobs if j.get("years"))
@@ -781,23 +786,24 @@ def hub_stats(js):
             + f' · <a href="{P}/methodology/">checked {fdate(TODAY, False)} against employer career pages</a></p>')
 
 
-def hub_sections(label, js, skip=""):
-    """Who hires, which skills and roles, where, and what it pays at each level: the same set of jobs seen from five sides."""
+def hub_sections(label, js, skip="", min_k=40, drop_tag=""):
+    """Who hires, which skills and roles, where, and what it pays at each level: the same set of jobs seen from five sides.
+    skip: the sides a page already is ("places" on a London page; several joined by commas). drop_tag: the page's own skill."""
     k = len(js)
-    if k < 40: return "", ""
+    if k < min_k: return "", ""
     top, out, ids = [], [], {j["id"] for j in js}
     bars = lambda rows_: '<div class="hbars">' + "".join(
         f'<a href="{P}/{u}"><span class="hn">{e(nm)}</span><span class="hb"><i style="width:{max(3, round(100 * c / rows_[0][2]))}%"></i></span><span class="hc">{c:,} · {100 * c / k:.0f}%</span></a>' for u, nm, c in rows_) + "</div>"
-    if skip != "skills":
-        sk = Counter(t for j in js for t in j["tags"]).most_common(7)
+    if "skills" not in skip:
+        sk = Counter(t for j in js for t in j["tags"] if t != drop_tag).most_common(7)
         if len(sk) >= 4: top.append(f'<div><h2 class="h2s">Skills asked for in {e(label)}</h2>' + bars([(f"skills/{TAG_SLUG.get(t, slugify(t))}/", t, c) for t, c in sk]) + "</div>")
-    if skip != "roles":
+    if "roles" not in skip:
         rl = sorted(((s_, nm, len(ids & rid)) for s_, (nm, rid) in HUB["roles"].items()), key=lambda x: -x[2])
         rl = [x for x in rl if x[2] >= 8][:7]
         if len(rl) >= 3: top.append(f'<div><h2 class="h2s">Job titles in {e(label)}</h2>' + bars([(f"roles/{s_}/", nm, c) for s_, nm, c in rl]) + "</div>")
     co = Counter(j["company"] for j in js).most_common(12)
     if len(co) >= 4: out.append(section(f"Who is hiring for {label}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, n_, True) for c, n_ in co) + "</ul>"))
-    if skip != "places":
+    if "places" not in skip:
         pname = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
         pl = [(p_, c) for p_, c in Counter(p_ for j in js for p_ in j["places"]).most_common(40) if p_ in HUB.get("live", ())][:10]
         if len(pl) >= 4: out.append(section(f"Where {label} are", '<ul class="tiles">' + "".join(tile(f"locations/{p_}/", pname[p_], c) for p_, c in pl) + "</ul>"
@@ -808,11 +814,16 @@ def hub_sections(label, js, skip=""):
     pay = [(nm, median(v), len(v)) for nm, v in lv.items() if len(v) >= 15]
     if len(pay) >= 2:
         order_ = {LVL_NAME[k]: i for i, k in enumerate(("Intern", "Junior", "", "Senior", "Lead"))}
-        out.append(section(f"What {label} pay, by level", '<div class="tablewrap"><table><tr><th>Level in the title</th><th>Median advertised salary</th><th>Roles counted</th></tr>'
+        out.append(section(f"Pay by level: {label}" if " pay " in f" {label} " else f"What {label} pay, by level", '<div class="tablewrap"><table><tr><th>Level in the title</th><th>Median advertised salary</th><th>Roles counted</th></tr>'
                            + "".join(f"<tr><td>{e(nm)}</td><td><strong>{money(md)}</strong></td><td>{c:,}</td></tr>" for nm, md, c in sorted(pay, key=lambda x: order_.get(x[0], 9)))
                            + '</table></div><p class="note">Medians of the midpoints of advertised yearly US-dollar ranges; a level needs at least 15 such roles. Advertised, not verified pay.</p>'))
     glance = (f'<div class="hubgrid">{"".join(top)}</div><p class="note">Bars show the share of these {k:,} roles; one role can count in several rows.</p>' if top else "")
     return glance, "".join(out)
+
+
+def job_links(xs, n=8):
+    """A few jobs of a set as plain links (title, then company), newest first."""
+    return '<ul class="xl">' + "".join(f'<li><a href="{P}/job/{j["slug"]}/">{e(j["title"])}</a> <span>{e(j["company"])}</span></li>' for j in order(xs)[:n]) + "</ul>"
 
 
 def auto_more(path, h1):
@@ -860,7 +871,7 @@ def list_save(h1, qs, feed_path=""):
             '<span>My jobs then shows how many are new each time you come back. No account, no email.</span></p>')
 
 
-def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live=""):
+def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live="", faq_extra=()):
     jobs = order(jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
     rows = collapse(jobs)
@@ -876,7 +887,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             if total > len(rows) else "")
     ld = crumbs_ld(list(trail) + [(h1, "")]) if head_html is None else ""
     if accent: ld += f"<style>:root:root:root{{--hl:{accent};--accent-soft:color-mix(in srgb,{accent} 22%,var(--card))}}</style>"      # each section of the site has its own colour
-    faq_html, faq_ld = faq_for(faq, jobs, faq_first) if faq else ("", "")
+    faq_html, faq_ld = faq_for(faq, jobs, faq_first, faq_extra) if faq else ("", "")
     for n in range(1, pages + 1):
         chunk = rows[(n - 1) * per:n * per]
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
@@ -886,7 +897,9 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
                 + pager_html(path, n, pages) + note + ((hub + after + faq_html) if n == 1 else ""))      # questions last, after what the page shows
         if n == 1:
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
-            page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open, {MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld)
+            mids_l = sorted((lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]])
+            pay_l = f", {money(mids_l[len(mids_l) // 4])}–{money(mids_l[3 * len(mids_l) // 4])}" if len(mids_l) >= 15 and "$" not in title else ""
+            page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open{pay_l or ', ' + MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld)
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False)
 
 
@@ -1271,7 +1284,9 @@ def main():
     HOURLY_SET = {s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())}
     ROT_SET = {s_["name"] for s_ in json.loads((ROOT / "sources_more.json").read_text())} if (ROOT / "sources_more.json").exists() else set()
     m_hourly = len({j["company"] for j in active if j["company"] in HOURLY_SET or j["company"] not in ROT_SET})
-    ROTATING = m_hourly < len({j["company"] for j in active})
+    # live.py on the server reads every board at least once an hour (config.json "live_collector"), so the four-hour rotation of the
+    # hourly build no longer limits how often a company is checked
+    ROTATING = m_hourly < len({j["company"] for j in active}) and not CFG.get("live_collector")
     EVERY = "every one to four hours" if ROTATING else "every hour"
     remote = [j for j in active if j["remote"]]
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
@@ -1577,9 +1592,9 @@ def main():
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
     hero = (f'<section class="hero v2"><div class="wrap">'
-            f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
+            f'<p class="stamp"><i></i>Jobs hiring now · <b>{n:,}</b> open, checked {fdate(TODAY, False)} <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
             f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
-            f'<p class="sub">Old listings stay online long after the job is filled. We read {m:,} company career pages' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and keep only what is still open.</p>'
+            f'<p class="sub">Old listings stay online long after the job is filled: ghost jobs. We read {m:,} company career pages' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and keep only what is still open.</p>'
             f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Software engineer, data analyst, customer service…" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
             f'<p class="popular"><a class="pop-tech" href="{P}/tech/">Tech jobs</a>{hero_chips}<a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a>'
@@ -1608,7 +1623,36 @@ def main():
             f'<p>A standard listing costs nothing and sits next to {n:,} open jobs from {m:,} companies. Want it first in its list? A featured listing, from {price_of("Featured job")}, paid in crypto.</p></div>'
             f'<a class="btn primary" href="{P}/post-a-job/">Post a job — free</a></div>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/og.jpg"}) + "</script>")
-    FAQ = [("Where do the jobs come from?", "Straight from the official careers pages of companies. Every listing links to the original posting, and you apply on the employer's own site."),
+    wk_ = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    co_top = Counter(j["company"] for j in active).most_common(10)
+    co_new = Counter(j["company"] for j in active if (j.get("first_seen") or "") >= wk_)
+    new_today = sum(1 for j in active if j.get("first_seen") == TODAY)
+    closed_today = sum(1 for j in jobs if not j["active"] and j.get("closed") == TODAY)
+    def age_(j):
+        try: return (datetime.date.today() - datetime.date.fromisoformat((j.get("posted") or j.get("first_seen") or TODAY)[:10])).days
+        except ValueError: return 0
+    old90 = sum(1 for j in active if age_(j) >= LONG_OPEN)
+    rem_pay = defaultdict(list)
+    for j in active:
+        if j["remote"] and j["usd"]: rem_pay[CAT[j["cat"]]].append((j["usd"][0] + j["usd"][1]) / 2)
+    rem_rank = sorted(((median(v), k_, len(v)) for k_, v in rem_pay.items() if len(v) >= 15), reverse=True)
+    rem_count = Counter(CAT[j["cat"]] for j in active if j["remote"])
+    ent_rank = sorted(((sum(1 for j in v if j.get("entry")) / len(v), CAT[c_], sum(1 for j in v if j.get("entry"))) for c_, v in by_cat.items() if len(v) >= 100 and c_ != OTHER[0]), reverse=True)[:3]
+    FAQ = [("What company is hiring the most right now?", "On " + fdate(TODAY) + ", by open jobs on " + SITE + ": " + ", ".join(f"{c_} ({k_:,})" for c_, k_ in co_top[:5])
+            + ". Counted from each company’s own careers page, re-read " + EVERY + "."),
+           ("How do I tell if a job posting is a ghost job?", "Five signs: the job is not on the company’s own careers page; it has been up for months (30, 60, 90 days or more); "
+            "it is reposted again and again; the description is vague; or someone asks for money or personal data early. Every job here is read from the employer’s own page "
+            f"and leaves the list when it is taken down there ({closed_today:,} today); {old90:,} open jobs posted {LONG_OPEN}+ days ago are marked as such."),
+           ("Why are there so many ghost jobs?", "Companies keep postings up to collect applicants for later, to look like they are growing, or because their rules require an outside posting "
+            "for a role they will fill inside (the US Congressional Research Service lists these reasons). Job boards that copy listings rarely check whether they are still open."),
+           ("What is the best remote job right now?", ("By pay, the remote work with the highest median advertised salary today is " + ", ".join(f"{k_} ({money(m_)}, {c_:,} postings with pay)" for m_, k_, c_ in rem_rank[:3])
+            + ". By number of openings: " + ", ".join(f"{k_} ({c_:,})" for k_, c_ in rem_count.most_common(3)) + ".") if rem_rank else "See the remote jobs page: it counts open remote roles by kind of work."),
+           ("How can I make $2,000 a week working from home?", ("$2,000 a week is about $104,000 a year. Remote kinds of work whose median advertised salary is above that today: "
+            + ", ".join(f"{k_} ({money(m_)})" for m_, k_, c_ in rem_rank if m_ >= 104000)[:300] + ". Postings state pay before tax.") if any(m_ >= 104000 for m_, _, _ in rem_rank) else
+            "Few remote postings here state that much; the remote jobs page shows pay by kind of work."),
+           ("What’s the easiest job to get right now?", ("The kinds of work with the largest share of junior roles and internships today: " + ", ".join(f"{k_} ({100 * sh_:.0f}%, {c_:,} roles)" for sh_, k_, c_ in ent_rank)
+            + ". The entry-level page lists them all.") if ent_rank else "The entry-level page lists junior roles and internships."),
+           ("Where do the jobs come from?", "Straight from the official careers pages of companies. Every listing links to the original posting, and you apply on the employer's own site."),
            ("How often is the site updated?", "Every hour. New roles are added. A role the company has closed keeps its page at the same address, marked as closed, and leaves the lists of open jobs."),
            ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with email alerts and AI resume tools is on the way; no job will be held back for it."),
            ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
@@ -1684,10 +1728,19 @@ def main():
                       f'<a class="tcard" href="{P}/api/"><span class="tprev" aria-hidden="true"><code>GET /api/v1/latest.json\n{{ "total": {n},\n  "jobs": [{{ "title": "…",\n    "company": "…" }}] }}</code></span>'
                       '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
                       '</div>')
+            + section("Companies hiring the most right now", '<ul class="tiles">' + "".join(
+                f'<li><a class="tile" href="{P}/companies/{slugify(c_)}/">{ava(c_, "sm")}<span class="n">{e(c_)}</span><span class="c">{k_:,}{" · " + str(co_new[c_]) + " new" if co_new.get(c_) else ""}</span></a></li>' for c_, k_ in co_top)
+                + "</ul>", ("companies/", "All companies"), sub=f"Open jobs at each company on {fdate(TODAY)}, and how many were added in the last seven days.")
+            + section("How ghost jobs are kept out", '<ol class="steps">'
+                      f'<li><b>Only the employer’s own page.</b> Every job is read from the company’s careers page or hiring system, never copied from another job board.</li>'
+                      f'<li><b>Checked {EVERY}.</b> A job the employer takes down leaves the list at the next check: {closed_today:,} so far today. {new_today:,} new jobs were added today.</li>'
+                      f'<li><b>Old postings are marked.</b> {old90:,} open jobs were posted {LONG_OPEN} or more days ago; their pages say so.</li>'
+                      '<li><b>Reposts are shown.</b> When a company reposts a role it closed, the job page says when the earlier posting closed.</li>'
+                      f'<li><b>Scam signs are listed.</b> Requests for money, chat apps or software installs: <a href="{P}/safety/">how to check an offer</a>.</li></ol>')
             + section("Where the jobs come from and how the site works", faq_html))
-    home_desc = f"Tired of job listings that closed weeks ago? {roles(n)} at {m:,} companies, checked against their career pages {EVERY}. Remote and salary filters."
+    home_desc = f"Job search without ghost jobs: {n:,} jobs hiring now at {m:,} companies, read from their own career pages {EVERY}. {new_today:,} new today. Free, no account."
     if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
-    page("", f"{roles(n, 'Open Job')} at {m:,} Companies | {SITE}",
+    page("", f"Job Search: {n:,} Jobs Hiring Now, Checked Every Hour | {SITE}",
          home_desc, home, hero=hero,
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
                "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>" + faq_ld + ORG_LD[0])
@@ -1767,6 +1820,19 @@ def main():
             add(f"locations/{slug}/{cs}/", f"{cname} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
                 f"loc={slug}&cat={cs}", f"{e(cname)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
     HUB["roles"] = {slug: (nm, {j["id"] for j in rj_}) for slug, (nm, rj_) in by_role.items()}
+    def role_rows(js, k_min=5):
+        """[(count, role slug, role name, median advertised pay or 0, the jobs)] for the kinds of work inside a set of jobs, largest first."""
+        ids_ = {j["id"] for j in js}
+        out_ = []
+        for s_, (nm_, rj_) in by_role.items():
+            if s_ in ("analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"): continue
+            hit_ = [j for j in rj_ if j["id"] in ids_]
+            if len(hit_) >= k_min:
+                pay_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in hit_ if j["usd"]]
+                out_.append((len(hit_), s_, nm_, median(pay_) if len(pay_) >= 5 else 0, hit_))
+        out_.sort(key=lambda r_: -r_[0])
+        return out_
+    COMBO_QA, COMBO_AFTER, COMBO_TITLE = {}, {}, {}
     HUB["week"], HUB["live"] = (datetime.date.today() - datetime.timedelta(days=7)).isoformat(), {slug for _, slug, _ in places}
     for slug_r, (rname, rj) in by_role.items():
         trail_r, low, base_r = (("Categories", "categories/"), (rname, f"roles/{slug_r}/")), rlow(rname), slug_r in ROLE_BASE
@@ -1800,8 +1866,49 @@ def main():
         for name, slug, _ in big_places:
             add(f"perks/{perk_slug}/{slug}/", f"Jobs with {perk_name.lower()} in {name}", [j for j in pk if slug in j["places"]], (("Perks", "perks/"), (perk_name, f"perks/{perk_slug}/")),
                 f"loc={slug}&perk={quote(perk_name)}", "", f" in {e(name)} that mention {perk_name.lower()}", [("place:" + slug, perk_name)])
+    pay_all_ = [j for j in active if j["usd"]]
     for k_ in (100, 150, 200, 250, 300):                       # "jobs that pay 100k": the low end of the advertised range is at least that much
         rich = [j for j in active if j["usd"] and j["usd"][0] >= k_ * 1000]
+        if len(rich) >= 8:
+            # what Google shows for "jobs that pay 100k" (15 Nov 2026): numbered lists of job titles with a figure each (Indeed, U.S. News),
+            # by field, "without a degree"; People also ask: the easiest one, how rare $100K is, which careers, $100K per hour and month
+            p_ = f"salary/{k_}k/"
+            rr_ = role_rows(rich, 10)
+            nd_ = [j for j in rich if "No degree required" in j.get("perks", [])]
+            en_ = [j for j in rich if j.get("entry")]
+            blk_ = ""
+            if len(rr_) >= 3:
+                shr_ = lambda s_: (lambda rp_: f"{100 * sum(1 for j in rp_ if j['usd'][0] >= k_ * 1000) / len(rp_):.0f}%" if len(rp_) >= 10 else "–")([j for j in by_role[s_][1] if j["usd"]])
+                blk_ += section(f"{min(25, len(rr_))} job titles with the most openings at ${k_}K or more", f'<div class="tablewrap"><table><tr><th>#</th><th>Kind of work</th><th>Open at ${k_}K+</th><th>Median advertised pay</th><th>Share of its postings with pay that start at ${k_}K+</th></tr>'
+                                + "".join(f'<tr><td>{i_ + 1}</td><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{c_:,}</td><td>{money(m_) if m_ else "–"}</td><td>{shr_(s_)}</td></tr>' for i_, (c_, s_, nm_, m_, _) in enumerate(rr_[:25]))
+                                + f'</table></div><p class="note">Kinds of work matched by job title among the {len(rich):,} open postings whose advertised range starts at ${k_}K or more. Median of the midpoints of those ranges. A job can match two kinds of work.</p>')
+            fl_ = Counter(j["cat"] for j in rich if j["cat"] != OTHER[0]).most_common(10)
+            if len(fl_) >= 3:
+                blk_ += section(f"Jobs that pay ${k_}K or more, by field", '<p class="rel">' + "".join(f'<a href="{P}/jobs/{c_}/">{e(CAT[c_])} · {n_:,}</a>' for c_, n_ in fl_) + "</p>")
+            if len(nd_) >= 3:
+                blk_ += section(f"Jobs that pay ${k_}K or more without a degree", f"<p>{len(nd_):,} of these postings say no degree is required. The newest:</p>" + job_links(nd_))
+            if len(en_) >= 3:
+                blk_ += section(f"Entry-level jobs that pay ${k_}K or more", f"<p>{len(en_):,} junior roles and internships start at ${k_}K or more. The newest:</p>" + job_links(en_)
+                                + f'<p class="note">All of them: <a href="{P}/entry-level/">entry-level jobs</a>.</p>')
+            COMBO_AFTER[p_] = blk_
+            easy_ = []
+            for c_, s_, nm_, _, h_ in rr_:
+                y_ = sorted(j["years"] for j in h_ if j.get("years"))
+                if len(y_) >= 10: easy_.append((y_[len(y_) // 2], -c_, nm_, len(y_)))
+            qa_ = []
+            if easy_:
+                y0_, _, nm0_, ny_ = min(easy_)
+                qa_.append((f"What's the easiest job that pays ${k_}K a year?", f"Judged by the experience asked: {rlow(nm0_)} roles. Of the {ny_:,} {rlow(nm0_)} postings here that start at ${k_}K or more and state experience, the median asks for {y0_} {'year' if y0_ == 1 else 'years'}. "
+                            + f"{len(en_):,} junior roles and internships start at ${k_}K or more today" + (f", and {len(nd_):,} postings say no degree is required." if nd_ else ".")
+                            + " How easy a job is also depends on the skills you already have, so compare the skills each posting names."))
+            if pay_all_:
+                qa_.append((f"How rare is a ${k_}K salary?", f"Among the {len(pay_all_):,} open jobs on {SITE} that state a yearly US-dollar range, {len(rich):,} ({100 * len(rich) / len(pay_all_):.0f}%) start at ${k_}K or more. "
+                            f"Most employers here are technology companies, so the share across all US jobs is lower."))
+            if len(rr_) >= 3:
+                qa_.append((f"What careers make over ${k_},000 a year?", "By open postings today: " + ", ".join(f"{rlow(nm_)} ({c_:,}" + (f", median {money(m_)})" if m_ else ")") for c_, _, nm_, m_, _ in rr_[:6]) + ". The full ranking is in the table above."))
+            qa_.append((f"How much is ${k_}K a year per hour and per month?", f"${k_},000 a year is ${k_ * 1000 / 2080:,.2f} an hour at 40 hours a week for 52 weeks, ${k_ * 1000 / 12:,.0f} a month and ${k_ * 1000 / 52:,.0f} a week, before tax."))
+            COMBO_QA[p_] = qa_
+            COMBO_TITLE[p_] = f"Jobs That Pay ${k_}K+ a Year ({len(rich):,} open) | {SITE}"
         add(f"salary/{k_}k/", f"Jobs that pay ${k_}K or more", rich, (("Salaries", "salaries/"),), f"sal={k_ * 1000}", "", f" whose advertised range starts at ${k_}K or more", [("pay", f"${k_}K+")])
         add(f"salary/{k_}k/remote/", f"Remote jobs that pay ${k_}K or more", [j for j in rich if j["remote"]], (("Salaries", "salaries/"), (f"${k_}K+", f"salary/{k_}k/")),
             f"sal={k_ * 1000}&remote=1", "remote ", f" whose advertised range starts at ${k_}K or more", [("pay", f"Remote ${k_}K+"), ("remote", f"${k_}K+")])
@@ -1811,8 +1918,17 @@ def main():
             add(f"jobs/{cs}/{ls}/", f"{ll} {cname} jobs", [j for j in by_cat[cs] if j["level"] == lv], (("All jobs", "jobs/"), (cname, f"jobs/{cs}/")),
                 f"cat={cs}&lvl={lv}", f"{e(ll)} {e(cname)} ", "", [("cat:" + cs, ll)])
     for path, h1, js, trail, qs, pre, post in combos:
-        listing(path, h1, f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
-                js, intro_for(js, pre, post), trail=trail, per=50, max_pages=3, more=qs, faq=h1[0].lower() + h1[1:] if h1.split()[0] in ("Remote", "Senior", "Junior", "Internship", "Lead") else h1)
+        # these lists had the list and nothing else (SERP_WORK rows 10, 11, 13, 14, 17: "only 1 H2"); the views the big pages have
+        seg_ = path.strip("/").split("/")
+        lab_ = h1[0].lower() + h1[1:] if h1.split()[0] in ("Remote", "Senior", "Junior", "Internship", "Lead", "Jobs", "Entry-level") else h1
+        if seg_[0] == "roles" and seg_[1] in by_role: lab_ = rlow(by_role[seg_[1]][0]) + h1[len(by_role[seg_[1]][0]):]
+        lab_r = ("roles" + lab_[4:]) if lab_.startswith("jobs ") else lab_.replace(" jobs", " roles", 1)
+        skip_ = ",".join(x for x, ok in (("places", (seg_[0] == "locations" and len(seg_) >= 3) or (seg_[0] == "perks" and len(seg_) == 3 and seg_[2] != "remote") or seg_[:2] == ["crypto", "in"]),
+                                         ("roles", seg_[0] == "roles")) if ok)
+        tag_ = next((t for t in by_tag if tslug(t) == seg_[-1]), "") if "skills" in seg_[:-1] else (next((t for t in by_tag if tslug(t) == seg_[1]), "") if seg_[0] == "skills" else "")
+        gl_, tl_ = hub_sections(lab_r, js, skip_, min_k=20, drop_tag=tag_)
+        listing(path, h1, COMBO_TITLE.get(path) or f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
+                js, intro_for(js, pre, post), trail=trail, per=50, max_pages=3, more=qs, faq=lab_, extra=gl_, hub=tl_, after=COMBO_AFTER.get(path, ""), faq_extra=COMBO_QA.get(path, ()))
 
     # Listings
     for s, name in CAT.items():
@@ -1895,13 +2011,33 @@ def main():
     listing("entry-level/", "Entry-level jobs & internships", f"Entry-Level Jobs & Internships ({len(jr):,}) | {SITE}",
             "Internships and junior roles at companies: a way into the industry without years of experience.", jr,
             intro_for(jr, "entry-level "))
+    def skill_more(t, js):
+        """"What jobs can I get with SQL?" (People also ask): the kinds of work that ask for it, with counts and pay; and the skills asked with it."""
+        ids_ = {j["id"] for j in js}
+        rows_ = []
+        for s_, (nm_, rj_) in by_role.items():
+            if s_ in BROAD: continue
+            hit_ = [j for j in rj_ if j["id"] in ids_]
+            if len(hit_) >= 5:
+                pay_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in hit_ if j["usd"])
+                rows_.append((len(hit_), s_, nm_, median(pay_) if len(pay_) >= 5 else 0))
+        rows_.sort(reverse=True)
+        out_ = ""
+        if len(rows_) >= 3:
+            out_ += section(f"Jobs you can get with {t}", '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs asking for ' + e(t) + '</th><th>Median advertised pay</th></tr>'
+                            + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{k_:,}</td><td>{money(m_) if m_ else "–"}</td></tr>' for k_, s_, nm_, m_ in rows_[:8]) + "</table></div>")
+        co_ = Counter(x for j in js for x in j["tags"] if x != t).most_common(8)
+        if len(co_) >= 4:
+            out_ += section(f"Skills asked together with {t}", "<p>" + ", ".join(f'<a href="{P}/skills/{tslug(x)}/">{e(x)}</a> ({100 * k_ / len(js):.0f}%)' for x, k_ in co_)
+                            + f" of the {len(js):,} open postings that name {e(t)}.</p>")
+        return out_
     for t, js in by_tag.items():
         listing(f"skills/{tslug(t)}/", f"{t} jobs", f"{t} Jobs ({len(js):,} open) | {SITE}",
                 f"{roles(len(js))} at companies that ask for {t}.", js,
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("skill:" + tslug(t)) + hub_stats(js) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t) + hub_sections(f"{t} roles", js, "skills")[0], hub=hub_sections(f"{t} roles", js, "skills")[1], list_title=f"Newest {t} jobs",
                 faq=f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
-                after=section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
+                after=skill_more(t, js) + section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     # Which kinds of work sit close to each other: two roles are neighbours when employers ask for the same skills in both.
     has_rex = lambda s_: (s_ == "intern" or s_ not in BROAD) and not s_.endswith("-speaking")
@@ -2227,9 +2363,31 @@ def main():
                      + '<nav class="anch" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
                      + ('<a href="#pay">Pay</a>' if pay_rows else "") + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
                      + (f'<a href="#closed">Closed <b>{len(arc):,}</b></a>' if arc else "") + '</nav><div id="jobs"></div>')
-        listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'open job')} today | {SITE}",
-                f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + ". Categories, locations and remote roles.",
-                act, head_html=head_html, after=overview + closed + embed, faq=f"jobs at {c}", feed=True)
+        wk7 = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+        new7_ = sum(1 for j in act if (j["posted"] or "") >= wk7)
+        shut7_ = sum(1 for j in arc if (j.get("closed") or "") >= wk7)
+        yrs_c = sorted(j["years"] for j in act if j.get("years"))
+        lv_ = Counter(j["level"] for j in act if j["level"])
+        pay_c = sorted((lo + hi) / 2 for j in act if j["usd"] for lo, hi in [j["usd"]])
+        interns_ = sum(1 for j in act if j["level"] == "Intern")
+        co_qa = []
+        if act:
+            co_qa.append((f"Is {c} hiring right now?", f"Yes: {len(act):,} open {'job' if len(act) == 1 else 'jobs'} on its own careers page as of {fdate(TODAY)}; {new7_:,} were added in the last seven days"
+                          + f" and {shut7_:,} closed." + " We re-read the page " + ("every hour." if CFG.get("live_collector") else "several times a day.")))
+            if len(act) >= 10:
+                co_qa.append((f"Is it hard to get hired at {c}?", (f"The postings that state experience ask for {yrs_c[len(yrs_c) // 2]} years at the median. " if len(yrs_c) >= 5 else "")
+                              + ("Levels named in the titles: " + ", ".join(f"{LVL_NAME.get(k, k)} {v:,}" for k, v in lv_.most_common(4)) + ". " if lv_ else "")
+                              + f"{sum(1 for j in act if j.get('entry')):,} of the {len(act):,} open roles are junior roles or internships."))
+            if len(pay_c) >= 5:
+                co_qa.append((f"Does {c} pay well?", f"{len(pay_c):,} of its {len(act):,} open postings state a yearly US-dollar range, with a median of {money(median(pay_c))}; "
+                              f"the middle half advertise {money(pay_c[len(pay_c) // 4])} to {money(pay_c[3 * len(pay_c) // 4])}." + (" Pay by field is in the table above." if pay_rows else "")))
+            if where:
+                co_qa.append((f"Where are {c}'s jobs located?", ", ".join(f"{PLACE_NAME[p_]} ({k})" for p_, k in where) + f"; {sum(1 for j in act if j['remote']):,} of its open roles are remote."))
+            if interns_:
+                co_qa.append((f"Does {c} have internships?", f"Yes: {interns_:,} open internship{'s' if interns_ > 1 else ''} as of {fdate(TODAY)}."))
+        listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'Open Job')}, Pay & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
+                f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + f", {new7_:,} added this week. Pay by field, locations and remote roles, from its own careers page.",
+                act, head_html=head_html, after=overview + closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa)
 
     # One-paragraph hiring summary per company, shown on each of its job pages
     for c, js in companies.items():
@@ -2596,6 +2754,24 @@ def main():
          '<button class="btn ghost sm" id="mj-erase" type="button">Erase everything</button><input type="file" id="mj-file" accept="application/json,.json" hidden></p>'
          '<p class="note" id="mj-data-note" role="status"></p></section></div>')
 
+    # acronyms match in capitals only ("OPT", not "opt in"); a bare "TN" would be Tennessee, so only "TN visa" / "TN status" count
+    VISA_RX = [("H-1B (US)", re.compile(r"\bH-?1B\b")), ("OPT / STEM OPT (US)", re.compile(r"\b(?:STEM )?OPT\b")),
+               ("TN (US, Canada and Mexico)", re.compile(r"\bTN (?:visa|status)\b")), ("E-3 (US, Australians)", re.compile(r"\bE-3\b")),
+               ("Green card (US)", re.compile(r"green card", re.I)), ("Skilled Worker (UK)", re.compile(r"skilled worker (?:visa|route|sponsorship)", re.I)),
+               ("EU Blue Card", re.compile(r"blue card", re.I)), ("Relocation help", re.compile(r"relocation (?:support|assistance|package)", re.I))]
+    def visa_kinds(pj):
+        """Which visas the postings name, from the posting text (People also ask: "Which companies will sponsor me?", "What visa…?")."""
+        txt_ = [(j, (j.get("desc") or "") + " " + (j.get("excerpt") or "")) for j in pj]
+        rows_ = [(sum(1 for _, t_ in txt_ if rx.search(t_)), nm) for nm, rx in VISA_RX]
+        rows_ = [(k, nm) for k, nm in rows_ if k]
+        cos_ = Counter(j["company"] for j in pj).most_common(10)
+        out_ = ""
+        if rows_:
+            out_ += section("Which visas the postings name", "<p>" + ", ".join(f"{e(nm)}: {k:,}" for k, nm in sorted(rows_, reverse=True))
+                            + f". Counted from the text of the {len(pj):,} open postings that mention visa sponsorship; many name no visa type. Always confirm with the employer.</p>")
+        if cos_:
+            out_ += section("Companies that mention sponsorship most", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in cos_) + "</ul>")
+        return out_
     # Perks, employment type, work from anywhere
     perk_tiles = ""
     for name, slug, _ in PERKS:
@@ -2605,7 +2781,8 @@ def main():
         listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {name} ({len(pj):,} open) | {SITE}",
                 f"{roles(len(pj), 'job')} where the posting mentions {name.lower()}. Updated hourly.", pj,
                 intro_for(pj, "", f" that mention {e(name.lower())} in the posting") + " We read this from the job text, so check the details with the employer.",
-                trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}")
+                trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}",
+                after=visa_kinds(pj) if "visa" in name.lower() else "")
     if perk_tiles:
         page("perks/", f"Jobs by Perk — visa sponsorship, equity, 4-day week | {SITE}", "Browse jobs by what the employer offers: visa sponsorship, relocation, equity, 4-day week and more.",
              crumbs(("Perks", "")) + f'<h1>Jobs by perk</h1><p class="lead">What employers mention in their postings. Detected from the job text, so always confirm with the company.</p><ul class="tiles">{perk_tiles}</ul>')
@@ -3094,13 +3271,22 @@ def main():
                  (f"Should {art(low)} {low} job posting show the salary?", f"Yes, if you can: {paid_pct}% of today’s {n_:,} open {low} postings here do. A range filters out people who would turn the offer down, and several US states and EU countries now require it."),
                  (f"How many years of experience should I ask for?", (f"The median in today’s {low} postings is {y_med} years. Ask for what the work needs: every extra year you require shrinks the pool of applicants." if y_med
                   else "As few as the work really needs: every extra year you require shrinks the pool of applicants."))]
+        ent_n = sum(1 for j in rj if j.get("entry"))
+        jd_qa += [(f"What does {art(low)} {low} do?", (f"{art(low).capitalize()} {low} {does}. " if does else "") + (f"Postings for this work name {', '.join(t for t, _ in top_[:3])} most often." if top_ else "")),
+                  (f"Is {art(low)} {low} an IT job?", f"It sits in {fn.lower()} on {SITE}. " + ("Yes: the work is built around software and data." if fs in ("engineering", "data-research", "security") else
+                   "Not in the narrow sense: it is its own field, though most postings here are at technology companies.")),
+                  (f"Can I become {art(low)} {low} with no experience?", f"{ent_n:,} of today’s {n_:,} postings ({pc_(ent_n, n_)}%) are junior roles or internships"
+                   + (f", and the median posting asks for {y_med} years" if y_med else "") + f". The steps, with today’s figures, are on the how-to-become page for this work."),
+                  (f"Can I learn {low} work in three months?", "Enough to start on the skills postings name first" + (f" ({', '.join(t for t, _ in top_[:2])})" if top_ else "")
+                   + ", and to build one or two projects to show; most employers still ask for a result you have delivered, so a first junior role or internship is the usual next step.")]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in jd_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         jd_dir[fs].append((slug_r, rname, n_))
-        page(f"job-descriptions/{slug_r}/", f"{tcase(rname)} Job Description Template ({TODAY[:4]}) | {SITE}",
+        page(f"job-descriptions/{slug_r}/", f"{tcase(rname)} Job Description: Duties, Skills & Template [{TODAY[:4]}] | {SITE}",
              f"A {low} job description template with the figures from {n_:,} open postings: experience asked, pay, skills and benefits employers name. Copy it and post your job free.",
              crumbs(("For employers", "post-a-job/"), ("Job descriptions", "job-descriptions/"), (rname, "")) + f'<h1>{e(rname)} job description: <span class="hl">template and real figures</span></h1>'
-             f'<p class="lead">A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
+             + (f'<p class="lead"><strong>{e(art(low).capitalize())} {e(low)} {e(does)}.</strong> ' if does else '<p class="lead">')
+             + f'A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
              + act_row("post-a-job/", "Post this job free", [("#letter", "Jump to the template")])
              + facts_
              + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> '
@@ -3262,8 +3448,11 @@ def main():
     assert len(IQ_SHORT) == len(IQ_RX)
     all_desc = [j for j in active if j.get("desc")]
     iq_hit = {j["id"]: [bool(rx.search(j["desc"])) for rx, _, _, _ in IQ_RX] for j in all_desc}      # each posting is read once
-    def iq_li(q, why, good):
-        return f'<li><h3>{e(q)}</h3><p class="why">{why}</p><p class="good"><b>A good answer shows:</b> {e(good)}</p></li>'
+    def iq_li(q, why, good, sample=""):
+        return (f'<li><h3>{e(q)}</h3><p class="why">{why}</p>' + (f'<p class="good"><b>A good answer shows:</b> {e(good)}</p>' if good else "")
+                + (f'<p class="good"><b>{"Answer" if not good else "Sample answer"}:</b> {e(sample)}</p>' if sample else "") + "</li>")
+    import quiz_pages
+    QUIZ_BY_SKILL = {v["skill"]: (k, v) for k, v in quiz_pages.QUIZZES.items()}
     def iq_ol(items, start):
         return f'<ol class="iq" style="counter-reset:iq {start}">' + "".join(iq_li(*x) for x in items) + "</ol>"
     SK_Q = [("Walk me through a recent project where you used {t}. What did you do yourself?", "Your own hands-on part, the choices you made and a number for the result."),
@@ -3289,7 +3478,22 @@ def main():
         mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"])
         paid_pct = pc_(sum(1 for j in rj if j["salary"]), n_)
         rem_pct = pc_(sum(1 for j in rj if j["remote"]), n_)
-        sk_items = [(SK_Q[i][0].format(t=t), f"{pc_(k, n_)}% of today’s {n_:,} open {e(low)} postings name {e(t)}.", SK_Q[i][1]) for i, (t, k) in enumerate(top_)]
+        ex_lines = [ln.strip() for ex in (d.get("exp") or []) for ln in ex["text"].split("\n") if ln.strip()]
+        def sample_for(t):
+            hit = next((ln for ln in ex_lines if t.lower() in ln.lower()), ex_lines[0] if ex_lines else "")
+            first = hit.split()[0] if hit else ""
+            hit = (hit[0].lower() + hit[1:]) if first[:1].isupper() and first[1:].islower() else hit      # "Built …" -> "built …", but "SQL …" stays
+            return (f"“In my last role I {hit.rstrip('.')}. I did that part myself: I chose how to do it, checked the result and explained it to the team.” "
+                    "Then say what you would do differently.") if hit else ""
+        sk_items = [(SK_Q[i][0].format(t=t), f"{pc_(k, n_)}% of today’s {n_:,} open {e(low)} postings name {e(t)}.", SK_Q[i][1], sample_for(t)) for i, (t, k) in enumerate(top_)]
+        # concrete technical questions with the answer, for the skills this work asks for most that have a skill test on the site
+        tech_items = []
+        for t, k in cnt_.most_common(10):
+            if t in QUIZ_BY_SKILL and k >= max(5, n_ * 0.1) and len(tech_items) < 8:
+                qk, qv = QUIZ_BY_SKILL[t]
+                for q_, opts, right, why in qv["qs"][:4]:
+                    tech_items.append((q_, f'A {e(t)} question ({pc_(k, n_)}% of today’s postings name {e(t)}). More in the <a href="{P}/skill-tests/{qk}/">{e(t)} skill test</a>.',
+                                       "", f"{opts[right]}. {why}"))
         du_items = [(DU_Q[i][0].format(x=x), f"One of the core duties of {e(low)} work.", DU_Q[i][1]) for i, x in enumerate(focus)]
         whose = f"today’s {len(pool_):,} open {e(low)} postings with a full description" if own_text else f"all {len(pool_):,} open postings with a full description"
         th_items = [(b, f"{pc_(k, len(pool_))}% of {whose} {e(a)}.", c) for k, a, b, c, _ in th_]
@@ -3303,7 +3507,7 @@ def main():
                      ("What are your salary expectations?", (f"Only {paid_pct}% of today’s {e(low)} postings state pay, so be ready to name a figure." if paid_pct < 60 else f"{paid_pct}% of today’s {e(low)} postings state pay; know where you stand in the range."), pay_good),
                      ("What is one of your weaknesses?", "A classic, still asked.", "A real weakness that does not block this job, and what you do about it."),
                      ("Do you have any questions for us?", "The last question of almost every interview.", "Two or three questions you prepared; the list below has some.")]
-        groups = [(f"Questions about the skills {low} postings name", sk_items), (f"Questions about the work itself", du_items),
+        groups = [(f"Questions about the skills {low} postings name", sk_items), (f"Technical {low} interview questions and answers", tech_items), (f"Questions about the work itself", du_items),
                   (f"Questions about how you work", th_items), ("Questions almost every interview has", gen_items)]
         groups = [(h, xs) for h, xs in groups if xs]
         n_q, body_, k_ = sum(len(xs) for _, xs in groups), "", 0
@@ -3321,6 +3525,12 @@ def main():
                   + " and the questions almost every interview has, such as “Tell me about yourself” and your salary expectations."),
                  (f"How should I answer {low} interview questions?", "With a real example: the situation, what you had to do, what you did yourself and the result, with a number. "
                   "This is the STAR method; aim for 60 to 90 seconds an answer."),
+                 (f"How do I prepare for {art(low)} {low} interview?",
+                  "Prepare three real stories with a number each (a result, a problem you solved, work with other people), practise them out loud for 60 to 90 seconds"
+                  + (f", and revise the skills the postings name most: {', '.join(t for t, _ in top_[:3])}" if top_ else "") + ". Read the posting again the day before: the duties it lists are what they will ask about."),
+                 (f"Is {art(low)} {low} interview hard?",
+                  (f"It depends on the level: today’s {low} postings ask for {sorted(j['years'] for j in rj if j.get('years'))[len([j for j in rj if j.get('years')]) // 2]} years of experience at the median. " if len([j for j in rj if j.get('years')]) >= 10 else "")
+                  + "Most interviews mix questions about the skills in the posting with questions about how you work; the technical part is easier with a real example ready for each skill."),
                  (f"What salary should I ask for as {art(low)} {low}?", (f"Today’s {len(mids_):,} {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}. Adjust for your experience and the country, and ask for their range first."
                   if len(mids_) >= 20 else "Look at postings for this work that state pay, adjust for your experience and the country, and ask for their range first."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -3329,11 +3539,12 @@ def main():
                   + (f"<div><dt>Postings read in full</dt><dd>{len(descs_):,}</dd></div>" if own_text else "")
                   + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "") + "</dl>")
         iq_dir[fs].append((slug_r, rname, n_q))
-        page(f"interview-questions/{slug_r}/", f"{tcase(rname)} Interview Questions ({TODAY[:4]}): {n_q} to Prepare, with What a Good Answer Shows | {SITE}",
+        page(f"interview-questions/{slug_r}/", f"{n_q} {tcase(rname)} Interview Questions and Answers ({TODAY[:4]}) | {SITE}",
              f"{n_q} {low} interview questions to prepare for, each with why it is likely to come up (from today’s {n_:,} open {low} postings) and what a good answer shows.",
              crumbs(("Interview questions", "interview-questions/"), (rname, "")) + f'<h1>{e(rname)} interview questions: <span class="hl">{n_q} to prepare for</span></h1>'
              f'<p class="lead">Each question says why it is likely to come up, from what today’s {n_:,} open {e(low)} postings ask for, and what a good answer shows. '
              f'Prepare a real example for each, then practise it with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>'
+             f'<p class="note">Updated {fdate(TODAY)}, from that day’s open postings.</p>'
              + act_row("#practise", "Practise out loud", note="The page reads each question aloud and checks your answer. This site keeps nothing.")
              + facts_ + body_
              + section("Questions to ask them", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in ask_) + "</dl>")
@@ -5363,7 +5574,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         cats_ = Counter(CAT[j["cat"]] for j in js_ if j["cat"] != OTHER[0]).most_common(3)
         yr_lo, yr_hi = lo_ * 2080, (hi_ * 2080 if hi_ else None)
         span_ = f"between {dollars(yr_lo)} and {dollars(yr_hi)} a year" if hi_ else f"{dollars(yr_lo)} a year or more"
-        lead_ = (f"${lo_} an hour is {dollars(yr_lo)} a year for full-time work (40 hours a week, 52 weeks), {dollars(yr_lo / 12)} a month. "
+        lead_ = (f"${lo_} an hour is {dollars(lo_ * 40)} a week, {dollars(yr_lo / 12)} a month and {dollars(yr_lo)} a year for full-time work (40 hours a week, 52 weeks). "
                  f"{len(js_):,} open jobs start their stated pay at {e(hr_label(lo_, hi_))}, or {span_}: {n_h:,} state an hourly rate, {len(js_) - n_h:,} a yearly salary.")
         qa_ = [(f"How much is ${lo_} an hour a year?", f"At 40 hours a week for 52 weeks, ${lo_} an hour is {dollars(yr_lo)} a year, {dollars(yr_lo / 12)} a month or {dollars(lo_ * 40)} a week. "
                 f"For other hours, use the pay converter on this site."),
@@ -5371,6 +5582,31 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 f"{n_h:,} of them state an hourly rate; the others state a yearly salary that works out to this hourly pay."),
                ("Why is a job listed under this pay?", f"Each job is placed by the lowest pay its posting states, so every job here pays at least ${lo_} an hour"
                 + (f" and starts below ${hi_}" if hi_ else "") + "; many ranges go higher. Only pay stated in US dollars is counted.")]
+        # what Google shows for "jobs that pay $25 an hour" (15 Nov 2026): $1,000 a week first, jobs without a degree, remote ones, and
+        # People also ask "Is $25 an hour decent pay?", "How can I make $25 an hour?", "What jobs pay $30 an hour without education?"
+        hrr_ = role_rows(js_, 3)
+        hmed_ = lambda xs: median([hr_of[j["id"]][0] for j in xs])
+        nd_ = [j for j in js_ if "No degree required" in j.get("perks", [])]
+        rm_ = [j for j in js_ if j["remote"]]
+        en_ = [j for j in js_ if j.get("entry")]
+        all_h = [v for v, _ in hr_of.values()]
+        below_ = sum(1 for v in all_h if v < lo_)
+        nd_t = Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in nd_).most_common(5)
+        hr_blk = ""
+        if len(hrr_) >= 3:
+            hr_blk += section(f"Which jobs pay {hr_label(lo_, hi_)}", '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs at this pay</th><th>Typical start</th><th>Remote</th></tr>'
+                              + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{c_:,}</td><td>${hmed_(h_):,.2f} an hour</td><td>{sum(1 for j in h_ if j["remote"]):,}</td></tr>' for c_, s_, nm_, _, h_ in hrr_[:10])
+                              + '</table></div><p class="note">Kinds of work matched by job title. The typical start is the median of the lowest pay each posting states, per hour. A job can match two kinds of work.</p>')
+        if len(nd_) >= 3: hr_blk += section(f"Jobs that pay {hr_label(lo_, hi_)} without a degree", f"<p>{len(nd_):,} of the {len(js_):,} postings say no degree is required. The newest:</p>" + job_links(nd_))
+        if len(rm_) >= 3: hr_blk += section(f"Remote jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(rm_):,} of them can be done from home. The newest:</p>" + job_links(rm_) + f'<p class="note">All remote work: <a href="{P}/remote/">remote jobs</a>.</p>')
+        if len(en_) >= 3: hr_blk += section(f"Entry-level jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(en_):,} junior roles and internships. The newest:</p>" + job_links(en_))
+        qa_[1:1] = [(f"Is ${lo_} an hour good pay?", f"Among the {len(all_h):,} open jobs on {SITE} that state pay in US dollars, {100 * below_ / max(1, len(all_h)):.0f}% start below ${lo_} an hour. "
+                     f"Most employers here are technology companies, so that share is not the share across all US jobs. For comparison, the US federal minimum wage is $7.25 an hour; many states and cities set a higher one."),
+                    (f"How can I make ${lo_} an hour?", f"{len(js_):,} open jobs pay it today, most in " + ", ".join(f"{c_.lower()} ({k_:,})" for c_, k_ in cats_) + f". {len(en_):,} of them are entry-level, "
+                     f"{len(rm_):,} are remote and {len(nd_):,} say no degree is required. Each job links to the employer's own page to apply."),
+                    (f"What jobs pay ${lo_} an hour without a degree?", (f"{len(nd_):,} open postings at this pay say no degree is required, for example " + ", ".join(f"{t_} ({k_})" for t_, k_ in nd_t) + "." if nd_ and nd_t else
+                     f"None of the {len(js_):,} postings at this pay says outright that no degree is required. Many do not ask for one either, so check the requirements line of each job.")),
+                    (f"Are there remote jobs that pay ${lo_} an hour?", f"Yes: {len(rm_):,} of the {len(js_):,} open jobs at this pay are listed as remote." if rm_ else f"None of the {len(js_):,} open jobs at this pay is listed as remote today.")]
         qa_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         conv = ('<div class="stats3 st4">'
@@ -5383,7 +5619,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 js_, intro=lead_, trail=(("Jobs by hourly pay", "jobs-that-pay/"),), more=False,
                 extra=act_row("#list", f"See the {len(js_):,} jobs", [("tools/salary-converter/", "Pay converter")]) + conv + hr_chips(lo_) + f'<p class="note">Work out any other rate with the <a href="{P}/tools/salary-converter/">pay converter</a>, or see <a href="{P}/salaries/">what each job pays</a>.</p>',
                 list_title=f"Open jobs from {hr_label(lo_, hi_)}",
-                after=section(f"Questions about ${lo_} an hour", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>") + qa_ld)
+                after=hr_blk + section(f"Questions about ${lo_} an hour", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>") + qa_ld)
     hr_rows = [(lo_, hi_, len(hr_jobs[lo_])) for lo_, hi_ in HR_BANDS if len(hr_jobs[lo_]) >= 20]
     if hr_rows:
         top_n = max(k_ for _, _, k_ in hr_rows)

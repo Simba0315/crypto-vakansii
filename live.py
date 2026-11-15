@@ -118,6 +118,7 @@ class Live:
             if closed: search_engine.call("DELETE", f"/{search_engine.ALIAS}/_doc/{rec['slug']}", timeout=5)
             else: search_engine.call("PUT", f"/{search_engine.ALIAS}/_doc/{rec['slug']}", search_engine.doc(rec, descr), timeout=5)
         except Exception as ex:
+            if closed and " 404" in str(ex): return                 # already gone from the index (a new index was loaded): nothing to remove
             log(f"search: {rec['slug']}: {type(ex).__name__}: {ex}")
 
     # --- one board -----------------------------------------------------------------------------------------------------------
