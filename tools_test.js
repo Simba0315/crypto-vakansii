@@ -29,6 +29,18 @@ eq('money negative', T.money(-1200, '€', 0), '−€1,200');
 eq('money NaN', T.money(NaN, '$', 0), '—');
 eq('fmt', T.fmt(2080), '2,080');
 
+/* take-home pay, US 2026: worked by hand from the IRS brackets (Rev. Proc. 2025-32) and the SSA wage base */
+let th = T.takeHome('60000', 'single', '');
+near('take-home 60k single: federal', th.fed, 5020); near('60k single: social security', th.ss, 3720); near('60k single: medicare', th.med, 870);
+near('60k single: net', th.net, 50390); near('60k single: marginal', th.marg, 0.12);
+th = T.takeHome('150000', 'joint', '0'); near('150k joint: federal', th.fed, 15340); near('150k joint: social security', th.ss, 9300);
+th = T.takeHome('300000', 'single', ''); near('300k single: federal', th.fed, 68134.25, 1e-6); near('300k single: ss capped at the wage base', th.ss, 11439);
+near('300k single: medicare with the 0.9% above 200k', th.med, 5250);
+th = T.takeHome('60000', 'single', '10000'); near('pre-tax 401(k) lowers the taxable income', th.taxable, 33900); near('but not FICA', th.ss, 3720);
+near('15k single: nothing taxable after the standard deduction', T.takeHome('15000', 'single', '').fed, 0);
+eq('take-home: contributions above the salary', T.takeHome('60000', 'single', '70000'), null);
+eq('take-home: empty salary', T.takeHome('', 'single', ''), null);
+
 /* pay converter */
 let c = T.convertPay('50', 'hour', '40', '52', '5');
 near('hourly 50 -> year', c.year, 104000);

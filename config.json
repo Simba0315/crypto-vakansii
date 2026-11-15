@@ -2,6 +2,7 @@
   "site_name": "Jobs Every Hour",
   "base_url": "https://jobseveryhour.com",
   "base_path": "",
+  "live_collector": true,
   "contact_telegram": "orderbulkreviews",
   "contact_email": "support@jobseveryhour.com",
   "emails": {

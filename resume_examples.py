@@ -11,6 +11,16 @@ A tool may stand in a line only through a typed place such as {lang:Python}: the
 for the role really name goes there, and the word after the colon is used when they name none. Never put a skill into a line any
 other way: "designed a housing in Python" is what a place without a kind produces.
 
+Search results for such pages show the same work at several levels, so every kind of work in ROLE also has three lines for a
+beginner and three for someone senior, written by the same rules (a verb first, a number in each, tools only through typed places,
+at most 160 characters):
+- ENTRY: what a beginner can honestly have, in this order: a course, bootcamp or personal project; an internship, placement or
+  first job; volunteer or part-time work. The scale stays small: a student project does not serve 1,200 requests a second.
+- SENIOR: what someone years further on has, in this order: leading a team; owning a strategy or a large program; hiring and
+  mentoring, or a result reached together with other teams.
+- ENTRY_TITLE: the beginner's title, only where it is not simply "Junior" before the title in ROLE (a Staff Accountant, not a
+  Junior Senior Accountant; a Line Cook, not a Junior Sous Chef). For the rest the build puts "Junior" in front.
+
 The skill tags of the collector are all technical. For work in TECH they say what the employer wants and lead the skills line and
 the chart. For other work a tag mostly describes the employer (a recruiter's posting at a machine learning company), so only the
 office tools in OFFICE are counted there.
@@ -770,6 +780,1215 @@ ROLE = {
         "Fixed 11 findings from two outside audits before launch"]),
 }
 
+# kind of work -> the beginner's title, where it is not simply "Junior " and the title in ROLE
+ENTRY_TITLE = {
+    "engineering-manager": "Team Lead", "tech-lead": "Associate Tech Lead", "software-architect": "Associate Software Architect",
+    "research-scientist": "Research Scientist Intern", "ai-trainer": "AI Data Annotator", "it-support": "IT Help Desk Technician",
+    "trust-safety": "Content Moderator", "physical-security": "Security Officer", "product-manager": "Associate Product Manager",
+    "program-manager": "Program Coordinator", "technical-program-manager": "Associate Technical Program Manager",
+    "project-manager": "Project Coordinator", "product-operations": "Product Operations Associate",
+    "business-operations": "Business Operations Associate", "chief-of-staff": "Special Projects Associate",
+    "graphic-designer": "Junior Graphic Designer", "audio": "Assistant Audio Engineer", "marketing-manager": "Marketing Coordinator",
+    "product-marketing": "Associate Product Marketing Manager", "growth-marketing": "Growth Marketing Associate",
+    "seo": "Junior SEO Specialist", "advertising": "Paid Media Coordinator", "social-media": "Social Media Coordinator",
+    "communications": "Communications Coordinator", "events": "Events Coordinator", "ecommerce": "E-commerce Coordinator",
+    "account-executive": "Associate Account Executive", "sales-development": "Sales Development Representative",
+    "sales-manager": "Assistant Sales Manager", "sales-operations": "Revenue Operations Analyst",
+    "business-development": "Business Development Associate", "solutions-architect": "Associate Solutions Architect",
+    "retail": "Part-Time Sales Associate", "customer-success-manager": "Customer Success Associate",
+    "technical-account-manager": "Associate Technical Account Manager", "customer-support": "Customer Support Representative",
+    "accounting": "Staff Accountant", "tax": "Tax Associate", "payroll": "Payroll Assistant", "investment": "Corporate Development Analyst",
+    "insurance": "Underwriting Assistant", "procurement": "Procurement Assistant", "legal-counsel": "Law Clerk", "policy": "Policy Associate",
+    "recruiter": "Recruiting Coordinator", "human-resources": "HR Coordinator", "training": "Learning and Development Coordinator",
+    "operations-manager": "Operations Coordinator", "executive-assistant": "Administrative Assistant", "workplace": "Office Coordinator",
+    "ehs": "EHS Coordinator", "technician": "Apprentice Technician", "construction": "Assistant Project Manager",
+    "life-sciences": "Research Assistant", "healthcare": "Clinical Operations Coordinator", "nursing": "New Graduate Registered Nurse",
+    "mental-health": "Pre-Licensed Therapist", "clinical-research": "Clinical Research Coordinator", "education": "Teaching Assistant",
+    "hospitality": "Line Cook", "intern": "Computer Science Student",
+}
+
+# kind of work -> what a beginner can honestly have: [a course, bootcamp or personal project; an internship, placement or first job;
+# volunteer or part-time work]
+ENTRY = {
+    # software
+    "software-engineer": [
+        "Built a habit-tracking web app in {lang:Python} as a personal project; 40 people used it in its first month",
+        "Fixed 25 bugs during a summer internship, each merged after code review",
+        "Rebuilt the sign-up form of a local food bank as a volunteer; volunteer sign-ups rose 30%"],
+    "backend-engineer": [
+        "Built a REST API in {lang:Go} for a course project with 30 endpoints, each covered by an automated test",
+        "Rewrote a slow {rel:PostgreSQL} query during a summer internship; an internal report went from 8 s to 2 s",
+        "Built a booking system for a volunteer-run sports club that takes about 200 bookings a month"],
+    "frontend-engineer": [
+        "Built a recipe site in {front:React} as a bootcamp final project that scored 95 in an automated accessibility audit",
+        "Built 8 interface components during a summer internship, now used on the company’s settings pages",
+        "Redesigned the website of a local animal shelter as a volunteer; adoption inquiries rose 20%"],
+    "full-stack-engineer": [
+        "Built a class project tracker with a {front:React} front end and a {rel:PostgreSQL} database, used by 25 students",
+        "Shipped 4 small features end to end during a summer internship, all released to customers",
+        "Built an online order form for a family bakery as part-time work; it takes about 80 orders a week"],
+    "mobile-engineer": [
+        "Published a study timer app built in {mobile:Kotlin} as a personal project; it reached 1,200 downloads",
+        "Fixed 15 crash reports in a shopping app during a summer internship",
+        "Built an event app for a student festival as a volunteer, used by 900 attendees"],
+    "qa-engineer": [
+        "Wrote 60 automated tests in {lang:Python} for a bootcamp project that run on every change",
+        "Found and reported 45 bugs during a summer internship, each with steps to reproduce",
+        "Tested a nonprofit’s donation site as a volunteer and found 12 bugs before launch"],
+    "embedded-engineer": [
+        "Built a battery-powered weather station in {lang:C++} for a course project that runs 6 months on one charge",
+        "Wrote a driver for a temperature sensor during a summer internship, tested on 20 boards",
+        "Repaired about 15 electronic devices a month at a volunteer-run community repair shop"],
+    "engineering-manager": [
+        "Completed a 10-week course for new engineering managers on feedback, hiring and planning",
+        "Led a team of 4 engineers as acting lead while the manager was on leave",
+        "Organized a volunteer coding workshop for 40 high school students"],
+    "web-developer": [
+        "Built a portfolio site of 12 pages as a personal project that loads in under a second on a phone",
+        "Built 6 landing pages during a summer internship, each live within a week",
+        "Rebuilt the website of a local theater as a volunteer; online ticket sales rose 35%"],
+    "product-engineer": [
+        "Launched a side project that gained 300 sign-ups in its first month",
+        "Interviewed 10 users during a summer internship and shipped the fix most of them asked for",
+        "Built a sign-up flow for a student society, moving 150 members off a paper form"],
+    "systems-software": [
+        "Wrote a memory allocator in {lang:C++} for a course project, 3 times faster than the default on the course benchmark",
+        "Found and removed a lock during a summer internship that cut the run time of a test suite by 20%",
+        "Fixed 6 bugs in an open-source file system tool, all merged by its maintainers"],
+    "graphics-engineer": [
+        "Wrote a ray tracer in {lang:C++} as a personal project that renders a test scene in 4 s",
+        "Cut frame time in a game by 2 ms during a summer internship by removing wasted draw calls",
+        "Taught a shader workshop to 30 members of a student game club"],
+    "game-developer": [
+        "Made a platform game in {lang:C++} as a personal project, downloaded 3,000 times",
+        "Built 5 gameplay features during a summer internship at a game studio, all in the released game",
+        "Built a puzzle game in a weekend game jam that placed third out of 120 entries"],
+    "tech-lead": [
+        "Led a 4-person capstone project in {lang:Java} from design to demo in one term",
+        "Led a project of 3 engineers for the first time, shipping a reporting feature a week early",
+        "Mentored 6 bootcamp students through their final projects as a volunteer"],
+    "software-architect": [
+        "Completed a 10-week course in distributed systems design and wrote a design document for each module",
+        "Designed a notification service in a first engineering job; it now sends 50,000 messages a day",
+        "Reviewed the hosting setup of a nonprofit as a volunteer and cut its hosting bill by 40%"],
+    "developer-advocate": [
+        "Wrote tutorials on a personal blog that were read 20,000 times in a year",
+        "Built 4 sample apps during a developer relations internship, each linked from the documentation",
+        "Organized a local developer meetup that grew to 150 members"],
+    "automation-engineer": [
+        "Built a course project in {lang:Python} that joins 3 public APIs into one daily report",
+        "Built 4 data integrations during a summer internship, each with an alert on failure",
+        "Automated the member list of a volunteer group, saving its organizers 3 hours a week"],
+    "business-systems": [
+        "Built 5 practice workflows in {crm:Salesforce} during an administrator course",
+        "Automated an approval process during a summer internship, saving the finance team 4 hours a week",
+        "Set up a donor database for a local charity as a volunteer, moving 1,500 records out of spreadsheets"],
+    # AI and machine learning
+    "machine-learning-engineer": [
+        "Trained an image classifier in {ml:PyTorch} for a course project that reached 92% accuracy",
+        "Built an evaluation script during a summer internship that runs 500 test cases on each model",
+        "Built a model for a volunteer library that sorted 2,000 donated books by topic"],
+    "ai-engineer": [
+        "Built a study assistant on a large language model as a personal project, used by 50 classmates",
+        "Wrote 200 test questions during a summer internship to score a chatbot before each release",
+        "Built a question bot for a nonprofit’s help page as a volunteer; it answers 60% of common questions"],
+    "forward-deployed-engineer": [
+        "Built an inventory report in {lang:Python} for a local shop as a capstone project, replacing 3 hours of counting a week",
+        "Joined customer calls during a summer internship and built 2 small tools from what customers asked for",
+        "Set up shared forms and reports for a food bank as a volunteer; weekly reporting went from 3 hours to 30 minutes"],
+    "applied-ai": [
+        "Built a set of prompts for a course project that cut the time to draft a lab report by 40%",
+        "Tested AI assistants on 3 workflows during a summer internship and wrote up which ones saved time",
+        "Taught a prompt-writing workshop to 40 members of a local small-business group"],
+    "computer-vision": [
+        "Trained a model to count birds in feeder photos as a personal project, correct on 90% of test photos",
+        "Labeled and cleaned 5,000 images during a summer internship for a defect detection model",
+        "Built a plant disease detector for a community garden as a volunteer, 85% accurate on members’ photos"],
+    "mlops": [
+        "Built a pipeline for a course project that retrains a model each night and keeps the last 10 versions",
+        "Packaged 3 models in containers during a summer internship, each deployable with one command",
+        "Set up a shared GPU server for a student AI club of 40 members"],
+    "research-scientist": [
+        "Reproduced the results of 3 published papers for a graduate course and released the code",
+        "Ran 40 experiments during a summer research internship that became a workshop paper",
+        "Reviewed 6 papers as a volunteer reviewer for a conference workshop"],
+    "ai-trainer": [
+        "Labeled 2,000 practice samples in an online annotation course",
+        "Wrote training examples during a freelance trial with a 94% acceptance rate at audit",
+        "Checked facts for a student newspaper as a volunteer, about 20 articles a month"],
+    # data
+    "data-engineer": [
+        "Built a pipeline in {lang:Python} for a personal project that loads 2 million rows of public transit data each night",
+        "Wrote 20 data quality checks during a summer internship that caught broken loads before reports did",
+        "Cleaned and merged 5 years of donor records for a local charity as a volunteer"],
+    "data-scientist": [
+        "Built a model in {lang:Python} for a course project that predicts bike-share demand within 12%",
+        "Analyzed 3 A/B tests during a summer internship and presented the results to product leaders",
+        "Analyzed survey answers from 800 residents for a volunteer city group"],
+    "data-analyst": [
+        "Built a dashboard in {bi:Tableau} for a course project that tracks 10 years of city rent prices",
+        "Wrote weekly reports in {sheet:SQL} during a summer internship, used by a sales team of 12",
+        "Analyzed donation data for a local nonprofit as a volunteer and found its 3 best months for appeals"],
+    "analytics-engineer": [
+        "Built 12 tested data models in {dbt:dbt} for a personal project on public sports data",
+        "Documented 30 tables during a summer internship so analysts could find them",
+        "Set up a reporting database for a volunteer group, replacing 6 separate spreadsheets"],
+    "business-analyst": [
+        "Mapped the course registration process for a university project and proposed 3 changes",
+        "Wrote requirements for 2 small features during a summer internship, both delivered",
+        "Ran 12 interviews for a nonprofit as a volunteer and wrote the report that chose its donor system"],
+    "quant": [
+        "Backtested a momentum strategy in {lang:Python} for a course project on 15 years of daily prices",
+        "Cleaned 10 years of options data during a summer internship for the research team",
+        "Placed second of 80 teams in a university trading competition"],
+    "pricing": [
+        "Compared the prices of 30 grocery products across local chains for a course project",
+        "Tracked competitor prices for 50 products each week during a summer internship",
+        "Set ticket prices for a student theater as a volunteer; sales rose 18%"],
+    "research-analyst": [
+        "Wrote a 20-page report on electric scooter sharing for a university course",
+        "Collected data on 150 companies during a summer internship for a market sizing report",
+        "Ran a survey of 300 local residents as a volunteer for a community group"],
+    "data-governance": [
+        "Wrote a data dictionary for 15 tables in a data management course",
+        "Added descriptions and owners to 200 tables during a summer internship",
+        "Wrote a privacy checklist as a volunteer for a group that keeps records of 400 members"],
+    # cloud, DevOps and IT
+    "devops-engineer": [
+        "Set up an automated release pipeline on {cloud:AWS} for a personal project that deploys in 4 minutes",
+        "Wrote {iac:Terraform} for 3 test environments during a summer internship",
+        "Set up hosting and nightly backups for a nonprofit’s website as a volunteer, with no outage in 12 months"],
+    "site-reliability-engineer": [
+        "Built monitoring for a home server project that alerts within 1 minute of a failure",
+        "Wrote 10 runbooks during a summer internship for the most common alerts",
+        "Kept the servers of a student club running as a volunteer for its 300 members"],
+    "it-support": [
+        "Completed a 12-week IT support certificate course covering networks, hardware and accounts",
+        "Answered about 20 help desk tickets a day during a summer internship at a school district",
+        "Set up 30 donated laptops for a community center as a volunteer"],
+    "systems-engineer": [
+        "Built a home lab of 4 virtual servers with shared sign-in as a personal project",
+        "Wrote {lang:Python} scripts during a summer internship that created 200 user accounts",
+        "Managed accounts and devices as a volunteer for a nonprofit of 25 staff"],
+    "cloud-engineer": [
+        "Hosted a personal website on {cloud:AWS}, built with {iac:Terraform}, for under $2 a month",
+        "Tagged 400 cloud resources during a summer internship so costs could be traced to teams",
+        "Moved a nonprofit’s file server to the cloud as a volunteer for its 20 staff"],
+    "network-engineer": [
+        "Built a home lab of 5 routers and switches for a networking certificate course",
+        "Mapped 120 network devices during a summer internship",
+        "Set up Wi-Fi across 3 floors of a community center as a volunteer"],
+    "database-administrator": [
+        "Set up a {rel:PostgreSQL} database for a course project and tested 5 restores from backup",
+        "Tuned 4 slow queries during a summer internship",
+        "Moved the membership records of 2,000 people for a volunteer group into a database"],
+    "data-center": [
+        "Completed a 10-week course in server hardware and cabling",
+        "Installed about 40 servers a week during a summer placement under a senior technician",
+        "Rebuilt 25 donated computers for a local school as a volunteer"],
+    "support-engineer": [
+        "Wrote a troubleshooting guide for the 5 most common errors of a course project API",
+        "Answered about 15 technical tickets a day during a summer internship",
+        "Answered about 30 questions a month on an open-source project’s forum as a volunteer"],
+    "system-administrator": [
+        "Ran 3 {os:Linux} servers at home as a personal project with automatic backups",
+        "Patched 150 servers during a summer internship under a senior administrator",
+        "Managed email and accounts for a local charity of 30 volunteers"],
+    # security
+    "cybersecurity": [
+        "Solved 60 challenges on a public capture-the-flag practice site as a personal project",
+        "Triaged about 30 vulnerability scan findings a week during a summer internship",
+        "Gave a phishing awareness talk to 50 staff of a local charity as a volunteer"],
+    "security-engineer": [
+        "Built a scanner for a course project that checks web apps for 10 common vulnerabilities",
+        "Reviewed 20 code changes for security issues during a summer internship",
+        "Reported 3 vulnerabilities through public bug bounty programs, all confirmed and fixed"],
+    "security-analyst": [
+        "Built a home lab that collects logs from 5 machines and alerts on failed logins",
+        "Reviewed about 40 alerts a day during a summer internship in a security operations center",
+        "Checked the website of a local charity as a volunteer and fixed 4 weak security settings"],
+    "penetration-tester": [
+        "Completed 50 practice machines on a training platform and wrote a report for each",
+        "Assisted on 6 penetration tests during a summer internship, writing up the findings",
+        "Found 2 vulnerabilities in open-source projects and reported them to the maintainers"],
+    "security-compliance": [
+        "Mapped 40 controls for a practice company in a security frameworks course",
+        "Collected audit evidence for 30 controls during a summer internship",
+        "Wrote 5 basic security policies for a small nonprofit as a volunteer"],
+    "fraud-risk": [
+        "Found 4 fraud patterns in public card transaction data with {sheet:SQL} for a course project",
+        "Reviewed about 40 flagged orders a day during a summer internship",
+        "Checked 200 grant applications for duplicates as a volunteer for a community fund"],
+    "trust-safety": [
+        "Completed a 4-week online course in content policy and online safety",
+        "Reviewed about 200 posts a day against policy during a short contract",
+        "Moderated an online forum of 5,000 members as a volunteer"],
+    "physical-security": [
+        "Completed a 40-hour security officer course with first aid certification",
+        "Patrolled a 3-building site on night shifts and wrote a report for every incident",
+        "Managed crowd entry for 2,000 people at a community festival as a volunteer"],
+    "privacy": [
+        "Wrote a sample privacy notice for a fictional app in a 6-week privacy law course",
+        "Logged 80 data subject requests during a summer internship, all answered on time",
+        "Wrote a privacy policy for a local charity as a volunteer covering 1,000 donors"],
+    # product and project
+    "product-manager": [
+        "Interviewed 15 students for a course project and wrote a product proposal from what they said",
+        "Wrote specifications for 3 features during a summer internship, all shipped before it ended",
+        "Launched a campus app with friends that reached 800 students in a term"],
+    "program-manager": [
+        "Planned a student conference for 250 people as a course project",
+        "Tracked actions and risks for a program of 4 teams during a summer internship",
+        "Coordinated 30 volunteers for a weekly food distribution"],
+    "technical-program-manager": [
+        "Coordinated a 6-person capstone project, delivered in one term",
+        "Tracked 50 dependencies for a platform launch during a summer internship",
+        "Coordinated the release of an open-source tool across 8 volunteer contributors"],
+    "project-manager": [
+        "Planned a sample project of 80 tasks in a project management course",
+        "Kept the schedule for 3 projects during a summer internship",
+        "Organized a charity run for 400 runners as a volunteer, on budget"],
+    "product-operations": [
+        "Sorted 1,000 app store reviews into themes for a course project",
+        "Wrote release notes for 12 launches during a summer internship",
+        "Ran the beta test of a student app with 60 volunteer testers"],
+    "scrum-master": [
+        "Earned a scrum master certificate after a 2-day course",
+        "Ran daily stand-ups and 5 retrospectives during a summer internship",
+        "Ran 2-week work cycles for a volunteer team building a charity website"],
+    "business-operations": [
+        "Built a financial model for a course case study of a 50-person company",
+        "Built a weekly report of 15 metrics during a summer internship",
+        "Kept the books for a student society with a yearly budget of $8,000"],
+    "chief-of-staff": [
+        "Won a business school strategy case competition against 40 teams",
+        "Prepared the slides for 8 leadership meetings during a summer internship",
+        "Ran the weekly meeting of a 12-person volunteer board"],
+    # design
+    "product-designer": [
+        "Designed a mobile app in {design:Figma} for a course project and tested it with 8 people",
+        "Designed 5 screens during a summer internship that shipped to customers",
+        "Redesigned the donation page of a local charity as a volunteer; online gifts rose 25%"],
+    "ux-researcher": [
+        "Ran 10 usability tests on a library website for a course project",
+        "Ran 12 user interviews during a summer internship and presented the findings to the product team",
+        "Surveyed 300 members of a local nonprofit about its services as a volunteer"],
+    "graphic-designer": [
+        "Designed a brand identity for a fictional coffee shop as a course project, applied to 15 items",
+        "Designed 40 social media graphics during a summer internship",
+        "Designed posters for 6 shows at a local theater as a volunteer"],
+    "content-designer": [
+        "Rewrote the error messages of a sample app for a course project and tested them with 6 people",
+        "Wrote the interface text for 20 screens during a summer internship",
+        "Rewrote 15 pages of a local charity’s website in plain language as a volunteer"],
+    "video-motion": [
+        "Made a 60-second animated short as a course project, shown at a student film festival",
+        "Edited 12 short social videos during a summer internship",
+        "Made 5 videos for a local animal shelter as a volunteer"],
+    "audio": [
+        "Recorded and mixed a 5-song record for a local band as a course project",
+        "Set up microphones for about 10 sessions a week during a studio internship",
+        "Ran live sound for 20 community theater shows as a volunteer"],
+    # marketing and communications
+    "marketing-manager": [
+        "Planned a marketing campaign for a local coffee shop as a course project with a budget of $500",
+        "Scheduled 30 marketing emails during a summer internship",
+        "Ran the social accounts of a student society, growing them to 1,200 followers"],
+    "product-marketing": [
+        "Wrote a launch plan for a fictional app as a course project and tested its message with 20 students",
+        "Wrote 4 competitor briefs for the sales team during a summer internship",
+        "Rewrote a nonprofit’s website copy as a volunteer; sign-ups rose 15%"],
+    "growth-marketing": [
+        "Ran paid ads for a personal online shop that brought its first 40 orders",
+        "Set up 6 A/B tests on landing pages during a summer internship",
+        "Grew the newsletter of a local nonprofit to 900 subscribers as a volunteer"],
+    "content-writer": [
+        "Wrote a personal blog of 30 articles on personal finance",
+        "Wrote 10 blog posts during a summer internship, all published",
+        "Wrote the newsletter for a local library as a volunteer, sent to 2,000 readers"],
+    "seo": [
+        "Grew a personal blog to 3,000 visits a month from search",
+        "Wrote titles and descriptions for 200 pages during a summer internship",
+        "Fixed 40 broken links on a charity’s website as a volunteer"],
+    "advertising": [
+        "Earned 2 ad platform certificates through free online courses",
+        "Built 50 ad variations for search and social during a summer internship",
+        "Ran a small ad campaign for a charity event as a volunteer that sold 150 tickets"],
+    "social-media": [
+        "Grew a personal short-video account to 4,000 followers",
+        "Scheduled 15 posts a week during a summer internship",
+        "Ran a local food bank’s social accounts as a volunteer, growing followers from 600 to 1,500"],
+    "community-manager": [
+        "Started an online study group that grew to 250 members",
+        "Moderated a forum of 10,000 members during a summer internship",
+        "Organized 8 meetups for a local hobby group as a volunteer"],
+    "communications": [
+        "Wrote 12 news stories for the student newspaper",
+        "Drafted 6 press releases during a summer internship",
+        "Wrote the monthly newsletter of a local charity, sent to 1,500 supporters"],
+    "events": [
+        "Planned a charity dinner for 150 guests as a course project",
+        "Booked venues and suppliers for 10 events during a summer internship",
+        "Ran registration for a 1,000-person community festival as a volunteer"],
+    "ecommerce": [
+        "Ran a small online shop selling prints, with 120 orders in a year",
+        "Updated 300 product listings during a summer internship",
+        "Set up an online store for a charity shop as a volunteer with its first 80 items"],
+    # sales
+    "solutions-engineer": [
+        "Built a demo app on a public API for a course project and presented it to 30 classmates",
+        "Ran 10 product demos during a summer internship alongside senior engineers",
+        "Set up a ticketing system for a nonprofit as a volunteer, used by its 15 staff"],
+    "account-executive": [
+        "Ran 20 practice discovery calls in a sales course",
+        "Booked 12 meetings during a summer sales internship",
+        "Raised $5,000 for a local charity by phone as a volunteer"],
+    "sales-development": [
+        "Completed a 4-week sales bootcamp with daily cold-call practice",
+        "Booked 8 qualified meetings during a summer sales internship",
+        "Raised $3,000 for a student charity drive by calling alumni"],
+    "account-manager": [
+        "Ran 10 role-play renewal calls in a customer relationship course",
+        "Prepared quarterly reviews for 20 accounts during a summer internship",
+        "Managed 15 sponsors for a student festival as a volunteer"],
+    "sales-manager": [
+        "Completed a 10-week sales leadership course for new managers",
+        "Coached 3 new sellers as a senior representative until each reached full target",
+        "Led a team of 10 volunteers in a fundraising drive for a local charity"],
+    "sales-representative": [
+        "Completed a 4-week sales training course with role-play customer calls",
+        "Sold $40,000 of products during a summer sales internship",
+        "Sold 300 raffle tickets for a school fundraiser as a volunteer"],
+    "sales-operations": [
+        "Built a sales dashboard in {bi:Tableau} for a course project from 2 years of sample data",
+        "Cleaned 5,000 duplicate records in {crm:the CRM} during a summer internship",
+        "Built a donor tracker for a local charity as a volunteer covering 600 donors"],
+    "business-development": [
+        "Researched 50 potential partners for a fictional startup as a course project",
+        "Built a list of 100 target partners during a summer internship",
+        "Signed 8 local sponsors for a student festival as a volunteer"],
+    "solutions-architect": [
+        "Built 3 practice designs on {cloud:AWS} while earning a cloud architecture certificate",
+        "Drew the architecture for 4 customer proposals during a summer internship",
+        "Designed a low-cost hosting setup for a nonprofit as a volunteer that costs $15 a month"],
+    "sales-engineer": [
+        "Built 3 demo scenarios on a free analytics tool for a course project",
+        "Ran 8 demos during a summer internship alongside a senior sales engineer",
+        "Trained 6 staff of a nonprofit on their new booking system as a volunteer"],
+    "retail": [
+        "Ran a stall at a school market that sold 200 items",
+        "Served about 80 customers a shift in a holiday season job",
+        "Sorted and priced about 500 donated items a month at a charity shop as a volunteer"],
+    # customer service
+    "customer-success-manager": [
+        "Wrote a sample onboarding plan for 3 kinds of customer in a customer success course",
+        "Onboarded 15 small customers during a summer internship",
+        "Answered about 20 member questions a week for a local sports club as a volunteer"],
+    "technical-account-manager": [
+        "Documented 5 setups on {cloud:AWS} while earning a cloud certificate",
+        "Prepared 10 technical review decks during a summer internship",
+        "Helped 12 small businesses set up their websites as a volunteer"],
+    "customer-support": [
+        "Completed a 4-week customer service course with written and phone practice",
+        "Answered about 30 customer chats a day during a summer job",
+        "Answered a local charity’s help line for 6 hours a week as a volunteer"],
+    "implementation": [
+        "Configured 3 practice projects in a software implementation course",
+        "Supported 5 customer setups during a summer internship",
+        "Moved a charity’s 1,200 contacts into a new system as a volunteer"],
+    # accounting and finance
+    "accounting": [
+        "Closed 3 practice months for a sample company in a bookkeeping course",
+        "Reconciled 12 bank accounts each month during a summer internship",
+        "Kept the books of a local youth club as a volunteer, about 200 entries a month"],
+    "financial-analyst": [
+        "Built a 3-statement model of a public company for a course project",
+        "Updated the monthly budget report for 8 departments during a summer internship",
+        "Managed the budget of a student society of 200 members"],
+    "tax": [
+        "Prepared 2 practice corporate returns in a corporate tax course",
+        "Prepared workpapers for 15 corporate returns during a summer internship",
+        "Prepared 60 personal tax returns at a free tax clinic as a volunteer"],
+    "treasury": [
+        "Built a 13-week cash forecast for a course case study",
+        "Reconciled 20 bank accounts daily during a summer internship",
+        "Managed $15,000 a year of cash for a student society"],
+    "payroll": [
+        "Ran 3 practice payroll cycles in a payroll course",
+        "Checked timesheets for 300 employees each week during a summer internship",
+        "Ran payroll for a small nonprofit of 12 staff as a volunteer"],
+    "audit": [
+        "Tested 20 controls for a practice case in an auditing course",
+        "Tested 50 expense claims for policy breaches during a summer internship",
+        "Checked 400 transactions of a local sports club as its volunteer auditor"],
+    "investment": [
+        "Valued 3 listed companies with a discounted cash flow model for a course project",
+        "Screened 80 companies for the deal team during a summer internship",
+        "Helped 4 local startups build their first financial models as a volunteer"],
+    "trader": [
+        "Traded a simulated portfolio for 6 months as a course project, inside every risk limit",
+        "Booked about 200 trades a day during a summer internship on a trading desk",
+        "Ran a university investment club of 40 students, writing a weekly market note"],
+    "insurance": [
+        "Priced 10 practice policies in an introductory insurance course",
+        "Prepared files for 150 policy renewals during a summer internship",
+        "Helped 30 families file home insurance claims after a flood as a volunteer"],
+    "lending": [
+        "Analyzed the financial statements of 5 companies for a corporate finance course",
+        "Spread financial statements for 40 loan applications during a summer internship",
+        "Reviewed 30 microloan applications as a volunteer for a community lender"],
+    "procurement": [
+        "Compared 5 supplier bids for a course case study and wrote a recommendation",
+        "Raised about 60 purchase orders a week during a summer internship",
+        "Sourced food for a charity kitchen as a volunteer, saving $2,000 a year"],
+    # legal and compliance
+    "legal-counsel": [
+        "Drafted 4 commercial contracts in a law school drafting course",
+        "Reviewed 30 supplier contracts during a summer internship with an in-house legal team",
+        "Advised 20 small businesses on lease terms at a law school clinic"],
+    "paralegal": [
+        "Completed a 6-month paralegal certificate course",
+        "Filed 40 documents with courts and registries during a summer internship",
+        "Helped 25 tenants fill in court forms as a volunteer at a legal aid clinic"],
+    "compliance": [
+        "Reviewed 20 practice cases in an anti-money-laundering certificate course",
+        "Checked 300 customer files during a summer internship",
+        "Updated 5 policies of a local charity as a volunteer"],
+    "policy": [
+        "Wrote a 15-page policy paper on data privacy for a graduate course",
+        "Tracked 50 bills for a trade association during a summer internship",
+        "Wrote 3 submissions to the city council as a volunteer for a housing group"],
+    # HR and recruiting
+    "recruiter": [
+        "Wrote 5 sample job postings in a recruiting course",
+        "Scheduled about 40 interviews a week during a summer internship",
+        "Recruited 30 volunteers for a community festival"],
+    "technical-recruiter": [
+        "Sourced 100 engineers for a practice search in a recruiting course",
+        "Screened 60 engineering applicants during a summer internship",
+        "Matched 20 career changers with volunteer mentors for a coding bootcamp"],
+    "human-resources": [
+        "Wrote an onboarding plan for a 50-person company in an HR fundamentals course",
+        "Onboarded 25 new hires during a summer internship",
+        "Ran onboarding for 80 volunteers at a food bank"],
+    "compensation-benefits": [
+        "Built a salary benchmark of 20 jobs from public pay data for a course project",
+        "Matched 150 jobs to market survey data during a summer internship",
+        "Compared 3 health plans for a small nonprofit as a volunteer"],
+    "training": [
+        "Designed a 3-module online course in an instructional design class",
+        "Scheduled 30 training sessions during a summer internship",
+        "Taught computer basics to 40 older adults as a volunteer"],
+    # operations and administration
+    "operations-manager": [
+        "Mapped a local bakery’s ordering process for a course project and removed 2 steps",
+        "Tracked about 500 orders a week during a summer internship",
+        "Organized the storeroom of a youth sports club as a volunteer, tracking 300 items"],
+    "executive-assistant": [
+        "Completed a 6-week office administration course",
+        "Managed the calendars of 2 managers during a summer internship",
+        "Organized the meetings of a 9-member volunteer board"],
+    "workplace": [
+        "Planned an office layout for 30 desks in a facilities management course",
+        "Answered about 20 office requests a day during a summer internship",
+        "Ran room bookings for a community center as a volunteer, about 50 a month"],
+    "supply-chain": [
+        "Built a demand forecast from 2 years of store sales for a course project",
+        "Counted and reconciled stock of 400 items during a summer internship",
+        "Planned 12 delivery routes a week for a food bank as a volunteer"],
+    "ehs": [
+        "Completed a 30-hour workplace safety course",
+        "Ran 25 safety inspections during a summer internship at a factory",
+        "Wrote the safety plan for a 2,000-person community festival as a volunteer"],
+    # hardware and engineering
+    "hardware-engineer": [
+        "Designed a 4-layer circuit board for a course project that worked on the first build",
+        "Tested 30 prototype boards during a summer internship",
+        "Built 10 sensor kits for a high school robotics club as a volunteer"],
+    "mechanical-engineer": [
+        "Designed a drone frame in CAD for a capstone project, 20% lighter than the kit frame",
+        "Made 25 part drawings during a summer internship, all released to suppliers",
+        "Built a wheelchair ramp for a community center as a volunteer in 3 weekends"],
+    "electrical-engineer": [
+        "Designed a solar charger for a course project that charges a phone in 3 hours",
+        "Tested 20 power boards during a summer internship",
+        "Rewired 24 stage lights at a community theater as a volunteer"],
+    "optics": [
+        "Measured 5 lens types on an optical bench in a lab course",
+        "Aligned 40 laser assemblies during a summer internship",
+        "Ran telescope nights for an astronomy club as a volunteer, about 300 visitors a year"],
+    "materials-engineer": [
+        "Tested the tensile strength of 30 samples in a materials lab course",
+        "Prepared 100 samples for microscopy during a summer internship",
+        "Ran materials science demos for 200 school students as a volunteer"],
+    "robotics": [
+        "Built a line-following robot in {lang:C++} for a course project that finished the track in 40 s",
+        "Wrote 15 simulation scenarios during a summer internship",
+        "Coached a high school robotics team of 12 students as a volunteer"],
+    "manufacturing": [
+        "Ran a time study on 3 assembly steps in a lean manufacturing course",
+        "Measured cycle times at 5 stations during a summer internship for a line rebalance",
+        "Organized a tool library of 150 tools for a community workshop as a volunteer"],
+    "test-engineer": [
+        "Built an automated bench test in {lang:Python} for a course project that checks a board in 30 s",
+        "Ran 200 tests on prototype units during a summer internship",
+        "Tested 15 donated laptops for a charity as a volunteer"],
+    "aerospace": [
+        "Wrote flight control code for a student rocket that reached 3,000 m",
+        "Ran 100 simulation cases during a summer internship",
+        "Mentored a high school model rocket club of 15 students as a volunteer"],
+    "technician": [
+        "Completed a 1-year technical course in electrical maintenance",
+        "Assisted on about 20 repairs a week as an apprentice",
+        "Fixed 30 bikes at a community bike shop as a volunteer"],
+    "field-service": [
+        "Completed a 6-month course in electronics service",
+        "Went on 50 service visits with senior engineers during a summer internship",
+        "Installed internet access at 4 community centers as a volunteer"],
+    "construction": [
+        "Scheduled a 3-story building for a construction management course",
+        "Tracked 200 requests for information on a hospital project during a summer internship",
+        "Built 2 homes with a volunteer housing group"],
+    # writing
+    "technical-writer": [
+        "Wrote a 20-page user guide for a course project app",
+        "Documented 15 API endpoints during a summer internship",
+        "Rewrote 3 setup guides for an open-source project as a volunteer"],
+    # science and healthcare
+    "life-sciences": [
+        "Ran 20 experiments for a final-year research project",
+        "Prepared about 50 samples a week during a summer lab internship",
+        "Taught a weekly science club for 15 school students as a volunteer"],
+    "healthcare": [
+        "Completed a 12-week healthcare administration course",
+        "Scheduled about 60 patient visits a day during a summer internship",
+        "Volunteered 200 hours at a hospital front desk"],
+    "nursing": [
+        "Completed 800 hours of clinical rotations in medical, surgical and pediatric units",
+        "Cared for up to 4 patients a shift under supervision in a final-year placement",
+        "Worked 20 hours a week as a nursing assistant during studies"],
+    "mental-health": [
+        "Completed 700 hours of supervised clinical practice in a master’s program",
+        "Saw 12 clients a week under supervision during a counseling internship",
+        "Answered a crisis text line for 4 hours a week as a volunteer"],
+    "clinical-research": [
+        "Completed a 10-week clinical research certificate, good clinical practice included",
+        "Entered data for 60 study participants during a summer internship",
+        "Helped run a health survey of 400 people as a volunteer"],
+    # education, hospitality, first jobs, crypto
+    "education": [
+        "Designed a 4-week practice course in a teaching methods class",
+        "Graded about 60 assignments a week as a teaching assistant",
+        "Tutored 10 high school students in math as a volunteer"],
+    "hospitality": [
+        "Completed a 6-month culinary course with a food safety certificate",
+        "Cooked on the grill station for about 150 covers a night in a summer job",
+        "Cooked weekly meals for 80 people at a community kitchen as a volunteer"],
+    "intern": [
+        "Built a weather app in {lang:Python} as a first-year project, used by 20 friends",
+        "Completed a 6-week summer coding program for students",
+        "Taught basic coding to 8 middle school students as a volunteer"],
+    "blockchain-engineer": [
+        "Built a small blockchain in {lang:Go} for a course project with 3 nodes reaching consensus",
+        "Ran 5 test nodes during a summer internship and reported the sync bugs they showed",
+        "Fixed 4 issues in an open-source wallet library as a volunteer contributor"],
+    "smart-contract-engineer": [
+        "Wrote a token contract for a course project with 50 tests that cover every line",
+        "Wrote 80 fuzz tests for a lending protocol during a summer internship",
+        "Found 2 bugs in public audit contests, both confirmed by the judges"],
+}
+
+# kind of work -> what someone years further on has: [leading a team, owning a strategy or a large program, hiring and mentoring
+# or a result reached with other teams]
+SENIOR = {
+    # software
+    "software-engineer": [
+        "Led a group of 8 engineers through a 9-month rebuild of the order system, shipped with no downtime",
+        "Set the testing strategy for 5 teams; production incidents fell from 14 a quarter to 4",
+        "Hired 6 engineers and mentored 4 to promotion in 2 years"],
+    "backend-engineer": [
+        "Led the 6 engineers of the payments platform team; on-call pages fell from 40 a week to 6",
+        "Owned the 18-month plan to split the core database, moving 30 services with no data loss",
+        "Set API design standards adopted by 9 teams and reviewed every new public endpoint"],
+    "frontend-engineer": [
+        "Led a frontend team of 6 engineers and hired 3 more in a year",
+        "Owned the move of 4 products to one {front:React} component library; new screens ship in half the time",
+        "Set web performance budgets with 7 teams; 90% of pages now load in under 2 s on a mid-range phone"],
+    "full-stack-engineer": [
+        "Led a team of 8 engineers across web and back end that delivered 3 major launches in a year",
+        "Owned the 12-month move from one large application to 5 services while shipping features every week",
+        "Mentored 5 engineers, 3 of whom were promoted within 18 months"],
+    "mobile-engineer": [
+        "Led a mobile team of 9 engineers across two platforms, releasing every week for 2 years",
+        "Set the mobile architecture now shared by 4 apps; a new screen takes 3 days instead of 2 weeks",
+        "Hired 5 mobile engineers through an interview loop I designed and ran for 40 candidates"],
+    "qa-engineer": [
+        "Led a QA team of 7 across 4 product teams and cut release testing from 3 days to 4 hours",
+        "Owned the company’s test strategy; defects found by customers fell 65% in a year",
+        "Trained 30 developers to write their own automated tests"],
+    "embedded-engineer": [
+        "Led a firmware team of 6 that shipped 3 products in 2 years",
+        "Owned the firmware update and security plan for 200,000 devices in the field",
+        "Ran weekly design reviews with the hardware and app teams; late hardware changes fell by 50%"],
+    "engineering-manager": [
+        "Led 4 teams and 35 engineers through 5 managers; yearly attrition stayed under 8%",
+        "Owned the engineering plan for a $12M product line and delivered 9 of its 10 yearly goals",
+        "Grew the organization from 18 to 35 engineers in 18 months with a structured hiring process"],
+    "web-developer": [
+        "Led a web team of 5 developers running 3 sites with 2 million visits a month",
+        "Owned the move of 3 sites to one content system, finished in 7 months",
+        "Set coding standards and reviews for 4 outside agencies; defects at launch fell by 60%"],
+    "product-engineer": [
+        "Led a team of 6 engineers that owns activation; it rose from 40% to 55% in a year",
+        "Set up the experiment process used by 5 teams, who ran 70 A/B tests in a year",
+        "Mentored 4 engineers to own features from customer interview to release"],
+    "systems-software": [
+        "Led a team of 6 engineers that owns the storage engine used by 40 services",
+        "Owned the 2-year plan to move the platform to a new concurrency model, finished on schedule",
+        "Mentored 5 engineers in performance work; each now leads profiling for their own team"],
+    "graphics-engineer": [
+        "Led a rendering team of 7 engineers across 2 game titles",
+        "Owned the renderer plan for a new console generation, shipped in 18 months",
+        "Set GPU budgets with 3 art teams; frame-rate complaints after launch fell by 70%"],
+    "game-developer": [
+        "Led a gameplay team of 8 programmers on a game that sold 1.5 million copies",
+        "Owned the gameplay architecture for 2 titles, shared across 3 studios",
+        "Hired and mentored 5 programmers, 2 of whom now lead teams"],
+    "tech-lead": [
+        "Led technical direction for 3 teams and 20 engineers on the payments platform",
+        "Owned the 2-year plan to replace the old checkout, delivered in 5 stages with no outage",
+        "Ran the engineering interview loop and hired 8 engineers in a year"],
+    "software-architect": [
+        "Built and led an architecture group of 6 engineers who review every cross-team design",
+        "Set the architecture strategy for 30 teams and 250 engineers across 3 products",
+        "Led the 2-year move of 200 services to {cloud:AWS} with the platform teams, closing 2 data centers"],
+    "developer-advocate": [
+        "Led a developer relations team of 6 advocates and writers across 3 regions",
+        "Owned the developer program strategy; monthly active developers rose from 8,000 to 30,000",
+        "Ran the feedback process between developers and 5 product teams; 60 requests shipped in a year"],
+    "automation-engineer": [
+        "Led an integrations team of 5 engineers running 150 customer integrations",
+        "Owned the integration platform strategy; a new connector takes 3 days instead of 3 weeks",
+        "Worked with sales and support to cut escalations about integrations by 60%"],
+    "business-systems": [
+        "Led a business systems team of 6 supporting finance, sales and HR",
+        "Owned the 18-month replacement of the finance system for 400 users, delivered on budget",
+        "Set the yearly systems roadmap with 8 department heads; spending on tools fell 15%"],
+    # AI and machine learning
+    "machine-learning-engineer": [
+        "Led a team of 8 machine learning engineers responsible for search and recommendations",
+        "Owned the ranking roadmap for 2 years; revenue from recommendations grew 35%",
+        "Set the evaluation standard 6 teams use before any model reaches customers"],
+    "ai-engineer": [
+        "Led a team of 7 engineers that builds the company’s AI features",
+        "Owned the AI platform strategy; 12 product teams now ship model features on it",
+        "Set cost and quality targets with 5 teams; spending per conversation fell 55%"],
+    "forward-deployed-engineer": [
+        "Led a group of 6 forward deployed engineers across 15 enterprise accounts",
+        "Owned the deployment playbook for every new account; time to first daily use fell from 10 weeks to 5",
+        "Turned field work into 8 product features with the product team, now used by 120 accounts"],
+    "applied-ai": [
+        "Led an applied AI team of 5 that rolled assistants out to 1,200 employees",
+        "Owned the company’s AI adoption plan across 9 departments; weekly use reached 80%",
+        "Set the review process for every AI workflow with department heads; 4 that showed no gain were stopped early"],
+    "computer-vision": [
+        "Led a team of 7 that builds the vision models in 3 product lines",
+        "Owned the plan to run all vision models on the device, cutting cloud costs by $400K a year",
+        "Set up a labeling program with an outside vendor that delivers 50,000 images a month"],
+    "mlops": [
+        "Led an ML platform team of 8 engineers serving 120 researchers and engineers",
+        "Owned the GPU strategy and a compute budget of $15M a year",
+        "Set release standards with 6 model teams; failed model releases fell from 12 a year to 2"],
+    "research-scientist": [
+        "Led a group of 6 scientists; 3 of our methods went into the company’s main model",
+        "Set the research agenda for long-context models over 2 years, with 9 papers published",
+        "Mentored 8 interns and junior researchers, 5 of whom published as first author"],
+    "ai-trainer": [
+        "Led a team of 25 annotators and 3 reviewers across 2 languages",
+        "Owned the data quality program for a model training project of 50,000 examples",
+        "Set review standards with the research team; examples rejected at audit fell from 9% to 2%"],
+    # data
+    "data-engineer": [
+        "Led a data platform team of 7 engineers serving 120 analysts",
+        "Owned the move from nightly batches to streaming on {queue:Kafka}; data now arrives within 5 minutes",
+        "Set data contracts with 10 product teams; broken pipelines fell from 15 a month to 2"],
+    "data-scientist": [
+        "Led a team of 6 data scientists working with marketing, product and finance",
+        "Owned the experimentation strategy; the company now runs 150 tests a year instead of 30",
+        "Built the pricing model used by 3 business units with their finance leads, adding $4M in yearly revenue"],
+    "data-analyst": [
+        "Led a team of 5 analysts that answers questions for sales, product and finance",
+        "Owned the company’s metrics plan; 40 dashboards were replaced by 8 trusted ones",
+        "Hired and trained 4 analysts, each handling requests alone within 2 months"],
+    "analytics-engineer": [
+        "Led an analytics engineering team of 5 that owns 400 shared models",
+        "Owned the plan to move all reporting into one modeled layer, finished in 9 months",
+        "Set modeling standards with 6 analyst teams; duplicate metrics fell from 70 to 12"],
+    "business-analyst": [
+        "Led a team of 6 business analysts across finance and operations",
+        "Owned the requirements for a $5M system replacement used by 800 people",
+        "Set the analysis method used by 4 departments; change requests after sign-off fell by 60%"],
+    "quant": [
+        "Led a research team of 5 quants on a strategy managing $800M",
+        "Owned the research process from idea to live trading; 6 new signals went live in a year",
+        "Hired and trained 4 researchers, all of whom shipped a live signal in their first year"],
+    "pricing": [
+        "Led a pricing team of 4 analysts across 3 product lines",
+        "Owned the pricing strategy for a $60M business; average revenue per customer rose 12% in a year",
+        "Set discount rules with sales and finance; gross margin rose by 3 points"],
+    "research-analyst": [
+        "Led a research team of 6 analysts publishing 40 reports a year",
+        "Owned the research agenda for 3 sectors followed by 500 clients",
+        "Briefed the executive team each quarter; 3 market entries followed from our work"],
+    "data-governance": [
+        "Led a data governance team of 5 across 4 business units",
+        "Owned the data governance program for 3,000 tables and 900 users",
+        "Agreed data ownership with 20 department leads; every key table now has a named owner"],
+    # cloud, DevOps and IT
+    "devops-engineer": [
+        "Led a platform team of 7 engineers supporting 25 product teams",
+        "Owned the move of 150 services to {orch:Kubernetes} over 14 months with no major outage",
+        "Set release standards with 25 teams; deploys rose from 30 a week to 200"],
+    "site-reliability-engineer": [
+        "Led an SRE team of 8 covering 60 services and a 24-hour on-call rotation",
+        "Owned the reliability program; 45 customer-facing services now have service level objectives",
+        "Set incident review practice across 12 teams; repeat incidents fell by 70%"],
+    "it-support": [
+        "Led an IT support team of 6 serving 1,500 employees in 4 offices",
+        "Owned the device management rollout for 1,500 laptops, finished in 3 months",
+        "Set service targets with HR and finance; employee satisfaction with IT rose from 3.8 to 4.6 out of 5"],
+    "systems-engineer": [
+        "Led a systems engineering team of 5 supporting 3,000 employees",
+        "Owned identity and access for 120 applications and moved all of them to single sign-on",
+        "Ran quarterly access reviews with security and HR; active accounts of former employees fell from 90 to 0"],
+    "cloud-engineer": [
+        "Led a cloud team of 6 engineers running 3 regions and 200 accounts",
+        "Owned the cloud cost program; yearly spending fell by $2.5M",
+        "Set the account and network standard adopted by 30 product teams"],
+    "network-engineer": [
+        "Led a network team of 5 engineers covering 30 offices and 2 data centers",
+        "Owned the 2-year network refresh with a budget of $4M, delivered on time",
+        "Set network standards with the security team; firewall rules fell from 9,000 to 2,500"],
+    "database-administrator": [
+        "Led a database team of 4 running 300 databases across 3 regions",
+        "Owned the move of 80 databases to a managed cloud service with under 10 minutes of downtime each",
+        "Set query review with 15 development teams; production incidents caused by queries fell 50%"],
+    "data-center": [
+        "Led a shift of 12 technicians across 2 data halls",
+        "Owned the build-out of a new data hall of 4,000 servers, finished 2 weeks early",
+        "Set safety and handover procedures with 3 contractors; incidents fell from 9 a year to 1"],
+    "support-engineer": [
+        "Led a technical support team of 10 across 3 time zones",
+        "Owned the escalation process with engineering; the time to fix a priority bug fell from 12 days to 4",
+        "Hired and trained 6 support engineers, all handling advanced cases within 3 months"],
+    "system-administrator": [
+        "Led a team of 5 administrators running 1,200 servers",
+        "Owned the server refresh program, replacing 400 machines in 9 months",
+        "Set change rules with 8 development teams; outages caused by changes fell by 60%"],
+    # security
+    "cybersecurity": [
+        "Led a security team of 8 covering application, cloud and incident response",
+        "Owned the 3-year security strategy and a budget of $3M",
+        "Set security standards with 20 engineering teams; critical findings in production fell 75%"],
+    "security-engineer": [
+        "Led an application security team of 6 supporting 300 engineers",
+        "Owned the secure development program, with a trained security champion in each of 25 teams",
+        "Set cloud security rules with platform engineering; public storage buckets fell from 40 to 0"],
+    "security-analyst": [
+        "Led a security operations team of 9 across 3 shifts",
+        "Owned the detection program; coverage of known attack techniques rose from 40% to 85%",
+        "Ran 4 joint exercises a year with IT and legal; the time to respond to a breach fell by half"],
+    "penetration-tester": [
+        "Led a team of 6 penetration testers delivering 120 tests a year",
+        "Owned the red team program, running 4 full-scope exercises a year",
+        "Trained 10 development teams on secure coding from real test findings; repeat findings fell by 50%"],
+    "security-compliance": [
+        "Led a GRC team of 5 covering 4 audit frameworks",
+        "Owned the compliance roadmap that added ISO 27001 and 2 regional certifications in 18 months",
+        "Set control ownership with 12 departments; audit findings fell from 15 to 2"],
+    "fraud-risk": [
+        "Led a fraud team of 12 analysts across 2 regions",
+        "Owned the fraud strategy for $2B in yearly payments; losses fell to 0.09% of volume",
+        "Set decline rules with the product and payments teams; good customers wrongly declined fell by 40%"],
+    "trust-safety": [
+        "Led a trust and safety team of 20 reviewers across 3 shifts",
+        "Owned the policy on harassment and hate speech across 2 products",
+        "Set review targets with product and legal; serious reports are now acted on within 1 hour"],
+    "physical-security": [
+        "Led a security team of 40 officers across 6 sites",
+        "Owned the security plan for 2 new offices, both opened on schedule",
+        "Set emergency procedures with facilities and HR; drill participation rose from 60% to 95%"],
+    "privacy": [
+        "Led a privacy team of 4 working across product, legal and security",
+        "Owned the privacy program for 15 countries and 20 million users",
+        "Set privacy review with 10 product teams; every launch now passes review before release, up from 60%"],
+    # product and project
+    "product-manager": [
+        "Led a team of 4 product managers covering onboarding, billing and growth",
+        "Owned the product strategy for a $25M line of business that grew 30% a year",
+        "Set the planning process for 6 teams; goals delivered on time rose from 55% to 80%"],
+    "program-manager": [
+        "Led a team of 5 program managers running the company’s largest initiatives",
+        "Owned a $20M program across 12 teams that launched in 9 countries",
+        "Set the program review used across the company; late launches fell from 40% to 15%"],
+    "technical-program-manager": [
+        "Led a group of 6 technical program managers across infrastructure and product",
+        "Owned the 2-year data center exit program across 20 teams, finished a quarter early",
+        "Set the launch review process used by 40 teams; launch rollbacks fell by 70%"],
+    "project-manager": [
+        "Led a team of 6 project managers delivering 40 projects a year",
+        "Owned a $15M portfolio of projects, 90% of them delivered on time",
+        "Set the project method used by 5 departments, with one status report and one risk list"],
+    "product-operations": [
+        "Led a product operations team of 5 supporting 12 product teams",
+        "Owned the launch process for 80 releases a year across 3 products",
+        "Set up a feedback system with sales and support that routes 10,000 comments a quarter to product teams"],
+    "scrum-master": [
+        "Coached 6 teams and 3 other scrum masters across 2 products",
+        "Owned the move of 8 teams to one shared quarterly planning cycle",
+        "Removed about 25 cross-team blockers a quarter through a weekly meeting of team leads"],
+    "business-operations": [
+        "Led a business operations team of 6 working with every department head",
+        "Owned the yearly operating plan for a $200M business",
+        "Ran a cost program across 10 departments that saved $4M a year"],
+    "chief-of-staff": [
+        "Led a team of 4 in the CEO’s office running planning, communications and special projects",
+        "Owned yearly planning for a company of 900 employees and 15 departments",
+        "Ran the integration of an acquired company of 120 people, finished in 6 months"],
+    # design
+    "product-designer": [
+        "Led a design team of 6 across 3 product areas",
+        "Owned the design system strategy; 8 teams now build from one library",
+        "Hired 4 designers and started a weekly critique that every designer attends"],
+    "ux-researcher": [
+        "Led a research team of 5 serving 8 product teams",
+        "Owned the research plan for a new product line: 120 studies over 2 years",
+        "Trained 30 designers and product managers to run their own usability tests"],
+    "graphic-designer": [
+        "Led a brand team of 5 designers and 2 illustrators",
+        "Owned the merging of 3 product brands into one, rolled out in 6 months",
+        "Set brand guidelines used by 4 agencies and 60 marketers"],
+    "content-designer": [
+        "Led a content design team of 5 across 4 product areas",
+        "Owned the voice and terms of the product across 300 screens",
+        "Set content review with design and legal; the time to approve a screen fell from 5 days to 1"],
+    "video-motion": [
+        "Led a video team of 6 producing 100 videos a year",
+        "Owned the motion design system used across 3 products and all marketing",
+        "Set up a production process with marketing and product that cut the cost of a video by 40%"],
+    "audio": [
+        "Led an audio team of 6 on 2 released games",
+        "Owned the audio pipeline for 4 titles, shared across 2 studios",
+        "Hired and trained 3 sound designers and set up review for every sound in the game"],
+    # marketing and communications
+    "marketing-manager": [
+        "Led a marketing team of 12 across brand, content, events and growth",
+        "Owned a marketing budget of $6M and a plan that produced 45% of new sales pipeline",
+        "Set shared targets with sales; revenue from marketing leads rose from $8M to $14M"],
+    "product-marketing": [
+        "Led a product marketing team of 5 across 3 product lines",
+        "Owned positioning for the move into large companies; enterprise deals rose from 10 to 45 a year",
+        "Set the launch process with product and sales used for 25 launches a year"],
+    "growth-marketing": [
+        "Led a growth team of 7 across paid, lifecycle and referrals",
+        "Owned an acquisition budget of $4M a year; the cost of a new customer fell 30%",
+        "Ran a testing program with product and data: 120 tests a year, 35 shipped"],
+    "content-writer": [
+        "Led a content team of 5 writers and editors",
+        "Owned the content strategy that grew visits from search from 100,000 to 400,000 a month",
+        "Set editorial standards with product and legal for 200 articles a year"],
+    "seo": [
+        "Led a search team of 6 covering technical work, content and links",
+        "Owned the search strategy for 3 sites with 2 million visits a month",
+        "Set search checks with engineering and content; new pages are indexed in 2 days instead of 3 weeks"],
+    "advertising": [
+        "Led a paid media team of 6 managing $15M a year",
+        "Owned the channel strategy across 6 networks; return rose from $3.10 to $4.40 for every $1 spent",
+        "Set up measurement with finance and data; paid results now match the books within 2%"],
+    "social-media": [
+        "Led a social team of 5 across 6 networks and 3 regions",
+        "Owned the social strategy for a brand with 2 million followers",
+        "Set a response process with support; 95% of customer messages are answered within 1 hour"],
+    "community-manager": [
+        "Led a community team of 5 managing 3 communities with 120,000 members",
+        "Owned the community strategy; members who answer questions grew from 200 to 1,400",
+        "Set a feedback process with 6 product teams; 40 member requests shipped in a year"],
+    "communications": [
+        "Led a communications team of 6 covering press, internal and executive communications",
+        "Owned the company’s crisis communications plan, used in 3 incidents",
+        "Ran communications for a funding round and an acquisition with legal, covered by 40 outlets"],
+    "events": [
+        "Led an events team of 6 running 80 events a year",
+        "Owned an events budget of $3M that returned $8 of pipeline for every $1",
+        "Set event plans with sales and marketing; 40% of attendees became qualified leads"],
+    "ecommerce": [
+        "Led an e-commerce team of 8 across web, marketplaces and merchandising",
+        "Owned a $40M online channel that grew 30% a year",
+        "Launched on 3 new marketplaces with operations and finance, adding $6M in sales"],
+    # sales
+    "solutions-engineer": [
+        "Led a team of 7 solutions engineers supporting $40M of yearly sales",
+        "Owned the proof-of-concept program; the win rate on deals with a proof rose from 35% to 60%",
+        "Set up a feedback loop with product; 20 requests from the field shipped in a year"],
+    "account-executive": [
+        "Led a deal team of 4 on the company’s largest contract, worth $2.4M over 3 years",
+        "Owned the enterprise territory for 2 regions and grew its pipeline from $5M to $12M",
+        "Mentored 4 new account executives; all reached target in their first year"],
+    "sales-development": [
+        "Led a team of 8 sales development representatives that booked 140 meetings a month",
+        "Owned the outbound strategy for 2 regions; pipeline from outreach rose from $6M to $11M",
+        "Trained 15 new representatives; the time to a first booked meeting fell from 3 weeks to 1"],
+    "account-manager": [
+        "Led a team of 6 account managers covering $30M of yearly revenue",
+        "Owned the renewal strategy for the 50 largest accounts; renewals rose from 89% to 95%",
+        "Set up account planning with product and support; upgrades rose 30%"],
+    "sales-manager": [
+        "Led 4 sales managers and 35 sellers across 3 regions",
+        "Owned a yearly target of $45M and closed 108% of it",
+        "Set territory and pricing rules with marketing and finance; the average deal grew 22%"],
+    "sales-representative": [
+        "Led a team of 6 sales representatives in the largest territory",
+        "Owned the 30 largest customer accounts in the region, worth $3M a year",
+        "Trained 10 new representatives on product and negotiation"],
+    "sales-operations": [
+        "Led a revenue operations team of 7 supporting 200 sellers",
+        "Owned the yearly planning of targets and territories for a $120M sales organization",
+        "Set one set of pipeline rules with sales, marketing and finance; forecast accuracy reached 95%"],
+    "business-development": [
+        "Led a partnerships team of 5 across 3 regions",
+        "Owned the partner strategy that grew revenue from partners from $4M to $15M",
+        "Negotiated a joint launch with 2 partners and the product team that added 20,000 customers"],
+    "solutions-architect": [
+        "Led a team of 8 solutions architects covering the 60 largest customers",
+        "Owned the reference architecture program; 25 designs are now used across sales and support",
+        "Set technical win plans with sales and product for deals worth $50M a year"],
+    "sales-engineer": [
+        "Led a team of 6 sales engineers supporting 30 account executives",
+        "Owned the demonstration and proof-of-concept strategy; the technical win rate rose from 38% to 55%",
+        "Set up a weekly product review with engineering; 15 gaps that blocked deals were closed in a year"],
+    "retail": [
+        "Led a shift team of 8 associates in a store with $3M in yearly sales",
+        "Owned the store’s visual merchandising plan; sales of featured items rose 20%",
+        "Trained 12 new associates and ran stock counts with the warehouse team"],
+    # customer service
+    "customer-success-manager": [
+        "Led a team of 8 customer success managers covering $40M of yearly revenue",
+        "Owned the onboarding program for 300 accounts; the time to first value fell from 40 days to 14",
+        "Set up early warnings for churn with product and sales; yearly churn fell from 11% to 6%"],
+    "technical-account-manager": [
+        "Led a team of 6 technical account managers covering 50 enterprise accounts",
+        "Owned the escalation process with engineering; priority-one incidents were resolved 40% faster",
+        "Set up launch reviews with product and support for 30 enterprise launches a year"],
+    "customer-support": [
+        "Led a support team of 12 agents across 2 shifts",
+        "Owned the help center; 60% of customers now find an answer without a ticket",
+        "Set up a bug process with engineering; repeat tickets about known bugs fell by 50%"],
+    "implementation": [
+        "Led a team of 8 implementation consultants delivering 60 projects a year",
+        "Owned the implementation method used across 3 products; projects on time rose from 70% to 90%",
+        "Set handovers with sales and support; customers needing rework after going live fell from 20% to 8%"],
+    # accounting and finance
+    "accounting": [
+        "Led an accounting team of 6 across 3 countries",
+        "Owned the move to a new accounting system, live in 7 months with no missed close",
+        "Set the close calendar with finance and operations; month-end closes in 4 days instead of 10"],
+    "financial-analyst": [
+        "Led a team of 5 analysts covering planning for the whole company",
+        "Owned the long-range plan for a $300M business, presented to the board each year",
+        "Set budget rules with 15 department heads; spending came in within 2% of plan"],
+    "tax": [
+        "Led a tax team of 6 covering 20 countries",
+        "Owned the tax planning for 2 acquisitions worth $500M",
+        "Set intercompany pricing with finance and legal across 12 entities, accepted by 3 tax authorities"],
+    "treasury": [
+        "Led a treasury team of 4 managing $800M of cash",
+        "Owned the currency hedging program for 15 currencies",
+        "Arranged a $150M credit line with 5 banks, working with legal and the finance team"],
+    "payroll": [
+        "Led a payroll team of 6 paying 8,000 employees in 15 countries",
+        "Owned the move to one payroll system for 15 countries, finished in 10 months",
+        "Set payroll cut-off dates with HR and finance; late changes fell by 70%"],
+    "audit": [
+        "Led an internal audit team of 7 delivering 30 audits a year",
+        "Owned the risk-based audit plan, approved by the audit committee each year for 4 years",
+        "Agreed fixes with 10 department heads; overdue audit actions fell from 40 to 5"],
+    "investment": [
+        "Led a corporate development team of 4 across 10 deals worth $1.2B",
+        "Owned the acquisition strategy for 2 years, in which 5 acquisitions closed",
+        "Led integration planning with operations and HR for 3 acquisitions, all on schedule"],
+    "trader": [
+        "Led a trading desk of 6 traders with a daily volume of $200M",
+        "Owned the desk’s risk limits with the risk team, with no limit breach in 3 years",
+        "Trained 5 junior traders, 3 of whom now run their own books"],
+    "insurance": [
+        "Led an underwriting team of 8 writing $60M in premiums a year",
+        "Owned the underwriting guidelines for 3 commercial products",
+        "Set pricing reviews with the actuarial and claims teams; the loss ratio improved by 5 points"],
+    "lending": [
+        "Led a credit team of 6 analysts approving $300M of loans a year",
+        "Owned the credit policy for small business lending across 2 products",
+        "Set approval limits with risk and sales; decisions take 1 day instead of 5 with no rise in defaults"],
+    "procurement": [
+        "Led a procurement team of 8 managing $150M of yearly spending",
+        "Owned the sourcing strategy for 4 categories, saving $12M in 2 years",
+        "Set a buying process with finance and legal; 90% of spending now goes to approved suppliers"],
+    # legal and compliance
+    "legal-counsel": [
+        "Led a commercial legal team of 5 lawyers and 2 paralegals",
+        "Owned the contracting strategy; 85% of deals now close on the company’s own terms",
+        "Set approval rules with sales and finance; legal review takes 3 days instead of 10"],
+    "paralegal": [
+        "Led a team of 4 paralegals supporting 12 lawyers",
+        "Owned the contract management system for 8,000 contracts",
+        "Set up an intake process with sales and procurement; every contract request is logged within 1 day"],
+    "compliance": [
+        "Led a compliance team of 10 across 3 countries",
+        "Owned the anti-money-laundering program through 2 regulator inspections with no finding",
+        "Set compliance checks with product and operations for 12 new products before launch"],
+    "policy": [
+        "Led a public policy team of 5 across 3 regions",
+        "Owned the policy strategy on 2 major regulations; 8 of our proposals were adopted",
+        "Built a coalition of 15 companies and 4 trade groups on one bill"],
+    # HR and recruiting
+    "recruiter": [
+        "Led a recruiting team of 6 that hired 180 people in a year",
+        "Owned the hiring plan with finance and department heads as the company grew from 400 to 650",
+        "Set interview standards with 25 hiring managers; offer acceptance rose from 72% to 88%"],
+    "technical-recruiter": [
+        "Led a technical recruiting team of 5 that hired 90 engineers in a year",
+        "Owned the engineering hiring strategy across 3 countries",
+        "Set the interview loop with engineering leaders; the time to an offer fell from 45 days to 25"],
+    "human-resources": [
+        "Led a team of 4 HR business partners covering 1,200 employees",
+        "Owned the reorganization of 2 business units with 300 people, finished in one quarter",
+        "Set up manager training with the leadership team; manager survey scores rose from 3.6 to 4.3"],
+    "compensation-benefits": [
+        "Led a compensation team of 4 covering 6,000 employees in 12 countries",
+        "Owned the equity plan and a yearly pay budget of $40M",
+        "Set pay ranges with finance and recruiting; offers above range fell from 25% to 5%"],
+    "training": [
+        "Led a learning team of 6 serving 5,000 employees",
+        "Owned the leadership development program for 300 managers",
+        "Set training plans with 8 department heads; the time for a new hire to reach full speed fell 30%"],
+    # operations and administration
+    "operations-manager": [
+        "Led an operations team of 60 across 3 sites",
+        "Owned the operations plan for a business with $50M in yearly sales",
+        "Set service targets with sales and finance; the cost of handling an order fell 18%"],
+    "executive-assistant": [
+        "Led a team of 4 assistants supporting the leadership team",
+        "Owned the planning of 4 board meetings a year and the yearly leadership off-site",
+        "Coordinated the calendars of 8 executives through the yearly planning cycle"],
+    "workplace": [
+        "Led a workplace team of 10 across 6 offices",
+        "Owned a facilities budget of $8M and a 3-year office plan",
+        "Set a hybrid office plan with HR and finance that cut office space by 30%"],
+    "supply-chain": [
+        "Led a supply chain team of 8 across planning and logistics",
+        "Owned the network plan for 4 warehouses; delivery cost per order fell 15%",
+        "Set a monthly planning meeting with sales and finance; forecast accuracy rose from 70% to 88%"],
+    "ehs": [
+        "Led an EHS team of 5 across 4 sites",
+        "Owned the safety program for 3,000 employees; the injury rate fell 50% in 2 years",
+        "Set safety targets with the managers of 4 sites, all met for 3 years running"],
+    # hardware and engineering
+    "hardware-engineer": [
+        "Led a hardware team of 6 engineers on 2 product lines",
+        "Owned the hardware roadmap for a product shipping 200,000 units a year",
+        "Set design reviews with manufacturing and firmware; board revisions per product fell from 5 to 2"],
+    "mechanical-engineer": [
+        "Led a team of 7 mechanical engineers on a new product line",
+        "Owned the mechanical design of a product that sells 100,000 units a year",
+        "Worked with suppliers and quality to cut part cost by 15% across 40 parts"],
+    "electrical-engineer": [
+        "Led a team of 5 electrical engineers across 3 products",
+        "Owned power design for a product family of 8 models",
+        "Set certification plans with test and compliance; all 6 products passed at the first attempt"],
+    "optics": [
+        "Led an optics team of 5 engineers and 3 technicians",
+        "Owned the optical design of 3 product generations",
+        "Set yield targets with manufacturing; yield across 4 products rose from 75% to 92%"],
+    "materials-engineer": [
+        "Led a materials team of 6 engineers and technicians",
+        "Owned the materials plan for a new product line and qualified 5 materials for it",
+        "Set failure analysis practice with quality and suppliers; repeat failures fell by 60%"],
+    "robotics": [
+        "Led a robotics team of 8 across planning, control and perception",
+        "Owned the autonomy roadmap for a fleet of 500 robots",
+        "Set field test plans with operations at 6 customer sites"],
+    "manufacturing": [
+        "Led a manufacturing engineering team of 8 across 3 lines",
+        "Owned the launch of a new production line with a budget of $10M",
+        "Set quality targets with suppliers and design; scrap across the plant fell from 5% to 2%"],
+    "test-engineer": [
+        "Led a test team of 6 engineers across 3 products",
+        "Owned the validation strategy for a product family of 5 models",
+        "Set test plans with design and manufacturing; defects found after release fell 60%"],
+    "aerospace": [
+        "Led a flight software team of 9 engineers",
+        "Owned the guidance and control design for a new vehicle over 3 years",
+        "Set test campaigns with hardware and operations for 8 launches, all on time"],
+    "technician": [
+        "Led a team of 6 technicians across 2 shifts",
+        "Owned the maintenance plan for 120 machines; uptime rose from 94% to 98%",
+        "Set spare parts levels with purchasing; waits for parts fell from 3 days to 1"],
+    "field-service": [
+        "Led a team of 10 field engineers across 2 regions",
+        "Owned the service plan for 400 installed systems",
+        "Set first-visit targets with parts and support; faults fixed at the first visit rose from 70% to 88%"],
+    "construction": [
+        "Led a project team of 12 on a $120M mixed-use development",
+        "Owned a portfolio of 4 projects worth $200M, all delivered within 3% of budget",
+        "Set safety plans with 30 subcontractors; no lost-time injury in 1 million hours worked"],
+    # writing
+    "technical-writer": [
+        "Led a documentation team of 5 writers across 4 products",
+        "Owned the documentation strategy; support tickets about the documentation fell 40%",
+        "Set documentation reviews with 10 engineering teams for every release"],
+    # science and healthcare
+    "life-sciences": [
+        "Led a lab team of 5 associates and technicians",
+        "Owned the assay development plan for 2 drug programs",
+        "Set lab methods with 3 partner teams; repeated experiments fell by 40%"],
+    "healthcare": [
+        "Led clinical operations for 200 clinicians in 15 states",
+        "Owned the expansion of a telehealth service into 4 new specialties",
+        "Set quality measures with medical leaders; follow-up within 7 days rose from 60% to 90% of patients"],
+    "nursing": [
+        "Led a nursing team of 15 as charge nurse on a 30-bed unit",
+        "Owned a fall prevention program; falls on the unit fell by 45%",
+        "Set discharge planning with doctors and social workers; the average stay fell by 1 day"],
+    "mental-health": [
+        "Led clinical supervision for 8 therapists and 4 trainees",
+        "Owned the clinical quality program for a service seeing 2,000 clients a year",
+        "Set referral pathways with 5 local hospitals; the wait for a first session fell from 6 weeks to 2"],
+    "clinical-research": [
+        "Led a team of 6 clinical research associates across 2 trials",
+        "Owned site monitoring for a 40-site trial in 5 countries",
+        "Set monitoring plans with the data management and medical teams; open queries fell by 60%"],
+    # education, hospitality, first jobs, crypto
+    "education": [
+        "Led a team of 8 instructors teaching 2,000 students a year",
+        "Owned the curriculum for a 12-week program, rewritten in 6 months",
+        "Set assessment standards with 3 departments; pass rates rose from 72% to 85%"],
+    "hospitality": [
+        "Led a kitchen team of 18 across 2 restaurants",
+        "Owned food costs of $1.2M a year, kept at 27% of sales",
+        "Set menus with front of house and suppliers; average spend per guest rose 15%"],
+    "intern": [
+        "Led a team of 5 students that won first place among 40 teams at a university hackathon",
+        "Ran the university coding club of 150 members for a year",
+        "Mentored 20 first-year students as a teaching assistant for an introductory programming course"],
+    "blockchain-engineer": [
+        "Led a protocol team of 7 engineers across 2 chains",
+        "Owned the upgrade plan for a network of 1,500 nodes, finished with no downtime",
+        "Set security reviews with 2 outside audit firms for every release, 12 in a year"],
+    "smart-contract-engineer": [
+        "Led a smart contract team of 5 across 3 protocols holding $300M",
+        "Owned the security process: every release passes 2 outside audits and a 30-day bug bounty",
+        "Set upgrade plans with the governance and frontend teams for 6 releases with no incident"],
+}
+
 # work where the collector's skill tags say what the employer wants from the person
 TECH = {
     "software-engineer", "backend-engineer", "frontend-engineer", "full-stack-engineer", "mobile-engineer", "qa-engineer", "embedded-engineer",
@@ -833,19 +2052,40 @@ def example(slug, name, family, rows, field_name):
 
 
 def test():
+    tools = {t for ts in KIND.values() for t in ts} | OFFICE
+    def check(where, slug, ln):
+        """A line as the module docstring asks for it."""
+        assert not ln.endswith(".") and ln[0].isupper() and "'" not in ln, (where, slug, ln)
+        assert all(m.group(1) in KIND for m in SLOT.finditer(ln)) and "{" not in SLOT.sub("", ln), (where, slug, ln)
+        longest = SLOT.sub(lambda m: max(KIND[m.group(1)] + [m.group(2)], key=len), ln)       # whatever the postings put in the places
+        assert len(ln) <= 160 and len(longest) <= 160, (where, slug, len(longest), ln)
+        bare = [t for t in tools if re.search(r"(?<![\w-])" + re.escape(t) + r"(?![\w-])", SLOT.sub("", ln))]
+        assert not bare, (where, slug, bare, ln)                                                # a tool only through a typed place
     for slug, (title, plain, lines) in ROLE.items():
         assert len(lines) == 4 and len(plain.split(",")) >= 3, slug
         assert sum(bool(re.search(r"\d", ln)) for ln in lines) >= 3, slug          # a result without a number is a description
         for ln in lines:
-            assert not ln.endswith(".") and ln[0].isupper() and "'" not in ln, (slug, ln)
-            assert all(m.group(1) in KIND for m in SLOT.finditer(ln)) and "{" not in SLOT.sub("", ln), (slug, ln)
+            check("ROLE", slug, ln)
+    for where, d in (("ENTRY", ENTRY), ("SENIOR", SENIOR)):
+        assert d.keys() == ROLE.keys(), (where, sorted(d.keys() ^ ROLE.keys()))
+        for slug, lines in d.items():
+            assert len(lines) == 3, (where, slug)
+            for ln in lines:
+                assert re.search(r"\d", ln), (where, slug, ln)
+                check(where, slug, ln)
+    new = [ln for d in (ENTRY, SENIOR) for lines in d.values() for ln in lines]
+    assert len(new) == len(set(new)), [ln for ln in set(new) if new.count(ln) > 1]
+    assert ENTRY_TITLE.keys() <= ROLE.keys(), sorted(ENTRY_TITLE.keys() - ROLE.keys())
+    for slug, t in ENTRY_TITLE.items():                                             # only where it is not simply "Junior" + the title
+        assert t and t[0].isupper() and t != "Junior " + ROLE[slug][0], (slug, t)
     d = example("data-analyst", "Data analyst", "data-analytics", [("SQL", 80), ("Python", 60), ("Looker", 20)], "data and analytics")
     assert "dashboard in Looker" in d["exp"][0]["text"] and "check in SQL" in d["exp"][0]["text"] and d["skills"].startswith("SQL, Python, Looker, dashboards"), d
     d = example("recruiter", "Recruiter", "hr-recruiting", asked("recruiter", [("Machine Learning", 40), ("Excel", 9)], 100), "HR and recruiting")
     assert "Machine Learning" not in json_of(d) and d["skills"].endswith("Excel"), d
     d = example("brand-new-work", "Brand new work", "sales", [], "sales")
     assert d["title"] == "Brand new work" and "the CRM" in d["exp"][1]["text"], d
-    print(f"resume_examples.py: {len(ROLE)} kinds of work, all checks passed")
+    print(f"resume_examples.py: {len(ROLE)} kinds of work, {len(ENTRY)} entry-level and {len(SENIOR)} senior sets, "
+          f"{len(ENTRY_TITLE)} beginner titles, all checks passed")
 
 
 def json_of(d):

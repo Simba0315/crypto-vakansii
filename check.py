@@ -49,6 +49,7 @@ fails, counts, broken = defaultdict(Counter), Counter(), Counter()
 for rel in sample:
     t = template(rel); counts[t] += 1
     h = STORE.page(rel.split("/")[1]) if STORE and t == "job" else (SITE / rel).read_text(encoding="utf-8", errors="replace")
+    if 'http-equiv="refresh"' in h[:600] and 'name="robots" content="noindex"' in h[:600]: counts[t] -= 1; continue      # another address for a page (/glossary/ats/): it hands over, it is not a page
     title = re.search(r"<title>(.*?)</title>", h, re.S)
     desc = re.search(r'<meta name="description" content="([^"]*)"', h)
     canon = re.search(r'<link rel="canonical" href="([^"]*)"', h)

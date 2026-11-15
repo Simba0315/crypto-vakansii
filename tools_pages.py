@@ -37,10 +37,13 @@ def _sel(k, label, options, hint="", cls="", attrs="", show=""):
             + (f'<p class="tl-h">{hint}</p>' if hint else "") + "</div>")
 
 
-def _area(k, label, rows, ph="", hint="", cls="full", tall=False, show="", ex=""):
-    """`ex` is the text the "Show an example" button puts in; without it the placeholder is used when it is itself an example."""
+def _area(k, label, rows, ph="", hint="", cls="full", tall=False, show="", ex="", file=False):
+    """`ex` is the text the "Show an example" button puts in; without it the placeholder is used when it is itself an example.
+    `file`: a button that reads a PDF, Word or text file into the box, in the browser (site.js); the file is never uploaded."""
     return (f'<div class="tl-f{" " + cls if cls else ""}"{show}><label class="tl-l" for="tl-{k}">{label}</label>'
-            f'<textarea id="tl-{k}" data-k="{k}" rows="{rows}"{" class=" + chr(34) + "tl-tall" + chr(34) if tall else ""}' + (f' placeholder="{_e(ph)}"' if ph else "")
+            + (f'<p class="tl-file"><label class="btn ghost sm" style="margin:0 0 8px">Open a PDF or Word file<input type="file" accept=".pdf,.docx,.txt" data-into="tl-{k}" hidden></label> '
+               '<span class="tl-fmsg note">Read in your browser; the file is never uploaded.</span></p>' if file else "")
+            + f'<textarea id="tl-{k}" data-k="{k}" rows="{rows}"{" class=" + chr(34) + "tl-tall" + chr(34) if tall else ""}' + (f' placeholder="{_e(ph)}"' if ph else "")
             + (f' data-ex="{_e(ex)}"' if ex else "") + "></textarea>"
             + (f'<p class="tl-h">{hint}</p>' if hint else "") + "</div>")
 
@@ -187,7 +190,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Paste your resume and the job description: you get a match score, the skills and repeated terms you are missing, and a short list of fixes. Nothing is uploaded.",
          wrap("resume-match",
               '<div class="card tl-form"><div class="tl-grid wide">'
-              + _area("resume", "Your resume (plain text)", 12, "Paste the text of your resume here", cls="", tall=True, ex=EX_RESUME)
+              + _area("resume", "Your resume", 12, "Paste the text of your resume here, or open the file above", cls="", tall=True, ex=EX_RESUME, file=True)
               + _area("jd", "The job description", 12, "Paste the full text of the job posting here", cls="", tall=True, ex=EX_JD) + "</div>"
               + '<div class="tl-grid one">' + _f("title", "Job title in the posting (optional)", "Senior Backend Engineer", mode="", hint="We check that your resume uses the same title.") + "</div>"
               + '<div class="tl-actions"><button class="btn" type="button" id="tl-run">Check the match</button>'
@@ -293,9 +296,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # ------------------------------------------------------------ 3. salary converter
     tool("salary-converter", "seekers", "Salary converter",
          "Turn an hourly, daily, weekly or monthly rate into a yearly salary and back, with your own working hours.",
-         "Salary Converter: Hourly to Yearly Pay",
+         "Salary Calculator: Hourly, Monthly, Yearly Pay",
          "Convert pay between hourly, daily, weekly, monthly and yearly figures. Set your own hours per week and paid weeks per year. Free, instant, no sign-up.",
-         "Convert an hourly rate to a yearly salary, and back",
+         "Salary calculator: hourly to yearly pay, and back",
          "One posting says $55 an hour, another $95,000 a year, and a recruiter quotes a day rate. You cannot compare them until they are in the same unit. "
          "Enter any one figure and your working hours: you get the hourly, daily, weekly, monthly and yearly equivalents at once.",
          wrap("salary-converter",
@@ -314,7 +317,10 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<li><code>monthly = yearly ÷ 12</code>, an average month.</li></ul>"
          "<p>All figures are before tax. For an employee with paid leave, leave “paid weeks” at 52: holidays are paid, so they are already inside the salary. "
          "For contract work, enter the number of weeks you expect to bill.</p>",
-         [("How do I convert an hourly rate to a yearly salary?",
+         [('How much is $60,000 a year per hour?', 'About $28.85 an hour at 40 hours a week for 52 weeks (2,080 hours): divide the yearly figure by 2,080. Monthly it is $5,000 and weekly $1,153.85, before tax.'),
+          ('What is a bi-weekly paycheck on $60,000 a year?', '$2,307.69 before tax: there are 26 bi-weekly pay periods in a year. Paid twice a month (semi-monthly, 24 periods) it is $2,500. This calculator works before tax; take-home pay depends on where you live and your deductions.'),
+          ('Does this calculator show take-home pay after tax?', 'No: every figure here is before tax, the way job postings state pay. For a US salary after federal tax, Social Security and Medicare, use the take-home pay calculator on this site.'),
+          ("How do I convert an hourly rate to a yearly salary?",
            "Multiply the hourly rate by the hours you work in a week and by the weeks you are paid in a year. At 40 hours and 52 weeks that is the hourly rate times 2,080, so $50 an hour is $104,000 a year."),
           ("How many working hours are there in a year?",
            "2,080 if you count 40 hours a week for 52 weeks. A 37.5-hour week gives 1,950 hours and a 35-hour week 1,820. For a salaried employee, paid holidays are already inside these figures."),
@@ -322,7 +328,46 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Because a contractor is paid only for the hours billed. Holidays, sick days, gaps between contracts, equipment and employer-side taxes all come out of the rate. Lower “paid weeks per year” to see what a rate adds up to, or use the contractor rate calculator."),
           ("Is the result before or after tax?",
            "Before tax. The converter only changes the unit of time. Tax depends on the country, the state and your personal situation, so it is not estimated here.")],
-         ["raise-calculator", "contractor-rate", "compare-offers"], ["salaries/"])
+         ["take-home-pay", "raise-calculator", "contractor-rate", "compare-offers"], ["salaries/"])
+
+    # ------------------------------------------------------------ 3b. take-home pay ("salary calculator": the first intent on Google is pay after tax,
+    # SERP_WORK 35b, 15 Nov 2026). US federal tax and FICA for 2026, figures from the IRS and the SSA; state tax is not estimated.
+    tool("take-home-pay", "seekers", "Take-home pay calculator",
+         "A US salary after federal income tax, Social Security and Medicare for 2026: per paycheck, per month and per year.",
+         "Take-Home Pay Calculator 2026: Salary After Tax",
+         "Work out your US take-home pay for 2026: federal income tax, Social Security and Medicare taken off, per paycheck, month and year. Free, no sign-up, nothing sent.",
+         "Salary after tax: your take-home pay in 2026",
+         "Enter a yearly salary and how you file. The calculator takes off federal income tax with the 2026 brackets and standard deduction, Social Security and Medicare, "
+         "and shows what lands in each paycheck. State and local income tax are not included: nine states have no income tax on wages, the others add their own.",
+         wrap("take-home-pay",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _f("salary", "Yearly salary (US dollars)", "75000")
+              + _sel("status", "Filing status", [("single", "Single", True), ("joint", "Married filing jointly")])
+              + _sel("freq", "Paid", [("biweek", "Every two weeks (26)", True), ("semimonth", "Twice a month (24)"), ("month", "Monthly (12)"), ("week", "Weekly (52)")])
+              + "</div>" + '<div class="tl-grid c2">'
+              + _f("pretax", "Pre-tax contributions a year (optional)", "0", hint="401(k), HSA and similar amounts taken before income tax.") + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _private(" The figures are worked out inside your browser and never sent anywhere.")
+              + _board("Your take-home pay", "Enter a yearly salary to see what is left after federal tax, Social Security and Medicare.")),
+         "How the take-home pay is calculated",
+         "<ul><li><strong>Federal income tax</strong> on the salary minus pre-tax contributions minus the 2026 standard deduction ($16,100 single, $32,200 married filing jointly), "
+         "with the 2026 brackets: 10%, 12%, 22%, 24%, 32%, 35% and 37% (single: up to $12,400, $50,400, $105,700, $201,775, $256,225, $640,600 and above; "
+         "married filing jointly: $24,800, $100,800, $211,400, $403,550, $512,450, $768,700 and above). Source: IRS Revenue Procedure 2025-32.</li>"
+         "<li><strong>Social Security</strong>: 6.2% of wages up to $184,500 (the 2026 wage base, Social Security Administration).</li>"
+         "<li><strong>Medicare</strong>: 1.45% of all wages, plus 0.9% above $200,000 single or $250,000 married filing jointly.</li></ul>"
+         "<p>Not included: state and local income tax, credits (child tax credit and others), itemized deductions, bonuses taxed at a flat rate, and benefits taken from pay "
+         "such as health insurance. Your employer’s withholding can differ a little from this year-end figure. This is an estimate, not tax advice.</p>",
+         [("How much is $75,000 a year after taxes?", "For a single filer with no pre-tax contributions, $61,593 a year after 2026 federal income tax ($7,670), Social Security ($4,650) "
+           "and Medicare ($1,088): about $2,369 every two weeks, before any state tax."),
+          ("How much is $100,000 a year after taxes?", "For a single filer with no pre-tax contributions, $79,180 a year after 2026 federal income tax ($13,170), Social Security ($6,200) and Medicare ($1,450), "
+           "before state tax: about $3,045 every two weeks."),
+          ("Does this include state tax?", "No. Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming have no state income tax on wages; "
+           "elsewhere, take off your state’s tax as well."),
+          ("Why is my paycheck different from this?", "Your employer withholds tax through the year from the W-4 you filled in, and takes off benefits such as health insurance. "
+           "This calculator works out the year’s federal tax itself, so the two can differ by a little."),
+          ("Do 401(k) contributions lower my taxes?", "Traditional 401(k) contributions lower your income tax, because they are taken off before it; Social Security and Medicare are still due on them. "
+           "Enter them as pre-tax contributions to see the difference.")],
+         ["salary-converter", "raise-calculator", "compare-offers"], ["salaries/"])
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",
@@ -501,9 +546,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         '<div class="tl-paper" id="tl-paper"></div><p class="note tl-noprint" id="tl-count" role="status" aria-live="polite"></p></div>')
     tool("cover-letter", "seekers", "Cover letter builder",
          "Fill in a few facts, pick a tone, get a clean letter to edit. Copy, download or print. A template, not AI.",
-         "Cover Letter Builder — Free, No Sign-Up",
+         "Cover Letter Generator — Free, No Sign-Up",
          "Build a short, clear cover letter from a few facts about you and the job. Three tones; copy, download or print. Template-based, private, no sign-up.",
-         "Write a cover letter without staring at a blank page",
+         "Cover letter generator: write one without staring at a blank page",
          "The empty page is the slowest part of applying. Fill in a few facts about the job and about you, pick a tone, and you have a short, clean letter to edit. "
          "It is a fill-in template, not AI: every sentence is built from what you type, so nothing is invented for you. Nothing is uploaded.",
          wrap("cover-letter",
@@ -528,7 +573,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Each part is built from one or two fields. A field you leave empty drops its sentence, and the three things a letter cannot do without (job title, company, your name) appear in [brackets] until you fill them in.</p>"
          "<p>The tone changes the wording, never the facts: “direct” is plain and brief, “warm” is friendlier, “formal” suits banks, law firms and the public sector. "
          "No AI is involved and nothing is generated: what you read is what you typed, arranged. Treat it as a first draft and change any sentence that does not sound like you.</p>",
-         [("Is this cover letter written by AI?",
+         [('Is there a free cover letter generator with no sign-up?', 'This one: fill in a few facts about you and the job, pick a tone, and copy, download or print the letter. No account, no email, and nothing is uploaded.'),
+          ('Can I use ChatGPT to write a cover letter?', 'Yes, as a first draft. Then make it yours: replace general claims with your own results and numbers, use the posting’s words and cut it to under 250 words. A letter that could go to any company reads as generated. This generator builds every sentence from the facts you type, so nothing is invented.'),
+          ("Is this cover letter written by AI?",
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated, guessed or sent to a server, so the letter contains only facts you typed."),
           ("How long should a cover letter be?",
            "Short: three to five brief paragraphs that fit on one page. The builder shows a word count under the letter and tells you when your answers make it run long."),
@@ -769,15 +816,15 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     # ------------------------------------------------------------ 14. resume review
     tool("resume-review", "seekers", "Resume review",
          "Paste your resume: a score out of 10 from six plain checks, with strengths, weaknesses and what to fix, each quoting your own line.",
-         "Resume Review: Free Score Out of 10 and Fixes",
+         "Free Resume Checker: Score Out of 10 and Fixes",
          "Paste your resume for a rule-based review: a score out of 10 from six checks, strengths, weaknesses and what to fix, quoting your own lines. No AI, private.",
-         "Get your resume reviewed the way a recruiter skims it",
+         "Resume checker: see your resume the way a recruiter skims it",
          "A recruiter’s first pass over a resume is a skim: the top of the page, a few bullet points, the dates. This review reads your text the same way with six plain checks: "
          "what the first screen holds, duty wording, numbers, the skills list, gaps between dates and length. You get a score out of 10 from a formula printed on this page, "
          "strengths, weaknesses and a list of fixes, each quoting your own line. It works by rules, not AI, and nothing is uploaded.",
          wrap("resume-review",
               '<div class="card tl-form">'
-              + _area("text", "Your resume (plain text)", 16, "Paste the text of your resume here, with its headings and dates", tall=True, ex=EX_REVIEW)
+              + _area("text", "Your resume", 16, "Paste the text of your resume here, with its headings and dates, or open the file above", tall=True, ex=EX_REVIEW, file=True)
               + '<div class="tl-actions">' + run_btn("Review the resume") + _clear(True) + "</div></div>"
               + _private(" The text is read inside your browser and is never sent anywhere.")
               + _board("Resume review", "Paste the text of your resume to see its score and what to fix.")
@@ -802,7 +849,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<p>8.5 and above is labelled “reads well on a first skim”, 6.5 to 8 “solid”, 4.5 to 6 “readable”, anything lower “hard to skim”. The points and thresholds are our own rules of thumb, "
          "written down so that you can check them; they are not an industry standard. The review cannot tell whether what you wrote is true, how the page looks or whether you fit a particular job. "
          "A break in the dates is a question a reader may ask, not a fault.</p>",
-         [("How is the resume score calculated?",
+         [('Is 80% a good ATS score?', 'There is no single ATS score. An employer’s applicant tracking system stores resumes and lets recruiters search them; the percentages people quote come from third-party checkers, each with its own formula. On this site the resume match checker scores the keyword overlap with one posting (75 and above is labelled a strong match), and this review scores how well the page reads on a first skim, out of 10.'),
+          ('How do I check if my resume is good?', 'Three questions cover most of it: does the top third show your title, years and strongest skills; does every line under a job say what changed, with a number; and does it use the words of the posting you apply to. This review checks the first two; the resume match checker checks the third against a real posting.'),
+          ("How is the resume score calculated?",
            "It is the sum of six checks worth 10 points in all: first screen 2, wording 2, numbers 2, skills 1.5, gaps 1 and length 1.5. The exact rule for each check is under “How the score is calculated”, so the same text always gets the same score."),
           ("Is the review done by AI?",
            "No. The page counts words, lines, numbers and dates, and looks for a short list of phrases. That is why every finding can quote the line it is about, and why the review cannot judge things that need understanding, such as whether a result is impressive."),
@@ -841,7 +890,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "<p>The buzzword list is short and ours: passionate, results-driven, guru, ninja, rockstar, wizard, synergy, thought leader, visionary, team player, self-starter, motivated, innovative, "
          "proven track record, outside the box and a few more. Points marked “Fix” and “Check” are counted as things to fix; “Note” is a smaller suggestion. "
          "The page reads words and patterns. It cannot judge your photo, your experience entries or whether a claim is true, and an unusual job title may not be on its list.</p>",
-         [("How long can a LinkedIn headline be?",
+         [('Can I upload my resume as a PDF or Word file?', 'Yes: open the file and the page reads its text right here in your browser, then shows it in the box so you can check it. The file itself is never uploaded. A scanned PDF is a picture with no text in it, so copy the text instead.'),
+          ("How long can a LinkedIn headline be?",
            "220 characters, including spaces. There is no need to fill them: a job title, a field and two or three skills are enough. The check flags a headline over the limit and notes one under 30 characters."),
           ("What is “the opening” of the About section?",
            "LinkedIn shows only the first lines of the About text until a reader clicks “see more”. This page treats the first 300 characters as that opening and checks that they say what you do and for whom, because a reader may never see the rest."),

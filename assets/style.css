@@ -25,14 +25,14 @@
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){
   --bg:#121110;--bg2:#191715;--card:#1b1917;--text:#f4f1ec;--muted:#aca69c;--faint:#8f897f;--line:#2a2723;--line2:#3b3732;
-  --hl:#5fd486;--hl-ink:#121110;--ac:#5fd486;--ac-ink:#121110;--brand:#5fd486;--brand-ink:#121110;--pop:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#5fd486;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#1f1d1a;
+  --hl:#5fd486;--hl-ink:#121110;--ac:#5fd486;--ac-ink:#121110;--brand:#5fd486;--brand-ink:#121110;--pop:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#d9d4ca;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#1f1d1a;
   --green:#6fdd95;--green-soft:#12301d;--amber:#f2c14e;--amber-soft:#302509;
   --shadow:0 1px 0 rgba(0,0,0,.5),0 14px 30px -18px rgba(0,0,0,.9);
   --ava-bg-l:18%;--ava-bg-s:35%;--ava-fg-l:82%;color-scheme:dark;
 }}
 :root[data-theme=dark]{
   --bg:#121110;--bg2:#191715;--card:#1b1917;--text:#f4f1ec;--muted:#aca69c;--faint:#8f897f;--line:#2a2723;--line2:#3b3732;
-  --hl:#5fd486;--hl-ink:#121110;--ac:#5fd486;--ac-ink:#121110;--brand:#5fd486;--brand-ink:#121110;--pop:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#5fd486;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#1f1d1a;
+  --hl:#5fd486;--hl-ink:#121110;--ac:#5fd486;--ac-ink:#121110;--brand:#5fd486;--brand-ink:#121110;--pop:#5fd486;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#d9d4ca;--btn-h-ink:#121110;--accent:#f4f1ec;--accent-soft:#1f1d1a;
   --green:#6fdd95;--green-soft:#12301d;--amber:#f2c14e;--amber-soft:#302509;
   --shadow:0 1px 0 rgba(0,0,0,.5),0 14px 30px -18px rgba(0,0,0,.9);
   --ava-bg-l:18%;--ava-bg-s:35%;--ava-fg-l:82%;color-scheme:dark;
@@ -951,7 +951,7 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .tier .btn{width:100%;margin:0 0 6px}
 .tier.best{background:#0e0e0c;border-color:#0e0e0c;color:#f3f2ec;border-top:5px solid var(--pop)}
 .tier.best .tn,.tier.best .td,.tier.best .tp small{color:#b9b7ad}
-.tier.best .btn,.tier.best .btn[disabled],.tier.best .btn[disabled]:hover{background:var(--pop);border-color:var(--pop);color:#06361c;opacity:1}
+.tier.best .btn,.tier.best .btn[disabled],.tier.best .btn[disabled]:hover{background:#f3f2ec;border-color:#f3f2ec;color:#121110;opacity:1}
 .ticks{list-style:none;margin:6px 0 0;padding:0}
 .ticks li{position:relative;padding:10px 0 10px 30px;border-top:1px solid var(--line);font-size:14.5px;line-height:1.4}
 .tier.best .ticks li{border-top-color:#2b2b27}
@@ -1035,7 +1035,7 @@ td s.was{font-size:.92em}
 .pt .pc .pp b{display:inline;font-size:inherit;letter-spacing:0;color:var(--text)}
 .pt .pc .pn{display:block;margin-top:4px;font-size:13px;font-weight:400;color:var(--faint)}
 .pt .best{background:var(--accent-soft)}
-.pt thead .best>b{color:var(--btn-h)}
+.pt thead .best>b{color:var(--ac)}
 :root[data-theme=dark] .pt thead .best>b{color:var(--ac)}
 .pt tr.pg th{font-size:17px;font-weight:700;padding:26px 20px 14px;letter-spacing:-.01em}
 .pt tbody th[scope=row]{font-weight:400;color:var(--muted)}
@@ -1841,6 +1841,9 @@ table.grid tr.grp th{font-variant-numeric:normal}
 .lact a.btn{text-decoration:none}
 /* companies hiring in a place: on a phone the kinds of work give way, so three columns fit the screen */
 @media(max-width:600px){.cotab th:nth-child(4),.cotab td:nth-child(4){display:none}.cotab th{white-space:normal}.cotab th,.cotab td{padding-right:12px}}
+
+/* crosslinks.py: narrower and related pages, a compact list in columns */
+.xlinks h3{font-size:15px;font-weight:650;margin:18px 0 8px;color:var(--muted)}.xl{columns:3 230px;column-gap:28px;list-style:none;padding:0;margin:0 0 6px}.xl li{break-inside:avoid;margin:0 0 7px;line-height:1.35}.xl a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line2)}.xl a:hover{border-bottom-color:var(--ac)}.xl span{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;margin-left:4px}
 
 /* Job alert sign-up (alert_form in build.py, server/src/alerts.js). Kept small on purpose: the design work may restyle it. */
 .alertf{margin:32px 0;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
