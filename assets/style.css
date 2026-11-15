@@ -1841,3 +1841,6 @@ table.grid tr.grp th{font-variant-numeric:normal}
 .lact a.btn{text-decoration:none}
 /* companies hiring in a place: on a phone the kinds of work give way, so three columns fit the screen */
 @media(max-width:600px){.cotab th:nth-child(4),.cotab td:nth-child(4){display:none}.cotab th{white-space:normal}.cotab th,.cotab td{padding-right:12px}}
+
+/* crosslinks.py: narrower and related pages, a compact list in columns */
+.xlinks h3{font-size:15px;font-weight:650;margin:18px 0 8px;color:var(--muted)}.xl{columns:3 230px;column-gap:28px;list-style:none;padding:0;margin:0 0 6px}.xl li{break-inside:avoid;margin:0 0 7px;line-height:1.35}.xl a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line2)}.xl a:hover{border-bottom-color:var(--ac)}.xl span{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;margin-left:4px}

@@ -678,6 +678,10 @@ def rss(path, title, link, jobs):
                 f"<description>{e(title)}</description><lastBuildDate>{now}</lastBuildDate>{items}</channel></rss>", sitemap=False)
 
 
+AI_TAGS = ("AI", "LLM", "Machine Learning", "PyTorch", "TensorFlow", "LangChain", "Computer Vision", "NLP")
+ALL_OPEN = [0]          # every open job on the site, set once the jobs are read: "this field is 2.1% of all open jobs"
+
+
 def faq_for(label, jobs, first=None):
     """Questions people actually ask about a set of jobs, answered from today's data. Returns (html, json-ld)."""
     if len(jobs) < 5: return "", ""
@@ -707,6 +711,38 @@ def faq_for(label, jobs, first=None):
         qa.append((f"What do {label} pay?",
                    f"The median advertised salary is {money(median(mids))}, based on {len(mids):,} open roles that publish a yearly US-dollar range. The middle half of those roles advertise between "
                    f"{money(mids[len(mids) // 4])} and {money(mids[min(len(mids) - 1, 3 * len(mids) // 4)])}. These are advertised ranges, not verified pay."))
+    # What Google's "People also ask" asks about a field (checked 15 Nov 2026 for "data analyst jobs": "Is it hard to get a data analyst
+    # job?", "Will AI replace data analysts?", "Is a data analyst still worth it in 2026?"), answered with today's counts, never opinion.
+    yrs = sorted(j["years"] for j in jobs if j.get("years"))
+    ent = sum(1 for j in jobs if j.get("entry"))
+    if n_ >= 20 and (len(yrs) >= 10 or ent):
+        one_ = (art(label[:-5]) + " " + label[:-1]) if label.endswith(" jobs") else f"one of the {label}"     # "data analyst jobs" -> "a data analyst job"
+        qa.append((f"Is it hard to get {one_}?",
+                   f"{ent:,} of the {n_:,} open {label} ({100 * ent / n_:.0f}%) are for beginners: junior roles and internships."
+                   + (f" Of the {len(yrs):,} postings that state experience, the median asks for {yrs[len(yrs) // 2]} {'year' if yrs[len(yrs) // 2] == 1 else 'years'}." if len(yrs) >= 10 else "")
+                   + f" {n_co:,} {'company is' if n_co == 1 else 'companies are'} hiring and {new7:,} roles were posted in the last seven days. Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
+    ai_ = Counter(t for j in jobs for t in j.get("tags", []) if t in AI_TAGS)
+    k_ai = sum(1 for j in jobs if any(t in AI_TAGS for t in j.get("tags", [])))
+    if n_ >= 20:
+        qa.append((f"How is AI changing {label}?",
+                   f"{k_ai:,} of the {n_:,} open {label} ({100 * k_ai / n_:.0f}%) ask for AI or machine-learning skills"
+                   + (", most often " + ", ".join(t for t, _ in ai_.most_common(3)) + "." if ai_ else ".")
+                   + f" Employers still list {n_:,} such roles today at {n_co:,} {'company' if n_co == 1 else 'companies'}. Counted from the postings' own text on {fdate(TODAY)}."))
+    # "What are the 5 skills of customer service?", "What jobs can I get with Python?" (People also ask, 15 Nov 2026)
+    sk_ = Counter(t for j in jobs for t in j.get("tags", []))
+    if n_ >= 20 and len(sk_) >= 3:
+        qa.append((f"What skills do {label} ask for?",
+                   "Most often " + ", ".join(f"{t} ({100 * k / n_:.0f}%)" for t, k in sk_.most_common(5)) + f" of the {n_:,} open postings, counted from their own text on {fdate(TODAY)}."))
+    ti_ = Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in jobs)
+    ti_ = [(t, k) for t, k in ti_.most_common(8) if k >= 2 and 3 <= len(t) <= 60][:5]
+    if n_ >= 20 and len(ti_) >= 3:
+        qa.append((f"Which job titles come up most in {label}?",
+                   ", ".join(f"{t} ({k})" for t, k in ti_) + f": the most common titles among the {n_:,} open roles, without the level and place notes in brackets."))
+    if n_ >= 20 and ALL_OPEN[0]:
+        qa.append((f"Are {label} in demand in {TODAY[:4]}?",
+                   f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, {100 * n_ / ALL_OPEN[0]:.1f}% of all {ALL_OPEN[0]:,} open jobs here; "
+                   f"{new7:,} were posted in the last seven days." + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
+                   + f" {r:,} ({100 * r / n_:.0f}%) can be done remotely."))
     qa.append((f"How do I apply for {label}?",
                f"Open a job and press “Apply on company site”. You go straight to the employer's own careers page and apply there. {SITE} needs no account and charges nothing for applying."))
     html_ = '<dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(a_)}</dd></div>" for q, a_ in qa) + "</dl>"
@@ -941,10 +977,11 @@ def microdata(props):
 
 
 def job_indexable(j):
-    """A job page goes to search engines only while the job is open and the page carries the employer's full text. A closed job's page
-    stays online for visitors, and a page with only the opening lines of the posting is too thin to rank: both are noindex and left out
-    of the sitemap, so Google spends its visits on the pages that can rank (categories, places, salaries, open jobs with their text)."""
-    return bool(j["active"] and j.get("desc") and not j.get("tg"))
+    """Every job page goes to search engines: open ones, and closed ones as an archive (the owner, 13 Nov 2026: "every job must be in
+    Google, every one"; "keep closed jobs, there may be search traffic on them"). Only posts read from Telegram channels stay out.
+    A closed page carries no JobPosting markup (Google's rule for expired jobs), so it can rank as a page without being offered as an
+    open job. Pages with only the opening lines of a posting grow into full pages as the collector keeps every open job's full text."""
+    return not j.get("tg")
 
 
 def job_page(j, active_by_cat):
@@ -1043,7 +1080,9 @@ def job_page(j, active_by_cat):
         ld["validThrough"] = VALID_TO
         # Google reads a remote posting only with the countries it is open to. A remote job that names none ("Remote", "Global")
         # gets no markup at all rather than a guessed country; its page is still found by ordinary search.
-        mark_ok = (not j["remote"] or "applicantLocationRequirements" in ld) and ("jobLocation" in ld or "applicantLocationRequirements" in ld) and not j.get("tg")
+        # Google: the description in JobPosting must be "a complete representation of the job"; an excerpt risks a manual action.
+        # A job with only its opening lines keeps its page in search, without the markup, until the collector stores its full text.
+        mark_ok = (not j["remote"] or "applicantLocationRequirements" in ld) and ("jobLocation" in ld or "applicantLocationRequirements" in ld) and not j.get("tg") and bool(full)
         if not mark_ok: head, micro = "", ""
         elif full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
         else: head, micro = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>", ""
@@ -1215,6 +1254,7 @@ def main():
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
+    ALL_OPEN[0] = len(active)
     global LIST_PAGES
     LIST_PAGES = int(os.environ.get("HRN_PAGE_CAP") or 1)      # owner, 14 Nov: no Cloudflare yet, so the 70 MiB of second pages goes to more jobs; the search shows the rest
     archived = [j for j in jobs if not j["active"]]
@@ -1778,7 +1818,9 @@ def main():
     for s, name in CAT.items():
         js = by_cat[s]
         if not js: continue
-        listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open) | {SITE}",
+        mids_c = sorted((lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]])
+        pay_c = f", {money(mids_c[len(mids_c) // 4])}–{money(mids_c[3 * len(mids_c) // 4])}" if len(mids_c) >= 15 else ""     # the pay range in the title, as the top results show it
+        listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open{pay_c}) | {SITE}",
                 f"{roles(len(js), name + ' job')} at companies. Remote and on-site roles, updated hourly.",
                 js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, extra=sponsor_line("category:" + s) + hub_stats(js) + rel(REL["cat:" + s], ("categories/", "All categories")) + hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
                 hub=hub_sections(f"{name} roles", js)[1], accent=CAT_ACCENT.get(s), list_title=f"Newest {name} jobs")
@@ -1896,7 +1938,9 @@ def main():
                     + (labrow("Prepare", [f'<a href="{P}/interview-questions/{slug_r}/">Interview questions</a>', f'<a href="{P}/cover-letter-examples/{slug_r}/">Cover letter example</a>',
                                           f'<a href="{P}/how-to-become/{slug_r}/">How to become one</a>']) if has_rex(slug_r) and len(rj) >= 20 else "")) if fams else ""
         secs = hub_sections(f"{low} roles", rj, "roles")
-        listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open) | {SITE}",
+        mids_r = sorted((lo + hi) / 2 for j in rj if j["usd"] for lo, hi in [j["usd"]])
+        pay_r = f", {money(mids_r[len(mids_r) // 4])}–{money(mids_r[3 * len(mids_r) // 4])}" if len(mids_r) >= 15 else ""     # the pay range in the title, as the top results show it
+        listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r}) | {SITE}",
                 f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated hourly.",
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
                 trail=(("Categories", "categories/"),), feed=True, extra=hub_stats(rj) + mini_pics(rj) + fam_line + rel(REL["role:" + slug_r], ("roles/", "All roles")) + secs[0], faq=f"{low} jobs",
@@ -2300,6 +2344,32 @@ def main():
                    "These are advertised ranges for open roles, mostly in the United States and in US dollars, not what people are actually paid.")]
         if best_c:
             sal_qa.insert(2, (f"Which companies advertise the highest {label} pay?", ", ".join(f"{k} ({money(m_)})" for m_, k in best_c) + ", by the median of their open postings that state pay (three postings or more)."))
+        # Google's "People also ask" for "<job> salary" (checked 15 Nov 2026): "Is it a high paying job?", "How much can you earn?",
+        # "What are the top 3 skills?", and searches "per hour", "per month", "entry level": each answered from the same postings.
+        all_mid = median([(lo + hi) / 2 for _, (lo, hi) in paid])
+        hourly = lambda v: f"${v / 2080:,.0f}"
+        ent_ = sorted((lo + hi) / 2 for j, (lo, hi) in group if j.get("entry"))
+        with_t = defaultdict(list)
+        for j, (lo, hi) in group:
+            for t in j.get("tags", []): with_t[t].append((lo + hi) / 2)
+        prem = sorted(((median(v) - median(mids), t, len(v)) for t, v in with_t.items() if len(v) >= max(5, len(mids) // 10) and len(v) < len(mids)), reverse=True)[:5]
+        prem = [x for x in prem if x[0] > 0]
+        sal_qa[3:3] = [
+            (f"Is {art(label.lower())} {label.lower()} a high-paying job?",
+             f"The median {label} posting advertises {money(median(mids))} a year, {('more than' if median(mids) > all_mid else 'less than')} the median of all {len(paid):,} job postings with pay on {SITE} ({money(all_mid)})."
+             f" That is {abs(round((median(mids) / all_mid - 1) * 100))}% {'above' if median(mids) > all_mid else 'below'} the middle of the market."),
+            (f"How much can you earn as {art(label.lower())} {label.lower()}?",
+             f"A tenth of the postings offer {money(pct(.9))} a year or more; the highest open {label} role advertises up to {money(max(hi for _, (lo, hi) in group))}. Pay rises with level: see the table by level."),
+            (f"What is the {label} salary per hour and per month?",
+             f"The median of {money(median(mids))} a year is about {hourly(median(mids))} an hour (2,080 working hours) and ${median(mids) / 12:,.0f} a month before tax. "
+             f"The middle half of postings: {hourly(pct(.25))} to {hourly(pct(.75))} an hour."),
+        ]
+        if len(ent_) >= 5:
+            sal_qa.insert(6, (f"What does an entry-level {label.lower()} make?", f"{len(ent_):,} junior and intern {label} postings state pay, with a median of {money(median(ent_))} a year "
+                                                                                f"({hourly(median(ent_))} an hour)."))
+        if prem:
+            sal_qa.insert(6, (f"Which skills pay more for {label} roles?", "Postings that ask for " + ", ".join(f"{t} (+{money(d)}, {k} postings)" for d, t, k in prem[:3])
+                              + f" advertise more than the {money(median(mids))} median of all {label} postings with pay."))
         sal_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sal_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         if role:      # a kind of work, so the page can also be read as an occupation with its pay
@@ -2315,9 +2385,13 @@ def main():
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
              f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}: '
-             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>'
+             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range: about {hourly(median(mids))} an hour or ${median(mids) / 12:,.0f} a month. '
+             f'A tenth of the postings offer {money(pct(.9))} or more. Advertised ranges, not verified pay.</p>'
              + act_row("tools/offer-check/", "Check an offer against these figures", [back] if isinstance(back, tuple) else ()) + f'{stats}'
-             + cut + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
+             + cut + (section(f"Skills that pay more for {label} roles", '<div class="tablewrap"><table><tr><th>Skill</th><th>Median with it</th><th>Above the median</th><th>Postings</th></tr>'
+                                + "".join(f'<tr><td><a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a></td><td>{money(median(mids) + d)}</td><td>+{money(d)}</td><td>{k:,}</td></tr>' for d, t, k in prem)
+                                + "</table></div>") if prem else "")
+             + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
              + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
              + cite(f"salaries/{slug}/", f"{label} salaries",
@@ -3054,6 +3128,15 @@ def main():
     # the same advice for every work; what makes each page useful is counted from today's postings: how many are open to beginners,
     # how many years employers ask, the skills they name first, whether a degree is required, what juniors are paid.
     hb_dir = defaultdict(list)
+    PROOF_AT = {"engineering": "Put the code on GitHub with a short read-me: what it does, how to run it, one number that shows it works.",
+                "data-research": "Use a public dataset (Kaggle, a government open-data portal), publish the queries or notebook on GitHub and a one-page write-up of what you found.",
+                "design": "Show three case studies on Behance, Dribbble or your own site: the problem, the sketches, the result and what changed.",
+                "product": "Write up one product decision: the problem, the evidence, what you shipped and the number it moved.",
+                "marketing": "Publish samples: a campaign with its results, a post, a landing page, each with the number it moved.",
+                "sales-bd": "Keep the numbers: quota reached, deals closed, pipeline built, written as results on the resume.",
+                "security": "Write up a lab or capture-the-flag result on GitHub or a blog; a certification helps here more than in most work."}
+    CERT_RX = re.compile(r"\b(AWS Certified[\w -]{0,30}|Azure [\w ]{0,20}Certifi\w+|Google (?:Cloud|Data Analytics)[\w ]{0,20}Certifi\w+|PMP|CPA|CFA|CISSP|CISM|Security\+|"
+                         r"CompTIA [A-Z][\w+]*|Scrum Master|CSM|Salesforce Certified[\w -]{0,25}|Tableau Certified[\w -]{0,20}|ITIL|SHRM-(?:CP|SCP)|PHR|CKA|Six Sigma)\b")
     for slug_r, d in rex_data.items():
         rname, rj = by_role[slug_r]
         if len(rj) < 20: continue
@@ -3071,12 +3154,17 @@ def main():
         top_ = resume_examples.asked(slug_r, cnt_.most_common(), n_)[:5]
         titles_ = [t for t, _ in Counter(j["title"] for j in begin).most_common(30) if len(t) <= 50][:5]
         lines_ = [ln.strip() for ln in (d["exp"][0]["text"] if d["exp"] else "").split("\n") if ln.strip()][:2]
+        certs_ = Counter(m.strip() for j in rj for m in set(CERT_RX.findall(j.get("desc") or j.get("excerpt") or "")))
+        certs_ = Counter({c: k for c, k in certs_.items() if k >= 2})            # one mention is noise ("CPA" once in a data analyst posting)
+        with_text = sum(1 for j in rj if j.get("desc"))
+        k_ai = sum(1 for j in rj if any(t in AI_TAGS for t in j["tags"]))
         steps = ("<ol class=\"steps\">"
                  f"<li><b>Know what the work is.</b> {e(art(low).capitalize())} {e(low)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
                  + (f"<li><b>Learn the skills employers name first.</b> In today’s {n_:,} postings: " + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in top_) + ".</li>" if top_ else
                     "<li><b>Learn the duties, not only the tools.</b> Postings for this work describe what you will do more than which software you will use: read ten of them and list the duties that repeat.</li>")
                  + "<li><b>Build proof you can show.</b> Two or three results with a number, from a job, a course project or volunteer work. The kind of line a recruiter looks for: "
-                 + (f"“{e(lines_[0])}”." if lines_ else "a result with a number.") + "</li>"
+                 + (f"“{e(lines_[0])}”." if lines_ else "a result with a number.") + (f" {e(PROOF_AT[fs])}" if fs in PROOF_AT else "")
+                 + (f" Certifications the postings name: {e(', '.join(c for c, _ in certs_.most_common(3)))}." if certs_ else "") + "</li>"
                  + f'<li><b>Write the resume and the letter.</b> Start from the <a href="{P}/resume/examples/{slug_r}/">{e(low)} resume example</a> and the <a href="{P}/cover-letter-examples/{slug_r}/">cover letter example</a>, and replace every line with your own.</li>'
                  + f'<li><b>Apply where beginners are hired.</b> {len(begin):,} of today’s {n_:,} open {e(low)} jobs are junior or intern roles or ask for two years of experience or less. '
                  + f'<a href="{P}/roles/{slug_r}/">See the open jobs</a> and check each one with the <a href="{P}/tools/resume-match/">resume match checker</a> before you apply.</li></ol>')
@@ -3085,7 +3173,15 @@ def main():
                  (f"Do I need a degree to become {art(low)} {low}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
                   + " Many others accept equivalent experience: read the requirements of each posting."),
                  (f"How much does a beginner {low} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
-                  else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure.")))]
+                  else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure."))),
+                 (f"What qualifications do you need to become {art(low)} {low}?",
+                  "Employers name skills first: " + (", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:3]) + " of today’s postings. " if top_ else "the duties in the posting. ")
+                  + (f"The median posting asks for {y_med} years of experience. " if y_med is not None else "")
+                  + (f"{nodeg}% say no degree is required. " if nodeg else "")
+                  + (("Certifications named in the full text of " + f"{with_text:,} postings: " + ", ".join(f"{c} ({k})" for c, k in certs_.most_common(3)) + ".") if certs_ else "Few postings ask for a specific certification.")),
+                 (f"Is AI replacing {low}s?" if not low.endswith("s") else f"Is AI replacing {low}?",
+                  f"Not in today’s postings: {n_:,} {low} jobs are open on {SITE} as of {fdate(TODAY)}, and {pc_(k_ai, n_)}% of them ask for AI or machine-learning skills"
+                  + (", alongside " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:2]) + "." if top_ else "."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs today</dt><dd>{n_:,}</dd></div><div><dt>Open to beginners</dt><dd>{len(begin):,}</dd></div>"
@@ -5811,6 +5907,10 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     (OUT / ".nojekyll").write_text("")
     write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#ffffff", "theme_color": "#121110",
                                        "icons": [{"src": P + "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}), sitemap=False)
+    # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
+    import crosslinks
+    n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")])
+    print(f"cross-links: {n_x:,} pages got links up, down or across ({n_l:,} narrow-to-broad pairs)")
     job_mod = {f"job/{j['slug']}/": (j.get("last_seen") if j["active"] else j.get("closed")) or TODAY for j in jobs}      # a closed job's page last changed the day it closed
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                            + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{job_mod.get(u, TODAY)}</lastmod></url>" for u in urls) + "</urlset>")
@@ -5827,7 +5927,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
           + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{max([job_mod.get(u, TODAY) for u in urls] or [TODAY])}</lastmod></sitemap>" for name, urls in parts if urls)
           + "</sitemapindex>", sitemap=False)
-    print(f"sitemaps: {len(core_urls):,} main pages, {sum(len(u) for n, u in parts[1:2]):,} other pages, {len(job_urls):,} open jobs with their full text")
+    print(f"sitemaps: {len(core_urls):,} main pages, {sum(len(u) for n, u in parts[1:2]):,} other pages, {len(job_urls):,} job pages")
     ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
                "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
     if MAIL.get("security"):
