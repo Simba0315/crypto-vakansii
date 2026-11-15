@@ -1,20 +1,16 @@
-import json, subprocess, threading
+import json, multiprocessing, subprocess
 from urllib.parse import urlsplit
 
 # At most this many requests at once to one host. The hiring systems below serve thousands of small company boards from one
 # address; 20 workers hitting it together is what gets a crawler rate-limited (Workable answers 429 to that). Hosts not listed:
 # no limit beyond the worker pool.
 PER_HOST = {"apply.workable.com": 4, "api.smartrecruiters.com": 8, "ats.rippling.com": 6, "opendata.trudvsem.ru": 4}
-_gates, _lock = {}, threading.Lock()
+# made at import, before collect.py may fork worker processes (HRN_PROCS), so threads and processes share the same limits
+_gates = {h: multiprocessing.BoundedSemaphore(n) for h, n in PER_HOST.items()}
 
 
 def _gate(url):
-    host = (urlsplit(url).hostname or "").lower()
-    n = PER_HOST.get(host)
-    if not n: return None
-    with _lock:
-        if host not in _gates: _gates[host] = threading.BoundedSemaphore(n)
-        return _gates[host]
+    return _gates.get((urlsplit(url).hostname or "").lower())
 
 
 def get_text(url, timeout=30, accept="application/json"):

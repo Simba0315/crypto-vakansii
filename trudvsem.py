@@ -128,9 +128,25 @@ def to_job(row, field):
     return j
 
 
+def _job(item):
+    row, field = item
+    j = to_job(row, field)
+    if j:
+        try: j["_ogrn"] = json.loads(row.get("company") or "{}").get("ogrn") or ""
+        except ValueError: j["_ogrn"] = ""
+    return j
+
+
+KEEP = ("id", "vacancyName", "vacancyUrl", "fullCompanyName", "company", "regionName", "vacancyAddress", "professionalSphereName", "datePublished",
+        "creationDate", "responsibilities", "positionRequirements", "qualifications", "additionalRequirements", "conditions", "benefit",
+        "salaryMin", "salaryMax", "busyType", "scheduleType")
+
+
 def read(stream, limit=None):
     """The wanted vacancies of a vacancy.csv stream as job records, newest first, at most `limit`.
+    The rows are chosen and sorted first (cheap); only the kept ones are read into job records, on every CPU core (about 20 ms each).
     Employers that share one name ('ООО «Альфа»' exists in many towns) get their town added, so two firms never merge into one page."""
+    import multiprocessing
     csv.field_size_limit(1 << 30)
     rows = csv.reader(stream, delimiter="|")
     hdr = next(rows)
@@ -139,22 +155,22 @@ def read(stream, limit=None):
         if len(r) != len(hdr): continue
         row = dict(zip(hdr, r))
         field = wanted(row)
-        if field is None: continue
-        j = to_job(row, field)
-        if j:
-            try: j["_ogrn"] = json.loads(row.get("company") or "{}").get("ogrn") or ""
-            except ValueError: j["_ogrn"] = ""
-            picked.append(j)
-    picked.sort(key=lambda j: j.get("posted_at") or j["posted"], reverse=True)
+        if field is not None: picked.append(({k: row.get(k, "") for k in KEEP}, field))
+    picked.sort(key=lambda x: x[0].get("datePublished") or x[0].get("creationDate") or "", reverse=True)
     if limit: picked = picked[:limit]
+    if len(picked) > 2000:
+        with multiprocessing.get_context("fork").Pool() as pool:
+            jobs = [j for j in pool.map(_job, picked, chunksize=500) if j]
+    else:
+        jobs = [j for j in map(_job, picked) if j]
     firms = defaultdict(set)
-    for j in picked: firms[j["company"]].add(j["_ogrn"])
-    for j in picked:
+    for j in jobs: firms[j["company"]].add(j["_ogrn"])
+    for j in jobs:
         if len(firms[j["company"]]) > 1:
             town = j["location"].split(",")[0].strip()
             j["company"] = f"{j['company']} ({town})" if town and town != "Russia" else j["company"]
         j.pop("_ogrn", None)
-    return picked
+    return jobs
 
 
 def fetch(limit=None):

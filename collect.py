@@ -415,11 +415,23 @@ def utc_iso(v):
 
 # Reading a posting (the patterns above) costs about 20 ms, and an hourly run used to spend 17 minutes re-reading postings that had
 # not changed. A record keeps a fingerprint of what the feed said ("h") and of this file (NORM_VER): when both match, the stored
-# record is reused as it is. Any change to collect.py changes NORM_VER, so a changed rule is applied to every job in the next runs.
-NORM_VER = hashlib.md5(Path(__file__).read_bytes()).hexdigest()[:6]
+# record is reused as it is. NORM_VER is a fingerprint of the rules that read a posting (the pattern tables and the functions below),
+# so changing a rule applies it to every job in the next runs, while other edits to this file do not cost a full re-read.
+NORM_VER = None
+
+
+def norm_version():
+    import inspect
+    parts = [inspect.getsource(f) for f in (_norm, excerpt, classify, classify_title, level, etype, perks, strip_html, clean_html, _Clean, tidy_pay,
+                                            pay_from_text, pay_k, years_asked, utc_iso, slugify)]
+    parts += [repr(x) for x in (CATS, CATS_INTL, DEPT_CATS, SKILLS, sorted(TITLE_ONLY), PERKS, PAY_SYM, CYR, OTHER)]
+    parts += [x.pattern for x in (NO_VISA, NO_RELO, ROLE_MARKERS, PAY_RNG, PAY_CTX, PAY_NOT_YEARLY, YEARS_RX, CRYPTO_RE)]
+    return hashlib.md5("\n".join(parts).encode()).hexdigest()[:6]
 
 
 def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False, posted_at=None):
+    global NORM_VER
+    if NORM_VER is None: NORM_VER = norm_version()
     key = hashlib.md5(repr((NORM_VER, company, ats, jid, title, url, location, remote, dept, posted, text, salary, hint, desc, hybrid, posted_at)).encode("utf-8", "replace")).hexdigest()[:12]
     old = KNOWN.get(f"{ats}-{slugify(company)}-{jid}")
     if old and old.get("h") == key:
@@ -880,8 +892,15 @@ def main():
     live = os.environ.get("HRN_PORTALS") == "1"
     pool = cf.ThreadPoolExecutor(2)
     portals = {m.SOURCE: pool.submit(m.fetch if live else (lambda k=k: snapshots.load(k))) for k, m in snapshots.MODULES.items()}
-    with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 24)) as ex:      # 12 for the first 784 boards; 20 with a quarter of sources_more; 24 with the new systems
-        results = list(ex.map(fetch, sources))
+    procs = int(os.environ.get("HRN_PROCS") or 0)
+    if procs:       # worker processes instead of threads: reading postings is CPU work, so a cold run (every job new) uses every core
+        import gc, multiprocessing
+        gc.freeze()                                         # the stored jobs are shared with the workers, not copied into each
+        with cf.ProcessPoolExecutor(procs, mp_context=multiprocessing.get_context("fork")) as ex:
+            results = list(ex.map(fetch, sources, chunksize=4))
+    else:
+        with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 24)) as ex:      # 12 for the first 784 boards; 20 with a quarter of sources_more; 24 with the new systems
+            results = list(ex.map(fetch, sources))
     # second, gentler pass for feeds that timed out or were rate-limited the first time
     by_name = {s["name"]: s for s in sources}
     retry = [by_name[name] for name, jobs in results if jobs is None][:400]
