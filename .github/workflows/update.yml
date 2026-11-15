@@ -24,7 +24,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60       # 45 until 15 Nov 2026; the first runs after new boards are added read every posting afresh (collect.py, NORM_VER)
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

@@ -51,7 +51,8 @@ AGENCY_NAME = re.compile(r"staffing|recruit|personnel|personal(service|dienst|ve
                          r"talent (solutions|partners|acquisition)|placement|uitzend|detacher|bemanning|rekryter|interim|manpower|employment (agency|services)|"
                          r"\bhr services|jobs? agency|search partners|resourcing|outsourcing|reclutamiento|selección de personal|rekrutacj|agenzia per il lavoro|"
                          r"кадров(ое|ое агентство)|hiring solutions|career partners|\btalent$|uitzend|werving|detachering|freelancers?\b|\bflex(work|workers)?\b|"
-                         r"workforce solutions|labou?r hire|temp(orary)? (staff|work)", re.I)
+                         r"workforce solutions|labou?r hire|temp(orary)? (staff|work)|upwork|statistician network|\bsandbox\b|virtual assistant|"
+                         r"wing assistant|coupang internal", re.I)
 AGENCY_TEXT = re.compile(r"\bour client\b|on behalf of (our|a) client|unser(em|en)? kunde|für unseren kunden|notre client|nuestro cliente|onze opdrachtgever|"
                          r"vår kund|naszego klienta|nasz klient|il nostro cliente|nosso cliente|для нашего клиента|наш клиент|namens onze klant|voor onze klant|"
                          r"im auftrag (unseres|eines) kunden|pour le compte de (notre|nos) client", re.I)
