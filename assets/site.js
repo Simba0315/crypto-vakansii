@@ -1255,6 +1255,34 @@
     }).catch(function () {});
   }
 
+  /* ---------- Post a job: is my company already here? ---------- */
+  // data/employers.json: [name, slug, open jobs, hiring system], built with the site; loaded only when the box is used
+  var empQ = $('emp-q'), empRes = $('emp-res');
+  if (empQ && empRes) {
+    var emps = null, empLoad = function () {
+      if (!emps) emps = fetch(P + '/data/employers.json').then(function (r) { return r.json(); });
+      return emps;
+    };
+    var norm = function (t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+    var empN = function (x) { return Number(x).toLocaleString('en-US'); };
+    var empShow = function () {
+      var q = norm(empQ.value);
+      if (q.length < 2) { empRes.innerHTML = ''; return; }
+      empLoad().then(function (rows) {
+        if (norm(empQ.value) !== q) return;
+        var starts = [], has = [];
+        rows.forEach(function (r) { var nm = norm(r[0]); if (nm.indexOf(q) === 0) starts.push(r); else if (nm.indexOf(' ' + q) >= 0) has.push(r); });
+        var got = starts.concat(has).slice(0, 8);
+        empRes.innerHTML = got.length ? got.map(function (r) {
+          return '<li><a href="' + P + '/companies/' + r[1] + '/"><b>' + esc(r[0]) + '</b><span>' + empN(r[2]) + (r[2] === 1 ? ' open job' : ' open jobs') + ' here' + (r[3] ? ', read from ' + esc(r[3]) : '') + '</span></a></li>';
+        }).join('') : '<li class="none">Not among the ' + empN(Number(empQ.getAttribute('data-n')) || rows.length) + ' companies we read. If your company uses another hiring system, or none, post the job free below.</li>';
+      }).catch(function () { empRes.innerHTML = '<li class="none">Could not load the list. Please try again.</li>'; });
+    };
+    var empTimer;
+    empQ.addEventListener('focus', empLoad);
+    empQ.addEventListener('input', function () { clearTimeout(empTimer); empTimer = setTimeout(empShow, 150); });
+  }
+
   /* ---------- My jobs page ---------- */
   var root = $('mj-root');
   if (root) {

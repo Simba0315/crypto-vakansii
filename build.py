@@ -4829,13 +4829,52 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the placement did.</span></span></div>'
                '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · ' + price_of("Featured job") + '</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
                '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the period ends, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
-    page("post-a-job/", f"Post a Job — free listing, featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Job — free listing, plans and prices for employers | {SITE}",
-         (f"Post a job for free, or feature it from {price_of('Featured job')} so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
-          f"Plans and prices for employers: free standard listings, featured jobs from {price_of('Featured job')}, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
-         crumbs(("For employers", "")) + "<h1>Post a job that doesn’t get buried</h1>"
-         f'<p class="lead">There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
-         'A featured one stays at the top instead of sliding down as new roles arrive.</p>'
-         + LAUNCH + emp_tiers
+    # The owner, 15 Nov: "why would anyone post with us if we already have a pile of employers' jobs?" The first screen answers it for the
+    # two kinds of employer: one whose hiring system we already read (its jobs are here, free; the search box shows them) and one with no
+    # hiring system (post free; the checks a posting goes through). What can be bought is visibility and tools, never the listing itself.
+    ats_names = [SOURCE_NAME[k_] for k_ in ("greenhouse", "lever", "ashby") if k_ in SOURCE_NAME]
+    ats_txt = ", ".join(ats_names[:-1]) + " or " + ats_names[-1] if len(ats_names) > 1 else (ats_names[0] if ats_names else "their hiring system")
+    emp_rows = []
+    for c_, js_ in companies.items():
+        act_ = [j for j in js_ if j["active"]]
+        if not act_: continue
+        sys_ = Counter(j["id"].split("-", 1)[0] for j in act_).most_common(1)[0][0]
+        emp_rows.append([c_, slugify(c_), len(act_), SOURCE_NAME.get(sys_, "")])
+    emp_rows.sort(key=lambda r_: -r_[2])
+    write("data/employers.json", json.dumps(emp_rows, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    post_btn = (f'<a class="btn primary" href="{e(app_url)}">Post a job free</a>' if app_url else '<button class="btn primary" type="button" disabled>Free posting opens soon</button>')
+    emp_two = ('<div class="emp2">'
+               f'<div class="emp2-c"><h2>Already on {e(ats_txt)}?</h2>'
+               f'<p>Then your open jobs are probably here already. We read the careers pages of {m:,} companies {EVERY}, free and automatic: nothing to post, nothing to pay. '
+               'A job you close leaves our lists at the next check.</p>'
+               '<label class="ask-l" for="emp-q">Find your company</label>'
+               f'<input type="search" id="emp-q" placeholder="Company name" autocomplete="off" data-n="{m}">'
+               '<ul class="emp-res" id="emp-res" aria-live="polite"></ul>'
+               '<p class="note">With an employer account you can add to them: '
+               f'a featured or pinned place above the regular jobs (from {price_of("Featured job")}), your company page claimed with your work email or a DNS record '
+               '(logo, description, perks, answers to candidates’ questions), and the views and clicks to apply of every job.'
+               + ("" if app_url else " Accounts are not open yet.") + "</p></div>"
+               '<div class="emp2-c"><h2>No hiring system? Post a job <span class="free">free</span></h2>'
+               '<p>Most small businesses have no hiring software. Post the job here instead: the title, the link or email to apply, the place and the description. '
+               'A standard listing is free for 30 days.</p>'
+               '<ul class="ticks"><li>We open the link to check the job is really there</li><li>The text is checked for signs of a scam: fees, chat-only contact, money up front</li>'
+               '<li>We check it is not already listed, so candidates see one job, not three copies</li></ul>'
+               + post_btn + "</div></div>")
+    emp_qa = [("Is posting a job free?", f"Yes. A standard listing is free for 30 days and sits in the lists and in search like every other job. Paying ({price_of('Featured job')} and up) only moves a job higher; it never decides whether it is shown."),
+              ("Why post a job here if my jobs are already listed?", f"If your company uses {ats_txt}, you do not need to: its jobs are read from your careers page {EVERY}. Posting is for jobs that are not on such a page, "
+               "and the paid options are for jobs you want seen first."),
+              ("Which hiring systems do you read?", f"Today {ats_txt}: {m:,} companies, {n:,} open jobs. Others are being added. A company that uses none of them can post its jobs here."),
+              ("How do you keep scams and copies out?", "Every posting is checked before it goes live: the link to apply is opened, the text is checked for requests for money and chat-only contact, and a posting that repeats a job already listed is caught. A reported job is reviewed and taken down if it breaks the rules."),
+              ("How do I claim my company page?", "With an employer account, prove the company is yours with an email at its domain or a DNS record, then add a logo, a description, perks and answers to common questions." + ("" if app_url else " Accounts are not open yet."))]
+    emp_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in emp_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("post-a-job/", f"Post a Job Free, or Find Your Jobs Already Here | {SITE}",
+         f"Post a job free. On {ats_txt}? Your open jobs are already read from your careers page, free: search your company. Featured jobs from {price_of('Featured job')}.",
+         crumbs(("For employers", "")) + '<h1>Post a job <span class="hl">free</span>, or find yours already here</h1>'
+         f'<p class="lead">Most of the {n:,} jobs here are read straight from employers’ own hiring systems, at no cost to them. If your company uses {e(ats_txt)}, '
+         'your jobs are probably here already. If it does not, post a job free. Paying only moves a job higher in the list.</p>'
+         + emp_two
+         + section("Want a job seen first?", '<p class="note">A standard listing slides down as new jobs arrive. A featured one stays at the top of its list.</p>' + LAUNCH + emp_tiers)
          + section("Standard, Featured and Pinned, side by side", emp_pt + f'<p class="note">Looking for work, not hiring? Job seekers have their own table on the <a href="{P}/pricing/">pricing page</a>.</p>')
          + section("How your job looks in the list", '<p class="note">The two highlighted rows are examples of featured jobs; the others are real listings from today.</p>' + demo_html)
          + section("What appears in your account at once", emp_cab)
@@ -4851,10 +4890,13 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          "<h3>No careers page of your own?</h3><p>Use your company page here as one. Link your site's Careers button to it, or embed the list with one line of code: "
          f'<a href="{P}/widgets/">badge and widget</a>.</p>'
          "<h3>What happens when the job closes?</h3><p>It is marked as closed and its page stays online.</p>"
-         "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>")
+         "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>"
+         + section("Questions employers ask", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in emp_qa) + "</dl>"), head=emp_ld)
     # Pricing: both sides on one page, each with its own table. A person looking for work and a company hiring buy different
     # things, so they never share a table (the owner: "for the job seeker and for the employer everything must be different").
-    price_qa = [("Do I have to pay to see jobs or to apply?", "No. Every job is public and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
+    price_qa = [("How much does it cost to post a job?", f"Nothing for a standard listing: it is free for 30 days. A featured job is {price_of('Featured job')} once for 14 days above the regular ones, "
+                 f"a pinned job {price_of('Pinned job')} once for 7 days in the first row. On the 11 niche job boards that print a price, one 30-day post costs $299 at the median, and 6 of them charge exactly that (read 13 Nov 2026)."),
+                ("Do I have to pay to see jobs or to apply?", "No. Every job is public and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
                 ("How do I pay?", "In crypto, on a checkout page: USDT, BTC, ETH and other coins. Cards and bank transfers are not taken yet."),
                 ("Will I be charged again?", "No. Every price here is a single payment. Nothing renews by itself, there is no card on file and nothing to cancel."),
                 ("Why are the prices so low?", "They are launch prices, about a third of the regular ones, while the paid plans are new. The regular price is the one crossed out."),
@@ -4931,7 +4973,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     emp_fit = fit([("Standard", "One role and no hurry. It is in the list and in search like every other job."),
                    ("Featured", "A role that must be seen this fortnight. This is the one we recommend."),
                    ("Pinned", "A launch or an urgent hire: the first row of the home page for a week.")])
-    page("pricing/", f"Pricing: free for job seekers, Plus from {plus['plans'][0]['price'] if plus['plans'] else ''}, featured jobs from {price_of('Featured job')} | {SITE}",
+    page("pricing/", f"Pricing: Free Job Posting, Featured Jobs {price_of('Featured job')}, Plus {plus['plans'][0]['price'] if plus['plans'] else ''} | {SITE}",
          f"What is free and what is paid, side by side. Job seekers: every job and the resume builder are free, Plus adds an AI writer from {low_day}. Employers: a standard listing is free, a featured job is {price_of('Featured job')}.",
          crumbs(("Pricing", "")) + '<h1>Pricing: what is free and <span class="hl">what you pay for</span></h1>'
          '<p class="lead">Two sets of plans, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
