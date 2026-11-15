@@ -951,7 +951,7 @@ def main():
     owner = {}                                              # the same job (company, title, place) from two sources: the first one keeps it
     for jid, old in db.items():
         if old["active"]:
-            open_by_co[board(old)].append(jid)
+            if not old.get("tg"): open_by_co[board(old)].append(jid)       # a Telegram job is not closed by the company's own board
             owner.setdefault(dup_key(old), board(old))
     for name, jobs in results:
         if jobs is None:
@@ -992,10 +992,17 @@ def main():
             stats["emptied"].append(name)                   # the whole board went empty at once: often a move to another hiring system
     known = {s["name"] for s in sources} | resting | set(portals)   # a board we no longer read cannot keep "open" jobs forever; one resting this hour can
     for old in db.values():
-        if old["active"] and not old.get("direct") and board(old) not in known:
+        if old["active"] and not old.get("direct") and not old.get("tg") and board(old) not in known:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
     DATA.parent.mkdir(exist_ok=True)
     direct_and_paid(db, used_slugs, {s["name"].lower() for s in sources}, stats)
+    if os.environ.get("HRN_TELEGRAM", "1") != "0":                 # jobs from public Telegram job channels (telegram_jobs.py)
+        try:
+            import telegram_jobs
+            telegram_jobs.collect(db, used_slugs, {s["name"].lower() for s in sources} | {n.lower() for n in resting}, stats,
+                                  norm, slugify, excerpt, classify, level, etype, TODAY, utc_now())
+        except Exception as ex:                                     # the channels never stop the hourly update
+            print(f"telegram: skipped this run: {type(ex).__name__}: {ex}")
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, left out as listed by another source {stats['dupes']}, not in English {stats['not_english']}")

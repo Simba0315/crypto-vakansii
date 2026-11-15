@@ -70,7 +70,7 @@ def mcp_call(name, args):
     if name == "search_jobs":
         q = str(args.get("query") or "")
         total, js, _, _ = find(q, remote=bool(args.get("remote_only")), limit=int(args.get("limit") or 10))
-        items = [brief(j) for j in js]
+        items = [brief(j) for j in js if not j.get("tg")]          # Telegram's terms forbid handing channel posts to AI: those stay on the site only
         lines = [f"{total:,} open jobs match “{q}”." + (" The best ones:" if items else " Try fewer or other words.")]
         lines += [f"{i}. {x['title']} — {x['company']}" + (f" · {x['location']}" if x["location"] else "") + (" · remote" if x["remote"] else "")
                   + (f" · {x['salary']}" if x["salary"] else "") + (f" · posted {x['posted']}" if x["posted"] else "") + f"\n   {x['url']}" for i, x in enumerate(items, 1)]
@@ -78,7 +78,7 @@ def mcp_call(name, args):
     if name == "get_job":
         slug = str(args.get("job") or "").strip().rstrip("/").rsplit("/", 1)[-1]
         j = STORE.record(slug) if re.fullmatch(r"[a-z0-9-]+", slug or "-") else None
-        if j is None: raise LookupError("No job with that slug or address. Use search_jobs to find one.")
+        if j is None or j.get("tg"): raise LookupError("No job with that slug or address. Use search_jobs to find one.")
         text = re.sub(r"\s*\n\s*", "\n", build.html.unescape(TAG.sub("\n", j.get("desc") or j.get("excerpt") or ""))).strip()
         x = brief(j) | {"open": bool(j["active"]), "closed_on": j.get("closed") or "", "apply_url": (j.get("url") or "") if j["active"] else "", "text": text[:8000]}
         head = (f"{x['title']} — {x['company']}" + (f" · {x['location']}" if x["location"] else "") + (f" · {x['salary']}" if x["salary"] else "") + "\n"
