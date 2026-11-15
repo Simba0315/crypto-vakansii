@@ -10,9 +10,14 @@ How it fits with the hourly build:
 - When the next upload brings a jobs.db that has the job, the live entry is dropped: the hourly record wins, and if it gave the job
   another address, the live address sends visitors there.
 
-Schedule: every board is read at least once an hour, spread over the hour; a board that changed in the last day every 10 minutes;
-a board that fails waits longer each time (up to 6 hours). Duplicates: a job that is already on the site under another source or
-address (dedupe.py: same company, same role, same place) is not added twice.
+Schedule: every board is read at least once an hour, spread over the hour; a board that changed in the last day every 10 minutes
+(on Workday and SmartRecruiters, which take many requests a board, never more than once an hour: SLOW); a board that fails waits
+longer each time (up to 6 hours). Duplicates: a job that is already on the site under another source or address (dedupe.py: same
+company, same role, same place) is not added twice.
+
+Every hiring system collect.py reads is read here too (collect.fetch). A posting the site already has is not parsed again (skip_known),
+and on Workday and SmartRecruiters its text is not asked for again; no more boards of one system are read at once than
+collect.ATS_LIMIT allows.
 
     python3 live.py                 run (on the server: systemd unit server/hosting/hrn-live.service)
     python3 live.py --once 50       read 50 boards once and print what would change, writing nothing (a dry run)
@@ -28,6 +33,10 @@ import build, collect, dedupe, search_engine            # noqa: E402
 JOBS_DB = ROOT / "data" / "jobs.db"
 LIVE_DB = Path(os.environ.get("HRN_LIVE_DB") or ROOT.parent / "live.db")
 HOUR, BUSY = 3600, 600                                   # quiet boards every hour, boards that changed in the last day every 10 minutes
+SLOW = collect.SLOW_ATS                                  # one request per 20 or 100 postings plus one per new posting: once an hour at most
+# Workday and SmartRecruiters: the text of at most this many postings new to the site per board and read. Their lists are newest first,
+# so these are the jobs just published; the backlog of a newly added board is the hourly run's to fill (collect.DETAILS), not ours.
+collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 5)
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 24)
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
@@ -48,7 +57,7 @@ def sources():
         if "candidates" in f.name: continue
         for s in json.loads(f.read_text()):
             k = (s.get("ats"), s.get("token"))
-            if not s.get("token") or not s.get("name") or k in seen or s["name"] in collect.EXCLUDE: continue
+            if not s.get("token") or not s.get("name") or k in seen or s["name"] in collect.EXCLUDE or s.get("hold"): continue
             seen.add(k)
             out.append(dict(s, crypto=s["name"] in crypto))
     return out
@@ -122,6 +131,14 @@ class Live:
             log(f"search: {rec['slug']}: {type(ex).__name__}: {ex}")
 
     # --- one board -----------------------------------------------------------------------------------------------------------
+    def skip_known(self, src):
+        """For collect.fetch (its "reuse"): a posting the site already has, in the hourly record or open in the live store, needs no
+        parsing and, on Workday and SmartRecruiters, no request for its text. apply() only needs its id. Made in the main thread,
+        because the live store's connection belongs to it."""
+        known = self.known
+        live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (src["name"],))}
+        return lambda jid, h=None: {"id": jid, "title": "-", "url": "-"} if jid in known or jid in live_ids else None
+
     def slug_for(self, j):
         base = f"{collect.slugify(j['title'])}-{collect.slugify(j['company'])}"
         slug, i = base, 2
@@ -190,7 +207,7 @@ class Live:
         row = self.con.execute("SELECT last_change, fails FROM boards WHERE key = ?", (k,)).fetchone() or (0, 0)
         last_change = now if changed else row[0]
         fails = 0 if ok else row[1] + 1
-        wait = min(HOUR * 2 ** fails, 6 * HOUR) if not ok else (BUSY if now - last_change < 86400 else HOUR)
+        wait = min(HOUR * 2 ** fails, 6 * HOUR) if not ok else (BUSY if now - last_change < 86400 and src["ats"] not in SLOW else HOUR)
         self.con.execute("UPDATE boards SET next_due = ?, last_change = ?, fails = ? WHERE key = ?", (now + wait, last_change, fails, k))
 
     def run(self):
@@ -207,10 +224,15 @@ class Live:
                 if time.time() - srcs_at > 600: srcs, srcs_at = sources(), time.time()
                 self.resync_search()
                 busy = {f"{s['ats']}:{s['token']}" for s in running.values()}
+                per_ats = {}
+                for s in running.values(): per_ats[s["ats"]] = per_ats.get(s["ats"], 0) + 1
                 for s in self.due(srcs):
                     if len(running) >= WORKERS * 2: break
                     if f"{s['ats']}:{s['token']}" in busy: continue
-                    running[ex.submit(collect.fetch, s)] = s
+                    # no more boards of one system than it allows at once: the others would only hold workers while they wait
+                    if per_ats.get(s["ats"], 0) >= collect.ATS_LIMIT.get(s["ats"], WORKERS * 2): continue
+                    per_ats[s["ats"]] = per_ats.get(s["ats"], 0) + 1
+                    running[ex.submit(collect.fetch, s, self.skip_known(s))] = s
                 if not running:
                     time.sleep(2); continue
                 finished, _ = cf.wait(running, timeout=5, return_when=cf.FIRST_COMPLETED)
@@ -232,7 +254,7 @@ def once(n):
     srcs = sources()[:n]
     t0, tot = time.time(), [0, 0, 0]
     with cf.ThreadPoolExecutor(WORKERS) as ex:
-        for s, (_, jobs) in zip(srcs, ex.map(collect.fetch, srcs)):
+        for s, (_, jobs) in zip(srcs, ex.map(collect.fetch, srcs, [lv.skip_known(s) for s in srcs])):
             if jobs is None: print(f"  {s['name']}: did not answer"); continue
             got = lv.apply(s, jobs)
             tot = [a + b for a, b in zip(tot, got)]
@@ -240,7 +262,7 @@ def once(n):
     print(f"{len(srcs)} boards in {time.time() - t0:.0f} s: {tot[0]} new, {tot[1]} closed, {tot[2]} duplicates skipped")
 
 
-CODE = [ROOT / f for f in ("live.py", "collect.py", "build.py", "dedupe.py", "search_engine.py")]
+CODE = [ROOT / f for f in ("live.py", "collect.py", "net.py", "build.py", "dedupe.py", "search_engine.py")]
 
 
 def watch(seen):

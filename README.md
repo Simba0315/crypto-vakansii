@@ -17,7 +17,8 @@ Live site: https://simba0315.github.io/crypto-vakansii/ (temporary address)
 
 ## How it works
 
-`collect.py` reads the public hiring feeds listed in `sources.json` and `sources_tech.json`; `build.py` generates the static site;
+`collect.py` reads the public hiring feeds (Greenhouse, Lever, Ashby, Workable, Recruitee, Teamtailor, Personio, Workday) listed in
+the `sources*.json` files; `build.py` generates the static site;
 `check.py` verifies every page type against a quality checklist; a GitHub Actions workflow runs all three every day and publishes
 the result. `server/` holds the accounts and checkout API (Cloudflare Worker + D1). Details: `AGENT_NOTES.md`.
 

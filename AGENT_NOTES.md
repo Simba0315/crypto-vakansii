@@ -12,8 +12,10 @@ it from there. After a change of name or palette: `python3 brand.py`, `python3 o
 
 ## How it works
 
-- `collect.py` reads public hiring feeds (Greenhouse, Lever, Ashby) listed in `sources.json` (crypto companies) and
-  `sources_tech.json` (tech companies) and writes `data/jobs.json`. Closed jobs are never deleted: `active=false` + `closed` date.
+- `collect.py` reads public hiring feeds (Greenhouse, Lever, Ashby; since 15 Nov 2026 also Workable, Recruitee, Teamtailor,
+  Personio and Workday) listed in `sources.json` (crypto companies), `sources_tech.json` (tech companies), `sources_more.json` and
+  `sources_ats.json` (read in turn, see "Sources and hiring systems") and writes `data/jobs.json`. Closed jobs are never deleted:
+  `active=false` + `closed` date.
 - `build.py` generates the whole site into `site/` from `data/jobs.json`, `config.json`, `assets/`.
 - `check.py` checks the built site against the page standard (one H1, title/description length, self-canonical,
   heading order, alt on images, internal links). It must print OK for every template before a push.
@@ -333,16 +335,37 @@ field. Every category and every field on `/categories/` has an icon: `ICON` (dra
 `tile()` and the directory block add it by themselves. A new category or field needs an entry in `SLUG_ICON` and in
 `skills_info.CATEGORIES`.
 
-## Hosting limit (measured 13 Nov 2026, corrected the same evening)
+## Hosting limit: gone (15 Nov 2026)
 
-The workflow stops above 950 MiB and GitHub Pages allows 1 GB. Measured on a fresh collection with 41,187 open jobs and 732 companies:
-873 MiB. One more job costs about 30 KB all in (its page about 12.4 KB, the rest is its rows in lists and its company's pages), so the
-room left is small. An earlier note here said "room for 10,000 more jobs": that was measured on a stale local copy with few full
-descriptions and was wrong. `LIST_PAGES` in `build.py` caps topic lists at 2 pages (1 above 43,000 open jobs); the workflow builds
-again with `HRN_PAGE_CAP=1` if a build is over 940 MiB. `sources_candidates.json` holds 3,852 more verified company boards (134,467 jobs
-at the time): 188 of them were added to `sources_tech.json` on 13 Nov 2026 (entries with `"added"`). Do not add more until job pages
-are served by the server (`server/`), which waits for the owner's domain. Measure with a fresh `python3 collect.py` before trusting a
-local size.
+GitHub Pages' 1 GB limit held the site back until 14 Nov 2026 (one job cost about 30 KB of pages). The site is now served by our own
+server from the job records (`data/jobs.db`), GitHub Pages only holds the redirects from the old address, and the workflow's step
+"Check the site fits the hosting limit" (and its rebuild with `HRN_PAGE_CAP=1`) was removed on 15 Nov 2026. `LIST_PAGES` stays at
+one page a list by the owner's choice of 14 Nov, not for size. Every board of `sources_candidates.json` that still answers is now
+read: 2,994 in `sources_more.json` since 14 Nov and the remaining 608 since 15 Nov (entries with `"added": "2026-11-15"`; 25 were
+left out as companies already read under another board or name).
+
+## Sources and hiring systems (15 Nov 2026)
+
+- `collect.fetch_feed` reads Greenhouse, Lever, Ashby, Workable (the careers widget's feed, one request a board, with the text),
+  Recruitee (`/api/offers/`), Teamtailor (`/jobs.rss`), Personio (`/xml?language=en`), Workday (the `cxs` JSON of the careers site:
+  20 postings a request, then one request per new posting for its text, at most `DETAILS` a board a read) and SmartRecruiters (the
+  Posting API, same two steps). Tokens: Workday `<tenant>.<wdN>/<site>`; Teamtailor and Personio a subdomain or a whole host.
+- `sources_ats.json` lists the boards on the newer systems (made by `discover_ats.py`, which verifies each board with the same
+  `fetch_feed`; `--names` names Workday and Personio boards again). It and `sources_more.json` are read in turn by the hourly run
+  (`collect.ROTATING`, `HRN_ROTATE`: every 4 hours; Workday and SmartRecruiters, `collect.SLOW_ATS`, every 8); `live.py` reads every
+  file every hour. A new Workday board enters the hourly record `DETAILS` (40) postings per read, newest first; `live.py` reads the
+  text of at most 5 new postings per board and read (`HRN_LIVE_DETAILS`), so it shows fresh jobs and leaves the backlog to the run.
+- `"hold": true` on a board: verified but not read by `collect.py` or `live.py`. On 15 Nov 2026 the 328 Workday boards with more
+  than 200 jobs (192,000 jobs) were put on hold, except 25 large shift-work employers: the hourly build costs about 3.8 ms per job
+  record in GitHub Actions, and with them the run would no longer fit in its 45 minutes. Lift holds once the build runs on the
+  server or is incremental (`ATS_REPORT.md`).
+- No SmartRecruiters board is listed: `api.smartrecruiters.com/robots.txt` allows only LinkedIn's crawler. The fetcher is there for
+  the day SmartRecruiters agrees. Workday boards are kept only where the tenant's robots.txt lets crawlers in.
+- Only English postings are kept from the newer systems (`collect.english`, checked before a posting is parsed).
+- Speed: a run no longer parses every posting. Each record keeps a fingerprint of the feed's data (`"h"`), and an unchanged posting
+  keeps its record (`reuse` in `collect.main`); a change to `collect.py` changes every fingerprint once (`RULES`). What is parsed is
+  parsed in one worker process per CPU (`collect.PARSE`). `live.py` skips postings the site already has (`Live.skip_known`).
+- Politeness per system: `collect.ATS_LIMIT` (boards at once) and `collect.ATS_GAP` (seconds between requests; per tenant on Workday).
 
 ## Job markup rules (14 Nov 2026)
 

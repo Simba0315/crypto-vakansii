@@ -5,7 +5,11 @@ on:
     branches: [main]
   # Every hour at 17 minutes past (UTC): a job an employer has just published is picked up by the next run.
   # A whole run took 9 to 15 minutes when this was set (15 runs measured on 2026-11-13; reading the feeds is 7 to 13 of them),
-  # so hourly runs do not pile up. The same schedule is stated on the site's /status/ page (build.py): change the two together.
+  # so hourly runs do not pile up. On 2026-11-15, with 3,776 boards, runs took 25 to 31 minutes (reading 16 to 20, building 7 to 9),
+  # almost all of the reading being the parsing of every posting again on one CPU. collect.py now parses only postings that changed,
+  # on every CPU; with the 2,505 boards added that day the record grows to about 280,000 open jobs and a run should take 30 to 35
+  # minutes (ATS_REPORT.md). The build grows with the record (about 3.8 ms a job): keep "hold" on boards until it can take them.
+  # The same schedule is stated on the site's /status/ page (build.py): change the two together.
   # It is written as two lines on purpose: the 03:17 run is also the once-a-day run, see DAILY below.
   schedule:
     - cron: "17 3 * * *"          # 03:17 UTC: the hourly work plus the once-a-day work
@@ -112,18 +116,6 @@ jobs:
           git add -A
           git commit -q -m "Jobs database and monthly reports"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
-      - name: Check the site fits the hosting limit
-        if: env.SWITCHED != '1'          # on our own server there is no 1 GB limit; GitHub Pages then holds only the small redirect site
-        run: |
-          # bytes of content, not disk blocks: with 40,000 small folders "du" overstates the size by a third
-          mb=$(find site -type f -printf '%s\n' | awk '{s+=$1} END {print int(s/1048576)}'); echo "site is ${mb} MB of content (the Pages limit is 1024)"
-          # Too large: build again with one page per list (the search shows the rest) rather than stop updating the site.
-          if [ "$mb" -gt 940 ]; then
-            echo "too large, building again with one page per list"
-            HRN_PAGE_CAP=1 python3 build.py
-            mb=$(find site -type f -printf '%s\n' | awk '{s+=$1} END {print int(s/1048576)}'); echo "site is now ${mb} MB of content"
-          fi
-          if [ "$mb" -gt 950 ]; then echo "the site no longer fits the hosting limit"; exit 1; fi
       - name: Check pages against the page standard
         continue-on-error: true
         run: python3 check.py
