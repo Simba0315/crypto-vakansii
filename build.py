@@ -1347,6 +1347,21 @@ def badge_svg(label, value):
             f'<text x="{lw + 9}" y="18.5" fill="#121110" font-family="Verdana,DejaVu Sans,Geneva,sans-serif" font-size="12" font-weight="bold">{e(value)}</text></svg>')
 
 
+# Titles some employers type in capitals ("FIELD MANAGER") look like shouting in a list: set them in ordinary capitals.
+CAPS_KEEP = {"AI", "HR", "IT", "QA", "QC", "UX", "UI", "PM", "SQL", "API", "GTM", "HRBP", "CRM", "ERP", "SDR", "BDR", "EHS", "RN", "LPN", "CDL",
+             "SaaS", "DevOps", "AWS", "GCP", "ML", "BI", "CEO", "CFO", "COO", "CTO", "VP", "II", "III", "IV", "USA", "US", "UK", "EMEA", "APAC", "LATAM", "SEO", "SEM", "ETL", "SRE", "IOS", "HVAC", "RF", "EMR", "ICU", "OR", "MRI"}
+CAPS_SMALL = {"and", "of", "the", "for", "to", "in", "a", "an", "or", "at", "on", "with", "de", "la"}
+def calm_title(t):
+    letters = re.sub(r"[^A-Za-z]", "", t)
+    if len(letters) < 8 or t != t.upper() or not any(len(w) >= 6 for w in re.findall(r"[A-Za-z]+", t)): return t
+    def fix(m, first=[True]):
+        w = m.group(0)
+        if w in CAPS_KEEP: return w
+        if m.start() and w.lower() in CAPS_SMALL: return w.lower()
+        if len(w) <= 2: return w
+        return w[0] + w[1:].lower()
+    return re.sub(r"[A-Za-z]+(?:'[A-Za-z]+)?", fix, t)
+
 def main():
     if OUT.exists(): shutil.rmtree(OUT)
     OUT.mkdir()
@@ -1369,6 +1384,7 @@ def main():
         j["pinned"] = bool(j["active"] and max(j.get("pinned_until", ""), bought.get("pinned", "")) >= TODAY)
         j["featured"] = bool(j["pinned"] or (j["active"] and max(j.get("featured_until", ""), bought.get("featured", "")) >= TODAY))
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
+        j["title"] = calm_title(j["title"])
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["pool"] = bool(POOL_RX.search(j["title"]))
         j["usd"] = usd_range(j["salary"])
