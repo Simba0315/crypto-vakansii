@@ -282,6 +282,35 @@ def slugify(s):
     return s[:60].strip("-") or "job"
 
 
+# The site is in English (the owner, 15 Nov 2026: "the site is international, the jobs must be in English"). Jobs from the sources
+# added that day (sources_ats.json, the public portals) are kept only when written in English; the others wait for a language
+# edition (ROADMAP 113, "/ru/"). Words that are frequent in one language and rare in the others decide; with too few words, the title.
+EN_WORDS = set("the and of to for with you we our will are your this that have from by an about who what join team work able".split())
+NOT_EN_WORDS = set(("und der die das mit für wir sie ist von zu den ein eine auf bei oder sowie unser unsere werden "
+                    "et le la les des pour avec nous vous est une du au aux dans sur notre votre "
+                    "y el los las para con que por del una nuestro nuestra somos "
+                    "het een van voor wij zijn ons onze bij "
+                    "och att för med som vi är ett av hos "
+                    "il di per che della sono nostro "
+                    "não com os uma nossa nosso para "
+                    "oraz jest dla się będzie "
+                    "og ikke til af hos vores er").split())
+NOT_EN_TITLE = re.compile(r"\((m|w|f|d|h|x|gn\*?)\s*/\s*(m|w|f|d|h|x)(\s*/\s*(m|w|f|d|h|x))?\)|\b(mitarbeiter|stagiaire|alternance|vendeur|medewerker|"
+                          r"verkäufer|kaufmann|kauffrau|ingenieur\b|entwickler|sachbearbeiter|leiter|referent|responsable|chargé|desarrollador|"
+                          r"medarbetare|säljare|utvecklare|projektledare)", re.I)
+
+
+def english(j):
+    """Whether a job record is written in English (see EN_WORDS)."""
+    text = f"{j.get('title', '')} {j.get('excerpt', '')}"
+    lat, cyr = len(re.findall(r"[A-Za-z]", text)), len(re.findall(r"[А-Яа-яЁё]", text))
+    if cyr > 0.05 * (lat + cyr): return False
+    words = re.findall(r"[a-zà-ÿąćęłńóśźż]+", text.lower())
+    en, other = sum(w in EN_WORDS for w in words), sum(w in NOT_EN_WORDS for w in words)
+    if en + other >= 4: return en > other
+    return not NOT_EN_TITLE.search(j.get("title", ""))
+
+
 def classify(title, dept=""):
     got = classify_title(title)
     if got != OTHER[0] or not dept: return got
@@ -876,14 +905,15 @@ def main():
         if (s["ats"], s["token"]) in taken or k in names or s["name"] in EXCLUDE_TECH: continue
         taken.add((s["ats"], s["token"])); names.add(k)
         if int(hashlib.md5((s["ats"] + s["token"]).encode()).hexdigest(), 16) % rot_a == hour % rot_a:
-            sources.append(dict(s, crypto=False))
+            sources.append(dict(s, crypto=False, en_only=True))
         else:
             resting.add(s["name"])
     is_crypto = {s["name"]: s["crypto"] for s in sources}
+    en_only = {s["name"] for s in sources if s.get("en_only")}      # boards added on 15 Nov and the portals: English postings only
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
     KNOWN.update(db)                                        # feeds without the text in their list reuse what an earlier run read (see FEEDS)
     used_slugs = {j["slug"] for j in db.values()}
-    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "dupes": 0}
+    stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "dupes": 0, "not_english": 0}
     # Public job portals with open data, many employers each (15 Nov 2026): Russia's federal portal (trudvsem.py) and Sweden's
     # Platsbanken (jobtech.py). .github/workflows/portals.yml reads them once a day into snapshots (portals.py) because Russia's file
     # alone takes minutes to download; every run applies the latest snapshot, which takes seconds. A portal without a usable
@@ -913,7 +943,7 @@ def main():
         if jobs is None:
             resting.add(src_name); del portals[src_name]   # no snapshot: its jobs stay as they were
         else:
-            results.append((src_name, jobs)); is_crypto[src_name] = False
+            results.append((src_name, jobs)); is_crypto[src_name] = False; en_only.add(src_name)
     pool.shutdown()
     seen_at = utc_now()                                     # when this run finished reading the feeds: the "first seen" time of every job that is new in it
     board = lambda j: j.get("src") or j["company"]          # what a job is read from: its company's board, or a portal with many employers
@@ -933,6 +963,8 @@ def main():
             j.pop("_crypto", None)
             j["crypto"] = is_crypto[name]
             if not j["title"] or not j["url"]: continue
+            if name in en_only and not english(j):
+                stats["not_english"] += 1; continue         # waits for a language edition of the site
             k = dup_key(j)
             if owner.setdefault(k, name) != name:
                 stats["dupes"] += 1; continue               # already listed from another source
@@ -966,7 +998,7 @@ def main():
     direct_and_paid(db, used_slugs, {s["name"].lower() for s in sources}, stats)
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
-    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, left out as listed by another source {stats['dupes']}")
+    print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}, left out as listed by another source {stats['dupes']}, not in English {stats['not_english']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
                                                           "failed": stats["failed"], "emptied": stats["emptied"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))

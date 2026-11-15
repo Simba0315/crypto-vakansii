@@ -17,6 +17,8 @@ SOURCE = "Platsbanken"
 FIELDS = {"apaJ_2ja_LuF": "engineering", "X82t_awd_Qyc": "operations", "RPTn_bxG_ExZ": "sales-bd", "bh3H_Y3h_5eD": "operations",
           "6Hq3_tKo_V57": "engineering", "9puE_nYg_crq": "design", "kJeN_wmw_9wX": "data-research"}
 REGIONS = ["01", "03", "04", "05", "06", "07", "08", "09", "10", "12", "13", "14", "17", "18", "19", "20", "21", "22", "23", "24", "25"]
+AGENCY_TEXT = re.compile(r"staffing (solutions )?(provider|company|firm|agency)|bemanningsföretag|rekryteringsföretag|on behalf of (our|a) client|"
+                         r"för vår kunds räkning|till vår kund|uppdrag hos (vår|en) kund", re.I)
 SHOP = re.compile(r"butik|kassa|dagligvaru|fackhandel|apotek|bensinstation|telefonförsäljare", re.I)
 AGENCY = re.compile(r"bemanning|rekrytering|staffing|recruit|academic work|adecco|manpower|randstad|proffice|poolia|studentconsulting|student consulting|"
                     r"lernia|uniflex|jurek|\btempo\b|dfind|experis|hays\b|perido|clockwork|ework|keystep|level recruitment|framtiden|personalpartner|"
@@ -52,6 +54,7 @@ def to_job(h, field_cat):
     title, url = (h.get("headline") or "").strip(), h.get("webpage_url") or ""
     company = ((h.get("employer") or {}).get("name") or "").strip()
     if not title or not company or not url.startswith("https://") or AGENCY.search(company): return None
+    if AGENCY_TEXT.search((h.get("description") or {}).get("text") or ""): return None
     if SHOP.search(((h.get("occupation_group") or {}).get("label") or "") + " " + ((h.get("occupation") or {}).get("label") or "")): return None
     a = h.get("workplace_address") or {}
     city = (a.get("municipality") or a.get("city") or "").strip().title()

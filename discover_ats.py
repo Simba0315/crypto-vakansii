@@ -22,6 +22,9 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 os.environ["HRN_DETAILS"] = "0"            # a board is judged from its list of jobs; the text of each job is read later by collect.py
 import collect                             # noqa: E402  (after HRN_DETAILS)
+# A board is judged on its titles, fields and the start of each text: the skill and perk patterns (most of the 20 ms a posting costs)
+# are not needed here, so they are switched off in this script only.
+collect.SKILLS, collect.PERKS = [], []
 from net import get_json                   # noqa: E402
 
 CC = "https://data.commoncrawl.org/cc-index/collections"
@@ -53,6 +56,11 @@ AGENCY_TEXT = re.compile(r"\bour client\b|on behalf of (our|a) client|unser(em|e
                          r"vår kund|naszego klienta|nasz klient|il nostro cliente|nosso cliente|для нашего клиента|наш клиент|namens onze klant|voor onze klant|"
                          r"im auftrag (unseres|eines) kunden|pour le compte de (notre|nos) client", re.I)
 BLUE = {"retail", "supply-chain", "healthcare"}          # shop, warehouse and clinic work
+OFFICE = {"engineering", "product", "design", "sales-bd", "marketing", "support", "compliance-legal", "finance", "people", "data-research",
+          "operations", "security", "consulting", "education"}
+MAX_JOBS = 1000         # a board this large is a chain or a big enterprise: the goal here is small and mid-size companies
+STAFFING_TEXT = re.compile(r"\bc2c\b|corp[- ]to[- ]corp|\bw-?2 (only|contract|candidates)|h-?1b|\bopt\b|\bcpt\b|\bead\b|contract[- ]to[- ]hire|"
+                           r"\b(for|with) (one of )?our (fortune|direct )?clients?\b|immediate (joiner|requirement)|bench sales", re.I)
 
 
 def cc_crawls(n):
@@ -178,11 +186,18 @@ def probe(system, token):
 
 
 def judge(name, jobs):
-    """Why a board is left out, or '' when it is kept."""
-    if not jobs: return "no open jobs"
+    """Why a board is left out, or '' when it is kept. The rules of sources_more.json (14 Nov 2026), made stricter on 15 Nov after the
+    first run let in chains whose titles are not in English (Domino's, Accor, JYSK) and IT staffing firms."""
+    n = len(jobs)
+    if not n: return "no open jobs"
+    if n > MAX_JOBS: return f"over {MAX_JOBS} jobs (a chain or a big enterprise)"
     if AGENCY_NAME.search(name): return "agency (name)"
-    if sum(bool(AGENCY_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * len(jobs)): return "agency (postings)"
-    if sum(j["cat"] in BLUE for j in jobs) > len(jobs) / 2: return "mostly shop, warehouse or clinic work"
+    if sum(bool(AGENCY_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * n): return "agency (postings)"
+    if sum(bool(STAFFING_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * n): return "agency (staffing terms)"
+    if sum(collect.english(j) for j in jobs) < n / 2: return "mostly not in English"        # the site is in English (owner, 15 Nov)
+    if sum(j["cat"] in BLUE for j in jobs) > n / 2: return "mostly shop, warehouse or clinic work"
+    if sum(j["cat"] in OFFICE for j in jobs) < 0.4 * n: return "under 40% office or tech work"
+    if n >= 60 and len({re.sub(r"\W+", " ", j["title"].lower()).strip() for j in jobs}) < 0.25 * n: return "the same few titles repeated (mass hiring)"
     return ""
 
 
@@ -225,6 +240,7 @@ def main():
     ap.add_argument("--workers", type=int, default=24)
     ap.add_argument("--max", type=int, default=0, help="at most this many new tokens per system (0: all)")
     ap.add_argument("--samples", action="store_true", help="save a real response of a system that has no test sample yet (feeds_samples/)")
+    ap.add_argument("--recheck", action="store_true", help="judge again the boards already in sources_ats.json (no Common Crawl)")
     a = ap.parse_args()
     tmp = ROOT / "data" / "cc"
     tmp.mkdir(parents=True, exist_ok=True)
@@ -236,12 +252,16 @@ def main():
     prev = json.loads((ROOT / "sources_ats.json").read_text()) if (ROOT / "sources_ats.json").exists() else []
     t0 = time.time()
     found = defaultdict(set)
-    for crawl in cc_crawls(a.crawls):
+    for crawl in ([] if a.recheck else cc_crawls(a.crawls)):
         prefixes = [p for s in a.systems for p in SYSTEMS[s][0]]
         got = cc_addresses(crawl, prefixes, tmp)
         for s in a.systems:
             for p in SYSTEMS[s][0]: found[s] |= tokens(s, got.get(p, ()))
     todo = []
+    if a.recheck:
+        for p in prev:
+            if p["count"] <= MAX_JOBS: found[p["ats"]].add(p["token"])
+        prev = []
     for s in a.systems:
         new = sorted(t for t in found[s] if (s, t.lower()) not in have)
         if a.max: new = new[:a.max]

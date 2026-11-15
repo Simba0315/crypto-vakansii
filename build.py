@@ -2009,6 +2009,9 @@ def main():
          + section("What the marks on company pages mean", '<dl class="qa">' + "".join(f"<div><dt>✓ {e(nm)}</dt><dd>{e(rule)} Today: {k_:,} employers.</dd></div>" for nm, rule, k_ in mk_rows) + "</dl>"
                    '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"))
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
+    TAG_COS = defaultdict(set)                              # skill -> companies whose top skills include it
+    for c_, st_ in STACK.items():
+        for t_ in st_: TAG_COS[t_].add(c_)
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
     PLACE_LIVE = {slug for _, slug, _ in places}
     PLACE_SLUG = {v: k for k, v in PLACE_NAME.items()}
@@ -2056,7 +2059,8 @@ def main():
                  f'<p class="note"><a href="{P}/widgets/">More widgets and badges</a></p></details>')
         stack = [t for t, _ in Counter(t for j in act for t in j["tags"]).most_common(10)]
         where = Counter(p_ for j in act for p_ in j["places"] if p_ in PLACE_LIVE).most_common(6)      # only places that have a page
-        sim = sorted(((len(set(stack) & set(STACK[o])), OPEN[o], o) for o in STACK if o != c and len(set(stack) & set(STACK[o])) >= 4), reverse=True)[:6]
+        shared = Counter(o for t in stack for o in TAG_COS[t] if o != c)       # through the tag index: comparing every pair of companies took minutes at 30,000
+        sim = sorted(((k, OPEN[o], o) for o, k in shared.items() if k >= 4), reverse=True)[:6]
         overview = ""
         pay_by = {}
         for j in act:
