@@ -72,8 +72,10 @@ class Live:
         con = sqlite3.connect(f"file:{JOBS_DB}?mode=ro", uri=True)
         known, by_co, slugs = {}, {}, set()
         idx = dedupe.Index(lambda loc: {c for c, _ in build.countries_of(loc)})
+        still_open = set()
         for jid, slug, company, active, rec in con.execute("SELECT id, slug, company, active, rec FROM jobs"):
             known[jid] = slug
+            if active: still_open.add(jid)
             slugs.add(slug)
             if active:
                 by_co.setdefault(company, set()).add(jid)
@@ -82,7 +84,9 @@ class Live:
         con.close()
         self.known, self.by_co, self.slugs, self.idx, self.stamp = known, by_co, slugs, idx, st
         dropped = 0
-        for jid, slug in self.con.execute("SELECT id, slug FROM live").fetchall():
+        for jid, slug, closed in self.con.execute("SELECT id, slug, closed FROM live").fetchall():
+            if jid in known and closed and jid in still_open:
+                continue                                         # we saw it close; the hourly record has not yet: keep it closed
             if jid in known:
                 if known[jid] != slug: self.con.execute("INSERT OR REPLACE INTO moved VALUES (?, ?)", (slug, known[jid]))
                 self.con.execute("DELETE FROM live WHERE id = ?", (jid,))
