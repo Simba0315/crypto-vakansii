@@ -237,7 +237,7 @@ MORE_ROLES = [
     # leadership and early career
     ("Executive and VP roles", "executive", r"\bchief\b|\bc[eftpmio]o\b|vice president|\bvp\b|\bsvp\b|\bevp\b|managing director|\bpresident\b",
      "executives and vice presidents", "runs a company or one of its functions"),
-    ("Head of and director roles", "director", r"\bhead of\b|\bdirector\b", "heads of department and directors", "leads a department: its people, plans and budget"),
+    ("Director and head of department", "director", r"\bhead of\b|\bdirector\b", "heads of department and directors", "leads a department: its people, plans and budget"),
     ("Intern and new grad", "intern", r"\bintern(ship)?\b|co-op|apprentice|working student|werkstudent|graduate (program|scheme|trainee|engineer|analyst)|new grad|early career|university grad|campus|trainee|stagiaire|praktik|accelerator program",
      "interns and new graduates", "takes a first job or a placement during studies: fixed-term, with training on the job"),
     # crypto and markets

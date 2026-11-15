@@ -1725,3 +1725,19 @@
     });
   })(forms[i]);
 })();
+
+// "On this page": mark the section being read (long article pages, wide screens only)
+(function () {
+  var toc = document.querySelector('.toc');
+  if (!toc || !('IntersectionObserver' in window)) return;
+  var links = [].slice.call(toc.querySelectorAll('li a')), byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      links.forEach(function (a) { a.classList.remove('on'); });
+      var a = byId[en.target.id]; if (a) a.classList.add('on');
+    });
+  }, { rootMargin: '-90px 0px -65% 0px' });
+  Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
+})();

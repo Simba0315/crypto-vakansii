@@ -405,9 +405,13 @@ def mincss(s):
     return re.sub(r"\x00(\d+)\x00", lambda m_: keep[int(m_.group(1))], s)
 
 
+SMALL_WORDS = {"a", "an", "and", "as", "at", "but", "by", "for", "in", "nor", "of", "on", "or", "per", "the", "to", "vs", "via", "with"}
+
+
 def tcase(s):
-    """Title case that leaves existing capitals alone: "DevOps engineer" -> "DevOps Engineer"."""
-    return " ".join(w[:1].upper() + w[1:] for w in s.split())
+    """Title case that leaves existing capitals alone and small words small: "VP of sales" -> "VP of Sales",
+    "DevOps engineer" -> "DevOps Engineer". The first word is always capitalised."""
+    return " ".join(w if i and w in SMALL_WORDS else w[:1].upper() + w[1:] for i, w in enumerate(s.split()))
 
 
 def fit_title(t):
@@ -458,8 +462,35 @@ def ld_small(m_):
     except ValueError: return m_.group(0)
 
 
+TOC_FAMILIES = ("how-to-become/", "interview-questions/", "job-descriptions/", "how-to-hire/", "guides/", "insights/", "relocate/",
+                "vs/", "compare/", "salaries/", "resignation-letters/", "resume-words/", "glossary/")
+SEC_H2 = re.compile(r'<section class="sec"(?: id="([^"]+)")?><div class="sec-head[^"]*"><h2>(.*?)</h2>')
+
+
+def with_toc(path, body):
+    """An "On this page" list beside a long article (4 or more sections): sticky on the right on wide screens, hidden on phones.
+    Sections without an id get one from their heading, so the links also work as jump links in search results."""
+    if not any(path.startswith(f) and path != f for f in TOC_FAMILIES): return body
+    heads = SEC_H2.findall(body)
+    if len(heads) < 4: return body
+    used, links = set(), []
+    def add_id(m_):
+        sid, h2 = m_.group(1), m_.group(2)
+        if not sid:
+            base = "s-" + (slugify(html.unescape(re.sub(r"<[^>]+>", "", h2)))[:48].strip("-") or "part")
+            sid, k = base, 2
+            while sid in used: sid, k = f"{base}-{k}", k + 1
+        used.add(sid)
+        links.append(f'<li><a href="#{sid}">{re.sub(r"<[^>]+>", "", h2)}</a></li>')
+        return f'<section class="sec" id="{sid}"><div class="sec-head' + m_.group(0).split('<div class="sec-head', 1)[1]
+    body = SEC_H2.sub(add_id, body)
+    return (f'<div class="has-toc"><div class="toc-main">{body}</div><aside class="toc" aria-label="On this page"><p>On this page</p>'
+            f'<ol>{"".join(links)}</ol><a class="toc-top" href="#main">Back to top</a></aside></div>')
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False):
     url = f"{FULL}/{path}"
+    body = with_toc(path, body)
     title, desc = fit_title(title), fit_desc(desc)
     if '"BreadcrumbList"' not in head:                 # every page with a visible trail carries the same trail as markup
         m_ = CRUMB_RX.search(body)
@@ -1460,7 +1491,7 @@ def main():
         if len(mids_) >= 30:
             eg = [(0, 75), (75, 100), (100, 125), (125, 150), (150, 175), (175, 200), (200, 250), (250, 300), (300, 10 ** 6)]
             md_ = median(mids_)
-            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars (bands in thousands). The orange column holds the median, {money(md_)}.</figcaption>'
+            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars (bands in thousands). The dark column holds the median, {money(md_)}.</figcaption>'
                    + vcols([(("<75" if lo == 0 else f"{lo}+" if hi > 1000 else f"{lo}"), c_,
                               f"{'under $75K' if lo == 0 else f'${lo}K and more' if hi > 1000 else f'${lo}K to ${hi}K'} · {c_:,} postings")
                              for lo, hi in eg for c_ in [sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)]],
@@ -1504,7 +1535,7 @@ def main():
     market_pics = ('<div class="pics">'
                    f'<figure class="pic"><figcaption><b>Where the jobs are</b>Open jobs in the ten largest fields. A job can count in two fields.</figcaption>{pic_fields}</figure>'
                    f'<figure class="pic"><figcaption><b>What the postings pay</b>{len(mids_all):,} postings state a yearly range in US dollars: '
-                   f'how many sit in each band, by the middle of their range, in thousands of dollars. The orange column holds the median, {money(med_all)}.</figcaption>'
+                   f'how many sit in each band, by the middle of their range, in thousands of dollars. The dark column holds the median, {money(med_all)}.</figcaption>'
                    f'{vcols(pay_pts, hi=med_i, aria="Postings by yearly pay band")}'
                    + (f'<p class="vc-note"><span><b>{money(med_all)}</b>median</span><span><b>{money(q_lo)}–{money(q_hi)}</b>the middle half of postings</span>'
                       f'<span><b>{sum(1 for v in mids_all if v >= 200000):,}</b>pay $200K or more</span></p>' if mids_all else "") + '</figure>'
@@ -2481,7 +2512,9 @@ def main():
              + section("Questions about this list", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_t) + "</dl>")
              + '<p class="note cmpl">Other lists: ' + " · ".join(f'<a href="{P}/companies/{o_[0]}/">{e(o_[1])}</a>' for o_ in TYPES if o_[0] != ts_) + "</p>", head=ld_t)
         co_types.append((ts_, h1_, len(hits)))
-    co_types_html = (section("Companies by type", '<ul class="tiles">' + "".join(tile(f"companies/{t_}/", h_, k_) for t_, h_, k_ in co_types) + "</ul>"
+    CO_SHORT = {"remote-first": "Remote-first", "hiring-worldwide": "Hiring in 8+ countries", "ai-hiring": "Hiring for AI roles",
+                "beginner-friendly": "Hiring beginners", "pay-transparent": "State the pay"}
+    co_types_html = (section("Companies by type", '<ul class="tiles">' + "".join(tile(f"companies/{t_}/", CO_SHORT.get(t_, h_), k_) for t_, h_, k_ in co_types) + "</ul>"
                              '<p class="note">Counted from each company’s own open postings, so a company moves in and out of a list as it hires.</p>') if co_types else "")
     page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {len(companies):,} employers | {SITE}",
          "Companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
@@ -3933,7 +3966,7 @@ def main():
             extra_hb += section(f"Tools and software {many} use", "<p>" + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in tools_)
                                 + f" of today’s {n_:,} open {e(low)} postings name them. Learn the first three well before the rest.</p>")
         if len(ladder) >= 2:
-            extra_hb += section(f"{tcase(rname)} career path: levels and pay", '<div class="tablewrap"><table><tr><th>Step</th><th>Median advertised pay</th><th>Postings with pay</th></tr>'
+            extra_hb += section(f"{rname} career path: levels and pay", '<div class="tablewrap"><table><tr><th>Step</th><th>Median advertised pay</th><th>Postings with pay</th></tr>'
                                 + "".join(f"<tr><td>{e(nm_)}</td><td><strong>{money(md_)}</strong></td><td>{c_:,}</td></tr>" for nm_, md_, c_ in ladder)
                                 + '</table></div><p class="note">The step is the level word in the job title; “No level in the title” is usually the mid-level role. '
                                 f'After senior, people move into lead, staff or principal roles, or into managing a team. <a href="{P}/guides/job-levels-explained/">What each level means</a>.</p>')
@@ -5596,11 +5629,15 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         page(f"glossary/{sl}/", gt_ + (f" | {SITE}" if len(gt_) + len(SITE) + 3 <= 65 else ""),
              f"{term}, explained in plain English: {d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]}",
              crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(GM["title"] if GM else term)}</h1>'
-             f'<p class="lead gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
-             + (f'<p class="gl-fig">{e(fig)} <span class="note">Counted on {fdate(TODAY)}.</span></p>' if fig else "")
-             + section("What to do about it", f"<p>{e(tip)}</p>") + g_more
-             + section("Useful next", '<div class="rel">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>")
-             + f'<p class="note cmpl">Other terms: <a href="{P}/glossary/{gslug(prev_[0])}/">{e(prev_[0])}</a> · <a href="{P}/glossary/{gslug(next_[0])}/">{e(next_[0])}</a> · <a href="{P}/glossary/">all {len(GT)} terms</a></p>', head=ld_)
+             f'<div class="gl-top"><div class="gl-card"><span class="gl-k">Definition</span>'
+             f'<p class="gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
+             + (f'<p class="gl-fig"><span class="gl-k">Today’s figure</span>{e(fig)} <span class="note">Counted on {fdate(TODAY)} from open postings.</span></p>' if fig else "")
+             + f'</div><div class="gl-card gl-tip"><h2 class="gl-k">What to do about it</h2><p>{e(tip)}</p>'
+             + ('<div class="gl-next">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>" if links else "") + "</div></div>"
+             + g_more
+             + f'<div class="gl-pager"><a href="{P}/glossary/{gslug(prev_[0])}/"><small>← Previous term</small>{e(prev_[0])}</a>'
+               f'<a href="{P}/glossary/"><small>Glossary</small>All {len(GT)} terms</a>'
+               f'<a href="{P}/glossary/{gslug(next_[0])}/"><small>Next term →</small>{e(next_[0])}</a></div>', head=ld_)
     gl_rows = "".join(f'<div id="{gslug(t)}"><dt><a href="{P}/glossary/{gslug(t)}/">{e(t)}</a></dt><dd>{e(d)}</dd></div>' for t, d, _, _ in sorted(GT, key=lambda x: x[0].lower()))
     page("glossary/", f"Job Search Glossary: {len(GT)} Hiring Terms Explained in Plain English | {SITE}",
          f"{len(GT)} words you meet when looking for a job or hiring, each explained in plain English with what to do about it: ATS, OTE, vesting, notice period, remote, hybrid, visa sponsorship and more.",
@@ -6648,8 +6685,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 + swatch("#FFFFFF", "Paper", "The page")
                 + swatch(BD[A_]["paper2"], "Sand", "Quiet panels and table heads")
                 + swatch(BD[A_]["tint"], "Tint", "A marker under one phrase, a selected row")
-                + swatch("#2A78D6", "Data blue", "Amounts in charts")
-                + swatch("#EB6834", "Data orange", "The one mark a chart is about"))
+                + swatch(BD[A_]["mark"], "Data green", "Amounts in charts")
+                + swatch(BD[A_]["ink"], "Data ink", "The one mark a chart is about"))
     TYPES = ('<div class="types"><div><span class="t1">Jobs that are still open</span><small>Headlines and the name: Schibsted Grotesk, 700–800</small></div>'
              '<div><span class="t2">Every job here comes from the employer’s own careers page. A job the employer takes down leaves the list.</span><small>Text: Public Sans, 400–700</small></div>'
              f'<div><span class="t3">{n:,} open jobs · {money(med_all)} median · 17 past the hour</span><small>Numbers: Public Sans with figures of equal width, so columns line up</small></div>'
@@ -6657,8 +6694,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              '<p class="note">All three typefaces are open source (SIL Open Font License) and served from this site.</p>')
     brand_qa = [("What does the mark mean?", "A clock face at 17 minutes past the hour: the minute every employer’s careers page is read in each hourly run. "
                  "The hour hand points up, the minute hand to 17 past."),
-                ("Why orange-red?", "It stands apart from the blue of Indeed and LinkedIn, the green of Glassdoor, Upwork and ZipRecruiter, the yellow of Welcome to the Jungle "
-                 "and the red of Dice, and it is the colour our charts already used for the one mark that matters."),
+                ("Why green?", "Green reads as “open”: the job is still open. It is the colour the site has used from the start, for the marker under words "
+                 "and the line under links, and it stays small: buttons are ink, and green is never a large fill."),
                 ("Can I use the logo?", "Yes, to link to the site or to write about it. Use the files on this page as they are: do not recolour, stretch, outline or "
                  "animate them, and do not put the mark on a photo without a plain plate behind it.")]
     page("brand/", f"Brand Guide — logo, colours, type and voice | {SITE}",
@@ -6679,9 +6716,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    '<p class="note">The letters are outlines, so the files look the same on a computer without the typeface.</p>')
          + section("Colour", f'<div class="swatches">{SWATCHES}</div>'
                    '<p>One brand colour, used sparingly: the mark, the main button, link underlines and the one thing on a page that matters most. '
-                   'Large areas are white or ink, never orange. Green is only for “yes”, “open” and other states, never for decoration.</p>')
+                   'Large areas are white or ink, never a big green fill, and never green blocks on black. Buttons are ink on light pages and paper on dark ones.</p>')
          + section("Type", TYPES)
-         + section("Charts", '<p>Light cards with a thin border. One blue for amounts and one orange for the single mark the chart is about, checked for colour '
+         + section("Charts", '<p>Light cards with a thin border. Brand green for amounts and ink for the single mark the chart is about, checked for colour '
                    'blindness in light and dark. Labels only where they help, a tooltip on every mark, and one caption that says what is counted and from where. '
                    'Every figure is counted from the open postings on the day the page is built; no decorative charts.</p>'
                    f'<p class="note">Examples: <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, <a href="{P}/jobs-that-pay/">jobs by hourly pay</a>, <a href="{P}/insights/">rankings</a>.</p>')
@@ -6805,13 +6842,15 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} job listings come from, how often they are checked and what the site does not do.",
          crumbs(("About", "")) + f"<h1>About {e(SITE)}</h1>"
          f'<p class="lead">{e(SITE)} is an index of open jobs. Every hour it reads the public hiring feeds of {N_FEEDS} companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.</p>'
+         f'<dl class="facts"><div><dt>Companies read</dt><dd>{N_FEEDS}</dd></div><div><dt>Open jobs today</dt><dd>{n:,}</dd></div>'
+         f'<div><dt>Checked</dt><dd>Every hour</dd></div><div><dt>Cost to job seekers</dt><dd>$0</dd></div></dl><div class="about-grid"><div>'
          f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>From the companies\' own careers systems, not from other job boards. Every listing links to the original posting, and you apply there. '
-         f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p>'
-         f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Every hour. The date of the last check is shown on every job page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p>'
-         f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p>'
-         f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p>'
+         f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p></div><div>'
+         f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Every hour. The date of the last check is shown on every job page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p></div><div>'
+         f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p></div><div>'
+         f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p></div><div>'
          f'<h2 class="h2s">How to contact {e(SITE)}</h2><p>' + (f"Write to us: {contact}." if contact else "Contact details will be published on this page shortly.")
-         + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>.</p>'
+         + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>.</p></div></div>'
          + ('<div class="tablewrap"><table><tr><th>About</th><th>Address</th></tr>'
             + "".join(f"<tr><td>{what}</td><td>{mail_a(k)}</td></tr>" for k, what in [
                 ("jobs", "Posting, correcting or removing a job"), ("partners", "Widgets, the API, job channels and communities"),
