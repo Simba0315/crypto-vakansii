@@ -3575,6 +3575,52 @@ def main():
              + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_)
     write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    cv_dir = defaultdict(list)
+    for slug_r, d in rex_data.items():
+        rname, rj = by_role[slug_r]
+        fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
+        low = rlow(rname)
+        uk_ = [j for j in rj if "united-kingdom" in j["places"]]
+        gbp_ = sorted(m_ for j in uk_ if (m_ := local_mid(j.get("salary"), "£")))
+        eu_ = [j for j in rj if "europe" in j["places"]]
+        d_cv = dict(d, summary=d["summary"].replace("five years of experience", "five years’ experience"))
+        paper_cv = paper(d_cv).replace('<p class="pp-h">Summary</p>', '<p class="pp-h">Personal profile</p>').replace('<p class="pp-h">Experience</p>', '<p class="pp-h">Employment history</p>')
+        cv_qa = [("What is the difference between a CV and a resume?", "In the UK, Ireland, most of Europe, Australia and New Zealand, “CV” is the usual name for the document you send with a job application; "
+                  "in the US and Canada it is called a resume, and “CV” means a long academic record. The content is the same idea: a short profile, your jobs with results, education and skills."),
+                 ("How long should a UK CV be?", "Two pages of A4 at most; one page is fine early in a career. Recruiters skim the first half page, so put the profile and your latest job there."),
+                 ("Should I put a photo on my CV?", "Not in the UK or Ireland, and leave out age, date of birth and marital status: employers there do not expect them and must not use them. "
+                  "Some countries in continental Europe still expect a photo, so check the custom of the country you apply in."),
+                 (f"What should a personal profile on {art(low)} {low} CV say?", "Three or four lines: your title and years of experience, two strengths employers in this work ask for, and one result with a number. Write it last, after the jobs.")]
+        if len(gbp_) >= 5:
+            cv_qa.append((f"What do {low} jobs pay in the UK?", f"{len(gbp_):,} open {low} postings in the United Kingdom state a yearly range in pounds: the median midpoint is £{median(gbp_):,.0f}."))
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cv_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        facts_cv = [("Open jobs in the UK", f"{len(uk_):,}"), ("Open in Europe", f"{len(eu_):,}")] + ([("Median UK pay stated", f"£{median(gbp_):,.0f}")] if len(gbp_) >= 5 else [])
+        cv_dir[fs].append((slug_r, rname, len(uk_)))
+        page(f"cv-examples/{slug_r}/", f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]}) | {SITE}",
+             f"A {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
+             crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} CV example <span class=\"hl\">(UK format)</span></h1>"
+             f'<p class="lead">The same document Americans call a resume, written the way UK and European employers expect it: a personal profile first, your employment history with results, '
+             f'no photo, age or marital status. Below, an example to start from and what {len(rj):,} open {e(low)} postings ask for.</p>'
+             '<div class="rexgrid"><div>' + paper_cv + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
+             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this CV in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/resume/examples/{slug_r}/">US resume version</a></p></div>'
+             '<div class="rexside"><div class="invf">' + "".join(f"<div><b>{e(v_)}</b><span>{e(k_)}</span></div>" for k_, v_ in facts_cv) + "</div>"
+             + '<h2>UK CV rules in one minute</h2><ol class="steps"><li><b>Two pages of A4 at most.</b> One is fine early on.</li>'
+               '<li><b>Personal profile, not objective.</b> Three or four lines on who you are and one result.</li>'
+               '<li><b>Leave out</b> photo, age, date of birth, marital status and national insurance number.</li>'
+               '<li><b>British spelling and dates</b> (organised, 03/2024), and pay in pounds if you mention it.</li>'
+               '<li><b>“References available on request”</b> can go; employers ask for them at the offer.</li></ol></div></div>'
+             + section(f"Questions about {art(low)} {low} CV", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cv_qa) + "</dl>")
+             + f'<p class="note cmpl">Next: <a href="{P}/locations/united-kingdom/">jobs in the United Kingdom</a> · <a href="{P}/cover-letter-examples/{slug_r}/">{e(low)} cover letter</a> · <a href="{P}/cv-examples/">all CV examples</a></p>', head=ld_)
+    cv_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(cv_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/cv-examples/{s_}/">{e(nm)}</a><span>{k:,} UK jobs</span></li>' for s_, nm, k in sorted(cv_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if cv_dir.get(fs)) + "</div>"
+    page("cv-examples/", f"CV Examples (UK Format) for {sum(len(v) for v in cv_dir.values())} Jobs, Free Template | {SITE}",
+         f"CV examples in UK format for {sum(len(v) for v in cv_dir.values())} kinds of work: personal profile, employment history with results, no photo. Free to open in the builder.",
+         crumbs(("Resume builder", "resume/"), ("CV examples", "")) + '<h1>CV examples <span class="hl">in UK format</span></h1>'
+         '<p class="lead">For jobs in the United Kingdom, Ireland and most of Europe: the same examples as our resume pages, laid out as a CV. Pick your work, open it in the free builder and replace every line with your own.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example accountant or designer" aria-label="Find a CV example"></p>'
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">builder</a> works for any job.</p>' + cv_html)
     rex_html = '<div class="dir" id="dir">' + "".join(
         f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(rex_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/resume/examples/{s_}/">{e(nm)}</a><span>{k:,} jobs</span></li>' for s_, nm, k in rex_dir[fs]) + "</ul></div>"
         for fs, fn, fd, live, js_ in fam_rows if rex_dir.get(fs)) + "</div>"
@@ -3835,13 +3881,40 @@ def main():
         facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs today</dt><dd>{n_:,}</dd></div><div><dt>Open to beginners</dt><dd>{len(begin):,}</dd></div>"
                   + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med is not None else "")
                   + (f"<div><dt>Beginner pay, median</dt><dd>{money(median(jr_pay))}</dd></div>" if len(jr_pay) >= 8 else "") + "</dl>")
+        many = ROLE_PLURAL.get(rname, low + "s")
+        lv_pay = defaultdict(list)
+        for j in rj:
+            if j["usd"]: lv_pay[j["level"]].append((j["usd"][0] + j["usd"][1]) / 2)
+        ladder = [(LVL_NAME[k], median(lv_pay[k]), len(lv_pay[k])) for k in ("Intern", "Junior", "", "Senior", "Lead") if len(lv_pay[k]) >= 5]
+        tools_ = [(t, k) for t, k in cnt_.most_common(12) if k >= 3][:10]
+        extra_hb = ""
+        if tools_:
+            extra_hb += section(f"Tools and software {many} use", "<p>" + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in tools_)
+                                + f" of today’s {n_:,} open {e(low)} postings name them. Learn the first three well before the rest.</p>")
+        if len(ladder) >= 2:
+            extra_hb += section(f"{tcase(rname)} career path: levels and pay", '<div class="tablewrap"><table><tr><th>Step</th><th>Median advertised pay</th><th>Postings with pay</th></tr>'
+                                + "".join(f"<tr><td>{e(nm_)}</td><td><strong>{money(md_)}</strong></td><td>{c_:,}</td></tr>" for nm_, md_, c_ in ladder)
+                                + '</table></div><p class="note">The step is the level word in the job title; “No level in the title” is usually the mid-level role. '
+                                f'After senior, people move into lead, staff or principal roles, or into managing a team. <a href="{P}/guides/job-levels-explained/">What each level means</a>.</p>')
+        goals_ = [f"Get fluent in {top_[0][0]}, the skill today’s postings name most, and prove it with a project you can show." if top_ else "Build one piece of work you can show and talk about in an interview.",
+                  (f"Earn a certification employers name in this work: {', '.join(c for c, _ in certs_.most_common(2))}." if certs_ else "Take one short course in the field and finish it with a project, not only a certificate."),
+                  "Keep a list of your results with numbers, updated every month: it becomes your resume lines and your interview stories.",
+                  "Find one person a few years ahead of you in this work and ask for a 20-minute talk each quarter."]
+        extra_hb += section(f"Professional development goals for {art(low)} {low}", '<ul class="ticks">' + "".join(f"<li>{e(g_)}</li>" for g_ in goals_) + "</ul>")
+        li_skills = " · ".join(t for t, _ in top_[:3]) if top_ else ""
+        extra_hb += section(f"LinkedIn profile tips for {art(low)} {low}", '<ul class="ticks">'
+                            + f'<li><b>Headline:</b> the title employers search for, then your strongest skills and one result: “{e(tcase(rname))}' + (f" | {e(li_skills)}" if li_skills else "") + ' | [one result with a number]”.</li>'
+                            + "<li><b>About:</b> three short paragraphs: what you do, two results with numbers, what you want next.</li>"
+                            + f"<li><b>Skills section:</b> list the skills postings name, in their words" + (f": {e(', '.join(t for t, _ in tools_[:5]))}" if tools_ else "") + ".</li>"
+                            + "<li><b>Open to work:</b> set the job titles and places you want; recruiters filter by them.</li></ul>"
+                            + f'<p class="note">Write the headline with the <a href="{P}/tools/linkedin-headline/">LinkedIn headline generator</a>.</p>')
         hb_dir[fs].append((slug_r, rname, len(begin)))
         page(f"how-to-become/{slug_r}/", f"How to Become {art(low)} {tcase(rname)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
              f"How to become {art(low)} {low}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
              crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
-             + facts_ + section(f"Five steps to your first {low} job", steps)
+             + facts_ + section(f"Five steps to your first {low} job", steps) + extra_hb
              + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_)
@@ -5360,7 +5433,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<p class="note no-print">“Save as PDF” opens your browser’s print window: choose “Save as PDF” as the printer.</p>'
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF — free</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
          '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
-         '<option value="developer">Developer</option><option value="executive">Executive</option></select></label>'
+         '<option value="developer">Developer</option><option value="executive">Executive</option><option value="timeline">Timeline</option></select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
          f'<p class="note no-print">Not sure how to start? <a href="{P}/resume/examples/">Open a resume example for your kind of work</a> and replace it line by line.</p>'
