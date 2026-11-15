@@ -241,6 +241,7 @@ def main():
     ap.add_argument("--max", type=int, default=0, help="at most this many new tokens per system (0: all)")
     ap.add_argument("--samples", action="store_true", help="save a real response of a system that has no test sample yet (feeds_samples/)")
     ap.add_argument("--recheck", action="store_true", help="judge again the boards already in sources_ats.json (no Common Crawl)")
+    ap.add_argument("--new-only", action="store_true", help="ask only boards not in sources_ats.json yet and add the good ones (the daily run)")
     a = ap.parse_args()
     tmp = ROOT / "data" / "cc"
     tmp.mkdir(parents=True, exist_ok=True)
@@ -262,6 +263,9 @@ def main():
         for p in prev:
             if p["count"] <= MAX_JOBS: found[p["ats"]].add(p["token"])
         prev = []
+    if a.new_only:
+        have |= {(p["ats"], p["token"].lower()) for p in prev}
+        names |= {collect.co_key(p["name"]) for p in prev}
     for s in a.systems:
         new = sorted(t for t in found[s] if (s, t.lower()) not in have)
         if a.max: new = new[:a.max]
@@ -283,7 +287,7 @@ def main():
             kept.append({"name": name, "ats": s, "token": t, "count": count, "lands": [c for c, _ in Counter(countries_n).most_common(3)]})
     # boards of a system that could not be asked this time stay as they were
     asked_ok = {s for s in a.systems if asked[s] and answered[s] >= 0.2 * asked[s]}
-    keep_prev = [p for p in prev if p["ats"] not in asked_ok]
+    keep_prev = prev if a.new_only else [p for p in prev if p["ats"] not in asked_ok]
     out_names = {collect.co_key(k["name"]) for k in kept}
     out = kept + [p for p in keep_prev if collect.co_key(p["name"]) not in out_names]
     # one company name, one board: a name used twice gets its system added ("Acme (Personio)"), so collect.py keeps both boards apart

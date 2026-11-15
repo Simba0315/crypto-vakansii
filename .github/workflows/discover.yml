@@ -2,14 +2,14 @@ name: Find company job boards
 
 # discover_ats.py finds the job boards of companies on the hiring systems small and mid-size companies use (Workable, Recruitee,
 # SmartRecruiters, Teamtailor, Personio, BambooHR, Breezy, Pinpoint, Rippling, Lever Europe, and Greenhouse/Lever/Ashby boards not
-# read yet) and writes sources_ats.json; collect.py reads those boards every 8 hours. It runs here, not on a cloud machine, because
-# Workable answers "too many requests" to shared cloud addresses. Runs when the script changes, every Monday, and by hand.
+# read yet) and writes sources_ats.json; collect.py reads those boards in turns (HRN_ROTATE_ATS). It runs here, not on a cloud machine, because
+# Workable answers "too many requests" to shared cloud addresses. Runs every day, when the script changes, and by hand.
 on:
   push:
     branches: [main]
     paths: [discover_ats.py, .github/workflows/discover.yml]
   schedule:
-    - cron: "41 1 * * 1"      # Mondays 01:41 UTC, away from the :17 hourly run
+    - cron: "41 1 * * *"      # every day 01:41 UTC, away from the :17 hourly run: new boards only; on Mondays every board is judged again
   workflow_dispatch:
 
 permissions:
@@ -29,7 +29,13 @@ jobs:
         with:
           python-version: "3.12"
       - name: Find boards
-        run: python3 discover_ats.py --crawls 3 --workers 24 --samples
+        run: |
+          # new boards every day; on Mondays (and when started by hand or by a change to the script) every board is asked again
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%u)" != "1" ]; then
+            python3 discover_ats.py --crawls 3 --workers 24 --samples --new-only
+          else
+            python3 discover_ats.py --crawls 3 --workers 24 --samples
+          fi
       - name: Check the feeds still read the saved samples
         run: python3 feeds_test.py
       - name: Commit the list
