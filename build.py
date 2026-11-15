@@ -2910,7 +2910,7 @@ def main():
              head=ld_r + crumbs_ld([("Compare", "compare/"), (f"{an_} vs {bn_}", "")]))
         rvs_done.append((path, f"{an_} vs {bn_}", A["n"] + B["n"]))
     cmp_opts = "".join(f'<option value="{tslug(t)}">{e(t)}</option>' for t in CMP)
-    page("compare/", f"Compare Skills by Jobs, Salary and Remote Share | {SITE}",
+    page("compare/", f"Compare Jobs and Skills: Pay, Demand and Remote Share | {SITE}",
          f"Put two tech skills head to head: open roles, median advertised salary, remote share and top employers, counted from {n:,} live job postings every day.",
          crumbs(("Compare skills", "")) + "<h1>Compare skills by jobs and pay</h1>"
          '<p class="plain"><b>In plain words:</b> pick two skills, for example Python and Java, and see which one more employers ask for and which one pays more.</p>'
@@ -3849,9 +3849,35 @@ def main():
          f"Interview questions for {iq_n} kinds of work. Each says why it is likely to come up, from today’s open postings, and what a good answer shows. Free, no sign-up.",
          crumbs(("Interview questions", "")) + f'<h1>Interview questions for <span class="hl">{iq_n} jobs</span></h1>'
          '<p class="lead">Pick your work. Each page lists the questions to prepare for, why each is likely to come up, from the skills and situations today’s open postings name, and what a good answer shows.</p>'
-         f'<p class="note">Want to test a skill instead? Take a <a href="{P}/skill-tests/">ten-question skill test</a> on SQL, Excel, Python and more.</p>'
+         f'<p class="note">Want to rehearse? <a href="{P}/interview-practice/">Practise out loud</a>: the page reads the questions and times your answers. Or take a <a href="{P}/skill-tests/">skill test</a> on SQL, Excel, Python and more.</p>'
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a job"></p>'
          f'<p class="lead" id="dirnone" hidden>No page with these words. The <a href="{P}/tools/interview-answer-builder/">interview answer builder</a> works for any job.</p>' + iq_html)
+
+    ip_html = '<div class="dir" id="dir">' + "".join(
+        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(iq_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/interview-questions/{s_}/#practise">{e(nm)}</a><span>{k} questions</span></li>' for s_, nm, k in sorted(iq_dir[fs], key=lambda x: x[1])) + "</ul></div>"
+        for fs, fn, fd, live, js_ in fam_rows if iq_dir.get(fs)) + "</div>"
+    ip_qa = [("How can I practice for an interview?", "Pick your job below: the page reads each likely question aloud, listens to your answer in the browser and checks its length, whether it has a number and whether you said what you did. "
+              "Practise three real stories out loud for 60 to 90 seconds each, then once more with a friend or a recording."),
+             ("What is the STAR method?", "A way to tell a work story: the Situation, the Task you had, the Action you took and the Result, with a number. Keep the action the longest part and say “I”, not “we”."),
+             ("What is the 30-60-90 rule in an interview?", "A short plan for your first three months in the job: what you will learn in the first 30 days, what you will start to change by day 60, and what result you will own by day 90. "
+              "Interviewers for senior roles often ask for one."),
+             ("What are the 5 P’s of interviewing?", "A saying, not a fixed method: “prior preparation prevents poor performance”. In practice: read the posting, research the company, prepare your stories, practise them out loud and prepare your own questions."),
+             ("How long should an interview answer be?", "Most answers work best in 60 to 90 seconds; “tell me about yourself” in about a minute. Longer answers lose the listener; the practice mode times each one.")]
+    ip_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in ip_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("interview-practice/", f"Free Interview Practice: Questions Read Aloud and Timed | {SITE}",
+         f"Practise a job interview out loud for {iq_n} kinds of work: the page reads each question, listens to your answer in the browser and checks it. Free, no sign-up, nothing recorded.",
+         crumbs(("Interview questions", "interview-questions/"), ("Practice", "")) + '<h1>Free interview practice: <span class="hl">questions read aloud, answers timed</span></h1>'
+         f'<p class="lead">Pick your job. The page reads each likely question aloud, listens to your answer in the browser and checks three things: the length, a number, and whether you said what you did. '
+         'No sign-up, and nothing you say is recorded or sent anywhere.</p>'
+         + section("Three ways to structure an answer", '<dl class="qa">'
+                   "<div><dt>STAR, for “tell me about a time…”</dt><dd>Situation, Task, Action, Result. One sentence each for the first two, most of the time on what you did, and a result with a number.</dd></div>"
+                   "<div><dt>“Tell me about yourself”, in about a minute</dt><dd>What you do now, one result you are proud of, and why this job is the next step. Leave your life story out.</dd></div>"
+                   "<div><dt>A 30-60-90 day plan, for senior roles</dt><dd>What you will learn by day 30, start to change by day 60 and own by day 90, tied to the goals in the posting.</dd></div></dl>"
+                   f'<p class="note">Write the stories first with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>, then practise them here.</p>')
+         + '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a job"></p>'
+         + f'<p class="lead" id="dirnone" hidden>No page with these words. The <a href="{P}/tools/interview-answer-builder/">interview answer builder</a> works for any job.</p>' + ip_html
+         + section("Questions about interview practice", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in ip_qa) + "</dl>"), head=ip_ld)
 
     # "How to hire a <work>" for employers (Indeed and Workable rank with such guides). The steps are the same for every work; what makes
     # a page worth reading is counted from today's postings: who else is hiring this work, where, what they pay and offer, how long
@@ -4249,45 +4275,50 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
         sk_med = [(j["usd"][0] + j["usd"][1]) / 2 for j in active if sk_t in j["tags"] and j["usd"]]
         sk_pay = money(median(sk_med)) if len(sk_med) >= 20 else ""
         sk_has = (OUT / "skills" / sk_slug / "index.html").exists()
-        ihtml = "".join(f'<fieldset class="qz-q"><legend><span>{i + 1}</span>{e(t_)}</legend>' + "".join(
+        n_q = len(q_["qs"]); lv_q = q_.get("levels") or [""] * n_q; tp_q = q_.get("topics") or [""] * n_q
+        ihtml = "".join(f'<fieldset class="qz-q"><legend><span>{i + 1}</span>{e(t_)}'
+                        + (f' <small class="note" style="font-weight:400;white-space:nowrap">{e(lv_q[i])} · {e(tp_q[i])}</small>' if lv_q[i] else "") + '</legend>' + "".join(
             f'<label><input type="radio" name="q{i}" value="{k}"><span>{e(a_)}</span></label>' for k, a_ in enumerate(o_)) + "</fieldset>" for i, (t_, o_, _, _) in enumerate(q_["qs"]))
-        idata = json.dumps({"a": [x[2] for x in q_["qs"]], "w": [x[3] for x in q_["qs"]], "n": sk_n, "pay": sk_pay, "name": q_["name"],
+        idata = json.dumps({"a": [x[2] for x in q_["qs"]], "w": [x[3] for x in q_["qs"]], "t": tp_q, "n": sk_n, "pay": sk_pay, "name": q_["name"],
                             "skill": f"{P}/skills/{sk_slug}/" if sk_has else "", "jobs": f"{P}/jobs/?skill={quote(sk_t)}"}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         ijs = r"""<script>(function(){var D=JSON.parse(document.getElementById('st-data').textContent),f=document.getElementById('st'),out=document.getElementById('st-out');
 var esc=function(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-f.addEventListener('submit',function(ev){ev.preventDefault();var ok=0,seen=0,rows='';
+f.addEventListener('submit',function(ev){ev.preventDefault();var ok=0,seen=0,rows='',tp={};
 D.a.forEach(function(r,i){var c=f.querySelector('input[name=q'+i+']:checked'),qs=f.querySelectorAll('fieldset')[i],labs=qs.querySelectorAll('label');
 labs.forEach(function(l){l.classList.remove('st-ok','st-bad');});labs[r].classList.add('st-ok');
 var old=qs.querySelector('.st-why');if(old)old.remove();
 var p=document.createElement('p');p.className='st-why';
+var tk=(D.t&&D.t[i])||'';if(tk){if(!tp[tk])tp[tk]=[0,0];tp[tk][1]++;if(c&&+c.value===r)tp[tk][0]++;}
 if(c){seen++;if(+c.value===r){ok++;p.innerHTML='<b>Right.</b> '+esc(D.w[i]);}else{c.parentNode.classList.add('st-bad');p.innerHTML='<b>Not quite.</b> '+esc(D.w[i]);}}
 else{p.innerHTML='<b>Skipped.</b> '+esc(D.w[i]);}
 qs.appendChild(p);});
-var lv=ok>=8?'Ready to be asked about it in an interview':ok>=5?'A good base, with some gaps to close':'Worth another week of practice before applying';
-out.innerHTML='<h2>You got '+ok+' of '+D.a.length+'</h2><p class="lead">'+lv+'. Below each question you can read why the answer is what it is.</p>'+
+var sh=ok/D.a.length,lv=sh>=0.8?'Ready to be asked about it in an interview':sh>=0.5?'A good base, with some gaps to close':'Worth another week of practice before applying';
+var by=Object.keys(tp).map(function(k){return esc(k)+' '+tp[k][0]+'/'+tp[k][1];}).join(' · ');
+out.innerHTML='<h2>You got '+ok+' of '+D.a.length+'</h2><p class="lead">'+lv+'. Below each question you can read why the answer is what it is.</p>'+(by?'<p><b>By topic:</b> '+by+'. Study the topics with the fewest right first.</p>':'')+
 (D.n?'<p>'+D.n.toLocaleString('en-US')+' open jobs name '+esc(D.name)+' today'+(D.pay?', with a median advertised pay of '+D.pay:'')+'. <a href="'+D.jobs+'">See the jobs</a>'+(D.skill?' · <a href="'+D.skill+'">What employers pair it with</a>':'')+'.</p>':'')+
-'<p class="note">This is a quick self-check of ten questions, not a certificate. Nothing is sent anywhere.</p><p><button class="btn ghost" type="button" id="st-again">Try again</button></p>';
+'<p class="note">This is a self-check of '+D.a.length+' questions, not a certificate. Nothing is sent anywhere.</p><p><button class="btn ghost" type="button" id="st-again">Try again</button></p>';
 out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});
 document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true;f.querySelectorAll('.st-why').forEach(function(x){x.remove();});f.querySelectorAll('label').forEach(function(l){l.classList.remove('st-ok','st-bad');});window.scrollTo({top:f.offsetTop-80,behavior:'smooth'});};});})();</script>"""
-        iqa = [(f"How do I prepare for a {q_['name']} interview?", f"Work through realistic questions, read why each answer is right, then redo the ones you missed. This test has ten, taken from what interviewers commonly ask a beginner or a junior. Then read the postings: the {sk_n:,} open jobs that name {q_['name']} show what employers expect on top of it." if sk_n else f"Work through realistic questions, read why each answer is right, then redo the ones you missed."),
+        iqa = [(f"How do I prepare for a {q_['name']} interview?", f"Work through realistic questions, read why each answer is right, then redo the ones you missed. This test has {n_q}, from beginner to advanced, of the kind interviewers commonly ask. Then read the postings: the {sk_n:,} open jobs that name {q_['name']} show what employers expect on top of it." if sk_n else f"Work through realistic questions, read why each answer is right, then redo the ones you missed."),
                (f"Is this {q_['name']} test free?", "Yes. It needs no account and no email, runs in your browser and sends nothing anywhere."),
-               ("What does my score mean?", "It is a self-check. Eight or more right means the basics are fresh; five to seven means a good base with gaps; under five means more practice first. It is not an official certificate.")]
+               ("What does my score mean?", "It is a self-check. 80% or more right means the basics are fresh; half to 80% means a good base with gaps; under half means more practice first. "
+                "The result also shows your score by topic, so you know what to study. It is not an official certificate.")] + list(q_.get("qa") or [])
         ild = '<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": a_, "acceptedAnswer": {"@type": "Answer", "text": b_}} for a_, b_ in iqa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
-        page(f"skill-tests/{qs_}/", f"{q_['name']} Test: 10 Interview Questions with Answers | {SITE}",
-             f"A free {q_['name']} test with ten questions that interviewers commonly ask, scored in your browser, with the reason behind every answer. No email, no sign-up.",
-             crumbs(("Skill tests", "skill-tests/"), (q_["name"], "")) + f'<h1>{e(q_["name"])} test: <span class="hl">10 questions to check yourself</span></h1>'
-             f'<p class="plain"><b>In plain words:</b> {e(q_["plain"])} Answer ten questions, press the button, and see which you got right and why.</p>'
-             + (f'<p class="lead">{sk_n:,} open jobs name {e(q_["name"])} today' + (f', with a median advertised pay of {sk_pay}' if sk_pay else "") + ". The questions are the kind that come up in a first interview.</p>" if sk_n else '<p class="lead">Ten questions of the kind that come up in a first interview.</p>')
+        page(f"skill-tests/{qs_}/", f"{q_['name']} Test: {n_q} Questions with Answers, Beginner to Advanced | {SITE}",
+             f"A free {q_['name']} test: {n_q} questions from beginner to advanced that interviewers commonly ask, scored in your browser by topic, with the reason behind every answer. No email, no sign-up.",
+             crumbs(("Skill tests", "skill-tests/"), (q_["name"], "")) + f'<h1>{e(q_["name"])} test: <span class="hl">{n_q} questions to check yourself</span></h1>'
+             f'<p class="plain"><b>In plain words:</b> {e(q_["plain"])} Answer {n_q} questions, press the button, and see which you got right, why, and your score by topic.</p>'
+             + (f'<p class="lead">{sk_n:,} open jobs name {e(q_["name"])} today' + (f', with a median advertised pay of {sk_pay}' if sk_pay else "") + f". {n_q} questions from beginner to advanced, about 10 to 15 minutes, the kind that come up in interviews.</p>" if sk_n else f'<p class="lead">{n_q} questions of the kind that come up in interviews.</p>')
              + f'<form id="st" class="qz">{ihtml}<p><button class="btn primary" type="submit">Check my answers</button></p></form>'
              f'<section class="sec qz-out" id="st-out" aria-live="polite" hidden></section><script type="application/json" id="st-data">{idata}</script>{ijs}'
              + section("Questions about this test", '<dl class="qa">' + "".join(f"<div><dt>{e(a_)}</dt><dd>{e(b_)}</dd></div>" for a_, b_ in iqa) + "</dl>")
              + '<p class="rel">More tests: ' + " ".join(f'<a href="{P}/skill-tests/{o_}/">{e(quiz_pages.QUIZZES[o_]["name"])}</a>' for o_ in quiz_pages.QUIZZES if o_ != qs_) + f' <a href="{P}/skill-tests/">All tests</a></p>', head=ild)
         sk_cards.append((qs_, q_["name"], q_["plain"], sk_n))
     page("skill-tests/", f"Skill Tests for Job Interviews: SQL, Excel, Python and More | {SITE}",
-         "Free ten-question tests for the skills employers ask for most: SQL, Excel, Python, JavaScript, Linux and Docker. Scored in your browser with the reason behind each answer.",
+         "Free tests of 24 questions, beginner to advanced, for the skills employers ask for most: SQL, Excel, Python, JavaScript, Linux and Docker. Scored in your browser by topic, with the reason behind each answer.",
          crumbs(("Skill tests", "")) + '<h1>Skill tests: <span class="hl">check yourself before the interview</span></h1>'
-         '<p class="plain"><b>In plain words:</b> a skill test is a short quiz. You answer ten questions about one skill, such as SQL or Excel, and see which answers were right and why.</p>'
+         '<p class="plain"><b>In plain words:</b> a skill test is a short quiz. You answer 24 questions about one skill, such as SQL or Excel, and see which answers were right, why, and your score by topic.</p>'
          '<p class="lead">A first interview often starts with questions on the skills listed in the posting. These tests cover the questions that come up most, so you find your gaps at home and not in the call. Free, no sign-up, nothing leaves your browser.</p>'
          '<div class="feats">' + "".join(f'<a class="feat" href="{P}/skill-tests/{s_}/"><h2>{e(nm_)} test</h2><p>{e(pl_)}' + (f" {k_:,} open jobs name it today." if k_ else "") + "</p></a>" for s_, nm_, pl_, k_ in sk_cards) + "</div>"
          f'<p class="note">After the test: <a href="{P}/interview-questions/">interview questions by job</a>, the <a href="{P}/resume/">resume builder</a> and the <a href="{P}/tools/resume-match/">resume match</a>.</p>')
@@ -4986,7 +5017,18 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<p class="rel"><span>Jump to:</span>' + "".join(f'<a href="#{g}">{e(nm)}</a>' for g, nm, _ in groups_) + "</p>" + skills_body)
 
     # Resume builder: stays in the browser, prints to PDF
-    page("resume/", f"Free Resume Builder — free PDF and Word download | {SITE}",
+    rb_qa = [("Is there a 100% free resume builder?", f"This one: all five templates, the PDF and the Word download are free, with no account, no trial and no watermark. "
+              f"Many builders let you write for free and charge at the download; we read the pricing pages of {len(builders_check.BUILDERS)} of them, and the comparison shows which give a free PDF."),
+             ("Can ChatGPT build a resume?", "It can draft and reword lines, but it does not know your results, and it tends to invent numbers and use the same phrases as everyone else. "
+              "Use it for wording, check every fact, and put the text into a plain one-column layout that applicant tracking systems read cleanly, such as the templates here."),
+             ("Which is the best free resume builder?", "The one that gives you a file employers’ software can read without paying at the end: a one-column layout, a real PDF or Word download, no sign-up. "
+              "That is how this builder is made, and the comparison of free builders shows how others handle the download."),
+             ("Do I need to sign up to make a resume here?", "No. You type in the form, the page updates as you go, and you download. Nothing leaves your browser; the draft is kept in this browser so you can come back to it."),
+             ("Will an applicant tracking system read this resume?", "The templates are single-column text with standard headings and no tables, icons or text boxes, which is what screening software reads best. "
+              "Match it to a posting with the resume match checker before you apply.")]
+    rb_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("resume/", f"Free Resume Builder: Free PDF & Word Download, No Sign-Up | {SITE}",
          "Build an ATS-friendly resume in your browser: five templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
          crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Five plain one-column templates that applicant tracking systems read cleanly '
          '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
@@ -5008,7 +5050,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div></section>'
-         + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>')
+         + '<div class="no-print">' + section("Questions about this resume builder", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rb_qa) + "</dl>") + "</div>"
+         + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>', head=rb_ld)
 
     # "Which free resume builders let you download the PDF": the question every "best free resume builder" list argues about (owner,
     # 14 Nov: "be in the top for free resume builder"). Every fact about another builder is read from its own pages (builders_check.py).
@@ -5098,17 +5141,26 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         sl = gslug(term)
         fig = gfig.get(term, "")
         prev_, next_ = GT[i - 1], GT[(i + 1) % len(GT)]
+        GM = glossary_terms.MORE.get(term)          # a full answer for the terms people search most ("what is an ats")
+        gqa = [(f"What is {term[0].lower() + term[1:] if not term[:2].isupper() else term}?", d)] + (list(GM["qa"]) if GM else [])
         ld_ = ('<script type="application/ld+json">' + json.dumps([
             {"@context": "https://schema.org", "@type": "DefinedTerm", "name": term, "description": d, "url": f"{FULL}/glossary/{sl}/",
              "inDefinedTermSet": {"@type": "DefinedTermSet", "name": "Job search glossary", "url": f"{FULL}/glossary/"}},
-            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": f"What is {term[0].lower() + term[1:] if not term[:2].isupper() else term}?",
-                                                                              "acceptedAnswer": {"@type": "Answer", "text": d}}]}], ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        page(f"glossary/{sl}/", f"{term}: What It Means in a Job Search | {SITE}",
+            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in gqa]}],
+            ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        g_more = ""
+        if GM:
+            g_more = ("".join(section(h_, "".join(f"<p>{e(x_)}</p>" for x_ in xs_)) for h_, xs_ in GM["sections"])
+                      + section(f"Questions about {term[0].lower() + term[1:] if not term[:2].isupper() else term}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in GM["qa"]) + "</dl>"))
+            for al_ in GM.get("aliases", ()):     # another address people type: a page that hands over to this one (canonical and an immediate refresh)
+                write(f"glossary/{al_}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(term)}</title><link rel="canonical" href="{FULL}/glossary/{sl}/">'
+                      f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/glossary/{sl}/"></head><body><p><a href="{P}/glossary/{sl}/">{e(term)}</a></p></body></html>', sitemap=False)
+        page(f"glossary/{sl}/", (GM["title"] if GM else f"{term}: What It Means in a Job Search") + f" | {SITE}",
              f"{term}, explained in plain English: {d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]}",
-             crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(term)}</h1>'
+             crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(GM["title"] if GM else term)}</h1>'
              f'<p class="lead gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
              + (f'<p class="gl-fig">{e(fig)} <span class="note">Counted on {fdate(TODAY)}.</span></p>' if fig else "")
-             + section("What to do about it", f"<p>{e(tip)}</p>")
+             + section("What to do about it", f"<p>{e(tip)}</p>") + g_more
              + section("Useful next", '<div class="rel">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>")
              + f'<p class="note cmpl">Other terms: <a href="{P}/glossary/{gslug(prev_[0])}/">{e(prev_[0])}</a> · <a href="{P}/glossary/{gslug(next_[0])}/">{e(next_[0])}</a> · <a href="{P}/glossary/">all {len(GT)} terms</a></p>', head=ld_)
     gl_rows = "".join(f'<div id="{gslug(t)}"><dt><a href="{P}/glossary/{gslug(t)}/">{e(t)}</a></dt><dd>{e(d)}</dd></div>' for t, d, _, _ in sorted(GT, key=lambda x: x[0].lower()))
@@ -5548,7 +5600,18 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the placement did.</span></span></div>'
                '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · ' + price_of("Featured job") + '</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
                '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the period ends, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
-    page("post-a-job/", f"Post a Job — free listing, featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Job — free listing, plans and prices for employers | {SITE}",
+    pj_qa = [("Where can I post a job for free?", f"Here: a standard listing is free, with its own page and 30 days in the list, among {n:,} open roles from {m:,} companies. "
+              "Self-serve posting is being finished; until it opens, write to " + (MAIL.get("jobs") or "us") + ". Several big job boards also have a free tier with limits; the site-by-site comparisons on this site show who charges for what."),
+             ("Is posting a job here really free?", "Yes. A standard listing costs nothing and needs no card. Paid placements only keep a job higher in the list, and nothing can be bought until payments open."),
+             ("Can I post a job on Google for free?", "Google does not take job posts itself: its job search reads job pages that carry JobPosting structured data. Every open job here with a full description "
+              "has its own page with that data, so a free listing here can appear in Google’s job search."),
+             ("Can I post a job without registering?", "Self-serve posting will ask for an email and a password, so that only you can close or renew the job. And if your openings are on a careers page we already read "
+              "(Greenhouse, Lever, Ashby and other hiring systems), they appear here by themselves, free and with no account; to have your careers page read, write to " + (MAIL.get("jobs") or "us") + "."),
+             ("How do I post a job for free online?", "Write the title, the place of work, the pay range and what the person will do; add the link where people apply; post it on free boards such as this one "
+              "and on your own careers page; share it with people who do that work. A posting that states pay and a place gets more of the right applicants.")]
+    pj_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in pj_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    page("post-a-job/", f"Post a Job for Free — featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Job for Free: Listings, Plans and Prices | {SITE}",
          (f"Post a job for free, or feature it from {price_of('Featured job')} so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
           f"Plans and prices for employers: free standard listings, featured jobs from {price_of('Featured job')}, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
          crumbs(("For employers", "")) + "<h1>Post a job that doesn’t get buried</h1>"
@@ -5570,7 +5633,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          "<h3>No careers page of your own?</h3><p>Use your company page here as one. Link your site's Careers button to it, or embed the list with one line of code: "
          f'<a href="{P}/widgets/">badge and widget</a>.</p>'
          "<h3>What happens when the job closes?</h3><p>It is marked as closed and its page stays online.</p>"
-         "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>")
+         "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>"
+         + section("Questions about posting a job for free", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in pj_qa) + "</dl>"), head=pj_ld)
     # Pricing: both sides on one page, each with its own table. A person looking for work and a company hiring buy different
     # things, so they never share a table (the owner: "for the job seeker and for the employer everything must be different").
     price_qa = [("Do I have to pay to see jobs or to apply?", "No. Every job is public and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
