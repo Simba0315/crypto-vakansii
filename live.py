@@ -10,8 +10,9 @@ How it fits with the hourly build:
 - When the next upload brings a jobs.db that has the job, the live entry is dropped: the hourly record wins, and if it gave the job
   another address, the live address sends visitors there.
 
-Schedule: every board is read at least once an hour, spread over the hour; a board that changed in the last day every 10 minutes;
-a board that fails waits longer each time (up to 6 hours). Duplicates: a job that is already on the site under another source or
+Schedule: every board of the older lists is read at least once an hour, spread over the hour; a board that changed in the last day
+every 10 minutes; the boards found by discover_ats.py (sources_ats.json) every 6 to 12 hours by size, or once a day when mostly
+frontline work, hourly while they change; only those up to HRN_ATS_MAX_BOARD jobs, as in collect.py. A board that fails waits longer. Duplicates: a job that is already on the site under another source or
 address (dedupe.py: same company, same role, same place) is not added twice.
 
     python3 live.py                 run (on the server: systemd unit server/hosting/hrn-live.service)
@@ -44,11 +45,17 @@ def sources():
     """Every board the hourly collector reads (all sources*.json but the candidate list), each once."""
     seen, out = set(), []
     crypto = {s["name"] for s in json.loads((ROOT / "sources.json").read_text())} if (ROOT / "sources.json").exists() else set()
+    max_board = int(os.environ.get("HRN_ATS_MAX_BOARD") or 100)          # the same staging as collect.py
     for f in sorted(ROOT.glob("sources*.json")):
-        if "candidates" in f.name: continue
+        if "candidates" in f.name or f.name.endswith("_report.json"): continue
         for s in json.loads(f.read_text()):
             k = (s.get("ats"), s.get("token"))
             if not s.get("token") or not s.get("name") or k in seen or s["name"] in collect.EXCLUDE: continue
+            if f.name == "sources_ats.json":
+                if s.get("count", 0) > max_board: continue
+                # the boards found by discover_ats.py (most of the 20,000) keep the collector's slower pace: 6 to 12 hours by size,
+                # a day for frontline boards (collect.ATS_TIERS); so the live reader needs about 1.3x its work, not 5x
+                s = dict(s, every=3600 * (24 if s.get("frontline") else next(n for least, n in collect.ATS_TIERS if s.get("count", 0) >= least)))
             seen.add(k)
             out.append(dict(s, crypto=s["name"] in crypto))
     return out
@@ -171,8 +178,8 @@ class Live:
         out = []
         for s in srcs:
             k = f"{s['ats']}:{s['token']}"
-            if k not in rows:                                       # a board seen for the first time: a place in the coming hour
-                nd = now + int(hashlib.md5(k.encode()).hexdigest(), 16) % HOUR
+            if k not in rows:                                       # a board seen for the first time: a place in its first period
+                nd = now + int(hashlib.md5(k.encode()).hexdigest(), 16) % (s.get("every") or HOUR)
                 self.con.execute("INSERT OR IGNORE INTO boards (key, next_due) VALUES (?, ?)", (k, nd))
                 rows[k] = (nd, 0, 0)
             if rows[k][0] <= now: out.append(s)
@@ -183,7 +190,9 @@ class Live:
         row = self.con.execute("SELECT last_change, fails FROM boards WHERE key = ?", (k,)).fetchone() or (0, 0)
         last_change = now if changed else row[0]
         fails = 0 if ok else row[1] + 1
-        wait = min(HOUR * 2 ** fails, 6 * HOUR) if not ok else (BUSY if now - last_change < 86400 else HOUR)
+        quiet = src.get("every") or HOUR                  # a board from sources_ats.json: its own pace (sources())
+        busy = BUSY if quiet == HOUR else HOUR            # …and at most hourly when it has just changed
+        wait = min(quiet * 2 ** fails, max(6 * HOUR, quiet)) if not ok else (busy if now - last_change < 86400 else quiet)
         self.con.execute("UPDATE boards SET next_due = ?, last_change = ?, fails = ? WHERE key = ?", (now + wait, last_change, fails, k))
 
     def run(self):
