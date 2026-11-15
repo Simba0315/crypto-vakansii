@@ -1236,8 +1236,9 @@ def main():
     N_FEEDS = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})     # employer feeds read in each run
     N_TURNS = len({s_["name"] for f_ in ("sources_more.json", "sources_ats.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})  # read in turns (collect.py)
     FEEDS_TXT = (f"We read {N_FEEDS:,} company feeds every hour and {N_TURNS:,} more in turns, each every 4 or 8 hours. " if N_TURNS else f"We read {N_FEEDS} company feeds every hour. ")
-    PORTALS_TXT = ("Once a day we also read two public employment services that publish the vacancies employers post with them as open data: Russia’s «Работа России» "
-                   "and Sweden’s Platsbanken; each such job names its source and links to it. ")
+    PORTALS_TXT = ("Once a day we also read Sweden’s public employment service, Platsbanken, which publishes the vacancies employers post with it as open data; "
+                   "its jobs written in English are listed, and each names its source and links to it. "
+                   if any(j["id"].startswith("platsbanken-") for j in active) else "")
     remote = [j for j in active if j["remote"]]
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
@@ -5265,7 +5266,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     n_rot8 = len(json.loads((ROOT / "sources_ats.json").read_text())) if (ROOT / "sources_ats.json").exists() else 0      # collect.py: HRN_ROTATE_ATS
     read_line = ((f"{n_hourly:,} employers’ careers pages are read every hour and {n_rot:,} more every four hours" if n_rot else f"{n_hourly:,} employers’ careers pages are read every hour")
                  + (f", {n_rot8:,} more every eight hours" if n_rot8 else "")
-                 + "; two public employment services (Russia’s «Работа России» and Sweden’s Platsbanken) are read once a day")
+                 + ("; Sweden’s public employment service (Platsbanken) is read once a day" if any(j["id"].startswith("platsbanken-") for j in active) else ""))
     bp50 = (f"{SITE} (jobseveryhour.com) is a free job search site built from employers’ own careers pages. It lists {n:,} open jobs at {m:,} companies today. "
             "A job the employer takes down leaves the list, every listing links to the original posting, and nobody needs an account to search or apply.")
     bp100 = (bp50 + f" {read_line}. Each job page shows the pay when the employer states it, how long the job has been open and when it was last checked. "
