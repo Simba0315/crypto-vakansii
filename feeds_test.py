@@ -225,6 +225,16 @@ for title, cat in [("Softwareentwickler (m/w/d)", "engineering"), ("Verkäufer (
                    ("Lagerist", "supply-chain"), ("Pflegefachkraft", "healthcare"), ("Бухгалтер", "finance"), ("Продавец-кассир", "retail"),
                    ("Менеджер по продажам", "sales-bd"), ("Программист 1С", "engineering"), ("Senior Data Engineer", "engineering")]:
     check(f"field of '{title}'", collect.classify(title) == cat, collect.classify(title))
+# All professions, wave 1 (15 Nov 2026): office support, nursing, clinical, teaching and bank titles each land in their own field
+for title, cat in [("Call Center Representative", "support"), ("Customer Service Representative", "support"), ("Contact Centre Agent", "support"),
+                   ("Data Entry Clerk", "administrative"), ("Receptionist", "administrative"), ("Administrative Assistant", "administrative"),
+                   ("Executive Assistant to the CEO", "administrative"), ("Office Manager", "administrative"),
+                   ("Registered Nurse - ICU", "nursing"), ("RN, Med/Surg Nights", "nursing"), ("Licensed Practical Nurse (LPN)", "nursing"), ("Certified Nursing Assistant", "nursing"),
+                   ("Nurse Recruiter", "people"), ("Medical Assistant", "healthcare"), ("Radiology Technologist", "healthcare"), ("Physical Therapist", "healthcare"),
+                   ("School Counselor", "healthcare"), ("High School Math Teacher", "education"), ("Teaching Assistant", "education"),
+                   ("Bank Teller", "finance"), ("Mortgage Loan Officer", "finance"), ("Senior Counsel, Employment", "compliance-legal"),
+                   ("Delivery Driver", "supply-chain"), ("Electrician", "manufacturing"), ("Store Associate", "retail"), ("Senior Data Engineer", "engineering")]:
+    check(f"field of '{title}'", collect.classify(title) == cat, collect.classify(title))
 for title, lvl in [("Ведущий инженер", "Senior"), ("Начальник отдела", "Lead"), ("Стажёр-аналитик", "Intern"), ("Senior Engineer", "Senior")]:
     check(f"level of '{title}'", collect.level(title) == lvl, collect.level(title))
 check("country names", countries.name("ru") == "Russia" and countries.name("XX") == "" and countries.code_of("Россия") == "RU")

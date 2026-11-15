@@ -592,7 +592,7 @@ SLUG_ICON = {   # fields on /categories/ and the categories of job lists
     "hr-recruiting": "users", "operations-administration": "sliders", "hardware-engineering": "chip", "writing-translation": "text", "science-healthcare": "heart",
     "education-training": "cap", "retail-hospitality": "bag", "languages": "globe", "crypto-web3": "hex", "leadership": "crown", "internships-entry-level": "sprout",
     "engineering": "code", "product": "board", "design": "pen", "sales-bd": "trend", "marketing": "megaphone", "support": "headset", "compliance-legal": "scales", "finance": "coin",
-    "people": "users", "data-research": "chart", "operations": "sliders", "healthcare": "heart", "manufacturing": "factory", "supply-chain": "box", "retail": "bag",
+    "people": "users", "data-research": "chart", "operations": "sliders", "healthcare": "heart", "nursing": "heart", "administrative": "board", "manufacturing": "factory", "supply-chain": "box", "retail": "bag",
     "education": "cap", "consulting": "case", "other": "dots",
 }
 PATH_FIELD = re.compile(r"^(?:jobs|crypto|categories|salaries)/([a-z0-9-]+)/$")
@@ -4186,7 +4186,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                ("sales-bd", "Sales", "finding customers and partners"), ("marketing", "Marketing", "making a product known"),
                ("support", "Helping customers", "support and customer success"), ("finance", "Finance", "accounting, planning, trading"),
                ("people", "Hiring and HR", "recruiters and people teams"), ("compliance-legal", "Legal and compliance", "lawyers, risk and policy"),
-               ("operations", "Operations and IT", "keeping the business running"), ("security", "Security", "protecting systems and data")]
+               ("operations", "Operations and IT", "keeping the business running"), ("security", "Security", "protecting systems and data"),
+               ("administrative", "Office and admin", "assistants, reception, data entry"), ("healthcare", "Healthcare", "doctors, therapists, clinical staff"),
+               ("nursing", "Nursing", "nurses and nursing assistants"), ("education", "Teaching", "teachers, tutors, trainers")]
     pct_paid = round(100 * sum(bool(j["salary"]) for j in active) / max(1, n))
     def fy_opt(v, label, hint="", count=None):
         return (f'<button class="opt" type="button" data-v="{e(str(v))}" aria-pressed="false"><b>{e(label)}</b>' + (f"<span>{e(hint)}</span>" if hint else "")

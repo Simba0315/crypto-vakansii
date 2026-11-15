@@ -29,22 +29,31 @@ CATS = [
     ("design", "Design", r"\bdesign(er|ers)?\b|\bux\b|\bui\b|creative|illustrat|motion"),
     ("sales-bd", "Sales & Business Development", r"\bsales\b|business development|\bbd\b|partnership|account (executive|manage)|institutional|relationship manager|listing"),
     ("marketing", "Marketing & Community", r"marketing|growth|content|social media|community|brand|\bpr\b|communications|\bseo\b|copywrit|\bkol\b|运营"),
-    ("support", "Customer Support", r"support|customer (service|success|experience)|client service|helpdesk"),
-    ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel|attorney|\brisk\b|regulatory|fraud|investigat|mlro|audit"),
-    ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|accounts? (payable|receivable)|treasury|controller|\btax\b|payroll|trader|trading|billing|\bfp&a\b"),
+    ("support", "Customer Support", r"support|customer (service|success|experience|care)|client service|helpdesk|call (center|centre)|contact (center|centre)|call handler"),
+    ("compliance-legal", "Compliance & Legal", r"compliance|legal|\baml\b|\bkyc\b|counsel(?!l?or)|attorney|\brisk\b|regulatory|fraud|investigat|mlro|audit"),
+    ("finance", "Finance & Trading", r"finance|financial|account(ant|ing)|accounts? (payable|receivable)|treasury|controller|\btax\b|payroll|trader|trading|billing|\bfp&a\b|"
+                                     r"\bteller\b|loan officer|underwrit|mortgage|\bbanker\b|credit analyst"),
     ("people", "People & Recruiting", r"recruit|talent|people (ops|partner|operations)|\bhr\b|human resources"),
+    # added 15 Nov 2026 with "all professions, wave 1" (the main session): office support work had no field of its own
+    ("administrative", "Administrative & Office", r"data entry|receptionist|administrative (assistant|coordinator|specialist|support|associate)|admin(istrative)? assistant|"
+                                                  r"office (assistant|clerk|coordinator|administrator|manager)|\bclerk\b|secretar|executive assistant|personal assistant|typist|"
+                                                  r"file clerk|mailroom|scheduler|scheduling coordinator|records (clerk|specialist)|transcription"),
     ("data-research", "Data & Research", r"analyst|\bdata\b|research|quant|scientist|economist|strategy"),
     ("operations", "Operations", r"operations|project manager|program manager|chief of staff|executive assistant|office|administrat"),
     # Added 13 Nov 2026 (the owner asked for the fields other job sites have). They stand after the older ones on purpose:
     # a title that already had a category keeps it, and only what used to fall into "Other" is sorted further.
-    ("healthcare", "Healthcare", r"\bnurse|nursing|clinical|clinician|physician|\bmedical\b|therapist|pharmac|\bnp\b|dental|dentist|veterinar|care (manager|coordinator|guide|navigator|advocate)|"
-                                 r"health coach|behavioral health|caregiver|\bemt\b|paramedic|optomet"),
+    # nurses got a field of their own on 15 Nov 2026 (the main session's "healthcare split into nursing and other clinical roles")
+    ("nursing", "Nursing", r"\bnurse|nursing|\brn\b|\blpn\b|\blvn\b|\bcna\b|midwi"),
+    ("healthcare", "Healthcare", r"clinical|clinician|physician|\bmedical\b|therapist|pharmac|\bnp\b|dental|dentist|veterinar|care (manager|coordinator|guide|navigator|advocate)|"
+                                 r"health coach|behavioral health|caregiver|\bemt\b|paramedic|optomet|radiolog|sonograph|phlebotom|surgical tech|respiratory|"
+                                 r"(lab|laboratory|medical|surgical|radiologic|mri|ct) technologist|medical (assistant|scribe)|patient care|physician assistant|psychiatr|"
+                                 r"psychologist|counsel(l)?or|social worker|dietitian|audiolog|occupational therap|speech[- ]language"),
     ("manufacturing", "Manufacturing & Trades", r"technician|manufactur|production|welder|machinist|assembl|\boperator\b|inspector|maintenance|electrician|\bmechanic\b|fabricat|tooling|\bcnc\b|"
                                                 r"facilities|construction|quality (control|inspector|technician)|painter|plumber|hvac|rigger|crane|installer"),
     ("supply-chain", "Supply Chain & Logistics", r"\bsupply\b|sourcing|procurement|logistics|warehouse|fulfil+ment|\bbuyer\b|\bplanner\b|inventory|shipping|receiving|transport|\bdriver\b|"
                                                  r"materials? (handler|planner|manager|coordinator)|dispatcher|fleet"),
     ("retail", "Retail & Hospitality", r"\bretail\b|\bstore\b|key holder|cashier|barista|\bchef\b|\bcook\b|hospitality|merchandis|shift (lead|supervisor|manager)|restaurant|front desk|concierge|housekeep"),
-    ("education", "Education & Training", r"teacher|instructor|\btutor|curriculum|\btrainer\b|learning (designer|specialist|experience|and development|& development)|enablement|professor|lecturer|"
+    ("education", "Education & Training", r"teacher|teaching assistant|paraprofessional|para-?educator|substitute|instructor|\btutor|curriculum|\btrainer\b|learning (designer|specialist|experience|and development|& development)|enablement|professor|lecturer|"
                                           r"education|instructional"),
     ("consulting", "Consulting & Solutions", r"consultant|consulting|implementation|professional services|solutions? (consult|architect|specialist|manager|lead)|deployment strategist|onboarding|"
                                              r"technical account|engagement manager|delivery (manager|lead)|advisor|advisory"),
@@ -755,8 +764,10 @@ def feed_rippling(src):
 
 
 ATS_TIERS = [(300, 6), (50, 8), (0, 12)]   # (at least this many jobs when found, read every N hours): sources_ats.json, see main()
-LARGE = {"workday"}       # hiring systems of large employers: only their office and tech jobs are kept (the owner, 15 Nov)
-NOT_OFFICE = {"retail", "supply-chain", "healthcare", "manufacturing"}
+LARGE = {"workday"}       # hiring systems of large employers: their frontline jobs wait for wave 2 (below)
+# "All professions" (decided 15 Nov 2026, ROADMAP 113): wave 1 is office, professional and remote work including healthcare and
+# education; frontline work (shops, warehouses and driving, plants and trades) is wave 2. From a large employer only wave 1 is kept.
+NOT_OFFICE = {"retail", "supply-chain", "manufacturing"}
 WD_MAX = 2000           # Workday lists at most this many jobs of one career site; a larger site is not read (discover_ats.py leaves it out)
 
 
@@ -967,7 +978,7 @@ def main():
         k = co_key(s["name"])
         if (s["ats"], s["token"]) in taken or k in names or s["name"] in EXCLUDE_TECH: continue
         taken.add((s["ats"], s["token"])); names.add(k)
-        rot_a = flat or next(n for least, n in ATS_TIERS if s.get("count", 0) >= least)
+        rot_a = flat or (24 if s.get("frontline") else next(n for least, n in ATS_TIERS if s.get("count", 0) >= least))   # wave 2: once a day
         if int(hashlib.md5((s["ats"] + s["token"]).encode()).hexdigest(), 16) % rot_a == hour % rot_a:
             sources.append(dict(s, crypto=False, en_only=True, office_only=s["ats"] in LARGE))
         else:

@@ -58,9 +58,13 @@ AGENCY_NAME = re.compile(r"staffing|recruit|personnel|personal(service|dienst|ve
 AGENCY_TEXT = re.compile(r"\bour client\b|on behalf of (our|a) client|unser(em|en)? kunde|für unseren kunden|notre client|nuestro cliente|onze opdrachtgever|"
                          r"vår kund|naszego klienta|nasz klient|il nostro cliente|nosso cliente|для нашего клиента|наш клиент|namens onze klant|voor onze klant|"
                          r"im auftrag (unseres|eines) kunden|pour le compte de (notre|nos) client", re.I)
-BLUE = {"retail", "supply-chain", "healthcare"}          # shop, warehouse and clinic work
+# "All professions" (15 Nov 2026, ROADMAP 113). Wave 1, read like any board: office, professional and remote work, healthcare and
+# education included (clinics, hospitals, schools, universities, banks, public bodies). Wave 2, frontline work (shops, warehouses and
+# driving, plants and trades): a board that is mostly that is kept, marked "frontline" and read once a day (collect.py) until the
+# rotation has room. Before 15 Nov such boards, and clinics, were left out.
+BLUE = {"retail", "supply-chain", "manufacturing"}       # frontline work (wave 2)
 OFFICE = {"engineering", "product", "design", "sales-bd", "marketing", "support", "compliance-legal", "finance", "people", "data-research",
-          "operations", "security", "consulting", "education"}
+          "operations", "security", "consulting", "education", "healthcare", "nursing", "administrative"}
 MAX_JOBS = 1000         # a board this large is a chain or a big enterprise: the goal here is small and mid-size companies
 STAFFING_TEXT = re.compile(r"\bc2c\b|corp[- ]to[- ]corp|\bw-?2 (only|contract|candidates)|h-?1b|\bopt\b|\bcpt\b|\bead\b|contract[- ]to[- ]hire|"
                            r"\b(for|with) (one of )?our (fortune|direct )?clients?\b|immediate (joiner|requirement)|bench sales", re.I)
@@ -285,10 +289,14 @@ def judge(name, jobs, large=False):
     if sum(bool(AGENCY_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * n): return "agency (postings)"
     if sum(bool(STAFFING_TEXT.search(j["title"] + " " + j["excerpt"])) for j in jobs) >= max(2, 0.3 * n): return "agency (staffing terms)"
     if sum(collect.english(j) for j in jobs) < n / 2: return "mostly not in English"        # the site is in English (owner, 15 Nov)
-    if sum(j["cat"] in BLUE for j in jobs) > n / 2: return "mostly shop, warehouse or clinic work"
-    if sum(j["cat"] in OFFICE for j in jobs) < 0.4 * n: return "under 40% office or tech work"
     if n >= 60 and not large and len({re.sub(r"\W+", " ", j["title"].lower()).strip() for j in jobs}) < 0.25 * n: return "the same few titles repeated (mass hiring)"
     return ""
+
+
+def frontline(jobs):
+    """Wave 2: most of the board is frontline work, or under 40% is wave-1 work."""
+    n = len(jobs) or 1
+    return sum(j["cat"] in BLUE for j in jobs) > n / 2 or sum(j["cat"] in OFFICE for j in jobs) < 0.4 * n
 
 
 def by_country(jobs):
@@ -306,13 +314,13 @@ def examine(st):
     s, t = st
     if s == "workday":                 # large employers: judged on the first page of 20, sized by the total the site reports
         jobs, total, name = probe_workday(t)
-        if jobs is None: return s, t, None, 0, {}, "no answer"
-        if total >= collect.WD_MAX: return s, t, name, total, {}, f"{collect.WD_MAX} jobs or more (Workday lists no more)"
-        if total > MAX_JOBS: return s, t, name, total, {}, f"over {MAX_JOBS} jobs (a chain or a big enterprise)"
-        return s, t, name, total, {k: round(v * total / max(1, len(jobs))) for k, v in by_country(jobs).items()}, judge(name, jobs, large=True)
+        if jobs is None: return s, t, None, 0, {}, "no answer", False
+        if total >= collect.WD_MAX: return s, t, name, total, {}, f"{collect.WD_MAX} jobs or more (Workday lists no more)", False
+        if total > MAX_JOBS: return s, t, name, total, {}, f"over {MAX_JOBS} jobs (a chain or a big enterprise)", False
+        return s, t, name, total, {k: round(v * total / max(1, len(jobs))) for k, v in by_country(jobs).items()}, judge(name, jobs, large=True), frontline(jobs)
     jobs, name = probe(s, t)
-    if jobs is None: return s, t, None, 0, {}, "no answer"
-    return s, t, name, len(jobs), dict(by_country(jobs)), judge(name, jobs)
+    if jobs is None: return s, t, None, 0, {}, "no answer", False
+    return s, t, name, len(jobs), dict(by_country(jobs)), judge(name, jobs), frontline(jobs)
 
 
 def save_samples(boards):
@@ -384,7 +392,7 @@ def main():
             if r[0] == "workday" and r[5] != "no answer":
                 k = r[1].split("/")[0]
                 if k not in biggest or r[3] > biggest[k][3]: biggest[k] = r
-        for s, t, name, count, countries_n, reason in results:
+        for s, t, name, count, countries_n, reason, front in results:
             if s == "workday" and reason != "no answer" and biggest.get(t.split("/")[0], (None, t))[1] != t:
                 why[(s, "another public site of the same employer")] += 1; asked[s] += 1; answered[s] += 1; continue
             asked[s] += 1
@@ -395,7 +403,8 @@ def main():
             if k in names: why[(s, "company already read elsewhere")] += 1; continue
             names.add(k)
             land_jobs.update(countries_n)
-            kept.append({"name": name, "ats": s, "token": t, "count": count, "lands": [c for c, _ in Counter(countries_n).most_common(3)]})
+            kept.append({"name": name, "ats": s, "token": t, "count": count, "lands": [c for c, _ in Counter(countries_n).most_common(3)]} | ({"frontline": True} if front else {}))
+            if front: why[(s, "kept: mostly frontline work, read once a day (wave 2)")] += 1
     # boards of a system that could not be asked this time stay as they were
     asked_ok = {s for s in a.systems if asked[s] and answered[s] >= 0.2 * asked[s]}
     keep_prev = prev if a.new_only else [p for p in prev if p["ats"] not in asked_ok]
