@@ -1,0 +1,23 @@
+[Unit]
+Description=Jobs Every Hour live collector: reads employers' boards around the clock and publishes new jobs within seconds (live.py)
+After=network-online.target opensearch.service hrn-site.service
+Wants=network-online.target
+
+[Service]
+User=hrn
+Group=hrn
+WorkingDirectory=/srv/hrn/app
+Environment=HRN_LIVE_DB=/srv/hrn/live.db
+Environment=HRN_OPENSEARCH=http://127.0.0.1:9200
+Environment=HRN_WATCH=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /srv/hrn/app/live.py
+Restart=always
+RestartSec=5
+# the server is shared with hypestkey: a ceiling on memory and processor, and the lowest priority
+MemoryMax=1500M
+CPUQuota=60%
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

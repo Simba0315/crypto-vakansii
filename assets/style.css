@@ -56,6 +56,7 @@ header.site .wrap{display:flex;align-items:center;gap:18px;height:60px}
 .logo .live{width:8px;height:8px;border-radius:50%;background:var(--brand)}
 nav{display:flex;align-items:center;gap:0;font-size:14.5px;font-weight:500;margin-left:auto}
 nav a.nl{padding:8px 11px;border-radius:4px;color:var(--muted);white-space:nowrap}
+@media(max-width:1440px){nav a.nl{padding:8px 7px}}
 nav a.nl:hover{color:var(--text);background:var(--bg2)}
 nav a.nl.plus{color:var(--text);font-weight:700}
 nav a.only-m{display:none}
@@ -76,7 +77,7 @@ nav a.only-m{display:none}
 .btn.ghost[aria-pressed=true]{background:var(--hl);color:var(--hl-ink);border-color:var(--hl)}
 .btn[disabled],.btn[disabled]:hover{opacity:.5;cursor:not-allowed;background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
 .hact .btn{padding:8px 14px}
-@media(max-width:1080px){
+@media(max-width:1180px){
   .burger{display:inline-flex}
   nav{display:none;position:absolute;left:0;right:0;top:100%;margin:0;padding:8px 16px 16px;flex-direction:column;align-items:stretch;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
   header.site.open nav{display:flex}
@@ -1425,7 +1426,7 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .navpanel a:hover b{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
 .navpanel span{display:block;margin-top:3px;font-size:13.5px;line-height:1.4;color:var(--muted)}
 .navsub{display:none}
-@media(max-width:1080px){
+@media(max-width:1180px){
   .navpanel{display:none!important}
   nav a.nl.hasmenu::after{display:none}
   nav a.nl.hasmenu{border-bottom:0}
@@ -1830,3 +1831,4 @@ h1,h2,h3,h4{font-variant-numeric:normal}
 .rep-more .tcard .tbody{padding-top:18px}
 table.grid tr.grp th{font-variant-numeric:normal}
 .tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
+.popular a.pop-tech{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:650}

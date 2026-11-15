@@ -460,7 +460,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False)
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/">{LOGO}<span>{e(SITE)}</span></a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="nl" href="{P}/jobs/">Jobs</a><a class="nl" href="{P}/tech/">Tech jobs</a><a class="nl" href="{P}/categories/">Categories</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Tools</a><a class="nl" href="{P}/for-you/">For you</a><a class="nl" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl" href="{P}/pricing/">Pricing</a>{NAV_PLUS}<a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
 {hero}<main class="wrap" id="main">{body}</main>
@@ -920,6 +920,13 @@ def microdata(props):
     return "".join(out)
 
 
+def job_indexable(j):
+    """A job page goes to search engines only while the job is open and the page carries the employer's full text. A closed job's page
+    stays online for visitors, and a page with only the opening lines of the posting is too thin to rank: both are noindex and left out
+    of the sitemap, so Google spends its visits on the pages that can rank (categories, places, salaries, open jobs with their text)."""
+    return bool(j["active"] and j.get("desc") and not j.get("tg"))
+
+
 def job_page(j, active_by_cat):
     canonical = f"{FULL}/job/{j['slug']}/"
     # the full description comes from the collector already reduced to a few plain tags; anything else falls back to the excerpt
@@ -1098,7 +1105,8 @@ def job_page(j, active_by_cat):
     desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + f". {CAT[j['cat']]} role"
             + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply through the Telegram post." if j.get("tg") else ". Apply on the company site."))
     # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
-    page(f"job/{j['slug']}/", title, desc, body, head + ('<meta name="robots" content="noindex">' if j.get("tg") else ""), sitemap=not j.get("tg"), compact=True)
+    ok_ = job_indexable(j)
+    page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=ok_, compact=True)
 
 
 def embed_code(spec, label, page_path, limit=6):
@@ -1264,7 +1272,15 @@ def main():
             for j in by_role[s_][1]:
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
-    fam_show = sorted(fam_rows, key=lambda f: roles_info.SHOW_ORDER.index(f[0]) if f[0] in roles_info.SHOW_ORDER else 99)      # everyday work first, then tech
+    fam_show = sorted(fam_rows, key=lambda f: -len(f[4]))      # by open jobs, so the order follows the jobs as sources grow (owner, 15 Nov: "IT first")
+    TECH_FAMS = ["software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering"]
+    # the hero's shortcut chips: among the roles people search for most, the three tech ones with the most open jobs, then two others
+    # (the owner, 15 Nov: "IT first: people mostly look for IT"); the order follows the counts
+    CHIP_TECH = ["software-engineer", "product-manager", "data-analyst", "data-scientist", "machine-learning-engineer", "devops-engineer", "cloud-engineer",
+                 "cybersecurity", "frontend-engineer", "backend-engineer", "product-designer"]
+    CHIP_OTHER = ["account-executive", "customer-support", "sales-representative", "marketing-manager", "project-manager", "recruiter", "accounting", "operations-manager"]
+    by_n = lambda slugs: sorted((s_ for s_ in slugs if s_ in by_role), key=lambda s_: -len(by_role[s_][1]))
+    hero_chips = "".join(f'<a href="{P}/roles/{s_}/">{e(by_role[s_][0][0].upper() + by_role[s_][0][1:])}</a>' for s_ in by_n(CHIP_TECH)[:3] + by_n(CHIP_OTHER)[:2])
     def dir_block(fs, fn, fd, live, js_, top=None, tag="h2"):
         return (f'<div class="dirb"><{tag}><a href="{P}/categories/{fs}/">{icon(fs)}<u>{e(fn)}</u></a><span>{len(js_):,}</span></{tag}><p>{e(fd[0].upper() + fd[1:])}.</p><ul>'
                 + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/roles/{s_}/">{e(nm)}</a><span>{c:,}</span></li>' for s_, nm, c in (live if top is None else live[:top]))
@@ -1501,10 +1517,10 @@ def main():
             f'<p class="stamp"><i></i>Checked {fdate(TODAY, False)} · <b>{n:,}</b> open jobs <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days · <b>{sum(1 for j in archived if (j.get("closed") or "") >= wk):,}</b> closed ones taken off this week</span></p>'
             f'<h1>Stop applying to jobs that are <span class="hl">already gone</span></h1>'
             f'<p class="sub">Old listings stay online long after the job is filled. Every job here is read from the employer’s own careers page ({m:,} companies' + (f', {m_hourly:,} of them every hour and the rest every four hours' if ROTATING else ', every hour') + ') and leaves the list when the employer closes it. Free, no account: you apply on the employer’s site.</p>'
-            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="What: job title, skill or company">'
+            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Software engineer, data analyst, customer service…" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
-            f'<p class="popular"><a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a><a href="{P}/entry-level/">Entry-level</a>'
-            f'<a href="{P}/perks/visa-sponsorship/">Visa sponsorship</a><a href="{P}/tech/">Tech</a><a href="{P}/crypto/">Crypto</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
+            f'<p class="popular"><a class="pop-tech" href="{P}/tech/">Tech jobs</a>{hero_chips}<a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a>'
+            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
@@ -1893,7 +1909,6 @@ def main():
                 + f'<li class="more"><a href="{P}/skills/">All {len(skill_counts)} skills</a></li></ul></div>')
     # The tech hub (/tech/): since 15 Nov 2026 the site covers every profession, so tech gets a page of its own, as crypto has: its
     # categories, its newest jobs, the tech-skill rankings and comparisons.
-    TECH_FAMS = ["software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering"]
     tech_fams = [f for f in fam_rows if f[0] in TECH_FAMS]
     tech_seen, tech_js = set(), []
     for f in tech_fams:
@@ -2134,7 +2149,7 @@ def main():
         size = records.save(ROOT / "data" / "jobs.db", jobs, sys.modules[__name__])
         print(f"job records: {len(jobs):,} in data/jobs.db, {size / 2**20:.0f} MiB")
     if rec_mode == "1":
-        URLS.extend(f"job/{j['slug']}/" for j in jobs if not j.get("tg"))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
+        URLS.extend(f"job/{j['slug']}/" for j in jobs if job_indexable(j))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
     else:
         for j in jobs: job_page(j, by_cat)
     listing("archive/", "Closed jobs archive", f"Closed Jobs Archive ({len(archived):,}) | {SITE}",
@@ -5958,11 +5973,19 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                            + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{job_mod.get(u, TODAY)}</lastmod></url>" for u in urls) + "</urlset>")
     job_urls = [u for u in URLS if u.startswith("job/")]
-    parts = [("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/")])]
+    # the pages the site is built to rank with: the home page, one-level hubs (jobs/, salaries/, remote/ ...), every category, every
+    # country and part of the world, every role; listed first and in a file of their own, so they are the first thing to read
+    countryish = {slug_ for _, slug_, rule_ in PLACES if isinstance(rule_, str)}
+    is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles)/[a-z0-9-]+/", u) is not None
+                         or (u.startswith("locations/") and u.count("/") == 2 and u.split("/")[1] in countryish))
+    core_urls = [u for u in URLS if not u.startswith("job/") and is_core(u)]
+    parts = [("sitemaps/core.xml", core_urls), ("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/") and not is_core(u)])]
     parts += [(f"sitemaps/jobs-{i // 20000 + 1}.xml", job_urls[i:i + 20000]) for i in range(0, len(job_urls), 20000)]
     for name, urls in parts: write(name, urlset(urls), sitemap=False)
     write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-          + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{TODAY}</lastmod></sitemap>" for name, _ in parts) + "</sitemapindex>", sitemap=False)
+          + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{max([job_mod.get(u, TODAY) for u in urls] or [TODAY])}</lastmod></sitemap>" for name, urls in parts if urls)
+          + "</sitemapindex>", sitemap=False)
+    print(f"sitemaps: {len(core_urls):,} main pages, {sum(len(u) for n, u in parts[1:2]):,} other pages, {len(job_urls):,} open jobs with their full text")
     ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
                "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
     if MAIL.get("security"):

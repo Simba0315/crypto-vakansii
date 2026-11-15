@@ -410,7 +410,7 @@
         ['/widgets/', 'Jobs for your website', 'A widget with your jobs or any list.'],
         ['/api/', 'Data for developers', 'Every open job as free JSON.']]]
     };
-    var wideQ = window.matchMedia('(min-width: 1081px)'), cur = null, timer = 0;
+    var wideQ = window.matchMedia('(min-width: 1181px)'), cur = null, timer = 0;
     var panel = document.createElement('div');
     panel.className = 'navpanel'; panel.id = 'navpanel'; panel.hidden = true;
     header.appendChild(panel);
