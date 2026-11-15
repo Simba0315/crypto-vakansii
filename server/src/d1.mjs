@@ -39,6 +39,16 @@ export class D1 {
     catch (err) { this.sqlite.exec('ROLLBACK'); throw err; }
   }
   async exec(sql) { this.sqlite.exec(sql); }
-  applySchema(path) { this.sqlite.exec(readFileSync(path, 'utf8')); return this; }
+  // The schema, then the columns it lists as "-- column: <table> <name> <definition>" that a database made from an earlier schema.sql
+  // lacks (CREATE TABLE IF NOT EXISTS leaves an old table as it was): each is added with ALTER TABLE, once.
+  applySchema(path) {
+    const sql = readFileSync(path, 'utf8');
+    this.sqlite.exec(sql);
+    for (const m of sql.matchAll(/^-- column: ([a-z_]+) ([a-z_]+) (.+)$/gm)) {
+      const have = this.sqlite.prepare('PRAGMA table_info(' + m[1] + ')').all().map((c) => c.name);
+      if (have.length && !have.includes(m[2])) this.sqlite.exec('ALTER TABLE ' + m[1] + ' ADD COLUMN ' + m[2] + ' ' + m[3]);
+    }
+    return this;
+  }
   close() { this.sqlite.close(); }
 }

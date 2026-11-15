@@ -1297,8 +1297,9 @@ def cite(path, title, quote=""):
 
 MONTH_YEAR = datetime.date.fromisoformat(TODAY).strftime("%B %Y")
 PRICE = {p_["name"]: p_ for p_ in CFG.get("prices", [])}
-price_of = lambda name: PRICE.get(name, {}).get("price", "")
-was_of = lambda name: (f'<s class="was">{e(PRICE[name]["was"])}</s> ' if PRICE.get(name, {}).get("was") else "")
+# The products of 15 Nov 2026 replaced the launch line (featured, pinned, packs); a page that still asks for the old name gets the new product.
+PRICE_ALIAS = {"Featured job": "Standard boost", "Pinned job": "Premium boost"}
+price_of = lambda name: PRICE.get(PRICE_ALIAS.get(name, name), {}).get("price", "")
 def ptable(cols, rows):
     """Plans side by side, the way pricing pages show them: a column per plan with its price on top, features in groups, a tick,
     a cross or a few words in every cell. cols: (name, price as HTML, note, best). rows: (group,) or (feature, cell, cell...);
@@ -1312,10 +1313,6 @@ def ptable(cols, rows):
     body = "".join(f'<tr class="pg"><th scope="colgroup" colspan="{len(cols) + 1}">{e(r[0])}</th></tr>' if len(r) == 1 else
                    f'<tr><th scope="row">{e(r[0])}</th>' + "".join(cell(v, cols[i][3]) for i, v in enumerate(r[1:])) + "</tr>" for r in rows)
     return f'<div class="ptwrap"><table class="pt c{len(cols)}"><thead>{head}</thead><tbody>{body}</tbody></table></div>'
-
-
-LAUNCH = ('<p class="launch"><b>Launch prices.</b> Every price here is about a third of the regular one while the paid plans are new. The regular price is the one crossed out.</p>'
-          if CFG.get("launch_prices") else "")
 
 
 def badge_svg(label, value):
@@ -5926,129 +5923,400 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than once an hour (it changes once an hour).</p>'
                    f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>') + api_faq, head=api_ld)
 
-    # Plus (paid plan for job seekers; one-time payments, no subscription). The page sells the problem first, shows each
-    # feature as a small screen (marked as an example), and does the price arithmetic for the visitor.
+    # ---- Prices: /plus/, /post-a-job/ and /pricing/. The product line is the owner's of 15 Nov 2026. Every price is read from config.json
+    # ("prices" for employers, "plus" for job seekers), so these pages and the account page name the same products. Every figure about
+    # another site comes from a research file (RESEARCH_TEAL_JOBRIGHT_SPONSORED.md, RESEARCH_ZHIPIN_NAUKRI_SEEK.md, PRICING_RESEARCH.md,
+    # REVENUE_RESEARCH.md, COMPETITOR_GAPS.md, REVIEWS_STUDY.md, RESEARCH_REZI_BUILDER.md) and is shown with its source, the day it was
+    # read and the file's own mark (third-party, secondary, not verified). Re-read the source before changing a figure.
+    # The rules (server/README.md and the site): one payment, nothing renews, paid in crypto, switched on by itself; no countdowns, nothing
+    # ticked in advance, no crossed-out "regular" price that never applied, no "most popular" (nothing has been sold yet): "Recommended"
+    # is our advice and says so.
     plus = CFG.get("plus", {"live": False, "plans": []})
-    cta = ('<a class="btn primary lg" href="#pay">Get Plus</a>' if plus.get("live") else '<button class="btn primary lg" type="button" disabled>Available soon</button>')
-    was_span = lambda pl: (f'<s class="was">{e(pl["was"])}</s> ' if pl.get("was") else "")
+    plans_, passes_ = plus.get("plans", []), plus.get("passes", [])
+    api_on = bool(CFG["api_url"])
+    app_url = f"{P}/account/" if api_on else ""
+    usd = lambda s: float(re.sub(r"[^\d.]", "", s or "") or 0)                         # "$1,000" -> 1000.0
+    dol = lambda x: f"${x:,.0f}" if float(x).is_integer() else f"${x:,.2f}"            # 51 -> "$51", 20.99 -> "$20.99"
+    def days_of(pl):
+        m_ = re.search(r"\d+", pl["name"])
+        return int(m_.group(0)) if m_ else 30
     def per_day(pl):
-        m_ = re.search(r"\d+", pl["price"]); k_ = re.search(r"\d+", pl["name"])
-        if not m_ or not k_: return ""
-        days_ = {1: 30, 3: 91, 12: 365}.get(int(k_.group(0)), 30 * int(k_.group(0)))
-        return f"{round(100 * int(m_.group(0)) / days_)} cents a day"
+        c_ = round(100 * usd(pl["price"]) / days_of(pl))
+        return f"${c_ / 100:.2f} a day" if c_ >= 100 else f"{c_} cents a day"
+    low_plan = min(plans_, key=lambda pl: usd(pl["price"]) / days_of(pl)) if plans_ else None
+    plan_by, pass_by = {pl["name"]: pl for pl in plans_}, {ps["name"]: ps for ps in passes_}
+    best_plan = next((pl for pl in plans_ if pl.get("best")), plans_[0] if plans_ else None)
+    pl7, pl30, pl90 = plan_by.get("7 days"), plan_by.get("30 days"), plan_by.get("90 days")
+    ps_res, ps_int = pass_by.get("One tailored resume"), pass_by.get("One mock interview")
+    tick = lambda items: '<ul class="ticks">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
+    trust = lambda items: '<ul class="ptrust">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
+    fit = lambda rows_: '<div class="pfit">' + "".join(f"<div><b>{e(a)}</b>{e(b)}</div>" for a, b in rows_) + "</div>"
+    faq_ld = lambda qa: ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    faq_html = lambda qa: '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>"
+    ai_m = re.search(r"AI_MONTHLY\s*=\s*\{\s*resume:\s*(\d+),\s*letter:\s*(\d+),\s*interview:\s*(\d+)", (ROOT / "server" / "src" / "worker.js").read_text(encoding="utf-8") if (ROOT / "server" / "src" / "worker.js").exists() else "")
+    ai_allow = f"{ai_m.group(1)} resume requests, {ai_m.group(2)} letters and {ai_m.group(3)} interview requests" if ai_m else "an allowance shown before you pay"
+    # employer products: how long each one runs, by its name in config.json
+    TERM = {"Standard listing": "for 30 days", "Standard boost": "for 30 days", "Premium boost": "for 30 days", "Hiring Pass": "for 30 days",
+            "Company spotlight": "for 30 days", "Category or skill sponsor": "for 30 days", "Bump to top": "once", "Extend a boost by 30 days": "once per boost",
+            "Urgently hiring badge": "for 14 days", "Resume search: 50 contact requests": "for 50 requests"}
+    is_credits = lambda name: bool(re.fullmatch(r"[\d,]+ credits", name))
+    term = lambda name: TERM.get(name, "one top-up" if is_credits(name) else "")
+    credits_ = [p_ for p_ in CFG["prices"] if is_credits(p_["name"])]
+    def bonus(p_):
+        c_, d_ = usd(p_["name"]), usd(p_["price"])
+        return f"+{round(100 * (c_ / d_ - 1))}% bonus" if d_ and c_ > d_ else ""
+    pv = lambda name: usd(price_of(name))
+    SB, PB, HP, SP, CS, XB, RS = (pv(x) for x in ("Standard boost", "Premium boost", "Hiring Pass", "Company spotlight", "Category or skill sponsor",
+                                                   "Extend a boost by 30 days", "Resume search: 50 contact requests"))
+    per_contact = dol(round(RS / 50, 2))
+    # every product and price in one table (the press page shows it too)
+    rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td><strong>{e(p['price'])}</strong></td><td>{e(p['what'])}</td></tr>" for p in CFG["prices"])
+    def pcard(name, price, per, sub, btn, fine="", chip="", best=False, ticks=None):
+        return (f'<div class="pcard{" best" if best else ""}">' + ('<span class="pband">Recommended by us</span>' if best else "")
+                + f'<p class="pk-n">{e(name)}</p><p class="pk-p"><b>{e(price)}</b><span>{e(per)}</span></p>'
+                + '<p class="pk-s">' + (f'<span class="pchip">{e(chip)}</span>' if chip else "") + "</p>"
+                + f'<p class="pk-d">{e(sub)}</p>{btn}' + (f'<p class="pk-f">{e(fine)}</p>' if fine else "") + (tick(ticks) if ticks else "") + "</div>")
+    def acard(name, price, per, what, chip=""):
+        return (f'<div class="pa"><p class="pk-n">{e(name)}</p><p class="pk-p"><b>{e(price)}</b><span>{e(per)}</span></p>'
+                + (f'<p class="pk-s"><span class="pchip">{e(chip)}</span></p>' if chip else "") + (f'<p class="pk-d">{e(what)}</p>' if what else "") + "</div>")
+    def emp_btn(best, here=False, label="Post a job"):
+        kind = "primary" if best else "ghost"
+        if app_url: return f'<a class="btn {kind}" href="{e(app_url)}">{e(label)}</a>'
+        return f'<button class="btn {kind}" type="button" disabled>Opens soon</button>' if here else f'<a class="btn {kind}" href="{P}/post-a-job/">How posting works</a>'
+    def plus_btn(best):
+        kind = "primary" if best else "ghost"
+        return (f'<a class="btn {kind}" href="{P}/plus/#pay">Get Plus</a>' if plus.get("live") else f'<a class="btn {kind}" href="{P}/plus/">See what Plus does</a>')      # not on sale yet: a dead grey button teaches nothing, the Plus page does
+    guarantee = ('<div class="pguar"><p class="pguar-k">Our guarantee: a free re-run</p>'
+                 '<p class="pguar-h">Fewer than 10 clicks on Apply in 14 days? The boost runs again, free.</p>'
+                 '<p>If a Standard or Premium boost that was paid for gets fewer than 10 clicks on Apply in its first 14 days, it runs for 30 more days at no cost. '
+                 'Nothing to claim and nobody to write to: it happens by itself.</p>'
+                 '<p class="note">It counts clicks on Apply, which we can measure. It cannot promise applications or a hire.</p></div>')
+
+    # ---- What others charge for the same things. A source: (what it is, its address or None, the day it was read).
+    CMP_SRC = {
+        "indeed": ("Indeed’s pricing page", "https://www.indeed.com/hire/cs/pricing?co=US", "15 Nov 2026"),
+        "indeed_how": ("Indeed: how pricing works", "https://www.indeed.com/hire/resources/howtohub/how-pricing-works-on-indeed", "15 Nov 2026"),
+        "indeed_est": ("100hires and Vendr guides", "https://100hires.com/indeed-job-posting-cost.html", "15 Nov 2026"),
+        "indeed_free": ("100hires guide, updated 12 Oct 2026", "https://100hires.com/indeed-job-posting-cost.html", "15 Nov 2026"),
+        "vendr": ("Vendr guide, Feb 2026", None, "15 Nov 2026"),
+        "smart": ("Indeed’s US page as shown in a search summary; 100hires", None, "15 Nov 2026"),
+        "brand": ("a quote found by search", None, "15 Nov 2026"),
+        "glassdoor": ("Glassdoor’s employer pricing page", "https://www.glassdoor.com/employers/features-and-pricing/", "13 Nov 2026"),
+        "glassdoor_in": ("noon.ai", "https://www.noon.ai/blog/articles/346-glassdoor-pricing-2026", "15 Nov 2026"),
+        "linkedin": ("LinkedIn’s job posting page", "https://business.linkedin.com/hire/post-jobs", "13 Nov 2026"),
+        "li_page": ("LinkedIn Premium’s page", "https://premium.linkedin.com/", "13 Nov 2026"),
+        "li_prem": ("activepieces.com, checked by its author on 9 Nov 2026; LinkedIn shows the price only after sign-in", None, "13 Nov 2026"),
+        "zip": ("ZipRecruiter’s pricing page showed a bot check; 100hires", "https://www.ziprecruiter.com/pricing", "13 Nov 2026"),
+        "zip_sec": ("ZipRecruiter’s Q3 2026 letter to shareholders, filed with the SEC", "https://www.sec.gov/Archives/edgar/data/0001617553/000161755326000055/q32026shareholderletter-.htm", "13 Nov 2026"),
+        "teal": ("Teal’s pricing page", "https://www.tealhq.com/pricing", "13 Nov 2026"),
+        "teal3": ("reviews on makerstack.co and frontdeskreview.com", "https://makerstack.co/reviews/teal-review/", "15 Nov 2026"),
+        "jobright": ("careery.pro and jobstrack.io reviews of its Aug 2026 prices (its own price page did not open)", "https://careery.pro/blog/ai-job-search/jobright-ai-review", "15 Nov 2026"),
+        "jobright_emp": ("Jobright’s employer pricing page", "https://jobright.ai/employers/pricing", "15 Nov 2026"),
+        "seek": ("SEEK’s product terms of 2 Nov 2026", "https://au.employer.seek.com/support/productterms", "15 Nov 2026"),
+        "seek_ts": ("SEEK’s talent search terms", "https://au.employer.seek.com/support/talentsearchofferterms", "15 Nov 2026"),
+        "seek_budget": ("100hires", "https://100hires.com/job-boards-australia.html", "15 Nov 2026"),
+        "jora": ("listings found by search", None, "15 Nov 2026"),
+        "naukri_app": ("the Naukri app on the App Store, India", "https://apps.apple.com/in/app/naukri-job-search-careers/id482877505", "15 Nov 2026"),
+        "naukri_emp": ("Internshala guide, updated 21 Sep 2026", "https://internshala.com/blog/naukri-job-posting-price/", "15 Nov 2026"),
+        "naukri_ff": ("HRCabin", "https://www.hrcabin.com/naukri-fast-forward-services-cost/", "15 Nov 2026"),
+        "boss": ("the BOSS Zhipin app on the App Store, China", "https://apps.apple.com/cn/app/id887314963", "15 Nov 2026"),
+        "jiemian": ("Jiemian, citing BOSS Zhipin support", "https://m.jiemian.com/article/13492516.html", "15 Nov 2026"),
+        "niche": ("the price pages of 11 job boards that print one", None, "13 Nov 2026"),
+        "niche6": ("the price pages of 6 job boards", None, "13 Nov 2026"),
+        "seek11": ("the price pages of 11 job-search services", None, "13 Nov 2026"),
+        "wwr": ("We Work Remotely’s price pages", "https://weworkremotely.com/remote-jobs/find-your-plan", "13 Nov 2026"),
+        "web3": ("web3.career’s posting page", "https://web3.career/post-web3-job", "13 Nov 2026"),
+        "web3ads": ("web3.career’s ads page", "https://web3.career/ads", "13 Nov 2026"),
+        "remote3": ("Remote3’s posting page", "https://www.remote3.co/post-job", "13 Nov 2026"),
+        "remotive": ("Remotive’s hiring page", "https://remotive.com/hire", "13 Nov 2026"),
+        "remotive_j": ("Remotive’s home page", "https://remotive.com/", "13 Nov 2026"),
+        "wn": ("Working Nomads’ Premium page", "https://www.workingnomads.com/premium-subscription", "13 Nov 2026"),
+        "dice": ("Dice’s hiring price page", "https://www.dice.com/hiring/pricing", "13 Nov 2026"),
+        "rezi": ("Rezi’s pricing and help pages", "https://www.rezi.ai/pricing", "14 Nov 2026"),
+        "trustpilot": ("their Trustpilot pages", None, "15 Nov 2026"),
+    }
+    def srcs(refs):
+        out_ = []
+        for k_, mark_ in refs:
+            lab_, url_, day_ = CMP_SRC[k_]
+            out_.append((f'<a href="{e(url_)}" rel="nofollow noopener">{e(lab_)}</a>' if url_ else e(lab_)) + (f", {e(mark_)}" if mark_ else "") + f", read {day_}")
+        return "<small>" + "; ".join(out_) + "</small>"
+    def cmp_table(groups):
+        """Each product in a row: what it is, our price, what others charge for the same thing (each figure with its source and the day
+        it was read) and the difference in plain words. A table on a computer; on a phone every row becomes a card."""
+        body_ = ""
+        for g_, rows_ in groups:
+            body_ += f'<tr class="cmp-g"><th scope="colgroup" colspan="4">{e(g_)}</th></tr>'
+            for name_, sub_, here_, here_sub, items_, diff_ in rows_:
+                them_ = '<ul class="cmp-l">' + "".join(f"<li><b>{e(s_)}:</b> {e(w_)} {srcs(r_)}</li>" for s_, w_, r_ in items_) + "</ul>"
+                body_ += (f'<tr><th scope="row"><b>{e(name_)}</b>' + (f"<span>{e(sub_)}</span>" if sub_ else "") + "</th>"
+                          f'<td class="cmp-us"><b>{e(here_)}</b> <span>{e(here_sub)}</span></td><td class="cmp-them">{them_}</td><td class="cmp-d">{e(diff_)}</td></tr>')
+        return ('<div class="cmpwrap"><table class="cmpt"><thead><tr><th scope="col">What you get</th><th scope="col">Here</th>'
+                f'<th scope="col">Elsewhere, for the same thing</th><th scope="col">The difference</th></tr></thead><tbody>{body_}</tbody></table></div>'
+                '<p class="note">Each figure as its source gives it, on the day it was read. “Third-party” means the figure is not from the site itself; “≈” marks an '
+                'estimate or a conversion (about ₹88, ¥6.72 or A$1.54 to the US dollar). Prices change: check the source before you rely on one.</p>')
+
+    # employers, product by product
+    emp_cmp = cmp_table([
+        ("Free here", [
+            ("Posting a job", "30 days in the list, its own page in Google’s job box", "Free", "for 30 days", [
+                ("Indeed", "free to post, but some jobs must be sponsored", [("indeed", "")]),
+                ("Indeed", "3 free posts a month for a company in the US, up to 30 days each", [("indeed_free", "third-party")]),
+                ("LinkedIn", "no public price for job posts: it depends on your hiring needs", [("linkedin", "")]),
+                ("Niche job boards", "$299 at the median for one 30-day post", [("niche", "")]),
+                ("SEEK", "no published price for a Basic ad: it changes with the role and the place. Free “Lite” ads only in Asia, at SEEK’s choice", [("seek", "")]),
+                ("Naukri", "₹400–₹850 (≈US$4.5–9.7) for a short classified post", [("naukri_emp", "third-party")]),
+                ("BOSS Zhipin", "¥30–¥118 (≈US$4.5–17.6) for a 30-day post; a role that many employers post in one city must be paid for", [("boss", ""), ("jiemian", "third-party")]),
+             ], "Free here; $299 for the same 30 days at the median niche board"),
+            ("Jobs from your careers page", f"read {EVERY} from {m:,} companies’ own pages", "Free", "nothing to post", [
+                ("SEEK", "free “Aggregated ads”: jobs reposted from the employer’s careers page, shown with low visibility", [("seek", "")]),
+             ], "Free on both; here the job keeps its full place in the lists"),
+        ]),
+        ("Boosts for one job", [
+            ("Standard boost", "30 days above the free jobs in its lists, a “Featured” mark, views and clicks", price_of("Standard boost"), "for 30 days, once", [
+                ("Indeed", "no public price: you set a budget and pay per click or per started application. About $5–$25 a day, ≈$150–$750 for 30 days", [("indeed_est", "third-party estimate")]),
+                ("Glassdoor", "no price of its own: jobs are posted on Indeed, and a sponsored Indeed job also shows on Glassdoor", [("glassdoor_in", "seen in a search summary")]),
+                ("LinkedIn", "no public price: it appears while you post", [("linkedin", "")]),
+                ("ZipRecruiter", "no public price: a third-party guide says its prices are not shown", [("zip", "")]),
+                ("Niche job boards", "the top option for one post: about $447 at the median; “Best” at We Work Remotely is $458", [("niche6", ""), ("wwr", "")]),
+                ("SEEK", "no published price for an Advanced ad. SEEK’s Jora site: “Plus” A$69, “Max” A$99 (≈US$45 / 64), length not stated", [("seek", ""), ("jora", "third-party, not verified")]),
+                ("Naukri", "a “Hot Vacancy” post with a boost in search: ₹1,650 (≈US$19)", [("naukri_emp", "third-party")]),
+             ], f"{dol(150 - SB)} to {dol(750 - SB)} less than 30 days of Indeed’s estimate" if SB < 150 else "Against ≈$150–$750 for 30 days at Indeed"),
+            ("Premium boost", "a turn in the top 3, “Urgently hiring”, logo and cover, an invitation to up to 50 people", price_of("Premium boost"), "for 30 days, once", [
+                ("Indeed", "a Premium sponsored job adds a top-of-page boost, the “Urgently hiring” label, logo and images, and invitations to matching people. "
+                           "No public price; Premium always costs more than Standard", [("indeed", ""), ("indeed_how", "")]),
+                ("SEEK", "a Premium ad: the most visible place in search and emails to matching candidates; no published price", [("seek", "")]),
+                ("We Work Remotely", "“Best”, with a pin: $458 for one post; $617 a post with the 30-day pin, before the bundle discount", [("wwr", "")]),
+             ], f"{dol(458 - PB)} less than the top post at We Work Remotely" if PB < 458 else "Against $458 at We Work Remotely"),
+            ("Hiring Pass", "every job of one company for 30 days: unlimited Standard boosts, 3 Premium, the spotlight", price_of("Hiring Pass"), "for 30 days, once", [
+                ("Indeed", "a typical spend of $500–$2,000 a month for 1–10 roles", [("vendr", "third-party")]),
+                ("Jobright", "AI Recruiter: $499 a month for one recruiter, who works one role at a time", [("jobright_emp", "")]),
+                ("ZipRecruiter", "no public price. Its average paying employer brought it about $561 a month: revenue per employer, not a price ($1,683 a quarter ÷ 3)", [("zip_sec", "")]),
+                ("LinkedIn", "Hiring Pro and job slots: contact sales", [("linkedin", "")]),
+                ("SEEK", "Ad Budgets paid in advance, from A$3,700 for about 8–12 ads (≈US$160–300 an ad); what is not used is lost at the end of the term", [("seek", ""), ("seek_budget", "third-party, not verified")]),
+             ], f"Every job of one company for {price_of('Hiring Pass')}; a typical month at Indeed starts at $500, and Jobright’s $499 covers one role"),
+        ]),
+        ("Your company, seen first", [
+            ("Company spotlight", "the home page and the top of the companies list, a badge on your page", price_of("Company spotlight"), "for 30 days, once", [
+                ("Indeed and Glassdoor", "employer branding is sold by sales: one quoted package was $15,000 a year (21–50 jobs); add-ons about $500–$2,000+ a month", [("brand", "third-party, not verified")]),
+                ("Glassdoor", "the paid employer profile: contact sales", [("glassdoor", "")]),
+                ("SEEK", "“Company Profile Boost” and other brand products: fixed fees, not published", [("seek", "")]),
+             ], f"{dol(1250 - SP)} less than one month of that $15,000 quote ($1,250, our arithmetic)" if SP < 1250 else "Against $1,250 a month in that quote"),
+            ("Category or skill sponsor", "your name at the top of one category or skill page", price_of("Category or skill sponsor"), "for 30 days, once", [
+                ("web3.career", "a banner slot in its job list: $1,999–$4,999 a month", [("web3ads", "")]),
+                ("Indeed and Glassdoor", "brand add-ons: about $500–$2,000+ a month", [("brand", "third-party, not verified")]),
+             ], f"{dol(1999 - CS)} less than web3.career’s cheapest slot" if CS < 1999 else "Against $1,999 at web3.career"),
+        ]),
+        ("Add-ons for one job", [
+            ("Bump to top", "back to the top of its date-sorted lists; its real date stays on it", price_of("Bump to top"), "once", [
+                ("web3.career", "pinned on top: $49 for 24 hours, $299 for 30 days", [("web3", "")]),
+                ("Remote3", "pinned on top: $99 for 7 days", [("remote3", "")]),
+                ("BOSS Zhipin", "extra visibility bought with coins at ¥1 each; the price of each item is not verified", [("boss", "")]),
+             ], f"{price_of('Bump to top')} once; a day pinned on top is $49 at web3.career"),
+            ("Extend a boost by 30 days", "for a boost running, or ended in the last 14 days", price_of("Extend a boost by 30 days"), "once per boost", [
+                ("Indeed", "every extra day of a sponsored job is paid from the daily budget again: about $5–$25 a day", [("indeed_est", "third-party estimate")]),
+                ("We Work Remotely", "another 30 days is a new post: $299", [("wwr", "")]),
+             ], "30 more days for less than two days at Indeed’s low estimate" if XB < 10 else "30 more days, once"),
+            ("Urgently hiring badge", "on a job posted here, or a listed job of a company whose page you claimed", price_of("Urgently hiring badge"), "for 14 days", [
+                ("Indeed", "the “Urgently hiring” label comes only with a Premium sponsored job, which has no public price", [("indeed", "")]),
+                ("SEEK", "an “Add-On Badge”: a fixed fee, not published; it changes how the ad looks, not where it ranks", [("seek", "")]),
+             ], "On its own, without buying a Premium budget"),
+        ]),
+        ("Paying ahead, and finding people", [
+            ("Prepaid credits", "1 credit = $1, for every product here; 12 months to spend them",
+             (f"{credits_[0]['price']}–{credits_[-1]['price']}" if credits_ else "Credits"), (f"up to {bonus(credits_[-1])}" if credits_ and bonus(credits_[-1]) else "one top-up"), [
+                ("SEEK", "Ad Budgets: paid in advance with a discount for size; the whole budget is charged even if unused, and what is left is lost at the end of the term", [("seek", "")]),
+                ("We Work Remotely", "bundles from $179 a job, up to 40% off, used within 12 months", [("wwr", "")]),
+                ("BOSS Zhipin", "coins at ¥1 each, spent on extras", [("boss", "")]),
+                ("Indeed", "a bill on the 1st of each month, or when spending reaches $500", [("indeed", "")]),
+             ], "A bonus of up to 20%, and nothing is billed afterwards"),
+            ("Resume search", "50 contact requests among people who chose to be found", price_of("Resume search: 50 contact requests"), "for 50 requests", [
+                ("Indeed", "Smart Sourcing: $400 a month (or $3,840 a year) for 100 contacts, $4 for each one more; a third-party guide gives $520 a month", [("smart", "sources differ")]),
+                ("Naukri", "Resdex Lite: ₹4,000 (≈US$45) for 100 resume views over 90 days", [("naukri_emp", "third-party")]),
+                ("Dice", "candidate views inside plans of $649–$899 a month", [("dice", "")]),
+                ("SEEK", "talent search credits under a sales agreement; no published price", [("seek_ts", "")]),
+             ], f"{per_contact} a contact, counted only when the person says yes; $4.00–$5.20 a contact at Indeed"),
+        ]),
+        ("If it does not work, and how you pay", [
+            ("A free re-run", "a paid boost with fewer than 10 clicks on Apply in its first 14 days runs 30 more days", "Free", "automatic", [
+                ("SEEK", "money back if nobody is hired within 4 weeks after the ad ends, only on its top fixed-fee ad, claimed within 28 days with proof", [("seek", "")]),
+                ("Remotive", "200+ clicks on Apply or a free repost for another month, on posts from $299 a month", [("remotive", "")]),
+                ("Indeed", "no such promise: you pay for each click or started application", [("indeed_how", "")]),
+             ], "Nothing to claim: it happens by itself"),
+            ("How you pay", "", "Once", "in crypto or credits; nothing renews", [
+                ("Indeed", "a bill on the 1st of each month, or when spending reaches $500", [("indeed", "")]),
+                ("Reviews", "people reviewing Indeed, LinkedIn, ZipRecruiter and We Work Remotely complain of trials that turned into charges and bills they did not expect", [("trustpilot", "")]),
+             ], "No card on file, nothing to cancel"),
+        ]),
+    ])
+    emp_vs = ('<div class="pvs"><div><p class="pvs-l">Elsewhere</p><p class="pvs-n">≈$150–$750</p><p>30 days of a sponsored job at Indeed: a third-party estimate, '
+              'because Indeed publishes no price. LinkedIn, ZipRecruiter and Glassdoor publish none either.</p></div>'
+              f'<div class="us"><p class="pvs-l">Here</p><p class="pvs-n">{e(price_of("Standard boost"))}</p><p>A Standard boost: 30 days above the free jobs, one payment. Posting itself is free.</p></div>'
+              '<p class="pvs-s">Indeed: 100hires and Vendr guides, read 15 Nov 2026. LinkedIn, ZipRecruiter and Glassdoor: their own pages, read 13 Nov 2026.</p></div>')
+    emp_sum = (f'<p class="cmp-sum"><b>In short:</b> posting is free here and costs $299 for 30 days at the median niche board. A Standard boost is {e(price_of("Standard boost"))}, '
+               f'where 30 days of a sponsored job at Indeed are estimated at $150–$750. Resume search is {e(per_contact)} a contact, where Indeed’s Smart Sourcing works out at $4.00–$5.20. '
+               'Every price here is printed, paid once and never renewed.</p>')
+
+    # job seekers, product by product
+    acct_word = "with an account, no card" if api_on else "with an account, opening soon"
+    seek_rows_plus = [r_ for r_ in (
+        ("Plus, 7 days", "every AI tool for a week", pl7["price"], "once", [
+            ("Teal+", "$13 every 7 days, renewed until you cancel", [("teal", "")]),
+            ("Jobright Turbo", "$17.99 a week", [("jobright", "third-party")]),
+         ], f"{dol(13 - usd(pl7['price']))} less than Teal+, {dol(round(17.99 - usd(pl7['price']), 2))} less than Jobright") if pl7 else None,
+        ("Plus, 30 days", "every AI tool for a month", pl30["price"], "once", [
+            ("Teal+", "$29 every 30 days, renewed until you cancel", [("teal", "")]),
+            ("Jobright Turbo", "$39.99 a month", [("jobright", "third-party")]),
+            ("LinkedIn Premium Career", "$39.99 a month, or $19.99 a month paid for a year", [("li_prem", "secondary source")]),
+            ("Naukri Pro", "₹999 (≈US$11) for a month", [("naukri_app", "")]),
+            ("Job-search services", "$29 a month at the median of 11 that sell by the month", [("seek11", "")]),
+         ], f"{dol(29 - usd(pl30['price']))} less than Teal+, {dol(round(39.99 - usd(pl30['price']), 2))} less than Jobright Turbo and LinkedIn Premium") if pl30 else None,
+        ("Plus, 90 days", "every AI tool for three months", pl90["price"], "once", [
+            ("Teal+", "$79 every 90 days, renewed until you cancel", [("teal", "")]),
+            ("Jobright Turbo", "$89.99 a quarter", [("jobright", "third-party")]),
+            ("Naukri Pro", "₹1,999 (≈US$23) for 3 months", [("naukri_app", "")]),
+         ], f"{dol(79 - usd(pl90['price']))} less than Teal+, {dol(round(89.99 - usd(pl90['price']), 2))} less than Jobright Turbo") if pl90 else None) if r_]
+    seek_rows_pass = [r_ for r_ in (
+        ("One tailored resume", "your resume reworded for one posting, with its cover letter", ps_res["price"], "once, within 30 days", [
+            ("Teal", "tailoring to a posting is part of Teal+, from $13 for 7 days", [("teal", "")]),
+            ("Jobright", "2 AI-tailored resumes a day on the free plan; more with Turbo, from $17.99 a week", [("jobright", "third-party")]),
+            ("Naukri", "an expert’s resume critique: ₹712 (≈US$8)", [("naukri_ff", "third-party, not verified")]),
+         ], f"{dol(13 - usd(ps_res['price']))} less than the shortest Teal+; Jobright gives 2 a day free") if ps_res else None,
+        ("One mock interview", "questions from one posting, feedback on up to 8 typed answers", ps_int["price"], "once, within 30 days", [
+            ("Jobright", "interview packs: $19.99 for one company for 7 days, $39.99 for all companies for 30 days", [("jobright", "third-party")]),
+            ("Naukri", "“Live AI Interviewer”: ₹749 or ₹999 (≈US$8.5–11)", [("naukri_app", "")]),
+         ], f"{dol(round(19.99 - usd(ps_int['price']), 2))} less than Jobright’s pack for one company") if ps_int else None) if r_]
+    seek_cmp = cmp_table([g_ for g_ in (
+        ("Free here", [
+            ("Every job and the link to apply", f"{n:,} open jobs, applied for on the employer’s own page", "Free", "no account", [
+                ("Remotive", "most listings sit behind a paid tier: job seekers pay to unlock all jobs (price not shown)", [("remotive_j", "")]),
+                ("Working Nomads", "Premium, $17.95 a month, promises about 10 times more postings", [("wn", "")]),
+             ], "Free here; no job is held back for a payment"),
+            ("Job alerts by email, saved jobs on every device", "new jobs that fit, by email; your list on the laptop and the phone", "Free", acct_word, [
+                ("Jobright", "the free plan has 1 instant job alert and 1 saved filter; Turbo lifts the limits", [("jobright", "third-party")]),
+                ("Teal", "tracking jobs is free there too", [("teal3", "third-party")]),
+             ], "Free here, not part of Plus"),
+            ("Resume builder", "5 templates, PDF and Word, no limit on downloads", "Free", "no account", [
+                ("Rezi", "the free plan has 3 PDF downloads; Word files only in Pro, $29 a month", [("rezi", "")]),
+                ("Teal", "the free plan has unlimited resumes and 11 templates, with limited AI", [("teal3", "third-party")]),
+             ], "Free here; Word files cost $29 a month at Rezi"),
+        ]),
+        ("Plus: the AI help, one payment", seek_rows_plus),
+        ("One task, one payment", seek_rows_pass),
+        ("How you pay", [
+            ("How you pay", "", "Once", "in crypto or credits; nothing renews", [
+                ("Teal+", "renewed every period until you cancel; a cancellation takes effect at the end of the period", [("teal", "")]),
+                ("LinkedIn Premium", "starts as a free trial for members who qualify", [("li_page", "")]),
+                ("Reviews", "people reviewing LinkedIn and other job sites complain of trials that turned into charges they did not expect", [("trustpilot", "")]),
+             ], "No card on file, nothing to cancel"),
+        ])) if g_[1]])
+    seek_vs = (f'<div class="pvs"><div><p class="pvs-l">Elsewhere</p><p class="pvs-n">$29</p><p>Every 30 days for Teal+, renewed until you cancel. '
+               'Jobright Turbo and LinkedIn Premium Career: $39.99 a month.</p></div>'
+               f'<div class="us"><p class="pvs-l">Here</p><p class="pvs-n">{e(pl30["price"] if pl30 else "")}</p><p>For 30 days of Plus: one payment that ends by itself. Jobs, alerts and the resume builder cost nothing.</p></div>'
+               '<p class="pvs-s">Teal: its pricing page, read 13 Nov 2026. Jobright: third-party reviews of its August 2026 prices, read 15 Nov 2026. '
+               'LinkedIn: a secondary source (activepieces.com), read 13 Nov 2026.</p></div>') if pl30 else ""
+    seek_sum = ('<p class="cmp-sum"><b>In short:</b> searching, applying, job alerts and the resume builder are free here. '
+                + (f'Plus is {e(pl30["price"])} for 30 days, where Teal+ is $29 and Jobright Turbo $39.99' if pl30 else "Plus costs less than Teal+ and Jobright Turbo")
+                + (f'; one mock interview is {e(ps_int["price"])}, where Jobright’s pack for one company is $19.99' if ps_int else "")
+                + '. Nothing here renews.</p>')
+
+    # ---- /plus/: the AI help for job seekers. Sells the problem first, shows each tool as a small screen (marked as an example), then the prices.
+    sale = bool(plus.get("live"))
+    cta = '<a class="btn primary lg" href="#pay">Get Plus</a>' if sale else '<button class="btn primary lg" type="button" disabled>Not on sale yet</button>'
+    buy_btn = ((lambda lbl: f'<a class="btn primary" href="{e(app_url or P + "/plus/")}">{e(lbl)}</a>') if sale else
+               (lambda lbl: '<button class="btn primary" type="button" disabled>Not on sale yet</button>'))
     plans = "".join(
-        f'<div class="plan{" best" if pl.get("best") else ""}">' + (f'<span class="pill acc">{e(pl["note"])}</span>' if pl.get("note") else '<span class="pill ghost">–</span>')
-        + f'<p class="pname">{e(pl["name"])}</p><p class="price">{was_span(pl)}{e(pl["price"])}</p><p class="note">{e(pl["per"])} · <b>{per_day(pl)}</b></p>{cta}</div>' for pl in plus["plans"])
+        f'<div class="plan{" best" if pl.get("best") else ""}">' + ('<span class="pill acc">Recommended by us</span>' if pl.get("best") else
+                                                                     f'<span class="pill acc">{e(pl["note"])}</span>' if pl.get("note") else '<span class="pill ghost">–</span>')
+        + f'<p class="pname">Plus · {e(pl["name"])}</p><p class="price">{e(pl["price"])}</p><p class="note">{e(pl.get("per") or "one payment")} · <b>{per_day(pl)}</b></p>{buy_btn("Get Plus")}</div>' for pl in plans_)
+    passes = "".join(f'<div class="plan"><span class="pill ghost">–</span><p class="pname">{e(ps["name"])}</p><p class="price">{e(ps["price"])}</p>'
+                     f'<p class="note">One payment</p><p class="pk-d">{e(ps["what"])}</p>{buy_btn("Buy this pass")}</div>' for ps in passes_)
     ex_ = '<span class="ex">example</span>'
     pcards = [
-        ("Resume review", "A read the way a recruiter reads: twenty seconds, top to bottom. You get a score, what the reader saw, what they could not find, and the lines to rewrite.",
+        ("AI resume review", "A read the way a recruiter reads: twenty seconds, top to bottom. You get a score, what the reader saw, what they could not find, and the lines to rewrite.",
          ex_ + '<span class="big">6<small>out of 10</small></span><span class="mt"><i style="width:60%"></i></span><span class="ln">First result appears on <b>page two</b> · no numbers in 7 of 9 bullets</span>'),
-        ("Your resume, reworded for one posting", "The same resume sent everywhere rarely fits. Your own bullet points are reworded against the posting you picked, using only what is already in your resume. You approve each line.",
+        ("Bullet points and a summary from your notes", "Write roughly what you did. The writer turns it into bullet points that start with a verb and a two-line summary, with numbers only where you gave them.",
+         ex_ + '<span class="ln">Your notes: moved the catalogue to server rendering, pages got faster</span><span class="ln"><b>Moved catalogue rendering to the server, so pages load faster</b></span><span class="sk" style="width:74%"></span>'),
+        ("Your resume, reworded for one posting", "The same resume sent everywhere rarely fits. Your own bullet points are reworded against the posting you picked, using only what is already in your resume, with the keywords it misses. You approve each line.",
          ex_ + '<span class="ln">Before: worked on the product catalogue</span><span class="ln"><b>After: cut catalogue load time by 40% by moving rendering to the server</b></span><span class="ln">Matches “performance” in the posting</span>'),
         ("Cover letter for the posting", "A draft built from your resume and the posting: a full letter for email, or four lines for a message to the recruiter. Ready to edit, so a letter stops costing an evening.",
          '<span class="ln"><b>Dear hiring team,</b></span><span class="sk" style="width:94%"></span><span class="sk h" style="width:58%"></span><span class="sk" style="width:88%"></span><span class="sk" style="width:40%"></span>'),
-        ("An email when a job fits", f"Nobody can check {m:,} career pages a day. Answer the five questions once; when an employer posts a job that fits, the email arrives the same day.",
-         ex_ + '<span class="ln"><b>3 new jobs fit your answers</b></span><span class="rw"><span>Remote</span><span class="mt"><i style="width:100%"></i></span><b>3 of 3</b></span>'
-               '<span class="rw"><span>Pay</span><span class="mt"><i style="width:66%"></i></span><b>2 of 3</b></span><span class="ln">Sent 08:10, the morning they were posted</span>'),
-        ("Interview prep for one job", "Likely questions taken from the posting’s own requirements, each with the points from your resume that answer it.",
-         ex_ + '<span class="ln"><b>1.</b> Tell us about a migration you led</span><span class="ln"><b>2.</b> How do you measure page speed?</span><span class="ln"><b>3.</b> A release you had to roll back</span><span class="ln">From 6 requirements in the posting</span>'),
-        ("Pay check and what to say", "Where an offer sits among the pay ranges employers advertise for the same work, and a short script for asking for more when it sits low.",
-         ex_ + '<span class="ln">Offer <b>$118K</b> · median for this work <b>$140K</b></span><span class="mt"><i style="left:22%;width:46%"></i><u style="left:30%"></u></span><span class="ln"><b>16% below the median</b>: worth asking</span>'),
-        ("LinkedIn profile review", "What a recruiter sees in search results: the headline and the first three lines. You get the fixes, with the fragment each one refers to.",
-         ex_ + '<span class="ln">Headline: <b>“Open to work”</b></span><span class="ln">Says no role and no field</span><span class="sk" style="width:86%"></span><span class="ln">3 fixes · 1 buzzword</span>'),
-        ("Your jobs on every device", "Saved jobs, application statuses and notes follow you from the laptop to the phone.",
-         ex_ + '<span class="rw"><span>Saved</span><span class="mt"><i style="width:100%"></i></span><b>9</b></span><span class="rw"><span>Applied</span><span class="mt"><i style="width:66%"></i></span><b>6</b></span>'
-               '<span class="rw"><span>Interview</span><span class="mt"><i style="width:22%"></i></span><b>2</b></span><span class="ln">Laptop and phone show the same list</span>'),
+        ("Interview practice with feedback", "Up to 8 likely questions taken from the posting’s own requirements, each with the points from your resume that answer it. Type an answer and get back what was strong, what was missing and a tighter version in your own words.",
+         ex_ + '<span class="ln"><b>1.</b> Tell us about a migration you led</span><span class="ln"><b>Strong:</b> a clear result, in numbers</span><span class="ln"><b>Missing:</b> what you would do differently</span><span class="ln">8 questions from 6 requirements</span>'),
     ]
     pcard_html = '<div class="tgrid">' + "".join(f'<div class="tcard"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span></span></div>' for t_, d_, scr in pcards) + "</div>"
     free_now = "".join(f'<li><a href="{P}/{u}">{e(t_)}</a><span>free</span></li>' for u, t_ in (
         ("jobs/", "Every job and the link to apply, the moment we have it"), ("for-you/", "Matching by five answers, with the reason next to each job"), ("categories/", f"Browsing by {len(fam_rows)} fields and {len(by_role)} kinds of work"),
-        ("salaries/", "Salary data from the pay ranges employers publish"), ("resume/", "Resume builder with Word and PDF"), ("tools/", "Every tool: resume match, pay calculators, letters"), ("my-jobs/", "Application tracker with reminders")))
-    rows_cmp = [("Every job and the link to apply", "Yes", "Yes"), ("Search, filters, categories, salary data", "Yes", "Yes"), ("Matching by five answers", "Yes", "Yes, and by email"),
-                ("Save jobs and track applications", "On this device", "On every device"), ("New jobs that fit", "On the site, when you visit", "By email, the day they are posted"),
-                ("Resume", "Builder and match check", "Reviewed, and reworded for each posting"), ("Cover letters", "Fill-in template", "Draft from your resume and the posting"),
-                ("Interview prep", "No", "Questions from the posting, with your answers"), ("Pay", "Salary checker", "Offer check with a script for negotiating"), ("LinkedIn profile", "No", "Reviewed, with fixes")]
-    cmp_html = "".join(f"<tr><td>{e(a_)}</td><td>{e(b_)}</td><td><strong>{e(c_)}</strong></td></tr>" for a_, b_, c_ in rows_cmp)
-    low_plan = min(plus["plans"], key=lambda pl: int(re.search(r"\d+", per_day(pl) or "999").group(0))) if plus["plans"] else None
-    tick = lambda items: '<ul class="ticks">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
+        ("salaries/", "Salary data from the pay ranges employers publish"), ("resume/", "Resume builder with Word and PDF"), ("tools/", "Every tool: resume match, pay calculators, letters, offer check"),
+        ("my-jobs/", "Application tracker with reminders")) + ((("account/", "Job alerts by email and saved jobs on every device, with a free account"),) if api_on else ()))
+    alerts_free = ("Job alerts by email, with a free account" if api_on else "Alerts in this browser, no account needed")
+    saved_free = ("Saved jobs on every device, with a free account" if api_on else "Application tracker in this browser")
     tiers = ('<div class="tiers">'
-             '<div class="tier"><p class="tn">Free</p><p class="tp">$0</p><p class="td">Everything you need to find a job and apply. No account, no card.</p>'
+             '<div class="tier"><p class="tn">Free</p><p class="tp">$0</p><p class="td">Everything you need to find a job and apply. No card.</p>'
              f'<a class="btn ghost" href="{P}/for-you/">Start with five questions</a>'
-             + tick(["Every job and the link to apply", "Search, 23 fields of work, salary data", "Matching by five answers, with reasons", "Resume builder: 5 templates, PDF and Word", "Resume review and resume match by rules",
-                     "Letter templates: cover, thank-you, resignation", "Application tracker on this device"]) + "</div>"
+             + tick(["Every job and the link to apply", f"Search, {len(fam_rows)} fields of work, salary data", "Matching by five answers, with reasons", alerts_free, saved_free,
+                     "Resume builder: 5 templates, PDF and Word", "Resume review and resume match by rules", "Letter templates: cover, thank-you, resignation", "Offer check and a letter for negotiating"]) + "</div>"
              '<div class="tier best"><p class="tn">Plus</p>'
-             + (f'<p class="tp">{was_span(low_plan)}{e(low_plan["price"])}<small> for {e(low_plan["name"])} · {per_day(low_plan)}</small></p>' if low_plan else '<p class="tp">Plus</p>')
-             + '<p class="td">Everything in Free, plus an AI writer for your resume and letters, and an email when a job fits. One payment, nothing renews.</p>' + cta
+             + (f'<p class="tp">{e(best_plan["price"])}<small> for {e(best_plan["name"])} · {per_day(best_plan)}</small></p>' if best_plan else '<p class="tp">Plus</p>')
+             + '<p class="td">Everything in Free, plus the AI help: a writer for your resume and letters, rewording for each posting, and interview practice. One payment, nothing renews.</p>' + cta
              + tick(["AI resume writer and editor: bullet points and summary from your notes", "Resume reworded for each posting, with the keywords it misses", "AI resume review: score, weak points, rewrites",
-                     "AI cover letters, thank-you and resignation letters", "Interview practice: questions for the posting and feedback on your answers", "An email the day a job fits your answers",
-                     "Pay check with a script for negotiating", "AI review of your LinkedIn profile", "As many resumes as you like, all five templates", "Your jobs and resumes on every device",
-                     "One payment: nothing renews, no card on file"]) + "</div>"
-             '<div class="tier"><p class="tn">Employers</p><p class="tp">Free<small> to post a job</small></p><p class="td">A standard listing costs nothing. A featured one stays at the top of its list.</p>'
+                     "AI cover letters and resignation letters", "Interview practice: questions from the posting and feedback on your answers", f"Each calendar month: {ai_allow}"]
+                    + ([f"Or one task: {ps_res['price']} for one tailored resume, {ps_int['price']} for one mock interview"] if ps_res and ps_int else [])
+                    + ["One payment: nothing renews, no card on file"]) + "</div>"
+             '<div class="tier"><p class="tn">Employers</p><p class="tp">Free<small> to post a job</small></p><p class="td">A standard listing costs nothing. A boost keeps a job above the free ones for 30 days.</p>'
              f'<a class="btn ghost" href="{P}/post-a-job/">Post a job</a>'
-             + tick(["A standard listing for 30 days", f"Featured job from {price_of('Featured job')}", "Pinned job, company spotlight, sponsor of a category", "Paid in crypto, switched on at once", "No calls, no sales manager"]) + "</div></div>")
-    ai_m = re.search(r"AI_MONTHLY\s*=\s*\{\s*resume:\s*(\d+),\s*letter:\s*(\d+),\s*interview:\s*(\d+)", (ROOT / "server" / "src" / "worker.js").read_text(encoding="utf-8") if (ROOT / "server" / "src" / "worker.js").exists() else "")
-    ai_allow = f"{ai_m.group(1)} resume tasks, {ai_m.group(2)} letters, {ai_m.group(3)} interview sessions" if ai_m else "Shown before you pay"
-    plus_price = " · ".join(f'{was_span(pl)}<b>{e(pl["price"])}</b> for {e(pl["name"])}' for pl in plus["plans"]) or "Plus"
-    seek_pt = ptable([("Free", "<b>$0</b>", "No account, no card", False), ("Plus", (f'from {was_span(plus["plans"][0])}<b>{e(plus["plans"][0]["price"])}</b>' if plus["plans"] else "Plus"), "One payment. Nothing renews", True)], [
-        ("Resume",), ("Resume builder", "All 5 templates", "All 5 templates"), ("Resumes kept", "~1, in this browser", "Unlimited, on every device"), ("PDF and Word downloads", "Unlimited", "Unlimited"),
-        (f"Resume examples for {len(rex_data)} kinds of work", True, True),
-        ("AI writer",), ("AI writer for bullet points and summary", False, True), ("Keywords for one posting", "~Found and missing", "Bullets reworded for the posting"),
-        ("Resume review and score", "~By rules", "By AI, with rewrites"), ("LinkedIn profile review", "~By rules", "By AI"), ("AI use each month", False, ai_allow),
-        ("Letters",), ("Cover letter", "~Fill-in template", "AI draft from your resume and the posting"), ("Thank-you, raise and resignation letters", "~Templates", "AI drafts"),
-        ("Interview and pay",), ("Interview questions for one posting, with feedback on your answers", False, True), ("Salary checker and offer check", True, True), ("Script for negotiating an offer", False, True),
-        ("Jobs",), ("Every job and the link to apply", True, True), ("Matching by five answers, with reasons", True, True), ("An email the day a job fits", False, True),
-        ("Application tracker", "~On this device", "On every device"),
-        ("Payment",), ("How you pay", "~Nothing to pay", "Once, in crypto"), ("Renews by itself", "~Nothing to renew", "Never")])
-    yes, no = '<td class="y">Yes</td>', '<td class="n">—</td>'
-    cell = lambda v: yes if v is True else no if v is False else f"<td>{e(v)}</td>"
-    grid_rows = [("Jobs", None, None), ("Every job and the link to apply", True, True), ("Search, categories, salary data, rankings", True, True), ("Matching by five answers", True, True), ("An email when a job fits", False, True),
-                 ("Resume", None, None), ("Resume builder, 5 templates", True, True), ("PDF and Word downloads", "Unlimited", "Unlimited"), ("Resume review", "By rules", "By AI, with rewrites"),
-                 ("Match against a posting", "Keywords found and missing", "Bullets reworded for the posting"), ("AI writer for bullet points and summary", False, True),
-                 ("Letters", None, None), ("Cover letter", "Fill-in template", "Draft from your resume and the posting"), ("Thank-you, raise and resignation letters", "Templates", "AI drafts"),
-                 ("Interview and pay", None, None), ("Interview questions for one posting", False, True), ("Salary checker and offer check", True, True), ("Script for negotiating an offer", False, True),
-                 ("Tracking", None, None), ("Application tracker", "On this device", "On every device"), ("LinkedIn profile review", "By rules", "By AI")]
-    grid_html = "".join(f'<tr class="grp"><th colspan="3">{e(a_)}</th></tr>' if b_ is None else f"<tr><td>{e(a_)}</td>{cell(b_)}{cell(c_)}</tr>" for a_, b_, c_ in grid_rows)
-    # what the same things cost elsewhere: the plans other services publish, read on their own pricing pages on the date given
-    else_rows = [("AI resume writer and editor, resume score, keywords for a job", "Plus", "Rezi Pro: $29 a month"),
-                 ("Resume review and LinkedIn review", "Free by rules; by AI in Plus", "RocketHunt Pro: 290 ₽ a month"),
-                 ("Match with a job, skill by skill", "Free", "RocketHunt Pro: 290 ₽ a month"),
-                 ("What a role pays and whether an offer is fair", "Free", "RocketHunt Pro: 290 ₽ a month"),
-                 ("Cover letters without a limit", "Template free; AI drafts in Plus", "hh PRO: 999 ₽ a month"),
-                 ("Resume downloads as PDF and Word", "Free, no limit", "Rezi Free: 3 PDF files; Word only in Pro"),
-                 ("Interview practice with AI", "Plus", "Rezi Free: 1 interview; more in Pro"),
-                 ("How the payment works", "One payment, ends by itself", "Monthly, renewed automatically")]
-    else_html = ('<div class="tablewrap"><table class="grid"><tr><th>What you get</th><th>Here</th><th>Elsewhere</th></tr>'
-                 + "".join(f"<tr><td>{e(a_)}</td><td class=\"y2\"><strong>{e(b_)}</strong></td><td>{e(c_)}</td></tr>" for a_, b_, c_ in else_rows)
-                 + '</table></div><p class="note">The right-hand column is what each service published on its own pricing page on November 13, 2026. Prices change; check theirs before you compare.</p>')
-    soon = "" if plus.get("live") else '<div class="banner">Plus is not on sale yet. This page shows what it will do and what it will cost. Everything in the “free” list works today.</div>'
+             + tick(["A standard listing for 30 days", f"Standard boost {price_of('Standard boost')}, Premium boost {price_of('Premium boost')}, 30 days each",
+                     f"Hiring Pass {price_of('Hiring Pass')}: every job of one company", "Paid in crypto or credits, switched on by itself", "No calls, no sales manager"]) + "</div></div>")
+    seek_pt = ptable([("Free", "<b>$0</b>", "No card; an account only for alerts and sync", False),
+                      ("Plus", (f'from <b>{e(plans_[0]["price"])}</b>' if plans_ else "Plus"), "One payment. Nothing renews", True)], [
+        ("Jobs",), ("Every job and the link to apply", True, True), ("Search, filters, categories, salary data", True, True), ("Matching by five answers, with reasons", True, True),
+        ("Job alerts by email", "With a free account" if api_on else "~Opening with free accounts", "With a free account" if api_on else "~Opening with free accounts"),
+        ("Saved jobs and applications", "On every device, with an account" if api_on else "~In this browser", "On every device, with an account" if api_on else "~In this browser"),
+        ("Resume",), ("Resume builder, 5 templates, PDF and Word", True, True), (f"Resume examples for {len(rex_data)} kinds of work", True, True),
+        ("Resume review and score", "~By rules", "By AI, with rewrites"), ("Keywords for one posting", "~Found and missing", "Bullets reworded for the posting"),
+        ("AI writer for bullet points and summary", False, True),
+        ("Letters",), ("Cover letter", "~Fill-in template", "AI draft from your resume and the posting"), ("Resignation letter", "~Template", "AI draft"),
+        ("Thank-you and raise letters", "~Templates", "~Templates"),
+        ("Interview and pay",), ("Interview questions", "~By role, with an answer builder", "From the posting, with your points"), ("Feedback on your typed answers", False, True),
+        ("Salary checker, offer check, a letter for negotiating", True, True),
+        ("AI use each calendar month", False, ai_allow),
+        ("Payment",), ("How you pay", "~Nothing to pay", "Once, in crypto or credits"), ("Renews by itself", "~Nothing to renew", "Never")])
+    soon = "" if sale else ('<div class="banner">Plus and the single passes are not on sale yet: they open when the AI service and payments are switched on. '
+                            'This page shows what they will do and what they will cost. Everything in the free list works today.</div>')
     plus_qa = [("Is this a subscription?", "No. You pay once for the period you choose. When it ends, nothing is charged and there is nothing to cancel. There is no card on file to charge."),
                ("Do I have to pay to see or apply for jobs?", "No. Every job is public the moment we have it and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
-               ("How do I pay?", "With crypto (USDT, BTC, ETH and other coins) on a checkout page. Plus turns on in your account once the network confirms the payment."),
+               ("Are job alerts part of Plus?", ("No. Job alerts by email and saved jobs on every device come with a free account. " if api_on else
+                                                 "No. Job alerts by email and saved jobs on every device will come with a free account. ") + "Plus is only the AI help."),
+               ("What is the difference between Plus and a single pass?", (f"A pass is one task, paid once: {ps_res['price']} for one resume reworded for one posting, with its cover letter, "
+                                                                           f"or {ps_int['price']} for one mock interview with feedback on up to 8 answers, each used within 30 days. " if ps_res and ps_int else "")
+                + "Plus gives every AI tool for the period you choose."),
+               ("How do I pay?", "With crypto (USDT, BTC, ETH and other coins) on a checkout page, or with prepaid credits. Plus turns on in your account once the network confirms the payment, at once with credits."),
                ("Is the resume help written by AI?", "Yes, the review, the rewording, the letters and the interview questions are. It works only from your own resume and the posting, adds no experience you do not have, and you approve every line before you use it."),
-               ("How much can I use it?", "The AI tools have a monthly allowance, shown before you pay, sized for an active job search: dozens of applications a month."),
-               ("When does it launch?", "When payments are connected. Until then the free site works as it does today.")]
-    plus_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in plus_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("plus/", f"Plus: resume review, letters and job alerts, one payment | {SITE}",
-         "Plus reviews your resume, rewords it for each posting, drafts the cover letter, prepares you for the interview and emails you when a job fits. One payment, a few cents a day, nothing renews. Every job stays free.",
+               ("How much can I use it?", f"Each calendar month: {ai_allow}. It is the same for every Plus plan and shown before you pay, and it is sized for an active job search."),
+               ("Why does it cost less than Teal+ or Jobright Turbo?", "Plus is only the AI help: the job search around it is free, and the AI use has a monthly allowance, so what it costs us is known in advance. "
+                + (f"30 days are {pl30['price']} here, $29 at Teal+ and $39.99 at Jobright Turbo (their prices as read on 13 and 15 Nov 2026)." if pl30 else "")),
+               ("When does it launch?", "When the AI service and payments are switched on. Until then the free site works as it does today" + (", accounts and job alerts included." if api_on else "."))]
+    page("plus/", f"Plus: AI resume help from {plans_[0]['price'] if plans_ else '$9'}, nothing renews | {SITE}",
+         f"Plus rewords your resume for each posting, reviews it, drafts letters and runs interview practice. From {plans_[0]['price'] if plans_ else '$9'}, paid once; nothing renews.",
          crumbs(("Plus", "")) + '<h1>Applications go out and nothing comes back. Plus finds out why and <span class="hl">fixes it</span>, job by job</h1>'
          '<p class="lead">A resume gets one short first read, and nobody tells you why it was put aside: the result is on page two, the bullets list duties, the letter could be for any company. '
-         f'Plus reads your resume the way a recruiter does, rewords it for each posting and tells you the day a job fits. One payment, from {min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else "a few cents a day"}. Nothing renews.</p>{soon}'
-         + LAUNCH + tiers
+         f'Plus reads your resume the way a recruiter does, rewords it for each posting, drafts the letter and rehearses the interview with you. One payment, from {per_day(low_plan) if low_plan else "a few cents a day"}. Nothing renews.</p>{soon}'
+         + tiers
          + section("Free and Plus, side by side", seek_pt + f'<p class="note">Hiring? Employers have their own table on the <a href="{P}/pricing/#employers">pricing page</a>.</p>')
          + section("What Plus adds", pcard_html)
-         + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto, on a checkout page, and Plus switches on when the payment is confirmed. '
-                   'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends.</p>')
-         + section("What the same things cost elsewhere", else_html)
+         + section("What it costs", f'<div class="plans">{plans}</div><p class="note">You pay once, in crypto on a checkout page or with credits, and Plus switches on when the payment is confirmed. '
+                   'There is no automatic renewal, no card on file and nothing to cancel: when the period ends, Plus simply ends. “Recommended by us” is our advice for an active search, not a count of sales.</p>', sid="pay")
+         + (section("Or pay for one task", f'<div class="plans">{passes}</div><p class="note">A pass is the AI help for one posting, paid once and used within 30 days.</p>') if passes_ else "")
+         + section("Plus against Teal+, Jobright Turbo and others", seek_vs + seek_sum + seek_cmp)
          + section("What stays free, for everyone", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div>')
-         + section("Questions about Plus", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in plus_qa) + "</dl>"), head=plus_ld)
-    # Employers
-    rows = "".join(f"<tr><td><strong>{e(p['name'])}</strong></td><td>{was_of(p['name'])}<strong>{e(p['price'])}</strong></td><td>{e(p['what'])}{' <span class=\"note\">Not available yet.</span>' if p.get('soon') else ''}</td></tr>" for p in CFG["prices"])
-    app_url = f"{P}/account/" if CFG["api_url"] else ""
-    steps = ('<ol class="steps"><li><b>Create an employer account.</b> It takes an email and a password.</li>'
+         + section("Questions about Plus", faq_html(plus_qa)), head=faq_ld(plus_qa))
+
+    # ---- /post-a-job/
+    steps = ('<ol class="steps"><li><b>Create an employer account.</b> With your work email, or with Google.</li>'
              "<li><b>Paste the job.</b> Title, link to apply, location, description. We open the link to check the job is really there.</li>"
-             "<li><b>A standard listing is free.</b> It goes live at the next hourly update. If you want it higher, pick a paid placement and pay at the crypto checkout (USDT, BTC, ETH and other coins).</li>"
-             "<li><b>Paid placements switch on by themselves</b> once the network confirms the payment. You can close or renew a job from your account at any time.</li></ol>")
+             "<li><b>A standard listing is free.</b> It goes live after the check, at the next hourly update. To keep it higher, add a boost and pay at the crypto checkout (USDT, BTC, ETH and other coins) or with credits.</li>"
+             "<li><b>A boost switches on by itself</b> once the network confirms the payment, at once when paid with credits. When its 30 days end, the job goes back to a standard listing: nothing renews and nothing more is charged.</li></ol>")
     if app_url:
         pay = (f'<section class="sec"><div class="sec-head"><h2>How to post a job</h2><a href="{e(app_url)}">Open the employer account</a></div>{steps}'
                f'<p><a class="btn primary lg" href="{e(app_url)}">Post a job now</a></p></section>')
@@ -6056,160 +6324,195 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         pay = (f'<section class="sec"><div class="sec-head"><h2>How posting a job will work</h2></div>{steps}'
                '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.'
                + (f" Questions in the meantime: {mail_a('jobs')}." if MAIL.get("jobs") or contact else "") + "</div></section>")
-    pains = [("Lists are sorted by date", f"{WEEKNEW:,} roles were posted here in the last 7 days, so a job that is not pinned leaves the first page within days."),
+    pains = [("Lists are sorted by date", f"{WEEKNEW:,} roles were posted here in the last 7 days, so a job without a boost leaves the first page within days."),
              ("Roles without pay get filtered out", f"{100 - SALPCT}% of postings here show no salary. Anyone who filters or sorts by pay never sees them. Adding a range costs nothing."),
-             ("Company spotlight", "Your logo and your open roles on the home page and at the top of the companies list.")]
-    pain_html = '<div class="feats">' + "".join(f'<div class="feat"><h2>{e(a)}</h2><p>{e(b)}</p></div>' for a, b in pains) + "</div>"
-    # What an employer gets the moment the payment is confirmed, shown rather than described (the owner: "show what they get at once:
-    # how the listing is highlighted, what appears in the account").
-    etick = lambda items: '<ul class="ticks">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
-    ebtn = (f'<a class="btn ghost" href="{e(app_url)}">Post a job</a>' if app_url else '<button class="btn ghost" type="button" disabled>Opens soon</button>')
+             ("A boost holds the place", "A boosted job stays above the free jobs of its category, role, place and search for 30 days, whatever is posted after it.")]
+    pain_html = '<div class="feats">' + "".join(f'<div class="feat"><h3>{e(a)}</h3><p>{e(b)}</p></div>' for a, b in pains) + "</div>"
+    etick = tick
+    ebtn = emp_btn(False, here=True)
     emp_tiers = ('<div class="tiers">'
-                 f'<div class="tier"><p class="tn">Standard</p><p class="tp">Free</p><p class="td">Your job in the list and in search, like every other job here.</p>{ebtn}'
-                 + etick(["In the main list for 30 days", "Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close or renew it yourself, any time"]) + "</div>"
-                 f'<div class="tier best"><p class="tn">Featured</p><p class="tp">{was_of("Featured job")}{price_of("Featured job")}<small> for 14 days</small></p><p class="td">A highlighted row that stays above the regular listings of its category.</p>{ebtn}'
-                 + etick(["Everything in Standard", "Highlighted row with a “Featured” mark", "Above regular listings in its category for 14 days", "On as soon as the payment is confirmed: nobody to write to", "Views and clicks to apply in your account"]) + "</div>"
-                 f'<div class="tier"><p class="tn">Pinned</p><p class="tp">{was_of("Pinned job")}{price_of("Pinned job")}<small> for 7 days</small></p><p class="td">The first row on the home page and in its category.</p>{ebtn}'
-                 + etick(["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites and channels read"]) + "</div></div>")
+                 f'<div class="tier"><p class="tn">Standard</p><p class="tp">Free<small> for 30 days</small></p><p class="td">Your job in the list and in search, like every other job here.</p>{ebtn}'
+                 + etick(["30 days in the list and in search", "Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close it or post it again yourself, any time"]) + "</div>"
+                 f'<div class="tier best"><p class="tn">Standard boost <span class="tchip">Our advice for most roles</span></p><p class="tp">{e(price_of("Standard boost"))}<small> for 30 days</small></p>'
+                 f'<p class="td">A highlighted row with a “Featured” mark, above the free jobs in its lists for 30 days.</p>{emp_btn(True, here=True)}'
+                 + etick(["Everything in Standard", "Highlighted row with a “Featured” mark", "Above the free jobs in its category, role, place and search lists", "Views and clicks on Apply for the job, in your account",
+                          "For a job posted here, or one we list from your careers page", "A free re-run if it gets fewer than 10 clicks on Apply in 14 days"]) + "</div>"
+                 f'<div class="tier"><p class="tn">Premium boost</p><p class="tp">{e(price_of("Premium boost"))}<small> for 30 days</small></p><p class="td">A turn in the top 3 of its lists, an “Urgently hiring” badge and an invitation to people who match.</p>{ebtn}'
+                 + etick(["Everything in the Standard boost", "Takes turns in the top 3 slots of its lists, hour by hour when more than 3 share a list", "“Urgently hiring” badge for the first 14 days",
+                          "Your logo and a cover image on the job page", "One email to up to 50 matching job seekers who asked for job invitations", "Views and clicks day by day",
+                          "A job we list from your careers page needs the company page claimed first"]) + "</div></div>")
     emp_pt = ptable([("Standard", "<b>Free</b>", "30 days in the list", False),
-                     ("Featured", f'{was_of("Featured job")}<b>{price_of("Featured job")}</b> once', "14 days above regular jobs", True),
-                     ("Pinned", f'{was_of("Pinned job")}<b>{price_of("Pinned job")}</b> once', "7 days in the first row", False)], [
+                     ("Standard boost", f'<b>{e(price_of("Standard boost"))}</b> once', "30 days above the free jobs", True),
+                     ("Premium boost", f'<b>{e(price_of("Premium boost"))}</b> once', "30 days, a turn in the top 3", False)], [
         ("The listing",), ("In the list and in search", "30 days", "30 days", "30 days"), ("Its own page, readable by Google’s job box", True, True, True),
-        ("A link straight to your application page", True, True, True), ("Checked before it goes live", True, True, True), ("Close or renew it yourself, any time", True, True, True),
-        ("Where it stands",), ("Place in its category", "~By date", "Above regular jobs, 14 days", "First row, 7 days"), ("Highlighted row with a “Featured” mark", False, True, True),
-        ("First row of the home page", False, False, "7 days"),
-        ("Your account",), ("Starts", "~At the next hourly update", "Within the hour after payment", "Within the hour after payment"), ("Views and clicks to apply, per job", False, True, True),
+        ("A link straight to your application page", True, True, True), ("Checked before it goes live", True, True, True),
+        ("Works for a job we list from your careers page", "~Listed free already", True, "~After you claim the company page"),
+        ("Where it stands",), ("Place in its lists: category, role, place, search", "~By date", "Above the free jobs", "Top 3, taking turns"),
+        ("Highlighted row with a “Featured” mark", False, True, True), ("“Urgently hiring” badge", False, f"~{price_of('Urgently hiring badge')} extra, 14 days", "First 14 days"),
+        ("Your logo and a cover image on the job page", False, False, True),
+        ("Reaching people",), ("Invitation email to matching job seekers who opted in", False, False, "Up to 50, once"),
+        ("Your account",), ("Views and clicks on Apply", False, "For the job", "Day by day"), ("A free re-run if under 10 clicks on Apply in 14 days", False, True, True),
         ("A receipt for every payment", "~Nothing to pay", True, True),
-        ("Payment",), ("How you pay", "~Nothing to pay", "Once, in crypto", "Once, in crypto"), ("Renews by itself", "~Nothing to renew", "Never", "Never")])
-    demo_rows = [dict(j) for j in latest[:4]]
-    demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior", "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company",
-                "slug": "", "title": "Senior Backend Engineer (your job)", "posted": TODAY}
-    demo_html = ('<ul class="jobs demo">' + eg(card(demo_job)) + "".join(card(j) for j in demo_rows[:2])
-                 + eg(card(dict(demo_job, title="Product Designer (your second job)", salary="", tags=["Figma"], level=""))) + "".join(card(j) for j in demo_rows[2:4]) + "</ul>")
+        ("Payment",), ("How you pay", "~Nothing to pay", "Once, in crypto or credits", "Once, in crypto or credits"),
+        ("Starts", "~After the check, at the next hourly update", "When the payment is confirmed", "When the payment is confirmed"), ("Renews by itself", "~Nothing to renew", "Never", "Never")])
+    pass_box = ('<div class="ppass">' + pcard("Hiring Pass", price_of("Hiring Pass"), "for 30 days", "Every job of one company, boosted for 30 days.", emp_btn(True, here=True, label="Open the employer account"), "One payment for one company. Nothing renews.")
+                + '<div class="pincl"><p class="pk-n">For 30 days, for one company</p>'
+                + tick(["Unlimited Standard boosts for its jobs during the 30 days; each boost runs its own 30 days","3 Premium boosts", "The company spotlight for the 30 days", "Views and clicks for every job",
+                        "For a company that is yours: you posted a job under its name or claimed its page"])
+                + f'<p class="note">Bought one by one, 3 Premium boosts and the spotlight come to {dol(3 * PB + SP)} (3 × {e(price_of("Premium boost"))} + {e(price_of("Company spotlight"))}), '
+                  f'before any Standard boost at {e(price_of("Standard boost"))} each.</p></div></div>')
+    addon_names = ("Bump to top", "Extend a boost by 30 days", "Urgently hiring badge", "Company spotlight", "Category or skill sponsor")
+    addons = '<div class="paddons">' + "".join(acard(x, price_of(x), term(x), PRICE[x]["what"]) for x in addon_names if x in PRICE) + "</div>"
+    credit_cards = ('<div class="paddons c4">' + "".join(acard(p_["name"], p_["price"], "one top-up", "", chip=bonus(p_)) for p_ in credits_) + "</div>"
+                    + tick(["1 credit = $1", "Credits last 12 months from the top-up", "Spend them on every product here, and on Plus and the passes for job seekers",
+                            "A purchase paid with credits switches on at once: no wait for the network", "A top-up is one payment in crypto; nothing renews"])) if credits_ else ""
+    rs_box = ('<div class="ppass">' + pcard("Resume search", price_of("Resume search: 50 contact requests"), "for 50 contact requests", "Search the resumes of people who chose to be found.",
+                                            emp_btn(False, here=True, label="Open the employer account"), "One payment. Nothing renews.")
+              + '<div class="pincl"><p class="pk-n">How it works</p>'
+              + tick(["Only resumes people chose to make findable: nobody is in it without saying yes", "Names and contacts stay hidden until the person accepts your request",
+                      "A request is used up only when the person accepts", "Declined, or no answer in 14 days: the request comes back to you",
+                      f"{per_contact} a contact who said yes"])
+              + '<p class="note">Only people who opted in are there, so the database starts small and grows.</p></div></div>') if "Resume search: 50 contact requests" in PRICE else ""
+    demo_rows = [dict(j) for j in latest[:3]]
+    demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "", "tags": [], "location": "Remote, Europe", "company": "Your company",
+                "slug": "", "title": "Senior Backend Engineer (your Premium boost)", "posted": TODAY}      # few pills: the urgent badge must fit in the row
+    urgent = '<span class="pill urg">Urgently hiring</span>'
+    prem_row = (eg(card(demo_job)).replace('<li class="job feat">', '<li class="job feat prem">', 1)
+                .replace('<span class="pill acc">Featured</span>', '<span class="pill acc">Featured</span>' + urgent, 1))
+    demo_html = ('<ul class="jobs demo">' + prem_row + eg(card(dict(demo_job, title="Product Designer (your Standard boost)", salary="", tags=["Figma"], level="")))
+                 + "".join(card(j) for j in demo_rows) + "</ul>")
+    prem_page = ('<div class="pjob"><div class="pjob-cover" aria-hidden="true"><span class="ex">example</span></div><div class="pjob-head"><span class="pjob-logo" aria-hidden="true">Y</span>'
+                 + '<div><b>Senior Backend Engineer</b><span>Your company · Remote, Europe · $140K – $180K</span></div>' + urgent + "</div>"
+                 '<div class="pjob-body" aria-hidden="true"><span class="sk" style="width:92%"></span><span class="sk" style="width:78%"></span><span class="sk" style="width:86%"></span></div></div>'
+                 '<p class="note">An example: the cover image and logo are yours; the badge goes after 14 days.</p>')
     emp_cab = ('<div class="tgrid">'
-               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Senior Backend Engineer</b></span><span class="rw"><span>Featured</span><span class="mt"><i style="width:64%"></i></span><b>9 days left</b></span>'
-               '<span class="ln">Live since Nov 13 · <b>Renew</b> · <b>Close</b></span></span><span class="tbody"><b>The placement, switched on</b><span>The moment the network confirms the payment, the job is marked Featured and the account shows how many days are left. Nothing to send, nobody to wait for.</span></span></div>'
-               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="rw"><span>Views</span><span class="mt"><i style="width:100%"></i></span><b>1,204</b></span><span class="rw"><span>Clicks to apply</span><span class="mt"><i style="width:22%"></i></span><b>86</b></span>'
-               '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the placement did.</span></span></div>'
-               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Featured job · ' + price_of("Featured job") + '</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
-               '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the period ends, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
+               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Senior Backend Engineer</b></span><span class="rw"><span>Boost</span><span class="mt"><i style="width:86%"></i></span><b>26 days left</b></span>'
+               '<span class="ln">Live since Nov 13 · <b>Extend</b> · <b>Close</b></span></span><span class="tbody"><b>The boost, switched on</b><span>The moment the network confirms the payment, or at once with credits, the job is marked Featured and the account shows how many days are left. Nothing to send, nobody to wait for.</span></span></div>'
+               '<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="rw"><span>Views</span><span class="mt"><i style="width:100%"></i></span><b>1,204</b></span><span class="rw"><span>Clicks on Apply</span><span class="mt"><i style="width:22%"></i></span><b>86</b></span>'
+               '<span class="ln">Counted per job, day by day</span></span><span class="tbody"><b>What the listing brought</b><span>Views of the job page and clicks on “Apply” for each job, so you can see what the boost did, and whether the free re-run is due.</span></span></div>'
+               f'<div class="tcard"><span class="tprev" aria-hidden="true"><span class="ex">example</span><span class="ln"><b>Receipt</b> · Standard boost · {e(price_of("Standard boost"))}</span><span class="ln">Paid in USDT · confirmed 14:02</span><span class="sk" style="width:70%"></span></span>'
+               '<span class="tbody"><b>A receipt and no renewal</b><span>Every payment is a single payment with a receipt in the account. When the 30 days end, the job goes back to a standard listing and nothing is charged.</span></span></div></div>')
+    emp_trust = trust(["A standard listing is free", "One payment, nothing renews", "Paid in crypto or credits, no card", "Switches on by itself once paid", "A free re-run if a boost brings under 10 clicks"])
     pj_qa = [("Where can I post a job for free?", f"Here: a standard listing is free, with its own page and 30 days in the list, among {n:,} open roles from {m:,} companies. "
-              "Self-serve posting is being finished; until it opens, write to " + (MAIL.get("jobs") or "us") + ". Several big job boards also have a free tier with limits; the site-by-site comparisons on this site show who charges for what."),
-             ("Is posting a job here really free?", "Yes. A standard listing costs nothing and needs no card. Paid placements only keep a job higher in the list, and nothing can be bought until payments open."),
+              + ("Post it from the employer account." if app_url else "Self-serve posting is being finished; until it opens, write to " + (MAIL.get("jobs") or "us") + ".")
+              + " Several big job boards also have a free tier with limits; the site-by-site comparisons on this site show who charges for what."),
+             ("Is posting a job here really free?", "Yes. A standard listing costs nothing and needs no card. A boost only keeps a job higher in its lists; nothing is charged unless you buy one."),
+             ("How much does it cost to boost a job?", f"A Standard boost is {price_of('Standard boost')} for 30 days: a highlighted row above the free jobs in its lists. A Premium boost is {price_of('Premium boost')}: "
+              "a turn in the top 3, an “Urgently hiring” badge, your logo and cover image, and an invitation to up to 50 matching job seekers. "
+              f"A Hiring Pass is {price_of('Hiring Pass')} for every job of one company for 30 days. Each is one payment in crypto or credits; nothing renews."),
+             ("What if a boost brings no applicants?", "If a Standard or Premium boost that was paid for gets fewer than 10 clicks on Apply in its first 14 days, it runs for 30 more days at no cost, by itself. "
+              "It counts clicks on Apply; it cannot promise a hire."),
+             ("Can I boost a job you already list from my careers page?", "Yes. Company pages carry “Is this your job? Boost it”. A Standard boost works on any of your listed jobs; "
+              "a Premium boost, a Hiring Pass or an urgent badge on a listed job needs the company page claimed first, with a work email or a DNS record."),
              ("Can I post a job on Google for free?", "Google does not take job posts itself: its job search reads job pages that carry JobPosting structured data. Every open job here with a full description "
               "has its own page with that data, so a free listing here can appear in Google’s job search."),
-             ("Can I post a job without registering?", "Self-serve posting will ask for an email and a password, so that only you can close or renew the job. And if your openings are on a careers page we already read "
+             ("Can I post a job without registering?", "Self-serve posting asks for an email, so that only you can close the job or buy a boost for it. And if your openings are on a careers page we already read "
               "(Greenhouse, Lever, Ashby and other hiring systems), they appear here by themselves, free and with no account; to have your careers page read, write to " + (MAIL.get("jobs") or "us") + "."),
              ("How do I post a job for free online?", "Write the title, the place of work, the pay range and what the person will do; add the link where people apply; post it on free boards such as this one "
               "and on your own careers page; share it with people who do that work. A posting that states pay and a place gets more of the right applicants.")]
-    pj_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in pj_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("post-a-job/", f"Post a Job for Free — featured from {price_of('Featured job')} | {SITE}" if app_url else f"Post a Job for Free: Listings, Plans and Prices | {SITE}",
-         (f"Post a job for free, or feature it from {price_of('Featured job')} so it stays at the top of the list. Self-serve, paid in crypto at checkout." if app_url else
-          f"Plans and prices for employers: free standard listings, featured jobs from {price_of('Featured job')}, company spotlight and page sponsorship. Self-serve posting is being finished and is not open yet."),
+    page("post-a-job/", f"Post a Job for Free, Boost It from {price_of('Standard boost')} | {SITE}" if app_url else f"Post a Job for Free: Listings, Boosts and Prices | {SITE}",
+         (f"Post a job for free for 30 days. A boost keeps it above the free jobs for 30 days from {price_of('Standard boost')}, paid once in crypto. Nothing renews." if app_url else
+          f"Employer prices: free 30-day listings, boosts from {price_of('Standard boost')}, a Hiring Pass, credits and resume search. Self-serve posting is not open yet."),
          crumbs(("For employers", "")) + "<h1>Post a job that doesn’t get buried</h1>"
          f'<p class="lead">There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
-         'A featured one stays at the top instead of sliding down as new roles arrive.</p>'
-         + LAUNCH + emp_tiers
-         + section("Standard, Featured and Pinned, side by side", emp_pt + f'<p class="note">Looking for work, not hiring? Job seekers have their own table on the <a href="{P}/pricing/">pricing page</a>.</p>')
-         + section("How your job looks in the list", '<p class="note">The two highlighted rows are examples of featured jobs; the others are real listings from today.</p>' + demo_html)
+         'A boost keeps a job above the free ones for 30 days instead of letting it slide down as new roles arrive. One payment, in crypto; nothing renews.</p>'
+         + emp_trust + emp_tiers
+         + section("Standard, Standard boost and Premium boost, side by side", emp_pt + f'<p class="note">“Our advice” is ours, for a role that has to be seen this month; it is not a count of sales. '
+                   f'Looking for work, not hiring? Job seekers have their own table on the <a href="{P}/pricing/">pricing page</a>.</p>')
+         + section("Hiring Pass: every job of one company", pass_box)
+         + section("Add-ons, one payment each", addons)
+         + (section("Credits: top up once, spend on anything", credit_cards) if credit_cards else "")
+         + (section("Resume search", rs_box) if rs_box else "")
+         + section("If a boost brings no one", guarantee)
+         + section("Why jobs slide out of sight", pain_html)
+         + section("How your job looks in the list", '<p class="note">The first row is an example of a Premium boost, the second of a Standard boost; the others are real listings from today.</p>' + demo_html)
+         + section("What a Premium boost adds to the job page", prem_page)
          + section("What appears in your account at once", emp_cab)
-         + f'{pain_html}' + section("Every plan and price", f'<div class="tablewrap"><table><tr><th>Plan</th><th>Price</th><th>What you get</th></tr>{rows}</table></div>')
          + section("How a company spotlight looks", '<div class="spot"><a class="eg">' + ava("Your company") + '<span><b>Your company</b><span class="s">42 open roles · featured</span></span></a></div>'
                    '<p class="note">Shown on the home page and at the top of the companies list.</p>')
-         + section("How a featured listing looks", '<ul class="jobs">' + eg(card({"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "Senior",
-                   "tags": ["Python", "AWS"], "location": "Remote, Europe", "company": "Your company", "slug": "", "title": "Senior Backend Engineer", "posted": TODAY}))
-                   + "</ul>") + pay
-         + f''
-         '<section class="sec"><div class="sec-head"><h2>Paying, careers pages and refunds</h2></div>'
-         "<h3>How do I pay?</h3><p>In crypto, on a checkout page: USDT, BTC, ETH and other coins. The placement switches on after the payment is confirmed. We do not take cards or bank transfers yet.</p>"
+         + section("What the same things cost elsewhere", emp_vs + emp_sum + emp_cmp) + pay
+         + '<section class="sec"><div class="sec-head"><h2>Paying, careers pages and refunds</h2></div>'
+         "<h3>How do I pay?</h3><p>In crypto, on a checkout page: USDT, BTC, ETH and other coins, or with prepaid credits. A purchase switches on after the payment is confirmed, at once with credits. We do not take cards or bank transfers yet.</p>"
          "<h3>No careers page of your own?</h3><p>Use your company page here as one. Link your site's Careers button to it, or embed the list with one line of code: "
          f'<a href="{P}/widgets/">badge and widget</a>.</p>'
          "<h3>What happens when the job closes?</h3><p>It is marked as closed and its page stays online.</p>"
-         "<h3>Can I get a refund?</h3><p>A placement switches on the moment the payment is confirmed, so there is nothing to refund before publication. If a paid placement did not run as described, write to us and it will be extended or refunded.</p></section>"
-         + section("Questions about posting a job for free", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in pj_qa) + "</dl>"), head=pj_ld)
-    # Pricing: both sides on one page, each with its own table. A person looking for work and a company hiring buy different
-    # things, so they never share a table (the owner: "for the job seeker and for the employer everything must be different").
+         "<h3>Can I get a refund?</h3><p>A purchase switches on the moment the payment is confirmed, so there is nothing to refund before it runs. A boost with fewer than 10 clicks on Apply in 14 days runs again for free. "
+         "If anything paid did not run as described, write to us and it will be extended or refunded.</p></section>"
+         + section("Questions about posting a job for free", faq_html(pj_qa)), head=faq_ld(pj_qa))
+
+    # ---- /pricing/: both sides on one page, each with its own cards and tables. A person looking for work and a company hiring buy
+    # different things, so they never share a table (the owner: "for the job seeker and for the employer everything must be different").
     price_qa = [("Do I have to pay to see jobs or to apply?", "No. Every job is public and free to apply to, on the employer’s own page. Plus adds help with applying; it does not unlock listings."),
-                ("How do I pay?", "In crypto, on a checkout page: USDT, BTC, ETH and other coins. Cards and bank transfers are not taken yet."),
+                ("Are job alerts free?", ("Yes. Job alerts by email and saved jobs on every device come with a free account. " if api_on else
+                                          "Yes. Job alerts by email and saved jobs on every device will come with a free account. ") + "Plus is only the AI help."),
+                ("How do I pay?", "In crypto, on a checkout page: USDT, BTC, ETH and other coins, or with prepaid credits. Cards and bank transfers are not taken yet."),
                 ("Will I be charged again?", "No. Every price here is a single payment. Nothing renews by itself, there is no card on file and nothing to cancel."),
-                ("Why are the prices so low?", "They are launch prices, about a third of the regular ones, while the paid plans are new. The regular price is the one crossed out."),
-                ("Can I buy today?", "Not yet. Payments are being connected; until then everything in the Free and Standard columns works as it does today.")]
-    price_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in price_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    extra_rows = "".join(f"<tr><td><strong>{e(p_['name'])}</strong></td><td>{was_of(p_['name'])}<strong>{e(p_['price'])}</strong></td><td>{e(p_['what'])}</td></tr>"
-                         for p_ in CFG["prices"] if p_["name"] not in ("Standard listing", "Featured job", "Pinned job"))
-    low_day = min((per_day(pl) for pl in plus["plans"]), key=lambda x: int(x.split()[0])) if plus["plans"] else ""
-    # Plan cards first (plan, price, button: how every pricing page that sells is read), the line-by-line tables under them.
-    # "Recommended" is our advice, said as such; "most popular" would be a claim about sales that have not happened.
-    def pcard(name, price, per, sub, btn, fine="", chip="", was="", best=False, ticks=None):
-        return (f'<div class="pcard{" best" if best else ""}">' + ('<span class="pband">Recommended</span>' if best else "")
-                + f'<p class="pk-n">{e(name)}</p><p class="pk-p"><b>{e(price)}</b><span>{e(per)}</span></p>'
-                + '<p class="pk-s">' + (f"<s>{e(was)}</s>" if was else "") + (f'<span class="pchip">{e(chip)}</span>' if chip else "") + "</p>"
-                + f'<p class="pk-d">{e(sub)}</p>{btn}' + (f'<p class="pk-f">{e(fine)}</p>' if fine else "") + (tick(ticks) if ticks else "") + "</div>")
-    def plus_btn(best):
-        kind = "primary" if best else "ghost"
-        return (f'<a class="btn {kind}" href="{P}/plus/#pay">Get Plus</a>' if plus.get("live") else f'<a class="btn {kind}" href="{P}/plus/">See what Plus does</a>')      # not on sale yet: a dead grey button teaches nothing, the Plus page does
+                ("When does a purchase start?", "By itself, once the network confirms the payment, and at once when it is paid with credits. A new job still has to pass the check before it goes live; paying does not skip it."),
+                ("Why are the prices lower than at Indeed or Teal?", "Prices here are fixed and printed, paid once, with no sales team and no auction, and the job search around them is free. "
+                 f"A Standard boost is {price_of('Standard boost')} for 30 days, where a sponsored job at Indeed is estimated at $150–$750"
+                 + (f"; 30 days of Plus are {pl30['price']}, where Teal+ is $29." if pl30 else ".")),
+                ("What are credits?", "Prepaid dollars: 1 credit = $1, with a 10% bonus on a $500 top-up and 20% on $1,000. They last 12 months from the top-up and pay for every product here, "
+                 "for employers and job seekers; a purchase paid with credits starts at once."),
+                ("What if a boost brings no one?", "If a Standard or Premium boost that was paid for gets fewer than 10 clicks on Apply in its first 14 days, it runs for 30 more days at no cost, by itself."),
+                ("Can I buy today?", ("Posting a standard listing is open in the employer account, and paid products are bought from the same account. Until crypto payments are switched on, "
+                                      "the account says so and nothing can be charged. " if app_url else
+                                      "Not yet. Payments are being connected; until then everything in the Free and Standard columns works as it does today. ")
+                 + "Plus and the passes open when the AI service and payments are on.")]
+    seek_trust = trust(["One payment, nothing renews", "No card kept on file", "Paid in crypto or credits", "Jobs, alerts and the resume builder stay free"])
     seek_cards = ('<div class="pgrid">'
-                  + pcard("Free", "$0", "forever", "Everything needed to find a job and apply.", f'<a class="btn ghost" href="{P}/for-you/">Start free</a>', "No account, no card.",
-                          ticks=["Every job and the link to apply", "Search, 23 fields of work, salary data", "Resume builder: 5 templates, PDF and Word", "Resume examples and letter templates", "Application tracker on this device"])
+                  + pcard("Free", "$0", "forever", "Everything needed to find a job and apply.", f'<a class="btn ghost" href="{P}/for-you/">Start free</a>', "No card.",
+                          ticks=["Every job and the link to apply", f"Search, {len(fam_rows)} fields of work, salary data", alerts_free, saved_free, "Resume builder: 5 templates, PDF and Word",
+                                 "Resume examples and letter templates"])
                   + '<div class="pside"><div class="pcards c3">'
                   + "".join(pcard(f"Plus · {pl['name']}", pl["price"], f"for {pl['name']}", " · ".join(x for x in (pl.get("per", ""), per_day(pl)) if x), plus_btn(pl.get("best")),
-                                  "One payment. It ends by itself; nothing renews.", chip=pl.get("note", ""), was=pl.get("was", ""), best=bool(pl.get("best"))) for pl in plus["plans"])
+                                  "One payment. It ends by itself; nothing renews.", chip=pl.get("note", ""), best=bool(pl.get("best"))) for pl in plans_)
                   + '</div><div class="pincl"><p class="pk-n">Every Plus plan includes everything in Free, and</p>'
-                  + tick(["AI resume writer and editor", "Resume reworded for each posting", "AI resume review: score and rewrites", "AI cover, thank-you and resignation letters", "Interview practice for the posting",
-                          "An email the day a job fits", "Pay check with a negotiating script", "Your jobs and resumes on every device"]) + "</div></div></div>") if plus["plans"] else ""
-    def emp_btn(best):
-        kind = "primary" if best else "ghost"
-        return f'<a class="btn {kind}" href="{e(app_url)}">Post a job</a>' if app_url else f'<a class="btn {kind}" href="{P}/post-a-job/">How posting works</a>'
+                  + tick(["AI resume writer and editor", "Resume reworded for each posting, with the keywords it misses", "AI resume review: score and rewrites", "AI cover and resignation letters",
+                          "Interview practice: questions from the posting, feedback on your answers", f"Each calendar month: {ai_allow}"]) + "</div></div></div>") if plans_ else ""
+    seek_passes = (('<h3 class="cmp-h">Or pay for one task</h3><div class="paddons">'
+                    + "".join(acard(ps["name"], ps["price"], "once", ps["what"]) for ps in passes_) + "</div>") if passes_ else "")
+    seek_fit = fit([r_ for r_ in (
+        (pl7["name"], "A few applications to send this week, with their letters and the interview practice.") if pl7 else None,
+        (pl30["name"], "An active search: dozens of applications, each with its own resume and letter. Our advice for most people.") if pl30 else None,
+        (pl90["name"], "A long search, or one that has not started yet. The lowest price a day.") if pl90 else None,
+        ("One pass", f"One posting that matters: {ps_res['price']} for the resume and letter, {ps_int['price']} for a mock interview.") if ps_res and ps_int else None) if r_])
     emp_cards = ('<div class="pcards c3">'
                  + pcard("Standard", "Free", "for 30 days", "Your job in the list and in search, like every other job here.", emp_btn(False),
-                         ticks=["Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close or renew it yourself"])
-                 + pcard("Featured", price_of("Featured job"), "for 14 days", "A highlighted row that stays above the regular listings of its category.", emp_btn(True), "One payment per job.",
-                         was=PRICE.get("Featured job", {}).get("was", ""), best=True,
-                         ticks=["Everything in Standard", "Highlighted row with a “Featured” mark", "Above regular listings for 14 days", "Views and clicks to apply in your account"])
-                 + pcard("Pinned", price_of("Pinned job"), "for 7 days", "The first row on the home page and in its category.", emp_btn(False), "One payment per job.",
-                         was=PRICE.get("Pinned job", {}).get("was", ""),
-                         ticks=["Everything in Featured", "First row of the home page for 7 days", "First row of its category", "Included in the feeds other sites read"]) + "</div>")
-    # What pricing pages of other job sites have in common, taken into this one (PRICING_RESEARCH.md, 44 sites): three choices, a marked
-    # middle one, short promises above the cards, "which plan fits", a comparison table and questions under them. Not taken: cheap trials
-    # that renew at a higher price, countdowns, extras ticked in advance.
-    # The figures below were read from the sites' own public price pages on MARKET["date"]. Re-read those pages before changing one.
-    MARKET = {"date": "13 Nov 2026", "seeker_month": 29,
-              "seeker_sites": ["Enhancv", "Himalayas", "Kickresume", "FlexJobs", "Zety", "Teal", "Rezi", "Resume.io", "Simplify", "Huntr", "Jobscan"],
-              "post": 299, "post_sites": ["Jobicy", "Working Nomads", "Remote3", "We Work Remotely", "Remote OK", "Remotive", "Cryptocurrency Jobs", "Dice"]}
-    trust = lambda items: '<ul class="ptrust">' + "".join(f"<li>{e(x)}</li>" for x in items) + "</ul>"
-    def pvs(them_big, them_txt, us_big, us_txt, src):
-        return (f'<div class="pvs"><div><p class="pvs-l">Elsewhere</p><p class="pvs-n">{e(them_big)}</p><p>{e(them_txt)}</p></div>'
-                f'<div class="us"><p class="pvs-l">Here</p><p class="pvs-n">{e(us_big)}</p><p>{e(us_txt)}</p></div><p class="pvs-s">{e(src)}</p></div>')
-    fit = lambda rows: '<div class="pfit">' + "".join(f"<div><b>{e(a)}</b>{e(b)}</div>" for a, b in rows) + "</div>"
-    seek_trust = trust(["One payment, nothing renews", "No card kept on file", "Paid in crypto", "The free part stays free"])
-    seek_vs = pvs(f"${MARKET['seeker_month']} a month", f"The median price of {len(MARKET['seeker_sites'])} job-search services that sell by the month. Almost all of them renew by themselves.",
-                  f"{plus['plans'][0]['price']} for a month", "One payment that ends by itself. Longer plans cost less per month.",
-                  f"Prices on the public pages of {', '.join(MARKET['seeker_sites'])}, read on {MARKET['date']}.") if plus["plans"] else ""
-    seek_fit = fit([("1 month", "You are already interviewing and want the letters and the interview practice for these weeks."),
-                    ("3 months", "You are starting a search and do not know how long it will take. This is the one we recommend."),
-                    ("12 months", "You change jobs or take contracts through the year, or want the lowest price per month.")])
-    emp_trust = trust(["A standard listing is free", "No subscription", "On within the hour after payment", "Paid in crypto"])
-    emp_vs = pvs(f"${MARKET['post']}", f"The median price of one 30-day job post on {len(MARKET['post_sites'])} job boards that print a price.",
-                 "Free", f"For a standard 30-day listing. {price_of('Featured job')} puts it above the regular ones for 14 days.",
-                 f"Prices on the public pages of {', '.join(MARKET['post_sites'])}, read on {MARKET['date']}.")
+                         ticks=["Its own page, readable by Google’s job box", "A link straight to your application page", "Checked before it goes live", "Close it yourself, any time"])
+                 + pcard("Standard boost", price_of("Standard boost"), "for 30 days", "A highlighted row above the free jobs in its lists.", emp_btn(True), "One payment per job.", best=True,
+                         ticks=["Everything in Standard", "Highlighted row with a “Featured” mark", "Above the free jobs for 30 days", "Views and clicks on Apply in your account", "A free re-run if under 10 clicks"])
+                 + pcard("Premium boost", price_of("Premium boost"), "for 30 days", "A turn in the top 3, the urgent badge and an invitation to people who match.", emp_btn(False), "One payment per job.",
+                         ticks=["Everything in the Standard boost", "Top 3 of its lists, taking turns", "“Urgently hiring” for the first 14 days", "Your logo and a cover image", "One email to up to 50 matching job seekers"]) + "</div>")
+    extra_rows = "".join(f"<tr><td><strong>{e(p_['name'])}</strong></td><td><strong>{e(p_['price'])}</strong> <span class=\"note\">{e(term(p_['name']))}</span></td><td>{e(p_['what'])}</td></tr>"
+                         for p_ in CFG["prices"] if p_["name"] not in ("Standard listing", "Standard boost", "Premium boost") and not is_credits(p_["name"]))
+    if credits_:      # the four top-ups in one row: the same product at four sizes
+        extra_rows += ("<tr><td><strong>Prepaid credits</strong></td><td>" + ", ".join(f"<strong>{e(p_['price'])}</strong>" + (f" for {e(p_['name'])}" if bonus(p_) else "") for p_ in credits_)
+                       + '</td><td>1 credit = $1, with a bonus on the two larger top-ups. Credits pay for every product here, for employers and job seekers, and last 12 months '
+                         "from the top-up; a purchase paid with credits switches on at once.</td></tr>")
     emp_fit = fit([("Standard", "One role and no hurry. It is in the list and in search like every other job."),
-                   ("Featured", "A role that must be seen this fortnight. This is the one we recommend."),
-                   ("Pinned", "A launch or an urgent hire: the first row of the home page for a week.")])
-    page("pricing/", f"Pricing: free for job seekers, Plus from {plus['plans'][0]['price'] if plus['plans'] else ''}, featured jobs from {price_of('Featured job')} | {SITE}",
-         f"What is free and what is paid, side by side. Job seekers: every job and the resume builder are free, Plus adds an AI writer from {low_day}. Employers: a standard listing is free, a featured job is {price_of('Featured job')}.",
+                   ("Standard boost", "A role that must be seen this month. Our advice for most roles."),
+                   ("Premium boost", "A hard or urgent hire: the top 3 of its lists, the urgent badge and an invitation to people who match."),
+                   ("Hiring Pass", "Several open roles at one company: every job boosted for 30 days, three of them Premium, and the spotlight.")])
+    emp_trust_p = trust(["A standard listing is free", "One payment, nothing renews", "On by itself once paid", "Paid in crypto or credits"])
+    page("pricing/", f"Pricing: Free Job Search, Plus from {plans_[0]['price'] if plans_ else '$9'}, Boosts from {price_of('Standard boost')} | {SITE}",
+         f"What is free and what is paid. Job seekers: every job, alerts and the resume builder are free; AI Plus from {plans_[0]['price'] if plans_ else '$9'}. Employers: posting is free, boosts from {price_of('Standard boost')}.",
          crumbs(("Pricing", "")) + '<h1>Pricing: what is free and <span class="hl">what you pay for</span></h1>'
-         '<p class="lead">Two sets of plans, because a person looking for work and a company hiring buy different things. Pick yours.</p>'
+         '<p class="lead">Two sets of plans, because a person looking for work and a company hiring buy different things. Every price is one payment in crypto; nothing renews. Pick yours.</p>'
          '<p class="tabs pswitch" id="pswitch" hidden><button class="tab" type="button" data-v="s" aria-pressed="true">I’m looking for work</button><button class="tab" type="button" data-v="e" aria-pressed="false">I’m hiring</button></p>'
-         + LAUNCH
-         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_trust}{seek_cards}{seek_vs}<h3 class="cmp-h">Which plan fits</h3>{seek_fit}<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}'
+         + f'<section class="sec" id="for-seekers"><div class="sec-head"><h2>Looking for work</h2><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_trust}{seek_cards}{seek_passes}'
+           f'<h3 class="cmp-h">Plus against Teal+ and Jobright Turbo</h3>{seek_vs}<h3 class="cmp-h">Which plan fits</h3>{seek_fit}'
+           '<p class="note">“Recommended by us” is our advice for an active search, not a count of sales.</p>'
+           f'<h3 class="cmp-h">Free and Plus, line by line</h3>{seek_pt}<h3 class="cmp-h">What the same things cost elsewhere</h3>{seek_sum}{seek_cmp}'
            f'<p><a class="btn primary" href="{P}/for-you/">Start free with five questions</a> <a class="btn ghost" style="margin-top:0" href="{P}/plus/">See Plus</a></p></section>'
-         + f'<section class="sec" id="for-employers"><div class="sec-head"><h2>Hiring</h2><a href="{P}/post-a-job/">See a featured job</a></div>'
-           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_trust + emp_cards + emp_vs + '<h3 class="cmp-h">Which plan fits</h3>' + emp_fit + '<h3 class="cmp-h">Standard, Featured and Pinned, line by line</h3>' + emp_pt
-           + f'<h3>More ways to be seen</h3><div class="tablewrap"><table><tr><th>Placement</th><th>Price</th><th>What you get</th></tr>{extra_rows}</table></div>'
-           f'<p><a class="btn primary" href="{P}/post-a-job/">Post a job</a></p></section>'
-         + section("Questions about prices and payment", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in price_qa) + "</dl>"), head=price_ld)
+         + f'<section class="sec" id="for-employers"><div class="sec-head"><h2>Hiring</h2><a href="{P}/post-a-job/">See how a boost looks</a></div>'
+           + ("" if app_url else '<div class="banner">Self-serve posting is being finished and is not open yet. Nothing can be bought today.</div>') + emp_trust_p + emp_cards + emp_vs
+           + '<h3 class="cmp-h">Which plan fits</h3>' + emp_fit + '<p class="note">“Recommended by us” is our advice for a role that has to be seen this month, not a count of sales.</p>'
+           + '<h3 class="cmp-h">Standard, Standard boost and Premium boost, line by line</h3>' + emp_pt
+           + f'<h3 class="cmp-h">Hiring Pass, add-ons, credits and resume search</h3><div class="tablewrap"><table><tr><th>Product</th><th>Price</th><th>What you get</th></tr>{extra_rows}</table></div>'
+           + '<h3 class="cmp-h">Our guarantee</h3>' + guarantee
+           + '<h3 class="cmp-h">What the same things cost elsewhere</h3>' + emp_sum + emp_cmp
+           + f'<p><a class="btn primary" href="{P}/post-a-job/">Post a job</a></p></section>'
+         + section("Questions about prices and payment", faq_html(price_qa)), head=faq_ld(price_qa))
     # "Jobs near me" and "part time jobs near me": among the most searched job phrases in every country.
     # The country comes from the device's time zone (nothing is sent anywhere); the nearest city only if the visitor allows location, and it is worked out in the browser.
     CITY_LL = {"new-york": (40.71, -74.01), "san-francisco": (37.77, -122.42), "seattle": (47.61, -122.33), "austin": (30.27, -97.74), "chicago": (41.88, -87.63), "boston": (42.36, -71.06),

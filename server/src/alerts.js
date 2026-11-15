@@ -23,7 +23,10 @@ export const ALERTS_PER_EMAIL = 5;         // alerts one address may have
 export const CONFIRMS_PER_EMAIL_DAY = 3;   // confirmation letters one address may get in a day, whoever asks
 export const SIGNUPS_PER_IP_HOUR = 10;     // sign-ups one visitor's address may send in an hour
 const DAY = 86400, SLACK = 1800;           // the next letter is due a little under a day (or a week) later, so the hourly run does not drift
-export const PERIOD = { daily: DAY, weekly: 7 * DAY };
+// instant: an alert of a signed-in account (its address is confirmed) may come within the hour a matching job is read, one letter an
+// hour at most; a sign-up form offers daily and weekly only (see readAlert)
+export const PERIOD = { instant: 3600, daily: DAY, weekly: 7 * DAY };
+const INSTANT_GAP = 50 * 60;               // an address gets an instant letter, then none for this long
 
 const enc = new TextEncoder();
 const hex = (buf) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
@@ -59,11 +62,12 @@ export function cleanWords(q) {
 export class AlertInputError extends Error { constructor(code, message) { super(message); this.code = code; } }
 const truthy = (v) => v === true || v === 1 || ['1', 'true', 'on', 'yes'].includes(String(v == null ? '' : v).toLowerCase());
 // From a form or JSON: { q, cat, loc, remote, sal, freq }. The search page's own parameter names are taken too.
-export function readAlert(b) {
+// opts.instant: the account page (a confirmed address) may ask for "instant"; a form anyone can send may not
+export function readAlert(b, opts = {}) {
   const cat = String(b.cat || '').trim(), loc = String(b.loc || '').trim().toLowerCase(), freq = String(b.freq || 'daily');
   if (cat && !Object.hasOwn(CATEGORIES, cat)) throw new AlertInputError('cat', 'Choose a category from the site.');
   if (loc && !/^[a-z0-9]+(?:-[a-z0-9]+){0,5}$/.test(loc)) throw new AlertInputError('loc', 'Choose a place from the site.');
-  if (!PERIOD[freq]) throw new AlertInputError('freq', 'Choose daily or weekly.');
+  if (!Object.hasOwn(PERIOD, freq) || (freq === 'instant' && !opts.instant)) throw new AlertInputError('freq', opts.instant ? 'Choose instant, daily or weekly.' : 'Choose daily or weekly.');
   const salRaw = Number(String(b.sal == null ? '' : b.sal).replace(/[^\d.]/g, '')) || 0;
   if (salRaw < 0 || salRaw > 2000000) throw new AlertInputError('sal', 'Enter the least yearly pay in US dollars, or leave it empty.');
   return { q: cleanWords(b.q), cat, loc: loc.slice(0, 60), remote: truthy(b.remote) ? 1 : 0, sal: Math.round(salRaw / 1000) * 1000, freq };
@@ -149,8 +153,8 @@ export async function alertLetter(env, a, jobs, total) {
   const text = (total === 1 ? '1 new job' : total + ' new jobs') + ' for your alert “' + describe(a) + '” since ' + since.toUTCString().slice(5, 16) + '.' +
     (total > n ? ' The newest ' + n + ' are below.' : '') + '\n\n' + jobs.map((j, i) => jobLine(env, j, i)).join('\n\n') + '\n\n' +
     (total > n ? 'All ' + total + ' and older ones: ' : 'The same search on the site: ') + searchLink(env.SITE_URL, a) + '\n\n' +
-    '—\nYou get this letter because this address asked for ' + (a.freq === 'weekly' ? 'weekly' : 'daily') + ' job alerts at ' + siteHost(env) + ' and confirmed it.\n' +
-    'Unsubscribe, or get it ' + (a.freq === 'weekly' ? 'daily' : 'weekly') + ' instead: ' + unsub + '\n' + 'This address gets one letter a day at most, whatever alerts it has.\n' +
+    '—\nYou get this letter because this address asked for ' + (a.freq === 'weekly' ? 'weekly' : a.freq === 'instant' ? 'instant' : 'daily') + ' job alerts at ' + siteHost(env) + ' and confirmed it.\n' +
+    'Unsubscribe, or get it ' + (a.freq === 'weekly' ? 'daily' : 'weekly') + ' instead: ' + unsub + '\n' + (a.freq === 'instant' ? 'Instant alerts come within the hour a matching job is read, one letter an hour at most.\n' : 'This address gets one letter a day at most, whatever alerts it has.\n') +
     siteName(env) + ' reads open jobs from employers’ own careers pages every hour. The letter has no images and its links are not counted.\n';
   return { subject: (total === 1 ? '1 new job: ' : total + ' new jobs: ') + describe(a).slice(0, 80), text,
     headers: { 'List-Unsubscribe': '<' + unsub + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'List-Id': 'Job alerts <alerts.' + siteHost(env) + '>', Precedence: 'bulk' } };
@@ -221,16 +225,19 @@ export async function runAlerts(env, records, { now = Math.floor(Date.now() / 10
       await db("UPDATE alerts SET seen_through = ?, due_at = ? WHERE id = ? AND status = 'active'", upto, next, a.id).run();
       out.empty++; continue;
     }
-    if (!lastLetter.has(a.email)) lastLetter.set(a.email, Number(await db("SELECT MAX(last_sent_at) AS t FROM alerts WHERE email = ? AND status = 'active'", a.email).first('t')) || 0);
-    const last = lastLetter.get(a.email);
-    if (last && last > now - ONE_LETTER_GAP) {                                               // the address had its letter today: this one joins the next
-      await db("UPDATE alerts SET due_at = ? WHERE id = ? AND status = 'active'", last + DAY - SLACK, a.id).run();
+    // instant alerts and the others keep apart: the daily letter of an address does not wait for its instant ones, and back
+    const instant = a.freq === 'instant', box = a.email + (instant ? '\ninstant' : '');
+    if (!lastLetter.has(box)) lastLetter.set(box, Number(await db("SELECT MAX(last_sent_at) AS t FROM alerts WHERE email = ? AND status = 'active' AND (freq = 'instant') = ?", a.email, instant ? 1 : 0).first('t')) || 0);
+    const last = lastLetter.get(box), gap = instant ? INSTANT_GAP : ONE_LETTER_GAP;
+    if (last && last > now - gap) {                                                          // the address had its letter: this one joins the next
+      await db("UPDATE alerts SET due_at = ? WHERE id = ? AND status = 'active'", instant ? last + 3600 - 600 : last + DAY - SLACK, a.id).run();
       out.waited++; continue;
     }
-    if (!byEmail.has(a.email)) byEmail.set(a.email, []);
-    byEmail.get(a.email).push({ a, hits, next, upto });
+    if (!byEmail.has(box)) byEmail.set(box, []);
+    byEmail.get(box).push({ a, hits, next, upto });
   }
-  for (const [email, group] of byEmail) {
+  for (const [box, group] of byEmail) {
+    const email = box.split('\n')[0];
     const still = [];
     for (const g of group) if ((await db('SELECT status FROM alerts WHERE id = ?', g.a.id).first('status')) === 'active') still.push(g);      // unsubscribed meanwhile
     if (!still.length) continue;

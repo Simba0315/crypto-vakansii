@@ -1,4 +1,8 @@
 // End-to-end tests for the API worker. Run:  node --no-warnings server/test/run.mjs
+// Changed on 2026-11-15 for the owner's new product line (PRODUCTS in src/worker.js), and only where a test names a product, an amount or
+// a number of days: featured is the Standard boost ($99, 30 days; it was $29 for 14), pinned and the 5-job pack are gone (their tests buy
+// a Standard boost, a bump or prepaid credits instead; pack credits are now credits of $1 each), Plus is $9 / $19 / $39 for 7 / 30 / 90
+// days. The new products have their own section, 36.
 // Changed in sections 1, 3, 5 and 14 on 2026-11-13, and nothing else in them: the amounts. The owner lowered every price to the launch
 // prices (featured 99 -> 29, pinned 199 -> 59, 5-job pack 399 -> 119, spotlight 499 -> 149, sponsor 299 -> 89; Plus 9 / 19 / 39 ->
 // 3 / 7 / 12), so the tests that name what an order costs name the new figures.
@@ -179,10 +183,10 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: SITE + '/job/old-role-stripe/' } } }); eq(r.status, 400, 'closed job refused');
   r = await call(env, 'POST', '/api/orders', { data: { product: 'featured', target: { job: 'staff-engineer-stripe' } } }); eq(r.status, 401, 'buying needs an account');
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: SITE + '/job/staff-engineer-stripe/?utm=1' } } });
-  eq([r.status, r.body.order.status, r.body.order.amount_usd, r.body.order.label], [200, 'pending', 29, 'Staff Engineer at Stripe'], 'order created');
+  eq([r.status, r.body.order.status, r.body.order.amount_usd, r.body.order.label], [200, 'pending', 99, 'Staff Engineer at Stripe'], 'order created');
   const id = r.body.order.id, inv = world.invoices[id];
   ok(r.body.order.pay_url.startsWith('https://pay.cryptomus.com/'), 'checkout link returned');
-  eq([inv.amount, inv.currency, inv.url_callback, inv.url_success], ['29', 'USD', API + '/api/webhooks/cryptomus', SITE + '/account/?order=' + id], 'invoice sent to the gateway correctly');
+  eq([inv.amount, inv.currency, inv.url_callback, inv.url_success], ['99', 'USD', API + '/api/webhooks/cryptomus', SITE + '/account/?order=' + id], 'invoice sent to the gateway correctly');
   r = await call(env, 'GET', '/api/public/export.json'); eq(r.body.boosts, [], 'nothing is live before payment');
 
   // forged webhook: wrong signature, and the gateway says the invoice is unpaid
@@ -190,13 +194,13 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   r = await call(env, 'GET', '/api/orders/' + id, { token }); eq(r.body.order.status, 'pending', 'forged webhook does not activate anything');
 
   const before = world.githubCalls;
-  r = await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ type: 'payment', uuid: inv.uuid, order_id: id, amount: '29.00', status: 'paid', is_final: true }) });
+  r = await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ type: 'payment', uuid: inv.uuid, order_id: id, amount: '99.00', status: 'paid', is_final: true }) });
   eq(r.status, 200, 'webhook acknowledged');
   r = await call(env, 'GET', '/api/orders/' + id, { token }); eq([r.body.order.status, r.body.order.pay_url], ['paid', ''], 'order is paid');
   r = await call(env, 'GET', '/api/public/export.json');
   eq(r.body.boosts.map((b) => [b.slug, b.kind]), [['staff-engineer-stripe', 'featured']], 'featured job is exported to the site');
-  const until = r.body.boosts[0].until, want = new Date(Date.now() + 14 * 86400e3).toISOString().slice(0, 10);
-  eq(until, want, 'featured for 14 days');
+  const until = r.body.boosts[0].until, want = new Date(Date.now() + 30 * 86400e3).toISOString().slice(0, 10);
+  eq(until, want, 'Standard boost (featured) for 30 days');
   eq(world.githubCalls, before + 1, 'site rebuild requested once');
   r = await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: id, status: 'paid', is_final: true }) });
   r = await call(env, 'GET', '/api/placements', { token }); eq(r.body.placements.length, 1, 'a repeated webhook does not double the placement');
@@ -206,7 +210,7 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' } } });
   await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: r.body.order.id, status: 'paid_over' }) });
   r = await call(env, 'GET', '/api/public/export.json');
-  eq(r.body.boosts[0].until, new Date(Date.now() + 28 * 86400e3).toISOString().slice(0, 10), 'second purchase adds 14 more days');
+  eq(r.body.boosts[0].until, new Date(Date.now() + 60 * 86400e3).toISOString().slice(0, 10), 'second purchase adds 30 more days');
   eq(world.githubCalls, before + 1, 'rebuilds are not sent more than once in ten minutes');
   await worker.scheduled({}, env);
   eq(world.githubCalls, before + 1, 'held-back rebuild waits for the ten minutes to pass');
@@ -226,10 +230,10 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
 /* ---- 4. webhook lost: the status is fetched from the gateway; underpayment; expiry ---- */
 {
   const env = newEnv(), token = await account(env);
-  let r = await call(env, 'POST', '/api/orders', { token, data: { product: 'pinned', target: { job: 'staff-engineer-stripe' } } });
+  let r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' } } });
   const id = r.body.order.id; world.invoices[id].status = 'paid';
   r = await call(env, 'GET', '/api/orders/' + id + '?refresh=1', { token }); eq(r.body.order.status, 'paid', 'payment found by asking the gateway');
-  r = await call(env, 'GET', '/api/public/export.json'); eq(r.body.boosts.map((b) => b.kind), ['pinned'], 'pinned job exported');
+  r = await call(env, 'GET', '/api/public/export.json'); eq(r.body.boosts.map((b) => b.kind), ['featured'], 'boosted job exported');
 
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' } } });
   await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: r.body.order.id, status: 'wrong_amount' }) });
@@ -249,7 +253,7 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   const env = newEnv(), token = await account(env);
   const pay = async (data) => { const r = await call(env, 'POST', '/api/orders', { token, data }); if (r.status === 200) await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: r.body.order.id, status: 'paid' }) }); return r; };
   let r = await pay({ product: 'spotlight', target: { company: 'Nobody Inc' } }); eq(r.status, 400, 'spotlight for an unknown company refused');
-  r = await pay({ product: 'spotlight', target: { company: 'stripe' } }); eq([r.status, r.body.order.label, r.body.order.amount_usd], [200, 'Stripe', 149], 'spotlight ordered, name normalised');
+  r = await pay({ product: 'spotlight', target: { company: 'stripe' } }); eq([r.status, r.body.order.label, r.body.order.amount_usd], [200, 'Stripe', 299], 'spotlight ordered, name normalised');
   r = await pay({ product: 'sponsor', target: { company: 'Harvey', page: 'skill:cobol-9000' } }); eq(r.status, 400, 'sponsoring a page that does not exist refused');
   r = await pay({ product: 'sponsor', target: { company: 'Harvey', page: 'skill:rust' } }); eq(r.status, 200, 'skill page sponsorship ordered');
   r = await pay({ product: 'sponsor', target: { company: 'Harvey', page: 'category:engineering' } }); eq(r.status, 200, 'category sponsorship ordered');
@@ -257,25 +261,25 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   eq(r.body.sponsors.map((s) => s.company + '/' + s.slot).sort(), ['Harvey/category:engineering', 'Harvey/skill:rust', 'Stripe/spotlight'], 'sponsors exported in the format the site build expects');
 
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' }, use_credit: true } }); eq(r.status, 409, 'no credits, no free listing');
-  r = await pay({ product: 'pack5' }); eq(r.body.order.amount_usd, 119, 'pack ordered');
-  r = await call(env, 'GET', '/api/me', { token }); eq(r.body.user.credits, 5, 'pack gives five credits');
+  r = await pay({ product: 'credits100' }); eq(r.body.order.amount_usd, 100, 'credits ordered');
+  r = await call(env, 'GET', '/api/me', { token }); eq(r.body.user.credits, 100, 'a top-up of $100 gives 100 credits');
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' }, use_credit: true } });
-  eq([r.status, r.body.order.status, r.body.order.amount_usd], [200, 'paid', 0], 'credit turns into a featured job at once');
-  r = await call(env, 'GET', '/api/me', { token }); eq(r.body.user.credits, 4, 'one credit used');
-  r = await call(env, 'POST', '/api/orders', { token, data: { product: 'pinned', target: { job: 'staff-engineer-stripe' }, use_credit: true } }); eq(r.status, 400, 'credits only buy featured jobs');
+  eq([r.status, r.body.order.status, r.body.order.amount_usd], [200, 'paid', 0], 'credits turn into a boosted job at once');
+  r = await call(env, 'GET', '/api/me', { token }); eq(r.body.user.credits, 1, '99 credits used');
+  r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' }, use_credit: true } }); eq(r.status, 409, 'not enough credits left for a second boost');
 }
 
 /* ---- 6. Plus ---- */
 {
   let env = newEnv(), token = await account(env);
-  let r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus3' } }); eq(r.status, 409, 'Plus cannot be bought before it is on sale');
+  let r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus90' } }); eq(r.status, 409, 'Plus cannot be bought before it is on sale');
   r = await call(env, 'GET', '/api/public/products'); ok(!r.body.products.some((p) => p.group === 'plus') && r.body.payments === 'on', 'Plus is not listed before it is on sale');
   r = await call(env, 'PUT', '/api/sync', { token, data: { data: { a: 1 } } }); eq(r.status, 200, 'sync between devices is free for an account with a confirmed email (it was a Plus feature until 15 Nov 2026)');
   env = newEnv({ PLUS_LIVE: '1' }); token = await account(env);
-  r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus3' } });
+  r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus90' } });
   await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: r.body.order.id, status: 'paid' }) });
   r = await call(env, 'GET', '/api/me', { token });
-  eq([r.body.user.plus, r.body.user.plus_until], [true, new Date(Date.now() + 91 * 86400e3).toISOString().slice(0, 10)], 'Plus switched on for 3 months');
+  eq([r.body.user.plus, r.body.user.plus_until], [true, new Date(Date.now() + 90 * 86400e3).toISOString().slice(0, 10)], 'Plus switched on for 90 days');
   r = await call(env, 'PUT', '/api/sync', { token, data: { data: { jobs: { x: 1 } } } }); eq(r.status, 200, 'sync saved');
   r = await call(env, 'GET', '/api/sync', { token }); eq(r.body.data, { jobs: { x: 1 } }, 'sync read back');
 }
@@ -457,32 +461,32 @@ async function quiet(run) {                    // runs something that is expecte
   r = await hook(env, id);
   eq([r.status, await status(id), await one(env, 'SELECT COUNT(*) FROM placements WHERE order_id = ?', id)], [200, 'paid', 1], 'the repeated webhook then activates the order in full');
 
-  id = await buy({ product: 'pack5' });
-  await breakWrites('credits');
+  id = await buy({ product: 'credits100' });
+  await breakWrites('wallet_lots');
   await quiet(() => hook(env, id));
-  eq([await status(id), (await me()).credits], ['pending', 0], 'a pack whose credits could not be written stays unpaid');
+  eq([await status(id), (await me()).credits], ['pending', 0], 'a top-up whose credits could not be written stays unpaid');
   await mendWrites();
-  await hook(env, id); eq([await status(id), (await me()).credits], ['paid', 5], 'and is delivered by the next webhook');
+  await hook(env, id); eq([await status(id), (await me()).credits], ['paid', 100], 'and is delivered by the next webhook');
 
-  id = await buy({ product: 'pack5' }); await Promise.all(Array.from({ length: 8 }, () => hook(env, id)));
-  eq((await me()).credits, 10, 'eight webhooks at the same moment deliver a pack once');
-  id = await buy({ product: 'plus1' }); await Promise.all(Array.from({ length: 8 }, () => hook(env, id)));
-  eq((await me()).plus_until, new Date(Date.now() + 30 * 86400e3).toISOString().slice(0, 10), 'eight webhooks at the same moment add a month of Plus once');
-  id = await buy({ product: 'pinned', target: { job: 'staff-engineer-stripe' } });
+  id = await buy({ product: 'credits100' }); await Promise.all(Array.from({ length: 8 }, () => hook(env, id)));
+  eq((await me()).credits, 200, 'eight webhooks at the same moment deliver a top-up once');
+  id = await buy({ product: 'plus30' }); await Promise.all(Array.from({ length: 8 }, () => hook(env, id)));
+  eq((await me()).plus_until, new Date(Date.now() + 30 * 86400e3).toISOString().slice(0, 10), 'eight webhooks at the same moment add 30 days of Plus once');
+  id = await buy({ product: 'featured', target: { job: 'staff-engineer-stripe' } });
   world.invoices[id].status = 'paid'; await env.DB.prepare('UPDATE orders SET created_at = created_at - 600 WHERE id = ?').bind(id).run();
   await Promise.all([hook(env, id), worker.scheduled({}, env), call(env, 'GET', '/api/orders/' + id + '?refresh=1', { token }), reconcileOrders(env), hook(env, id)]);
   eq([await status(id), await one(env, 'SELECT COUNT(*) FROM placements WHERE order_id = ?', id)], ['paid', 1], 'a webhook, the cron and the account page together activate an order once');
 
-  // a pack credit pays for a featured job in the same all-or-nothing step
-  await env.DB.exec('UPDATE credits SET remaining = 0; UPDATE credits SET remaining = 1 WHERE rowid = (SELECT MIN(rowid) FROM credits)');
+  // prepaid credits pay for a boost in the same all-or-nothing step
+  await env.DB.exec('UPDATE wallet_lots SET remaining = 0; UPDATE wallet_lots SET remaining = 99 WHERE rowid = (SELECT MIN(rowid) FROM wallet_lots)');
   const spend = () => call(env, 'POST', '/api/orders', { token, data: { ...FEATURED, use_credit: true } });
   await breakWrites('placements');
   await quiet(async () => { r = await spend(); });
-  eq([r.status, (await me()).credits], [500, 1], 'a credit is not spent when the listing it pays for could not be recorded');
+  eq([r.status, (await me()).credits], [500, 99], 'credits are not spent when the boost they pay for could not be recorded');
   await mendWrites();
   const two = await Promise.all([spend(), spend()]);
-  eq([two.map((x) => x.status).sort(), (await me()).credits], [[200, 409], 0], 'one credit cannot pay for two listings sent at the same moment');
-  eq(await one(env, "SELECT COUNT(*) FROM orders WHERE provider = 'credit' AND status = 'paid'"), 1, 'and exactly one of them is recorded as delivered');
+  eq([two.map((x) => x.status).sort(), (await me()).credits], [[200, 409], 0], 'credits for one boost cannot pay for two sent at the same moment');
+  eq(await one(env, "SELECT COUNT(*) FROM orders WHERE provider = 'wallet' AND status = 'paid'"), 1, 'and exactly one of them is recorded as delivered');
 
   let refused = false;
   try { await env.DB.prepare("INSERT INTO placements (id, order_id, user_id, kind, target, starts_at, ends_at) SELECT 'p_twice', order_id, user_id, kind, target, starts_at, ends_at FROM placements LIMIT 1").run(); } catch { refused = true; }
@@ -528,8 +532,8 @@ async function quiet(run) {                    // runs something that is expecte
   // for 30 days, so this test lets those days pass (the guard itself is tested in section 20)
   await env.DB.exec('UPDATE jobs SET ended_at = ended_at - 31 * 86400');
   r = await call(env, 'POST', '/api/jobs', { token, data: GOOD }); const third = r.body.job.id;
-  await pay(token, { product: 'pinned', target: { job_id: third } });
-  x = await exported(); eq([x.jobs.length, x.jobs[0].pinned_until > '2026', x.sponsors.length], [1, true, 2], 'a new job, pinned, and the spotlight of its company is back');
+  await pay(token, { product: 'featured', target: { job_id: third } });
+  x = await exported(); eq([x.jobs.length, x.jobs[0].featured_until > '2026', x.sponsors.length], [1, true, 2], 'a new job, boosted, and the spotlight of its company is back');
   await call(env, 'POST', '/api/admin/jobs/' + third + '/remove', { token: 'admin-secret' });
   x = await exported();
   eq([x.jobs.length, x.sponsors.length, await one(env, 'SELECT cancelled FROM placements WHERE target = ?', 'direct:' + third)], [0, 1, 1], 'a job the owner took down leaves the export and its placement is switched off');
@@ -560,7 +564,7 @@ async function quiet(run) {                    // runs something that is expecte
     await env.DB.prepare('UPDATE orders SET created_at = created_at - ? WHERE id = ?').bind(age, id).run();
     return id;
   };
-  const o = { paid: await order(6 * MIN, 'paid'), young: await order(2 * MIN, 'paid', 'pinned'), cancelled: await order(20 * MIN, 'cancel'), failed: await order(10 * MIN, 'fail'),
+  const o = { paid: await order(6 * MIN, 'paid'), young: await order(2 * MIN, 'paid', 'bump'), cancelled: await order(20 * MIN, 'cancel'), failed: await order(10 * MIN, 'fail'),
     short: await order(10 * MIN, 'wrong_amount'), open: await order(30 * MIN, 'check'), lapsed: await order(80 * MIN, 'check'), confirming: await order(3 * HOUR, 'confirm_check'),
     late: await order(5 * HOUR, 'paid_over'), unknown: await order(3 * HOUR, null), ancient: await order(25 * HOUR, null), stuck: await order(26 * HOUR, 'process') };
   world.asked = [];
@@ -586,8 +590,8 @@ async function quiet(run) {                    // runs something that is expecte
   await env.DB.exec('UPDATE orders SET checked_at = checked_at - 61'); await worker.scheduled({}, env);
   eq(await status(down), 'paid', 'cron: and it is settled on a later run');
 
-  const blocked = await order(10 * MIN, 'paid', 'pinned'), behind = await order(9 * MIN, 'paid');
-  await env.DB.exec("CREATE TRIGGER boom BEFORE INSERT ON placements WHEN NEW.kind = 'pinned' BEGIN SELECT RAISE(ABORT, 'no room'); END");
+  const blocked = await order(10 * MIN, 'paid', 'bump'), behind = await order(9 * MIN, 'paid');
+  await env.DB.exec("CREATE TRIGGER boom BEFORE INSERT ON placements WHEN NEW.kind = 'bump' BEGIN SELECT RAISE(ABORT, 'no room'); END");
   const logged = await quiet(() => worker.scheduled({}, env));
   await env.DB.exec('DROP TRIGGER boom');
   eq([await status(blocked), await status(behind), logged.length], ['pending', 'paid', 1], 'cron: an order that cannot be settled does not hold up the ones behind it');
@@ -616,7 +620,7 @@ async function quiet(run) {                    // runs something that is expecte
   polls = await Promise.all([poll(), poll(), poll(), poll(), poll()]);
   eq(world.asked.length, 2, 'order page: five refreshes at the same moment are one question to the gateway');
   r = await call(env, 'GET', '/api/orders/' + mine, { token }); eq(r.body.order.status, 'paid', 'order page: the payment is found without any webhook');
-  const next = await order(0, 'paid', 'pinned'); world.asked = [];
+  const next = await order(0, 'paid', 'bump'); world.asked = [];
   await env.DB.exec("UPDATE rate SET n = 60 WHERE k LIKE 'check:%'");
   r = await call(env, 'GET', '/api/orders/' + next + '?refresh=1', { token }); eq([r.status, r.body.order.status, world.asked.length], [200, 'pending', 0], 'order page: past the limit for one account it answers from what is stored');
   r = await call(env, 'GET', '/api/orders/' + next + '?refresh=1', { token: await account(env, 'other@x.dev') }); eq([r.status, world.asked.length], [404, 0], "order page: someone else's order is neither shown nor checked");
@@ -876,7 +880,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
     const before = world.fetched.length;
     r = await call(env, 'POST', '/api/jobs', { token, data: NOVA }); eq([r.status, r.body.error], [403, 'confirm_email'], 'A: an unconfirmed account cannot publish a job');
     r = await call(env, 'POST', '/api/orders', { token, data: { product: 'featured', target: { job: 'staff-engineer-stripe' } } }); eq([r.status, r.body.error], [403, 'confirm_email'], 'A: nor buy a placement');
-    r = await call(env, 'POST', '/api/orders', { token, data: { product: 'pack5' } }); eq([r.status, r.body.error], [403, 'confirm_email'], 'A: nor a pack of placements');
+    r = await call(env, 'POST', '/api/orders', { token, data: { product: 'credits100' } }); eq([r.status, r.body.error], [403, 'confirm_email'], 'A: nor prepaid credits');
     r = await call(env, 'POST', '/api/jobs/preview', { token, data: NOVA });
     eq([r.status, r.body.ok, r.body.confirmed, r.body.job.title, await one(env, 'SELECT COUNT(*) FROM jobs')], [200, true, false, NOVA.title, 0], 'A: it can have a draft checked, and nothing is stored');
     ok(!world.fetched.slice(before).includes(NOVA.apply_url), 'A: checking a draft opens no link');
@@ -890,7 +894,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
     r = await confirm(tok); eq([r.status, (await call(env, 'GET', '/api/me', { token })).body.user.confirmed], [200, true], 'A: the token from the mail confirms the account');
     r = await confirm(tok); eq([r.status, await one(env, 'SELECT COUNT(*) FROM confirms WHERE user_id = ?', uid)], [400, 0], 'A: a confirmation token works once and is gone from the database');
     r = await call(env, 'POST', '/api/jobs', { token, data: NOVA }); eq(r.status, 200, 'A: a confirmed account can post a job');
-    r = await call(env, 'POST', '/api/orders', { token, data: { product: 'pack5' } }); eq(r.status, 200, 'A: and buy');
+    r = await call(env, 'POST', '/api/orders', { token, data: { product: 'credits100' } }); eq(r.status, 200, 'A: and buy');
     r = await call(env, 'POST', '/api/auth/confirm/request', { token }); eq([r.status, r.body.confirmed, outbox.length], [200, true, 1], 'A: asking for a link again when the account is confirmed sends nothing');
 
     r = await sign('late@orbit.dev'); const late = r.body.token, lateTok = linkIn(outbox[1]);
@@ -1204,11 +1208,11 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   // paying does not skip review: what is bought is held, and starts with the approval
   const COMET = employer('comet.dev', 'Comet Works'), comet = await fresh(env, 'hr@comet.dev'), cometId = await one(env, "SELECT id FROM users WHERE email = 'hr@comet.dev'");
   const buy = async (who, id) => { const made = await call(env, 'POST', '/api/orders', { token: who, data: { product: 'featured', target: { job_id: id } } }); if (made.status === 200) await hook(env, made.body.order.id); return made; };
-  const bought = async (id) => (await env.DB.prepare('SELECT held, cancelled, starts_at, ends_at FROM placements WHERE target = ? ORDER BY starts_at').bind('direct:' + id).all()).results, TWO_WEEKS = 14 * 86400;
+  const bought = async (id) => (await env.DB.prepare('SELECT held, cancelled, starts_at, ends_at FROM placements WHERE target = ? ORDER BY starts_at').bind('direct:' + id).all()).results, TWO_WEEKS = 30 * 86400;      // a boost: 30 days (14 before the prices of 15 Nov 2026)
   r = await post(COMET('Senior Rust Engineer'), comet); const c1 = r.body.job.id;
   r = await buy(comet, c1); eq(r.status, 200, 'D: a placement can be bought for a job that waits for review');
-  eq([await bought(c1), await statusOf(env, c1)], [[{ held: 1, cancelled: 0, starts_at: 0, ends_at: TWO_WEEKS }], 'review'], 'D: paying does not skip review: the job still waits, and the placement is held with its 14 days untouched');
-  r = await call(env, 'GET', '/api/placements', { token: comet }); eq(r.body.placements.map((x) => [x.kind, x.state, x.days, x.until]), [['featured', 'held', 14, '']], 'D: the buyer sees the placement as held, with its days');
+  eq([await bought(c1), await statusOf(env, c1)], [[{ held: 1, cancelled: 0, starts_at: 0, ends_at: TWO_WEEKS }], 'review'], 'D: paying does not skip review: the job still waits, and the placement is held with its 30 days untouched');
+  r = await call(env, 'GET', '/api/placements', { token: comet }); eq(r.body.placements.map((x) => [x.kind, x.state, x.days, x.until]), [['featured', 'held', 30, '']], 'D: the buyer sees the placement as held, with its days');
   let x = (await call(env, 'GET', '/api/public/export.json')).body;
   ok(!x.jobs.some((j) => j.id === c1) && !JSON.stringify(x).includes(c1), 'D: neither the held job nor what was bought for it is exported');
   await buy(comet, c1);
@@ -1218,7 +1222,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   let rows = await bought(c1);
   ok(rows.every((p) => p.held === 0) && rows[0].starts_at >= t0 && rows[0].starts_at <= t0 + SLACK && rows[0].ends_at - rows[0].starts_at === TWO_WEEKS && rows[1].starts_at === rows[0].ends_at && rows[1].ends_at - rows[1].starts_at === TWO_WEEKS,
     'D: approval starts the held placements: their days run from the approval, one after the other', JSON.stringify(rows));
-  eq((await exportedJobs(env)).find((j) => j.id === c1).featured_until, new Date(Date.now() + 28 * 86400e3).toISOString().slice(0, 10), 'D: and the site gets the job as featured for all the days that were bought');
+  eq((await exportedJobs(env)).find((j) => j.id === c1).featured_until, new Date(Date.now() + 60 * 86400e3).toISOString().slice(0, 10), 'D: and the site gets the job as featured for all the days that were bought');
 
   r = await call(env, 'PATCH', '/api/jobs/' + c1, { token: comet, data: { location: 'Lisbon' } });
   eq([r.status, r.body.job.status, r.body.job.location, (await exportedJobs(env)).some((j) => j.id === c1)], [200, 'review', 'Lisbon', false], 'D: an edit by an account that is not trusted yet sends its live job back to review');
@@ -1255,7 +1259,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   const opened = () => world.fetched.filter((u) => u === LINK).length, aDayLater = () => cron.DB.exec('UPDATE jobs SET checked_at = checked_at - 90000');
   r = await call(cron, 'POST', '/api/jobs', { token: vega, data: VEGA }); const v1 = r.body.job.id;
   eq([r.body.job.status, await one(cron, 'SELECT apply_host FROM jobs')], ['live', 'vega.dev'], 'D: recheck: (a live job; the host its link ends on is kept)');
-  r = await call(cron, 'POST', '/api/orders', { token: vega, data: { product: 'pinned', target: { job_id: v1 } } }); await hook(cron, r.body.order.id);
+  r = await call(cron, 'POST', '/api/orders', { token: vega, data: { product: 'featured', target: { job_id: v1 } } }); await hook(cron, r.body.order.id);
   const pin = () => cron.DB.prepare('SELECT held, ends_at - starts_at AS left FROM placements').first();
   let n = opened(); await worker.scheduled({}, cron); eq(opened() - n, 0, 'D: recheck: a link checked today is not opened again');
   await aDayLater(); n = opened(); await worker.scheduled({}, cron);
@@ -1267,9 +1271,9 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   ok(row.status === 'review' && /now leads to boards\.greenhouse\.io \(it led to vega\.dev/.test(row.review_reason) && (await exportedJobs(cron)).length === 0, 'D: recheck: a link that now ends on another host takes the job back to review',
     JSON.stringify(row));
   let pinned = await pin();
-  ok(pinned.held === 1 && pinned.left <= 7 * 86400 && pinned.left >= 7 * 86400 - SLACK, 'D: recheck: and what was bought for it stops running, with the days it had left', JSON.stringify(pinned));
+  ok(pinned.held === 1 && pinned.left <= 30 * 86400 && pinned.left >= 30 * 86400 - SLACK, 'D: recheck: and what was bought for it stops running, with the days it had left', JSON.stringify(pinned));
   await admin('POST', 'jobs/' + v1 + '/approve', undefined, cron); pinned = await pin();
-  ok(pinned.held === 0 && pinned.left >= 7 * 86400 - SLACK, 'D: recheck: until the owner approves the job again', JSON.stringify(pinned));
+  ok(pinned.held === 0 && pinned.left >= 30 * 86400 - SLACK, 'D: recheck: until the owner approves the job again', JSON.stringify(pinned));
   await aDayLater(); await worker.scheduled({}, cron);
   eq([await statusOf(cron, v1), await one(cron, 'SELECT apply_host FROM jobs WHERE id = ?', v1)], ['live', 'boards.greenhouse.io'], 'D: recheck: once the owner has approved it, the new host is the one it is compared with');
   delete world.redirects[LINK]; delete world.pages[LINK];                 // the page is gone: nobody knows where the link leads now
@@ -1321,7 +1325,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   eq([r.status, await statusOf(env, a), await one(env, 'SELECT review_reason FROM jobs WHERE id = ?', a), (await exportedJobs(env)).some((j) => j.id === a)], [200, 'review', 'reported', false],
     'E: a second report from another address hides the job until a person decides');
   let p = await placement();
-  ok(p.held === 1 && p.starts_at === 0 && p.ends_at <= 14 * 86400 && p.ends_at >= 14 * 86400 - SLACK, 'E: what was bought for the job stops running while it is hidden', JSON.stringify(p));
+  ok(p.held === 1 && p.starts_at === 0 && p.ends_at <= 30 * 86400 && p.ends_at >= 30 * 86400 - SLACK, 'E: what was bought for the job stops running while it is hidden', JSON.stringify(p));
   const mine = (await call(env, 'GET', '/api/jobs', { token: lyra })).body.jobs.find((j) => j.id === a);
   eq([mine.status, mine.review_reason], ['review', 'reported'], 'E: the employer sees that the job was reported and is being looked at');
   r = await report(b, 'asks_for_money', '203.0.113.9'); eq(await statusOf(env, b), 'review', 'E: one report that the job asks for money hides it at once');
@@ -1981,18 +1985,18 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   const perCall = ((AI_BOUNDS.promptBytes + AI_BOUNDS.frameTokens) * AI_BOUNDS.usdPerMTok.input + AI_BOUNDS.maxTokens * AI_BOUNDS.usdPerMTok.output) / 1e6;
   const calls = Object.values(AI_MONTHLY).reduce((a, b) => a + b, 0), worst = calls * perCall, plus = Object.entries(PRODUCTS).filter(([, p]) => p.group === 'plus');
   eq([Math.round(perCall * 1e5) / 1e5, calls, Math.round(worst * 100) / 100, Math.abs(worst - aiWorstMonthUsd()) < 1e-9, plus.map(([id, p]) => [id, p.usd, monthsTouched(p.plusDays)])],
-    [0.00495, 170, 0.84, true, [['plus1', 3, 3], ['plus3', 7, 5], ['plus12', 12, 13]]],
-    'AI cost: a call costs $0.00495 at the very most and the 170 calls of a month $0.84; Plus is $3, $7 and $12 for periods that touch at most 3, 5 and 13 calendar months');
+    [0.00495, 170, 0.84, true, [['plus7', 9, 2], ['plus30', 19, 3], ['plus90', 39, 5]]],
+    'AI cost: a call costs $0.00495 at the very most and the 170 calls of a month $0.84; Plus is $9, $19 and $39 for periods that touch at most 2, 3 and 5 calendar months');
   ok(worst < 1 && plus.every(([, p]) => worst * monthsTouched(p.plusDays) < p.usd),
-    'AI cost: at the worst the limits allow, a month of AI costs less than the $1 a month of the cheapest Plus, and every plan brings in more than its months of AI can cost', 'worst month: $' + worst.toFixed(4));
+    'AI cost: at the worst the limits allow, a month of AI costs less than $1, and every plan brings in more than its months of AI can cost', 'worst month: $' + worst.toFixed(4));
   // the allowance is one set of numbers, whichever plan was bought: bought at the checkout, each plan opens the tools with the same limits
   const shop = newEnv({ PLUS_LIVE: '1', ANTHROPIC_API_KEY: AI_KEY }), allowances = Object.values(AI_MONTHLY);
   const bought = async (product) => {
     const tk = await fresh(shop, product + '@gmail.com'), made = await call(shop, 'POST', '/api/orders', { token: tk, data: { product } }); await hook(shop, made.body.order.id);
     return [made.body.order.amount_usd, Object.values((await usage(tk, shop)) || {}).map((g) => g.limit)];
   };
-  eq([await bought('plus1'), await bought('plus3'), await bought('plus12')], [[3, allowances], [7, allowances], [12, allowances]],
-    'AI cost: Plus bought at the checkout opens the tools, and every plan has the same allowances: those of the 1-month plan are no larger than the others’');
+  eq([await bought('plus7'), await bought('plus30'), await bought('plus90')], [[9, allowances], [19, allowances], [39, allowances]],
+    'AI cost: Plus bought at the checkout opens the tools, and every plan has the same allowances: those of the 7-day plan are no larger than the others’');
 }
 
 /* ---- 28. Hits: what a listing brought: views of the job page and clicks on "Apply", per job and day ---- */
@@ -2559,7 +2563,7 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   let r = await call(env, 'GET', '/api/public/products'); eq([r.body.payments, r.body.products.some((p) => p.group === 'plus')], ['off', false], 'Settings: the site is told payments are off');
   const tok = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'boss@jobs.example', password: PASS } })).body.token;
   await env.DB.prepare('UPDATE users SET confirmed_at = 1').run();
-  r = await call(env, 'POST', '/api/orders', { token: tok, data: { product: 'pack5' } });
+  r = await call(env, 'POST', '/api/orders', { token: tok, data: { product: 'credits100' } });
   eq([r.status, r.body.error], [503, 'payments_off'], 'Settings: nobody can be charged: an order is refused');
   env.DB.close();
   env = productionEnv({ ...vars, PAYMENTS_LIVE: '1' }, { serverDir: path.join(here, '..') });
@@ -2763,9 +2767,228 @@ await smtpServer.close();
   eq((await call(payEnv, 'GET', '/api/orders/' + oid + '/receipt', { token: boss })).status, 404, 'Receipt: none before the payment');
   await hook(payEnv, oid);
   r = await call(payEnv, 'GET', '/api/orders/' + oid + '/receipt', { token: boss });
-  eq([r.status, r.body.receipt.amount_usd, r.body.receipt.period_days, r.body.receipt.paid_with, r.body.receipt.note], [200, 29, 14, 'cryptocurrency, through Cryptomus', 'One payment for a fixed period. Nothing renews and nothing more is charged.'],
+  eq([r.status, r.body.receipt.amount_usd, r.body.receipt.period_days, r.body.receipt.paid_with, r.body.receipt.note], [200, 99, 30, 'cryptocurrency, through Cryptomus', 'One payment for a fixed period. Nothing renews and nothing more is charged.'],
     'Receipt: a paid order has a receipt that says what was bought, for how long, how it was paid, and that nothing renews');
   globalThis.fetch = realFetch;
+}
+
+/* ---- 36. The product line of 15 Nov 2026: boosts, Premium, Hiring Pass, credits, add-ons, the free re-run, invitations, images,
+   resumes in the account, alerts kept in the account, team roles (the owner: "all the paid features of the paid sites, at a price lower
+   than the others"; ACCOUNTS_COMPARISON.md) ---- */
+{
+  const W = await import('../src/worker.js'), DAYS = (n) => new Date(Date.now() + n * 86400e3).toISOString().slice(0, 10), T = () => Math.floor(Date.now() / 1000);
+  const order = (env, token, data) => call(env, 'POST', '/api/orders', { token, data });
+  const paid = async (env, token, data) => { const r = await order(env, token, data); if (r.status === 200 && r.body.order.status === 'pending') await hook(env, r.body.order.id); return r; };
+  const exp = async (env) => (await call(env, 'GET', '/api/public/export.json')).body;
+  const PNG = (n = 64) => 'data:image/png;base64,' + Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), Buffer.alloc(n, 7)]).toString('base64');
+
+  // the price list
+  let env = newEnv(), r = await call(env, 'GET', '/api/public/products'), P = Object.fromEntries(r.body.products.map((p) => [p.id, p]));
+  eq(['featured', 'premium', 'pass', 'spotlight', 'sponsor', 'bump', 'extend', 'urgent', 'credits100', 'credits250', 'credits550', 'credits1200', 'talent50'].map((id) => [id, P[id] && P[id].usd, P[id] && P[id].days]),
+    [['featured', 99, 30], ['premium', 249, 30], ['pass', 499, 30], ['spotlight', 299, 30], ['sponsor', 199, 30], ['bump', 5, 30], ['extend', 9, 30], ['urgent', 9, 14], ['credits100', 100, 365], ['credits250', 250, 365],
+      ['credits550', 500, 365], ['credits1200', 1000, 365], ['talent50', 199, 0]], 'Products: the owner’s price list of 15 Nov 2026, each with its days');
+  eq([P.credits550.credits, P.credits1200.credits, P.pass.premium_boosts, P.featured.rerun, P.premium.listed_needs_claim, Object.values(P).some((p) => p.group === 'plus' || p.group === 'ai')],
+    [550, 1200, 3, { applies: 10, days: 14 }, true, false], 'Products: +10% and +20% credits, 3 Premium boosts in a pass, the re-run rule; Plus and the AI passes are not listed while not on sale');
+  r = await call(newEnv({ PLUS_LIVE: '1', ANTHROPIC_API_KEY: AI_KEY }), 'GET', '/api/public/products');
+  eq(r.body.products.filter((p) => p.group === 'plus' || p.group === 'ai').map((p) => [p.id, p.usd, p.days]), [['plus7', 9, 7], ['plus30', 19, 30], ['plus90', 39, 90], ['ai_resume', 5, 30], ['ai_interview', 9, 30]],
+    'Products: Plus 7 / 30 / 90 days at $9 / $19 / $39 and the single AI passes at $5 and $9, once on sale');
+  r = await call(newEnv({ PLUS_LIVE: '1' }), 'GET', '/api/public/products'); ok(!r.body.products.some((p) => p.group === 'ai'), 'Products: the AI passes stay off until the AI key is set');
+
+  // prepaid credits: lots, oldest-expiring first, a year each, never buying credits
+  const boss = await account(env), job = (await call(env, 'POST', '/api/jobs', { token: boss, data: GOOD })).body.job.id;
+  r = await order(env, boss, { product: 'featured', target: { job_id: job }, pay: 'wallet' }); eq([r.status, r.body.error, r.body.balance, r.body.needed], [409, 'credit', 0, 99], 'Credits: no credits, nothing bought, and the answer says what is missing');
+  const top = (await paid(env, boss, { product: 'credits550' })).body.order.id; await paid(env, boss, { product: 'credits100' });
+  await env.DB.prepare("UPDATE wallet_lots SET expires_at = strftime('%s', 'now') + 10 * 86400 WHERE credits = 100").run();
+  r = await call(env, 'GET', '/api/wallet', { token: boss }); eq([r.body.balance, r.body.lots.map((l) => l.credits), r.body.next_expiry], [650, [100, 550], DAYS(10)], 'Credits: $500 gives 550 (+10%); the lots are listed, the one that runs out first on top');
+  r = await order(env, boss, { product: 'credits100', pay: 'wallet' }); eq([r.status, r.body.error], [400, 'credit'], 'Credits: credits do not buy credits');
+  r = await order(env, boss, { product: 'featured', target: { job_id: job }, pay: 'wallet' });
+  eq([r.status, r.body.order.status, r.body.order.amount_usd, r.body.order.credits, r.body.order.paid_with], [200, 'paid', 0, 99, 'wallet'], 'Credits: a boost paid with credits is on at once; the order says 99 credits, $0 (the money came with the top-up)');
+  eq(await env.DB.prepare('SELECT credits, remaining FROM wallet_lots ORDER BY expires_at').all().then((x) => x.results.map((l) => [l.credits, l.remaining])), [[100, 1], [550, 550]], 'Credits: taken from the lot that runs out first');
+  r = await order(env, boss, { product: 'spotlight', target: { company: 'Acme Robotics' }, use_credit: true }); eq(r.body.order.status, 'paid', 'Credits: spendable on every product (a spotlight here)');
+  eq([(await call(env, 'GET', '/api/me', { token: boss })).body.user.credits, await one(env, 'SELECT remaining FROM wallet_lots WHERE credits = 100')], [252, 0], 'Credits: a purchase across two lots empties the first and takes the rest from the next');
+  r = await call(env, 'GET', '/api/orders/' + (await one(env, "SELECT id FROM orders WHERE product = 'spotlight'")) + '/receipt', { token: boss });
+  eq([r.body.receipt.paid_with, r.body.receipt.credits, r.body.receipt.amount_usd], ['299 prepaid credits', 299, 0], 'Credits: the receipt says how many credits paid for it');
+  r = await call(env, 'GET', '/api/orders/' + top + '/receipt', { token: boss }); eq([r.body.receipt.credits_bought, r.body.receipt.credits_expire, r.body.receipt.amount_usd], [550, DAYS(365), 500], 'Credits: the receipt of a top-up says how many credits and until when');
+  await hook(env, top, 'refund_paid'); eq(await one(env, 'SELECT remaining FROM wallet_lots WHERE credits = 550'), 0, 'Credits: a refunded top-up takes back the credits left of it');
+  await paid(env, boss, { product: 'credits250' }); await env.DB.exec("UPDATE wallet_lots SET expires_at = strftime('%s', 'now') - 1");
+  r = await order(env, boss, { product: 'bump', target: { job_id: job }, pay: 'wallet' }); eq([r.status, r.body.balance], [409, 0], 'Credits: credits more than 12 months old are gone');
+
+  // bump, extend, urgent, Premium on a job posted here
+  env = newEnv(); const ceo = await account(env), j1 = (await call(env, 'POST', '/api/jobs', { token: ceo, data: GOOD })).body.job.id;
+  r = await order(env, ceo, { product: 'extend', target: { job_id: j1 } }); eq([r.status, r.body.error], [409, 'no_boost'], 'Extend: only for a job that has a boost');
+  await paid(env, ceo, { product: 'featured', target: { job_id: j1 } });
+  r = await paid(env, ceo, { product: 'extend', target: { job_id: j1 } }); eq(r.status, 200, 'Extend: bought for a boosted job');
+  eq((await exp(env)).jobs[0].featured_until, DAYS(60), 'Extend: 30 more days of the Standard boost after the boost ends');
+  r = await order(env, ceo, { product: 'extend', target: { job_id: j1 } }); eq([r.status, r.body.error], [409, 'extended'], 'Extend: once per boost');
+  await paid(env, ceo, { product: 'bump', target: { job_id: j1 } }); await paid(env, ceo, { product: 'bump', target: { job_id: j1 } });
+  let x = await exp(env);
+  ok(x.jobs[0].bumped && Math.abs(Date.parse(x.jobs[0].bumped) / 1000 - T()) < SLACK && x.jobs[0].posted === DAYS(0), 'Bump: the export says when the job was bumped; its posting date stays the real one');
+  eq(await env.DB.prepare("SELECT starts_at FROM placements WHERE kind = 'bump'").all().then((q) => q.results.every((p) => Math.abs(p.starts_at - T()) < SLACK)), true, 'Bump: a second bump starts at once, not after the first');
+  await paid(env, ceo, { product: 'urgent', target: { job_id: j1 } }); eq((await exp(env)).jobs[0].urgent_until, DAYS(14), 'Urgent: the badge for 14 days');
+  const j2 = (await call(env, 'POST', '/api/jobs', { token: ceo, data: employer('acme.dev', 'Acme Robotics')('Firmware Engineer') })).body.job.id;
+  await paid(env, ceo, { product: 'premium', target: { job_id: j2 } });
+  x = (await exp(env)).jobs.find((j) => j.id === j2); eq([x.premium_until, x.urgent_until, x.featured_until], [DAYS(30), DAYS(14), ''], 'Premium: 30 days, with the “Urgently hiring” badge for its first 14');
+  const old = (await call(env, 'POST', '/api/jobs', { token: ceo, data: employer('acme.dev', 'Acme Robotics')('Hardware Engineer') })).body.job.id;
+  await paid(env, ceo, { product: 'featured', target: { job_id: old } }); await env.DB.prepare('UPDATE placements SET starts_at = starts_at - 45 * 86400, ends_at = ends_at - 45 * 86400 WHERE target = ?').bind('direct:' + old).run();
+  r = await order(env, ceo, { product: 'extend', target: { job_id: old } }); eq([r.status, r.body.error], [409, 'no_boost'], 'Extend: not for a boost that ended more than 14 days ago');
+
+  // Premium, the badge and the cover on a job the site lists: the company claims its page first
+  const mail = mailbox(), cl = newEnv({ COMPANY_SITES: { Stripe: 'stripe.com' }, ...mail }), outsider = await account(cl), st = await fresh(cl, 'talent@stripe.com');
+  for (const p of ['premium', 'urgent']) { r = await order(cl, outsider, { product: p, target: { job: 'staff-engineer-stripe' } }); eq([r.status, r.body.error], [403, 'claim_first'], 'Claim first: ' + p + ' on a listed job needs the company page claimed'); }
+  r = await order(cl, outsider, { product: 'featured', target: { job: 'staff-engineer-stripe' } }); eq(r.status, 200, 'Claim first: a Standard boost of a listed job is open to anyone, as before');
+  const claim = (await call(cl, 'POST', '/api/claims', { token: st, data: { company: 'Stripe' } })).body.claim;
+  r = await call(cl, 'PUT', '/api/listings/cover', { token: outsider, data: { target: { job: 'staff-engineer-stripe' }, image: PNG() } }); eq([r.status, r.body.error], [403, 'claim_first'], 'Cover: only the company sets the cover of its listed job');
+  r = await call(cl, 'PUT', '/api/listings/cover', { token: st, data: { target: { job: 'staff-engineer-stripe' }, image: PNG() } }); eq([r.status, /\/api\/public\/media\/m_[a-f0-9]{20}$/.test(r.body.cover)], [200, true], 'Cover: set by the company');
+  const coverUrl = r.body.cover;
+  ok(!(await exp(cl)).boosts.some((b) => b.cover), 'Cover: not shown before a Premium boost runs');
+  r = await paid(cl, st, { product: 'premium', target: { job: 'staff-engineer-stripe' } }); eq(r.status, 200, 'Premium: the company that claimed its page boosts its listed job');
+  x = await exp(cl); const pb = x.boosts.find((b) => b.kind === 'premium');
+  eq([pb.slug, pb.until, pb.cover, x.boosts.find((b) => b.kind === 'urgent').until], ['staff-engineer-stripe', DAYS(30), coverUrl, DAYS(14)], 'Premium: exported with its cover, and the badge for 14 days');
+  r = await call(cl, 'GET', '/api/public/media/' + coverUrl.split('/').pop());
+  eq([r.status, r.headers.get('Content-Type'), r.headers.get('X-Content-Type-Options'), r.headers.get('Cache-Control')], [200, 'image/png', 'nosniff', 'public, max-age=31536000, immutable'], 'Images: served with their own type, never sniffed, cached for good');
+  eq((await call(cl, 'GET', '/api/public/media/m_' + '0'.repeat(20))).status, 404, 'Images: an unknown id is not found');
+  for (const [bad, code, why] of [['data:image/svg+xml;base64,' + Buffer.from('<svg onload="alert(1)"/>').toString('base64'), 422, 'an SVG is refused (it can carry a script)'],
+    ['data:image/png;base64,' + Buffer.from('\xff\xd8\xff\xe0 not a png', 'latin1').toString('base64'), 422, 'a file that is not the image it says is refused'], [PNG(160000), 413, 'a logo over 150 KB is refused']]) {
+    r = await call(cl, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { logo: bad } }); eq([r.status], [code], 'Images: ' + why);
+  }
+  r = await call(cl, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { logo: PNG(), locations: ['Berlin', 'Remote, Europe', 'Berlin'] } });
+  eq([r.status, r.body.page.locations, /media\/m_/.test(r.body.page.logo)], [200, ['Berlin', 'Remote, Europe'], true], 'Company page: a logo and where the company hires');
+  x = (await exp(cl)).claimed[0]; eq([x.company, x.logo, x.locations], ['Stripe', r.body.page.logo, ['Berlin', 'Remote, Europe']], 'Company page: the export carries the logo and the places for the site’s company page');
+  r = await call(cl, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { locations: ['https://evil.com'] } }); eq([r.status, r.body.error], [400, 'locations'], 'Company page: places are names, not links');
+
+  // views and clicks on a listed job while its boost runs, for the buyer and for the re-run
+  await call(cl, 'POST', '/api/public/hit', { data: { job: 'staff-engineer-stripe', kind: 'apply' } }); await call(cl, 'POST', '/api/public/hit', { data: { job: 'old-role-stripe', kind: 'apply' } });
+  eq(await cl.DB.prepare('SELECT slug, applies FROM boost_hits').all().then((q) => q.results), [{ slug: 'staff-engineer-stripe', applies: 1 }], 'Hits: a listed job is counted while a boost on it runs, and only then');
+
+  // team roles and the invitation letter
+  r = await call(cl, 'POST', '/api/team', { token: st, data: { email: 'hr@stripe.com', role: 'boss' } }); eq([r.status, r.body.error], [400, 'role'], 'Team: the role is owner or member');
+  r = await call(cl, 'POST', '/api/team', { token: st, data: { email: 'hr@stripe.com' } });
+  eq([r.status, r.body.members.map((m) => [m.email, m.role])], [200, [['hr@stripe.com', 'member']]], 'Team: a colleague is a member unless made an owner');
+  ok(mail.outbox.some((m) => m.to === 'hr@stripe.com' && /team of Stripe/.test(m.subject) && m.text.includes(SITE + '/account/') && m.text.includes('talent@stripe.com')), 'Team: the colleague gets a letter saying who added them, for which company, and where to sign in');
+  const hr = await fresh(cl, 'hr@stripe.com');
+  r = await call(cl, 'PUT', '/api/claims/' + claim.id + '/page', { token: hr, data: { locations: ['Dublin'] } }); eq(r.status, 404, 'Team: a member does not change the company page');
+  r = await call(cl, 'PATCH', '/api/team/hr%40stripe.com', { token: st, data: { role: 'owner' } }); eq(r.body.members[0].role, 'owner', 'Team: made an owner');
+  r = await call(cl, 'PUT', '/api/claims/' + claim.id + '/page', { token: hr, data: { locations: ['Dublin'] } }); eq([r.status, r.body.page.locations], [200, ['Dublin']], 'Team: an owner changes the company page');
+  const holder = await one(cl, "SELECT id FROM users WHERE email = 'talent@stripe.com'");
+  r = await call(cl, 'POST', '/api/team', { token: hr, data: { email: 'ops@stripe.com', team: holder } }); eq([r.status, r.body.members.length], [200, 2], 'Team: an owner adds people to the team it shares');
+  r = await call(cl, 'GET', '/api/team', { token: hr }); eq(r.body.member_of.map((m) => [m.team, m.role]), [[holder, 'owner']], 'Team: a colleague sees the teams it is in, with its role');
+  r = await call(cl, 'POST', '/api/team', { token: outsider, data: { email: 'x@acme.dev', team: holder } }); eq(r.status, 404, 'Team: nobody else manages that team');
+
+  // the Hiring Pass
+  env = newEnv(); const pa = await account(env), pj = (await call(env, 'POST', '/api/jobs', { token: pa, data: GOOD })).body.job.id;
+  r = await order(env, pa, { product: 'pass', target: { company: 'Stripe' } }); eq([r.status, r.body.error], [403, 'not_your_company'], 'Pass: only for one’s own company');
+  r = await paid(env, pa, { product: 'pass', target: { company: 'Acme Robotics' } }); eq(r.status, 200, 'Pass: bought for the company the account posts for');
+  x = await exp(env); eq([x.sponsors.map((s) => [s.company, s.slot, s.until])], [[['Acme Robotics', 'spotlight', DAYS(30)]]], 'Pass: the company spotlight for its 30 days');
+  r = await order(env, pa, { product: 'featured', target: { job_id: pj } });
+  eq([r.body.order.status, r.body.order.amount_usd, r.body.order.paid_with], ['paid', 0, 'pass'], 'Pass: a Standard boost of the company’s job is free and on at once');
+  const pj2 = (await call(env, 'POST', '/api/jobs', { token: pa, data: employer('acme.dev', 'Acme Robotics')('Firmware Engineer') })).body.job.id;
+  const premiums = []; for (let i = 0; i < 4; i++) premiums.push((await order(env, pa, { product: 'premium', target: { job_id: pj2 } })).body.order);
+  eq(premiums.map((o) => [o.status, o.paid_with]), [['paid', 'pass'], ['paid', 'pass'], ['paid', 'pass'], ['pending', 'crypto']], 'Pass: three Premium boosts come with it; the fourth is paid as usual');
+  r = await call(env, 'GET', '/api/billing', { token: pa });
+  eq([r.body.passes.length, r.body.passes[0].premium_left, r.body.passes[0].company, r.body.wallet.balance], [1, 0, 'Acme Robotics', 0], 'Billing: the pass, with the Premium boosts it has left');
+  ok(r.body.boosts.every((b) => b.rerun === null), 'Billing: boosts that came with the pass have no re-run (the guarantee is for boosts paid on their own)');
+
+  // the free re-run: a paid boost with fewer than 10 clicks on Apply in 14 days runs again, once
+  const rm = mailbox(); env = newEnv(rm); const rb = await account(env), quiet1 = (await call(env, 'POST', '/api/jobs', { token: rb, data: GOOD })).body.job.id;
+  const busy = (await call(env, 'POST', '/api/jobs', { token: rb, data: employer('acme.dev', 'Acme Robotics')('Firmware Engineer') })).body.job.id;
+  await paid(env, rb, { product: 'featured', target: { job_id: quiet1 } }); await paid(env, rb, { product: 'premium', target: { job_id: busy } });
+  r = await call(env, 'GET', '/api/billing', { token: rb }); eq(r.body.boosts.map((b) => b.rerun && b.rerun.checks_on), [DAYS(14), DAYS(14)], 'Re-run: the account sees the day each paid boost is checked');
+  await env.DB.exec('UPDATE placements SET starts_at = starts_at - 15 * 86400, ends_at = ends_at - 15 * 86400');
+  const day = (n) => new Date(Date.now() - n * 86400e3).toISOString().slice(0, 10);
+  await env.DB.prepare('INSERT INTO job_hits (job_id, day, views, applies) VALUES (?, ?, 40, 4), (?, ?, 90, 12)').bind(quiet1, day(10), busy, day(10)).run();
+  const endBefore = await one(env, 'SELECT ends_at FROM placements WHERE target = ?', 'direct:' + quiet1);
+  await worker.scheduled({}, env); await W.rerunBoosts(env);
+  const re = await env.DB.prepare("SELECT o.product, o.amount_usd, o.status, p.starts_at, p.ends_at FROM orders o JOIN placements p ON p.order_id = o.id WHERE o.provider = 'rerun'").all().then((q) => q.results);
+  eq([re.length, re[0].product, re[0].amount_usd, re[0].status, re[0].starts_at === endBefore, re[0].ends_at - re[0].starts_at], [1, 'featured', 0, 'paid', true, 30 * 86400],
+    'Re-run: 4 clicks on Apply in 14 days: the boost runs 30 more days after its end, free, once however often the cron runs');
+  eq(await env.DB.prepare('SELECT applies, given_order != \'\' AS given FROM reruns ORDER BY applies').all().then((q) => q.results.map((x) => [x.applies, x.given])), [[4, 1], [12, 0]], 'Re-run: 12 clicks: nothing is due');
+  ok(rm.outbox.some((m) => m.subject === 'Your boost runs again, free' && /brought 4 clicks on Apply/.test(m.text)), 'Re-run: the buyer is told, with the count');
+  r = await call(env, 'GET', '/api/billing', { token: rb }); ok(r.body.boosts.some((b) => b.free_rerun) && r.body.boosts.some((b) => b.rerun && b.rerun.given), 'Billing: the re-run and the boost it came from');
+
+  // job invitations of a Premium boost: opt-in only, matching, one letter each, a one-click stop
+  const im = mailbox(), ie = newEnv({ COMPANY_SITES: { Stripe: 'stripe.com' }, ...im }), seeker = await fresh(ie, 'ann@gmail.com'), other = await fresh(ie, 'bob@gmail.com'), far = await fresh(ie, 'cy@gmail.com');
+  r = await call(ie, 'GET', '/api/invites', { token: seeker }); eq([r.body.prefs, r.body.consent_text === W.INVITE_CONSENT], [null, true], 'Invitations: off until the person opts in; the page gets the consent line to show');
+  r = await call(ie, 'PUT', '/api/invites', { token: seeker, data: { roles: ['engineering'] } }); eq([r.status, r.body.error], [400, 'consent'], 'Invitations: nothing without the tick and the exact line');
+  const optIn = (tk, data) => call(ie, 'PUT', '/api/invites', { token: tk, data: { consent: true, consent_text: W.INVITE_CONSENT, ...data } });
+  r = await optIn(seeker, { roles: ['engineering'], places: ['berlin'] }); eq(r.body.prefs.roles, ['engineering'], 'Invitations: on, for the fields and places chosen');
+  await optIn(other, { roles: ['design'] }); await optIn(far, { roles: ['engineering'], places: ['tokyo'], remote: true });
+  const ist = await fresh(ie, 'talent@stripe.com'); await call(ie, 'POST', '/api/claims', { token: ist, data: { company: 'Stripe' } });
+  await paid(ie, ist, { product: 'premium', target: { job: 'staff-engineer-stripe' } });
+  const REC = { slug: 'staff-engineer-stripe', title: 'Staff Engineer', company: 'Stripe', location: 'Berlin, Germany', remote: false, salary: '', cat: 'engineering', places: ['berlin', 'germany'] };
+  eq((await W.runInvites(ie, { bySlug: () => null })).waiting, 1, 'Invitations: a job not in the records yet waits for the next hour');
+  let out = await W.runInvites(ie, { bySlug: (s) => (s === REC.slug ? REC : null) });
+  const letters = im.outbox.filter((m) => m.kind === 'invite');
+  eq([out.sent, letters.map((m) => m.to)], [1, ['ann@gmail.com']], 'Invitations: one letter, to the person whose field and place fit (not the designer, not the one in Tokyo who only takes remote work)');
+  ok(letters[0].bulk && /^<https:\/\/api\.test\/api\/invites\/stop\?u=u_[a-f0-9]{20}&t=[a-f0-9]{32}>$/.test(letters[0].headers['List-Unsubscribe']) && letters[0].text.includes(SITE + '/job/staff-engineer-stripe/') && !letters[0].text.includes('talent@stripe.com'),
+    'Invitations: the letter links to the job, has a one-click stop, and gives the employer nothing about the person');
+  out = await W.runInvites(ie, { bySlug: () => REC }); eq(out.sent, 0, 'Invitations: one round per Premium boost');
+  const stop = letters[0].headers['List-Unsubscribe'].slice(1, -1).replace(API, '');
+  eq((await call(ie, 'GET', stop)).status, 200, 'Invitations: the stop link shows a page with a button');
+  eq((await call(ie, 'GET', stop.replace(/t=[a-f0-9]+/, 't=' + 'a'.repeat(32)))).status, 404, 'Invitations: a made-up link does nothing');
+  await call(ie, 'POST', stop); eq((await call(ie, 'GET', '/api/invites', { token: seeker })).body.prefs, null, 'Invitations: stopped in one click');
+
+  // resumes kept in the account, several versions
+  env = newEnv({ TALENT_DB: 'on' }); const me = await fresh(env, 'dana@gmail.com'), RES = { name: 'Dana Ray', title: 'Data Analyst', skills: 'SQL, Python', exp: [{ role: 'Analyst', org: 'Nova', dates: '2020 – now', text: 'Built the sales dashboards' }] };
+  r = await call(env, 'GET', '/api/resumes', { token: me }); eq([r.body.resumes, r.body.max], [[], 10], 'Resumes: none at first, ten at most');
+  r = await call(env, 'POST', '/api/resumes', { token: me, data: { name: 'Data, short', resume: RES } }); const rid1 = r.body.resume.id;
+  eq([r.status, r.body.resume.name, r.body.resume.title], [200, 'Data, short', 'Data Analyst'], 'Resumes: one is kept, with its name');
+  r = await call(env, 'PUT', '/api/resumes/' + rid1, { token: me, data: { resume: { ...RES, title: 'Senior Data Analyst' } } }); eq([r.body.resume.name, r.body.resume.title], ['Data, short', 'Senior Data Analyst'], 'Resumes: updated in place');
+  r = await call(env, 'GET', '/api/resumes/' + rid1, { token: me }); eq(r.body.resume.resume.title, 'Senior Data Analyst', 'Resumes: read back whole');
+  r = await call(env, 'POST', '/api/resumes', { token: me, data: { resume: { ...RES, summary: 'x'.repeat(60001) } } }); eq(r.status, 413, 'Resumes: a resume that is too long is refused');
+  for (let i = 0; i < 9; i++) await call(env, 'POST', '/api/resumes', { token: me, data: { name: 'v' + i, resume: RES } });
+  r = await call(env, 'POST', '/api/resumes', { token: me, data: { resume: RES } }); eq([r.status, r.body.error], [409, 'limit'], 'Resumes: the eleventh is refused');
+  eq((await call(env, 'GET', '/api/resumes/' + rid1, { token: await fresh(env, 'eve@gmail.com') })).status, 404, 'Resumes: nobody else reads them');
+  const unconfirmed = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'new@gmail.com', password: PASS } })).body.token;
+  eq((await call(env, 'GET', '/api/resumes', { token: unconfirmed })).status, 403, 'Resumes: kept once the address is confirmed');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: me, data: { consent: true, consent_text: W.TALENT_CONSENT, resume_id: rid1, roles: ['data-research'] } });
+  eq([r.status, r.body.profile.resume.title], [200, 'Senior Data Analyst'], 'Resumes: one of them is what employers may find, after the tick');
+  r = await call(env, 'GET', '/api/me/export', { token: me }); eq(r.body.resumes.length, 10, 'Resumes: in the export of my data');
+  eq((await call(env, 'DELETE', '/api/resumes/' + rid1, { token: me })).body.ok, true, 'Resumes: deleted one by one');
+  await call(env, 'DELETE', '/api/me', { token: me, data: { confirm: 'delete my account' } }); eq(await one(env, 'SELECT COUNT(*) FROM resumes'), 0, 'Resumes: and all of them with the account');
+
+  // alerts kept in the account: instant, daily, weekly, pause
+  const am = mailbox(), ae = newEnv(am), al = await fresh(ae, 'lee@gmail.com');
+  r = await call(ae, 'POST', '/api/alerts', { data: { email: 'x@gmail.com', q: 'rust', freq: 'instant' } }); eq([r.status, r.body.error], [400, 'freq'], 'Alerts: the open form offers daily and weekly only');
+  r = await call(ae, 'POST', '/api/me/alerts', { token: al, data: { q: 'rust', freq: 'instant' } }); eq([r.status, r.body.alerts.map((a) => [a.freq, a.status])], [200, [['instant', 'active']]], 'Alerts: the account makes an instant alert, on at once (its address is confirmed)');
+  r = await call(ae, 'POST', '/api/me/alerts', { token: al, data: { q: 'python', freq: 'daily' } }); const ids = Object.fromEntries(r.body.alerts.map((a) => [a.freq, a.id]));
+  const at = new Date(Date.now() - 600e3).toISOString().replace(/\.\d{3}Z$/, 'Z'), JOBS = [{ slug: 'r1', title: 'Rust Engineer', company: 'Acme', places: [], cat: 'engineering', first_seen_at: at }, { slug: 'p1', title: 'Python Engineer', company: 'Acme', places: [], cat: 'engineering', first_seen_at: at }];
+  await ae.DB.prepare("UPDATE alerts SET due_at = 0, last_sent_at = CASE WHEN freq = 'daily' THEN strftime('%s', 'now') - 3600 ELSE 0 END").run();
+  await ALERTS.runAlerts(ae, recs(JOBS));
+  eq(am.outbox.filter((m) => m.kind === 'alert').map((m) => /Rust Engineer/.test(m.text) && !/Python/.test(m.text)), [true], 'Alerts: an instant alert does not wait for the daily letter of the same address, and the daily one keeps its day');
+  await ae.DB.exec('UPDATE alerts SET due_at = 0'); await ALERTS.runAlerts(ae, recs([...JOBS, { ...JOBS[0], slug: 'r2', first_seen_at: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z') }]));
+  eq(am.outbox.filter((m) => m.kind === 'alert').length, 1, 'Alerts: one instant letter an hour at most');
+  r = await call(ae, 'PATCH', '/api/alerts/' + ids.instant, { token: al, data: { paused: true } }); eq(r.body.alerts.find((a) => a.id === ids.instant).paused, true, 'Alerts: paused');
+  await ae.DB.exec("UPDATE alerts SET due_at = 0, last_sent_at = 0"); await ALERTS.runAlerts(ae, recs([...JOBS, { ...JOBS[0], slug: 'r3', first_seen_at: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z') }]));
+  ok(!am.outbox.filter((m) => m.kind === 'alert').slice(1).some((m) => /Rust/.test(m.text)), 'Alerts: a paused alert sends nothing');
+  r = await call(ae, 'PATCH', '/api/alerts/' + ids.instant, { token: al, data: { paused: false, freq: 'weekly' } }); x = r.body.alerts.find((a) => a.id === ids.instant);
+  eq([x.status, x.freq], ['active', 'weekly'], 'Alerts: on again, and how often it comes is changed');
+  r = await call(ae, 'PATCH', '/api/alerts/' + ids.daily, { token: al, data: { freq: 'hourly' } }); eq([r.status, r.body.error], [400, 'freq'], 'Alerts: instant, daily or weekly');
+  eq((await call(ae, 'PATCH', '/api/alerts/' + ids.daily, { token: await fresh(ae, 'kim@gmail.com'), data: { paused: true } })).status, 404, 'Alerts: only the address’s own account changes them');
+
+  // the single AI passes: one tailored resume (tailor + one cover letter), one mock interview (questions + 8 answers)
+  const ai = world.ai, shop = newEnv({ PLUS_LIVE: '1', ANTHROPIC_API_KEY: AI_KEY }), sk = await fresh(shop, 'sam@gmail.com');
+  r = await order(newEnv({ PLUS_LIVE: '1' }), null, { product: 'ai_resume' }); eq(r.status, 401, 'AI passes: buying needs an account');
+  const noKey = newEnv({ PLUS_LIVE: '1' }); r = await order(noKey, await fresh(noKey, 'q@gmail.com'), { product: 'ai_resume' }); eq([r.status, r.body.error], [409, 'not_on_sale'], 'AI passes: not sold without the AI key');
+  const RS = { name: 'Sam Lee', title: 'Backend Engineer', skills: 'Go, PostgreSQL', exp: [{ role: 'Backend Engineer', org: 'Nova', dates: '2020 – now', text: 'Wrote the billing service in Go' }] };
+  const POST_ = 'Backend Engineer at Orbit Labs. We need Go, PostgreSQL and Kafka experience to build our payments platform with a small team.';
+  ai.reply = { subject: 'Application: Backend Engineer', paragraphs: ['Hello,', 'I wrote the billing service at Nova in Go.', 'Best regards,\nSam Lee'] };
+  const cover = () => { shop.DB.exec("DELETE FROM rate WHERE k LIKE 'ai:%'"); return call(shop, 'POST', '/api/ai/letter/cover', { token: sk, data: { resume: RS, posting: POST_, format: 'email' } }); };
+  eq((await cover()).status, 402, 'AI passes: without Plus or a pass, the tools answer 402');
+  await paid(shop, sk, { product: 'ai_resume' });
+  r = await cover(); eq([r.status, r.body.subject], [200, 'Application: Backend Engineer'], 'AI passes: one tailored resume opens the cover letter for its posting');
+  eq([(await cover()).status, await one(shop, 'SELECT extra_left FROM ai_passes')], [402, 0], 'AI passes: used once');
+  shop.DB.exec("DELETE FROM rate WHERE k LIKE 'ai:%'"); eq((await call(shop, 'POST', '/api/ai/resume/review', { token: sk, data: { resume: RS } })).status, 402, 'AI passes: a pass opens only its own tools');
+  await paid(shop, sk, { product: 'ai_interview' }); ai.status = 500;
+  shop.DB.exec("DELETE FROM rate WHERE k LIKE 'ai:%'"); r = await quietly(() => call(shop, 'POST', '/api/ai/interview/feedback', { token: sk, data: { question: 'Tell me about Go.', answer: 'I wrote the billing service at Nova in Go and ran it for three years.' } }));
+  eq([r.status, await one(shop, "SELECT extra_left FROM ai_passes WHERE kind = 'interview'")], [502, 8], 'AI passes: an answer the provider did not give uses nothing up');
+  ai.status = 200; ai.reply = null;
+  r = await call(shop, 'GET', '/api/billing', { token: sk }); eq(r.body.ai_passes.map((p) => [p.kind, p.left]), [['resume', { tailor: 1, cover_letter: 0 }], ['interview', { questions: 1, feedback: 8 }]], 'Billing: the single passes with what is left of them');
+
+  // older databases get the new columns
+  const old2 = new D1(); old2.sqlite.exec("CREATE TABLE team_members (owner_id TEXT NOT NULL, email TEXT NOT NULL, added_at INTEGER NOT NULL, PRIMARY KEY (owner_id, email)); INSERT INTO team_members VALUES ('u', 'a@b.c', 1);" +
+    'CREATE TABLE orders (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, product TEXT NOT NULL, target TEXT NOT NULL DEFAULT \'{}\', label TEXT NOT NULL DEFAULT \'\', amount_usd INTEGER NOT NULL, status TEXT NOT NULL DEFAULT \'pending\', provider TEXT NOT NULL DEFAULT \'\', provider_uuid TEXT NOT NULL DEFAULT \'\', pay_url TEXT NOT NULL DEFAULT \'\', created_at INTEGER NOT NULL, paid_at INTEGER NOT NULL DEFAULT 0, checked_at INTEGER NOT NULL DEFAULT 0, activation TEXT NOT NULL DEFAULT \'\')');
+  old2.applySchema(path.join(here, '../schema.sql')); old2.applySchema(path.join(here, '../schema.sql'));
+  eq([old2.sqlite.prepare('SELECT role FROM team_members').get().role, old2.sqlite.prepare('PRAGMA table_info(orders)').all().some((c) => c.name === 'credits')], ['member', true], 'Schema: a database made from an earlier schema.sql gets the new columns, once, keeping its rows');
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');

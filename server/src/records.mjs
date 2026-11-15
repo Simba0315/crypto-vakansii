@@ -29,5 +29,14 @@ export function openRecords(path) {
         return out;
       } finally { db.close(); }
     },
+    // one open job by the address of its page, or null (the invitations of a Premium boost look their job up here)
+    bySlug(slug) {
+      const db = open(); if (!db) return null;
+      try {
+        const row = db.prepare('SELECT rec FROM jobs WHERE slug = ? AND active = 1').get(String(slug));
+        let j = null; try { j = row ? JSON.parse(row.rec) : null; } catch {}
+        return j ? Object.fromEntries(FIELDS.map((k) => [k, j[k]])) : null;
+      } finally { db.close(); }
+    },
   };
 }

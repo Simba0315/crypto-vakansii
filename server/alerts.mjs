@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { readEnvFile, productionEnv } from './src/config.mjs';
 import { openRecords } from './src/records.mjs';
 import { runAlerts, matches, wordTests } from './src/alerts.js';
+import { runInvites } from './src/worker.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const vars = readEnvFile(process.env.API_ENV || '/etc/hrn-api/api.env');
@@ -25,5 +26,8 @@ if (process.argv.includes('--dry')) {
   if (!env.MAIL) console.log('mail is off (no SMTP_PASS in the settings): nothing can be sent');
   const out = await runAlerts(env, records);
   console.log('alerts: ' + JSON.stringify(out) + ' in ' + Math.round((Date.now() - t0) / 100) / 10 + ' s');
+  // the invitation letters of Premium boosts, after the alerts (they need the same job records)
+  const inv = await runInvites(env, records);
+  console.log('invitations: ' + JSON.stringify(inv));
 }
 env.DB.close();

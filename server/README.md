@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,159 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,261 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -179,6 +179,89 @@ Google and LinkedIn (`?code=&state=`). Tested in section 35.
   text, the site on the claimed domain); `export.json` `claimed` carries `about` and `website` for the site's company page (the build
   does not show them yet).
 - **Receipts:** `GET /api/orders/<id>/receipt` for a paid order: what, for how long, how it was paid, "nothing renews".
+
+## The product line of 15 Nov 2026 (the owner's prices; tested in section 36)
+
+The owner: "all the paid features we collected from all the paid sites must be on our site, at a price lower than the others". Every
+product is one payment, in crypto (Cryptomus) or with prepaid credits, switched on by itself when the payment is confirmed; nothing
+renews. `PRODUCTS` in `src/worker.js` is the list (the ids `featured`, `spotlight`, `sponsor` are kept from the first list; `pinned`,
+`pack5`, `plus1/3/12` are gone); `config.json` "prices" and "plus" show the same names and prices on the site.
+
+| id | name | price | what it does |
+|---|---|---|---|
+| `featured` | Standard boost | $99 | 30 days, kind `featured`; for a job posted here (`target: { job_id }`) or one the site lists (`target: { job }`, open to anyone, as before) |
+| `premium` | Premium boost | $249 | 30 days, kind `premium`: top-3 rotation (the build), "Urgently hiring" for the first 14 days, a cover image, one round of invitations to up to 50 opted-in seekers; a listed job needs a verified claim of its company (403 `claim_first`) |
+| `pass` | Hiring Pass | $499 | one company the account or its team holds (a posted name or a verified claim; else 403 `not_your_company`): the spotlight for 30 days, Standard boosts of its jobs free while it runs, 3 Premium boosts |
+| `spotlight` / `sponsor` | Company spotlight / Category or skill sponsor | $299 / $199 | 30 days, as before |
+| `bump` | Bump to top | $5 | starts at once; the export says when (`bumped` / `at`); the job's date stays the real one |
+| `extend` | Extend a boost by 30 days | $9 | 30 more days of the Standard boost after the job's boost ends; while it runs or up to 14 days after; once per boost (409 `no_boost`, `extended`) |
+| `urgent` | Urgently hiring badge | $9 | 14 days; a listed job needs the claim |
+| `credits100` … `credits1200` | 100 / 250 / 550 / 1,200 credits | $100 / $250 / $500 / $1,000 | 1 credit = $1, good for 365 days; +10% at $500, +20% at $1,000 |
+| `talent50` | Resume search: 50 contact requests | $199 | the resume database (a request is used only when the person accepts) |
+| `plus7` / `plus30` / `plus90` | Plus | $9 / $19 / $39 | 7 / 30 / 90 days of the AI tools (sold only with `PLUS_LIVE=1`) |
+| `ai_resume` / `ai_interview` | One tailored resume / One mock interview | $5 / $9 | a single pass for 30 days: `resume/tailor` once and `letter/cover` once; `interview/questions` once and `interview/feedback` 8 times (sold only with `PLUS_LIVE=1` and `ANTHROPIC_API_KEY`) |
+
+**Paying.** `POST /api/orders { product, target?, pay? }`. `pay: "wallet"` (or the old `use_credit: true`) pays with credits: 409
+`credit` with `{ balance, needed }` when there are too few; otherwise the order is `paid` at once with `amount_usd: 0` and `credits` set
+(the money came with the top-up, so revenue is not counted twice). A running Hiring Pass of the account or its team pays a Standard or
+Premium boost of the company's job by itself (`paid_with: "pass"`). Otherwise the answer is a `pending` order with `pay_url`, as before.
+Every order now has `credits` and `paid_with` (`crypto`, `wallet`, `pass`, `rerun`). Credits are lots, spent oldest-expiring first; a
+spend is planned on the wallet's version and refused if another purchase changed the wallet meanwhile (then planned again). A refund
+takes back what is left of a top-up's credits, a pass and a single AI pass.
+
+**The free re-run** (SEEK's guarantee, on our own counts): each Standard or Premium boost paid on its own (crypto or credits; not one
+that came with a pass, not a re-run) is looked at by the cron 14 days after it started. With fewer than 10 clicks on Apply in those days
+(`job_hits` for a posted job, `boost_hits` for a listed one: `POST /api/public/hit` now also counts a listed job while a boost on it
+runs) it runs again for 30 days after its end, free (an order of $0 with provider `rerun`), once, and the buyer gets a letter.
+
+**What the account reads.**
+- `GET /api/billing`: `{ wallet: { balance, next_expiry, lots: [{ credits, remaining, bought, expires, expired }] }, passes: [{ id, company, from, until, live, premium_left, holder }],
+  ai_passes: [{ id, kind, left, until, live }], boosts: [{ id, kind, target, label, from, until, state, views, applies, by_day, free_rerun, product, rerun }], rerun_rule }`.
+  `rerun` is `{ checks_on, needs }` before the check, `{ applies, given }` after it, `null` for a boost the guarantee does not cover.
+- `GET /api/wallet`: the `wallet` part alone. In `/api/me`, `user.credits` is now the balance of credits (it was pack credits).
+- `GET /api/orders/ID/receipt` (paid or refunded): `{ receipt: { number, date, seller, buyer, item, period_days, amount_usd, credits, credits_bought, credits_expire, paid_with, status, paid_at, note } }`.
+
+**Images.** `PUT /api/claims/ID/page` now also takes `logo` (a data URL; `''` takes it off) and `locations` (up to 10 place names);
+only an owner of the team may change the page. `PUT /api/listings/cover { target: { job_id | job }, image }` (and `DELETE`) sets the
+cover of a job posted here or of a listed job of a claimed company; it is exported only while a Premium boost of the job runs. Images
+are PNG, JPEG or WebP, checked by their first bytes (never SVG), a logo 150 KB and a cover 450 KB at most, served by
+`GET /api/public/media/ID` with their own type, `nosniff` and a year of cache. A request body with an image may be 700,000 characters
+(every other one 20,000); `prod.mjs` and both nginx files take 720 KB for that.
+
+**The export** (`/api/public/export.json`): a posted job has `featured_until`, `premium_until`, `urgent_until`, `bumped` (ISO time),
+`cover`, `logo` (`pinned_until` is gone); `boosts` of listed jobs have the kinds `featured`, `premium` (with `cover`), `urgent` (bought,
+or the first 14 days of a Premium boost) and `bump` (with `at`); `claimed` has `logo` and `locations` as well. collect.py and build.py
+do not read the new fields yet: the Premium rotation, the badge, the cover and the logo and places on company pages are build work still
+to do.
+
+**Team roles.** `team_members.role` is `owner` or `member` (`POST /api/team { email, role? }`, `PATCH /api/team/EMAIL { role }`; `team`
+in the body or `?team=HOLDER_ID` for an owner managing a team it shares). A new member gets a letter (who added them, which company,
+where to sign in). Members post under the company's name and use its pass; owners also change the team and the company page and buy a pass.
+
+**Resumes in the account.** `GET /api/resumes` gives `{ max: 10, resumes: [{ id, name, title, created, updated }] }`;
+`POST /api/resumes { name, resume }`; `GET`, `PUT { name?, resume? }`, `DELETE /api/resumes/ID` (`resume`: the builder's `hrn_resume`
+object, 60,000 characters at most; a confirmed email first). `PUT /api/talent/profile { resume_id, ... }` puts one of them into the
+resume database (after the tick, as before).
+
+**Alerts in the account.** `POST /api/me/alerts { q, cat, loc, remote, sal, freq }` makes an alert of the account's confirmed address,
+on at once; there `freq` may be `instant` (within the hour a matching job is read, one letter an hour at most, kept apart from the one
+daily letter of the address); the open form still offers `daily` and `weekly` only. `PATCH /api/alerts/ID { freq?, paused? }`: a paused
+alert sends nothing and, on again, starts from the jobs of that hour. Paused alerts count towards the five of an address.
+
+**Job invitations** (what a Premium boost sends). `GET /api/invites` gives `{ consent_text, prefs }`; `PUT /api/invites { consent: true,
+consent_text, roles?, places?, remote?, paused? }` (the first time with `INVITE_CONSENT` word for word); `DELETE /api/invites`. The
+hourly alert job (`alerts.mjs`) runs `runInvites` after the alerts: each Premium boost that runs gets one round, once its job is in
+`data/jobs.db`, to up to 50 opted-in people whose fields and places fit (oldest opt-in first, never the buyer, at most one letter every 3
+days per person), each letter with a one-click stop (`GET` or `POST /api/invites/stop?u=&t=`). Alert addresses are never used for this.
+
+The person's export now has `resumes`, `job_invitations`, `invitations_received`, `credits`, `hiring_passes`, `ai_passes` and `images`;
+deleting the account deletes the resumes, invitations, images and covers too (unused credits are lost with the account).
+
+**Database.** New tables: `wallet_lots`, `wallets`, `passes`, `ai_passes`, `reruns`, `boost_hits`, `invite_prefs`, `invites`,
+`invite_runs`, `media`, `listing_media`, `resumes`; new columns `orders.credits`, `team_members.role`, `company_pages.logo` and
+`company_pages.locations`. On our own server there is nothing to do: `applySchema` (`src/d1.mjs`) adds a column that `schema.sql` lists
+as `-- column: TABLE NAME DEFINITION` when an older database lacks it. On Cloudflare D1, run those as `ALTER TABLE ... ADD COLUMN` by
+hand, then `schema.sql`.
 
 ## The resume database (opt-in; off until `TALENT_DB=on`)
 
@@ -665,8 +748,10 @@ cannot post until `UPDATE users SET confirmed_at = created_at` or a new confirma
 ## Rules
 
 - `PAY_MODE=test` exists only for `dev.mjs`. Never set it on Cloudflare.
-- Prices live in `PRODUCTS` in `src/worker.js` and, for display, in `config.json`. Change both together. They are the launch prices
-  of 2026-11-13: featured $29, pinned $59, 5-job pack $119, spotlight $149, sponsor $89; Plus $3, $7 and $12 for 1, 3 and 12 months.
+- Prices live in `PRODUCTS` in `src/worker.js` and, for display, in `config.json`. Change both together. They are the owner’s prices
+  of 2026-11-15 (the table above): Standard boost $99, Premium $249, Hiring Pass $499, spotlight $299, sponsor $199, bump $5, extend $9,
+  urgent $9, credits $100 / $250 / $500 (550) / $1,000 (1,200), resume search $199; Plus $9, $19 and $39 for 7, 30 and 90 days; single
+  AI passes $5 and $9.
   The price of Plus decides how many AI requests a member gets: change it and the test of the AI cost tells you whether the
   allowances (`AI_MONTHLY`) still fit.
 - Plus is refused until `PLUS_LIVE = "1"`: do not sell it before its features exist (the AI tools need `ANTHROPIC_API_KEY`). Job seekers sign up with any mailbox they
