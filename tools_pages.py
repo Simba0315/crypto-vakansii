@@ -160,14 +160,14 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
 
     # site pages a tool can point to: path -> (card title, card text)
     SITE_PAGES = {
-        "jobs/": ("Open tech jobs", f"{n_jobs:,} roles from company career pages, re-checked every hour."),
-        "remote/": ("Remote tech jobs", "Open roles listed as remote, with the countries or time zones each one accepts."),
+        "jobs/": ("Open jobs", f"{n_jobs:,} roles from company career pages, re-read every one to four hours."),
+        "remote/": ("Remote jobs", "Open roles listed as remote, with the countries or time zones each one accepts."),
         "salaries/": ("Salaries by role, skill and company", "Median advertised pay from live postings, with the number of roles behind each figure."),
         "resume/": ("Resume builder", "A plain one-column resume that screening software reads cleanly. Saves as PDF, nothing uploaded."),
         "for-you/": ("Jobs for you", "Pick your skills or paste your resume and see the open roles that fit, best matches first."),
-        "post-a-job/": ("Post a job", "Put your vacancy in front of people who are searching for tech roles right now."),
-        "widgets/": ("Jobs widget and live badges", "Show live tech jobs on your own site with one line of code."),
-        "contract/": ("Contract tech jobs", "Open contract roles at tech companies, updated hourly."),
+        "post-a-job/": ("Post a job", "Put your vacancy in front of people who are searching for work right now."),
+        "widgets/": ("Jobs widget and live badges", "Show live jobs on your own site with one line of code."),
+        "contract/": ("Contract jobs", "Open contract roles, updated hourly."),
     }
     TOOLS = []          # filled below, in the order they appear on the hub
 
@@ -256,11 +256,11 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     sal_table = ('<div class="tablewrap"><table><tr><th>Category</th><th>Any level</th><th>Junior</th><th>No level in the title</th><th>Senior</th><th>Lead and above</th></tr>' + sal_rows + "</table></div>"
                  f'<p class="note">Median advertised salary · number of postings counted. A dash means fewer than {MIN_SAMPLE} postings. Yearly, US dollars, as of {DATE}. '
                  f'<a href="{P}/salaries/">Salaries by skill and company</a></p>')
-    tool("salary-checker", "seekers", "Tech salary checker",
+    tool("salary-checker", "seekers", "Salary checker",
          "See the median and range of advertised salaries for your category, level and skill, and where your pay sits.",
-         "Tech Salary Checker — Is Your Pay Fair?",
-         f"Compare your salary with what open tech job postings advertise: median and range by category, level and skill, from {n_paid:,} postings with a published range.",
-         "Is your tech salary in line with what companies advertise?",
+         "Salary Checker — Is Your Pay Fair?",
+         f"Compare your salary with what open job postings advertise: median and range by category, level and skill, from {n_paid:,} postings with a published range.",
+         "Is your salary in line with what companies advertise?",
          f"{100 - sal_pct}% of the {n_jobs:,} open roles here do not state a salary, so it is hard to tell whether your salary or an offer is fair. "
          f"This checker uses the {n_paid:,} postings that do publish a yearly US-dollar range. Pick a category and a level, add a skill if you like, enter your number, and see the median, the typical range and where you sit.",
          wrap("salary-checker",
@@ -274,14 +274,14 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
               + '<p class="note tl-priv"><b>Private</b>Your salary is compared inside your browser and is never sent anywhere. Figures are advertised ranges, not verified pay; bonus and equity are not included.</p>'
               + '<script type="application/json" id="tl-data">' + json.dumps(sal_data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + "</script>"),
          "Where the figures come from",
-         f"<p>Every figure is calculated from job postings collected from employers’ own careers pages and re-checked every hour. On {DATE} there were {n_jobs:,} open roles; "
+         f"<p>Every figure is calculated from job postings collected from employers’ own careers pages and re-read every one to four hours. On {DATE} there were {n_jobs:,} open roles; "
          f"{n_paid:,} of them publish a yearly salary range in US dollars. Ranges in other currencies and hourly rates are left out so that all figures can be compared.</p>"
          "<p>Each posting counts once, by the midpoint of its range. The <strong>median</strong> is the middle posting; the <strong>middle half</strong> runs from the 25th to the 75th percentile; "
          "“the typical posting advertises” is the median lower end and the median upper end of the ranges. Your position is found by placing your number between 15 percentile points of the group.</p>"
          f"<p>A group needs at least {MIN_SAMPLE} postings. Below that nothing is shown, because a median of a few postings describes those few companies, not the market. "
          "The level comes from the job title; “no level in the title” means the title has no word such as Senior, Lead or Junior.</p>",
          [("Where does the salary data come from?",
-           f"From salary ranges that employers publish in their own job postings. On {DATE} we counted {n_paid:,} open tech roles with a yearly US-dollar range, out of {n_jobs:,} open roles. Nothing comes from surveys or from numbers submitted by users."),
+           f"From salary ranges that employers publish in their own job postings. On {DATE} we counted {n_paid:,} open roles with a yearly US-dollar range, out of {n_jobs:,} open roles. Nothing comes from surveys or from numbers submitted by users."),
           ("Why is there no figure for my selection?",
            f"Because fewer than {MIN_SAMPLE} open postings match it. A median of a handful of postings says more about those few companies than about the market, so the checker shows nothing instead. Remove the skill or choose “Any level” to widen the sample."),
           ("Is the advertised range what people are actually paid?",
@@ -624,7 +624,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          "Job Description Checker: Bias & Clarity Score",
          "Paste a job description and get a score with fixes: missing salary, too many must-haves, gender-coded and exclusionary words, jargon, readability. Free.",
          "Find what is putting candidates off your job description",
-         f"A posting with no salary, fifteen “requirements” and a wall of jargon gets skipped by the people you want to hear from. {100 - sal_pct}% of the {n_jobs:,} open tech roles we track do not state a salary. "
+         f"A posting with no salary, fifteen “requirements” and a wall of jargon gets skipped by the people you want to hear from. {100 - sal_pct}% of the {n_jobs:,} open roles we track do not state a salary. "
          "Paste your text and the checker scores it and lists what to fix: length, missing salary, must-have overload, gender-coded and exclusionary wording, jargon and readability. The text stays in your browser.",
          wrap("job-description-checker",
               '<div class="card tl-form">'
@@ -650,7 +650,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
          [("What makes a good job description?",
            "One that lets the right person decide quickly: what they will do, what they must already be able to do, what it pays, where the work happens and what the hiring steps are. Everything else can live on the careers page."),
           ("Should a job description include the salary?",
-           f"Yes, if you want candidates to be able to tell whether the role fits them. Of the {n_jobs:,} open tech roles we track, {sal_pct}% state what they pay" + (", so a posting with a clear range also stands out from most of the others." if sal_pct < 40 else ", and candidates who filter by salary never see the rest.")),
+           f"Yes, if you want candidates to be able to tell whether the role fits them. Of the {n_jobs:,} open roles we track, {sal_pct}% state what they pay" + (", so a posting with a clear range also stands out from most of the others." if sal_pct < 40 else ", and candidates who filter by salary never see the rest.")),
           ("What is gender-coded language in a job posting?",
            "Words that readers tend to associate more with men (“competitive”, “dominant”) or more with women (“supportive”, “collaborative”). Research by Gaucher, Friesen and Kay (2011) found that adverts loaded with masculine-coded words appealed less to women. The checker counts both kinds from a short word list and tells you which way the text leans."),
           ("How many requirements should a job posting list?",
@@ -856,7 +856,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     tool("offer-check", "seekers", "Offer check",
          "Enter an offered salary and pick the category and level: see where it sits among advertised ranges and how far it is from the median.",
          "Job Offer Check: Salary vs Advertised Ranges",
-         "Check a salary offer against the advertised ranges of open tech jobs: where it sits for your category and level, the median and the postings behind it. Free.",
+         "Check a salary offer against the advertised ranges of open jobs: where it sits for your category and level, the median and the postings behind it. Free.",
          "Check a salary offer against what open postings advertise",
          f"When an offer arrives it is hard to tell whether the figure is fair: {100 - sal_pct}% of the {n_jobs:,} open roles on this site do not state a salary. This check uses the {n_paid:,} that do. "
          "Enter the yearly pay you were offered in US dollars and pick the category and level. You see whether the offer is below the lower quarter, in the middle half or above the upper quarter "
@@ -1658,8 +1658,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     hub_desc = "Free tools for a job search and for hiring: resume builder and review, job matching, application tracker, salary and offer checks, letters, interview answers."
     list_ld = _ld({"@context": "https://schema.org", "@type": "ItemList", "name": f"Free tools on {SITE}", "numberOfItems": len(TOOLS),
                    "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": t["name"], "url": f"{FULL}/tools/{t['slug']}/"} for i, t in enumerate(TOOLS)]})
-    page("tools/", "Free Tools for Tech Job Seekers & Recruiters" + brand, hub_desc,
-         crumbs(("Tools", "")) + "<h1>Free tools for a tech job search and for hiring</h1>"
+    page("tools/", "Free Tools for Job Seekers & Recruiters" + brand, hub_desc,
+         crumbs(("Tools", "")) + "<h1>Free tools for a job search and for hiring</h1>"
          f'<p class="lead">{len(TOOLS) + len(EXTRA)} tools, from a resume builder to pay calculators, for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
          f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
          + section("Start here: resume, matching, tracking", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>")
