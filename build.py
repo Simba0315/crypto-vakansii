@@ -256,7 +256,7 @@ def art(nm):
 TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc"}
 URLS = []
 ORG_LD = [""]
-V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js"))).hexdigest()[:8]   # cache-busting version
+V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js"))).hexdigest()[:8]   # cache-busting version
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
              f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a> · '
              f'<a href="{P}/methodology/">How it works</a> · <a href="{P}/privacy/">Privacy</a> · <a href="{P}/terms/">Terms</a></p></div></footer>')
@@ -2215,6 +2215,7 @@ def main():
          crumbs(("Salaries", "")) + '<h1>Tech salaries from <span class="hl">live job postings</span></h1>'
          f'<p class="lead">{100 - SALPCT}% of open tech postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
          f'Each figure is a <a href="{P}/glossary/median/">median</a>: half of the postings advertise more than it, half less. These are advertised ranges, not what people are actually paid.</p>'
+         f'<p class="cta2"><a class="btn primary" href="{P}/salaries/explorer/">Open the salary explorer</a> <span class="note">Filter by role, place, skill and level, free.</span></p>'
          + (lambda mids_: f'<div class="statrow"><div class="stat"><b>{money(median(mids_))}</b><span>median advertised salary</span></div>'
                           f'<div class="stat"><b>{money(mids_[len(mids_) // 4])} – {money(mids_[3 * len(mids_) // 4])}</b><span>middle half of roles</span></div>'
                           f'<div class="stat"><b>{SALPCT}%</b><span>of open postings state pay</span></div>'
@@ -2282,6 +2283,77 @@ def main():
     for slug_r, (rname, rj) in by_role.items():
         group = [(j, j["usd"]) for j in rj if j["usd"]]
         if len(group) >= 20: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rlow(rname)} jobs"), role=True)      # 20 postings with pay is enough for a median; the page states the count
+
+    # Salary explorer (owner, 15 Nov: "look at Wellfound's salary calculator, maybe ours lacks something"). One page, filters for
+    # role, place, skill, field, level and remote, counted in the browser from data/salary-explorer.json: every open posting that states
+    # a yearly US-dollar range. Each figure carries its count; nothing is shown from fewer than 20 postings. No trend by quarter until
+    # the record covers 60 days.
+    EXP_MIN = 20
+    ex_jobs = [j for j in active if j["usd"]]
+    ex_roles = [(s_, rn) for s_, (rn, rj) in sorted(by_role.items(), key=lambda kv: kv[1][0]) if sum(1 for j in rj if j["usd"]) >= EXP_MIN]
+    ex_role_i = {s_: i for i, (s_, _) in enumerate(ex_roles)}
+    ex_role_of = defaultdict(list)
+    for s_, _ in ex_roles:
+        for j in by_role[s_][1]:
+            if j["usd"]: ex_role_of[j["id"]].append(ex_role_i[s_])
+    ex_place_n = Counter(p_ for j in ex_jobs for p_ in j["places"] if p_ in PLACE_NAME)
+    ex_places = [p_ for p_, k_ in sorted(ex_place_n.items(), key=lambda kv: PLACE_NAME[kv[0]]) if k_ >= EXP_MIN]
+    ex_place_i = {p_: i for i, p_ in enumerate(ex_places)}
+    ex_skill_n = Counter(t for j in ex_jobs for t in j["tags"])
+    ex_skills = sorted(t for t, k_ in ex_skill_n.items() if k_ >= EXP_MIN)
+    ex_skill_i = {t: i for i, t in enumerate(ex_skills)}
+    ex_cats = [cs for cs in CAT if cs != OTHER[0] and sum(1 for j in ex_jobs if j["cat"] == cs) >= EXP_MIN]
+    ex_cat_i = {cs: i for i, cs in enumerate(ex_cats)}
+    EX_LV = ["", "Intern", "Junior", "Senior", "Lead"]
+    flag_txt = lambda p_: re.sub(r"<[^>]+>", "", pfl(p_))
+    ex_link = lambda slug_: f"salaries/{slug_}/" if (OUT / "salaries" / slug_ / "index.html").exists() else ""
+    ex_data = {"date": TODAY, "since": SURV["since"].isoformat() if SURV else TODAY, "min": EXP_MIN,
+               "roles": [[rn, ex_link(s_)] for s_, rn in ex_roles],
+               "places": [[PLACE_NAME[p_], flag_txt(p_), ex_link(p_) or f"locations/{p_}/"] for p_ in ex_places],
+               "skills": [[t, ex_link(TAG_SLUG.get(t, slugify(t)))] for t in ex_skills],
+               "cats": [[CAT[cs], ex_link(cs)] for cs in ex_cats], "levels": EX_LV,
+               "rows": [[round(j["usd"][0] / 1000), round(j["usd"][1] / 1000), ex_cat_i.get(j["cat"], -1), EX_LV.index(j["level"]) if j["level"] in EX_LV else 0,
+                         j.get("years") or 0, 1 if j["remote"] else 0, [ex_place_i[p_] for p_ in j["places"] if p_ in ex_place_i],
+                         [ex_skill_i[t] for t in j["tags"] if t in ex_skill_i][:8], ex_role_of.get(j["id"], [])] for j in ex_jobs]}
+    write("data/salary-explorer.json", json.dumps(ex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    ex_mids = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in ex_jobs)
+    ex_q = lambda q: ex_mids[min(len(ex_mids) - 1, int(len(ex_mids) * q))] if ex_mids else 0
+    ex_days = SURV["days"] if SURV else 1
+    opt = lambda items: "".join(f'<option value="{i}">{e(lbl)}</option>' for i, lbl in items)
+    ex_links = lambda title, items: (f'<div class="exl"><p class="flabel">{e(title)}</p><p class="rel">' + "".join(f'<a href="{P}/{u}">{lbl}</a>' for lbl, u in items if u) + "</p></div>")
+    ex_qa = [("Where do these salaries come from?", f"From the pay ranges employers print in their own open job postings: {len(ex_jobs):,} of them state a yearly range in US dollars today. "
+              "The midpoint of each range is counted. These are advertised ranges for open jobs, not what people are paid."),
+             ("What do the bands mean?", "Postings are sorted by the middle of their pay range. Below the middle: the lowest 10% to 25%. The middle half: 25% to 75%. "
+              "Top of the market: 75% to 90%. The very highest and lowest tenth are left out of the bands, so one unusual posting cannot stretch them."),
+             ("Why is there no trend over time yet?", f"Postings have been recorded since {fdate(ex_data['since'])}, {ex_days} days ago. A trend by quarter needs at least 60 days; "
+              "it appears on this page by itself when the record is long enough."),
+             ("Why do some filters show no figure?", f"Every figure needs at least {EXP_MIN} postings that state pay. With fewer, a single posting moves the result too much, so the page says how many there are instead.")]
+    page("salaries/explorer/", f"Salary Explorer: pay by role, place, skill and level | {SITE}",
+         f"Filter {len(ex_jobs):,} open job postings that state pay by role, location, skill, field and level: the median, the pay bands, pay by years of experience asked and the best-paid skills.",
+         crumbs(("Salaries", "salaries/"), ("Explorer", "")) + "<h1>Salary explorer</h1>"
+         f'<p class="lead">Pick a role, a place, a skill or a level and see what employers advertise: the median, the bands around it and what changes the pay. '
+         f'Counted from {len(ex_jobs):,} open postings that state a yearly range in US dollars, on {fdate(TODAY)}. Free, no sign-up.</p>'
+         '<form class="exf" id="exf" onsubmit="return false">'
+         f'<label>Role<select id="ex-role"><option value="">All roles</option>{opt((i, rn) for i, (_, rn) in enumerate(ex_roles))}</select></label>'
+         f'<label>Location<select id="ex-place"><option value="">Anywhere</option>{opt((i, flag_txt(p_) + " " + PLACE_NAME[p_]) for i, p_ in enumerate(ex_places))}</select></label>'
+         f'<label>Skill<select id="ex-skill"><option value="">Any skill</option>{opt(enumerate(ex_skills))}</select></label>'
+         f'<label>Field<select id="ex-cat"><option value="">All fields</option>{opt((i, CAT[cs]) for i, cs in enumerate(ex_cats))}</select></label>'
+         '<label>Level<select id="ex-lvl"><option value="">Any level</option><option value="1">Intern</option><option value="2">Junior</option><option value="0">No level in the title</option>'
+         '<option value="3">Senior</option><option value="4">Lead and above</option></select></label>'
+         '<label class="exr"><input type="checkbox" id="ex-remote"> Remote only</label><button class="linkbtn" type="button" id="ex-reset">Clear filters</button></form>'
+         f'<div id="ex-out" aria-live="polite"><div class="stats3 st4"><div class="st"><span class="st-l">Median</span><b class="st-v">{money(ex_q(.5))}</b><span class="st-s">{len(ex_mids):,} postings</span></div>'
+         f'<div class="st"><span class="st-l">Middle half</span><b class="st-v">{money(ex_q(.25))}–{money(ex_q(.75))}</b><span class="st-s">25% to 75%</span></div>'
+         f'<div class="st"><span class="st-l">Top of the market</span><b class="st-v">{money(ex_q(.75))}–{money(ex_q(.9))}</b><span class="st-s">75% to 90%</span></div>'
+         f'<div class="st"><span class="st-l">Below the middle</span><b class="st-v">{money(ex_q(.1))}–{money(ex_q(.25))}</b><span class="st-s">10% to 25%</span></div></div>'
+         '<p class="note">The charts appear when the page has loaded the postings.</p></div>'
+         f'<p class="note">No trend by quarter yet: postings have been recorded for {ex_days} days, and a trend needs 60. Each figure needs at least {EXP_MIN} postings.</p>'
+         + section("Salaries by role, skill, place and field", ex_links("By role", [(e(rn), u) for rn, u in ex_data["roles"]])
+                   + ex_links("By skill", [(e(t), u) for t, u in ex_data["skills"]]) + ex_links("By location", [(pfl(p_) + e(PLACE_NAME[p_]), f"locations/{p_}/") for p_ in ex_places])
+                   + ex_links("By field", [(e(n_), u) for n_, u in ex_data["cats"]]))
+         + section("How the explorer counts", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in ex_qa) + "</dl>")
+         + f'<script src="{P}/explorer.js?v={V}" defer></script>',
+         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in ex_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
 
     # Hiring trends: one page of live numbers
     week = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
@@ -5625,7 +5697,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "map.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "map.js", "explorer.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
