@@ -103,7 +103,8 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at INTEGER NOT NULL,
   paid_at INTEGER NOT NULL DEFAULT 0,
   checked_at INTEGER NOT NULL DEFAULT 0,
-  activation TEXT NOT NULL DEFAULT ''
+  activation TEXT NOT NULL DEFAULT '',
+  credits INTEGER NOT NULL DEFAULT 0                -- prepaid credits it was paid with (then amount_usd is 0: the money came with the top-up)
 );
 CREATE INDEX IF NOT EXISTS orders_user ON orders (user_id, created_at);
 CREATE INDEX IF NOT EXISTS orders_open ON orders (status, created_at);
@@ -425,6 +426,7 @@ CREATE TABLE IF NOT EXISTS team_members (
   owner_id TEXT NOT NULL,
   email TEXT NOT NULL,
   added_at INTEGER NOT NULL,
+  role TEXT NOT NULL DEFAULT 'member',              -- 'owner': may also manage the team, the company page and buy for the company; 'member': posts under the name
   PRIMARY KEY (owner_id, email)
 );
 CREATE INDEX IF NOT EXISTS team_email ON team_members (email);
@@ -433,6 +435,127 @@ CREATE TABLE IF NOT EXISTS company_pages (
   company_key TEXT PRIMARY KEY,
   about TEXT NOT NULL DEFAULT '',
   website TEXT NOT NULL DEFAULT '',
+  logo TEXT NOT NULL DEFAULT '',                    -- a media id (the company's own logo, uploaded in the account)
+  locations TEXT NOT NULL DEFAULT '',               -- where it hires, one place per line, as the company writes them
   updated_by TEXT NOT NULL,
   updated_at INTEGER NOT NULL
 );
+
+-- ---------------------------------------------------------------- the paid products of 15 Nov 2026 (see PRODUCTS in src/worker.js)
+-- Columns added to tables that may already exist in a database made from an earlier schema.sql: applySchema (src/d1.mjs) reads these
+-- lines and adds a column that is missing. On Cloudflare D1 run the same as ALTER TABLE ... ADD COLUMN by hand.
+-- column: orders credits INTEGER NOT NULL DEFAULT 0
+-- column: team_members role TEXT NOT NULL DEFAULT 'member'
+-- column: company_pages logo TEXT NOT NULL DEFAULT ''
+-- column: company_pages locations TEXT NOT NULL DEFAULT ''
+
+-- Prepaid credits (1 credit = US$1): one lot per top-up, spent oldest-expiring first, each lot good for 12 months. A purchase paid with
+-- credits says how many in orders.credits. wallets.version changes with every top-up and every spend, so a spend planned on a balance
+-- that changed meanwhile is refused and planned again (see walletPlan in src/worker.js).
+CREATE TABLE IF NOT EXISTS wallet_lots (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  order_id TEXT NOT NULL,
+  credits INTEGER NOT NULL,
+  remaining INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS wallet_lots_order ON wallet_lots (order_id);   -- one top-up, one lot
+CREATE INDEX IF NOT EXISTS wallet_lots_user ON wallet_lots (user_id, expires_at);
+CREATE TABLE IF NOT EXISTS wallets (
+  user_id TEXT PRIMARY KEY,
+  version INTEGER NOT NULL DEFAULT 0
+);
+-- A Hiring Pass: one company, 30 days, Standard boosts of its jobs free while it runs, a number of Premium boosts.
+CREATE TABLE IF NOT EXISTS passes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  order_id TEXT NOT NULL,
+  company_key TEXT NOT NULL,
+  company TEXT NOT NULL,
+  starts_at INTEGER NOT NULL,
+  ends_at INTEGER NOT NULL,
+  premium_left INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS passes_order ON passes (order_id);
+CREATE INDEX IF NOT EXISTS passes_company ON passes (company_key, ends_at);
+-- Single AI passes for job seekers: one tailored resume (tailor + cover letter) or one mock interview (questions + feedback).
+CREATE TABLE IF NOT EXISTS ai_passes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  order_id TEXT NOT NULL,
+  kind TEXT NOT NULL,                               -- 'resume' | 'interview'
+  main_left INTEGER NOT NULL,                       -- tailor / questions
+  extra_left INTEGER NOT NULL,                      -- cover letter / feedback on answers
+  expires_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ai_passes_order ON ai_passes (order_id);
+CREATE INDEX IF NOT EXISTS ai_passes_user ON ai_passes (user_id, expires_at);
+-- The free re-run: each paid boost is looked at once, 14 days after it started (applies: clicks on Apply counted in those days).
+CREATE TABLE IF NOT EXISTS reruns (
+  placement_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  applies INTEGER NOT NULL,
+  given_order TEXT NOT NULL DEFAULT '',             -- the order of the free run, '' when none was due
+  checked_at INTEGER NOT NULL
+);
+-- Views and clicks on "Apply" of a job read from a hiring system while a boost on it runs (for the buyer's stats and the re-run).
+CREATE TABLE IF NOT EXISTS boost_hits (
+  slug TEXT NOT NULL,
+  day TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0,
+  applies INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (slug, day)
+);
+-- Job invitations: a job seeker who opted in gets at most one letter about one Premium job every few days.
+CREATE TABLE IF NOT EXISTS invite_prefs (
+  user_id TEXT PRIMARY KEY,
+  roles TEXT NOT NULL DEFAULT '',                   -- category slugs, one per line ('' = any)
+  places TEXT NOT NULL DEFAULT '',                  -- place slugs, one per line ('' = any)
+  remote INTEGER NOT NULL DEFAULT 0,                -- 1: remote jobs count wherever they are
+  paused INTEGER NOT NULL DEFAULT 0,
+  consent_text TEXT NOT NULL,
+  consented_at INTEGER NOT NULL,
+  last_at INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS invites (
+  placement_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  sent_at INTEGER NOT NULL,
+  PRIMARY KEY (placement_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS invite_runs (
+  placement_id TEXT PRIMARY KEY,
+  sent INTEGER NOT NULL,
+  at INTEGER NOT NULL
+);
+-- Images an employer uploads: a company logo, a cover for a Premium job. PNG, JPEG or WebP only (never SVG), served by
+-- /api/public/media/<id> with their own type.
+CREATE TABLE IF NOT EXISTS media (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  kind TEXT NOT NULL,                               -- 'logo' | 'cover'
+  type TEXT NOT NULL,                               -- image/png | image/jpeg | image/webp
+  data TEXT NOT NULL,                               -- base64
+  bytes INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS media_user ON media (user_id);
+CREATE TABLE IF NOT EXISTS listing_media (
+  target TEXT PRIMARY KEY,                          -- 'direct:<job id>' or 'job:<slug>', as in placements
+  user_id TEXT NOT NULL,
+  cover TEXT NOT NULL DEFAULT '',                   -- a media id
+  updated_at INTEGER NOT NULL
+);
+-- Resumes kept in the account: several versions, each the builder's object (hrn_resume) with a name the person gives it.
+CREATE TABLE IF NOT EXISTS resumes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  data TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS resumes_user ON resumes (user_id, updated_at);

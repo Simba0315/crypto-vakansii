@@ -44,7 +44,7 @@
               few live jobs again (each job once a day, see recheckLinks), tidies up, sends held-back rebuilds.
 */
 
-import { readAlert, describe, searchLink, confirmLetter, confirmLink, tokenOk, isoTime, AlertInputError, ALERT_MAX_JOBS, ALERTS_PER_EMAIL, CONFIRMS_PER_EMAIL_DAY,
+import { readAlert, describe, searchLink, confirmLetter, confirmLink, tokenOk, alertToken, isoTime, AlertInputError, ALERT_MAX_JOBS, ALERTS_PER_EMAIL, CONFIRMS_PER_EMAIL_DAY,
   SIGNUPS_PER_IP_HOUR, PENDING_DAYS, PERIOD, CATEGORIES, cleanWords, wordTests } from './alerts.js';
 
 const DAY = 86400;
@@ -58,24 +58,53 @@ const sha256 = async (s) => hex(await crypto.subtle.digest('SHA-256', enc.encode
 const isoDay = (ts) => new Date(ts * 1000).toISOString().slice(0, 10);
 const slugify = (s) => (String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '')) || 'job';
 
-/* Price list. Keep it in step with "prices" and "plus" in the site's config.json (those are what visitors read). These are the
-   launch prices of 2026-11-13, about a third of the first ones (99, 199, 399, 499, 299; Plus 9, 19, 39). The price of Plus decides how
-   much the AI tools may cost: when it changes, see AI_MONTHLY. */
+/* Price list. Keep it in step with "prices" and "plus" in the site's config.json (those are what visitors read: the names are looked up
+   there). The product line of 15 Nov 2026, the owner's: every product is one payment for a stated time, paid in crypto or with prepaid
+   credits, switched on by itself when the payment is confirmed; nothing renews. What each field means:
+     kind, days      a placement of that kind for that many days (see activate); startNow: it starts at once instead of after a running
+                     one of the same kind (a bump, the spotlight of a Hiring Pass); extendsBoost: 30 more days of the Standard boost after
+                     the boost of that job (featured or premium) ends
+     target          what it is bought for: 'job' (a job posted here, or one the site lists), 'company', 'page' (category or skill), 'none'
+     own             a job the site lists (not posted here) must belong to a company whose page the account (or its team) claimed
+     guarantee       the free re-run: fewer than RERUN_APPLIES clicks on Apply in the first RERUN_DAYS days, and it runs again free
+     urgentDays, invites   Premium: an "Urgently hiring" badge for the first days, one invitation letter to that many job seekers
+     pass            a Hiring Pass: the company spotlight for its days, Standard boosts of the company's jobs free while it runs, and
+                     that many Premium boosts
+     walletCredits   prepaid credits (1 credit = US$1) good for WALLET_DAYS; plusDays: Plus; aiPass: one single AI pass; talentCredits:
+                     contact requests in the resume database
+   The ids featured, spotlight and sponsor are kept from the first price list, so the site's export and older orders read the same. */
 export const PRODUCTS = {
-  featured: { name: 'Featured job', usd: 29, kind: 'featured', days: 14, target: 'job', group: 'employer' },
-  pinned: { name: 'Pinned job', usd: 59, kind: 'pinned', days: 7, target: 'job', group: 'employer' },
-  pack5: { name: '5-job pack', usd: 119, credits: 5, creditDays: 90, target: 'none', group: 'employer' },
-  spotlight: { name: 'Company spotlight', usd: 149, kind: 'spotlight', days: 30, target: 'company', group: 'employer' },
-  sponsor: { name: 'Category or skill sponsor', usd: 89, kind: 'sponsor', days: 30, target: 'page', group: 'employer' },
-  plus1: { name: 'Plus, 1 month', usd: 3, plusDays: 30, target: 'none', group: 'plus' },
-  plus3: { name: 'Plus, 3 months', usd: 7, plusDays: 91, target: 'none', group: 'plus' },
-  plus12: { name: 'Plus, 12 months', usd: 12, plusDays: 365, target: 'none', group: 'plus' },
+  featured: { name: 'Standard boost', usd: 99, kind: 'featured', days: 30, target: 'job', group: 'employer', guarantee: true },
+  premium: { name: 'Premium boost', usd: 249, kind: 'premium', days: 30, target: 'job', group: 'employer', guarantee: true, own: true, urgentDays: 14, invites: 50 },
+  pass: { name: 'Hiring Pass', usd: 499, kind: 'spotlight', days: 30, target: 'company', group: 'employer', startNow: true, pass: 3 },
+  spotlight: { name: 'Company spotlight', usd: 299, kind: 'spotlight', days: 30, target: 'company', group: 'employer' },
+  sponsor: { name: 'Category or skill sponsor', usd: 199, kind: 'sponsor', days: 30, target: 'page', group: 'employer' },
+  bump: { name: 'Bump to top', usd: 5, kind: 'bump', days: 30, target: 'job', group: 'employer', startNow: true },
+  extend: { name: 'Extend a boost by 30 days', usd: 9, kind: 'featured', days: 30, target: 'job', group: 'employer', extendsBoost: true },
+  urgent: { name: 'Urgently hiring badge', usd: 9, kind: 'urgent', days: 14, target: 'job', group: 'employer', own: true },
+  credits100: { name: '100 credits', usd: 100, walletCredits: 100, target: 'none', group: 'credits' },
+  credits250: { name: '250 credits', usd: 250, walletCredits: 250, target: 'none', group: 'credits' },
+  credits550: { name: '550 credits', usd: 500, walletCredits: 550, target: 'none', group: 'credits' },          // +10%
+  credits1200: { name: '1,200 credits', usd: 1000, walletCredits: 1200, target: 'none', group: 'credits' },     // +20%
+  plus7: { name: 'Plus, 7 days', usd: 9, plusDays: 7, target: 'none', group: 'plus' },
+  plus30: { name: 'Plus, 30 days', usd: 19, plusDays: 30, target: 'none', group: 'plus' },
+  plus90: { name: 'Plus, 90 days', usd: 39, plusDays: 90, target: 'none', group: 'plus' },
+  ai_resume: { name: 'One tailored resume', usd: 5, aiPass: 'resume', target: 'none', group: 'ai' },
+  ai_interview: { name: 'One mock interview', usd: 9, aiPass: 'interview', target: 'none', group: 'ai' },
 };
-/* Packs of contact requests for the resume database (see TALENT_CONSENT): one payment, nothing renews. Empty until the owner sets the price
-   (only the owner changes prices); then, for example: talent10: { name: 'Resume database: 10 contact requests', usd: <price>, talentCredits: 10,
-   target: 'none', group: 'employer' }, and the same in config.json. A pack is sold like any product here once it is in this list. */
-export const TALENT_PACKS = {};
+/* Contact requests for the resume database (see TALENT_CONSENT): one payment, nothing renews; a request is used only when the person
+   accepts (it comes back on a decline or no answer in TALENT_REQUEST_DAYS). */
+export const TALENT_PACKS = {
+  talent50: { name: 'Resume search: 50 contact requests', usd: 199, talentCredits: 50, target: 'none', group: 'employer' },
+};
 Object.assign(PRODUCTS, TALENT_PACKS);
+const WALLET_DAYS = 365;                  // prepaid credits last this long after the top-up
+const RERUN_DAYS = 14, RERUN_APPLIES = 10;  // the free re-run: a paid boost with fewer clicks on Apply than this in its first days runs again
+const EXTEND_AFTER_DAYS = 14;             // a boost can be extended while it runs and this long after it ended
+const AI_PASS_DAYS = 30;                  // a single AI pass is used within this long
+const AI_PASS_USES = { resume: { main: 1, extra: 1 }, interview: { main: 1, extra: 8 } };   // tailor + cover letter; questions + feedback on answers
+// which single pass covers which AI tool, and which of its two counters it uses
+const AI_PASS_TOOLS = { 'resume/tailor': ['resume', 'main'], 'letter/cover': ['resume', 'extra'], 'interview/questions': ['interview', 'main'], 'interview/feedback': ['interview', 'extra'] };
 const FREE_JOB_DAYS = 30, FREE_JOBS_PER_DAY = 3, LINK_CHECKS_PER_HOUR = 30;
 const INVOICE_LIFETIME = 3600;            // seconds an invoice can be paid, as told to the gateway
 const ORDER_GRACE = 900;                  // an unpaid invoice is closed this long after its lifetime ran out
@@ -159,9 +188,9 @@ export const companyKey = (name) => {
   const tidy = (s) => s.replace(/[​-‏⁠﻿]/g, '').replace(/\s+/g, ' ').replace(/[\s\p{P}\p{S}]+$/u, '').trim();
   return tidy(tidy(String(name || '')).normalize('NFKC').toLowerCase());
 };
-async function body(req) {
+async function body(req, max = 20000) {           // max: characters; the endpoints that take an image allow more
   const text = await req.text();
-  if (text.length > 20000) throw bad('too_large', 'The request is too large.', 413);
+  if (text.length > max) throw bad('too_large', 'The request is too large.', 413);
   try { const v = JSON.parse(text || '{}'); if (v && typeof v === 'object') return v; } catch {}
   throw bad('bad_json', 'The request body must be JSON.');
 }
@@ -369,7 +398,8 @@ async function currentUser(env, req, required = true) {
 }
 async function userView(env, u) {
   const t = now();
-  const credits = await db(env, 'SELECT COALESCE(SUM(remaining), 0) AS n FROM credits WHERE user_id = ? AND expires_at > ? AND remaining > 0', u.id, t).first('n');
+  // credits: the prepaid credits left (1 credit = US$1), see walletOf
+  const credits = await db(env, 'SELECT COALESCE(SUM(remaining), 0) AS n FROM wallet_lots WHERE user_id = ? AND expires_at > ? AND remaining > 0', u.id, t).first('n');
   // posts_as: what this account may post as. "employer": jobs of its own company, on its domain. "recruiter": jobs of other companies
   // (it has a LinkedIn identity). Empty: a job seeker's account. Either way the email must be confirmed before anything is published.
   return { id: u.id, email: u.email, company: u.company, plus: u.plus_until > t, plus_until: u.plus_until > t ? isoDay(u.plus_until) : '', credits: Number(credits) || 0,
@@ -716,29 +746,110 @@ async function resolveTarget(env, user, product, t) {
 }
 
 /* ---------------------------------------------------------------- orders and activation */
-const orderView = (o) => ({ id: o.id, product: o.product, name: (PRODUCTS[o.product] || {}).name || o.product, label: o.label, amount_usd: o.amount_usd, status: o.status,
+const PAID_WITH = { wallet: 'prepaid credits', credit: 'prepaid credits', pass: 'the Hiring Pass bought earlier',
+  rerun: 'nothing: a free re-run, because the boost got fewer than ' + RERUN_APPLIES + ' clicks on Apply in its first ' + RERUN_DAYS + ' days',
+  cryptomus: 'cryptocurrency, through Cryptomus', test: 'a test payment (no money moved)' };
+const orderView = (o) => ({ id: o.id, product: o.product, name: (PRODUCTS[o.product] || {}).name || o.product, label: o.label, amount_usd: o.amount_usd, credits: o.credits || 0, status: o.status,
+  paid_with: ['wallet', 'pass', 'rerun'].includes(o.provider) ? o.provider : o.provider === 'credit' ? 'wallet' : 'crypto',
   pay_url: o.status === 'pending' ? o.pay_url : '', created: isoDay(o.created_at), paid: o.paid_at ? isoDay(o.paid_at) : '' });
+
+/* ---------------------------------------------------------------- who acts for which company
+   teamOf: this account and the accounts whose team it is in, on the same company domain (manage: only where it is an "owner" of the
+   team). A team member's jobs may use the company's Hiring Pass and its claimed pages; buying a pass for the company, changing its page
+   and its team take an owner. */
+const marks = (list) => list.map(() => '?').join(', ');
+async function teamOf(env, user, manage = false) {
+  const ids = [user.id], own = domainOf(user);
+  if (!own || !user.confirmed_at) return ids;
+  for (const r of (await db(env, 'SELECT m.owner_id, m.role, u.domain, u.email FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email = ? AND u.banned = 0', user.email).all()).results)
+    if (domainOf(r) === own && (!manage || r.role === 'owner') && !ids.includes(r.owner_id)) ids.push(r.owner_id);
+  return ids;
+}
+// a job page of the site belongs to a company when its address ends with the company's name as the site writes it in addresses
+const slugIsOf = (slug, company) => { const cs = slugify(company || ''); return !!cs && cs !== 'job' && new RegExp('-' + cs.replace(/-/g, '\\-') + '(?:-\\d+)?$').test(String(slug || '')); };
+const claimsOf = async (env, ids) => (await db(env, "SELECT * FROM company_claims WHERE status = 'verified' AND user_id IN (" + marks(ids) + ')', ...ids).all()).results;
+const CLAIM_FIRST = 'This is a job the site reads from the company’s careers page. A Premium boost and the “Urgently hiring” badge are for the company itself: claim the company page first (Your company pages), then boost it.';
+// the claimed company a listed job belongs to, among the claims this account (or its team) holds, or null
+async function claimedJobOf(env, user, slug) {
+  return (await claimsOf(env, await teamOf(env, user))).find((c) => slugIsOf(slug, c.company)) || null;
+}
+// a company this account (or a team it owns) holds: it posted a job under the name, or its page is claimed and verified
+async function ownsCompany(env, user, name) {
+  const ids = await teamOf(env, user, true), k = companyKey(name);
+  return !!(await db(env, 'SELECT 1 AS x FROM companies WHERE k = ? AND user_id IN (' + marks(ids) + ") UNION SELECT 1 FROM company_claims WHERE company_key = ? AND status = 'verified' AND user_id IN (" + marks(ids) + ')',
+    k, ...ids, k, ...ids).first());
+}
+// the running Hiring Pass that covers a boost of this job, or null: the company of the job, a pass of this account or its team, and for
+// Premium a pass that still has Premium boosts left
+async function passFor(env, user, product, key, t) {
+  if (product !== PRODUCTS.featured && product !== PRODUCTS.premium) return null;
+  const ids = await teamOf(env, user);
+  const passes = (await db(env, 'SELECT * FROM passes WHERE user_id IN (' + marks(ids) + ') AND starts_at <= ? AND ends_at > ? ORDER BY ends_at', ...ids, t, t).all()).results;
+  if (!passes.length) return null;
+  const k = key.startsWith('direct:') ? await db(env, 'SELECT company_key FROM jobs WHERE id = ?', key.slice(7)).first('company_key') : null;
+  return passes.find((p) => (k != null ? p.company_key === k : slugIsOf(key.slice(4), p.company)) && (product !== PRODUCTS.premium || p.premium_left > 0)) || null;
+}
+// "Extend a boost by 30 days": once per boost, for a job whose boost runs or ended at most EXTEND_AFTER_DAYS ago
+async function mayExtend(env, user, key, t) {
+  const ids = await teamOf(env, user);
+  const since = await db(env, 'SELECT MAX(paid_at) AS at FROM orders WHERE user_id IN (' + marks(ids) + ") AND target = ? AND status = 'paid' AND product IN ('featured', 'premium') AND provider != 'rerun'", ...ids, key).first('at');
+  if (!since) throw bad('no_boost', 'Extending is for a job with a Standard or Premium boost. Boost the job first.', 409);
+  if (!(await db(env, "SELECT 1 AS x FROM placements WHERE target = ? AND kind IN ('featured', 'premium') AND cancelled = 0 AND (held = 1 OR ends_at > ?)", key, t - EXTEND_AFTER_DAYS * DAY).first()))
+    throw bad('no_boost', 'The boost of this job ended more than ' + EXTEND_AFTER_DAYS + ' days ago. Boost it again instead.', 409);
+  if (await db(env, 'SELECT 1 AS x FROM orders WHERE user_id IN (' + marks(ids) + ") AND target = ? AND product = 'extend' AND status IN ('paid', 'pending') AND created_at >= ?", ...ids, key, since).first())
+    throw bad('extended', 'This boost was extended once already: one extension per boost.', 409);
+}
+
+/* ---------------------------------------------------------------- prepaid credits (1 credit = US$1)
+   A top-up is a lot of credits good for WALLET_DAYS; a purchase takes from the lots that run out first. The plan of what to take is
+   made here and carried out by activate in one batch whose first statement checks that the wallet has not changed since (its version):
+   two purchases at the same moment cannot spend the same credits, the second is planned again on what is left. */
+async function walletOf(env, userId, t = now()) {
+  const lots = (await db(env, 'SELECT * FROM wallet_lots WHERE user_id = ? ORDER BY expires_at, id', userId).all()).results;
+  const live = lots.filter((l) => l.expires_at > t && l.remaining > 0);
+  return { balance: live.reduce((a, l) => a + l.remaining, 0), next_expiry: live.length ? isoDay(live[0].expires_at) : '',
+    lots: lots.map((l) => ({ credits: l.credits, remaining: l.expires_at > t ? l.remaining : 0, bought: isoDay(l.created_at), expires: isoDay(l.expires_at), expired: l.expires_at <= t })) };
+}
+async function walletPlan(env, userId, credits, t) {
+  const version = Number(await db(env, 'SELECT version FROM wallets WHERE user_id = ?', userId).first('version')) || 0;
+  const lots = (await db(env, 'SELECT id, remaining FROM wallet_lots WHERE user_id = ? AND remaining > 0 AND expires_at > ? ORDER BY expires_at, id', userId, t).all()).results;
+  let left = credits; const take = [];
+  for (const l of lots) { if (!left) break; const n = Math.min(l.remaining, left); take.push([l.id, n]); left -= n; }
+  return left ? null : { version, take, credits };
+}
 
 async function createOrder(env, req, user) {
   await limit(env, 'order:' + user.id, 20, 3600);
-  const b = await body(req), product = PRODUCTS[b.product];
+  const b = await body(req), product = Object.hasOwn(PRODUCTS, String(b.product)) ? PRODUCTS[b.product] : null;
   if (!product) throw bad('product', 'Unknown product.');
   if (product.group === 'plus' && env.PLUS_LIVE !== '1') throw bad('not_on_sale', 'Plus is not on sale yet.', 409);
-  if (product.group === 'employer' && !user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);      // nothing is sold to an address nobody has confirmed
+  if (product.group === 'ai' && !(env.PLUS_LIVE === '1' && env.ANTHROPIC_API_KEY)) throw bad('not_on_sale', 'The single AI passes are not on sale yet.', 409);
+  if ((product.group === 'employer' || product.group === 'credits') && !user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);      // nothing is sold to an address nobody has confirmed
   // an account that is only a recruiter (a LinkedIn identity, no company domain) speaks for no company, so it cannot put one in the spotlight or sponsor a page in its name
-  if ((product.target === 'company' || product.target === 'page') && user.linkedin_sub && !domainOf(user)) throw bad('recruiter', 'A recruiter cannot buy a company spotlight or a sponsorship in a company’s name: only the company itself can.', 403);
-  const target = await resolveTarget(env, user, product, b.target);
-  const id = rid('o_'), t = now();
-  if (b.use_credit) {                                         // a prepaid featured listing from a pack: no payment step
-    if (b.product !== 'featured') throw bad('credit', 'Pack credits are for featured jobs.');
-    const noCredit = bad('credit', 'You have no pack credits left.', 409);
-    const credit = await db(env, 'SELECT id FROM credits WHERE user_id = ? AND remaining > 0 AND expires_at > ? ORDER BY expires_at LIMIT 1', user.id, t).first();
-    if (!credit) throw noCredit;
-    await db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, created_at) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)',
-      id, user.id, b.product, target.key, target.label, 'pending', 'credit', t).run();
-    if (!(await activate(env, id, credit.id))) {               // the credit went to a request that arrived at the same moment
+  if ((product.target === 'company' || product.target === 'page') && user.linkedin_sub && !domainOf(user)) throw bad('recruiter', 'A recruiter cannot buy a company spotlight, a Hiring Pass or a sponsorship in a company’s name: only the company itself can.', 403);
+  const target = await resolveTarget(env, user, product, b.target), t = now();
+  if (product.own && target.key.startsWith('job:') && !(await claimedJobOf(env, user, target.key.slice(4)))) throw bad('claim_first', CLAIM_FIRST, 403);
+  if (product.pass && !(await ownsCompany(env, user, target.key.slice(8))))
+    throw bad('not_your_company', 'A Hiring Pass is for your own company: one you posted a job for here, or whose page you claimed.', 403);
+  if (product.extendsBoost) await mayExtend(env, user, target.key, t);
+  const id = rid('o_');
+  const viaWallet = b.pay === 'wallet' || b.use_credit === true, pass = await passFor(env, user, product, target.key, t);
+  if (viaWallet && product.walletCredits) throw bad('credit', 'Credits buy everything except more credits.');
+  if (pass || viaWallet) {                                    // nothing to pay on a checkout page: it switches on now
+    await db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, created_at, credits) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?)',
+      id, user.id, b.product, target.key, target.label, 'pending', pass ? 'pass' : 'wallet', t, pass ? 0 : product.usd).run();
+    let done = false;
+    if (pass) done = await activate(env, id, { pass: pass.id, premium: product === PRODUCTS.premium });
+    else for (let i = 0; i < 4 && !done; i++) {
+      const plan = await walletPlan(env, user.id, product.usd, t);
+      if (!plan) break;
+      done = await activate(env, id, { wallet: plan });       // false when another purchase changed the wallet meanwhile: plan again
+    }
+    if (!done) {
       await db(env, "UPDATE orders SET status = 'failed' WHERE id = ? AND status = 'pending'", id).run();
-      throw noCredit;
+      if (pass) throw bad('pass', 'Your Hiring Pass has no Premium boosts left, or it has just run out.', 409);
+      const w = await walletOf(env, user.id, t);
+      throw bad('credit', 'Not enough credits: this costs ' + product.usd + ', you have ' + w.balance + '. Top up, or pay in crypto.', 409, { balance: w.balance, needed: product.usd });
     }
     return { order: orderView(await db(env, 'SELECT * FROM orders WHERE id = ?', id).first()) };
   }
@@ -762,30 +873,48 @@ async function createOrder(env, req, user) {
    Everything is one batch, which D1 runs as a single transaction. Its first statement marks the order paid and stamps it with a mark only
    this call knows; every other statement writes only where that mark is on the order. A repeated or parallel call (a webhook sent twice,
    the cron and a webhook together) finds the order already paid, stamps nothing, and so writes nothing. If any statement fails, the order
-   stays unpaid and the next webhook or cron run does the whole thing again. creditId: the pack credit that pays for this order, spent in
-   the same batch. One order gives at most one placement and one row of credits; the unique indexes in schema.sql back that up. */
-async function activate(env, orderId, creditId = '') {
+   stays unpaid and the next webhook or cron run does the whole thing again.
+   via: how an order without a checkout is paid. { wallet: plan } takes the credits of the plan (walletPlan), only if the wallet is still
+   at the version the plan was made on; { pass, premium } uses a running Hiring Pass (for Premium, one of its Premium boosts).
+   One order gives at most one placement, one lot of credits, one pass; the unique indexes in schema.sql back that up. */
+async function activate(env, orderId, via = {}) {
   const o = await db(env, 'SELECT * FROM orders WHERE id = ?', orderId).first(), p = o && PRODUCTS[o.product];
   if (!o || !['pending', 'expired', 'underpaid', 'failed'].includes(o.status)) return false;
   if (!p) { console.error('activate: order ' + o.id + ' is for a product that is not in the price list'); return false; }
-  const t = now(), mark = rid('a_'), mine = 'EXISTS (SELECT 1 FROM orders WHERE id = ? AND activation = ?)';
-  const steps = [creditId
-    ? db(env, "UPDATE orders SET status = 'paid', paid_at = ?, activation = ? WHERE id = ? AND status IN ('pending', 'expired', 'underpaid', 'failed') " +
-        'AND EXISTS (SELECT 1 FROM credits WHERE id = ? AND user_id = orders.user_id AND remaining > 0 AND expires_at > ?)', t, mark, o.id, creditId, t)
-    : db(env, "UPDATE orders SET status = 'paid', paid_at = ?, activation = ? WHERE id = ? AND status IN ('pending', 'expired', 'underpaid', 'failed')", t, mark, o.id)];
-  if (creditId) steps.push(db(env, 'UPDATE credits SET remaining = remaining - 1 WHERE id = ? AND remaining > 0 AND ' + mine, creditId, o.id, mark));
-  // Buying again while it is running adds time instead of overlapping. Paying never skips review: for a job that is waiting for a person
-  // the placement is written as held (held = 1, its time counted from zero instead of from now), in the same statement that looks at the
-  // job, and its days start to run when the job is approved (see holdPlacements and releasePlacements).
-  if (p.kind) steps.push(db(env,
-    'INSERT INTO placements (id, order_id, user_id, kind, target, label, starts_at, ends_at, held) SELECT ?, id, user_id, ?, target, label, start, start + ?, held FROM (' +
-    'SELECT x.id, x.user_id, x.target, x.label, x.held, MAX(CASE WHEN x.held = 1 THEN 0 ELSE ? END, COALESCE((SELECT MAX(p.ends_at) FROM placements p ' +
-    'WHERE p.kind = ? AND p.target = x.target AND p.cancelled = 0 AND p.held = x.held AND (x.held = 1 OR p.ends_at > ?)), 0)) AS start FROM (' +
-    "SELECT o.id, o.user_id, o.target, o.label, EXISTS (SELECT 1 FROM jobs j WHERE o.target = 'direct:' || j.id AND j.status = 'review') AS held " +
-    'FROM orders o WHERE o.id = ? AND o.activation = ?) x)', rid('p_'), p.kind, p.days * DAY, t, p.kind, t, o.id, mark));
-  if (p.credits) steps.push(db(env, 'INSERT INTO credits (id, user_id, order_id, remaining, expires_at) SELECT ?, user_id, id, ?, ? FROM orders WHERE id = ? AND activation = ?',
-    rid('c_'), p.credits, t + p.creditDays * DAY, o.id, mark));
+  const t = now(), mark = rid('a_'), mine = 'EXISTS (SELECT 1 FROM orders WHERE id = ? AND activation = ?)', open = "status IN ('pending', 'expired', 'underpaid', 'failed')";
+  const steps = [via.wallet
+    ? db(env, "UPDATE orders SET status = 'paid', paid_at = ?, activation = ? WHERE id = ? AND " + open + ' AND COALESCE((SELECT version FROM wallets WHERE user_id = orders.user_id), 0) = ?', t, mark, o.id, via.wallet.version)
+    : via.pass
+      ? db(env, "UPDATE orders SET status = 'paid', paid_at = ?, activation = ? WHERE id = ? AND " + open + ' AND EXISTS (SELECT 1 FROM passes WHERE id = ? AND starts_at <= ? AND ends_at > ? AND (? = 0 OR premium_left > 0))',
+        t, mark, o.id, via.pass, t, t, via.premium ? 1 : 0)
+      : db(env, "UPDATE orders SET status = 'paid', paid_at = ?, activation = ? WHERE id = ? AND " + open, t, mark, o.id)];
+  if (via.wallet) {
+    steps.push(db(env, 'UPDATE wallets SET version = version + 1 WHERE user_id = ? AND ' + mine, o.user_id, o.id, mark));
+    for (const [lot, n] of via.wallet.take) steps.push(db(env, 'UPDATE wallet_lots SET remaining = remaining - ? WHERE id = ? AND remaining >= ? AND ' + mine, n, lot, n, o.id, mark));
+  }
+  if (via.pass && via.premium) steps.push(db(env, 'UPDATE passes SET premium_left = premium_left - 1 WHERE id = ? AND premium_left > 0 AND ' + mine, via.pass, o.id, mark));
+  // A placement. Buying again while one of the same kind runs adds time instead of overlapping (startNow: a bump and a pass's spotlight
+  // start at once; extendsBoost: after whichever boost of the job ends last). Paying never skips review: for a job that is waiting for a
+  // person the placement is written as held (held = 1, its time counted from zero instead of from now), in the same statement that
+  // looks at the job, and its days start to run when the job is approved (see holdPlacements and releasePlacements).
+  if (p.kind) {
+    const kinds = p.extendsBoost ? ['featured', 'premium'] : [p.kind];
+    const after = p.startNow ? '0' : 'COALESCE((SELECT MAX(p.ends_at) FROM placements p WHERE p.kind IN (' + marks(kinds) + ') AND p.target = x.target AND p.cancelled = 0 AND p.held = x.held AND (x.held = 1 OR p.ends_at > ?)), 0)';
+    steps.push(db(env,
+      'INSERT INTO placements (id, order_id, user_id, kind, target, label, starts_at, ends_at, held) SELECT ?, id, user_id, ?, target, label, start, start + ?, held FROM (' +
+      'SELECT x.id, x.user_id, x.target, x.label, x.held, MAX(CASE WHEN x.held = 1 THEN 0 ELSE ? END, ' + after + ') AS start FROM (' +
+      "SELECT o.id, o.user_id, o.target, o.label, EXISTS (SELECT 1 FROM jobs j WHERE o.target = 'direct:' || j.id AND j.status = 'review') AS held " +
+      'FROM orders o WHERE o.id = ? AND o.activation = ?) x)', rid('p_'), p.kind, p.days * DAY, t, ...(p.startNow ? [] : [...kinds, t]), o.id, mark));
+  }
+  if (p.pass) steps.push(db(env, 'INSERT INTO passes (id, user_id, order_id, company_key, company, starts_at, ends_at, premium_left) SELECT ?, user_id, id, ?, ?, ?, ?, ? FROM orders WHERE id = ? AND activation = ?',
+    rid('h_'), companyKey(o.target.slice(8)), o.target.slice(8), t, t + p.days * DAY, p.pass, o.id, mark));
+  if (p.walletCredits) steps.push(
+    db(env, 'INSERT INTO wallet_lots (id, user_id, order_id, credits, remaining, expires_at, created_at) SELECT ?, user_id, id, ?, ?, ?, ? FROM orders WHERE id = ? AND activation = ?',
+      rid('w_'), p.walletCredits, p.walletCredits, t + WALLET_DAYS * DAY, t, o.id, mark),
+    db(env, 'INSERT INTO wallets (user_id, version) SELECT user_id, 1 FROM orders WHERE id = ? AND activation = ? ON CONFLICT(user_id) DO UPDATE SET version = version + 1', o.id, mark));
   if (p.plusDays) steps.push(db(env, 'UPDATE users SET plus_until = MAX(plus_until, ?) + ? WHERE id = ? AND ' + mine, t, p.plusDays * DAY, o.user_id, o.id, mark));
+  if (p.aiPass) steps.push(db(env, 'INSERT INTO ai_passes (id, user_id, order_id, kind, main_left, extra_left, expires_at, created_at) SELECT ?, user_id, id, ?, ?, ?, ?, ? FROM orders WHERE id = ? AND activation = ?',
+    rid('i_'), p.aiPass, AI_PASS_USES[p.aiPass].main, AI_PASS_USES[p.aiPass].extra, t + AI_PASS_DAYS * DAY, t, o.id, mark));
   if (p.talentCredits) steps.push(db(env, 'INSERT INTO talent_credits (user_id, n) SELECT user_id, ? FROM orders WHERE id = ? AND activation = ? ON CONFLICT(user_id) DO UPDATE SET n = n + excluded.n', p.talentCredits, o.id, mark));
   const done = await env.DB.batch(steps);
   if (!done[0].meta.changes) return false;
@@ -796,8 +925,11 @@ async function settle(env, order, status) {                    // status as the 
   if (status === 'paid' || status === 'paid_over') return activate(env, order.id);
   if (order.status !== 'pending') {
     if (status === 'refund_paid' && order.status === 'paid') {
+      // a refund takes back what the order gave: its placement, the credits of a top-up that are left, a pass, a single AI pass
       await env.DB.batch([db(env, "UPDATE orders SET status = 'refunded' WHERE id = ?", order.id), db(env, 'UPDATE placements SET cancelled = 1 WHERE order_id = ?', order.id),
-        db(env, 'UPDATE credits SET remaining = 0 WHERE order_id = ?', order.id)]);
+        db(env, 'UPDATE credits SET remaining = 0 WHERE order_id = ?', order.id), db(env, 'UPDATE wallet_lots SET remaining = 0 WHERE order_id = ?', order.id),
+        db(env, 'UPDATE wallets SET version = version + 1 WHERE user_id = ?', order.user_id), db(env, 'UPDATE passes SET ends_at = MIN(ends_at, ?), premium_left = 0 WHERE order_id = ?', now(), order.id),
+        db(env, 'UPDATE ai_passes SET main_left = 0, extra_left = 0 WHERE order_id = ?', order.id)]);
       await requestRebuild(env);
     }
     return false;
@@ -1399,12 +1531,20 @@ async function hit(env, req) {
   const slug = /^j_[a-f0-9]{12}$/.test(ref) ? '' : jobSlugFrom(ref);
   const job = slug === '' ? await db(env, "SELECT id FROM jobs WHERE id = ? AND status = 'live' AND expires_at > ?", ref, t).first()
     : slug ? await db(env, "SELECT id FROM jobs WHERE slug = ? AND status = 'live' AND expires_at > ? ORDER BY created_at DESC LIMIT 1", slug, t).first() : null;
-  if (!job) return claimedHit(env, slug, b.company, kind, who, day);
+  if (!job) { await boostHit(env, slug, kind, who, day, t); return claimedHit(env, slug, b.company, kind, who, day); }
   // the row in hit_seen is the test: it can be written once a day per job, kind and visitor, however many requests arrive together
   const first = await db(env, 'INSERT INTO hit_seen (day, job_id, kind, ip_hash) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', day, job.id, kind, who).run();
   if (first.meta.changes) await db(env, 'INSERT INTO job_hits (job_id, day, views, applies) VALUES (?, ?, ?, ?) ON CONFLICT(job_id, day) DO UPDATE SET views = views + excluded.views, applies = applies + excluded.applies',
     job.id, day, kind === 'view' ? 1 : 0, kind === 'apply' ? 1 : 0).run();
   return null;
+}
+/* A job read from a hiring system while a Standard or Premium boost on it runs: counted for the boost (boost_hits), the same way, so
+   whoever bought it sees what it brought and the free re-run can be judged (see rerunBoosts). Nothing is counted for a job without one. */
+async function boostHit(env, slug, kind, who, day, t) {
+  if (!slug || !(await db(env, "SELECT 1 AS x FROM placements WHERE target = ? AND kind IN ('featured', 'premium') AND cancelled = 0 AND held = 0 AND starts_at <= ? AND ends_at > ?", 'job:' + slug, t, t).first())) return;
+  const first = await db(env, 'INSERT INTO hit_seen (day, job_id, kind, ip_hash) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', day, 'b:' + slug, kind, who).run();
+  if (first.meta.changes) await db(env, 'INSERT INTO boost_hits (slug, day, views, applies) VALUES (?, ?, ?, ?) ON CONFLICT(slug, day) DO UPDATE SET views = views + excluded.views, applies = applies + excluded.applies',
+    slug, day, kind === 'view' ? 1 : 0, kind === 'apply' ? 1 : 0).run();
 }
 /* A job read from a hiring system, of a company whose page is claimed: counted for that company (company_hits), the same way. The page
    sends the company's name with the slug; the slug must end with that name as the site writes it in addresses, so a name cannot be
@@ -1447,28 +1587,41 @@ async function shownNow(env, t, liveJobs) {
 async function exportForSite(env) {
   const t = now();
   // one row per thing that is live now; "ends" covers time bought on top of the running period; a held placement (its job waits for review) is not running
-  const live = (await db(env, 'SELECT kind, target, MAX(ends_at) AS ends FROM placements WHERE cancelled = 0 AND held = 0 AND ends_at > ? GROUP BY kind, target HAVING MIN(starts_at) <= ?', t, t).all()).results;
+  const live = (await db(env, 'SELECT kind, target, MAX(ends_at) AS ends, MAX(CASE WHEN starts_at <= ? THEN starts_at END) AS since FROM placements WHERE cancelled = 0 AND held = 0 AND ends_at > ? GROUP BY kind, target HAVING MIN(starts_at) <= ?', t, t, t).all()).results;
+  // the "Urgently hiring" badge of a Premium boost: its first PRODUCTS.premium.urgentDays days
+  const urgentDays = PRODUCTS.premium.urgentDays * DAY;
+  for (const r of (await db(env, "SELECT target, MAX(MIN(ends_at, starts_at + ?)) AS ends FROM placements WHERE kind = 'premium' AND cancelled = 0 AND held = 0 AND starts_at <= ? AND starts_at + ? > ? GROUP BY target",
+    urgentDays, t, urgentDays, t).all()).results) live.push({ kind: 'urgent', target: r.target, ends: r.ends, since: 0 });
   // only jobs that are live now leave this service: closed, deleted, taken-down and run-out ones are not in the list, nor is any job
   // that waits for review or was turned down
   const rows = (await db(env, "SELECT * FROM jobs WHERE status = 'live' AND expires_at > ? ORDER BY created_at", t).all()).results, shown = await shownNow(env, t, rows);
+  const covers = new Map((await db(env, "SELECT target, cover FROM listing_media WHERE cover != ''").all()).results.map((r) => [r.target, r.cover]));
+  const pages = (await db(env, "SELECT c.company, c.company_key, c.decided_at, p.about, p.website, p.logo, p.locations FROM company_claims c LEFT JOIN company_pages p ON p.company_key = c.company_key WHERE c.status = 'verified' ORDER BY c.company").all()).results;
+  const logoOf = new Map(pages.filter((c) => c.logo).map((c) => [c.company_key, mediaUrl(env, c.logo)]));
   const boosts = [], sponsors = [], direct = {};
   for (const p of live) {
     if (!shown(p.target)) continue;
     const until = isoDay(p.ends), [type, rest] = [p.target.slice(0, p.target.indexOf(':')), p.target.slice(p.target.indexOf(':') + 1)];
-    if (type === 'job') boosts.push({ slug: rest, kind: p.kind, until });
-    else if (type === 'direct') (direct[rest] = direct[rest] || {})[p.kind] = until;
+    // a bump says when it was bought ("at"): the site sorts the job as if it were new then; its date stays the real one
+    const extra = p.kind === 'bump' ? { at: new Date(p.since * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z') } : p.kind === 'premium' && covers.has(p.target) ? { cover: mediaUrl(env, covers.get(p.target)) } : {};
+    if (type === 'job') boosts.push({ slug: rest, kind: p.kind, until, ...extra });
+    else if (type === 'direct') (direct[rest] = direct[rest] || {})[p.kind] = { until, ...extra };
     else if (type === 'company') sponsors.push({ company: rest, slot: 'spotlight', until });
     else { const cut = rest.indexOf('|'); sponsors.push({ company: rest.slice(cut + 1), slot: type + ':' + rest.slice(0, cut), until }); }
   }
-  const jobs = rows.map((j) => ({
-    id: j.id, company: j.company, company_url: j.company_url, title: j.title, url: j.apply_url, location: j.location, remote: !!j.remote, salary: j.salary, etype: j.etype,
-    text: j.description, posted: isoDay(j.created_at), featured_until: (direct[j.id] || {}).featured || '', pinned_until: (direct[j.id] || {}).pinned || '',
-    // who posted it: "employer" (an account tied to the company's own domain) or "recruiter" (a person with a LinkedIn identity, whose
-    // name is given, posting for a company they are not part of: the site says "posted by a recruiter, not verified by the employer")
-    posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' }));
-  // companies whose page is managed by the company itself (a verified claim): for the site to say so on the company page
-  const claimed = (await db(env, "SELECT c.company, c.decided_at, p.about, p.website FROM company_claims c LEFT JOIN company_pages p ON p.company_key = c.company_key WHERE c.status = 'verified' ORDER BY c.company").all()).results
-    .map((c) => ({ company: c.company, since: isoDay(c.decided_at), about: c.about || '', website: c.website || '' }));
+  const jobs = rows.map((j) => {
+    const d = direct[j.id] || {}, u = (k) => (d[k] || {}).until || '';
+    return { id: j.id, company: j.company, company_url: j.company_url, title: j.title, url: j.apply_url, location: j.location, remote: !!j.remote, salary: j.salary, etype: j.etype,
+      text: j.description, posted: isoDay(j.created_at), featured_until: u('featured'), premium_until: u('premium'), urgent_until: u('urgent'), bumped: (d.bump || {}).at || '',
+      cover: (d.premium || {}).cover || '', logo: logoOf.get(j.company_key) || '',
+      // who posted it: "employer" (an account tied to the company's own domain) or "recruiter" (a person with a LinkedIn identity, whose
+      // name is given, posting for a company they are not part of: the site says "posted by a recruiter, not verified by the employer")
+      posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' };
+  });
+  // companies whose page is managed by the company itself (a verified claim): for the site to say so on the company page, with what
+  // the company wrote there (about, site, logo, where it hires)
+  const claimed = pages.map((c) => ({ company: c.company, since: isoDay(c.decided_at), about: c.about || '', website: c.website || '', logo: c.logo ? mediaUrl(env, c.logo) : '',
+    locations: String(c.locations || '').split('\n').filter(Boolean) }));
   return { generated: new Date(t * 1000).toISOString(), boosts, sponsors, jobs, claimed };
 }
 /* Ask GitHub to rebuild the site so a change shows up within minutes instead of at the next daily run. At most once in ten minutes. */
@@ -1818,7 +1971,15 @@ async function aiUsage(env, user, month) {
    allowance carries usage: { group, used, limit, left, month }, so the page can show what is left without asking again. */
 async function ai(env, req, user, name, m) {
   const t = now(), month = monthOf(t);
-  if (user.plus_until <= t) throw bad('plus', 'The AI resume tools are part of Plus.', 402);
+  // without Plus, a single pass covers its own tools: one tailored resume (tailor, then a cover letter), one mock interview (the
+  // questions, then feedback on answers); it is used up only by an answer the provider gave (see below)
+  let pass = null;
+  if (user.plus_until <= t) {
+    const use = m === 'POST' ? AI_PASS_TOOLS[name] : null;
+    pass = use ? await db(env, 'SELECT * FROM ai_passes WHERE user_id = ? AND kind = ? AND expires_at > ? AND ' + use[1] + '_left > 0 ORDER BY expires_at LIMIT 1', user.id, use[0], t).first() : null;
+    if (!pass) throw bad('plus', 'The AI resume tools are part of Plus' + (use ? ', or of a single pass (one tailored resume, one mock interview)' : '') + '.', 402);
+    pass.col = use[1] + '_left';
+  }
   if (!env.ANTHROPIC_API_KEY) throw NOT_CONFIGURED('The AI tools are');
   if (name === 'usage' && m === 'GET') { const d = new Date(t * 1000); return { month, resets: isoDay(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) / 1000), usage: await aiUsage(env, user, month) }; }
   const tool = m === 'POST' && Object.hasOwn(AI_TOOLS, name) ? AI_TOOLS[name] : null;
@@ -1831,8 +1992,15 @@ async function ai(env, req, user, name, m) {
   // counted before it is sent: one statement that makes the row or raises it, and raises it only while it is under the allowance
   const used = await db(env, 'INSERT INTO ai_usage (user_id, month, grp, n) VALUES (?, ?, ?, 1) ON CONFLICT(user_id, month, grp) DO UPDATE SET n = n + 1 WHERE ai_usage.n < ? RETURNING n', user.id, month, tool.group, cap).first('n');
   if (used == null) throw bad('ai_allowance', 'You have used this month’s allowance for ' + AI_GROUPS[tool.group] + ' (' + cap + ' requests). It starts again on the first of next month.', 429, { usage: usage(cap) });
+  if (pass && (await db(env, 'UPDATE ai_passes SET ' + pass.col + ' = ' + pass.col + ' - 1 WHERE id = ? AND ' + pass.col + ' > 0 RETURNING ' + pass.col, pass.id).first(pass.col)) == null) {
+    await db(env, 'UPDATE ai_usage SET n = n - 1 WHERE user_id = ? AND month = ? AND grp = ? AND n > 0', user.id, month, tool.group).run();
+    throw bad('plus', 'This pass is used up.', 402);                                                  // two requests at once on its last use
+  }
   const reply = await askModel(env, system, message, tool.schema);
-  if (!reply.billed) await db(env, 'UPDATE ai_usage SET n = n - 1 WHERE user_id = ? AND month = ? AND grp = ? AND n > 0', user.id, month, tool.group).run();
+  if (!reply.billed) {
+    await db(env, 'UPDATE ai_usage SET n = n - 1 WHERE user_id = ? AND month = ? AND grp = ? AND n > 0', user.id, month, tool.group).run();
+    if (pass) await db(env, 'UPDATE ai_passes SET ' + pass.col + ' = ' + pass.col + ' + 1 WHERE id = ?', pass.id).run();
+  }
   const spent = usage(reply.billed ? used : used - 1);
   if (reply.why === 'down') throw bad('ai_down', 'The AI service did not answer. Please try again in a minute.', 502, { usage: spent });
   if (reply.why === 'declined') throw bad('ai_declined', 'The AI service would not answer this request. Change the text and try again.', 422, { usage: spent });
@@ -1898,8 +2066,8 @@ async function alertCreate(env, req, ctx, b) {
   const done = { ok: true, message: ALERT_SENT, alert: describe(a) };
   if (typeof b.website === 'string' && b.website.trim()) return done;
   const t = now(), same = await db(env, 'SELECT * FROM alerts WHERE email = ? AND q = ? AND cat = ? AND loc = ? AND remote = ? AND sal = ?', email, a.q, a.cat, a.loc, a.remote, a.sal).first();
-  if (same && same.status === 'active') return done;                 // already on: nothing changes, nothing is sent
-  if (!same && Number(await db(env, "SELECT COUNT(*) AS n FROM alerts WHERE email = ? AND status = 'active'", email).first('n')) >= ALERTS_PER_EMAIL)
+  if (same && (same.status === 'active' || same.status === 'paused')) return done;      // already on (or paused in the account): nothing changes, nothing is sent
+  if (!same && Number(await db(env, "SELECT COUNT(*) AS n FROM alerts WHERE email = ? AND status IN ('active', 'paused')", email).first('n')) >= ALERTS_PER_EMAIL)
     throw bad('too_many', 'This address has ' + ALERTS_PER_EMAIL + ' job alerts, the most one address can have. Unsubscribe from one of them (a link in each letter) to add another.', 409);
   if (!(await allowed(env, 'alert-mail:' + email, CONFIRMS_PER_EMAIL_DAY, DAY))) return done;      // no more than a few confirmation letters a day to one address, whoever asks
   if (!(await allowed(env, 'alert-mail-all', CONFIRMS_PER_HOUR, 3600))) return done;                 // and not many an hour in all
@@ -1921,7 +2089,7 @@ const alertFromLink = async (env, url, purpose) => {
   return { valid: true, id, token, a: await db(env, 'SELECT * FROM alerts WHERE id = ?', id).first() };
 };
 const toSite = (env) => '<p><a href="' + esc(env.SITE_URL) + '/jobs/">Search jobs</a></p>';
-const freqWords = (a) => (a.freq === 'weekly' ? 'once a week' : 'once a day') + ', at most ' + ALERT_MAX_JOBS + ' jobs in a letter, only when there are new ones';
+const freqWords = (a) => (a.freq === 'weekly' ? 'once a week' : a.freq === 'instant' ? 'within the hour a job is read (one letter an hour at most)' : 'once a day') + ', at most ' + ALERT_MAX_JOBS + ' jobs in a letter, only when there are new ones';
 async function alertConfirm(env, req, url) {
   const { a, id, token } = await alertFromLink(env, url, 'confirm');
   if (!a) return htmlPage(env, 'This link does not work', '<h1>This link does not work any more</h1><p>A confirmation link works for ' + PENDING_DAYS + ' days. Ask for the alert again on the site.</p>' + toSite(env), 404);
@@ -1969,7 +2137,8 @@ async function alertUnsubscribe(env, req, url) {
 async function myAlerts(env, user) {
   if (!user.confirmed_at) return { alerts: [] };
   const rows = (await db(env, 'SELECT * FROM alerts WHERE email = ? ORDER BY created_at DESC', user.email).all()).results;
-  return { alerts: rows.map((a) => ({ id: a.id, alert: describe(a), freq: a.freq, status: a.status, created: isoDay(a.created_at), letters: a.letters, search: searchLink(env.SITE_URL, a) })) };
+  return { alerts: rows.map((a) => ({ id: a.id, alert: describe(a), freq: a.freq, status: a.status, paused: a.status === 'paused', created: isoDay(a.created_at), letters: a.letters,
+    last_letter: a.last_sent_at ? isoDay(a.last_sent_at) : '', search: searchLink(env.SITE_URL, a) })) };
 }
 
 /* ---------------------------------------------------------------- "Is this job already on the site?" (dedupe.py, through serve.py)
@@ -2130,7 +2299,12 @@ async function talentProfile(env, user) {
 async function talentSave(env, req, user) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
   await limit(env, 'talent-save:' + user.id, 60, 3600);
-  const b = await body(req), had = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first(), t = now();
+  const b = await body(req, 80000), had = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first(), t = now();
+  if (typeof b.resume_id === 'string' && b.resume_id) {                // one of the resumes kept in the account (see resumes)
+    const kept = await db(env, 'SELECT data FROM resumes WHERE id = ? AND user_id = ?', b.resume_id, user.id).first('data');
+    if (!kept) throw bad('not_found', 'No resume with this id on this account.', 404);
+    b.resume = JSON.parse(kept);
+  }
   if (!had && (b.consent !== true || b.consent_text !== TALENT_CONSENT))
     throw bad('consent', 'Your resume is stored only after you tick “Let employers find my resume”: send consent: true with the consent text shown.', 400, { consent_text: TALENT_CONSENT });
   const x = readTalent(b, had), j = (a) => a.join('\n');
@@ -2321,7 +2495,14 @@ async function myExport(env, user) {
     jobs: (await all('SELECT * FROM jobs WHERE user_id = ?', user.id)).map((j) => jobView(j, t)),
     orders: (await all('SELECT * FROM orders WHERE user_id = ?', user.id)).map(orderView),
     company_pages: (await all('SELECT * FROM company_claims WHERE user_id = ?', user.id)).map(claimView),
-    team: (await all('SELECT email, added_at FROM team_members WHERE owner_id = ?', user.id)).map((x) => ({ email: x.email, added: isoDay(x.added_at) })),
+    team: (await all('SELECT email, added_at, role FROM team_members WHERE owner_id = ?', user.id)).map((x) => ({ email: x.email, role: x.role || 'member', added: isoDay(x.added_at) })),
+    resumes: (await all('SELECT * FROM resumes WHERE user_id = ? ORDER BY created_at', user.id)).map((r) => resumeView(r, true)),
+    job_invitations: invitePrefsView(await db(env, 'SELECT * FROM invite_prefs WHERE user_id = ?', user.id).first()) || null,
+    invitations_received: (await all('SELECT i.sent_at, p.label FROM invites i LEFT JOIN placements p ON p.id = i.placement_id WHERE i.user_id = ? ORDER BY i.sent_at', user.id)).map((x) => ({ job: x.label || '', sent: isoDay(x.sent_at) })),
+    credits: await walletOf(env, user.id, t),
+    hiring_passes: (await all('SELECT company, starts_at, ends_at, premium_left FROM passes WHERE user_id = ?', user.id)).map((x) => ({ company: x.company, from: isoDay(x.starts_at), until: isoDay(x.ends_at), premium_left: x.premium_left })),
+    ai_passes: (await all('SELECT kind, main_left, extra_left, expires_at FROM ai_passes WHERE user_id = ?', user.id)).map((x) => ({ kind: x.kind, main_left: x.main_left, extra_left: x.extra_left, until: isoDay(x.expires_at) })),
+    images: (await all('SELECT id, kind, type, bytes, created_at FROM media WHERE user_id = ?', user.id)).map((x) => ({ kind: x.kind, type: x.type, bytes: x.bytes, url: mediaUrl(env, x.id), added: isoDay(x.created_at) })),
     synced: sync ? { data: JSON.parse(sync.data), updated: isoDay(sync.updated_at) } : null,
     letters_last_30_days: (await all('SELECT at, kind, status FROM mail_log WHERE to_addr = ? ORDER BY at', user.email)).map((x) => ({ at: new Date(x.at * 1000).toISOString(), kind: x.kind, status: x.status })) };
 }
@@ -2330,7 +2511,8 @@ function eraseSteps(env, u, email, t) {
   const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email),
     db(env, 'DELETE FROM rate WHERE k LIKE ?', '%:' + email), db(env, 'DELETE FROM team_members WHERE email = ?', email)];          // limits kept under the address (sign-in, new password, alert letters)
   if (u) steps.push(talentRefund(env, 'r.candidate_id = ?', u.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ? OR employer_id = ?', u.id, u.id),
-    ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits', 'identities'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
+    ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits', 'identities',
+      'resumes', 'invite_prefs', 'invites', 'media', 'listing_media'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
     db(env, 'DELETE FROM team_members WHERE owner_id = ?', u.id), ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id),
     db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
     db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
@@ -2344,63 +2526,343 @@ async function deleteMe(env, req, user) {
   return { ok: true, deleted: true, message: 'Your account is deleted: your alerts, your resume, your sessions and everything you posted are gone. Records of payments, if any, are kept as the law requires, without your address.' };
 }
 
-/* ---------------------------------------------------------------- an employer's team, page text and receipts
+/* ---------------------------------------------------------------- an employer's team, company page, images and receipts
    Team: the account that holds a company name here (it posted the company's first job, or manages its claimed page) adds colleagues by
-   address, on the same company domain only, 20 at most. A colleague signs up with that address, confirms it, and posts under the
-   company's name from their own account; their first jobs are looked at by a person like anyone's. POST /api/team { email },
-   GET /api/team, DELETE /api/team/<email>. */
-const TEAM_MAX = 20;
+   address, on the same company domain only, TEAM_MAX at most, each as an "owner" or a "member". A colleague gets a letter, signs up with
+   that address, confirms it, and posts under the company's name from their own account; their first jobs are looked at by a person
+   like anyone's. A member posts and uses the company's Hiring Pass for its jobs; an owner may also change the team, the company page
+   and buy for the company. POST /api/team { email, role?, team? }, GET /api/team?team=, PATCH /api/team/<email> { role, team? },
+   DELETE /api/team/<email>?team=. team: the holder's account id, for an owner who manages a team that is not its own. */
+const TEAM_MAX = 20, TEAM_ROLES = ['owner', 'member'];
 // whether this account may act for the account that holds a company name: it is that account, or a colleague it added, on the same domain
-async function actsFor(env, user, ownerId) {
-  if (ownerId === user.id) return true;
-  const own = domainOf(user);
-  if (!own || !user.confirmed_at) return false;
-  const owner = await db(env, 'SELECT u.domain, u.email FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.owner_id = ? AND m.email = ? AND u.banned = 0', ownerId, user.email).first();
-  return !!owner && domainOf(owner) === own;
+async function actsFor(env, user, ownerId) { return (await teamOf(env, user)).includes(ownerId); }
+async function managesFor(env, user, ownerId) { return (await teamOf(env, user, true)).includes(ownerId); }
+async function teamHolder(env, user, team) {                      // the account whose team is meant: one's own, or one this account owns with others
+  const id = typeof team === 'string' && team ? team : user.id;
+  if (!(await managesFor(env, user, id))) throw bad('not_found', 'No team of yours with this id.', 404);
+  return id === user.id ? user : await db(env, 'SELECT * FROM users WHERE id = ?', id).first();
 }
-async function teamAdd(env, req, user) {
-  const own = domainOf(user);
+async function teamAdd(env, req, user, ctx) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  const b = await body(req), holder = await teamHolder(env, user, b.team), own = domainOf(holder);
   if (!own) throw bad('work_email', 'A team needs an account tied to the company’s domain.', 403);
-  const holds = await db(env, "SELECT 1 AS x FROM companies WHERE user_id = ? UNION SELECT 1 FROM company_claims WHERE user_id = ? AND status = 'verified'", user.id, user.id).first();
+  const holds = await db(env, "SELECT name AS company FROM companies WHERE user_id = ? UNION SELECT company FROM company_claims WHERE user_id = ? AND status = 'verified'", holder.id, holder.id).first();
   if (!holds) throw bad('no_company', 'Post your company’s first job or claim its page first: the team posts under that name.', 409);
   await limit(env, 'team:' + user.id, 30, 3600);
-  const email = cleanEmail((await body(req)).email);
-  if (!email || email === user.email) throw bad('email', 'Enter a colleague’s work address.');
+  const email = cleanEmail(b.email), role = b.role === undefined ? 'member' : String(b.role);
+  if (!email || email === holder.email) throw bad('email', 'Enter a colleague’s work address.');
+  if (!TEAM_ROLES.includes(role)) throw bad('role', 'The role is "owner" or "member".');
   if (siteDomain(email.slice(email.lastIndexOf('@') + 1)) !== own) throw bad('email', 'A colleague’s address must be on ' + own + '.', 422);
-  if (Number(await db(env, 'SELECT COUNT(*) AS n FROM team_members WHERE owner_id = ?', user.id).first('n')) >= TEAM_MAX) throw bad('limit', 'A team can have ' + TEAM_MAX + ' people.', 429);
-  await db(env, 'INSERT INTO team_members (owner_id, email, added_at) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', user.id, email, now()).run();
-  return teamList(env, user);
+  if (Number(await db(env, 'SELECT COUNT(*) AS n FROM team_members WHERE owner_id = ?', holder.id).first('n')) >= TEAM_MAX) throw bad('limit', 'A team can have ' + TEAM_MAX + ' people.', 429);
+  const added = await db(env, 'INSERT INTO team_members (owner_id, email, added_at, role) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', holder.id, email, now(), role).run();
+  if (added.meta.changes) {                                       // the invitation: who added them, for which company, where to sign in; nothing else
+    const known = await db(env, 'SELECT 1 AS x FROM users WHERE email = ?', email).first();
+    await later(ctx, sendMail(env, email, 'You were added to the team of ' + clip(holds.company, 60) + ' at ' + (env.SITE_NAME || 'Jobs Every Hour'),
+      user.email + ' added you to the team of ' + holds.company + ' at ' + env.SITE_URL + ', as ' + (role === 'owner' ? 'an owner (you can post jobs, change the team and the company page, and buy for the company)' : 'a member (you can post jobs under the company’s name)') + '.\n\n' +
+      (known ? 'Sign in with this address to see it: ' : 'Open an account with this address (it takes an email and a password) to post: ') + env.SITE_URL + '/account/\n\n' +
+      'If you do not know ' + user.email + ', ignore this letter; nothing happens unless you sign in.\n', { kind: 'team_invite' }));
+  }
+  return teamList(env, user, holder.id);
 }
-async function teamList(env, user) {
-  const rows = (await db(env, "SELECT m.email, m.added_at, u.id AS uid, u.confirmed_at, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live') AS live FROM team_members m LEFT JOIN users u ON u.email = m.email WHERE m.owner_id = ? ORDER BY m.added_at", user.id).all()).results;
-  const of = await db(env, "SELECT m.owner_id, u.company FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email = ?", user.email).all();
-  return { members: rows.map((r) => ({ email: r.email, added: isoDay(r.added_at), has_account: !!r.uid, confirmed: !!r.confirmed_at, live_jobs: r.live || 0 })),
-    member_of: (of.results || []).map((r) => ({ company: r.company })) };
+async function teamRole(env, req, user, email) {
+  const b = await body(req), holder = await teamHolder(env, user, b.team), role = String(b.role || '');
+  if (!TEAM_ROLES.includes(role)) throw bad('role', 'The role is "owner" or "member".');
+  const done = await db(env, 'UPDATE team_members SET role = ? WHERE owner_id = ? AND email = ?', role, holder.id, email).run();
+  if (!done.meta.changes) throw bad('not_found', 'No such person in the team.', 404);
+  return teamList(env, user, holder.id);
 }
-/* The text a company that manages its claimed page wants on it: "about" (up to 1,000 characters, screened like a posting, no links) and
-   its site (on the claimed domain). export.json carries both in "claimed" for the site's company page. PUT /api/claims/<id>/page. */
+async function teamDel(env, user, email, team) {
+  const holder = await teamHolder(env, user, team);
+  await db(env, 'DELETE FROM team_members WHERE owner_id = ? AND email = ?', holder.id, email).run();
+  return teamList(env, user, holder.id);
+}
+async function teamList(env, user, holderId = user.id) {
+  if (holderId !== user.id && !(await managesFor(env, user, holderId))) throw bad('not_found', 'No team of yours with this id.', 404);
+  const rows = (await db(env, "SELECT m.email, m.added_at, m.role, u.id AS uid, u.confirmed_at, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live') AS live FROM team_members m LEFT JOIN users u ON u.email = m.email WHERE m.owner_id = ? ORDER BY m.added_at", holderId).all()).results;
+  const of = (await db(env, "SELECT m.owner_id, m.role, u.company, u.email, u.domain FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email = ? AND u.banned = 0", user.email).all()).results;
+  return { team: holderId, members: rows.map((r) => ({ email: r.email, role: r.role || 'member', added: isoDay(r.added_at), has_account: !!r.uid, confirmed: !!r.confirmed_at, live_jobs: r.live || 0 })),
+    member_of: of.filter((r) => domainOf(r) === domainOf(user) && user.confirmed_at).map((r) => ({ team: r.owner_id, company: r.company, role: r.role || 'member' })) };
+}
+
+/* Images an employer puts on the site: the company logo (on its claimed company page and its Premium jobs) and a cover for a Premium
+   job. Sent as a data URL; PNG, JPEG or WebP only, checked by their first bytes (never SVG: a picture that can carry a script), and
+   served back from this service with their own type, cached for good (a new image gets a new id). */
+const IMAGE_MAX = { logo: 150000, cover: 450000 };   // bytes
+function readImage(v, kind) {
+  const m = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(v || ''));
+  if (!m) throw bad('image', 'Send the image as a PNG, JPEG or WebP file.', 422);
+  let bin; try { bin = atob(m[2]); } catch { throw bad('image', 'Send the image as a PNG, JPEG or WebP file.', 422); }
+  if (bin.length > IMAGE_MAX[kind]) throw bad('too_large', 'The image is too large: ' + Math.round(IMAGE_MAX[kind] / 1000) + ' KB at most.', 413);
+  const ok = m[1] === 'image/png' ? bin.slice(0, 8) === '\x89PNG\r\n\x1a\n' : m[1] === 'image/jpeg' ? bin.slice(0, 3) === '\xff\xd8\xff' : bin.slice(0, 4) === 'RIFF' && bin.slice(8, 12) === 'WEBP';
+  if (!ok) throw bad('image', 'The file is not the kind of image it says it is.', 422);
+  return { type: m[1], data: m[2], bytes: bin.length };
+}
+const mediaUrl = (env, id) => (id ? String(env.API_URL || env.SITE_URL).replace(/\/+$/, '') + '/api/public/media/' + id : '');
+async function serveMedia(env, id) {
+  const row = /^m_[a-f0-9]{20}$/.test(id) ? await db(env, 'SELECT type, data FROM media WHERE id = ?', id).first() : null;
+  if (!row) return new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-Content-Type-Options': 'nosniff' } });
+  return new Response(Uint8Array.from(atob(row.data), (c) => c.charCodeAt(0)), { headers: { 'Content-Type': row.type, 'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; sandbox", 'Cross-Origin-Resource-Policy': 'cross-origin', 'Access-Control-Allow-Origin': '*' } });
+}
+const storeImage = async (env, user, kind, img) => { const id = rid('m_'); await db(env, 'INSERT INTO media (id, user_id, kind, type, data, bytes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', id, user.id, kind, img.type, img.data, img.bytes, now()).run(); return id; };
+const dropImage = (env, id) => (id ? db(env, 'DELETE FROM media WHERE id = ?', id).run() : null);
+
+/* The company page a verified claim manages: "about" (up to 1,000 characters, screened like a posting, no links), its site (on the
+   claimed domain), a logo (an image, see readImage; '' takes it off) and where it hires (up to 10 places, as the company writes them).
+   export.json carries them in "claimed" for the site's company page. PUT /api/claims/<id>/page; fields left out stay as they are. */
 async function claimPage(env, req, user, id) {
   const c = await db(env, "SELECT * FROM company_claims WHERE id = ? AND status = 'verified'", id).first();
-  if (!c || !(await actsFor(env, user, c.user_id))) throw bad('not_found', 'No verified company page with this id on this account.', 404);
-  const b = await body(req), about = b.about == null || b.about === '' ? '' : prose(b.about, 1000, 40), site = b.website ? publicUrl(b.website) : null;
+  if (!c || !(await managesFor(env, user, c.user_id))) throw bad('not_found', 'No verified company page with this id on this account.', 404);
+  const b = await body(req, 700000), had = await db(env, 'SELECT * FROM company_pages WHERE company_key = ?', c.company_key).first() || { about: '', website: '', logo: '', locations: '' };
+  const about = b.about === undefined ? had.about : b.about == null || b.about === '' ? '' : prose(b.about, 1000, 40), site = b.website ? publicUrl(b.website) : null;
   if (about === null) throw bad('about', 'Write 40 to 1,000 characters about the company, or leave it empty.');
   if (/https?:\/\/|www\./i.test(about)) throw bad('about', 'Keep links out of the text; give the company site in its own field.');
   if (b.website && (!site || siteDomain(site.hostname) !== c.domain)) throw bad('website', 'The company site must be on ' + c.domain + '.', 422);
-  if (about) { const s = screenPosting({ title: '', description: about, company: c.company, applyUrl: 'https://' + c.domain, accountDomain: c.domain }); if (s.verdict !== 'ok') throw bad('rejected', 'This text cannot be shown. ' + s.reasons.join(' '), 422, { reasons: s.reasons }); }
-  await db(env, 'INSERT INTO company_pages (company_key, about, website, updated_by, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(company_key) DO UPDATE SET about = excluded.about, website = excluded.website, updated_by = excluded.updated_by, updated_at = excluded.updated_at',
-    c.company_key, about, site ? site.origin : '', user.id, now()).run();
+  const website = b.website === undefined ? had.website : site ? site.origin : '';
+  if (about && about !== had.about) { const s = screenPosting({ title: '', description: about, company: c.company, applyUrl: 'https://' + c.domain, accountDomain: c.domain }); if (s.verdict !== 'ok') throw bad('rejected', 'This text cannot be shown. ' + s.reasons.join(' '), 422, { reasons: s.reasons }); }
+  let locations = had.locations;
+  if (b.locations !== undefined) {
+    const list = (Array.isArray(b.locations) ? b.locations : String(b.locations || '').split(/[\n;]+/)).map((x) => line(String(x), 60, 2)).filter(Boolean);
+    if (list.length > 10) throw bad('locations', 'Give up to 10 places where the company hires.');
+    if (list.some((x) => /https?:|www\.|@|[<>]/i.test(x))) throw bad('locations', 'Places are names, like “Berlin” or “Remote, Europe”: no links or addresses.');
+    locations = [...new Set(list)].join('\n');
+  }
+  let logo = had.logo;
+  if (b.logo !== undefined) logo = b.logo ? await storeImage(env, user, 'logo', readImage(b.logo, 'logo')) : '';
+  await db(env, 'INSERT INTO company_pages (company_key, about, website, logo, locations, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(company_key) DO UPDATE SET about = excluded.about, ' +
+    'website = excluded.website, logo = excluded.logo, locations = excluded.locations, updated_by = excluded.updated_by, updated_at = excluded.updated_at', c.company_key, about, website, logo, locations, user.id, now()).run();
+  if (logo !== had.logo) await dropImage(env, had.logo);
   await requestRebuild(env);
-  return { ok: true, page: { company: c.company, about, website: site ? site.origin : '' } };
+  return { ok: true, page: { company: c.company, about, website, logo: mediaUrl(env, logo), locations: locations.split('\n').filter(Boolean) } };
 }
-// A receipt for a paid order, for the employer's records: one payment for a fixed period, nothing renews.
+/* The cover of a Premium job: shown on the job page while a Premium boost of the job runs. For a job posted here, or a job the site
+   lists of a company whose page this account (or its team) claimed. PUT /api/listings/cover { target: { job_id | job }, image },
+   DELETE the same with no image. */
+async function listingCover(env, req, user, remove) {
+  const b = await body(req, 700000), target = await resolveTarget(env, user, PRODUCTS.premium, b.target);
+  if (target.key.startsWith('job:') && !(await claimedJobOf(env, user, target.key.slice(4)))) throw bad('claim_first', CLAIM_FIRST, 403);
+  const had = await db(env, 'SELECT cover FROM listing_media WHERE target = ?', target.key).first('cover');
+  const cover = remove ? '' : await storeImage(env, user, 'cover', readImage(b.image, 'cover'));
+  await db(env, 'INSERT INTO listing_media (target, user_id, cover, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(target) DO UPDATE SET user_id = excluded.user_id, cover = excluded.cover, updated_at = excluded.updated_at', target.key, user.id, cover, now()).run();
+  if (had && had !== cover) await dropImage(env, had);
+  await requestRebuild(env);
+  return { ok: true, target: target.key, cover: mediaUrl(env, cover) };
+}
+
+/* ---------------------------------------------------------------- resumes kept in the account (several versions)
+   The builder keeps one resume in the browser; an account keeps up to RESUMES_MAX of them on the server, each with a name ("Backend,
+   Berlin", "Data, short"), so the same person has them on every device. Nothing is shown to anyone: employers see a resume only if
+   the person puts one into the resume database (PUT /api/talent/profile with resume_id, after the tick). */
+const RESUMES_MAX = 10, RESUME_CHARS_MAX = 60000;
+const resumeName = (v) => line(v, 60, 1) || 'My resume';
+function resumeData(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw bad('resume', 'Send the resume as the builder keeps it.');
+  const text = JSON.stringify(v);
+  if (text.length > RESUME_CHARS_MAX) throw bad('too_long', 'The resume is too long: keep it under 60,000 characters.', 413);
+  return text;
+}
+const resumeView = (r, full) => ({ id: r.id, name: r.name, title: (() => { try { return String(JSON.parse(r.data).title || '').slice(0, 120); } catch { return ''; } })(),
+  created: isoDay(r.created_at), updated: isoDay(r.updated_at), ...(full ? { resume: JSON.parse(r.data) } : {}) });
+async function resumes(env, req, user, id, m) {
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  const t = now(), mine = id ? await db(env, 'SELECT * FROM resumes WHERE id = ? AND user_id = ?', id, user.id).first() : null;
+  if (id && !mine) throw bad('not_found', 'No resume with this id on this account.', 404);
+  if (!id && m === 'GET') return { max: RESUMES_MAX, resumes: (await db(env, 'SELECT * FROM resumes WHERE user_id = ? ORDER BY updated_at DESC', user.id).all()).results.map((r) => resumeView(r)) };
+  if (id && m === 'GET') return { resume: resumeView(mine, true) };
+  if (id && m === 'DELETE') { await db(env, 'DELETE FROM resumes WHERE id = ?', id).run(); return { ok: true }; }
+  await limit(env, 'resumes:' + user.id, 120, 3600);
+  const b = await body(req, 80000);
+  if (!id && m === 'POST') {
+    if (Number(await db(env, 'SELECT COUNT(*) AS n FROM resumes WHERE user_id = ?', user.id).first('n')) >= RESUMES_MAX) throw bad('limit', 'An account keeps ' + RESUMES_MAX + ' resumes. Delete one to add another.', 409);
+    const rid_ = rid('r_');
+    await db(env, 'INSERT INTO resumes (id, user_id, name, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)', rid_, user.id, resumeName(b.name), resumeData(b.resume), t, t).run();
+    return { resume: resumeView(await db(env, 'SELECT * FROM resumes WHERE id = ?', rid_).first()) };
+  }
+  if (id && (m === 'PUT' || m === 'PATCH')) {
+    await db(env, 'UPDATE resumes SET name = ?, data = ?, updated_at = ? WHERE id = ?', b.name === undefined ? mine.name : resumeName(b.name), b.resume === undefined ? mine.data : resumeData(b.resume), t, id).run();
+    return { resume: resumeView(await db(env, 'SELECT * FROM resumes WHERE id = ?', id).first()) };
+  }
+  throw bad('not_found', 'Not found.', 404);
+}
+
+/* ---------------------------------------------------------------- job alerts kept in the account
+   An account whose address is confirmed makes alerts for that address without a confirmation letter (the address is proved), chooses
+   how often each comes (instant: within the hour a matching job is read, one letter an hour at most; daily; weekly) and pauses one
+   (no letters, kept; on again it starts from the jobs of that hour, not from the ones it missed). POST /api/me/alerts { q, cat, loc,
+   remote, sal, freq }, PATCH /api/alerts/<id> { freq?, paused? }. */
+async function myAlertAdd(env, req, user) {
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  await limit(env, 'my-alerts:' + user.id, 30, 3600);
+  let a; try { a = readAlert(await body(req), { instant: true }); } catch (err) { throw toAlertError(err); }
+  const t = now(), same = await db(env, 'SELECT * FROM alerts WHERE email = ? AND q = ? AND cat = ? AND loc = ? AND remote = ? AND sal = ?', user.email, a.q, a.cat, a.loc, a.remote, a.sal).first();
+  if (!same && Number(await db(env, "SELECT COUNT(*) AS n FROM alerts WHERE email = ? AND status IN ('active', 'paused')", user.email).first('n')) >= ALERTS_PER_EMAIL)
+    throw bad('too_many', 'Your address has ' + ALERTS_PER_EMAIL + ' job alerts, the most one address can have. Delete one to add another.', 409);
+  if (same) await db(env, "UPDATE alerts SET freq = ?, status = 'active', confirmed_at = CASE WHEN confirmed_at = 0 THEN ? ELSE confirmed_at END, seen_through = CASE WHEN status = 'active' THEN seen_through ELSE ? END, " +
+    'due_at = CASE WHEN status = ? THEN MIN(due_at, ?) ELSE ? END WHERE id = ?', a.freq, t, isoTime(t - 3600), 'active', t + PERIOD[a.freq] - 1800, t + PERIOD[a.freq] - 1800, same.id).run();
+  else await db(env, 'INSERT INTO alerts (id, email, q, cat, loc, remote, sal, freq, status, created_at, confirmed_at, seen_through, due_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    rid('a_'), user.email, a.q, a.cat, a.loc, a.remote, a.sal, a.freq, 'active', t, t, isoTime(t - 3600), t + PERIOD[a.freq] - 1800).run();
+  return myAlerts(env, user);
+}
+async function myAlertChange(env, req, user, id) {
+  const a = user.confirmed_at ? await db(env, 'SELECT * FROM alerts WHERE id = ? AND email = ?', id, user.email).first() : null;
+  if (!a || a.status === 'pending') throw bad('not_found', 'Alert not found.', 404);
+  const b = await body(req), t = now(), freq = b.freq === undefined ? a.freq : String(b.freq);
+  if (!PERIOD[freq]) throw bad('freq', 'Choose instant, daily or weekly.');
+  const paused = b.paused === undefined ? a.status === 'paused' : b.paused === true;
+  if (paused) await db(env, "UPDATE alerts SET freq = ?, status = 'paused' WHERE id = ?", freq, id).run();
+  else if (a.status === 'paused') await db(env, "UPDATE alerts SET freq = ?, status = 'active', seen_through = ?, due_at = ? WHERE id = ?", freq, isoTime(t - 3600), t + PERIOD[freq] - 1800, id).run();
+  else await db(env, 'UPDATE alerts SET freq = ?, due_at = MIN(due_at, ?) WHERE id = ?', freq, t + PERIOD[freq] - 1800, id).run();
+  return myAlerts(env, user);
+}
+
+/* ---------------------------------------------------------------- job invitations (what a Premium boost sends)
+   A job seeker who opts in (the tick, with INVITE_CONSENT word for word, kept with the time) may get a letter about one Premium job that
+   fits the fields and places they chose: at most one letter every INVITE_GAP_DAYS days, each with a one-click stop. The addresses of
+   job alerts are never used for this: an alert is for alerts only. Sent by runInvites, from the hourly alert job (server/alerts.mjs),
+   because it needs the job records to match against. GET, PUT, DELETE /api/invites; GET or POST /api/invites/stop?u=&t= (from a letter). */
+export const INVITE_CONSENT = 'Send me job invitations: one letter about one job that fits the fields and places I chose, when its employer bought a Premium boost. At most one letter every 3 days; I can stop them in one click.';
+const INVITE_GAP_DAYS = 3;
+const invitePrefsView = (p) => p && { roles: p.roles.split('\n').filter(Boolean), places: p.places.split('\n').filter(Boolean), remote: !!p.remote, paused: !!p.paused, since: isoDay(p.consented_at) };
+async function invitePrefs(env, req, user, m) {
+  if (m === 'DELETE') { await env.DB.batch([db(env, 'DELETE FROM invite_prefs WHERE user_id = ?', user.id)]); return { consent_text: INVITE_CONSENT, prefs: null }; }
+  if (m === 'PUT') {
+    if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+    const b = await body(req), had = await db(env, 'SELECT * FROM invite_prefs WHERE user_id = ?', user.id).first(), t = now();
+    if (!had && (b.consent !== true || b.consent_text !== INVITE_CONSENT)) throw bad('consent', 'Invitations are sent only after you tick the box: send consent: true with the text shown.', 400, { consent_text: INVITE_CONSENT });
+    const roles = lines(b.roles === undefined && had ? had.roles.split('\n') : b.roles, 5, 40, (x) => (Object.hasOwn(CATEGORIES, x) ? x : ''));
+    const places = lines(b.places === undefined && had ? had.places.split('\n') : b.places, 10, 60, (x) => (/^[a-z0-9]+(?:-[a-z0-9]+){0,5}$/.test(x.toLowerCase()) ? x.toLowerCase() : ''));
+    const flag = (k) => (b[k] === undefined ? (had ? had[k] : 0) : b[k] === true ? 1 : 0);
+    await db(env, 'INSERT INTO invite_prefs (user_id, roles, places, remote, paused, consent_text, consented_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET roles = excluded.roles, places = excluded.places, remote = excluded.remote, paused = excluded.paused',
+      user.id, roles.join('\n'), places.join('\n'), flag('remote'), flag('paused'), INVITE_CONSENT, t).run();
+  }
+  return { consent_text: INVITE_CONSENT, prefs: invitePrefsView(await db(env, 'SELECT * FROM invite_prefs WHERE user_id = ?', user.id).first()) };
+}
+const inviteStopLink = async (env, userId) => String(env.API_URL || env.SITE_URL).replace(/\/+$/, '') + '/api/invites/stop?u=' + userId + '&t=' + await alertToken(env, 'invite', userId);
+async function inviteStop(env, req, url) {
+  const u = url.searchParams.get('u') || '', token = url.searchParams.get('t') || '';
+  const valid = /^u_[a-f0-9]{20}$/.test(u) && /^[a-f0-9]{32}$/.test(token) && sameText(await alertToken(env, 'invite', u), token);
+  if (!valid) return htmlPage(env, 'This link does not work', '<h1>This link does not work</h1><p>Use the link in the latest letter, or stop invitations on your account page.</p>', 404);
+  if (req.method === 'GET') return htmlPage(env, 'Stop job invitations', '<h1>Stop job invitations?</h1><p>No more letters about jobs from employers. Your account and your job alerts stay as they are.</p>' +
+    '<form method="post" action="?u=' + u + '&amp;t=' + token + '"><button>Stop job invitations</button></form>');
+  await db(env, 'DELETE FROM invite_prefs WHERE user_id = ?', u).run();
+  if (/List-Unsubscribe=One-Click/i.test((await req.text()).slice(0, 2000))) return new Response('Stopped.', { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+  return htmlPage(env, 'Job invitations stopped', '<h1>Job invitations stopped</h1><p>No more letters about jobs from employers. You can ask for them again on your account page.</p>');
+}
+/* The letters of Premium boosts: for each Premium placement that runs and has not had its letters yet, the job is looked up in the job
+   records (by the address of its page); when it is there, up to the product's number of people who opted in and match it (a field they
+   chose or none, a place they chose or none, or remote when they said remote counts) get one letter each, oldest opt-in first, nobody
+   who had an invitation in the last INVITE_GAP_DAYS days, nobody twice for one job, never the buyer. A job not in the records yet waits
+   for the next hour. The letters are bulk letters: the mailer's daily cap holds them back like job alerts. */
+export async function runInvites(env, records, { now: t = now() } = {}) {
+  const out = { jobs: 0, sent: 0, waiting: 0, stopped: '' };
+  if (!env.MAIL || typeof env.MAIL.send !== 'function') return { ...out, stopped: 'no_mail' };
+  const due = (await db(env, "SELECT p.*, j.slug AS posted_slug FROM placements p LEFT JOIN jobs j ON 'direct:' || j.id = p.target WHERE p.kind = 'premium' AND p.cancelled = 0 AND p.held = 0 AND p.starts_at <= ? AND p.ends_at > ? " +
+    'AND NOT EXISTS (SELECT 1 FROM invite_runs r WHERE r.placement_id = p.id) ORDER BY p.starts_at LIMIT 20', t, t).all()).results;
+  const prefs = (await db(env, 'SELECT i.*, u.email FROM invite_prefs i JOIN users u ON u.id = i.user_id WHERE i.paused = 0 AND u.banned = 0 AND u.confirmed_at > 0 ORDER BY i.consented_at').all()).results;
+  for (const p of due) {
+    const slug = p.target.startsWith('job:') ? p.target.slice(4) : p.posted_slug, rec = slug && typeof records.bySlug === 'function' ? records.bySlug(slug) : null;
+    if (!rec) { out.waiting++; continue; }
+    out.jobs++;
+    const most = (PRODUCTS.premium.invites || 0), fit = prefs.filter((x) => x.user_id !== p.user_id && x.last_at <= t - INVITE_GAP_DAYS * DAY
+      && (!x.roles || x.roles.split('\n').includes(rec.cat))
+      && (!x.places || x.places.split('\n').some((pl) => (rec.places || []).includes(pl)) || (x.remote && rec.remote)));
+    let sent = 0;
+    for (const x of fit) {
+      if (sent >= most) break;
+      if (!(await db(env, 'INSERT INTO invites (placement_id, user_id, sent_at) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', p.id, x.user_id, t).run()).meta.changes) continue;
+      const stop = await inviteStopLink(env, x.user_id), page = env.SITE_URL + '/job/' + rec.slug + '/';
+      const text = 'A job that fits what you asked for (' + [x.roles ? x.roles.split('\n').map((r) => CATEGORIES[r] || r).join(', ') : 'any field', x.places ? x.places.split('\n').join(', ') : 'any place'].join('; ') + '):\n\n' +
+        rec.title + ' — ' + rec.company + '\n' + [rec.location || '', rec.remote ? 'Remote' : '', rec.salary || ''].filter(Boolean).join(' · ') + '\n' + page + '\n\n' +
+        'The employer paid to have this job shown to people who asked for invitations; it did not get your address and does not know who you are. You apply on the employer’s own page, as with every job here.\n\n' +
+        '—\nYou get this because you ticked “Send me job invitations” on your account at ' + env.SITE_URL + '. At most one such letter every ' + INVITE_GAP_DAYS + ' days.\nStop job invitations: ' + stop + '\n';
+      const r = await env.MAIL.send({ from: String(env.MAIL_FROM || ''), to: x.email, subject: 'A job for you: ' + clip(rec.title, 70) + ' at ' + clip(rec.company, 40), text, kind: 'invite', bulk: true,
+        headers: { 'List-Unsubscribe': '<' + stop + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', Precedence: 'bulk' } });
+      if (r && r.sent === false && r.status !== 'unknown') {
+        await db(env, 'DELETE FROM invites WHERE placement_id = ? AND user_id = ?', p.id, x.user_id).run();
+        if (r.status === 'capped' || r.status === 'no_mail' || !r.rejected) { out.stopped = r.status || 'the mail server failed'; break; }   // the rest of this job waits for the next run
+        continue;
+      }
+      await db(env, 'UPDATE invite_prefs SET last_at = ? WHERE user_id = ?', t, x.user_id).run();
+      x.last_at = t; sent++; out.sent++;
+    }
+    if (out.stopped) break;
+    await db(env, 'INSERT INTO invite_runs (placement_id, sent, at) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', p.id, sent, t).run();
+  }
+  return out;
+}
+
+/* ---------------------------------------------------------------- the free re-run (SEEK's guarantee, measured on our own counts)
+   Every Standard or Premium boost that was paid for (in crypto or with credits; not one that came with a Hiring Pass, not a re-run) is
+   looked at once, RERUN_DAYS days after it started. If its job got fewer than RERUN_APPLIES clicks on Apply in those days (a job posted
+   here: job_hits; a job the site lists: boost_hits, counted while the boost ran), it runs again for its days, free: a paid order of
+   0 with provider "rerun" and a placement after the boost's end. The buyer gets a letter. A posted job that is closed or gone gets none.
+   The row in reruns is written first and only once, and the order and the placement are written only where it carries their id: two
+   cron runs at the same moment cannot give two re-runs. */
+export async function rerunBoosts(env, t = now()) {
+  const out = { checked: 0, given: 0 };
+  const due = (await db(env, "SELECT p.*, o.product FROM placements p JOIN orders o ON o.id = p.order_id WHERE p.kind IN ('featured', 'premium') AND p.cancelled = 0 AND p.held = 0 AND p.starts_at <= ? " +
+    "AND o.status = 'paid' AND o.product IN ('featured', 'premium') AND o.provider IN ('cryptomus', 'test', 'wallet') AND NOT EXISTS (SELECT 1 FROM reruns r WHERE r.placement_id = p.id) ORDER BY p.starts_at LIMIT 50",
+  t - RERUN_DAYS * DAY).all()).results;
+  for (const p of due) {
+    out.checked++;
+    const from = isoDay(p.starts_at), to = isoDay(p.starts_at + (RERUN_DAYS - 1) * DAY), direct = p.target.startsWith('direct:');
+    const applies = Number(await (direct ? db(env, 'SELECT COALESCE(SUM(applies), 0) AS n FROM job_hits WHERE job_id = ? AND day BETWEEN ? AND ?', p.target.slice(7), from, to)
+      : db(env, 'SELECT COALESCE(SUM(applies), 0) AS n FROM boost_hits WHERE slug = ? AND day BETWEEN ? AND ?', p.target.slice(4), from, to)).first('n')) || 0;
+    const gone = direct && !(await db(env, "SELECT 1 AS x FROM jobs WHERE id = ? AND status IN ('live', 'review') AND expires_at > ?", p.target.slice(7), t).first());
+    if (applies >= RERUN_APPLIES || gone) { await db(env, 'INSERT INTO reruns (placement_id, user_id, applies, given_order, checked_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING', p.id, p.user_id, applies, '', t).run(); continue; }
+    const oid = rid('o_'), days = PRODUCTS[p.product].days, given = 'EXISTS (SELECT 1 FROM reruns WHERE placement_id = ? AND given_order = ?)';
+    const done = await env.DB.batch([
+      db(env, 'INSERT INTO reruns (placement_id, user_id, applies, given_order, checked_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING', p.id, p.user_id, applies, oid, t),
+      db(env, "INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, created_at, paid_at) SELECT ?, ?, ?, ?, ?, 0, 'paid', 'rerun', ?, ? WHERE " + given, oid, p.user_id, p.product, p.target, p.label, t, t, p.id, oid),
+      db(env, 'INSERT INTO placements (id, order_id, user_id, kind, target, label, starts_at, ends_at, held) SELECT ?, ?, ?, ?, ?, ?, s, s + ?, 0 FROM (SELECT MAX(?, COALESCE((SELECT MAX(ends_at) FROM placements ' +
+        'WHERE kind = ? AND target = ? AND cancelled = 0 AND held = 0), 0)) AS s) WHERE ' + given, rid('p_'), oid, p.user_id, p.kind, p.target, p.label, days * DAY, t, p.kind, p.target, p.id, oid),
+      // a re-run sends no second round of invitations: the boost bought one
+      db(env, 'INSERT INTO invite_runs (placement_id, sent, at) SELECT id, 0, ? FROM placements WHERE order_id = ? AND ' + given, t, oid, p.id, oid)]);
+    if (!done[1].meta.changes) continue;
+    out.given++;
+    const u = await db(env, 'SELECT email FROM users WHERE id = ? AND banned = 0', p.user_id).first();
+    if (u) { try { await sendMail(env, u.email, 'Your boost runs again, free', 'The ' + PRODUCTS[p.product].name + ' of “' + p.label + '” brought ' + applies + ' click' + (applies === 1 ? '' : 's') + ' on Apply in its first ' + RERUN_DAYS +
+      ' days, fewer than ' + RERUN_APPLIES + '. As promised, it runs again for ' + days + ' more days at no cost, after the current run ends. Nothing to do on your side.\n\nSee it in your account: ' + env.SITE_URL + '/account/\n', { kind: 'rerun' }); } catch {} }
+  }
+  if (out.given) { try { await requestRebuild(env); } catch {} }
+  return out;
+}
+
+/* What the account sees of what it bought: credits, passes, single AI passes, and the boosts with their views and clicks on Apply (for a
+   job posted here since the boost started; for a job the site lists, while the boost ran) and whether the free re-run was given. */
+async function billing(env, user, t = now()) {
+  const ids = await teamOf(env, user);
+  const passes = (await db(env, 'SELECT p.*, u.email FROM passes p JOIN users u ON u.id = p.user_id WHERE p.user_id IN (' + marks(ids) + ') AND p.ends_at > ? ORDER BY p.ends_at', ...ids, t - 30 * DAY).all()).results;
+  const ai = (await db(env, 'SELECT * FROM ai_passes WHERE user_id = ? AND expires_at > ? ORDER BY expires_at', user.id, t - 30 * DAY).all()).results;
+  const rows = (await db(env, 'SELECT p.*, r.applies AS rerun_applies, r.given_order, o.product, o.provider FROM placements p LEFT JOIN reruns r ON r.placement_id = p.id LEFT JOIN orders o ON o.id = p.order_id ' +
+    "WHERE p.user_id = ? AND p.cancelled = 0 AND p.kind IN ('featured', 'premium', 'urgent', 'bump') ORDER BY p.starts_at DESC LIMIT 100", user.id).all()).results;
+  const days = Array.from({ length: HIT_DAYS }, (_, i) => isoDay(t - (HIT_DAYS - 1 - i) * DAY));
+  const boosts = [];
+  for (const p of rows) {
+    const direct = p.target.startsWith('direct:'), from = p.held ? isoDay(t) : isoDay(p.starts_at), until = p.held ? isoDay(t) : isoDay(Math.min(p.ends_at, t));
+    const sql = direct ? 'FROM job_hits WHERE job_id = ? AND day BETWEEN ? AND ?' : 'FROM boost_hits WHERE slug = ? AND day BETWEEN ? AND ?', arg = direct ? p.target.slice(7) : p.target.slice(4);
+    const sum = await db(env, 'SELECT COALESCE(SUM(views), 0) AS v, COALESCE(SUM(applies), 0) AS a ' + sql, arg, from, until).first();
+    const recent = new Map((await db(env, 'SELECT day, views, applies ' + sql, arg, days[0], until).all()).results.map((r) => [r.day, r]));
+    const guaranteed = !!(PRODUCTS[p.product] || {}).guarantee && ['cryptomus', 'test', 'wallet'].includes(p.provider), isRerun = p.provider === 'rerun';
+    boosts.push({ id: p.id, kind: p.kind, target: p.target, label: p.label, from: p.held ? '' : isoDay(p.starts_at), until: p.held ? '' : isoDay(p.ends_at),
+      state: p.held ? 'held' : p.ends_at <= t ? 'ended' : p.starts_at > t ? 'scheduled' : 'live', views: Number(sum.v) || 0, applies: Number(sum.a) || 0, free_rerun: isRerun, product: p.product || '',
+      rerun: p.rerun_applies == null ? (guaranteed && !p.held ? { checks_on: isoDay(p.starts_at + RERUN_DAYS * DAY), needs: RERUN_APPLIES } : null) : { applies: p.rerun_applies, given: !!p.given_order },
+      by_day: days.map((day) => { const r = recent.get(day) || {}; return { day, views: r.views || 0, applies: r.applies || 0 }; }) });
+  }
+  return { wallet: await walletOf(env, user.id, t), passes: passes.map((p) => ({ id: p.id, company: p.company, from: isoDay(p.starts_at), until: isoDay(p.ends_at), live: p.ends_at > t, premium_left: p.premium_left, holder: p.email })),
+    ai_passes: ai.map((x) => ({ id: x.id, kind: x.kind, left: x.kind === 'resume' ? { tailor: x.main_left, cover_letter: x.extra_left } : { questions: x.main_left, feedback: x.extra_left }, until: isoDay(x.expires_at), live: x.expires_at > t })),
+    boosts, rerun_rule: { applies: RERUN_APPLIES, days: RERUN_DAYS } };
+}
+
+// A receipt for a paid order, for the buyer's records (the account page prints it): one payment for a fixed period, nothing renews.
 async function receipt(env, user, id) {
   const o = await db(env, "SELECT * FROM orders WHERE id = ? AND user_id = ? AND status IN ('paid', 'refunded')", id, user.id).first();
   if (!o) throw bad('not_found', 'No paid order with this id on this account.', 404);
-  const p = PRODUCTS[o.product] || {};
+  const p = PRODUCTS[o.product] || {}, lot = p.walletCredits ? await db(env, 'SELECT * FROM wallet_lots WHERE order_id = ?', o.id).first() : null;
   return { receipt: { number: o.id, date: isoDay(o.paid_at || o.created_at), seller: (env.SITE_NAME || 'Jobs Every Hour') + ', ' + env.SITE_URL, buyer: { email: user.email, company: user.company || '' },
-    item: (p.name || o.product) + (o.label && o.label !== p.name ? ': ' + o.label : ''), period_days: p.days || p.plusDays || p.creditDays || 0, amount_usd: o.amount_usd,
-    paid_with: o.provider === 'credit' ? 'a credit from a pack bought earlier' : o.provider === 'cryptomus' ? 'cryptocurrency, through Cryptomus' : o.provider, status: o.status,
+    item: (p.name || o.product) + (o.label && o.label !== p.name ? ': ' + o.label : ''), period_days: p.days || p.plusDays || (p.walletCredits ? WALLET_DAYS : p.aiPass ? AI_PASS_DAYS : 0),
+    amount_usd: o.amount_usd, credits: o.credits || 0, credits_bought: p.walletCredits || 0, credits_expire: lot ? isoDay(lot.expires_at) : '',
+    paid_with: o.provider === 'wallet' ? o.credits + ' prepaid credits' : PAID_WITH[o.provider] || o.provider, status: o.status, paid_at: o.paid_at ? new Date(o.paid_at * 1000).toISOString() : '',
     note: 'One payment for a fixed period. Nothing renews and nothing more is charged.' } };
 }
 
@@ -2414,7 +2876,11 @@ async function route(env, req, url, ctx) {
   if (path === '/api/public/hit' && m === 'POST') return hit(env, req);
   if (path === '/api/public/products' && m === 'GET') {
     // billing: every product is one payment for a stated time; nothing renews by itself and no card or wallet is kept (a promise: /promise/)
-    return { products: Object.entries(PRODUCTS).filter(([, p]) => p.group !== 'plus' || env.PLUS_LIVE === '1').map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || 0, target: p.target, group: p.group, billing: 'one-time', renews: false })),
+    // Plus and the single AI passes are listed only while they are on sale (PLUS_LIVE; the passes need the AI key as well)
+    const onSale = (p) => (p.group !== 'plus' || env.PLUS_LIVE === '1') && (p.group !== 'ai' || (env.PLUS_LIVE === '1' && !!env.ANTHROPIC_API_KEY));
+    return { products: Object.entries(PRODUCTS).filter(([, p]) => onSale(p)).map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || (p.walletCredits ? WALLET_DAYS : p.aiPass ? AI_PASS_DAYS : 0),
+      target: p.target, group: p.group, billing: 'one-time', renews: false, ...(p.walletCredits ? { credits: p.walletCredits } : {}), ...(p.pass ? { premium_boosts: p.pass } : {}),
+      ...(p.guarantee ? { rerun: { applies: RERUN_APPLIES, days: RERUN_DAYS } } : {}), ...(p.own ? { listed_needs_claim: true } : {}) })),
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
       // for the pages to know which buttons to show: sign-in with LinkedIn, and the AI tools of Plus
       linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off',
@@ -2432,6 +2898,8 @@ async function route(env, req, url, ctx) {
   if (path === '/api/alerts' && m === 'POST') return alertSignup(env, req, ctx);                       // job alerts: no account needed
   if (path === '/api/alerts/confirm' && (m === 'GET' || m === 'POST')) return alertConfirm(env, req, url);
   if (path === '/api/alerts/unsubscribe' && (m === 'GET' || m === 'POST')) return alertUnsubscribe(env, req, url);
+  if (path === '/api/invites/stop' && (m === 'GET' || m === 'POST')) return inviteStop(env, req, url);      // from an invitation letter: no session
+  if (seg[0] === 'public' && seg[1] === 'media' && seg[2] && m === 'GET') return serveMedia(env, seg[2]);
   if (seg[0] === 'dev' && seg[1] === 'pay' && env.PAY_MODE === 'test') {                               // developer machines only
     const o = await db(env, "SELECT * FROM orders WHERE id = ? AND provider = 'test'", seg[2] || '').first();
     if (!o) throw bad('not_found', 'Order not found.', 404);
@@ -2444,10 +2912,18 @@ async function route(env, req, url, ctx) {
   if (path === '/api/me' && m === 'GET') return { user: await userView(env, user) };
   if (path === '/api/me/export' && m === 'GET') return myExport(env, user);
   if (path === '/api/me' && m === 'DELETE') return deleteMe(env, req, user);
-  if (path === '/api/team' && m === 'GET') return teamList(env, user);
-  if (path === '/api/team' && m === 'POST') return teamAdd(env, req, user);
-  if (seg[0] === 'team' && seg[1] && m === 'DELETE') { await db(env, 'DELETE FROM team_members WHERE owner_id = ? AND email = ?', user.id, decodeURIComponent(seg[1]).toLowerCase()).run(); return teamList(env, user); }
+  if (path === '/api/team' && m === 'GET') return url.searchParams.get('team') ? teamList(env, user, url.searchParams.get('team')) : teamList(env, user);
+  if (path === '/api/team' && m === 'POST') return teamAdd(env, req, user, ctx);
+  if (seg[0] === 'team' && seg[1] && m === 'DELETE') return teamDel(env, user, decodeURIComponent(seg[1]).toLowerCase(), url.searchParams.get('team') || '');
+  if (seg[0] === 'team' && seg[1] && m === 'PATCH') return teamRole(env, req, user, decodeURIComponent(seg[1]).toLowerCase());
   if (seg[0] === 'claims' && seg[1] && seg[2] === 'page' && m === 'PUT') return claimPage(env, req, user, seg[1]);
+  if (path === '/api/listings/cover' && (m === 'PUT' || m === 'DELETE')) return listingCover(env, req, user, m === 'DELETE');
+  if (path === '/api/billing' && m === 'GET') return billing(env, user, t);                       // credits, passes, boosts with their stats and the re-run
+  if (path === '/api/wallet' && m === 'GET') return walletOf(env, user.id, t);
+  if (seg[0] === 'resumes' && seg.length <= 2) return resumes(env, req, user, seg[1] || '', m);
+  if (path === '/api/me/alerts' && m === 'POST') return myAlertAdd(env, req, user);
+  if (seg[0] === 'alerts' && seg[1] && !seg[2] && m === 'PATCH') return myAlertChange(env, req, user, seg[1]);
+  if (path === '/api/invites' && ['GET', 'PUT', 'DELETE'].includes(m)) return invitePrefs(env, req, user, m);
   if (seg[0] === 'orders' && seg[1] && seg[2] === 'receipt' && m === 'GET') return receipt(env, user, seg[1]);
   if (path === '/api/auth/confirm/request' && m === 'POST') return confirmRequest(env, user, ctx);
   if (path === '/api/auth/linkedin/start' && m === 'POST') return linkedinStart(env, req, user);
@@ -2717,6 +3193,7 @@ export default {
     await step('talent', () => env.DB.batch([talentRefund(env, 'r.created_at < ?', t - TALENT_REQUEST_DAYS * DAY),
       db(env, "UPDATE talent_requests SET status = 'expired', answered_at = ? WHERE status = 'sent' AND created_at < ?", t, t - TALENT_REQUEST_DAYS * DAY)]));           // the log of letters is kept 30 days
     await step('alerts', () => db(env, "DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", t - PENDING_DAYS * DAY).run());   // nobody confirmed them
+    await step('reruns', () => rerunBoosts(env, t));          // the free re-run of a paid boost that brought fewer than RERUN_APPLIES clicks on Apply
     await step('rebuild', async () => { if ((await db(env, "SELECT v FROM meta WHERE k = 'rebuild_wanted'").first('v')) === '1') await requestRebuild(env, true); });
   },
 };

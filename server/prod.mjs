@@ -14,7 +14,7 @@ import { readEnvFile, productionEnv, describeEnv } from './src/config.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const vars = readEnvFile(process.env.API_ENV || '/etc/hrn-api/api.env');
-const HOST = vars.HOST || '127.0.0.1', PORT = Number(vars.PORT) || 8787, MAX_BODY = 65536;
+const HOST = vars.HOST || '127.0.0.1', PORT = Number(vars.PORT) || 8787, MAX_BODY = 720000;      // an uploaded image (a logo, a cover) as a data URL; the worker limits every other body to 20,000 characters
 let env;
 try { env = productionEnv(vars, { serverDir: here }); } catch (err) { console.error('not started: ' + err.message); process.exit(1); }
 
