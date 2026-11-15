@@ -26,6 +26,9 @@ ROOT = Path(__file__).parent
 OUT = ROOT / "site"
 CFG = json.loads((ROOT / "config.json").read_text())
 CFG["api_url"] = os.environ.get("HRN_API_URL", CFG.get("api_url", "")).rstrip("/")   # the accounts and checkout API; empty until it is deployed
+# The opt-in resume database (server/README.md "The resume database"): its privacy and promise text appear once it is on for the site,
+# with the API and the resume builder's "Let employers find my resume" (config.json "talent_db": true, or HRN_TALENT_DB=1 for a test build)
+CFG["talent_db"] = bool(CFG["api_url"]) and (os.environ.get("HRN_TALENT_DB") == "1" or bool(CFG.get("talent_db")))
 SITE, BASE, P = CFG["site_name"], CFG["base_url"].rstrip("/"), CFG.get("base_path", "").rstrip("/")
 LVL_NAME = {"Intern": "Intern", "Junior": "Junior", "Senior": "Senior", "Lead": "Lead and above", "": "No level in the title"}   # the one vocabulary for seniority (AUDIT 21); "Lead" covers lead, staff, principal, head of, director
 FULL = BASE + P
@@ -5102,6 +5105,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + section("What is free, with no account?", "<ul><li>Searching, every filter, salary data and all rankings.</li><li>Opening any job and applying: you always go to the employer’s own page, and we take nothing for it.</li>"
                    "<li>Saving jobs, tracking applications and saved searches, kept in your browser.</li><li>The resume builder and every tool in the tools section.</li><li>Widgets, badges, the data files and the API.</li></ul>")
          + section("What will this site never do?", "<ul><li>Charge you to apply for a job.</li><li>Ask for your phone number, or call you.</li>"
+                   + ("<li>Show your resume to any employer unless you tick “Let employers find my resume”. Even then your name and contact details go to an employer only "
+                      "when you accept its request, and one click deletes your resume for good.</li>" if CFG["talent_db"] else "")
                    + ("<li>Sell or pass on personal data. The address you give for job alerts is used for those letters and nothing else.</li>" if CFG["api_url"] else
                       "<li>Sell or pass on personal data. Job seekers have no accounts here, so there is nothing to sell.</li>") + "<li>Send you email you did not ask for.</li>"
                    "<li>Hold a job back for paying members. Every listing is public the moment we have it.</li><li>Renew a payment by itself. Anything paid is a single payment for a stated period.</li><li>Show a job as open after we know it is closed, or hide where a listing came from.</li>"
@@ -5144,14 +5149,24 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         + h2p("The record of letters we send")
         + "<p>For every letter the site sends (an alert, a confirmation link, a new password link, a sign-in notice) we keep for 30 days: the address, the time, what kind of letter it was, "
           "and the answer of the mail server. Never the subject or the text.</p>"
+        + ((h2p("Your resume in the resume database, only if you tick it", "resumes")
+            + "<p>The resume builder keeps your resume in your browser. Only if you open an account and tick “Let employers find my resume” is it stored on our server, "
+              "with the words you agreed to and when. Employers whose account is tied to their company’s domain can then find it, but without your name, email, phone or links, "
+              "without the names of your employers, and with email addresses, phone numbers and web addresses taken out of the text (you may choose to show your name or your employers). "
+              "An employer gets your name and contact details only when you accept its request; if you decline or do not answer in 14 days, it learns nothing about you.</p>"
+              "<ul><li><b>You decide where it shows:</b> the kinds of work and the places you want, and companies that must never see it (your current employer, say).</li>"
+              "<li><b>Pause</b> hides it and keeps it. <b>Delete</b> removes it from our server at once, with every request about it. An employer whose request you accepted keeps what it was given.</li>"
+              "<li><b>Letters:</b> you get one when an employer asks; nothing else.</li></ul>") if CFG["talent_db"] else "")
         + h2p("Why we may keep it")
         + "<ul><li><b>Job alerts:</b> your consent, given by confirming the link. You can withdraw it at any time by unsubscribing; letters already sent are not affected.</li>"
-          "<li><b>Accounts and posting jobs:</b> to provide what you asked for when you opened the account.</li>"
+          + ("<li><b>The resume database:</b> your consent, given by the tick. You can withdraw it at any time by pausing or deleting your resume.</li>" if CFG["talent_db"] else "")
+          + ("<li><b>Accounts and posting jobs:</b> to provide what you asked for when you opened the account.</li>"
           "<li><b>Fraud checks, reports, limits, sign-in notices and the record of letters:</b> our legitimate interest in keeping scams off the site and accounts safe. You can object; we then weigh it case by case.</li>"
-          "<li><b>Payments,</b> once they exist: the law, which says how long records of payments are kept. Nothing is sold yet.</li></ul>"
+          "<li><b>Payments,</b> once they exist: the law, which says how long records of payments are kept. Nothing is sold yet.</li></ul>")
         + h2p("How long it is kept")
         + "<ul><li>A job alert: until you unsubscribe or ask us to delete it. An unconfirmed one: 7 days.</li><li>An account: until you ask us to delete it.</li>"
-          "<li>The record of letters: 30 days. The web server’s log: 14 days.</li><li>Visitor hashes for counting views: until the end of the day. Limit counters: an hour, or a day for confirmation letters.</li>"
+        + ("<li>A resume in the resume database: until you delete it; a request to contact you: as long as your resume is there.</li>" if CFG["talent_db"] else "")
+        + "<li>The record of letters: 30 days. The web server’s log: 14 days.</li><li>Visitor hashes for counting views: until the end of the day. Limit counters: an hour, or a day for confirmation letters.</li>"
           "<li>Sessions: 30 days. Confirmation links: 24 hours. New password links: 30 minutes.</li></ul>"
         + h2p("Who else handles it")
         + "<p>The data is kept on our own server, a virtual server rented from Hostinger. Requests to the site pass through Cloudflare, which protects it from attacks and, "

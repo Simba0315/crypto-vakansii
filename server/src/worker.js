@@ -45,7 +45,7 @@
 */
 
 import { readAlert, describe, searchLink, confirmLetter, confirmLink, tokenOk, isoTime, AlertInputError, ALERT_MAX_JOBS, ALERTS_PER_EMAIL, CONFIRMS_PER_EMAIL_DAY,
-  SIGNUPS_PER_IP_HOUR, PENDING_DAYS, PERIOD } from './alerts.js';
+  SIGNUPS_PER_IP_HOUR, PENDING_DAYS, PERIOD, CATEGORIES, cleanWords, wordTests } from './alerts.js';
 
 const DAY = 86400;
 const MAIL_LOG_DAYS = 30;                 // how long the log of letters (mail_log: when, to whom, what kind, the result) is kept
@@ -71,6 +71,11 @@ export const PRODUCTS = {
   plus3: { name: 'Plus, 3 months', usd: 7, plusDays: 91, target: 'none', group: 'plus' },
   plus12: { name: 'Plus, 12 months', usd: 12, plusDays: 365, target: 'none', group: 'plus' },
 };
+/* Packs of contact requests for the resume database (see TALENT_CONSENT): one payment, nothing renews. Empty until the owner sets the price
+   (only the owner changes prices); then, for example: talent10: { name: 'Resume database: 10 contact requests', usd: <price>, talentCredits: 10,
+   target: 'none', group: 'employer' }, and the same in config.json. A pack is sold like any product here once it is in this list. */
+export const TALENT_PACKS = {};
+Object.assign(PRODUCTS, TALENT_PACKS);
 const FREE_JOB_DAYS = 30, FREE_JOBS_PER_DAY = 3, LINK_CHECKS_PER_HOUR = 30;
 const INVOICE_LIFETIME = 3600;            // seconds an invoice can be paid, as told to the gateway
 const ORDER_GRACE = 900;                  // an unpaid invoice is closed this long after its lifetime ran out
@@ -781,6 +786,7 @@ async function activate(env, orderId, creditId = '') {
   if (p.credits) steps.push(db(env, 'INSERT INTO credits (id, user_id, order_id, remaining, expires_at) SELECT ?, user_id, id, ?, ? FROM orders WHERE id = ? AND activation = ?',
     rid('c_'), p.credits, t + p.creditDays * DAY, o.id, mark));
   if (p.plusDays) steps.push(db(env, 'UPDATE users SET plus_until = MAX(plus_until, ?) + ? WHERE id = ? AND ' + mine, t, p.plusDays * DAY, o.user_id, o.id, mark));
+  if (p.talentCredits) steps.push(db(env, 'INSERT INTO talent_credits (user_id, n) SELECT user_id, ? FROM orders WHERE id = ? AND activation = ? ON CONFLICT(user_id) DO UPDATE SET n = n + excluded.n', p.talentCredits, o.id, mark));
   const done = await env.DB.batch(steps);
   if (!done[0].meta.changes) return false;
   if (p.kind) { try { await requestRebuild(env); } catch {} }     // what was bought is recorded; a rebuild that could not be asked for is picked up by the daily build
@@ -2055,6 +2061,167 @@ async function claimStats(env, user, id, t) {
     by_day: days.map((day) => { const r = x.recent.get(day) || {}; return { day, views: r.views || 0, applies: r.applies || 0 }; }) })) };
 }
 
+/* ---------------------------------------------------------------- the resume database: opt-in only
+   The owner asked to sell employers access to resumes. Taking other sites' resumes is not allowed (personal data without consent, and
+   their terms), so this is the legal way, the one Naukri (Resdex), SEEK (Talent Search) and Indeed (Resume search) took: a database of
+   resumes that people put there themselves. The rules, each enforced here and tested in section 34:
+   - Nothing is stored without the tick. PUT /api/talent/profile stores a resume only with consent: true and the exact consent line the
+     page showed (TALENT_CONSENT, kept with the time). An account must have confirmed its email. Switched on by TALENT_DB=on.
+   - Hidden until accepted. Employers see no name (unless the person chose to show it), no email, phone or links, no employer names
+     (unless chosen), and emails, phone numbers and addresses are taken out of the free text. The name and contact details go to one
+     employer only when the person accepts that employer's request.
+   - The person decides where it shows: the kinds of work and the places they want (search finds them only there), company domains that
+     never see it (their current employer, say), pause (hidden, kept), and delete (the row and every request about it are deleted at once;
+     nothing is kept, and the answer says so).
+   - Only an employer whose account is tied to a company domain (an email on it, a DNS record or a file) and confirmed can search and
+     ask; a recruiter on LinkedIn alone cannot. Searches TALENT_SEARCHES_PER_HOUR an hour, requests TALENT_REQUESTS_PER_DAY a day, one
+     request per person ever. The message is screened like a posting (screenPosting): fees, chat apps, installs and the rest are refused.
+   - Paid as a one-time pack of contact requests (TALENT_PACKS; nothing renews). A request takes one when sent and gives it back when the
+     person declines or does not answer in TALENT_REQUEST_DAYS: an employer pays only for people who said yes. Until the owner sets a price,
+     credits come only from the owner (POST /api/admin/talent/credits). */
+export const TALENT_CONSENT = 'Let employers find my resume. I agree that Jobs Every Hour keeps my resume on its server and shows it to employers with a proved company account, ' +
+  'without my name, email, phone or links unless I choose to show my name. An employer gets my name and contact details only if I accept its request. I can pause or delete it at any time.';
+const TALENT_LEVELS = ['entry', 'mid', 'senior', 'lead'], TALENT_REQUEST_DAYS = 14, TALENT_REQUESTS_PER_DAY = 20, TALENT_SEARCHES_PER_HOUR = 120, TALENT_PAGE = 20;
+const talentOn = (env) => { if (env.TALENT_DB !== 'on') throw NOT_CONFIGURED('The resume database is'); };
+const HIDDEN = '[hidden]';
+// what employers may read of free text before acceptance: no email address, web address, handle or phone number (9 digits or more; dates stay)
+export const redact = (s) => String(s || '').replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, HIDDEN).replace(/\bhttps?:\/\/\S+|\bwww\.\S+|\b(?:linkedin\.com|github\.com|t\.me|wa\.me)\/\S*/gi, HIDDEN)
+  .replace(/@[a-z0-9_]{3,}/gi, HIDDEN).replace(/\+?\d[\d\s().-]{7,}\d/g, (m) => ((m.match(/\d/g) || []).length >= 9 ? HIDDEN : m));
+const lines = (v, max, each, pick = (x) => x) => [...new Set((Array.isArray(v) ? v : String(v || '').split(/[\n,]+/)).map((x) => pick(String(x).trim())).filter(Boolean))].slice(0, max).map((x) => x.slice(0, each));
+// The builder's resume (assets/resume.js), its own fields only and each cut to size; and what search reads from it and from the settings.
+function readTalent(b, had) {
+  const r = b.resume && typeof b.resume === 'object' && !Array.isArray(b.resume) ? b.resume : had ? JSON.parse(had.resume) : null;
+  if (!r) throw bad('resume', 'Send the resume as the builder keeps it.');
+  if (JSON.stringify(r).length > 30000) throw bad('too_long', 'The resume is too long: keep it under 30,000 characters.', 413);
+  const s = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+  const resume = { name: s(r.name, 120), title: s(r.title, 160), email: s(r.email, 254), phone: s(r.phone, 40), place: s(r.place, 160), links: s(r.links, 500), summary: s(r.summary, 1500), skills: s(r.skills, 1500),
+    exp: (Array.isArray(r.exp) ? r.exp : []).slice(0, 12).map((x) => ({ role: s(x && x.role, 160), org: s(x && x.org, 160), dates: s(x && x.dates, 80), text: s(x && x.text, 2500) })).filter((x) => x.role || x.org || x.text),
+    edu: (Array.isArray(r.edu) ? r.edu : []).slice(0, 8).map((x) => ({ what: s(x && x.what, 200), org: s(x && x.org, 200), dates: s(x && x.dates, 80) })).filter((x) => x.what || x.org) };
+  if (!resume.skills && !resume.exp.length) throw bad('resume', 'Add your skills or at least one job before employers can find your resume.');
+  const pick = (k, dflt) => (b[k] === undefined && had ? had[k] : b[k] === undefined ? dflt : b[k]);
+  const level = String(pick('level', '')), years = Number(pick('years', 0));
+  if (level && !TALENT_LEVELS.includes(level)) throw bad('level', 'Choose entry, mid, senior or lead.');
+  if (!Number.isInteger(years) || years < 0 || years > 60) throw bad('years', 'Give your years of experience as a whole number.');
+  const listOf = (k) => (b[k] === undefined && had ? had[k].split('\n').filter(Boolean) : b[k]);
+  const roles = lines(listOf('roles'), 5, 40, (x) => (Object.hasOwn(CATEGORIES, x) ? x : ''));
+  const places = lines(listOf('places'), 10, 60, (x) => (/^[a-z0-9]+(?:-[a-z0-9]+){0,5}$/.test(x) ? x : ''));
+  const blocked = lines(listOf('blocked'), 20, 100, (x) => { const u = publicUrl('https://' + x.toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^[^@]*@/, '').replace(/[/?#].*$/, '')); return u ? siteDomain(u.hostname) : ''; });
+  const flag = (k) => (pick(k, 0) === true || pick(k, 0) === 1 || pick(k, 0) === '1' ? 1 : 0);
+  return { resume, level, years, roles, places, blocked, show_name: flag('show_name'), show_employers: flag('show_employers'), paused: flag('paused'),
+    headline: clip(resume.title || (resume.exp[0] || {}).role || '', 160), skills: lines(resume.skills, 40, 60, (x) => x.toLowerCase()) };
+}
+// A person as employers see them: the full card only for the employer whose request they accepted (contact) or for themselves.
+function talentCard(t, { contact = null, own = false } = {}) {
+  const r = JSON.parse(t.resume), open = !!contact || own;
+  return { id: t.pid, name: open || t.show_name ? r.name : '', headline: open ? t.headline : redact(t.headline), level: t.level, years: t.years, skills: t.skills.split('\n').filter(Boolean),
+    roles: t.roles.split('\n').filter(Boolean), places: t.places.split('\n').filter(Boolean), summary: open ? r.summary : redact(r.summary),
+    experience: r.exp.map((x) => ({ role: open ? x.role : redact(x.role), org: open || t.show_employers ? x.org : '', dates: x.dates, text: open ? x.text : redact(x.text) })),
+    education: r.edu.map((x) => ({ what: x.what, org: x.org, dates: x.dates })), updated: isoDay(t.updated_at), ...(contact ? { contact } : {}) };
+}
+const talentSettings = (t) => ({ level: t.level, years: t.years, roles: t.roles.split('\n').filter(Boolean), places: t.places.split('\n').filter(Boolean), blocked: t.blocked.split('\n').filter(Boolean),
+  show_name: !!t.show_name, show_employers: !!t.show_employers, paused: !!t.paused, consented: isoDay(t.consented_at), updated: isoDay(t.updated_at) });
+async function talentProfile(env, user) {
+  const t = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first();
+  return { consent_text: TALENT_CONSENT, profile: t ? { ...talentSettings(t), resume: JSON.parse(t.resume), as_employers_see: talentCard(t),
+    requests: Number(await db(env, "SELECT COUNT(*) AS n FROM talent_requests WHERE candidate_id = ? AND status = 'sent'", user.id).first('n')) || 0 } : null };
+}
+async function talentSave(env, req, user) {
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  await limit(env, 'talent-save:' + user.id, 60, 3600);
+  const b = await body(req), had = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first(), t = now();
+  if (!had && (b.consent !== true || b.consent_text !== TALENT_CONSENT))
+    throw bad('consent', 'Your resume is stored only after you tick “Let employers find my resume”: send consent: true with the consent text shown.', 400, { consent_text: TALENT_CONSENT });
+  const x = readTalent(b, had), j = (a) => a.join('\n');
+  if (had) await db(env, 'UPDATE talent SET resume = ?, headline = ?, level = ?, years = ?, skills = ?, roles = ?, places = ?, show_name = ?, show_employers = ?, blocked = ?, paused = ?, updated_at = ? WHERE user_id = ?',
+    JSON.stringify(x.resume), x.headline, x.level, x.years, j(x.skills), j(x.roles), j(x.places), x.show_name, x.show_employers, j(x.blocked), x.paused, t, user.id).run();
+  else await db(env, 'INSERT INTO talent (user_id, pid, resume, headline, level, years, skills, roles, places, show_name, show_employers, blocked, paused, consent_text, consented_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    user.id, rid('t_', 8), JSON.stringify(x.resume), x.headline, x.level, x.years, j(x.skills), j(x.roles), j(x.places), x.show_name, x.show_employers, j(x.blocked), x.paused, TALENT_CONSENT, t, t).run();
+  return talentProfile(env, user);
+}
+// Deleting is for good: the resume and every request about it go at once; open requests give their employers the credit back.
+async function talentDelete(env, user) {
+  await env.DB.batch([talentRefund(env, 'r.candidate_id = ?', user.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ?', user.id), db(env, 'DELETE FROM talent WHERE user_id = ?', user.id)]);
+  return { ok: true, deleted: true, message: 'Your resume is deleted from our server, with every request about it. Employers who were given your contact details earlier keep what they were given.' };
+}
+// gives back one credit for every open request matching the condition (on r), to the employer that sent it
+const talentRefund = (env, where, arg) => db(env, "UPDATE talent_credits SET n = n + (SELECT COUNT(*) FROM talent_requests r WHERE r.employer_id = talent_credits.user_id AND r.status = 'sent' AND " + where + ')', arg);
+function talentEmployer(user) {
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  if (!domainOf(user)) throw bad('employer_only', 'The resume database is open to employers whose account is tied to their company’s domain (an email on it, a DNS record or a file).', 403);
+  return domainOf(user);
+}
+async function talentSearch(env, user, url) {
+  const own = talentEmployer(user);
+  await limit(env, 'talent-search:' + user.id, TALENT_SEARCHES_PER_HOUR, 3600);
+  const p = url.searchParams, tests = wordTests(cleanWords(p.get('q') || '')), skill = (p.get('skill') || '').trim().toLowerCase(), role = p.get('role') || '', place = p.get('place') || '';
+  const level = p.get('level') || '', years = Number(p.get('years')) || 0, offset = Math.max(0, Math.min(Number(p.get('offset')) || 0, 1000));
+  const rows = (await db(env, 'SELECT * FROM talent WHERE paused = 0 AND user_id != ? ORDER BY updated_at DESC LIMIT 5000', user.id).all()).results.filter((t) => {
+    if (t.blocked.split('\n').includes(own)) return false;                          // the person chose not to be seen by this company
+    if (skill && !t.skills.split('\n').includes(skill)) return false;
+    if (role && !t.roles.split('\n').includes(role)) return false;
+    if (place && !t.places.split('\n').includes(place) && !(place !== 'remote' && t.places.split('\n').includes('remote') && p.get('remote_ok') === '1')) return false;
+    if (level && t.level !== level) return false;
+    if (years && t.years < years) return false;
+    if (!tests.length) return true;
+    const r = JSON.parse(t.resume), hay = [t.headline, t.skills.replace(/\n/g, ' '), ...r.exp.map((x) => x.role), redact(r.summary)].join(' \n ');
+    return tests.every((re) => re.test(hay));
+  });
+  const credits = Number(await db(env, 'SELECT n FROM talent_credits WHERE user_id = ?', user.id).first('n')) || 0;
+  return { total: rows.length, credits, results: rows.slice(offset, offset + TALENT_PAGE).map((t) => talentCard(t)) };
+}
+async function talentContact(env, req, user, pid, ctx) {
+  const own = talentEmployer(user);
+  const b = await body(req), t = await db(env, 'SELECT * FROM talent WHERE pid = ? AND paused = 0', String(pid)).first();
+  if (!t || t.user_id === user.id || t.blocked.split('\n').includes(own)) throw bad('not_found', 'No such resume.', 404);
+  const message = prose(b.message, 1000, 40), job = b.job_url ? publicUrl(b.job_url) : null;
+  if (!message) throw bad('message', 'Write to the person in 40 to 1,000 characters: who you are, the job, and why them.');
+  if (b.job_url && !job) throw bad('job_url', 'The link to the job must start with https://');
+  const screen = screenPosting({ title: '', description: message, company: user.company || own, applyUrl: job ? job.href : 'https://' + own, accountDomain: own });
+  if (screen.verdict !== 'ok') throw bad('rejected', 'This message cannot be sent. ' + screen.reasons.join(' '), 422, { reasons: screen.reasons });
+  await limit(env, 'talent-req:' + user.id, TALENT_REQUESTS_PER_DAY, DAY);
+  const took = await db(env, 'UPDATE talent_credits SET n = n - 1 WHERE user_id = ? AND n > 0', user.id).run();
+  if (!took.meta.changes) throw bad('no_credits', 'You have no contact requests left. A pack is a single payment and nothing renews.', 402);
+  const id = rid('q_'), t0 = now(), company = user.company || own;
+  try {
+    await db(env, 'INSERT INTO talent_requests (id, employer_id, candidate_id, company, domain, message, job_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', id, user.id, t.user_id, company, own, message, job ? job.href : '', t0).run();
+  } catch (err) {
+    await db(env, 'UPDATE talent_credits SET n = n + 1 WHERE user_id = ?', user.id).run();
+    if (/UNIQUE/i.test(String(err && err.message))) throw bad('already_asked', 'You have already asked this person. Each employer can ask once.', 409);
+    throw err;
+  }
+  const to = await db(env, 'SELECT email FROM users WHERE id = ?', t.user_id).first('email');
+  await later(ctx, sendMail(env, to, company + ' would like to contact you', company + ' (' + own + ') found your resume in the ' + (env.SITE_NAME || 'Jobs Every Hour') + ' resume database and would like to contact you.\n\n' +
+    'Their message:\n' + message + '\n' + (job ? '\nThe job: ' + job.href + '\n' : '') + '\nAccept or decline on your account page: ' + env.SITE_URL + '/account/#talent\n\n' +
+    'They get your name and contact details only if you accept. If you do nothing, the request ends in ' + TALENT_REQUEST_DAYS + ' days and they learn nothing about you.\n' +
+    'You get this because you chose “Let employers find my resume”. To stop it, pause or delete your resume on the account page.\n', { kind: 'talent_request' }));
+  return { request: { id, candidate: t.pid, status: 'sent', sent: isoDay(t0) }, credits: Number(await db(env, 'SELECT n FROM talent_credits WHERE user_id = ?', user.id).first('n')) || 0 };
+}
+async function talentAnswer(env, user, id, answer, ctx) {
+  const r = await db(env, "SELECT * FROM talent_requests WHERE id = ? AND candidate_id = ? AND status = 'sent'", id, user.id).first();
+  if (!r) throw bad('not_found', 'No open request with this id.', 404);
+  const t = now();
+  if (answer === 'decline') await env.DB.batch([talentRefund(env, 'r.id = ?', id), db(env, "UPDATE talent_requests SET status = 'declined', answered_at = ? WHERE id = ? AND status = 'sent'", t, id)]);
+  else {
+    await db(env, "UPDATE talent_requests SET status = 'accepted', answered_at = ? WHERE id = ? AND status = 'sent'", t, id).run();
+    const to = await db(env, 'SELECT email FROM users WHERE id = ?', r.employer_id).first('email');
+    await later(ctx, sendMail(env, to, 'A candidate accepted your request', 'A person you asked through the ' + (env.SITE_NAME || 'Jobs Every Hour') + ' resume database accepted your request. Their name and contact details are on your account page: ' +
+      env.SITE_URL + '/account/#talent\n\nPlease write to them yourself; we do not pass messages on.\n', { kind: 'talent_accepted' }));
+  }
+  return { ok: true, status: answer === 'decline' ? 'declined' : 'accepted' };
+}
+async function talentIncoming(env, user) {
+  const rows = (await db(env, 'SELECT * FROM talent_requests WHERE candidate_id = ? ORDER BY created_at DESC LIMIT 200', user.id).all()).results;
+  return { requests: rows.map((r) => ({ id: r.id, company: r.company, domain: r.domain, message: r.message, job_url: r.job_url, status: r.status, received: isoDay(r.created_at), answered: r.answered_at ? isoDay(r.answered_at) : '' })) };
+}
+async function talentSent(env, user) {
+  talentEmployer(user);
+  const rows = (await db(env, 'SELECT r.*, t.pid, t.resume, t.headline, t.level, t.years, t.skills, t.roles, t.places, t.show_name, t.show_employers, t.updated_at, u.email AS candidate_email FROM talent_requests r ' +
+    'JOIN talent t ON t.user_id = r.candidate_id JOIN users u ON u.id = r.candidate_id WHERE r.employer_id = ? ORDER BY r.created_at DESC LIMIT 500', user.id).all()).results;
+  return { credits: Number(await db(env, 'SELECT n FROM talent_credits WHERE user_id = ?', user.id).first('n')) || 0,
+    requests: rows.map((r) => { const res = JSON.parse(r.resume); return { id: r.id, status: r.status, sent: isoDay(r.created_at), answered: r.answered_at ? isoDay(r.answered_at) : '',
+      candidate: talentCard(r, r.status === 'accepted' ? { contact: { name: res.name, email: r.candidate_email, resume_email: res.email, phone: res.phone, links: res.links } } : {}) }; }) };
+}
+
 /* ---------------------------------------------------------------- router */
 async function route(env, req, url, ctx) {
   const path = url.pathname.replace(/\/+$/, ''), m = req.method, seg = path.split('/').slice(2);     // /api/<seg...>
@@ -2068,7 +2235,8 @@ async function route(env, req, url, ctx) {
     return { products: Object.entries(PRODUCTS).filter(([, p]) => p.group !== 'plus' || env.PLUS_LIVE === '1').map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || 0, target: p.target, group: p.group, billing: 'one-time', renews: false })),
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
       // for the pages to know which buttons to show: sign-in with LinkedIn, and the AI tools of Plus
-      linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off' };
+      linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off',
+      talent: env.TALENT_DB === 'on' ? 'on' : 'off' };
   }
   if (path === '/api/auth/signup' && m === 'POST') return signup(env, req, ctx);
   if (path === '/api/auth/login' && m === 'POST') return login(env, req, ctx);
@@ -2126,6 +2294,18 @@ async function route(env, req, url, ctx) {
     const done = user.confirmed_at ? await db(env, 'DELETE FROM alerts WHERE id = ? AND email = ?', seg[1], user.email).run() : { meta: { changes: 0 } };
     if (!done.meta.changes) throw bad('not_found', 'Alert not found.', 404);
     return { ok: true };
+  }
+  if (seg[0] === 'talent') {                                                                            // the resume database (opt-in)
+    talentOn(env);
+    if (path === '/api/talent/profile' && m === 'GET') return talentProfile(env, user);
+    if (path === '/api/talent/profile' && m === 'PUT') return talentSave(env, req, user);
+    if (path === '/api/talent/profile' && m === 'DELETE') return talentDelete(env, user);
+    if (path === '/api/talent/requests' && m === 'GET') return talentIncoming(env, user);
+    if (seg[1] === 'requests' && seg[2] && (seg[3] === 'accept' || seg[3] === 'decline') && m === 'POST') return talentAnswer(env, user, seg[2], seg[3], ctx);
+    if (path === '/api/talent/search' && m === 'GET') return talentSearch(env, user, url);
+    if (path === '/api/talent/sent' && m === 'GET') return talentSent(env, user);
+    if (seg[1] && seg[2] === 'contact' && m === 'POST') return talentContact(env, req, user, seg[1], ctx);
+    throw bad('not_found', 'Not found.', 404);
   }
   if (path === '/api/claims' && m === 'POST') return claimCompanyPage(env, req, user);
   if (path === '/api/claims' && m === 'GET') return { claims: (await db(env, 'SELECT * FROM company_claims WHERE user_id = ? ORDER BY created_at DESC', user.id).all()).results.map(claimView) };
@@ -2247,6 +2427,20 @@ async function admin(env, req, seg, m) {
     if (!done.meta.changes) throw bad('not_found', 'No claim with this id.', 404);
     await requestRebuild(env); return { ok: true };
   }
+  // The resume database: give an employer contact requests (until a pack is on sale, or as a goodwill gesture), and the counts.
+  if (seg[1] === 'talent' && seg[2] === 'credits' && m === 'POST') {
+    const b = await body(req), n = Number(b.n), acc = String(b.account || '');
+    if (!Number.isInteger(n) || n < 1 || n > 1000) throw bad('n', 'Give a whole number of requests, 1 to 1,000.');
+    if (!(await db(env, 'SELECT 1 AS x FROM users WHERE id = ? AND banned = 0', acc).first())) throw bad('not_found', 'No such account.', 404);
+    const left = await db(env, 'INSERT INTO talent_credits (user_id, n) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET n = n + excluded.n RETURNING n', acc, n).first('n');
+    return { ok: true, credits: Number(left) };
+  }
+  if (seg[1] === 'talent' && !seg[2] && m === 'GET') {
+    const n = async (sql) => Number(await db(env, sql).first('n')) || 0;
+    return { resumes: await n('SELECT COUNT(*) AS n FROM talent WHERE paused = 0'), paused: await n('SELECT COUNT(*) AS n FROM talent WHERE paused = 1'),
+      requests: Object.fromEntries((await db(env, 'SELECT status, COUNT(*) AS n FROM talent_requests GROUP BY status').all()).results.map((r) => [r.status, r.n])),
+      credits_held: await n('SELECT COALESCE(SUM(n), 0) AS n FROM talent_credits') };
+  }
   // Who the site has, in counts: accounts of job seekers and of employers, job alerts, claimed company pages, mail sent today, and what
   // each of the last 30 days added. Counts only: no address leaves this endpoint.
   if (seg[1] === 'audience' && m === 'GET') {
@@ -2274,7 +2468,8 @@ async function admin(env, req, seg, m) {
     const u = await db(env, 'SELECT id FROM users WHERE email = ?', email).first(), alerts = await db(env, 'SELECT COUNT(*) AS n FROM alerts WHERE email = ?', email).first('n');
     const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email),
       db(env, 'DELETE FROM rate WHERE k LIKE ?', '%:' + email)];                // limits kept under the address (sign-in, new password, alert letters)
-    if (u) steps.push(...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
+    if (u) steps.push(talentRefund(env, 'r.candidate_id = ?', u.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ? OR employer_id = ?', u.id, u.id),
+      ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
       ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id), db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
       db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
     await env.DB.batch(steps);
@@ -2290,7 +2485,9 @@ async function admin(env, req, seg, m) {
       db(env, 'DELETE FROM oauth_states WHERE user_id = ?', id), db(env, 'DELETE FROM domain_claims WHERE user_id = ?', id),      // its LinkedIn identity stays on it, so it cannot be attached to a new account
       db(env, "UPDATE reports SET decision = 'upheld', decided_at = ? WHERE decided_at = 0 AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)", t, id),
       ...takeDown(env, 'user_id = ?', id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', id), db(env, 'DELETE FROM companies WHERE user_id = ?', id),
-      db(env, 'DELETE FROM company_claims WHERE user_id = ?', id)]);
+      db(env, 'DELETE FROM company_claims WHERE user_id = ?', id),
+      // its resume leaves the database, and its open requests to people are withdrawn (they would otherwise still reach someone)
+      db(env, 'UPDATE talent SET paused = 1 WHERE user_id = ?', id), db(env, "UPDATE talent_requests SET status = 'expired', answered_at = ? WHERE employer_id = ? AND status = 'sent'", t, id)]);
     await requestRebuild(env); return { ok: true };
   }
   throw bad('not_found', 'Not found.', 404);
@@ -2326,7 +2523,10 @@ export default {
     await step('claims', () => db(env, 'DELETE FROM domain_claims WHERE expires_at < ?', t).run());
     await step('ai', () => db(env, 'DELETE FROM ai_usage WHERE month < ?', monthOf(t - 62 * DAY)).run());      // counts of months gone by: this month and the last are kept
     await step('rate', () => db(env, 'DELETE FROM rate WHERE reset_at < ?', t).run());
-    await step('mail log', () => db(env, 'DELETE FROM mail_log WHERE at < ?', t - MAIL_LOG_DAYS * DAY).run());           // the log of letters is kept 30 days
+    await step('mail log', () => db(env, 'DELETE FROM mail_log WHERE at < ?', t - MAIL_LOG_DAYS * DAY).run());
+    // requests to people in the resume database that got no answer: closed, and the employer gets its credit back
+    await step('talent', () => env.DB.batch([talentRefund(env, 'r.created_at < ?', t - TALENT_REQUEST_DAYS * DAY),
+      db(env, "UPDATE talent_requests SET status = 'expired', answered_at = ? WHERE status = 'sent' AND created_at < ?", t, t - TALENT_REQUEST_DAYS * DAY)]));           // the log of letters is kept 30 days
     await step('alerts', () => db(env, "DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", t - PENDING_DAYS * DAY).run());   // nobody confirmed them
     await step('rebuild', async () => { if ((await db(env, "SELECT v FROM meta WHERE k = 'rebuild_wanted'").first('v')) === '1') await requestRebuild(env, true); });
   },

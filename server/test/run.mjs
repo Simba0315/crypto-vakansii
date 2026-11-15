@@ -2574,6 +2574,111 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
 }
 await smtpServer.close();
 
+/* ---- 34. The resume database: opt-in only (the owner: sell employers access to resumes; the legal way is people who put theirs there) ---- */
+{
+  const { TALENT_CONSENT, redact } = await import('../src/worker.js');
+  eq(redact('Call me at +1 (415) 555-0199 or write to jane.doe@mail.com, see https://janedoe.dev and @janedoe. Worked 2019 - 2022 on 12 teams.'),
+    'Call me at [hidden] or write to [hidden], see [hidden] and [hidden]. Worked 2019 - 2022 on 12 teams.', 'Resumes: emails, phone numbers, addresses and handles are taken out of what employers read; dates and numbers stay');
+  eq((await call(newEnv(), 'GET', '/api/talent/profile', { token: 'x'.repeat(64) })).status, 401, 'Resumes: the endpoints need a session');
+  const off = newEnv(), offTok = await fresh(off, 'me@gmail.com');
+  eq([(await call(off, 'GET', '/api/talent/profile', { token: offTok })).body.error, (await call(off, 'GET', '/api/public/products')).body.talent], ['not_configured', 'off'], 'Resumes: off until TALENT_DB=on');
+  const box = mailbox(), env = newEnv({ ...box, TALENT_DB: 'on' }), adm = async (method, p, data) => { const res = await worker.fetch(new Request(API + '/api/admin/' + p, { method, headers: { Authorization: 'Bearer admin-secret', 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined }), env); return { status: res.status, body: await res.json() }; };
+  const RES = { name: 'Jane Roe', title: 'Senior Rust Engineer', email: 'jane.roe@gmail.com', phone: '+44 20 7946 0958', place: 'London', links: 'https://janeroe.dev', summary: 'Rust engineer, 8 years. Reach me at jane.roe@gmail.com.',
+    skills: 'Rust, Go, Kubernetes', exp: [{ role: 'Senior Rust Engineer', org: 'Initech', dates: '2019 - 2026', text: 'Built the payments core in Rust.\nCall +44 20 7946 0958 for references.' }], edu: [{ what: 'BSc Computer Science', org: 'UCL', dates: '2015' }] };
+  const jane = await fresh(env, 'jane.roe@gmail.com');
+  let r = await call(env, 'GET', '/api/talent/profile', { token: jane });
+  eq([r.status, r.body.profile, r.body.consent_text === TALENT_CONSENT, (await call(env, 'GET', '/api/public/products')).body.talent], [200, null, true, 'on'], 'Resumes: nothing is stored to start with; the page gets the consent line to show');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES } });
+  const r2 = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES, consent: true, consent_text: 'I agree' } });
+  eq([r.status, r.body.error, r2.status, await one(env, 'SELECT COUNT(*) FROM talent')], [400, 'consent', 400, 0], 'Resumes: without the tick and the exact consent line shown, nothing is stored');
+  const unconf = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'new@gmail.com', password: PASS } })).body.token;
+  eq((await call(env, 'PUT', '/api/talent/profile', { token: unconf, data: { resume: RES, consent: true, consent_text: TALENT_CONSENT } })).body.error, 'confirm_email', 'Resumes: an account must confirm its email first');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES, consent: true, consent_text: TALENT_CONSENT, level: 'senior', years: 8, roles: ['engineering'], places: ['united-kingdom', 'remote'] } });
+  const seen = r.body.profile && r.body.profile.as_employers_see, row = await env.DB.prepare('SELECT * FROM talent').first();
+  ok(r.status === 200 && row.consent_text === TALENT_CONSENT && row.consented_at > 0 && /^t_[a-f0-9]{16}$/.test(row.pid) && JSON.parse(row.resume).name === 'Jane Roe', 'Resumes: with the tick the resume is stored, with the consent line and its time, under a public id that is not the account id');
+  ok(seen.name === '' && !JSON.stringify(seen).match(/jane|Roe|7946|janeroe|Initech/i) && seen.experience[0].org === '' && seen.summary.includes('[hidden]') && seen.skills.join() === 'rust,go,kubernetes',
+    'Resumes: the person sees exactly what employers see: no name, email, phone, links or employer names');
+
+  const acme = await fresh(env, 'hr@acme.dev'), seeker = await fresh(env, 'looking@gmail.com');
+  r = await call(env, 'GET', '/api/talent/search?skill=rust', { token: seeker }); eq([r.status, r.body.error], [403, 'employer_only'], 'Resumes: only an employer tied to a company domain can search');
+  r = await call(env, 'GET', '/api/talent/search?skill=rust&role=engineering&place=united-kingdom&level=senior&years=5', { token: acme });
+  eq([r.status, r.body.total, r.body.results[0].id, r.body.results[0].name, r.body.credits], [200, 1, row.pid, '', 0], 'Resumes: an employer finds a person by skill, kind of work, place, level and years, without a name');
+  eq([(await call(env, 'GET', '/api/talent/search?q=rust+engineer', { token: acme })).body.total, (await call(env, 'GET', '/api/talent/search?place=germany', { token: acme })).body.total,
+    (await call(env, 'GET', '/api/talent/search?years=10', { token: acme })).body.total, (await call(env, 'GET', '/api/talent/search?q=initech', { token: acme })).body.total],
+    [1, 0, 0, 0], 'Resumes: only where the person wants to work, and an employer name the person hid cannot be searched for');
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Hello Jane, we are hiring a Rust engineer for our robotics team in London; would you like to talk?' } });
+  eq([r.status, r.body.error], [402, 'no_credits'], 'Resumes: a request needs a credit; the answer says a pack is one payment and nothing renews');
+  ok(/nothing renews/.test(r.body.message), 'Resumes: the refusal says nothing renews');
+  const acmeId = await one(env, "SELECT id FROM users WHERE email = 'hr@acme.dev'");
+  r = await adm('POST', 'talent/credits', { account: acmeId, n: 3 }); eq([r.status, r.body.credits], [200, 3], 'Resumes: the owner can give an employer contact requests (until a pack is on sale)');
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Great job for you! Pay a registration fee of $50 to start, then contact us on Telegram @acmehr.' } });
+  eq([r.status, r.body.error, await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', acmeId)], [422, 'rejected', 3], 'Resumes: a message that asks for money or moves people to a chat is refused, and costs nothing');
+  const mailsBefore = box.outbox.length;
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Hello, we are hiring a Rust engineer for our robotics team in London. Would you like to talk?', job_url: 'https://acme.dev/careers/senior-rust-engineer' } });
+  const note = box.outbox.at(-1);
+  eq([r.status, r.body.credits, box.outbox.length - mailsBefore, note.to, note.kind], [200, 2, 1, 'jane.roe@gmail.com', 'talent_request'], 'Resumes: a request takes a credit and tells the person by email');
+  ok(note.text.includes('Hello, we are hiring a Rust engineer') && /only if you accept/.test(note.text) && !note.text.includes('hr@acme.dev'), 'Resumes: the letter carries the message and says they learn nothing unless the person accepts');
+  r = await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: acme, data: { message: 'Hello again, we are hiring a Rust engineer for our robotics team in London. Would you like to talk?' } });
+  eq([r.status, r.body.error, await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', acmeId)], [409, 'already_asked', 2], 'Resumes: one request per employer and person, and a refused second one costs nothing');
+  r = await call(env, 'GET', '/api/talent/sent', { token: acme });
+  eq([r.body.requests[0].status, r.body.requests[0].candidate.name, r.body.requests[0].candidate.contact], ['sent', '', undefined], 'Resumes: before the answer the employer has no name and no contact');
+  r = await call(env, 'GET', '/api/talent/requests', { token: jane });
+  const reqId = r.body.requests[0].id;
+  eq([r.body.requests.length, r.body.requests[0].company, r.body.requests[0].domain, r.body.requests[0].status], [1, 'acme.dev', 'acme.dev', 'sent'], 'Resumes: the person sees who asked, from which domain, and the message');
+  r = await call(env, 'POST', '/api/talent/requests/' + reqId + '/accept', { token: acme }); eq(r.status, 404, 'Resumes: only the person can answer');
+  r = await call(env, 'POST', '/api/talent/requests/' + reqId + '/accept', { token: jane });
+  const sent = (await call(env, 'GET', '/api/talent/sent', { token: acme })).body;
+  eq([r.body.status, sent.requests[0].candidate.contact, sent.requests[0].candidate.name, sent.credits, box.outbox.at(-1).kind, box.outbox.at(-1).to],
+    ['accepted', { name: 'Jane Roe', email: 'jane.roe@gmail.com', resume_email: 'jane.roe@gmail.com', phone: '+44 20 7946 0958', links: 'https://janeroe.dev' }, 'Jane Roe', 2, 'talent_accepted', 'hr@acme.dev'],
+    'Resumes: on acceptance that employer, and only that one, gets the name and contact details; the credit is spent');
+  // a decline and a request nobody answers give the credit back
+  const globex = await fresh(env, 'hr@globex.dev'), globexId = await one(env, "SELECT id FROM users WHERE email = 'hr@globex.dev'");
+  await adm('POST', 'talent/credits', { account: globexId, n: 2 });
+  await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: globex, data: { message: 'Hello, Globex is hiring a platform engineer who knows Rust and Kubernetes. Can we talk this week?' } });
+  const gReq = (await call(env, 'GET', '/api/talent/requests', { token: jane })).body.requests.find((x) => x.domain === 'globex.dev').id;
+  r = await call(env, 'POST', '/api/talent/requests/' + gReq + '/decline', { token: jane });
+  eq([r.body.status, await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', globexId), (await call(env, 'GET', '/api/talent/sent', { token: globex })).body.requests[0].candidate.contact],
+    ['declined', 2, undefined], 'Resumes: a declined request gives the credit back and gives the employer nothing');
+  const initech = await fresh(env, 'hr@initech.com'), initechId = await one(env, "SELECT id FROM users WHERE email = 'hr@initech.com'");
+  await adm('POST', 'talent/credits', { account: initechId, n: 1 });
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { blocked: ['careers.initech.com'] } });
+  eq([r.body.profile.blocked, (await call(env, 'GET', '/api/talent/search?skill=rust', { token: initech })).body.total,
+    (await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: initech, data: { message: 'Hello Jane, Initech would like to talk to you about a senior Rust role here.' } })).status],
+    [['initech.com'], 0, 404], 'Resumes: a company the person blocks (their own employer, say) never finds them and cannot ask');
+  await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { blocked: [] } });
+  await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: initech, data: { message: 'Hello Jane, Initech would like to talk to you about a senior Rust role here.' } });
+  await env.DB.prepare('UPDATE talent_requests SET created_at = created_at - 15 * 86400 WHERE employer_id = ?').bind(initechId).run();
+  await worker.scheduled({}, env);
+  eq([await one(env, 'SELECT status FROM talent_requests WHERE employer_id = ?', initechId), await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', initechId)], ['expired', 1],
+    'Resumes: a request with no answer in 14 days ends and gives the credit back');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { paused: true } });
+  eq([r.body.profile.paused, (await call(env, 'GET', '/api/talent/search', { token: acme })).body.total, r.body.profile.resume.name], [true, 0, 'Jane Roe'], 'Resumes: paused, it is hidden from search and kept');
+  await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { paused: false, show_name: true } });
+  eq((await call(env, 'GET', '/api/talent/search', { token: globex })).body.results[0].name, 'Jane Roe', 'Resumes: the person may choose to show the name before accepting');
+  // one employer still waiting when the person deletes: the credit comes back, and nothing of the resume is left
+  const hooli = await fresh(env, 'hr@hooli.dev'), hooliId = await one(env, "SELECT id FROM users WHERE email = 'hr@hooli.dev'");
+  await adm('POST', 'talent/credits', { account: hooliId, n: 1 });
+  await call(env, 'POST', '/api/talent/' + row.pid + '/contact', { token: hooli, data: { message: 'Hello Jane, Hooli would like to talk to you about a senior Rust role on our team.' } });
+  r = await call(env, 'DELETE', '/api/talent/profile', { token: jane });
+  eq([r.body.deleted, await one(env, 'SELECT COUNT(*) FROM talent'), await one(env, 'SELECT COUNT(*) FROM talent_requests'), await one(env, 'SELECT n FROM talent_credits WHERE user_id = ?', hooliId),
+    (await call(env, 'GET', '/api/talent/profile', { token: jane })).body.profile, (await call(env, 'GET', '/api/talent/search', { token: acme })).body.total],
+    [true, 0, 0, 1, null, 0], 'Resumes: delete is for good: the resume and every request about it are gone at once, and open requests give their credits back');
+  ok(/Employers who were given your contact details earlier keep what they were given/.test(r.body.message), 'Resumes: and the answer says plainly what deleting cannot take back');
+  // a pack of contact requests, once the owner has set a price, is bought like any product: one payment, nothing renews
+  PRODUCTS.talent_test = { name: 'Resume database: 5 contact requests', usd: 9, talentCredits: 5, target: 'none', group: 'employer' };
+  const testEnv = newEnv({ PAY_MODE: 'test', TALENT_DB: 'on' }), boss = await account(testEnv, 'boss@acme.dev');
+  r = await call(testEnv, 'POST', '/api/orders', { token: boss, data: { product: 'talent_test' } });
+  await call(testEnv, 'GET', new URL(r.body.order.pay_url).pathname);
+  eq(await one(testEnv, 'SELECT n FROM talent_credits'), 5, 'Resumes: a paid pack adds its contact requests');
+  delete PRODUCTS.talent_test;
+  // erasing an account takes its resume with it
+  const tom = await fresh(env, 'tom@gmail.com');
+  await call(env, 'PUT', '/api/talent/profile', { token: tom, data: { resume: RES, consent: true, consent_text: TALENT_CONSENT } });
+  await adm('POST', 'erase', { email: 'tom@gmail.com' });
+  eq(await one(env, 'SELECT COUNT(*) FROM talent'), 0, 'Resumes: erasing an account on request deletes its resume');
+  r = await adm('GET', 'talent'); ok(r.status === 200 && r.body.resumes === 0 && typeof r.body.credits_held === 'number', 'Resumes: the owner sees counts');
+}
+
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
 { const r = await call(newEnv(), 'GET', '/api/public/products'); ok(r.body.products.length > 0 && r.body.products.every((p) => p.billing === 'one-time' && p.renews === false), 'every product is one payment and renews nothing, and the list says so'); }
 

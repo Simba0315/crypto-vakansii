@@ -357,7 +357,7 @@ local size.
 
 
 
-## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,100 tests, not installed yet)
+## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,132 tests, not installed yet)
 
 - The owner: "we need to collect a database of employers and users". `server/prod.mjs` runs `src/worker.js` on Node 22 on the Hostinger
   server (127.0.0.1:8787, service `hrn-api`, user `hrnapi`, code `/opt/hrn-api`, database `/var/lib/hrn-api/api.db`, settings and secrets
@@ -377,6 +377,9 @@ local size.
   and it is the account's domain, otherwise the owner decides (`/api/admin/claims`). Claimed companies get views and clicks per job page.
 - `/privacy/` and `/terms/` have sections for alerts and accounts that appear in the same build as the forms (`api_on` in `build.py`).
   If the server starts keeping anything new, the privacy page must say it in the same change.
+- The resume database (`/api/talent/...`, off until `TALENT_DB=on`): opt-in only, with the exact consent line stored; employers see no
+  name or contacts until the person accepts their request; delete is immediate and total. Never fill it from anywhere but the person's
+  own tick (no imports from other sites). Its privacy and /promise/ text switch on with `"talent_db": true` in `config.json`.
 - The site's pages do not call `/api/public/hit` yet, and the account page has no claim form or stats yet: `server/README.md` lists what
   each page needs.
 

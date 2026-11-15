@@ -346,3 +346,52 @@ CREATE TABLE IF NOT EXISTS company_hits (
   applies INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (company_key, slug, day)
 );
+
+-- ---------------------------------------------------------------- the resume database: opt-in only (15 Nov 2026)
+-- A person's resume, stored only after they ticked "Let employers find my resume" (consent_text: the exact line they agreed to, and
+-- when). resume: the builder's object as JSON, contact details included, which no employer sees before the person accepts its request.
+-- pid: the public id employers see (never the account id). headline, level (entry | mid | senior | lead), years (as the person states
+-- them), skills (lower case, one per line), roles (category slugs) and places (place slugs, "remote") are what search reads. show_name,
+-- show_employers: what the person chose to show before accepting (both off by default). blocked: company domains that never see it (one
+-- per line). paused: hidden from search, kept. Deleting it deletes the row and the requests about it; nothing is kept.
+CREATE TABLE IF NOT EXISTS talent (
+  user_id TEXT PRIMARY KEY,
+  pid TEXT NOT NULL UNIQUE,
+  resume TEXT NOT NULL,
+  headline TEXT NOT NULL DEFAULT '',
+  level TEXT NOT NULL DEFAULT '',
+  years INTEGER NOT NULL DEFAULT 0,
+  skills TEXT NOT NULL DEFAULT '',
+  roles TEXT NOT NULL DEFAULT '',
+  places TEXT NOT NULL DEFAULT '',
+  show_name INTEGER NOT NULL DEFAULT 0,
+  show_employers INTEGER NOT NULL DEFAULT 0,
+  blocked TEXT NOT NULL DEFAULT '',
+  paused INTEGER NOT NULL DEFAULT 0,
+  consent_text TEXT NOT NULL,
+  consented_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+-- An employer's request to contact a person in the resume database. status: sent | accepted | declined | expired (no answer in 14 days).
+-- One request per employer and person, ever (a decline is final). The employer gets the person's name and email only on "accepted".
+CREATE TABLE IF NOT EXISTS talent_requests (
+  id TEXT PRIMARY KEY,
+  employer_id TEXT NOT NULL,
+  candidate_id TEXT NOT NULL,
+  company TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  message TEXT NOT NULL,
+  job_url TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'sent',
+  created_at INTEGER NOT NULL,
+  answered_at INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS talent_requests_once ON talent_requests (employer_id, candidate_id);
+CREATE INDEX IF NOT EXISTS talent_requests_candidate ON talent_requests (candidate_id, status);
+CREATE INDEX IF NOT EXISTS talent_requests_open ON talent_requests (status, created_at);
+-- Contact requests an employer can send: bought as a one-time pack (nothing renews) or given by the owner. A request takes one when it
+-- is sent and gives it back when the person declines or does not answer in 14 days: an employer pays only for people who said yes.
+CREATE TABLE IF NOT EXISTS talent_credits (
+  user_id TEXT PRIMARY KEY,
+  n INTEGER NOT NULL DEFAULT 0
+);

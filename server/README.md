@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,100 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,132 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -71,6 +71,7 @@ Settings in `/etc/hrn-api/api.env` (KEY=value; root and the service user only):
 | `SITE_INTERNAL`, `DUPLICATE_URL` | `http://127.0.0.1:8790`, its `/api/check-duplicate` | the page server on the same machine (`DUPLICATE_URL=off` stops the duplicate check) |
 | `COMPANY_SITES_FILE`, `RECORDS_FILE` | `/srv/hrn/app/logos.json`, `/srv/hrn/app/data/jobs.db` | what the build uploads every hour: companies' own sites, the job records |
 | `PORT`, `HOST` | `8787`, `127.0.0.1` | where the API listens |
+| `TALENT_DB` | none: off | `on` opens the opt-in resume database ("The resume database" below) |
 | `GITHUB_TOKEN`, `GITHUB_REPO`, `LINKEDIN_*`, `ANTHROPIC_API_KEY` | none | optional, as on Cloudflare (see below) |
 
 `PAY_MODE` is refused: `prod.mjs` does not start with it. Nobody can be charged until `PAYMENTS_LIVE=1`: `/api/orders` answers 503
@@ -147,6 +148,49 @@ A verified claim gives:
 
 What the site's pages still need for this: the account page (claim form, stats), and the job page's call to `/api/public/hit` with the
 company's name (none of the hit calls is wired into the pages yet, see "What a listing brought").
+
+## The resume database (opt-in; off until `TALENT_DB=on`)
+
+The owner asked to sell employers access to resumes. Copying other sites' resumes is not allowed (personal data without consent, and
+their terms). The legal way, the one Naukri (Resdex), SEEK (Talent Search) and Indeed (Resume search) took: a database of resumes people
+put there themselves. Everything below is enforced in `src/worker.js` (`TALENT_CONSENT` and the functions after it) and tested in section 34.
+
+People (any account with a confirmed email):
+- `GET /api/talent/profile`: `{ consent_text, profile }`. `profile` is `null` until stored; then the settings, the stored `resume`,
+  `as_employers_see` (exactly what an employer gets before acceptance) and `requests` (open ones).
+- `PUT /api/talent/profile { resume, consent: true, consent_text, level?, years?, roles?, places?, blocked?, show_name?, show_employers?, paused? }`.
+  The first save needs `consent: true` and `consent_text` equal to `TALENT_CONSENT`, word for word: the page shows that line next to the
+  tick, and the line and the time are stored. Later saves may send only what changes (`{ paused: true }`). `resume` is the builder's object
+  (`hrn_resume`); `level` entry | mid | senior | lead; `years` as the person states them; `roles` category slugs (5 at most), `places`
+  place slugs and `remote` (10): search finds the person only there; `blocked` company domains or addresses that must never see it.
+- `DELETE /api/talent/profile`: deletes the resume and every request about it at once; open requests give their employers the credit
+  back. Nothing is kept.
+- `GET /api/talent/requests`; `POST /api/talent/requests/<id>/accept` or `/decline`. A request ends by itself after 14 days.
+
+Employers (an account tied to a company domain by its email, a DNS record or a file, confirmed; a LinkedIn-only recruiter cannot):
+- `GET /api/talent/search?q=&skill=&role=&place=&level=&years=&offset=`: 20 at a time, newest first, with `total` and `credits`. Before
+  acceptance a result has no name (unless the person chose to show it), no email, phone, links or employer names, and email
+  addresses, phone numbers, web addresses and handles are taken out of the text (`redact`). A company the person blocked finds nothing.
+- `POST /api/talent/<id>/contact { message, job_url? }`: 40 to 1,000 characters, screened like a posting (fees, chat apps, installs,
+  secrets are refused and cost nothing); one request per employer and person ever, 20 a day. It takes a credit (402 `no_credits`
+  without one) and gives it back on a decline or no answer in 14 days: an employer pays only for people who said yes. The person gets a
+  letter with the message; on acceptance the employer gets a letter and, in `GET /api/talent/sent`, the name, the account's email and
+  the contact details from the resume.
+- Credits: a one-time pack (`TALENT_PACKS` in `src/worker.js`, nothing renews), empty until the owner sets the price; until then
+  `POST /api/admin/talent/credits { account, n }`. `GET /api/admin/talent`: counts.
+
+What the resume builder page (`assets/resume.js`) needs, once `/api/public/products` says `talent: "on"`:
+1. A box under the resume: **"Let employers find my resume"**, unticked, with `consent_text` from `GET /api/talent/profile` printed next
+   to the tick word for word, and a line "Your name and contact details stay hidden until you accept an employer's request". Ticking it
+   asks the visitor to sign in or open an account (email and password, then the confirmation link), then sends `PUT /api/talent/profile`
+   with `consent: true`, `consent_text` and the resume. Nothing leaves the browser before the tick.
+2. Once stored: "Show my name" (off), "Show my employers' names" (off), the kinds of work and places to be found for, "Companies that
+   must not see it" (pre-filled with the current employer's site if the visitor wants), **Pause**, **Delete for good** (one click,
+   then "Deleted"), and a preview drawn from `as_employers_see`. Saving the resume in the builder afterwards offers "Update the copy
+   employers see" (a `PUT` with the new resume); it is never sent silently.
+3. On the account page (`#talent`): requests with the company, its domain and the message, and **Accept** / **Decline**.
+4. The site build: `"talent_db": true` in `config.json` (with `api_url`) adds the privacy section "Your resume in the resume database"
+   and the line on `/promise/`; switch it on in the same change as the page above.
 
 ## The owner's views of the audience
 
