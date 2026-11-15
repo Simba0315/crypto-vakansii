@@ -14,6 +14,7 @@ const PORT = Number(process.env.PORT || 8787), SITE = process.env.SITE_URL || 'h
 const env = {
   DB: new D1(process.env.DB_FILE || ':memory:').applySchema(path.join(here, 'schema.sql')),
   SITE_URL: SITE, SITE_ORIGINS: new URL(SITE).origin, API_URL: 'http://localhost:' + PORT, PAY_MODE: 'test', ADMIN_TOKEN: 'dev-admin', PLUS_LIVE: '0',
+  TALENT_DB: process.env.TALENT_DB || 'on',                           // the resume database, on here to try the whole account page
   MAIL: { send: async (m) => { console.log('--- letter (' + (m.kind || 'mail') + ') to ' + m.to + ': ' + m.subject + '\n' + m.text); } }, MAIL_FROM: 'Jobs Every Hour <dev@localhost>',
 };
 http.createServer(async (req, res) => {

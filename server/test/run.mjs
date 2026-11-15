@@ -270,7 +270,7 @@ eq(phpJson({ u: 'https://a.b/c', t: 'é' }, true), '{"u":"https:\\/\\/a.b\\/c","
   let env = newEnv(), token = await account(env);
   let r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus3' } }); eq(r.status, 409, 'Plus cannot be bought before it is on sale');
   r = await call(env, 'GET', '/api/public/products'); ok(!r.body.products.some((p) => p.group === 'plus') && r.body.payments === 'on', 'Plus is not listed before it is on sale');
-  r = await call(env, 'PUT', '/api/sync', { token, data: { data: { a: 1 } } }); eq(r.status, 402, 'sync needs Plus');
+  r = await call(env, 'PUT', '/api/sync', { token, data: { data: { a: 1 } } }); eq(r.status, 200, 'sync between devices is free for an account with a confirmed email (it was a Plus feature until 15 Nov 2026)');
   env = newEnv({ PLUS_LIVE: '1' }); token = await account(env);
   r = await call(env, 'POST', '/api/orders', { token, data: { product: 'plus3' } });
   await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ order_id: r.body.order.id, status: 'paid' }) });
@@ -2677,6 +2677,95 @@ await smtpServer.close();
   await adm('POST', 'erase', { email: 'tom@gmail.com' });
   eq(await one(env, 'SELECT COUNT(*) FROM talent'), 0, 'Resumes: erasing an account on request deletes its resume');
   r = await adm('GET', 'talent'); ok(r.status === 200 && r.body.resumes === 0 && typeof r.body.credits_held === 'number', 'Resumes: the owner sees counts');
+}
+
+/* ---- 35. Sign in with Google; the person's own export and delete; free sync; an employer's team, page text and receipts ---- */
+{
+  const GO = { GOOGLE_CLIENT_ID: 'g-client', GOOGLE_CLIENT_SECRET: 'g-secret', GOOGLE_REDIRECT_URL: SITE + '/account/' };
+  const realFetch = globalThis.fetch, google = { codes: {}, asked: [] };
+  globalThis.fetch = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url === 'https://oauth2.googleapis.com/token') {
+      const p = new URLSearchParams(init.body), who = google.codes[p.get('code')]; google.asked.push(Object.fromEntries(p));
+      if (!who || p.get('client_secret') !== 'g-secret' || p.get('redirect_uri') !== SITE + '/account/' || p.get('grant_type') !== 'authorization_code') return Response.json({ error: 'invalid_grant' }, { status: 400 });
+      delete google.codes[p.get('code')];
+      const t = Math.floor(Date.now() / 1000);
+      return Response.json({ access_token: 'ya29.x', id_token: idToken({ iss: 'https://accounts.google.com', aud: 'g-client', iat: t, exp: t + 3600, email_verified: true, ...who }) });
+    }
+    return realFetch(input, init);
+  };
+  let gc = 0;
+  const signIn = async (env, who, { secret: wrong } = {}) => {
+    const s = (await call(env, 'POST', '/api/auth/google/start')).body, code = 'gcode-' + (++gc); google.codes[code] = who;
+    const state = new URL(s.url).searchParams.get('state');
+    return call(env, 'POST', '/api/auth/google/callback', { data: { code, state, secret: wrong || s.secret } });
+  };
+  eq((await call(newEnv(), 'POST', '/api/auth/google/start')).body.error, 'not_configured', 'Google: off until its three settings are set');
+  const box = mailbox(), env = newEnv({ ...GO, ...box });
+  let r = await call(env, 'POST', '/api/auth/google/start'), u = new URL(r.body.url);
+  eq([u.origin + u.pathname, u.searchParams.get('client_id'), u.searchParams.get('redirect_uri'), u.searchParams.get('scope'), u.searchParams.get('response_type'), /^[a-f0-9]{64}$/.test(r.body.secret), (await call(env, 'GET', '/api/public/products')).body.google],
+    ['https://accounts.google.com/o/oauth2/v2/auth', 'g-client', SITE + '/account/', 'openid email profile', 'code', true, 'on'], 'Google: the start answers Google’s authorization address and a secret for the page to keep');
+  r = await signIn(env, { sub: 'g-1', email: 'Ann.Lee@Gmail.com', name: 'Ann Lee' });
+  eq([r.status, r.body.created, r.body.user.email, r.body.user.confirmed, r.body.user.posts_as, (await call(env, 'GET', '/api/me', { token: r.body.token })).status], [200, true, 'ann.lee@gmail.com', true, [], 200],
+    'Google: a new address makes a confirmed job seeker’s account and signs it in');
+  r = await signIn(env, { sub: 'g-2', email: 'cto@acme.dev', name: 'Cto', hd: 'acme.dev' });
+  eq([r.body.created, r.body.user.domain, r.body.user.posts_as], [true, 'acme.dev', ['employer']], 'Google: a company (Workspace) address makes an employer account tied to that domain');
+  const pw = await fresh(env, 'boss@globex.dev');
+  r = await signIn(env, { sub: 'g-3', email: 'boss@globex.dev', name: 'Boss' });
+  eq([r.body.created, r.body.user.email, await one(env, "SELECT COUNT(*) FROM identities WHERE sub = 'g-3'")], [false, 'boss@globex.dev', 1], 'Google: an account with that verified address is signed in and gets Google attached');
+  r = await signIn(env, { sub: 'g-3', email: 'boss@globex.dev' }); eq([r.status, r.body.created], [200, false], 'Google: the next time it is the same account');
+  r = await signIn(env, { sub: 'g-9', email: 'x@gmail.com' }, { secret: 'f'.repeat(64) });
+  eq([r.status, r.body.error, await one(env, "SELECT COUNT(*) FROM users WHERE email = 'x@gmail.com'")], [401, 'state', 0], 'Google: without the secret of the page that started it, nothing happens (no login CSRF)');
+  r = await signIn(env, { sub: 'g-10', email: 'y@gmail.com', email_verified: false }); eq([r.status, r.body.error], [403, 'google_email'], 'Google: an address Google has not verified is refused');
+  r = await signIn(env, { sub: 'g-11', email: 'z@gmail.com', aud: 'someone-else' }); eq([r.status, r.body.error], [502, 'google'], 'Google: a token made for another application is refused');
+  ok((await call(env, 'POST', '/api/auth/login', { data: { email: 'ann.lee@gmail.com', password: '' } })).status === 401, 'Google: an account made through Google has no password anyone can guess');
+
+  // the person's own data
+  const ann = (await signIn(env, { sub: 'g-1', email: 'ann.lee@gmail.com' })).body.token;
+  await call(env, 'PUT', '/api/sync', { token: ann, data: { data: { saved: ['senior-rust-engineer-acme'], applied: ['data-analyst-globex'] } } });
+  r = await call(env, 'GET', '/api/sync', { token: ann }); eq(r.body.data, { saved: ['senior-rust-engineer-acme'], applied: ['data-analyst-globex'] }, 'Sync: saved and applied jobs are kept for the account, free');
+  await env.DB.prepare("INSERT INTO alerts (id, email, q, status, created_at, confirmed_at) VALUES ('a_" + 'c'.repeat(20) + "', 'ann.lee@gmail.com', 'rust', 'active', 1, 1)").run();
+  r = await call(env, 'GET', '/api/me/export', { token: ann });
+  ok(r.status === 200 && r.body.account.email === 'ann.lee@gmail.com' && r.body.sign_in.google[0].email === 'ann.lee@gmail.com' && r.body.alerts[0].alert === '“rust” jobs' && r.body.synced.data.saved.length === 1 &&
+    !/pass_hash|pass_salt|token_hash|ip_hash/.test(JSON.stringify(r.body)), 'Export: the account, how it signs in, its alerts and synced lists, and no hashes or tokens');
+  r = await call(env, 'DELETE', '/api/me', { token: ann, data: {} }); eq([r.status, r.body.error], [400, 'confirm'], 'Delete: it asks for the words "delete my account"');
+  r = await call(env, 'DELETE', '/api/me', { token: ann, data: { confirm: 'Delete my account' } });
+  eq([r.body.deleted, (await call(env, 'GET', '/api/me', { token: ann })).status, await one(env, "SELECT COUNT(*) FROM alerts WHERE email = 'ann.lee@gmail.com'"), await one(env, "SELECT COUNT(*) FROM identities WHERE sub = 'g-1'"),
+    await one(env, "SELECT COUNT(*) FROM users WHERE email = 'ann.lee@gmail.com'"), await one(env, 'SELECT COUNT(*) FROM sync')], [true, 401, 0, 0, 0, 0], 'Delete: the person deletes the account themselves: sessions, alerts, Google, synced lists, all gone');
+
+  // an employer's team
+  const acme = (await signIn(env, { sub: 'g-2', email: 'cto@acme.dev' })).body.token;
+  r = await call(env, 'POST', '/api/team', { token: acme, data: { email: 'hr@acme.dev' } }); eq([r.status, r.body.error], [409, 'no_company'], 'Team: an account adds colleagues once it holds a company name here');
+  await env.DB.prepare("UPDATE users SET approved_jobs = 2, created_at = created_at - 15 * 86400 WHERE email = 'cto@acme.dev'").run();
+  r = await call(env, 'POST', '/api/jobs', { token: acme, data: GOOD }); eq(r.body.job && r.body.job.status, 'live', 'Team: the company’s first job takes its name');
+  r = await call(env, 'POST', '/api/team', { token: acme, data: { email: 'someone@gmail.com' } }); eq([r.status, r.body.error], [422, 'email'], 'Team: only addresses on the company’s domain');
+  r = await call(env, 'POST', '/api/team', { token: acme, data: { email: 'HR@acme.dev' } });
+  eq([r.status, r.body.members.map((m) => [m.email, m.has_account])], [200, [['hr@acme.dev', false]]], 'Team: a colleague is added by address');
+  const hr = await fresh(env, 'hr@acme.dev'), stranger = await fresh(env, 'dev@acme.dev'), job2 = employer('acme.dev', 'Acme Robotics')('Firmware Engineer');
+  r = await call(env, 'POST', '/api/jobs', { token: stranger, data: job2 }); eq([r.status, r.body.error], [409, 'company_taken'], 'Team: someone not added cannot post under the company’s name, even on its domain');
+  r = await call(env, 'POST', '/api/jobs', { token: hr, data: job2 });
+  eq([r.status, r.body.job.company, r.body.job.status], [200, 'Acme Robotics', 'review'], 'Team: a colleague posts under the company’s name from their own account, and a person looks at a new account’s first jobs');
+  r = await call(env, 'GET', '/api/team', { token: acme }); eq([r.body.members[0].has_account, r.body.members[0].confirmed], [true, true], 'Team: the owner sees who has an account');
+  r = await call(env, 'DELETE', '/api/team/' + encodeURIComponent('hr@acme.dev'), { token: acme });
+  eq([r.body.members.length, (await call(env, 'POST', '/api/jobs', { token: hr, data: employer('acme.dev', 'Acme Robotics')('Hardware Engineer') })).body.error], [0, 'company_taken'], 'Team: a colleague taken off the team can no longer post under the name');
+
+  // company page text after a claim, and receipts
+  const claimEnv = newEnv({ COMPANY_SITES: { Stripe: 'stripe.com' } }), st = await fresh(claimEnv, 'talent@stripe.com');
+  const claim = (await call(claimEnv, 'POST', '/api/claims', { token: st, data: { company: 'Stripe' } })).body.claim;
+  r = await call(claimEnv, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { about: 'Stripe builds payments infrastructure for the internet. We hire engineers, designers and operators worldwide.', website: 'https://stripe.com/jobs' } });
+  eq([r.status, r.body.page.website, (await call(claimEnv, 'GET', '/api/public/export.json')).body.claimed[0].about.startsWith('Stripe builds')], [200, 'https://stripe.com', true], 'Company page: the company writes its own text, which the export carries for the site');
+  r = await call(claimEnv, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { about: 'Earn $500 a day from home! Contact us on Telegram @stripejobs now, no interview needed.' } });
+  eq([r.status, r.body.error], [422, 'rejected'], 'Company page: the text is screened like a posting');
+  r = await call(claimEnv, 'PUT', '/api/claims/' + claim.id + '/page', { token: st, data: { website: 'https://evil.com' } }); eq([r.status, r.body.error], [422, 'website'], 'Company page: the site must be on the claimed domain');
+  const payEnv = newEnv(), boss = await account(payEnv);
+  r = await call(payEnv, 'POST', '/api/orders', { token: boss, data: { product: 'featured', target: { job: SITE + '/job/staff-engineer-stripe/' } } });
+  const oid = r.body.order.id;
+  eq((await call(payEnv, 'GET', '/api/orders/' + oid + '/receipt', { token: boss })).status, 404, 'Receipt: none before the payment');
+  await hook(payEnv, oid);
+  r = await call(payEnv, 'GET', '/api/orders/' + oid + '/receipt', { token: boss });
+  eq([r.status, r.body.receipt.amount_usd, r.body.receipt.period_days, r.body.receipt.paid_with, r.body.receipt.note], [200, 29, 14, 'cryptocurrency, through Cryptomus', 'One payment for a fixed period. Nothing renews and nothing more is charged.'],
+    'Receipt: a paid order has a receipt that says what was bought, for how long, how it was paid, and that nothing renews');
+  globalThis.fetch = realFetch;
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');

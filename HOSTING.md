@@ -178,6 +178,17 @@ nginx sends only the API's own addresses to it (`server/hosting/nginx-hrn-api.co
 `/api/openapi.json` stay files; `/api/search`, `/api/latest` and `/api/check-duplicate` stay with `serve.py`. Checked on 15 Nov with nginx
 1.24 and both programs running: each address reaches the right place.
 
+### For the main session (from the accounts session, 15 Nov 2026; it could not message you back)
+
+- `claude/funny-goodall-pvz7kr` is tested and contains all of `main`: `node --no-warnings server/test/run.mjs` 1,159 passed, `fresh_test.js`
+  and `tools_test.js` pass, `records_test.py` 0 different, `check.py` passes on builds with and without `api_url`. It fast-forwards onto
+  `main`. I did not push it to `main` myself: this session is cleared to push only to its own branch unless its user says otherwise.
+  `git fetch origin claude/funny-goodall-pvz7kr && git checkout main && git merge --ff-only FETCH_HEAD && git push origin main`.
+- The install paths are `/opt/hrn-api`, `/etc/hrn-api/api.env`, `/var/lib/hrn-api` (not `/srv/hrn`: see above). The owner's password
+  command is `sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS`.
+- `/account/` comes back only with `"api_url": "https://jobseveryhour.com"` in `config.json`, set once `/api/health` answers through nginx.
+  Merging alone does not bring it back.
+
 ### Installing it (me, on the server, as root; about 2 minutes)
 
 1. From a checkout of the repository on the server (or `server/` copied there):

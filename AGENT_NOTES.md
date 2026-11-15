@@ -357,7 +357,7 @@ local size.
 
 
 
-## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,132 tests, not installed yet)
+## Accounts, job alerts and employer posting on our own server (15 Nov 2026, `server/`, 1,159 tests, not installed yet)
 
 - The owner: "we need to collect a database of employers and users". `server/prod.mjs` runs `src/worker.js` on Node 22 on the Hostinger
   server (127.0.0.1:8787, service `hrn-api`, user `hrnapi`, code `/opt/hrn-api`, database `/var/lib/hrn-api/api.db`, settings and secrets

@@ -395,3 +395,44 @@ CREATE TABLE IF NOT EXISTS talent_credits (
   user_id TEXT PRIMARY KEY,
   n INTEGER NOT NULL DEFAULT 0
 );
+
+-- ---------------------------------------------------------------- sign-in with Google, teams, company pages (15 Nov 2026)
+-- New tables only, so a database made by an earlier install needs no change.
+-- A way to sign in other than the password: provider 'google' and the subject id it gives this application, with the address it
+-- verified and the name. One identity, one account; an account has at most one per provider.
+CREATE TABLE IF NOT EXISTS identities (
+  provider TEXT NOT NULL,
+  sub TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  email TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (provider, sub)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS identities_user ON identities (user_id, provider);
+-- A sign-in with Google that was started: the hash of the state and of the secret the page keeps, one use, 15 minutes. The secret is
+-- what stops a stranger from signing someone into the stranger's account (login CSRF): only the page that started it holds it.
+CREATE TABLE IF NOT EXISTS signin_states (
+  state_hash TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  secret_hash TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+-- Colleagues an employer account lets post under its company names: addresses on the same company domain. They post from their own
+-- accounts, which go through the same checks (a new account's jobs are looked at by a person).
+CREATE TABLE IF NOT EXISTS team_members (
+  owner_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  added_at INTEGER NOT NULL,
+  PRIMARY KEY (owner_id, email)
+);
+CREATE INDEX IF NOT EXISTS team_email ON team_members (email);
+-- What a company that claimed its page says about itself, for the site's company page: a short text and its site.
+CREATE TABLE IF NOT EXISTS company_pages (
+  company_key TEXT PRIMARY KEY,
+  about TEXT NOT NULL DEFAULT '',
+  website TEXT NOT NULL DEFAULT '',
+  updated_by TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);

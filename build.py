@@ -5157,7 +5157,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         + h2p("Accounts for employers and job seekers: what we keep")
         + "<p>Searching and applying need no account. If you open one, we keep your email address; your password as a salted hash (PBKDF2), never the password itself; "
           "a company name and the company domain the account is tied to, and how that domain was proved (an email on it, a DNS record or a file); "
-          "the name, member id and verified email LinkedIn gives us if you choose to attach a LinkedIn profile; the jobs you post, with the notes of the person who reviewed them; "
+          "the name, member id and verified email LinkedIn gives us if you choose to attach a LinkedIn profile; the address, name and account id Google gives us if you sign in with Google; "
+          "the saved jobs, statuses and searches you choose to keep in sync between your devices; the colleagues you add to your company’s team; the jobs you post, with the notes of the person who reviewed them; "
           "the company pages you claim; and how many times a month you used paid AI tools, if you have them (counts only, never what you sent).</p>"
           "<p>To keep accounts safe we also keep a hash of the session key while you are signed in (30 days at most), one-time links to confirm an address or set a new password "
           "(only their hash, for 24 hours and 30 minutes), and a hash of the browser description you signed in from, so that a sign-in from a new browser can be reported to you by email.</p>"
@@ -5196,7 +5197,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "keeps the mailboxes you can write to. These companies may process the data outside your country. Fonts, scripts and images are served from this site, not from other companies. "
           "When you press “Apply”, you go to the employer’s own site, which has its own privacy policy.</p>"
         + h2p("Seeing, correcting and deleting your data")
-        + f"<p>You can stop any alert yourself from any of its letters. For anything else, write to {priv_who} from the address concerned: you can ask what we keep about it, "
+        + f"<p>You can stop any alert yourself from any of its letters. On the account page you can download everything we keep about your account and delete the account yourself. "
+          f"For anything else, write to {priv_who} from the address concerned: you can ask what we keep about it, "
           "have it corrected, have it deleted, or object to its use. We answer within 30 days, usually much sooner. Deleting removes the alerts of that address, the record of letters to it, the limit counters kept under it, "
           "and the account with its sessions and company pages; jobs it posted come down. Records of payments, once there are any, are kept as long as the law requires. "
           "You can also complain to the data protection authority where you live.</p>")
@@ -6498,10 +6500,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     if CFG["api_url"]:
         acc_data = {"site": FULL, "skills": wb_data["skills"], "categories": wb_data["categories"], "companies": [c for c, _ in comp_items if OPEN[c]],
                     "what": {p["name"]: p["what"] for p in CFG["prices"]}}
-        page("account/", f"Employer Account — post and promote jobs | {SITE}",
-             "Post a job for free or put it in front of candidates. Pay in crypto at checkout: the placement switches on by itself once the payment is confirmed.",
-             crumbs(("For employers", "post-a-job/"), ("Account", "")) + "<h1>Employer account</h1>"
-             '<p class="lead">Post a job, promote it, or put your company on the home page. What you buy here switches on by itself; there is nobody to wait for.</p>'
+        page("account/", f"Your Account: Alerts, Saved Jobs, Posting | {SITE}",
+             "Your free account: job alerts, saved jobs on every device and your resume for employers; for employers, free job posting, company pages, team and receipts.",
+             crumbs(("Account", "")) + "<h1>Your account</h1>"
+             '<p class="lead">Free for job seekers and employers. Keep your alerts and saved jobs in one place, let employers find your resume if you want to, '
+             'or post jobs from your work address. Sign in with your email or with Google.</p>'
              f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
              '<script type="application/json" id="acc-data">' + json.dumps(acc_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/account.js?v={V}" defer></script>',
              head='<meta name="robots" content="noindex">', sitemap=False)

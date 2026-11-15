@@ -1106,7 +1106,7 @@ const COMPANY_TAKEN = 'Another account already posts jobs under this company nam
 async function claimCompany(env, user, name, key) {
   await db(env, 'INSERT INTO companies (k, name, user_id, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(k) DO NOTHING', key, name, user.id, now()).run();
   const held = await db(env, 'SELECT name, user_id FROM companies WHERE k = ?', key).first();
-  if (!held || held.user_id !== user.id) throw bad('company_taken', COMPANY_TAKEN, 409);     // two accounts at the same moment: the insert let only one in
+  if (!held || !(await actsFor(env, user, held.user_id))) throw bad('company_taken', COMPANY_TAKEN, 409);     // two accounts at the same moment: the insert let only one in; a colleague the holder added may use it
   return held.name;
 }
 /* The same job twice: the same account, the same company and the same title (compared without case and punctuation), while the first
@@ -1159,7 +1159,7 @@ async function readJob(env, user, b, existing, dry) {
   // home: the domain this job is tied to. A company site off the account's own domain makes it a recruiter's job, if the account may post as one.
   const home = siteDomain(companyUrl.hostname), recruiter = !!user.linkedin_sub && home !== own;
   const held = await db(env, 'SELECT name, user_id FROM companies WHERE k = ?', key).first();
-  if (held && (recruiter || held.user_id !== user.id)) throw bad('company_taken', recruiter ? 'This company posts its own jobs here, so a recruiter cannot post under its name.' : COMPANY_TAKEN, 409);
+  if (held && (recruiter || !(await actsFor(env, user, held.user_id)))) throw bad('company_taken', recruiter ? 'This company posts its own jobs here, so a recruiter cannot post under its name.' : COMPANY_TAKEN, 409);
   // The site's list of companies also holds the ones that got there through jobs posted here, so a company this account already posts
   // under is on it after the first job. That is this account's own company, not one "listed automatically", and must not stop a second job.
   // The same goes for a company that is on the list only through a recruiter's job: it must not stop the next one, nor the company itself.
@@ -1167,7 +1167,8 @@ async function readJob(env, user, b, existing, dry) {
   // A company the site reads from its hiring system has its jobs here already. Only the account that manages its page (a verified claim)
   // may add a job its hiring system does not list; anyone else is told so and offered the claim.
   const listed = !here && (await indexedCompanies(env)).has(key);
-  if (listed && (recruiter || !(await verifiedClaim(env, user.id, key)))) throw bad('listed', company + ' is already listed here automatically from its careers page: its jobs appear here within an hour of being posted there. ' +
+  const claimHolder = listed && !recruiter ? await db(env, "SELECT user_id FROM company_claims WHERE company_key = ? AND status = 'verified'", key).first('user_id') : null;
+  if (listed && (recruiter || !claimHolder || !(await actsFor(env, user, claimHolder)))) throw bad('listed', company + ' is already listed here automatically from its careers page: its jobs appear here within an hour of being posted there. ' +
     (recruiter ? 'You can promote any of its jobs instead of posting again.' : CLAIM_HOW), 409, recruiter ? undefined : { claim: { company: (await indexedCompanies(env)).get(key) } });
   if (!recruiter && home !== own) throw bad('company_url', 'The company site must be on the domain of your account’s email (' + own + ').', 422);
   if (recruiter && (freeMail(companyUrl.hostname) || hiringSystem(companyUrl.hostname) || BLOCKED_HOSTS.test(companyUrl.hostname) || badLink(companyUrl, '')))
@@ -1466,7 +1467,8 @@ async function exportForSite(env) {
     // name is given, posting for a company they are not part of: the site says "posted by a recruiter, not verified by the employer")
     posted_by: j.posted_by === AS_RECRUITER ? AS_RECRUITER : 'employer', recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' }));
   // companies whose page is managed by the company itself (a verified claim): for the site to say so on the company page
-  const claimed = (await db(env, "SELECT company, decided_at FROM company_claims WHERE status = 'verified' ORDER BY company").all()).results.map((c) => ({ company: c.company, since: isoDay(c.decided_at) }));
+  const claimed = (await db(env, "SELECT c.company, c.decided_at, p.about, p.website FROM company_claims c LEFT JOIN company_pages p ON p.company_key = c.company_key WHERE c.status = 'verified' ORDER BY c.company").all()).results
+    .map((c) => ({ company: c.company, since: isoDay(c.decided_at), about: c.about || '', website: c.website || '' }));
   return { generated: new Date(t * 1000).toISOString(), boosts, sponsors, jobs, claimed };
 }
 /* Ask GitHub to rebuild the site so a change shows up within minutes instead of at the next daily run. At most once in ten minutes. */
@@ -2222,6 +2224,186 @@ async function talentSent(env, user) {
       candidate: talentCard(r, r.status === 'accepted' ? { contact: { name: res.name, email: r.candidate_email, resume_email: res.email, phone: res.phone, links: res.links } } : {}) }; }) };
 }
 
+/* ---------------------------------------------------------------- sign in with Google (job seekers and employers alike)
+   OpenID Connect, authorization code flow, as Google documents it ("OpenID Connect", developers.google.com/identity/openid-connect/
+   openid-connect): authorization https://accounts.google.com/o/oauth2/v2/auth, token https://oauth2.googleapis.com/token, scopes
+   openid email profile. Off until GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URL (the account page, <SITE_URL>/account/)
+   are set: then /api/public/products says google: "on".
+   - Start (no session needed): POST /api/auth/google/start answers { url, secret }. The page keeps the secret (sessionStorage) and sends
+     the browser to url. Only the hashes of the state and the secret are stored; one use, 15 minutes.
+   - Back: Google sends the browser to the account page with ?code=&state=; the page sends POST /api/auth/google/callback { code, state,
+     secret }. Without the secret of the page that started it, a sign-in is refused, so nobody can sign a stranger into their own account.
+   - The ID token comes straight from Google's token endpoint over TLS for this client, so its claims are read without checking the
+     signature (OpenID Connect Core 3.1.3.7); they must be for this client (aud), from Google (iss), not run out, and the address verified.
+   - Who it is: the Google identity if known; else the account with that verified address, which gets the identity attached (Google has
+     just shown the person controls the address); else a new account, confirmed at once. An address on a company's own domain (a Google
+     Workspace address) makes an employer account tied to that domain, exactly like signing up with it; any other address a job seeker's.
+     A new account has no password; "Forgot password" sets one. */
+const GOOGLE_AUTHORIZE = 'https://accounts.google.com/o/oauth2/v2/auth', GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token', SIGNIN_MINUTES = 15;
+function googleApp(env) {
+  const app = { id: String(env.GOOGLE_CLIENT_ID || ''), secret: String(env.GOOGLE_CLIENT_SECRET || ''), redirect: String(env.GOOGLE_REDIRECT_URL || '') };
+  if (!app.id || !app.secret || !app.redirect) throw NOT_CONFIGURED('Sign-in with Google is');
+  return app;
+}
+async function googleStart(env, req) {
+  const app = googleApp(env);
+  await limit(env, 'google-start:' + clientIp(req), 30, 3600);
+  const state = rid('', 32), secret = rid('', 32), t = now();
+  await db(env, 'INSERT INTO signin_states (state_hash, provider, secret_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)', await sha256(state), 'google', await sha256(secret), t, t + SIGNIN_MINUTES * 60).run();
+  return { url: GOOGLE_AUTHORIZE + '?response_type=code&client_id=' + encodeURIComponent(app.id) + '&redirect_uri=' + encodeURIComponent(app.redirect) + '&scope=' + encodeURIComponent('openid email profile') +
+    '&state=' + state + '&prompt=select_account', secret };
+}
+async function googleCallback(env, req, ctx) {
+  const app = googleApp(env);
+  await limit(env, 'google-back:' + clientIp(req), 30, 3600);
+  const b = await body(req), hex64 = (v) => (typeof v === 'string' && /^[a-f0-9]{64}$/.test(v) ? v : ''), state = hex64(b.state), secret = hex64(b.secret);
+  const code = typeof b.code === 'string' && b.code.length <= 2000 && !/\s/.test(b.code) ? b.code : '', t = now();
+  const stale = bad('state', 'This sign-in with Google was not started on this page, or it took too long. Please start it again.', 401);
+  const started = state ? await db(env, "DELETE FROM signin_states WHERE state_hash = ? AND provider = 'google' RETURNING secret_hash, expires_at", await sha256(state)).first() : null;
+  if (!started || !secret || started.secret_hash !== await sha256(secret) || started.expires_at <= t) throw stale;
+  const failed = bad('google', 'Google did not confirm the sign-in. Please try again.', 502);
+  if (!code) throw failed;
+  let claims = null;
+  try {
+    const res = await fetch(GOOGLE_TOKEN, { method: 'POST', signal: AbortSignal.timeout(LINK_TIMEOUT), headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+      body: new URLSearchParams({ grant_type: 'authorization_code', code, client_id: app.id, client_secret: app.secret, redirect_uri: app.redirect }).toString() });
+    const granted = res.ok ? await res.json() : null;
+    claims = granted && idTokenClaims(granted.id_token);
+  } catch {}
+  if (!claims || !['https://accounts.google.com', 'accounts.google.com'].includes(claims.iss) || ![].concat(claims.aud).includes(app.id) || !(Number(claims.exp) > t) || !line(claims.sub, 255, 1)) throw failed;
+  const email = claims.email_verified === true ? cleanEmail(claims.email) : null;
+  if (!email || !/^[\x21-\x7e]+$/.test(email)) throw bad('google_email', 'Google did not give us a verified email address for this account.', 403);
+  const host = email.slice(email.lastIndexOf('@') + 1);
+  if (throwawayMail(host)) throw bad('throwaway_email', THROWAWAY);
+  const name = line(claims.name, 120) || '';
+  let user = await db(env, "SELECT u.* FROM identities i JOIN users u ON u.id = i.user_id WHERE i.provider = 'google' AND i.sub = ?", claims.sub).first(), created = false;
+  if (!user) {
+    user = await db(env, 'SELECT * FROM users WHERE email = ?', email).first();
+    if (!user) {
+      const id = rid('u_'), personal = freeMail(host);
+      try { await db(env, "INSERT INTO users (id, email, domain, pass_hash, pass_salt, company, confirmed_at, created_at) VALUES (?, ?, ?, '', '', '', ?, ?)", id, email, personal ? '' : siteDomain(host), t, t).run(); }
+      catch (err) { if (!/UNIQUE/i.test(String(err && err.message))) throw err; }      // the same person signing up at the same moment another way
+      user = await db(env, 'SELECT * FROM users WHERE email = ?', email).first();
+      created = user.id === id;
+    }
+    if (user.banned) throw bad('credentials', 'Wrong email or password.', 401);
+    try { await db(env, 'INSERT INTO identities (provider, sub, user_id, email, name, created_at) VALUES (?, ?, ?, ?, ?, ?)', 'google', claims.sub, user.id, email, name, t).run(); }
+    catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw bad('google_taken', 'This account already has another Google account attached.', 409); throw err; }
+    if (!user.confirmed_at) await db(env, 'UPDATE users SET confirmed_at = ? WHERE id = ? AND confirmed_at = 0', t, user.id).run();      // Google has just verified the address
+    user = await db(env, 'SELECT * FROM users WHERE id = ?', user.id).first();
+  }
+  if (user.banned) throw bad('credentials', 'Wrong email or password.', 401);
+  if (!created && !(await knownDevice(env, req, user.id))) {
+    await later(ctx, sendMail(env, user.email, 'A new sign-in to your account', 'Your account at ' + env.SITE_URL + ' was just signed in to with Google from a browser it has not been used in before (' +
+      new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC).\n\nIf that was you, there is nothing to do. If it was not, secure your Google account first.\n', { kind: 'device' }));
+  } else if (created) await knownDevice(env, req, user.id);
+  return { token: await openSession(env, user.id), user: await userView(env, user), created };
+}
+
+/* ---------------------------------------------------------------- the person's own data: everything, and deleting it
+   GET /api/me/export: every thing this service keeps about the account, as JSON to save (the privacy page promises it): the account,
+   the ways it signs in, alerts of its address, its resume in the resume database and the requests about it, jobs, orders, company
+   pages, team, synced lists. No hashes, no tokens.
+   DELETE /api/me { confirm: "delete my account" }: what the owner's erase does, asked for by the person: alerts, resume, requests,
+   sessions, proofs, claims, jobs (taken down), synced data, mail log rows; the account row stays with the address replaced, because paid
+   orders may point at it, and nobody can sign in to it. */
+async function myExport(env, user) {
+  const all = async (sql, ...args) => (await db(env, sql, ...args).all()).results, t = now();
+  const talent = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first(), sync = await db(env, 'SELECT data, updated_at FROM sync WHERE user_id = ?', user.id).first();
+  return { exported: new Date(t * 1000).toISOString(), site: env.SITE_URL,
+    account: { ...(await userView(env, user)), created: isoDay(user.created_at), confirmed: user.confirmed_at ? isoDay(user.confirmed_at) : '' },
+    sign_in: { password: !!user.pass_hash, google: (await all("SELECT email, name, created_at FROM identities WHERE user_id = ? AND provider = 'google'", user.id)).map((x) => ({ email: x.email, name: x.name, since: isoDay(x.created_at) })),
+      linkedin: user.linkedin_sub ? { name: user.linkedin_name, email: user.linkedin_email, since: isoDay(user.linkedin_at) } : null },
+    alerts: user.confirmed_at ? (await all('SELECT * FROM alerts WHERE email = ?', user.email)).map((a) => ({ alert: describe(a), freq: a.freq, status: a.status, created: isoDay(a.created_at), letters: a.letters })) : [],
+    resume_database: talent ? { ...talentSettings(talent), resume: JSON.parse(talent.resume), consent_text: talent.consent_text } : null,
+    requests_received: (await all('SELECT company, domain, message, job_url, status, created_at FROM talent_requests WHERE candidate_id = ?', user.id)).map((r) => ({ ...r, created_at: isoDay(r.created_at) })),
+    requests_sent: (await all('SELECT status, created_at FROM talent_requests WHERE employer_id = ?', user.id)).map((r) => ({ status: r.status, sent: isoDay(r.created_at) })),
+    jobs: (await all('SELECT * FROM jobs WHERE user_id = ?', user.id)).map((j) => jobView(j, t)),
+    orders: (await all('SELECT * FROM orders WHERE user_id = ?', user.id)).map(orderView),
+    company_pages: (await all('SELECT * FROM company_claims WHERE user_id = ?', user.id)).map(claimView),
+    team: (await all('SELECT email, added_at FROM team_members WHERE owner_id = ?', user.id)).map((x) => ({ email: x.email, added: isoDay(x.added_at) })),
+    synced: sync ? { data: JSON.parse(sync.data), updated: isoDay(sync.updated_at) } : null,
+    letters_last_30_days: (await all('SELECT at, kind, status FROM mail_log WHERE to_addr = ? ORDER BY at', user.email)).map((x) => ({ at: new Date(x.at * 1000).toISOString(), kind: x.kind, status: x.status })) };
+}
+// everything of an account and an address, as one batch (the person's own delete and the owner's erase on request)
+function eraseSteps(env, u, email, t) {
+  const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email),
+    db(env, 'DELETE FROM rate WHERE k LIKE ?', '%:' + email), db(env, 'DELETE FROM team_members WHERE email = ?', email)];          // limits kept under the address (sign-in, new password, alert letters)
+  if (u) steps.push(talentRefund(env, 'r.candidate_id = ?', u.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ? OR employer_id = ?', u.id, u.id),
+    ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits', 'identities'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
+    db(env, 'DELETE FROM team_members WHERE owner_id = ?', u.id), ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id),
+    db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
+    db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
+  return steps;
+}
+async function deleteMe(env, req, user) {
+  const b = await body(req);
+  if (String(b.confirm || '').trim().toLowerCase() !== 'delete my account') throw bad('confirm', 'To delete the account, send confirm: "delete my account".');
+  await env.DB.batch(eraseSteps(env, user, user.email, now()));
+  await requestRebuild(env);
+  return { ok: true, deleted: true, message: 'Your account is deleted: your alerts, your resume, your sessions and everything you posted are gone. Records of payments, if any, are kept as the law requires, without your address.' };
+}
+
+/* ---------------------------------------------------------------- an employer's team, page text and receipts
+   Team: the account that holds a company name here (it posted the company's first job, or manages its claimed page) adds colleagues by
+   address, on the same company domain only, 20 at most. A colleague signs up with that address, confirms it, and posts under the
+   company's name from their own account; their first jobs are looked at by a person like anyone's. POST /api/team { email },
+   GET /api/team, DELETE /api/team/<email>. */
+const TEAM_MAX = 20;
+// whether this account may act for the account that holds a company name: it is that account, or a colleague it added, on the same domain
+async function actsFor(env, user, ownerId) {
+  if (ownerId === user.id) return true;
+  const own = domainOf(user);
+  if (!own || !user.confirmed_at) return false;
+  const owner = await db(env, 'SELECT u.domain, u.email FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.owner_id = ? AND m.email = ? AND u.banned = 0', ownerId, user.email).first();
+  return !!owner && domainOf(owner) === own;
+}
+async function teamAdd(env, req, user) {
+  const own = domainOf(user);
+  if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  if (!own) throw bad('work_email', 'A team needs an account tied to the company’s domain.', 403);
+  const holds = await db(env, "SELECT 1 AS x FROM companies WHERE user_id = ? UNION SELECT 1 FROM company_claims WHERE user_id = ? AND status = 'verified'", user.id, user.id).first();
+  if (!holds) throw bad('no_company', 'Post your company’s first job or claim its page first: the team posts under that name.', 409);
+  await limit(env, 'team:' + user.id, 30, 3600);
+  const email = cleanEmail((await body(req)).email);
+  if (!email || email === user.email) throw bad('email', 'Enter a colleague’s work address.');
+  if (siteDomain(email.slice(email.lastIndexOf('@') + 1)) !== own) throw bad('email', 'A colleague’s address must be on ' + own + '.', 422);
+  if (Number(await db(env, 'SELECT COUNT(*) AS n FROM team_members WHERE owner_id = ?', user.id).first('n')) >= TEAM_MAX) throw bad('limit', 'A team can have ' + TEAM_MAX + ' people.', 429);
+  await db(env, 'INSERT INTO team_members (owner_id, email, added_at) VALUES (?, ?, ?) ON CONFLICT DO NOTHING', user.id, email, now()).run();
+  return teamList(env, user);
+}
+async function teamList(env, user) {
+  const rows = (await db(env, "SELECT m.email, m.added_at, u.id AS uid, u.confirmed_at, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live') AS live FROM team_members m LEFT JOIN users u ON u.email = m.email WHERE m.owner_id = ? ORDER BY m.added_at", user.id).all()).results;
+  const of = await db(env, "SELECT m.owner_id, u.company FROM team_members m JOIN users u ON u.id = m.owner_id WHERE m.email = ?", user.email).all();
+  return { members: rows.map((r) => ({ email: r.email, added: isoDay(r.added_at), has_account: !!r.uid, confirmed: !!r.confirmed_at, live_jobs: r.live || 0 })),
+    member_of: (of.results || []).map((r) => ({ company: r.company })) };
+}
+/* The text a company that manages its claimed page wants on it: "about" (up to 1,000 characters, screened like a posting, no links) and
+   its site (on the claimed domain). export.json carries both in "claimed" for the site's company page. PUT /api/claims/<id>/page. */
+async function claimPage(env, req, user, id) {
+  const c = await db(env, "SELECT * FROM company_claims WHERE id = ? AND status = 'verified'", id).first();
+  if (!c || !(await actsFor(env, user, c.user_id))) throw bad('not_found', 'No verified company page with this id on this account.', 404);
+  const b = await body(req), about = b.about == null || b.about === '' ? '' : prose(b.about, 1000, 40), site = b.website ? publicUrl(b.website) : null;
+  if (about === null) throw bad('about', 'Write 40 to 1,000 characters about the company, or leave it empty.');
+  if (/https?:\/\/|www\./i.test(about)) throw bad('about', 'Keep links out of the text; give the company site in its own field.');
+  if (b.website && (!site || siteDomain(site.hostname) !== c.domain)) throw bad('website', 'The company site must be on ' + c.domain + '.', 422);
+  if (about) { const s = screenPosting({ title: '', description: about, company: c.company, applyUrl: 'https://' + c.domain, accountDomain: c.domain }); if (s.verdict !== 'ok') throw bad('rejected', 'This text cannot be shown. ' + s.reasons.join(' '), 422, { reasons: s.reasons }); }
+  await db(env, 'INSERT INTO company_pages (company_key, about, website, updated_by, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(company_key) DO UPDATE SET about = excluded.about, website = excluded.website, updated_by = excluded.updated_by, updated_at = excluded.updated_at',
+    c.company_key, about, site ? site.origin : '', user.id, now()).run();
+  await requestRebuild(env);
+  return { ok: true, page: { company: c.company, about, website: site ? site.origin : '' } };
+}
+// A receipt for a paid order, for the employer's records: one payment for a fixed period, nothing renews.
+async function receipt(env, user, id) {
+  const o = await db(env, "SELECT * FROM orders WHERE id = ? AND user_id = ? AND status IN ('paid', 'refunded')", id, user.id).first();
+  if (!o) throw bad('not_found', 'No paid order with this id on this account.', 404);
+  const p = PRODUCTS[o.product] || {};
+  return { receipt: { number: o.id, date: isoDay(o.paid_at || o.created_at), seller: (env.SITE_NAME || 'Jobs Every Hour') + ', ' + env.SITE_URL, buyer: { email: user.email, company: user.company || '' },
+    item: (p.name || o.product) + (o.label && o.label !== p.name ? ': ' + o.label : ''), period_days: p.days || p.plusDays || p.creditDays || 0, amount_usd: o.amount_usd,
+    paid_with: o.provider === 'credit' ? 'a credit from a pack bought earlier' : o.provider === 'cryptomus' ? 'cryptocurrency, through Cryptomus' : o.provider, status: o.status,
+    note: 'One payment for a fixed period. Nothing renews and nothing more is charged.' } };
+}
+
 /* ---------------------------------------------------------------- router */
 async function route(env, req, url, ctx) {
   const path = url.pathname.replace(/\/+$/, ''), m = req.method, seg = path.split('/').slice(2);     // /api/<seg...>
@@ -2236,7 +2418,7 @@ async function route(env, req, url, ctx) {
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
       // for the pages to know which buttons to show: sign-in with LinkedIn, and the AI tools of Plus
       linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off',
-      talent: env.TALENT_DB === 'on' ? 'on' : 'off' };
+      talent: env.TALENT_DB === 'on' ? 'on' : 'off', google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URL ? 'on' : 'off' };
   }
   if (path === '/api/auth/signup' && m === 'POST') return signup(env, req, ctx);
   if (path === '/api/auth/login' && m === 'POST') return login(env, req, ctx);
@@ -2245,6 +2427,8 @@ async function route(env, req, url, ctx) {
   if (path === '/api/auth/reset/request' && m === 'POST') return resetRequest(env, req, ctx);
   if (path === '/api/auth/reset/confirm' && m === 'POST') return resetConfirm(env, req);
   if (path === '/api/webhooks/cryptomus' && m === 'POST') return cryptomusWebhook(env, req);
+  if (path === '/api/auth/google/start' && m === 'POST') return googleStart(env, req);                // sign in with Google: no session yet
+  if (path === '/api/auth/google/callback' && m === 'POST') return googleCallback(env, req, ctx);
   if (path === '/api/alerts' && m === 'POST') return alertSignup(env, req, ctx);                       // job alerts: no account needed
   if (path === '/api/alerts/confirm' && (m === 'GET' || m === 'POST')) return alertConfirm(env, req, url);
   if (path === '/api/alerts/unsubscribe' && (m === 'GET' || m === 'POST')) return alertUnsubscribe(env, req, url);
@@ -2258,6 +2442,13 @@ async function route(env, req, url, ctx) {
 
   const user = await currentUser(env, req), t = now();
   if (path === '/api/me' && m === 'GET') return { user: await userView(env, user) };
+  if (path === '/api/me/export' && m === 'GET') return myExport(env, user);
+  if (path === '/api/me' && m === 'DELETE') return deleteMe(env, req, user);
+  if (path === '/api/team' && m === 'GET') return teamList(env, user);
+  if (path === '/api/team' && m === 'POST') return teamAdd(env, req, user);
+  if (seg[0] === 'team' && seg[1] && m === 'DELETE') { await db(env, 'DELETE FROM team_members WHERE owner_id = ? AND email = ?', user.id, decodeURIComponent(seg[1]).toLowerCase()).run(); return teamList(env, user); }
+  if (seg[0] === 'claims' && seg[1] && seg[2] === 'page' && m === 'PUT') return claimPage(env, req, user, seg[1]);
+  if (seg[0] === 'orders' && seg[1] && seg[2] === 'receipt' && m === 'GET') return receipt(env, user, seg[1]);
   if (path === '/api/auth/confirm/request' && m === 'POST') return confirmRequest(env, user, ctx);
   if (path === '/api/auth/linkedin/start' && m === 'POST') return linkedinStart(env, req, user);
   if (path === '/api/auth/linkedin/callback' && m === 'POST') return linkedinCallback(env, req, user);
@@ -2318,7 +2509,10 @@ async function route(env, req, url, ctx) {
   }
   if (seg[0] === 'jobs' && seg[1] && (m === 'PATCH' || m === 'POST' || m === 'DELETE')) return updateJob(env, req, user, seg[1], m === 'DELETE' ? 'delete' : m === 'PATCH' ? 'edit' : seg[2] || 'edit');
   if (path === '/api/sync') {                                                                          // Plus: the same saved jobs on every device
-    if (user.plus_until <= t) throw bad('plus', 'Sync between devices is part of Plus.', 402);
+    // saved jobs, statuses and searches on every device: free for every account with a confirmed email (it was planned for Plus; the
+    // owner wants a full dashboard for job seekers, and keeping someone's own lists is not a thing to sell)
+    if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+    if (m === 'PUT' && JSON.stringify((await req.clone().json().catch(() => ({}))).data || {}).length > 200000) throw bad('too_large', 'Too much to keep in sync: 200,000 characters at most.', 413);
     if (m === 'GET') { const row = await db(env, 'SELECT data, updated_at FROM sync WHERE user_id = ?', user.id).first(); return { data: row ? JSON.parse(row.data) : null, updated: row ? row.updated_at : 0 }; }
     if (m === 'PUT') {
       const text = JSON.stringify((await body(req)).data || {});
@@ -2466,13 +2660,7 @@ async function admin(env, req, seg, m) {
     const email = cleanEmail((await body(req)).email);
     if (!email) throw bad('email', 'Give the email address to erase.');
     const u = await db(env, 'SELECT id FROM users WHERE email = ?', email).first(), alerts = await db(env, 'SELECT COUNT(*) AS n FROM alerts WHERE email = ?', email).first('n');
-    const steps = [db(env, 'DELETE FROM alerts WHERE email = ?', email), db(env, 'DELETE FROM mail_log WHERE to_addr = ?', email),
-      db(env, 'DELETE FROM rate WHERE k LIKE ?', '%:' + email)];                // limits kept under the address (sign-in, new password, alert letters)
-    if (u) steps.push(talentRefund(env, 'r.candidate_id = ?', u.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ? OR employer_id = ?', u.id, u.id),
-      ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
-      ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id), db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
-      db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
-    await env.DB.batch(steps);
+    await env.DB.batch(eraseSteps(env, u, email, t));
     if (u) await requestRebuild(env);
     return { ok: true, alerts_deleted: Number(alerts) || 0, account_erased: !!u };
   }
@@ -2521,6 +2709,7 @@ export default {
     await step('hits', () => db(env, 'DELETE FROM hit_seen WHERE day < ?', isoDay(t)).run());      // who was counted on days gone by: the hashes are kept for the day only
     await step('states', () => db(env, 'DELETE FROM oauth_states WHERE expires_at < ?', t).run());
     await step('claims', () => db(env, 'DELETE FROM domain_claims WHERE expires_at < ?', t).run());
+    await step('sign-ins', () => db(env, 'DELETE FROM signin_states WHERE expires_at < ?', t).run());
     await step('ai', () => db(env, 'DELETE FROM ai_usage WHERE month < ?', monthOf(t - 62 * DAY)).run());      // counts of months gone by: this month and the last are kept
     await step('rate', () => db(env, 'DELETE FROM rate WHERE reset_at < ?', t).run());
     await step('mail log', () => db(env, 'DELETE FROM mail_log WHERE at < ?', t - MAIL_LOG_DAYS * DAY).run());

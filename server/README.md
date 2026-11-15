@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,132 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,159 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -72,6 +72,7 @@ Settings in `/etc/hrn-api/api.env` (KEY=value; root and the service user only):
 | `COMPANY_SITES_FILE`, `RECORDS_FILE` | `/srv/hrn/app/logos.json`, `/srv/hrn/app/data/jobs.db` | what the build uploads every hour: companies' own sites, the job records |
 | `PORT`, `HOST` | `8787`, `127.0.0.1` | where the API listens |
 | `TALENT_DB` | none: off | `on` opens the opt-in resume database ("The resume database" below) |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URL` | none: off | "Sign in with Google" ("Accounts for everyone" below); the secret with `api-secret.sh` |
 | `GITHUB_TOKEN`, `GITHUB_REPO`, `LINKEDIN_*`, `ANTHROPIC_API_KEY` | none | optional, as on Cloudflare (see below) |
 
 `PAY_MODE` is refused: `prod.mjs` does not start with it. Nobody can be charged until `PAYMENTS_LIVE=1`: `/api/orders` answers 503
@@ -148,6 +149,36 @@ A verified claim gives:
 
 What the site's pages still need for this: the account page (claim form, stats), and the job page's call to `/api/public/hit` with the
 company's name (none of the hit calls is wired into the pages yet, see "What a listing brought").
+
+## Accounts for everyone: sign in with Google, your data, the employer's dashboard (15 Nov 2026)
+
+The owner: "are the accounts worked out as far as they go? Posting needs a work email or LinkedIn, and job seekers need an account too".
+The account page (`assets/account.js`, `/account/`, shown once `api_url` is set) is one dashboard for both: job alerts, saved jobs on every
+device, the resume for employers (only if ticked), and for an account tied to a company domain: posting with views and clicks, company
+pages, the team, resume search, promotions and receipts. It handles the links in letters (`#confirm=`, `#reset=`) and the way back from
+Google and LinkedIn (`?code=&state=`). Tested in section 35.
+
+- **Sign in with Google** (OpenID Connect, off until the three `GOOGLE_*` settings are set; then `/api/public/products` says
+  `google: "on"`): `POST /api/auth/google/start` → `{ url, secret }` (the page keeps the secret in sessionStorage);
+  `POST /api/auth/google/callback { code, state, secret }` → `{ token, user, created }`. A known Google identity signs in; else the
+  account with the same verified address gets Google attached; else a new account is made, confirmed at once. A company (Workspace)
+  address makes an employer account tied to its domain, like signing up with it. Without the page's secret nothing happens (no login
+  CSRF). To switch it on (the owner, needs a Google account): Google Cloud console → APIs & Services → Credentials → "OAuth client ID",
+  type "Web application", authorised redirect URI `https://jobseveryhour.com/account/`; then `GOOGLE_CLIENT_ID=...` and
+  `GOOGLE_REDIRECT_URL=https://jobseveryhour.com/account/` in `/etc/hrn-api/api.env`, and the secret with
+  `sudo bash /opt/hrn-api/server/hosting/api-secret.sh GOOGLE_CLIENT_SECRET`.
+- **The person's own data:** `GET /api/me/export` (everything about the account as JSON, no hashes or tokens) and
+  `DELETE /api/me { confirm: "delete my account" }` (the same as the owner's erase).
+- **Saved jobs on every device:** `/api/sync` is free for any account with a confirmed email (it was planned for Plus; keeping someone's
+  own lists is not a thing to sell). The page copies the browser's `hrn_jobs`, `hrn_saved`, `hrn_searches`, `hrn_follow`, `hrn_hidden`,
+  `hrn_mute` up, or brings them down, only when the person presses the button.
+- **Team:** an account that holds a company name here adds colleagues on the same domain (`POST /api/team { email }`, `GET /api/team`,
+  `DELETE /api/team/<email>`, 20 at most); they post under the company's name from their own accounts (`actsFor` in `src/worker.js`),
+  and their first jobs are reviewed like anyone's.
+- **Company page text:** `PUT /api/claims/<id>/page { about, website }` for a verified claim (screened like a posting, no links in the
+  text, the site on the claimed domain); `export.json` `claimed` carries `about` and `website` for the site's company page (the build
+  does not show them yet).
+- **Receipts:** `GET /api/orders/<id>/receipt` for a paid order: what, for how long, how it was paid, "nothing renews".
 
 ## The resume database (opt-in; off until `TALENT_DB=on`)
 
