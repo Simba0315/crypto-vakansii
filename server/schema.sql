@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
   linkedin_name TEXT NOT NULL DEFAULT '',
   linkedin_email TEXT NOT NULL DEFAULT '',
   linkedin_at INTEGER NOT NULL DEFAULT 0,
+  work_email TEXT NOT NULL DEFAULT '',              -- the work address confirmed by a link (domain_proof 'work_email'), for an account on a free mailbox
   created_at INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_linkedin ON users (linkedin_sub) WHERE linkedin_sub != '';   -- one LinkedIn identity, one account: a second attachment fails
@@ -445,6 +446,7 @@ CREATE TABLE IF NOT EXISTS company_pages (
 -- Columns added to tables that may already exist in a database made from an earlier schema.sql: applySchema (src/d1.mjs) reads these
 -- lines and adds a column that is missing. On Cloudflare D1 run the same as ALTER TABLE ... ADD COLUMN by hand.
 -- column: orders credits INTEGER NOT NULL DEFAULT 0
+-- column: users work_email TEXT NOT NULL DEFAULT ''
 -- column: team_members role TEXT NOT NULL DEFAULT 'member'
 -- column: company_pages logo TEXT NOT NULL DEFAULT ''
 -- column: company_pages locations TEXT NOT NULL DEFAULT ''
@@ -559,3 +561,15 @@ CREATE TABLE IF NOT EXISTS resumes (
   updated_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS resumes_user ON resumes (user_id, updated_at);
+
+-- A link to a work address, asked for by an account on a free mailbox to be tied to its company's domain (workEmailRequest in
+-- src/worker.js); one per account, 24 hours, only the hash of its token is kept.
+CREATE TABLE IF NOT EXISTS work_links (
+  token_hash TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS work_links_user ON work_links (user_id);
