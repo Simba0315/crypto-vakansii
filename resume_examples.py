@@ -2004,7 +2004,17 @@ TECH = {
 # A kind of work that appears later and has no entry yet gets its field's lines until somebody writes its own.
 FIELD = {
     "software-development": ROLE["software-engineer"], "ai-machine-learning": ROLE["machine-learning-engineer"], "data-analytics": ROLE["data-analyst"],
-    "cloud-devops-it": ROLE["devops-engineer"], "security": ROLE["cybersecurity"], "product-project": ROLE["project-manager"],
+    "cloud-devops-it": ROLE["devops-engineer"],
+    "skilled-trades": ("Maintenance Technician", "preventive maintenance, troubleshooting, safety procedures", [
+        "Cut unplanned downtime on 4 production lines from 18 to 7 hours a month with a weekly preventive maintenance plan",
+        "Diagnosed and repaired electrical and mechanical faults on 30+ machines, closing 95% of work orders within 24 hours",
+        "Led a lockout-tagout refresher for 22 colleagues; the site went 400 days without a lost-time incident",
+        "Kept a spare-parts log that cut emergency orders by 40% in one year"]),
+    "logistics-transport": ("Warehouse and Logistics Coordinator", "inventory control, shipping, scheduling", [
+        "Ran inbound and outbound shipping for a 60,000 sq ft warehouse handling 1,200 orders a day at 99.6% accuracy",
+        "Reorganised pick paths and cut average pick time from 4.2 to 2.9 minutes per order",
+        "Planned routes for a fleet of 12 vans, lowering fuel cost by 11% in six months",
+        "Trained 15 new associates on scanners, safety and the inventory system in their first week"]), "security": ROLE["cybersecurity"], "product-project": ROLE["project-manager"],
     "design-creative": ROLE["product-designer"], "marketing-communications": ROLE["marketing-manager"], "sales": ROLE["account-executive"],
     "customer-service": ROLE["customer-support"], "accounting-finance": ROLE["financial-analyst"], "legal-compliance": ROLE["compliance"],
     "hr-recruiting": ROLE["human-resources"], "operations-administration": ROLE["operations-manager"], "hardware-engineering": ROLE["mechanical-engineer"],

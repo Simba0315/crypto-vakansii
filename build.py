@@ -231,7 +231,7 @@ ROLE_NT = {r[0] for r in roles_info.MORE_ROLES if len(r) > 5}       # fields of 
 NOT_TECH = re.compile(roles_info.NOT_TECH, re.I)
 ROLE_RX = {nm: re.compile(rx, re.I) for nm, _, rx in ROLES}
 role_hit = lambda nm, rx, title: bool(ROLE_RX[nm].search(title)) and (nm in ROLE_OWN or not ROLE_OTHER.search(title)) and not (nm in ROLE_NT and NOT_TECH.search(title))
-KEEP_CAP = {"German", "French", "Spanish", "Japanese", "Portuguese", "Chinese", "Italian", "Dutch", "Korean"}
+KEEP_CAP = {"German", "French", "Spanish", "Japanese", "Portuguese", "Chinese", "Italian", "Dutch", "Korean"} | set(getattr(roles_info, "KEEP_CAP", ()))   # "Java developer", "Arabic speaking" keep their capital
 
 
 def rlow(nm):
@@ -575,7 +575,7 @@ SLUG_ICON = {   # fields on /categories/ and the categories of job lists
     "software-development": "code", "ai-machine-learning": "spark", "data-analytics": "chart", "cloud-devops-it": "cloud", "security": "shield", "product-project": "board",
     "design-creative": "pen", "marketing-communications": "megaphone", "sales": "trend", "customer-service": "headset", "accounting-finance": "coin", "legal-compliance": "scales",
     "hr-recruiting": "users", "operations-administration": "sliders", "hardware-engineering": "chip", "writing-translation": "text", "science-healthcare": "heart",
-    "education-training": "cap", "retail-hospitality": "bag", "languages": "globe", "crypto-web3": "hex", "leadership": "crown", "internships-entry-level": "sprout",
+    "education-training": "cap", "retail-hospitality": "bag", "languages": "globe", "skilled-trades": "factory", "logistics-transport": "box", "crypto-web3": "hex", "leadership": "crown", "internships-entry-level": "sprout",
     "engineering": "code", "product": "board", "design": "pen", "sales-bd": "trend", "marketing": "megaphone", "support": "headset", "compliance-legal": "scales", "finance": "coin",
     "people": "users", "data-research": "chart", "operations": "sliders", "healthcare": "heart", "manufacturing": "factory", "supply-chain": "box", "retail": "bag",
     "education": "cap", "consulting": "case", "other": "dots",
