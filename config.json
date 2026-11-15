@@ -17,44 +17,72 @@
     {
       "name": "Standard listing",
       "price": "Free",
-      "what": "Your job in the main feed for 30 days. When it closes, its page stays online, marked as closed."
+      "what": "30 days in the list and in search, its own page readable by Google’s job box, a link straight to your application page. Checked before it goes live."
     },
     {
-      "name": "Featured job",
-      "price": "$29",
-      "what": "Highlighted row and a place above regular listings in its category for 14 days.",
-      "was": "$99"
+      "name": "Standard boost",
+      "price": "$99",
+      "what": "30 days: a highlighted row with a “Featured” mark, above the free jobs in its lists (category, role, place, search), and views and clicks on Apply for the job in your account. For a job posted here or one we already list from your careers page."
     },
     {
-      "name": "Pinned job",
-      "price": "$59",
-      "what": "Top of the home page and of its category for 7 days.",
-      "was": "$199"
+      "name": "Premium boost",
+      "price": "$249",
+      "what": "30 days: everything in the Standard boost, plus a turn in the top 3 slots of its lists, an “Urgently hiring” badge for the first 14 days, your logo and a cover image on the job page, one invitation email to up to 50 job seekers who asked for invitations and match the job, and views and clicks day by day. A listed job needs its company page claimed first."
     },
     {
-      "name": "5-job pack",
-      "price": "$119",
-      "what": "Five featured jobs to use within 3 months.",
-      "was": "$399"
+      "name": "Hiring Pass",
+      "price": "$499",
+      "what": "30 days for one company: unlimited Standard boosts for its jobs (each runs its own 30 days), 3 Premium boosts, the company spotlight and stats. The company must be yours: you posted a job under its name or claimed its page."
     },
     {
       "name": "Company spotlight",
-      "price": "$149 / month",
-      "what": "Your company in “Featured employers” on the home page and at the top of the companies list, plus a badge on your company page.",
-      "was": "$499 / month"
+      "price": "$299",
+      "what": "30 days: your company in “Featured employers” on the home page and at the top of the companies list, and a badge on your company page."
     },
     {
       "name": "Category or skill sponsor",
-      "price": "$89 / month",
-      "what": "Your company named at the top of one category or skill page, for example “Engineering jobs · supported by you”.",
-      "was": "$299 / month"
+      "price": "$199",
+      "what": "30 days: your company named at the top of one category or skill page, for example “Engineering jobs · supported by you”."
     },
     {
-      "name": "Branded listing",
-      "price": "$49",
-      "what": "A featured job with a cover image and a longer description written by you.",
-      "soon": true,
-      "was": "$149"
+      "name": "Bump to top",
+      "price": "$5",
+      "what": "Once: the job moves to the top of its date-sorted lists as if it were new. Its real posting date stays on it."
+    },
+    {
+      "name": "Extend a boost by 30 days",
+      "price": "$9",
+      "what": "30 more days of the Standard boost for a job whose boost is running or ended in the last 14 days. Once per boost."
+    },
+    {
+      "name": "Urgently hiring badge",
+      "price": "$9",
+      "what": "An “Urgently hiring” badge for 14 days, on a job posted here or a listed job of a company whose page you claimed."
+    },
+    {
+      "name": "100 credits",
+      "price": "$100",
+      "what": "Prepaid credits: 1 credit = $1, for every product here, for employers and job seekers. They last 12 months from the top-up; a purchase paid with credits switches on at once."
+    },
+    {
+      "name": "250 credits",
+      "price": "$250",
+      "what": "Prepaid credits: 1 credit = $1, for every product here, for employers and job seekers. They last 12 months from the top-up; a purchase paid with credits switches on at once."
+    },
+    {
+      "name": "550 credits",
+      "price": "$500",
+      "what": "Prepaid credits with a 10% bonus (550 for $500): 1 credit = $1, for every product here, for employers and job seekers. They last 12 months from the top-up; a purchase paid with credits switches on at once."
+    },
+    {
+      "name": "1,200 credits",
+      "price": "$1,000",
+      "what": "Prepaid credits with a 20% bonus (1,200 for $1,000): 1 credit = $1, for every product here, for employers and job seekers. They last 12 months from the top-up; a purchase paid with credits switches on at once."
+    },
+    {
+      "name": "Resume search: 50 contact requests",
+      "price": "$199",
+      "what": "Search the resumes people chose to make findable. Names and contacts stay hidden until the person accepts; a request is used up only when they do (declined, or no answer in 14 days: it comes back)."
     }
   ],
   "wallets": [
@@ -78,33 +106,41 @@
     "live": false,
     "plans": [
       {
-        "name": "1 month",
-        "price": "$3",
+        "name": "7 days",
+        "price": "$9",
+        "per": "one payment",
+        "note": ""
+      },
+      {
+        "name": "30 days",
+        "price": "$19",
         "per": "one payment",
         "note": "",
-        "was": "$9"
+        "best": true
       },
       {
-        "name": "3 months",
-        "price": "$7",
-        "per": "about $2.30 a month",
-        "note": "Save 22%",
-        "best": true,
-        "was": "$19"
+        "name": "90 days",
+        "price": "$39",
+        "per": "one payment",
+        "note": "Lowest price a day"
+      }
+    ],
+    "passes": [
+      {
+        "name": "One tailored resume",
+        "price": "$5",
+        "what": "Your resume reworded for one posting, with the keywords it misses, and a cover letter for that posting. One use, within 30 days."
       },
       {
-        "name": "12 months",
-        "price": "$12",
-        "per": "$1 a month",
-        "note": "Save 67%",
-        "was": "$39"
+        "name": "One mock interview",
+        "price": "$9",
+        "what": "Questions taken from one posting, and feedback on up to 8 typed answers. One use, within 30 days."
       }
     ]
   },
   "sponsors": [],
   "api_url": "https://jobseveryhour.com",
   "indexnow_key": "da012c9b3f492ce3845d18a66c19d58c",
-  "launch_prices": true,
   "verify": {
     "google": "",
     "bing": "",
