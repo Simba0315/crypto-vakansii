@@ -1801,3 +1801,5 @@ a.eg{cursor:default}.job>a.eg:hover{background:none;box-shadow:none}.spot a.eg:h
 #ex-out .hbars .hn a{display:inline;padding:0;margin:0;min-height:0;border:0;border-radius:0;background:none;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 #ex-out .hbars .hn a:hover{text-decoration-color:var(--ac)}
 #ex-out .hbars .hn .fl{margin-right:6px}
+
+.tabp .tgroup{font-size:15px;font-weight:650;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:6px}.tabp .tgroup:first-child{margin-top:4px}
