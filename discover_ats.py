@@ -186,10 +186,22 @@ def judge(name, jobs):
     return ""
 
 
-def lands(jobs):
+def by_country(jobs):
+    """Open jobs of a board by country (the first country each location names; jobs that name none are not counted)."""
     import build
-    c = Counter(code for j in jobs for code, _ in build.countries_of(j["location"] or "")[:1])
-    return [k for k, _ in c.most_common(3)]
+    return Counter(code for j in jobs for code, _ in build.countries_of(j["location"] or "")[:1])
+
+
+def lands(jobs):
+    return [k for k, _ in by_country(jobs).most_common(3)]
+
+
+def examine(st):
+    """Ask one board and judge it, in a worker process: (system, token, name, number of jobs, jobs by country, reason left out or '')."""
+    s, t = st
+    jobs, name = probe(s, t)
+    if jobs is None: return s, t, None, 0, {}, "no answer"
+    return s, t, name, len(jobs), dict(by_country(jobs)), judge(name, jobs)
 
 
 def save_samples(boards):
@@ -235,19 +247,20 @@ def main():
         if a.max: new = new[:a.max]
         print(f"{s}: {len(found[s])} boards in the crawl, {len(new)} not read yet")
         todo += [(s, t) for t in new]
-    kept, why, answered, asked = [], Counter(), Counter(), Counter()
-    with cf.ThreadPoolExecutor(a.workers) as ex:
-        for (s, t), (jobs, name) in zip(todo, ex.map(lambda st: probe(*st), todo)):
+    kept, why, answered, asked, land_jobs = [], Counter(), Counter(), Counter(), Counter()
+    # worker processes, not threads: reading the postings is CPU work (about 20 ms a job), and every core is used
+    import multiprocessing
+    with cf.ProcessPoolExecutor(a.workers, mp_context=multiprocessing.get_context("fork")) as ex:
+        for s, t, name, count, countries_n, reason in ex.map(examine, todo, chunksize=8):
             asked[s] += 1
-            if jobs is None: why[(s, "no answer")] += 1; continue
+            if reason == "no answer": why[(s, reason)] += 1; continue
             answered[s] += 1
-            # the jobs carry the token as company; judge them under the shown name
-            reason = judge(name, jobs)
             if reason: why[(s, reason)] += 1; continue
             k = collect.co_key(name)
             if k in names: why[(s, "company already read elsewhere")] += 1; continue
             names.add(k)
-            kept.append({"name": name, "ats": s, "token": t, "count": len(jobs), "lands": lands(jobs)})
+            land_jobs.update(countries_n)
+            kept.append({"name": name, "ats": s, "token": t, "count": count, "lands": [c for c, _ in Counter(countries_n).most_common(3)]})
     # boards of a system that could not be asked this time stay as they were
     asked_ok = {s for s in a.systems if asked[s] and answered[s] >= 0.2 * asked[s]}
     keep_prev = [p for p in prev if p["ats"] not in asked_ok]
@@ -267,7 +280,8 @@ def main():
         if o["lands"]: by_land[o["lands"][0]] += 1; jobs_land[o["lands"][0]] += o["count"]
     summary = {"date": collect.TODAY, "seconds": round(time.time() - t0), "boards": len(out), "jobs": sum(o["count"] for o in out),
                "by_system": {s: [by_sys[s], jobs_sys[s]] for s in sorted(by_sys, key=lambda s: -jobs_sys[s])},
-               "by_country": {c: [by_land[c], jobs_land[c]] for c, _ in jobs_land.most_common()},
+               "by_country": {c: [by_land[c], jobs_land[c]] for c, _ in jobs_land.most_common()},     # boards by their main country: [boards, their jobs]
+               "jobs_by_country": dict(land_jobs.most_common()),                                       # every job of the boards found now, by its own country
                "left_out": {f"{s}: {r}": n for (s, r), n in why.most_common()},
                "asked": dict(asked), "answered": dict(answered)}
     (ROOT / "sources_ats_report.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n")
