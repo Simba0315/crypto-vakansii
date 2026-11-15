@@ -1781,3 +1781,17 @@ a.pic.st-map:hover u{text-decoration-color:var(--text)}
 .bd-files a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 /* example cards on sales pages: not links, so no hover and no pointer */
 a.eg{cursor:default}.job>a.eg:hover{background:none;box-shadow:none}.spot a.eg:hover b{text-decoration:none}
+
+/* Salary explorer (/salaries/explorer/) */
+.exf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;align-items:end;margin:18px 0 6px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.exf label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.exf select{font:inherit;font-size:14.5px;font-weight:500;color:var(--text);padding:9px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--bg)}
+.exf .exr{flex-direction:row;align-items:center;gap:8px;padding-bottom:10px;color:var(--text);font-weight:500}
+.exf .linkbtn{justify-self:start;padding-bottom:10px}
+.ex-what{margin:18px 0 0;font-size:15px;color:var(--muted)}.ex-what b{color:var(--text)}
+.ex-none{margin:18px 0;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.exh{display:flex;align-items:flex-end;gap:3px;height:150px;border-bottom:1px solid var(--line2)}
+.exh i{flex:1;background:var(--viz-1);border-radius:3px 3px 0 0;min-width:4px}.exh i.hi{background:var(--viz-2)}
+.exhx{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
+.exl{margin:0 0 14px}.exl .rel{display:flex;flex-wrap:wrap;gap:4px 14px;margin:4px 0 0;font-size:14.5px}
+.exl .rel a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}.exl .rel a:hover{text-decoration-color:var(--ac)}
