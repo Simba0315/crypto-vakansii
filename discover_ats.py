@@ -180,7 +180,27 @@ def workday_name(legal):
     kept = [w for i, w in enumerate(words) if not (re.fullmatch(r"\d+", w) and i == 0) and w.lower() not in legal_w and w.lower() not in lands]
     name = " ".join(kept).strip()
     if name.upper() == name and len(name) > 4: name = " ".join(w if len(w) <= 3 else w.title() for w in name.split())
-    return name
+    return workday_tidy(name)
+
+
+def workday_tidy(name):
+    """Entity codes in front ("UK10 AstraZeneca", "6040-Ethicon", "*US AMR-Jones Lang LaSalle", "95-2566122 First American"), brackets
+    ("Wawa (210515330)", "UPS (Ohio)") and tails ("_United States", "Legal Entity", "Employment", "S de R L de C V") taken off."""
+    n = re.sub(r"\s*\([^)]*\)\s*", " ", str(name or "")).strip()
+    n = re.sub(r"_[A-Za-z ]+$", "", n)
+    n = re.sub(r"\s+(legal entity|employment|s ?a ?u|s de r ?l de c ?v|opco|of cos|n ?a)$", "", n, flags=re.I)
+    for _ in range(3):
+        m = re.match(r"^\*?\s*([A-Z0-9]{1,8}[-\s]+)(?=\S)", n)
+        if not m: break
+        code = m.group(1).strip(" -")
+        rest = n[m.end():].strip()
+        # a code with a digit, a "*" or a "-" goes; a short letter code only when it abbreviates the name after it ("KDS Kohl's", "COV Covidien")
+        lettered = code.isalpha() and code.isupper() and len(code) <= 4 and rest[:1].upper() == code[:1] and m.group(1).strip() == code and len(rest.split()) >= 1
+        if (re.search(r"\d", code) or "-" in m.group(1) or n.startswith("*") or lettered) and not re.fullmatch(r"[A-Z0-9]{1,4}", rest):
+            n = rest
+        else:
+            break
+    return re.sub(r"\s+", " ", n).strip(" -_*") or str(name or "")
 
 
 def shown_name(system, token, jobs, feed):
@@ -287,7 +307,8 @@ def examine(st):
     if s == "workday":                 # large employers: judged on the first page of 20, sized by the total the site reports
         jobs, total, name = probe_workday(t)
         if jobs is None: return s, t, None, 0, {}, "no answer"
-        if total > collect.WD_MAX: return s, t, name, total, {}, f"over {collect.WD_MAX} jobs (Workday lists no more)"
+        if total >= collect.WD_MAX: return s, t, name, total, {}, f"{collect.WD_MAX} jobs or more (Workday lists no more)"
+        if total > MAX_JOBS: return s, t, name, total, {}, f"over {MAX_JOBS} jobs (a chain or a big enterprise)"
         return s, t, name, total, {k: round(v * total / max(1, len(jobs))) for k, v in by_country(jobs).items()}, judge(name, jobs, large=True)
     jobs, name = probe(s, t)
     if jobs is None: return s, t, None, 0, {}, "no answer"
