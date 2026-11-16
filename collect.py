@@ -83,6 +83,21 @@ DEPT_CATS = [
     ("operations", r"operations|\bops\b|admin|workplace"),
 ]
 OTHER = ("other", "Other")
+# Added 16 Nov 2026 (AUDIT 62-66: "Other" held one open job in twelve, 12,575 of them). Tried last, after the title rules above and the
+# department: a job that already had a category keeps it. Every pattern comes from a count of the titles that were left in "Other".
+CATS_LATE = [
+    ("healthcare", "Healthcare", r"surgeon|anesthesi|pathologist|psycholog|psychiatr|social worker|medication aide|respiratory|radiolog|physician|dermatolog|cardiolog|pediatric|"
+                                 r"oncolog|\bcna\b|nurse aide|patient (care|access|service)|animal care|speech[- ](language )?(pathol|therap)|occupational therap|physical therap|"
+                                 r"health information|\bdoctor\b|\bdentist|dental hygienist|pharmacy|phlebotom|sonograph|caregiver|home health"),
+    ("retail", "Retail & Hospitality", r"\bbaker\b|\bserver\b|wait ?staff|stocker|grocery|bartender|dishwasher|\bkitchen\b(?! install)|\bhostess\b|\bdeli\b|\bbutcher|line cook|food service"),
+    ("manufacturing", "Manufacturing & Trades", r"janitor|groundskeeper|custodia|landscap|\blaborer\b|install(ation)? helper|\bsuperintendent\b|\bhelper\b|\bwarehouse\b|housekeeping|\bpainter\b|roofing|carpent"),
+    ("sales-bd", "Sales & Business Development", r"\bcomercial\b|\bcommerciale\b|\bcommercial (manager|executive|director|associate)|\bcanvass|vendas|\bventas\b|\bvendedor"),
+    ("support", "Customer Service & Support", r"atendimento|atenci[oó]n al cliente|customer care|client care|\bcall cent(er|re)\b|servicio al cliente"),
+    ("marketing", "Marketing & Community", r"paid (social|search|media)|media (activation|planner|buyer|manager)|\bcampaign|\beditor\b|\bwriter\b|journalist|\bproducer\b|public relations|\bpublicist|videograph|photograph|\bsocial\b"),
+    ("education", "Education & Training", r"\bteaching\b|paraprofessional|\bschool\b|teacher|\bstudent (ambassador|success|services|affairs)|\bacademic\b|training specialist"),
+    ("finance", "Finance & Trading", r"portfolio manager|\bwealth\b|valuations?|estate planning|private client|\bequit(y|ies)\b|investment|\bunderwrit|\bloan\b|\bcredit (analyst|manager|officer)|\bactuar"),
+    ("operations", "Operations", r"project (coordinator|director|assistant)|(?<!technical )programme (manager|coordinator)|\bscheduler\b|general manager|office (manager|assistant)|\bexecutive assistant|\badmin\b|\bassistant manager\b"),
+]
 _LANGS = (r"english|german|french|spanish|portuguese|italian|dutch|japanese|korean|mandarin|chinese|cantonese|arabic|hebrew|hindi|russian|ukrainian|polish|"
           r"turkish|swedish|norwegian|danish|finnish|greek|czech|romanian|hungarian|vietnamese|thai|indonesian|malay|tagalog|bahasa")
 
@@ -864,8 +879,10 @@ def slugify(s):
 
 def classify(title, dept=""):
     got = classify_title(title)
-    if got != OTHER[0] or not dept: return got
-    return next((slug for slug, rx in DEPT_CATS if re.search(rx, dept, re.I)), OTHER[0])
+    if got != OTHER[0] or not dept: got_ = got
+    else: got_ = next((slug for slug, rx in DEPT_CATS if re.search(rx, dept, re.I)), OTHER[0])
+    if got_ != OTHER[0]: return got_
+    return next((slug for slug, name, rx in CATS_LATE if re.search(rx, title, re.I)), OTHER[0])
 
 
 def classify_title(title):
