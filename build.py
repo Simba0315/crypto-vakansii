@@ -6980,6 +6980,21 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             f'<a href="{P}/jobs-that-pay/{lo_}-an-hour/"><span class="hn">{e(hr_label(lo_, hi_))}</span><span class="hb"><i style="width:{max(2, round(100 * k_ / top_n))}%"></i></span><span class="hc">{k_:,}</span></a>'
             for lo_, hi_, k_ in hr_rows) + "</div>"
         conv_rows = "".join(f"<tr><td>${h_}</td><td>{dollars(h_ * 40)}</td><td>{dollars(h_ * 2080 / 12)}</td><td>{dollars(h_ * 2080)}</td></tr>" for h_ in (15, 18, 20, 22, 25, 30, 35, 40, 50, 75, 100))
+        # typical starting hourly pay for each field: the median of the lowest pay each posting states, fields with at least 20 such jobs
+        fld_hr = []
+        for fs_, fn_, _, _, fj_ in fam_rows:
+            hv_ = [hr_of[j["id"]][0] for j in fj_ if j["id"] in hr_of]
+            if len(hv_) >= 20: fld_hr.append((fs_, fn_, len(hv_), median(hv_), sum(1 for j in fj_ if j["id"] in hr_of and j["remote"])))
+        fld_hr.sort(key=lambda r_: -r_[3])
+        fld_blk = ""
+        if len(fld_hr) >= 4:
+            fld_blk = section("Typical hourly pay by kind of work",
+                              "<p>The middle starting rate for each field, from the jobs in it that state their pay in US dollars. Half of those jobs start higher, half lower. "
+                              "Click a field to see its jobs.</p>"
+                              '<div class="tablewrap"><table><thead><tr><th>Field</th><th>Jobs with pay stated</th><th>Typical start</th><th>A year at 2,080 hours</th><th>Remote</th></tr></thead><tbody>'
+                              + "".join(f'<tr><td><a href="{P}/categories/{fs_}/">{e(fn_)}</a></td><td>{k_:,}</td><td>${m_:,.2f} an hour</td><td>{dollars(m_ * 2080)}</td><td>{r_:,}</td></tr>' for fs_, fn_, k_, m_, r_ in fld_hr)
+                              + '</tbody></table></div><p class="note">“Typical start” is the median of the lowest pay each posting states, as an hourly rate or a yearly salary divided by 2,080. '
+                              'Pay is the figure before tax. Most employers here are technology companies, so the rates are not those of every job in the country.</p>')
         hub_qa = [("How is an hourly rate turned into a yearly salary?", "Multiply it by 2,080: 40 hours a week for 52 weeks. $25 an hour is $52,000 a year; a yearly salary divided by 2,080 gives the hourly rate."),
                   ("Which jobs are listed under each rate?", f"Every open job that states its pay in US dollars: {hr_total:,} today. A job is placed by the lowest pay its posting states, as an hourly rate or as a yearly salary divided by 2,080.")]
         hub_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -6990,6 +7005,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f'<p class="lead">{hr_total:,} open jobs state their pay in US dollars. Here they are by the hourly rate they start at: an hourly rate as the employer wrote it, '
              'or a yearly salary divided by 2,080 hours (40 a week, 52 weeks). Pick a rate to see the jobs.</p>'
              + f'<figure class="pic" style="max-width:760px"><figcaption><b>Open jobs by starting hourly pay</b>Each job counted once, by the lowest pay its posting states.</figcaption>{hr_bars}</figure>'
+             + fld_blk
              + section("Hourly pay in a week, a month and a year", '<div class="tablewrap"><table><thead><tr><th>An hour</th><th>A week (40 h)</th><th>A month</th><th>A year (2,080 h)</th></tr></thead><tbody>'
                        + conv_rows + f'</tbody></table></div><p class="note">Any other rate or number of hours: the <a href="{P}/tools/salary-converter/">pay converter</a>.</p>')
              + section("Questions about hourly pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hub_qa) + "</dl>"), head=hub_ld)
