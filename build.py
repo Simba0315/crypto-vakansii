@@ -6864,6 +6864,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              [f'<a href="{P}/widgets/ghost/"><strong>Ghost</strong></a>', "Add an HTML card in the editor and paste the script version."],
              [f'<a href="{P}/widgets/notion/"><strong>Notion</strong></a>', "Notion removes scripts. Take the iframe version and paste the address from its <code>src</code> into an Embed block."],
              ["<strong>Plain HTML</strong>", "Paste the script version anywhere inside <code>&lt;body&gt;</code>."]]), sid="platforms", label="Platforms")
+         + section("Or start from [[what you want to do]]", '<div class="feats">'
+                   f'<a class="feat" href="{P}/widgets/remote-jobs/"><h3>Remote jobs widget</h3><p>A box of remote jobs for a blog, newsletter or community page.</p></a>'
+                   f'<a class="feat" href="{P}/widgets/careers-page/"><h3>Careers page widget</h3><p>Your own company’s jobs, with search, read from Greenhouse, Lever or Ashby.</p></a>'
+                   f'<a class="feat" href="{P}/widgets/embed-job-listings/"><h3>Embed job listings</h3><p>The script and the frame version, and what each can list.</p></a></div>', label="By purpose")
          + section("Your own company’s jobs, [[straight from your hiring system]]",
                    '<p>If your company posts jobs through Greenhouse, Lever or Ashby, the widget can read your public job board directly in the visitor’s browser. '
                    'Pick your system in the builder and type the name of your board. New roles appear and closed ones disappear by themselves, and a click on a job opens your own application page.</p>'
@@ -6975,6 +6979,67 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              "var done=function(){var x=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=x},1500)};"
              "if(navigator.clipboard)navigator.clipboard.writeText(t.value).then(done,function(){t.select()});else{t.select();done()}});</script>",
              head=p_ld, cls="hub sp widp")
+
+    # One page per purpose (ROADMAP 244, 17 Nov 2026): people search for "remote jobs widget", "careers page widget" and "embed job listings
+    # on website", not for a builder. Same widget, a different first answer; each page says in plain words what it is and has a live preview.
+    snip_careers = e('<div data-hrn-jobs="greenhouse:your-board-name" data-layout="careers" data-search="1" data-company="Your company name"><a href="' + FULL + '/jobs/">Jobs on ' + SITE + '</a></div>\n<script src="' + FULL + '/widget.js" async></script>')
+    snip_remote = e(f'<div data-hrn-jobs="remote" data-limit="8" data-title="Remote jobs"><a href="{FULL}/remote/">Remote jobs on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
+    snip_cards = e(f'<div data-hrn-jobs="category:engineering" data-layout="cards" data-limit="6"><a href="{FULL}/jobs/">Jobs on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
+    USES = [
+        ("remote-jobs", "Remote jobs widget", "Remote jobs widget for your site", "remote", snip_remote, snip_script,
+         f"A box on your page that lists remote jobs and keeps itself up to date. Today it holds {len(remote):,} remote jobs, each from a company’s own careers page.",
+         'In plain words: you paste two lines of code once, and your page then shows a list of remote jobs. You do not edit the list. It changes by itself every hour, and a closed job disappears.',
+         "Who uses it", ["A blog or newsletter about working from home, with a list of real openings under each article.", "A community or Slack group page, a coding school or a bootcamp that wants its members to see where people are hiring.",
+                         "A personal site: a “jobs I would apply for” corner that never needs editing."],
+         [("Which jobs does it show?", f"The newest remote jobs from our index, which holds {len(remote):,} of them today. Every job links to its page here, which shows the salary if the employer gave one, the countries it is open to and a button to the employer’s own application page."),
+          ("Can it show only remote jobs for one skill?", "Not in one box today. A box shows remote jobs, or one skill, or one category, or one city. To show remote jobs in one field, use the category list on the builder page and add the word remote to the title."),
+          ("Are the jobs open to people in any country?", "Not all. Many remote jobs name the countries or time zones they accept; each job’s page says which. The box shows a plain list, and the visitor learns the rule on the job’s page.")]),
+        ("careers-page", "Careers page widget", "Careers page widget for your company", "careers", snip_careers, None,
+         "A full careers page for a company that already posts jobs through Greenhouse, Lever or Ashby: a list with a search box and a filter by team, read live from your own board.",
+         "In plain words: if your company already keeps its jobs in a hiring system such as Greenhouse, this one box shows them on your own website, with a search box. Nothing to retype, and no account here.",
+         "How to set it up", ["Find the name of your board. For Greenhouse it is the last part of your job board address (boards.greenhouse.io/<b>name</b>); for Lever and Ashby it is the same part of your jobs link.",
+                              "Write it into the code as <code>greenhouse:name</code>, <code>lever:name</code> or <code>ashby:name</code>, and your company name into <code>data-company</code>.",
+                              "Paste the code into a block of your careers page that accepts HTML. Jobs you open or close in your hiring system change on your page at once."],
+         [("Which hiring systems does it read?", "Greenhouse, Lever and Ashby. A board in another system cannot be shown in this box yet."),
+          ("Do you store my company’s jobs?", "No. In this mode the visitor’s browser reads your public job board directly. Nothing passes through our servers and we keep no copy."),
+          ("What does the preview show?", "The layout only: it fills the careers layout with the newest jobs on this site, because we cannot read your board before you name it. With your board name in the code, the same layout shows your roles."),
+          ("Will Google show these jobs in its job search?", f"Not from the box: it is drawn by a script after the page loads. To appear in Google’s job search, mark up each job page on your site; the free <a href=\"{P}/tools/jobposting-schema/\">JobPosting generator</a> writes that code.")]),
+        ("embed-job-listings", "Embed job listings on a website", "Embed job listings on any website", "cards", snip_cards, snip_script,
+         "Two ways to put a live list of jobs on a page you control: a short script, or a frame. Choose what to list, copy the code and paste it.",
+         "In plain words: to embed means to place a live box from another site inside your own page. This box shows open jobs. You copy a few lines of code and paste them where the jobs should appear.",
+         "What you can list", ["The newest jobs, or only remote jobs.", "One skill, one category, one city or one company.", "Your own company’s jobs, read from Greenhouse, Lever or Ashby.",
+                               "In a list, cards, a compact list, a moving ticker or a full careers page, in light, dark or automatic colours."],
+         [("What is the difference between the script and the frame?", "The script draws the list inside your page and takes your colours. The frame (an iframe) shows a small separate page inside a box of a fixed size. Use the frame where a site removes scripts, such as Notion or the cheapest Squarespace plan."),
+          ("Does the list copy jobs onto my site?", "No. The jobs stay on this site and in the employer’s hiring system; your page only shows a live view of them, and each click opens the job’s own page."),
+          ("Does it cost anything?", "No. It is free, with no account. The code keeps a small link back to this site.")]),
+    ]
+    for uslug, uname, uh1, ulay, ucode, ualt, ulead, uplain, uhead, ulist, ufaq in USES:
+        u_faq = ufaq + [("Is this widget free?", "Yes. There is no plan and no account. The snippet keeps a small link back to this site.")]
+        u_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": re.sub(r"<[^>]+>", "", a_)}} for q_, a_ in u_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
+            + crumbs_ld([("Job widget", "widgets/"), (uname, "")]))
+        pv = {"remote": 'data-hrn-jobs="remote" data-limit="5"', "careers": 'data-hrn-jobs="latest" data-layout="careers" data-limit="5"', "cards": 'data-hrn-jobs="category:engineering" data-layout="cards" data-limit="4"'}[ulay]
+        code_ = (f'<span class="flabel">Script version</span><textarea id="pw-a" rows="{4 if ulay == "careers" else 3}" readonly aria-label="Script version">{ucode}</textarea>'
+                 '<p><button class="btn sm" type="button" data-copy="pw-a">Copy the code</button></p>'
+                 + (f'<span class="flabel">Frame (iframe) version</span><textarea id="pw-b" rows="3" readonly aria-label="Frame version">{snip_iframe}</textarea>'
+                    '<p><button class="btn sm ghost" type="button" data-copy="pw-b" style="margin-top:0">Copy the code</button></p>' if ualt else "")
+                 + (f'<p>Change <code>your-board-name</code> to the name of your board.</p>' if ulay == "careers" else f'<p>To show something else, <a href="{P}/widgets/">build your own on the job widget page</a>.</p>'))
+        page(f"widgets/{uslug}/", f"{uname}: free, no account | {SITE}", ulead[:158],
+             crumbs(("Job widget", "widgets/"), (uname, "")) + f"<h1>{e(uh1)}</h1>"
+             f'<p class="lead">{ulead}</p><p class="plain"><b>In plain words:</b>{uplain[len("In plain words:"):]}</p>'
+             + act_row("#code", "Get the code", [("#preview", "What your visitors will see"), ("widgets/", "Build your own")], note="Free, no account.")
+             + section(f"[[{uhead}]]", ('<ol class="steps">' if ulay == "careers" else "<ul>") + "".join(f"<li>{x}</li>" for x in ulist) + ("</ol>" if ulay == "careers" else "</ul>"), label="In short")
+             + section("The code", code_, sid="code", label="Copy and paste")
+             + section("What your visitors [[will see]]", f'<div {pv} data-hrn-base="{P}"><a href="{P}/jobs/">Jobs on {e(SITE)}</a></div>'
+                       + ('<p class="note">Layout preview with the newest jobs on this site. With your board name in the code, it lists your own roles.</p>' if ulay == "careers" else ""), sid="preview", label="Live preview")
+             + section(f"Questions about [[the {uname.lower()}]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{a_ if '<a ' in a_ else e(a_)}</dd></div>" for q_, a_ in u_faq) + "</dl>", label="Questions")
+             + section("More ways to use it", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in USES if x[0] != uslug)
+                       + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in PLATFORMS[:4]) + f'<a href="{P}/widgets/">All options</a></p>')
+             + f'<script src="{P}/widget.js?v={V}" defer></script>'
+             "<script>document.addEventListener('click',function(ev){var b=ev.target.closest('[data-copy]');if(!b)return;var t=document.getElementById(b.getAttribute('data-copy'));"
+             "var done=function(){var x=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=x},1500)};"
+             "if(navigator.clipboard)navigator.clipboard.writeText(t.value).then(done,function(){t.select()});else{t.select();done()}});</script>",
+             head=u_ld, cls="hub sp widp")
 
     sample = json.dumps({"name": "Rust jobs", "url": f"{FULL}/skills/rust/", "site": SITE, "updated": TODAY, "total": 1100,
                          "jobs": [{"title": "Senior Rust Engineer", "company": "Example Co", "location": "Remote", "remote": True, "salary": "$180K - $240K", "posted": TODAY, "url": f"{FULL}/job/…/"}]}, indent=2)
