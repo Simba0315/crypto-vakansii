@@ -1308,7 +1308,9 @@ def intro_for(jobs, pre="", post="", hub=False, row=False):
     names = [c for c, _ in Counter(j["company"] for j in jobs).most_common(5)]
     top = ", ".join(names)
     if hub and len(jobs) >= 20 and len(names) >= 3:
-        return f"{e(', '.join(names[:-1]))} and {e(names[-1])} have the most open {pre}roles{post} right now."
+        # one rule for every list (17 Nov 2026): the first sentence says how many are open, in words that search and AI assistants
+        # can quote, then who has the most; the row of figures under it carries the rest
+        return f"{roles(len(jobs), 'open ' + pre + 'role')}{post} as of {fdate(TODAY)}. {e(', '.join(names[:-1]))} and {e(names[-1])} have the most."
     mids = [(lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]]]
     who = (e(", ".join(names[:-1])) + " and " + e(names[-1]) + " have the most. ") if len(names) > 1 else (e(top) + " has them all. ")
     if row and len(jobs) >= 20 and len(names) >= 3: return f"{roles(len(jobs), 'open ' + pre + 'role')}{post} as of {fdate(TODAY)}. {who.strip()}"
