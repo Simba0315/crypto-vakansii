@@ -20,6 +20,7 @@
   var xlBoxes = Array.prototype.slice.call(document.querySelectorAll('.f-xl'));
   var xlOf = function () { return xlBoxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }); };
   var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
+  list.setAttribute('aria-busy', 'true');      // until the first results the empty list is drawn as rows still loading (style.css, main.srch); render() takes the mark off
   var ftoggle = $('ftoggle'), fwrap = $('fwrap'), keepShown = false;
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
     var open = fwrap.classList.toggle('open'); ftoggle.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -86,6 +87,7 @@
   };
   var render = function () {
     list.innerHTML = found.slice(0, shown).map(function (j) { return H.card(j, extra.get(j[0]) || 0); }).join('');
+    list.removeAttribute('aria-busy');
     count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
     more.hidden = found.length <= shown; H.decorate(list);
   };
@@ -384,7 +386,7 @@
     try { var hd = await headP; if (!full) { jobs = hd.rows; allTotal = hd.total; run(); } } catch (e) {}
   } else count.textContent = 'Searching all jobs…';
   try { jobs = await whole; }
-  catch (e) { if (!jobs.length) count.textContent = 'Could not load the list. Please reload the page.'; return; }
+  catch (e) { if (!jobs.length) { count.textContent = 'Could not load the list. Please reload the page.'; list.removeAttribute('aria-busy'); } return; }
   full = true;
   (function () {                    // suggestions for the City box: the first part of each posting's place line, most frequent first
     var cnt = {};

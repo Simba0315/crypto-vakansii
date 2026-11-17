@@ -2916,3 +2916,411 @@ main.ins .lact{margin:16px 0 22px}
   .tablewrap .rkt tr:hover td{background:none}
   .rkt td .bar{display:none}
 }
+
+/* Key pages (home, search, employers, pricing, Plus, about), 17 Nov 2026 */
+/* The six pages a visitor and an employer see first, looked at by eye at 1440 px, at 375 px and in the dark theme. build.py puts
+   "kp" on <main> of the home, employers, pricing, Plus and about pages (plus "home", "sell" or "about") and "srch" on the search
+   page; every rule below is scoped by one of them or by a class that only these pages use, so no other page changes. One
+   exception, a mistake of two classes with one name: ".jobs>li.job.feat" (a featured row took the padding of a ".feat" item).
+   The way of building is the one of DESIGN_STUDY.md, "dLocal and Ashby", in our colours and type: a page is a few framed panels
+   with a large corner radius instead of a long sheet; a label and a two-weight headline open a block; a block has one pill
+   button with its arrow in a circle; long tables are rows that open; 110 to 130 px of air between blocks. Green stays a small
+   accent: a dot, a line under a link, a tick. Buttons are ink on paper and paper on ink. */
+
+/* ---- air and section headers ---- */
+main.kp .sec{margin-top:clamp(72px,9.2vw,128px)}
+main.kp .hsec>.sec-head{margin-bottom:34px}
+main.kp .hsec .sec-sub{font-size:16px}
+main.kp .sec-head h2.tw{font-size:clamp(28px,3.5vw,44px);line-height:1.06}
+main.kp .hsec>.sec-head>a{display:inline-flex;align-items:center;gap:10px;padding:6px 7px 6px 18px;font-size:14.5px}
+main.kp .hsec>.sec-head>a::after{content:"\2192";display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:var(--text);color:var(--bg);font-size:14px;line-height:1}
+main.kp .hsec>.sec-head>a:hover{background:var(--card);color:var(--text);border-color:var(--text)}
+main.kp a.btn{text-decoration:none}
+@media(max-width:700px){main.kp .hsec>.sec-head{margin-bottom:22px}}
+
+/* ---- the one action of a block: a pill with its arrow in a circle; a plain link may stand beside it ---- */
+.btn.go{gap:12px;padding:7px 7px 7px 22px;font-size:15.5px;line-height:1.2}
+.btn.go i{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:var(--btn-ink);color:var(--btn);font-style:normal}
+.btn.go i::before{content:"\2192";font-size:16px;line-height:1}
+.btn.go:hover i{color:var(--btn-h)}
+.kact{display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;margin:28px 0 0}
+.kact>a:not(.btn){font-size:15px;font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.kact>a:not(.btn):hover{text-decoration-color:var(--text)}
+
+/* ---- a page's first screen as one framed panel ---- */
+.khero{margin:18px 0 0;padding:40px 56px 52px;border-radius:28px;background:var(--bg2)}
+.khero .crumbs{margin:0 0 26px}
+.khero .sec-label{margin:0 0 18px}
+.khero h1{max-width:23ch;margin:0 0 18px;font-size:clamp(33px,4.5vw,56px);line-height:1.03;letter-spacing:-.04em}
+.khero .lead{max-width:64ch;margin:0;font-size:18.5px;line-height:1.5}
+.khero .nums{margin:40px 0 0;background:var(--card)}
+.khero .nums+.nums-src{margin:10px 0 0}
+.khero .ptrust{margin:34px 0 0}
+.khero .banner{margin:30px 0 0;padding:14px 18px;border-radius:14px;font-size:15px}
+main.kp .khero+.sec{margin-top:clamp(64px,7vw,96px)}
+@media(max-width:700px){
+  .khero{margin:8px -10px 0;padding:18px 20px 28px;border-radius:22px}
+  .khero .crumbs{margin-bottom:16px}
+  .khero h1{font-size:clamp(30px,8.6vw,36px)}
+  .khero .lead{font-size:16.5px}
+  .khero .nums{margin-top:28px}
+  .khero .ptrust{margin-top:24px}
+  .kact{margin-top:22px}
+}
+
+/* ---- framed panels: soft (tinted), card (white with a border), ink (dark, its buttons paper) ---- */
+main.kp .kpanel{padding:56px 56px 60px;border-radius:28px}
+main.kp .kpanel.soft{background:var(--bg2)}
+main.kp .kpanel.card{border:1px solid var(--line2);background:var(--card)}
+.kpanel.ink{--bg:#121110;--bg2:#1d1b18;--card:#1b1917;--text:#f4f1ec;--muted:#b9b4aa;--faint:#958f85;--line:#2e2b27;--line2:#4a463f;--btn:#f4f1ec;--btn-ink:#121110;--btn-h:#d9d4ca;--btn-h-ink:#121110;
+  --ac:#5fd486;--hl:#5fd486;--hl-ink:#121110;--brand:#5fd486;--accent-soft:#1f1d1a;--green:#f4f1ec;--green-soft:#2a2723;background:#121110;color:var(--text)}
+.kpanel.ink .sec-label{border-color:var(--line2);background:transparent;color:var(--muted)}
+.kpanel.ink .steps li::before{background:var(--text);color:var(--bg)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .kpanel.ink{border:1px solid #2e2b27;background:#1b1917}}
+:root[data-theme=dark] .kpanel.ink{border:1px solid #2e2b27;background:#1b1917}
+@media(max-width:900px){main.kp .kpanel{padding:40px 32px 44px}}
+@media(max-width:700px){main.kp .kpanel{margin-left:-10px;margin-right:-10px;padding:30px 20px 32px;border-radius:22px}}
+
+/* a panel in two parts: the headline, a sentence and the action on the left, a short list on the right */
+.kcta{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:36px 72px;align-items:center}
+.kcta .sec-label{margin:0 0 16px}
+.kcta h2.tw{margin:0;font-size:clamp(30px,3.8vw,48px);font-weight:400;line-height:1.04;letter-spacing:-.04em}
+.kcta h2.tw b{font-weight:700}
+.kcta h2 .free{display:inline-block;padding:0 .26em .04em;border-radius:12px;background:var(--text);color:var(--bg)}
+.kcta-t>p:not(.sec-label):not(.kact){max-width:54ch;margin:18px 0 0;font-size:17px;line-height:1.5;color:var(--muted)}
+.kcta-t>p a:not(.btn){color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.kgets{list-style:none;margin:0;padding:0}
+.kgets li{padding:17px 0;border-top:1px solid var(--line2);font-size:16.5px;line-height:1.4;color:var(--muted)}
+.kgets li:last-child{border-bottom:1px solid var(--line2)}
+.kgets b{color:var(--text);font-weight:650}
+.kcta .steps{max-width:none;margin:0}
+.kcta .steps li{padding:15px 0 15px 38px;border-bottom:0;border-top:1px solid var(--line2);font-size:15.5px;line-height:1.5}
+.kcta .steps li::before{top:16px;border-radius:50%}
+@media(max-width:900px){.kcta{grid-template-columns:1fr}}
+
+/* ---- tabs that fold a block's lists (no script): the labels are pills, a panel shows for the chosen one ---- */
+.ktabs{gap:8px}
+.ktabs>label{padding:9px 18px;border-radius:999px;font-size:15px}
+.ktabs>.tabp{min-width:0;max-width:100%;margin-top:26px}      /* a flex item is as wide as its widest row unless told otherwise: a row that scrolls sideways made the page 1,600 px wide on a phone */
+.ktabs>input:nth-of-type(1):checked~.tabp:nth-of-type(1),.ktabs>input:nth-of-type(2):checked~.tabp:nth-of-type(2),
+.ktabs>input:nth-of-type(3):checked~.tabp:nth-of-type(3),.ktabs>input:nth-of-type(4):checked~.tabp:nth-of-type(4){display:block}
+.ktabs .tabp>.tgroup:first-child{margin:0 0 14px}
+.ktabs .tabp .tgroup{margin:34px 0 14px;font-size:15.5px}
+.ktabs .tabmore{margin-top:22px;font-size:15px;font-weight:600}
+.ktabs .tabp>.note{margin:14px 0 0}
+.ktabs .lrow{margin-top:18px}
+@media(max-width:700px){.ktabs{gap:6px}.ktabs>label{padding:8px 12px;font-size:14px}.ktabs>.tabp{margin-top:20px}}
+
+/* ---- rows that open: more products on the employers page ---- */
+.krows{border-top:1px solid var(--line2)}
+.krows>details{border-bottom:1px solid var(--line2)}
+.krows summary{display:flex;align-items:center;gap:8px 24px;padding:24px 4px;list-style:none;cursor:pointer}
+.krows summary::-webkit-details-marker{display:none}
+.krows summary b{flex:0 0 220px;font:700 clamp(20px,2.2vw,26px)/1.15 var(--display);letter-spacing:-.025em}
+.krows summary span{flex:1;min-width:0;font-size:15.5px;line-height:1.4;color:var(--muted)}
+.krows summary::after,.kmore summary::after{content:"+";display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid var(--line2);border-radius:50%;font:400 22px/1 "Public Sans",system-ui,sans-serif;color:var(--text);transition:transform .15s}
+.krows details[open]>summary::after,.kmore[open]>summary::after{transform:rotate(45deg)}
+.krows summary:hover::after,.kmore summary:hover::after{border-color:var(--text)}
+.krows summary:focus-visible,.kmore summary:focus-visible{outline:2px solid var(--text);outline-offset:2px;border-radius:8px}
+.krow-in{padding:0 4px 30px}
+.krow-in>:first-child{margin-top:0}
+@media(max-width:700px){.krows summary{flex-wrap:wrap;padding:18px 0}.krows summary b{flex:1 1 60%}.krows summary span{order:3;flex:1 1 100%}.krow-in{padding:0 0 22px}}
+
+/* a long table one click away: closed until asked for */
+.kmore{margin:22px 0 0;border:1px solid var(--line2);border-radius:18px;background:var(--card)}
+.kmore summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px 14px 24px;list-style:none;cursor:pointer;font-size:16px;font-weight:650}
+.kmore summary::-webkit-details-marker{display:none}
+.kmore>.ptwrap,.kmore>.cmpwrap{margin:0;border:0;border-top:1px solid var(--line2);border-radius:0 0 18px 18px}
+.kmore>.note{margin:0;padding:14px 24px 18px;border-top:1px solid var(--line)}
+main.kp .kmore+.note{margin-top:14px}
+@media(max-width:700px){.kmore summary{padding:12px 12px 12px 18px;font-size:15px}.kmore>.cmpwrap{padding:0 14px 6px;border-radius:0 0 18px 18px}.kmore>.note{padding:12px 18px 16px}}
+
+/* ---- questions: plain text in two columns with air (the sell pages), rows that open on the home page ---- */
+main.kp .qa{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:0 72px;border-top:1px solid var(--line2)}
+main.kp .qa div{padding:22px 0;border-bottom-color:var(--line2)}
+main.kp .qa dt{font-size:17px;line-height:1.35}
+main.kp .qa dd{margin-top:6px;font-size:15.5px;line-height:1.55}
+main.kp .qa dd a{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+main.kp .faq2{display:block;border-top:1px solid var(--line2)}
+main.kp .faq2 details{padding:0;border:0;border-bottom:1px solid var(--line2);border-radius:0;background:none}
+main.kp .faq2 summary{padding:21px 2px;font-size:17px;line-height:1.35}
+main.kp .faq2 summary::after{width:30px;height:30px;border:1px solid var(--line2);background:none}
+main.kp .faq2 p{margin:0 2px 22px;font-size:15.5px}
+@media(min-width:901px){
+  main.home #faq{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:24px 72px;align-items:start}
+  main.home #faq>.sec-head{position:sticky;top:96px;margin:0}
+}
+
+/* ---- ticks: a plain ruled list (the boxed ticks put white cards on the ink column and the mark over the first letters) ---- */
+main.kp ul.ticks{display:block;margin:12px 0 0}
+main.kp ul.ticks li{padding:10px 0 10px 30px;border:0;border-top:1px solid var(--line);border-radius:0;background:none;font-size:14.5px;line-height:1.4}
+main.kp ul.ticks li::before{left:0;top:10px}
+main.kp .tier.best ul.ticks li{border-top-color:#2e2b27}
+main.kp .tier.best ul.ticks li::before{background:#2a2723;color:#f4f1ec}
+main.kp .pincl ul.ticks{columns:2 250px;column-gap:40px;margin-top:10px}
+main.kp .pincl ul.ticks li{padding:8px 0 8px 30px;border-top:0;break-inside:avoid}
+main.kp .pincl ul.ticks li::before{top:8px}
+main.kp .ppass .pincl ul.ticks,main.kp .krow-in>ul.ticks{columns:1}
+main.kp .krow-in>ul.ticks{max-width:640px}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) main.kp ul.ticks li::before{color:var(--text)}}
+:root[data-theme=dark] main.kp ul.ticks li::before{color:var(--text)}
+
+/* ---- price cards and tiers ---- */
+main.kp .tiers{gap:20px;margin:0 0 6px;align-items:stretch}
+main.kp .tier{padding:30px 30px 22px;border-color:var(--line);border-radius:22px}
+main.kp .tier .td{min-height:0;margin-bottom:14px;font-size:15px;line-height:1.5}
+main.kp .tier .tp{font-size:48px;font-weight:700}
+main.kp .tier.best{border:0;border-radius:22px;background:#121110}
+main.kp .tier .btn{margin:0 0 8px}
+main.kp .tier .tsoon,main.kp .plan .tsoon{display:inline-flex;align-self:flex-start;margin:0 0 8px;padding:6px 14px;border:1px dashed var(--line2);border-radius:999px;font-size:13.5px;font-weight:600;color:var(--muted)}
+main.kp .tier.best .tsoon{border-color:#4a463f;color:#b9b4aa}
+main.kp .plan .tsoon{margin:auto 0 0}
+main.kp .tchip{background:#f4f1ec;color:#121110}
+main.kp .tiers.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) main.kp .tier.best{border:1px solid #4a463f;background:#1b1917}}
+:root[data-theme=dark] main.kp .tier.best{border:1px solid #4a463f;background:#1b1917}
+@media(max-width:760px){main.kp .tiers.two{grid-template-columns:1fr}main.kp .tier{padding:24px 22px 16px}}
+main.kp .plans{gap:16px;margin:0 0 16px}
+main.kp .plan{padding:26px 26px 24px;border-radius:20px}
+main.kp .plan.best{border:1.5px solid var(--text)}
+main.kp .plans:not(:has(.pill.acc)) .pill.ghost{display:none}      /* single passes: no mark on any card, so no empty line above the names */
+@media(max-width:700px){main.kp .plan .pill.ghost{display:none}}
+main.kp .pcard{border-radius:20px;box-shadow:none}
+main.kp .pcard.best{border:1.5px solid var(--text);border-radius:0 0 20px 20px}
+main.kp .pband{left:-1.5px;right:-1.5px;border-radius:20px 20px 0 0}
+main.kp .pa{border-radius:18px;box-shadow:none}
+main.kp .pincl{display:flex;flex-direction:column;justify-content:center;border-radius:20px}
+main.kp .pfit div{border-radius:16px}
+main.kp .pvs{border-radius:20px}
+main.kp .cmp-h{margin:56px 0 0;font:700 clamp(21px,2.3vw,26px)/1.2 var(--display);letter-spacing:-.025em}
+main.kp .cmp-h+*{margin-top:18px}
+main.kp .cmp-sum{margin:20px 0 0;font-size:16px;line-height:1.55}
+main.kp .ptwrap,main.kp .cmpwrap{border-radius:18px}
+main.kp .kmore>.ptwrap,main.kp .kmore>.cmpwrap{border-radius:0 0 18px 18px}
+main.kp .kwait{margin:0 0 4px;font-size:14.5px;color:var(--muted)}
+main.kp .pgrid,main.kp .pcards{margin-top:44px}
+main.kp .pside .pcards{margin-top:0}
+/* the guarantee: one statement, large, on a tinted panel (it was a narrow box with a green rule) */
+main.kp .pguar{max-width:none;margin:0;padding:40px 44px 38px;border:0;border-radius:24px;background:var(--bg2)}
+main.kp .pguar p{font-size:16px;line-height:1.55}
+main.kp .pguar p.pguar-k{margin:0 0 14px;font-size:13.5px;font-weight:600;letter-spacing:0;color:var(--muted)}
+main.kp .pguar p.pguar-h{max-width:30ch;margin:0 0 18px;font-size:clamp(25px,3.1vw,40px);font-weight:700;line-height:1.08;letter-spacing:-.035em}
+main.kp .pguar p.note{font-size:14px}
+main.kp .cmp-h+.pguar{margin-top:18px}
+@media(max-width:700px){main.kp .pguar{padding:26px 22px}}
+/* the dark theme: no green type on black in the price tables and chips */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) main.kp .pt thead .best>b,:root:not([data-theme=light]) main.kp .cmpt td.cmp-d,:root:not([data-theme=light]) main.kp .pchip{color:var(--text)}}
+:root[data-theme=dark] main.kp .pt thead .best>b,:root[data-theme=dark] main.kp .cmpt td.cmp-d,:root[data-theme=dark] main.kp .pchip{color:var(--text)}
+/* the pricing switch: one segmented pill */
+.khero .pswitch{display:inline-flex;gap:4px;margin:28px 0 0;padding:5px;border:1px solid var(--line2);border-radius:999px;background:var(--card)}
+.khero .pswitch .tab{min-height:44px;padding:10px 22px;border:0;border-radius:999px;background:none;font-size:15.5px}
+.khero .pswitch .tab[aria-pressed=true]{background:var(--text);color:var(--bg)}
+@media(max-width:420px){.khero .pswitch{display:flex}.khero .pswitch .tab{flex:1;padding:10px 8px;font-size:14.5px}}
+/* a plain three-column table on a phone: each row a block, the name above its price and its text, nothing scrolls sideways */
+@media(max-width:700px){
+  main.kp .kstack{overflow:visible;border:0;background:none;box-shadow:none}
+  main.kp .kstack table,main.kp .kstack tbody,main.kp .kstack tr,main.kp .kstack td{display:block}
+  main.kp .kstack tr:first-child{display:none}
+  main.kp .kstack tr{padding:16px 0;border-top:1px solid var(--line2)}
+  main.kp .kstack td{padding:0;border:0;background:none;white-space:normal;font-size:15px;line-height:1.5}
+  main.kp .kstack td:nth-child(2){margin:2px 0 6px}
+  main.kp .kstack td:nth-child(3){color:var(--muted)}
+  main.kp .kstack tr:hover td{background:none}
+}
+
+/* ---- the proof row of the employers page: the figure large, what it counts, then the heading and one sentence ---- */
+.kfacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line2);border-radius:24px;background:var(--card);overflow:hidden}
+.kfacts>div{padding:30px 32px 30px;border-left:1px solid var(--line)}
+.kfacts>div:first-child{border-left:0}
+.kf-n{margin:0;font:700 clamp(36px,4.4vw,56px)/1 var(--display);letter-spacing:-.045em}
+.kf-l{margin:8px 0 0;font-size:14.5px;color:var(--muted)}
+.kfacts h3{margin:26px 0 6px;font:700 19px/1.25 var(--display);letter-spacing:-.02em}
+.kfacts h3+p{margin:0;font-size:15.5px;line-height:1.5;color:var(--muted)}
+@media(max-width:800px){.kfacts{grid-template-columns:1fr}.kfacts>div{padding:24px 22px;border-left:0;border-top:1px solid var(--line)}.kfacts>div:first-child{border-top:0}.kfacts h3{margin-top:16px}}
+
+/* ---- how a boosted job looks: the list the width of the page, then the job page and the company tile side by side ---- */
+.klooks>div>.note:first-child{margin:0 0 14px}
+.klooks .jobs.demo{max-width:none;border-top:1px solid var(--line)}
+@media(min-width:900px){.klooks .jobs.demo .job>a{grid-template-columns:auto minmax(0,1fr) 150px 300px 48px}}      /* room for the three marks of a Premium row */
+.jobs>li.job.feat{padding:0}      /* ".feat" is also the ruled item of a list of features: its 14px above and below put white bands round a featured row */
+.klooks-s{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:34px 44px;margin-top:44px;align-items:start}
+.klooks-s h3{margin:0 0 14px;font:700 19px/1.25 var(--display);letter-spacing:-.02em}
+.klooks-s .note{margin:10px 0 0}
+.klooks-s .pjob{max-width:none;margin:0;border-radius:18px}
+.klooks-s .pjob-head{position:relative;z-index:1}
+.klooks-s .spot{grid-template-columns:1fr}
+.klooks-s .spot a{border-color:var(--line2);border-left:4px solid var(--text);border-radius:14px}
+@media(max-width:800px){.klooks-s{grid-template-columns:1fr}}
+main.kp .pjob-cover{background:var(--bg2);background-image:repeating-linear-gradient(135deg,transparent 0 14px,color-mix(in srgb,var(--text) 5%,transparent) 14px 15px)}      /* a placeholder for the employer's own picture, not a green picture on black */
+main.kp .pjob-cover .ex{color:var(--faint)}
+main.kp .pjob-logo{background:var(--text);color:var(--bg)}
+
+/* ---- cards with a small screen: one line to swipe on a phone instead of a stack of tall cards ---- */
+main.kp .tgrid.five{grid-template-columns:repeat(6,minmax(0,1fr))}
+main.kp .tgrid.five>.tcard{grid-column:span 2}
+main.kp .tgrid.five>.tcard:nth-child(n+4){grid-column:span 3}
+main.kp .tcard{border-radius:18px}
+@media(max-width:900px){main.kp .tgrid.five{grid-template-columns:repeat(2,minmax(0,1fr))}main.kp .tgrid.five>.tcard,main.kp .tgrid.five>.tcard:nth-child(n+4){grid-column:auto}}
+@media(max-width:700px){
+  main.kp .tgrid,main.kp .tgrid.five,main.kp .tgrid.own{display:flex;gap:12px;margin:0 -20px;padding:0 20px 10px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}
+  main.kp .tgrid::-webkit-scrollbar{display:none}
+  main.kp .tgrid>.tcard{flex:0 0 84%;scroll-snap-align:center}
+  main.kp .kpanel .tgrid{margin:0 -20px;padding:0 20px 10px}
+}
+
+/* ---- the home page ---- */
+/* the directory: the six largest fields as cards in a grid, the rest as tiles */
+main.home .dir.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:0;columns:auto}
+main.home .dir.six .dirb{margin:0;padding:24px 26px 14px;border-radius:20px}
+main.home .dir.six .dirb h3{font-size:20px}
+main.home .dir.six .dirb p{margin:8px 0 6px;font-size:14px;line-height:1.45}
+main.home .tabp .tiles{gap:12px}
+@media(max-width:980px){main.home .dir.six{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+  main.home .dir.six{display:flex;gap:12px;margin:0 -20px;padding:0 20px 10px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}
+  main.home .dir.six::-webkit-scrollbar{display:none}
+  main.home .dir.six .dirb{flex:0 0 84%;scroll-snap-align:center}
+  main.home .tabp .tiles{grid-template-columns:1fr;gap:8px}
+  main.home .tabp .tile{min-height:48px;padding:8px 12px}
+}
+/* the market in a panel: the pictures are cards on the tint; today's line is a quiet row, not a black strip with a green link */
+main.home .kpanel .pics{margin:0}
+main.home .pulse{margin:20px 0 0;padding:15px 22px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--muted);font-size:14.5px}
+main.home .pulse b{color:var(--text)}
+main.home .pulse span{font-size:14px;color:var(--muted)}
+main.home .pulse a{color:var(--text);font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+/* the rules against ghost jobs beside what we do instead */
+.ktwo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px 72px;align-items:start}
+.ktwo .steps{max-width:none;margin:0}
+.ktwo .steps li{padding:16px 0 16px 38px;font-size:15.5px;line-height:1.5}
+.ktwo .steps li:first-child{padding-top:2px}
+.ktwo .steps li:first-child::before{top:2px}
+.ktwo .steps li::before{top:16px;border-radius:50%}
+.ktwo .steps li:last-child{border-bottom:0}
+.ktwo .steps a{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.kinstead h3{margin:0 0 4px;font:700 20px/1.25 var(--display);letter-spacing:-.02em}
+.kinstead .feats{display:block}
+.kinstead .feat{padding:16px 0;border-bottom-color:var(--line)}
+.kinstead .feat:last-child{border-bottom:0;padding-bottom:0}
+.kinstead .feat h4{margin:0 0 4px;font-size:16px;font-weight:650}
+.kinstead .feat p{max-width:none;font-size:15px;line-height:1.5}
+@media(max-width:900px){.ktwo{grid-template-columns:1fr}}
+/* the highest paid: a title takes two lines before it is cut */
+main.home .payrank .pr-t b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25}
+/* the first screen on a phone: the shortcuts, the doors beside the list and the logos are one line each to swipe */
+@media(max-width:700px){
+  .hero.v2 .popular,.hero.v2 .logorow{flex-wrap:nowrap;justify-content:flex-start;margin-left:-20px;margin-right:-20px;padding:0 20px 4px;overflow-x:auto;scrollbar-width:none}
+  .hero.v2 .popular::-webkit-scrollbar,.hero.v2 .logorow::-webkit-scrollbar,.hero.v2 .shot-side::-webkit-scrollbar{display:none}
+  .hero.v2 .popular a,.hero.v2 .logorow a{flex:none;white-space:nowrap}
+  .hero.v2 .shot-side{flex-direction:row;gap:10px;padding:14px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}
+  .hero.v2 .scard{flex:0 0 78%;scroll-snap-align:center}
+  .hero.v2 .shot .jobs>.job:nth-child(n+6){display:none}
+  .hero.v2 .hero-logos{padding-top:36px}
+}
+/* the dark theme: the link of a door is paper with the green line, not green type on black */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .hero.v2 .scard em{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}}
+:root[data-theme=dark] .hero.v2 .scard em{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+
+/* ---- Plus: what stays free, on ink ---- */
+main.kp .kpanel .dir.free{margin:0}
+main.kp .kpanel .dir.free .dirb{margin:0;padding:0;border:0;background:none}
+main.kp .kpanel .dir.free li{border-bottom-color:var(--line2)}
+main.kp .kpanel .dir.free li a{padding:13px 0;font-size:16px}
+main.kp .kpanel .dir.free li span{padding:2px 10px;border:1px solid var(--line2);border-radius:999px;font-size:12.5px;font-weight:600;color:var(--text)}
+
+/* ---- about: three steps, who is behind it, contacts ---- */
+main.about .khero+.sec-label{margin-top:72px}
+main.about>.sec-label{margin:64px 0 16px}
+main.about .about-grid{gap:20px;margin:0}
+main.about .about-grid>div{padding:28px 28px 26px;border-radius:22px}
+main.about .about-grid h2.h2s{margin:0 0 10px;font-size:21px;line-height:1.2;letter-spacing:-.02em}
+main.about .about-grid p{font-size:15.5px;line-height:1.55}
+main.about .about-grid p a,main.about .kcontact p a{color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+main.about .about-grid.three{grid-template-columns:repeat(3,minmax(0,1fr));counter-reset:ab}
+main.about .about-grid.three>div{counter-increment:ab}
+main.about .about-grid.three>div::before{content:counter(ab);display:grid;place-items:center;width:34px;height:34px;margin:0 0 20px;border:1px solid var(--line2);border-radius:50%;font:700 15px/1 var(--display)}
+main.about .about-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+main.about .kcontact{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:20px 48px;align-items:start}
+main.about .kcontact h2.h2s{margin:0 0 10px;font-size:21px;line-height:1.2;letter-spacing:-.02em}
+main.about .kcontact p{margin:0;font-size:15.5px;line-height:1.55;color:var(--muted)}
+main.about .kcontact .tablewrap{margin:0;border-radius:18px}
+@media(max-width:900px){main.about .about-grid.three,main.about .about-grid.two,main.about .kcontact{grid-template-columns:1fr}}
+@media(max-width:700px){
+  main.about>.sec-label,main.about .khero+.sec-label{margin-top:44px}
+  main.about .kcontact .tablewrap{overflow:visible;border:0;background:none;box-shadow:none}
+  main.about .kcontact table,main.about .kcontact tbody,main.about .kcontact tr,main.about .kcontact td{display:block}
+  main.about .kcontact tr:first-child{display:none}
+  main.about .kcontact tr{padding:13px 0;border-top:1px solid var(--line2)}
+  main.about .kcontact td{padding:0;border:0;background:none;white-space:normal}
+  main.about .kcontact td:first-child{font-size:14px;color:var(--muted)}
+  main.about .kcontact td a{font-weight:600}
+}
+
+/* ---- the search page: the product keeps its structure; the box, the filters, the count, the empty and the loading states are tidied ---- */
+main.srch .h1s{margin:8px 0 0;font-size:clamp(26px,2.6vw,32px)}
+/* the box a visitor types into: the round one of the home page (it was a rectangle with an ink rule) */
+main.srch .searchbar.wide{margin:16px 0 20px;padding:6px 6px 6px 20px;border:1px solid var(--line2);border-radius:999px;box-shadow:var(--shadow)}
+main.srch .searchbar.wide:focus-within{border-color:var(--text);box-shadow:var(--shadow)}
+main.srch .searchbar.wide input[type=search]{padding:12px 6px;font-size:16.5px}
+main.srch .searchbar.wide .btn{padding:12px 24px;font-size:15.5px}
+/* the filters on a computer: one tinted panel instead of loose controls over a rule; fields of one height */
+@media(min-width:861px){
+  main.srch #fwrap{gap:14px 14px;margin:0 0 22px;padding:18px 20px 12px;border:0;border-radius:20px;background:var(--bg2)}
+  main.srch #fwrap .flabel{margin-bottom:6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  main.srch #fwrap .fgroup select,main.srch #fwrap .fgroup #city{min-height:44px;padding:9px 12px;border-color:var(--line);border-radius:12px;font-size:14.5px}
+  main.srch #fwrap .fgroup select:hover,main.srch #fwrap .fgroup #city:hover{border-color:var(--line2)}
+  main.srch #fwrap>.f-work .filters{gap:6px 8px;min-height:44px}
+  main.srch #fwrap>.fclear{align-self:end;padding-bottom:10px}
+}
+main.srch #fwrap .f-work .filters label,main.srch #fwrap .xlv label{min-height:38px;padding:0 14px 0 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:14px;font-weight:500}
+main.srch #fwrap .f-work .filters label:hover,main.srch #fwrap .xlv label:hover{border-color:var(--line2)}
+main.srch #fwrap .f-work .filters label:has(input:checked),main.srch #fwrap .xlv label:has(input:checked){border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+main.srch #f-rc-w{margin-top:8px}
+main.srch .morefilters summary{display:inline-flex;align-items:center;gap:8px;padding:8px 0;list-style:none;font-size:14px}
+main.srch .morefilters summary::-webkit-details-marker{display:none}
+main.srch .morefilters summary::before{content:"+";display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--line2);border-radius:50%;font:400 16px/1 "Public Sans",system-ui,sans-serif;transition:transform .15s}
+main.srch .morefilters[open] summary::before{transform:rotate(45deg)}
+main.srch .morefilters summary:hover::before{border-color:var(--text)}
+main.srch .fclear .linkbtn{text-decoration-color:var(--ac);text-decoration-thickness:2px}
+/* above the list: the promise as one quiet line, the count as the list's heading */
+main.srch .srch-promise{margin:0 0 14px;font-size:13.5px;line-height:1.5}
+main.srch .srch-promise a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+main.srch .rbar{gap:10px 14px;margin:0 0 14px}
+main.srch .rbar #count{font-size:17px;font-weight:650;color:var(--text);letter-spacing:-.01em}
+main.srch .rtools select{min-height:38px;border-radius:999px;padding:7px 12px}
+/* nothing found: one card that says so and offers the way out; no empty list and no empty preview beside it */
+main.srch #results:not([aria-busy]):empty{display:none}
+main.srch .sgrid:has(#results:not([aria-busy]):empty) .pane{display:none}
+main.srch .relax{margin:6px 0 18px;padding:20px 22px;border:1px solid var(--line2);border-radius:18px;background:var(--card);font-size:16px;line-height:1.5;color:var(--text);gap:6px 18px}
+main.srch .relax .linkbtn{padding:4px 0;font-size:15.5px;font-weight:600;text-align:left}
+/* still loading: the list is drawn as six quiet rows (no motion), so the page does not jump when the jobs arrive */
+main.srch #results[aria-busy=true]:empty{height:504px;border:1px solid var(--line);border-radius:var(--radius);box-shadow:none;background:
+  linear-gradient(to bottom,transparent 21px,var(--bg2) 21px 63px,transparent 63px) 16px 0/42px 84px repeat-y,
+  linear-gradient(to bottom,transparent 24px,var(--bg2) 24px 38px,transparent 38px) 72px 0/46% 84px repeat-y,
+  linear-gradient(to bottom,transparent 48px,var(--bg2) 48px 59px,transparent 59px) 72px 0/28% 84px repeat-y,
+  linear-gradient(to bottom,transparent 83px,var(--line) 83px) 0 0/100% 84px repeat-y,var(--card)}
+main.srch .pane{border-radius:18px}
+main.srch .pane-empty{padding:80px 16px;font-size:15px}
+/* a phone: the filters open as one sheet; the kinds of work in two columns; the open button is ink */
+@media(max-width:860px){
+  main.srch #ftoggle{min-height:40px;margin:0 0 14px;padding:0 18px}
+  main.srch #ftoggle[aria-expanded=true]{border-color:var(--text);background:var(--text);color:var(--bg)}
+  main.srch #fwrap{margin-bottom:18px;padding:16px 16px 8px;border-radius:18px}
+  main.srch #fwrap .fgroup select,main.srch #fwrap .fgroup #city{min-height:46px;border-radius:12px}
+  main.srch #fwrap .f-work .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  main.srch #fwrap .f-work .filters label{min-height:44px}
+  main.srch #fwrap .fclear{padding:6px 0 10px}
+  main.srch .searchbar.wide{padding-left:16px}
+  main.srch .searchbar.wide .btn{padding:12px 18px}
+}
+
+/* ---- phones, the sell pages: the promises under the headline are one line to swipe; the plan table keeps its words inside its columns ---- */
+@media(max-width:700px){
+  .khero .ptrust{flex-wrap:nowrap;margin-left:-20px;margin-right:-20px;padding:0 20px 4px;overflow-x:auto;scrollbar-width:none}
+  .khero .ptrust::-webkit-scrollbar{display:none}
+  .khero .ptrust li{flex:none;white-space:nowrap}
+  main.kp .pt .pc b{font-size:14.5px;line-height:1.2;overflow-wrap:anywhere}
+  main.kp .pt tbody th[scope=row]{white-space:normal;overflow-wrap:anywhere}
+  main.kp .lrow>div{gap:6px 16px}
+}
+@media(max-width:420px){.khero .pswitch .tab{white-space:nowrap;padding:10px 6px;font-size:14px}.ktabs{gap:5px}.ktabs>label{padding:8px 11px;font-size:13.5px}}
