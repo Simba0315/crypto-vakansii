@@ -48,3 +48,31 @@ sticker shadows and blobs, centred symmetry everywhere, filler copy, empty state
 
 A sticky header with a blur behind it; sticky detail pane and sub-navigation; hover as a tint or a 2px rule, never a lift;
 tabs without scripts; "/" focuses search; chips that scroll sideways on phones.
+
+## dLocal and Ashby (the owner, 17 Nov 2026: "look, especially at dlocal: the design is great, a lot can be taken for different pages")
+
+Looked at on 17 Nov 2026 at 1440 px: dlocal.com (home) and ashbyhq.com (home). What to take is the way the page is built, in our
+own colours and type (ink, paper, one green; Schibsted Grotesk and Public Sans). Not their blue, pictures, wording or logo.
+
+What makes dLocal read as expensive:
+1. **A framed canvas.** The hero and the big bands are panels with a large corner radius (about 24 px), set in from the edges of
+   the window, instead of full-width stripes. The page reads as a few large objects, not a long sheet.
+2. **A label above every section title.** A small pill ("Solutions", "Coverage") says what the section is before the headline.
+3. **Two-weight headlines.** The headline is set light (weight 400) and the two or three words that carry the meaning are bold:
+   "Flexible **payment solutions** for every need". Size 40 px for sections, 70 px for the hero, letter-spacing about -0.05em.
+4. **One sentence of numbers.** "In 2025 dLocal processed $41 billion" as a headline, then four figures in a row under it. Our own
+   figures are stronger than theirs for this: open jobs, companies, checked every hour, new in three days.
+5. **Section header in three parts:** headline on the left, one or two lines of text in the middle, one pill button on the right.
+6. **Pill buttons with an arrow in a circle** for the one action of a block; text links with an arrow for the rest.
+7. **Rows that open** (icon, name, plus sign) for a list of products, one of them open with its text and picture.
+8. **Cards with a figure on glass:** a picture card for a region with three small tiles of numbers on it and one link.
+9. **A strip of customer logos** right under the hero. We have the logos of the companies whose jobs we list.
+10. **A lot of air:** 120 to 160 px between sections, short lines of text, nothing touching anything.
+
+What Ashby adds: a one-line announcement pill above the headline; the headline in near-black on white with nothing else; a grid of
+customer logos in grey; product tabs under the hero that switch one large screenshot; one customer quote with a name and a photo
+(we have no customers to quote yet: leave that out, never invent one).
+
+Where each goes on our site (plan, PLAN_RU.md): the home page, /post-a-job/, /pricing/, /plus/, the account's first screen and its
+overview, the tools hub, /about/, then the section titles of every page family (label + two-weight headline are one change in
+`section()`).
