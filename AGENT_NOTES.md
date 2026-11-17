@@ -484,3 +484,39 @@ plain HTML, so the page is readable without the map.
 - How often pages are read: the boards in `sources.json` and `sources_tech.json` every hour, the ~3,000 in `sources_more.json` every
   four hours (`HRN_ROTATE`). `build.py` counts both (`m_hourly`, `ROTATING`, `EVERY`) and the home page, media kit, widget answer and
   dataset description say it exactly. Other pages that say "every hour" (job pages, methodology, status) need the same care.
+
+## Build speed, company lists, the collector on the server (17 Nov 2026)
+
+- **Where a build's time goes.** `build.py` ends with a line `slowest stages: …` (the `lap()` calls stand before the commented
+  blocks of `main()`; a stage runs until the next `lap`). Read it in the GitHub log of a run on the full record (220,000 jobs):
+  the local record is a fifth of it and hides what grows with jobs times roles or places. On GitHub the same build varies by up to
+  1.7 times between runs (different machines): compare the "Check pages" step of the same run before judging a change.
+- **Cheap tests before expensive ones** (all four passes of 17 Nov, the build went from about 10 minutes to 2.5 locally):
+  `rx_needs(pattern)` reads a regex and returns the words a text must have for it to match; `role_slugs()` runs a role rule only
+  on titles that have them; `rx_skip([regexes])` does the same for regexes that read whole descriptions (`have(text)`, then
+  `may[i](have)`); `same_case` / `low_of` say when lower-casing is not safe (ı, ſ, Greek) and then nothing is skipped.
+  `by_place(js)` and `by_kind(js)` sort a page's jobs into places and kinds of work in one pass; `HUB["job_roles"]` is job id ->
+  role slugs. When adding a page family, never write "for every role: the jobs of this page that are in the role".
+- **How such a change is checked:** the result must be the same pages. Keep a fingerprint of every built page except job pages
+  with clock times taken out, build again, compare; the few pages that differ should all hold one posting whose age ("6 days ago")
+  changed between the two builds. For matching rules, compare with the plain way on every title or description of the record.
+- **Company lists** (`/companies/sp-500/`, `/nasdaq-100/`, `/unicorns/`, `/y-combinator/`): who is in a list is in
+  `company_lists.json` (from Wikipedia, CC BY-SA 4.0, credited on the page with the date read; matched to our company names by
+  hand, name-only look-alikes removed: Co–Star is not CoStar Group, Flex is not Flex Ltd.). A new list is an entry there plus a
+  tuple in `CO_LISTS`; a page is built when 5 of its companies have open jobs. Fortune's and Forbes' rankings are their own
+  work: do not copy them.
+- **Boards on hold** (`"hold": true` in `sources_ats.json`): 254 large Workday boards, 143,733 jobs. 74 well-known ones were
+  released on 17 Nov (`"lifted"`). Release more only after reading the stage line of a run on the full record, and watch the
+  memory of `hrn-live` on the server (1.9 GB of its 3 GB limit at 216,000 jobs; the server also runs another site).
+- **`live.py`**: reads the jobs employers posted in the account every 2 minutes (`direct`), reopens a job it had closed when the
+  board lists it again (`reopen`), does not close closed jobs again after a new record, and reads 15 texts a board on each pass
+  (Workday, SmartRecruiters). It restarts by itself when the upload brings new code.
+- **The workflow**: a push builds from the saved jobs unless they are more than three hours old (`STALE`), then it collects too.
+  GitHub starts scheduled runs 4 or 5 times a day whatever the cron lines say. A lasting fix needs a GitHub token on the server
+  to start runs from there, and that is a secret only the owner can create and type in.
+- **`views.py`** (on the server: `sudo python3 /srv/hrn/app/views.py 14`): how many times people, not robots, opened each
+  company's job pages, from the nginx log. Nothing new is recorded about visitors. On 17 Nov: 290 opens by people in 4 days against
+  341,813 requests by robots (GPTBot, ClaudeBot, Amazonbot), and Googlebot had only just found the home page: Search Console is
+  the owner's decision to do last, do not push it.
+- **Tools' result board** is a light card that follows the theme (`.tl-board` in `assets/tools.css`): no green type on black
+  anywhere; the owner dislikes it.
