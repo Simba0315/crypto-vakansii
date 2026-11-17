@@ -1649,6 +1649,411 @@
     return { pay: x, group: g, cat: used[0], lvl: used[1], wider: wider, mixesLevels: wider && used[1] !== lvl, mixesCategories: wider && used[0] !== cat, also: other ? { cat: cat, lvl: '', group: other } : null, diff: diff, zone: zone, pct: T.percentile(data.q, g.vals, x), verdict: verdict };
   };
 
+  /* ================================================================ logic added 2026-11-17: eleven more tools ================================================================ */
+  // Each function takes the page's form as it is. A field that exists once per choice is named <field>_<choice> ("when_applied",
+  // "goal_fair"), so the labels and the examples live only in the markup and the same object can be passed straight from the form.
+  function pickOf(v, list, def) { return list.indexOf(v) >= 0 ? v : def; }
+  function skillList(s, max) { return String(s || '').split(/[,;\n]+/).map(clean).filter(Boolean).slice(0, max || 5); }
+  function low1(s) { return s.replace(/^[A-Z](?=[a-z])/, function (c) { return c.toLowerCase(); }); }      // "Built a report" inside a sentence; "I", "SQL" and "QA" stay as they are
+  function inl(s) { return low1(mid(s)); }                    // a phrase typed with a capital first letter (phone keyboards add one), placed inside a sentence
+  function stat(text) { return { text: text, length: text.length, words: wordCount(text) }; }
+  function tidy(s) { return s.replace(/([^.])\.\.(?!\.)/g, '$1.').replace(/ {2,}/g, ' ').trim(); }      // "Acme Inc.." and doubled spaces; line breaks stay
+  // she, he, they: subject, object, possessive, and whether the verb takes the -s form
+  var PRON = { she: ['she', 'her', 'her', true], he: ['he', 'him', 'his', true], they: ['they', 'them', 'their', false] };
+
+  /* ---------- follow-up email: five situations, two tones (fill-in template) ---------- */
+  T.FOLLOW_UPS = ['applied', 'interview', 'second', 'offer', 'recruiter'];
+  T.followUp = function (f) {
+    f = f || {};
+    var sit = pickOf(f.situation, T.FOLLOW_UPS, 'applied'), brief = f.tone === 'brief';
+    var name = clean(f.name) || '[Your name]', to = clean(f.to), role = clean(f.role) || '[job title]', company = clean(f.company), at = company ? ' at ' + company : '';
+    var when = mid(f['when_' + sit] || f.when), w = when ? ' ' + when : '', promised = mid(f.promised), add = sentence(f.add), plus = add ? ' ' + add : '';
+    var p = [to ? 'Hi ' + to + ',' : 'Hello,'], subject, tip;
+    if (sit === 'applied') {
+      subject = 'Following up on my application for ' + role;
+      tip = 'Send it about a week after you applied. If the posting names a closing date, wait until a few days after that date.';
+      if (brief) p.push('I applied for the ' + role + ' role' + at + w + '. Is it still open, and when do you expect to start interviews?',
+        (add ? add + ' ' : '') + 'I am still interested and can send anything else you need.', 'Best regards,\n' + name);
+      else p.push('I applied for the ' + role + ' role' + at + w + ', and I am writing to make sure my application reached you.',
+        'I am still very interested in the job.' + plus,
+        'Could you tell me when you expect to choose people to interview? If anything is missing from my application, I can send it today.', 'Thank you for your time,\n' + name);
+    } else if (sit === 'interview') {
+      subject = role + ' interview: checking in';
+      tip = 'Send it on the working day after the date they gave you. If they gave no date, wait a week after the interview.';
+      if (brief) p.push('I interviewed for the ' + role + ' role' + at + w + (promised ? ' and expected to hear back ' + promised : '') + '. Is there an update, or a new date for the decision?',
+        (add ? add + ' ' : '') + 'I am still interested and glad to send anything further.', 'Best regards,\n' + name);
+      else p.push('Thank you again for the interview for the ' + role + ' role' + at + w + '.' + (promised ? ' You mentioned I would hear back ' + promised + ', so I am checking in.' : ' I am checking in to ask where things stand.'),
+        'I know decisions often take longer than planned, and I am not trying to rush you. I am still very interested in the job.' + plus,
+        'Is there a new date for the decision, or anything more you need from me before then?', 'Thanks again,\n' + name);
+    } else if (sit === 'second') {
+      subject = role + ' role: one last note';
+      tip = 'Send it a week after your first follow-up, as a reply to that email so the earlier message sits underneath. After this one, stop writing and put the time into other applications.';
+      var wrote = when ? 'I wrote ' + when : 'I wrote earlier';
+      if (brief) p.push('A second short note about the ' + role + ' role' + at + ': ' + low1(wrote) + ' and have had no reply.',
+        'Is the role still open? A yes or a no is all I need.' + plus, 'I will not write about it again after this.', 'Best regards,\n' + name);
+      else p.push(wrote + ' about the ' + role + ' role' + at + ' and have not heard back, so this is my last note about it.',
+        'If the role has been filled or put on hold, a one-line reply would help me plan. If it is still open, I am still interested.' + plus,
+        'Whatever the answer, thank you for considering me. I would be glad to hear about other roles that fit.', 'Thank you,\n' + name);
+    } else if (sit === 'offer') {
+      subject = 'Written offer for the ' + role + ' role';
+      tip = 'Send it two or three working days after the verbal offer. Do not resign from your current job until the written offer has arrived.';
+      if (brief) p.push('Following our conversation' + w + ', I am waiting for the written offer for the ' + role + ' role' + at + '.',
+        'When can I expect it? I need the salary, the start date and the main terms in writing before I can confirm.' + plus, 'Best regards,\n' + name);
+      else p.push('Thank you again for offering me the ' + role + ' role' + at + w + '. I was very glad to hear it.',
+        'I have not received the offer in writing yet. Could you tell me when to expect it? I would like to read the salary, the start date and the main terms before I give notice or turn down other options.',
+        (add ? add + ' ' : '') + 'If you need anything from me to prepare it, such as documents or references, I can send it today.', 'Thank you,\n' + name);
+    } else {
+      subject = role + ' role: is it still open?';
+      tip = 'Send it a week after your last contact. A recruiter works on many roles at once, so one clear question gets an answer sooner than a long message.';
+      if (brief) p.push('Is the ' + role + ' role' + at + ' still open? ' + (when ? 'We last spoke ' + when : 'It has been a while since we spoke') + ' and I have had no update.',
+        'If it has closed or stalled, just say so and I will plan around it.' + plus, 'I am still open to similar roles you are working on.', 'Best regards,\n' + name);
+      else p.push('We last spoke' + w + ' about the ' + role + ' role' + at + ', and I have not had an update since, so I am checking in.',
+        'I understand that priorities shift and that employers go quiet on recruiters too. Could you tell me where it stands: still moving, on hold or closed?',
+        (add ? add + ' ' : '') + 'If this one is no longer open, I would still like to hear about similar roles.', 'Thanks,\n' + name);
+    }
+    var m = mail(subject, p);
+    m.situation = sit; m.tip = tip;
+    return m;
+  };
+
+  /* ---------- the email that carries a resume: a posted job or a speculative one, a named person or a general address, with or without a referral ---------- */
+  T.applicationEmail = function (f) {
+    f = f || {};
+    var spec = f.kind === 'speculative', to = clean(f.to), named = !!to, ref = clean(f.referrer), full = clean(f.name), name = full || '[Your name]';
+    var role = clean(f.role) || (spec ? '[kind of work]' : '[job title]'), company = clean(f.company) || '[company]';
+    var source = phrase(f.source), current = clean(f.current), years = yearsText(f.years), proof = sentence(f.proof), why = sentence(f.why), contact = clean(f.contact), link = clean(f.link);
+    var me = current ? 'I am ' + article(current) + ' ' + current + (years ? ' with ' + years + ' of experience' : '') + '.' : years ? 'I have ' + years + ' of experience in this kind of work.' : '';
+    var bg = [me, proof].filter(Boolean).join(' '), reach = contact ? ' You can reach me at ' + contact + '.' : '';
+    var attach = 'My resume is attached' + (f.cover ? ', along with a cover letter' : '') + '.' + (link ? ' Examples of my work: ' + link : '');       // the link ends its paragraph, so no full stop sticks to it
+    var p = [named ? 'Dear ' + to + ',' : 'Dear Hiring Team,'], subject;
+    if (!spec) {
+      subject = ref ? 'Referred by ' + ref + ': ' + role + ' application' : 'Application for ' + role + (full ? ', ' + full : '');
+      p.push((ref ? ref + ' suggested I apply for the ' + role + ' role at ' + company + (named ? ' and told me you are the person to write to' : '') + '.'
+        : 'I am applying for the ' + role + ' role at ' + company + (source ? ', which I found on ' + source : '') + '.') + ' ' + attach);
+      if (bg) p.push('In short: ' + bg);
+      if (why) p.push(why);
+      p.push(named ? 'I would be glad to talk whenever suits you.' + reach
+        : 'If this address is not the right place for applications, I would be grateful if you could pass my resume to the person hiring for this role.' + reach);
+    } else {
+      subject = ref ? ref + ' suggested I write to you' : cap(role) + ' interested in working at ' + company;
+      p.push((ref ? ref + ' suggested I write to you. ' : '') + 'I would like to work at ' + company + ' as ' + article(role) + ' ' + role + '. ' +
+        (ref ? 'No such role is posted right now, so I am asking before one opens.' : 'I know no such role is posted right now, so I am writing before one opens.'));
+      if (why) p.push(why);
+      p.push((bg ? bg + ' ' : '') + attach);
+      p.push(named ? 'If nothing is open at the moment, could you keep my resume for when something is? I would also be glad to talk for ten minutes about what the team needs.' + reach
+        : 'Could you pass this to the person who hires for this kind of work, or tell me who that is?' + reach);
+    }
+    p.push((named ? 'Best regards,' : 'Kind regards,') + '\n' + name);
+    var m = mail(subject, p), file = full.replace(/[^A-Za-z0-9À-ɏ]+/g, '-').replace(/^-+|-+$/g, '');
+    m.file = (file || 'Firstname-Lastname') + '-Resume.pdf';        // a file name the reader can find again among a hundred "resume.pdf"
+    return m;
+  };
+
+  /* ---------- asking for a referral: a close colleague, a distant contact or a stranger; an email or a short LinkedIn message ---------- */
+  T.referralRequest = function (f) {
+    f = f || {};
+    var who = pickOf(f.who, ['close', 'distant', 'stranger'], 'close'), li = f.channel === 'linkedin';
+    var name = clean(f.name) || '[Your name]', to = clean(f.to), role = clean(f.role) || '[job title]', company = clean(f.company) || '[company]';
+    var link = clean(f.link), how = inl(f['how_' + who] || f.how), fit = sentence(f.fit), by = mid(f.by), job = 'the ' + role + ' role at ' + company;
+    var hi = (who === 'stranger' ? 'Hello' : 'Hi') + (to ? ' ' + to : '') + ',', fitS = fit ? ' ' + fit : '', posting = link ? 'The posting: ' + link : '', closes = by ? ' The posting closes ' + by + '.' : '';
+    var p = [hi], subject;
+    if (li) {
+      p.push(who === 'close' ? company + ' is hiring ' + article(role) + ' ' + role + ' and I am going to apply. Would you be willing to refer me?' + fitS +
+          ' I can send my resume and a few lines for the referral form, so it takes you five minutes. And it is completely fine to say no.'
+        : who === 'distant' ? (how ? 'We know each other from ' + how + '. ' : '') + 'I am applying for ' + job + '.' + fitS + ' Would you be comfortable referring me, or telling me who is hiring for it? No problem at all if not.'
+        : 'We have not met' + (how ? ': I am writing because ' + how : '') + '. I am applying for ' + job + '.' + fitS + ' Could I ask you two or three questions about the team, here or on a short call? Ten minutes would help me a lot.');
+      p.push(posting, (who === 'stranger' ? 'Thank you,' : 'Thanks,') + '\n' + name);
+      subject = '';
+    } else if (who === 'close') {
+      subject = 'Could you refer me for a role at ' + company + '?';
+      p.push(company + ' is hiring ' + article(role) + ' ' + role + ', and I am going to apply. Would you be willing to refer me?', posting,
+        (how ? 'You know my work from ' + how + ', so you can judge whether I would fit.' : 'You know my work, so you can judge whether I would fit.') + fitS,
+        'If you are happy to do it, I will send my resume and a few lines you can paste into the referral form, so it takes you five minutes.' + closes,
+        'And if you would rather not, for any reason, just say so. It will not change anything between us.', 'Thanks,\n' + name);
+    } else if (who === 'distant') {
+      subject = 'A question about the ' + role + ' role at ' + company;
+      p.push((how ? 'We know each other from ' + how + '. ' : 'It has been a while since we were last in touch. ') + 'I am writing with a direct question.',
+        'I am applying for ' + job + '. Would you be comfortable referring me, or pointing me to the person who is hiring for it?', posting,
+        (fit ? 'So that you can judge quickly: ' + fit + ' ' : '') + 'My resume is attached.' + closes,
+        'We have not worked closely for some time, so please feel free to say no. A referral should be something you are comfortable giving.', 'Thank you for reading this,\n' + name);
+    } else {
+      subject = role + ' role at ' + company + ': a question from an applicant';
+      p.push('We have not met, so thank you for opening this. I am writing to you because ' + (how || 'you work at ' + company + ' in the area I am applying to') + '.',
+        'I am applying for ' + job + '.' + fitS, posting,
+        'I am not asking you to vouch for someone you do not know. Would you be open to a 15-minute call about the team and the work? If you then think I would fit, a referral would mean a lot. If not, your view of the role would still help me.' +
+          (by ? ' The posting closes ' + by + ', so any time before then would be ideal.' : ''),
+        'Thank you for your time,\n' + name);
+    }
+    var m = mail(subject, p);
+    if (li) m.text = m.body;                                 // a LinkedIn message has no subject line
+    m.channel = li ? 'linkedin' : 'email'; m.who = who; m.length = m.body.length;
+    return m;
+  };
+
+  /* ---------- LinkedIn connection note: two wordings per kind of person, always inside the limit ---------- */
+  T.NOTE_MAX = 300; T.NOTE_SHORT = 200;                      // LinkedIn's limit for the note on a connection request, and the shorter one some free accounts get
+  T.connectionNote = function (f) {
+    f = f || {};
+    var kind = pickOf(f.kind, ['recruiter', 'manager', 'alumni', 'event', 'role'], 'recruiter'), max = num(f.limit) === T.NOTE_SHORT ? T.NOTE_SHORT : T.NOTE_MAX;
+    var to = clean(f.to), name = clean(f.name), me = phrase(f.me), company = clean(f.company), job = clean(f.job), school = phrase(f.school), event = mid(f.event);
+    var detail = sentence(kind === 'event' ? f.detail_event : f.detail);        // at an event the extra line is about the conversation, otherwise about you
+    var hi = 'Hi' + (to ? ' ' + to : '') + ',', at = company ? ' at ' + company : '', iam = me ? 'I am ' + article(me) + ' ' + me + '.' : '';
+    // A part is [text, rank, what it is, a shorter wording]. Rank 0 always stays; the others are added while the note still fits: rank 1 first, then the name (2), then rank 3.
+    var D = [detail, 3, 'your extra line'], N = [name, 2, 'your name'], I = [iam, 1, 'the line about you'];
+    var fit = function (parts) {
+      parts = parts.filter(function (x) { return x && x[0]; });
+      var len = function (list) { return list.map(function (x) { return x[0]; }).join(' ').length; };
+      if (len(parts.filter(function (x) { return !x[1]; })) > max) parts = parts.map(function (x) { return x[3] ? [x[3], x[1], x[2]] : x; });
+      var keep = parts.filter(function (x) { return !x[1]; }), out = [];
+      [1, 2, 3].forEach(function (rank) {
+        parts.forEach(function (x) {
+          if (x[1] !== rank) return;
+          var more = parts.filter(function (y) { return y === x || keep.indexOf(y) >= 0; });
+          if (len(more) <= max) keep = more; else out.push(x[2]);
+        });
+      });
+      var s = keep.map(function (x) { return x[0]; }).join(' ');
+      if (s.length > max) {                                  // only when what you typed is itself too long: end at a sentence, or at a word when no sentence ends in time
+        var c = s.slice(0, max + 1).replace(/\s+\S*$/, '').slice(0, max), whole = c.match(/^[\s\S]*[.?!](?=\s|$)/);
+        s = whole && whole[0].length > max / 2 ? whole[0] : c.replace(/[\s,;:]+$/, '');
+        out.push('the end of the note');
+      }
+      return { text: s, length: s.length, left: max - s.length, dropped: out };
+    };
+    var a, b, J = job || '[job title]', mine = iam || 'I am [what you do].';
+    if (kind === 'recruiter') {
+      a = [[hi, 0], [mine, 0], [company && job ? 'I saw that you recruit for ' + company + ', and the ' + job + ' role there fits what I do.' : company ? 'I saw that you recruit for ' + company + ', and the work there fits what I do.'
+        : job ? 'I am looking at ' + job + ' roles, which I believe you recruit for.' : 'I am looking for my next role in this field.', 1, 'the line about the role'], D, ['I would like to connect and send you my resume.', 0], N];
+      b = [[hi + (job ? ' are you the right person to ask about the ' + job + ' role' + at + '?' : ' are you hiring in my field at the moment?'), 0], [mine, 0], D,
+        ['If someone else handles it, a name would help me a lot.', 1, 'the closing line'], N];
+    } else if (kind === 'manager') {
+      a = [[hi + ' I applied for the ' + J + ' role on your team' + at + '.', 0], I, D, ['I would like to connect in case you have questions about my application.', 0], N];
+      b = [[hi + ' I have just applied for the ' + J + ' role' + at + ' and saw that you lead the team.', 0], I, D, ['Is there anything you would like to see from me beyond the resume?', 0], N];
+    } else if (kind === 'alumni') {
+      var S = school || '[your school]';
+      a = [[hi + ' I am a fellow ' + S + ' graduate' + (me ? ', now working as ' + article(me) + ' ' + me : '') + '.', 0, '', hi + ' I am a fellow ' + S + ' graduate.'], D,
+        [company ? 'I am looking at roles at ' + company + ' and would value hearing how you found the move there.' : 'I would value hearing how your career has gone since.', 0], ['Could we connect?', 1, 'the closing line'], N];
+      b = [[hi + ' we both studied at ' + S + '.', 0], I, D, [company ? 'May I ask you two questions about working at ' + company + '?' : 'May I ask you two questions about your work?', 0], ['A reply here would be plenty.', 1, 'the closing line'], N];
+    } else if (kind === 'event') {
+      var E = event || '[the event]';
+      var talk = [detail, 1, 'the line about your conversation'], self = [iam, 3, 'the line about you'];       // here what you talked about says more than what you do
+      a = [[hi + ' it was good to meet you at ' + E + '.', 0], talk, self, ['I would like to stay in touch.', 0], N];
+      b = [[hi + ' we spoke at ' + E + '.', 0], talk, ['I would like to hear more about your work' + at + ', so I am sending this while the conversation is fresh.', 0], self, N];
+    } else {
+      a = [[hi + ' ' + (me ? 'I am ' + article(me) + ' ' + me + ' working towards ' : 'I am working towards ') + article(J) + ' ' + J + ' role.', 0, '', hi + ' I am working towards ' + article(J) + ' ' + J + ' role.'],
+        ['Your path' + at + ' is close to the one I hope to take.', 1, 'the line about their path'], D, ['May I connect and ask you one or two questions about it?', 0], N];
+      b = [[hi + ' you do the job I am aiming for: ' + J + at + '.', 0], I, D, ['What would you tell someone starting on that path today?', 0], ['One line would help.', 1, 'the closing line'], N];
+    }
+    var notes = [['Straight to the point', fit(a)], ['With a question', fit(b)]].map(function (x) { x[1].kind = x[0]; x[1].short = x[1].length <= T.NOTE_SHORT; return x[1]; });
+    return { kind: kind, max: max, notes: notes, empty: !(to || name || me || company || job || school || event || detail) };
+  };
+
+  /* ---------- professional bio: first or third person, three lengths, for LinkedIn, a company site or a conference ---------- */
+  T.bio = function (f) {
+    f = f || {};
+    var third = f.person === 'third', place = pickOf(f.place, ['linkedin', 'company', 'conference'], 'linkedin'), pr = PRON[f.pronoun];
+    var full = clean(f.name), name = full || '[Your name]', first = full ? full.split(' ')[0] : name;
+    // after the first sentence a third-person bio goes on with "she", "he" or "they", or repeats the first name when no pronoun is chosen
+    var s = !third ? 'I' : pr ? pr[0] : first, S = cap(s), sing = third && (!pr || pr[3]), me = !third ? 'me' : pr ? pr[1] : first, my = !third ? 'my' : pr ? pr[2] : first + '’s';
+    var v = function (base, s3) { return sing ? s3 : base; }, be = !third ? 'am' : sing ? 'is' : 'are';
+    var role = clean(f.role) || '[job title]', company = clean(f.company), years = yearsText(f.years), focus = inl(f.focus), st = skillList(f.strengths, 4), proof = low1(phrase(f.proof));
+    var extra = inl(f['extra_' + place] || f.extra), outside = inl(f.outside), contact = clean(f.contact);
+    var who = (third ? name + ' is ' : 'I am ') + article(role) + ' ' + role, at = company ? ' at ' + company : '';
+    var works = focus ? (company ? ', where ' + s + ' ' + v('work', 'works') + ' on ' + focus : ', working on ' + focus) : '';
+    var recent = proof ? 'Recently, ' + s + ' ' + proof + '.' : '', away = outside ? 'Outside work, you will find ' + me + ' ' + outside + '.' : '';
+    var before = low1(phrase(f.before)), degree = mid(f.degree), earlier = before ? 'Before that, ' + s + ' ' + before + '.' : '', holds = degree ? S + ' ' + v('hold', 'holds') + ' ' + degree + '.' : '';
+    var one, sh, lg;
+    if (place === 'linkedin') {
+      one = who + at + (focus ? ', working on ' + focus : years ? ' with ' + years + ' of experience' : '') + '.';
+      sh = [who + at + (years ? ' with ' + years + ' of experience' : '') + (focus ? (years ? ' in ' : ', working on ') + focus : '') + '.',
+        st.length ? cap(my) + (st.length === 1 ? ' strongest area is ' : ' strongest areas are ') + andList(st) + '.' : '', recent];
+      lg = sh.concat([earlier, holds, extra ? S + ' ' + be + ' open to ' + extra + '.' : '', away, 'The best way to reach ' + me + ' is ' + (contact || 'a message here on LinkedIn') + '.']);
+    } else if (place === 'company') {
+      one = who + at + works + '.';
+      sh = [who + (years ? ' with ' + years + ' of experience' : '') + '.', focus ? (company ? 'At ' + company + ', ' + s : S) + ' ' + v('work', 'works') + ' on ' + focus + '.' : '', recent,
+        st.length ? cap(my) + ' background is in ' + andList(st) + '.' : ''];
+      lg = sh.concat([earlier, extra ? 'Colleagues and customers come to ' + me + ' for ' + extra + '.' : '', holds, away, contact ? 'You can reach ' + me + ' at ' + contact + '.' : '']);
+    } else {
+      one = who + at + (extra ? ' and ' + (third ? 'speaks' : 'speak') + ' about ' + extra : works) + '.';
+      sh = [who + at + works + '.', extra ? 'At this event, ' + s + ' will talk about ' + extra + '.' : '', recent];
+      lg = sh.concat([years ? S + ' ' + v('have', 'has') + ' worked in this field for ' + years + '.' : '', earlier, st.length ? cap(my) + ' work centres on ' + andList(st) + '.' : '', holds, away,
+        contact ? 'You can find ' + me + ' at ' + contact + '.' : '']);
+    }
+    var join = function (a) { return tidy(a.filter(Boolean).join(' ')); };
+    return { person: third ? 'third' : 'first', place: place, one: stat(tidy(one)), short: stat(join(sh)), long: stat(join(lg)),
+      empty: !(full || clean(f.role) || company || years || focus || st.length || proof || extra || outside || before || degree) };
+  };
+
+  /* ---------- LinkedIn "About" section from a few answers, in three shapes, inside the 2,600 characters LinkedIn allows ---------- */
+  T.linkedinAbout = function (f) {
+    f = f || {};
+    var style = pickOf(f.style, ['story', 'list', 'short'], 'story');
+    var role = clean(f.role) || '[Your job title]', years = yearsText(f.years), who = inl(f.who), st = skillList(f.strengths, 5), proofs = lines(f.proofs, 3).map(sentence), next = inl(f.next), contact = clean(f.contact);
+    var how = clean(f.how) ? sentence(f.how) : '';                    // one or two sentences in the visitor's own voice: the part no template can write
+    var open = 'I am ' + article(role) + ' ' + role + (years ? ' with ' + years + ' of experience' : '') + '.' + (who ? ' I work with ' + who + '.' : '');
+    var make = function (pr) {
+      if (style === 'list') return [open, how, st.length ? 'What I do best:\n' + st.map(function (x) { return '• ' + cap(x); }).join('\n') : '', pr.length ? 'Results:\n' + pr.map(function (x) { return '• ' + x; }).join('\n') : '',
+        next ? 'Looking for: ' + next + '.' : '', 'Contact: ' + (contact || 'a message here on LinkedIn') + '.'].filter(Boolean).join('\n\n');
+      if (style === 'short') return [open, st.length ? 'Strongest in ' + andList(st.slice(0, 3)) + '.' : '', pr[0] || '', next ? 'Now looking for ' + next + '.' : '',
+        'You can reach me ' + (contact ? 'at ' + contact : 'with a message here on LinkedIn') + '.'].filter(Boolean).join(' ');
+      return [open, how, st.length ? 'I am at my best working on ' + andList(st) + '.' : '', pr.length ? 'What that has looked like in practice: ' + pr.join(' ') : '',
+        next ? 'I am now looking for ' + next + '.' : '', 'The quickest way to reach me is ' + (contact || 'a message here on LinkedIn') + '.'].filter(Boolean).join('\n\n');
+    };
+    var kept = proofs.slice(), text = tidy(make(kept)), cut = false;
+    while (text.length > T.ABOUT_MAX && kept.length > 1) { kept.pop(); text = tidy(make(kept)); }           // results go from the end first
+    if (text.length > T.ABOUT_MAX) {                                                                       // then the text is cut at a sentence, or at a word when no sentence ends nearby
+      cut = true; text = text.slice(0, T.ABOUT_MAX + 1).replace(/\s+\S*$/, '').slice(0, T.ABOUT_MAX);
+      var dot = text.lastIndexOf('.'); if (dot > T.ABOUT_MAX * 0.6) text = text.slice(0, dot + 1);
+    }
+    return { style: style, text: text, length: text.length, left: T.ABOUT_MAX - text.length, words: wordCount(text), opening: text.slice(0, T.OPENING), dropped: proofs.length - kept.length, cut: cut,
+      empty: !clean(f.role) && !years && !who && !how && !st.length && !proofs.length && !next };
+  };
+
+  /* ---------- elevator pitch: about 30 seconds said aloud, for a job fair, the start of an interview or a networking event ---------- */
+  T.PITCH_WPM = 150; T.PITCH_WORDS = 75;                    // 150 words a minute is an ordinary speaking pace, so 30 seconds is about 75 words
+  T.pitch = function (f) {
+    f = f || {};
+    var where = pickOf(f.where, ['fair', 'interview', 'networking'], 'fair');
+    var name = clean(f.name), role = clean(f.role), r = role || '[what you do]', years = yearsText(f.years), best = low1(phrase(f.best)), proof = low1(phrase(f.proof)), goal = low1(phrase(f['goal_' + where] || f.goal));
+    var company = clean(f.company), job = clean(f.job), s = [], items = [], add = function (level, t, d) { items.push({ level: level, t: t, d: d }); };
+    if (where === 'fair') {
+      s.push(name ? 'Hi, I’m ' + name + '.' : 'Hi.', 'I’m ' + article(r) + ' ' + r + (years ? ' with ' + years + ' of experience' : '') + '.');
+      if (best) s.push('What I do best is ' + best + '.');
+      if (proof) s.push('Recently I ' + proof + '.');
+      if (goal) s.push('I’m looking for ' + goal + (company ? ', which is why I came over to ' + company : '') + '.');
+      s.push('What do you look for in people who apply for that?');
+    } else if (where === 'interview') {
+      s.push('I’m ' + article(r) + ' ' + r + (years ? ' with ' + years + ' of experience' : '') + '.');
+      if (best) s.push('The part of the work I do best is ' + best + '.');
+      if (proof) s.push('Recently I ' + proof + '.');
+      if (goal) s.push((job ? 'The ' + job + ' role' : 'This role') + (company ? ' at ' + company : '') + ' caught my eye because ' + goal + '.');
+      s.push('I’d be glad to go deeper into any of that.');
+    } else {
+      s.push(name ? 'Hi, I’m ' + name.split(' ')[0] + '.' : 'Hi.', 'I work as ' + article(r) + ' ' + r + (years ? ', ' + years + ' now' : '') + '.');
+      if (best) s.push('The thing people come to me for is ' + best + '.');
+      if (proof) s.push('Not long ago I ' + proof + '.');
+      if (goal) s.push('Right now I’m curious about ' + goal + '.');
+      s.push('How about you: what are you working on these days?');
+    }
+    var text = tidy(s.join(' ')), words = wordCount(text), sec = Math.round(words / T.PITCH_WPM * 60), time = T.speak(sec), empty = !(name || role || years || best || proof || goal);
+    if (empty) return { empty: true, where: where, text: '', words: 0, seconds: 0, time: T.speak(0), checks: [], fixes: 0 };
+    var basis = words + ' words at ' + T.PITCH_WPM + ' words a minute. ', parts = [['what you do best', best], ['your result', proof], [where === 'fair' ? 'what you are looking for' : where === 'interview' ? 'why this role' : 'what you are curious about', goal]];
+    var longest = parts.slice().sort(function (a, b) { return wordCount(b[1]) - wordCount(a[1]); })[0];
+    if (sec < 20) add('fix', 'Too short: about ' + time, basis + 'There is room for more: fill in the parts that are still empty.');
+    else if (sec < 25) add('warn', 'A little short: about ' + time, basis + 'Aim for 25 to 35 seconds: one more detail in your result would do it.');
+    else if (sec <= 35) add('ok', 'Good length: about ' + time, basis + 'That is inside the 25 to 35 seconds this page aims for.');
+    else if (sec <= 45) add('warn', 'A little long: about ' + time, basis + 'Aim for 25 to 35 seconds. The longest part is ' + longest[0] + ' (' + wordCount(longest[1]) + ' words): shorten that first.');
+    else add('fix', 'Too long: about ' + time, basis + 'A pitch that runs over 45 seconds becomes a speech. The longest part is ' + longest[0] + ' (' + wordCount(longest[1]) + ' words): cut it to one clause.');
+    if (!role) add('fix', 'What you do is missing', 'The listener needs your kind of work in the first sentence.');
+    parts.forEach(function (x) { if (!x[1]) add('warn', cap(x[0]) + ' is missing', 'The pitch works without it, but this is the part people remember or answer.'); });
+    if (proof) {
+      if (NUMBER.test(proof)) add('ok', 'The result has a number', 'A figure is the easiest thing to remember from a short talk.');
+      else add('warn', 'No number in the result', 'Say how much, how many or how fast. If nothing was measured, say what people could do afterwards that they could not do before.');
+    }
+    var rank = { fix: 0, warn: 1, info: 2, ok: 3 };
+    items.sort(function (a, b) { return rank[a.level] - rank[b.level]; });
+    return { where: where, text: text, words: words, seconds: sec, time: time, checks: items, fixes: items.filter(function (i) { return i.level !== 'ok'; }).length, empty: false };
+  };
+
+  /* ---------- resume summary: two or three lines, written differently for each level of experience ---------- */
+  T.SUMMARY_LEVELS = ['none', 'some', 'senior', 'manager', 'changer'];
+  T.resumeSummary = function (f) {
+    f = f || {};
+    var lv = pickOf(f.level, T.SUMMARY_LEVELS, 'some'), given = clean(f.role), role = given || '[job title]', R = cap(role), years = yearsText(f.years), sk = skillList(f.skills, 5), skills = andList(sk);
+    var result = low1(phrase(f.result)), res = result ? cap(result) + '.' : '', study = mid(f['study_' + lv] || f.study), from = inl(f['from_' + lv] || f.from), scope = inl(f.scope), team = inl(f.team);
+    var exp = years ? years + ' of experience' : '', a, b, kinds;
+    if (lv === 'none') {
+      kinds = ['Education first', 'Skills first'];
+      a = 'Entry-level ' + role + (study ? ' with ' + study : '') + (skills ? (study ? ' and working knowledge of ' : ' with working knowledge of ') + skills : '') + '.' +
+        (result ? ' ' + (from ? 'During ' + from + ', ' + result : cap(result)) + '.' : from ? ' Hands-on practice from ' + from + '.' : '');
+      b = (skills ? 'Trained in ' + skills + (study ? ' through ' + study : '') + '. ' : study ? 'Holds ' + study + '. ' : '') + (result ? cap(result) + (from ? ', during ' + from : '') + '. ' : from ? 'Hands-on practice from ' + from + '. ' : '') +
+        'Looking for a first role as ' + article(role) + ' ' + role + '.';
+    } else if (lv === 'senior') {
+      kinds = ['Experience first', 'Result first'];
+      a = R + (exp ? ' with ' + exp : '') + (scope ? (exp ? ', responsible for ' : ' responsible for ') + scope : '') + '.' + (skills ? ' Expert in ' + skills + '.' : '') + (res ? ' ' + res : '');
+      b = result ? R + ' who ' + result + '.' + (scope ? ' Owns ' + scope + '.' : '') + (exp || skills ? ' ' + cap(exp + (skills ? (exp ? ' across ' : 'works across ') + skills : '')) + '.' : '') : '';
+    } else if (lv === 'manager') {
+      kinds = ['Experience first', 'Team first'];
+      a = R + (exp ? ' with ' + exp : '') + (team ? (exp ? ', now leading ' : ' leading ') + team : '') + '.' + (res ? ' ' + res : '') + (skills ? ' Background in ' + skills + '.' : '');
+      b = team ? 'Leads ' + team + ' as ' + article(role) + ' ' + role + (years ? ', with ' + years + ' in the field' : '') + '.' + (res ? ' ' + res : '') + (skills ? ' Hands-on in ' + skills + '.' : '') : '';
+    } else if (lv === 'changer') {
+      kinds = ['Background first', 'Result first'];
+      a = 'Brings ' + (from || '[your earlier work]') + ' to ' + article(role) + ' ' + role + ' role.' + (study ? ' Completed ' + study + (skills ? '; skilled in ' + skills : '') + '.' : skills ? ' Skilled in ' + skills + '.' : '') + (res ? ' ' + res : '');
+      b = result ? res + ' Now moving into ' + article(role) + ' ' + role + ' role' + (from ? ' after ' + from : '') + (study ? ', with ' + study : '') + '.' + (skills ? ' Skilled in ' + skills + '.' : '') : '';
+    } else {
+      kinds = ['Skills first', 'Result first'];
+      a = R + (exp ? ' with ' + exp : '') + (skills ? (exp ? ' in ' : ' skilled in ') + skills : '') + '.' + (res ? ' ' + res : '');
+      b = result ? R + ' who ' + result + '.' + (exp || skills ? ' ' + cap(exp + (skills ? (exp ? '; strongest in ' : 'strongest in ') + skills : '')) + '.' : '') : '';
+    }
+    var seen = {}, variants = [];
+    [a, b].forEach(function (t, i) {
+      t = tidy(t || '');
+      if (!t || seen[t]) return;
+      seen[t] = 1;
+      variants.push({ kind: kinds[i], text: t, length: t.length, words: wordCount(t), lines: Math.max(1, Math.ceil(t.length / T.LINE)) });
+    });
+    return { level: lv, variants: variants, figure: !!result && hasFigure(result), result: !!result, empty: !given && !years && !sk.length && !result && !study && !from && !scope && !team };
+  };
+
+  /* ---------- skills to put on a resume, by job title: the skills today's postings for one kind of work name most (data/role-skills.json) ---------- */
+  // data: { date, roles: [[slug, name, postings, [[skill, postings that name it], …]], …], slugs: { skill: its page under /skills/ } }
+  T.roleSkills = function (data, slug) {
+    var row = data && Array.isArray(data.roles) ? data.roles.filter(function (r) { return r[0] === slug; })[0] : null;
+    if (!row) return null;
+    var n = row[2], skills = (row[3] || []).map(function (x) { return { name: x[0], n: x[1], pct: n ? x[1] / n * 100 : 0, slug: (data.slugs || {})[x[0]] || '' }; });
+    return { slug: row[0], name: row[1], n: n, skills: skills, date: data.date || '' };
+  };
+  T.skillsLine = function (names) { names = (names || []).map(clean).filter(Boolean); return names.length ? 'Skills: ' + names.join(', ') : ''; };
+
+  /* ---------- letter of recommendation: who writes it, about whom, two strengths with an example each, two tones ---------- */
+  T.recommendation = function (f) {
+    f = f || {};
+    var writer = pickOf(f.writer, ['manager', 'colleague', 'teacher', 'client'], 'manager'), who = pickOf(f.who, ['employee', 'student', 'contractor'], 'employee'), warm = f.tone === 'warm';
+    var pr = PRON[f.pronoun] || PRON.they, sub = pr[0], obj = pr[1], pos = pr[2], was = pr[3] ? 'was' : 'were';
+    var given = clean(f.cand), cand = given || '[their name]', first = given ? given.split(' ')[0] : cand;
+    var role = mid(f['role_' + who] || f.role), org = clean(f.org), dur = inl(f.dur), purpose = mid(f.purpose), to = clean(f.to);
+    var own = function (s) { return mid(s).replace(/^(Her|His|Its)\b/, function (w) { return w.toLowerCase(); }); };      // "Her clear writing" inside a sentence; a name at the start keeps its capital
+    var s1 = own(f.s1) || '[first strength]', e1 = sentence(f.e1) || '[Add one example that shows it.]', s2 = own(f.s2), e2 = sentence(f.e2);
+    var name = clean(f.name) || '[Your name]', title = clean(f.title), contact = clean(f.contact), written = T.longDate(f.date);
+    var at = org ? ' at ' + org : '', span = dur ? ' for ' + dur : '', aim = purpose ? ' for ' + purpose : '';
+    var did = !role ? '' : ', while ' + sub + ' ' + (who === 'student' ? was + ' a student in ' + role : who === 'contractor' ? 'worked with us on contract as ' + article(role) + ' ' + role : 'worked as ' + article(role) + ' ' + role);
+    var rel = writer === 'colleague' && who === 'student' ? 'We studied together' + at + span + (role ? ', in ' + role : '') + '.'
+      : (writer === 'manager' ? 'I ' + (who === 'student' ? 'supervised ' : 'managed ') + obj + at + span
+        : writer === 'colleague' ? 'We worked side by side' + at + span
+        : writer === 'teacher' ? 'I taught ' + obj + at + span
+        : (org ? 'At ' + org + ', I' : 'I') + ' was ' + pos + ' client' + span) + did + '.';
+    var again = writer === 'manager' ? 'I would hire ' + first + ' again without a second thought.' : writer === 'colleague' ? 'I would gladly share a team with ' + first + ' again.'
+      : writer === 'teacher' ? 'I would be glad to have ' + first + ' in my class again.' : 'I would give ' + first + ' our next project without asking anyone else.';
+    var p = [written, to ? 'Dear ' + to + ',' : 'To whom it may concern,'];
+    if (warm) {
+      p.push('I am very glad to recommend ' + cand + aim + '. ' + rel + ' I saw ' + pos + ' work up close.');
+      p.push('The first thing people notice about ' + first + ' is ' + s1 + '. ' + e1);
+      if (s2 || e2) p.push((s2 ? 'Just as important is ' + s2 + '.' : '') + (e2 ? ' ' + e2 : ''));
+      p.push(again + ' I recommend ' + obj + ' wholeheartedly. Please get in touch if you would like to hear more' + (contact ? ': ' + contact : '') + '.');
+      p.push('With warm regards,\n' + name + (title || org ? '\n' + [title, org].filter(Boolean).join(', ') : ''));
+    } else {
+      p.push('I am writing to recommend ' + cand + aim + '. ' + rel);
+      p.push('What stands out most is ' + s1 + '. ' + e1);
+      if (s2 || e2) p.push((s2 ? 'A second strength is ' + s2 + '.' : '') + (e2 ? ' ' + e2 : ''));
+      p.push('I recommend ' + first + ' without reservation.' + (contact ? ' If you would like to know more, you can reach me at ' + contact + '.' : ' I am glad to answer any questions you have.'));
+      p.push('Sincerely,\n' + name + (title || org ? '\n' + [title, org].filter(Boolean).join(', ') : ''));
+    }
+    var m = mail('', p.map(function (x) { return x ? x.trim() : x; }));
+    m.text = m.body;                                        // a letter carries a date, not a subject line
+    m.writer = writer; m.who = who;
+    return m;
+  };
+
+  /* ---------- weekly pay with overtime, for hourly work: plain arithmetic, the rules themselves differ by country and state ---------- */
+  T.overtime = function (o) {
+    o = o || {};
+    var rate = num(o.rate), hours = num(o.hours), at = clean(o.threshold) === '' ? 40 : num(o.threshold), mult = clean(o.mult) === '' ? 1.5 : num(o.mult);
+    if (!(rate > 0) || rate > 1e6 || !(hours >= 0) || hours > 168 || !(at >= 0) || at > 168 || !(mult >= 1) || mult > 10) return null;
+    var reg = Math.min(hours, at), ot = Math.max(0, hours - at), otRate = rate * mult, regPay = reg * rate, otPay = ot * otRate, total = regPay + otPay;
+    return { rate: rate, hours: hours, threshold: at, mult: mult, regHours: reg, otHours: ot, otRate: otRate, regPay: regPay, otPay: otPay, total: total,
+      effective: hours > 0 ? total / hours : rate, premium: ot * rate * (mult - 1), year: total * 52 };
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = T;
   if (typeof document === 'undefined') return;
   window.HRNT = T;                       // the resume builder scores the resume and matches it to a posting with the same code
@@ -2505,6 +2910,178 @@
         sub('<b>' + esc(r.verdict) + '.</b> ' + esc(money(r.pay, '$', 0)) + ' is ' + zone + '.' + wide + ' Compared with ' + esc(fmt(g.n)) + ' open ' + esc(what(r.cat, r.lvl)) + ' that publish a yearly US-dollar range, as of ' + esc(D.date) +
           '. These are advertised ranges, not what people were paid, and bonus and equity are not in them.') +
         kv([['Lower quarter, below', K(g.p25)], ['Median', K(g.median)], ['Upper quarter, above', K(g.p75)], ['Your offer', money(r.pay, '$', 0)], ['Postings counted', fmt(g.n)]]));
+    });
+  };
+
+  /* ================================================================ pages added 2026-11-17: eleven more tools ================================================================ */
+  // A part of the form that belongs to one choice: <div data-on="who:close distant"> is shown while the field "who" is "close" or "distant".
+  function showFor(v) { each('[data-on]', function (el) { var a = el.getAttribute('data-on').split(':'); el.hidden = (' ' + a[1] + ' ').indexOf(' ' + v[a[0]] + ' ') < 0; }); }
+
+  /* ---------- follow-up email, the email that carries a resume, referral request, letter of recommendation ---------- */
+  tools['follow-up-email'] = function () { letter(T.followUp, function (m) { return m.tip + ' '; }, showFor); };
+  tools['application-email'] = function () { letter(T.applicationEmail, function (m) { return 'Before you send it, attach your resume as a PDF named ' + m.file + '. '; }, showFor); };
+  tools['referral-request'] = function () { letter(T.referralRequest, function (m) { return m.channel === 'linkedin' ? fmt(m.length) + ' characters · ' : ''; }, showFor); };
+  tools['recommendation-letter'] = function () {
+    var date = root.querySelector('[data-k="date"]');
+    if (date) date.setAttribute('value', localIso());                   // the letter is dated today unless changed
+    letter(T.recommendation, null, showFor);
+  };
+
+  /* ---------- LinkedIn connection note ---------- */
+  tools['linkedin-connection-message'] = function () {
+    var out = $('tl-out'), title = 'Characters used', hint = 'Fill in the form to build the note.';
+    form(function (v) {
+      showFor(v);
+      var r = T.connectionNote(v);
+      [0, 1].forEach(function (i) {
+        var x = r.empty ? null : r.notes[i], n = i + 1;
+        $('tl-k' + n).textContent = 'Note ' + n + (x ? ' · ' + x.kind.toLowerCase() : '');
+        fill($('tl-q' + n), x ? x.text : '', hint);
+        $('tl-n' + n).textContent = x ? x.length + ' of ' + r.max + ' characters · ' + x.left + ' left' + (x.dropped.length ? ' · left out to fit: ' + x.dropped.join(', ') : '') + blanks(x.text) : '';
+      });
+      if (r.empty) return idle(out, title, 'Say who you are writing to and what you do to see the note and how much of the limit it uses.');
+      var x = r.notes[0];
+      board(out, title, 'Limit: ' + r.max + ' characters', big(String(x.length), 'of ' + r.max + ' characters in note 1') + meter(x.length / r.max * 100) +
+        sub(esc(x.left + ' left. ') + (x.dropped.length ? 'To stay inside the limit, note 1 leaves out ' + esc(x.dropped.join(' and ')) + '. ' : 'Everything you typed fits. ') +
+          (r.max === T.NOTE_MAX ? (x.short ? 'It would also fit the ' + T.NOTE_SHORT + ' characters that some free accounts get.' : 'Some free accounts get only ' + T.NOTE_SHORT + ' characters: if LinkedIn cuts your note, switch the limit above to ' + T.NOTE_SHORT + '.')
+            : 'Written for the shorter limit of ' + T.NOTE_SHORT + ' characters.')));
+    });
+  };
+
+  /* ---------- professional bio ---------- */
+  tools['professional-bio'] = function () {
+    var hint = 'Enter your name and your job title to build the bio.';
+    form(function (v) {
+      showFor(v);
+      var r = T.bio(v);
+      [['One line', r.one], ['Short, about 50 words', r.short], ['Long, about 100 words', r.long]].forEach(function (x, i) {
+        var n = i + 1;
+        $('tl-k' + n).textContent = x[0];
+        fill($('tl-q' + n), r.empty ? '' : x[1].text, hint);
+        $('tl-n' + n).textContent = r.empty ? '' : x[1].words + ' words · ' + fmt(x[1].length) + ' characters' + blanks(x[1].text);
+      });
+    });
+  };
+
+  /* ---------- LinkedIn About section ---------- */
+  tools['linkedin-summary'] = function () {
+    var paper = $('tl-paper'), info = $('tl-count'), out = $('tl-out'), title = 'Characters used';
+    form(function (v) {
+      var r = T.linkedinAbout(v);
+      if (r.empty) {
+        fill(paper, '', 'Answer the questions. Your About section appears here as you type.'); info.textContent = '';
+        return idle(out, title, 'Answer the questions to see the text and how much of LinkedIn’s ' + fmt(T.ABOUT_MAX) + ' characters it uses.');
+      }
+      fill(paper, r.text);
+      info.textContent = fmt(r.length) + ' of ' + fmt(T.ABOUT_MAX) + ' characters · ' + r.words + ' words' + blanks(r.text);
+      board(out, title, fmt(r.left) + ' left', big(fmt(r.length), 'of ' + fmt(T.ABOUT_MAX) + ' characters') + meter(r.length / T.ABOUT_MAX * 100) +
+        sub((r.cut ? 'The text ran over the limit and was cut at the end of a sentence: shorten your answers. ' : r.dropped ? 'To stay inside the limit, ' + r.dropped + ' of your results ' + (r.dropped === 1 ? 'was' : 'were') + ' left out. ' : '') +
+          'A reader sees only the opening before pressing “see more”, about the first ' + T.OPENING + ' characters, so these lines carry the most weight:') +
+        '<blockquote class="tl-quote">' + esc(r.opening) + (r.length > T.OPENING ? '…' : '') + '</blockquote>');
+    });
+  };
+
+  /* ---------- elevator pitch ---------- */
+  tools['elevator-pitch'] = function () {
+    var paper = $('tl-paper'), info = $('tl-count'), out = $('tl-out'), detail = $('tl-detail'), title = 'Speaking time';
+    form(function (v) {
+      showFor(v);
+      var r = T.pitch(v);
+      if (r.empty) {
+        fill(paper, '', 'Fill in the form. Your pitch appears here as you type.'); info.textContent = ''; detail.innerHTML = '';
+        return idle(out, title, 'Say what you do, what you do best and one result to see how long the pitch takes to say.');
+      }
+      fill(paper, r.text);
+      info.textContent = r.words + ' words · about ' + r.time + ' spoken at ' + T.PITCH_WPM + ' words a minute' + blanks(r.text);
+      var at = Math.max(4, Math.min(96, r.seconds / 60 * 100));
+      board(out, title, r.fixes ? r.fixes + ' to fix or check' : 'All checks pass', big(r.time, 'said aloud') +
+        '<div class="tl-range" aria-hidden="true"><i style="left:41.67%;width:16.67%"></i><b style="left:' + plain(at, 1) + '%"><span>this pitch</span></b></div>' +
+        '<div class="tl-scale" aria-hidden="true"><span>0 s</span><span>green: 25 to 35 s</span><span>1 min</span></div>' +
+        sub(esc(r.words + ' words at ' + T.PITCH_WPM + ' words a minute. A 30-second pitch is about ' + T.PITCH_WORDS + ' words. ') + 'People speak at different speeds: say it aloud once with a timer.'));
+      detail.innerHTML = list(r.checks);
+    });
+  };
+
+  /* ---------- resume summary ---------- */
+  tools['resume-summary'] = function () {
+    var hint = 'Enter the job title, your skills and one result to build the summary.';
+    form(function (v) {
+      showFor(v);
+      var r = T.resumeSummary(v);
+      [0, 1].forEach(function (i) {
+        var x = r.empty ? null : r.variants[i], n = i + 1;
+        $('tl-c' + n).hidden = !x && i > 0;
+        $('tl-k' + n).textContent = 'Summary ' + n + (x ? ' · ' + x.kind.toLowerCase() : '');
+        fill($('tl-q' + n), x ? x.text : '', hint);
+        $('tl-n' + n).textContent = x ? x.words + ' words · about ' + x.lines + ' line' + (x.lines === 1 ? '' : 's') + ' on the page' + (!r.result ? ' · add one result' : r.figure ? '' : ' · add a number to the result') + blanks(x.text) : '';
+      });
+    });
+  };
+
+  /* ---------- skills to put on a resume, by job title: today's counts from /data/role-skills.json ---------- */
+  tools['resume-skills'] = function () {
+    var out = $('tl-out'), detail = $('tl-detail'), title = 'Skills employers name', D = null, failed = false, cur = null, picks = {}, last = '';
+    var drawLine = function () {
+      var box = $('tl-line'), note = $('tl-line-n');
+      if (!box || !cur) return;
+      var names = cur.skills.filter(function (s) { return picks[s.name]; }).map(function (s) { return s.name; });
+      box.value = T.skillsLine(names);
+      if (note) note.textContent = names.length ? names.length + ' skill' + (names.length === 1 ? '' : 's') + ' in the line. Keep only the ones you can show in an interview.' : 'Tick at least one skill to build the line.';
+    };
+    var F = form(function (v) {
+      if (failed) { detail.innerHTML = ''; cur = null; return idle(out, title, 'Today’s figures could not be loaded. Check your connection and reload the page. The table further down shows the ten most common job titles.'); }
+      if (!D) { detail.innerHTML = ''; cur = null; return idle(out, title, 'Loading today’s figures…'); }
+      var r = T.roleSkills(D, v.role), top = Math.max(1, Math.min(15, num(v.top) || 10));
+      if (!r || !r.skills.length) { detail.innerHTML = ''; cur = null; return idle(out, title, 'Pick a job title to see the skills that today’s postings for it name most.'); }
+      var key = r.slug + '|' + top;
+      if (key !== last) { picks = {}; r.skills.forEach(function (s, i) { picks[s.name] = i < top; }); last = key; }      // a new job title or a new length starts from the most named skills
+      cur = r;
+      var first = r.skills[0], widest = first.pct || 1, pc = function (s) { return s.pct < 1 ? 'under 1%' : plain(s.pct, 0) + '%'; };
+      board(out, title, fmt(r.n) + ' postings', big(first.name, 'named in ' + pc(first) + ' of them') +
+        sub('Counted from ' + esc(fmt(r.n)) + ' open postings on this site whose title says <b>' + esc(r.name) + '</b> or a close variant' + (r.date ? ', as of ' + esc(r.date) : '') +
+          '. A skill counts once for each posting that names it.') +
+        kv(r.skills.slice(0, 4).map(function (s) { return [s.name, pc(s) + ' of postings']; })));
+      detail.innerHTML = '<div class="card"><p class="tl-t">Tick the skills you have</p><ul class="tl-sk">' + r.skills.map(function (s) {
+          return '<li><label class="check"><input type="checkbox" data-skill="' + esc(s.name) + '"' + (picks[s.name] ? ' checked' : '') + '> ' + esc(s.name) + '</label>' +
+            '<span class="tl-skb" aria-hidden="true"><i style="width:' + plain(Math.max(2, s.pct / widest * 100), 1) + '%"></i></span>' +
+            '<span class="tl-skn">' + pc(s) + ' · ' + (s.slug ? '<a href="' + H.base + '/skills/' + esc(s.slug) + '/">' + esc(fmt(s.n)) + ' postings</a>' : esc(fmt(s.n)) + ' postings') + '</span></li>';
+        }).join('') + '</ul><p class="note">The percent is the share of the ' + esc(fmt(r.n)) + ' postings that name the skill. The link opens every open job on this site that asks for it.</p></div>' +
+        '<div class="card"><p class="tl-t">Your skills line</p><textarea id="tl-line" rows="2" readonly aria-label="Skills line for your resume"></textarea>' +
+        '<p><button class="btn sm" type="button" data-copy="tl-line">Copy the line</button> <span class="note" id="tl-line-n"></span></p></div>' +
+        '<p><a class="btn ghost sm" href="' + H.base + '/resume/examples/' + esc(r.slug) + '/">Resume example for this work</a> <a class="btn ghost sm" href="' + H.base + '/roles/' + esc(r.slug) + '/">See the ' + esc(fmt(r.n)) + ' open jobs</a> ' +
+        '<a class="btn ghost sm" href="' + H.base + '/tools/resume-match/">Check your resume against one posting</a></p>';
+      drawLine();
+    });
+    detail.addEventListener('change', function (ev) {
+      var name = ev.target && ev.target.getAttribute ? ev.target.getAttribute('data-skill') : null;
+      if (name == null || !cur) return;
+      picks[name] = ev.target.checked; drawLine();
+    });
+    fetch(H.base + '/data/role-skills.json').then(function (res) { if (!res.ok) throw new Error('role-skills'); return res.json(); })
+      .then(function (data) {
+        D = data;
+        var want = (location.search.match(/[?&]role=([a-z0-9-]{2,80})/) || [])[1];                     // ?role=<slug>: a link from the table under the tool
+        if (want && T.roleSkills(D, want)) { F.set('role', want); F.save(); }
+        F.draw();
+      })
+      .catch(function () { failed = true; F.draw(); });
+  };
+
+  /* ---------- overtime pay ---------- */
+  tools['overtime-pay'] = function () {
+    var out = $('tl-out'), title = 'Your pay for the week';
+    form(function (v) {
+      if (!clean(v.rate) || !clean(v.hours)) return idle(out, title, 'Enter your hourly rate and the hours you worked in the week.');
+      var r = T.overtime(v), s = v.cur;
+      if (!r) return idle(out, title, 'Check the figures: the rate must be above zero, and the hours and the overtime threshold must be between 0 and 168, the number of hours in a week.');
+      var h = function (x) { return fmt(x, 2) + (x === 1 ? ' hour' : ' hours'); };
+      board(out, title, r.otHours ? h(r.otHours) + ' of overtime' : 'No overtime this week',
+        big(money(r.total, s, 2), 'before tax') +
+        sub(r.otHours ? esc(h(r.regHours)) + ' at ' + esc(money(r.rate, s, 2)) + ' and ' + esc(h(r.otHours)) + ' at ' + esc(money(r.otRate, s, 2)) + ' (' + esc(plain(r.mult, 2)) + ' times the rate). Overtime adds ' + esc(money(r.premium, s, 2)) +
+            ' on top of what the same hours would pay at the plain rate. Whether those hours must be paid as overtime depends on the law where you work and on your contract: this is arithmetic, not legal advice.'
+          : 'All ' + esc(h(r.hours)) + ' are at or under the threshold of ' + esc(h(r.threshold)) + ', so every hour is paid at the plain rate. Some places also count overtime by the day, which this weekly sum does not.') +
+        kv([['Regular pay', money(r.regPay, s, 2)], ['Overtime pay', money(r.otPay, s, 2)], ['Total for the week', money(r.total, s, 2)], ['Average per hour worked', money(r.effective, s, 2)],
+          ['Overtime rate', money(r.otRate, s, 2) + ' an hour'], ['52 weeks like this one', money(r.year, s, 0)]]));
     });
   };
 
