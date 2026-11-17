@@ -700,6 +700,10 @@
       var hit = !q || row.textContent.toLowerCase().indexOf(q) >= 0;
       row.hidden = !hit; if (hit) shown++;
     });
+    document.querySelectorAll('#rolelist > li').forEach(function (li) {    // the A-to-Z list of roles: one tile per role
+      var hit = !q || (li.getAttribute('data-n') || '').indexOf(q) >= 0;
+      li.hidden = !hit; if (hit) shown++;
+    });
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 
