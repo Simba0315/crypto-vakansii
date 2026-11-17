@@ -50,23 +50,23 @@ US = {
     "name": OUR_NAME,
     "open_jobs": 41187,
     "companies": 732,
-    "source": "the employers' own careers pages (Greenhouse, Lever and Ashby boards)",
+    "source": "the employers' own careers pages, read from eight hiring systems (Greenhouse, Lever, Ashby, Workday, Workable, Personio, Recruitee and Teamtailor)",
     "refresh": "every hour",
     "apply": "on the employer's own page",
     "account_needed_to_search": False,
     "account_needed_to_apply": False,
     "price_for_job_seekers": "free",
     "plus_plan": {
-        "prices_usd": {"1 month": 3, "3 months": 7, "12 months": 12},
+        "prices_usd": {"7 days": 9, "30 days": 19, "90 days": 39},
         "one_payment": True,
         "renews": False,
         "on_sale": False,
     },
     "employer_listings": {
         "standard": "free for 30 days",
-        "featured": "$29 for 14 days",
-        "pinned": "$59 for 7 days",
-        "self_serve_open": False,
+        "standard_boost": "$99 for 30 days",
+        "premium_boost": "$249 for 30 days",
+        "self_serve_open": True,                 # a standard listing is posted in the employer account; paid boosts wait for payments
     },
     "payments": "crypto",
     "free_tools": ["resume builder", "resume match checker", "salary data from posted ranges", "jobs map"],
@@ -75,13 +75,14 @@ US = {
 }
 
 US_ANSWERS = {
-    "Who pays": "Job seekers use it free. Paid options: an optional Plus plan for job seekers (not on sale yet) and featured "
-                "or pinned listings for employers (self-serve posting is not open yet).",
-    "Price for job seekers": "Free. Optional Plus plan: $3 for 1 month, $7 for 3 months, $12 for 12 months. One payment, "
+    "Who pays": "Job seekers use it free. Paid options: an optional Plus plan for job seekers (not on sale yet) and boosts for "
+                "employers' listings (posting is open and free; paid boosts open when payments are switched on).",
+    "Price for job seekers": "Free. Optional Plus plan: $9 for 7 days, $19 for 30 days, $39 for 90 days. One payment, "
                              "nothing renews. Not on sale yet.",
-    "Price to post one job": "Standard listing free for 30 days. Featured $29 for 14 days. Pinned $59 for 7 days. "
-                             "Self-serve posting is not open yet.",
-    "Where the jobs come from": "The employers' own careers pages (Greenhouse, Lever and Ashby boards).",
+    "Price to post one job": "Standard listing free for 30 days, posted in the employer account. Standard boost $99 and "
+                             "Premium boost $249, each for 30 days; boosts open when payments are switched on.",
+    "Where the jobs come from": "The employers' own careers pages, read from eight hiring systems (Greenhouse, Lever, Ashby, Workday, Workable, "
+                                "Personio, Recruitee and Teamtailor).",
     "Where you apply": "On the employer's own page.",
     "Account needed to apply": "No. You can search and apply without an account.",
     "How fresh the listings are": "Every job is read again from the employer's careers page every hour.",
@@ -123,12 +124,12 @@ SITES = [
             "job seeker profiles.",
             "Many more employer tools: Indeed Apply, candidate tracking, screener questions, video interviews and a resume "
             "database.",
-            "Employers can post today, and a basic post is free for many jobs. Our self-serve posting is not open yet.",
+            "Employers can post today, and a basic post is free for many jobs. Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
             "We read every job again from the employer's careers page every hour. Indeed reads career-site feeds every 6 hours.",
             "Every job sends you to apply on the employer's own page. On Indeed, some jobs take the application on Indeed.",
-            "Our employer prices are public: featured $29 for 14 days, pinned $59 for 7 days. Indeed shows no fixed price for "
+            "Our employer prices are public: Standard boost $99 and Premium boost $249, each for 30 days. Indeed shows no fixed price for "
             "its paid levels.",
         ],
         pick="Use Indeed if you want the largest general job site and employer tools like Indeed Apply, use Jobs Every Hour "
@@ -195,7 +196,7 @@ SITES = [
         us_better=[
             "We read every job again from the employer's careers page every hour. LinkedIn reads partner feeds every 6 to 24 "
             "hours.",
-            "Our prices are on the page: Plus from $3 (not on sale yet), featured listing $29, pinned $59. LinkedIn shows "
+            "Our prices are on the page: Plus from $9 (not on sale yet), Standard boost $99, Premium boost $249. LinkedIn shows "
             "Premium prices only after sign-in and publishes no job post prices.",
             "Every job sends you to apply on the employer's own page. Easy Apply keeps the application on LinkedIn.",
         ],
@@ -258,7 +259,7 @@ SITES = [
             "A large startup audience: 27,000+ startups hire there, and 10M+ candidates have opted in to hear from startups.",
             "Employer tools beyond job posts: Reach for sourcing (from $135 per seat a month) and Autopilot, a recruiting "
             "service ($500 a month per role plus a 10% fee on a hire).",
-            "Free job posting is open to employers today. Our self-serve posting is not open yet.",
+            "Free job posting is open to employers today. Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
             "No account needed to search or apply. Wellfound asks you to sign in with a profile before you apply.",
@@ -310,10 +311,10 @@ SITES = [
             "More ways for employers to stand out: two paid upgrades, and Premium Placement for hiring at scale (from "
             "$1,999).",
             "Bundles for employers who hire often: from $179 a job, up to 40% off, used within 12 months.",
-            "Employers can buy and post today. Our self-serve posting is not open yet.",
+            "Employers can buy and post today. Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
-            "A standard listing is free for 30 days (self-serve posting is not open yet). On We Work Remotely the base "
+            "A standard listing is free for 30 days, posted in the employer account. On We Work Remotely the base "
             "listing is $299 for 30 days.",
             "We read every job again from the employer's careers page every hour. A We Work Remotely listing is bought for "
             "a fixed 30 days.",
@@ -361,14 +362,14 @@ SITES = [
             "Much larger: it lists 100,000+ remote jobs from 10,000+ companies and says it reaches 20,100,000+ remote "
             "workers a month.",
             "Wide reach for employers: posts are emailed to 2,692,454 remote job seekers and crossposted to 261 job boards.",
-            "It has a public jobs API, and employers can post today. Our self-serve posting is not open yet.",
+            "It has a public jobs API, and employers can post today. Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
             "No commitment: Plus is one payment that never renews, from $3 for 1 month (not on sale yet). Remote OK Premium "
             "is $14.95 a month with a 12-month commitment.",
             "Salary data from posted ranges is a free tool here. Remote OK lists salary data among its paid Premium "
             "features.",
-            "A standard listing is free for 30 days (self-serve posting is not open yet). Remote OK starts at $299 for 30 "
+            "A standard listing is free for 30 days, posted in the employer account. Remote OK starts at $299 for 30 "
             "days and renews unless turned off.",
         ],
         pick="Use Remote OK if you want a large remote-only board with wide reach for employers, use Jobs Every Hour if you "
@@ -454,12 +455,12 @@ SITES = [
             "Running since 2017, and it says it has helped 50k+ people find a job. We launched in November 2026.",
             "A Telegram channel with 62.1K subscribers that posts about 3 jobs a day.",
             "More ways for employers to pay (card, bank transfer, crypto for some customers), and posting is open today. "
-            "Our self-serve posting is not open yet.",
+            "Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
-            "A standard listing is free for 30 days (self-serve posting is not open yet). On CryptoJobsList the budget "
+            "A standard listing is free for 30 days, posted in the employer account. On CryptoJobsList the budget "
             "starts at $150 for 30 days.",
-            "Fixed prices for a better place: featured $29 for 14 days, pinned $59 for 7 days. On CryptoJobsList the place "
+            "Fixed prices for a better place: Standard boost $99 and Premium boost $249, each for 30 days. On CryptoJobsList the place "
             "depends on the budget and can change if another employer pays more.",
             "We take payment in crypto. CryptoJobsList offers crypto to selected customers only.",
         ],
@@ -506,12 +507,12 @@ SITES = [
             "A large crypto audience: its posting page shows 640,903 job post views, 41,000 Twitter followers and 9,000 "
             "Discord members.",
             "Employers get a built-in applicant tracking system (powered by Bondex), and posting is open today. Our "
-            "self-serve posting is not open yet.",
+            "free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
             "We take payment in crypto. Web3.career's posting form does not offer crypto.",
-            "Lower prices to stand out: pinned $59 for 7 days, featured $29 for 14 days (self-serve posting is not open "
-            "yet). On Web3.career, 7 days at the top is +$149 and 14 days is +$199.",
+            "A lower price to stand out: Standard boost $99 for 30 days (paid boosts are not on sale yet). "
+            "On Web3.career, 7 days at the top is +$149 and 14 days is +$199.",
         ],
         pick="Use Web3.career if you want the widest list of web3 projects and a large crypto audience, use Jobs Every Hour if "
              "you want to pay in crypto and apply on employers' own careers pages.",
