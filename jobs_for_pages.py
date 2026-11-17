@@ -21,7 +21,7 @@ import re
 
 PUBLISHED = "2026-11-17"
 MIN_ROLES = 5        # a page needs this many of its kinds of work to have a role page today
-PAY_MIN = 5          # postings that state a yearly US-dollar range before a median is shown
+PAY_MIN = 15         # postings that state a yearly US-dollar range before a median is shown (5 gave odd medians: $277K from 6 postings)
 TEXT_MIN = 20        # postings held in full before a share of them is shown
 
 GROUPS = (("who", "By person or situation", "By situation", "The number on a tile is the jobs open today in the kinds of work on that page."),

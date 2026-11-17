@@ -1,12 +1,13 @@
-# Письмо компаниям: черновик на утверждение владельцу (17 нояб. 2026)
+# Письмо компаниям (текст утверждён владельцем 17 нояб. 2026, НЕ ОТПРАВЛЯТЬ)
 
-Ничего не отправлено. Это текст и порядок действий; рассылка начнётся только после вашего «да» на текст.
+**Статус:** владелец утвердил текст 17 ноября и сказал: «утверждаю, но мы не постим… сайт вообще не проработанный, от личного кабинета
+до всего остального». Рассылка не начинается, пока владелец сам не скажет, что сайт готов. Ничего не отправлено.
 
 ## Зачем
 
-На сайте вакансии 6 000+ компаний, и почти ни одна из них о нас не знает. Письмо говорит компании три вещи: её вакансии уже у нас,
-страницу компании можно забрать бесплатно, а если нужно больше откликов — есть продвижение. Это главный способ получить первых
-платящих работодателей (план на $1 млн, `REVENUE_PLAN_2027.md`).
+На сайте вакансии 6 000+ компаний, и почти ни одна из них о нас не знает. Письмо говорит компании две вещи: её вакансии уже у нас,
+и страницу компании можно забрать бесплатно. О платном продвижении в первом письме не говорим: его компания увидит в кабинете, когда
+заберёт страницу. Это главный способ получить первых работодателей в кабинете, а из них первых платящих (план на $1 млн, `REVENUE_PLAN_2027.md`).
 
 ## Кому и как
 
@@ -34,21 +35,22 @@
 
 ## Текст письма (английский, как будет отправлено)
 
-**Subject:** Your {N} open jobs are listed on Jobs Every Hour
+**Subject:** {Company}: your {N} open jobs on Jobs Every Hour
 
 Hello,
 
-{Company}'s {N} open jobs are listed on Jobs Every Hour (jobseveryhour.com). We read them from your own careers page every hour,
-and every "Apply" button sends the candidate straight to your site. It costs you nothing, and you do not need to do anything.
+{Company} has {N} open jobs listed on Jobs Every Hour (jobseveryhour.com). We read them from your own careers page every hour, and
+every "Apply" button sends the candidate straight to your site. This is free, and you do not need to do anything.
 
-{Only for a company with 50 or more opens by people in 14 days; left out in the first wave:} In the last 14 days your job pages were opened {V} times on our site.
+{Only for a company with 50 or more opens by people in 14 days; left out in the first wave:} In the last 14 days people opened your job pages {V} times on our site.
 
-Two things you can do, if you want:
+If you would like to, you can take over your company page. It is free and takes about two minutes:
 
-1. Take over your company page, free: add your logo and a few lines about the company, list the places where you hire, and see
-   how many people view each job and click Apply. It takes two minutes: {link to the company page}
-2. Get more applicants for a role that is hard to fill: a boost puts the job above the others in its lists for 30 days, from $99,
-   one payment, nothing renews.
+- add your logo and a few lines about the company,
+- list the places where you hire,
+- see how many people view each job and click Apply.
+
+Your page: {link to the company page}
 
 If a job on the page is wrong or should come down, reply to this email and we will fix it the same day.
 
@@ -56,17 +58,32 @@ If a job on the page is wrong or should come down, reply to this email and we wi
 Jobs Every Hour · jobseveryhour.com
 {postal address}
 
-You are receiving this once because your company's public job postings are listed on our site. Unsubscribe: {link}
+You are receiving this one email because your company's public job postings are listed on our site. Unsubscribe: {link}
 
 ## Напоминание через 7 дней (только тем, кто не ответил и не отписался)
 
-**Subject:** Re: Your {N} open jobs are listed on Jobs Every Hour
+**Subject:** Re: {Company}: your {N} open jobs on Jobs Every Hour
 
 Hello, a short follow-up: {Company}'s page on Jobs Every Hour is still unclaimed. Claiming it is free and takes two minutes:
 {link}. If this is not for you, there is nothing to do, and we will not write again.
 
 {Sender name}, Jobs Every Hour
 Unsubscribe: {link}
+
+## Что я улучшил в тексте после утверждения (17 нояб.)
+
+- **Тема письма начинается с названия компании:** так письмо не похоже на рассылку и его чаще открывают.
+- **Одно действие вместо двух.** В первом письме больше нет цены и продвижения ($99): письмо незнакомому человеку с ценой читается как реклама
+  и чаще попадает в спам. Продвижение компания увидит сама в кабинете после того, как заберёт страницу; о нём можно сказать в ответе тем, кто ответил.
+- **Три выгоды списком** (логотип и текст, города, статистика): читается за пять секунд.
+- Смысл и обещания те же, что вы утвердили; новых обещаний нет.
+
+## Что должно быть готово на сайте до отправки (чтобы письмо не привело людей в сырой кабинет)
+
+1. Кабинет работодателя проверен целиком на живом сайте: регистрация, подтверждение почты, «забрать страницу компании», загрузка логотипа,
+   статистика по вакансиям, выход. Без единой ошибки и непонятного места.
+2. Письма кабинета (подтверждение, «страница одобрена») доходят и выглядят аккуратно.
+3. Владелец сам прошёл этот путь и сказал «можно».
 
 ## Что будет измеряться
 
