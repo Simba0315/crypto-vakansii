@@ -15,7 +15,9 @@
 
   var M, rows, counts = [], picked = -1, f = H.parse('');
   var map = new maplibregl.Map({ container: box, style: 'https://tiles.openfreemap.org/styles/positron', center: [-40, 30], zoom: 1.3,
-    minZoom: 1, maxZoom: 11, attributionControl: { compact: true }, cooperativeGestures: matchMedia('(pointer: coarse)').matches });
+    // cooperative gestures everywhere: the wheel scrolls the page (Ctrl or ⌘ with the wheel zooms, the map says so), and a phone
+    // pans with two fingers. Without it a visitor scrolling down the page was caught by the map and zoomed it instead.
+    minZoom: 1, maxZoom: 11, attributionControl: { compact: true }, cooperativeGestures: true });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
   map.on('error', function (ev) { if (ev && ev.error && /style|Failed to fetch/i.test(String(ev.error.message || ''))) fail(); });
 
@@ -37,7 +39,8 @@
     var c = M.c[i], list = [];
     for (var k = 0; k < rows.length && list.length < 20; k++) if (M.ix[k] === i && H.match(rows[k], f)) list.push(rows[k]);
     var q = input.value.trim(), all = q ? P + '/jobs/?q=' + encodeURIComponent(q + ' ' + c[1]) : P + '/' + c[5];
-    panel.innerHTML = '<div class="mp-head"><h2>' + flag(c[2]) + esc(c[1]) + '</h2><span class="pill">' + num(counts[i]) + (q ? ' match' : ' open') + '</span></div>' +
+    panel.innerHTML = '<div class="mp-head"><h2>' + flag(c[2]) + esc(c[1]) + '</h2><span class="pill">' + num(counts[i]) + (q ? ' match' : ' open') + '</span>' +
+      '<button type="button" class="mp-close" aria-label="Close the list of ' + esc(c[1]) + '">×</button></div>' +
       '<ul class="jobs">' + list.map(function (j) { return H.card(j); }).join('') + '</ul>' +
       (counts[i] > list.length ? '<p><a class="btn ghost sm" href="' + all + '">All ' + num(counts[i]) + ' in ' + esc(c[1]) + '</a></p>' : '') +
       '<div class="mp-help"><p><b>Applying to these?</b> Check your resume against one of the postings first: it shows which of its words your resume is missing.</p>' +
@@ -57,6 +60,11 @@
     }
     if (picked >= 0) { if (counts[picked]) show(picked); else panel.hidden = true; }
   }
+  // the city's list closes with its own button; the map takes the whole width again
+  panel.addEventListener('click', function (ev) {
+    if (!ev.target.closest || !ev.target.closest('.mp-close')) return;
+    picked = -1; panel.hidden = true; map.resize();
+  });
   var ready = H.load().then(function (r) { rows = r; });
   // the dots go on as soon as the map style is in (style.load), not after every base-map tile (load)
   Promise.all([fetch(P + '/data/map.json').then(function (r) { return r.json(); }), new Promise(function (ok) { if (map.isStyleLoaded()) ok(); else map.once('style.load', ok); })]).then(function (got) {
@@ -77,7 +85,12 @@
       tip.setLngLat([c[4], c[3]]).setHTML('<b>' + esc(c[1]) + '</b><br>' + num(p.n) + ' jobs').addTo(map);
     });
     map.on('mouseleave', 'jobs', function () { map.getCanvas().style.cursor = ''; tip.remove(); });
-    map.on('click', 'jobs', function (ev) { show(ev.features[0].properties.i); panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+    map.on('click', 'jobs', function (ev) {
+      var i = ev.features[0].properties.i;
+      show(i); panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // the list takes a column beside the map: the map is narrower now, so bring the chosen city back into its middle
+      map.resize(); map.easeTo({ center: [M.c[i][4], M.c[i][3]], duration: 500 });
+    });
     draw(false);
     if (q0) ready.then(function () { draw(true); });
   }).catch(fail);

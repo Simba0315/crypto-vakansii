@@ -325,7 +325,8 @@
         (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + (data.summary ? '<h3>Summary</h3><p>' + esc(data.summary) + '</p>' : '') +
         (exp ? '<h3>Experience' + (tl && union(spans) ? ' <small>' + span(union(spans)) + '</small>' : '') + '</h3>' + exp : '') + (proj ? '<h3>Projects</h3>' + proj : '') + (edu ? '<h3>Education</h3>' + edu : '') + (cert ? '<h3>Certifications</h3>' + cert : '') +
         (skills.length ? '<h3>Skills</h3>' + (tl ? '<p class="pv-tags">' + skills.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</p>' : '<p>' + skills.map(esc).join(' · ') + '</p>') : '') + (lang.length ? '<h3>Languages</h3><p>' + lang.join(' · ') + '</p>' : '')
-      : '<p class="pane-empty">Start typing on the left. Your resume appears here.</p>';
+      // the empty sheet: one sentence and one way out (an example to start from), not a blank box with a grey line
+      : '<div class="pane-empty"><p>Start typing on the left. Your resume appears here.</p><p class="no-print"><a class="btn ghost sm" href="' + H.base + '/resume/examples/">Open an example to start from</a></p></div>';
     applyTpl();
   };
   // a Word file: the same page as simple HTML, which Word opens and saves as .docx
