@@ -64,6 +64,12 @@ jobs:
             git show FETCH_HEAD:posted.json > data/posted.json 2>/dev/null || rm -f data/posted.json      # what post.py already sent to the channels
             echo "restored $(wc -c < data/jobs.json) bytes"
             echo "PREV_BYTES=$(wc -c < data/jobs.json | tr -d ' ')" >> "$GITHUB_ENV"
+            # How old the saved jobs are. A push normally builds from them as they are (a design change reaches the site in minutes);
+            # when they are older than three hours the push reads the careers pages too, because GitHub skips most scheduled
+            # starts (4 or 5 runs a day instead of 24 on 16 and 17 Nov 2026) and a push is then the only run that happens.
+            age=$(( ( $(date +%s) - $(git log -1 --format=%ct FETCH_HEAD) ) / 60 ))
+            echo "the saved jobs are $age minutes old"
+            if [ "$age" -gt 180 ]; then echo "STALE=true" >> "$GITHUB_ENV"; fi
           else
             code=$?
             if [ "$code" != "2" ]; then echo "could not reach the repository (exit $code): stopping instead of starting empty"; exit 1; fi
@@ -71,11 +77,12 @@ jobs:
           fi
       # A push is a change of the site's code or design: it is built from the jobs the last hourly run saved, without reading every
       # careers page again, so a change reaches the site in minutes instead of waiting a whole collection (owner, 15 Nov 2026).
+      # The exception (17 Nov 2026): saved jobs older than three hours, see STALE in "Restore jobs database".
       - name: Collect jobs (closed ones move to the archive)
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' || env.STALE == 'true'
         run: python3 collect.py
       - name: Save jobs database
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' || env.STALE == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
