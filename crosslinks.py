@@ -26,6 +26,9 @@ FLAG = re.compile("[\U0001F1E6-\U0001F1FF]{2}")
 GROUP = {"skills": "By skill", "kind": "By kind of work", "roles": "By role", "level": "By level", "places": "By place", "pages": "More pages",
          "remote": "Remote", "chains": "By blockchain"}
 LEVELS = {"intern", "junior", "senior", "lead", "entry-level", "new"}
+# Hubs whose own body is the list of their narrower pages (the crypto hub's directory of every crypto list, the tiles of the relocation
+# guides): a second copy of the same links under "Narrow down ..." is not added. The narrower pages keep their links up and across.
+OWN_DIR = {"crypto/", "relocate/"}
 
 
 def low(title):
@@ -104,7 +107,7 @@ def run(site, urls):
         for g in ("skills", "kind", "roles", "places", "chains", "level", "remote", "pages"):
             xs = sorted(groups.get(g, ()), key=lambda u: -meta(u)[1])[:60]
             if xs: body += f'<h3>{GROUP[g]}</h3><ul class="xl">' + "".join(f"<li>{a(u)}</li>" for u in xs) + "</ul>"
-        if body: blocks[parent] += f'<section class="sec xlinks"><div class="sec-head"><h2>Narrow down {html.escape(low(title))}</h2></div>{body}</section>'
+        if body and parent not in OWN_DIR: blocks[parent] += f'<section class="sec xlinks"><div class="sec-head"><h2>Narrow down {html.escape(low(title))}</h2></div>{body}</section>'
     for u, ps in up.items():                            # narrow page: up to its broader pages, across to its neighbours
         if not ps: continue
         ups = [p for p, _ in ps]

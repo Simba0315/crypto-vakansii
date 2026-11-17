@@ -95,7 +95,11 @@ def figures(a, by_role, money, median, rlow=lambda s: s, ctx=None):
     n, mids = len(union), [mid(j) for j in union if j.get("usd")]
     remote, entry = round(100 * sum(1 for j in union if j.get("remote")) / n), sum(1 for j in union if j.get("entry"))
     line = f"{n:,} jobs are open today in these {len(rows)} kinds of work. {remote}% of them are remote and {entry:,} have a junior or intern title."
+    # the same figures for the row of numbers of the page (sections review, batch 4): the count stays a sentence, the rest stand in the row
+    head = f"{n:,} jobs are open today in these {len(rows)} kinds of work."
+    cells = [(f"{remote}%", "of them are remote"), (f"{entry:,}", "have a junior or intern title")]
     if len(mids) >= PAY_MIN:
+        cells.append((money(median(mids)), f"median advertised pay, from the {len(mids):,} that state a yearly range in US dollars"))
         line += f" The {len(mids):,} that state a yearly range in US dollars advertise a median of {money(median(mids))}."
     more = []
     for k in extras:
@@ -113,7 +117,8 @@ def figures(a, by_role, money, median, rlow=lambda s: s, ctx=None):
               "{REMOTE}": f"The largest remote share today is {rem['remote']}%, in {rlow(rem['name'])} postings." if rem["remote"] else "",
               "{ENTRY}": f"The most openings with a junior or intern title today are in {rlow(ent['name'])} ({ent['entry']:,})." if ent["entry"] else "",
               "{EXTRA}": " ".join(more)}
-    return {"rows": rows, "k": len(rows), "n": n, "line": line + ("" if not more else " " + " ".join(more)), "extras": extras, "tokens": tokens}
+    return {"rows": rows, "k": len(rows), "n": n, "line": line + ("" if not more else " " + " ".join(more)), "extras": extras, "tokens": tokens,
+            "head": head + ("" if not more else " " + " ".join(more)), "cells": cells}
 
 
 def fill(text, fig):
@@ -138,8 +143,9 @@ def note_of(a):
     return ""
 
 
-def render(a, fig, e, P, when, have, n_all):
-    """The page below the breadcrumb. when: the build's date in words; have: the addresses that exist; n_all: every open job."""
+def render(a, fig, e, P, when, have, n_all, nums=None):
+    """The page below the breadcrumb. when: the build's date in words; have: the addresses that exist; n_all: every open job;
+    nums: build.py's row of numbers (without it the figures stay one paragraph, as they were before the sections review)."""
     label = next(g[2] for g in GROUPS if g[0] == a["group"])
     h = (f'<article class="guide"><h1>{e(a["h1"])}{"" if a["h1"].endswith("?") else ":"} <span class="hl">{fig["k"]} kinds of work open today</span></h1>'
          f'<p class="stamp">{label} · figures recounted {when} from <b>{n_all:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
@@ -151,7 +157,8 @@ def render(a, fig, e, P, when, have, n_all):
         cells = [f'<span class="bar"><i style="width:{max(3, round(100 * r["n"] / top))}%"></i></span>{r["n"]:,}', r["pay"], f'{r["remote"]}%', f'{r["entry"]:,}'] + r["cells"]
         return (f'<tr><th scope="row"><a href="{P}/roles/{r["slug"]}/">{e(r["name"])}</a><span>{e(r["why"])}</span></th>'
                 + "".join(f'<td data-l="{t}">{c}</td>' for t, c in zip(ths, cells)) + "</tr>")
-    h += (f'<h2>{"Kinds of work graduates move into" if a["group"] == "degree" else "Kinds of work that fit"}, with what is open today</h2><p>{e(fig["line"])}</p>'
+    h += (f'<h2>{"Kinds of work graduates move into" if a["group"] == "degree" else "Kinds of work that fit"}, with what is open today</h2>'
+          + (f'<p>{e(fig["head"])}</p>' + nums(fig["cells"], src=False) if nums else f'<p>{e(fig["line"])}</p>') +
           '<div class="tablewrap jfwrap"><table class="jft"><thead><tr><th>Kind of work</th>' + "".join(f"<th>{t}</th>" for t in ths) + "</tr></thead><tbody>"
           + "".join(tr(r) for r in fig["rows"]) + "</tbody></table></div>"
           '<p class="note">Open jobs: postings open today whose title matches that kind of work; a posting can match two, and the total above counts it once. '
@@ -161,7 +168,7 @@ def render(a, fig, e, P, when, have, n_all):
     h += '<h2>What to check before you apply</h2><ul class="ticks">' + "".join(f"<li>{e(c)}</li>" for c in a["check"]) + "</ul>"
     h += f'<h2>Questions about {e(a["about"])}</h2><dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(x)}</dd></div>" for q, x in faq(a, fig)) + "</dl>"
     links = [(u, t) for u, t in a["more"] if u in have] + [("jobs-for/", "All lists by situation and by degree")]
-    h += '<p class="note cmpl">Next: ' + " · ".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in links) + "</p>"
+    h += '<p class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in links) + "</p>"
     h += f'<div class="adv-jobs"><p>None of these is your kind of work? Search by title, skill or place.</p><a class="btn ghost" href="{P}/jobs/">Search all open jobs</a></div>'
     return h + "</article>"
 
@@ -178,15 +185,22 @@ def head_ld(a, fig, json, site, full, today):
                 {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": x}} for q, x in faq(a, fig)]}))
 
 
-def hub(figs, tile, section, e, P, when, n_all):
+def hub(figs, tile, section, e, P, when, n_all, nums=None):
     """/jobs-for/ below the breadcrumb: both groups as tiles, each with the jobs open today in its kinds of work."""
     k = len(figs)
     h = (f'<h1>{e(HUB_H1)} <span class="hl">{k} lists, counted from today’s postings</span></h1><p class="lead">{e(HUB_LEAD)}</p>')
+    if nums:
+        big = max(figs, key=lambda s: figs[s]["n"])
+        h += nums([(str(sum(1 for a in ENTRIES if a["group"] == g and a["slug"] in figs)), e("lists " + title[0].lower() + title[1:])) for g, title, _, _ in GROUPS]
+                  + [(f"{n_all:,}", "open jobs the lists are counted from"),
+                     (f"{figs[big]['n']:,}", "jobs in the largest list: " + e(next(a["tile"] for a in ENTRIES if a["slug"] == big)).lower())])
     for g, title, _, sub in GROUPS:
         items = [a for a in ENTRIES if a["group"] == g and a["slug"] in figs]
         if g == "degree": items.sort(key=lambda a: a["tile"])
         if items:
-            h += section(title, '<ul class="tiles">' + "".join(tile(f"jobs-for/{a['slug']}/", a["tile"], figs[a["slug"]]["n"]) for a in items) + "</ul>", sub=sub)
+            two = f"By [[{title[3:]}]]" if nums and title.startswith("By ") else title      # the two-weight headline of a labelled section
+            h += section(two, '<ul class="tiles">' + "".join(tile(f"jobs-for/{a['slug']}/", a["tile"], figs[a["slug"]]["n"]) for a in items) + "</ul>", sub=sub,
+                         **({"label": f"{len(items)} lists"} if nums else {}))
     return h + (f'<p class="note">Counted {when} from {n_all:,} open jobs read from employers’ own careers pages. A list appears only when at least {MIN_ROLES} of its kinds of work '
                 f'have open jobs today. Not sure where you fit: take the <a href="{P}/career-quiz/">career quiz</a>, or browse every kind of work in the '
                 f'<a href="{P}/categories/">categories</a>.</p>')

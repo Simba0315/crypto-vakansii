@@ -179,3 +179,20 @@ select:not([multiple]){-webkit-appearance:none!important;-moz-appearance:none!im
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) select:not([multiple]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%23aca69c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}}
 :root[data-theme=dark] select:not([multiple]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%23aca69c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}
 select:not([multiple]):hover{border-color:var(--text)}
+
+/* Sections review, batch 4 (lists, tools, writing helpers), 17 Nov 2026 */
+/* The open tool in the row of tools is ink, like the open list in every other row of pills (it was a green fill). */
+.tsub a:hover{background:var(--bg2);color:var(--text);border-color:var(--text)}
+.tsub a[aria-current],.tsub a[aria-current]:hover{background:var(--text);color:var(--bg);border-color:var(--text)}
+/* A phone: the tool itself on the first screen. The paragraph is set smaller and the "In plain words" box stands right under the
+   tool (both stood above it: 13 to 19 lines of text before the first field, which was at the foot of the screen or under it). */
+@media(max-width:700px){
+  main:has(>.tl){display:flex;flex-direction:column}
+  main:has(>.tl)>*{min-width:0}
+  main:has(>.tl)>.lead{font-size:16px;line-height:1.5;margin-bottom:14px}
+  main:has(>.tl)>.plain{order:1;margin:20px 0 0}
+  main:has(>.tl)>.tl-after{order:2}
+}
+/* The dark theme: the label of the note under a form ("Private", "Not legal advice", "Today's postings") is paper, not green type on black. */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .tl-priv b{color:var(--text)}}
+:root[data-theme=dark] .tl-priv b{color:var(--text)}
