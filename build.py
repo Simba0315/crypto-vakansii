@@ -842,6 +842,11 @@ def section(title, inner, link=None, sid="", sub="", label=""):
     return f'<section class="sec"{sid_}><div class="sec-head{" has-sub" if sub else ""}"><h2>{e(title)}</h2>{sb}{more}</div>{inner}</section>'
 
 
+def fx(dl):
+    """The figures row of a page of the 391-page families (a facts list) drawn as the framed row of numbers the hubs use, with the line that says when they were checked."""
+    return dl.replace('<dl class="facts">', '<dl class="nums">') + f'<p class="nums-src"><a href="{P}/methodology/">Checked {fdate(TODAY, False)} against employer career pages</a></p>'
+
+
 def pics_first(pics, block):
     """Pictures above a block on wide screens and under it on a phone (the same two classes listing() uses for the charts and the list)."""
     return f'<div class="lflow"><div class="lpics">{pics}</div><div class="llist">{block}</div></div>' if pics else block
@@ -4249,7 +4254,7 @@ def main():
                   "Give one result with a number, name the skills the posting asks for, and say why this company. The entry-level letter on this page is written that way.")]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = (f'<dl class="facts"><div><dt>Open {e(low)} jobs today</dt><dd>{len(rj):,}</dd></div><div><dt>Can be done from home</dt><dd>{pc_(sum(j["remote"] for j in rj), len(rj))}%</dd></div>'
+        facts_ = fx(f'<dl class="facts"><div><dt>Open {e(low)} jobs today</dt><dd>{len(rj):,}</dd></div><div><dt>Can be done from home</dt><dd>{pc_(sum(j["remote"] for j in rj), len(rj))}%</dd></div>'
                   + (f'<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>' if len(mids_) >= 30 else "") + "</dl>")
         cl_dir[fs].append((slug_r, rname, len(rj)))
         page(f"cover-letter-examples/{slug_r}/", f"{tcase(rname)} Cover Letter: 3 Examples & Template ({TODAY[:4]}) | {SITE}",
@@ -4322,7 +4327,7 @@ def main():
                + "".join(f"- {x}\n" for x, _ in perk_)
                + "- [Paid time off, health cover and the rest of your benefits]\n\n"
                "How to apply\n[What to send, the interview steps and how long they take. Name the date you will reply by.]")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Open postings today</dt><dd>{n_:,}</dd></div>"
+        facts_ = fx('<dl class="facts">' + f"<div><dt>Open postings today</dt><dd>{n_:,}</dd></div>"
                   + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med else "")
                   + f"<div><dt>Postings that state pay</dt><dd>{paid_pct}%</dd></div>"
                   + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "")
@@ -4438,7 +4443,7 @@ def main():
                   + (", alongside " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:2]) + "." if top_ else "."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs today</dt><dd>{n_:,}</dd></div><div><dt>Open to beginners</dt><dd>{len(begin):,}</dd></div>"
+        facts_ = fx('<dl class="facts">' + f"<div><dt>Open jobs today</dt><dd>{n_:,}</dd></div><div><dt>Open to beginners</dt><dd>{len(begin):,}</dd></div>"
                   + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med is not None else "")
                   + (f"<div><dt>Beginner pay, median</dt><dd>{money(median(jr_pay))}</dd></div>" if len(jr_pay) >= 8 else "") + "</dl>")
         many = ROLE_PLURAL.get(rname, low + "s")
@@ -4474,7 +4479,7 @@ def main():
              crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
-             + facts_ + section(f"Five steps to your first {low} job", steps) + extra_hb
+             + facts_ + section(f"Five steps to your first {low} job", steps, label="The way in") + extra_hb
              + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_)
@@ -4635,7 +4640,7 @@ def main():
                   if len(mids_) >= 20 else "Look at postings for this work that state pay, adjust for your experience and the country, and ask for their range first."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in iq_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Questions to prepare</dt><dd>{n_q}</dd></div><div><dt>Open {e(low)} jobs today</dt><dd>{n_:,}</dd></div>"
+        facts_ = fx('<dl class="facts">' + f"<div><dt>Questions to prepare</dt><dd>{n_q}</dd></div><div><dt>Open {e(low)} jobs today</dt><dd>{n_:,}</dd></div>"
                   + (f"<div><dt>Postings read in full</dt><dd>{len(descs_):,}</dd></div>" if own_text else "")
                   + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "") + "</dl>")
         iq_dir[fs].append((slug_r, rname, n_q))
@@ -4787,7 +4792,7 @@ def main():
                   + ("the table on this page lists the countries named most in today’s postings." if len(ctry_) >= 3 else "name the countries you can hire in."))]      # no country names in plain text: a country is shown with its flag
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hh_qa + hh_more]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Companies hiring now</dt><dd>{len(cos_):,}</dd></div><div><dt>Open postings</dt><dd>{n_:,}</dd></div>"
+        facts_ = fx('<dl class="facts">' + f"<div><dt>Companies hiring now</dt><dd>{len(cos_):,}</dd></div><div><dt>Open postings</dt><dd>{n_:,}</dd></div>"
                   + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "")
                   + f"<div><dt>Remote</dt><dd>{rem_pct}%</dd></div>"
                   + (f"<div><dt>Half are open for over</dt><dd>{age_med} days</dd></div>" if age_med is not None else "") + "</dl>")
@@ -4853,7 +4858,7 @@ def main():
         off = OFFICIAL_VISA.get(c)
         lists_ = [(f"perks/visa-sponsorship/{slug}/", f"{len(visa_):,} jobs with visa sponsorship"), (f"perks/relocation/{slug}/", f"{len(relo_):,} jobs with relocation support")]
         lists_ = [(u, t) for u, t in lists_ if (OUT / u / "index.html").exists()]
-        facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs in the country</dt><dd>{len(cj):,}</dd></div><div><dt>Mention visa sponsorship</dt><dd>{len(visa_):,}</dd></div>"
+        facts_ = fx('<dl class="facts">' + f"<div><dt>Open jobs in the country</dt><dd>{len(cj):,}</dd></div><div><dt>Mention visa sponsorship</dt><dd>{len(visa_):,}</dd></div>"
                   f"<div><dt>Mention relocation support</dt><dd>{len(relo_):,}</dd></div>"
                   + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 10 else "") + "</dl>")
         steps = ('<ol class="steps">'
