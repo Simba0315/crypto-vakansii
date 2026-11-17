@@ -65,7 +65,7 @@
     "Assurant",
     "Financials"
    ],
-   "AT&T Mobility Services": [
+   "AT&T": [
     "AT&T",
     "Communication Services"
    ],
@@ -189,7 +189,7 @@
     "DaVita",
     "Health Care"
    ],
-   "Deckers Brands. We’re": [
+   "Deckers Brands": [
     "Deckers Brands",
     "Consumer Discretionary"
    ],
@@ -237,7 +237,7 @@
     "Gen Digital",
     "Information Technology"
    ],
-   "General Mills Services": [
+   "General Mills": [
     "General Mills",
     "Consumer Staples"
    ],
@@ -253,10 +253,6 @@
     "GoDaddy",
     "Information Technology"
    ],
-   "Hartford Fire Ins": [
-    "Hartford",
-    "Financials"
-   ],
    "Hasbro": [
     "Hasbro",
     "Consumer Discretionary"
@@ -265,7 +261,7 @@
     "HP Inc.",
     "Information Technology"
    ],
-   "Humana Benefit Plan": [
+   "Humana": [
     "Humana",
     "Health Care"
    ],
@@ -293,7 +289,7 @@
     "J.B. Hunt",
     "Industrials"
    ],
-   "Jabil Vietnam": [
+   "Jabil": [
     "Jabil",
     "Information Technology"
    ],
@@ -357,7 +353,7 @@
     "Morgan Stanley",
     "Financials"
    ],
-   "Motorola Solutions Overview": [
+   "Motorola Solutions": [
     "Motorola Solutions",
     "Information Technology"
    ],
@@ -368,6 +364,10 @@
    "NiSource": [
     "NiSource",
     "Utilities"
+   ],
+   "Northern Trust": [
+    "Northern Trust",
+    "Financials"
    ],
    "Northrop Grumman": [
     "Northrop Grumman",
@@ -433,17 +433,17 @@
     "Target Corporation",
     "Consumer Staples"
    ],
-   "The Coca-Cola": [
+   "The Coca-Cola Company": [
     "Coca-Cola Company",
     "Consumer Staples"
+   ],
+   "The Hartford": [
+    "Hartford",
+    "Financials"
    ],
    "The Home Depot": [
     "Home Depot",
     "Consumer Discretionary"
-   ],
-   "The Northern Trust": [
-    "Northern Trust",
-    "Financials"
    ],
    "TJX": [
     "TJX Companies",

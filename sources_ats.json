@@ -21,7 +21,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Banner Health",
@@ -76,7 +76,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cisco",
@@ -89,7 +89,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "CVS Health",
@@ -152,7 +152,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Global Partners",
@@ -221,7 +221,7 @@
 "BR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "JCrew Stores",
@@ -269,7 +269,7 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "KnitWell",
@@ -313,7 +313,7 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "LVHN",
@@ -350,7 +350,7 @@
 "FR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Meijer",
@@ -372,7 +372,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cencora",
@@ -385,7 +385,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Nordstrom",
@@ -407,7 +407,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Ochsner Health",
@@ -430,7 +430,7 @@
 "FR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Parsons",
@@ -460,7 +460,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Republic Services",
@@ -705,7 +705,7 @@
 "MY"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Applied Materials",
@@ -717,7 +717,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "ASM Global-SMG",
@@ -731,7 +731,7 @@
 "hold": true
 },
 {
-"name": "AT&T Mobility Services",
+"name": "AT&T",
 "ats": "workday",
 "token": "att.wd1/ATTGeneral",
 "count": 1000,
@@ -739,7 +739,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Benchmark Resorts",
@@ -864,7 +864,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cushman & Wakefield",
@@ -890,7 +890,7 @@
 "PL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Dave & Buster’s",
@@ -942,7 +942,7 @@
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "State of Georgia",
@@ -966,7 +966,7 @@
 "SG"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "GE HealthCare",
@@ -979,7 +979,7 @@
 "HU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "HPE",
@@ -1005,10 +1005,10 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
-"name": "Jabil Vietnam",
+"name": "Jabil",
 "ats": "workday",
 "token": "jabil.wd5/Jabil_Careers",
 "count": 1000,
@@ -1018,7 +1018,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Johnson & Johnson",
@@ -1031,7 +1031,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "KBR",
@@ -1057,7 +1057,7 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Little Caesar Enterprises",
@@ -1090,7 +1090,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Micron Technology",
@@ -1102,7 +1102,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Ivy Rehab",
@@ -1182,7 +1182,7 @@
 "BR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Kansas Health System",
@@ -1320,7 +1320,7 @@
 "AU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "The P&G Distributing",
@@ -1359,7 +1359,7 @@
 "IL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cardinal Health",
@@ -1373,7 +1373,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "Motorola Solutions Overview",
+"name": "Motorola Solutions",
 "ats": "workday",
 "token": "motorolasolutions.wd5/Careers",
 "count": 860,
@@ -1383,7 +1383,7 @@
 "BR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "GlobalFoundries",
@@ -1421,7 +1421,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Bright Horizons",
@@ -1526,7 +1526,7 @@
 "ES"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "3M",
@@ -1539,7 +1539,7 @@
 "CN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "UA System",
@@ -1594,7 +1594,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Aegis Therapies",
@@ -1674,7 +1674,7 @@
 "NL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Topgolf",
@@ -1711,7 +1711,7 @@
 "PH"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Albany Med Health System",
@@ -1755,7 +1755,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "International Schools Partnership. Please",
@@ -1875,7 +1875,7 @@
 "hold": true
 },
 {
-"name": "The Northern Trust",
+"name": "Northern Trust",
 "ats": "workday",
 "token": "ntrs.wd1/northerntrust",
 "count": 646,
@@ -1885,7 +1885,7 @@
 "IE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "UT Austin",
@@ -2083,7 +2083,7 @@
 "CZ"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Nationwide Children’s Hospital",
@@ -2206,7 +2206,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Marathon Health",
@@ -2226,7 +2226,7 @@
 "count": 531,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cigna",
@@ -2238,7 +2238,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "City Wide Facility Solutions",
@@ -2423,7 +2423,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Avis Budget",
@@ -2554,7 +2554,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "University of Ottawa",
@@ -2576,7 +2576,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Desjardins",
@@ -2600,7 +2600,7 @@
 "PL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Rocket Loans",
@@ -2636,7 +2636,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Concord Hospital",
@@ -2691,7 +2691,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "AeroVironment",
@@ -2714,7 +2714,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Intellect",
@@ -2804,10 +2804,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
-"name": "General Mills Services",
+"name": "General Mills",
 "ats": "workday",
 "token": "genmills.wd1/GMI_External_Careers",
 "count": 382,
@@ -2817,7 +2817,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Ingram Micro",
@@ -2865,7 +2865,7 @@
 "JP"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "American Axle & Manufacturing",
@@ -2951,7 +2951,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Tommy Bahama R&R",
@@ -3000,7 +3000,7 @@
 "ES"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Denver Health",
@@ -3023,7 +3023,7 @@
 "hold": true
 },
 {
-"name": "Deckers Brands. We’re",
+"name": "Deckers Brands",
 "ats": "workday",
 "token": "deckers.wd5/Deckers",
 "count": 350,
@@ -3033,7 +3033,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "H2 Health",
@@ -3096,7 +3096,7 @@
 "HU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "BKF",
@@ -3119,7 +3119,7 @@
 "PT"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "4001US00 DUAL North America",
@@ -3156,7 +3156,7 @@
 "AU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Allegion",
@@ -3169,7 +3169,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Gramian Consulting Group",
@@ -3271,7 +3271,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Catalent",
@@ -3310,7 +3310,7 @@
 "hold": true
 },
 {
-"name": "Humana Benefit Plan",
+"name": "Humana",
 "ats": "workday",
 "token": "humana.wd5/Humana_External_Career_Site",
 "count": 306,
@@ -3318,7 +3318,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "GEICO",
@@ -3351,7 +3351,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Wright Tree Service",
@@ -3506,7 +3506,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cheer Home Care",
@@ -3561,7 +3561,7 @@
 "NL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Guest Services",
@@ -3802,7 +3802,7 @@
 "FR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "ZOLL Medical",
@@ -3860,7 +3860,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Unilever",
@@ -3884,7 +3884,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Lennar",
@@ -3895,7 +3895,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "InterVarsity",
@@ -4168,7 +4168,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Logitech",
@@ -4249,7 +4249,7 @@
 "hold": true
 },
 {
-"name": "Hartford Fire Ins",
+"name": "The Hartford",
 "ats": "workday",
 "token": "thehartford.wd5/Careers_External",
 "count": 217,
@@ -4258,7 +4258,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Global Pacific Support",
@@ -4305,7 +4305,7 @@
 "hold": true
 },
 {
-"name": "The Coca-Cola",
+"name": "The Coca-Cola Company",
 "ats": "workday",
 "token": "coke.wd1/coca-cola-careers",
 "count": 212,
@@ -4315,7 +4315,7 @@
 "PH"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "First American’s",
@@ -4477,7 +4477,7 @@
 "HK"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Torch Technologies",
@@ -4523,7 +4523,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-17"
 },
 {
 "name": "Cornell University",

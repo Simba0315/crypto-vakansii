@@ -23,6 +23,16 @@ jobs in English are counted (and collected). On Workday a board is counted up to
 
 ## Read now, and on hold
 
+**Update, 17 Nov 2026:** 74 of the boards on hold were released: the companies that are in a well-known list (S&P 500, Nasdaq-100,
+unicorns, Y Combinator; `company_lists.json`), 48,636 jobs at the check: NVIDIA, Cisco, Intel, Boeing, Pfizer, Visa, Bank of America,
+Morgan Stanley, Johnson & Johnson, Adobe and others. They carry `"lifted": "2026-11-17"` in `sources_ats.json`. Their jobs come in
+gradually (40 texts a board on each hourly read, 5 a board on each pass of `live.py`), so the record grows by about 18,000 jobs a day
+for three days. Nine of them got their plain names instead of a legal entity's (Jabil, AT&T, Motorola Solutions, Humana, General Mills,
+The Hartford, Deckers Brands, Northern Trust, The Coca-Cola Company). 254 boards (143,733 jobs) are still on hold. What made room:
+the build matches titles to roles about twenty times faster and reads descriptions three times faster (ROADMAP.md, section 122),
+and every build now prints its slowest stages.
+
+
 All 6,609 boards are in the sources files, but 328 large Workday boards (192,369 jobs) carry `"hold": true` and are not read yet:
 
 | | Boards | Open jobs at the check |
