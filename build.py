@@ -222,6 +222,25 @@ ROLES = [   # (name, slug, pattern matched against the job title)
 # how each role reads in the plural ("jobs for data engineers"), and titles that belong to another profession even if a role word is in them
 ROLE_PLURAL = {"Cybersecurity": "cybersecurity specialists", "IT support": "IT support specialists", "DevOps engineer": "DevOps engineers", "QA engineer": "QA engineers",
                "Program and project manager": "program and project managers"}
+HB_PERSON = {"applied-ai": "applied AI specialist", "mlops": "ML infrastructure engineer", "business-systems": "business systems specialist", "pricing": "pricing specialist",
+             "data-governance": "data governance specialist", "data-center": "data center technician", "developer-advocate": "developer advocate", "tech-lead": "tech lead",
+             "software-architect": "software architect", "system-administrator": "system administrator", "security-analyst": "security analyst",
+             "security-compliance": "security compliance specialist", "trust-safety": "trust and safety specialist", "physical-security": "security officer",
+             "privacy": "privacy specialist", "product-operations": "product operations manager", "scrum-master": "scrum master", "business-operations": "business operations manager",
+             "ai-trainer": "AI trainer", "content-designer": "content designer", "video-motion": "video and motion specialist", "audio": "audio specialist",
+             "growth-marketing": "growth marketer", "content-writer": "content writer", "seo": "SEO specialist", "advertising": "advertising specialist",
+             "communications": "communications specialist", "ecommerce": "e-commerce specialist", "sales-operations": "sales operations analyst",
+             "business-development": "business development manager", "retail": "retail associate", "customer-support": "customer support specialist",
+             "implementation": "implementation specialist", "accounting": "accountant", "financial-analyst": "financial analyst", "tax": "tax specialist",
+             "treasury": "treasury specialist", "payroll": "payroll specialist", "audit": "internal auditor", "investment": "investment analyst",
+             "insurance": "insurance specialist", "lending": "lending specialist", "legal-counsel": "lawyer", "compliance": "compliance officer",
+             "policy": "policy specialist", "human-resources": "HR specialist", "compensation-benefits": "compensation and benefits specialist", "training": "trainer",
+             "executive-assistant": "executive assistant", "workplace": "workplace coordinator", "supply-chain": "supply chain specialist",
+             "ehs": "health and safety specialist", "optics": "optics engineer", "robotics": "robotics engineer", "manufacturing": "manufacturing specialist",
+             "field-service": "field service technician", "construction": "construction specialist", "life-sciences": "life scientist",
+             "healthcare": "healthcare professional", "nursing": "nurse", "mental-health": "therapist", "clinical-research": "clinical research specialist",
+             "education": "teacher", "hospitality": "hospitality worker", "intern": "intern"}
+"""Role slug -> the person, for sentences that say "become a ..." (the name of a role like "Customer support" is a field of work, not a person)."""
 ROLE_OTHER = re.compile(r"\b(sales|account executive|counsel|attorney|recruiter|recruiting|marketing|paralegal)\b", re.I)
 ROLE_OWN = {"Account executive", "Marketing manager", "Recruiter", "Solutions engineer", "Customer success manager"}       # roles the exclusion must not touch
 # The 25 roles above came first and have every combination page. The rest of the directory (categories, more roles, plain lines,
@@ -4644,6 +4663,7 @@ def main():
         if len(rj) < 20: continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
         low, n_ = rlow(rname), len(rj)
+        pw = HB_PERSON.get(slug_r, low)      # the person who does the work ("customer support" is a field, "customer support specialist" a person)
         does = (roles_info.INFO.get(slug_r) or (None, ""))[1]
         begin = [j for j in rj if j["entry"] or (j.get("years") and j["years"] <= 2)]
         yrs = sorted(j["years"] for j in rj if j.get("years"))
@@ -4661,7 +4681,7 @@ def main():
         with_text = sum(1 for j in rj if j.get("desc"))
         k_ai = sum(1 for j in rj if any(t in AI_TAGS for t in j["tags"]))
         steps = ("<ol class=\"steps\">"
-                 f"<li><b>Know what the work is.</b> {e(art(low).capitalize())} {e(low)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
+                 f"<li><b>Know what the work is.</b> {e(art(pw).capitalize())} {e(pw)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
                  + (f"<li><b>Learn the skills employers name first.</b> In today’s {n_:,} postings: " + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in top_) + ".</li>" if top_ else
                     "<li><b>Learn the duties, not only the tools.</b> Postings for this work describe what you will do more than which software you will use: read ten of them and list the duties that repeat.</li>")
                  + "<li><b>Build proof you can show.</b> Two or three results with a number, from a job, a course project or volunteer work. The kind of line a recruiter looks for: "
@@ -4672,16 +4692,16 @@ def main():
                  + f'<a href="{P}/roles/{slug_r}/">See the open jobs</a> and check each one with the <a href="{P}/tools/resume-match/">resume match checker</a> before you apply.</li></ol>')
         hb_qa = [(f"How much experience do {low} jobs ask for?", (f"The median in today’s postings is {y_med} years; {low_yrs}% of the postings that name a number ask for two years or less." if y_med is not None
                   else "Most postings for this work do not name a number of years. Read the duties: they tell you more about the level than the title does.")),
-                 (f"Do I need a degree to become {art(low)} {low}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
+                 (f"Do I need a degree to become {art(pw)} {pw}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
                   + " Many others accept equivalent experience: read the requirements of each posting."),
-                 (f"How much does a beginner {low} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
+                 (f"How much does a beginner {pw} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
                   else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure."))),
-                 (f"What qualifications do you need to become {art(low)} {low}?",
+                 (f"What qualifications do you need to become {art(pw)} {pw}?",
                   "Employers name skills first: " + (", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:3]) + " of today’s postings. " if top_ else "the duties in the posting. ")
                   + (f"The median posting asks for {y_med} years of experience. " if y_med is not None else "")
                   + (f"{nodeg}% say no degree is required. " if nodeg else "")
                   + (("Certifications named in the full text of " + f"{with_text:,} postings: " + ", ".join(f"{c} ({k})" for c, k in certs_.most_common(3)) + ".") if certs_ else "Few postings ask for a specific certification.")),
-                 (f"Is AI replacing {low}s?" if not low.endswith("s") else f"Is AI replacing {low}?",
+                 (f"Is AI replacing {pw}s?" if not pw.endswith("s") else f"Is AI replacing {pw}?",
                   f"Not in today’s postings: {n_:,} {low} jobs are open on {SITE} as of {fdate(TODAY)}, and {pc_(k_ai, n_)}% of them ask for AI or machine-learning skills"
                   + (", alongside " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:2]) + "." if top_ else "."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -4709,9 +4729,9 @@ def main():
                   (f"Earn a certification employers name in this work: {', '.join(c for c, _ in certs_.most_common(2))}." if certs_ else "Take one short course in the field and finish it with a project, not only a certificate."),
                   "Keep a list of your results with numbers, updated every month: it becomes your resume lines and your interview stories.",
                   "Find one person a few years ahead of you in this work and ask for a 20-minute talk each quarter."]
-        extra_hb += section(f"Professional development goals for {art(low)} {low}", '<ul class="ticks">' + "".join(f"<li>{e(g_)}</li>" for g_ in goals_) + "</ul>")
+        extra_hb += section(f"Professional development goals for {art(pw)} {pw}", '<ul class="ticks">' + "".join(f"<li>{e(g_)}</li>" for g_ in goals_) + "</ul>")
         li_skills = " · ".join(t for t, _ in top_[:3]) if top_ else ""
-        extra_hb += section(f"LinkedIn profile tips for {art(low)} {low}", '<ul class="ticks">'
+        extra_hb += section(f"LinkedIn profile tips for {art(pw)} {pw}", '<ul class="ticks">'
                             + f'<li><b>Headline:</b> the title employers search for, then your strongest skills and one result: “{e(tcase(rname))}' + (f" | {e(li_skills)}" if li_skills else "") + ' | [one result with a number]”.</li>'
                             + "<li><b>About:</b> three short paragraphs: what you do, two results with numbers, what you want next.</li>"
                             + f"<li><b>Skills section:</b> list the skills postings name, in their words" + (f": {e(', '.join(t for t, _ in tools_[:5]))}" if tools_ else "") + ".</li>"
@@ -4719,13 +4739,13 @@ def main():
                             + f'<p class="note">Write the headline with the <a href="{P}/tools/linkedin-headline/">LinkedIn headline generator</a>.</p>')
         hb_dir[fs].append((slug_r, rname, len(begin)))
         hb_begin.update(j["id"] for j in begin)
-        page(f"how-to-become/{slug_r}/", f"How to Become {art(low)} {tcase(rname)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
-             f"How to become {art(low)} {low}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
-             crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
+        page(f"how-to-become/{slug_r}/", f"How to Become {art(pw)} {tcase(pw)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
+             f"How to become {art(pw)} {pw}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
+             crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(pw)} {e(pw)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + facts_ + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
              + section(f"Five steps to your first {low} job", steps, label="The way in") + extra_hb
-             + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
+             + section(f"Questions about becoming {art(pw)} {pw}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_, cls="kw")
     hb_n = sum(len(v) for v in hb_dir.values())
