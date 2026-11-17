@@ -275,8 +275,12 @@ that is not the employer's own hiring system must be labelled as such and kept o
      A card is fine when it shows something real: tool tiles (`.tcard`) carry a small screen of the tool's result;
    - small capital letters in mono with letter-spacing as labels; mono is for numbers only;
    - boxes around everything: lists are flat with hairlines, like a printed index (`.jobs`, `.tiles`, `.hbars`, tables);
-   - a row of four big numbers in the hero, badge-style kickers above a headline, arrows after every link;
-   - accordions for questions: questions and answers are plain text (`.qa`).
+   - arrows after every link;
+   - (lifted on 17 Nov 2026 by the owner's own reference, dlocal.com: "the design is great, a lot can be taken for different
+     pages") a row of large figures under a title, a small label above a section title, framed panels, one pill button with an
+     arrow per block and rows that open ARE the site's language now: `nums()`, `section(..., label=)`, `kpanel()`, `khero()`,
+     `go()`, `krows()`, `kmore()` in `build.py`. Use them as the reviewed pages do; do not invent a second set. Questions with
+     answers stay readable text on content pages (`.qa`); the home page lists its questions as rows that open.
    Required, from the same day ("the tools page looked like it had no design, I could not tell what was clickable",
    "every page must be worked through", "an ordinary person will not understand many skills"):
    - anything clickable must look clickable: a green underline on the name, a hover state on the whole row or tile;
