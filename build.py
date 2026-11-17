@@ -2135,6 +2135,14 @@ def main():
     LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead and above")]
     combos, REL = [], defaultdict(list)
     big_places = [x for x in places if len(x[2]) >= 150]      # combination pages only where a place has enough jobs to fill them
+    big_slugs = {slug for _, slug, _ in big_places}
+    def by_place(js):
+        """{place: the jobs of js in it}, for the big places, each list in the order of js. One pass over the jobs instead of one
+        pass per place: 743 skills x 100 places x their jobs was most of this stage on the full record (17 Nov 2026)."""
+        out_ = defaultdict(list)
+        for j in js:
+            for p_ in big_slugs.intersection(j["places"]): out_[p_].append(j)
+        return out_
     def add(path, h1, js, trail, qs, pre, post, keys):
         if len(js) < 8: return
         combos.append((path, h1, js, trail, qs, pre, post))
@@ -2142,9 +2150,10 @@ def main():
     for t, js in by_tag.items():
         add(f"remote/skills/{tslug(t)}/", f"Remote {t} jobs", [j for j in js if j["remote"]], (("Remote", "remote/"),),
             f"remote=1&skills={quote(t)}", "remote ", f" mentioning {e(t)}", [("tag:" + t, f"Remote {t} jobs"), ("remote", f"Remote {t}")])
+        here_t = by_place(js)
         for name, slug, _ in big_places:
             short = name.removeprefix("the ")
-            add(f"locations/{slug}/skills/{tslug(t)}/", f"{t} jobs in {name}", [j for j in js if slug in j["places"]],
+            add(f"locations/{slug}/skills/{tslug(t)}/", f"{t} jobs in {name}", here_t.get(slug, []),
                 (("Locations", "locations/"), (short, f"locations/{slug}/")), f"loc={slug}&skills={quote(t)}", "", f" mentioning {e(t)} in {e(name)}",
                 [("tag:" + t, f"{t} in {short}"), ("place:" + slug, f"{t} jobs")])
     for name, slug, pj in places:
@@ -2176,8 +2185,9 @@ def main():
         rem_, ent_ = [j for j in rj if j["remote"]], [j for j in rj if j["entry"]]
         if base_r or len(rem_) >= 20: add(f"roles/{slug_r}/remote/", f"Remote {low} jobs", rem_, trail_r, f"remote=1&q={quote(rname)}", "remote ", f" for {e(many)}", [("role:" + slug_r, "Remote")])
         if base_r or len(ent_) >= 20: add(f"roles/{slug_r}/entry-level/", f"Entry-level {low} jobs", ent_, trail_r, f"entry=1&q={quote(rname)}", "entry-level ", f" for {e(many)}", [("role:" + slug_r, "Entry-level")])
+        here_r = by_place(rj)
         for name, slug, _ in big_places:          # every big place, not only the first six (Wellfound's role x city pages); 25 jobs or more
-            here_ = [j for j in rj if slug in j["places"]]
+            here_ = here_r.get(slug, [])
             if base_r or len(here_) >= 25:
                 add(f"roles/{slug_r}/{slug}/", f"{rname} jobs in {name}", here_, trail_r, f"loc={slug}&q={quote(rname)}", "", f" for {e(many)} in {e(name)}",
                     [("role:" + slug_r, name.removeprefix("the ")), ("place:" + slug, rname)])
@@ -2253,6 +2263,8 @@ def main():
         for lv, ls, ll in LEVELS:
             add(f"jobs/{cs}/{ls}/", f"{ll} {cname} jobs", [j for j in by_cat[cs] if j["level"] == lv], (("All jobs", "jobs/"), (cname, f"jobs/{cs}/")),
                 f"cat={cs}&lvl={lv}", f"{e(ll)} {e(cname)} ", "", [("cat:" + cs, ll)])
+    tag_of_slug = {}
+    for t in by_tag: tag_of_slug.setdefault(tslug(t), t)       # the first skill with that address, as the search through by_tag found it
     for path, h1, js, trail, qs, pre, post in combos:
         # these lists had the list and nothing else (SERP_WORK rows 10, 11, 13, 14, 17: "only 1 H2"); the views the big pages have
         seg_ = path.strip("/").split("/")
@@ -2261,7 +2273,7 @@ def main():
         lab_r = ("roles" + lab_[4:]) if lab_.startswith("jobs ") else lab_.replace(" jobs", " roles", 1)
         skip_ = ",".join(x for x, ok in (("places", (seg_[0] == "locations" and len(seg_) >= 3) or (seg_[0] == "perks" and len(seg_) == 3 and seg_[2] != "remote") or seg_[:2] == ["crypto", "in"]),
                                          ("roles", seg_[0] == "roles" or (seg_[0] == "salary" and len(seg_) == 2))) if ok)
-        tag_ = next((t for t in by_tag if tslug(t) == seg_[-1]), "") if "skills" in seg_[:-1] else (next((t for t in by_tag if tslug(t) == seg_[1]), "") if seg_[0] == "skills" else "")
+        tag_ = tag_of_slug.get(seg_[-1], "") if "skills" in seg_[:-1] else (tag_of_slug.get(seg_[1], "") if seg_[0] == "skills" else "")
         gl_, tl_ = hub_sections(lab_r, js, skip_, min_k=20, drop_tag=tag_)
         listing(path, h1, COMBO_TITLE.get(path) or f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
                 js, intro_for(js, pre, post), trail=trail, per=50, max_pages=3, more=qs, faq=lab_, extra=gl_, hub=tl_, after=COMBO_AFTER.get(path, ""), faq_extra=COMBO_QA.get(path, ()))
@@ -5397,7 +5409,14 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 ("Attention to detail", r"attention to detail|detail[- ]oriented"), ("Ownership", r"\bownership\b"), ("Self-starter", r"self[- ](?:starter|motivated|directed)"),
                 ("Organisation", r"\borgani[sz](?:ed|ational skills)\b"), ("Adaptability", r"adaptab|comfortable with ambiguity"), ("Leadership", r"\bleadership\b"),
                 ("Customer focus", r"customer[- ](?:focus|obsess|centric)")]
-    adv_soft_n = sorted(((nm_, pc_(sum(1 for j in adv_desc if re.search(rx_, j["desc"], re.I)), len(adv_desc))) for nm_, rx_ in adv_soft), key=lambda x: -x[1])
+    adv_rx = [re.compile(rx_, re.I) for _, rx_ in adv_soft]
+    adv_have, adv_may = rx_skip(adv_rx)                           # ten searches a description, most of which cannot match
+    adv_hits = [0] * len(adv_rx)
+    for j in adv_desc:
+        got_ = adv_have(j["desc"])
+        for i_, (may_, rx_) in enumerate(zip(adv_may, adv_rx)):
+            if may_(got_) and rx_.search(j["desc"]): adv_hits[i_] += 1
+    adv_soft_n = sorted(((nm_, pc_(k_, len(adv_desc))) for (nm_, _), k_ in zip(adv_soft, adv_hits)), key=lambda x: -x[1])
     adv_mids = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in active if j["usd"])
     adv_ages = sorted(max(0, (datetime.date.fromisoformat(TODAY) - datetime.date.fromisoformat(j["posted"][:10])).days) for j in active if j.get("posted"))
     advice_ctx = {"n": n, "n_desc": len(adv_desc), "soft": adv_soft_n,
@@ -6077,7 +6096,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         "Entry-level": f"{sum(1 for j in active if j['entry']):,} of today’s open jobs have a junior or intern title.",
         "Work from anywhere": f"{sum(1 for j in active if j.get('anywhere')):,} of today’s remote jobs name no country or region.",
         "Talent pool": f"{sum(1 for j in active if j['pool']):,} of today’s listings are talent pools rather than openings.",
-        "Cover letter": (f"Only {sum(1 for j in descs_ if re.search(r'cover[ -]*letter', j['desc'], re.I)):,} of the {len(descs_):,} open postings here with a full description mention a cover letter in their text." if len(descs_) >= 100 else ""),
+        "Cover letter": (f"Only {sum(1 for j in descs_ if 'cover' in j['desc'].lower() and re.search(r'cover[ -]*letter', j['desc'], re.I)):,} of the {len(descs_):,} open postings here with a full description mention a cover letter in their text." if len(descs_) >= 100 else ""),
         "Median": (f"The median advertised pay of today’s open jobs that state a yearly US-dollar range is {money(median(paid_))}." if len(paid_) >= 50 else ""),
         "Base salary": (f"The middle half of today’s postings that state pay offer {money(paid_[len(paid_) // 4])} to {money(paid_[3 * len(paid_) // 4])} a year." if len(paid_) >= 50 else ""),
     }
