@@ -1000,7 +1000,7 @@ def pager_html(path, n, pages):
 
 
 CAT_ACCENT = {}                       # sections once had their own colours; the site now keeps one green everywhere
-HUB = {"roles": {}, "week": ""}       # role slug -> (name, ids of its jobs); filled in main()
+HUB = {"roles": {}, "week": "", "job_roles": {}}       # role slug -> (name, ids of its jobs); job id -> its role slugs; filled in main()
 
 
 def hub_stats(js):
@@ -1028,7 +1028,10 @@ def hub_sections(label, js, skip="", min_k=40, drop_tag=""):
         sk = Counter(t for j in js for t in j["tags"] if t != drop_tag).most_common(7)
         if len(sk) >= 4: top.append(f'<div><h2 class="h2s">Skills asked for in {e(plc or label)}</h2>' + bars([(f"skills/{TAG_SLUG.get(t, slugify(t))}/", t, c) for t, c in sk]) + "</div>")
     if "roles" not in skip:
-        rl = sorted(((s_, nm, len(ids & rid)) for s_, (nm, rid) in HUB["roles"].items()), key=lambda x: -x[2])
+        # how many of this page's jobs each kind of work has: asked of the page's jobs, not of every role's whole set of jobs
+        # (len(ids & rid) for 531 roles on each of thousands of pages was a large part of a build on the full record, 17 Nov 2026)
+        rk = Counter(s_ for jid in ids for s_ in HUB["job_roles"].get(jid, ()))
+        rl = sorted(((s_, nm, rk.get(s_, 0)) for s_, (nm, rid) in HUB["roles"].items()), key=lambda x: -x[2])
         rl = [x for x in rl if x[2] >= 8][:7]
         if len(rl) >= 3: top.append(f'<div><h2 class="h2s">Job titles in {e(plc or label)}</h2>' + bars([(f"roles/{s_}/", nm, c) for s_, nm, c in rl]) + "</div>")
     co = Counter(j["company"] for j in js).most_common(12)
@@ -2165,13 +2168,25 @@ def main():
             add(f"locations/{slug}/{cs}/", f"{cname} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
                 f"loc={slug}&cat={cs}", f"{e(cname)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
     HUB["roles"] = {slug: (nm, {j["id"] for j in rj_}) for slug, (nm, rj_) in by_role.items()}
+    job_roles = defaultdict(list)                              # job id -> the kinds of work it belongs to
+    for slug, (nm, rj_) in by_role.items():
+        for jid in {j["id"] for j in rj_}: job_roles[jid].append(slug)
+    HUB["job_roles"] = job_roles
+    def by_kind(js):
+        """{role slug: the jobs of js that belong to it}, each job once: one pass over js instead of a pass over every role's jobs."""
+        out_, seen_ = defaultdict(list), set()
+        for j in js:
+            if j["id"] in seen_: continue
+            seen_.add(j["id"])
+            for s_ in job_roles.get(j["id"], ()): out_[s_].append(j)
+        return out_
     def role_rows(js, k_min=5):
         """[(count, role slug, role name, median advertised pay or 0, the jobs)] for the kinds of work inside a set of jobs, largest first."""
-        ids_ = {j["id"] for j in js}
+        kind_ = by_kind(js)
         out_ = []
         for s_, (nm_, rj_) in by_role.items():
             if s_ in ("analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"): continue
-            hit_ = [j for j in rj_ if j["id"] in ids_]
+            hit_ = kind_.get(s_, [])
             if len(hit_) >= k_min:
                 pay_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in hit_ if j["usd"]]
                 out_.append((len(hit_), s_, nm_, median(pay_) if len(pay_) >= 5 else 0, hit_))
@@ -2436,11 +2451,11 @@ def main():
             intro_for(jr, "entry-level "), extra=ent_top + gl_e, hub=tl_e, after=ent_after, faq="entry-level jobs", faq_extra=ent_qa)
     def skill_more(t, js):
         """"What jobs can I get with SQL?" (People also ask): the kinds of work that ask for it, with counts and pay; and the skills asked with it."""
-        ids_ = {j["id"] for j in js}
+        kind_ = by_kind(js)
         rows_ = []
         for s_, (nm_, rj_) in by_role.items():
             if s_ in BROAD: continue
-            hit_ = [j for j in rj_ if j["id"] in ids_]
+            hit_ = kind_.get(s_, [])
             if len(hit_) >= 5:
                 pay_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in hit_ if j["usd"])
                 rows_.append((len(hit_), s_, nm_, median(pay_) if len(pay_) >= 5 else 0))
