@@ -704,6 +704,10 @@
       var hit = !q || (li.getAttribute('data-n') || '').indexOf(q) >= 0;
       li.hidden = !hit; if (hit) shown++;
     });
+    document.querySelectorAll('table.dirt tr[data-n]').forEach(function (tr) {    // a table with a row per name (salaries by job title)
+      var hit = !q || tr.getAttribute('data-n').indexOf(q) >= 0;
+      tr.hidden = !hit; if (hit) shown++;
+    });
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 

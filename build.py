@@ -3173,12 +3173,15 @@ def main():
         for t in j["tags"]: g_tag[t].append((j, r))
     cat_slug = {v: k for k, v in CAT.items()}
     best = sorted(paid, key=lambda x: -x[1][1])
-    def level_table(group, minimum=15):  # pay ladder: median and middle half per seniority level; "" when there is too little data
+    def level_rows(group, minimum=15):  # (level, name, median, lower quarter, upper quarter, postings) per seniority level with enough postings
         rows_ = []
         for lv, name in ((k, LVL_NAME[k]) for k in ("Intern", "Junior", "Senior", "Lead", "")):
             ms = sorted((lo + hi) / 2 for j, (lo, hi) in group if j["level"] == lv)
             if len(ms) >= minimum: rows_.append((lv, name, median(ms), ms[len(ms) // 4], ms[min(len(ms) - 1, len(ms) * 3 // 4)], len(ms)))
-        if sum(1 for r in rows_ if r[0]) < 2: return ""
+        return rows_ if sum(1 for r in rows_ if r[0]) >= 2 else []
+    def level_table(group, minimum=15):  # pay ladder: median and middle half per seniority level; "" when there is too little data
+        rows_ = level_rows(group, minimum)
+        if not rows_: return ""
         med = {r[0]: r[2] for r in rows_}
         lo_, hi_ = ("Junior", "Senior") if "Junior" in med and "Senior" in med else ("Senior", "Lead") if "Senior" in med and "Lead" in med else (None, None)
         answer = ""
@@ -3187,6 +3190,22 @@ def main():
                       "The level comes from the job title; titles without a level word are counted separately.</p>")
         body_ = "".join(f'<tr><td>{e(name)}</td><td><strong>{money(m_)}</strong></td><td style="white-space:nowrap">{money(q1)}–{money(q3)}</td><td>{c:,}</td></tr>' for _, name, m_, q1, q3, c in rows_)
         return answer + f'<div class="tablewrap t4"><table><tr><th>Level</th><th>Median salary</th><th>Middle half</th><th>Roles</th></tr>{body_}</table></div>'
+    def pay_pic(mids_, title):
+        """A card with the spread of advertised pay: postings per band, the band that holds the median marked."""
+        md_ = median(mids_)
+        hi_ = next((i for i, (lo, hi) in enumerate(edges) if lo * 1000 <= md_ < hi * 1000), None)
+        pts = [(pay_lb(lo, hi), c_, f"{pay_tip(lo, hi)} · {c_:,} postings" + (" · the median is here" if i == hi_ else ""))
+               for i, (lo, hi) in enumerate(edges) for c_ in [sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)]]
+        return (f'<figure class="pic"><figcaption><b>{e(title)}</b>{len(mids_):,} postings by the middle of their yearly range, in thousands of US dollars. '
+                f'The dark column holds the median, {money(md_)}.</figcaption>' + vcols(pts, hi=hi_, aria="Postings by yearly pay band") + "</figure>")
+    def level_pic(group):
+        """The same ladder as the table by level, drawn: one bar per level, the median of its postings."""
+        rows_ = level_rows(group)
+        if not rows_: return ""
+        mx_ = max(r[2] for r in rows_) or 1
+        return ('<figure class="pic"><figcaption><b>Pay by level</b>The median of each level. The level is the word in the job title.</figcaption><div class="hbars">'
+                + "".join(f'<div><span class="hn">{e(name)}</span><span class="hb"><i style="width:{max(3, round(100 * m_ / mx_))}%"></i></span>'
+                          f'<span class="hc">{money(m_)} · {c:,} postings</span></div>' for _, name, m_, _, _, c in rows_) + "</div></figure>")
     def level_section(title, group):
         t_ = level_table(group)
         return section(title, t_) if t_ else ""
@@ -3211,28 +3230,42 @@ def main():
                    "director and vice president for people who lead teams. The table of salaries by level above shows what each step pays in today’s postings."))
     sal_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sal_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    sal_rows = "".join(f'<tr><td>{i_ + 1}</td><td><a href="{P}/salaries/{s_}/">{e(nm_)}</a></td><td><strong>{money(m_)}</strong></td><td>{c_:,}</td></tr>' for i_, (m_, s_, nm_, c_, _) in enumerate(sal_t))
+    # The hub (sections review, batch 3): the first sentence states the median and what it is counted from; the other figures stand
+    # in the row of numbers; the box to type a job title into is the page's main action. The table of job titles shows its first
+    # 30 rows: the rest open with one click, or by typing (site.js filters the rows; without scripts the checkbox still opens them).
+    SAL_FIRST = 30
+    sal_mx = max((r_[0] for r_ in sal_t), default=1) or 1
+    sal_rows = "".join(f'<tr data-n="{e(nm_.lower())}"{" class=xr" if i_ >= SAL_FIRST else ""}><td>{i_ + 1}</td><td><a href="{P}/salaries/{s_}/">{e(nm_)}</a></td>'
+                       f'<td class="salbar"><strong>{money(m_)}</strong><span class="bar"><i style="width:{max(4, round(100 * m_ / sal_mx))}%"></i></span></td><td>{c_:,}</td></tr>'
+                       for i_, (m_, s_, nm_, c_, _) in enumerate(sal_t))
+    sal_all = (f'<p class="showall"><input type="checkbox" id="salall" class="sr-only"><label class="btn ghost sm" for="salall"><span>Show all {len(sal_t)} job titles</span>'
+               f'<span>Show the first {SAL_FIRST} only</span></label></p>' if len(sal_t) > SAL_FIRST else "")
+    sal_q = lambda q: all_m[min(len(all_m) - 1, int(len(all_m) * q))]
     page("salaries/", f"Salary by Job Title: {len(sal_t)} Jobs From Live Postings | {SITE}",
          f"Median salary by job title for {len(sal_t)} jobs, plus by category, level, skill and company, from the pay ranges in {len(paid):,} open job postings. Updated daily.",
          crumbs(("Salaries", "")) + '<h1>Salaries from <span class="hl">live job postings</span></h1>'
-         f'<p class="lead">{100 - SALPCT}% of open postings do not state a salary, which leaves candidates guessing. These figures come from the {len(paid):,} open roles that do publish a yearly US-dollar range. '
+         f'<p class="lead">Job postings that state pay advertise a median of {money(median(all_m))} a year, counted from the {len(paid):,} open roles that publish a yearly US-dollar range; '
+         f'{100 - SALPCT}% of open postings state no salary at all, which leaves candidates guessing. '
          f'Each figure is a <a href="{P}/glossary/median/">median</a>: half of the postings advertise more than it, half less. These are advertised ranges, not what people are actually paid.</p>'
-         f'<p class="cta2"><a class="btn primary" href="{P}/salaries/explorer/">Open the salary explorer</a> <span class="note">Filter by role, place, skill and level, free.</span></p>'
-         + (lambda mids_: f'<div class="statrow"><div class="stat"><b>{money(median(mids_))}</b><span>median advertised salary</span></div>'
-                          f'<div class="stat"><b>{money(mids_[len(mids_) // 4])} – {money(mids_[3 * len(mids_) // 4])}</b><span>middle half of roles</span></div>'
-                          f'<div class="stat"><b>{SALPCT}%</b><span>of open postings state pay</span></div>'
-                          f'<div class="stat"><b>{len(mids_):,}</b><span>roles counted today</span></div></div>')(sorted((lo + hi) / 2 for _, (lo, hi) in paid))
-         + (section(f"Salary by job title: {len(sal_t)} jobs, highest first", '<div class="tablewrap"><table><tr><th>#</th><th>Job title</th><th>Median advertised salary</th><th>Postings with pay</th></tr>'
-                    + sal_rows + '</table></div><p class="note">A job title needs 20 open postings that state a yearly US-dollar range. Open one for its pay by level and place.</p>') if sal_t else "")
-         + section("By category", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10))
-         + level_section("Salaries by level, intern to lead", paid)
-         + section("By skill", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"))
-         + section("By company", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8))
-         + section("Highest-paying open roles", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary"))
+         + act_row("salaries/explorer/", "Open the salary explorer", note="Filter by role, place, skill and level, free.")
+         + nums([(f"{money(sal_q(.25))}–{money(sal_q(.75))}", "the middle half of postings"), (money(sal_q(.9)), "or more in the top tenth of postings"),
+                 (f"{len(sal_t)}", "job titles ranked below"), (f"{len(g_comp):,}", "employers that state pay")])
+         + ('<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job title' + (f", for example {e(rlow(common_t[0][2]))}" if common_t else "") + '" aria-label="Find a job title"></p>'      # the example is a title the table has today
+            f'<p class="lead" id="dirnone" hidden>No job title with these words has 20 postings that state pay today. The <a href="{P}/salaries/explorer/">salary explorer</a> counts by skill, place and field too.</p>'
+            + section(f"Salary by job title: [[{len(sal_t)} jobs]], highest first", '<div class="tablewrap"><table class="dirt"><tr><th>#</th><th>Job title</th><th>Median advertised salary</th><th>Postings with pay</th></tr>'
+                      + sal_rows + "</table></div>" + sal_all, sid="titles", label="By job title",
+                      sub="A job title needs 20 open postings that state a yearly US-dollar range. Open one for its pay by level and place.") if sal_t else "")
+         + section("Salary [[by category]]", table(g_cat, lambda k: f"salaries/{cat_slug[k]}/" if len(g_cat[k]) >= 30 and k != OTHER[1] else f"jobs/{cat_slug[k]}/", 10), label="By field",
+                   sub="The median of each field that has 10 postings with pay or more.")
+         + (lambda t_: section("Salaries [[by level]], intern to lead", t_, label="By level") if t_ else "")(level_table(paid))
+         + '<div class="duo">' + section("Salary [[by skill]]", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"), label="By skill")
+         + section("Salary [[by company]]", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8), label="By company") + "</div>"
+         + section("Highest-paying [[open roles]]", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary"), label="Open now",
+                   sub="The open roles with the highest advertised pay, at most two from one employer.")
          + cite("salaries/", "Salaries from live job postings",
                 f"Job postings that state pay advertise a median of {money(median([(lo + hi) / 2 for _, (lo, hi) in paid]))} a year; {100 - SALPCT}% of open postings state no pay at all. "
                 f"Counted from {len(paid):,} open postings, {MONTH_YEAR}.")
-         + section("Questions about salaries", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>"), head=sal_ld)
+         + section("Questions about salaries", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>"), head=sal_ld, cls="hub sal")
 
     def salary_page(slug, label, group, back, role=False):
         by_loc = defaultdict(list)
@@ -3245,9 +3278,10 @@ def main():
         pct = lambda q: mids[min(len(mids) - 1, int(len(mids) * q))]
         comp = defaultdict(list)
         for j, r in group: comp[j["company"]].append((j, r))
-        stats = (f'<div class="statrow"><div class="stat"><b>{money(median(mids))}</b><span>median advertised salary</span></div>'
-                 f'<div class="stat"><b>{money(pct(.25))} – {money(pct(.75))}</b><span>middle half of roles</span></div>'
-                 f'<div class="stat"><b>{money(mean_)}</b><span>average advertised salary</span></div><div class="stat"><b>{len(mids):,}</b><span>roles counted</span></div></div>')
+        # the row of figures holds what the first sentence does not say (the sentence keeps the median, the middle half and the count)
+        stats = nums([(f"${median(mids) / 2080:,.0f}", "an hour at the median, for 2,080 hours a year"), (f"${median(mids) / 12:,.0f}", "a month before tax, at the median"),
+                      (money(mean_), "average advertised salary"), (money(pct(.9)), "or more in the top tenth of postings")])
+        pics = f'<div class="pics two">{pay_pic(mids, f"What {label} postings pay")}{level_pic(group)}</div>'
         top_jobs = diverse_pairs(sorted(group, key=lambda x: -x[1][1]), 20)
         # People type "average <job> salary" and writers quote the answer: the page states it in words, as questions, and for search engines.
         best_c = sorted(((median([(lo + hi) / 2 for _, (lo, hi) in v]), k) for k, v in comp.items() if len(v) >= 3), reverse=True)[:3]
@@ -3298,10 +3332,9 @@ def main():
              f"The average {label} salary at companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
-             f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}: '
-             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range: about {hourly(median(mids))} an hour or ${median(mids) / 12:,.0f} a month. '
-             f'A tenth of the postings offer {money(pct(.9))} or more. Advertised ranges, not verified pay.</p>'
-             + act_row("tools/offer-check/", "Check an offer against these figures", [back] if isinstance(back, tuple) else ()) + f'{stats}'
+             f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}, '
+             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>'
+             + act_row("tools/offer-check/", "Check an offer against these figures", [back] if isinstance(back, tuple) else ()) + stats + pics
              + cut + (section(f"Skills that pay more for {label} roles", '<div class="tablewrap"><table><tr><th>Skill</th><th>Median with it</th><th>Above the median</th><th>Postings</th></tr>'
                                 + "".join(f'<tr><td><a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a></td><td>{money(median(mids) + d)}</td><td>+{money(d)}</td><td>{k:,}</td></tr>' for d, t, k in prem)
                                 + "</table></div>") if prem else "")
@@ -3310,7 +3343,7 @@ def main():
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
              + cite(f"salaries/{slug}/", f"{label} salaries",
                     f"The median advertised salary for {label} roles at companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
-                    f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld)
+                    f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld, cls="sal")
     lap('a skill that shares its address with a field or a kind of wo')
     # a skill that shares its address with a field or a kind of work ("Payroll", "Procurement") leaves /salaries/<slug>/ to that page,
     # which used to be written over it anyway; the skill page's "salaries" link then leads there
@@ -3363,7 +3396,9 @@ def main():
     ex_q = lambda q: ex_mids[min(len(ex_mids) - 1, int(len(ex_mids) * q))] if ex_mids else 0
     ex_days = SURV["days"] if SURV else 1
     opt = lambda items: "".join(f'<option value="{i}">{e(lbl)}</option>' for i, lbl in items)
-    ex_links = lambda title, items: (f'<div class="exl"><p class="flabel">{e(title)}</p><p class="rel">' + "".join(f'<a href="{P}/{u}">{lbl}</a>' for lbl, u in items if u) + "</p></div>")
+    # each list of salary pages is a row that opens (sections review, batch 3): four lists stood open as 2,600 px of links under the tool
+    ex_links = lambda title, items: (lambda its: (f'<details class="exl"><summary><b>{e(title)}</b><span>{len(its):,} pages</span></summary><p class="rel">'
+                                                    + "".join(f'<a href="{P}/{u}">{lbl}</a>' for lbl, u in its) + "</p></details>") if its else "")([x for x in items if x[1]])
     ex_qa = [("Where do these salaries come from?", f"From the pay ranges employers print in their own open job postings: {len(ex_jobs):,} of them state a yearly range in US dollars today. "
               "The midpoint of each range is counted. These are advertised ranges for open jobs, not what people are paid."),
              ("What do the bands mean?", "Postings are sorted by the middle of their pay range. Below the middle: the lowest 10% to 25%. The middle half: 25% to 75%. "
@@ -3383,20 +3418,21 @@ def main():
          f'<label>Field<select id="ex-cat"><option value="">All fields</option>{opt((i, CAT[cs]) for i, cs in enumerate(ex_cats))}</select></label>'
          '<label>Level<select id="ex-lvl"><option value="">Any level</option><option value="1">Intern</option><option value="2">Junior</option><option value="0">No level in the title</option>'
          '<option value="3">Senior</option><option value="4">Lead and above</option></select></label>'
-         '<label class="exr"><input type="checkbox" id="ex-remote"> Remote only</label><button class="linkbtn" type="button" id="ex-reset">Clear filters</button></form>'
+         '<p class="exo"><label class="exr"><input type="checkbox" id="ex-remote"> Remote only</label><button class="linkbtn" type="button" id="ex-reset">Clear filters</button></p></form>'
          f'<div id="ex-out" aria-live="polite"><div class="stats3 st4"><div class="st"><span class="st-l">Median</span><b class="st-v">{money(ex_q(.5))}</b><span class="st-s">{len(ex_mids):,} postings</span></div>'
          f'<div class="st"><span class="st-l">Middle half</span><b class="st-v">{money(ex_q(.25))}–{money(ex_q(.75))}</b><span class="st-s">25% to 75%</span></div>'
          f'<div class="st"><span class="st-l">Top of the market</span><b class="st-v">{money(ex_q(.75))}–{money(ex_q(.9))}</b><span class="st-s">75% to 90%</span></div>'
          f'<div class="st"><span class="st-l">Below the middle</span><b class="st-v">{money(ex_q(.1))}–{money(ex_q(.25))}</b><span class="st-s">10% to 25%</span></div></div>'
          '<p class="note">The charts appear when the page has loaded the postings.</p></div>'
          f'<p class="note">No trend by quarter yet: postings have been recorded for {ex_days} days, and a trend needs 60. Each figure needs at least {EXP_MIN} postings.</p>'
-         + section("Salaries by role, skill, place and field", ex_links("By role", [(e(rn), u) for rn, u in ex_data["roles"]])
+         + section("Salaries by role, skill, place and field", '<div class="exls">' + ex_links("By role", [(e(rn), u) for rn, u in ex_data["roles"]])
                    + ex_links("By skill", [(e(t), u) for t, u in ex_data["skills"]]) + ex_links("By location", [(pfl(p_) + e(PLACE_NAME[p_]), f"locations/{p_}/") for p_ in ex_places])
-                   + ex_links("By field", [(e(n_), u) for n_, u in ex_data["cats"]]))
+                   + ex_links("By field", [(e(n_), u) for n_, u in ex_data["cats"]]) + "</div>",
+                   sub="Every role, skill, place and field with enough postings has a page of its own. Open a list to see them.")
          + section("How the explorer counts", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in ex_qa) + "</dl>")
          + f'<script src="{P}/explorer.js?v={V}" defer></script>',
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in ex_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in ex_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>", cls="sal")
 
     lap('Hiring trends: one page of live numbers')
     # Hiring trends: one page of live numbers
@@ -3404,7 +3440,15 @@ def main():
     new7 = [j for j in active if (j["posted"] or "") >= week]
     pctf = lambda a, b: f"{100 * a / b:.0f}%" if b else "—"
     def trow(cells): return "<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>"
-    def ttable(head, rows_): return ('<div class="tablewrap"><table><tr>' + "".join(f"<th>{h}</th>" for h in head) + "</tr>" + "".join(rows_) + "</table></div>")
+    def ttable(head, rows_, cls=""):
+        """cls "rkt": a ranking. Each cell then carries its column's name (data-l), so a phone can lay a row out as a card instead of a
+        table that scrolls sideways; "rk1" when the first column is the place in the ranking."""
+        if cls:
+            def named(r_):
+                it = iter(head)
+                return re.sub(r"<td>", lambda m_: f'<td data-l="{e(re.sub("<[^>]+>", "", next(it, "")))}">', r_)
+            rows_ = [named(r_) for r_ in rows_]
+        return (f'<div class="tablewrap{" rkwrap" if cls else ""}"><table{f" class={chr(34)}{cls}{chr(34)}" if cls else ""}><tr>' + "".join(f"<th>{h}</th>" for h in head) + "</tr>" + "".join(rows_) + "</table></div>")
     med = lambda js: (money(median([(lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]]])) if sum(1 for j in js if j["usd"]) >= 15 else "—")
     top_skill = max((len(js) for js in by_tag.values()), default=1)
     barc = lambda v, mx, label: f'<span class="bar"><i style="width:{max(2, round(100 * v / mx))}%"></i></span>{label}'
@@ -3434,6 +3478,15 @@ def main():
 
     lap('Compare: two skills head to head, from the same live posting')
     # Compare: two skills head to head, from the same live postings. Every number on these pages is ours.
+    def duel(ua, na, ub, nb, rows_):
+        """Two skills or two jobs head to head: the names, then bars from the middle, the same picture as company against company
+        (vs_head, vs_rows). rows_: [(label, value a, value b, text a, text b)]."""
+        out = ""
+        for lab, a_, b_, ta, tb in rows_:
+            mx_ = max(a_, b_, 1)
+            out += (f'<div class="vsr"><span class="vl">{e(lab)}</span><span class="va"><b>{e(ta)}</b><i style="width:{round(100 * a_ / mx_)}%"></i></span>'
+                    f'<span class="vb"><i style="width:{round(100 * b_ / mx_)}%"></i><b>{e(tb)}</b></span></div>')
+        return (f'<div class="vsh"><a href="{P}/{ua}"><b>{e(na)}</b></a><span>vs</span><a href="{P}/{ub}"><b>{e(nb)}</b></a></div><div class="vs">{out}</div>')
     def skill_facts(t):
         js = by_tag[t]; mids = sorted((lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]])
         return {"n": len(js), "remote": sum(j["remote"] for j in js), "entry": sum(j["entry"] for j in js), "senior": sum(j["level"] in ("Senior", "Lead") for j in js),
@@ -3473,22 +3526,32 @@ def main():
                   (f"Which pays more, {a} or {b}?", pay + " These are advertised ranges from job postings, not verified pay."),
                   (f"Is {a} or {b} better for remote work?", rem),
                   (f"Do employers ask for {a} and {b} together?", together)]
-            faq_c = "".join(f"<details class='faq'><summary>{e(q_)}</summary><p>{e(a_)}</p></details>" for q_, a_ in qa)
+            faq_c = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>"      # plain questions and answers, as everywhere (they were rows that open)
+            pe_ = lambda F: 100 * F["entry"] / F["n"]
+            ps_ = lambda F: 100 * F["senior"] / F["n"]
+            duel_c = duel(f"skills/{tslug(a)}/", a, f"skills/{tslug(b)}/", b, [
+                ("Open roles", A["n"], B["n"], f"{A['n']:,}", f"{B['n']:,}"), ("Posted in the last 7 days", A["new"], B["new"], f"{A['new']:,}", f"{B['new']:,}"),
+                ("Median advertised salary", A["med"] or 0, B["med"] or 0, money(A["med"]) if A["med"] else "too few ranges", money(B["med"]) if B["med"] else "too few ranges"),
+                ("Remote roles", ra, rb, f"{ra:.0f}%", f"{rb:.0f}%"), ("Entry-level roles", pe_(A), pe_(B), f"{pe_(A):.0f}%", f"{pe_(B):.0f}%"),
+                ("Senior and lead roles", ps_(A), ps_(B), f"{ps_(A):.0f}%", f"{ps_(B):.0f}%")])
             ld_c = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
                 {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
             others = [o for o in CMP if o not in (a, b)][:6]
+            # sections review, batch 3: the first sentence is the answer (which is asked for more, which pays more), then the picture,
+            # then what the bars do not say, the two buttons, the table and the questions
             page(path, f"{a} vs {b} Jobs — demand, salary, remote | {SITE}",
                  f"{a} vs {b} in live job postings: {A['n']:,} against {B['n']:,} open roles, median advertised salaries, remote share and who is hiring. Updated daily.",
                  crumbs(("Compare skills", "compare/"), (f"{a} vs {b}", "")) + f"<h1>{e(a)} vs {e(b)}: jobs, salaries and remote work</h1>"
-                 f'<p class="lead">{e(a)} and {e(b)} side by side in {n:,} live job postings on {fdate(TODAY)}: how many roles ask for each, what they pay and how many are remote.</p>'
-                 f'<div class="card verdict"><p><strong>Demand.</strong> {e(demand)}</p><p><strong>Pay.</strong> {e(pay)}</p><p><strong>Remote.</strong> {e(rem)}</p><p><strong>Together.</strong> {e(together)}</p></div>'
+                 f'<p class="lead">{e(demand)} {e(pay)} {e(a)} and {e(b)} side by side in {n:,} live job postings on {fdate(TODAY)}.</p>'
+                 + duel_c
+                 + f'<div class="card verdict"><p><strong>Remote.</strong> {e(rem)}</p><p><strong>Together.</strong> {e(together)}</p></div>'
+                 + f'<p class="cta2"><a class="btn" href="{P}/skills/{tslug(a)}/">See {e(a)} jobs</a> <a class="btn ghost" style="margin-top:0" href="{P}/skills/{tslug(b)}/">See {e(b)} jobs</a></p>'
                  + section(f"{a} and {b} side by side", ttable(["", f'<a href="{P}/skills/{tslug(a)}/">{e(a)}</a>', f'<a href="{P}/skills/{tslug(b)}/">{e(b)}</a>'], rows_c)
                            + f'<p class="note">Source: open roles on {e(SITE)}, collected from companies\' own careers pages and recounted every day. Salary medians need at least 30 published ranges. '
                              f'<a href="{P}/methodology/">How the numbers are made</a>.</p>')
-                 + f'<p class="cta2"><a class="btn" href="{P}/skills/{tslug(a)}/">See {e(a)} jobs</a> <a class="btn ghost" style="margin-top:0" href="{P}/skills/{tslug(b)}/">See {e(b)} jobs</a></p>'
                  + section(f"{a} or {b}: questions people ask", faq_c)
                  + section("More skill comparisons", '<ul class="tiles">' + "".join(tile(cmp_path(x, o), f"{x} vs {o}", len(facts[x]["ids"] | facts[o]["ids"])) for x in (a, b) for o in others[:3]) + "</ul>", ("compare/", "All comparisons"))
-                 + cite(path, f"{a} vs {b}: jobs, salaries and remote work"), head=ld_c + crumbs_ld([("Compare skills", "compare/"), (f"{a} vs {b}", "")]))
+                 + cite(path, f"{a} vs {b}: jobs, salaries and remote work"), head=ld_c + crumbs_ld([("Compare skills", "compare/"), (f"{a} vs {b}", "")]), cls="hub")
     lap('Role against role. The searches are "data analyst vs data sc')
     # Role against role. The searches are "data analyst vs data scientist", "product manager vs project manager": Google's answer
     # puts what each does, the tools and the pay side by side; People also ask "which is better", "which pays more", "will AI replace",
@@ -3571,26 +3634,36 @@ def main():
              crumbs(("Compare", "compare/"), (f"{an_} vs {bn_}", "")) + f'<h1>{e(an_)} vs {e(bn_)}: <span class="hl">what each does, what it pays</span></h1>'
              f'<p class="lead">{e(art_a[0].upper() + art_a[1:])} {e(A["low"])} {e(A["does"])}. {e(art_b[0].upper() + art_b[1:])} {e(B["low"])} {e(B["does"])}. '
              f'Below, the two side by side in today’s {A["n"] + B["n"]:,} open postings.</p>'
+             + duel(f"roles/{a_}/", an_, f"roles/{b_}/", bn_, [
+                 ("Open jobs today", A["n"], B["n"], f"{A['n']:,}", f"{B['n']:,}"),
+                 ("Median advertised pay", A["med"] or 0, B["med"] or 0, money(A["med"]) if A["med"] else "too few ranges", money(B["med"]) if B["med"] else "too few ranges"),
+                 ("Can be done from home", A["rem"], B["rem"], pct_(A["rem"]), pct_(B["rem"])), ("Junior roles and internships", A["ent"], B["ent"], pct_(A["ent"]), pct_(B["ent"])),
+                 ("Senior and lead roles", A["sen"], B["sen"], pct_(A["sen"]), pct_(B["sen"])), ("Ask for AI or machine-learning skills", A["ai"], B["ai"], pct_(A["ai"]), pct_(B["ai"]))])
              + '<div class="card verdict">' + "".join(f"<p><strong>{e(k_)}.</strong> {e(v_)}</p>" for k_, v_ in verdict_) + "</div>"
-             + section(f"{an_} and {bn_} side by side", tbl_) + gap_html
              + f'<p class="cta2"><a class="btn" href="{P}/roles/{a_}/">See {e(A["low"])} jobs</a> <a class="btn ghost" style="margin-top:0" href="{P}/roles/{b_}/">See {e(B["low"])} jobs</a></p>'
+             + section(f"{an_} and {bn_} side by side", tbl_) + gap_html
              + section(f"{an_} or {bn_}: questions people ask", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a2_)}</dd></div>" for q_, a2_ in qa_r) + "</dl>")
              + f'<p class="note cmpl">Next: <a href="{P}/how-to-become/">how to become one</a> · <a href="{P}/salaries/">salaries by job</a> · <a href="{P}/interview-questions/">interview questions</a></p>',
-             head=ld_r + crumbs_ld([("Compare", "compare/"), (f"{an_} vs {bn_}", "")]))
+             head=ld_r + crumbs_ld([("Compare", "compare/"), (f"{an_} vs {bn_}", "")]), cls="hub")
         rvs_done.append((path, f"{an_} vs {bn_}", A["n"] + B["n"]))
     cmp_opts = "".join(f'<option value="{tslug(t)}">{e(t)}</option>' for t in CMP)
+    cmp_pairs = [(a, b) for i, a in enumerate(CMP) for b in CMP[i + 1:]]
     page("compare/", f"Compare Jobs and Skills: Pay, Demand and Remote Share | {SITE}",
          f"Put two tech skills head to head: open roles, median advertised salary, remote share and top employers, counted from {n:,} live job postings every day.",
-         crumbs(("Compare skills", "")) + "<h1>Compare skills by jobs and pay</h1>"
-         '<p class="plain"><b>In plain words:</b> pick two skills, for example Python and Java, and see which one more employers ask for and which one pays more.</p>'
-         f'<p class="lead">Pick two skills and see how many open roles ask for each, what those roles pay and how many are remote. Counted from {n:,} live postings, and counted again every day.</p>'
-         f'<div class="card"><div class="fbar" style="margin:0;align-items:flex-end"><label class="wl">First skill<select id="cmp-a">{cmp_opts}</select></label>'
-         f'<label class="wl">Second skill<select id="cmp-b">{cmp_opts}</select></label><button class="btn" id="cmp-go" type="button">Compare</button></div></div>'
-         + (section("Compare jobs", '<ul class="tiles">' + "".join(tile(u_, t_, k_) for u_, t_, k_ in rvs_done) + "</ul>") if rvs_done else "")
-         + section("All skill comparisons", '<ul class="tiles">' + "".join(tile(cmp_path(a, b), f"{a} vs {b}", len(facts[a]["ids"] | facts[b]["ids"])) for i, a in enumerate(CMP) for b in CMP[i + 1:]) + "</ul>")
+         crumbs(("Compare skills", "")) + '<h1>Compare jobs and skills by <span class="hl">pay and demand</span></h1>'
+         f'<p class="lead">Pick two skills, for example Python and Java, and see which one more employers ask for, which pays more and how many of the roles are remote. '
+         f'Counted from {n:,} live postings, and counted again every day.</p>'
+         + nums([(f"{len(rvs_done)}", "pairs of jobs, side by side"), (f"{len(cmp_pairs)}", "pairs of skills, side by side"), (f"{n:,}", "open postings they are counted from"),
+                 (f"{m:,}", "employers behind the postings")])
+         + f'<div class="card cmpick"><label class="wl">First skill<select id="cmp-a">{cmp_opts}</select></label>'
+         f'<label class="wl">Second skill<select id="cmp-b">{cmp_opts}</select></label><button class="btn primary" id="cmp-go" type="button">Compare</button></div>'
+         + (section("Compare [[two jobs]]", '<ul class="tiles wide">' + "".join(tile(u_, t_, k_) for u_, t_, k_ in rvs_done) + "</ul>", sid="jobs", label="Job against job",
+                    sub="What each does, what it pays and the skills to add to move across. The number is the open jobs of the two together.") if rvs_done else "")
+         + section("Compare [[two skills]]", '<ul class="tiles wide">' + "".join(tile(cmp_path(a, b), f"{a} vs {b}", len(facts[a]["ids"] | facts[b]["ids"])) for a, b in cmp_pairs) + "</ul>", sid="skills",
+                   label="Skill against skill", sub="Open roles, advertised pay and remote share for each. The number is the open roles that ask for either.")
          + f'<script>(function(){{var o={json.dumps([tslug(t) for t in CMP])},a=document.getElementById("cmp-a"),b=document.getElementById("cmp-b");b.selectedIndex=1;'
            f'document.getElementById("cmp-go").addEventListener("click",function(){{if(a.value===b.value){{b.focus();return;}}var p=[a.value,b.value].sort(function(x,y){{return o.indexOf(x)-o.indexOf(y);}});'
-           f'location.href="{P}/compare/"+p[0]+"-vs-"+p[1]+"/";}});}})();</script>')
+           f'location.href="{P}/compare/"+p[0]+"-vs-"+p[1]+"/";}});}})();</script>', cls="hub")
 
     lap("My jobs: tracker kept in the visitor's browser, no account n")
     # My jobs: tracker kept in the visitor's browser, no account needed
@@ -3701,19 +3774,30 @@ def main():
             c_ = re.findall(r"<td>(.*?)</td>", r_, re.S)
             if len(c_) <= max(chart): continue
             lab, raw = re.sub(r"<[^>]+>", "", c_[chart[0]]).strip(), re.sub(r"<[^>]+>", "", c_[chart[1]]).strip()
-            m_, href = re.search(r"\d[\d,]*\.?\d*", raw), re.search(r'href="([^"]+)"', c_[chart[0]])
-            if lab and m_: pts.append((html.unescape(lab), float(m_.group(0).replace(",", "")), html.unescape(raw), href.group(1) if href else ""))
+            # a cell that holds a range ("$350K - $850K") is drawn by its upper end: that list is ranked by the top of the range
+            ms_, href = re.findall(r"\d[\d,]*\.?\d*", raw), re.search(r'href="([^"]+)"', c_[chart[0]])
+            if lab and ms_: pts.append((html.unescape(lab), max(float(x_.replace(",", "")) for x_ in ms_), html.unescape(raw), href.group(1) if href else ""))
         return pts
-    def ins_chart(pts):
+    cut_ = lambda s_, k_: s_ if len(s_) <= k_ else s_[:k_].rsplit(" ", 1)[0].rstrip(" ,-–(") + "…"      # a long name ends at a word, with a mark that it goes on
+    def ins_chart(pts, what=""):
+        """The first ten of a ranking as bars, in a card like every other picture; `what`: the name of the column the bars show."""
         mx_ = max((p_[1] for p_ in pts), default=0)
         if len(pts) < 4 or not mx_: return ""
-        return ('<div class="hbars chart">' + "".join(f'<a href="{e(h_) if h_ else "#"}"><span class="hn">{e(lab[:44])}</span><span class="hb"><i style="width:{max(2, round(100 * v / mx_))}%"></i></span><span class="hc">{e(raw[:24])}</span></a>'
-                                                     for lab, v, raw, h_ in pts) + "</div>")
+        return (f'<figure class="pic insc"><figcaption><b>The first {len(pts)}, drawn</b>' + (f"The bar is the column “{e(what)}” of the list below." if what else "") + '</figcaption><div class="hbars chart">'
+                + "".join(f'<a href="{e(h_) if h_ else "#"}"><span class="hn">{e(cut_(lab, 56))}</span><span class="hb"><i style="width:{max(2, round(100 * v / mx_))}%"></i></span><span class="hc">{e(raw[:24])}</span></a>'
+                          for lab, v, raw, h_ in pts) + "</div></figure>")
     def insight(slug, h1, desc, lead, head, rows_html, more, chart=(1, 2)):
-        INS_PREV[f"insights/{slug}/"] = ins_points(rows_html, chart)
+        """A ranking (sections review, batch 3): the paragraph names the first three with their figures, so the answer is on the page
+        in words; one button under it; the first ten drawn in a card; then the table, whose rows a phone shows as cards."""
+        pts = INS_PREV[f"insights/{slug}/"] = ins_points(rows_html, chart)
+        col_ = re.sub(r"<[^>]+>", "", head[chart[1]])
+        sep_ = "; " if any("," in p_[0] for p_ in pts[:3]) else ", "          # job titles hold commas of their own
+        first = (f" First today ({e(col_[0].lower() + col_[1:])}): " + sep_.join(f"{e(lab)} ({e(raw)})" for lab, _, raw, _ in pts[:3]) + ".") if len(pts) >= 3 else ""
         page(f"insights/{slug}/", f"{h1} — {month} | {SITE}", desc,
-             crumbs(("Insights", "insights/"), (h1, "")) + f"<h1>{e(h1)}</h1><p class=\"lead\">{lead} Recalculated every day from {n:,} open roles; this is the picture for {month}.</p>"
-             + ins_chart(INS_PREV[f"insights/{slug}/"]) + ttable(head, rows_html) + f'<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p><p><a class="btn" href="{P}/{more[0]}">{e(more[1])}</a></p>' + cite(f"insights/{slug}/", f"{h1}, {month}"))
+             crumbs(("Insights", "insights/"), (h1, "")) + f"<h1>{e(h1)}</h1><p class=\"lead\">{lead}{first} Recalculated every day from {n:,} open roles; this is the picture for {month}.</p>"
+             + act_row(more[0], more[1], [("insights/", "All charts and rankings")])
+             + ins_chart(pts, col_) + ttable(head, rows_html, "rkt rk1" if head[0] == "#" else "rkt")
+             + '<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p>' + cite(f"insights/{slug}/", f"{h1}, {month}"), cls="ins")
         return (f"insights/{slug}/", h1, desc)
     sal_by_tag = sorted(((t, median([(lo + hi) / 2 for _, (lo, hi) in g]), len(g)) for t, g in g_tag.items() if len(g) >= 30), key=lambda x: -x[1])
     remote_co = sorted(((c, sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js)) for c, js in companies.items()), key=lambda x: -x[1])
@@ -3955,7 +4039,9 @@ def main():
     def icard(u, t, d):
         pts = INS_PREV.get(u, [])[:4]
         mx_ = max((p_[1] for p_ in pts), default=0)
-        prev = "".join(f'<span class="rw"><span>{e(lab[:20])}</span><span class="mt"><i style="width:{max(4, round(100 * v / mx_))}%"></i></span><b>{e(raw[:10])}</b></span>' for lab, v, raw, _ in pts) if mx_ else ""
+        # the figure beside a bar: a range is shown by its upper end, the end the bar is drawn by (it used to be cut after ten characters: "$350K - $8")
+        fig_ = lambda raw: re.split(r"\s[-–]\s|\sto\s", raw)[-1][:12]
+        prev = "".join(f'<span class="rw"><span>{e(lab[:40])}</span><span class="mt"><i style="width:{max(4, round(100 * v / mx_))}%"></i></span><b>{e(fig_(raw))}</b></span>' for lab, v, raw, _ in pts) if mx_ else ""
         return (f'<a class="tcard" href="{P}/{u}">' + (f'<span class="tprev wide" aria-hidden="true">{prev}</span>' if prev else "")
                 + f'<span class="tbody"><b>{e(t)}</b><span>{e(d)}</span><i><u>Open the list</u></i></span></a>')
     fam_bars = '<div class="hbars">' + "".join(
@@ -3966,9 +4052,13 @@ def main():
          crumbs(("Insights", "")) + f'<h1>The job market <span class="hl">in pictures</span></h1>'
          f'<p class="lead">Charts and rankings counted from {n:,} open jobs at {m:,} employers, redrawn each time the jobs are read again. Every chart links to the list behind it.</p>'
          + market_pics
-         + section("Rankings", '<div class="tgrid">' + "".join(icard(u, t, d) for u, t, d in INS)
-                   + f'<a class="tcard" href="{P}/trends/"><span class="tbody"><b>Hiring trends dashboard</b><span>The headline numbers on one page: skills, companies, categories and locations.</span><i><u>Open the dashboard</u></i></span></a></div>')
-         + (section("Who is hiring, field by field", '<p class="note">Each bar opens the list of employers with the most open jobs in that field, with their remote roles and advertised pay.</p>' + fam_bars) if fam_bars else ""))
+         + section("[[Rankings]] from today’s postings", '<div class="tgrid">' + "".join(icard(u, t, d) for u, t, d in INS)
+                   + f'<a class="tcard" href="{P}/trends/"><span class="tprev wide" aria-hidden="true"><span class="big">{n:,}<small>open jobs</small></span>'
+                     f'<span class="ln"><b>{m:,}</b> employers · <b>{len(new7):,}</b> jobs posted in the last 7 days</span></span>'
+                     f'<span class="tbody"><b>Hiring trends dashboard</b><span>The headline numbers on one page: skills, companies, categories and locations.</span><i><u>Open the dashboard</u></i></span></a></div>',
+                   sid="rankings", label="Lists", sub="Each card shows the first four of a list. Open it for the whole table.")
+         + (section("Who is hiring, [[field by field]]", fam_bars, sid="fields", label="By field",
+                    sub="Each bar opens the list of employers with the most open jobs in that field, with their remote roles and advertised pay.") if fam_bars else ""), cls="hub")
 
     lap('Feeds: every list as an address a bot can read. Channel owne')
     # Feeds: every list as an address a bot can read. Channel owners in Telegram, Slack and Discord plug these into their own bots,
@@ -4974,7 +5064,7 @@ def main():
     for x in VS:
         ours = compare_sites.OUR_NAME
         table_ = ('<div class="tablewrap"><table class="vs-t"><tr><th></th><th>' + e(x["name"]) + "</th><th>" + e(ours) + "</th></tr>"
-                  + "".join(f"<tr><th>{e(q_)}</th><td>{e(a_)}</td><td>{e(b_)}</td></tr>" for q_, a_, b_ in x["rows"]) + "</table></div>")
+                  + "".join(f'<tr><th>{e(q_)}</th><td data-l="{e(x["name"])}">{e(a_)}</td><td data-l="{e(ours)}">{e(b_)}</td></tr>' for q_, a_, b_ in x["rows"]) + "</table></div>")      # data-l: whose answer a cell is, shown above it when a phone stacks the row
         vs_qa = [(f"Is {ours} better than {x['name']}?", x["pick"]), (f"Where is {x['name']} better?", " ".join(x["them_better"])), (f"Where is {ours} better?", " ".join(x["us_better"]))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in vs_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -4988,7 +5078,8 @@ def main():
              + '<div class="vs-two"><div><h2>Where ' + e(x["name"]) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["them_better"]) + "</ul></div>"
                '<div><h2>Where ' + e(ours) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["us_better"]) + "</ul></div></div>"
              + section(f"Questions about {x['name']} and {ours}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in vs_qa) + "</dl>")
-             + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>'), head=ld_)
+             + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>')
+             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
     lap('"<site> vs <site>" and "<site> alternatives": the owner aske')
     # "<site> vs <site>" and "<site> alternatives": the owner asked for compare pages "with all websites" (as Indeed's compare pages),
     # and people search these between the big names. Only the facts compare_sites.py holds with a source, side by side; no verdict.
@@ -5003,7 +5094,7 @@ def main():
             sl = f"{a_['slug']}-vs-{b_['slug']}"
             site_pairs.append((sl, a_, b_))
             table_ = ('<div class="tablewrap"><table class="vs-t four"><tr><th></th><th>' + e(a_["name"]) + "</th><th>" + e(b_["name"]) + "</th><th>" + e(compare_sites.OUR_NAME) + "</th></tr>"
-                      + "".join(f"<tr><th>{e(q_)}</th><td>{e(ra[q_])}</td><td>{e(rb[q_])}</td><td>{e(ru[q_])}</td></tr>" for q_ in common) + "</table></div>")
+                      + "".join(f'<tr><th>{e(q_)}</th><td data-l="{e(a_["name"])}">{e(ra[q_])}</td><td data-l="{e(b_["name"])}">{e(rb[q_])}</td><td data-l="{e(compare_sites.OUR_NAME)}">{e(ru[q_])}</td></tr>' for q_ in common) + "</table></div>")
             pq = [(f"What is the difference between {a_['name']} and {b_['name']}?", a_["what"] + " " + b_["what"])]
             if "Who pays" in common: pq.append((f"Who pays on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Who pays']} {b_['name']}: {rb['Who pays']}"))
             if "Where you apply" in common: pq.append((f"Where do you apply on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Where you apply']} {b_['name']}: {rb['Where you apply']}"))
@@ -5051,9 +5142,14 @@ def main():
          f"{SITE} side by side with {', '.join(x['name'] for x in VS[:-1])} and {VS[-1]['name']}: who pays, prices, where jobs come from and where you apply. Every fact sourced and dated.",
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
          '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now.</p>'
-         + section("Choose a site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>")
-         + section("Job sites compared with each other", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{sl}/"><span class="n">{e(a_["name"])} vs {e(b_["name"])}</span></a></li>' for sl, a_, b_ in site_pairs) + "</ul>")
-         + section("Alternatives", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/alternatives/"><span class="n">{e(x["name"])} alternatives</span></a></li>' for x in VS) + "</ul>"))
+         + nums([(f"{len(VS)}", "job sites compared with this one"), (f"{len(site_pairs)}", "pairs of job sites, side by side"),
+                 (f"{sum(len(x['rows']) for x in VS)}", "facts about them, each with its source"), (f"{len({u_ for x in VS for _, u_, _ in x['sources']})}", "pages of theirs read for it")], src=False)
+         + section("Choose [[a site]]", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>", sid="sites", label="With this site",
+                   sub="Each page says where the other site is better and where this one is, with the source of every fact about the other site.")
+         + section("Job sites compared with [[each other]]", '<ul class="tiles wide">' + "".join(f'<li><a class="tile" href="{P}/vs/{sl}/"><span class="n">{e(a_["name"])} vs {e(b_["name"])}</span></a></li>' for sl, a_, b_ in site_pairs) + "</ul>", sid="pairs", label="Site against site",
+                   sub="What each site says about itself, side by side. These pages rank neither.")
+         + section("[[Alternatives]] to each site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/alternatives/"><span class="n">{e(x["name"])} alternatives</span></a></li>' for x in VS) + "</ul>", sid="alternatives", label="Other places to look",
+                   sub="For each site, the others described from their own pages."), cls="hub")
 
     lap('Career quiz: "which kind of work fits me?" (the Careerist st')
     # Career quiz: "which kind of work fits me?" (the Careerist study: its lead magnet, but theirs asks for a phone number). Seven plain
@@ -5246,10 +5342,30 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
                "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
                "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": FULL + "/og.jpg"}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        links = ('<p class="note cmpl">Next: ' + " · ".join(f'<a href="{P}/{u_}">{e(t_)}</a>' for u_, t_ in more) + "</p>") if more else ""
-        page(f"guides/{slug}/", f"{title} | {SITE}", desc,
-             crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
-             f'<p class="lead">{lead}</p>{body}{links}</article>', head=ld_ + extra_head)
+        # sections review, batch 3. What to read next is a row of links that look like links (it was one grey line). The short answer
+        # of an advice article stands first, right under the question in the heading, and the paragraph that sets the scene after it.
+        # A guide with three headings or more gets the "On this page" list beside it (with_toc() looks for section() blocks, a guide
+        # has plain headings): the right third of the page was empty.
+        links = ('<div class="gnext"><b>Read next</b>' + "".join(f'<a href="{P}/{u_}">{e(t_)}</a>' for u_, t_ in more) + "</div>") if more else ""
+        top_ = f'<p class="lead">{lead}</p>'
+        if body.startswith('<div class="adv-short">'):
+            k_ = body.index("</div>") + 6
+            top_, body = body[:k_] + top_, body[k_:]
+        used, toc = set(), []
+        def add_id(m_):
+            txt = re.sub(r"<[^>]+>", "", m_.group(1))
+            base = "s-" + (slugify(html.unescape(txt))[:48].strip("-") or "part")
+            sid, k = base, 2
+            while sid in used: sid, k = f"{base}-{k}", k + 1
+            used.add(sid); toc.append(f'<li><a href="#{sid}">{txt}</a></li>')
+            return f'<h2 id="{sid}">{m_.group(1)}</h2>'
+        if '<section class="sec"' not in body: body = re.sub(r"<h2>(.*?)</h2>", add_id, body)
+        art_ = (crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
+                f'{top_}{body}{links}</article>')
+        if len(toc) >= 3:
+            art_ = (f'<div class="has-toc"><div class="toc-main">{art_}</div><aside class="toc" aria-label="On this page"><p>On this page</p>'
+                    f'<ol>{"".join(toc)}</ol><a class="toc-top" href="#main">Back to top</a></aside></div>')
+        page(f"guides/{slug}/", f"{title} | {SITE}", desc, art_, head=ld_ + extra_head, cls="gd")
         GUIDES.append((slug, title, desc, cat, prev))
     fam_stats = []
     for fs, fn, fd, live, js_ in fam_rows:
@@ -5258,7 +5374,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         fam_stats.append(dict(fs=fs, fn=fn, n=len(js_), rem=sum(j["remote"] for j in js_), pay=sum(bool(j["salary"]) for j in js_), ent=sum(1 for j in js_ if j["entry"]),
                               med=median(mids_) if len(mids_) >= 30 else 0, rmed=median(rmids_) if len(rmids_) >= 30 else 0))
     big_f = [f for f in fam_stats if f["n"] >= 100]
-    mini = lambda rows_: "".join(f'<span class="rw"><span>{e(lab[:20])}</span><span class="mt"><i style="width:{max(4, round(100 * v_ / max(r_[1] for r_ in rows_)))}%"></i></span><b>{e(txt)}</b></span>' for lab, v_, txt in rows_[:4])
+    mini = lambda rows_: "".join(f'<span class="rw"><span>{e(lab[:40])}</span><span class="mt"><i style="width:{max(4, round(100 * v_ / max(r_[1] for r_ in rows_)))}%"></i></span><b>{e(txt)}</b></span>' for lab, v_, txt in rows_[:4])
     skel = '<span class="sk" style="width:92%"></span><span class="sk h" style="width:54%"></span><span class="sk" style="width:80%"></span><span class="sk" style="width:66%"></span>'
 
     lap('1. remote work by field')
@@ -5624,12 +5740,16 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     for g_ in GUIDES:
         if g_[3] not in gcats: gcats.append(g_[3])
     gcard = lambda g_: (f'<a class="tcard" href="{P}/guides/{g_[0]}/"><span class="tprev wide" aria-hidden="true">{g_[4]}</span><span class="tbody"><b>{e(g_[1])}</b><span>{e(g_[2])}</span><i><u>Read</u></i></span></a>')
+    gcount = Counter(g_[3] for g_ in GUIDES)
+    gid = lambda c_: "g-" + slugify(c_)
     page("guides/", f"Guides: the job market explained with today’s numbers | {SITE}",
          f"{len(GUIDES)} guides to finding work, each with figures recounted from {n:,} open jobs: remote work by field, who states the pay, how long postings stay open, entry-level jobs, skills in demand.",
          crumbs(("Guides", "")) + '<h1>Guides, with <span class="hl">today’s numbers</span> in them</h1>'
          f'<p class="lead">Advice about job search goes out of date, and the figures in it faster. Every guide here is recounted from the {n:,} open jobs each time they are read again, so a number you see is today’s.</p>'
-         + "".join(section(c_, '<div class="tgrid">' + "".join(gcard(g_) for g_ in GUIDES if g_[3] == c_) + "</div>") for c_ in gcats)
-         + f'<p class="note">More to read: the <a href="{P}/glossary/">glossary</a>, the <a href="{P}/safety/">job offer safety checklist</a>, the <a href="{P}/insights/">charts and rankings</a>' + (f', <a href="{P}/jobs-for/">jobs by situation and by degree</a>' if jf_figs else "") + ".</p>")
+         + '<div class="pillrow" role="navigation" aria-label="Guides by subject">' + "".join(f'<a href="#{gid(c_)}">{e(c_)}<i>{gcount[c_]}</i></a>' for c_ in gcats) + "</div>"
+         + "".join(section(f"[[{c_}]]", '<div class="tgrid g">' + "".join(gcard(g_) for g_ in GUIDES if g_[3] == c_) + "</div>", sid=gid(c_),
+                           label=f"{gcount[c_]} guide{'s' if gcount[c_] != 1 else ''}") for c_ in gcats)
+         + f'<p class="note">More to read: the <a href="{P}/glossary/">glossary</a>, the <a href="{P}/safety/">job offer safety checklist</a>, the <a href="{P}/insights/">charts and rankings</a>' + (f', <a href="{P}/jobs-for/">jobs by situation and by degree</a>' if jf_figs else "") + ".</p>", cls="hub")
 
     lap('Help: one page that answers what people would otherwise writ')
     # Help: one page that answers what people would otherwise write to ask (the owner looked at the knowledge base of hh.ru and wants
@@ -6321,14 +6441,20 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                f'<a href="{P}/glossary/"><small>Glossary</small>All {len(GT)} terms</a>'
                f'<a href="{P}/glossary/{gslug(next_[0])}/"><small>Next term →</small>{e(next_[0])}</a></div>', head=ld_)
     gl_rows = "".join(f'<div id="{gslug(t)}"><dt><a href="{P}/glossary/{gslug(t)}/">{e(t)}</a></dt><dd>{e(d)}</dd></div>' for t, d, _, _ in sorted(GT, key=lambda x: x[0].lower()))
+    # a row of letters above the list (sections review, batch 3): each jumps to the first term that starts with it. 165 terms are
+    # 8,000 px on a desktop and 21,000 on a phone, and the old anchors (#remote) are the ids the letters point at.
+    gl_first = {}
+    for w_ in sorted((x[0] for x in GT), key=str.lower): gl_first.setdefault(w_[0].upper() if w_[0].isalpha() else "0–9", gslug(w_))
+    gl_az = '<div class="pillrow az" role="navigation" aria-label="Jump to a letter">' + "".join(f'<a href="#{s_}">{e(l_)}</a>' for l_, s_ in gl_first.items()) + "</div>"
     page("glossary/", f"Job Search Glossary: {len(GT)} Hiring Terms Explained in Plain English | {SITE}",
          f"{len(GT)} words you meet when looking for a job or hiring, each explained in plain English with what to do about it: ATS, OTE, vesting, notice period, remote, hybrid, visa sponsorship and more.",
          crumbs(("Glossary", "")) + f'<h1>Job search glossary: <span class="hl">{len(GT)} terms in plain English</span></h1>'
          f'<p class="lead">The words that come up in job postings, interviews and offers, each explained in a sentence or two. Open a term for what to do about it and, where there is one, a figure from today’s {n_act:,} open postings.</p>'
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a word, for example vesting or hybrid" aria-label="Find a term"></p>'
-         '<dl class="qa gl-index" id="dir">' + gl_rows + "</dl>",
+         '<p class="lead" id="dirnone" hidden>No term with these words. The <a href="' + P + '/help/">help page</a> answers questions about this site.</p>'
+         + gl_az + '<dl class="qa gl-index" id="dir">' + gl_rows + "</dl>",
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "DefinedTermSet", "name": "Job search glossary", "url": f"{FULL}/glossary/",
-               "hasDefinedTerm": [{"@type": "DefinedTerm", "name": t, "description": d, "url": f"{FULL}/glossary/{gslug(t)}/"} for t, d, _, _ in GT]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+               "hasDefinedTerm": [{"@type": "DefinedTerm", "name": t, "description": d, "url": f"{FULL}/glossary/{gslug(t)}/"} for t, d, _, _ in GT]}, ensure_ascii=False).replace("</", "<\\/") + "</script>", cls="hub")
 
     lap('Partners')
     # Partners
