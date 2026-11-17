@@ -398,6 +398,11 @@ async function currentUser(env, req, required = true) {
   if (required) throw bad('sign_in', 'Please sign in.', 401);
   return null;
 }
+/* The owner's own accounts (ADMIN_EMAILS: addresses separated by commas, compared without case): an account on one of them, with its
+   email confirmed and not banned, may use the moderation part of /api/admin/ with its ordinary session (see admin). An address nobody
+   confirmed counts for nothing: anyone can type one at sign-up. */
+const adminEmails = (env) => String(env.ADMIN_EMAILS || '').toLowerCase().split(/[\s,;]+/).filter(Boolean);
+const isModerator = (env, u) => !!u && u.confirmed_at > 0 && !u.banned && adminEmails(env).includes(String(u.email).toLowerCase());
 async function userView(env, u) {
   const t = now();
   // credits: the prepaid credits left (1 credit = US$1), see walletOf
@@ -410,7 +415,8 @@ async function userView(env, u) {
     posts_as: [...(domainOf(u) ? ['employer'] : []), ...(u.linkedin_sub ? ['recruiter'] : [])],
     // can_post: an account with a confirmed email may post a job (one not tied to a company domain: always looked at by a person first,
     // see AS_UNVERIFIED); verified: the account is tied to a company domain (its email, a confirmed work email, a DNS record or a file)
-    can_post: u.confirmed_at > 0 && !u.banned, verified: !!domainOf(u), work_email: u.work_email || '' };
+    can_post: u.confirmed_at > 0 && !u.banned, verified: !!domainOf(u), work_email: u.work_email || '',
+    admin: isModerator(env, u) };      // admin: this account may moderate (review, claims, reports) from its own session
 }
 const bearer = (req) => (/^Bearer ([a-f0-9]{64})$/.exec(req.headers.get('Authorization') || '') || [])[1] || '';      // the session token of a request, or ''
 /* The browser a sign-in comes from, as far as it shows: a hash of the account and the User-Agent with the version numbers taken out, so
@@ -986,7 +992,7 @@ async function createOrder(env, req, user) {
    via: how an order without a checkout is paid. { wallet: plan } takes the credits of the plan (walletPlan), only if the wallet is still
    at the version the plan was made on; { pass, premium } uses a running Hiring Pass (for Premium, one of its Premium boosts).
    One order gives at most one placement, one lot of credits, one pass; the unique indexes in schema.sql back that up. */
-async function activate(env, orderId, via = {}) {
+async function activate(env, orderId, via = {}, ctx) {
   const o = await db(env, 'SELECT * FROM orders WHERE id = ?', orderId).first(), p = o && PRODUCTS[o.product];
   if (!o || !['pending', 'expired', 'underpaid', 'failed'].includes(o.status)) return false;
   if (!p) { console.error('activate: order ' + o.id + ' is for a product that is not in the price list'); return false; }
@@ -1028,10 +1034,30 @@ async function activate(env, orderId, via = {}) {
   const done = await env.DB.batch(steps);
   if (!done[0].meta.changes) return false;
   if (p.kind) { try { await requestRebuild(env); } catch {} }     // what was bought is recorded; a rebuild that could not be asked for is picked up by the daily build
+  if (!via.wallet && !via.pass) { try { await later(ctx, paidLetter(env, o.id)); } catch {} }      // a payment at the checkout: the buyer is told it arrived
   return true;
 }
-async function settle(env, order, status) {                    // status as the gateway reports it
-  if (status === 'paid' || status === 'paid_over') return activate(env, order.id);
+/* "Payment received": the letter after a payment at the checkout was confirmed (not for a purchase with credits or a pass, which the
+   account page shows at once): what was bought, and whether it is on or starts when the job is approved. Sent after everything is
+   stored; a letter that does not go changes nothing about the order. */
+async function paidLetter(env, orderId) {
+  const o = await db(env, "SELECT o.*, u.email, u.banned, u.plus_until FROM orders o JOIN users u ON u.id = o.user_id WHERE o.id = ? AND o.status = 'paid'", orderId).first(), p = o && PRODUCTS[o.product];
+  if (!o || !p || o.banned) return;
+  const pl = p.kind ? await db(env, 'SELECT held, starts_at, ends_at FROM placements WHERE order_id = ?', o.id).first() : null;
+  const lot = p.walletCredits ? await db(env, 'SELECT expires_at FROM wallet_lots WHERE order_id = ?', o.id).first() : null;
+  const what = p.name + (o.label && o.label !== p.name ? ': ' + o.label : '');
+  const state = pl ? (pl.held ? 'It starts when your job is approved: a person reads a new job first, and its ' + p.days + ' days run from that moment.'
+    : pl.starts_at > now() + 60 ? 'It is added to what is running now: it starts on ' + isoDay(pl.starts_at) + ' and runs until ' + isoDay(pl.ends_at) + '.'
+      : 'It is on now and runs until ' + isoDay(pl.ends_at) + '. The site shows it after its next update, usually within the hour.')
+    : lot ? p.walletCredits + ' credits are in your account, good until ' + isoDay(lot.expires_at) + '.'
+      : p.plusDays ? 'Plus is on until ' + isoDay(o.plus_until) + '.' : p.aiPass ? 'It is in your account, to use within ' + AI_PASS_DAYS + ' days.'
+        : p.talentCredits ? p.talentCredits + ' contact requests are in your account.' : 'It is on now.';
+  await sendMail(env, o.email, 'Payment received', 'We received your payment of $' + o.amount_usd + ' for:\n\n  ' + what + '\n\n' + state +
+    (p.pass ? '\nThe Hiring Pass runs until ' + isoDay(o.paid_at + p.days * DAY) + ': Standard boosts of the company’s jobs are free meanwhile, and ' + p.pass + ' Premium boosts come with it.' : '') +
+    '\n\nYour receipt is on the account page: ' + env.SITE_URL + '/account/\nOne payment for a fixed period. Nothing renews and nothing more is charged.\n', { kind: 'paid' });
+}
+async function settle(env, order, status, ctx) {               // status as the gateway reports it
+  if (status === 'paid' || status === 'paid_over') return activate(env, order.id, {}, ctx);
   if (order.status !== 'pending') {
     if (status === 'refund_paid' && order.status === 'paid') {
       // a refund takes back what the order gave: its placement, the credits of a top-up that are left, a pass, a single AI pass
@@ -1054,7 +1080,7 @@ async function settle(env, order, status) {                    // status as the 
    Returns the order's status afterwards, or '' when the gateway was not asked: not a gateway order, already settled, or asked less than
    minGap seconds ago. That last test and the note of the time are one statement, so two callers cannot both get through. */
 const MONEY_ON_ITS_WAY = ['process', 'confirm_check', 'wrong_amount_waiting', 'locked'];
-async function reconcileOrder(env, order, minGap) {
+async function reconcileOrder(env, order, minGap, ctx) {
   if (order.provider !== 'cryptomus' || !['pending', 'underpaid', 'expired'].includes(order.status)) return '';
   const t = now(), mine = await db(env, 'UPDATE orders SET checked_at = ? WHERE id = ? AND checked_at <= ?', t, order.id, t - minGap).run();
   if (!mine.meta.changes) return '';
@@ -1063,7 +1089,7 @@ async function reconcileOrder(env, order, minGap) {
     const info = await gateway(env, '/v1/payment/info', { order_id: order.id });
     if (String(info.order_id) === order.id) status = String(info.payment_status || info.status || '');
   } catch {}
-  if (status !== null) await settle(env, order, status);
+  if (status !== null) await settle(env, order, status, ctx);
   const age = t - order.created_at, waiting = status === null || MONEY_ON_ITS_WAY.includes(status);
   if (age > (waiting ? ORDER_GIVE_UP : INVOICE_LIFETIME + ORDER_GRACE)) await db(env, "UPDATE orders SET status = 'expired' WHERE id = ? AND status = 'pending'", order.id).run();
   return String(await db(env, 'SELECT status FROM orders WHERE id = ?', order.id).first('status'));
@@ -1071,26 +1097,26 @@ async function reconcileOrder(env, order, minGap) {
 /* Settles orders that are still pending although their webhook should have come long ago: without this a paid invoice whose webhook was
    lost would stay pending for ever. Run by the cron for everybody (the longest unchecked first, RECONCILE_BATCH at a time), and for one
    account when it opens its list of orders. Orders with no gateway behind them (test mode, pack credits) simply lapse. */
-export async function reconcileOrders(env, userId = '') {
+export async function reconcileOrders(env, userId = '', ctx) {
   const t = now(), who = userId ? ' AND user_id = ?' : '', whose = userId ? [userId] : [], seen = { checked: 0, paid: 0, expired: 0 };
   await db(env, "UPDATE orders SET status = 'expired' WHERE status = 'pending' AND provider != 'cryptomus' AND created_at < ?" + who, t - 2 * INVOICE_LIFETIME, ...whose).run();
   const due = (await db(env, "SELECT * FROM orders WHERE status = 'pending' AND provider = 'cryptomus' AND created_at <= ? AND checked_at <= ?" + who +
     ' ORDER BY checked_at, created_at LIMIT ' + (userId ? 3 : RECONCILE_BATCH), t - RECONCILE_AFTER, t - 60, ...whose).all()).results;
   for (const o of due) {
     try {
-      const status = await reconcileOrder(env, o, 60);
+      const status = await reconcileOrder(env, o, 60, ctx);
       if (status) { seen.checked++; if (status === 'paid' || status === 'expired') seen[status]++; }
     } catch (err) { console.error('reconcile: order ' + o.id + ' failed: ' + (err && err.message)); }     // one bad order does not hold up the rest
   }
   return seen;
 }
-async function cryptomusWebhook(env, req) {
+async function cryptomusWebhook(env, req, ctx) {
   const raw = await req.text();
   let data; try { data = JSON.parse(raw); } catch { return json({ ok: false }, 400); }
   const order = data && typeof data.order_id === 'string' ? await db(env, 'SELECT * FROM orders WHERE id = ?', data.order_id).first() : null;
   if (!order || order.provider !== 'cryptomus') return json({ ok: true });       // nothing of ours: acknowledge so it is not resent forever
-  if (webhookSignatureOk(raw, env.CRYPTOMUS_API_KEY)) await settle(env, order, String(data.status || ''));
-  else { try { await reconcileOrder(env, order, 10); } catch {} }                // unsigned or oddly encoded: ignore its content, check with the gateway
+  if (webhookSignatureOk(raw, env.CRYPTOMUS_API_KEY)) await settle(env, order, String(data.status || ''), ctx);
+  else { try { await reconcileOrder(env, order, 10, ctx); } catch {} }                // unsigned or oddly encoded: ignore its content, check with the gateway
   return json({ ok: true });
 }
 
@@ -1541,7 +1567,8 @@ const hold = (env, id, reason, t) => [db(env, "UPDATE jobs SET status = 'review'
 async function updateJob(env, req, user, id, action) {
   const t = now(), old = await db(env, 'SELECT * FROM jobs WHERE id = ? AND user_id = ?', id, user.id).first();
   if (!old || old.status === 'removed' || !['edit', 'close', 'renew', 'delete'].includes(action)) throw bad('not_found', 'Job not found.', 404);
-  if (old.status === 'rejected' && action !== 'delete') throw bad('rejected', 'This job was not accepted, so it cannot be changed or published. Delete it and post a corrected one.', 409);
+  // a job a person turned down: it can be deleted, or edited, which sends it to a person again (see below); not closed or published as it is
+  if (old.status === 'rejected' && action !== 'delete' && action !== 'edit') throw bad('rejected', 'This job was not accepted. Edit it to send it again, or delete it.', 409);
   if (action === 'close') await db(env, "UPDATE jobs SET status = 'closed' WHERE id = ? AND status IN ('live', 'review', 'closed')", id).run();
   else if (action === 'renew') {
     // a job that comes back to the site or to the queue counts against the cap of an account that is not trusted yet; the count is
@@ -1556,8 +1583,23 @@ async function updateJob(env, req, user, id, action) {
     if (!done[0].meta.changes) throw bad('limit', recruiter ? RECRUITER_ROOM : NO_ROOM, 429);
   } else if (action === 'delete') await env.DB.batch(takeDown(env, 'id = ?', id, t));
   else {
-    const j = await readJob(env, user, { ...jobView(old, t), ...(await body(req)) }, old), why = j.reasons.length ? 1 : 0;
-    if ((j.company_key !== old.company_key || old.posted_by === AS_UNVERIFIED) && j.posted_by === '') j.company = await claimCompany(env, user, j.company, j.company_key);
+    const j = await readJob(env, user, { ...jobView(old, t), ...(await body(req)) }, old), why = j.reasons.length ? 1 : 0, again = old.status === 'rejected';
+    if ((j.company_key !== old.company_key || old.posted_by === AS_UNVERIFIED || again) && j.posted_by === '') j.company = await claimCompany(env, user, j.company, j.company_key);
+    if (again) {
+      // An edit of a job that was not accepted sends it again: checked like a new one (readJob), it goes back to the queue with what the
+      // person wrote the first time, for 30 days from now, and counts against the account's cap of jobs on the site or waiting like one.
+      // What was bought for it before stays switched off.
+      const recruiter = j.posted_by === AS_RECRUITER, cap = j.posted_by !== '' || !trusted(user, t) ? NEW_LIVE_JOBS : 1e9;
+      const reasons = clip(['sent again after it was not accepted (“' + old.reject_reason + '”)', ...j.reasons].join('; '), 500);
+      const sent = await db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
+        "status = 'review', review_reason = ?, reject_reason = '', held_at = ?, ended_at = 0, expires_at = ? WHERE id = ? AND status = 'rejected' " +
+        "AND (SELECT COUNT(*) FROM jobs c WHERE c.user_id = ? AND c.id != ? AND c.status IN ('live', 'review') AND c.expires_at > ? AND (? = 0 OR c.posted_by = 'recruiter')) < ?",
+        j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype, j.description, j.recruiter_name, j.posted_by,
+        reasons, t, t + FREE_JOB_DAYS * DAY, id, user.id, id, t, recruiter ? 1 : 0, cap).run();
+      if (!sent.meta.changes) throw bad('limit', recruiter ? RECRUITER_ROOM : NO_ROOM, 429);
+      await bump(env, 'held', t).run();
+      return { job: jobView(await db(env, 'SELECT * FROM jobs WHERE id = ?', id).first(), t) };
+    }
     await env.DB.batch([db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
       "held_at = CASE WHEN ? = 1 AND status = 'live' THEN ? ELSE held_at END, status = CASE WHEN ? = 1 AND status = 'live' THEN 'review' ELSE status END, review_reason = CASE WHEN ? = 1 THEN ? ELSE review_reason END " +
       "WHERE id = ? AND status IN ('live', 'review', 'closed')", j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype,
@@ -3022,7 +3064,7 @@ async function route(env, req, url, ctx) {
   if (path === '/api/auth/confirm' && m === 'POST') return confirmEmail(env, req);
   if (path === '/api/auth/reset/request' && m === 'POST') return resetRequest(env, req, ctx);
   if (path === '/api/auth/reset/confirm' && m === 'POST') return resetConfirm(env, req);
-  if (path === '/api/webhooks/cryptomus' && m === 'POST') return cryptomusWebhook(env, req);
+  if (path === '/api/webhooks/cryptomus' && m === 'POST') return cryptomusWebhook(env, req, ctx);
   if (path === '/api/auth/google/start' && m === 'POST') return googleStart(env, req);                // sign in with Google: no session yet
   if (path === '/api/auth/google/callback' && m === 'POST') return googleCallback(env, req, ctx);
   if (path === '/api/domain/email/confirm' && m === 'POST') return workEmailConfirm(env, req);       // the link in the letter is the proof: no session
@@ -3037,10 +3079,10 @@ async function route(env, req, url, ctx) {
   if (seg[0] === 'dev' && seg[1] === 'pay' && env.PAY_MODE === 'test') {                               // developer machines only
     const o = await db(env, "SELECT * FROM orders WHERE id = ? AND provider = 'test'", seg[2] || '').first();
     if (!o) throw bad('not_found', 'Order not found.', 404);
-    await activate(env, o.id);
+    await activate(env, o.id, {}, ctx);
     return Response.redirect(env.SITE_URL + '/account/?order=' + o.id, 302);
   }
-  if (seg[0] === 'admin') return admin(env, req, seg, m);
+  if (seg[0] === 'admin') return admin(env, req, seg, m, ctx);
 
   const user = await currentUser(env, req), t = now();
   if (path === '/api/me' && m === 'GET') return { user: await userView(env, user) };
@@ -3071,7 +3113,7 @@ async function route(env, req, url, ctx) {
   if (seg[0] === 'ai') return ai(env, req, user, seg.slice(1).join('/'), m);
   if (path === '/api/orders' && m === 'POST') return createOrder(env, req, user);
   if (path === '/api/orders' && m === 'GET') {
-    try { await reconcileOrders(env, user.id); } catch {}      // an old invoice is closed only after the gateway was asked whether it was paid
+    try { await reconcileOrders(env, user.id, ctx); } catch {}      // an old invoice is closed only after the gateway was asked whether it was paid
     return { orders: (await db(env, 'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 100', user.id).all()).results.map(orderView) };
   }
   if (seg[0] === 'orders' && seg[1] && m === 'GET') {
@@ -3080,7 +3122,7 @@ async function route(env, req, url, ctx) {
     // the account page polls this after checkout: one order is checked with the gateway on demand, at most once in ten seconds per order
     // (reconcileOrder) and a bounded number of times per account, whatever the page or a script does
     if (url.searchParams.has('refresh') && await allowed(env, 'check:' + user.id, 60, 600)) {
-      try { await reconcileOrder(env, o, 10); } catch {}
+      try { await reconcileOrder(env, o, 10, ctx); } catch {}
       o = await db(env, 'SELECT * FROM orders WHERE id = ?', o.id).first();
     }
     return { order: orderView(o) };
@@ -3112,7 +3154,10 @@ async function route(env, req, url, ctx) {
     throw bad('not_found', 'Not found.', 404);
   }
   if (path === '/api/claims' && m === 'POST') return claimCompanyPage(env, req, user);
-  if (path === '/api/claims' && m === 'GET') return { claims: (await db(env, 'SELECT * FROM company_claims WHERE user_id = ? ORDER BY created_at DESC', user.id).all()).results.map(claimView) };
+  if (path === '/api/claims' && m === 'GET') {            // a verified claim carries what its company page says now, for the form; one that waits or was turned down has none
+    const rows = (await db(env, 'SELECT c.*, p.about, p.website, p.logo, p.locations FROM company_claims c LEFT JOIN company_pages p ON p.company_key = c.company_key WHERE c.user_id = ? ORDER BY c.created_at DESC', user.id).all()).results;
+    return { claims: rows.map((c) => ({ ...claimView(c), page: c.status === 'verified' ? { about: c.about || '', website: c.website || '', logo: mediaUrl(env, c.logo || ''), locations: String(c.locations || '').split('\n').filter(Boolean) } : null })) };
+  }
   if (seg[0] === 'claims' && seg[1] && seg[2] === 'stats' && m === 'GET') return claimStats(env, user, seg[1], t);
   if (path === '/api/jobs/preview' && m === 'POST') return previewJob(env, req, user);
   if (path === '/api/jobs' && m === 'POST') return createJob(env, req, user);
@@ -3144,9 +3189,20 @@ async function route(env, req, url, ctx) {
 const settleReports = (env, id, t) => [             // a job taken off the site for good: the open reports about it were right, and the account loses its trust
   db(env, 'UPDATE users SET upheld_reports = upheld_reports + 1 WHERE id = (SELECT user_id FROM jobs WHERE id = ?) AND EXISTS (SELECT 1 FROM reports WHERE job_id = ? AND decided_at = 0)', id, id),
   db(env, "UPDATE reports SET decision = 'upheld', decided_at = ? WHERE job_id = ? AND decided_at = 0", t, id)];
-async function admin(env, req, seg, m) {
+// what a moderator's session may do under /api/admin/: read the overview, the queue and the counts, decide jobs, claims and reports
+const moderation = (seg, m) => {
+  const [, what, id, act] = seg;
+  if (m === 'GET') return ['overview', 'review', 'audience', 'claims', 'reports'].includes(what) && !id;
+  return m === 'POST' && !!id && ((what === 'jobs' && ['approve', 'reject', 'remove'].includes(act)) || (what === 'claims' && ['approve', 'reject'].includes(act)) || (what === 'reports' && act === 'decide'));
+};
+// The letters a decision sends to the account it is about, after the change is stored; a letter that does not go changes nothing.
+const tell = async (env, ctx, to, subject, text, kind) => { try { if (to && !/@invalid$/.test(to)) await later(ctx, sendMail(env, to, subject, text, { kind })); } catch {} };
+async function admin(env, req, seg, m, ctx) {
   const given = (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
-  if (!env.ADMIN_TOKEN || !sameText(await sha256(given), await sha256(String(env.ADMIN_TOKEN)))) throw bad('forbidden', 'Not allowed.', 403);
+  const owner = !!env.ADMIN_TOKEN && sameText(await sha256(given), await sha256(String(env.ADMIN_TOKEN)));
+  // Not the owner's token: the session of one of the owner's accounts (ADMIN_EMAILS) is taken for the moderation routes and nothing
+  // else. Erasing a person's data, bans, credits and whatever is added here later stay with the token.
+  if (!owner && !(isModerator(env, await currentUser(env, req, false)) && moderation(seg, m))) throw bad('forbidden', 'Not allowed.', 403);
   const t = now(), id = seg[2] || '';
   if (seg[1] === 'review' && m === 'GET') {
     const rows = (await db(env, 'SELECT j.*, u.domain, u.domain_proof, u.email, u.created_at AS account_created, u.confirmed_at, u.approved_jobs, u.upheld_reports, u.linkedin_sub, u.linkedin_name, u.linkedin_email, u.linkedin_at, ' +
@@ -3158,8 +3214,10 @@ async function admin(env, req, seg, m) {
     return { jobs: rows.map((j) => ({ ...hits(j.id), id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, apply_host: j.apply_host, location: j.location, salary: j.salary,
       description: j.description, reason: j.review_reason, posted: isoDay(j.created_at), held: isoDay(j.held_at || j.created_at), open_reports: j.open_reports, report_reasons: j.report_reasons || '',
       held_placements: j.held_placements, posted_by: postedBy(j), recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '',
-      // email_domain: the company domain the account is tied to ('' for a recruiter on a free mailbox); proved_by: how (see proofsOf)
-      account: { id: j.user_id, email_domain: domainOf(j), age_days: Math.floor((t - j.account_created) / DAY), confirmed: j.confirmed_at > 0,
+      page: '/job/' + jobSlug(j.title, j.company) + '/', remote: !!j.remote, etype: j.etype,      // page: where the job will be on the site
+      // email: the account's address, for the person who decides; email_domain: the company domain the account is tied to ('' for a
+      // recruiter or an employer on a free mailbox); proved_by: how (see proofsOf)
+      account: { id: j.user_id, email: j.email, email_domain: domainOf(j), age_days: Math.floor((t - j.account_created) / DAY), confirmed: j.confirmed_at > 0,
         approved_jobs: j.approved_jobs, upheld_reports: j.upheld_reports, proved_by: proofsOf(j), free_mailbox: freeMail(j.email.slice(j.email.lastIndexOf('@') + 1)),
         linkedin: j.linkedin_sub ? { name: j.linkedin_name, email_domain: j.linkedin_email.slice(j.linkedin_email.lastIndexOf('@') + 1), attached: isoDay(j.linkedin_at) } : null,
         recruiter_jobs_approved: j.recruiter_approved } })) };
@@ -3173,19 +3231,29 @@ async function admin(env, req, seg, m) {
       db(env, "UPDATE jobs SET status = 'live', review_reason = '', approved_at = CASE WHEN approved_at = 0 THEN ? ELSE approved_at END, checked_at = ?, expires_at = ? WHERE id = ? AND status = 'review'",
         t, t, t + FREE_JOB_DAYS * DAY, id)]);
     if (!done[3].meta.changes) throw bad('not_found', 'No job with this id is waiting for review.', 404);
-    await requestRebuild(env); return { ok: true };
+    await requestRebuild(env);
+    const j = await db(env, 'SELECT j.title, j.company, j.expires_at, u.email, (SELECT COUNT(*) FROM placements p WHERE p.target = ? AND p.cancelled = 0 AND p.ends_at > ?) AS bought FROM jobs j JOIN users u ON u.id = j.user_id WHERE j.id = ?', 'direct:' + id, t, id).first();
+    if (j) await tell(env, ctx, j.email, 'Your job is live', '“' + j.title + '” at ' + j.company + ' was read by a person and approved. It is live for ' + FREE_JOB_DAYS + ' days, until ' + isoDay(j.expires_at) + '.\n\n' +
+      'Its page: ' + env.SITE_URL + '/job/' + jobSlug(j.title, j.company) + '/\nThe site shows it after its next update, usually within the hour.\n' +
+      (j.bought ? '\nWhat you bought for it starts now.\n' : '') + '\nViews, clicks on Apply, closing it and publishing it again are on the account page: ' + env.SITE_URL + '/account/\n', 'job_approved');
+    return { ok: true };
   }
   if (seg[1] === 'jobs' && seg[3] === 'reject' && m === 'POST') {           // the employer sees the reason; what was bought for the job is switched off (a refund is made by hand at the gateway)
     const reason = line((await body(req)).reason, 300, 3);
     if (!reason) throw bad('reason', 'Give the reason in 3 to 300 characters: the employer reads it.');
-    if (!(await db(env, "SELECT 1 AS x FROM jobs WHERE id = ? AND status IN ('review', 'live')", id).first())) throw bad('not_found', 'No job with this id is live or waiting for review.', 404);
+    const j = await db(env, "SELECT j.title, j.company, u.email, (SELECT COUNT(*) FROM placements p WHERE p.target = ? AND p.cancelled = 0) AS bought FROM jobs j JOIN users u ON u.id = j.user_id WHERE j.id = ? AND j.status IN ('review', 'live')", 'direct:' + id, id).first();
+    if (!j) throw bad('not_found', 'No job with this id is live or waiting for review.', 404);
     await env.DB.batch([...settleReports(env, id, t),
       db(env, "UPDATE placements SET cancelled = 1 WHERE target = 'direct:' || ?", id),
       // the company name goes back when this account has no other job under it: a name must not be held by a job nobody ever saw
       db(env, 'DELETE FROM companies WHERE user_id = (SELECT user_id FROM jobs WHERE id = ?) AND k = (SELECT company_key FROM jobs WHERE id = ?) AND NOT EXISTS (SELECT 1 FROM jobs o WHERE o.id != ? ' +
         "AND o.user_id = companies.user_id AND o.company_key = companies.k AND o.status NOT IN ('removed', 'rejected'))", id, id, id),
       db(env, "UPDATE jobs SET status = 'rejected', reject_reason = ?, ended_at = ? WHERE id = ? AND status IN ('review', 'live')", reason, t, id)]);
-    await requestRebuild(env); return { ok: true };
+    await requestRebuild(env);
+    await tell(env, ctx, j.email, 'Your job was not accepted', '“' + j.title + '” at ' + j.company + ' was read by a person and not accepted. The reason, as written:\n\n  ' + reason + '\n\n' +
+      'You can edit the job on the account page and send it again; it is then read again: ' + env.SITE_URL + '/account/\n' +
+      (j.bought ? '\nWhat you bought for this job is switched off. If you paid for it, reply to this letter and it is refunded.\n' : ''), 'job_rejected');
+    return { ok: true };
   }
   if (seg[1] === 'reports' && !id && m === 'GET') {
     const rows = (await db(env, 'SELECT r.id, r.job_id, r.slug, r.reason, r.note, r.created_at, r.decision, r.decided_at, j.title, j.company, j.status AS job_status FROM reports r LEFT JOIN jobs j ON j.id = r.job_id ' +
@@ -3218,21 +3286,29 @@ async function admin(env, req, seg, m) {
   if (seg[1] === 'claims' && !id && m === 'GET') {
     const rows = (await db(env, "SELECT c.*, u.email, u.domain_proof, u.created_at AS account_created, u.confirmed_at, u.linkedin_sub FROM company_claims c JOIN users u ON u.id = c.user_id WHERE c.status = 'pending' ORDER BY c.created_at LIMIT 200").all()).results;
     return { claims: rows.map((c) => ({ id: c.id, company: c.company, domain: c.domain, site_we_know: c.site, reason: c.reason, asked: isoDay(c.created_at),
-      account: { id: c.user_id, email_domain: c.email.slice(c.email.lastIndexOf('@') + 1), proved_by: proofsOf({ ...c, domain: c.domain }), age_days: Math.floor((t - c.account_created) / DAY) } })) };
+      account: { id: c.user_id, email: c.email, email_domain: c.email.slice(c.email.lastIndexOf('@') + 1), proved_by: proofsOf({ ...c, domain: c.domain }), age_days: Math.floor((t - c.account_created) / DAY) } })) };
   }
   if (seg[1] === 'claims' && seg[3] === 'approve' && m === 'POST') {
     let done;
     try { done = await db(env, "UPDATE company_claims SET status = 'verified', reason = '', decided_at = ? WHERE id = ? AND status = 'pending'", t, id).run(); }
     catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw bad('claimed', 'Another account already manages this company’s page: reject this claim, or reject that one first.', 409); throw err; }
     if (!done.meta.changes) throw bad('not_found', 'No claim with this id is waiting.', 404);
-    await requestRebuild(env); return { ok: true };
+    await requestRebuild(env);
+    const c = await db(env, 'SELECT c.company, u.email FROM company_claims c JOIN users u ON u.id = c.user_id WHERE c.id = ?', id).first();
+    if (c) await tell(env, ctx, c.email, 'Your company page is confirmed', 'Your claim of the page of ' + c.company + ' at ' + env.SITE_URL + ' was read by a person and confirmed.\n\n' +
+      'On the account page you can now write the page’s text, add a logo and the places where you hire, see the views and clicks on Apply of your jobs, and add jobs your hiring system does not list: ' + env.SITE_URL + '/account/\n', 'claim_approved');
+    return { ok: true };
   }
   if (seg[1] === 'claims' && seg[3] === 'reject' && m === 'POST') {
     const reason = line((await body(req)).reason, 300, 3);
     if (!reason) throw bad('reason', 'Give the reason in 3 to 300 characters: the account reads it.');
     const done = await db(env, "UPDATE company_claims SET status = 'rejected', reason = ?, decided_at = ? WHERE id = ? AND status IN ('pending', 'verified')", reason, t, id).run();
     if (!done.meta.changes) throw bad('not_found', 'No claim with this id.', 404);
-    await requestRebuild(env); return { ok: true };
+    await requestRebuild(env);
+    const c = await db(env, 'SELECT c.company, u.email FROM company_claims c JOIN users u ON u.id = c.user_id WHERE c.id = ?', id).first();
+    if (c) await tell(env, ctx, c.email, 'Your company page claim was not accepted', 'Your claim of the page of ' + c.company + ' at ' + env.SITE_URL + ' was read by a person and not accepted. The reason, as written:\n\n  ' + reason + '\n\n' +
+      'If it no longer holds, ask for the page again on the account page, or reply to this letter: ' + env.SITE_URL + '/account/\n', 'claim_rejected');
+    return { ok: true };
   }
   // The resume database: give an employer contact requests (until a pack is on sale, or as a goodwill gesture), and the counts.
   if (seg[1] === 'talent' && seg[2] === 'credits' && m === 'POST') {
