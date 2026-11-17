@@ -1622,5 +1622,137 @@
     "Healthcare"
    ]
   }
+ },
+ "y-combinator": {
+  "source": "List of Y Combinator startups",
+  "url": "https://en.wikipedia.org/wiki/List_of_Y_Combinator_startups",
+  "read": "2026-11-17",
+  "members": 167,
+  "rows": {
+   "Airbnb": [
+    "Airbnb",
+    ""
+   ],
+   "Algolia": [
+    "Algolia",
+    ""
+   ],
+   "Benchling": [
+    "Benchling",
+    ""
+   ],
+   "Brex": [
+    "Brex",
+    ""
+   ],
+   "Coinbase": [
+    "Coinbase",
+    ""
+   ],
+   "DoorDash USA": [
+    "DoorDash",
+    ""
+   ],
+   "Dropbox": [
+    "Dropbox",
+    ""
+   ],
+   "EquipmentShare": [
+    "EquipmentShare",
+    ""
+   ],
+   "Flexport": [
+    "Flexport",
+    ""
+   ],
+   "Flock Safety": [
+    "Flock Safety",
+    ""
+   ],
+   "Ginkgo Bioworks": [
+    "Ginkgo Bioworks",
+    ""
+   ],
+   "GitLab": [
+    "GitLab",
+    ""
+   ],
+   "Gusto": [
+    "Gusto",
+    ""
+   ],
+   "HackerRank": [
+    "HackerRank",
+    ""
+   ],
+   "Helion": [
+    "Helion Energy",
+    ""
+   ],
+   "Instacart": [
+    "Instacart",
+    ""
+   ],
+   "Mixpanel": [
+    "Mixpanel",
+    ""
+   ],
+   "Momentus Space LLC": [
+    "Momentus",
+    ""
+   ],
+   "Mux": [
+    "Mux",
+    ""
+   ],
+   "Oklo": [
+    "Oklo",
+    ""
+   ],
+   "PagerDuty": [
+    "PagerDuty",
+    ""
+   ],
+   "Podium": [
+    "Podium",
+    ""
+   ],
+   "QuickNode": [
+    "Quicknode",
+    ""
+   ],
+   "Quora": [
+    "Quora",
+    ""
+   ],
+   "Reddit": [
+    "Reddit",
+    ""
+   ],
+   "Replit": [
+    "Replit",
+    ""
+   ],
+   "Scale AI": [
+    "Scale AI",
+    ""
+   ],
+   "SmartAsset": [
+    "SmartAsset",
+    ""
+   ],
+   "Stripe": [
+    "Stripe",
+    ""
+   ],
+   "Webflow": [
+    "Webflow",
+    ""
+   ],
+   "Zapier": [
+    "Zapier",
+    ""
+   ]
+  }
  }
 }

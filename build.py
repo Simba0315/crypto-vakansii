@@ -244,7 +244,7 @@ def same_case(c):
     return o < 128 or (0xC0 <= o <= 0x17E and o not in (0x130, 0x131)) or 0x400 <= o <= 0x4FF or c.lower() == c == c.upper()
 
 
-def rx_needs(pattern, cap=200):
+def rx_needs(pattern, cap=200, flags=re.I):
     """What a text must contain for this regex to match it, as a list of word sets (lower case): a match needs every word of at
     least one set. An empty list when nothing can be said. Testing 531 role rules against every job title was a fifth of a build
     (profile of 17 Nov 2026: 131 s for 31,800 titles); "is this word in the title" is a hundred times cheaper than a regex search,
@@ -280,7 +280,7 @@ def rx_needs(pattern, cap=200):
         if run: cur = both(cur, word())
         return cur
     try:
-        d = need(sp.parse(pattern, re.I))
+        d = need(sp.parse(pattern, flags))
     except Exception:
         return []
     return [] if not all(d) else sorted(set(d), key=sorted)
@@ -288,6 +288,34 @@ def rx_needs(pattern, cap=200):
 
 ROLE_NEED = {nm: rx_needs(rx) for nm, _, rx in ROLES}
 SAME_CASE = {}
+
+
+def low_of(text):
+    """The lower-case copy of a text that the word tests read (role_slugs, rx_skip), or None for a text with a letter that re.I pairs in its own way
+    (then nothing is skipped and every regex is run)."""
+    if not text.isascii():
+        for c in set(text):
+            if c not in SAME_CASE: SAME_CASE[c] = same_case(c)
+            if not SAME_CASE[c]: return None
+    return text.lower()
+
+
+def rx_skip(rxs):
+    """For compiled regexes that all read the same long texts (job descriptions): returns have and tests.
+    have(text) is the set of the words these regexes need that the text has (None for a text with a letter re.I pairs in its own
+    way: then nothing is skipped); tests[i](that set) is False when regex i cannot match the text, True when it must be run.
+    The interview-theme and office-day regexes read every full description (26 searches of about 230 microseconds a posting,
+    a minute of a build on a fifth of the record); two thirds of those searches cannot match, and this says so from one pass
+    over the text. Checked against the plain searches on 7,055 descriptions: the same answers."""
+    needs = [rx_needs(r.pattern, flags=r.flags) for r in rxs]
+    words = sorted({w_ for d in needs for c_ in d for w_ in c_})
+    def have(text):
+        low = low_of(text)
+        return None if low is None else {w_ for w_ in words if w_ in low}
+    def test(d):
+        if not d: return lambda got: True
+        return lambda got: got is None or any(c_ <= got for c_ in d)
+    return have, [test(d) for d in needs]
 
 
 def role_slugs(titles):
@@ -309,12 +337,9 @@ def role_slugs(titles):
     out = {}
     for t in titles:
         if t in out: continue
-        if not t.isascii():
-            for c in t:
-                if c not in SAME_CASE: SAME_CASE[c] = same_case(c)
-            if not all(SAME_CASE[c] for c in t):                # a letter re.I pairs in its own way: every rule, the plain way
-                out[t] = [s_ for s_, (nm, rx) in last.items() if role_hit(nm, rx, t)]; continue
-        tl = t.lower()
+        tl = low_of(t)
+        if tl is None:                                           # a letter re.I pairs in its own way: every rule, the plain way
+            out[t] = [s_ for s_, (nm, rx) in last.items() if role_hit(nm, rx, t)]; continue
         hit = {w_ for w_ in one if w_ in tl}
         for g_ in {tl[i:i + 2] for i in range(len(tl) - 1)}:
             for w_ in by2.get(g_, ()):
@@ -2722,7 +2747,12 @@ def main():
                 ("nasdaq-100", "Nasdaq-100 companies hiring now", "Nasdaq-100 Companies Hiring Now", "the Nasdaq-100", "Nasdaq-100 companies",
                  "The Nasdaq-100 is a share index of 100 of the largest non-financial companies listed on the Nasdaq exchange."),
                 ("unicorns", "Unicorn startups hiring now", "Unicorn Startups Hiring Now", "the list of unicorn startups", "Unicorn startups",
-                 "A unicorn is a privately held startup valued at US$1 billion or more.")]
+                 "A unicorn is a privately held startup valued at US$1 billion or more."),
+                ("y-combinator", "Y Combinator companies hiring now", "Y Combinator Companies Hiring Now", "Wikipedia’s list of Y Combinator startups", "Y Combinator companies",
+                 "Y Combinator is a startup accelerator in San Francisco that has funded thousands of startups since 2005.")]
+    LIST_OWN = {"sp-500": " This site is not connected with the companies that publish these indexes; the index names belong to their owners.",
+                "y-combinator": " This site is not connected with Y Combinator."}
+    LIST_OWN["nasdaq-100"] = LIST_OWN["sp-500"]
     try: lists_data = json.load(open("company_lists.json", encoding="utf-8"))
     except (OSError, ValueError): lists_data = {}
     CO_IN, co_lists = defaultdict(list), []
@@ -2735,8 +2765,10 @@ def main():
         n_jobs = sum(len(v) for _, v in hits)
         med_ = lambda v: (lambda m_: money(median(m_)) if len(m_) >= 5 else "–")([(j["usd"][0] + j["usd"][1]) / 2 for j in v if j["usd"]])
         new_ = lambda c: fresh_n.get(c, 0)
+        has_sec = any(rows_l[c][1] for c, _ in hits)            # the Y Combinator list gives no sector
+        sec_w = "industry" if ls_ == "unicorns" else "sector"
         rows_t = "".join(f'<tr><td>{i_ + 1}</td><td><a href="{P}/companies/{slugify(c)}/">{e(c)}</a></td><td>{len(v):,}</td><td>{("+" + format(new_(c), ",")) if new_(c) else "–"}</td>'
-                         f'<td>{e(rows_l[c][1]) or "–"}</td><td>{med_(v)}</td></tr>' for i_, (c, v) in enumerate(hits))
+                         + (f'<td>{e(rows_l[c][1]) or "–"}</td>' if has_sec else "") + f'<td>{med_(v)}</td></tr>' for i_, (c, v) in enumerate(hits))
         by_sec = defaultdict(lambda: [0, 0])
         for c, v in hits:
             k_ = rows_l[c][1] or "Not stated"
@@ -2757,19 +2789,20 @@ def main():
         ld_l = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_l]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"companies/{ls_}/", f"{ttl_}: {n_jobs:,} Jobs ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
-             f"{len(hits):,} companies from {the_} with {n_jobs:,} open jobs between them today: who hires the most, in which sectors, and what they pay. Read from their own careers pages every hour.",
+             f"{len(hits):,} {short_[0].lower() + short_[1:] if ls_ == 'unicorns' else short_} have {n_jobs:,} open jobs here today: who hires the most"
+             + (f", in which {'industries' if ls_ == 'unicorns' else 'sectors'}" if has_sec else "") + " and what they pay. Updated every hour.",
              crumbs(("Companies", "companies/"), (short_, "")) + f'<h1>{e(h1_)}: <span class="hl">{n_jobs:,} jobs</span></h1>'
-             f'<p class="lead">{e(what_)} {len(hits):,} of its {d_.get("members", 0):,} companies have open jobs on this site today, {n_jobs:,} between them, '
+             f'<p class="lead">{e(what_)} {len(hits):,} of the {d_.get("members", 0):,} companies in {e(the_)} have open jobs on this site today, {n_jobs:,} between them, '
              f'read from each company’s own careers page every hour. Largest first.</p>'
              + section(f"{short_} with open jobs", '<div class="tablewrap"><table><tr><th>#</th><th>Company</th><th>Open jobs</th><th>New this week</th>'
-                       f'<th>{"Industry" if ls_ == "unicorns" else "Sector"}</th><th>Median advertised pay</th></tr>' + rows_t + "</table></div>"
+                       + (f"<th>{sec_w.capitalize()}</th>" if has_sec else "") + "<th>Median advertised pay</th></tr>" + rows_t + "</table></div>"
                        '<p class="note">Median advertised pay is shown when at least five of a company’s open postings state a yearly US-dollar range.</p>')
-             + (section(f'Open jobs by {"industry" if ls_ == "unicorns" else "sector"}', f'<div class="tablewrap"><table><tr><th>{"Industry" if ls_ == "unicorns" else "Sector"}</th><th>Companies</th><th>Open jobs</th></tr>'
-                        + sec_rows + "</table></div>") if len(by_sec) >= 3 else "")
+             + (section(f"Open jobs by {sec_w}", f'<div class="tablewrap"><table><tr><th>{sec_w.capitalize()}</th><th>Companies</th><th>Open jobs</th></tr>'
+                        + sec_rows + "</table></div>") if has_sec and len(by_sec) >= 3 else "")
              + section("Questions about this list", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_l) + "</dl>")
              + f'<p class="note">Who is in the list: Wikipedia, “<a href="{e(d_.get("url", ""))}" rel="nofollow noopener">{e(d_.get("source", ""))}</a>”, used under '
                f'<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="nofollow noopener">CC BY-SA 4.0</a>, read on {read_}. Job counts and pay: {SITE}. '
-               'This site is not connected with the companies that publish these indexes; the index names belong to their owners.</p>'
+               + LIST_OWN.get(ls_, "").strip() + "</p>"
              + '<p class="note cmpl">Other lists: ' + " · ".join(f'<a href="{P}/companies/{o_[0]}/">{e(o_[4])}</a>' for o_ in CO_LISTS if o_[0] != ls_ and f"companies/{o_[0]}/" in LIST_OK)
              + "".join(f' · <a href="{P}/companies/{o_[0]}/">{e(o_[1])}</a>' for o_ in TYPES if any(t_ == o_[0] for t_, _, _ in co_types)) + "</p>", head=ld_l)
         co_lists.append((ls_, short_, len(hits)))
@@ -4363,7 +4396,11 @@ def main():
                 "Night and weekend shifts", "A sales quota", "Good writing", "Time zones"]      # the same themes in two or three words
     assert len(IQ_SHORT) == len(IQ_RX)
     all_desc = [j for j in active if j.get("desc")]
-    iq_hit = {j["id"]: [bool(rx.search(j["desc"])) for rx, _, _, _ in IQ_RX] for j in all_desc}      # each posting is read once
+    iq_have, iq_may = rx_skip([rx for rx, _, _, _ in IQ_RX])
+    iq_hit = {}                                                                                      # each posting is read once
+    for j in all_desc:
+        got_ = iq_have(j["desc"])
+        iq_hit[j["id"]] = [may_(got_) and bool(rx.search(j["desc"])) for may_, (rx, _, _, _) in zip(iq_may, IQ_RX)]
     def iq_li(q, why, good, sample=""):
         return (f'<li><h3>{e(q)}</h3><p class="why">{why}</p>' + (f'<p class="good"><b>A good answer shows:</b> {e(good)}</p>' if good else "")
                 + (f'<p class="good"><b>{"Answer" if not good else "Sample answer"}:</b> {e(sample)}</p>' if sample else "") + "</li>")
@@ -5201,15 +5238,23 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # 10. office days in hybrid jobs: read from the full text of postings (a range "2 to 3 days" counts as its lower figure)
     OD_W = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
     OD_N = r"([1-5]|one|two|three|four|five)"
-    OD_RX = [re.compile(OD_N + r"(?:\s*(?:-|–|to|or)\s*(?:[1-5]|two|three|four|five))?\+?\s+(?:full\s+)?days?\s+(?:a|per|each|every|of the)\s+week\s+(?:in|at|from|on)[- ](?:the\s+|our\s+|an?\s+|one of our\s+)?(?:office|site|on-?site|hub|studio|headquarters|hq|location)", re.I),
-             re.compile(r"(?:in|at)\s+(?:the|our)\s+(?:office|hub|studio)\s+(?:at least\s+|a minimum of\s+)?" + OD_N + r"\s+days?\s+(?:a|per|each)\s+week", re.I),
-             re.compile(r"office\s+" + OD_N + r"\s+days?\s+(?:a|per|each)\s+week", re.I),
-             re.compile(OD_N + r"\s+days?\s+(?:in|at)[- ](?:the\s+)?office", re.I),
-             re.compile(r"(?:in[- ]office|on[- ]?site|in[- ]person)\s+" + OD_N + r"\s+days?\s+(?:a|per|each)\s+week", re.I)]
+    # Each rule is written as (what comes before, the part that starts with plain letters): the second part alone is tried first,
+    # because a search that can start from fixed letters ("days", "office") is some fifty times faster than one that starts with
+    # "a digit or one, two, three…", which the engine has to try at every character of a 7,000-character description.
+    OD_SRC = [(OD_N + r"(?:\s*(?:-|–|to|or)\s*(?:[1-5]|two|three|four|five))?\+?\s+(?:full\s+)?",
+               r"days?\s+(?:a|per|each|every|of the)\s+week\s+(?:in|at|from|on)[- ](?:the\s+|our\s+|an?\s+|one of our\s+)?(?:office|site|on-?site|hub|studio|headquarters|hq|location)"),
+              (r"(?:in|at)\s+(?:the|our)\s+(?:office|hub|studio)\s+(?:at least\s+|a minimum of\s+)?" + OD_N + r"\s+", r"days?\s+(?:a|per|each)\s+week"),
+              ("", r"office\s+" + OD_N + r"\s+days?\s+(?:a|per|each)\s+week"),
+              (OD_N + r"\s+", r"days?\s+(?:in|at)[- ](?:the\s+)?office"),
+              (r"(?:in[- ]office|on[- ]?site|in[- ]person)\s+" + OD_N + r"\s+", r"days?\s+(?:a|per|each)\s+week")]
+    OD_RX = [re.compile(a_ + b_, re.I) for a_, b_ in OD_SRC]
+    OD_GATE = [re.compile(b_, re.I) for _, b_ in OD_SRC]
     od_ = Counter()
+    od_have, od_may = rx_skip(OD_RX)
     for j in all_desc:
-        for rx_ in OD_RX:
-            m_ = rx_.search(j["desc"])
+        got_ = od_have(j["desc"])
+        for may_, gate_, rx_ in zip(od_may, OD_GATE, OD_RX):
+            m_ = may_(got_) and gate_.search(j["desc"]) and rx_.search(j["desc"])
             if m_:
                 od_[int(OD_W.get(m_.group(1).lower(), m_.group(1)))] += 1
                 break
