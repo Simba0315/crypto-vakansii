@@ -36,7 +36,10 @@ HOUR, BUSY = 3600, 600                                   # quiet boards every ho
 SLOW = collect.SLOW_ATS                                  # one request per 20 or 100 postings plus one per new posting: once an hour at most
 # Workday and SmartRecruiters: the text of at most this many postings new to the site per board and read. Their lists are newest first,
 # so these are the jobs just published; the backlog of a newly added board is the hourly run's to fill (collect.DETAILS), not ours.
-collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 5)
+# 15 since 17 Nov 2026 (5 before): GitHub starts the hourly run only 4 or 5 times a day, so the backlog of a newly added board was
+# filled mostly from here, 5 texts an hour: a board with 1,000 jobs took a week. 15 an hour is still one request every few minutes
+# to an employer's site.
+collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15)
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 24)
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
