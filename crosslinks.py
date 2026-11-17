@@ -28,6 +28,11 @@ GROUP = {"skills": "By skill", "kind": "By kind of work", "roles": "By role", "l
 LEVELS = {"intern", "junior", "senior", "lead", "entry-level", "new"}
 
 
+def low(title):
+    """A page's heading inside a sentence: "Narrow down jobs in London", not "Narrow down Jobs in London"."""
+    return title[0].lower() + title[1:] if title.split(" ", 1)[0] in ("Jobs", "Remote", "Entry-level", "Companies") else title
+
+
 def parents(u, have):
     """[(broader page, group the narrower one belongs to on it)] for a page address, only pages that exist."""
     p = u.strip("/").split("/")
@@ -99,7 +104,7 @@ def run(site, urls):
         for g in ("skills", "kind", "roles", "places", "chains", "level", "remote", "pages"):
             xs = sorted(groups.get(g, ()), key=lambda u: -meta(u)[1])[:60]
             if xs: body += f'<h3>{GROUP[g]}</h3><ul class="xl">' + "".join(f"<li>{a(u)}</li>" for u in xs) + "</ul>"
-        if body: blocks[parent] += f'<section class="sec xlinks"><div class="sec-head"><h2>Narrow down {html.escape(title)}</h2></div>{body}</section>'
+        if body: blocks[parent] += f'<section class="sec xlinks"><div class="sec-head"><h2>Narrow down {html.escape(low(title))}</h2></div>{body}</section>'
     for u, ps in up.items():                            # narrow page: up to its broader pages, across to its neighbours
         if not ps: continue
         ups = [p for p, _ in ps]
