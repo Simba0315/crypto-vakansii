@@ -2657,3 +2657,172 @@ main.hub .cta2 a.btn{text-decoration:none}
   #acc.pr .acc-side,#acc.pr .acc-ph,#acc.pr .acc-call,#acc.pr .acc-list,#acc.pr .acc-h2,#acc.pr #acc-say,#acc.pr .acc-test,#acc.pr .acc-synced,#acc.pr .acc-btns{display:none!important}
   #acc.pr .acc-shell{display:block}
 }
+
+/* Sections review, batch 3 (salaries, glossary, comparisons, guides, insights), 17 Nov 2026 */
+/* Looked at by eye at 1360 px, at 375 px and in the dark theme, then fixed here and in build.py. The parts are those of batch 1:
+   the row of a page's own numbers (.nums), a label above a two-weight headline (section(label=)), the pill box of a hub, the
+   bars from the middle of a comparison (.vs), the row of pills (.pillrow), light cards for pictures (.pic). build.py puts a class
+   on <main>: "hub" on the hubs and on comparison pages, "sal" on salary pages, "ins" on rankings, "gd" on guides. */
+
+/* small labels are plain words, not capitals with letter-spacing (the owner's rule): the "On this page" list (every family that
+   has one), the cards of a glossary term, the short answer and the examples of an advice article */
+.toc p,.gl-k,.adv-short span,.adv-ex figcaption{font:600 13px/1.3 var(--mono);letter-spacing:0;text-transform:none;color:var(--muted)}
+
+/* salaries: the bar of a table in the chart colour on its soft track, as in the picture cards */
+td.salbar .bar{background:var(--viz-soft)}
+td.salbar .bar i{background:var(--viz-1)}
+/* the table of job titles shows its first rows; the rest open with the button under it (a checkbox, so it works without scripts)
+   or by typing a title in the box above */
+.dirt td:first-child,.dirt th:first-child{width:1%;padding-right:4px;color:var(--faint)}
+tr.xr{display:none}
+main:has(#salall:checked) tr.xr:not([hidden]),main:has(#dirfilter:not(:placeholder-shown)) tr.xr:not([hidden]){display:table-row}
+.showall{margin:14px 0 0}
+.showall .btn{margin-top:0;cursor:pointer}
+.showall label span+span,main:has(#salall:checked) .showall label span:first-child{display:none}
+main:has(#salall:checked) .showall label span+span{display:inline}
+main:has(#dirfilter:not(:placeholder-shown)) .showall{display:none}
+.showall input:focus-visible+label{outline:2px solid var(--text);outline-offset:2px}
+main.sal:has(#dirfilter:not(:placeholder-shown)) #titles{margin-top:40px}
+/* two tables side by side (by skill, by company): a shorter bar */
+main.sal .duo{gap:0 28px}
+main.sal .duo td.salbar .bar{width:min(110px,10vw)}
+/* a salary page: the two pictures under the numbers; one alone does not stretch across the page */
+main.sal .pics.two{margin:22px 0 4px}
+main.sal .pics.two .pic:only-child{max-width:560px}
+@media(max-width:560px){
+  /* a phone: the four columns of the job titles do not fit, so the place in the list (the rows are in order anyway) steps aside */
+  .dirt th{white-space:normal}
+  .dirt th:first-child,.dirt td:first-child{display:none}
+  .tablewrap .dirt th,.tablewrap .dirt td{padding:10px 8px}
+  .tablewrap .dirt th:nth-child(2),.tablewrap .dirt td:nth-child(2){padding-left:14px}
+  main.sal .t4{font-size:14px}
+  main.sal .t4 th{white-space:normal}
+  .tablewrap.t4 th,.tablewrap.t4 td,.tablewrap.t4 th:last-child,.tablewrap.t4 td:last-child{padding:10px 8px}
+  .tablewrap.t4 th:first-child,.tablewrap.t4 td:first-child{padding-left:12px}
+}
+
+/* salary explorer: each select as wide as its cell; on a phone two to a row, so the figures are on the first screens */
+.exf select{width:100%;max-width:none;min-width:0}
+.exf .exo{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;margin:0;padding-bottom:4px}
+.exf .exo .exr,.exf .exo .linkbtn{padding-bottom:0}
+@media(max-width:560px){.exf{grid-template-columns:1fr 1fr;gap:10px 12px;padding:12px 14px}.exf .exo{grid-column:1/-1;padding-bottom:0}
+  #ex-out .stats3.st4 .st{padding-left:12px;padding-right:10px}
+  #ex-out .stats3.st4 .st-v{font-size:20px;letter-spacing:-.035em;white-space:nowrap}}      /* a range ("$150K–$243K") stays on one line in its tile */
+/* five pictures in two columns left a hole: the odd last one takes the row, its bars in two columns */
+@media(min-width:861px){
+  .ex-pics .pic:last-child:nth-child(odd){grid-column:1/-1}
+  .ex-pics .pic:last-child:nth-child(odd) .hbars{display:grid;grid-template-columns:1fr 1fr;gap:10px 44px}
+}
+/* the lists of salary pages under the tool: four rows that open */
+.exls{border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+details.exl{margin:0;border-top:1px solid var(--line)}
+details.exl:first-child{border-top:0}
+details.exl>summary{display:flex;align-items:center;gap:12px;padding:15px 20px;list-style:none;cursor:pointer;font-size:16px}
+details.exl>summary::-webkit-details-marker{display:none}
+details.exl>summary span{font-size:13.5px;color:var(--faint)}
+details.exl>summary::after{content:"+";margin-left:auto;font-size:22px;line-height:1;color:var(--muted)}
+details.exl[open]>summary::after{content:"\2013"}
+details.exl>summary:hover{background:var(--bg2)}
+details.exl .rel{margin:0;padding:4px 20px 18px}
+
+/* glossary index: a row of letters above the list; a letter jumps to its first term */
+.pillrow.az{gap:6px;margin:18px 0 0}
+.pillrow.az a{min-width:38px;justify-content:center;padding:0 10px}
+main.hub:has(#dirfilter:not(:placeholder-shown)) .pillrow.az{display:none}
+main.hub .gl-index{margin-top:22px}
+.gl-index>div{scroll-margin-top:84px}
+@media(max-width:700px){.pillrow.az{flex-wrap:wrap;margin:16px 0 0;padding:0;overflow:visible}}
+
+/* comparisons of skills and of jobs: the picker is one bar; a tile holds a long pair of names whole */
+.cmpick{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 14px;max-width:760px;margin:22px 0 0;padding:18px 20px;border-radius:16px;box-shadow:var(--shadow)}
+.cmpick label.wl{flex:1 1 200px;min-width:0}
+.cmpick label.wl select{width:100%;max-width:none;min-height:46px}
+.cmpick .btn{min-height:46px;margin:0}
+@media(max-width:560px){.cmpick{padding:14px}.cmpick .btn{flex:1 1 100%}}
+.tiles.wide{grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.tiles.wide .tile .n{-webkit-line-clamp:3}
+/* the bars from the middle: room for a few words where a figure is missing ("too few ranges") */
+main.hub .vsr i{max-width:calc(100% - 122px)}
+main.hub .vs+.verdict{margin-top:0}
+/* a phone: the bars were an inch long, most of each half kept for the figure. The figure takes what it needs and words wrap
+   (company against company, from batch 1, is drawn by the same rules) */
+@media(max-width:560px){
+  main.hub .vsr i{max-width:calc(100% - 72px)}
+  main.hub .vsr b{white-space:normal;line-height:1.15}
+  main.hub .vsr .va b{text-align:right}
+}
+
+/* compared with other job sites: the question of a row is read as a heading, not as a small grey label */
+.tablewrap .vs-t tr:not(:first-child) th{background:none;font-size:14.5px;font-weight:650;line-height:1.4;color:var(--text);white-space:normal;vertical-align:top}
+.tablewrap .vs-t td{vertical-align:top}
+/* "where each is better": one card a side, the points as a ruled list in it (they were boxes inside a box) */
+.vs-two>div{padding:22px 24px 12px;border-radius:18px}
+.vs-two h2{margin:0 0 8px;font-size:19px}
+.vs-two ul.ticks{display:block;margin:0}
+.vs-two ul.ticks li{padding:11px 0 11px 32px;border:0;border-top:1px solid var(--line);border-radius:0;background:none}
+.vs-two ul.ticks li:first-child{border-top:0}
+.vs-two ul.ticks li::before{left:0;top:12px}
+/* a phone: a row is its question, then each site's answer under the site's name (the table used to scroll sideways, the last
+   column out of sight) */
+@media(max-width:700px){
+  .vs-t,.vs-t tbody,.vs-t tr,.vs-t th,.vs-t td{display:block;width:auto!important}
+  .vs-t tr:first-child{display:none}
+  .vs-t tr{padding:14px 16px 13px;border-bottom:1px solid var(--line)}
+  .vs-t tr:last-child{border-bottom:0}
+  .tablewrap .vs-t tr:not(:first-child) th{padding:0;border:0;font-size:16px}
+  .tablewrap .vs-t td,.tablewrap .vs-t td:last-child{padding:9px 0 0;border:0;font-size:15px}
+  .vs-t td::before{content:attr(data-l);display:block;margin-bottom:1px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .tablewrap .vs-t tr:hover td{background:none}
+  .vs-two>div{padding:18px 18px 8px}
+}
+
+/* guides index: the subjects as a row of pills with their counts; a subject with one or two guides fills its row */
+.pillrow a i{margin-left:7px;font:500 12.5px var(--mono);font-style:normal;color:var(--faint)}
+@media(min-width:701px){
+  .tgrid.g:has(>.tcard:first-child:last-child){grid-template-columns:1fr}
+  .tgrid.g>.tcard:first-child:last-child{flex-direction:row}
+  .tgrid.g>.tcard:first-child:last-child .tprev{flex:0 0 42%;height:auto;min-height:168px;border-bottom:0;border-right:1px solid var(--line)}
+  .tgrid.g>.tcard:first-child:last-child .tbody{justify-content:center;padding:22px 28px}
+  .tgrid.g>.tcard:first-child:last-child .tbody>i{margin-top:0}
+  .tgrid.g:has(>.tcard:first-child:nth-last-child(2)){grid-template-columns:1fr 1fr}
+}
+/* the first lines of an advice article on its card: a quotation, not grey filler */
+.adv-prev{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;padding:0 4px 0 12px;border-left:2px solid var(--line2);font-size:14px;line-height:1.5;color:var(--text)}
+
+/* a guide: its bars in a light card in the chart colour; the short answer first; what to read next as links that look like links */
+.guide .hbars.chart{padding:10px 20px 6px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.guide .hbars.chart a:last-child{border-bottom:0}
+.guide .hbars.chart .hb{background:var(--viz-soft)}
+.guide .hbars.chart .hb i{background:var(--viz-1)}
+.guide .adv-short{margin:16px 0 18px}
+.gnext{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:36px 0 0;padding-top:20px;border-top:1px solid var(--line)}
+.gnext b{margin-right:6px;font-size:14px;font-weight:600;color:var(--muted)}
+.gnext a{display:inline-flex;align-items:center;min-height:38px;padding:0 15px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:14px;font-weight:600}
+.gnext a:hover{border-color:var(--text)}
+.adv-jobs+.gnext{margin-top:22px}
+@media(max-width:560px){
+  .guide .hbars.chart{padding:6px 14px 2px}
+  /* the trail of a guide or a ranking repeats its long heading: one line of it on a phone */
+  main.gd .crumbs,main.ins .crumbs{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+
+/* a ranking: one button under the paragraph, the first ten drawn in a card (two columns of five on a wide screen), then the table */
+main.ins .lact{margin:16px 0 22px}
+.pic.insc{margin:0 0 22px}
+.insc .hbars.chart{max-width:none;margin:0}
+@media(min-width:861px){.insc .hbars.chart{grid-template-columns:1fr 1fr;grid-template-rows:repeat(5,auto);grid-auto-flow:column;gap:10px 56px}}
+/* a phone: each row of the table is a card, the name first, every figure beside the name of its column */
+@media(max-width:640px){
+  .tablewrap.rkwrap{overflow:visible;border:0;border-radius:0;background:none;box-shadow:none}
+  .rkt,.rkt tbody,.rkt tr,.rkt td{display:block;width:auto}
+  .rkt tr:first-child{display:none}
+  .rkt tr{position:relative;margin:0 0 10px;padding:12px 14px 10px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  .rkt.rk1 tr{padding-left:46px}
+  .tablewrap .rkt td,.tablewrap .rkt td:last-child{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:3px 0;border:0;text-align:right}
+  .rkt td::before{content:attr(data-l);flex:none;max-width:50%;font-size:13.5px;color:var(--muted);text-align:left}
+  .tablewrap .rkt.rk1 td:first-child{position:absolute;left:14px;top:13px;padding:0;color:var(--faint)}
+  .rkt.rk1 td:first-child::before,.rkt.rk1 td:nth-child(2)::before,.rkt:not(.rk1) td:first-child::before{content:none}
+  .tablewrap .rkt.rk1 td:nth-child(2),.tablewrap .rkt:not(.rk1) td:first-child{display:block;padding:0 0 6px;font-size:16px;font-weight:650;text-align:left}
+  .tablewrap .rkt tr:hover td{background:none}
+  .rkt td .bar{display:none}
+}
