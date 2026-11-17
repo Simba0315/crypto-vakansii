@@ -347,6 +347,30 @@ TERMS = [
      "If an employer adds money to it, count that sum as part of your pay when you compare offers.", [("tools/compare-offers/", "Compare two offers"), ("tools/offer-check/", "Offer check")]),
     ("Equal opportunity employer", "A statement that the employer does not choose or reject people because of race, sex, religion, age, disability or similar traits. In the US, most employers must follow the law whether or not they print it.",
      "Treat the line as a minimum, not a sign of a good workplace; the posting’s pay range, benefits and clear duties say more.", [("jobs/", "All open jobs")]),
+    ("Vesting cliff", "The waiting period at the start of a stock grant during which none of it is yours yet. A common cliff is one year; if you leave before it ends, you keep nothing.",
+     "Ask for the cliff and the full vesting schedule in writing, and note the date your cliff ends before you plan a move.", [("tools/equity-calculator/", "Equity calculator"), ("tools/compare-offers/", "Compare two offers")]),
+    ("Equity refresh", "An extra stock grant an employer gives a current employee, usually after a good review or a promotion, on top of the grant in the first offer.",
+     "Ask whether refreshes exist and how often they are given; without them, your stock pay falls once the first grant is fully vested.", [("tools/equity-calculator/", "Equity calculator")]),
+    ("Backfill", "A job opened to replace someone who left, as opposed to a new job created for growth.",
+     "Ask in the interview why the job is open; a backfill tells you what the last person did and how long they stayed.", [("interview-questions/", "Interview questions")]),
+    ("Skills-based hiring", "Choosing people by what they can do, shown through tests, work samples or past projects, instead of by a degree or a list of past employers.",
+     "Put proof of the skill, such as a project or a result, above your education on the resume.", [("resume/", "Resume builder"), ("skills/", "Skills in demand")]),
+    ("Knockout question", "A yes or no question in an application form, such as work authorization or years of experience, that rejects the application at once if it is answered the wrong way.",
+     "Answer truthfully, and read each one before you start the form, so you do not spend an hour on a job that cannot take you.", [("jobs/", "All open jobs")]),
+    ("Reduction in force (RIF)", "The formal name for a layoff where an employer cuts jobs, not people for poor work. The roles disappear, so the people are not blamed.",
+     "Ask in writing for the end date, pay for unused leave, severance and how long your health cover lasts.", [("resignation-letters/", "Resignation letters"), ("tools/last-working-day/", "Last working day calculator")]),
+    ("Rolling basis", "A way of hiring where applications are read as they arrive and the job closes when someone is chosen, not on a fixed date.",
+     "Apply in the first days: late applications may never be read once the place is filled.", [("jobs/", "All open jobs")]),
+    ("Talent acquisition", "The employer’s hiring department. The word covers finding people, running interviews and making offers, and it often replaces the older name “human resources” for this part of the work.",
+     "Write to the talent acquisition contact named in the posting for questions about the process, and to the hiring manager only about the work.", [("interview-questions/", "Interview questions")]),
+    ("Bar raiser", "An interviewer from outside the hiring team whose job is to keep the standard of new hires high. At some large companies this person can stop an offer.",
+     "Expect broad questions about how you work and decide; prepare stories that do not depend on one team’s tools.", [("tools/interview-answer-builder/", "Interview answer builder")]),
+    ("Salary history ban", "A law, in force in a number of US states and cities, that forbids an employer to ask what you were paid before.",
+     "If asked anyway, say what range you are looking for and why; you are not required to name your old pay where the ban applies.", [("tools/negotiation-email/", "Negotiation email"), ("salaries/", "Salaries")]),
+    ("On-call", "Time outside your normal hours when you must be ready to answer an urgent problem, for example a server that stops working at night.",
+     "Ask how often you are on call, what it pays and whether you get time off after a night call.", [("tools/offer-check/", "Offer check")]),
+    ("Open enrollment", "The short yearly period in which you may choose or change your health insurance and other benefits. Outside it, you can change only after a life event such as a new job.",
+     "Note the deadline in your first week, because a missed one can leave you without cover until the next period.", [("tools/compare-offers/", "Compare two offers")]),
 ]
 
 
@@ -1187,7 +1211,7 @@ MORE = {
     ),
     "Vesting": dict(
         title="What Is Vesting? Vesting Schedules and Cliffs Explained",
-        aliases=["vesting-schedule", "vesting-cliff"],
+        aliases=["vesting-schedule"],
         sections=[
             ("What vesting means", [
                 "Vesting is how something promised to you, such as stock options, RSUs or the employer’s retirement contributions, becomes fully yours over time. Until it vests, you lose it if you leave.",
