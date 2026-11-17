@@ -5110,6 +5110,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                   "med": money(median(adv_mids)) if adv_mids else "–", "p25": money(adv_mids[len(adv_mids) // 4]) if adv_mids else "–", "p75": money(adv_mids[3 * len(adv_mids) // 4]) if adv_mids else "–",
                   "age_med": adv_ages[len(adv_ages) // 2] if adv_ages else 0, "old_pct": pc_(sum(1 for d_ in adv_ages if d_ >= 90), max(1, len(adv_ages))),
                   "entry_n": sum(1 for j in active if j["entry"]), "entry_pct": pc_(sum(1 for j in active if j["entry"]), n)}
+    adv_urls = set(URLS)
+    adv_top = []
+    for slug_r, (rname, rj) in by_role.items():
+        mids_r = [(j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"]]
+        if len(mids_r) >= 30 and f"salaries/{slug_r}/" in adv_urls: adv_top.append((median(mids_r), rname, slug_r, len(mids_r)))
+    advice_ctx["top_roles"] = [(nm_, s_, money(m_), c_) for m_, nm_, s_, c_ in sorted(adv_top, reverse=True)[:12]]
     for a_ in advice_pages.ARTICLES:
         guide(a_["slug"], a_["title"], a_["desc"], a_["cat"], a_["lead"], advice_pages.render(a_, advice_ctx, e, P),
               f'<span class="adv-prev">{e(a_["short"][:120].rsplit(" ", 1)[0])}…</span>', a_["more"], extra_head=advice_pages.faq_ld(a_, json))
@@ -5760,7 +5766,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         "Median": (f"The median advertised pay of today’s open jobs that state a yearly US-dollar range is {money(median(paid_))}." if len(paid_) >= 50 else ""),
         "Base salary": (f"The middle half of today’s postings that state pay offer {money(paid_[len(paid_) // 4])} to {money(paid_[3 * len(paid_) // 4])} a year." if len(paid_) >= 50 else ""),
     }
+    built_ = set(URLS)
     for i, (term, d, tip, links) in enumerate(GT):
+        # a link to a list that depends on today's jobs (a perk, a skill, a role, a place) is shown only when that list has a page today
+        links = [(u_, l_) for u_, l_ in links if not u_.startswith(("perks/", "skills/", "roles/", "salaries/", "locations/", "categories/", "remote/")) or u_ in built_]
         sl = gslug(term)
         fig = gfig.get(term, "")
         prev_, next_ = GT[i - 1], GT[(i + 1) % len(GT)]
@@ -7147,10 +7156,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              "Your free account: job alerts, saved jobs on every device and your resume for employers; for employers, free job posting, company pages, team and receipts.",
              crumbs(("Account", "")) + "<h1>Your account</h1>"
              '<p class="lead">Free for job seekers and employers. Keep your alerts and saved jobs in one place, let employers find your resume if you want to, '
-             'or post jobs from your work address. Sign in with your email or with Google.</p>'
+             'or post jobs for your company. Choose who you are, then sign in.</p>'
              f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
              '<script type="application/json" id="acc-data">' + json.dumps(acc_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/account.js?v={V}" defer></script>',
              head='<meta name="robots" content="noindex">', sitemap=False)
+        # The moderator's page, for the owner: jobs waiting for a person, claims of company pages, reports (assets/admin.js). In Russian,
+        # because the owner reads Russian; it is not linked from the public pages and not in the sitemap, and the API checks who asks.
+        adm_v = hashlib.md5((ROOT / "assets" / "admin.js").read_bytes()).hexdigest()[:8]
+        page("admin/", f"Moderation | {SITE}", "The moderator’s page of the site: jobs waiting for review, company page claims and reports.",
+             crumbs(("Account", "account/"), ("Moderation", "")) + '<h1>Модерация</h1>'
+             '<p class="lead">Здесь всё, что ждёт вашего решения: вакансии на проверке, заявки на страницу компании и жалобы. '
+             'Одобренная вакансия выходит на сайт при ближайшем обновлении, работодатель получает письмо.</p>'
+             f'<div id="adm" data-api="{e(CFG["api_url"])}" data-site="{e(P)}"><noscript><div class="banner">Нужен JavaScript.</div></noscript></div>'
+             f'<script src="{P}/admin.js?v={adm_v}" defer></script>', head='<meta name="robots" content="noindex">', sitemap=False)
     # The brand (owner, 15 Nov 2026: "a corporate design of our own, like Indeed and other brands"). brand.py defines three
     # directions and draws every logo file; /brand/ is the guide, /brand/directions/ shows all three (not indexed), and the
     # media kit has the files, the colours, the descriptions and today's numbers for press and partners.
@@ -7501,7 +7519,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "map.js", "explorer.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "map.js", "explorer.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")

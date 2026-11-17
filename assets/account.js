@@ -80,7 +80,7 @@
         (google || pub.linkedin === 'on' ? '<p class="acc-or"><span>or with your email</span></p>' : '') +
         '<form novalidate>' + field(emp ? 'Work email' : 'Email', 'email', 'type="email" autocomplete="email" required', up ? (emp ? 'Your address at your company (you@yourcompany.com): your jobs go live without waiting. A personal address works too; its jobs are read by a person first.' : '') : '') +
         field('Password', 'password', 'type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" required minlength="8"', up ? 'At least 8 characters.' : '') +
-        (up ? field('Company (optional)', 'company', 'type="text" autocomplete="organization" maxlength="80"') : '') +
+        (up && emp ? field('Company', 'company', 'type="text" autocomplete="organization" maxlength="80"') : '') +
         err + '<button class="btn primary lg" type="submit" style="width:100%">' + (up ? 'Create account' : 'Sign in') + '</button></form>' +
         '<p class="note" style="margin:14px 0 0">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address.' : '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>' +
         (emp ? '<ul class="acc-why"><li><b>Post jobs free</b>30 days in the list and in search, with its own page in Google’s job box.</li>' +
@@ -267,9 +267,10 @@
       html += sec('Your company pages', (S.claims.length ? '<div class="card" style="padding:0">' + S.claims.map(function (c) {
         return '<div class="trow"><span>' + state(c.status) + '</span><div class="main"><strong>' + esc(c.company) + '</strong><span class="js">' + esc(c.domain) + ' · since ' + esc(c.since) + (c.reason ? ' · ' + esc(c.reason) : '') + '</span>' +
           (c.status === 'verified' ? '<form class="claim-page" data-id="' + esc(c.id) + '" novalidate>' +
-            '<div class="logo-up"><span class="logo-prev" aria-hidden="true">' + esc(c.company.charAt(0)) + '</span><label class="fld">Company logo (PNG, JPG or WebP, square, up to 150 KB)<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label></div>' +
-            '<label class="fld">About the company (shown on its page)<textarea name="about" rows="3" maxlength="1000"></textarea></label>' +
-            field('Company site', 'website', 'type="url" placeholder="https://' + esc(c.domain) + '"') + err + '<button class="btn sm" type="submit">Save the page</button> <button class="btn ghost sm" type="button" data-stats="' + esc(c.id) + '">Views and clicks</button><div class="stats-out"></div></form>' : '') + '</div></div>';
+            '<div class="logo-up"><span class="logo-prev" aria-hidden="true">' + (c.page && c.page.logo ? '<img src="' + esc(c.page.logo) + '" alt="">' : esc(c.company.charAt(0))) + '</span><label class="fld">Company logo (PNG, JPG or WebP, square, up to 150 KB)<input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"></label></div>' +
+            '<label class="fld">About the company (shown on its page)<textarea name="about" rows="3" maxlength="1000">' + esc((c.page && c.page.about) || '') + '</textarea></label>' +
+            '<label class="fld">Places where you hire, one per line (up to 10)<textarea name="locations" rows="3" placeholder="Berlin&#10;London&#10;Remote, Europe">' + esc(((c.page && c.page.locations) || []).join('\n')) + '</textarea></label>' +
+            field('Company site', 'website', 'type="url" value="' + esc((c.page && c.page.website) || '') + '" placeholder="https://' + esc(c.domain) + '"') + err + '<button class="btn sm" type="submit">Save the page</button> <button class="btn ghost sm" type="button" data-stats="' + esc(c.id) + '">Views and clicks</button><div class="stats-out"></div></form>' : '') + '</div></div>';
       }).join('') + '</div>' : '') +
         '<form class="card" id="claim" novalidate><p>We read the jobs of thousands of companies from their own hiring systems. If one of them is yours, claim its page: you see how many people view each job and click Apply, write the text of the page, and can add jobs your hiring system does not list.</p>' +
         field('Company, as the site names it', 'company', 'type="text" list="acc-companies" maxlength="80" required') + err + '<button class="btn" type="submit">Claim the page</button></form>', 'company');
@@ -290,7 +291,11 @@
 
     var jobCards = (mine.length || claimed) ? ['featured', 'premium', 'urgent', 'bump', 'extend'].map(function (id) { return productCard(id, jobField, credit); }).join('') :
       '<div class="acc-card acc-empty"><p class="pname">Promote a job</p><p>Post a job first. Then pick it here, or press “Promote” next to it in Your jobs: no link to copy.</p><a class="btn primary" href="#post">Post a job free</a></div>';
-    if (products.featured) html += sec('Get more applicants', '<h3 class="acc-h3">For one job</h3><div class="acc-grid">' + jobCards + '</div>' +
+    var coverForm = mine.length && products.premium ? '<form class="card acc-inline" id="cover-up" novalidate><label class="fld">Cover picture for a Premium job<select name="job_id">' + mine.map(function (j) {
+      return '<option value="' + esc(j.id) + '">' + esc(j.title) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="fld">Picture (PNG, JPG or WebP, wide, up to 450 KB)<input type="file" name="cover_file" accept="image/png,image/jpeg,image/webp"></label>' + err +
+      '<button class="btn" type="submit">Upload the cover</button><p class="note" style="flex-basis:100%;margin:0">Shown at the top of the job page while its Premium boost runs.</p></form>' : '';
+    if (products.featured) html += sec('Get more applicants', '<h3 class="acc-h3">For one job</h3><div class="acc-grid">' + jobCards + '</div>' + coverForm +
       '<h3 class="acc-h3">For your company</h3><div class="acc-grid">' + productCard('spotlight', companyField, credit) + productCard('pass', companyField) + productCard('sponsor', companyField + pages, credit) + '</div>' +
       '<h3 class="acc-h3">Credits: pay once, use on anything for 12 months</h3><div class="acc-grid">' + ['credits100', 'credits250', 'credits550', 'credits1200'].map(function (id) { return productCard(id, ''); }).join('') + '</div>' + (pub.payments === 'off' ? '<div class="banner">Paid placements are not on sale yet. Everything else on this page is free.</div>' : '<p class="note" style="margin-top:12px">You pay on a crypto checkout page. The placement switches on by itself when the network confirms the payment.</p>') +
       '<datalist id="acc-companies">' + D.companies.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>', 'promote');
@@ -328,7 +333,28 @@
     if (!(S.resumes && S.resumes.resumes.length)) steps.push(['Keep your resume here', 'Make it in the free builder, then save it to your account.', '#resumes']);
     if (!S.alerts.length) steps.push(['Get new jobs by email', 'Search, then press “Free job alerts”.', D.site + '/jobs/']);
     steps.push(emp || S.jobs.length ? ['Promote a job', 'More views and clicks on Apply, from ' + (products.bump ? money(products.bump.usd) : '$5') + '.', '#promote'] : ['Hiring? Post a job free', 'It goes live in minutes; you see its views and clicks on Apply.', '#post']);
-    return '<section class="sec" id="ov"><div class="ov-hi"><h2>Overview</h2><p class="note">' + esc(me.email) + '</p></div><div class="ov-grid">' +
+    var ups = [], soon = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
+    var up = function (kind, text, href, label) { ups.push('<li class="up-' + kind + '"><span>' + text + '</span>' + (href ? '<a href="' + href + '">' + label + '</a>' : '') + '</li>'); };
+    if (!me.confirmed) up('warn', 'Your email is not confirmed yet: open the link we sent to ' + esc(me.email) + '.', '#settings', 'Send it again');
+    S.orders.forEach(function (o) { if (o.status === 'pending' && o.pay_url) up('warn', 'Waiting for payment: <b>' + esc(o.name) + '</b>' + (o.label && o.label !== o.name ? ' for ' + esc(o.label) : '') + '.', esc(o.pay_url), 'Pay now'); });
+    S.jobs.forEach(function (j) {
+      if (j.status === 'rejected') up('bad', '<b>' + esc(j.title) + '</b> was not accepted' + (j.reject_reason ? ': ' + esc(j.reject_reason) : '') + '.', '#jobs', 'See it');
+      else if (j.status === 'review') up('wait', '<b>' + esc(j.title) + '</b> is waiting for a quick check by a person' + (j.review_reason ? ' (' + esc(j.review_reason) + ')' : '') + '. Usually within a day; you get an email.', '#jobs', 'See it');
+      else if (j.status === 'live' && j.until && j.until <= soon) up('warn', '<b>' + esc(j.title) + '</b> leaves the site on ' + esc(j.until) + '.', '#promote', 'Keep it up');
+      else if (j.status === 'live') up('ok', '<b>' + esc(j.title) + '</b> is live until ' + esc(j.until) + ': ' + (j.views || 0) + ' views, ' + (j.applies || 0) + ' clicks on Apply.', '#jobs', 'See it');
+      else if (j.status === 'expired' || j.status === 'closed') up('wait', '<b>' + esc(j.title) + '</b> is ' + j.status + '.', '#jobs', 'Publish again');
+    });
+    S.placements.forEach(function (p) {
+      if (p.state === 'held') up('wait', 'Your <b>' + esc(p.kind) + '</b> for ' + esc(p.label) + ' is paid and starts the moment the job is approved.', '', '');
+      else if (p.state === 'live') up('ok', 'Your <b>' + esc(p.kind) + '</b> for ' + esc(p.label) + ' is running until ' + esc(p.until) + '.', '#billing', 'Details');
+    });
+    S.claims.forEach(function (c) {
+      if (c.status === 'pending') up('wait', 'Your claim of the <b>' + esc(c.company) + '</b> page is being checked.', '#company', 'See it');
+      else if (c.status === 'rejected') up('bad', 'Your claim of the <b>' + esc(c.company) + '</b> page was not accepted' + (c.reason ? ': ' + esc(c.reason) : '') + '.', '#company', 'See it');
+    });
+    (S.incoming || []).forEach(function (q) { if (q.status === 'sent') up('warn', '<b>' + esc(q.company) + '</b> asked to contact you about a job.', '#resumes', 'Answer'); });
+    var feed = ups.length ? '<h3 class="acc-h3">Updates</h3><ul class="acc-ups">' + ups.slice(0, 12).join('') + '</ul>' : '';
+    return '<section class="sec" id="ov"><div class="ov-hi"><h2>Overview</h2><p class="note">' + esc(me.email) + '</p></div>' + feed + '<div class="ov-grid">' +
       c(S.syncCount || 0, 'saved jobs and applications', '#saved') + c(S.resumes ? S.resumes.resumes.length : 0, 'resumes', '#resumes') + c(S.alerts.length, 'job alerts', '#alerts') +
       (emp || S.jobs.length ? c(live, 'of your jobs live', '#jobs') + c(views, 'views of your jobs', '#jobs') + c(applies, 'clicks on Apply', '#jobs') : '') + '</div>' +
       '<h3 class="acc-h3">Next steps</h3><div class="ov-next">' + steps.map(function (x) { return '<a href="' + x[2] + '"><b>' + x[0] + '</b><span>' + x[1] + '</span></a>'; }).join('') + '</div></section>';
@@ -377,7 +403,8 @@
       panels += '<div class="acc-panel" data-tab="' + t[0] + '" hidden>' + byTab[t[0]].join('') + '</div>';
     });
     root.innerHTML = '<div class="acc-shell"><aside class="acc-side"><div class="acc-me"><span class="acc-av">' + esc(me.email.charAt(0).toUpperCase()) + '</span><div><b>' + esc(me.email) + '</b><span>' +
-      (emp ? esc(me.domain || 'Recruiter') : 'Job seeker') + '</span></div></div><div class="acc-nav" role="navigation" aria-label="Your account">' + nav + '</div>' +
+      (emp ? esc(me.domain || 'Recruiter') : S.jobs.length || ROLE === 'employer' ? 'Employer' : 'Job seeker') + '</span></div></div><div class="acc-nav" role="navigation" aria-label="Your account">' + nav + '</div>' +
+      (me.admin ? '<a class="acc-adm" href="' + esc(D.site) + '/admin/">Moderation</a>' : '') +
       '<button class="btn ghost sm acc-out" type="button" id="acc-out">Sign out</button></aside><div class="acc-main"><div id="acc-pay"></div>' + (notice ? '<div class="banner ok">' + notice + '</div>' : '') +
       (!me.confirmed ? '<div class="banner">Confirm your email: open the link we sent to ' + esc(me.email) + '.</div>' : '') +
       (pub.payments === 'test' ? '<div class="banner">Test mode: payments are simulated on this machine. No money moves.</div>' : '') + panels + '<div hidden>' + extra + '</div></div></div>';
@@ -443,6 +470,14 @@
         throw e;
       });
     });
+    submit(document.getElementById('cover-up'), function (v) {
+      var form = document.getElementById('cover-up'), file = form.querySelector('input[type=file]').files[0];
+      if (!file) throw new Error('Choose a picture first.');
+      if (file.size > 450000) throw new Error('The picture is larger than 450 KB. Save it smaller (for example 1200 × 400 pixels) and try again.');
+      return new Promise(function (ok, fail) { var rd = new FileReader(); rd.onload = function () { ok(rd.result); }; rd.onerror = function () { fail(new Error('The file could not be read.')); }; rd.readAsDataURL(file); })
+        .then(function (img) { return api('PUT', '/api/listings/cover', { target: { job_id: v.job_id }, image: img }); })
+        .then(function () { notice = 'The cover is saved. It shows on the job page while its Premium boost runs.'; return load(); });
+    });
     on('[data-promote]', function (b) {
       var id = b.getAttribute('data-promote');
       Array.prototype.forEach.call(root.querySelectorAll('select[name=job_id]'), function (sl) { sl.value = id; });
@@ -462,6 +497,7 @@
       });
       submit(f, function (v) {
         delete v.logo_file; if (f._logo) v.logo = f._logo;
+        v.locations = String(v.locations || '').split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean);
         return api('PUT', '/api/claims/' + f.getAttribute('data-id') + '/page', v).then(function () { notice = 'The company page is saved' + (f._logo ? ', with your logo' : '') + '; it shows after the next update.'; return load(); });
       });
     });

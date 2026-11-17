@@ -471,3 +471,197 @@ ARTICLES += [
              ("Why do some job postings stay open for months?", "The role may be hard to fill, paused, or kept open to collect applications. This site shows each posting’s age so you can choose fresher ones.")],
      "more": (("guides/follow-up-after-applying/", "Following up after applying"), ("guides/how-long-jobs-stay-open/", "How long jobs stay open"), ("new/", "Jobs posted this week"))},
 ]
+
+
+# ---------- second batch (17 Nov 2026): resumes and letters, starting out, pay, offers, phone and video interviews ----------
+def _toproles(ctx, e, P):
+    rows = "".join(f'<li><a href="{P}/salaries/{s}/">{e(nm)}</a><span>{e(med)} median · {c:,} postings</span></li>' for nm, s, med, c in ctx.get("top_roles", [])[:12])
+    if not rows: return ""
+    return (f'<h2>The best-paid kinds of work in today’s postings</h2><p>The median of the yearly US-dollar ranges that postings state, for kinds of work with at least 30 such postings. '
+            f'Counted from {ctx["n"]:,} open jobs; the list changes as the postings change.</p><ol class="adv-figs">{rows}</ol>')
+
+
+DATA["toproles"] = _toproles
+
+ARTICLES += [
+    {"slug": "how-to-write-a-resume", "cat": "Resumes and letters",
+     "title": "How to write a resume: 7 steps and a free template",
+     "desc": "What goes on a resume and in what order, how to write bullets with results, how to fit one page, and how to pass screening software. With a free builder.",
+     "lead": "A recruiter gives a resume a few seconds on the first pass, and screening software reads it before that. Both look for the same thing: "
+             "the words of the posting, and proof that you did the work. Here are the steps, in order, with what today’s postings ask for.",
+     "short": "One page, one column, in this order: name and contacts, a two-line summary, skills, experience with results in numbers, education. "
+              "Use the words of the posting, start each line with a verb, and save it as a PDF.",
+     "formula_h": "Seven steps",
+     "formula": [("Contacts.", "Name, city, phone, email, a link to LinkedIn or a portfolio. No photo, age or full address in the US, UK or Canada."),
+                 ("Summary.", "Two lines: what you do, how long, and your strongest result. Skip “hardworking team player”."),
+                 ("Skills.", "Eight to twelve that the posting names and you really have, in its words."),
+                 ("Experience.", "Newest job first. Under each: three to five lines that start with a verb and end with a result."),
+                 ("Numbers.", "How many, how much, how fast, how often. “Answered 60 tickets a day” says more than “handled customer requests”."),
+                 ("Education and certificates.", "Degree, school, year. Certificates the posting asks for go near the top."),
+                 ("Check and save.", "One page if you have under ten years of experience, no typos, file name “Name-Role.pdf”.")],
+     "data": "skills",
+     "examples_h": "Lines that work, before and after",
+     "examples": [("Customer support", "Before: Responsible for answering customer emails. After: Answered 60 customer emails a day with a 96% satisfaction score, and wrote 14 help articles that cut repeat questions by a fifth."),
+                  ("Software engineer", "Before: Worked on the checkout page. After: Rebuilt the checkout page in React, cutting load time from 4.1 to 1.6 seconds and raising completed orders by 7%."),
+                  ("Sales", "Before: Managed client accounts. After: Managed 45 client accounts worth $2.1M a year and renewed 93% of them."),
+                  ("Warehouse", "Before: Picked and packed orders. After: Picked and packed 180 orders a shift with 99.7% accuracy; trained 6 new starters."),
+                  ("Teacher", "Before: Taught maths to year 9. After: Taught maths to 120 year 9 students; the share passing the end-of-year exam rose from 71% to 84%."),
+                  ("New graduate", "Before: Member of the marketing society. After: Ran the marketing society’s Instagram, growing it from 400 to 2,300 followers in a year.")],
+     "after": [("Passing screening software", ["Most large employers store resumes in an applicant tracking system, and recruiters search it by keyword. Use a plain one-column layout with standard headings "
+                                              "(Experience, Education, Skills), no text in images, tables or text boxes, and the posting’s own words for skills and job titles."]),
+               ("One page or two?", ["One page for under ten years of experience. Two when you have more and every line earns its place. Nobody is rejected for one page; many are skimmed past on three."])],
+     "mistakes": ["Duties instead of results.", "One resume sent to every job: change the summary and skills for each.", "Columns, icons and skill bars that screening software reads as noise.",
+                  "Typos, and an email address from school days.", "“References available on request”: it is assumed."],
+     "tool": ("resume/", "Free resume builder", "Fill in the form and watch the page take shape; five plain templates, PDF and Word, no account and no charge."),
+     "faq": [("How long should a resume be?", "One page for most people. Two pages if you have more than ten years of relevant experience. Recruiters read the top third first, so put the strongest things there."),
+             ("What is the best resume format?", "Reverse-chronological: newest job first, in one column with standard headings. It is what recruiters expect and what screening software reads best."),
+             ("Should I put a photo on my resume?", "Not in the US, UK, Canada, Australia or Ireland, where employers avoid them. In much of continental Europe and Asia a photo is common; follow local custom."),
+             ("How far back should a resume go?", "Ten to fifteen years. Older jobs can be one line each, or left out if they are unrelated.")],
+     "more": (("resume/examples/", "Resume examples by job"), ("resume-words/", "Stronger words for a resume"), ("guides/how-to-write-a-cover-letter/", "How to write a cover letter"))},
+
+    {"slug": "how-to-write-a-cover-letter", "cat": "Resumes and letters",
+     "title": "How to write a cover letter: a 4-paragraph formula",
+     "desc": "A cover letter in four short paragraphs: why this job, your best proof, what you would do first, and a close. With examples, length, and when you can skip it.",
+     "lead": "A cover letter is not your resume in sentences. It answers one question the resume cannot: why this job, at this company, and why you. "
+             "Four short paragraphs do it, and the whole letter fits on half a page.",
+     "short": "Four paragraphs, 200 to 300 words: the job and why you want it; your strongest result that matches the posting; what you would bring in the first months; "
+              "a close that asks for a conversation. Address it to a person when you can find the name.",
+     "formula_h": "The four paragraphs",
+     "formula": [("Opening:", "the job you are applying for and one specific reason you want it at this company."),
+                 ("Proof:", "one or two results from your experience that match what the posting asks for most, with numbers."),
+                 ("What you bring:", "what you would do or improve in the role, in the posting’s words."),
+                 ("Close:", "thanks, and a line asking for a conversation. Then your name.")],
+     "examples_h": "Examples",
+     "examples": [("Marketing coordinator", "Dear Ms Alvarez, I’m applying for the Marketing Coordinator role. I’ve followed your campaigns since the “Open Late” launch, and I’d like to help run the next one. "
+                                              "At my current job I manage our email programme: 40,000 subscribers, an open rate up from 18% to 27% in a year. I also coordinate two freelancers and our weekly content calendar. "
+                                              "In your team I’d take the calendar and reporting off the manager’s desk from the first week. I’d welcome a conversation. Thank you for your time. Sam Lee"),
+                  ("Career changer", "Dear Hiring Manager, I’m applying for the Junior Data Analyst role. After six years as a store manager I have spent the last year learning SQL and Tableau, because the part of my job I liked most was finding out why sales moved. "
+                                     "I built the weekly sales dashboard my region now uses, and it cut reporting time from a day to an hour. I would bring the same habit to your team: start from the question the business is asking. "
+                                     "I’d be glad to show you the dashboard. Thank you. Priya Shah"),
+                  ("No experience", "Dear Mr Okafor, I’m applying for the Customer Support Trainee role. I have just finished school, where I ran the help desk for our student laptop scheme and answered about 20 questions a week. "
+                                    "I’m patient, I write clearly, and I like solving the problem in the first reply. I’d be glad to learn your product and start with the simplest tickets. Thank you for considering me. Dana Kim")],
+     "after": [("Do I need a cover letter at all?", ["Send one when the posting asks for it, when you are changing careers, when you have a gap to explain, or when you have a real reason for wanting this company. "
+                                                    "When the form marks it optional and you have nothing specific to say, a strong resume is enough."]),
+               ("How to find the name", ["The posting, the company’s team page, or LinkedIn (“Head of Marketing at …”). If you cannot find it, “Dear Hiring Manager” is fine. “To whom it may concern” reads as a form letter."])],
+     "mistakes": ["Repeating the resume line by line.", "“I am writing to apply for…” followed by a paragraph about yourself and nothing about them.", "More than one page.",
+                  "The wrong company name, left from the last letter.", "Apologising for what you lack instead of showing what you have."],
+     "tool": ("tools/cover-letter/", "Cover letter builder", "Paste the posting and your strongest result: a four-paragraph letter you can edit, free."),
+     "faq": [("How long should a cover letter be?", "200 to 300 words, three or four short paragraphs. It should fit on half a page."),
+             ("Do employers still read cover letters?", "Many do when deciding between similar candidates, and some postings require one. It matters most for career changers and for jobs with a lot of writing."),
+             ("How do I start a cover letter?", "With the job and one specific reason you want it at this company. Avoid opening with your own life story."),
+             ("Can I use the same cover letter for every job?", "Keep the structure, change the opening and the proof for each posting. A letter that could go to any company reads that way.")],
+     "more": (("cover-letter-examples/", "Cover letter examples by job"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("tools/cover-letter/", "Cover letter builder"))},
+
+    {"slug": "how-to-get-a-job-with-no-experience", "cat": "Applying",
+     "title": "How to get a job with no experience: 8 ways that work",
+     "desc": "Where the jobs for beginners are, what to put on a resume when you have not worked, and eight ways to get the first job, with today’s count of entry-level postings.",
+     "lead": "Every posting seems to ask for experience, and you need a job to get it. The way through is to show proof of the same skills from somewhere else, "
+             "and to apply where beginners are actually wanted. Both are easier than they look.",
+     "short": "Apply to postings that say junior, trainee, intern or entry-level; show proof from study, projects, volunteering or part-time work; "
+              "learn the two or three skills those postings name most; and apply to many, early, because beginner roles fill fast.",
+     "formula_h": "Eight ways",
+     "formula": [("Search by level, not by dream title.", "Junior, trainee, associate, intern, entry-level, apprentice, graduate."),
+                 ("Count what you have done as experience.", "Projects, coursework, volunteering, clubs, family business, part-time jobs: describe them like jobs, with results."),
+                 ("Learn what the postings name.", "Read ten postings for the job you want and learn the two skills they repeat."),
+                 ("Make one piece of proof.", "A portfolio, a small project, a certificate with a project at the end."),
+                 ("Start nearby.", "Support, sales, operations and assistant roles hire beginners and lead into most fields."),
+                 ("Use internships and apprenticeships.", "Many turn into offers, and they count as experience either way."),
+                 ("Ask people.", "A short, specific message to someone doing the job gets more answers than a hundred cold applications."),
+                 ("Apply early and widely.", "Beginner roles get the most applicants; the first week matters.")],
+     "data": "entry",
+     "examples_h": "What to write on the resume",
+     "examples": [("Instead of “no experience”", "Volunteer, community food bank (2025–2026): sorted and packed about 300 parcels a week in a team of 8; trained 5 new volunteers."),
+                  ("A course project", "Built a budgeting app in Python for a course project; 3 classmates still use it. Code on GitHub."),
+                  ("A part-time job", "Barista, 15 hours a week: served about 200 customers a shift, handled the till, opened the shop alone at weekends."),
+                  ("A club or society", "Treasurer, university hiking club: managed a $4,000 yearly budget and cut costs 12% by renegotiating the minibus hire.")],
+     "mistakes": ["Applying only to roles that ask for three years, and stopping after ten rejections.", "A resume that lists school subjects and nothing you did.",
+                  "Waiting until the course ends to start applying.", "Paying anyone for a job, a “placement” or training with a job promised: real employers do not charge."],
+     "tool": ("entry-level/", "Entry-level jobs", "Every open job with a junior or intern title, by field and place, read from employers’ own pages."),
+     "faq": [("What jobs can I get with no experience?", "Support, sales, retail, hospitality, warehouse, assistant and trainee roles, plus internships and apprenticeships in almost every field."),
+             ("How do I write a resume with no experience?", "Lead with skills and education, then describe projects, volunteering and part-time work as you would a job: what you did and what came of it."),
+             ("Is it worth applying if I don’t meet every requirement?", "Yes, if you meet about half and can do the core of the job. Requirements describe an ideal person who rarely applies."),
+             ("How long does it take to get a first job?", "Often two to six months of steady applying. Fresher postings answer faster, which is why this site shows each posting’s age.")],
+     "more": (("entry-level/", "Entry-level jobs"), ("internships/", "Internships"), ("guides/how-to-write-a-resume/", "How to write a resume"))},
+
+    {"slug": "highest-paying-jobs", "cat": "Pay",
+     "title": "Highest-paying jobs right now, from live postings",
+     "desc": "The kinds of work with the highest advertised pay today, counted from open postings that state a salary range, and what it takes to get into them.",
+     "lead": "Lists of the best-paid jobs are usually a year old and built from surveys. This one is counted from the postings that are open today and state their pay, "
+             "so it shows what employers are offering now, not what people remember earning.",
+     "short": "The list below is counted from the postings open today that state a yearly pay range: the median for each kind of work, highest first. "
+              "Open any line for the range, the places and the skills employers ask for.",
+     "data": "toproles",
+     "after": [("How to read the list", ["The figure is the median of advertised yearly ranges, so half of the postings for that work offer more and half less. Advertised pay is not the same as pay people get: "
+                                        "offers move with experience, place and negotiation. Kinds of work with few postings that state pay are left out."]),
+               ("What the best-paid jobs have in common", ["Most ask for several years of experience, a scarce skill, or responsibility for money or people. Few are open to beginners, but each has a path: "
+                                                          "the how-to-become pages show the levels and what each one pays today."]),
+               ("High pay without a degree", ["Sales, skilled trades, operations and many technical roles hire on proof rather than a diploma. Look at the skills a posting names, not only the degree line: "
+                                             "some postings do not ask for a degree at all."])],
+     "mistakes": ["Choosing a field only by its top salary: the median for beginners is what you will earn first.", "Comparing pay across countries without the cost of living.",
+                  "Trusting a single figure with no date and no source."],
+     "tool": ("salaries/explorer/", "Salary explorer", "Pick a role, a place, a skill or a level and see what postings advertise today."),
+     "faq": [("What is the highest-paying job right now?", "By advertised pay in today’s postings, the work at the top of the list above. It changes as postings open and close, so the page is recounted on every update."),
+             ("Which jobs pay over $100,000?", "Most senior roles in software, data, security, product, finance, law and enterprise sales. The site lists every open job whose stated range starts at $100K or more."),
+             ("What high-paying jobs need no degree?", "Sales, many software and IT roles, skilled trades and operations management hire on skills and results. Check the posting: some do not ask for a degree."),
+             ("Why do your figures differ from salary surveys?", "Surveys ask people what they earn; these are the ranges employers advertise today. Both are useful: one is what was paid, the other what is on offer.")],
+     "more": (("salaries/", "Salaries by job title"), ("salary/100k/", "Jobs paying $100K or more"), ("guides/negotiate-salary/", "How to negotiate a salary"))},
+
+    {"slug": "accept-or-decline-a-job-offer", "cat": "Pay",
+     "title": "How to accept, decline or counter a job offer",
+     "desc": "What to check before you say yes, how to ask for time, how to counter, and what to write when you accept or decline, with short email examples.",
+     "lead": "An offer is the start of a short conversation, not the end of one. You can ask for it in writing, take a day or two, ask questions, counter, accept or decline, "
+             "and each has a polite form that keeps the door open.",
+     "short": "Thank them, ask for the offer in writing and for a day or two to read it. Check pay, bonus, start date, hours, place of work, leave and notice. "
+              "Then accept in writing, counter once with a figure and a reason, or decline briefly and kindly.",
+     "formula_h": "The order",
+     "formula": [("Thank them and ask for it in writing.", "“Thank you, I’m delighted. Could you send the offer in writing so I can read the details?”"),
+                 ("Ask for time.", "One to three working days is normal. Give a date and keep it."),
+                 ("Check the whole package.", "Base pay, bonus and how it is earned, equity, start date, hours, remote days, leave, probation and notice."),
+                 ("Decide: accept, counter or decline.", "One counter, with a number and a reason. Then a clear yes or no.")],
+     "data": "pay",
+     "examples_h": "What to write",
+     "examples": [("Asking for time", "Thank you for the offer; I’m excited about the role. Could I have until Thursday to read through the details and come back to you?"),
+                  ("Accepting", "I’m pleased to accept the offer for the Operations Analyst role at a salary of $72,000, starting on 3 March. Thank you; I’m looking forward to joining the team. Please let me know the next steps."),
+                  ("Countering", "Thank you for the offer. I’m keen to join. Given the range advertised for similar roles here and my four years in the field, would $78,000 be possible? I’m ready to accept at that figure."),
+                  ("Declining", "Thank you for the offer and for the time everyone gave me. After careful thought I’ve decided to accept another role that is a closer fit for me right now. I enjoyed meeting the team and hope our paths cross again."),
+                  ("Declining after accepting elsewhere", "Thank you for your patience. I have accepted another offer, so I’d like to withdraw from the process. I appreciate your time and wish you well with the search."),
+                  ("When your employer counter-offers", "Thank you; I appreciate it. I’ve thought about it and my decision is to move on. I’ll do everything I can to hand over well.")],
+     "after": [("Should you take a counter-offer from your current employer?", ["Think about why you looked for a new job. If it was only pay, a counter-offer can solve it. If it was the work, the manager or the lack of growth, "
+                                                                              "the same reasons will still be there after the raise."])],
+     "mistakes": ["Accepting on the phone before you have seen the offer in writing.", "Resigning before the new contract is signed.", "Countering three times after agreeing a figure.",
+                  "Ghosting an employer you have decided to decline.", "Accepting two offers and backing out of one late."],
+     "tool": ("tools/job-offer-response/", "Job offer response", "Accept, decline, counter or ask for time: the email written for you to edit and send."),
+     "faq": [("How long can I take to answer a job offer?", "One to three working days is usual; up to a week for senior roles or a relocation. Ask, give a date and keep it."),
+             ("Can I negotiate after accepting a job offer?", "It is much harder and can damage trust. Raise everything before you accept."),
+             ("How do I decline a job offer politely?", "Promptly, briefly and with thanks: say you have decided to take another direction, without a long explanation or criticism."),
+             ("Is a verbal job offer binding?", "It depends on the country, and it is hard to prove. Wait for the written offer or contract before you resign from your current job.")],
+     "more": (("guides/negotiate-salary/", "How to negotiate a salary"), ("tools/compare-offers/", "Compare two offers"), ("resignation-letters/", "Resignation letters"))},
+
+    {"slug": "phone-and-video-interview-tips", "cat": "Interviews",
+     "title": "Phone and video interview tips: a checklist",
+     "desc": "How to prepare for a phone screen and a video interview: what the recruiter checks, the set-up, notes you can keep in front of you, and what to do when the technology fails.",
+     "lead": "Most hiring starts with a short call and continues on video. They are easier than a room in one way: your notes can sit in front of you. "
+             "And harder in another: without a handshake, your voice, your light and your connection do the first impression.",
+     "short": "For a phone screen: a quiet place, the posting and your resume in front of you, three short answers ready (about you, why this job, your pay range). "
+              "For video: test the link, camera at eye level, light on your face, look at the lens, and have a phone number ready in case the call drops.",
+     "formula_h": "The checklist",
+     "formula": [("The day before:", "read the posting again; prepare your now-proof-next answer, a reason for wanting the job, a pay range and two questions."),
+                 ("Your place:", "quiet, door closed, phone on silent, others warned. A plain wall behind you."),
+                 ("Your set-up for video:", "laptop on books so the camera is at eye level, a window or lamp in front of you, headphones, the app updated and the link tested."),
+                 ("In front of you:", "the posting, your resume, three results with numbers, your questions. Notes are fine; reading from them is not."),
+                 ("During:", "smile when you say hello, pause before answering, look at the lens when you speak, and stop at about two minutes."),
+                 ("After:", "a thank-you note the same day.")],
+     "data": "open",
+     "after": [("What a phone screen checks", ["A recruiter has fifteen to thirty minutes to confirm four things: you can do the core of the job, your pay expectations fit the budget, you can start in time, "
+                                              "and you can explain yourself clearly. Have a short answer ready for each."]),
+               ("When the technology fails", ["Say so at once, and suggest the fix: “I’ve lost your video; shall I call you on the phone?” Everyone has been there, and staying calm is itself a good sign. "
+                                             "Keep the recruiter’s number and email open on your phone before the call starts."])],
+     "mistakes": ["Taking the call while walking or driving.", "Reading answers from the screen: the eyes give it away.", "A window behind you, so your face is a shadow.",
+                  "Notifications sounding during the call.", "Not knowing your pay range when the recruiter asks."],
+     "tool": ("interview-practice/", "Interview practice", "The page reads each question aloud, listens to your answer and times it; nothing is recorded or sent."),
+     "faq": [("How long does a phone interview last?", "Usually fifteen to thirty minutes with a recruiter. A call with the hiring manager can run forty-five."),
+             ("What should I wear for a video interview?", "What you would wear to the office for that job, top to bottom in case you need to stand. Plain colours work best on camera."),
+             ("Can I use notes in a video interview?", "Yes: a few key points beside the camera. Do not read full answers; glance and then look back at the lens."),
+             ("What do I do if my internet drops during an interview?", "Rejoin at once; if that fails, phone or email the interviewer and suggest continuing by phone. It is rarely held against you.")],
+     "more": (("guides/tell-me-about-yourself/", "Tell me about yourself"), ("guides/questions-to-ask-in-an-interview/", "Questions to ask"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},
+]
