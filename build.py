@@ -7055,22 +7055,35 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    '<p class="note">Notice periods depend on your contract and on the law where you work: two weeks is the custom in the United States, while the UK and most of Europe set minimums by law. This page is general guidance, not legal advice.</p>')
          + section("Questions about resignation letters", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rl_qa) + "</dl>"), head=rl_ld)
 
-    # Stronger resume words, one page per overused verb ("another word for managed on a resume"). In the Rezi study 8 such pages bring
-    # that site 8% of its search visits. Each page groups the words by what was actually done and shows a resume line for each group.
+    # Stronger resume words, one page per overused word or phrase ("another word for managed on a resume"). In the Rezi study 8 such
+    # pages bring that site 8% of its search visits; Teal has about 900. Each page groups the words by what was actually done and shows
+    # a resume line for each group. A word is a verb, a stock phrase or a trait ("hardworking"): the index page lists the three apart.
     RW = resume_words.WORDS
     rw_tile = lambda x: f'<li><a class="tile" href="{P}/resume-words/{x["slug"]}/"><span class="n">Instead of “{e(x["word"])}”</span><span class="c">{sum(len(g[1]) for g in x["groups"])} words</span></a></li>'
+    rw_set = {x["slug"]: {w for g in x["groups"] for w in g[1]} for x in RW}
+
+    def rw_near(x, k=18):
+        """The pages offered under a word: first the pages of its own replacements ("supervised" under "managed") and the ones that share
+        the most replacements with it, then the next six in the list, so that every page is linked from at least six others."""
+        i, mine = RW.index(x), rw_set[x["slug"]]
+        close = sorted((y for y in RW if y is not x), key=lambda y: -(8 * (y["word"] in mine) + len(mine & rw_set[y["slug"]])))[:k - 6]
+        return close + [y for y in (RW[(i + d) % len(RW)] for d in range(1, len(RW))) if y not in close][:6]
+
     for x in RW:
         n_ = sum(len(g[1]) for g in x["groups"])
         qa_ = x["qa"]
+        by_ = "what you want to say" if x.get("kind") == "trait" else "what you did"
+        t_ = "Another Word for “" + re.sub(r"-(\w)", lambda m_: "-" + m_.group(1).upper(), tcase(x["word"])) + "” on a Resume"     # Go-Getter, Detail-Oriented
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         groups_ = "".join(f'<div class="rw-g"><h3>{e(what)}</h3><p class="rw-w">' + "".join(f"<span>{e(w)}</span>" for w in words) + "</p>"
                           f'<p class="rw-ex"><span>Example</span>{e(line)}</p></div>' for what, words, line in x["groups"])
-        page(f"resume-words/{x['slug']}/", f"Another Word for “{tcase(x['word'])}” on a Resume: {n_} Synonyms with Examples | {SITE}",
-             f"{n_} stronger words to use instead of “{x['word']}” on a resume, grouped by what you actually did, each group with an example line that shows a result.",
+        # a long phrase ("excellent communication skills") keeps its whole name in the title and gives up the count and the brand
+        page(f"resume-words/{x['slug']}/", f"{t_}: {n_} Synonyms with Examples | {SITE}" if len(t_) + len(SITE) + 3 <= 65 else t_,
+             f"{n_} stronger words to use instead of “{x['word']}” on a resume, grouped by {'what you want to say' if x.get('kind') == 'trait' else 'what you actually did'}, each group with an example line that shows a result.",
              crumbs(("Resume words", "resume-words/"), (f"Instead of “{x['word']}”", "")) + f'<h1>Another word for “{e(x["word"])}” on a resume: <span class="hl">{n_} synonyms</span></h1>'
-             f'<p class="lead">{e(x["why"])} The words below are grouped by what you did; each group has an example line with a number, the way a recruiter wants to read it.</p>'
-             + f'<section class="sec"><div class="sec-head"><h2>Words to use instead of “{e(x["word"])}”, by what you did</h2></div><div class="rw-grid">{groups_}</div></section>'
+             f'<p class="lead">{e(x["why"])} The words below are grouped by {by_}; each group has an example line with a number, the way a recruiter wants to read it.</p>'
+             + f'<section class="sec"><div class="sec-head"><h2>Words to use instead of “{e(x["word"])}”, by {by_}</h2></div><div class="rw-grid">{groups_}</div></section>'
              + (section(f"Which word to use instead of “{x['word']}”", '<div class="tablewrap"><table><tr><th>If you…</th><th>Use</th></tr>'
                         + "".join(f"<tr><td>{e(a_)}</td><td><strong>{e(b_)}</strong></td></tr>" for a_, b_ in x.get("pick", ())) + "</table></div>") if x.get("pick") else "")
              + (section("Before and after", '<div class="tablewrap"><table><tr><th>Weak</th><th>Strong</th></tr>'
@@ -7078,13 +7091,17 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              + section("Turn your own line into a strong one", '<p>Start with the verb that names the action, add what you did it to, and end with a number: how many, how much, how fast. '
                        f'The <a href="{P}/tools/resume-bullet-builder/">resume bullet builder</a> puts the three parts together for you, and the <a href="{P}/resume/">resume builder</a> lays out the whole page. Both are free and need no account.</p>')
              + section(f"Questions about replacing “{x['word']}”", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
-             + section("Other overused resume words", f'<ul class="tiles">{"".join(rw_tile(y) for y in RW if y["slug"] != x["slug"])}</ul>', ("resume-words/", f"All {len(RW)}")), head=ld_)
-    page("resume-words/", f"Resume Synonyms: Stronger Words for {len(RW)} Overused Verbs | {SITE}",
-         f"Stronger words for the {len(RW)} most overused resume verbs, from “managed” and “led” to “responsible for” and “helped”, grouped by what you did, with example lines.",
-         crumbs(("Resume words", "")) + f'<h1>Resume synonyms: <span class="hl">stronger words for {len(RW)} tired verbs</span></h1>'
-         '<p class="lead">Recruiters read “managed”, “responsible for” and “helped” in almost every resume, and those words do not say what changed because of you. '
+             + section("Other overused resume words", f'<ul class="tiles">{"".join(rw_tile(y) for y in rw_near(x))}</ul>', ("resume-words/", f"All {len(RW)}")), head=ld_)
+    rw_lists = [(name_, sub_, sorted((y for y in RW if y.get("kind", "verb") == kind_), key=lambda y: y["word"])) for kind_, name_, sub_ in (
+        ("verb", "Overused verbs", "action verbs that open too many bullet points."),
+        ("phrase", "Everyday verbs and stock phrases", "plain words and set phrases that hide what you did."),
+        ("trait", "Adjectives and self-descriptions", "things people call themselves, where a fact works better."))]
+    page("resume-words/", f"Resume Synonyms: {len(RW)} Overused Words and What to Write Instead | {SITE}",
+         f"What to write instead of {len(RW)} overused resume words, from “managed” and “responsible for” to “hardworking” and “team player”, each with example lines.",
+         crumbs(("Resume words", "")) + f'<h1>Resume synonyms: <span class="hl">what to write instead of {len(RW)} tired words</span></h1>'
+         '<p class="lead">Recruiters read “managed”, “responsible for” and “hardworking” in almost every resume, and those words do not say what changed because of you. '
          'Pick the word you keep repeating: each page lists better ones by what you actually did, with an example line that has a number.</p>'
-         + section("Pick the word you overuse", f'<ul class="tiles">{"".join(rw_tile(y) for y in RW)}</ul>')
+         + "".join(section(name_, f'<ul class="tiles">{"".join(rw_tile(y) for y in ws_)}</ul>', sub=f"{len(ws_)} {sub_}") for name_, sub_, ws_ in rw_lists if ws_)
          + section("Write the whole line", f'<p>A strong resume line has three parts: an action verb, what you did it to, and a result with a number. '
                    f'The free <a href="{P}/tools/resume-bullet-builder/">resume bullet builder</a> helps you write one, and <a href="{P}/resume/examples/">resume examples for {len(rex_data)} kinds of work</a> show whole resumes written this way.</p>'))
 
