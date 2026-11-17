@@ -1559,6 +1559,11 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "offer-check": "“Below the lower quarter” means lower than three of every four salaries posted for that work. This page places your offer among the salaries that open postings state, and says how many postings that is.",
         "salary-checker": "The median is the middle figure: half of the postings pay more and half pay less. This page shows the median and the usual range for a kind of work and a level, and where your salary sits among them.",
         "salary-converter": "Pay is quoted per hour, per day, per month or per year, and the figures cannot be compared until they are in one unit. This page converts one of them into all the others, using the hours you actually work.",
+        "take-home-pay": "Your salary on the offer is the gross figure, before the government takes its share; take-home pay is what reaches your bank account. This page takes off the main US taxes (income tax, Social Security and Medicare) and shows what is left in each paycheck.",
+        "job-search-calculator": "Looking for work is a numbers game: only some applications lead to an interview, and only some interviews lead to an offer. Enter your own two rates and this page shows how many applications one offer takes at that pace.",
+        "last-working-day": "The notice period is the time between telling your employer you are leaving and your final day. This page counts it on a calendar, so you can see the date instead of guessing at weekends.",
+        "resume-review": "Skimming means looking at the top of the page, the first bullet points and the dates before reading anything closely. This page reads your text in that order and lists the lines a skimmer would pass over, with a fix for each.",
+        "remote-work-savings": "Working from home saves the time and money you spend getting to an office, but that cost never shows on a payslip. Enter your own travel and office costs and this page adds them up for a year.",
         "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
     }
     for t in TOOLS:
