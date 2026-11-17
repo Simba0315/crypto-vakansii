@@ -236,7 +236,7 @@ address, and a Cloudflare rule "skip bot checks for `/api/public/export.json`" f
 ### Every day (the owner, or me with his go-ahead)
 
 The review queue and the claims of company pages wait for a person: `server/README.md`, "Reviewing held jobs" (the token:
-`sudo grep ^ADMIN_TOKEN= /etc/hrn-api/api.env`). How many people signed up: `/api/admin/audience`. Logs: `journalctl -u hrn-api`,
+`sudo grep ^ADMIN_TOKEN= /etc/hrn-api/api.env`). How many people signed up: `/api/admin/audience`. To moderate from your own account instead of the token, add `ADMIN_EMAILS=you@example.com` (your account's address; several separated by commas) to `/etc/hrn-api/api.env` and restart the API (`sudo systemctl restart hrn-api`): that account then sees the review queue, claims and reports when signed in. Logs: `journalctl -u hrn-api`,
 `journalctl -u hrn-alerts`. What the next alert run would send: `sudo -u hrnapi /usr/local/bin/node --no-warnings /opt/hrn-api/server/alerts.mjs --dry`.
 
 ### Taking it back

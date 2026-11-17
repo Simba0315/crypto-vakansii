@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,313 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,346 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -66,6 +66,7 @@ Settings in `/etc/hrn-api/api.env` (KEY=value; root and the service user only):
 | `MAIL_FROM` | `Jobs Every Hour <SMTP_USER>` | the sender as shown |
 | `MAIL_DAILY_CAP` | `300` | letters a day (UTC) at most; job alerts stop at 80% of it, so confirmation links always have room. Beget publishes no number; raise it only after asking them |
 | `ADMIN_TOKEN` | made at random by `api-setup.sh` | the key to `/api/admin/...` |
+| `ADMIN_EMAILS` | none | the owner's own account addresses, separated by commas: such an account moderates (review, claims, reports) from its ordinary session ("Moderating from the owner's own account" below) |
 | `PAYMENTS_LIVE` | none: payments off | `1` switches payments on (the owner, last); only then are `CRYPTOMUS_MERCHANT`, `CRYPTOMUS_API_KEY` and `PLUS_LIVE` read |
 | `DB_FILE` | `/var/lib/hrn-api/api.db` | the database |
 | `SITE_INTERNAL`, `DUPLICATE_URL` | `http://127.0.0.1:8790`, its `/api/check-duplicate` | the page server on the same machine (`DUPLICATE_URL=off` stops the duplicate check) |
@@ -179,6 +180,36 @@ Google and LinkedIn (`?code=&state=`). Tested in section 35.
   text, the site on the claimed domain); `export.json` `claimed` carries `about` and `website` for the site's company page (the build
   does not show them yet).
 - **Receipts:** `GET /api/orders/<id>/receipt` for a paid order: what, for how long, how it was paid, "nothing renews".
+
+## Moderating from the owner's own account, and the letters a decision sends (17 Nov 2026; tested in section 38)
+
+Jobs wait "for a person", and until now only a request with `ADMIN_TOKEN` could decide them. Now the owner moderates from his ordinary
+signed-in account:
+
+- `ADMIN_EMAILS` (in `/etc/hrn-api/api.env`: addresses separated by commas, compared without case). An account on one of them, with
+  its email confirmed and not banned, is a moderator: `GET /api/me` says `user.admin: true` (false for everyone else), and its session
+  token (`Authorization: Bearer <session>`) is taken under `/api/admin/` for the moderation routes only:
+  `GET overview`, `GET review`, `GET audience`, `POST jobs/ID/approve`, `POST jobs/ID/reject { reason }`, `POST jobs/ID/remove`,
+  `GET claims`, `POST claims/ID/approve`, `POST claims/ID/reject { reason }`, `GET reports`, `POST reports/ID/decide { decision }`.
+  Everything else there (`erase`, `users|accounts/ID/ban`, `talent`, `talent/credits`, whatever is added later) answers 403 to a
+  session and stays with `ADMIN_TOKEN`, which works for every route as before. Not set: nothing changes. An address nobody confirmed
+  counts for nothing. The start line in the log says how many moderators there are, never who.
+- `GET /api/admin/claims` now carries `account.email` for each claim, and `GET /api/admin/review`, for each job, `account.email` (the moderator has to see who posted), `page` (where the job will
+  be on the site: `/job/<slug>/`), `remote` and `etype`.
+- **Letters**, each to the address of the account the decision is about, sent after the change is stored (`tell` in `src/worker.js`,
+  through `sendMail`, so the daily cap and the log of letters apply); a letter that fails or is held back fails nothing:
+  - a job approved: "Your job is live": the title, its page, the 30 days, and that what was bought for it starts now;
+  - a job rejected: "Your job was not accepted": the title, the reason as the moderator wrote it, that it can be edited and sent
+    again, and that what was bought for it is switched off (reply to have it refunded);
+  - a claim approved: "Your company page is confirmed"; rejected: "Your company page claim was not accepted", with the reason;
+  - a payment at the checkout confirmed (webhook, cron or the account page's check): "Payment received": the amount, what was bought,
+    and that it is on (until when), or that it starts when the job is approved, or what was added to the account (credits, Plus, a
+    pass). A purchase with credits or a Hiring Pass sends none (it is not a payment, and the account page shows it at once).
+- **A rejected job can be edited and sent again**: `PATCH /api/jobs/ID` on a rejected job checks it like a new one and puts it back in
+  the queue (`status: "review"`, `review_reason` starting "sent again after it was not accepted (…)", 30 days from now), within the
+  account's cap of jobs on the site or waiting. It still cannot be closed, published again as it is, or approved (409, 409, 404).
+- `GET /api/claims`: each claim has `page`: for a verified claim `{ about, website, logo, locations }` (what its company page says now;
+  `logo` is the image's address or `''`), for one that waits or was turned down `null`.
 
 ## Posting as easy as on Indeed: unverified employers, the work-email link, LinkedIn as a sign-in (15 Nov 2026; tested in section 37)
 
@@ -564,7 +595,8 @@ Then:
   approval counts towards the account's trust (once per job).
 - **reject** (needs a reason): the job is closed for good and the employer sees the reason. What was bought for it is switched off;
   if money was paid, refund it by hand at the gateway. Open reports about it are upheld, which costs the account its trust, and the
-  company name is free again if the account has no other job under it. The employer may post a corrected job.
+  company name is free again if the account has no other job under it. The employer gets a letter with the reason and may edit the
+  job, which sends it to the queue again, or post a corrected one.
 - **ban** (`/api/admin/accounts/<id>/ban`, the same as `/api/admin/users/<id>/ban`): for an account that is plainly fraudulent.
   Everything it has goes at once.
 - `reports/<id>/decide` with `upheld` or `dismissed` is for a report that has no job to approve or reject: a job read from a hiring

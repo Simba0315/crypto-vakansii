@@ -1183,7 +1183,8 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   r = await admin('GET', 'review');
   eq([r.status, r.body.jobs.length, r.body.jobs[0].id, r.body.jobs[0].account.email_domain, r.body.jobs[0].account.age_days, /not trusted yet/.test(r.body.jobs[0].reason)], [200, 1, rust, 'orbit.dev', 0, true],
     'D: the review queue lists the held job with the reason, the domain of the account and its age');
-  ok(!JSON.stringify(r.body).includes('hr@orbit.dev'), 'D: the queue carries the domain of the email, not the address');
+  // since 17 Nov 2026 the owner moderates from his own account and has to see who posted: the queue carries the account's address
+  ok(r.body.jobs[0].account.email === 'hr@orbit.dev' && r.body.jobs[0].page === '/job/senior-rust-engineer-orbit-labs/', 'D: the queue carries the address of the account, for the person who decides, and where the job will be');
   r = await admin('POST', 'jobs/' + rust + '/approve');
   eq([r.status, (await exportedJobs(env)).map((j) => j.title), await approved(), (await me()).trusted], [200, ['Senior Rust Engineer'], 1, false], 'D: approval puts the job on the site and counts towards trust');
   r = await admin('POST', 'jobs/' + rust + '/approve'); eq([r.status, await approved()], [404, 1], 'D: a job that is not waiting cannot be approved again, and is counted once');
@@ -1243,8 +1244,9 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
   r = await admin('POST', 'jobs/' + c2 + '/reject', { reason: 'The page behind the link is not a job at Comet Works.' }); eq(r.status, 200, 'D: the owner rejects a held job');
   const seen = (await call(env, 'GET', '/api/jobs', { token: comet })).body.jobs.find((j) => j.id === c2);
   eq([seen.status, seen.reject_reason, (await bought(c2))[0].cancelled], ['rejected', 'The page behind the link is not a job at Comet Works.', 1], 'D: the employer sees that the job was turned down and why; what was bought for it is switched off');
-  eq([(await call(env, 'PATCH', '/api/jobs/' + c2, { token: comet, data: { location: 'Porto' } })).status, (await act(c2, 'renew', comet)).status, (await admin('POST', 'jobs/' + c2 + '/approve')).status], [409, 409, 404],
-    'D: a rejected job cannot be edited, published again or approved');
+  // an edit of a rejected job sends it again since 17 Nov 2026 (section 38); as it is, it cannot be closed, published again or approved
+  eq([(await act(c2, 'close', comet)).status, (await act(c2, 'renew', comet)).status, (await admin('POST', 'jobs/' + c2 + '/approve')).status], [409, 409, 404],
+    'D: a rejected job cannot be closed, published again as it is, or approved');
   eq(await one(env, "SELECT COUNT(*) FROM companies WHERE k = 'comet works'"), 1, 'D: the company name stays with the account while it has another job under it');
   await nextDay(env);
   r = await post(COMET('Senior Go Engineer'), comet); eq([r.status, (r.body.job || {}).status], [200, 'review'], 'D: a corrected version of a rejected job may be posted: it is not a duplicate');
@@ -1559,7 +1561,7 @@ const JANE = { sub: 'li-782bbtaQ', name: 'Jane Roe', given_name: 'Jane', family_
   eq([item.id, item.posted_by, item.recruiter, item.account.proved_by, item.account.email_domain, item.account.free_mailbox, item.account.linkedin, item.account.recruiter_jobs_approved],
     [j1, 'recruiter', 'Jane Roe', ['linkedin'], '', true, { name: 'Jane Roe', email_domain: 'talentfirm.com', attached: new Date().toISOString().slice(0, 10) }, 0],
     'Recruiter: the review queue says the job is a recruiter’s and how the poster proved who they are: LinkedIn, with the name and the domain of the verified email');
-  ok(!JSON.stringify(r.body).includes('jane@gmail.com') && !JSON.stringify(r.body).includes('jane.roe@') && !JSON.stringify(r.body).includes(JANE.sub), 'Recruiter: the queue carries no email address and no LinkedIn subject id');
+  ok(r.body.jobs[0].account.email === 'jane@gmail.com' && !JSON.stringify(r.body).includes('jane.roe@') && !JSON.stringify(r.body).includes(JANE.sub), 'Recruiter: the queue carries the account’s address, and neither the address LinkedIn gave nor the LinkedIn subject id');
 
   await admin('POST', 'jobs/' + j1 + '/approve');
   const boss = await account(env, 'hr@nova.dev'); await post(employer('nova.dev', 'Nova Labs')('Senior Go Engineer'), boss);
@@ -3108,6 +3110,100 @@ await smtpServer.close();
   li.down = true; r = await lsignin({ ...JANE, sub: 'li-u3', email: 'u3@gmail.com' }); li.down = false; eq([r.status, r.body.error], [502, 'linkedin'], 'LinkedIn sign-in: nothing while LinkedIn is not answering');
   s = await lstart(le, { token: pw }); eq([!!s.url, s.secret === undefined, await one(le, 'SELECT COUNT(*) FROM oauth_states')], [true, true, 1], 'LinkedIn: with a session the start attaches, as before');
   s = await lstart(le, { token: pw, data: { signin: true } }); ok(/^[a-f0-9]{64}$/.test(s.secret), 'LinkedIn: with { signin: true } a signed-in page can start a sign-in too');
+}
+
+/* ---- 38. The owner moderates from his own signed-in account (ADMIN_EMAILS), and the people a decision is about get a letter ---- */
+{
+  const box = mailbox(), env = newEnv({ ADMIN_EMAILS: 'Owner@Example.com, second@owner.dev', ...box });
+  const mod = await fresh(env, 'owner@example.com'), hr = await fresh(env, 'hr@orbit.dev'), ORBIT = employer('orbit.dev', 'Orbit Labs');
+  const as = (who, method, p, data) => call(env, method, '/api/admin/' + p, { token: who, data });
+  const letters = (to, subject) => box.outbox.filter((m) => m.to === to && m.subject === subject), me = async (tk, e = env) => (await call(e, 'GET', '/api/me', { token: tk })).body.user;
+  const unconfirmed = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'second@owner.dev', password: PASS } })).body.token;
+  eq([(await me(mod)).admin, (await me(hr)).admin, (await me(unconfirmed)).admin], [true, false, false], 'Moderator: /api/me says admin for a confirmed account on one of the owner’s addresses (compared without case), and for nobody else');
+  const plain = newEnv(), nobody = await fresh(plain, 'owner@example.com');
+  eq([(await me(nobody, plain)).admin, (await call(plain, 'GET', '/api/admin/review', { token: nobody })).status], [false, 403], 'Moderator: with ADMIN_EMAILS not set nothing changes: no session opens /api/admin/');
+
+  const READS = ['overview', 'review', 'audience', 'claims', 'reports'];
+  eq(await Promise.all(READS.map(async (p) => (await as(mod, 'GET', p)).status)), [200, 200, 200, 200, 200], 'Moderator: its session reads the overview, the queue, the counts, the claims and the reports');
+  eq(await Promise.all(READS.map(async (p) => (await as(hr, 'GET', p)).status)), [403, 403, 403, 403, 403], 'Moderator: another account’s session is refused on every one of them');
+  eq([(await as(unconfirmed, 'GET', 'review')).status, (await as('f'.repeat(64), 'GET', 'review')).status, (await as(undefined, 'GET', 'review')).status], [403, 403, 403], 'Moderator: so is an owner’s address nobody confirmed, a made-up token and no token');
+  const hrId = await one(env, "SELECT id FROM users WHERE email = 'hr@orbit.dev'");
+  const TOKEN_ONLY = [['POST', 'erase', { email: 'x@y.dev' }], ['POST', 'users/' + hrId + '/ban'], ['POST', 'accounts/' + hrId + '/ban'], ['POST', 'talent/credits', { account: hrId, n: 5 }], ['GET', 'talent'], ['GET', 'nothing-here']];
+  eq(await Promise.all(TOKEN_ONLY.map(async ([m, p, d]) => (await as(mod, m, p, d)).status)), [403, 403, 403, 403, 403, 403], 'Moderator: erasing data, bans, credits and anything else under /api/admin/ stay with the owner’s token');
+  eq([await one(env, "SELECT banned FROM users WHERE email = 'hr@orbit.dev'"), (await as(ADMIN, 'GET', 'talent')).status, (await as(ADMIN, 'GET', 'review')).status], [0, 200, 200], 'Moderator: nothing was done by those refused calls, and the token works for everything as before');
+
+  // a job: the queue, approval with its letter
+  const j1 = (await call(env, 'POST', '/api/jobs', { token: hr, data: ORBIT('Senior Rust Engineer') })).body.job.id;
+  let r = await as(mod, 'GET', 'review');
+  eq([r.body.jobs.map((j) => [j.id, j.account.email, j.page, j.posted_by])], [[[j1, 'hr@orbit.dev', '/job/senior-rust-engineer-orbit-labs/', 'employer']]], 'Moderator: the queue shows who posted the job and where it will be on the site');
+  r = await call(env, 'POST', '/api/orders', { token: hr, data: { product: 'featured', target: { job_id: j1 } } }); await hook(env, r.body.order.id);
+  let l = letters('hr@orbit.dev', 'Payment received');
+  ok(l.length === 1 && /\$99/.test(l[0].text) && /Standard boost: Senior Rust Engineer at Orbit Labs/.test(l[0].text) && /starts when your job is approved/.test(l[0].text) && /Nothing renews/.test(l[0].text) && l[0].kind === 'paid',
+    'Letters: a payment at the checkout is answered with what was bought, and that it starts when the job is approved');
+  r = await as(mod, 'POST', 'jobs/' + j1 + '/approve'); eq([r.status, await statusOf(env, j1)], [200, 'live'], 'Moderator: its session approves a job');
+  l = letters('hr@orbit.dev', 'Your job is live');
+  ok(l.length === 1 && l[0].text.includes('“Senior Rust Engineer” at Orbit Labs') && l[0].text.includes(SITE + '/job/senior-rust-engineer-orbit-labs/') && /live for 30 days/.test(l[0].text) && /What you bought for it starts now/.test(l[0].text) && l[0].kind === 'job_approved',
+    'Letters: an approved job: its title, its page on the site, the 30 days, and that what was bought starts');
+  r = await call(env, 'POST', '/api/orders', { token: hr, data: { product: 'bump', target: { job_id: j1 } } }); await hook(env, r.body.order.id);
+  ok(/It is on now/.test(letters('hr@orbit.dev', 'Payment received')[1].text), 'Letters: a payment for a live job says it is on');
+
+  // rejection with its letter; the job can be edited and sent again
+  await nextDay(env);
+  const j2 = (await call(env, 'POST', '/api/jobs', { token: hr, data: ORBIT('Platform Engineer') })).body.job.id;
+  r = await as(mod, 'POST', 'jobs/' + j2 + '/reject', {}); eq([r.status, r.body.error], [400, 'reason'], 'Moderator: a rejection needs a reason');
+  r = await as(mod, 'POST', 'jobs/' + j2 + '/reject', { reason: 'The link opens the careers page, not this job.' }); eq([r.status, await statusOf(env, j2)], [200, 'rejected'], 'Moderator: its session rejects a job');
+  l = letters('hr@orbit.dev', 'Your job was not accepted');
+  ok(l.length === 1 && l[0].text.includes('“Platform Engineer” at Orbit Labs') && l[0].text.includes('The link opens the careers page, not this job.') && /edit the job on the account page and send it again/.test(l[0].text) && l[0].kind === 'job_rejected',
+    'Letters: a rejected job: its title, the reason as the moderator wrote it, and that it can be edited and sent again');
+  r = await call(env, 'PATCH', '/api/jobs/' + j2, { token: hr, data: { apply_url: ORBIT('Platform Engineer v2').apply_url, title: 'Platform Engineer v2' } });
+  eq([r.status, r.body.job.status, r.body.job.reject_reason, /^sent again after it was not accepted \(“The link opens the careers page, not this job\.”\)/.test(r.body.job.review_reason)], [200, 'review', '', true],
+    'Resend: an edit of a rejected job sends it to a person again, with what was written the first time');
+  eq((await as(mod, 'GET', 'review')).body.jobs.map((j) => j.id), [j2], 'Resend: and it is in the queue');
+  r = await as(mod, 'POST', 'jobs/' + j2 + '/remove'); eq([r.status, await statusOf(env, j2)], [200, 'removed'], 'Moderator: its session takes a job down');
+
+  // claims of company pages, with their letters, and the page of a verified claim for the form
+  const harvey = await fresh(env, 'talent@harvey.ai');
+  const claim = (await call(env, 'POST', '/api/claims', { token: harvey, data: { company: 'Harvey' } })).body.claim;
+  r = await call(env, 'GET', '/api/claims', { token: harvey }); eq(r.body.claims.map((c) => [c.status, c.page]), [['pending', null]], 'Claims: a claim that waits has no page yet');
+  eq((await as(mod, 'GET', 'claims')).body.claims.map((c) => [c.id, c.company, c.domain, c.account.email]), [[claim.id, 'Harvey', 'harvey.ai', 'talent@harvey.ai']], 'Moderator: the claims that wait, with who asks');
+  r = await as(mod, 'POST', 'claims/' + claim.id + '/approve'); eq(r.status, 200, 'Moderator: its session approves a claim');
+  l = letters('talent@harvey.ai', 'Your company page is confirmed'); ok(l.length === 1 && /page of Harvey/.test(l[0].text) && l[0].text.includes(SITE + '/account/'), 'Letters: a confirmed claim');
+  r = await call(env, 'GET', '/api/claims', { token: harvey }); eq(r.body.claims[0].page, { about: '', website: '', logo: '', locations: [] }, 'Claims: a verified claim carries its page, empty at first');
+  await call(env, 'PUT', '/api/claims/' + claim.id + '/page', { token: harvey, data: { about: 'Harvey builds software for law firms and legal teams around the world.', website: 'https://harvey.ai', locations: ['New York', 'London'],
+    logo: 'data:image/png;base64,' + Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), Buffer.alloc(32, 7)]).toString('base64') } });
+  r = await call(env, 'GET', '/api/claims', { token: harvey }); const pg = r.body.claims[0].page;
+  eq([pg.about.startsWith('Harvey builds'), pg.website, pg.locations, /\/api\/public\/media\/m_[a-f0-9]{20}$/.test(pg.logo)], [true, 'https://harvey.ai', ['New York', 'London'], true], 'Claims: and what was saved comes back for the form: text, site, places, the logo’s address');
+  r = await as(mod, 'POST', 'claims/' + claim.id + '/reject', { reason: 'harvey.ai mail could not be confirmed.' }); eq(r.status, 200, 'Moderator: its session rejects a claim');
+  l = letters('talent@harvey.ai', 'Your company page claim was not accepted'); ok(l.length === 1 && l[0].text.includes('harvey.ai mail could not be confirmed.'), 'Letters: a rejected claim, with the reason');
+  eq((await call(env, 'GET', '/api/claims', { token: harvey })).body.claims.map((c) => [c.status, c.page]), [['rejected', null]], 'Claims: a rejected claim has no page');
+
+  // reports
+  await call(env, 'POST', '/api/report', { data: { job: 'staff-engineer-stripe', reason: 'job_not_real' } });
+  r = await as(mod, 'GET', 'reports'); const rep = r.body.reports[0];
+  eq([r.body.reports.length, rep.page, rep.reason, rep.decision], [1, '/job/staff-engineer-stripe/', 'job_not_real', ''], 'Moderator: the reports');
+  eq([(await as(mod, 'POST', 'reports/' + rep.id + '/decide', { decision: 'dismissed' })).status, (await as(hr, 'POST', 'reports/' + rep.id + '/decide', { decision: 'upheld' })).status], [200, 403], 'Moderator: its session decides a report; another account’s does not');
+  r = await as(mod, 'GET', 'overview'); ok(r.body.users >= 4 && Array.isArray(r.body.recent_jobs) && Array.isArray(r.body.recent_orders), 'Moderator: the overview');
+
+  // what is not a payment at the checkout sends no "Payment received"; a letter that does not go fails nothing
+  const before = letters('hr@orbit.dev', 'Payment received').length;
+  r = await call(env, 'POST', '/api/orders', { token: hr, data: { product: 'credits100' } }); await hook(env, r.body.order.id);
+  ok(/100 credits are in your account/.test(letters('hr@orbit.dev', 'Payment received')[before].text), 'Letters: a top-up says the credits are in the account');
+  await call(env, 'POST', '/api/orders', { token: hr, data: { product: 'bump', target: { job_id: j1 }, pay: 'wallet' } });
+  eq(letters('hr@orbit.dev', 'Payment received').length, before + 1, 'Letters: a purchase with credits is not a payment, and sends none');
+  for (const [what, MAIL] of [['fails', { send: async () => { throw new Error('mail is down'); } }], ['is held back by the daily cap', { send: async () => ({ sent: false, status: 'capped' }) }]]) {
+    const dark = newEnv({ ADMIN_EMAILS: 'owner@example.com', MAIL }); let id;
+    r = await quietly(async () => {                       // the mailer of this database fails for every letter, the sign-up ones too
+      const m2 = await fresh(dark, 'owner@example.com'), e2 = await fresh(dark, 'hr@orbit.dev');
+      id = (await call(dark, 'POST', '/api/jobs', { token: e2, data: ORBIT('Senior Rust Engineer') })).body.job.id;
+      return call(dark, 'POST', '/api/admin/jobs/' + id + '/approve', { token: m2 });
+    });
+    eq([r.status, await statusOf(dark, id)], [200, 'live'], 'Letters: a letter that ' + what + ' does not fail the decision');
+  }
+  // the setting reaches the worker on our own server
+  const { productionEnv, describeEnv } = await import('../src/config.mjs'), { mkdtempSync, rmSync } = await import('node:fs'), os = await import('node:os');
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'hrn-admin-')), penv = productionEnv({ ADMIN_EMAILS: 'owner@example.com, b@owner.dev', DB_FILE: path.join(dir, 'a.db') }, { serverDir: path.join(here, '..') });
+  eq([penv.ADMIN_EMAILS, /moderators 2/.test(describeEnv(penv)), describeEnv(penv).includes('owner@example.com')], ['owner@example.com, b@owner.dev', true, false], 'Settings: ADMIN_EMAILS reaches the worker; the log says how many moderators, not who');
+  penv.DB.close(); rmSync(dir, { recursive: true, force: true });
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');

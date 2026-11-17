@@ -51,7 +51,7 @@ export function productionEnv(vars, { serverDir }) {
     COMPANY_SITES: companySites(vars.COMPANY_SITES_FILE || '/srv/hrn/app/logos.json'),
     PLUS_LIVE: '0',
   };
-  for (const k of ['ADMIN_TOKEN', 'GITHUB_TOKEN', 'GITHUB_REPO', 'LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_REDIRECT_URL', 'ANTHROPIC_API_KEY', 'TALENT_DB', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URL']) if (vars[k]) env[k] = vars[k];
+  for (const k of ['ADMIN_TOKEN', 'ADMIN_EMAILS', 'GITHUB_TOKEN', 'GITHUB_REPO', 'LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_REDIRECT_URL', 'ANTHROPIC_API_KEY', 'TALENT_DB', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URL']) if (vars[k]) env[k] = vars[k];
   if (vars.PAYMENTS_LIVE === '1') {
     for (const k of ['CRYPTOMUS_MERCHANT', 'CRYPTOMUS_API_KEY']) if (vars[k]) env[k] = vars[k];
     if (vars.PLUS_LIVE === '1') env.PLUS_LIVE = '1';
@@ -67,5 +67,5 @@ export function productionEnv(vars, { serverDir }) {
 
 // One line about the settings for the log: what is on, never a value of a secret.
 export const describeEnv = (env) => 'site ' + env.SITE_URL + '; mail ' + (env.MAIL ? 'on (' + env.MAIL_FROM.replace(/^.*</, '<') + ', ' + env.MAIL.cap + ' a day)' : 'off (no SMTP_PASS)') +
-  '; payments ' + (env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'ON' : 'off') + '; admin ' + (env.ADMIN_TOKEN ? 'on' : 'off (no ADMIN_TOKEN)') +
+  '; payments ' + (env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'ON' : 'off') + '; admin ' + (env.ADMIN_TOKEN ? 'on' : 'off (no ADMIN_TOKEN)') + '; moderators ' + String(env.ADMIN_EMAILS || '').split(/[\s,;]+/).filter(Boolean).length +
   '; duplicate check ' + (env.DUPLICATE_URL ? 'on' : 'off');
