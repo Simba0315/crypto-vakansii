@@ -361,10 +361,36 @@ def rlow(nm):
     return nm if w in KEEP_CAP or sum(c.isupper() for c in w) >= 2 else nm[0].lower() + nm[1:]
 
 
+A_SOUND = re.compile(r"(?i)(?:uni(?![nm])|use|usa|usu|ukr|util|eur|one\b|once\b)")      # a vowel letter read as "you" or "w": a university, a user, a European, a one-page
+AN_SOUND = re.compile(r"(?i)(?:hour|honest|honor|heir)")                                  # a silent h: an hourly
+
+
 def art(nm):
+    """"a" or "an" before a name, by its sound: "an HR business partner", "a UX researcher", "an iOS developer",
+    "a university recruiter", "a HubSpot job". An acronym is read letter by letter; a word in mixed case (HubSpot, NetSuite) is not."""
     w = nm.split()[0]
-    if sum(c.isupper() for c in w) >= 2: return "an" if w[0] in "AEFHILMNORSX" else "a"
+    if w[:1].isupper() and (len(w) == 1 or not w[1].islower()): return "an" if w[0] in "AEFHILMNORSX" else "a"      # HR, SEO, MLOps, M&A, X-ray
+    if A_SOUND.match(w): return "a"
+    if AN_SOUND.match(w): return "an"
     return "an" if nm[0].lower() in "aeiou" else "a"
+
+
+def person(slug, name):
+    """The person who does a kind of work, as the word stands inside a sentence: "customer support specialist" for the role
+    "Customer support" (roles_info.PERSON), the name itself for a role named after a person ("software engineer"). Use it only
+    where a person is meant ("How to become a …", "What does a … do?"); the field keeps the role's name ("Customer support jobs")."""
+    return rlow(roles_info.person(slug, name))
+
+
+def persons(slug, name):
+    """The same in the plural: "customer support specialists", "software engineers", "chiefs of staff"."""
+    return roles_info.persons(slug, ROLE_PLURAL.get(name, rlow(name) + "s"))
+
+
+def become_label(slug):
+    """The words of a link to a "how to become" page. "One" stands for the person named in the heading above the link, and a
+    role named after a field ("Customer support") names nobody."""
+    return "How to start" if slug in roles_info.PERSON else "How to become one"
 TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs", "Next.js": "nextjs", "CI/CD": "ci-cd", "AML/KYC": "aml-kyc",
             "Three.js": "threejs", "A/B testing": "ab-testing", "MITRE ATT&CK": "mitre-attack", "Monday.com": "monday", "SAP S/4HANA": "sap-s4hana",
             "FP&A": "fpa", "M&A": "mergers-and-acquisitions", "GD&T": "gdt", "Driver's license": "drivers-license", "Security+": "security-plus",
@@ -560,8 +586,9 @@ SMALL_WORDS = {"a", "an", "and", "as", "at", "but", "by", "for", "in", "nor", "o
 
 def tcase(s):
     """Title case that leaves existing capitals alone and small words small: "VP of sales" -> "VP of Sales",
-    "DevOps engineer" -> "DevOps Engineer". The first word is always capitalised."""
-    return " ".join(w if i and w in SMALL_WORDS else w[:1].upper() + w[1:] for i, w in enumerate(s.split()))
+    "DevOps engineer" -> "DevOps Engineer". The first word is always capitalised, unless it has a capital of its own inside:
+    "iOS developer" -> "iOS Developer", not "IOS Developer"."""
+    return " ".join(w if (i and w in SMALL_WORDS) or any(c.isupper() for c in w[1:]) else w[:1].upper() + w[1:] for i, w in enumerate(s.split()))
 
 
 def fit_title(t):
@@ -587,7 +614,7 @@ def fit_title(t):
         head_ = re.split(r" — |: ", left)[0]
         if len(head_) >= 12: left = head_
         room = 65 - len(brand) - 3
-        if len(left) > room: left = left[:room + 1].rsplit(" ", 1)[0].rstrip(" ,-–—:&")
+        if len(left) > room: left = re.sub(r" \([\d,]*$", "", left[:room + 1].rsplit(" ", 1)[0]).rstrip(" ,-–—:&")      # never "… jobs in Europe (74 | Brand": a count cut out of its bracket goes whole
         return f"{left} | {brand}"
     return t2 if len(t2) <= 70 else t2[:68].rsplit(" ", 1)[0].rstrip(" ,-–—:&(")
 
@@ -2673,7 +2700,7 @@ def main():
         # between the heading and the list)
         prep_ = ([f'<a href="{P}/resume/examples/{slug_r}/">Resume example</a>']
                  + ([f'<a href="{P}/interview-questions/{slug_r}/">Interview questions</a>', f'<a href="{P}/cover-letter-examples/{slug_r}/">Cover letter example</a>',
-                     f'<a href="{P}/how-to-become/{slug_r}/">How to become one</a>'] if len(rj) >= 20 else [])) if has_rex(slug_r) else []
+                     f'<a href="{P}/how-to-become/{slug_r}/">{become_label(slug_r)}</a>'] if len(rj) >= 20 else [])) if has_rex(slug_r) else []
         fam_line = (labrow("Part of", [f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams])
                     + labrow("Prepare", prep_, ("resume/examples/", "All resume examples"))) if fams else ""
         secs = hub_sections(f"{low} roles", rj, "roles,who")        # the employers' tiles stand once, under "Companies hiring ..."
@@ -3376,7 +3403,7 @@ def main():
                 f"Counted from {len(paid):,} open postings, {MONTH_YEAR}.")
          + section("Questions about salaries", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>"), head=sal_ld, cls="hub sal")
 
-    def salary_page(slug, label, group, back, role=False):
+    def salary_page(slug, label, group, back, role=False, psn=None):
         by_loc = defaultdict(list)
         for j, r in group:
             for ps in j["places"]: by_loc[PLACE_NAME[ps]].append((j, r))
@@ -3412,17 +3439,19 @@ def main():
         prem = sorted(((median(v) - median(mids), t, len(v)) for t, v in with_t.items() if len(v) >= max(5, len(mids) // 10) and len(v) < len(mids)), reverse=True)[:5]
         prem = [x for x in prem if x[0] > 0]
         sal_qa[3:3] = [
-            (f"Is {art(label.lower())} {label.lower()} a high-paying job?",
+            # `psn` is the person of a kind of work ("an accountant"). A skill, a field or a language has none and is asked about
+            # as jobs: "Are Python jobs high-paying?", not "Is a python a high-paying job?"
+            (f"Is {art(psn)} {psn} a high-paying job?" if psn else f"Are {label} jobs high-paying?",
              f"The median {label} posting advertises {money(median(mids))} a year, {('more than' if median(mids) > all_mid else 'less than')} the median of all {len(paid):,} job postings with pay on {SITE} ({money(all_mid)})."
              f" That is {abs(round((median(mids) / all_mid - 1) * 100))}% {'above' if median(mids) > all_mid else 'below'} the middle of the market."),
-            (f"How much can you earn as {art(label.lower())} {label.lower()}?",
+            (f"How much can you earn as {art(psn)} {psn}?" if psn else f"How much can you earn in {label} jobs?",
              f"A tenth of the postings offer {money(pct(.9))} a year or more; the highest open {label} role advertises up to {money(max(hi for _, (lo, hi) in group))}. Pay rises with level: see the table by level."),
             (f"What is the {label} salary per hour and per month?",
              f"The median of {money(median(mids))} a year is about {hourly(median(mids))} an hour (2,080 working hours) and ${median(mids) / 12:,.0f} a month before tax. "
              f"The middle half of postings: {hourly(pct(.25))} to {hourly(pct(.75))} an hour."),
         ]
         if len(ent_) >= 5:
-            sal_qa.insert(6, (f"What does an entry-level {label.lower()} make?", f"{len(ent_):,} junior and intern {label} postings state pay, with a median of {money(median(ent_))} a year "
+            sal_qa.insert(6, (f"What does an entry-level {psn} make?" if psn else f"What do entry-level {label} jobs pay?", f"{len(ent_):,} junior and intern {label} postings state pay, with a median of {money(median(ent_))} a year "
                                                                                 f"({hourly(median(ent_))} an hour)."))
         if prem:
             sal_qa.insert(6, (f"Which skills pay more for {label} roles?", "Postings that ask for " + ", ".join(f"{t} (+{money(d)}, {k} postings)" for d, t, k in prem[:3])
@@ -3466,7 +3495,8 @@ def main():
             salary_page(cat_slug[name], name, group, (f"jobs/{cat_slug[name]}/", f"All {name} jobs"))
     for slug_r, (rname, rj) in by_role.items():
         group = [(j, j["usd"]) for j in rj if j["usd"]]
-        if len(group) >= 20: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rlow(rname)} jobs"), role=True)      # 20 postings with pay is enough for a median; the page states the count
+        if len(group) >= 20: salary_page(slug_r, tcase(rname), group, (f"roles/{slug_r}/", f"All {rlow(rname)} jobs"), role=True,
+                                           psn=None if slug_r in roles_info.PERSON and not has_rex(slug_r) else person(slug_r, rname))      # 20 postings with pay is enough for a median; the page states the count
 
     lap('Salary explorer (owner, 15 Nov: "look at Wellfound\'s salary ')
     # Salary explorer (owner, 15 Nov: "look at Wellfound's salary calculator, maybe ours lacks something"). One page, filters for
@@ -3683,7 +3713,7 @@ def main():
         mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj_ if j["usd"])
         yrs_ = sorted(j["years"] for j in rj_ if j.get("years"))
         tg_ = Counter(t for j in rj_ for t in j["tags"])
-        return dict(slug=r_, name=nm_, low=rlow(nm_), n=k_, does=roles_info.INFO.get(r_, ("", ""))[1], med=median(mids_) if len(mids_) >= 15 else None,
+        return dict(slug=r_, name=nm_, low=rlow(nm_), psn=person(r_, nm_), psns=persons(r_, nm_), n=k_, does=roles_info.INFO.get(r_, ("", ""))[1], med=median(mids_) if len(mids_) >= 15 else None,
                     q1=mids_[len(mids_) // 4] if len(mids_) >= 15 else None, q3=mids_[3 * len(mids_) // 4] if len(mids_) >= 15 else None,
                     rem=100 * sum(1 for j in rj_ if j["remote"]) / k_, ent=100 * sum(1 for j in rj_ if j["entry"]) / k_,
                     sen=100 * sum(1 for j in rj_ if j["level"] in ("Senior", "Lead")) / k_, yrs=yrs_[len(yrs_) // 2] if len(yrs_) >= 10 else None,
@@ -3696,7 +3726,7 @@ def main():
         A, B = role_facts(a_), role_facts(b_)
         path = f"compare/{a_}-vs-{b_}/"
         an_, bn_ = tcase(A["name"]), tcase(B["name"])
-        art_a, art_b = art(A["low"]), art(B["low"])
+        art_a, art_b = art(A["psn"]), art(B["psn"])
         verdict_ = []
         big_, small_ = (A, B) if A["n"] >= B["n"] else (B, A)
         verdict_.append(("Demand", f"{big_['n']:,} open {big_['low']} jobs against {small_['n']:,} for {small_['low']} roles today."))
@@ -3727,21 +3757,21 @@ def main():
             gap_html += section(f"From {A['low']} to {B['low']}: skills to add", "<ul class=\"ticks\">" + "".join(f"<li><strong>{e(t)}</strong>: named in {v:.0f}% of {B['low']} postings, {w:.0f}% of {A['low']} postings</li>" for t, v, w in gap_ab) + "</ul>")
         if gap_ba:
             gap_html += section(f"From {B['low']} to {A['low']}: skills to add", "<ul class=\"ticks\">" + "".join(f"<li><strong>{e(t)}</strong>: named in {v:.0f}% of {A['low']} postings, {w:.0f}% of {B['low']} postings</li>" for t, v, w in gap_ba) + "</ul>")
-        qa_r = [(f"Which is better, {A['low']} or {B['low']}?", f"It depends on the work you like: {art_a} {A['low']} {A['does'] or 'does the work of the role'}; {art_b} {B['low']} {B['does'] or 'does the work of the role'}. "
+        qa_r = [(f"Which is better, {A['psn']} or {B['psn']}?", f"It depends on the work you like: {art_a} {A['psn']} {A['does'] or 'does the work of the role'}; {art_b} {B['psn']} {B['does'] or 'does the work of the role'}. "
                  + " ".join(v for _, v in verdict_[:3]))]
         if A["med"] and B["med"]:
-            qa_r.append((f"Which pays more, {A['low']} or {B['low']}?", verdict_[1][1] + " These are advertised ranges from job postings, not verified pay."))
+            qa_r.append((f"Which pays more, {A['psn']} or {B['psn']}?", verdict_[1][1] + " These are advertised ranges from job postings, not verified pay."))
         if gap_ab:
-            qa_r.append((f"Can {art_a} {A['low']} become {art_b} {B['low']}?", f"Yes, and the skills to add are the ones {B['low']} postings ask for much more often: " + ", ".join(f"{t} ({v:.0f}% against {w:.0f}%)" for t, v, w in gap_ab[:4]) + "."))
-        qa_r.append((f"Will AI replace {A['low']}s?" if not A["low"].endswith("s") else f"Will AI replace {A['low']}?",
+            qa_r.append((f"Can {art_a} {A['psn']} become {art_b} {B['psn']}?", f"Yes, and the skills to add are the ones {B['low']} postings ask for much more often: " + ", ".join(f"{t} ({v:.0f}% against {w:.0f}%)" for t, v, w in gap_ab[:4]) + "."))
+        qa_r.append((f"Will AI replace {A['psns']}?",
                      f"Employers still post {A['n']:,} {A['low']} jobs today, and {A['ai']:.0f}% of them ask for AI or machine-learning skills ({B['ai']:.0f}% of {B['low']} jobs): AI is becoming part of the work rather than replacing it outright, judging by the postings."))
-        qa_r.append((f"Is {art_a} {A['low']} a dead-end job?", f"No sign of it in the postings: {A['sen']:.0f}% of open {A['low']} jobs are senior or lead roles, so the path up exists, and the skills above show the way across to {B['low']} work."))
+        qa_r.append((f"Is {art_a} {A['psn']} a dead-end job?", f"No sign of it in the postings: {A['sen']:.0f}% of open {A['low']} jobs are senior or lead roles, so the path up exists, and the skills above show the way across to {B['low']} work."))
         ld_r = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a2_}} for q_, a2_ in qa_r]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(path, f"{an_} vs {bn_}: Jobs, Pay & Skills ({TODAY[:4]}) | {SITE}",
              f"{an_} vs {bn_}: what each does, {A['n']:,} and {B['n']:,} open jobs, advertised pay, remote share, entry-level share and the skills to add to switch. Counted from today’s postings.",
              crumbs(("Compare", "compare/"), (f"{an_} vs {bn_}", "")) + f'<h1>{e(an_)} vs {e(bn_)}: <span class="hl">what each does, what it pays</span></h1>'
-             f'<p class="lead">{e(art_a[0].upper() + art_a[1:])} {e(A["low"])} {e(A["does"])}. {e(art_b[0].upper() + art_b[1:])} {e(B["low"])} {e(B["does"])}. '
+             f'<p class="lead">{e(art_a[0].upper() + art_a[1:])} {e(A["psn"])} {e(A["does"])}. {e(art_b[0].upper() + art_b[1:])} {e(B["psn"])} {e(B["does"])}. '
              f'Below, the two side by side in today’s {A["n"] + B["n"]:,} open postings.</p>'
              + duel(f"roles/{a_}/", an_, f"roles/{b_}/", bn_, [
                  ("Open jobs today", A["n"], B["n"], f"{A['n']:,}", f"{B['n']:,}"),
@@ -4276,7 +4306,7 @@ def main():
         big = len(by_role[slug_r][1]) >= 20
         items = [("roles", f"roles/{slug_r}/", "Open jobs"), ("salary", f"salaries/{slug_r}/", "Salary"), ("resume", f"resume/examples/{slug_r}/", "Resume example"),
                  ("cv", f"cv-examples/{slug_r}/", "CV example (UK)"), ("letter", f"cover-letter-examples/{slug_r}/", "Cover letter"), ("iq", f"interview-questions/{slug_r}/", "Interview questions"),
-                 ("become", f"how-to-become/{slug_r}/", "How to become one"), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
+                 ("become", f"how-to-become/{slug_r}/", become_label(slug_r)), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
         items = [(k, u, t) for k, u, t in items if k != here and (k != "salary" or (OUT / u / "index.html").exists()) and (big or k not in ("iq", "become", "jd", "hire"))]
         return section(f"Everything about {low} work", '<div class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for _, u, t in items) + "</div>")
 
@@ -4302,11 +4332,11 @@ def main():
     for slug_r, (rname, rj) in by_role.items():
         if not has_rex(slug_r): continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
-        low = rlow(rname)
+        low, psn = rlow(rname), person(slug_r, rname)      # the field ("accounting resume") and the person ("skills for an accountant")
         cnt_ = Counter(t for j in rj for t in j["tags"])
         top_ = resume_examples.asked(slug_r, cnt_.most_common(), len(rj))
         tech_ = slug_r in resume_examples.TECH
-        d = resume_examples.example(slug_r, rname, fs, top_, rlow(fn))
+        d = resume_examples.example(slug_r, roles_info.person(slug_r, rname), fs, top_, rlow(fn))      # without an example of its own, the title on the paper is the person
         skills_ = d["skills"].split(", ")
         if slug_r not in resume_examples.ROLE: print(f"  resume example: no entry of its own for {slug_r}, the lines of its field are used")
         rex_data[slug_r] = d
@@ -4358,12 +4388,12 @@ def main():
                        + "<li><b>Send it as a PDF unless the form asks for Word.</b> Name the file with your name and the role.</li></ol>"
                        f'<p class="note">Check it before you send: the <a href="{P}/tools/resume-review/">resume checker</a> and the <a href="{P}/tools/resume-match/">match against a posting</a>.</p>')
         if top_:
-            qa_.insert(0, (f"What are the top 3 skills for {art(low)} {low}?", "By today’s postings for this work: " + ", ".join(f"{t} ({pc_(k, len(rj))}%)" for t, k in top_[:3]) + "."))
+            qa_.insert(0, (f"What are the top 3 skills for {art(psn)} {psn}?", "By today’s postings for this work: " + ", ".join(f"{t} ({pc_(k, len(rj))}%)" for t, k in top_[:3]) + "."))
         qa_.append((f"How do I write {art(low)} {low} resume with no experience?", "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number; "
                     "put the skills the postings ask for near the top. The entry-level example on this page is written that way." if len(ent_l) >= 3 else
                     "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number, and the skills the postings ask for near the top."))
         if len(mids_) >= 30:
-            qa_.append((f"Is {art(low)} {low} a high salary?", f"Today’s {low} postings that state a yearly range advertise a median of {money(median(mids_))}. Most employers here are technology companies, so this runs above the wider market."))
+            qa_.append((f"Is {art(psn)} {psn} a high salary?", f"Today’s {low} postings that state a yearly range advertise a median of {money(median(mids_))}. Most employers here are technology companies, so this runs above the wider market."))
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"resume/examples/{slug_r}/", (f"{tcase(rname)} Resume Examples: Entry-Level, Mid & Senior ({TODAY[:4]})" if n_ex == 3 else f"{tcase(rname)} Resume Example ({TODAY[:4]})") + f" | {SITE}",
@@ -4407,7 +4437,7 @@ def main():
         facts_cv = [(f"{len(uk_):,}", f"open {e(low)} jobs in the UK"), (f"{len(eu_):,}", "open in Europe"), (f"{len(rj):,}", "open anywhere")] + ([(f"£{median(gbp_):,.0f}", "median UK pay stated")] if len(gbp_) >= 5 else [])
         cv_dir[fs].append((slug_r, rname, len(uk_)))
         page(f"cv-examples/{slug_r}/", f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]}) | {SITE}",
-             f"A {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
+             f"{art(low).capitalize()} {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
              crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} CV example <span class=\"hl\">(UK format)</span></h1>"
              f'<p class="lead">The same document Americans call a resume, written the way UK and European employers expect it: a personal profile first, your employment history with results, '
              f'no photo, age or marital status. Below, an example to start from and what {len(rj):,} open {e(low)} postings ask for.</p>'
@@ -4452,14 +4482,14 @@ def main():
     for slug_r, d in rex_data.items():
         rname, rj = by_role[slug_r]
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
-        low = rlow(rname)
+        low, psn = rlow(rname), person(slug_r, rname)
         lines_ = [ln.strip() for ln in (d["exp"][0]["text"] if d["exp"] else "").split("\n") if ln.strip()][:2]
         cnt_ = Counter(t for j in rj for t in j["tags"])
         top_ = [t for t, _ in resume_examples.asked(slug_r, cnt_.most_common(), len(rj))][:3]
         tech_ = slug_r in resume_examples.TECH
         cl_head = "[Your name]\n[Phone] · [Email] · [LinkedIn or portfolio link]\n\n[Date]\n\n[Hiring manager’s name]\n[Company]\n[Company address]\n\n"
         letter_ = (cl_head + "Dear Hiring Manager,\n\n"
-                   f"I am applying for the {d['title']} position at [Company]. I have [number] years of experience as {art(low)} {low}, most recently at [Current company], "
+                   f"I am applying for the {d['title']} position at [Company]. I have [number] years of experience as {art(psn)} {psn}, most recently at [Current company], "
                    f"where my focus is {d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1]}.\n\n"
                    + ("Two results from that work:\n" + "\n".join(f"- {ln}" for ln in lines_) + "\n\n" if lines_ else "")
                    + "[One or two sentences on why this company: a product you use, a goal from the posting, a problem you can help with.] "
@@ -4475,7 +4505,7 @@ def main():
                         + "[One or two sentences on why this company: a product you use, a goal from the posting.] I learn quickly and would welcome the chance to show it.\n\n"
                         "Thank you for your time.\n\nSincerely,\n[Your name]")
         senior_letter = (cl_head + "Dear Hiring Manager,\n\n"
-                         f"I am applying for the [Senior / Lead] {d['title']} position at [Company]. I have [number] years of experience as {art(low)} {low}, the last [number] leading [a team of N / the main programme] at [Current company].\n\n"
+                         f"I am applying for the [Senior / Lead] {d['title']} position at [Company]. I have [number] years of experience as {art(psn)} {psn}, the last [number] leading [a team of N / the main programme] at [Current company].\n\n"
                          + ("Two results I led:\n" + "\n".join(f"- {ln}" for ln in lines_) + "\n\n" if lines_ else "")
                          + "[One sentence on the problem in the posting you would take on first, and how.] I would bring the same focus on results, and on growing the people around me.\n\n"
                          "I would welcome a conversation. Thank you for your time.\n\nSincerely,\n[Your name]")
@@ -4508,7 +4538,7 @@ def main():
         facts_ = nums([(f"{len(rj):,}", f"open {e(low)} jobs today"), (f"{pc_(sum(j['remote'] for j in rj), len(rj))}%", "can be done from home")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 30 else []))
         cl_dir[fs].append((slug_r, rname, len(rj)))
         page(f"cover-letter-examples/{slug_r}/", f"{tcase(rname)} Cover Letter: 3 Examples & Template ({TODAY[:4]}) | {SITE}",
-             f"A {low} cover letter example built around measured results, with what today’s {len(rj):,} open {low} postings ask for. Copy it and fill in the brackets.",
+             f"{art(low).capitalize()} {low} cover letter example built around measured results, with what today’s {len(rj):,} open {low} postings ask for. Copy it and fill in the brackets.",
              crumbs(("Cover letter examples", "cover-letter-examples/"), (rname, "")) + f'<h1>{e(rname)} cover letter example: <span class="hl">results first</span></h1>'
              f'<p class="lead">A cover letter for {e(low)} jobs that leads with what you achieved, not with what you were responsible for. Copy it, replace the parts in [brackets] and use the words of the posting you answer.</p>'
              + facts_ + act_row("", "Copy the letter", [("#entry-level", "Entry-level letter"), ("#senior", "Senior letter")], clip="letter")
@@ -4544,7 +4574,7 @@ def main():
         rname, rj = by_role[slug_r]
         if len(rj) < 20: continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
-        low, n_ = rlow(rname), len(rj)
+        low, n_, psn = rlow(rname), len(rj), person(slug_r, rname)
         does = (roles_info.INFO.get(slug_r) or (None, ""))[1]
         focus = [x.strip() for x in (resume_examples.ROLE.get(slug_r, (None, ""))[1] or "").split(",") if x.strip()][:4]
         yrs = sorted(j["years"] for j in rj if j.get("years"))
@@ -4565,7 +4595,7 @@ def main():
                + "".join(f"- {x[0].upper() + x[1:]}: [what this means in your team]\n" for x in focus)
                + "- [One more duty that is specific to this job]\n\n"
                "What we are looking for\n"
-               + (f"- [{y_med}]+ years of experience as {art(low)} {low}\n" if y_med else f"- [Number]+ years of experience as {art(low)} {low}\n")
+               + (f"- [{y_med}]+ years of experience as {art(psn)} {psn}\n" if y_med else f"- [Number]+ years of experience as {art(psn)} {psn}\n")
                + "".join(f"- Experience with {t}\n" for t, _ in top_)
                + "- [One or two must-haves that are specific to this job]\n\n"
                "Pay and benefits\n- Pay range: $[lowest] – $[highest] a year, [plus equity or bonus if any]\n"
@@ -4586,10 +4616,10 @@ def main():
                  (f"How many years of experience should I ask for?", (f"The median in today’s {low} postings is {y_med} years. Ask for what the work needs: every extra year you require shrinks the pool of applicants." if y_med
                   else "As few as the work really needs: every extra year you require shrinks the pool of applicants."))]
         ent_n = sum(1 for j in rj if j.get("entry"))
-        jd_qa += [(f"What does {art(low)} {low} do?", (f"{art(low).capitalize()} {low} {does}. " if does else "") + (f"Postings for this work name {', '.join(t for t, _ in top_[:3])} most often." if top_ else "")),
-                  (f"Is {art(low)} {low} an IT job?", f"It sits in {fn.lower()} on {SITE}. " + ("Yes: the work is built around software and data." if fs in ("engineering", "data-research", "security") else
+        jd_qa += [(f"What does {art(psn)} {psn} do?", (f"{art(psn).capitalize()} {psn} {does}. " if does else "") + (f"Postings for this work name {', '.join(t for t, _ in top_[:3])} most often." if top_ else "")),
+                  (f"Is {art(psn)} {psn} an IT job?", f"It sits in {fn.lower()} on {SITE}. " + ("Yes: the work is built around software and data." if fs in ("engineering", "data-research", "security") else
                    "Not in the narrow sense: it is its own field, though most postings here are at technology companies.")),
-                  (f"Can I become {art(low)} {low} with no experience?", f"{ent_n:,} of today’s {n_:,} postings ({pc_(ent_n, n_)}%) are junior roles or internships"
+                  (f"Can I become {art(psn)} {psn} with no experience?", f"{ent_n:,} of today’s {n_:,} postings ({pc_(ent_n, n_)}%) are junior roles or internships"
                    + (f", and the median posting asks for {y_med} years" if y_med else "") + f". The steps, with today’s figures, are on the how-to-become page for this work."),
                   (f"Can I learn {low} work in three months?", "Enough to start on the skills postings name first" + (f" ({', '.join(t for t, _ in top_[:2])})" if top_ else "")
                    + ", and to build one or two projects to show; most employers still ask for a result you have delivered, so a first junior role or internship is the usual next step.")]
@@ -4597,21 +4627,21 @@ def main():
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in jd_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         jd_dir[fs].append((slug_r, rname, n_))
         page(f"job-descriptions/{slug_r}/", f"{tcase(rname)} Job Description: Duties, Skills & Template [{TODAY[:4]}] | {SITE}",
-             f"A {low} job description template with the figures from {n_:,} open postings: experience asked, pay, skills and benefits employers name. Copy it and post your job free.",
+             f"{art(low).capitalize()} {low} job description template with the figures from {n_:,} open postings: experience asked, pay, skills and benefits employers name. Copy it and post your job free.",
              crumbs(("For employers", "post-a-job/"), ("Job descriptions", "job-descriptions/"), (rname, "")) + f'<h1>{e(rname)} job description: <span class="hl">template and real figures</span></h1>'
-             + (f'<p class="lead"><strong>{e(art(low).capitalize())} {e(low)} {e(does)}.</strong> ' if does else '<p class="lead">')
-             + f'A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
+             + (f'<p class="lead"><strong>{e(art(psn).capitalize())} {e(psn)} {e(does)}.</strong> ' if does else '<p class="lead">')
+             + f'A template for hiring {art(psn)} {e(psn)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
              + facts_ + act_row("", "Copy the template", [("post-a-job/", "Post this job free")], clip="letter")
              + '<div class="rexgrid wide"><div>'
              + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-job-description" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-job-description" style="margin-top:0">PDF</button> '
                f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div></div>'
              + (f'<div class="rexside"><h2>What today’s {e(low)} postings say</h2>' + '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p></div></div>')
-             + section(f"Questions about hiring {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
+             + section(f"Questions about hiring {art(psn)} {psn}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
              + role_kit(slug_r, low, "jd")
              + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
              + (f'<a href="{P}/salaries/{slug_r}/">{e(low)} pay</a> · ' if (OUT / "salaries" / slug_r / "index.html").exists() else "")      # a salary page exists only from 20 postings with pay
-             + f'<a href="{P}/how-to-hire/{slug_r}/">how to hire {art(low)} {e(low)}</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_, cls="kw")
+             + f'<a href="{P}/how-to-hire/{slug_r}/">how to hire {art(psn)} {e(psn)}</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_, cls="kw")
     jd_n = sum(len(v) for v in jd_dir.values())
     jd_html = kind_dir(jd_dir, "job-descriptions", ("posting", "postings"))
     page("job-descriptions/", f"Job Description Templates for {jd_n} Roles, with Real Pay and Skills Data | {SITE}",
@@ -4642,7 +4672,7 @@ def main():
         rname, rj = by_role[slug_r]
         if len(rj) < 20: continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
-        low, n_ = rlow(rname), len(rj)
+        low, n_, psn, psns = rlow(rname), len(rj), person(slug_r, rname), persons(slug_r, rname)
         does = (roles_info.INFO.get(slug_r) or (None, ""))[1]
         begin = [j for j in rj if j["entry"] or (j.get("years") and j["years"] <= 2)]
         yrs = sorted(j["years"] for j in rj if j.get("years"))
@@ -4660,7 +4690,7 @@ def main():
         with_text = sum(1 for j in rj if j.get("desc"))
         k_ai = sum(1 for j in rj if any(t in AI_TAGS for t in j["tags"]))
         steps = ("<ol class=\"steps\">"
-                 f"<li><b>Know what the work is.</b> {e(art(low).capitalize())} {e(low)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
+                 f"<li><b>Know what the work is.</b> {e(art(psn).capitalize())} {e(psn)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
                  + (f"<li><b>Learn the skills employers name first.</b> In today’s {n_:,} postings: " + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in top_) + ".</li>" if top_ else
                     "<li><b>Learn the duties, not only the tools.</b> Postings for this work describe what you will do more than which software you will use: read ten of them and list the duties that repeat.</li>")
                  + "<li><b>Build proof you can show.</b> Two or three results with a number, from a job, a course project or volunteer work. The kind of line a recruiter looks for: "
@@ -4671,23 +4701,23 @@ def main():
                  + f'<a href="{P}/roles/{slug_r}/">See the open jobs</a> and check each one with the <a href="{P}/tools/resume-match/">resume match checker</a> before you apply.</li></ol>')
         hb_qa = [(f"How much experience do {low} jobs ask for?", (f"The median in today’s postings is {y_med} years; {low_yrs}% of the postings that name a number ask for two years or less." if y_med is not None
                   else "Most postings for this work do not name a number of years. Read the duties: they tell you more about the level than the title does.")),
-                 (f"Do I need a degree to become {art(low)} {low}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
+                 (f"Do I need a degree to become {art(psn)} {psn}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
                   + " Many others accept equivalent experience: read the requirements of each posting."),
-                 (f"How much does a beginner {low} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
+                 (f"How much does a beginner {psn} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
                   else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure."))),
-                 (f"What qualifications do you need to become {art(low)} {low}?",
+                 (f"What qualifications do you need to become {art(psn)} {psn}?",
                   "Employers name skills first: " + (", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:3]) + " of today’s postings. " if top_ else "the duties in the posting. ")
                   + (f"The median posting asks for {y_med} years of experience. " if y_med is not None else "")
                   + (f"{nodeg}% say no degree is required. " if nodeg else "")
                   + (("Certifications named in the full text of " + f"{with_text:,} postings: " + ", ".join(f"{c} ({k})" for c, k in certs_.most_common(3)) + ".") if certs_ else "Few postings ask for a specific certification.")),
-                 (f"Is AI replacing {low}s?" if not low.endswith("s") else f"Is AI replacing {low}?",
+                 (f"Is AI replacing {psns}?",
                   f"Not in today’s postings: {n_:,} {low} jobs are open on {SITE} as of {fdate(TODAY)}, and {pc_(k_ai, n_)}% of them ask for AI or machine-learning skills"
                   + (", alongside " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:2]) + "." if top_ else "."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         facts_ = nums([(f"{n_:,}", f"open {e(low)} jobs today"), (f"{len(begin):,}", "open to beginners")] + ([(f"{y_med} years", "experience asked, median")] if y_med is not None else [])
                       + ([(money(median(jr_pay)), "beginner pay, median")] if len(jr_pay) >= 8 else []))
-        many = ROLE_PLURAL.get(rname, low + "s")
+        many = psns
         lv_pay = defaultdict(list)
         for j in rj:
             if j["usd"]: lv_pay[j["level"]].append((j["usd"][0] + j["usd"][1]) / 2)
@@ -4708,23 +4738,23 @@ def main():
                   (f"Earn a certification employers name in this work: {', '.join(c for c, _ in certs_.most_common(2))}." if certs_ else "Take one short course in the field and finish it with a project, not only a certificate."),
                   "Keep a list of your results with numbers, updated every month: it becomes your resume lines and your interview stories.",
                   "Find one person a few years ahead of you in this work and ask for a 20-minute talk each quarter."]
-        extra_hb += section(f"Professional development goals for {art(low)} {low}", '<ul class="ticks">' + "".join(f"<li>{e(g_)}</li>" for g_ in goals_) + "</ul>")
+        extra_hb += section(f"Professional development goals for {art(psn)} {psn}", '<ul class="ticks">' + "".join(f"<li>{e(g_)}</li>" for g_ in goals_) + "</ul>")
         li_skills = " · ".join(t for t, _ in top_[:3]) if top_ else ""
-        extra_hb += section(f"LinkedIn profile tips for {art(low)} {low}", '<ul class="ticks">'
-                            + f'<li><b>Headline:</b> the title employers search for, then your strongest skills and one result: “{e(tcase(rname))}' + (f" | {e(li_skills)}" if li_skills else "") + ' | [one result with a number]”.</li>'
+        extra_hb += section(f"LinkedIn profile tips for {art(psn)} {psn}", '<ul class="ticks">'
+                            + f'<li><b>Headline:</b> the title employers search for, then your strongest skills and one result: “{e(tcase(psn))}' + (f" | {e(li_skills)}" if li_skills else "") + ' | [one result with a number]”.</li>'
                             + "<li><b>About:</b> three short paragraphs: what you do, two results with numbers, what you want next.</li>"
                             + f"<li><b>Skills section:</b> list the skills postings name, in their words" + (f": {e(', '.join(t for t, _ in tools_[:5]))}" if tools_ else "") + ".</li>"
                             + "<li><b>Open to work:</b> set the job titles and places you want; recruiters filter by them.</li></ul>"
                             + f'<p class="note">Write the headline with the <a href="{P}/tools/linkedin-headline/">LinkedIn headline generator</a>.</p>')
         hb_dir[fs].append((slug_r, rname, len(begin)))
         hb_begin.update(j["id"] for j in begin)
-        page(f"how-to-become/{slug_r}/", f"How to Become {art(low)} {tcase(rname)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
-             f"How to become {art(low)} {low}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
-             crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
+        page(f"how-to-become/{slug_r}/", f"How to Become {art(psn)} {tcase(psn)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
+             f"How to become {art(psn)} {psn}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
+             crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(psn)} {e(psn)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + facts_ + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
              + section(f"Five steps to your first {low} job", steps, label="The way in") + extra_hb
-             + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
+             + section(f"Questions about becoming {art(psn)} {psn}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_, cls="kw")
     hb_n = sum(len(v) for v in hb_dir.values())
@@ -4810,14 +4840,38 @@ def main():
             ("Tell me about a problem with {t} that took you a long time to solve.", "How you narrowed the problem down, and what you would do faster next time.")]
     DU_Q = [("How do you approach {x}? Walk me through an example from your last job.", "A real example: what you did yourself, the steps in order and the result with a number."),
             ("What is the hardest part of {x} for you, and how do you handle it?", "An honest difficulty and the habit or method that makes it work.")]
+    # One sample answer per skill question, in the order of SK_Q. Each answers its own question and names the skill the question
+    # names. The figures are examples of the kind a good answer has, as in the resume examples; no employer is named.
+    def names_skill(ln, t):
+        """True when a line names the skill as a word of its own: "Go" is not in "Google" or "ago", "AWS" is not in "laws"."""
+        rx_ = r"(?<![\w+#.-])" + re.escape(t) + r"(?![\w+#-])"
+        return bool(re.search(rx_, ln) or (len(t) > 3 and re.search(rx_, ln, re.I)))
+    def sk_plain(t):
+        """The first sentence of an explanation: the skill's plain line from skills_info.py where it reads as a definition
+        ("SQL is the language for asking a database questions"), a general opening where it does not."""
+        grp, line = skills_info.INFO.get(t, ("", ""))
+        if grp != "spoken" and re.match(r"(a|an|the) ", line) and "such" not in line.split() and not names_skill(line, t):
+            return f"I would start with one plain sentence: {t} is {line}."
+        return f"I would leave the terms out and say in one sentence what {t} is for."
+    SK_A = [lambda t: (f"“On my last project I used {t} every day for about 3 months. My own part was one piece from start to finish: I planned it, did the work "
+                       "and checked the result against the old way of working. It saved the team about 4 hours a week.” Then say what you would do differently."),
+            lambda t: (f"“The mistake I see most with {t} is copying what worked somewhere else without checking that it fits the case in front of you. "
+                       "I try it on a small example first and write down what I expect before I look at the result. On my last team that habit cut the rework "
+                       "from about 10 cases a month to 2.” Name a mistake you have really seen."),
+            lambda t: (f"“{sk_plain(t)} Then I would show one small example from my own work and let the person try it. I taught 3 new colleagues this way, "
+                       "and each did a first task alone within 2 weeks.” Use an example the listener already knows."),
+            lambda t: (f"“One problem with {t} kept coming back for about 3 weeks, because it showed up only now and then. I wrote down every case, changed one "
+                       "thing at a time and found the cause in the one step all the cases shared. Next time I would start that list on day one and ask a "
+                       "colleague after 2 days, not 2 weeks.” End with what you changed so that it does not come back.")]
+    assert len(SK_A) == len(SK_Q)
     iq_dir = defaultdict(list)
     for slug_r, d in rex_data.items():
         rname, rj = by_role[slug_r]
         if len(rj) < 20: continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
-        low, n_ = rlow(rname), len(rj)
+        low, n_, psn = rlow(rname), len(rj), person(slug_r, rname)
         cnt_ = Counter(t for j in rj for t in j["tags"])
-        top_ = resume_examples.asked(slug_r, cnt_.most_common(), n_)[:4]
+        top_ = resume_examples.asked(slug_r, cnt_.most_common(), n_)[:len(SK_Q)]
         focus = [x.strip() for x in resume_examples.ROLE[slug_r][1].split(",") if x.strip()][:2] if slug_r in resume_examples.ROLE else []
         descs_ = [j for j in rj if j.get("desc")]
         own_text = len(descs_) >= 20
@@ -4828,13 +4882,17 @@ def main():
         paid_pct = pc_(sum(1 for j in rj if j["salary"]), n_)
         rem_pct = pc_(sum(1 for j in rj if j["remote"]), n_)
         ex_lines = [ln.strip() for ex in (d.get("exp") or []) for ln in ex["text"].split("\n") if ln.strip()]
-        def sample_for(t):
-            hit = next((ln for ln in ex_lines if t.lower() in ln.lower()), ex_lines[0] if ex_lines else "")
-            first = hit.split()[0] if hit else ""
+        def sample_for(t, i):
+            """The sample answer under the skill question in place i (SK_Q[i]) about the skill t. The first question asks for a project,
+            so a line of this work's resume example is quoted there when it names the skill; the line is never used under another
+            skill. (Until 17 Nov 2026 one line stood under all four questions: the question about C++ had an answer about Python.)"""
+            hit = next((ln for ln in ex_lines if names_skill(ln, t)), "") if i == 0 else ""
+            if not hit: return SK_A[i](t)
+            first = hit.split()[0]
             hit = (hit[0].lower() + hit[1:]) if first[:1].isupper() and first[1:].islower() else hit      # "Built …" -> "built …", but "SQL …" stays
             return (f"“In my last role I {hit.rstrip('.')}. I did that part myself: I chose how to do it, checked the result and explained it to the team.” "
-                    "Then say what you would do differently.") if hit else ""
-        sk_items = [(SK_Q[i][0].format(t=t), f"{pc_(k, n_)}% of today’s {n_:,} open {e(low)} postings name {e(t)}.", SK_Q[i][1], sample_for(t)) for i, (t, k) in enumerate(top_)]
+                    "Then say what you would do differently.")
+        sk_items = [(SK_Q[i][0].format(t=t), f"{pc_(k, n_)}% of today’s {n_:,} open {e(low)} postings name {e(t)}.", SK_Q[i][1], sample_for(t, i)) for i, (t, k) in enumerate(top_)]
         # concrete technical questions with the answer, for the skills this work asks for most that have a skill test on the site
         tech_items = []
         for t, k in cnt_.most_common(10):
@@ -4850,7 +4908,7 @@ def main():
         pay_good = (f"A range you can defend. Today’s {len(mids_):,} {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}; the middle half {money(mids_[len(mids_) // 4])} to {money(mids_[3 * len(mids_) // 4])}. Ask for their range first if you can."
                     if len(mids_) >= 20 else "A range you can defend, based on postings that state pay and on your experience. Ask for their range first if you can.")
         gen_items = [("Tell me about yourself.", "Almost every interview opens with it.",
-                      f"Under a minute: your current work as {art(low)} {low}, one result with a number and why this job is the next step. Not your whole resume."),
+                      f"Under a minute: your current work as {art(psn)} {psn}, one result with a number and why this job is the next step. Not your whole resume."),
                      ("Why do you want to work here?", "It tests whether you read about the company.", "Something specific: a product, a goal from the posting or a problem you can help with."),
                      ("Why are you leaving your current job?", "It checks for problems you might bring along.", "What you are moving towards, said briefly, with no criticism of your employer."),
                      ("What are your salary expectations?", (f"Only {paid_pct}% of today’s {e(low)} postings state pay, so be ready to name a figure." if paid_pct < 60 else f"{paid_pct}% of today’s {e(low)} postings state pay; know where you stand in the range."), pay_good),
@@ -4880,7 +4938,7 @@ def main():
                  (f"Is {art(low)} {low} interview hard?",
                   (f"It depends on the level: today’s {low} postings ask for {sorted(j['years'] for j in rj if j.get('years'))[len([j for j in rj if j.get('years')]) // 2]} years of experience at the median. " if len([j for j in rj if j.get('years')]) >= 10 else "")
                   + "Most interviews mix questions about the skills in the posting with questions about how you work; the technical part is easier with a real example ready for each skill."),
-                 (f"What salary should I ask for as {art(low)} {low}?", (f"Today’s {len(mids_):,} {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}. Adjust for your experience and the country, and ask for their range first."
+                 (f"What salary should I ask for as {art(psn)} {psn}?", (f"Today’s {len(mids_):,} {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}. Adjust for your experience and the country, and ask for their range first."
                   if len(mids_) >= 20 else "Look at postings for this work that state pay, adjust for your experience and the country, and ask for their range first."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in iq_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -4958,8 +5016,8 @@ def main():
         rname, rj = by_role[slug_r]
         if len(rj) < 20: continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
-        low, n_ = rlow(rname), len(rj)
-        many = ROLE_PLURAL.get(rname, low + "s")
+        low, n_, psn = rlow(rname), len(rj), person(slug_r, rname)
+        many = persons(slug_r, rname)
         cos_ = Counter(j["company"] for j in rj)
         ctry_ = Counter(c for j in rj for c in {x for x, _ in countries_of(j.get("location") or "")})
         names_ = {c: nm for c, nm, _, _ in COUNTRIES}
@@ -5015,7 +5073,7 @@ def main():
                           + "</table></div>") if fam_r else "")
         hr_r = sorted(h_[0] for j in rj if (h_ := usd_hourly(j["salary"])))
         con_pct = pc_(sum(1 for j in rj if j.get("etype") == "Contract"), n_)
-        task_ = section(f"A take-home task for {art(low)} {low}", '<ul class="ticks">'
+        task_ = section(f"A take-home task for {art(psn)} {psn}", '<ul class="ticks">'
                         "<li>Use a real, anonymised task from your own work: the kind of problem the person will meet in the first month.</li>"
                         "<li>Keep it to two or three hours, say so, and pay for anything longer.</li>"
                         "<li>Ask for three things: the result, how they got there, and one recommendation or next step.</li>"
@@ -5023,17 +5081,17 @@ def main():
                            "<li>Score every answer on the same points: correctness, clarity and judgement.</li>")
                         + "<li>Talk it through in the next interview: how they explain their choices tells as much as the result.</li>"
                         "<li>Not sure yet? A short paid trial project or a contract-to-hire term lets both sides check the fit.</li></ul>")
-        hh_more = [(f"Should I hire a freelance {low} or a full-time one?", f"{con_pct}% of today’s {low} postings are contract roles. Freelance suits a defined project with an end date; full-time suits ongoing work and anything that needs "
+        hh_more = [(f"Should I hire a freelance {psn} or a full-time one?", f"{con_pct}% of today’s {low} postings are contract roles. Freelance suits a defined project with an end date; full-time suits ongoing work and anything that needs "
                     "knowledge of your business. A paid trial project or a contract-to-hire term lets both sides check the fit first."),
-                   (f"How much does a freelance {low} cost per hour?", (f"The {len(hr_r):,} postings for this work that state an hourly rate advertise a median of ${hr_r[len(hr_r) // 2]:,.0f} an hour." if len(hr_r) >= 5 else
+                   (f"How much does a freelance {psn} cost per hour?", (f"The {len(hr_r):,} postings for this work that state an hourly rate advertise a median of ${hr_r[len(hr_r) // 2]:,.0f} an hour." if len(hr_r) >= 5 else
                     (f"Few postings for this work state an hourly rate. The median yearly pay divided by 2,080 hours is about ${median(mids_) / 2080:,.0f} an hour; contractors usually charge more, since they pay their own taxes, holidays and insurance." if len(mids_) >= 20 else
                      "Few postings for this work state pay by the hour. Ask two or three freelancers for a quote on the same task brief.")))]
         if top_:
-            hh_more.append((f"What skills should I test in {art(low)} {low}?", "The ones today’s postings name most: " + ", ".join(f"{t} ({100 * k / n_:.0f}%)" for t, k in top_[:5])
+            hh_more.append((f"What skills should I test in {art(psn)} {psn}?", "The ones today’s postings name most: " + ", ".join(f"{t} ({100 * k / n_:.0f}%)" for t, k in top_[:5])
                             + ". Test them on a small task from your own work rather than with trivia questions."))
-        hh_qa = [(f"How much does it cost to hire {art(low)} {low}?", (f"The pay is the largest part: today’s {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}. " if len(mids_) >= 20 else "The pay is the largest part. ")
+        hh_qa = [(f"How much does it cost to hire {art(psn)} {psn}?", (f"The pay is the largest part: today’s {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}. " if len(mids_) >= 20 else "The pay is the largest part. ")
                   + "Add advertising, agency fees if you use one and the hours your team spends interviewing; the cost per hire calculator on this site adds them up. Posting on this site is free."),
-                 (f"How long does it take to hire {art(low)} {low}?", (f"Half of today’s open {low} postings have been up more than {age_med} days" + (f", and postings for this work that closed since we started tracking stayed up a median of {cl_med} days" if cl_med is not None else "")
+                 (f"How long does it take to hire {art(psn)} {psn}?", (f"Half of today’s open {low} postings have been up more than {age_med} days" + (f", and postings for this work that closed since we started tracking stayed up a median of {cl_med} days" if cl_med is not None else "")
                   + ". A posting can close before the person starts, so plan for a few weeks more." if age_med is not None else "It depends on the level and the market; plan for several weeks from posting to the first day.")),
                  (f"Where can I find {many}?", f"{len(cos_):,} companies are hiring {many} on this site today. Post your job here free, on your own careers page and in communities where {many} meet; "
                   + ("the table on this page lists the countries named most in today’s postings." if len(ctry_) >= 3 else "name the countries you can hire in."))]      # no country names in plain text: a country is shown with its flag
@@ -5042,12 +5100,12 @@ def main():
         facts_ = nums([(f"{len(cos_):,}", "companies hiring now"), (f"{n_:,}", f"open {e(low)} postings")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else [])
                       + [(f"{rem_pct}%", "remote")] + ([(f"{age_med} days", "half of the postings have been up longer")] if age_med is not None else []))
         hh_dir[fs].append((slug_r, rname, len(cos_)))
-        page(f"how-to-hire/{slug_r}/", f"How to Hire {art(low)} {tcase(rname)} ({TODAY[:4]}): Pay, Competition and Six Steps | {SITE}",
-             f"How to hire {art(low)} {low}: {len(cos_):,} companies are hiring this work today. What they pay and offer, where, how long postings stay up, and six steps with free templates and tools.",
-             crumbs(("For employers", "post-a-job/"), ("How to hire…", "how-to-hire/"), (rname, "")) + f'<h1>How to hire {art(low)} {e(low)}: <span class="hl">{len(cos_):,} companies are hiring now</span></h1>'
+        page(f"how-to-hire/{slug_r}/", f"How to Hire {art(psn)} {tcase(psn)} ({TODAY[:4]}): Pay, Competition and Six Steps | {SITE}",
+             f"How to hire {art(psn)} {psn}: {len(cos_):,} companies are hiring this work today. What they pay and offer, where, how long postings stay up, and six steps with free templates and tools.",
+             crumbs(("For employers", "post-a-job/"), ("How to hire…", "how-to-hire/"), (rname, "")) + f'<h1>How to hire {art(psn)} {e(psn)}: <span class="hl">{len(cos_):,} companies are hiring now</span></h1>'
              f'<p class="lead">What you compete with, counted from today’s {n_:,} open {e(low)} postings: who is hiring, where, what they pay and how long postings stay up. Then six steps, each with a free template or tool.</p>'
              + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template")])
-             + section(f"Six steps to hire {art(low)} {low}", steps)      # the steps are what "how to hire" asks for: first, then the figures behind them
+             + section(f"Six steps to hire {art(psn)} {psn}", steps)      # the steps are what "how to hire" asks for: first, then the figures behind them
              + section("What you compete with", '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{v}</td></tr>" for k, v in rows_) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>')
              + which_
