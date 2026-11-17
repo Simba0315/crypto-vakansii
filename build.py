@@ -842,6 +842,11 @@ def section(title, inner, link=None, sid="", sub="", label=""):
     return f'<section class="sec"{sid_}><div class="sec-head{" has-sub" if sub else ""}"><h2>{e(title)}</h2>{sb}{more}</div>{inner}</section>'
 
 
+def fx(dl):
+    """The figures row of a page of the 391-page families (a facts list) drawn as the framed row of numbers the hubs use, with the line that says when they were checked."""
+    return dl.replace('<dl class="facts">', '<dl class="nums">') + f'<p class="nums-src"><a href="{P}/methodology/">Checked {fdate(TODAY, False)} against employer career pages</a></p>'
+
+
 def pics_first(pics, block):
     """Pictures above a block on wide screens and under it on a phone (the same two classes listing() uses for the charts and the list)."""
     return f'<div class="lflow"><div class="lpics">{pics}</div><div class="llist">{block}</div></div>' if pics else block
@@ -4512,7 +4517,7 @@ def main():
              crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + facts_ + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
-             + section(f"Five steps to your first {low} job", steps) + extra_hb
+             + section(f"Five steps to your first {low} job", steps, label="The way in") + extra_hb
              + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_, cls="kw")
@@ -4892,7 +4897,7 @@ def main():
         off = OFFICIAL_VISA.get(c)
         lists_ = [(f"perks/visa-sponsorship/{slug}/", f"{len(visa_):,} jobs with visa sponsorship"), (f"perks/relocation/{slug}/", f"{len(relo_):,} jobs with relocation support")]
         lists_ = [(u, t) for u, t in lists_ if (OUT / u / "index.html").exists()]
-        facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs in the country</dt><dd>{len(cj):,}</dd></div><div><dt>Mention visa sponsorship</dt><dd>{len(visa_):,}</dd></div>"
+        facts_ = fx('<dl class="facts">' + f"<div><dt>Open jobs in the country</dt><dd>{len(cj):,}</dd></div><div><dt>Mention visa sponsorship</dt><dd>{len(visa_):,}</dd></div>"
                   f"<div><dt>Mention relocation support</dt><dd>{len(relo_):,}</dd></div>"
                   + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 10 else "") + "</dl>")
         steps = ('<ol class="steps">'
