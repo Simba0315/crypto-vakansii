@@ -708,6 +708,14 @@
       var hit = !q || tr.getAttribute('data-n').indexOf(q) >= 0;
       tr.hidden = !hit; if (hit) shown++;
     });
+    document.querySelectorAll('[data-dirg]').forEach(function (g) {      // groups of named items (skills, tools, resume words): a group left empty steps aside
+      var any = 0;
+      g.querySelectorAll('[data-n]').forEach(function (el) {
+        var hit = !q || el.getAttribute('data-n').indexOf(q) >= 0;
+        el.hidden = !hit; if (hit) any++;
+      });
+      g.hidden = !!q && !any; if (any) shown++;
+    });
     var none = $('dirnone'); if (none) none.hidden = shown > 0;
   });
 

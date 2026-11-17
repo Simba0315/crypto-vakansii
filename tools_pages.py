@@ -2420,25 +2420,32 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
 
     def wide(path, name, text, slug):
         prev = PREV.get(slug, "")
-        return (f'<a class="twide" href="{P}/{path}"><span class="tprev" aria-hidden="true">{prev}</span>'
+        return (f'<a class="twide" data-n="{e((name + " " + text).lower())}" href="{P}/{path}"><span class="tprev" aria-hidden="true">{prev}</span>'
                 f'<span class="tbody"><b>{e(name)}</b><span>{e(text)}</span><i><u>Open the tool</u></i></span></a>')
 
     def trow(path, name, text, slug):
         return (f'<li><a href="{P}/{path}"><b><u>{e(name)}</u></b><span class="d">{e(text)}</span>'
                 f'<span class="r"><small>Example</small>{e(RES.get(slug, ""))}</span></a></li>')
 
+    # sections review, batch 4 (17 Nov 2026): the hub is 47 tools long, so it gets the hub's parts: a row of its own figures, a box
+    # that keeps the tools with the typed words in their name or text, a row of pills to jump to a group, a label above each group
+    found = lambda s_: TILES[f"tools/{s_}/"].replace('<a class="tcard" ', f'<a class="tcard" data-n="{e((by_slug[s_]["name"] + " " + by_slug[s_]["card"]).lower())}" ', 1)
+    part = lambda title, inner, sid, k: section(f"[[{title}]]", inner, sid=sid, label=f"{k} tool{'s' if k != 1 else ''}").replace("<section ", "<section data-dirg ", 1)
+
     def group(key):
-        return '<div class="tgrid">' + "".join(TILES[f"tools/{t['slug']}/"] for t in TOOLS if t["group"] == key) + "</div>"
+        return '<div class="tgrid">' + "".join(found(t["slug"]) for t in TOOLS if t["group"] == key) + "</div>"
     # job-seeker tools stand in the order of a search: the resume, applying, the offer, leaving. A tool that is not named here still appears, in a last group.
-    HUB = [("Resume and LinkedIn profile", ["resume-review", "resume-match", "resume-skills", "job-description-keywords", "resume-summary", "resume-bullet-builder", "linkedin-headline", "linkedin-summary", "linkedin-review"]),
-           ("Applying and interviews", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
-           ("Networking and introductions", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
-           ("Pay and offers", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "contractor-rate"]),
-           ("Remote work and leaving a job", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
-    named = {s_ for _, ss in HUB for s_ in ss}
+    HUB = [("Resume and LinkedIn profile", "resume", ["resume-review", "resume-match", "resume-skills", "job-description-keywords", "resume-summary", "resume-bullet-builder", "linkedin-headline", "linkedin-summary", "linkedin-review"]),
+           ("Applying and interviews", "applying", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
+           ("Networking and introductions", "networking", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
+           ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "contractor-rate"]),
+           ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
+    named = {s_ for _, _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]
-    grid = lambda slugs: '<div class="tgrid">' + "".join(TILES[f"tools/{s_}/"] for s_ in slugs if s_ in by_slug) + "</div>"
-    seekers = "".join(section(h_, grid(ss)) for h_, ss in HUB) + (section("More for job seekers", grid(rest)) if rest else "")
+    grid = lambda slugs: '<div class="tgrid">' + "".join(found(s_) for s_ in slugs if s_ in by_slug) + "</div>"
+    have = lambda slugs: sum(1 for s_ in slugs if s_ in by_slug)
+    seekers = "".join(part(h_, grid(ss), sid_, have(ss)) for h_, sid_, ss in HUB if have(ss)) + (part("More for job seekers", grid(rest), "more", len(rest)) if rest else "")
+    jump = [("Start here", "start")] + [(h_, sid_) for h_, sid_, ss in HUB if have(ss)] + ([("More for job seekers", "more")] if rest else []) + [("For employers and recruiters", "employers")]
     hub_faq = [("Are these tools free?", "Yes. Every tool on this page is free, needs no account and can be used as often as you like."),
                ("Do the tools store or upload what I type?",
                 "No. All calculations and text checks run in your browser. What you type is saved only in this browser’s storage so a tool remembers it next time, and every tool has a Clear button that erases it."),
@@ -2455,7 +2462,16 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          crumbs(("Tools", "")) + "<h1>Free tools for a job search and for hiring</h1>"
          f'<p class="lead">{len(TOOLS) + len(EXTRA)} tools, from a resume builder to pay calculators, for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
          f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
-         + section("Start here: resume, matching, tracking", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>")
+         + '<dl class="nums">' + "".join(f"<div><dt>{b_}</dt><dd>{a_}</dd></div>" for a_, b_ in (
+             ("Free", "every tool, as often as you like"), (f"{n_seek + len(EXTRA)}", "tools for a job search"), (f"{n_emp}", "tools for employers and recruiters"),
+             ("No account", "and nothing you type is uploaded"))) + "</dl>"
+         + '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type what you need, for example salary, cover letter or LinkedIn" aria-label="Find a tool"></p>'
+         f'<p class="lead" id="dirnone" hidden>No tool with these words. The <a href="{P}/help/">help page</a> answers questions about this site.</p>'
+         + '<div class="pillrow" role="navigation" aria-label="Groups of tools">' + "".join(f'<a href="#{sid_}">{e(h_)}</a>' for h_, sid_ in jump) + "</div>"
+         + section("Start here: [[resume, matching, tracking]]", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>", sid="start",
+                   label="The three most used").replace("<section ", "<section data-dirg ", 1)
+         + seekers
+         + part("For employers and recruiters", group("employers"), "employers", n_emp)
          + section("Templates and examples to copy", '<div class="feats">'
                    f'<a class="feat" href="{P}/resume/examples/"><h3>Resume examples</h3><p>A written example for each kind of work, with the skills today’s postings name.</p></a>'
                    f'<a class="feat" href="{P}/cover-letter-examples/"><h3>Cover letter examples</h3><p>A letter for each kind of work that leads with results, ready to copy.</p></a>'
@@ -2467,14 +2483,12 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                    f'<a class="feat" href="{P}/how-to-hire/"><h3>How to hire…</h3><p>For employers: who else is hiring each role, what they pay, and six steps.</p></a>'
                    f'<a class="feat" href="{P}/map/"><h3>Jobs map</h3><p>Every city with open jobs on one map. Search a skill and see where it is hiring.</p></a>'
                    f'<a class="feat" href="{P}/vs/"><h3>Compared with other job sites</h3><p>Fair, sourced comparisons with Indeed, LinkedIn and others.</p></a></div>')
-         + seekers
-         + section("For employers and recruiters", group("employers"))
          + section("How these tools work", '<div class="feats">'
                    '<div class="feat"><h3>Nothing leaves your browser</h3><p>Every calculation and text check runs on your device. Nothing is uploaded, and “Clear” erases what a tool remembers.</p></div>'
                    f'<div class="feat"><h3>The salary figures have a source</h3><p>They come from {n_paid:,} open roles that publish a yearly US-dollar range. No figure is shown for fewer than {MIN_SAMPLE} postings.</p></div>'
                    '<div class="feat"><h3>The method is on the page</h3><p>Arithmetic and fill-in templates, not AI. Under each tool you can read how its result is calculated.</p></div></div>')
          + section("Questions about the tools", faq_html)
          + section("More on this site", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")])),
-         head=assets + list_ld + faq_ld + crumbs_ld([("Tools", "")]))
+         head=assets + list_ld + faq_ld + crumbs_ld([("Tools", "")]), cls="hub tlhub")
 
     return [(f"tools/{t['slug']}/", t["name"], t["card"]) for t in TOOLS]

@@ -2916,3 +2916,116 @@ main.ins .lact{margin:16px 0 22px}
   .tablewrap .rkt tr:hover td{background:none}
   .rkt td .bar{display:none}
 }
+
+/* Sections review, batch 4 (lists, tools, writing helpers), 17 Nov 2026 */
+/* The lists of jobs that were still a paragraph and a hundred rows (skills, crypto, remote, perks, pay, the single lists), the tools
+   hub, and the writing helpers (resume words, "jobs for ...", resignation letters, relocation guides, skill tests). Looked at by eye
+   at 1360 px, at 375 px and in the dark theme, then fixed here, in build.py, tools_pages.py and jobs_for_pages.py. The parts are
+   those of batches 1 to 3: the row of a page's own numbers (.nums), a label above a two-weight headline, the pill box of a hub,
+   the row of pills (.pillrow), light cards for pictures (.pic), rows that open (.exl), a table as cards on a phone (.rkt), the
+   document page of batch 2 (the class "kw" on <main>). Classes on <main> added here: "skl" the skills hub, "tlhub" the tools hub,
+   "rwhub" the index of resume words, "rlhub" the index of resignation letters. */
+
+/* list pages: the action row of a list no search reproduces holds links only; a row of pills under the action */
+main.lp .lact:not(:has(.btn)){margin:14px 0 20px}
+main.lp .lact+.pillrow{margin-top:0}
+main.lp .pillrow+.note{margin:14px 0 0}
+.nums-src+.lact{margin-top:16px}
+/* a phone: a table of three or four columns keeps to the screen (its column heads wrap, the cells stand closer) */
+@media(max-width:560px){main.lp .tablewrap th{white-space:normal}main.lp .tablewrap th,main.lp .tablewrap td,main.lp .tablewrap th:last-child,main.lp .tablewrap td:last-child{padding:10px 10px}
+  main.lp .tablewrap th:first-child,main.lp .tablewrap td:first-child{padding-left:14px}}
+/* the pictures of a list beside a table (internships: the table of seasons and one chart): the table takes two thirds of the row */
+.lpics>.sec{flex:2 1 460px;min-width:0;margin:0}
+.lpics>.sec .note{margin-bottom:0}
+.lpics:has(>.sec) .hubgrid>div:only-child .hbars{display:grid;columns:auto}
+.lpics:has(>.sec) .hubgrid>div:only-child .hbars a{margin-bottom:0}
+@media(max-width:700px){.lpics>.sec{flex-basis:100%}}
+/* a directory inside a list page (the crypto hub): a group label over tiles, then rows that open, their links as chips with a count */
+main.lp .hsec{margin-top:72px}
+main.lp .hsec .tgrp{margin-top:0}
+main.lp .exls{margin-top:22px}
+details.exl .rel.chips{gap:8px;padding:6px 20px 20px}
+details.exl .rel.chips a{font-size:14px}
+@media(max-width:560px){main.lp .hsec{margin-top:52px}details.exl>summary{padding:14px 16px}details.exl .rel.chips{padding:4px 14px 16px}}
+
+/* hubs with a box to type in: while something is typed the row of pills steps aside and the groups that still hold a match close up */
+main.hub:has(#dirfilter:not(:placeholder-shown)) .pillrow{display:none}
+main.hub:has(#dirfilter:not(:placeholder-shown)) [data-dirg]{margin-top:36px}
+main.hub:has(#dirfilter:not(:placeholder-shown)) [data-dirg] .sec-label,main.hub:has(#dirfilter:not(:placeholder-shown)) [data-dirg] .sec-sub{display:none}      /* "18 skills" over the two that are left would be wrong */
+main.hub .pillrow+.sec{margin-top:60px}
+/* the skills hub: eighteen groups, some of one skill, so less air between them than between the few sections of other hubs */
+main.skl .sec{margin-top:60px}
+main.skl .hsec>.sec-head{margin-bottom:12px}
+main.skl .sec-head h2.tw{font-size:clamp(24px,2.4vw,30px)}
+@media(max-width:700px){main.skl .sec{margin-top:44px}}
+
+/* jobs by hourly pay: seven bars read down two columns on a wide screen (the card was half the page with nothing beside it) */
+.pic.hrp{margin:22px 0 0}
+@media(min-width:861px){.pic.hrp .hbars{display:block;columns:2;column-gap:56px}.pic.hrp .hbars a{break-inside:avoid;margin-bottom:8px}}
+
+/* the tools hub: on a phone 47 cards with a picture each were 26 screens. In the groups the picture steps aside and a card is the
+   tool's name, one line of text and the link; the three large tools at the top keep theirs. */
+main.tlhub .sec{margin-top:72px}
+@media(max-width:560px){
+  main.tlhub .sec{margin-top:48px}
+  main.tlhub .tgrid{gap:10px}
+  main.tlhub .tgrid .tprev{display:none}
+  main.tlhub .tgrid .tbody{padding:14px 16px 14px}
+  main.tlhub .tgrid .tbody>b{font-size:17px}
+  main.tlhub .tgrid .tbody>i{padding-top:4px}
+}
+/* the dark theme: the highlighted words in a tool's sample screen are paper, not green type on black */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .tprev code b{color:var(--text);font-weight:650}}
+:root[data-theme=dark] .tprev code b{color:var(--text);font-weight:650}
+
+/* resume words: "Instead of" is set lighter than the word the eye looks for; on a phone two tiles to a row, without the count */
+.tile .n small{font-size:inherit;font-weight:400;color:var(--muted)}
+main.rwhub .sec{margin-top:72px}
+@media(max-width:560px){
+  main.rwhub .sec{margin-top:48px}
+  .tiles.rwt{grid-template-columns:1fr 1fr;gap:8px}
+  .tiles.rwt .tile{padding:9px 12px;min-height:56px}
+  .tiles.rwt .tile .c{display:none}
+  .tiles.rwt .tile .n small{display:block;font-size:12.5px;line-height:1.3}
+}
+
+/* resignation letters: the standard letter with the situations beside it; a row is the letter's whole name and what it is for
+   (they were tiles under the letter that cut the names short, and the right half of the page was empty) */
+.rl-h{margin:4px 0 14px;font-size:21px;line-height:1.2;letter-spacing:-.02em}
+main.rlhub .rexside{scroll-margin-top:84px}
+.rl-pick{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.rl-pick li{border-bottom:1px solid var(--line)}
+.rl-pick a{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 14px;min-height:44px;padding:10px 8px;margin:0 -8px;border-radius:8px}
+.rl-pick a:hover{background:var(--bg2)}
+.rl-pick b{font-weight:600;font-size:15.5px;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.rl-pick span{font-size:13.5px;color:var(--muted)}
+@media(max-width:560px){.rl-pick a{flex-direction:column;align-items:flex-start;gap:1px}}      /* a phone: what a letter is for always stands under its name */
+
+/* "jobs for ...": the figures of a page as the row of numbers under the sentence that states the count; what to read next as chips */
+.guide .nums{margin:14px 0 20px}
+.guide .rel.chips{margin:26px 0 0}
+/* relocation guides: the countries right under the figures, the two wider lists as chips */
+main.hub .nums-src+.tiles{margin-top:22px}
+main.hub .tiles+.rel.chips{margin-top:18px}
+.sec>.pic:has(>.hbars:only-child){padding-top:16px;padding-bottom:14px}
+
+/* jobs near me: "Change place" is the one control of the first screen: ink like the links beside it and tall enough for a thumb
+   (it was faint grey, 25 px high) */
+main>.near .near-pick{padding:7px 0;color:var(--text);text-decoration-color:var(--ac)}
+
+/* a skill test: the question is a block inside its card, the number beside it, the level and the topic under it. The three stood
+   in one row inside the card's border: on a phone the question was a column three words wide, and a long topic pushed the card
+   past the edge of the screen. (A legend that floats is laid out like any block; the answers clear it.) */
+.qz-q{min-width:0}
+.qz-q legend{float:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;align-items:start;width:100%;margin:0 0 10px;padding:0;line-height:1.35}
+.qz-q legend span{grid-row:1/span 2}
+.qz-q legend small.note{grid-column:2;margin:0;font-size:13px}
+.qz-o{clear:both}
+@media(max-width:560px){
+  .qz-q{padding:14px 14px 10px}
+  .qz-q label{display:flex;margin:6px 0;border-radius:14px;min-height:44px}
+}
+/* the dark theme: the number of a question is paper on its chip, and a wrong answer is a dark red card (it was a light one under light type) */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .qz-q legend span{color:var(--text)}:root:not([data-theme=light]) .qz-q label.st-bad{background:#3a1d18;border-color:#d0705f}}
+:root[data-theme=dark] .qz-q legend span{color:var(--text)}
+:root[data-theme=dark] .qz-q label.st-bad{background:#3a1d18;border-color:#d0705f}
