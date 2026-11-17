@@ -5450,6 +5450,27 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         guide(a_["slug"], a_["title"], a_["desc"], a_["cat"], a_["lead"], advice_pages.render(a_, advice_ctx, e, P),
               f'<span class="adv-prev">{e(a_["short"][:120].rsplit(" ", 1)[0])}…</span>', a_["more"], extra_head=advice_pages.faq_ld(a_, json))
 
+    lap('"Jobs for ..." pages: the kinds of work that fit an audience ')
+    # "Jobs for ..." pages (jobs_for_pages.py): the searches "jobs for introverts", "jobs without a degree", "what can you do with a
+    # psychology degree". Each page names kinds of work and shows, for each one that has a role page today, the open jobs, the median
+    # advertised pay, the remote share and the openings for beginners. A page needs five such kinds of work, and a related link is
+    # shown only when its page exists. The hub /jobs-for/ lists both groups; the guides index below is the one page that links to it.
+    import jobs_for_pages
+    jf_ctx = {"night": {j["id"] for p_, _, _, js_ in HOURS if p_ == "night-shift/" for j in js_}}
+    jf_figs = {a_["slug"]: f_ for a_ in jobs_for_pages.ENTRIES if (f_ := jobs_for_pages.figures(a_, by_role, money, median, rlow, jf_ctx))}
+    jf_have = set(URLS) | {f"jobs-for/{s_}/" for s_ in jf_figs}
+    for a_ in jobs_for_pages.ENTRIES:
+        if a_["slug"] not in jf_figs: continue
+        f_ = jf_figs[a_["slug"]]
+        page(f"jobs-for/{a_['slug']}/", f"{a_['title']} | {SITE}", jobs_for_pages.desc(a_, f_),
+             crumbs(("Jobs for…", "jobs-for/"), (a_["name"], "")) + jobs_for_pages.render(a_, f_, e, P, fdate(TODAY), jf_have, n),
+             head=jobs_for_pages.head_ld(a_, f_, json, SITE, FULL, TODAY))
+    if jf_figs:
+        page("jobs-for/", f"{jobs_for_pages.HUB_TITLE} | {SITE}", jobs_for_pages.HUB_DESC.format(k=len(jf_figs), n=f"{n:,}"),
+             crumbs(("Jobs for…", "")) + jobs_for_pages.hub(jf_figs, tile, section, e, P, fdate(TODAY), n))
+    print(f"jobs-for: {len(jf_figs)} of {len(jobs_for_pages.ENTRIES)} pages built, "
+          f"{sum(1 for a_ in jobs_for_pages.ENTRIES if a_['slug'] in jf_figs for u_, _ in a_['more'] if u_ not in jf_have)} related links left out (no such page today)")
+
     gcats = []
     for g_ in GUIDES:
         if g_[3] not in gcats: gcats.append(g_[3])
@@ -5459,7 +5480,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Guides", "")) + '<h1>Guides, with <span class="hl">today’s numbers</span> in them</h1>'
          f'<p class="lead">Advice about job search goes out of date, and the figures in it faster. Every guide here is recounted from the {n:,} open jobs each time they are read again, so a number you see is today’s.</p>'
          + "".join(section(c_, '<div class="tgrid">' + "".join(gcard(g_) for g_ in GUIDES if g_[3] == c_) + "</div>") for c_ in gcats)
-         + f'<p class="note">More to read: the <a href="{P}/glossary/">glossary</a>, the <a href="{P}/safety/">job offer safety checklist</a>, the <a href="{P}/insights/">charts and rankings</a>.</p>')
+         + f'<p class="note">More to read: the <a href="{P}/glossary/">glossary</a>, the <a href="{P}/safety/">job offer safety checklist</a>, the <a href="{P}/insights/">charts and rankings</a>' + (f', <a href="{P}/jobs-for/">jobs by situation and by degree</a>' if jf_figs else "") + ".</p>")
 
     lap('Help: one page that answers what people would otherwise writ')
     # Help: one page that answers what people would otherwise write to ask (the owner looked at the knowledge base of hh.ru and wants

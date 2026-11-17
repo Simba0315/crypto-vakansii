@@ -2215,3 +2215,23 @@ select:not([multiple]):hover{border-color:var(--text)}
 .acc-ups .up-bad{border-left-color:#c2410c}
 .acc-adm{display:block;padding:9px 12px;border-radius:8px;background:var(--text);color:var(--bg);font-size:14.5px;font-weight:650;text-align:center}
 .adv-figs{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}.adv-figs li>:first-child{min-width:0}
+/* Jobs for ... (jobs_for_pages.py): the kinds of work for one audience with the figures of the day. The reason sits under each name; on a phone every row is a card, so the numbers stay on screen */
+.jft thead th{white-space:normal;vertical-align:bottom;line-height:1.3}
+.jft th:first-child{width:40%}
+.jft tbody th{white-space:normal;background:none;font-size:15.5px;font-weight:400;color:var(--text);min-width:250px}
+.jft tbody th a{font-weight:650;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.jft tbody th a:hover{text-decoration-color:var(--text)}
+.jft tbody th span{display:block;margin-top:3px;font-size:13.5px;line-height:1.45;color:var(--muted)}
+.jft td{white-space:nowrap}
+.jft .bar{width:56px}
+.tablewrap .jft tr:hover th{background:var(--bg2)}
+@media(max-width:680px){
+  .jfwrap{overflow:visible;background:none;border:0;box-shadow:none}
+  .jft thead,.jft .bar{display:none}
+  .jft,.jft tbody,.jft tr,.jft tbody th,.jft td{display:block;width:auto}
+  .jft tr{border:1px solid var(--line);border-radius:14px;background:var(--card);margin:0 0 10px;padding:4px 0 8px}
+  .jfwrap .jft tbody th{border:0;padding:10px 14px 6px;min-width:0;width:auto}
+  .jfwrap .jft td{border:0;padding:3px 14px;display:flex;justify-content:space-between;gap:12px}
+  .jft td::before{content:attr(data-l);color:var(--muted);font-size:13.5px;white-space:normal}
+  .tablewrap .jft tr:hover td,.tablewrap .jft tr:hover th{background:none}
+}
