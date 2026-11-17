@@ -871,7 +871,8 @@ def go(href, label, kind="primary"):
 
 def kpanel(sec, kind="soft"):
     """A section() set in a frame with a large corner radius: "soft" (a tinted panel), "card" (white, with a border), "ink" (dark;
-    its buttons are paper)."""
+    its buttons are paper). The dark kind is not used: the owner saw it on the home page on 17 Nov 2026 and wrote "the light one
+    seems better to me", so the panels for employers on the home page, on /post-a-job/ and on /plus/ are "soft"."""
     return sec.replace('<section class="sec hsec"', f'<section class="sec hsec kpanel {kind}"', 1)
 
 
@@ -2033,7 +2034,7 @@ def main():
                      f'<a class="btn" href="{P}/plus/">See Plus</a></div>')
     lap('The owner, 14 Nov: "the green I do not like, and it must say')
     # The owner, 14 Nov: "the green I do not like, and it must say that it is free". A light card; "free" first and big.
-    band = ('<section class="sec kpanel ink kcta"><div class="kcta-t"><p class="sec-label">For employers</p><h2 class="tw">Post a job for <b class="free">free</b></h2>'
+    band = ('<section class="sec kpanel soft kcta"><div class="kcta-t"><p class="sec-label">For employers</p><h2 class="tw">Post a job for <b class="free">free</b></h2>'
             f'<p>A standard listing costs nothing and sits next to {n:,} open jobs from {m:,} companies. Want it first in its list? A featured listing, from {price_of("Featured job")}, paid in crypto.</p>'
             f'<p class="kact">{go("post-a-job/", "Post a job — free")}<a href="{P}/pricing/#employers">See every price</a></p></div>'
             '<ul class="kgets"><li><b>30 days</b> in the list and in search</li><li><b>Its own page</b>, readable by Google’s job box</li>'
@@ -7257,7 +7258,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Free and Plus, [[side by side]]", tiers + kmore("Every line of Free and Plus", seek_pt)
                    + f'<p class="note">Hiring? Posting a job is free and a boost is {e(price_of("Standard boost"))} for 30 days: employers have their own table on the <a href="{P}/pricing/#employers">pricing page</a>.</p>', label="Free or Plus")
          + section("Plus against Teal+, Jobright Turbo [[and others]]", seek_vs + seek_sum + kmore("Every plan and pass against what others charge, with the sources", seek_cmp), label="Compare")
-         + kpanel(section("What stays free, [[for everyone]]", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div><p class="kact">{go("for-you/", "Start with five questions")}</p>', sid="free", label="Free"), "ink")
+         + kpanel(section("What stays free, [[for everyone]]", f'<div class="dir free"><div class="dirb"><ul>{free_now}</ul></div></div><p class="kact">{go("for-you/", "Start with five questions")}</p>', sid="free", label="Free"), "soft")
          + section("Questions [[about Plus]]", faq_html(plus_qa), label="Questions"), head=faq_ld(plus_qa), cls="kp sell")
 
     lap('---- /post-a-job/')
@@ -7267,11 +7268,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              "<li><b>A standard listing is free.</b> It goes live after the check, at the next hourly update. To keep it higher, add a boost and pay at the crypto checkout (USDT, BTC, ETH and other coins) or with credits.</li>"
              "<li><b>A boost switches on by itself</b> once the network confirms the payment, at once when paid with credits. When its 30 days end, the job goes back to a standard listing: nothing renews and nothing more is charged.</li></ol>")
     if app_url:
-        pay = ('<section class="sec hsec kpanel ink kcta" id="how"><div class="kcta-t"><p class="sec-label">Four steps</p><h2 class="tw">How to <b>post a job</b></h2>'
+        pay = ('<section class="sec hsec kpanel soft kcta" id="how"><div class="kcta-t"><p class="sec-label">Four steps</p><h2 class="tw">How to <b>post a job</b></h2>'
                f'<p>Posting a standard listing is open in the employer account. {PAY_WAIT}</p>'
                f'<p class="kact">{go("account/", "Post a job now")}</p></div>{steps}</section>')
     else:
-        pay = ('<section class="sec hsec kpanel ink kcta" id="how"><div class="kcta-t"><p class="sec-label">Four steps</p><h2 class="tw">How posting a job <b>will work</b></h2>'
+        pay = ('<section class="sec hsec kpanel soft kcta" id="how"><div class="kcta-t"><p class="sec-label">Four steps</p><h2 class="tw">How posting a job <b>will work</b></h2>'
                '<p>Self-serve posting is being finished and is not open yet. Nothing can be bought today.'
                + (f" Questions in the meantime: {mail_a('jobs')}." if MAIL.get("jobs") or contact else "") + f"</p></div>{steps}</section>")
     pains = [(f"{WEEKNEW:,}", "roles posted here in the last 7 days", "Lists are sorted by date", "A job without a boost leaves the first page within days."),

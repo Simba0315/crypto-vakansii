@@ -281,6 +281,8 @@ that is not the employer's own hiring system must be labelled as such and kept o
      arrow per block and rows that open ARE the site's language now: `nums()`, `section(..., label=)`, `kpanel()`, `khero()`,
      `go()`, `krows()`, `kmore()` in `build.py`. Use them as the reviewed pages do; do not invent a second set. Questions with
      answers stay readable text on content pages (`.qa`); the home page lists its questions as rows that open.
+   - Panels are light. A dark panel ("ink") was tried for "Post a job for free" on the home page on 17 Nov 2026; the owner:
+     "делай как считаешь нужным, но мне кажется светлая лучше". Dark stays for the footer only.
    Required, from the same day ("the tools page looked like it had no design, I could not tell what was clickable",
    "every page must be worked through", "an ordinary person will not understand many skills"):
    - anything clickable must look clickable: a green underline on the name, a hover state on the whole row or tile;
