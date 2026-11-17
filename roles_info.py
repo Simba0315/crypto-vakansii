@@ -9,7 +9,9 @@ A role is a set of job titles: the pattern is matched against the title of a pos
 is both a backend engineer and a staff engineer); categories are only a way to browse, so a role may sit in two of them.
 Every role has one plain line (what a person in this job does) and a plural for sentences ("jobs for accountants").
 A role gets a page when at least 20 open jobs match it; add a role here and the build does the rest.
+A role named after a field ("Customer support") also needs the word for the person who does it: PERSON, near the end of this file.
 """
+import re
 
 # (name, slug, pattern matched against the job title, plural for sentences, what a person in this job does[, "nt"])
 # "nt": a field of work whose word also appears in engineering and sales titles ("Software Engineer, Tax Platform",
@@ -140,7 +142,7 @@ MORE_ROLES = [
      "business development and partnerships managers", "finds other companies to work with and negotiates the deals: resellers, integrations, joint offers"),
     ("Technical account manager", "technical-account-manager", r"technical account manager|\btam\b|technical customer success|customer (solutions|technical) (manager|architect)",
      "technical account managers", "is a customer’s named technical contact after the sale: knows their setup, plans upgrades, chases fixes"),
-    ("Retail and store jobs", "retail", r"retail|store (manager|associate|lead|leader|supervisor)|key holder|sales floor|brand ambassador|cashier|boutique|showroom",
+    ("Retail and store", "retail", r"retail|store (manager|associate|lead|leader|supervisor)|key holder|sales floor|brand ambassador|cashier|boutique|showroom",
      "retail and store staff", "works in a shop or showroom: serves customers, runs the floor, opens and closes the store"),
     # support
     ("Customer support", "customer-support", r"customer (support|service|care|experience|advocate|happiness|operations)|support (specialist|agent|associate|representative|analyst|advisor|lead|manager|operations|team)|help ?cent(er|re)|call cent(er|re)|contact cent(er|re)|client (support|service)|service (desk|advisor)",
@@ -235,7 +237,7 @@ MORE_ROLES = [
     ("Food and hospitality", "hospitality", r"\bchef\b|\bcook\b|kitchen|barista|restaurant|hospitality|concierge|culinary|food (service|safety|program)|catering|dishwasher|bartender|hotel|travel (manager|coordinator|specialist)",
      "kitchen and hospitality staff", "cooks, serves and looks after guests, in company kitchens, restaurants and travel teams", "nt"),
     # leadership and early career
-    ("Executive and VP roles", "executive", r"\bchief\b|\bc[eftpmio]o\b|vice president|\bvp\b|\bsvp\b|\bevp\b|managing director|\bpresident\b",
+    ("Executive and VP", "executive", r"\bchief\b|\bc[eftpmio]o\b|vice president|\bvp\b|\bsvp\b|\bevp\b|managing director|\bpresident\b",
      "executives and vice presidents", "runs a company or one of its functions"),
     ("Director and head of department", "director", r"\bhead of\b|\bdirector\b", "heads of department and directors", "leads a department: its people, plans and budget"),
     ("Intern and new grad", "intern", r"\bintern(ship)?\b|co-op|apprentice|working student|werkstudent|graduate (program|scheme|trainee|engineer|analyst)|new grad|early career|university grad|campus|trainee|stagiaire|praktik|accelerator program",
@@ -258,7 +260,7 @@ MORE_ROLES = [
     ("Energy and sustainability", "energy", r"sustainab|climate|carbon|renewable|solar|\bwind\b|energy|\besg\b|battery storage|\bgrid\b|utility|power (generation|plant|systems|delivery)|nuclear|turbine",
      "energy and sustainability staff", "works on power: generating it, storing it, and using less of it"),
     ("Audio and music", "audio", r"\bmusic\b|\baudio\b|sound (design|engineer)|composer", "audio and music specialists", "records, designs and programs sound, for games, video and music products"),
-    ("Operators and drivers", "operators", r"operator\b|\bdriver\b(?! (monitoring|response|experience|assist))|porter|courier|delivery (associate|driver)|forklift|crane",
+    ("Operator and driver", "operators", r"operator\b|\bdriver\b(?! (monitoring|response|experience|assist))|porter|courier|delivery (associate|driver)|forklift|crane",
      "operators and drivers", "runs machines, vehicles or a control room, usually in shifts", "nt"),
     ("Nursing", "nursing", r"nurse|\brn\b|\blpn\b|nursing", "nurses", "cares for patients, in person or by video, and coordinates their treatment"),
     ("Mental health and therapy", "mental-health", r"therapist|psychiatr|psycholog|counselor|\bmental health|behavioral health|social worker|\blcsw\b|\blmft\b",
@@ -949,7 +951,7 @@ MORE_ROLES = [
      "biologists", "studies living things, from cells and genes to animals and plants, usually through lab experiments", "nt"),
     ("Process development scientist", "process-development", r"process development|\bcmc\b|bioprocess|upstream (process|development|manufacturing)|downstream (process|development|manufacturing)|cell culture|fermentation|purification|formulation (scientist|development)|scale[- ]up|tech(nology)? transfer|\bmsat\b|biomanufacturing|\bgmp\b|cgmp|\bcqv\b",
      "process development scientists", "turns a lab recipe for a drug or material into a process that can make it reliably at scale", "nt"),
-    ("PhD and doctoral roles", "phd", r"\bph\.?\s?d\b|doctoral|doctorate|post[- ]?doc|postdoctoral|post-doctoral",
+    ("PhD and doctorate", "phd", r"\bph\.?\s?d\b|doctoral|doctorate|post[- ]?doc|postdoctoral|post-doctoral",
      "PhD holders and candidates", "does research or advanced technical work that asks for a doctorate, mostly in AI, science and engineering"),
     ("Research program manager", "research-program-manager", r"research (program|project|operations|partnerships|strategy) (manager|lead|director|coordinator|specialist)|research program manager|(scientific|science) (program|project|operations|affairs|partnerships) (manager|lead|director)|\br&d\b (program|project) (manager|lead|director|coordinator)|lab (operations|program) manager",
      "research program managers", "runs research programs: plans, budgets, partners and the people and equipment the scientists need", "nt"),
@@ -1004,7 +1006,7 @@ MORE_ROLES = [
      "summer interns", "works at a company for one summer during studies, usually ten to twelve weeks, often with a job offer at the end"),
     ("Apprentice and trainee", "apprentice", r"apprentice|trainee|traineeship|\bcadet\b|learnership|ausbildung|\bazubi\b|duales studium|alternance|alternant|returnship|re-?entry program",
      "apprentices and trainees", "learns a trade or profession on the job, with pay and structured training, often alongside a school"),
-    ("Fellowship and residency programs", "fellowship-residency", r"\bfellows?(hip)?\b|\bresidency\b|\bresident\b(?! (solution|solutions|manager|engineer|architect|support))|ai resident|scholar(ship)?\b|\bvisiting (researcher|scientist|scholar)",
+    ("Fellowship and residency", "fellowship-residency", r"\bfellows?(hip)?\b|\bresidency\b|\bresident\b(?! (solution|solutions|manager|engineer|architect|support))|ai resident|scholar(ship)?\b|\bvisiting (researcher|scientist|scholar)",
      "fellows and residents", "joins a fixed-term program, often in research or public service, to work on real projects with mentors"),
     # languages
     ("Arabic speaking", "arabic-speaking", r"arabic|\bmena\b|\bgcc\b|saudi|\bksa\b|\buae\b|emirates|dubai|abu dhabi|qatar|kuwait|bahrain|\boman\b|egypt|morocco|\bjordan\b|middle east",
@@ -1197,3 +1199,148 @@ def what(slug, name=""):
     """'A backend engineer writes the part of a product…' as a full sentence, or an empty string."""
     w = INFO.get(slug, ("", ""))[1]
     return (w[0].upper() + w[1:] + ".") if w else ""
+
+
+# The person who does the work, for the roles whose name is a field or an activity and not a person.
+#
+# Most role names are a person ("Software engineer", "Account executive") and fit any sentence. More than a hundred are a field
+# ("Customer support", "Accounting", "Compliance", "German speaking"), and a sentence that needs a person read wrong with them:
+# "How to become a customer support", "How to hire a compliance", "Is AI replacing customer supports?". PERSON gives each of
+# them the word for the person, written as it stands inside a sentence (lower case unless it starts with an acronym or a proper
+# name):
+#
+#     PERSON[role slug] = "customer support specialist"                       # the plural adds an s
+#     PERSON[role slug] = ("corporate secretary", "corporate secretaries")    # with its plural, where the plural is not regular
+#
+# Pages use it only where a person is meant: "How to become a customer support specialist", "What does an accountant do?",
+# "years of experience as a compliance analyst". Where the field is meant, the role's name stays: "Customer support jobs",
+# "Accounting interview questions", "Compliance salary". build.py reads it through person() and persons() below.
+#
+# How a form was chosen (checked on 17 Nov 2026 against the titles in data/jobs.json that the role's own rule matches):
+# 1. the title our postings use most for that work, among the titles that name the field: "customer support specialist" (32
+#    postings) before "representative" and "agent"; "compliance analyst" (48) before "compliance officer" (27);
+# 2. a hands-on title before a rank, when at least five postings use the hands-on one: "tax analyst", not "tax manager",
+#    because the pages also say "a beginner …" and "an entry-level …"; where the manager is the hands-on job and nobody posts
+#    another title, it stays ("communications manager", "product operations manager");
+# 3. never the name of another role: the "Cybersecurity" page is not headed "security engineer" and "Human resources" is not
+#    "HR business partner", because those pages exist and two pages would carry one headline;
+# 4. where the postings give no clear title (few postings, or many professions under one field), the singular of the plural
+#    the role already had ("trust and safety specialist"), or a plain word for the people of the field ("retail worker").
+# Keep a form within 31 characters: "How to Become a …" and the site name have to fit a title of 65.
+# A new role named after a field needs an entry here; `python3 roles_info.py` fails without one.
+PERSON = {
+    # the first 25 roles (ROLES in build.py)
+    "cybersecurity": "cybersecurity engineer", "it-support": "IT support specialist",
+    # software, data and AI
+    "applied-ai": "applied AI engineer", "mlops": "ML infrastructure engineer", "founding-team": "founding hire",
+    "developer-advocate": "developer advocate", "data-center": "data center technician", "business-systems": "business systems analyst",
+    "system-administrator": "system administrator", "ai-trainer": "AI trainer", "ai-safety": "AI safety specialist",
+    "experimentation": "experimentation specialist", "data-governance": "data governance specialist", "quantum": "quantum engineer",
+    "phd": "PhD intern", "fellowship-residency": "fellow",
+    # security and risk
+    "security-analyst": "security analyst", "security-compliance": "GRC analyst", "trust-safety": "trust and safety specialist",
+    "physical-security": "security officer", "identity-access-management": "IAM engineer", "itsm": "ITSM specialist",
+    "law-enforcement": "law enforcement specialist", "pricing": "pricing analyst",
+    # product, projects, design
+    "product-operations": "product operations manager", "business-operations": "strategy and operations manager", "consulting": "consultant",
+    "process-improvement": "process improvement specialist", "video-motion": "motion designer", "audio": "audio engineer",
+    # marketing
+    "growth-marketing": "growth marketer", "seo": "SEO manager", "advertising": "advertising specialist",
+    "communications": "communications manager", "ecommerce": "e-commerce manager", "influencer-marketing": "influencer marketing manager",
+    "growth": "growth specialist",
+    # sales and customers
+    "sales-operations": "sales operations analyst", "business-development": "business development manager", "retail": "retail worker",
+    "sales-coordinator": "deal desk analyst", "public-sector-sales": "public sector account executive",
+    "customer-support": "customer support specialist", "implementation": "implementation consultant",
+    "merchant-support": "merchant support specialist",
+    # finance
+    "accounting": "accountant", "tax": "tax analyst", "treasury": "treasury analyst", "payroll": "payroll specialist",
+    "audit": "internal auditor", "investment": "investment analyst", "insurance": "insurance specialist", "lending": "loan officer",
+    "financial-reporting": "financial reporting accountant", "banking-operations": "banking operations analyst",
+    "wealth-management": "wealth manager", "payments": "payments specialist", "procurement": "procurement specialist",
+    # legal, compliance, policy
+    "paralegal": "paralegal", "compliance": "compliance analyst", "privacy": "privacy counsel",
+    "policy": "policy manager", "litigation": "litigation lawyer", "corporate-governance": ("corporate secretary", "corporate secretaries"),
+    "public-administration": "public administrator",
+    # people and the office
+    "human-resources": "HR specialist", "compensation-benefits": "compensation analyst", "training": "trainer",
+    "workplace": "workplace coordinator", "business-continuity": "business continuity manager",
+    "founders-office": "special projects manager", "fundraising-grants": "fundraiser",
+    # supply, hardware, building
+    "supply-chain": "supply chain planner", "ehs": "safety engineer", "construction": "construction manager",
+    "optics": "optical engineer", "robotics": "robotics engineer", "manufacturing": "production engineer",
+    "field-service": "field service technician", "launch-operations": "launch engineer",
+    "mission-operations": "mission operations engineer", "estimator": "cost estimator", "fire-protection": "fire protection engineer",
+    "power-plant-operator": "power plant operator", "defense": "defense specialist", "freight-forwarding": "freight forwarding specialist",
+    "energy": "energy specialist", "government": "government specialist",
+    # science, health, teaching, hospitality
+    "life-sciences": "life scientist", "healthcare": "healthcare worker", "nursing": "nurse", "mental-health": "therapist",
+    "clinical-research": "clinical research associate", "public-health": "public health specialist", "education": "instructor",
+    "hospitality": "hospitality worker", "hotel-guest-services": "guest services specialist", "casino": "casino worker",
+    # crypto
+    "exchange-operations": "exchange operations specialist", "prediction-markets": "prediction markets specialist",
+    # languages
+    "bilingual": "bilingual professional", "localization": "localization specialist",
+    "german-speaking": "German speaker", "french-speaking": "French speaker", "spanish-speaking": "Spanish speaker",
+    "japanese-speaking": "Japanese speaker", "portuguese-speaking": "Portuguese speaker", "chinese-speaking": "Chinese speaker",
+    "italian-speaking": "Italian speaker", "dutch-speaking": "Dutch speaker", "korean-speaking": "Korean speaker",
+    "arabic-speaking": "Arabic speaker", "polish-speaking": "Polish speaker", "turkish-speaking": "Turkish speaker",
+    "russian-speaking": "Russian speaker", "hebrew-speaking": "Hebrew speaker", "thai-speaking": "Thai speaker",
+    "vietnamese-speaking": "Vietnamese speaker", "indonesian-speaking": "Indonesian and Malay speaker",
+    "nordic-speaking": ("speaker of Nordic languages", "speakers of Nordic languages"), "ukrainian-speaking": "Ukrainian speaker",
+    "filipino-speaking": "Filipino speaker",
+    "cee-speaking": ("speaker of Central and Eastern European languages", "speakers of Central and Eastern European languages"),
+}
+
+# The last word of a name that is a person ("Software engineer", "Chief of staff" and "Head of product" start with theirs).
+# test() uses it to find the names that are not, so that a new field cannot be added without a person form.
+PERSON_WORDS = ("accountant actuary adjuster administrator advocate agent ambassador analyst animator architect artist assistant associate auditor "
+                "barista biller biologist chauffeur chemist cleaner consultant controller cook coordinator counsel counselor courier cryptographer "
+                "cto designer developer dietitian director driver economist editor electrician engineer estimator executive fellow fundraiser "
+                "generalist grad hire inspector instructor intern lawyer lead lecturer liaison machinist manager marketer mechanic merchandiser "
+                "nurse officer operator owner paralegal partner pharmacist physician pipefitter planner practitioner producer professional "
+                "programmer receptionist recruiter representative researcher scientist secretary sourcer speaker specialist statistician "
+                "superintendent supervisor technician tester therapist trader trainee trainer underwriter vp welder worker writer").split()
+PERSON_NAME = re.compile(r"\b(?:" + "|".join(PERSON_WORDS) + r")$|^(?:Head|Chief|Director) |\bVP of\b|^speaker of ", re.I)
+
+
+def person(slug, name):
+    """The person who does this work, in the singular: PERSON's form for a field, the name itself for a role named after a person."""
+    p = PERSON.get(slug)
+    return (p if isinstance(p, str) else p[0]) if p else name
+
+
+def persons(slug, many):
+    """The same in the plural. `many` is the role's plural for sentences (INFO); it is used for a role named after a person."""
+    p = PERSON.get(slug)
+    return (p + "s" if isinstance(p, str) else p[1]) if p else many
+
+
+def test():
+    import build                                                         # the first 25 roles are named there; build.py does not run on import
+    names = {s: nm for nm, s, _ in build.ROLES}
+    bare = lambda nm: re.sub(r"\s*\(.*?\)", "", nm)                      # "Financial analyst (FP&A)" is a financial analyst
+    assert PERSON.keys() <= names.keys(), sorted(PERSON.keys() - names.keys())
+    missing = [f"{s} ({nm})" for s, nm in names.items() if not PERSON_NAME.search(bare(nm)) and s not in PERSON]
+    assert not missing, "named after a field, with no person form in PERSON: " + ", ".join(missing)
+    taken, seen = {nm.lower(): s for s, nm in names.items()}, {}
+    for s, p in PERSON.items():
+        one, many = person(s, ""), persons(s, "")
+        assert PERSON_NAME.search(one), f"{s}: “{one}” does not name a person"
+        assert one == build.rlow(one) and one == one.strip(), f"{s}: “{one}” is not written as it stands inside a sentence"
+        assert taken.get(one.lower(), s) == s, f"{s}: “{one}” is the name of another role ({taken.get(one.lower())})"
+        assert one.lower() not in seen, f"{s} and {seen.get(one.lower())} share “{one}”"
+        assert len(one) <= 31 or s.endswith("-speaking"), f"{s}: “{one}” is too long for a title ({len(one)} characters, 31 at most)"
+        assert isinstance(p, str) or (len(p) == 2 and p[1] != p[0] + "s"), f"{s}: the plural is given only where it is not regular"
+        assert many != one, s
+        seen[one.lower()] = s
+    assert person("customer-support", "Customer support") == "customer support specialist" and persons("customer-support", "") == "customer support specialists"
+    assert person("software-engineer", "Software engineer") == "Software engineer" and persons("software-engineer", "software engineers") == "software engineers"
+    assert persons("corporate-governance", "") == "corporate secretaries" and build.art(person("accounting", "")) == "an"
+    kit = sum(1 for s in PERSON if not s.endswith("-speaking"))
+    print(f"roles_info.py: {len(names)} roles, {len(PERSON)} named after a field and given a person form "
+          f"({kit} kinds of work, {len(PERSON) - kit} languages), all checks passed")
+
+
+if __name__ == "__main__":
+    test()
