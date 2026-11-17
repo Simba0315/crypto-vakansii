@@ -1113,11 +1113,14 @@ def auto_more(path, h1):
 LIST_PAGES = 2
 
 
-def act_row(href, label, more=(), note=""):
+def act_row(href, label, more=(), note="", clip=""):
     """A page's main action right under its opening paragraph, so it is on the first phone screen (SEO_MAP.md): one ink button,
-    then at most a couple of plain links and one short line. An href starting with "#" stays on the page."""
+    then at most a couple of plain links and one short line. An href starting with "#" stays on the page.
+    `clip`: the id of a text on the page (a letter, a template): the button then copies it (site.js, data-clip) and `href` is not used."""
     u = lambda h: h if h.startswith(("#", "http")) else f"{P}/{h}"
-    return (f'<p class="lact"><a class="btn primary sm" href="{u(href)}">{e(label)}</a>' + "".join(f'<a href="{u(h)}">{e(t)}</a>' for h, t in more)
+    btn = (f'<button class="btn primary sm" type="button" data-clip="{clip}" data-raw="1">{e(label)}</button>' if clip
+           else f'<a class="btn primary sm" href="{u(href)}">{e(label)}</a>')
+    return (f'<p class="lact">{btn}' + "".join(f'<a href="{u(h)}">{e(t)}</a>' for h, t in more)
             + (f"<span>{e(note)}</span>" if note else "") + "</p>")
 
 
@@ -4042,10 +4045,44 @@ def main():
     lap('Resume examples: one page per kind of work, with the skills ')
     # Resume examples: one page per kind of work, with the skills employers name in today's postings for it and an invented
     # example that opens in the builder. See resume_examples.py.
-    rex_data, rex_dir = {}, defaultdict(list)
+    rex_data, rex_dir, rex_three = {}, defaultdict(list), 0
     fam_of = {}
     for fs, fn, fd, live, js_ in fam_rows:
         for s_, _, _ in live: fam_of.setdefault(s_, (fs, fn))
+    # Seven families have one page per kind of work: resume, CV and cover letter examples, interview questions, how to become,
+    # how to hire, job descriptions. They are one set (sections review, batch 2, 17 Nov 2026), built from the same parts in the
+    # same order: the trail, the heading, one paragraph, the row of the page's own figures (nums()), ONE ink action (act_row()),
+    # then what the visitor came for (the example, the letter, the questions, the steps, the template), the questions, and the
+    # links to the other pages about the same work (role_kit()). A document page (resume, CV, letter, job description) shows the
+    # document on the left and what today's postings say beside it (.rexgrid); the other levels stand side by side (.kwlv).
+    # <main> carries the class "kw" on these pages and "hub" on their seven directories: the styles of the review are scoped by them.
+    MED_PAY = f'<a href="{P}/glossary/median/">median</a> advertised pay'
+    FREE_RB = "Free, with no account."      # said next to the button that opens the resume builder (the owner: where something is free, the word is visible)
+
+    def role_kit(slug_r, low, here):
+        """Every page about one kind of work links all the others (Upwork's "Resources to help you hire"), as chips. Pages that exist
+        only: a salary page needs 20 postings with pay, the four guides (questions, how to become, description, how to hire) 20 open postings."""
+        big = len(by_role[slug_r][1]) >= 20
+        items = [("roles", f"roles/{slug_r}/", "Open jobs"), ("salary", f"salaries/{slug_r}/", "Salary"), ("resume", f"resume/examples/{slug_r}/", "Resume example"),
+                 ("cv", f"cv-examples/{slug_r}/", "CV example (UK)"), ("letter", f"cover-letter-examples/{slug_r}/", "Cover letter"), ("iq", f"interview-questions/{slug_r}/", "Interview questions"),
+                 ("become", f"how-to-become/{slug_r}/", "How to become one"), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
+        items = [(k, u, t) for k, u, t in items if k != here and (k != "salary" or (OUT / u / "index.html").exists()) and (big or k not in ("iq", "become", "jd", "hire"))]
+        return section(f"Everything about {low} work", '<div class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for _, u, t in items) + "</div>")
+
+    def kind_dir(dir_, base, unit, by_name=False, frag="", zero=True):
+        """The directory of one of the seven hubs: a card per field (its icon and name as the heading, as on /categories/), in it the kinds
+        of work, each with the figure that belongs to the family (open jobs, questions, companies hiring). `unit`: (one, many).
+        `zero=False` leaves a figure of 0 out (a CV example is worth opening when no job of the kind is open in the UK today)."""
+        key = (lambda x: x[1]) if by_name else (lambda x: -x[2])
+        return '<div class="dir" id="dir">' + "".join(
+            f'<div class="dirb"><h2><b>{icon(fs)}{e(fn)}</b><span>{len(dir_[fs])}</span></h2><ul>'
+            + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/{base}/{s_}/{frag}">{e(nm)}</a>' + (f"<span>{k:,} {unit[k != 1]}</span>" if k or zero else "") + "</li>"
+                      for s_, nm, k in sorted(dir_[fs], key=key))
+            + "</ul></div>" for fs, fn, fd, live, js_ in fam_rows if dir_.get(fs)) + "</div>"
+
+    n_fields = lambda dir_: sum(1 for fs, *_ in fam_rows if dir_.get(fs))
+    dir_sec = lambda title, inner, link, sub: section(title, inner, link, sid="all", sub=sub, label="Directory")      # a hub's directory under a section header, as on /categories/
+
     def paper(d):
         return ('<div class="paper"><p class="pp-name">' + e(d["name"]) + '</p><p class="pp-title">' + e(d["title"]) + '</p><p class="pp-contact">' + e(d["place"]) + " · " + e(d["email"]) + "</p>"
                 '<p class="pp-h">Summary</p><p>' + e(d["summary"]) + '</p><p class="pp-h">Skills</p><p>' + e(d["skills"]) + '</p><p class="pp-h">Experience</p>'
@@ -4065,7 +4102,7 @@ def main():
         rex_dir[fs].append((slug_r, rname, len(rj)))
         titles_ = [t for t, _ in Counter(j["title"] for j in rj).most_common(40) if len(t) <= 60][:6]
         mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"]]
-        facts_ = [("Open jobs today", f"{len(rj):,}"), ("Can be done from home", f"{pc_(sum(j['remote'] for j in rj), len(rj))}%")] + ([("Median advertised pay", money(median(mids_)))] if len(mids_) >= 30 else [])
+        facts_ = [(f"{len(rj):,}", f"open {e(low)} jobs today"), (f"{pc_(sum(j['remote'] for j in rj), len(rj))}%", "can be done from home")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 30 else [])
         chart_ = bars_([(t, k, f"{k:,} jobs · {pc_(k, len(rj))}%", f"skills/{tslug(t)}/") for t, k in top_]) if top_ else ""
         if tech_ and top_:
             ask_ = "<h2>What employers ask for</h2><p>The skills named most often in today’s postings for this work. Name the ones you have, by these words: screening software looks for the word.</p>" + chart_
@@ -4101,6 +4138,8 @@ def main():
                             {"role": d["title"], "org": "Another Example Ltd", "dates": "2016 – 2021", "text": d["exp"][0]["text"].split("\n")[0] if d["exp"] else ""}])
             levels_ += section(f"Experienced {low} resume example" if st_ == d["title"] else f"Senior {low} resume example", paper(d_s) + '<p class="note">At this level the lines are about people led, budgets owned and results across teams.</p>')
         n_ex = 1 + (len(ent_l) >= 3) + (len(sen_l) >= 3 and slug_r != "intern")
+        rex_three += n_ex == 3
+        if levels_: levels_ = f'<div class="kwlv">{levels_}</div>'       # the other levels stand side by side on wide screens
         how_ = section(f"How to write {art(low)} {low} resume", '<ol class="steps">'
                        "<li><b>One column, standard headings.</b> Summary, Skills, Experience, Education: screening software reads these in order; tables, icons and two columns can come out scrambled.</li>"
                        "<li><b>Every line: action, tool, result.</b> “Built a churn dashboard in Tableau from SQL data; weekly reporting went from two days to one hour.” A verb first, the tool the posting names, one number.</li>"
@@ -4121,16 +4160,18 @@ def main():
               f"{art(low).capitalize()} {low} resume example with measured results, next to what {len(rj):,} open postings for this work offer today. Open it in the free builder and make it yours."),
              crumbs(("Resume builder", "resume/"), ("Examples", "resume/examples/"), (rname, "")) + f"<h1>{e(rname)} resume example</h1>"
              f'<p class="lead">' + (f"A person in this job {e(w_)}. " if w_ else "") + f"Below: an example to start from, and what {len(rj):,} open postings for this work ask for today.</p>"
-             '<div class="rexgrid"><div>' + paper(d) + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
+             + nums(facts_) + act_row(f"resume/?example={slug_r}", "Open this example in the builder", [("tools/resume-review/", "Check your own resume")], note=FREE_RB)
+             + '<div class="rexgrid"><div>' + paper(d) + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
              f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this example in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/tools/resume-review/">Check your own resume</a></p></div>'
-             '<div class="rexside"><div class="invf">' + "".join(f"<div><b>{e(v_)}</b><span>{e(k_)}</span></div>" for k_, v_ in facts_) + "</div>" + ask_
+             '<div class="rexside">' + ask_
              + ("<h2>Titles employers use</h2><p>" + e("; ".join(titles_)) + ".</p>" if titles_ else "")
              + '<h2>Make it yours</h2><ol class="steps"><li><b>Keep the form, change every fact.</b> A verb first, what changed, one number.</li>'
                f'<li><b>Use the posting’s words.</b> The <a href="{P}/tools/resume-match/">match checker</a> shows which of them your resume lacks.</li>'
                f'<li><b>Put the strongest result first.</b> The <a href="{P}/tools/resume-review/">resume review</a> tells you what a first read finds.</li></ol></div></div>'
              + levels_ + how_
              + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
-             + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_)
+             + role_kit(slug_r, low, "resume")
+             + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_, cls="kw")
     write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     cv_dir = defaultdict(list)
     for slug_r, d in rex_data.items():
@@ -4152,41 +4193,45 @@ def main():
             cv_qa.append((f"What do {low} jobs pay in the UK?", f"{len(gbp_):,} open {low} postings in the United Kingdom state a yearly range in pounds: the median midpoint is £{median(gbp_):,.0f}."))
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cv_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_cv = [("Open jobs in the UK", f"{len(uk_):,}"), ("Open in Europe", f"{len(eu_):,}")] + ([("Median UK pay stated", f"£{median(gbp_):,.0f}")] if len(gbp_) >= 5 else [])
+        facts_cv = [(f"{len(uk_):,}", f"open {e(low)} jobs in the UK"), (f"{len(eu_):,}", "open in Europe"), (f"{len(rj):,}", "open anywhere")] + ([(f"£{median(gbp_):,.0f}", "median UK pay stated")] if len(gbp_) >= 5 else [])
         cv_dir[fs].append((slug_r, rname, len(uk_)))
         page(f"cv-examples/{slug_r}/", f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]}) | {SITE}",
              f"A {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
              crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} CV example <span class=\"hl\">(UK format)</span></h1>"
              f'<p class="lead">The same document Americans call a resume, written the way UK and European employers expect it: a personal profile first, your employment history with results, '
              f'no photo, age or marital status. Below, an example to start from and what {len(rj):,} open {e(low)} postings ask for.</p>'
-             '<div class="rexgrid"><div>' + paper_cv + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
+             + nums(facts_cv) + act_row(f"resume/?example={slug_r}", "Open this CV in the builder", [(f"resume/examples/{slug_r}/", "US resume version")], note=FREE_RB)
+             + '<div class="rexgrid"><div>' + paper_cv + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
              f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this CV in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/resume/examples/{slug_r}/">US resume version</a></p></div>'
-             '<div class="rexside"><div class="invf">' + "".join(f"<div><b>{e(v_)}</b><span>{e(k_)}</span></div>" for k_, v_ in facts_cv) + "</div>"
+             '<div class="rexside">'
              + '<h2>UK CV rules in one minute</h2><ol class="steps"><li><b>Two pages of A4 at most.</b> One is fine early on.</li>'
                '<li><b>Personal profile, not objective.</b> Three or four lines on who you are and one result.</li>'
                '<li><b>Leave out</b> photo, age, date of birth, marital status and national insurance number.</li>'
                '<li><b>British spelling and dates</b> (organised, 03/2024), and pay in pounds if you mention it.</li>'
                '<li><b>“References available on request”</b> can go; employers ask for them at the offer.</li></ol></div></div>'
              + section(f"Questions about {art(low)} {low} CV", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cv_qa) + "</dl>")
-             + f'<p class="note cmpl">Next: <a href="{P}/locations/united-kingdom/">jobs in the United Kingdom</a> · <a href="{P}/cover-letter-examples/{slug_r}/">{e(low)} cover letter</a> · <a href="{P}/cv-examples/">all CV examples</a></p>', head=ld_)
-    cv_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(cv_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/cv-examples/{s_}/">{e(nm)}</a><span>{k:,} UK jobs</span></li>' for s_, nm, k in sorted(cv_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if cv_dir.get(fs)) + "</div>"
+             + role_kit(slug_r, low, "cv")
+             + f'<p class="note cmpl">Next: <a href="{P}/locations/united-kingdom/">jobs in the United Kingdom</a> · <a href="{P}/cover-letter-examples/{slug_r}/">{e(low)} cover letter</a> · <a href="{P}/cv-examples/">all CV examples</a></p>', head=ld_, cls="kw")
+    cv_html = kind_dir(cv_dir, "cv-examples", ("UK job", "UK jobs"), zero=False)
+    cv_n, cv_uk = sum(len(v) for v in cv_dir.values()), sum(1 for j in active if "united-kingdom" in j["places"])
     page("cv-examples/", f"CV Examples (UK Format) for {sum(len(v) for v in cv_dir.values())} Jobs, Free Template | {SITE}",
          f"CV examples in UK format for {sum(len(v) for v in cv_dir.values())} kinds of work: personal profile, employment history with results, no photo. Free to open in the builder.",
          crumbs(("Resume builder", "resume/"), ("CV examples", "")) + '<h1>CV examples <span class="hl">in UK format</span></h1>'
          '<p class="lead">For jobs in the United Kingdom, Ireland and most of Europe: the same examples as our resume pages, laid out as a CV. Pick your work, open it in the free builder and replace every line with your own.</p>'
+         + nums([(f"{cv_n}", "CV examples in UK format"), (f"{n_fields(cv_dir)}", "fields of work"), (f"{cv_uk:,}", "open jobs in the UK today"), ("Free", "to open in the builder, with no account")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example accountant or designer" aria-label="Find a CV example"></p>'
-         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">builder</a> works for any job.</p>' + cv_html)
-    rex_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(rex_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/resume/examples/{s_}/">{e(nm)}</a><span>{k:,} jobs</span></li>' for s_, nm, k in rex_dir[fs]) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if rex_dir.get(fs)) + "</div>"
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">builder</a> works for any job.</p>'
+         + dir_sec(f"[[{cv_n} CV examples]] by field of work", cv_html, ("resume/examples/", "US resume examples"), "The number next to a name is how many jobs of that kind are open in the United Kingdom today."), cls="hub")
+    rex_html = kind_dir(rex_dir, "resume/examples", ("job", "jobs"))
     page("resume/examples/", f"Resume Examples for {len(rex_data)} Kinds of Work | {SITE}",
          f"{len(rex_data)} resume examples, each with the skills employers name in today’s open postings for that work. Open any of them in the free resume builder.",
          crumbs(("Resume builder", "resume/"), ("Examples", "")) + f'<h1>Resume examples for <span class="hl">{len(rex_data)} kinds of work</span></h1>'
          '<p class="lead">Each example comes with the skills employers name for that work in today’s open postings, counted again at every update. Pick your work, open the example in the builder and replace it line by line.</p>'
+         + nums([(f"{len(rex_data)}", "resume examples"), (f"{n_fields(rex_dir)}", "fields of work"), (f"{rex_three}", "pages that also have an entry-level and a senior example"),
+                 ("Free", "to open in the resume builder, with no account")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
-         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">resume builder</a> works for any job.</p>' + rex_html)
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">resume builder</a> works for any job.</p>'
+         + dir_sec(f"[[{len(rex_data)} resume examples]] by field of work", rex_html, ("resume/", "Open the resume builder"), "The number next to each name is how many jobs of that kind are open today."), cls="hub")
 
     lap('Cover letter examples, one per kind of work (the Rezi study:')
     # Cover letter examples, one per kind of work (the Rezi study: cover letter pages bring that site 6% of its search visits).
@@ -4224,12 +4269,12 @@ def main():
                          + "[One sentence on the problem in the posting you would take on first, and how.] I would bring the same focus on results, and on growing the people around me.\n\n"
                          "I would welcome a conversation. Thank you for your time.\n\nSincerely,\n[Your name]")
         sk_pct = [(t, 100 * cnt_[t] / max(1, len(rj))) for t in top_]
-        how_cl = section(f"How to write {art(low)} {low} cover letter, paragraph by paragraph", '<ol class="steps">'
+        how_cl = (f"<h2>How to write {art(low)} {e(low)} cover letter, paragraph by paragraph</h2>" + '<ol class="steps">'
                          f'<li><b>Opening.</b> The role you apply for, your years in {e(low)} work and the two or three tools or skills the posting names first.</li>'
                          '<li><b>One or two results.</b> What changed because of you, with a number: time saved, money, people served, errors cut. Use the posting’s own words for the work.</li>'
                          '<li><b>Why this company.</b> One specific reason: a product you use, a goal in the posting, a problem you can help with. A line that fits any company is skipped.</li>'
                          '<li><b>Close.</b> Say you would welcome a conversation, thank them, sign with your full name. Under 250 words in all.</li></ol>')
-        tips_cl = section("Quick tips", '<ul class="ticks">'
+        tips_cl = ("<h2>Quick tips</h2>" + '<ul class="ticks">'
                           + (f'<li>Mirror the posting: today’s {len(rj):,} {e(low)} postings name ' + ", ".join(f"{e(t)} ({k:.0f}%)" for t, k in sk_pct) + " most often.</li>" if sk_pct else "")
                           + "<li>Put a number in every result: how many, how much, how fast.</li>"
                           "<li>No experience yet? Lead with a project, a course, an internship or volunteer work, and use the entry-level letter above.</li>"
@@ -4249,46 +4294,40 @@ def main():
                   "Give one result with a number, name the skills the posting asks for, and say why this company. The entry-level letter on this page is written that way.")]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = (f'<dl class="facts"><div><dt>Open {e(low)} jobs today</dt><dd>{len(rj):,}</dd></div><div><dt>Can be done from home</dt><dd>{pc_(sum(j["remote"] for j in rj), len(rj))}%</dd></div>'
-                  + (f'<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>' if len(mids_) >= 30 else "") + "</dl>")
+        facts_ = nums([(f"{len(rj):,}", f"open {e(low)} jobs today"), (f"{pc_(sum(j['remote'] for j in rj), len(rj))}%", "can be done from home")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 30 else []))
         cl_dir[fs].append((slug_r, rname, len(rj)))
         page(f"cover-letter-examples/{slug_r}/", f"{tcase(rname)} Cover Letter: 3 Examples & Template ({TODAY[:4]}) | {SITE}",
              f"A {low} cover letter example built around measured results, with what today’s {len(rj):,} open {low} postings ask for. Copy it and fill in the brackets.",
              crumbs(("Cover letter examples", "cover-letter-examples/"), (rname, "")) + f'<h1>{e(rname)} cover letter example: <span class="hl">results first</span></h1>'
              f'<p class="lead">A cover letter for {e(low)} jobs that leads with what you achieved, not with what you were responsible for. Copy it, replace the parts in [brackets] and use the words of the posting you answer.</p>'
-             + facts_
+             + facts_ + act_row("", "Copy the letter", [("#entry-level", "Entry-level letter"), ("#senior", "Senior letter")], clip="letter")
+             + '<div class="rexgrid wide"><div>'
              + f'<div class="rl-paper"><pre id="letter">{e(letter_)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-cover-letter" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-cover-letter" style="margin-top:0">PDF</button> '
-               f'<a class="btn ghost sm" href="{P}/tools/cover-letter/" style="margin-top:0">Write yours with the free builder</a></p></div>'
-             + section(f"Entry-level {low} cover letter (no experience)", f'<div class="rl-paper"><pre id="letter2">{e(entry_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter2" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">PDF</button></p></div>')
-             + section(f"Senior {low} cover letter", f'<div class="rl-paper"><pre id="letter3">{e(senior_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter3" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">PDF</button></p></div>')
-             + how_cl + tips_cl
+               f'<a class="btn ghost sm" href="{P}/tools/cover-letter/" style="margin-top:0">Write yours with the free builder</a></p></div></div>'
+             + '<div class="rexside">' + how_cl + tips_cl + "</div></div>"
+             + '<div class="kwlv">' + section(f"Entry-level {low} cover letter (no experience)", f'<div class="rl-paper"><pre id="letter2">{e(entry_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter2" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">PDF</button></p></div>', sid="entry-level")
+             + section(f"Senior {low} cover letter", f'<div class="rl-paper"><pre id="letter3">{e(senior_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter3" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">PDF</button></p></div>', sid="senior") + "</div>"
              + section(f"Questions about {art(low)} {low} cover letter", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cl_qa) + "</dl>")
              + section("Use it with", '<div class="feats">'
                        f'<a class="feat" href="{P}/resume/examples/{slug_r}/"><h3>The {e(low)} resume example</h3><p>The same results, laid out as a one-page resume you can open in the builder.</p></a>'
                        f'<a class="feat" href="{P}/tools/resume-match/"><h3>Check against a posting</h3><p>See which of the posting’s words your resume and letter are missing.</p></a>'
-                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{len(rj):,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>'), head=ld_)
+                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{len(rj):,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>') + role_kit(slug_r, low, "letter"), head=ld_, cls="kw")
     cl_n = sum(len(v) for v in cl_dir.values())
-    cl_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(cl_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/cover-letter-examples/{s_}/">{e(nm)}</a><span>{k:,} jobs</span></li>' for s_, nm, k in sorted(cl_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if cl_dir.get(fs)) + "</div>"
+    cl_html = kind_dir(cl_dir, "cover-letter-examples", ("job", "jobs"))
     page("cover-letter-examples/", f"Cover Letter Examples for {cl_n} Kinds of Work ({TODAY[:4]}) | {SITE}",
          f"{cl_n} cover letter examples, one for each kind of work, built around measured results and the skills today’s open postings ask for. Copy one or write yours in the free builder.",
          crumbs(("Cover letter examples", "")) + f'<h1>Cover letter examples for <span class="hl">{cl_n} kinds of work</span></h1>'
          f'<p class="lead">Each letter leads with two results from that work and names the skills employers ask for in today’s open postings. Pick your work, copy the letter and fill in the brackets, or write your own in the <a href="{P}/tools/cover-letter/">cover letter builder</a>.</p>'
+         + nums([(f"{cl_n}", "kinds of work"), (f"{3 * cl_n:,}", "letters: mid-level, entry-level and senior for each"), (f"{n_fields(cl_dir)}", "fields of work"),
+                 ("Free", "to copy, or to download as Word or PDF")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
-         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/tools/cover-letter/">cover letter builder</a> works for any job.</p>' + cl_html)
+         f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/tools/cover-letter/">cover letter builder</a> works for any job.</p>'
+         + dir_sec(f"[[{cl_n} cover letters]] by field of work", cl_html, ("tools/cover-letter/", "Cover letter builder"), "The number next to each name is how many jobs of that kind are open today."), cls="hub")
 
     lap('Job description templates for employers, one per kind of wor')
     # Job description templates for employers, one per kind of work (the Careerist/PeopleForce study: PeopleForce has none, and
     # employers search for them). Every figure is counted from today's open postings for that work; the text is a template with
     # brackets, written for this site, never copied from a posting.
-    def role_kit(slug_r, low, here):
-        """Every page about one kind of work links all the others (Upwork's "Resources to help you hire"); pages that exist only."""
-        items = [("roles", f"roles/{slug_r}/", "Open jobs"), ("salary", f"salaries/{slug_r}/", "Salary"), ("resume", f"resume/examples/{slug_r}/", "Resume example"),
-                 ("letter", f"cover-letter-examples/{slug_r}/", "Cover letter"), ("iq", f"interview-questions/{slug_r}/", "Interview questions"),
-                 ("become", f"how-to-become/{slug_r}/", "How to become one"), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
-        items = [(k, u, t) for k, u, t in items if k != here and (k != "salary" or (OUT / u / "index.html").exists())]
-        return section(f"Everything about {low} work", '<div class="rel">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for _, u, t in items) + "</div>")
     jd_dir = defaultdict(list)
     for slug_r, d in rex_data.items():
         rname, rj = by_role[slug_r]
@@ -4322,11 +4361,8 @@ def main():
                + "".join(f"- {x}\n" for x, _ in perk_)
                + "- [Paid time off, health cover and the rest of your benefits]\n\n"
                "How to apply\n[What to send, the interview steps and how long they take. Name the date you will reply by.]")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Open postings today</dt><dd>{n_:,}</dd></div>"
-                  + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med else "")
-                  + f"<div><dt>Postings that state pay</dt><dd>{paid_pct}%</dd></div>"
-                  + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "")
-                  + f"<div><dt>Open to remote work</dt><dd>{rem_pct}%</dd></div></dl>")
+        facts_ = nums([(f"{n_:,}", f"open {e(low)} postings today")] + ([(f"{y_med} years", "experience asked, median")] if y_med else []) + [(f"{paid_pct}%", "postings that state pay")]
+                      + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else []) + [(f"{rem_pct}%", "open to remote work")])
         data_rows = ([("Experience asked", f"Median {y_med} years; the middle half ask {yrs[len(yrs) // 4]}–{yrs[3 * len(yrs) // 4]} years ({len(yrs):,} postings name a number)")] if y_med else []) + \
                     ([("Pay advertised", f"{money(q_(.25))} – {money(q_(.75))} for the middle half; median {money(median(mids_))} ({len(mids_):,} postings with a yearly US-dollar range)")] if len(mids_) >= 20 else []) + \
                     ([("Skills named most", ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_))] if top_ else []) + \
@@ -4354,34 +4390,34 @@ def main():
              crumbs(("For employers", "post-a-job/"), ("Job descriptions", "job-descriptions/"), (rname, "")) + f'<h1>{e(rname)} job description: <span class="hl">template and real figures</span></h1>'
              + (f'<p class="lead"><strong>{e(art(low).capitalize())} {e(low)} {e(does)}.</strong> ' if does else '<p class="lead">')
              + f'A template for hiring {art(low)} {e(low)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
-             + act_row("post-a-job/", "Post this job free", [("#letter", "Jump to the template")])
-             + facts_
+             + facts_ + act_row("", "Copy the template", [("post-a-job/", "Post this job free")], clip="letter")
+             + '<div class="rexgrid wide"><div>'
              + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-job-description" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-job-description" style="margin-top:0">PDF</button> '
-               f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div>'
-             + section(f"What today’s {low} postings say", '<div class="tablewrap"><table>' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
-                       f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p>')
+               f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div></div>'
+             + (f'<div class="rexside"><h2>What today’s {e(low)} postings say</h2>' + '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
+                       f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p></div></div>')
              + section(f"Questions about hiring {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
              + role_kit(slug_r, low, "jd")
              + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
              + (f'<a href="{P}/salaries/{slug_r}/">{e(low)} pay</a> · ' if (OUT / "salaries" / slug_r / "index.html").exists() else "")      # a salary page exists only from 20 postings with pay
-             + f'<a href="{P}/how-to-hire/{slug_r}/">how to hire {art(low)} {e(low)}</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_)
+             + f'<a href="{P}/how-to-hire/{slug_r}/">how to hire {art(low)} {e(low)}</a> · <a href="{P}/job-descriptions/">all job description templates</a></p>', head=ld_, cls="kw")
     jd_n = sum(len(v) for v in jd_dir.values())
-    jd_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(jd_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/job-descriptions/{s_}/">{e(nm)}</a><span>{k:,} postings</span></li>' for s_, nm, k in sorted(jd_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if jd_dir.get(fs)) + "</div>"
+    jd_html = kind_dir(jd_dir, "job-descriptions", ("posting", "postings"))
     page("job-descriptions/", f"Job Description Templates for {jd_n} Roles, with Real Pay and Skills Data | {SITE}",
          f"{jd_n} job description templates for employers, each with the experience, pay, skills and benefits named in today’s open postings for that work. Copy one and post your job free.",
          crumbs(("For employers", "post-a-job/"), ("Job descriptions", "")) + f'<h1>Job description templates for <span class="hl">{jd_n} roles</span></h1>'
          '<p class="lead">Each template comes with the figures from today’s open postings for that work: how many years employers ask for, what they pay, which skills and benefits they name. '
          f'Copy one, fill in the brackets, check it with the <a href="{P}/tools/job-description-checker/">job description checker</a> and post it free.</p>'
+         + nums([(f"{jd_n}", "templates"), (f"{n_fields(jd_dir)}", "fields of work"), (f"{len(active):,}", "open postings the figures come from"), ("Free", "to copy, and to post the job")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a template"></p>'
-         f'<p class="lead" id="dirnone" hidden>No template with these words. The <a href="{P}/tools/job-description-checker/">checker</a> works for any job description.</p>' + jd_html)
+         f'<p class="lead" id="dirnone" hidden>No template with these words. The <a href="{P}/tools/job-description-checker/">checker</a> works for any job description.</p>'
+         + dir_sec(f"[[{jd_n} templates]] by field of work", jd_html, ("tools/job-description-checker/", "Check a description"), "The number next to each role is how many postings for it are open today."), cls="hub")
 
     lap('"How to become a <work>" for people changing careers (the Ca')
     # "How to become a <work>" for people changing careers (the Careerist study: that topic carries their whole blog). The steps are
     # the same advice for every work; what makes each page useful is counted from today's postings: how many are open to beginners,
     # how many years employers ask, the skills they name first, whether a degree is required, what juniors are paid.
-    hb_dir = defaultdict(list)
+    hb_dir, hb_begin = defaultdict(list), set()
     PROOF_AT = {"engineering": "Put the code on GitHub with a short read-me: what it does, how to run it, one number that shows it works.",
                 "data-research": "Use a public dataset (Kaggle, a government open-data portal), publish the queries or notebook on GitHub and a one-page write-up of what you found.",
                 "design": "Show three case studies on Behance, Dribbble or your own site: the problem, the sketches, the result and what changed.",
@@ -4438,9 +4474,8 @@ def main():
                   + (", alongside " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:2]) + "." if top_ else "."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Open jobs today</dt><dd>{n_:,}</dd></div><div><dt>Open to beginners</dt><dd>{len(begin):,}</dd></div>"
-                  + (f"<div><dt>Experience asked, median</dt><dd>{y_med} years</dd></div>" if y_med is not None else "")
-                  + (f"<div><dt>Beginner pay, median</dt><dd>{money(median(jr_pay))}</dd></div>" if len(jr_pay) >= 8 else "") + "</dl>")
+        facts_ = nums([(f"{n_:,}", f"open {e(low)} jobs today"), (f"{len(begin):,}", "open to beginners")] + ([(f"{y_med} years", "experience asked, median")] if y_med is not None else [])
+                      + ([(money(median(jr_pay)), "beginner pay, median")] if len(jr_pay) >= 8 else []))
         many = ROLE_PLURAL.get(rname, low + "s")
         lv_pay = defaultdict(list)
         for j in rj:
@@ -4449,8 +4484,10 @@ def main():
         tools_ = [(t, k) for t, k in cnt_.most_common(12) if k >= 3][:10]
         extra_hb = ""
         if tools_:
-            extra_hb += section(f"Tools and software {many} use", "<p>" + ", ".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a> ({pc_(k, n_)}%)' for t, k in tools_)
-                                + f" of today’s {n_:,} open {e(low)} postings name them. Learn the first three well before the rest.</p>")
+            # the tools as bars, not as a sentence of twelve names and shares ("pictures before words"); "Tools and software software engineers use" read as a slip
+            extra_hb += section(f"Tools {many} use" if many.lower().startswith("software") else f"Tools and software {many} use",
+                                bars_([(t, k, f"{pc_(k, n_)}%", f"skills/{tslug(t)}/") for t, k in tools_])
+                                + f'<p class="note">The share of today’s {n_:,} open {e(low)} postings that name each one. Learn the first three well before the rest.</p>')
         if len(ladder) >= 2:
             extra_hb += section(f"{rname} career path: levels and pay", '<div class="tablewrap"><table><tr><th>Step</th><th>Median advertised pay</th><th>Postings with pay</th></tr>'
                                 + "".join(f"<tr><td>{e(nm_)}</td><td><strong>{money(md_)}</strong></td><td>{c_:,}</td></tr>" for nm_, md_, c_ in ladder)
@@ -4469,25 +4506,26 @@ def main():
                             + "<li><b>Open to work:</b> set the job titles and places you want; recruiters filter by them.</li></ul>"
                             + f'<p class="note">Write the headline with the <a href="{P}/tools/linkedin-headline/">LinkedIn headline generator</a>.</p>')
         hb_dir[fs].append((slug_r, rname, len(begin)))
+        hb_begin.update(j["id"] for j in begin)
         page(f"how-to-become/{slug_r}/", f"How to Become {art(low)} {tcase(rname)}: Skills, Pay and {len(begin):,} Beginner Jobs | {SITE}",
              f"How to become {art(low)} {low}, from today’s {n_:,} open postings: {len(begin):,} are open to beginners. The skills employers name first, the experience they ask for and what juniors earn.",
              crumbs(("How to become…", "how-to-become/"), (rname, "")) + f'<h1>How to become {art(low)} {e(low)}: <span class="hl">{len(begin):,} beginner jobs open today</span></h1>'
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
-             + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
-             + facts_ + section(f"Five steps to your first {low} job", steps) + extra_hb
+             + facts_ + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
+             + section(f"Five steps to your first {low} job", steps) + extra_hb
              + section(f"Questions about becoming {art(low)} {low}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
              + role_kit(slug_r, low, "become")
-             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_)
+             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_, cls="kw")
     hb_n = sum(len(v) for v in hb_dir.values())
-    hb_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(hb_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/how-to-become/{s_}/">{e(nm)}</a><span>{k:,} for beginners</span></li>' for s_, nm, k in sorted(hb_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if hb_dir.get(fs)) + "</div>"
+    hb_html = kind_dir(hb_dir, "how-to-become", ("for beginners", "for beginners"))
     page("how-to-become/", f"How to Become…: {hb_n} Careers with Skills, Pay and Beginner Jobs | {SITE}",
          f"How to become one of {hb_n} kinds of professional, from today’s open postings: the jobs open to beginners, the skills employers name first, the experience they ask for and what juniors earn.",
          crumbs(("How to become…", "")) + f'<h1>How to become… <span class="hl">{hb_n} careers, with today’s figures</span></h1>'
          '<p class="lead">For people changing careers: pick the work you want. Each page counts, from today’s open postings, how many jobs take beginners, which skills employers name first and what juniors are paid, then gives five steps to the first job.</p>'
+         + nums([(f"{hb_n}", "careers"), (f"{len(hb_begin):,}", "jobs open to beginners in them today"), (f"{n_fields(hb_dir)}", "fields of work"), (f"{len(active):,}", "open postings counted")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a career"></p>'
-         f'<p class="lead" id="dirnone" hidden>No career with these words. <a href="{P}/entry-level/">Entry-level jobs</a> lists every job open to beginners.</p>' + hb_html)
+         f'<p class="lead" id="dirnone" hidden>No career with these words. <a href="{P}/entry-level/">Entry-level jobs</a> lists every job open to beginners.</p>'
+         + dir_sec(f"[[{hb_n} careers]] by field of work", hb_html, ("entry-level/", "All entry-level jobs"), "The number next to each name is how many of its open jobs take beginners today."), cls="hub")
 
     lap('Interview questions, one page per kind of work (Indeed\'s "<r')
     # Interview questions, one page per kind of work (Indeed's "<role> interview questions" pages are among its biggest search
@@ -4635,18 +4673,22 @@ def main():
                   if len(mids_) >= 20 else "Look at postings for this work that state pay, adjust for your experience and the country, and ask for their range first."))]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in iq_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Questions to prepare</dt><dd>{n_q}</dd></div><div><dt>Open {e(low)} jobs today</dt><dd>{n_:,}</dd></div>"
-                  + (f"<div><dt>Postings read in full</dt><dd>{len(descs_):,}</dd></div>" if own_text else "")
-                  + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "") + "</dl>")
+        facts_ = nums([(f"{n_q}", "questions to prepare"), (f"{n_:,}", f"open {e(low)} jobs today")] + ([(f"{len(descs_):,}", "postings read in full")] if own_text else [])
+                      + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else []))
         iq_dir[fs].append((slug_r, rname, n_q))
         page(f"interview-questions/{slug_r}/", f"{n_q} {tcase(rname)} Interview Questions and Answers ({TODAY[:4]}) | {SITE}",
              f"{n_q} {low} interview questions to prepare for, each with why it is likely to come up (from today’s {n_:,} open {low} postings) and what a good answer shows.",
              crumbs(("Interview questions", "interview-questions/"), (rname, "")) + f'<h1>{e(rname)} interview questions: <span class="hl">{n_q} to prepare for</span></h1>'
              f'<p class="lead">Each question says why it is likely to come up, from what today’s {n_:,} open {e(low)} postings ask for, and what a good answer shows. '
              f'Prepare a real example for each, then practise it with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>'
-             f'<p class="note">Updated {fdate(TODAY)}, from that day’s open postings.</p>'
-             + act_row("#practise", "Practise out loud", note="The page reads each question aloud and checks your answer. This site keeps nothing.")
-             + facts_ + body_
+             + facts_
+             # The page's one action is the "Practise out loud" card. site.js puts it in front of the first list of questions; this empty
+             # list stands where the action belongs, under the figures, so the card is there and the questions follow at once (the card
+             # stood under the first heading, below a button that only jumped to it). The plain row stays for a browser without
+             # scripts and for readers of the markup; the card takes its place (.vp-go in style.css).
+             + act_row("#practise", "Practise out loud", note="The page reads each question aloud and checks your answer. This site keeps nothing.").replace('class="lact"', 'class="lact vp-go"', 1)
+             + '<ol class="iq" hidden></ol>'
+             + body_
              + section("Questions to ask them", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in ask_) + "</dl>")
              + section(f"Questions about {art(low)} {low} interview", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in iq_qa) + "</dl>")
              + section("Prepare with", '<div class="feats">'
@@ -4655,22 +4697,21 @@ def main():
                        f'<a class="feat" href="{P}/tools/thank-you-email/"><h3>Thank-you email</h3><p>Send it on the day of the interview, written from four fields.</p></a>'
                        f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{n_:,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>')
              + role_kit(slug_r, low, "iq")
-             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. The questions are ours; no employer’s interview is copied here.</p>', head=ld_)
+             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. The questions are ours; no employer’s interview is copied here.</p>', head=ld_, cls="kw")
     iq_n = sum(len(v) for v in iq_dir.values())
-    iq_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(iq_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/interview-questions/{s_}/">{e(nm)}</a><span>{k} questions</span></li>' for s_, nm, k in sorted(iq_dir[fs], key=lambda x: x[1])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if iq_dir.get(fs)) + "</div>"
+    iq_html = kind_dir(iq_dir, "interview-questions", ("question", "questions"), by_name=True)
+    iq_q = sum(k for v in iq_dir.values() for _, _, k in v)
     page("interview-questions/", f"Interview Questions for {iq_n} Jobs, with What a Good Answer Shows | {SITE}",
          f"Interview questions for {iq_n} kinds of work. Each says why it is likely to come up, from today’s open postings, and what a good answer shows. Free, no sign-up.",
          crumbs(("Interview questions", "")) + f'<h1>Interview questions for <span class="hl">{iq_n} jobs</span></h1>'
          '<p class="lead">Pick your work. Each page lists the questions to prepare for, why each is likely to come up, from the skills and situations today’s open postings name, and what a good answer shows.</p>'
-         f'<p class="note">Want to rehearse? <a href="{P}/interview-practice/">Practise out loud</a>: the page reads the questions and times your answers. Or take a <a href="{P}/skill-tests/">skill test</a> on SQL, Excel, Python and more.</p>'
+         + nums([(f"{iq_n}", "kinds of work"), (f"{iq_q:,}", "questions, each with what a good answer shows"), (f"{len(all_desc):,}", "postings read in full for them"), ("Free", "no sign-up")])
+         + act_row("interview-practice/", "Practise out loud", [("skill-tests/", "Skill tests on SQL, Excel, Python and more")], note="The page reads the questions aloud and times your answers.") +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a job"></p>'
-         f'<p class="lead" id="dirnone" hidden>No page with these words. The <a href="{P}/tools/interview-answer-builder/">interview answer builder</a> works for any job.</p>' + iq_html)
+         f'<p class="lead" id="dirnone" hidden>No page with these words. The <a href="{P}/tools/interview-answer-builder/">interview answer builder</a> works for any job.</p>'
+         + dir_sec(f"Questions for [[{iq_n} kinds of work]]", iq_html, ("tools/interview-answer-builder/", "Interview answer builder"), "The number next to each name is how many questions its page has."), cls="hub")
 
-    ip_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(iq_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/interview-questions/{s_}/#practise">{e(nm)}</a><span>{k} questions</span></li>' for s_, nm, k in sorted(iq_dir[fs], key=lambda x: x[1])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if iq_dir.get(fs)) + "</div>"
+    ip_html = kind_dir(iq_dir, "interview-questions", ("question", "questions"), by_name=True, frag="#practise")
     ip_qa = [("How can I practice for an interview?", "Pick your job below: the page reads each likely question aloud, listens to your answer in the browser and checks its length, whether it has a number and whether you said what you did. "
               "Practise three real stories out loud for 60 to 90 seconds each, then once more with a friend or a recording."),
              ("What is the STAR method?", "A way to tell a work story: the Situation, the Task you had, the Action you took and the Result, with a number. Keep the action the longest part and say “I”, not “we”."),
@@ -4787,35 +4828,33 @@ def main():
                   + ("the table on this page lists the countries named most in today’s postings." if len(ctry_) >= 3 else "name the countries you can hire in."))]      # no country names in plain text: a country is shown with its flag
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hh_qa + hh_more]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        facts_ = ('<dl class="facts">' + f"<div><dt>Companies hiring now</dt><dd>{len(cos_):,}</dd></div><div><dt>Open postings</dt><dd>{n_:,}</dd></div>"
-                  + (f"<div><dt>Median advertised pay</dt><dd>{money(median(mids_))}</dd></div>" if len(mids_) >= 20 else "")
-                  + f"<div><dt>Remote</dt><dd>{rem_pct}%</dd></div>"
-                  + (f"<div><dt>Half are open for over</dt><dd>{age_med} days</dd></div>" if age_med is not None else "") + "</dl>")
+        facts_ = nums([(f"{len(cos_):,}", "companies hiring now"), (f"{n_:,}", f"open {e(low)} postings")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else [])
+                      + [(f"{rem_pct}%", "remote")] + ([(f"{age_med} days", "half of the postings have been up longer")] if age_med is not None else []))
         hh_dir[fs].append((slug_r, rname, len(cos_)))
         page(f"how-to-hire/{slug_r}/", f"How to Hire {art(low)} {tcase(rname)} ({TODAY[:4]}): Pay, Competition and Six Steps | {SITE}",
              f"How to hire {art(low)} {low}: {len(cos_):,} companies are hiring this work today. What they pay and offer, where, how long postings stay up, and six steps with free templates and tools.",
              crumbs(("For employers", "post-a-job/"), ("How to hire…", "how-to-hire/"), (rname, "")) + f'<h1>How to hire {art(low)} {e(low)}: <span class="hl">{len(cos_):,} companies are hiring now</span></h1>'
              f'<p class="lead">What you compete with, counted from today’s {n_:,} open {e(low)} postings: who is hiring, where, what they pay and how long postings stay up. Then six steps, each with a free template or tool.</p>'
-             + facts_
-             + section("What you compete with", '<div class="tablewrap"><table>' + "".join(f"<tr><th>{e(k)}</th><td>{v}</td></tr>" for k, v in rows_) + "</table></div>"
+             + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template")])
+             + section(f"Six steps to hire {art(low)} {low}", steps)      # the steps are what "how to hire" asks for: first, then the figures behind them
+             + section("What you compete with", '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{v}</td></tr>" for k, v in rows_) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>')
              + which_
-             + section(f"Six steps to hire {art(low)} {low}", steps)
              + task_
              + section(f"Questions about hiring {many}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hh_qa + hh_more) + "</dl>")
              + role_kit(slug_r, low, "hire")
              + f'<p class="note cmpl">See also: <a href="{P}/job-descriptions/{slug_r}/">{e(low)} job description template</a> · <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
-             + f'<a href="{P}/tools/cost-per-hire/">cost per hire calculator</a> · <a href="{P}/how-to-hire/">all hiring guides</a></p>', head=ld_)
+             + f'<a href="{P}/tools/cost-per-hire/">cost per hire calculator</a> · <a href="{P}/how-to-hire/">all hiring guides</a></p>', head=ld_, cls="kw")
     hh_n = sum(len(v) for v in hh_dir.values())
-    hh_html = '<div class="dir" id="dir">' + "".join(
-        f'<div class="dirb"><h2><span>{e(fn)}</span><span>{len(hh_dir[fs])}</span></h2><ul>' + "".join(f'<li data-n="{e(nm.lower())}"><a href="{P}/how-to-hire/{s_}/">{e(nm)}</a><span>{k:,} hiring</span></li>' for s_, nm, k in sorted(hh_dir[fs], key=lambda x: -x[2])) + "</ul></div>"
-        for fs, fn, fd, live, js_ in fam_rows if hh_dir.get(fs)) + "</div>"
+    hh_html = kind_dir(hh_dir, "how-to-hire", ("hiring", "hiring"))
     page("how-to-hire/", f"How to Hire…: Guides for {hh_n} Roles with Pay and Competition Data | {SITE}",
          f"Hiring guides for {hh_n} kinds of work: who else is hiring, where, what they pay and offer, how long postings stay up, and six steps with free templates and tools.",
          crumbs(("For employers", "post-a-job/"), ("How to hire…", "")) + f'<h1>How to hire… <span class="hl">{hh_n} roles, with today’s competition</span></h1>'
          '<p class="lead">For employers: pick the work you are hiring for. Each guide counts, from today’s open postings, how many companies want the same people, what they pay and offer and how long postings stay up, then gives six steps with a free template or tool for each.</p>'
+         + nums([(f"{hh_n}", "roles with a hiring guide"), (f"{len(companies):,}", "employers with open jobs today"), (f"{len(active):,}", "open postings counted"), ("Free", "to post a job here")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a guide"></p>'
-         f'<p class="lead" id="dirnone" hidden>No guide with these words. The <a href="{P}/job-descriptions/">job description templates</a> cover the same roles.</p>' + hh_html)
+         f'<p class="lead" id="dirnone" hidden>No guide with these words. The <a href="{P}/job-descriptions/">job description templates</a> cover the same roles.</p>'
+         + dir_sec(f"Hiring guides for [[{hh_n} roles]]", hh_html, ("post-a-job/", "Post a job free"), "The number next to each role is how many companies are hiring for it today."), cls="hub")
 
     lap('Relocation guides, one per country (Relocate.me lives on gui')
     # Relocation guides, one per country (Relocate.me lives on guides like these, the owner asked for them): from today's postings in

@@ -2657,3 +2657,93 @@ main.hub .cta2 a.btn{text-decoration:none}
   #acc.pr .acc-side,#acc.pr .acc-ph,#acc.pr .acc-call,#acc.pr .acc-list,#acc.pr .acc-h2,#acc.pr #acc-say,#acc.pr .acc-test,#acc.pr .acc-synced,#acc.pr .acc-btns{display:none!important}
   #acc.pr .acc-shell{display:block}
 }
+
+/* Sections review, batch 2 (seven families by kind of work), 17 Nov 2026 */
+/* Resume, CV and cover letter examples, interview questions, how to become, how to hire, job descriptions: a page per kind of work
+   in each and a hub. Looked at by eye at 1360 px, at 375 px and in the dark theme. build.py puts the class "kw" on <main> of these
+   pages; their seven directories are "hub" pages and take the hub rules of batch 1 as they are. One order on every page: the
+   heading, one paragraph, the row of figures (.nums), ONE ink action (.lact), then what the visitor came for. */
+
+/* the header block: figures, then the action; a button never carries the line that marks a link */
+main.kw .nums{margin-top:18px}
+main.kw .nums dd{white-space:nowrap}      /* "73 days" stays one figure when an odd last cell lies on its side on a phone */
+main.kw .lact{margin:16px 0 0}
+main.kw a.btn,main.hub .lact a.btn{text-decoration:none}
+main.kw .lact+.sec:not(.voicepr),main.kw .nums-src+.sec:not(.voicepr),main.kw ol.iq[hidden]+.sec{margin-top:52px}
+@media(max-width:560px){
+  main.kw .lact{gap:6px 18px}
+  main.kw .lact .btn,main.hub .lact .btn{min-height:44px;padding:0 18px;font-size:14.5px}
+  main.kw .lact>a:not(.btn),main.hub .lact>a:not(.btn){display:inline-flex;align-items:center;min-height:40px}
+  main.kw .lact span{flex:0 1 auto}      /* a short note shares the line with the link beside it */
+  main.kw .lact+.sec:not(.voicepr),main.kw .nums-src+.sec:not(.voicepr),main.kw ol.iq[hidden]+.sec{margin-top:36px}
+}
+
+/* a document page (resume, CV, letter, job description): the document on the left, what today's postings say beside it */
+main.kw .rexgrid{margin:28px 0 0}
+@media(min-width:1100px){main.kw .rexgrid.wide{grid-template-columns:minmax(0,640px) minmax(0,1fr)}}      /* a letter or a template is wider than a resume sheet */
+main.kw .paper{border-radius:10px;box-shadow:var(--shadow)}
+main.kw .rexgrid .rl-paper,main.kw .kwlv .rl-paper{max-width:none;margin:0}
+main.kw .rexgrid>div>.note{margin:12px 0 14px}
+main.kw .rexside h2{margin:30px 0 8px;font-size:21px;line-height:1.2;letter-spacing:-.02em}
+main.kw .rexside>h2:first-child{margin-top:4px}
+main.kw .rexside>p{margin:0 0 10px}
+main.kw .rexside .steps{max-width:none;margin:8px 0 0}
+main.kw .rexside ul.ticks{grid-template-columns:1fr;gap:8px;margin-top:10px}
+main.kw .rexside .hbars.chart{margin:8px 0 6px}
+main.kw .rexside .tablewrap{margin:10px 0 8px;box-shadow:none}
+@media(max-width:560px){
+  main.kw .rexgrid{margin-top:22px}
+  main.kw .paper{padding:20px 18px 18px}
+  main.kw .paper .pp-name{font-size:22px}
+  main.kw .rl-act .btn{min-height:42px;padding:0 16px}      /* Copy, Word, PDF: large enough for a thumb */
+  main.kw .paper .pp-job span{float:none;display:block}      /* the dates under the job: floated right they ran into the first line of the list */
+}
+
+/* the other levels of an example (entry-level, senior) side by side, their sheets starting on one line whatever the headings' length */
+.kwlv{display:grid;grid-template-columns:minmax(0,1fr);gap:0 48px}
+.kwlv>.sec{min-width:0}
+.kwlv .sec-head h2{font-size:clamp(21px,2.1vw,25px);line-height:1.2;letter-spacing:-.02em}
+.kwlv .note{margin:12px 0 0}
+.kwlv .rl-paper{display:flex;flex-direction:column}
+.kwlv .rl-act{margin-top:auto;padding-top:18px}      /* two letters of different length: their buttons on one line at the foot of the cards */
+@media(min-width:1000px){
+  .kwlv:has(>.sec+.sec){grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto}
+  .kwlv:has(>.sec+.sec)>.sec{display:grid;grid-template-rows:subgrid;grid-row:span 3;align-content:start}
+  .kwlv:has(>.sec+.sec) .sec-head{align-items:flex-end}
+  .kwlv>.sec:only-child>.paper,.kwlv>.sec:only-child>.rl-paper{max-width:760px}
+}
+
+/* a table of names and values: beside a document, and on a phone everywhere, the name stands above its value (two columns left
+   the value a strip a few words wide) */
+main.kw .rexside table.kv,main.kw .rexside table.kv tbody,main.kw .rexside table.kv tr,main.kw .rexside table.kv th,main.kw .rexside table.kv td{display:block}
+main.kw .rexside table.kv th{padding:12px 16px 0;border:0;background:none;white-space:normal}
+main.kw .rexside table.kv td{padding:3px 16px 12px;font-size:14.5px}
+main.kw .rexside table.kv tr:hover td{background:none}
+@media(max-width:700px){
+  main.kw table.kv,main.kw table.kv tbody,main.kw table.kv tr,main.kw table.kv th,main.kw table.kv td{display:block}
+  main.kw table.kv th{padding:12px 14px 0;border:0;background:none;white-space:normal}
+  main.kw table.kv td{padding:3px 14px 12px}
+  main.kw table.kv tr:hover td{background:none}
+  main.kw .tablewrap th{white-space:normal}      /* a table of three or four columns keeps to the screen's width */
+}
+
+/* bars on these pages: the data colour token of the site's other charts, rounded, on a soft track (they were thin square rules) */
+main.kw .hbars.chart .hb{height:8px;border-radius:999px;background:var(--viz-soft)}
+main.kw .hbars.chart .hb i{border-radius:999px;background:var(--viz-1)}
+main.kw .hbars.chart .hc{color:var(--text)}
+
+/* interview questions: ".why" is also the pay explainer's row of marks, and its flex row and 58px indent leaked into the questions */
+.iq .why{display:block;padding:0}
+/* the "Practise out loud" card is the page's action: it stands under the figures, the width of the column */
+main.kw .voicepr{margin:18px 0 0}
+main.kw .vp-go:has(+.voicepr){display:none}      /* the plain row a browser without scripts gets; the card takes its place */
+main.kw .voicepr .vp-card{max-width:none;margin:0;padding:18px 20px;border-radius:16px}
+main.kw .vp-h b{font:700 19px/1.25 var(--display);letter-spacing:-.02em}
+main.kw .vp-row .btn{min-height:40px}
+
+/* the seven directories: a field's icon and name on one line, a long name wrapping beside the icon */
+main.hub .dirb h2 b{display:flex;align-items:center;min-width:0}
+
+/* the dark theme: the tick of a passed check is paper, not green type on black */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .vp-checks li.ok::before{color:var(--text)}}
+:root[data-theme=dark] .vp-checks li.ok::before{color:var(--text)}
