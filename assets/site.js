@@ -1788,33 +1788,46 @@
   Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
 })();
 
-// the account in the header: "Sign in" for everyone, and once signed in a round button with the first letter and a menu
+// the account in the header: "Sign in" for everyone, and once signed in a round button with the first letter and a menu.
+// The menu follows the side the person uses (hrn_role: a job seeker sees resumes, saved jobs and alerts; an employer sees their jobs,
+// posting, promotion and billing). It is drawn again whenever the sign-in or the side changes: the account page says so with the event
+// "hrn:auth", another tab of the site through the "storage" event. Signing out puts "Sign in" back at once, without loading a page.
 (function () {
   var a = document.getElementById('hsign');
   if (!a) return;
   var api = (a.getAttribute('data-api') || '').replace(/\/+$/, ''), base = (window.HRN && window.HRN.base) || '';
+  if (window.HRN) window.HRN.api = api;                 // for the pages that keep something in the account (the resume builder)
   var get = function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
-  var token = get('hrn_token'), email = get('hrn_me_email') || '';
-  if (!token) return;                                   // signed out: the link "Sign in" stays as it is
-  var acc = base + '/account/';
-  var wrap = document.createElement('div'); wrap.className = 'hacc';
-  wrap.innerHTML = '<button class="hacc-b" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Your account">' +
-    (email ? email.charAt(0).toUpperCase() : '•') + '</button><div class="hacc-m" role="menu" hidden>' +
-    (email ? '<p class="hacc-e">' + email.replace(/[<>&"]/g, '') + '</p>' : '') +
-    '<a role="menuitem" href="' + acc + '#overview">Your account</a><a role="menuitem" href="' + acc + '#resumes">Resumes</a>' +
-    '<a role="menuitem" href="' + base + '/my-jobs/">Saved jobs and applications</a><a role="menuitem" href="' + acc + '#alerts">Job alerts</a>' +
-    '<a role="menuitem" href="' + acc + '#jobs">Jobs you posted</a><a role="menuitem" href="' + acc + '#settings">Settings</a>' +
-    '<button role="menuitem" type="button" class="hacc-out">Sign out</button></div>';
-  a.replaceWith(wrap);
-  var b = wrap.querySelector('.hacc-b'), m = wrap.querySelector('.hacc-m');
-  var close = function () { m.hidden = true; b.setAttribute('aria-expanded', 'false'); };
-  b.addEventListener('click', function (ev) { ev.stopPropagation(); m.hidden = !m.hidden; b.setAttribute('aria-expanded', String(!m.hidden)); });
-  document.addEventListener('click', function (ev) { if (!wrap.contains(ev.target)) close(); });
-  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') close(); });
-  wrap.querySelector('.hacc-out').addEventListener('click', function () {
-    fetch(api + '/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(function () {}).then(function () {
-      try { localStorage.removeItem('hrn_token'); localStorage.removeItem('hrn_me_email'); } catch (e) {}
-      location.href = acc;
+  var acc = base + '/account/', wrap = null;
+  var MENU = {
+    seeker: [[acc + '#overview', 'Your account'], [acc + '#resumes', 'Resumes'], [base + '/my-jobs/', 'Saved jobs and applications'], [acc + '#alerts', 'Job alerts'], [acc + '#settings', 'Settings']],
+    employer: [[acc + '#overview', 'Your account'], [acc + '#jobs', 'Your jobs'], [acc + '#post', 'Post a job'], [acc + '#promote', 'Promote a job'], [acc + '#company', 'Company page'], [acc + '#billing', 'Billing'], [acc + '#settings', 'Settings']]
+  };
+  var close = function () { if (!wrap) return; wrap.querySelector('.hacc-m').hidden = true; wrap.querySelector('.hacc-b').setAttribute('aria-expanded', 'false'); };
+  function paint() {
+    var token = get('hrn_token'), email = get('hrn_me_email') || '', role = get('hrn_role') === 'employer' ? 'employer' : 'seeker';
+    if (!token) { if (wrap) { wrap.replaceWith(a); wrap = null; } return; }      // signed out: the link "Sign in" is back as it was
+    var w = document.createElement('div'); w.className = 'hacc';
+    w.innerHTML = '<button class="hacc-b" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Your account">' +
+      (email ? email.charAt(0).toUpperCase() : '•') + '</button><div class="hacc-m" role="menu" hidden>' +
+      '<p class="hacc-e">' + (email ? '<b>' + email.replace(/[<>&"]/g, '') + '</b>' : '') + '<span>' + (role === 'employer' ? 'Employer account' : 'Job seeker account') + '</span></p>' +
+      MENU[role].map(function (x) { return '<a role="menuitem" href="' + x[0] + '">' + x[1] + '</a>'; }).join('') +
+      '<button role="menuitem" type="button" class="hacc-out">Sign out</button></div>';
+    (wrap || a).replaceWith(w); wrap = w;
+    var b = w.querySelector('.hacc-b'), m = w.querySelector('.hacc-m');
+    b.addEventListener('click', function (ev) { ev.stopPropagation(); m.hidden = !m.hidden; b.setAttribute('aria-expanded', String(!m.hidden)); });
+    m.addEventListener('click', function (ev) { if (ev.target.tagName === 'A') close(); });      // a part of the account page that is open already: the menu must not stay over it
+    w.querySelector('.hacc-out').addEventListener('click', function () {
+      if (document.getElementById('acc')) { close(); document.dispatchEvent(new CustomEvent('hrn:signout')); return; }      // on the account page the page itself signs out and shows the form
+      fetch(api + '/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(function () {});
+      try { localStorage.setItem('hrn_token', '""'); localStorage.setItem('hrn_me_email', '""'); } catch (e) {}
+      paint();
+      try { document.dispatchEvent(new CustomEvent('hrn:auth')); } catch (e) {}
     });
-  });
+  }
+  document.addEventListener('click', function (ev) { if (wrap && !wrap.contains(ev.target)) close(); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && wrap && !wrap.querySelector('.hacc-m').hidden) { close(); wrap.querySelector('.hacc-b').focus(); } });
+  document.addEventListener('hrn:auth', paint);
+  window.addEventListener('storage', function (ev) { if (!ev.key || ev.key === 'hrn_token' || ev.key === 'hrn_role' || ev.key === 'hrn_me_email') paint(); });
+  paint();
 })();

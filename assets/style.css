@@ -465,7 +465,6 @@ nav a.nl[aria-current=page]{color:var(--text);box-shadow:inset 0 -3px 0 var(--ac
 footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
 
 /* employer account */
-.acc-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px}
 .acc-auth{max-width:460px}
 .fld{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted);margin:0 0 14px}
 .fld input,.fld select,.fld textarea{font:400 15px "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:var(--text);padding:11px 13px;border:1px solid var(--line2);border-radius:6px;background:var(--card);width:100%;max-width:none;margin:0;min-height:44px}
@@ -2072,22 +2071,15 @@ footer .logo img{height:28px}
 .acc-nav a{padding:8px 12px;border-radius:8px;font-size:14.5px;font-weight:500;color:var(--muted)}
 .acc-nav a:hover{background:var(--bg2);color:var(--text)}
 .acc-nav a.on{background:var(--bg2);color:var(--text);font-weight:650;box-shadow:inset 3px 0 0 var(--ac)}
-.acc-navh{margin:10px 0 4px;padding:0 12px;font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
 .acc-out{margin:0!important;justify-self:start}
 .acc-main{min-width:0}
 .acc-main .acc-panel>.sec:first-child{margin-top:0}
 .acc-main .sec{margin-top:40px}
-.ov-hi h2{margin:0}.ov-hi .note{margin:4px 0 18px}
 .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
 .ov-c{display:grid;gap:4px;padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:14px}
 .ov-c b{font:800 28px/1 var(--display);letter-spacing:-.02em}.ov-c span{font-size:13.5px;color:var(--muted)}
 .ov-c:hover{border-color:var(--text)}
 .acc-h3{margin:28px 0 12px;font-size:16px}
-.ov-next{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.ov-next a{display:grid;gap:4px;padding:16px 18px;border:1px dashed var(--line2);border-radius:14px}
-.ov-next a:hover{border-style:solid;border-color:var(--text)}
-.ov-next b::after{content:" →"}.ov-next span{font-size:14px;color:var(--muted)}
-.acc-ok{padding:14px 16px;border-radius:12px;background:var(--green-soft);color:var(--text);margin:0 0 14px}
 .acc-inline{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;padding:16px 18px}
 .acc-inline .fld{flex:1 1 240px;margin:0}
 .acc-more{margin:14px 0}.acc-more summary{cursor:pointer;font-size:14px;color:var(--muted)}
@@ -2097,7 +2089,6 @@ footer .logo img{height:28px}
 .acc-boost label:has(input:checked){border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
 .acc-boost input{margin-top:3px;accent-color:var(--text)}
 .acc-boost b{display:block}.acc-boost span{font-size:14px;color:var(--muted)}
-.acc-empty{display:grid;gap:10px;align-content:start}
 .spark{display:inline-flex;align-items:flex-end;gap:2px;height:22px;margin-top:6px}
 .spark i{display:block;width:5px;border-radius:2px 2px 0 0;background:var(--viz-1)}
 .rs-i{display:inline-grid;place-items:center;width:38px;height:46px;border-radius:6px;border:1px solid var(--line2);font:700 11px/1 var(--mono);color:var(--muted)}
@@ -2109,11 +2100,9 @@ footer .logo img{height:28px}
   .acc-side{position:static;padding:12px}
   .acc-nav{display:flex;overflow-x:auto;gap:6px;scrollbar-width:none}
   .acc-nav a{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:7px 12px}
-  .acc-navh{display:none}
   .acc-dl>div{grid-template-columns:minmax(0,1fr)}
 }
 .acc-boost label{justify-content:flex-start;text-align:left;font-weight:400}.acc-boost input[type=radio]{width:18px;height:18px;min-width:0;max-width:18px;margin:2px 0 0;padding:0;flex:none;border-radius:50%}.acc-boost label>span{flex:1;min-width:0}
-.acc-panel .trow{grid-template-columns:150px minmax(0,1fr) auto}.acc-panel .trow>span:first-child{justify-self:start}.acc-panel .trow .ctl{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}@media(max-width:640px){.acc-panel .trow{grid-template-columns:minmax(0,1fr)}}
 /* drop-down lists: our own arrow, 12 px inside the right edge, the same in every browser (owner, 15 Nov 2026: "the arrows almost
    go past the frame, too far right") */
 select:not([multiple]){-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%2355534c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 13px center!important;background-size:12px 8px!important;padding-right:38px!important;text-overflow:ellipsis}
@@ -2141,7 +2130,6 @@ select:not([multiple]):hover{border-color:var(--text)}
 .acc-who button{display:grid;gap:3px;text-align:left;padding:16px 18px;border:1px solid var(--line2);border-radius:14px;background:var(--card);color:var(--text);cursor:pointer;font:inherit}
 .acc-who button b{font-size:17px}.acc-who button span{font-size:14px;color:var(--muted)}
 .acc-who button[aria-selected=true]{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
-.acc-auth-h{margin:0 0 14px;font-size:22px}
 @media(max-width:560px){.acc-who{grid-template-columns:1fr}}
 /* paid products in the account: what each includes, and what others charge */
 .acc-card{position:relative}
@@ -2234,4 +2222,284 @@ select:not([multiple]):hover{border-color:var(--text)}
   .jfwrap .jft td{border:0;padding:3px 14px;display:flex;justify-content:space-between;gap:12px}
   .jft td::before{content:attr(data-l);color:var(--muted);font-size:13.5px;white-space:normal}
   .tablewrap .jft tr:hover td,.tablewrap .jft tr:hover th{background:none}
+}
+/* Account, pass of 17 Nov 2026 */
+/* The owner: "the site is not worked through, from the personal account to everything else". Everything the account page draws
+   (assets/account.js) is under #acc; the round button in the header and its menu are .hacc. The patterns are those of DESIGN_STUDY,
+   "dLocal and Ashby", in our own colours and type: a small label above a two-weight headline, the first screen as one framed panel,
+   a row of the person's own numbers, cards with air. One filled button per screen; the rest are outlines. Green stays a small accent. */
+#acc{--acc-bad:#b42318;--acc-bad-soft:#fdecea;--acc-tint:color-mix(in srgb,var(--text) 6%,transparent)}      /* --acc-tint: a hover or a chosen row, seen on white and on the dark card alike */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) #acc{--acc-bad:#ff9d8f;--acc-bad-soft:#3a1915}}
+:root[data-theme=dark] #acc{--acc-bad:#ff9d8f;--acc-bad-soft:#3a1915}
+.acc-wait{min-height:420px;display:grid;place-items:center}
+/* buttons: an outline button sits on the same line as its neighbours, and stays an outline while it waits */
+#acc .btn.ghost{margin-top:0}
+#acc .btn.wide{width:100%}
+#acc .btn.ghost[disabled],#acc .btn.ghost[disabled]:hover{background:transparent;color:var(--text);border-color:var(--line2)}
+#acc a.btn{text-decoration:none}
+.acc-btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 0}
+.acc-btns .note{margin:0}
+/* the label and the headline that open the first screen and every part */
+.acc-lbl{display:inline-flex;align-items:center;gap:8px;margin:0;padding:5px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:13px;font-weight:600;line-height:1.3;color:var(--muted)}
+.acc-lbl i{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+.acc-t{margin:14px 0 0;font:400 clamp(28px,3.1vw,40px)/1.08 var(--display);letter-spacing:-.035em;text-wrap:balance}
+.acc-t b{font-weight:750}
+.acc-t.sm{font-size:clamp(24px,2.4vw,30px)}
+.acc-sub{margin:10px 0 0;max-width:66ch;color:var(--muted);font-size:16px;line-height:1.5}
+.acc-ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px 24px;flex-wrap:wrap;margin:0 0 24px}
+.acc-ph>div:first-child{flex:1 1 380px;min-width:0}
+.acc-ph .acc-t{font-size:clamp(26px,2.6vw,34px)}
+.acc-pa{flex:none}
+.acc-sec{margin-top:40px}
+.acc-h2{margin:0 0 14px;font:700 20px/1.2 var(--display);letter-spacing:-.02em}
+.acc-sec>.acc-sub,.acc-form>.acc-sub{margin:0 0 16px}
+.acc-sec>.acc-h2+.acc-sub{margin-top:-4px}
+#acc .acc-h3{margin:24px 0 10px;font-size:16px}
+/* links in the account's own text look like links */
+#acc p a:not(.btn),#acc .hint a,#acc .acc-row a.tt,#acc .acc-job-t a,#acc td a:not(.btn),#acc .acc-more summary,#acc .acc-sw b{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+#acc p a:not(.btn):hover,#acc .acc-row a.tt:hover,#acc .acc-job-t a:hover,#acc td a:not(.btn):hover{text-decoration-color:var(--text)}
+/* signed out: one framed panel. Left: who you are and what the account gives; right: the form */
+#acc .acc-gate{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);grid-template-areas:"pitch auth" "why auth";grid-template-rows:auto 1fr;gap:28px 64px;align-items:start;margin:4px 0 40px;padding:48px 52px;border-radius:24px;background:var(--bg2)}
+.acc-pitch{grid-area:pitch;padding-top:6px}
+#acc .acc-gate .acc-auth{grid-area:auth;max-width:none;padding:28px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow)}
+#acc .acc-gate.one{display:block;padding:56px 20px}
+#acc .acc-gate.one .acc-auth{max-width:460px;margin:0 auto}
+#acc .acc-gate.one .acc-sub{margin-bottom:20px}
+#acc .acc-gate.one form{margin-top:20px}
+#acc .acc-auth .banner{margin:0 0 18px;font-size:14.5px}
+#acc .acc-who{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:none;margin:26px 0 0}
+#acc .acc-who button{display:grid;gap:3px;align-content:start;text-align:left;padding:14px 16px;border:1px solid var(--line2);border-radius:14px;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+#acc .acc-who button:hover{border-color:var(--text)}
+#acc .acc-who button b{font-size:16px;line-height:1.25}
+#acc .acc-who button span{font-size:13.5px;color:var(--muted)}
+#acc .acc-who button[aria-pressed=true]{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+#acc .acc-why{grid-area:why;list-style:none;margin:0;padding:0;display:grid;gap:0}
+#acc .acc-why li{position:relative;padding:13px 0 13px 34px;border:0;border-top:1px solid var(--line2);border-radius:0;background:none;color:var(--muted);font-size:15px;line-height:1.45}
+#acc .acc-why li::before{content:"✓";position:absolute;left:0;top:14px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);font:700 12px/1 system-ui}
+#acc .acc-why b{display:block;margin:0 0 1px;color:var(--text);font-size:15.5px}
+.acc-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 0 20px;border-radius:12px;background:var(--acc-tint)}
+.acc-seg button{padding:10px 12px;border:0;border-radius:9px;background:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer}
+.acc-seg button:hover{color:var(--text)}
+.acc-seg button[aria-selected=true]{background:var(--card);color:var(--text);box-shadow:0 0 0 1px var(--line2),0 1px 2px rgba(16,24,40,.08)}
+#acc .acc-sso{margin:0}
+#acc .acc-or{margin:16px 0 14px}
+.acc-alt{margin:16px 0 0;font-size:13.5px;line-height:1.5;color:var(--faint)}
+.acc-alt a{color:var(--text);font-weight:600}
+/* fields: the label in ink, a rounder box, and the mistake written under the field it is about */
+#acc .fld{margin:0 0 14px}
+#acc .fld-l{font-size:13.5px;font-weight:600;color:var(--text)}
+#acc .fld input,#acc .fld select,#acc .fld textarea{border-radius:10px}
+#acc .fld textarea{line-height:1.5}
+#acc .hint{font-size:13px;font-weight:400;line-height:1.4;color:var(--faint)}
+#acc [aria-invalid=true]{border-color:var(--acc-bad);box-shadow:0 0 0 3px var(--acc-bad-soft)}
+#acc .ferr{display:block;font-size:13px;font-weight:600;line-height:1.4;color:var(--acc-bad)}
+#acc .fld:has(.ferr) .hint{display:none}
+#acc .acc-err{margin:4px 0 12px;border-radius:10px;border-color:color-mix(in srgb,var(--acc-bad) 30%,transparent);background:var(--acc-bad-soft);color:var(--acc-bad)}
+#acc label.check{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;padding:8px 0;font-size:14.5px;font-weight:500;line-height:1.45;cursor:pointer}
+#acc label.check input{flex:none;width:18px;height:18px;min-height:0;margin:2px 0 0;padding:0;accent-color:var(--text)}
+#acc label.check>span{flex:1;min-width:0}
+#acc label.check .ferr{flex:1 0 100%;padding-left:28px}
+#acc .acc-roles input{width:16px;height:16px;min-height:0;padding:0}
+#acc .acc-remote{align-self:center;padding-top:14px}
+.acc-file{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.acc-file label{position:relative;cursor:pointer}
+.acc-file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.acc-file label:focus-within{outline:2px solid var(--text);outline-offset:2px}
+.acc-file-n{font-size:13.5px;color:var(--muted)}
+/* signed in: the menu of one side on the left, one part at a time on the right */
+#acc .acc-shell{grid-template-columns:248px minmax(0,1fr);gap:44px;margin:4px 0 40px}
+#acc .acc-side{top:84px;gap:14px;padding:16px;border-radius:18px}
+#acc .acc-nav a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:10px;font-size:15px}
+#acc .acc-nav a:hover,#acc .acc-nav a.on{background:var(--acc-tint)}
+#acc .acc-nav a i{flex:none;padding:1px 8px;border-radius:999px;background:var(--acc-tint);font-style:normal;font-size:12px;font-weight:600;color:var(--muted)}
+.acc-foot{display:grid;gap:12px;padding-top:14px;border-top:1px solid var(--line)}
+.acc-sw{padding:0;border:0;background:none;text-align:left;font-family:inherit;font-size:13.5px;line-height:1.4;color:var(--muted);cursor:pointer}
+.acc-sw b{display:block;color:var(--text);font-weight:600}
+.acc-sw:hover b{text-decoration-color:var(--text)}
+#acc .acc-out{justify-self:start}
+#acc .acc-adm{padding:8px 12px;border:1px solid var(--line2);border-radius:999px;background:none;color:var(--text);font-size:13.5px;font-weight:600;justify-self:start}
+#acc .acc-adm:hover{border-color:var(--text)}
+#acc .acc-main .banner{margin:0 0 20px;border-radius:14px}
+#acc .acc-main .banner b,#acc .acc-auth .banner b{font-weight:700}
+.acc-call{display:flex;align-items:center;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;margin:0 0 22px;padding:12px 16px;border-radius:14px;background:var(--amber-soft);color:var(--text);font-size:15px;line-height:1.45}
+.acc-call p{flex:1 1 300px;margin:0}
+.acc-call.soft{background:var(--bg2)}
+#acc .acc-call .btn{background:transparent;border-color:var(--text);color:var(--text)}
+#acc .acc-call .btn:hover{background:var(--text);color:var(--bg)}
+.acc-quiet{margin:0 0 16px;font-size:15px;line-height:1.5;color:var(--muted)}
+.acc-quiet b{color:var(--text)}
+#acc .acc-sec+.acc-form{margin-top:24px}
+.acc-synced{margin:14px 0;padding:12px 16px;border-radius:14px;background:var(--green-soft);font-size:15px;line-height:1.45}
+#acc .acc-more{margin:14px 0}
+#acc .acc-more summary{font-size:14.5px;font-weight:600;color:var(--text)}
+#acc .acc-more[open] summary{margin-bottom:12px}
+.acc-test{margin:0 0 16px}
+/* the person's own numbers: one row, four figures */
+.acc-nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 8px;border:1px solid var(--line);border-radius:18px;background:var(--card);overflow:hidden}
+.acc-nums a{display:grid;gap:6px;align-content:start;padding:20px 22px;border-left:1px solid var(--line)}
+.acc-nums a:first-child{border-left:0}
+.acc-nums a:hover{background:var(--acc-tint)}
+.acc-nums b{font:700 34px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.acc-nums span{font-size:14px;line-height:1.3;color:var(--muted)}
+#acc .acc-ups{margin:0 0 16px}
+#acc .acc-ups li{border-radius:14px}
+/* what to do next: a ruled list, each row a link */
+.acc-steps{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--card);overflow:hidden}
+.acc-steps li{border-top:1px solid var(--line)}
+.acc-steps li:first-child{border-top:0}
+.acc-steps a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 16px;align-items:center;padding:16px 20px}
+.acc-steps a::after{content:"";grid-column:2;grid-row:1/3;width:8px;height:8px;border-top:2px solid var(--faint);border-right:2px solid var(--faint);transform:rotate(45deg)}
+.acc-steps a:hover{background:var(--acc-tint)}
+.acc-steps b{font-size:16px;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.acc-steps span{grid-column:1;font-size:14.5px;line-height:1.45;color:var(--muted)}
+/* lists (resumes, alerts, the team): one card, a row per item, the buttons on the right */
+.acc-list{margin:0 0 14px;border:1px solid var(--line);border-radius:18px;background:var(--card);overflow:hidden}
+.acc-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:16px 20px;border-top:1px solid var(--line)}
+.acc-row:first-child{border-top:0}
+.acc-row .main{flex:1 1 260px;min-width:0}
+.acc-row>.rs-i+.main{flex:1 1 0;min-width:150px}
+.acc-row .tt,.acc-row strong{font-size:16px;font-weight:650}
+.acc-row .js{display:block;margin-top:4px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.acc-row .js+.js{margin-top:0}
+.acc-row .main>.state{margin-right:6px;vertical-align:1px}
+.acc-row .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.acc-msg{margin:8px 0;line-height:1.5}
+.acc-mini{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.acc-mini select{min-height:36px;padding:6px 32px 6px 12px;border-radius:999px;font-size:13.5px}
+#acc .rs-i{flex:none;border-radius:8px}
+/* nothing here yet: one sentence and one button */
+.acc-none{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;margin:0 0 14px;padding:22px 24px;border:1px dashed var(--line2);border-radius:18px}
+.acc-none p{flex:1 1 320px;margin:0;font-size:15.5px;line-height:1.5;color:var(--muted)}
+.acc-none b{color:var(--text)}
+/* forms in cards */
+#acc .card{padding:22px 24px;border-radius:18px}
+.acc-form{margin:0 0 14px}
+#acc .acc-form .acc-h2{margin-bottom:16px}
+#acc .acc-inline{align-items:flex-start;gap:12px 14px;margin:0 0 14px;padding:18px 20px}
+#acc .acc-inline>.btn{margin-top:25px;min-height:46px}
+#acc .acc-inline .acc-err{flex:1 0 100%;margin:0}
+.acc-inline-t{flex:1 0 100%;margin:0;font-size:15px;line-height:1.5;color:var(--muted)}
+.acc-inline-t b{color:var(--text)}
+#acc .acc-inline.flat{margin:16px 0 4px;padding:0;border:0;background:none}
+#acc .acc-inline .acc-file{margin-top:31px}
+#acc .acc-boost{margin:8px 0 14px}
+#acc .acc-boost legend{padding:0;font-size:13.5px;color:var(--text)}
+#acc .acc-boost label{border-radius:14px}
+/* a job you posted (and a company page you claimed): its state, what it brought, what you can do with it */
+.acc-job{margin:0 0 12px;padding:20px 22px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.acc-job.bad{border-color:color-mix(in srgb,var(--acc-bad) 45%,var(--line))}
+.acc-job-h{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px}
+.acc-job-h>div:first-child{flex:1 1 300px;min-width:0}
+.acc-job-t{margin:10px 0 2px;font:700 19px/1.25 var(--display);letter-spacing:-.02em}
+.acc-job .js{margin:0;font-size:14px;color:var(--muted)}
+.acc-job-n{display:flex;align-items:flex-end;gap:22px}
+.acc-job-n>span{display:grid;gap:2px;font-size:12.5px;color:var(--muted)}
+.acc-job-n b{font:700 22px/1.1 var(--display);color:var(--text);font-variant-numeric:tabular-nums}
+.acc-job-n>.spark{display:inline-flex;margin:0 0 3px}
+.acc-job-s{margin:12px 0 0;font-size:15px;line-height:1.5;color:var(--muted)}
+.acc-job-s b{color:var(--text)}
+.acc-job>.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.acc-job>form{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.acc-job>form .acc-h3{margin-top:0}
+#acc .state{padding:3px 10px;border-radius:999px;background:var(--acc-tint)}
+#acc .state.live,#acc .state.paid,#acc .state.verified,#acc .state.active,#acc .state.accepted{background:var(--green-soft);color:var(--green)}
+#acc .state.pending,#acc .state.scheduled,#acc .state.review,#acc .state.held,#acc .state.paused{background:var(--amber-soft);color:var(--amber)}
+#acc .state.rejected,#acc .state.underpaid{background:var(--acc-bad-soft);color:var(--acc-bad)}
+#acc .logo-up{align-items:flex-start;margin:0 0 16px}
+#acc .logo-up .fld-l{margin:0 0 8px}
+#acc .logo-up .hint{margin:8px 0 0}
+.stats-out{margin-top:14px}
+/* promotion: the job is picked once, the prices follow */
+#acc .acc-grid{gap:14px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+#acc .acc-grid.four{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+#acc .acc-grid.four .price{font-size:30px}
+#acc .acc-card{border-radius:18px}
+#acc .acc-card .fld{margin:4px 0 0}
+.pc-act{display:grid;gap:8px;margin-top:auto;padding-top:14px}
+#acc .acc-card .btn{margin-top:0}
+.acc-pick{margin:0 0 14px}
+#acc .acc-pick .fld{margin:0}
+/* "Let employers find you": closed until the person wants it */
+.acc-fold{border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.acc-fold>summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:16px 20px;list-style:none;font-size:15px;color:var(--muted);cursor:pointer}
+.acc-fold>summary::-webkit-details-marker{display:none}
+.acc-fold>summary b{color:var(--text)}
+.acc-fold-a{margin-left:auto;padding:6px 14px;border:1px solid var(--line2);border-radius:999px;font-size:13.5px;font-weight:600;color:var(--text)}
+.acc-fold>summary:hover .acc-fold-a{border-color:var(--text)}
+.acc-fold[open]>summary .acc-fold-a{display:none}
+.acc-fold>form{padding:0 20px 20px}
+.acc-fold.open{padding:18px 20px 20px}
+.acc-fold-h{margin:0 0 6px}
+.acc-fold.open .acc-more{margin-bottom:0}
+/* settings */
+#acc .acc-dl{border-radius:18px;overflow:hidden}
+#acc .acc-dl>div{grid-template-columns:170px minmax(0,1fr);align-items:center;padding:16px 20px}
+#acc .acc-dl dt{font-size:14.5px;font-weight:600;color:var(--text)}
+#acc .acc-dl dd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+#acc .acc-dl dd>span{flex:1 1 260px;min-width:0;line-height:1.45}
+.acc-danger{padding:18px 20px;border:1px solid color-mix(in srgb,var(--acc-bad) 35%,var(--line));border-radius:18px;background:var(--card)}
+.acc-danger p:first-child{margin-top:0}
+#acc .acc-danger .fld{max-width:380px}
+#acc .acc-danger .btn{color:var(--acc-bad);border-color:color-mix(in srgb,var(--acc-bad) 50%,var(--line2))}
+#acc .acc-danger .btn:hover{border-color:var(--acc-bad)}
+.acc-receipt{margin-top:14px}
+#acc .tablewrap th{white-space:nowrap}
+#acc .tablewrap td:first-child{overflow-wrap:anywhere}
+#acc .tablewrap .btn{margin:0}
+/* the header: the menu's own type (a font shorthand with "inherit" in it is dropped by the browser), who is signed in, and the side */
+.hacc-m a,.hacc-m button{font-family:inherit;font-size:14.5px;font-weight:500;line-height:1.3}
+.hacc-e{white-space:normal}
+.hacc-e b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;color:var(--text)}
+.hacc-e span{font-size:12.5px;color:var(--faint)}
+.hacc-b:focus-visible,.hsign:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+@media(max-width:1020px){
+  #acc .acc-gate{gap:24px 36px;padding:36px 32px}
+}
+@media(max-width:860px){
+  #acc .acc-gate{grid-template-columns:minmax(0,1fr);grid-template-areas:"pitch" "auth" "why";grid-template-rows:auto;gap:22px;padding:24px 18px;border-radius:20px}
+  #acc .acc-gate.one{padding:24px 14px}
+  #acc .acc-gate .acc-auth{padding:22px 18px}
+  #acc .acc-who{margin-top:18px}
+  #acc .acc-shell{grid-template-columns:minmax(0,1fr);gap:20px}
+  #acc .acc-side{position:static;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"me out" "nav nav" "sw sw";gap:12px;padding:12px 14px}
+  #acc .acc-me{grid-area:me;padding-bottom:0;border-bottom:0}
+  #acc .acc-nav{grid-area:nav;display:flex;gap:6px;margin:0 -14px;padding:2px 14px 4px;overflow-x:auto;scrollbar-width:none}
+  #acc .acc-nav::-webkit-scrollbar{display:none}
+  #acc .acc-nav a{flex:none;padding:8px 13px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+  #acc .acc-nav a.on{background:var(--text);border-color:var(--text);color:var(--bg);box-shadow:none}
+  #acc .acc-nav a.on i{background:transparent;color:inherit;padding:0}
+  .acc-foot{display:contents}
+  .acc-sw{grid-area:sw}
+  .acc-sw b{display:inline}
+  #acc .acc-out{grid-area:out;align-self:center}
+  #acc .acc-adm{grid-column:1/-1}
+  #acc .acc-dl>div{grid-template-columns:minmax(0,1fr);gap:6px}
+}
+@media(max-width:640px){
+  .acc-nums{grid-template-columns:1fr 1fr}
+  .acc-nums a{padding:16px;border-left:0;border-top:1px solid var(--line)}
+  .acc-nums a:nth-child(-n+2){border-top:0}
+  .acc-nums a:nth-child(even){border-left:1px solid var(--line)}
+  .acc-nums b{font-size:28px}
+  #acc .card,.acc-job,.acc-none{padding:18px 16px}
+  .acc-row{padding:14px 16px}
+  .acc-steps a{padding:14px 16px}
+  #acc .acc-inline>.btn{margin-top:0;width:100%}
+  #acc .acc-inline .acc-file{margin-top:0}
+  .acc-ph{margin-bottom:18px}
+  .acc-pa,.acc-pa .btn{width:100%}
+  .acc-none .btn{width:100%}
+  #acc .acc-remote{padding-top:0}
+  .acc-job-n{gap:18px}
+}
+@media(max-width:420px){
+  #acc .acc-who button span{display:none}
+  #acc .acc-who button{padding:12px}
+  #acc .acc-who button b{font-size:15px}
+  .acc-seg button{padding:10px 4px;font-size:14.5px;white-space:nowrap}
+}
+/* a receipt on paper: the receipt and nothing else */
+@media print{
+  #acc.pr .acc-side,#acc.pr .acc-ph,#acc.pr .acc-call,#acc.pr .acc-list,#acc.pr .acc-h2,#acc.pr #acc-say,#acc.pr .acc-test,#acc.pr .acc-synced,#acc.pr .acc-btns{display:none!important}
+  #acc.pr .acc-shell{display:block}
 }
