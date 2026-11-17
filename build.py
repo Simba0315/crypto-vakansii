@@ -2606,8 +2606,10 @@ def main():
          'The number next to each name is how many jobs are open today.</p>' + dir_filter + dir_html + fam_tab_html + dir_faq, head=dir_ld)
     page("roles/", f"List of Jobs A to Z: {len(by_role)} Job Titles with Open Roles | {SITE}", f"Every kind of work with open jobs, A to Z: {len(by_role)} job titles, each with remote, entry-level, city and salary pages.",
          crumbs(("Categories", "categories/"), ("All roles", "")) + '<h1>All roles, A to Z</h1><p class="lead">Job titles differ from company to company, so each role here gathers the variants employers use. '
-         f'The same roles grouped by field are on the <a href="{P}/categories/">categories page</a>.</p>'
-         '<ul class="tiles">' + "".join(tile(f"roles/{s_}/", nm, len(js_)) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: kv[1][0].lower())) + "</ul>")
+         f'The same roles grouped by field are on the <a href="{P}/categories/">categories page</a>. The number on each tile is how many jobs are open today.</p>'
+         '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find a role"></p>'
+         '<p class="lead" id="dirnone" hidden>No role with these words. Try the <a href="' + P + '/jobs/">job search</a>: it looks through every title.</p>'
+         '<ul class="tiles" id="rolelist">' + "".join(tile(f"roles/{s_}/", nm, len(js_)).replace("<li>", f'<li data-n="{e(nm.lower())}">', 1) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: kv[1][0].lower())) + "</ul>")
     for fs, fn, fd, live, js_ in fam_rows:
         low_f, names_ = rlow(fn), [nm for _, nm, _ in live]
         role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">{e(roles_info.what(s_))}</span></a></li>' for s_, nm, c in live) + "</ul>"
