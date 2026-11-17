@@ -155,11 +155,14 @@ class Live:
         name, now = src["name"], time.time()
         today = datetime.date.today().isoformat()
         live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (name,))}
-        seen, new, dup = set(), 0, 0
+        shut = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed != ''", (name,))}     # closed on an earlier read
+        seen, new, dup, back = set(), 0, 0, []
         for j in jobs:
             j.pop("_crypto", None)
             if not j.get("title") or not j.get("url"): continue
             seen.add(j["id"])
+            if j["id"] in shut and j["id"] in self.known:
+                back.append(j["id"]); continue          # we closed it and the board lists it again
             if j["id"] in self.known or j["id"] in live_ids: continue
             ats = j["id"].split("-", 1)[0]
             if any(m.get("id") != j["id"] and (m.get("id", "").split("-", 1)[0] != ats or m["why"] == "the same link to apply")
@@ -176,8 +179,11 @@ class Live:
             self.idx.add(j["slug"], name, j["title"], j["location"], j["remote"], j["url"], {"id": j["id"]})
             self.search_put(j, desc)
             new += 1
+        if back: self.reopen(name, back)
         closed = 0
-        was_open = self.by_co.get(name, set()) | live_ids
+        # without the ones already closed here: after every new hourly record they are "open" in it again until it catches up, and
+        # closing them a second time only repeats the work (one board was "closed" 1,548 jobs at a time, three times, on 17 Nov 2026)
+        was_open = (self.by_co.get(name, set()) | live_ids) - shut
         if jobs or len(was_open) < 20:                              # a board that suddenly shows nothing waits for the hourly collector
             for jid in was_open - seen:
                 slug = self.known.get(jid) or (self.con.execute("SELECT slug FROM live WHERE id = ?", (jid,)).fetchone() or [None])[0]
@@ -190,6 +196,22 @@ class Live:
                 self.by_co.get(name, set()).discard(jid)
                 closed += 1
         return new, closed, dup
+
+    def reopen(self, name, ids):
+        """Jobs closed here on an earlier read that the board lists again: it had dropped them for one reading, or put them back.
+        While the hourly record still has such a job open, its entry there is used again and the search gets the job back.
+        (Before 17 Nov 2026 it stayed closed for good: 61 jobs closed on 15 and 16 Nov were still open in the record of the 17th.)"""
+        if not self.write or not JOBS_DB.exists(): return
+        rec, n = sqlite3.connect(f"file:{JOBS_DB}?mode=ro", uri=True), 0
+        for i in range(0, len(ids), 400):
+            part = ids[i:i + 400]
+            for jid, r_, descr in rec.execute(f"SELECT id, rec, descr FROM jobs WHERE active AND id IN ({','.join('?' * len(part))})", part).fetchall():
+                self.con.execute("DELETE FROM live WHERE id = ?", (jid,))
+                self.by_co.setdefault(name, set()).add(jid)
+                self.search_put(json.loads(r_), descr or "")
+                n += 1
+        rec.close()
+        if n: log(f"{name}: {n} listed again, reopened")
 
     # --- the loop ------------------------------------------------------------------------------------------------------------
     # --- jobs posted on the site itself --------------------------------------------------------------------------------------------
