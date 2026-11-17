@@ -1337,6 +1337,11 @@ def fetch_feed(src, reuse=None):
     return name, out
 
 
+def direct_desc(text):
+    """The description an employer typed in the account (plain text), as paragraphs for the job page."""
+    return "".join(f"<p>{html.escape(p_.strip())}</p>" for p_ in str(text or "").split("\n") if p_.strip())
+
+
 def direct_and_paid(db, used_slugs, indexed, stats):
     """Jobs employers posted in their account, and paid placements, from our own API ("api_url" in config.json).
     A failed call changes nothing: posted jobs stay as they were and the previous placements file is kept."""
@@ -1354,6 +1359,7 @@ def direct_and_paid(db, used_slugs, indexed, stats):
         if not isinstance(d, dict) or str(d.get("company", "")).strip().lower() in indexed: continue   # a posting may not pass itself off as an indexed company
         j = norm(str(d.get("company", "")).strip(), "direct", d.get("id", ""), d.get("title"), d.get("url"), d.get("location"), bool(d.get("remote")), "",
                  d.get("posted"), str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""))
+        j["desc"] = direct_desc(d.get("text"))      # the employer's own words, whole and escaped: short texts are kept too (clean_html drops anything under 200 characters)
         j.pop("_crypto")
         if not j["title"] or not j["company"] or not str(j["url"]).startswith("https://"): continue
         j.update(crypto=False, direct=True, featured_until=str(d.get("featured_until") or ""), pinned_until=str(d.get("pinned_until") or ""))

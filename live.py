@@ -49,6 +49,9 @@ def log(*a):
     print(datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S"), *a, flush=True)
 
 
+DIRECT_EVERY = 120          # seconds between reads of the jobs employers posted on the site itself
+
+
 def sources():
     """Every board the hourly collector reads (all sources*.json but the candidate list), each once."""
     seen, out = set(), []
@@ -189,6 +192,26 @@ class Live:
         return new, closed, dup
 
     # --- the loop ------------------------------------------------------------------------------------------------------------
+    # --- jobs posted on the site itself --------------------------------------------------------------------------------------------
+    def direct(self, indexed):
+        """Jobs employers posted in their account (our own API, /api/public/export.json), by company. A job a person has just approved
+        is on the site within minutes instead of waiting for the next hourly build. None: no API, or it did not answer (nothing changes)."""
+        api = (os.environ.get("HRN_API_URL") or json.loads((ROOT / "config.json").read_text()).get("api_url", "")).rstrip("/")
+        if not api: return None
+        exp = collect.get_json(api + "/api/public/export.json", 20)
+        if not isinstance(exp, dict) or not isinstance(exp.get("jobs"), list): return None
+        by = {}
+        for d in exp["jobs"]:
+            if not isinstance(d, dict): continue
+            company = str(d.get("company", "")).strip()
+            if not company or company.lower() in indexed: continue      # as in collect.direct_and_paid: a posting may not pass itself off as an indexed company
+            j = collect.norm(company, "direct", d.get("id", ""), d.get("title"), d.get("url"), d.get("location"), bool(d.get("remote")), "", d.get("posted"),
+                             str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""))
+            if not j["title"] or not str(j["url"]).startswith("https://"): continue
+            j["direct"], j["desc"] = True, collect.direct_desc(d.get("text"))
+            by.setdefault(company, []).append(j)
+        return by
+
     def due(self, srcs):
         now = time.time()
         rows = {k: (nd, lc, f) for k, nd, lc, f in self.con.execute("SELECT key, next_due, last_change, fails FROM boards")}
@@ -214,6 +237,7 @@ class Live:
         srcs, srcs_at = sources(), time.time()
         log(f"live: {len(srcs):,} boards, {WORKERS} at a time; store {LIVE_DB}")
         tally, tally_at = [0, 0, 0, 0, 0], time.time()          # boards read, failed, new jobs, closed, duplicates skipped
+        direct_at, direct_seen = 0, set()                       # jobs posted on the site itself: read every DIRECT_EVERY seconds
         with cf.ThreadPoolExecutor(WORKERS) as ex:
             running = {}
             while True:
@@ -223,6 +247,16 @@ class Live:
                 if self.reload(): srcs = sources()
                 if time.time() - srcs_at > 600: srcs, srcs_at = sources(), time.time()
                 self.resync_search()
+                if time.time() - direct_at >= DIRECT_EVERY:
+                    direct_at = time.time()
+                    try: posted = self.direct({s["name"].lower() for s in srcs})
+                    except Exception as err: posted = None; log(f"posted jobs: not read ({type(err).__name__})")
+                    if posted is not None:
+                        for company in sorted(set(posted) | direct_seen):
+                            new, closed, dup = self.apply({"name": company, "crypto": False}, posted.get(company, []))
+                            tally = [tally[0], tally[1], tally[2] + new, tally[3] + closed, tally[4] + dup]
+                            if new or closed: log(f"{company} (posted here): +{new} new, {closed} closed")
+                        direct_seen = set(posted)
                 busy = {f"{s['ats']}:{s['token']}" for s in running.values()}
                 per_ats = {}
                 for s in running.values(): per_ats[s["ats"]] = per_ats.get(s["ats"], 0) + 1

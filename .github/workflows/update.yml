@@ -14,6 +14,10 @@ on:
   schedule:
     - cron: "17 3 * * *"          # 03:17 UTC: the hourly work plus the once-a-day work
     - cron: "17 0-2,4-23 * * *"   # every other hour: collect, build, deploy
+    # A second start each hour (17 Nov 2026): GitHub skipped or delayed most scheduled starts (4 or 5 runs a day instead of 24), so
+    # the pages were rebuilt every 5 to 6 hours. With two starts an hour more of them get through; runs never overlap (concurrency
+    # below), a start that arrives while a run is going waits for it, and a second waiting one replaces the first.
+    - cron: "47 * * * *"
   workflow_dispatch:
 
 permissions:

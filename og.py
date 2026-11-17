@@ -92,6 +92,12 @@ def icons():
     out = ROOT / "assets" / "brand"
     for name, n in (("apple-touch-icon.png", 180), ("icon-192.png", 192), ("icon-512.png", 512), (f"{brand.APPLIED}-mark-96.png", 96), ("linkedin-logo-400.png", 400)):
         shoot(ICON.replace("SIZE", str(n)).replace("MARKSVG", brand.mark_light()), n, n, out / name, jpeg=False); print(f"assets/brand/{name} written")
+    # /favicon.ico: browsers and Googlebot ask for it by that name whatever the page says (it answered 404 until 17 Nov 2026)
+    try:
+        from PIL import Image
+        Image.open(out / "icon-192.png").convert("RGBA").save(out / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)]); print("assets/brand/favicon.ico written")
+    except ImportError:
+        print("favicon.ico not rewritten: Pillow is not installed (pip install pillow)")
 
 
 def shoot(html, w, h, out, jpeg=True):

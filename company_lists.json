@@ -1,0 +1,1626 @@
+{
+ "sp-500": {
+  "source": "List of S&P 500 companies",
+  "url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+  "read": "2026-11-17",
+  "members": 500,
+  "rows": {
+   "3M": [
+    "3M",
+    "Industrials"
+   ],
+   "Abbott": [
+    "Abbott Laboratories",
+    "Health Care"
+   ],
+   "Adobe": [
+    "Adobe Inc.",
+    "Information Technology"
+   ],
+   "AES": [
+    "AES Corporation",
+    "Utilities"
+   ],
+   "Air Products": [
+    "Air Products",
+    "Materials"
+   ],
+   "Airbnb": [
+    "Airbnb",
+    "Consumer Discretionary"
+   ],
+   "Allegion": [
+    "Allegion",
+    "Industrials"
+   ],
+   "Alliant Energy": [
+    "Alliant Energy",
+    "Utilities"
+   ],
+   "Allstate": [
+    "Allstate",
+    "Financials"
+   ],
+   "American Electric Power": [
+    "American Electric Power",
+    "Utilities"
+   ],
+   "Amgen": [
+    "Amgen",
+    "Health Care"
+   ],
+   "Analog Devices": [
+    "Analog Devices",
+    "Information Technology"
+   ],
+   "Applied Materials": [
+    "Applied Materials",
+    "Information Technology"
+   ],
+   "AppLovin": [
+    "AppLovin",
+    "Communication Services"
+   ],
+   "Assurant Services Argentina": [
+    "Assurant",
+    "Financials"
+   ],
+   "AT&T Mobility Services": [
+    "AT&T",
+    "Communication Services"
+   ],
+   "Autodesk": [
+    "Autodesk",
+    "Information Technology"
+   ],
+   "Axon": [
+    "Axon Enterprise",
+    "Industrials"
+   ],
+   "Bank of America": [
+    "Bank of America",
+    "Financials"
+   ],
+   "Baxter": [
+    "Baxter International",
+    "Health Care"
+   ],
+   "BlackRock": [
+    "BlackRock",
+    "Financials"
+   ],
+   "Blackstone": [
+    "Blackstone Inc.",
+    "Financials"
+   ],
+   "Block": [
+    "Block, Inc.",
+    "Financials"
+   ],
+   "Bloom Energy": [
+    "Bloom Energy",
+    "Industrials"
+   ],
+   "Boeing": [
+    "Boeing",
+    "Industrials"
+   ],
+   "Broadcom": [
+    "Broadcom",
+    "Information Technology"
+   ],
+   "Broadridge Financial Solutions": [
+    "Broadridge Financial Solutions",
+    "Industrials"
+   ],
+   "Brown & Brown": [
+    "Brown & Brown",
+    "Financials"
+   ],
+   "C.H. Robinson": [
+    "C.H. Robinson",
+    "Industrials"
+   ],
+   "Cadence": [
+    "Cadence Design Systems",
+    "Information Technology"
+   ],
+   "Cardinal Health": [
+    "Cardinal Health",
+    "Health Care"
+   ],
+   "Caterpillar": [
+    "Caterpillar Inc.",
+    "Industrials"
+   ],
+   "Cboe": [
+    "Cboe Global Markets",
+    "Financials"
+   ],
+   "Cencora": [
+    "Cencora",
+    "Health Care"
+   ],
+   "Centene": [
+    "Centene Corporation",
+    "Health Care"
+   ],
+   "Chevron": [
+    "Chevron Corporation",
+    "Energy"
+   ],
+   "Ciena": [
+    "Ciena",
+    "Information Technology"
+   ],
+   "Cigna": [
+    "Cigna",
+    "Health Care"
+   ],
+   "Cisco": [
+    "Cisco",
+    "Information Technology"
+   ],
+   "CME": [
+    "CME Group",
+    "Financials"
+   ],
+   "Coinbase": [
+    "Coinbase",
+    "Financials"
+   ],
+   "CrowdStrike": [
+    "CrowdStrike",
+    "Information Technology"
+   ],
+   "CVS Health": [
+    "CVS Health",
+    "Health Care"
+   ],
+   "Danaher": [
+    "Danaher Corporation",
+    "Health Care"
+   ],
+   "Datadog": [
+    "Datadog",
+    "Information Technology"
+   ],
+   "DaVita": [
+    "DaVita",
+    "Health Care"
+   ],
+   "Deckers Brands. We’re": [
+    "Deckers Brands",
+    "Consumer Discretionary"
+   ],
+   "DoorDash USA": [
+    "DoorDash",
+    "Consumer Discretionary"
+   ],
+   "Duke Energy Employees Current": [
+    "Duke Energy",
+    "Utilities"
+   ],
+   "Elevance Health": [
+    "Elevance Health",
+    "Health Care"
+   ],
+   "FedEx Express": [
+    "FedEx",
+    "Industrials"
+   ],
+   "Ferguson": [
+    "Ferguson Enterprises",
+    "Industrials"
+   ],
+   "FOX": [
+    "Fox Corporation",
+    "Communication Services"
+   ],
+   "Gartner": [
+    "Gartner",
+    "Information Technology"
+   ],
+   "GE Aerospace": [
+    "GE Aerospace",
+    "Industrials"
+   ],
+   "GE HealthCare": [
+    "GE HealthCare",
+    "Health Care"
+   ],
+   "GE Vernova": [
+    "GE Vernova",
+    "Industrials"
+   ],
+   "Gen Digital": [
+    "Gen Digital",
+    "Information Technology"
+   ],
+   "General Mills Services": [
+    "General Mills",
+    "Consumer Staples"
+   ],
+   "Gilead Sciences": [
+    "Gilead Sciences",
+    "Health Care"
+   ],
+   "Globe Life": [
+    "Globe Life",
+    "Financials"
+   ],
+   "GoDaddy": [
+    "GoDaddy",
+    "Information Technology"
+   ],
+   "Hartford Fire Ins": [
+    "Hartford",
+    "Financials"
+   ],
+   "Hasbro": [
+    "Hasbro",
+    "Consumer Discretionary"
+   ],
+   "HP": [
+    "HP Inc.",
+    "Information Technology"
+   ],
+   "Humana Benefit Plan": [
+    "Humana",
+    "Health Care"
+   ],
+   "Illumina": [
+    "Illumina, Inc.",
+    "Health Care"
+   ],
+   "Intel": [
+    "Intel",
+    "Information Technology"
+   ],
+   "Invesco": [
+    "Invesco",
+    "Financials"
+   ],
+   "IQVIA": [
+    "IQVIA",
+    "Health Care"
+   ],
+   "Iron Mountain": [
+    "Iron Mountain",
+    "Real Estate"
+   ],
+   "J.B. Hunt": [
+    "J.B. Hunt",
+    "Industrials"
+   ],
+   "Jabil Vietnam": [
+    "Jabil",
+    "Information Technology"
+   ],
+   "Johnson & Johnson": [
+    "Johnson & Johnson",
+    "Health Care"
+   ],
+   "Johnson Controls": [
+    "Johnson Controls",
+    "Industrials"
+   ],
+   "Kimberly-Clark": [
+    "Kimberly-Clark",
+    "Consumer Staples"
+   ],
+   "KLA": [
+    "KLA Corporation",
+    "Information Technology"
+   ],
+   "Kraft Heinz": [
+    "Kraft Heinz",
+    "Consumer Staples"
+   ],
+   "Labcorp": [
+    "Labcorp",
+    "Health Care"
+   ],
+   "Leidos": [
+    "Leidos",
+    "Industrials"
+   ],
+   "Lennar": [
+    "Lennar",
+    "Consumer Discretionary"
+   ],
+   "Live Nation Entertainment": [
+    "Live Nation Entertainment",
+    "Communication Services"
+   ],
+   "Lowe's": [
+    "Lowe's",
+    "Consumer Discretionary"
+   ],
+   "McKesson": [
+    "McKesson",
+    "Health Care"
+   ],
+   "Medtronic": [
+    "Medtronic",
+    "Health Care"
+   ],
+   "Micron Technology": [
+    "Micron Technology",
+    "Information Technology"
+   ],
+   "Mondelez International": [
+    "Mondelez International",
+    "Consumer Staples"
+   ],
+   "Morgan Stanley": [
+    "Morgan Stanley",
+    "Financials"
+   ],
+   "Motorola Solutions Overview": [
+    "Motorola Solutions",
+    "Information Technology"
+   ],
+   "Nasdaq": [
+    "Nasdaq, Inc.",
+    "Financials"
+   ],
+   "NiSource": [
+    "NiSource",
+    "Utilities"
+   ],
+   "Northrop Grumman": [
+    "Northrop Grumman",
+    "Industrials"
+   ],
+   "NVIDIA": [
+    "Nvidia",
+    "Information Technology"
+   ],
+   "Okta": [
+    "Okta, Inc.",
+    "Information Technology"
+   ],
+   "Otis": [
+    "Otis Worldwide",
+    "Industrials"
+   ],
+   "Palantir": [
+    "Palantir Technologies",
+    "Information Technology"
+   ],
+   "Pfizer": [
+    "Pfizer",
+    "Health Care"
+   ],
+   "PNC": [
+    "PNC Financial Services",
+    "Financials"
+   ],
+   "Prologis Management": [
+    "Prologis",
+    "Real Estate"
+   ],
+   "Reddit": [
+    "Reddit",
+    "Communication Services"
+   ],
+   "Republic Services": [
+    "Republic Services",
+    "Industrials"
+   ],
+   "RTX": [
+    "RTX Corporation",
+    "Industrials"
+   ],
+   "Solventum": [
+    "Solventum",
+    "Health Care"
+   ],
+   "Sysco": [
+    "Sysco",
+    "Consumer Staples"
+   ],
+   "T. Rowe Price": [
+    "T. Rowe Price",
+    "Financials"
+   ],
+   "Take-Two Interactive Software, Inc.": [
+    "Take-Two Interactive",
+    "Communication Services"
+   ],
+   "Target": [
+    "Target Corporation",
+    "Consumer Staples"
+   ],
+   "The Coca-Cola": [
+    "Coca-Cola Company",
+    "Consumer Staples"
+   ],
+   "The Home Depot": [
+    "Home Depot",
+    "Consumer Discretionary"
+   ],
+   "The Northern Trust": [
+    "Northern Trust",
+    "Financials"
+   ],
+   "TJX": [
+    "TJX Companies",
+    "Consumer Discretionary"
+   ],
+   "Travelers": [
+    "Travelers Companies",
+    "Financials"
+   ],
+   "Twilio": [
+    "Twilio",
+    "Information Technology"
+   ],
+   "Tyson Foods": [
+    "Tyson Foods",
+    "Consumer Staples"
+   ],
+   "United Rentals": [
+    "United Rentals",
+    "Industrials"
+   ],
+   "Veeva": [
+    "Veeva Systems",
+    "Health Care"
+   ],
+   "Viatris": [
+    "Viatris",
+    "Health Care"
+   ],
+   "Visa": [
+    "Visa Inc.",
+    "Financials"
+   ],
+   "Walmart": [
+    "Walmart",
+    "Consumer Staples"
+   ],
+   "Williams": [
+    "Williams Companies",
+    "Energy"
+   ],
+   "Workday": [
+    "Workday, Inc.",
+    "Information Technology"
+   ],
+   "Xcel Energy": [
+    "Xcel Energy",
+    "Utilities"
+   ],
+   "Zebra": [
+    "Zebra Technologies",
+    "Information Technology"
+   ],
+   "Zoetis": [
+    "Zoetis",
+    "Health Care"
+   ]
+  }
+ },
+ "nasdaq-100": {
+  "source": "List of NASDAQ-100 companies",
+  "url": "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
+  "read": "2026-11-17",
+  "members": 100,
+  "rows": {
+   "Adobe": [
+    "Adobe Inc.",
+    "Technology"
+   ],
+   "Airbnb": [
+    "Airbnb",
+    "Consumer Discretionary"
+   ],
+   "American Electric Power": [
+    "American Electric Power",
+    "Utilities"
+   ],
+   "Amgen": [
+    "Amgen",
+    "Health Care"
+   ],
+   "Analog Devices": [
+    "Analog Devices",
+    "Technology"
+   ],
+   "Applied Materials": [
+    "Applied Materials",
+    "Technology"
+   ],
+   "AppLovin": [
+    "AppLovin",
+    "Technology"
+   ],
+   "Astera Labs": [
+    "Astera Labs",
+    "Technology"
+   ],
+   "Autodesk": [
+    "Autodesk",
+    "Technology"
+   ],
+   "Axon": [
+    "Axon Enterprise",
+    "Industrials"
+   ],
+   "Broadcom": [
+    "Broadcom",
+    "Technology"
+   ],
+   "Cadence": [
+    "Cadence Design Systems",
+    "Technology"
+   ],
+   "Cisco": [
+    "Cisco",
+    "Telecommunications"
+   ],
+   "CoreWeave": [
+    "CoreWeave",
+    "Technology"
+   ],
+   "CrowdStrike": [
+    "CrowdStrike",
+    "Technology"
+   ],
+   "Datadog": [
+    "Datadog",
+    "Technology"
+   ],
+   "DoorDash USA": [
+    "DoorDash",
+    "Technology"
+   ],
+   "GE HealthCare": [
+    "GE HealthCare",
+    "Health Care"
+   ],
+   "Gilead Sciences": [
+    "Gilead Sciences",
+    "Health Care"
+   ],
+   "Intel": [
+    "Intel",
+    "Technology"
+   ],
+   "KLA": [
+    "KLA Corporation",
+    "Technology"
+   ],
+   "Micron Technology": [
+    "Micron Technology",
+    "Technology"
+   ],
+   "Mondelez International": [
+    "Mondelez International",
+    "Consumer Staples"
+   ],
+   "Nebius": [
+    "Nebius Group",
+    "Technology"
+   ],
+   "NVIDIA": [
+    "Nvidia",
+    "Technology"
+   ],
+   "Palantir": [
+    "Palantir Technologies",
+    "Technology"
+   ],
+   "Rocket Lab": [
+    "Rocket Lab",
+    "Industrials"
+   ],
+   "SpaceX": [
+    "SpaceX",
+    "Telecommunications"
+   ],
+   "Take-Two Interactive Software, Inc.": [
+    "Take-Two Interactive",
+    "Consumer Discretionary"
+   ],
+   "Thomson Reuters": [
+    "Thomson Reuters",
+    "Technology"
+   ],
+   "Walmart": [
+    "Walmart",
+    "Consumer Discretionary"
+   ],
+   "Workday": [
+    "Workday, Inc.",
+    "Technology"
+   ],
+   "Xcel Energy": [
+    "Xcel Energy",
+    "Utilities"
+   ]
+  }
+ },
+ "unicorns": {
+  "source": "List of unicorn startup companies",
+  "url": "https://en.wikipedia.org/wiki/List_of_unicorn_startup_companies",
+  "read": "2026-11-17",
+  "members": 645,
+  "rows": {
+   "1Password": [
+    "1Password",
+    "Password manager"
+   ],
+   "6sense": [
+    "6sense",
+    "Artificial intelligence"
+   ],
+   "Abnormal Security": [
+    "Abnormal Security",
+    "Cybersecurity"
+   ],
+   "Abridge": [
+    "Abridge",
+    "Healthcare technology and AI"
+   ],
+   "Acorns": [
+    "Acorns",
+    "Financial technology"
+   ],
+   "Ada": [
+    "Ada",
+    "Software"
+   ],
+   "Addepar": [
+    "Addepar",
+    "Financial technology"
+   ],
+   "Aikido Security": [
+    "Aikido Security",
+    "Cybersecurity"
+   ],
+   "Airbyte": [
+    "Airbyte",
+    "Software"
+   ],
+   "Aircall.io, Inc.": [
+    "Aircall",
+    "Cloud"
+   ],
+   "Airtable": [
+    "Airtable",
+    "Collaborative software"
+   ],
+   "Airwallex": [
+    "Airwallex",
+    "Financial services"
+   ],
+   "Alan": [
+    "Alan",
+    "Health technology"
+   ],
+   "Alchemy": [
+    "Alchemy",
+    "Blockchain"
+   ],
+   "Algolia": [
+    "Algolia",
+    "Software"
+   ],
+   "AlphaSense": [
+    "AlphaSense",
+    "Software"
+   ],
+   "Amber Group": [
+    "Amber Group",
+    "Cryptocurrency"
+   ],
+   "Andela": [
+    "Andela",
+    "Education"
+   ],
+   "Anduril Industries": [
+    "Anduril Industries",
+    "Defense technology"
+   ],
+   "Animoca Brands": [
+    "Animoca Brands",
+    "Blockchain gaming"
+   ],
+   "Anthropic": [
+    "Anthropic",
+    "Artificial Intelligence"
+   ],
+   "Apna": [
+    "Apna",
+    ""
+   ],
+   "AppDirect": [
+    "AppDirect",
+    ""
+   ],
+   "AppsFlyer": [
+    "AppsFlyer",
+    "Mobile marketing analytics"
+   ],
+   "Arctic Wolf": [
+    "Arctic Wolf Networks",
+    "Cybersecurity"
+   ],
+   "Astranis": [
+    "Astranis",
+    "Space technology"
+   ],
+   "Automattic": [
+    "Automattic",
+    "Internet"
+   ],
+   "Avant": [
+    "Avant",
+    "Consumer finance"
+   ],
+   "Away": [
+    "Away",
+    "Retail"
+   ],
+   "Axonius": [
+    "Axonius",
+    "Cybersecurity"
+   ],
+   "Benevity": [
+    "Benevity",
+    "Software as a service"
+   ],
+   "BigID": [
+    "BigID",
+    "Cybersecurity"
+   ],
+   "Bitpanda": [
+    "Bitpanda",
+    "Cryptocurrency"
+   ],
+   "Blacksmith": [
+    "Blacksmith",
+    "Software"
+   ],
+   "Blockchain.com": [
+    "Blockchain.com",
+    "Cryptocurrency"
+   ],
+   "Blockstream": [
+    "Blockstream",
+    "Blockchain"
+   ],
+   "Branch Metrics": [
+    "Branch Metrics",
+    "Marketing"
+   ],
+   "C6 Bank": [
+    "C6 Bank",
+    "Financial services"
+   ],
+   "Cabify": [
+    "Cabify",
+    "Transportation"
+   ],
+   "Cadence Solutions": [
+    "Cadence Solutions, Inc.",
+    "Healthcare"
+   ],
+   "Calendly": [
+    "Calendly",
+    "Software"
+   ],
+   "Calm": [
+    "Calm",
+    "Digital health"
+   ],
+   "Carta": [
+    "Carta",
+    "Software"
+   ],
+   "Celonis": [
+    "Celonis",
+    "Software"
+   ],
+   "Chainalysis": [
+    "Chainalysis",
+    "Blockchain"
+   ],
+   "Character.AI": [
+    "Character.ai",
+    "Artificial Intelligence"
+   ],
+   "Checkout.com": [
+    "Checkout.com",
+    "Financial technology"
+   ],
+   "Checkr": [
+    "Checkr",
+    "Human resource management"
+   ],
+   "Clara": [
+    "Clara",
+    "Financial technology"
+   ],
+   "ClassDojo": [
+    "ClassDojo",
+    "Education Technology"
+   ],
+   "ClickHouse": [
+    "ClickHouse",
+    "Database management"
+   ],
+   "CloudKitchens": [
+    "CloudKitchens",
+    "Ghost kitchen"
+   ],
+   "Clubhouse": [
+    "Clubhouse",
+    "Messaging"
+   ],
+   "Coalition, Inc.": [
+    "Coalition",
+    "Cybersecurity"
+   ],
+   "Cockroach Labs": [
+    "Cockroach Labs",
+    "Database management"
+   ],
+   "Cognite - AI for Industry": [
+    "Cognite",
+    "Software"
+   ],
+   "Cognition": [
+    "Cognition AI",
+    "Artificial Intelligence"
+   ],
+   "Cohere": [
+    "Cohere",
+    "Artificial intelligence"
+   ],
+   "Cohesity": [
+    "Cohesity",
+    "Software"
+   ],
+   "Collibra": [
+    "Collibra",
+    "Data governance"
+   ],
+   "Commure": [
+    "Commure",
+    "Health technology"
+   ],
+   "Consensys": [
+    "ConsenSys",
+    "Blockchain"
+   ],
+   "Contentful": [
+    "Contentful",
+    "Content management system"
+   ],
+   "Cresta": [
+    "Cresta",
+    "Artificial intelligence"
+   ],
+   "Culture Amp": [
+    "Culture Amp",
+    "Software"
+   ],
+   "Dapper": [
+    "Dapper Labs",
+    "NFT"
+   ],
+   "Dash0": [
+    "Dash0",
+    "Software as a service"
+   ],
+   "Databricks": [
+    "Databricks",
+    "Software"
+   ],
+   "Dataiku": [
+    "Dataiku",
+    "Artificial intelligence"
+   ],
+   "DataRobot": [
+    "DataRobot",
+    "Artificial intelligence"
+   ],
+   "Devoted Health. These": [
+    "Devoted Health",
+    "Healthcare"
+   ],
+   "Discord": [
+    "Discord",
+    "Software"
+   ],
+   "Doctolib": [
+    "Doctolib",
+    "Healthcare"
+   ],
+   "Dragos": [
+    "Dragos",
+    "Cybersecurity"
+   ],
+   "DriveWealth": [
+    "DriveWealth",
+    "Financial technology"
+   ],
+   "Druva": [
+    "Druva",
+    "Cloud computing"
+   ],
+   "Dutchie": [
+    "Dutchie.com",
+    "Cannabis"
+   ],
+   "EBANX": [
+    "Ebanx",
+    "Financial services"
+   ],
+   "ElevenLabs": [
+    "ElevenLabs",
+    "AI Audio technologies"
+   ],
+   "Eliseai": [
+    "EliseAI",
+    "Artificial intelligence"
+   ],
+   "Epic Games": [
+    "Epic Games",
+    "Video games"
+   ],
+   "Etched": [
+    "Etched",
+    "Artificial intelligence"
+   ],
+   "Eucalyptus": [
+    "Eucalyptus Health",
+    "Health"
+   ],
+   "Exotec": [
+    "Exotec",
+    "Robotics"
+   ],
+   "Faire": [
+    "Faire",
+    "E-commerce"
+   ],
+   "Fal Ai": [
+    "Fal",
+    "Artificial intelligence"
+   ],
+   "Feedzai": [
+    "Feedzai",
+    "Artificial intelligence"
+   ],
+   "Figure": [
+    "Figure AI",
+    "Humanoid robotics"
+   ],
+   "Fivetran": [
+    "Fivetran",
+    "Data infrastructure"
+   ],
+   "Flexport": [
+    "Flexport",
+    "Logistics"
+   ],
+   "Flo Health": [
+    "Flo Health",
+    "Health Technology"
+   ],
+   "Formlabs": [
+    "Formlabs",
+    "3D printing"
+   ],
+   "Forter": [
+    "Forter",
+    "Software"
+   ],
+   "G2": [
+    "G2",
+    "Technology"
+   ],
+   "Gamma": [
+    "Gamma",
+    "Artificial intelligence"
+   ],
+   "GetYourGuide": [
+    "GetYourGuide",
+    "Travel"
+   ],
+   "Glance": [
+    "Glance",
+    "Artificial intelligence"
+   ],
+   "Gong.io": [
+    "Gong",
+    "June 2021"
+   ],
+   "Gopuff": [
+    "GoPuff",
+    "E-commerce"
+   ],
+   "Grafana Labs": [
+    "Grafana Labs",
+    "Software"
+   ],
+   "Granola": [
+    "Granola",
+    "Software"
+   ],
+   "Grover": [
+    "Grover",
+    "E-commerce"
+   ],
+   "Gusto": [
+    "Gusto",
+    "Software"
+   ],
+   "Gymshark": [
+    "Gymshark",
+    "Sportswear"
+   ],
+   "Happyrobot.ai": [
+    "HappyRobot",
+    "Artificial Intelligence"
+   ],
+   "Harness": [
+    "Harness",
+    "Software"
+   ],
+   "Harvey": [
+    "Harvey",
+    "Artificial intelligence"
+   ],
+   "Headway": [
+    "Headway",
+    "Healthcare"
+   ],
+   "Heartflow": [
+    "HeartFlow",
+    "Healthcare"
+   ],
+   "Helion": [
+    "Helion Energy",
+    "Fusion power"
+   ],
+   "Helsing": [
+    "Helsing",
+    "Defense"
+   ],
+   "HomeLight": [
+    "HomeLight",
+    "Real estate"
+   ],
+   "Honeybook": [
+    "HoneyBook",
+    "Financial services"
+   ],
+   "Hopper": [
+    "Hopper",
+    "Travel"
+   ],
+   "Houzz": [
+    "Houzz",
+    "Interior design"
+   ],
+   "iCapital": [
+    "iCapital",
+    "Financial services"
+   ],
+   "iFood": [
+    "IFood",
+    "Food delivery"
+   ],
+   "Illumio": [
+    "Illumio",
+    "Cybersecurity"
+   ],
+   "Improbable": [
+    "Improbable",
+    "Cloud computing"
+   ],
+   "Incode Technologies": [
+    "Incode",
+    "Technology"
+   ],
+   "Infobip": [
+    "Infobip",
+    "Cloud communications"
+   ],
+   "Injective": [
+    "Injective",
+    "Financial technology"
+   ],
+   "InMobi": [
+    "InMobi",
+    "Internet"
+   ],
+   "Innovaccer Analytics": [
+    "Innovaccer",
+    "Health care"
+   ],
+   "Intercom": [
+    "Intercom",
+    "Software"
+   ],
+   "Iterable": [
+    "Iterable",
+    "Marketing"
+   ],
+   "Ivalua": [
+    "Ivalua",
+    ""
+   ],
+   "Kalshi": [
+    "Kalshi",
+    "Finance"
+   ],
+   "LangChain": [
+    "LangChain",
+    "Artificial intelligence"
+   ],
+   "Ledger": [
+    "Ledger",
+    "Cryptocurrency"
+   ],
+   "Legora": [
+    "Legora",
+    "Artificial intelligence"
+   ],
+   "Locus Robotics": [
+    "Locus Robotics",
+    "Robotics"
+   ],
+   "Lovable": [
+    "Lovable",
+    "Artificial intelligence"
+   ],
+   "Lucid Software": [
+    "Lucid Software",
+    "Software"
+   ],
+   "Lunar": [
+    "Lunar",
+    "Financial technology"
+   ],
+   "Megazone": [
+    "MEGAZONE",
+    "Cloud computing"
+   ],
+   "Mercor": [
+    "Mercor",
+    "Artificial Intelligence"
+   ],
+   "MessageBird": [
+    "MessageBird",
+    "Cloud communications"
+   ],
+   "Mews": [
+    "Mews",
+    "Hospitality management platform"
+   ],
+   "Mirakl": [
+    "Mirakl",
+    "Marketplace"
+   ],
+   "Miro": [
+    "Miro",
+    "Software"
+   ],
+   "Mistral.ai": [
+    "Mistral AI",
+    "Artificial Intelligence"
+   ],
+   "Mollie": [
+    "Mollie",
+    "Financial technology"
+   ],
+   "Moloco": [
+    "MOLOCO",
+    "Advertising technology"
+   ],
+   "Monzo": [
+    "Monzo",
+    "Financial services"
+   ],
+   "MoonPay": [
+    "MoonPay",
+    "Cryptocurrency"
+   ],
+   "Mural": [
+    "Mural",
+    "Technology"
+   ],
+   "N26": [
+    "N26",
+    "Financial services"
+   ],
+   "NetDocuments": [
+    "NetDocuments",
+    "Software"
+   ],
+   "Neuralink": [
+    "Neuralink",
+    "Neurotechnology"
+   ],
+   "Noom US": [
+    "Noom",
+    "Healthcare"
+   ],
+   "Nord Security": [
+    "Nord Security",
+    "VPN service"
+   ],
+   "Notion": [
+    "Notion Labs",
+    "Productivity software"
+   ],
+   "Nscale": [
+    "Nscale",
+    "Artificial Intelligence"
+   ],
+   "Nuro": [
+    "Nuro",
+    "Robotics"
+   ],
+   "Oaknorth": [
+    "OakNorth",
+    "Finance"
+   ],
+   "Odyssey": [
+    "Odyssey",
+    "Artificial intelligence"
+   ],
+   "OneTrust": [
+    "OneTrust",
+    "Cybersecurity"
+   ],
+   "OpenAI": [
+    "OpenAI",
+    "Artificial intelligence"
+   ],
+   "OpenEvidence": [
+    "OpenEvidence",
+    "Health Technology"
+   ],
+   "Orca Security": [
+    "Orca Security",
+    "Cybersecurity"
+   ],
+   "Oura": [
+    "Oura Health",
+    "Wearables"
+   ],
+   "Outreach": [
+    "Outreach",
+    "Sales"
+   ],
+   "OutSystems": [
+    "OutSystems",
+    "Software development"
+   ],
+   "Pantheon": [
+    "Pantheon Systems",
+    "WebOps"
+   ],
+   "Patreon": [
+    "Patreon",
+    "Online membership service"
+   ],
+   "PAX Labs": [
+    "PAX Labs",
+    "Cannabis"
+   ],
+   "Paxos": [
+    "Paxos",
+    "Cryptocurrency"
+   ],
+   "Pendo": [
+    "Pendo",
+    "Software"
+   ],
+   "Perplexity": [
+    "Perplexity AI",
+    "Artificial Intelligence"
+   ],
+   "Plaid": [
+    "Plaid",
+    "Financial technology"
+   ],
+   "Pleo": [
+    "Pleo",
+    "Financial technology"
+   ],
+   "Podium": [
+    "Podium",
+    "Software"
+   ],
+   "PsiQuantum": [
+    "PsiQuantum",
+    "Quantum computing"
+   ],
+   "Qonto": [
+    "Qonto",
+    "Finance"
+   ],
+   "Quince": [
+    "Quince",
+    "Enterprise Technology"
+   ],
+   "Quora": [
+    "Quora",
+    "Social network"
+   ],
+   "Ramp": [
+    "Ramp",
+    "Financial technology"
+   ],
+   "Razorpay Software Private Limited": [
+    "Razorpay",
+    "Financial technology"
+   ],
+   "Redis": [
+    "Redis Labs",
+    "Software"
+   ],
+   "Relativity Space": [
+    "Relativity Space",
+    "Aerospace"
+   ],
+   "Remote": [
+    "Remote",
+    "Software"
+   ],
+   "Render": [
+    "Render",
+    "Cloud computing"
+   ],
+   "Replit": [
+    "Replit",
+    "Artificial Intelligence"
+   ],
+   "Ripple": [
+    "Ripple",
+    "Cryptocurrency"
+   ],
+   "River AI Inc.": [
+    "River AI",
+    "Artificial intelligence"
+   ],
+   "Ro": [
+    "Ro",
+    "Health technology"
+   ],
+   "Rohlik": [
+    "Rohlik",
+    "Retail"
+   ],
+   "SambaNova": [
+    "SambaNova",
+    "Artificial intelligence"
+   ],
+   "Sandboxaq": [
+    "SandboxAQ",
+    "Quantum technology, Artificial intelligence"
+   ],
+   "Scale AI": [
+    "Scale AI",
+    "Artificial intelligence"
+   ],
+   "Scandit": [
+    "Scandit",
+    "Software"
+   ],
+   "Shield AI": [
+    "Shield AI",
+    "Defense Technology"
+   ],
+   "Shift Technology": [
+    "Shift Technology",
+    "Artificial intelligence"
+   ],
+   "Sift": [
+    "Sift",
+    "Fraud prevention"
+   ],
+   "Simile": [
+    "Simile",
+    "Artificial Intelligence"
+   ],
+   "Skild AI": [
+    "Skild AI",
+    "Robotics"
+   ],
+   "Slash Financial": [
+    "Slash",
+    "Financial technology"
+   ],
+   "SmartAsset": [
+    "SmartAsset",
+    "Financial technology"
+   ],
+   "Snyk": [
+    "Snyk",
+    "Application security"
+   ],
+   "Socket": [
+    "Socket",
+    "Security software"
+   ],
+   "Socure": [
+    "Socure",
+    "Identity management"
+   ],
+   "Sorare": [
+    "Sorare",
+    "Fantasy sports"
+   ],
+   "Sourcegraph": [
+    "Sourcegraph",
+    "Developer platform"
+   ],
+   "Spoton": [
+    "SpotOn",
+    "Financial technology"
+   ],
+   "Staffbase": [
+    "Staffbase",
+    "Software as a service"
+   ],
+   "Starburst": [
+    "Starburst Data",
+    "Data analytics"
+   ],
+   "StockX": [
+    "StockX",
+    "E-commerce"
+   ],
+   "Stripe": [
+    "Stripe",
+    "Financial services"
+   ],
+   "Substack": [
+    "Substack",
+    "Media and Publishing"
+   ],
+   "Suno": [
+    "Suno",
+    "Artificial intelligence"
+   ],
+   "Superhuman Platform Inc": [
+    "Superhuman",
+    "Collaborative software"
+   ],
+   "Sword Health": [
+    "Sword Health",
+    "Health"
+   ],
+   "Synthesia": [
+    "Synthesia",
+    "Artificial intelligence"
+   ],
+   "Sysdig": [
+    "Sysdig",
+    "Cybersecurity"
+   ],
+   "Talkdesk": [
+    "Talkdesk",
+    "Software as a service"
+   ],
+   "Tanium": [
+    "Tanium",
+    "Cybersecurity"
+   ],
+   "Taxfix.com": [
+    "Taxfix",
+    "Fintech / Tax software"
+   ],
+   "Tekion": [
+    "Tekion",
+    "Software as a service"
+   ],
+   "Tenstorrent": [
+    "Tenstorrent",
+    "Semiconductors"
+   ],
+   "Thumbtack": [
+    "Thumbtack",
+    "Software"
+   ],
+   "Tipalti": [
+    "Tipalti",
+    "Financial technology"
+   ],
+   "Together AI": [
+    "Together AI",
+    "Artificial Intelligence"
+   ],
+   "Trade Republic": [
+    "Trade Republic",
+    "Financial technology"
+   ],
+   "TradingView": [
+    "TradingView",
+    "Finance"
+   ],
+   "Trulioo": [
+    "Trulioo",
+    "Identity management"
+   ],
+   "Typesafe Ai": [
+    "TypeSafe AI",
+    "Artificial intelligence"
+   ],
+   "Unite Us": [
+    "Unite Us",
+    "Healthcare"
+   ],
+   "Vanta": [
+    "Vanta",
+    "Cybersecurity"
+   ],
+   "Vercel": [
+    "Vercel",
+    "Cloud computing / AI"
+   ],
+   "Verkada": [
+    "Verkada",
+    "Physical security"
+   ],
+   "Virta Health": [
+    "Virta Health",
+    "Healthcare"
+   ],
+   "Vox Media Group": [
+    "Vox Media",
+    "Digital media"
+   ],
+   "VTS": [
+    "VTS",
+    ""
+   ],
+   "Wayflyer": [
+    "Wayflyer",
+    "Financial technology"
+   ],
+   "Webflow": [
+    "Webflow",
+    "Web development"
+   ],
+   "Wellhub": [
+    "Wellhub",
+    "Fitness"
+   ],
+   "Whoop": [
+    "WHOOP",
+    "Wearable technology"
+   ],
+   "Wonderful": [
+    "Wonderful",
+    "Artificial intelligence"
+   ],
+   "Workato": [
+    "Workato",
+    "Technology"
+   ],
+   "Yugabyte": [
+    "Yugabyte",
+    "Database management"
+   ],
+   "Zipline": [
+    "Zipline",
+    "Logistics"
+   ],
+   "Zocdoc": [
+    "Zocdoc",
+    "Healthcare"
+   ]
+  }
+ }
+}
