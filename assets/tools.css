@@ -34,26 +34,29 @@
 .tl-priv b{font-weight:650;color:var(--green);margin-right:4px}
 
 /* result board: big display numeral, mono labels */
-.tl-board{margin-top:18px;background:#0e0e0c;color:#f3f2ec;border:1px solid #2b2b27;border-top:4px solid var(--pop);border-radius:6px;padding:14px 20px 20px;min-height:150px}
-.tl-board-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;font:500 13px "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:#a5a399;padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid #2b2b27}
-.tl-board-h b{color:var(--pop);font-weight:500}
-.tl-big{margin:0;font:800 clamp(38px,10vw,64px)/1 var(--display);letter-spacing:-.03em;color:var(--pop);font-variant-numeric:lining-nums proportional-nums;overflow-wrap:anywhere}
-.tl-big small{display:inline-block;margin-left:.4em;font:400 13.5px "Public Sans","Public Sans Fallback",system-ui,sans-serif;letter-spacing:0;color:#a5a399;white-space:nowrap}
-.tl-big.tl-dim{color:#55534c}
-.tl-sub{margin:10px 0 0;max-width:74ch;font-size:15px;line-height:1.55;color:#cfcdc3;overflow-wrap:anywhere}
-.tl-sub b{color:#f3f2ec;font-weight:650}
-.tl-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:0 18px;margin:16px 0 0;padding:0;border-top:1px solid #2b2b27}
+/* The result board. It was black with green figures until 17 Nov 2026; the owner does not like green on black ("not necessarily
+   green on black", 14 Nov), so it is a light card like the rest of the site: ink figures, one green line on top. It follows the
+   theme through the tokens, so in the dark theme it is a dark card with paper-coloured figures, still without green type. */
+.tl-board{margin-top:18px;background:var(--card);color:var(--text);border:1px solid var(--line2);border-top:3px solid var(--ac);border-radius:10px;padding:14px 20px 20px;min-height:150px;box-shadow:var(--shadow)}
+.tl-board-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;font:500 13px "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:var(--muted);padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tl-board-h b{color:var(--text);font-weight:600}
+.tl-big{margin:0;font:800 clamp(38px,10vw,64px)/1 var(--display);letter-spacing:-.03em;color:var(--text);font-variant-numeric:lining-nums proportional-nums;overflow-wrap:anywhere}
+.tl-big small{display:inline-block;margin-left:.4em;font:400 13.5px "Public Sans","Public Sans Fallback",system-ui,sans-serif;letter-spacing:0;color:var(--muted);white-space:nowrap}
+.tl-big.tl-dim{color:var(--faint)}
+.tl-sub{margin:10px 0 0;max-width:74ch;font-size:15px;line-height:1.55;color:var(--muted);overflow-wrap:anywhere}
+.tl-sub b{color:var(--text);font-weight:650}
+.tl-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:0 18px;margin:16px 0 0;padding:0;border-top:1px solid var(--line)}
 .tl-kv div{padding-top:12px;min-width:0}
-.tl-kv dt{font:400 13px/1.35 "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:#a5a399}
-.tl-kv dd{margin:3px 0 0;font:700 20px/1.2 var(--display);letter-spacing:-.015em;color:#f3f2ec;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.tl-meter{position:relative;height:10px;margin:16px 0 4px;border-radius:5px;background:#2b2b27;overflow:hidden}
-.tl-meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--pop);transition:width .25s}
-.tl-range{position:relative;height:12px;margin:26px 0 6px;border-radius:6px;background:#2b2b27}
-.tl-range i{position:absolute;top:0;bottom:0;border-radius:6px;background:#2f6b45}
-.tl-range u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:2px;background:var(--pop)}
-.tl-range b{position:absolute;top:-6px;bottom:-6px;width:4px;margin-left:-2px;border-radius:2px;background:#f3f2ec}
-.tl-range b span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding-bottom:2px;font:600 11.5px "Public Sans","Public Sans Fallback",system-ui,sans-serif;white-space:nowrap;color:#f3f2ec}
-.tl-scale{display:flex;justify-content:space-between;gap:12px;font:500 11.5px var(--mono);color:#a5a399}
+.tl-kv dt{font:400 13px/1.35 "Public Sans","Public Sans Fallback",system-ui,sans-serif;color:var(--muted)}
+.tl-kv dd{margin:3px 0 0;font:700 20px/1.2 var(--display);letter-spacing:-.015em;color:var(--text);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tl-meter{position:relative;height:10px;margin:16px 0 4px;border-radius:5px;background:var(--line);overflow:hidden}
+.tl-meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--ac);transition:width .25s}
+.tl-range{position:relative;height:12px;margin:26px 0 6px;border-radius:6px;background:var(--line)}
+.tl-range i{position:absolute;top:0;bottom:0;border-radius:6px;background:color-mix(in srgb,var(--ac) 30%,transparent)}
+.tl-range u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:2px;background:var(--ac)}
+.tl-range b{position:absolute;top:-6px;bottom:-6px;width:4px;margin-left:-2px;border-radius:2px;background:var(--text)}
+.tl-range b span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding-bottom:2px;font:600 11.5px "Public Sans","Public Sans Fallback",system-ui,sans-serif;white-space:nowrap;color:var(--text)}
+.tl-scale{display:flex;justify-content:space-between;gap:12px;font:500 11.5px var(--mono);color:var(--muted)}
 @media(prefers-reduced-motion:reduce){.tl-meter i{transition:none}}
 
 /* details under the board */
@@ -130,7 +133,7 @@ td.tl-best{background:var(--accent-soft)}
 .tl-skn{min-width:132px;text-align:right;font-size:13.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 @media(max-width:560px){.tl-sk li{grid-template-columns:minmax(0,1fr) auto}.tl-skb{grid-column:1/-1;grid-row:2}.tl-skn{min-width:0}}
 /* a quoted line on the dark board: the opening of an About text */
-.tl-board .tl-quote{max-width:74ch;margin-top:10px;border-left-color:var(--pop);color:#f3f2ec;font-size:15px}
+.tl-board .tl-quote{max-width:74ch;margin-top:10px;border-left-color:var(--ac);color:var(--text);font-size:15px}
 /* a worked example in the text under a tool: what the tool gives for its own sample details, line breaks kept */
 .tl-ex{max-width:76ch;margin:12px 0 0;padding:16px 18px;border:1px solid var(--line);border-left:3px solid var(--ac);border-radius:6px;background:var(--card);font-size:15px;line-height:1.6;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
 .tl-after .sec>p:not(.note){max-width:76ch;color:var(--muted)}
