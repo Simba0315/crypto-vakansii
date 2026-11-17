@@ -7669,9 +7669,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                     "what": {p["name"]: p["what"] for p in CFG["prices"]}}
         page("account/", f"Your Account: Alerts, Saved Jobs, Posting | {SITE}",
              "Your free account: job alerts, saved jobs on every device and your resume for employers; for employers, free job posting, company pages, team and receipts.",
-             crumbs(("Account", "")) + "<h1>Your account</h1>"
-             '<p class="lead">Free for job seekers and employers. Keep your alerts and saved jobs in one place, let employers find your resume if you want to, '
-             'or post jobs for your company. Choose who you are, then sign in.</p>'
+             # acc-hd is the page as it reads without JavaScript; account.js hides it and draws its own first screen (a label, a headline, the form)
+             crumbs(("Account", "")) + '<div id="acc-hd"><h1>Your account</h1>'
+             '<p class="lead">Free for job seekers and employers. Sign in, or create an account in a minute.</p></div>'
              f'<div id="acc" data-api="{e(CFG["api_url"])}"><noscript><div class="banner">The account needs JavaScript.</div></noscript></div>'
              '<script type="application/json" id="acc-data">' + json.dumps(acc_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/account.js?v={V}" defer></script>',
              head='<meta name="robots" content="noindex">', sitemap=False)

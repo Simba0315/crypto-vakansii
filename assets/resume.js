@@ -660,18 +660,21 @@
    the account, up to ten, and opens on any device from the account's Resumes. */
 (function () {
   var bar = document.querySelector('#rb .rb-actions'); if (!bar) return;
-  var token = null; try { token = JSON.parse(localStorage.getItem('hrn_token')); } catch (e) {}
+  // the sign-in is read when it is needed, not once: signing out in the header (site.js says so with "hrn:auth") changes the button at once
+  var signedIn = function () { try { return JSON.parse(localStorage.getItem('hrn_token')) || ''; } catch (e) { return ''; } };
   var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'rb-acc';
-  b.textContent = token ? 'Save to my account' : 'Sign in to keep it in your account';
+  var label = function () { b.textContent = signedIn() ? 'Save to my account' : 'Sign in to keep it in your account'; };
+  label(); document.addEventListener('hrn:auth', label);
   bar.appendChild(b);
   b.addEventListener('click', function () {
-    var base = (window.HRN && window.HRN.base) || '';
+    var base = (window.HRN && window.HRN.base) || '', token = signedIn();
     if (!token) { location.href = base + '/account/'; return; }
     var data = null; try { data = JSON.parse(localStorage.getItem('hrn_resume')); } catch (e) {}
     if (!data) { b.textContent = 'Fill in the resume first'; return; }
     b.disabled = true; b.textContent = 'Saving…';
     var title = ((data.basics && (data.basics.title || data.basics.name)) || data.title || 'My resume');
-    fetch(location.origin + '/api/resumes', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    // the API's own address (the header link carries it; site.js keeps it in HRN.api): the same site in production, another port on a developer's machine
+    fetch(((window.HRN && window.HRN.api) || location.origin) + '/api/resumes', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify({ name: String(title).slice(0, 50) + ' · ' + new Date().toISOString().slice(0, 10), resume: data }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (x) { return { ok: r.ok, x: x }; }); })
       .then(function (res) {
