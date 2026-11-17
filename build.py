@@ -2653,7 +2653,7 @@ def main():
     page("categories/", f"List of Job Categories: {len(fam_rows)} Fields, {len(by_role)} Job Titles | {SITE}",
          f"Browse {n:,} open jobs by category: {len(fam_rows)} fields and {len(by_role)} kinds of work, from software and data to sales, finance, law, healthcare and the factory floor. Each has its own page.",
          crumbs(("Categories", "")) + '<h1>Browse all job <span class="hl">categories</span></h1>'
-         '<p class="lead">Pick a field to read what the work is and see who is hiring, or go straight to a kind of work.</p>' + hub_nums + dir_filter
+         f'<p class="lead">{n:,} open jobs, sorted into {len(fam_rows)} fields and {len(by_role)} kinds of work. Pick a field to read what the work is and see who is hiring, or go straight to a kind of work.</p>' + hub_nums + dir_filter
          + section(f"[[{len(fam_rows)} fields]] and the kinds of work in each", dir_html, ("roles/", "All roles, A to Z"), sid="fields",
                    sub="The number next to each name is how many jobs are open today.", label="Directory")
          + fam_tab_html + dir_faq, head=dir_ld, cls="hub")
@@ -2737,7 +2737,7 @@ def main():
         page(f"locations/{slug}/companies/", t_ if len(t_) <= 65 else t_.rsplit(" (", 1)[0],
              f"{len(cos_):,} companies have open jobs in {name} as of {fdate(TODAY)}, {len(new_):,} of them posted in the last seven days. The most: {', '.join(cos_[:3])}.",
              crumbs(("Locations", "locations/"), (short, f"locations/{slug}/"), ("Companies hiring", "")) + f'<h1>{path_fl(f"locations/{slug}/")}Companies hiring in {e(name)}</h1>'
-             f'<p class="lead">Every employer with an open job in {e(name)} on {fdate(TODAY)}, read from its own careers page. '
+             f'<p class="lead">{len(cos_):,} employers have open jobs in {e(name)} on {fdate(TODAY)}, each read from its own careers page. '
              f'Most open jobs first; each name opens all of that company’s roles.</p>'
              + nums([(f"{len(cos_):,}", "employers hiring here"), (f"{len(new_):,}", "posted a job in the last 7 days"), (f"{len(js):,}", f"open jobs in {e(short)}"),
                      (f"{sum(1 for j in js if j['remote']):,}", "of them remote")])
@@ -2768,7 +2768,7 @@ def main():
     page("locations/", f"Jobs by Country: {n_ctry} Countries and {n_city} Cities | {SITE}",
          f"Choose a country: open jobs in {n_ctry} countries, each with the number that can be done from home. Also by part of the world and by city.",
          crumbs(("Locations", "")) + f'<h1>Jobs by country: <span class="hl">choose yours</span></h1>'
-         f'<p class="lead">Pick a country or a city to see its open jobs, counted today. Jobs that are not tied to one country are under <a href="{P}/work-from-anywhere/">work from anywhere</a>.</p>'
+         f'<p class="lead">Open jobs in {n_ctry} countries, counted today. Pick a country or a city to see its jobs. Jobs that are not tied to one country are under <a href="{P}/work-from-anywhere/">work from anywhere</a>.</p>'
          + nums([(f"{n_ctry:,}", "countries with open jobs"), (f"{n_city:,}", "states and cities"), (f"{n:,}", "open jobs today"),
                  (f"{len(remote):,}", f'can be done <a href="{P}/remote/">from home</a>')])
          + '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a country or a city, for example Germany or Austin" aria-label="Find a place"></p>'
@@ -2867,7 +2867,7 @@ def main():
         page(f"companies/{ts_}/", f"{ttl_}: {len(hits):,} Employers ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
              f"{len(hits):,} companies where {rule_}, with {n_jobs:,} open jobs between them, counted from their own careers pages and updated every hour.",
              crumbs(("Companies", "companies/"), (h1_, "")) + f'<h1>{e(h1_)}: <span class="hl">{len(hits):,} employers</span></h1>'
-             f'<p class="lead">Companies where {e(rule_)}, counted today from their own careers pages. Largest first.</p>'
+             f'<p class="lead">{len(hits):,} companies where {e(rule_)}, with {n_jobs:,} open jobs between them, counted today from their own careers pages. Largest first.</p>'
              + nums([(f"{n_jobs:,}", "open jobs between them"), (f"{sum(fresh_n.get(c, 0) for c, _ in hits):,}", "posted in the last 7 days"),
                      (f"{100 * rem_t / max(1, n_jobs):.0f}%", "can be done from home"), (f"{ent_t:,}", "junior roles and internships")])
              + lists_nav(ts_)
@@ -2917,7 +2917,7 @@ def main():
              f"{len(hits):,} {short_[0].lower() + short_[1:] if ls_ == 'unicorns' else short_} have {n_jobs:,} open jobs here today: who hires the most"
              + (f", in which {'industries' if ls_ == 'unicorns' else 'sectors'}" if has_sec else "") + " and what they pay. Updated every hour.",
              crumbs(("Companies", "companies/"), (short_, "")) + f'<h1>{e(h1_)}: <span class="hl">{n_jobs:,} jobs</span></h1>'
-             f'<p class="lead">{e(what_)} Listed here are the companies from {e(the_)} whose own careers pages this site reads every hour and that have open jobs today. Largest first.</p>'
+             f'<p class="lead">{e(what_)} {len(hits):,} of the {d_.get("members", 0):,} companies in {e(the_)} have open jobs on this site today, {n_jobs:,} between them, read from each company’s own careers page every hour. Largest first.</p>'
              + nums([(f"{len(hits):,}", f"of the {d_.get('members', 0):,} companies are hiring here"), (f"{sum(new_(c) for c, _ in hits):,}", "jobs posted in the last 7 days"),
                      (f"{rem_:,}", "can be done from home"), (f"{ent_:,}", "junior roles and internships")])
              + lists_nav(ls_)
@@ -2946,7 +2946,7 @@ def main():
                                     '<p class="note">Companies from each list that have open jobs here today.</p>') if co_lists else ""),
                                 ("companies/compare/", "Compare two companies"), sid="lists", label="Ready-made lists",
                                 sub="Counted from each company’s own open postings, so a company moves in and out of a list as it hires.")
-    co_lead = (f"{names(top_open)} have the most open roles today." if len(top_open) > 1 else "Every employer whose own careers page is read here, with its open roles counted today.")
+    co_lead = f"{len(companies):,} employers have open roles today, each read from its own careers page." + (f" {names(top_open)} have the most." if len(top_open) > 1 else "")
     if top_new: co_lead += f" {names(top_new)} posted the most new ones in the last 7 days."
     page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {len(companies):,} employers | {SITE}",
          "Companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
@@ -3003,7 +3003,9 @@ def main():
         if CO_IN.get(c):
             tbadges += '<p class="note colist">Listed in: ' + " · ".join(f'<a href="{P}/companies/{l_}/">{e(n_)}</a>' for l_, n_ in CO_IN[c]) + "</p>"
         cats_txt = [e(name) for name, _ in top_cats if name != OTHER[1]]
-        lead = (((f"Most of {e(c)}’s open roles are in {', '.join(cats_txt[:-1]) + ' and ' + cats_txt[-1] if len(cats_txt) > 1 else cats_txt[0]}. " if cats_txt else "")
+        # the first sentence answers "is X hiring?" in words (what a search snippet or an AI assistant quotes); the row of figures has the rest
+        lead = (((f"{e(c)} has {roles(len(act), 'open role')} right now" + (f", {rem_c:,} of them remote" if rem_c else "") + ". ")
+                 + (f"Most are in {', '.join(cats_txt[:-1]) + ' and ' + cats_txt[-1] if len(cats_txt) > 1 else cats_txt[0]}. " if cats_txt else "")
                  + f"Every role here is read from {e(c)}’s own careers page and was checked on {fdate(TODAY, False)}.") if act else "No open roles right now. Past openings are below.")
         closed = section(f"Closed jobs at {c}", f'<ul class="jobs">{"".join(card(j) for j in arc[:200])}</ul>', sid="closed") if arc else ""
         careers_link = f'<a href="{FULL}/companies/{slug}/">Open roles at {c}</a>'
