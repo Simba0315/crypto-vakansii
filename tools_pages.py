@@ -3,6 +3,7 @@
 build.py calls build_tools() and passes its own page helpers. The behaviour of every tool lives in assets/tools.js
 (pure functions tested under Node + page wiring) and the extra styles in assets/tools.css. Nothing here needs a server:
 each tool runs in the visitor's browser, and the only data embedded in a page is a small set of salary aggregates.
+One tool reads a data file instead: "skills to put on a resume" by job title loads data/role-skills.json, which build.py writes from the day's postings.
 """
 import datetime, json
 from collections import defaultdict
@@ -101,6 +102,52 @@ EX_LI_ABOUT = ("PASSIONATE ABOUT TECHNOLOGY!!! Jordan is a hard-working team pla
                "Jordan thinks outside the box and always gives everything. Jordan has worked in many companies and loves new challenges.")
 
 
+# What each of the tools added on 17 Nov 2026 gives for its own sample details ("Show an example"), printed in the page text as a worked example.
+# tools_test.js reads the built pages, fills the form the way the button does and checks that the tool returns exactly these texts.
+EXAMPLE = {
+    "follow-up-email": ("Subject: Following up on my application for Senior Backend Engineer\n\n"
+                        "Hi Dana,\n\n"
+                        "I applied for the Senior Backend Engineer role at Acme on 4 November, and I am writing to make sure my application reached you.\n\n"
+                        "I am still very interested in the job. Since we were last in touch, I finished the cloud certificate the posting asks for.\n\n"
+                        "Could you tell me when you expect to choose people to interview? If anything is missing from my application, I can send it today.\n\n"
+                        "Thank you for your time,\nAlex Morgan"),
+    "application-email": ("Subject: Referred by Sam Ortiz: Marketing Manager application\n\n"
+                          "Dear Dana Lee,\n\n"
+                          "Sam Ortiz suggested I apply for the Marketing Manager role at Acme and told me you are the person to write to. My resume is attached. Examples of my work: alexmorgan.example/work\n\n"
+                          "In short: I am a marketing manager with 6 years of experience. Last year I grew newsletter sign-ups from 8,000 to 31,000.\n\n"
+                          "I have used your scheduling app with two teams, and I know why people stay with it.\n\n"
+                          "I would be glad to talk whenever suits you. You can reach me at alex@example.com.\n\n"
+                          "Best regards,\nAlex Morgan"),
+    "referral-request": ("Subject: Could you refer me for a role at Acme?\n\n"
+                         "Hi Sam,\n\n"
+                         "Acme is hiring a Data Analyst, and I am going to apply. Would you be willing to refer me?\n\n"
+                         "The posting: acme.example/jobs/data-analyst\n\n"
+                         "You know my work from the three years we shared on the billing team at Example Co, so you can judge whether I would fit. I have built sales reports for two retailers, the work this role describes.\n\n"
+                         "If you are happy to do it, I will send my resume and a few lines you can paste into the referral form, so it takes you five minutes. The posting closes on Friday, 27 November.\n\n"
+                         "And if you would rather not, for any reason, just say so. It will not change anything between us.\n\n"
+                         "Thanks,\nAlex Morgan"),
+    "linkedin-connection-message": "Hi Dana, I am a product designer with six years in fintech. I saw that you recruit for Acme, and the Senior Product Designer role there fits what I do. I have led design for two payment apps. I would like to connect and send you my resume. Alex",
+    "professional-bio": "I am a senior backend engineer at Acme with 8 years of experience in payment systems for online shops. My strongest areas are Python, PostgreSQL and system design. Recently, I rebuilt the checkout for two million shoppers and cut failed payments by 30%.",
+    "professional-bio-one": "I am a senior backend engineer at Acme, working on payment systems for online shops.",
+    "linkedin-summary": ("I am a senior backend engineer with 8 years of experience. I work with online shops that have outgrown their first payment system.\n\n"
+                         "I like to start from the numbers the business already tracks and work back to the code.\n\n"
+                         "I am at my best working on Python, PostgreSQL and payment systems.\n\n"
+                         "What that has looked like in practice: I rebuilt the checkout for two million shoppers and cut failed payments by 30%. I moved 30 services to a new database with no downtime. I cut the monthly cloud bill from $41,000 to $27,000.\n\n"
+                         "I am now looking for senior backend roles at product companies.\n\n"
+                         "The quickest way to reach me is alex@example.com."),
+    "elevator-pitch": "Hi, I’m Alex Morgan. I’m a data analyst with 4 years of experience. What I do best is turning messy sales data into reports people actually use. Recently I built a weekly report that replaced six spreadsheets and saves the team a day a week. I’m looking for an analyst role on a pricing team, which is why I came over to Acme. What do you look for in people who apply for that?",
+    "elevator-pitch-n": "74 words, about 30 seconds at 150 words a minute.",
+    "resume-summary": "Data analyst with 4 years of experience in SQL, Excel and Tableau. Cut month-end close from 8 days to 5 by automating reconciliations.",
+    "resume-summary-2": "Data analyst who cut month-end close from 8 days to 5 by automating reconciliations. 4 years of experience; strongest in SQL, Excel and Tableau.",
+    "recommendation-letter": ("Dear Ms Rivera,\n\n"
+                              "I am writing to recommend Priya Shah for the Team Lead role at Acme. I managed her at Example Co for three years, while she worked as a senior support agent.\n\n"
+                              "What stands out most is how calm she stays with upset customers. When our payment system failed last March, she answered 140 tickets in a day and kept our satisfaction score above 90%.\n\n"
+                              "A second strength is her clear writing. She rewrote 60 help articles, and tickets about refunds fell by a third.\n\n"
+                              "I recommend Priya without reservation. If you would like to know more, you can reach me at dana.lee@example.com.\n\n"
+                              "Sincerely,\nDana Lee\nHead of Support, Example Co"),
+}
+
+
 def _private(what):
     return f'<p class="note tl-priv"><b>Private</b>{what} What you type is kept only in this browser so the page remembers it; “Clear” erases it.</p>'
 
@@ -149,8 +196,9 @@ def salary_groups(jobs):
 
 # ---------------------------------------------------------------- the section
 
-def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
-    """Writes the /tools/ hub and every tool page through page(); returns [(path, name, one_line_description), ...] for linking."""
+def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skills=(), skill_slug=None):
+    """Writes the /tools/ hub and every tool page through page(); returns [(path, name, one_line_description), ...] for linking.
+    role_skills: [(role slug, role name, postings, [(skill, postings that name it), …]), …], most postings first; skill_slug(skill) is its page under /skills/."""
     today = datetime.date.today()
     DATE = f"{MONTHS[today.month - 1]} {today.day}, {today.year}"
     n_jobs = len(jobs)
@@ -171,11 +219,13 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "post-a-job/": ("Post a job", "Put your vacancy in front of people who are searching for work right now."),
         "widgets/": ("Jobs widget and live badges", "Show live jobs on your own site with one line of code."),
         "contract/": ("Contract jobs", "Open contract roles, updated hourly."),
+        "my-jobs/": ("Application tracker", "Save jobs, mark where each application stands and see which ones have gone quiet."),
     }
     TOOLS = []          # filled below, in the order they appear on the hub
 
-    def tool(slug, group, name, card, title, desc, h1, lead, html, how_title, how, faq, rel, site):
-        TOOLS.append(dict(slug=slug, group=group, name=name, card=card, title=title + brand, desc=desc, h1=h1, lead=lead, html=html, how_title=how_title, how=how, faq=faq, rel=rel, site=site))
+    def tool(slug, group, name, card, title, desc, h1, lead, html, how_title, how, faq, rel, site, ex=None):
+        """ex: (heading, html) of one more section shown between the tool and "how it works": a worked example or a table."""
+        TOOLS.append(dict(slug=slug, group=group, name=name, card=card, title=title + brand, desc=desc, h1=h1, lead=lead, html=html, how_title=how_title, how=how, faq=faq, rel=rel, site=site, ex=ex))
 
     def wrap(slug, inner):
         return f'<div class="tl" data-tool="{slug}">{NOSCRIPT}{inner}</div>'
@@ -242,7 +292,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "No: only the ones that are true for you. Where you have a skill, use the posting’s exact word, in the skills line and in the job where you used it."),
           ("Is the job description uploaded anywhere?",
            "No. It is read inside your browser and kept only in this browser’s storage so the page remembers it; the Clear button erases it.")],
-         ["resume-match", "resume-bullet-builder", "cover-letter"], ["resume/", "for-you/"])
+         ["resume-match", "resume-skills", "resume-bullet-builder"], ["resume/", "for-you/"])
 
     # ------------------------------------------------------------ 2. salary checker
     groups = salary_groups(jobs)
@@ -367,7 +417,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "This calculator works out the year’s federal tax itself, so the two can differ by a little."),
           ("Do 401(k) contributions lower my taxes?", "Traditional 401(k) contributions lower your income tax, because they are taken off before it; Social Security and Medicare are still due on them. "
            "Enter them as pre-tax contributions to see the difference.")],
-         ["salary-converter", "raise-calculator", "compare-offers"], ["salaries/"])
+         ["salary-converter", "overtime-pay", "raise-calculator"], ["salaries/"])
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",
@@ -583,7 +633,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Why this job and this company, and one concrete result that shows you can do the work. The resume lists what you did; the letter connects it to what this employer needs."),
           ("Do I need a different cover letter for every job?",
            "Yes, at least the opening and the reason for choosing the company. Your details stay saved in this browser, so for the next application you change only the job title, the company and the “why” sentence.")],
-         ["resume-match", "thank-you-email", "interview-answer-builder"], ["resume/"])
+         ["application-email", "resume-match", "thank-you-email"], ["resume/"])
 
     # ------------------------------------------------------------ 9. negotiation email
     both = ' data-for="counter raise"'
@@ -980,7 +1030,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Nobody can promise that, and this page does not. It is a courtesy, it keeps the conversation open, and it gives you a place to add something you forgot to say in the room."),
           ("Is the email written by AI?",
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated or sent to a server.")],
-         ["interview-answer-builder", "reference-request-email", "negotiation-email"], ["for-you/"])
+         ["follow-up-email", "interview-answer-builder", "reference-request-email"], ["for-you/"])
 
     # ------------------------------------------------------------ 17b. answering a job offer (search demand: "job offer acceptance email", "decline job offer email")
     tool("job-offer-response", "seekers", "Job offer response email",
@@ -1141,7 +1191,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Your current resume and the job description, plus two or three points that matter for this job. A reference who knows what the employer is looking for can give examples that fit."),
           ("What if the person says no?",
            "Thank them and ask someone else. The template ends with a line that makes declining easy, because you want a reference from someone who is glad to give one.")],
-         ["thank-you-email", "resignation-letter", "cover-letter"], ["resume/"])
+         ["recommendation-letter", "thank-you-email", "resignation-letter"], ["resume/"])
 
     # ------------------------------------------------------------ 21. LinkedIn headline and About
     tool("linkedin-headline", "seekers", "LinkedIn headline and About builder",
@@ -1180,7 +1230,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "LinkedIn accepts up to 2,600 characters, but only the opening lines show before a reader has to click “see more”. Put what you do and for whom in the first two sentences; the builder’s paragraph starts with exactly that."),
           ("Will these headlines get me more profile views?",
            "This page cannot promise that. It gives you three clear ways to say what you do inside LinkedIn’s limit. How often a profile is found also depends on your experience, your network and what recruiters search for.")],
-         ["linkedin-review", "resume-bullet-builder", "cover-letter"], ["resume/"])
+         ["linkedin-summary", "linkedin-review", "linkedin-connection-message"], ["resume/"])
 
     # ------------------------------------------------------------ 22. interview answer (STAR)
     star = lambda k, label, rows, ph, hint: _area(k, label, rows, ph, hint=hint, ex=EX_STAR[k])
@@ -1220,7 +1270,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Because the interviewer is trying to learn what you did. “We shipped the project” leaves your part unclear; “I wrote the plan and ran the weekly review” does not. Keep “we” for the situation and use “I” for the action."),
           ("What if my result has no number?",
            "Then say what was different afterwards in a way someone could check: a deadline met, a complaint that stopped, a process other teams copied. A number is the easiest proof to remember, but it is not the only one.")],
-         ["thank-you-email", "resume-bullet-builder", "cover-letter"], ["for-you/"])
+         ["elevator-pitch", "thank-you-email", "resume-bullet-builder"], ["for-you/"])
 
     # ------------------------------------------------------------ 23. resume bullet point
     tool("resume-bullet-builder", "seekers", "Resume bullet point builder",
@@ -1258,7 +1308,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Use a count you do know: the size of the team, the number of customers, how often something happened, how long it took. If nothing was measured, describe the change: what people could do afterwards that they could not do before."),
           ("How many bullet points should each job have?",
            "As a rule of thumb, three to five for recent jobs and one or two for older ones. Put the line with the strongest result first: a reader who skims sees the first line under each job title.")],
-         ["resume-review", "resume-match", "linkedin-headline"], ["resume/"])
+         ["resume-summary", "resume-review", "resume-match"], ["resume/"])
 
     # ------------------------------------------------------------ 24. job search funnel
     tool("job-search-calculator", "seekers", "Job search calculator",
@@ -1295,7 +1345,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "More applications bring more interviews only if the rate stays the same. If very few of your applications get a reply, look at the resume and at which jobs you pick as well: doubling the reply rate has the same effect on the result as doubling the number of applications."),
           ("Is this a prediction of my job search?",
            "No. It is arithmetic on your own numbers, and it assumes the future looks like your past. It cannot know the job market, the season or how well each job fits you.")],
-         ["resume-review", "resume-match", "interview-answer-builder"], ["for-you/", "jobs/"])
+         ["follow-up-email", "resume-review", "resume-match"], ["for-you/", "jobs/"])
 
     # ------------------------------------------------------------ 25. remote work savings
     tool("remote-work-savings", "seekers", "Remote work savings calculator",
@@ -1523,6 +1573,614 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
            "Multiply each rating by the weight of its criterion, add the results and divide by the sum of the weights. Ratings of 4, 5, 3, 4 and 4 with weights of 30, 25, 20, 15 and 10 give 4.05 out of 5.")],
          ["cost-per-hire", "job-description-checker", "boolean-search"], ["post-a-job/"])
 
+    # ============================================================ added 2026-11-17: eleven more tools (letters, short texts, skills by job title, overtime)
+    # A field that belongs to one choice of a select carries data-on="<select>:<values>"; tools.js shows it only for those values. A field that
+    # exists once per choice is named <field>_<choice> (when_applied, goal_fair): each keeps its own label and example, and tools.js reads the one in use.
+    on = lambda spec: f' data-on="{spec}"'
+    sample = lambda text: f'<blockquote class="tl-ex">{e(text)}</blockquote>'      # a worked example in the page text: what the tool gives for its own sample details (tools_test.js compares the two)
+    no_ai = lambda what: (f"Is the {what} written by AI?", f"No. It is a fill-in template: every sentence is assembled from the fields you complete. Nothing is generated, guessed or sent to a server, so the {what} holds only facts you typed.")
+
+    # ------------------------------------------------------------ 30. follow-up email
+    tool("follow-up-email", "seekers", "Follow-up email",
+         "Five situations, from a week after applying to a recruiter who went quiet: a short, polite follow-up in two tones, with the day to send it.",
+         "Follow-Up Email After Applying or an Interview",
+         "Write a follow-up email after applying, after an interview with no reply or after a verbal offer. Five situations, two tones, and when to send each. Free.",
+         "Write a follow-up email after applying or after an interview",
+         "Follow up once, in three or four sentences: say which job and when you were last in touch, that you are still interested, and ask one clear question. "
+         "Silence after an application or an interview leaves people either waiting for weeks or writing every few days, and both hurt. "
+         "Pick your situation, fill in the names and the dates, and the email is ready to copy, with the day to send it. It is a fill-in template, not AI: each sentence is built from what you type.",
+         wrap("follow-up-email",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("situation", "Situation", [("applied", "A week after applying", True), ("interview", "After an interview, past the date they gave"), ("second", "Second follow-up, no reply to the first"),
+                                                ("offer", "After a verbal offer, nothing in writing"), ("recruiter", "To a recruiter who went quiet")], cls="full")
+              + _sel("tone", "Tone", [("friendly", "Friendly", True), ("brief", "Brief")])
+              + _f("to", "Their first name", "Dana", mode="")
+              + _f("name", "Your name", "Alex Morgan", mode="", auto="name")
+              + _f("role", "Job title", "Senior Backend Engineer", mode="")
+              + _f("company", "Company (optional)", "Acme", mode="", auto="organization")
+              + _f("when_applied", "When you applied (optional)", "on 4 November", mode="", hint="For example: last Monday, on 4 November.", show=on("situation:applied"))
+              + _f("when_interview", "When the interview was (optional)", "on 4 November", mode="", hint="For example: last Monday, on 4 November.", show=on("situation:interview"))
+              + _f("promised", "When they said you would hear (optional)", "by Friday, 13 November", mode="", hint="Finish the sentence “You said I would hear back …”.", show=on("situation:interview"))
+              + _f("when_second", "When you first wrote (optional)", "last Tuesday", mode="", hint="Finish the sentence “I wrote …”.", show=on("situation:second"))
+              + _f("when_offer", "When and how the offer was made (optional)", "on the phone last Thursday", mode="", hint="Finish the sentence “You offered me the job …”.", show=on("situation:offer"))
+              + _f("when_recruiter", "When you last spoke (optional)", "two weeks ago", mode="", hint="Finish the sentence “We last spoke …”.", show=on("situation:recruiter"))
+              + _area("add", "Something new to add (optional)", 2, "Since we were last in touch, I finished the cloud certificate the posting asks for.",
+                      hint="One full sentence: a result, a course or a reference that was not in your application.") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("follow-up-email.txt") + "</div>"),
+         "How the follow-up email is put together",
+         "<p>Every version does three things in this order: it reminds the reader which job this is about and when you were last in touch, says in one line that you are still interested, "
+         "and asks one question that can be answered in a sentence. The first line of the output is the subject.</p>"
+         "<ul><li><strong>A week after applying</strong> asks whether the application arrived and when interviews start.</li>"
+         "<li><strong>After an interview</strong> names the date you were given and asks for a new one.</li>"
+         "<li><strong>The second follow-up</strong> says it is the last one and makes a “no” easy to send.</li>"
+         "<li><strong>After a verbal offer</strong> asks for the offer in writing before you give notice.</li>"
+         "<li><strong>To a recruiter</strong> asks whether the role is still moving, on hold or closed.</li></ul>"
+         "<p>“Friendly” leaves room for the other person’s delays; “brief” is two or three sentences. The line under the email says when to send it. "
+         "No AI is involved and nothing is sent anywhere: copy the text into your own email and send it yourself.</p>",
+         [("How long should I wait before following up on a job application?",
+           "About a week. If the posting gives a closing date, wait until a few days after it, because some employers read applications only once the posting has closed."),
+          ("How do I follow up after an interview with no response?",
+           "Wait until the working day after the date they gave you, or a week if they gave none. Thank them for the interview, say you are still interested and ask whether there is a new date for the decision."),
+          ("How many times can I follow up?",
+           "Twice: a first email, then a second one a week later that says it is your last. After that, put your time into other applications. A third message rarely changes anything."),
+          ("What should the subject line of a follow-up email say?",
+           "The job title and what the email is about, so it can be found later: “Following up on my application for Senior Backend Engineer”. For a second follow-up, reply to your first email so the earlier message sits underneath."),
+          ("I got a verbal offer but nothing in writing. Should I follow up?",
+           "Yes, after two or three working days. Ask when the written offer will arrive, and do not resign from your current job until you have the salary, the start date and the main terms in writing."),
+          ("Is it rude to follow up with a recruiter who stopped replying?",
+           "No. Recruiters handle many roles at once and expect to be asked. One clear question (is the role still moving, on hold or closed?) is easy to answer and tells you whether to keep waiting."),
+          no_ai("email")],
+         ["thank-you-email", "application-email", "job-search-calculator"], ["my-jobs/", "jobs/"],
+         ex=("Follow-up email example: a week after applying", "<p>The form filled in with its sample details gives this email, in the friendly tone:</p>" + sample(EXAMPLE["follow-up-email"])))
+
+    # ------------------------------------------------------------ 31. the email that carries a resume
+    tool("application-email", "seekers", "Email to send a resume",
+         "The short email that carries your resume: to a named person or a general address, with a referral or without, for a posted job or none.",
+         "Email to Send a Resume: Template & Generator",
+         "Write the short email that goes with your resume: for a posted job or none, to a named person or a general inbox, with a referral or without. Free, private.",
+         "Write the email that goes with your resume",
+         "Keep it to five or six sentences: which job, that your resume is attached, one result, and how to reach you. "
+         "The email is read before the attachment is opened, and “Please find attached my resume” gives the reader no reason to open it. "
+         "Choose whether the job is posted, whether you have a name to write to and whether someone referred you, and the email is ready to copy. It is a fill-in template, not AI.",
+         wrap("application-email",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("kind", "The job", [("posted", "A posted job", True), ("speculative", "No job is posted")])
+              + _f("to", "Their name (optional)", "Dana Lee", mode="", hint="With no name, the email opens “Dear Hiring Team” and asks to be passed on.")
+              + _f("name", "Your name", "Alex Morgan", mode="", auto="name")
+              + _f("role", "Job title", "Marketing Manager", mode="", hint="With no posting: the kind of work you want.")
+              + _f("company", "Company", "Acme", mode="", auto="organization")
+              + _f("source", "Where you saw the job (optional)", SITE, mode="", show=on("kind:posted"))
+              + _f("referrer", "Who referred you (optional)", "Sam Ortiz", mode="", hint="Ask them first: the employer may call them.")
+              + _f("current", "Your current or latest job title (optional)", "marketing manager", mode="")
+              + _f("years", "Years of experience (optional)", "6", mode="text")
+              + _f("contact", "Phone or email (optional)", "alex@example.com", mode="", auto="email")
+              + _area("proof", "One result (optional)", 2, "Last year I grew newsletter sign-ups from 8,000 to 31,000.", hint="A full sentence starting with “I”, with a number if you have one.")
+              + _area("why", "Why this company (optional)", 2, "I have used your scheduling app with two teams, and I know why people stay with it.",
+                      hint="One full sentence that could not be said about another employer.")
+              + _f("link", "Link to your work (optional)", "alexmorgan.example/work", mode="", cls="full", hint="A portfolio, a code repository or your LinkedIn profile.") + "</div>"
+              + '<div class="tl-checks">' + _check("cover", "I am attaching a cover letter too") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("application-email.txt") + "</div>"),
+         "How the email is put together",
+         "<p>The email has four short parts. The opening says which job it is about and that your resume is attached; with no posting, it says what work you want and that you know nothing is advertised. "
+         "Then come one or two sentences on who you are, with one result, then why this company if you add it, and a close that says how to reach you.</p>"
+         "<p>A <strong>name</strong> changes the greeting and the close: sent to a general address, the email asks for your resume to be passed to the person who is hiring. "
+         "A <strong>referral</strong> moves into the first words and the subject, because it is the reason the email gets opened. "
+         "The line under the email suggests a name for the attached file, such as Alex-Morgan-Resume.pdf, so it can be found again among a hundred files called “resume.pdf”.</p>"
+         "<p>Fields you leave empty drop their sentences. No AI is involved and nothing is sent anywhere: copy the text into your own email and attach the file yourself.</p>",
+         [("What do I write in an email when sending a resume?",
+           "Which job you are applying for, that your resume is attached, one or two sentences on who you are with one result, and how to reach you. Five or six sentences are enough: the resume carries the detail."),
+          ("What subject line should I use when emailing a resume?",
+           "The job title and your name: “Application for Marketing Manager, Alex Morgan”. If someone referred you, put their name first, because it is the reason the email is opened. If the posting asks for a reference number or a set subject, use that."),
+          ("Should the resume be a PDF or a Word file?",
+           "Send what the posting asks for. If it does not say, a PDF keeps the layout the same on every screen. Name the file with your own name, not “resume.pdf”."),
+          ("Is the email the same as a cover letter?",
+           "It can stand in for one. If the posting asks for a cover letter, attach it and keep the email to a few lines. If it does not, this short email does the job of a letter."),
+          ("Can I email a company that has no job posted?",
+           "Yes. Say which kind of work you want, that you know nothing is advertised, and why this company. Ask them to keep your resume or to tell you who to write to. Some roles are filled before they are ever advertised."),
+          ("How do I mention a referral in the email?",
+           "In the first sentence and in the subject: “Sam Ortiz suggested I apply”. Ask the person first, because the employer may call them to check."),
+          no_ai("email")],
+         ["cover-letter", "follow-up-email", "referral-request"], ["resume/", "jobs/"],
+         ex=("Example of an email to send with a resume", "<p>The form filled in with its sample details, a posted job with a named contact and a referral, gives this email:</p>" + sample(EXAMPLE["application-email"])))
+
+    # ------------------------------------------------------------ 32. asking for a referral
+    tool("referral-request", "seekers", "Referral request message",
+         "Ask a close colleague, a distant contact or a stranger at the company to refer you: an email or a short LinkedIn message.",
+         "Job Referral Request: Email & LinkedIn Message",
+         "Ask for a job referral without making it awkward: wording for a close colleague, a distant contact or a stranger, as an email or a short LinkedIn message.",
+         "Ask for a job referral, and make it easy to say yes or no",
+         "Name the job, say in one line why you fit, offer to do the work of the referral yourself, and make it easy to say no. "
+         "Asking a favour of someone you have not spoken to for years, or have never met, is the part people put off until the posting has closed. "
+         "Choose how well you know the person and where you are writing, and the message is ready to copy. It is a fill-in template, not AI.",
+         wrap("referral-request",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("who", "Who you are asking", [("close", "A close colleague", True), ("distant", "A distant contact"), ("stranger", "Someone I never met")])
+              + _sel("channel", "Where you are writing", [("email", "Email", True), ("linkedin", "LinkedIn message")])
+              + _f("to", "Their first name", "Sam", mode="")
+              + _f("name", "Your name", "Alex Morgan", mode="", auto="name")
+              + _f("role", "Job title", "Data Analyst", mode="")
+              + _f("company", "Company", "Acme", mode="", auto="organization")
+              + _f("link", "Link to the posting (optional)", "acme.example/jobs/data-analyst", mode="", cls="full")
+              + _f("by", "When the posting closes (optional)", "on Friday, 27 November", mode="", hint="Finish the sentence “The posting closes …”.", show=on("channel:email"))
+              + _area("how_close", "How they know your work", 2, "the three years we shared on the billing team at Example Co", hint="Finish the sentence “You know my work from …”.", show=on("who:close"))
+              + _area("how_distant", "Where you know each other from", 2, "the analytics meetup in Leeds last spring", hint="Finish the sentence “We know each other from …”.", show=on("who:distant"))
+              + _area("how_stranger", "Why you are writing to this person", 2, "I read your post about how the data team plans its quarters", hint="Finish the sentence “I am writing to you because …”.", show=on("who:stranger"))
+              + _area("fit", "Why you fit, in one sentence", 2, "I have built sales reports for two retailers, the work this role describes.", hint="A full sentence starting with “I”.") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("referral-request.txt") + "</div>"),
+         "How the referral request is put together",
+         "<p>The three versions ask for different things, because the three people can give different things. A <strong>close colleague</strong> is asked for the referral directly, "
+         "and you offer to send your resume and a few lines for the referral form. A <strong>distant contact</strong> is asked whether they are comfortable referring you, or who is hiring. "
+         "A <strong>stranger</strong> is not asked to vouch for you at all: the message asks for a short call about the team and leaves the referral to them.</p>"
+         "<p>Every version makes it easy to decline, because a person who feels cornered writes a weak referral or none. The email has a subject line and room for the closing date of the posting. "
+         "The LinkedIn message is one short paragraph, and the line under it shows its length in characters.</p>"
+         "<p>No AI is involved and nothing is sent anywhere: copy the text and send it yourself.</p>",
+         [("How do I ask someone for a job referral?",
+           "Name the exact job, say in one sentence why you fit, offer to send your resume and a few lines they can paste into the referral form, and say that it is fine to decline. Add the link to the posting so they do not have to search for it."),
+          ("Can I ask a stranger for a referral?",
+           "Not in the first message. A stranger cannot vouch for work they have not seen. Ask for a short call or two questions about the team instead. If the talk goes well, the person may offer the referral themselves."),
+          ("Should I ask by email or on LinkedIn?",
+           "Use the channel where you already talk to the person. For someone you do not know, LinkedIn is the usual place, and the message must be short. For a former colleague, email leaves room for the link and your resume."),
+          ("What should I send with a referral request?",
+           "The link to the posting, your current resume and two or three lines about why you fit that the person can copy into the company’s referral form. The less work it is, the more likely it gets done."),
+          ("What if they do not answer?",
+           "Wait a week and send one short reminder. If there is still no answer, apply without the referral before the posting closes. Silence usually means a full inbox, not a judgment of you."),
+          ("Do employees get paid for referring someone?",
+           "Many companies pay a bonus to an employee whose referral is hired, so your request is not only a favour. Whether your contact gets one depends on their employer’s rules."),
+          no_ai("message")],
+         ["linkedin-connection-message", "application-email", "reference-request-email"], ["jobs/"],
+         ex=("Referral request example: an email to a close colleague", "<p>The form filled in with its sample details gives this email:</p>" + sample(EXAMPLE["referral-request"])))
+
+    # ------------------------------------------------------------ 33. LinkedIn connection note
+    tool("linkedin-connection-message", "seekers", "LinkedIn connection message",
+         "A note for a connection request that fits LinkedIn’s 300 characters, counted as you type, for five kinds of people.",
+         "LinkedIn Connection Request Message Generator",
+         "Write a LinkedIn connection request note inside the 300-character limit: to a recruiter, a hiring manager, an alumnus or someone you met. Counted as you type.",
+         "Write a LinkedIn connection message that fits in 300 characters",
+         "Say who you are, why this person and what you would like, in under 300 characters: that is all the note on a connection request can hold. "
+         "A request with no note leaves the other person guessing why you are asking, and LinkedIn stops a long one at the limit. "
+         "Pick who you are writing to and fill in a few fields. You get two notes with a character count, and when a note runs over, the least important line is left out for you. These are fill-in templates, not AI.",
+         wrap("linkedin-connection-message",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _sel("kind", "Who you are writing to", [("recruiter", "A recruiter", True), ("manager", "A hiring manager"), ("alumni", "Someone from my school"), ("event", "Someone from an event"),
+                                                        ("role", "Someone in a job I want")])
+              + _sel("limit", "Limit", [("300", "300 characters", True), ("200", "200 characters")], hint="Some free accounts get only 200.")
+              + _f("to", "Their first name", "Dana", mode="")
+              + _f("name", "Your first name (optional)", "Alex", mode="", auto="given-name", hint="Goes at the end if there is room.")
+              + _f("me", "What you do, in a few words", "product designer with six years in fintech", mode="", cls="full", hint="Finish the sentence “I am a …”.")
+              + _f("company", "Their company (optional)", "Acme", mode="", auto="organization")
+              + _f("job", "The job title this is about", "Senior Product Designer", mode="", hint="The role you applied for, are asking about or want.", show=on("kind:recruiter manager role"))
+              + _f("school", "The school you both went to", "Leeds University", mode="", show=on("kind:alumni"))
+              + _f("event", "Where you met", "the Leeds Design Meetup", mode="", show=on("kind:event"))
+              + _area("detail", "One line about you (optional)", 2, "I have led design for two payment apps.", hint="A full sentence. It is the first thing left out when the note is too long.", show=on("kind:recruiter manager alumni role"))
+              + _area("detail_event", "Something from your conversation (optional)", 2, "Your point about testing prices with real customers stayed with me.",
+                      hint="A full sentence. It is kept as long as the note has room.", show=on("kind:event")) + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _private(" The notes are assembled inside your browser and are never sent to LinkedIn or anywhere else.")
+              + _board("Characters used", "Say who you are writing to and what you do to see the note and how much of the limit it uses.")
+              + '<div class="tl-out3" aria-live="polite">' + vcard(1, "Note 1") + vcard(2, "Note 2") + "</div>"),
+         "How the note is built and kept inside the limit",
+         "<p>Each note is built from short parts: the greeting, who you are, why this person, and one request. The two notes say it in different ways: the first states what you want, "
+         "the second asks a question that is easy to answer.</p>"
+         "<p><strong>The limit.</strong> LinkedIn allows 300 characters in the note on a connection request, spaces included. Some free accounts are given a shorter note of 200 characters, so you can switch the limit. "
+         "When a note runs over, the least important parts are left out: your extra line first, then your name at the end, then the line about you. In a note to someone you met, the line about your conversation is kept longest. The count under each note says what was left out. "
+         "A note is cut short only when a single field is itself too long, and then at the end of a sentence where it can.</p>"
+         "<p>Nothing is sent to LinkedIn or anywhere else: copy the note and paste it into the box that opens when you choose “Add a note”.</p>",
+         [("How long can a LinkedIn connection message be?",
+           "300 characters, spaces included. Some free accounts are limited to 200 characters. This page counts every character and keeps both notes inside the limit you choose."),
+          ("What should I write in a LinkedIn connection request?",
+           "Who you are, why you are writing to this person and not to someone else, and one small request. Leave your career story for later: the note only has to get the request accepted."),
+          ("Should I send a connection request with a note or without one?",
+           "With a note when the person does not know you. Without one they see only your name and headline, and have to guess why you are asking."),
+          ("How do I message a recruiter on LinkedIn?",
+           "Say what you do in a few words, name the role or the company you saw them recruit for, and offer to send your resume. Use the job title as it appears in the posting, because that is the word a recruiter searches for."),
+          ("Is it OK to connect with the hiring manager after I apply?",
+           "Yes, once. Say that you applied and for which role, and either leave it there or ask one short question. Do not ask them to look at your application in the note."),
+          ("What happens if my note is longer than the limit?",
+           "LinkedIn does not let you type past the limit. Here the note is shortened for you: the least important line goes first, usually your extra line, then your name at the end, and the count shows what was left out."),
+          ("Does this page send anything to LinkedIn?",
+           "No. The notes are assembled in your browser. Copy one and paste it into the box that opens when you choose “Add a note” on LinkedIn.")],
+         ["referral-request", "linkedin-headline", "linkedin-summary"], ["jobs/"],
+         ex=("LinkedIn connection message example: a note to a recruiter", f'<p>The form filled in with its sample details gives this note, {len(EXAMPLE["linkedin-connection-message"])} characters long:</p>'
+             + sample(EXAMPLE["linkedin-connection-message"])))
+
+    # ------------------------------------------------------------ 34. professional bio
+    tool("professional-bio", "seekers", "Professional bio generator",
+         "A short bio in the first or the third person, in three lengths at once: one line, about 50 words and about 100, for LinkedIn, a company page or a conference.",
+         "Professional Bio Generator: Short & Long Bio",
+         "Build a professional bio from a few facts: first or third person, one line, about 50 words or about 100, for LinkedIn, a company page or a conference. Free.",
+         "Write a short professional bio without sounding like a brochure",
+         "A good bio says who you are, what you work on and one thing you did, in that order, and stops. "
+         "Writing about yourself is hard: the first draft comes out as a list of job titles, or as praise nobody would say aloud. "
+         "Fill in a few facts and choose first or third person. You get the bio in three lengths at once: one line, about 50 words and about 100 words. It is a fill-in template, not AI, so nothing is invented.",
+         wrap("professional-bio",
+              '<div class="card tl-form"><div class="tl-grid wide">'
+              + _sel("place", "Where the bio goes", [("linkedin", "LinkedIn, personal site", True), ("company", "A company “team” page"), ("conference", "A conference program")])
+              + _sel("person", "Written in", [("first", "First person: “I am…”", True), ("third", "Third person: “Alex is…”")])
+              + _sel("pronoun", "Pronoun", [("she", "She"), ("he", "He"), ("they", "They", True), ("name", "None: repeat the name")], show=on("person:third"))
+              + _f("name", "Your name", "Alex Morgan", mode="", auto="name")
+              + _f("role", "Job title", "senior backend engineer", mode="")
+              + _f("company", "Company (optional)", "Acme", mode="", auto="organization")
+              + _f("years", "Years of experience (optional)", "8", mode="text")
+              + _f("focus", "What you work on", "payment systems for online shops", mode="", hint="Finish the sentence “I work on …”.")
+              + _f("strengths", "Two or three strengths (optional)", "Python, PostgreSQL, system design", mode="", hint="Separate them with commas.")
+              + _f("degree", "Degree or certificate (optional)", "a BSc in computer science from the University of Leeds", mode="", cls="full", hint="Finish the sentence “I hold …”.")
+              + _area("proof", "One recent result (optional)", 2, "rebuilt the checkout for two million shoppers and cut failed payments by 30%",
+                      hint="Finish the sentence “Recently, I …”, starting with a verb in the past tense.")
+              + _area("before", "What you did before (optional)", 2, "ran the billing team at Example Co for five years", hint="Finish the sentence “Before that, I …”.")
+              + _area("extra_linkedin", "What you are open to (optional)", 2, "senior backend roles and conference talks", hint="Finish the sentence “I am open to …”.", show=on("place:linkedin"))
+              + _area("extra_company", "What people come to you for (optional)", 2, "anything about refunds, chargebacks and payment providers",
+                      hint="Finish the sentence “Colleagues and customers come to me for …”.", show=on("place:company"))
+              + _area("extra_conference", "What your talk is about (optional)", 2, "moving a payment system to a new database without downtime", hint="Finish the sentence “I will talk about …”.", show=on("place:conference"))
+              + _f("outside", "Outside work (optional)", "coaching a youth football team", mode="", hint="Finish the sentence “Outside work, you will find me …”.")
+              + _f("contact", "Where to reach you (optional)", "alex@example.com", mode="", auto="email") + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _private(" The bio is assembled inside your browser and is never sent anywhere.")
+              + '<div class="tl-out3" aria-live="polite">' + vcard(1, "One line") + vcard(2, "Short, about 50 words") + vcard(3, "Long, about 100 words") + "</div>"),
+         "How the three lengths of the bio are built",
+         "<p>All three lengths are built from the same facts, in a fixed order.</p>"
+         "<ul><li><strong>One line:</strong> your name or “I”, your job title, your company and what you work on. It fits under a photo or in a list of speakers.</li>"
+         "<li><strong>About 50 words:</strong> adds your years of experience, your strengths and one recent result.</li>"
+         "<li><strong>About 100 words:</strong> adds what you did before, your degree, one line that depends on where the bio goes, a line about life outside work and how to reach you.</li></ul>"
+         "<p><strong>Where the bio goes</strong> changes the text. For LinkedIn the long bio says what you are open to. For a company page it starts from your work at the company and says what people come to you for. "
+         "For a conference it puts your talk in the second sentence.</p>"
+         "<p><strong>First or third person.</strong> Use “I” where you speak for yourself, such as LinkedIn. Use the third person where someone else introduces you, such as a program or a team page. "
+         "In the third person you choose the pronoun, or none: the bio then repeats your first name. The word counts under each text are real counts, so a length comes out shorter when you leave fields empty.</p>",
+         [("How do I write a short professional bio?",
+           "Start with your name and job title, say what you work on, and add one result that shows you are good at it. Two or three sentences, about 50 words, are enough for most uses."),
+          ("Should a bio be in the first or the third person?",
+           "First person (“I am…”) on LinkedIn and personal sites, where you speak for yourself. Third person (“Alex is…”) on company pages, in conference programs and in press material, where someone else is presenting you."),
+          ("How long should a professional bio be?",
+           "One line for a byline or a list of speakers, about 50 words for a team page or a profile, and about 100 words when you are asked for a full bio. Past that, most readers stop."),
+          ("What should I leave out of a bio?",
+           "Adjectives about yourself (passionate, dynamic, results-driven), a full list of every job you have had, and anything you would not say when introducing yourself in person. A fact and a number say more than praise."),
+          ("Can I mention hobbies in a professional bio?",
+           "One line at the end is fine and makes the bio easier to remember. Keep it specific, such as coaching a youth team, and leave it out of the shortest version."),
+          ("What is a speaker bio?",
+           "The short text a conference prints next to your name. It says who you are, where you work and what your talk is about, usually in the third person and in 50 to 100 words."),
+          no_ai("bio")],
+         ["linkedin-summary", "linkedin-headline", "elevator-pitch"], ["resume/"],
+         ex=("Professional bio example in about 50 words", "<p>The form filled in with its sample details gives this short bio, in the first person, for LinkedIn:</p>" + sample(EXAMPLE["professional-bio"])
+             + "<p>The same facts in one line:</p>" + sample(EXAMPLE["professional-bio-one"])))
+
+    # ------------------------------------------------------------ 35. LinkedIn About section
+    tool("linkedin-summary", "seekers", "LinkedIn summary generator",
+         "A few answers become the About section of your profile, in three shapes, counted against LinkedIn’s 2,600 characters.",
+         "LinkedIn Summary Generator: About Section",
+         "Write the About section of your LinkedIn profile from a few answers: role, years, strengths, results and what you want next. Counted against 2,600 characters.",
+         "Write your LinkedIn summary from a few answers",
+         "The About section should say what you do, for whom and what you have to show for it, with the main point in the first two lines. "
+         "Most are left empty, or filled with words like “passionate” and “results-driven” that tell a recruiter nothing. "
+         "Answer a few questions: your role, your years, your strengths, up to three results with a number, and what you want next. "
+         "You get the text in the shape you choose, with a count against LinkedIn’s limit of 2,600 characters. It is a fill-in template, not AI.",
+         wrap("linkedin-summary",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("style", "Shape", [("story", "Short paragraphs", True), ("list", "A list, easy to skim"), ("short", "One short paragraph")])
+              + _f("role", "Your job title", "senior backend engineer", mode="")
+              + _f("years", "Years of experience (optional)", "8", mode="text")
+              + _f("strengths", "Your three strongest skills or fields", "Python, PostgreSQL, payment systems", mode="", cls="full", hint="Separate them with commas.")
+              + _area("who", "Who you work with or for (optional)", 2, "online shops that have outgrown their first payment system", hint="Finish the sentence “I work with …”.")
+              + _area("how", "How you work, in your own words (optional)", 2, "I like to start from the numbers the business already tracks and work back to the code.",
+                      hint="One or two full sentences. This is the part that sounds like you.")
+              + _area("proofs", "Results, one per line (up to three)", 4, "I rebuilt the checkout for two million shoppers and cut failed payments by 30%.\nI moved 30 services to a new database with no downtime.\n"
+                      "I cut the monthly cloud bill from $41,000 to $27,000.", hint="Full sentences starting with “I”, each with a number.")
+              + _area("next", "What you want next (optional)", 2, "senior backend roles at product companies", hint="Finish the sentence “I am now looking for …”.")
+              + _f("contact", "How to reach you (optional)", "alex@example.com", mode="", auto="email", cls="full", hint="Left empty, the text says “a message here on LinkedIn”.") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>"
+              + _private(" The text is assembled inside your browser and is never sent to LinkedIn or anywhere else.") + "</div>"
+              + paper("linkedin-about.txt") + "</div>"
+              + _board("Characters used", "Answer the questions to see the text and how much of LinkedIn’s 2,600 characters it uses.")),
+         "How the About section is built and counted",
+         "<p>The text is built in a fixed order: who you are and for whom you work, how you work, what you do best, your results, what you want next and how to reach you. "
+         "The opening comes first because LinkedIn shows only the first lines of the About section until a reader presses “see more”.</p>"
+         "<ul><li><strong>Short paragraphs</strong> reads like a person talking, and suits most profiles.</li>"
+         "<li><strong>A list</strong> puts your strengths and your results on separate lines, for readers who skim.</li>"
+         "<li><strong>One short paragraph</strong> uses your first result only, for a profile that already says a lot elsewhere.</li></ul>"
+         "<p><strong>The limit.</strong> LinkedIn allows 2,600 characters in the About section, spaces and line breaks included. The board shows how many you have used. "
+         "If your answers run over, results are left out from the last one, and only then is the text cut at the end of a sentence. "
+         "The board also quotes about the first 300 characters, the part this page treats as visible before “see more”; the exact cut depends on the screen.</p>"
+         "<p>The page arranges your words and adds no claims of its own. Nothing is sent to LinkedIn or anywhere else: copy the text and paste it into your profile.</p>",
+         [("What should I write in my LinkedIn summary?",
+           "What you do and for whom, what you are good at, two or three results with a number, and what you want next. Write it in the first person, the way you would say it to someone you have just met."),
+          ("How long should a LinkedIn summary be?",
+           "LinkedIn allows 2,600 characters, but few people read that much. As a rule of thumb, three to five short paragraphs are enough. Put the main point in the first two lines, because the rest is hidden until the reader presses “see more”."),
+          ("Is the LinkedIn summary the same as the About section?",
+           "Yes. LinkedIn used to call it the summary and now labels it “About”. It is the free-text box near the top of your profile, under your name and headline."),
+          ("Should the About section be in the first person?",
+           "Yes. It is your own profile, so “I” reads naturally. The third person suits a company page or a conference program; the professional bio generator on this site writes both."),
+          ("What should I put in the About section when I am looking for work?",
+           "Say which roles you want in plain words, such as “senior backend roles at product companies”, and how to reach you. Use the job titles and the skills that postings use, because those are the words recruiters search for."),
+          ("Do keywords in the About section matter?",
+           "They help you get found, because recruiters search profiles by job title and skill. Use the title and the skills a posting would name, where they are true, inside normal sentences. A bare list of keywords reads as stuffing."),
+          no_ai("text")],
+         ["linkedin-headline", "linkedin-review", "professional-bio"], ["resume/"],
+         ex=("LinkedIn summary example for the About section", f'<p>The form filled in with its sample details gives this text in short paragraphs, {len(EXAMPLE["linkedin-summary"]):,} of 2,600 characters:</p>'
+             + sample(EXAMPLE["linkedin-summary"])))
+
+    # ------------------------------------------------------------ 36. elevator pitch
+    tool("elevator-pitch", "seekers", "Elevator pitch generator",
+         "What you do, what you do best and one result become a 30-second pitch of about 75 words, timed at 150 words a minute.",
+         "Elevator Pitch Generator: 30 Seconds, Timed",
+         "Build a 30-second elevator pitch of about 75 words for a job fair, the start of an interview or a networking event, timed at 150 words a minute. Free, private.",
+         "Build a 30-second elevator pitch and see how long it runs",
+         "A 30-second pitch is about 75 words: who you are, what you do best, one result, and what you want from this conversation. "
+         "Asked “so, what do you do?”, most people either give a job title and stop, or talk for three minutes. "
+         "Fill in four short answers and pick where you will say it. The page puts the pitch together, counts the words and estimates the time at 150 words a minute. It is a fill-in template, not AI.",
+         wrap("elevator-pitch",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("where", "Where you will say it", [("fair", "At a job fair", True), ("interview", "To open an interview"), ("networking", "At a networking event")])
+              + _f("name", "Your name", "Alex Morgan", mode="", auto="name", show=on("where:fair networking"))
+              + _f("role", "What you do", "data analyst", mode="", hint="Finish the sentence “I’m a …”.")
+              + _f("years", "Years of experience (optional)", "4", mode="text")
+              + _f("company", "Company you are talking to (optional)", "Acme", mode="", auto="organization", show=on("where:fair interview"))
+              + _f("job", "Job you are interviewing for (optional)", "Senior Data Analyst", mode="", show=on("where:interview"))
+              + _area("best", "What you do best", 2, "turning messy sales data into reports people actually use", hint="Finish the sentence “What I do best is …”.")
+              + _area("proof", "One recent result", 2, "built a weekly report that replaced six spreadsheets and saves the team a day a week", hint="Finish the sentence “Recently I …”, with a number if you have one.")
+              + _area("goal_fair", "What you are looking for", 2, "an analyst role on a pricing team", hint="Finish the sentence “I’m looking for …”.", show=on("where:fair"))
+              + _area("goal_interview", "Why this role", 2, "you need someone to own reporting for a growing sales team", hint="Finish the sentence “This role caught my eye because …”.", show=on("where:interview"))
+              + _area("goal_networking", "What you are curious about", 2, "how other teams forecast demand", hint="Finish the sentence “Right now I’m curious about …”.", show=on("where:networking")) + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("elevator-pitch.txt") + "</div>"
+              + _board("Speaking time", "Say what you do, what you do best and one result to see how long the pitch takes to say.")
+              + '<div class="tl-detail" id="tl-detail"></div>'),
+         "How the pitch is built and timed",
+         "<p>The pitch has four parts in a fixed order: who you are, what you do best, one result, and what you want from this conversation. The last part changes with the place.</p>"
+         "<ul><li><strong>At a job fair</strong> it starts with your name, says what role you are looking for and ends with a question for the person at the stand.</li>"
+         "<li><strong>To open an interview</strong> it skips your name, connects your result to the role and offers to go deeper. It works as a short answer to “tell me about yourself”.</li>"
+         "<li><strong>At a networking event</strong> it is looser, says what you are curious about and hands the conversation back with a question.</li></ul>"
+         "<p><strong>Speaking time</strong> = words ÷ 150 × 60 seconds. 150 words a minute is an ordinary speaking pace, so 30 seconds is about 75 words. 25 to 35 seconds passes; "
+         "20 to 24 and 36 to 45 seconds are marked to check; under 20 or over 45 seconds is marked to fix, and the page names your longest part. The result is also checked for a number.</p>"
+         "<p>The pace and the thresholds are this page’s rules of thumb. Say the pitch aloud once with a timer, then change the words until it sounds like you. A pitch that sounds memorised works against you.</p>",
+         [("What is an elevator pitch?",
+           "A short spoken introduction, about 30 seconds long, that says who you are, what you are good at and what you are looking for. The name comes from the idea of explaining yourself during a ride in a lift."),
+          ("How long should an elevator pitch be?",
+           "About 30 seconds, which is roughly 75 words at an ordinary speaking pace of 150 words a minute. At a job fair or a networking event the other person should get a turn within half a minute."),
+          ("What should a 30-second pitch include?",
+           "Four things: who you are, what you do best, one result with a number, and what you want from this conversation. End with a question, so that it becomes a conversation and not a speech."),
+          ("How do I use an elevator pitch in an interview?",
+           "As the short answer to “tell me about yourself”: who you are, one result, and why this role. Then stop and let the interviewer choose what to ask about. For a longer answer, the interview answer builder on this site times 60 to 90 seconds."),
+          ("How do I keep a pitch from sounding rehearsed?",
+           "Learn the four parts, not the sentences. Say it aloud a few times in different words, and use short forms such as “I’m” and “I’d”, as the page does. If you lose your place, the order still carries you."),
+          ("What if I have no work experience?",
+           "Use a project, a course, volunteering or a part-time job for the result. “I built a stock model for a class project that a local shop now uses” does the same work as a result from a job."),
+          no_ai("pitch")],
+         ["interview-answer-builder", "professional-bio", "linkedin-connection-message"], ["jobs/"],
+         ex=("Elevator pitch example: 30 seconds at a job fair", "<p>The form filled in with its sample details gives this pitch: " + EXAMPLE["elevator-pitch-n"] + "</p>" + sample(EXAMPLE["elevator-pitch"])))
+
+    # ------------------------------------------------------------ 37. resume summary
+    tool("resume-summary", "seekers", "Resume summary generator",
+         "Job title, skills and one result become a two-to-three line resume summary, worded for your level: no experience, a few years, senior, manager or career changer.",
+         "Resume Summary Generator by Experience Level",
+         "Write a two-to-three line resume summary for your level: no experience, a few years, senior, manager or career changer. From your title, skills and one result.",
+         "Write a resume summary in two or three lines",
+         "A resume summary is two or three lines at the top of the page: your job title, your strongest skills and one result with a number. "
+         "It is the first thing a recruiter reads, and “hard-working team player seeking a challenging role” could be anyone. "
+         "Pick your level and fill in a few fields. You get the summary in two wordings, with the space each takes on the page. It is a fill-in template, not AI: every fact in it is one you typed.",
+         wrap("resume-summary",
+              '<div class="card tl-form"><div class="tl-grid wide">'
+              + _sel("level", "Your level", [("none", "No experience yet"), ("some", "A few years’ experience", True), ("senior", "Senior"), ("manager", "Manager"), ("changer", "Changing career")])
+              + _f("role", "Job title you are applying for", "data analyst", mode="")
+              + _f("years", "Years of experience", "4", mode="text", show=on("level:some senior manager"))
+              + _f("skills", "Your three strongest skills", "SQL, Excel, Tableau", mode="", hint="Separate them with commas. Use the words the posting uses.")
+              + _f("study_none", "Degree, course or certificate", "a BSc in Economics (2026)", mode="", hint="Finish the sentence “I have …”.", show=on("level:none"))
+              + _f("from_none", "Where your practice comes from (optional)", "a six-month internship at a logistics firm", mode="", hint="An internship, a project, volunteering.", show=on("level:none"))
+              + _f("scope", "What you are responsible for (optional)", "pricing analytics for 300 stores", mode="", hint="Finish the sentence “I am responsible for …”.", show=on("level:senior"))
+              + _f("team", "The team you lead", "a team of 12 analysts", mode="", hint="Finish the sentence “I lead …”.", show=on("level:manager"))
+              + _f("from_changer", "The work you come from", "eight years of teaching mathematics", mode="", hint="Finish the sentence “I bring …”.", show=on("level:changer"))
+              + _f("study_changer", "Course or certificate for the new work (optional)", "a nine-month data analytics course", mode="", hint="Finish the sentence “I completed …”.", show=on("level:changer"))
+              + _area("result", "One result", 2, "cut month-end close from 8 days to 5 by automating reconciliations", hint="Start with a verb in the past tense and add a number: cut…, built…, grew…") + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _private(" The summary is assembled inside your browser and is never sent anywhere.")
+              + '<div class="tl-out3" aria-live="polite">' + vcard(1, "Summary 1") + vcard(2, "Summary 2") + "</div>"),
+         "How the summary is worded for each level",
+         "<p>The summary is written without “I”, as resumes are, and each level puts a different fact first.</p>"
+         "<ul><li><strong>No experience yet:</strong> your degree or course, the skills you can already use, and a result from an internship or a project.</li>"
+         "<li><strong>A few years:</strong> your title, your years and your skills, then one result.</li>"
+         "<li><strong>Senior:</strong> what you are responsible for comes before the list of skills.</li>"
+         "<li><strong>Manager:</strong> the team you lead comes first, and the skills go last.</li>"
+         "<li><strong>Changing career:</strong> the work you come from, the course that bridges the gap, and a result that carries over.</li></ul>"
+         "<p>You get two wordings of the same facts. Wordings that come out identical are shown once, and the second one needs a result, or for a manager a team. "
+         "Under each you see the word count and about how many lines it takes on a one-column resume, at about 100 characters a line. That figure is an estimate: your font and margins change it. "
+         "If the result has no number, the line under the summary says so.</p>"
+         f'<p>The page arranges your words and adds no claims of its own, so write only what is true. Put the summary under your name in the <a href="{P}/resume/">resume builder</a>.</p>',
+         [("What is a resume summary?",
+           "Two or three lines at the top of a resume, under your name, that say what you do, what you are best at and one thing you achieved. It replaces the old “objective” line, which said what you wanted and not what you offer."),
+          ("How long should a resume summary be?",
+           "Two to three lines, about 30 to 50 words. A recruiter reads it in a few seconds, and anything longer pushes your experience down the page."),
+          ("How do I write a resume summary with no experience?",
+           "Lead with your degree or course and the skills you can already use, then give one result from an internship, a project, volunteering or a part-time job. Say which first role you are looking for."),
+          ("What is the difference between a resume summary and an objective?",
+           "A summary says what you bring: skills and a result. An objective says what you want. Employers read for the first, so use a summary. Only a career changer or a first-time applicant needs a line about the role they are aiming for."),
+          ("Should I write the summary in the first person?",
+           "Without a pronoun: “Data analyst with 4 years of experience”, not “I am a data analyst”. That is the convention on resumes, and it saves space."),
+          ("Do I need a different summary for every job?",
+           "Change the job title and the skills to the words the posting uses, and pick the result closest to what that employer needs. The rest can stay. The resume skills tool on this site shows which skills postings for your job title name most."),
+          no_ai("summary")],
+         ["resume-skills", "resume-bullet-builder", "resume-review"], ["resume/"],
+         ex=("Resume summary example with a few years of experience", "<p>The form filled in with its sample details gives these two wordings:</p>" + sample(EXAMPLE["resume-summary"]) + sample(EXAMPLE["resume-summary-2"])))
+
+    # ------------------------------------------------------------ 38. skills to put on a resume, by job title (from today's postings)
+    # build.py counts, for each kind of work that is a job title, the skills its postings name; the same rows go to data/role-skills.json for tools.js.
+    RS = list(role_skills)
+    pct = lambda k, n_: "under 1%" if 100 * k < n_ else f"{(200 * k + n_) // (2 * n_)}%"      # rounds halves up, as tools.js does
+    if RS and skill_slug:
+        top_s, top_nm, top_n, top_sk = RS[0]
+        low = lambda nm: nm if sum(c.isupper() for c in nm.split()[0]) >= 2 else nm[0].lower() + nm[1:]        # "Data analyst" inside a sentence; "QA engineer" keeps its capitals
+        rs_rows = "".join(
+            f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td class="num">{n_:,}</td><td>'
+            + ", ".join(f'<a href="{P}/skills/{skill_slug(t)}/">{e(t)}</a> <span class="note">{pct(k, n_)}</span>' for t, k in sk_[:6])
+            + f'</td><td><a href="{P}/tools/resume-skills/?role={s_}">All {len(sk_)}</a></td></tr>' for s_, nm_, n_, sk_ in RS[:10])
+        rs_table = ('<div class="tablewrap"><table><tr><th>Job title</th><th>Open postings</th><th>Skills named most, with the share of postings that name each</th><th>In the tool</th></tr>' + rs_rows + "</table></div>"
+                    f'<p class="note">Counted on {DATE} from the postings open on this site whose title contains the job title or a close variant. The ten job titles with the most postings are shown; '
+                    f'the tool above has all {len(RS)}. <a href="{P}/skills/">All skills</a> · <a href="{P}/categories/">All kinds of work</a></p>')
+        rs_first = ", ".join(f"{pct(k, top_n)} name {t}" for t, k in top_sk[:3])
+        tool("resume-skills", "seekers", "Resume skills by job title",
+             "Pick a job title and see the skills that today’s postings for it name most, with the share of postings, and copy a ready Skills line.",
+             "Skills to Put on a Resume, by Job Title",
+             f"Skills to put on a resume for {len(RS)} job titles, counted from today’s open postings: the share of postings that name each skill, and a Skills line to copy.",
+             "Skills to put on a resume, by job title",
+             "List first the skills that postings for your job title name most often, in the words they use. "
+             "Lists of “top resume skills” are the same for every job and never say where they come from. "
+             f"This page counts the skills named in the postings open on this site today, for {len(RS)} job titles. "
+             f"Of the {top_n:,} open {low(top_nm)} postings, for example, {rs_first}. Pick your job title, tick the skills you really have and copy the Skills line.",
+             wrap("resume-skills",
+                  '<noscript><p class="note">The table further down this page shows the ten most common job titles and works without JavaScript.</p></noscript>'
+                  '<div class="card tl-form"><div class="tl-grid">'
+                  + _sel("role", "Job title", [(s_, nm_, s_ == top_s) for s_, nm_, _, _ in sorted(RS, key=lambda r: r[1].lower())], hint=f"{len(RS)} job titles whose postings name tools often enough to count.", cls="full")
+                  + _sel("top", "Skills in the line", [("5", "The 5 named most"), ("8", "The 8 named most"), ("10", "The 10 named most", True), ("15", "All of them, up to 15")],
+                         hint="You can tick and untick single skills below.") + "</div>"
+                  + '<div class="tl-actions"><button class="btn ghost sm tl-end" type="button" data-clear>Start again</button></div></div>'
+                  + f'<p class="note tl-priv"><b>Today’s postings</b>Counted on {DATE} from the jobs open on this site. A skill here is a tool, a programming language, a certificate, a license or a spoken language that a posting names; '
+                    'soft skills such as “communication” are not counted. Your choices stay in your browser.</p>'
+                  + _board("Skills employers name", "Loading today’s figures…")
+                  + '<div class="tl-detail" id="tl-detail"></div>'),
+             "How the skills are counted",
+             f"<p>Every posting on this site is read from the employer’s own careers page. Its text is searched for the {n_skills} skills this site tracks: programming languages, tools, platforms, certificates, licenses and spoken languages, "
+             "including their usual spellings (“Postgres” counts as PostgreSQL). A posting belongs to a job title when its own title contains that title or a close variant.</p>"
+             "<p>For each job title the page counts how many of its postings name each skill. <strong>The percent</strong> is that count divided by the number of postings for the title. "
+             "A skill counts once per posting, however often the text repeats it. Up to 15 skills are shown for a title. A skill is left out when fewer than three postings, or fewer than 5% of them, name it.</p>"
+             "<p><strong>Which job titles are listed.</strong> A title needs at least 20 open postings, at least three skills that pass that test, and its most named skill in a tenth of its postings or more. "
+             "Postings for many sales, legal and office jobs describe duties and rarely name tools, so those titles are left out instead of being shown with thin figures.</p>"
+             "<p><strong>What is not counted:</strong> soft skills such as communication or teamwork, which postings word in too many ways to count reliably, and anything outside our list. "
+             "So read the result as “which tools, languages and certificates to name”, not as everything the job needs. A skill named in half of the postings is close to expected; one named in 5% is a bonus.</p>"
+             "<p>The Skills line joins the skills you tick, most named first. Tick only what you can show in an interview: a recruiter who searches for a skill will ask about it.</p>",
+             [("What skills should I put on my resume?",
+               "The ones that postings for your job title name, where you really have them, in the posting’s own words. Pick your job title above to see which skills today’s postings name most, and in what share of them."),
+              ("How many skills should a resume list?",
+               "As a rule of thumb, 8 to 12 in the skills section, the most relevant first. A long list hides the ones that matter, so the page lets you copy a line of 5, 8, 10 or 15."),
+              ("Where do these figures come from?",
+               f"From the job postings open on this site, read from employers’ own careers pages. On {DATE} the tool covers {len(RS)} job titles. Nothing comes from surveys or from other sites’ lists."),
+              ("Why are soft skills like communication not in the list?",
+               "Because they cannot be counted reliably: every posting words them differently. Show them through results in your experience section. “Trained 15 new colleagues” says more than the word “leadership”."),
+              ("Should I list a skill I am still learning?",
+               "Only if you say so: “Python (basic)” is honest and is still found by a search. Listing a skill you cannot use gets you into interviews you cannot pass."),
+              ("Where on the resume do the skills go?",
+               "In a short Skills section and, more importantly, inside the lines about your jobs, next to what you did with them. A skill that appears only in a list tells the reader nothing about how well you know it."),
+              ("Why is my job title not in the list?",
+               "A title is listed only when at least 20 postings for it are open and they name tools often enough to count. Postings for many sales, legal and office jobs describe duties instead. "
+               "Try a broader title, or paste one posting into the keyword finder on this site to see the skills it names."),
+              ("How often do the figures change?",
+               "With every update of the site, several times a day, as postings open and close. The date above the result is the day of the count.")],
+             ["resume-summary", "job-description-keywords", "resume-match"], ["resume/", "for-you/"],
+             ex=("Resume skills for the ten most common job titles", rs_table))
+
+    # ------------------------------------------------------------ 39. letter of recommendation
+    tool("recommendation-letter", "seekers", "Letter of recommendation builder",
+         "For a manager, a colleague, a teacher or a client: how you know the person, two strengths with an example each and a clear closing, in two tones.",
+         "Letter of Recommendation Template & Generator",
+         "Write a letter of recommendation for an employee, a student or a contractor: how you know them, two strengths with an example each and a clear closing. Free.",
+         "Write a letter of recommendation that says something specific",
+         "A useful recommendation says how you know the person, names two strengths and gives one example of each. "
+         "Asked to write one, most people produce a page of praise (“hard-working, reliable, a pleasure to work with”) that could describe anyone and convinces nobody. "
+         "Choose who you are to the person, add the two strengths and what happened, and pick a tone. The letter is ready to copy or print. It is a fill-in template, not AI: every claim in it is yours.",
+         wrap("recommendation-letter",
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              + _sel("writer", "You are their", [("manager", "Manager", True), ("colleague", "Colleague"), ("teacher", "Teacher or professor"), ("client", "Client")])
+              + _sel("who", "They are", [("employee", "An employee", True), ("student", "A student"), ("contractor", "A contractor")])
+              + _sel("tone", "Tone", [("plain", "Plain", True), ("warm", "Warm")])
+              + _sel("pronoun", "Pronoun", [("she", "She", True), ("he", "He"), ("they", "They")])
+              + _f("cand", "Their full name", "Priya Shah", mode="")
+              + _f("role_employee", "Their job title", "senior support agent", mode="", show=on("who:employee"))
+              + _f("role_student", "Course or program", "the BSc Economics program", mode="", hint="Finish the sentence “She was a student in …”.", show=on("who:student"))
+              + _f("role_contractor", "What they did for you", "web developer", mode="", hint="Finish the sentence “She worked with us as a …”.", show=on("who:contractor"))
+              + _f("org", "Your organization", "Example Co", mode="", auto="organization")
+              + _f("dur", "How long you have known their work", "three years", mode="", hint="Finish the sentence “… for …”.")
+              + _f("purpose", "What the letter is for (optional)", "the Team Lead role at Acme", mode="", hint="Finish the sentence “I recommend her for …”.")
+              + _f("to", "Addressed to (optional)", "Ms Rivera", mode="", hint="Left empty, the letter opens “To whom it may concern”.")
+              + _area("s1", "First strength", 2, "how calm she stays with upset customers", hint="Finish the sentence “What stands out most is …”.")
+              + _area("e1", "An example of it", 3, "When our payment system failed last March, she answered 140 tickets in a day and kept our satisfaction score above 90%.",
+                      hint="One or two full sentences: what happened and what came of it.")
+              + _area("s2", "Second strength (optional)", 2, "her clear writing", hint="Finish the sentence “A second strength is …”.")
+              + _area("e2", "An example of it (optional)", 3, "She rewrote 60 help articles, and tickets about refunds fell by a third.")
+              + _f("name", "Your name", "Dana Lee", mode="", auto="name")
+              + _f("title", "Your job title (optional)", "Head of Support", mode="")
+              + _f("contact", "Your email or phone (optional)", "dana.lee@example.com", mode="", auto="email")
+              + _f("date", "Date of the letter", typ="date", mode="") + "</div>"
+              + '<div class="tl-actions">' + _clear(True) + "</div>" + mail_note + "</div>"
+              + paper("recommendation-letter.txt", '<button class="btn ghost" type="button" data-print>Print</button>') + "</div>"),
+         "How the letter of recommendation is put together",
+         "<p>The letter has five parts: the opening, which says whom you recommend and for what; how you know the person and for how long; the first strength with its example; "
+         "the second strength with its example; and a closing that says how strongly you recommend them and how to reach you.</p>"
+         "<p><strong>Who you are</strong> changes the second sentence and the closing: a manager writes “I managed her”, a teacher “I taught her”, a client “I was her client”, a colleague “we worked side by side”. "
+         "<strong>Who they are</strong> changes how their role is described: an employee’s job title, a student’s course, a contractor’s work for you.</p>"
+         "<p>“Plain” states the facts and suits applications to large employers and universities. “Warm” is more personal and ends with a line such as “I would hire Priya again”. "
+         "An example you leave out stays in [brackets] as a reminder, because a strength with no example is only an adjective. The date is written out in full. "
+         "Nothing is sent anywhere: copy the letter, or print it and sign it.</p>",
+         [("What should a letter of recommendation include?",
+           "Who you are and how you know the person, for how long, two or three strengths with a specific example of each, and a clear statement that you recommend them. One page is enough."),
+          ("How long should a recommendation letter be?",
+           "Three to five short paragraphs on one page, about 200 to 300 words. A reader with a pile of applications wants two concrete examples, not a full history."),
+          ("Who should write a letter of recommendation?",
+           "Someone who saw the person’s work closely: a manager for an employee, a teacher or supervisor for a student, a client for a contractor. A senior title helps less than real knowledge of the work."),
+          ("I was asked to draft my own recommendation letter. Is that normal?",
+           "It is common: busy managers and professors often ask for a draft. Write the facts and the examples as they happened, and let the person change the wording and sign it. They must agree with every sentence."),
+          ("What is the difference between a recommendation letter and a reference?",
+           "A recommendation letter is written in advance, usually for one application, and the candidate can send it. A reference is a person the employer contacts directly. The reference request email on this site asks someone to be one."),
+          ("Should the letter mention weaknesses?",
+           "Not unless the form asks for them. If it does, name something the person has already improved and say how. A letter that reads as honest carries more weight than one that is all praise."),
+          no_ai("letter")],
+         ["reference-request-email", "cover-letter", "resignation-letter"], ["resume/"],
+         ex=("Letter of recommendation example from a manager", "<p>The form filled in with its sample details gives this letter, in the plain tone. The tool adds today’s date at the top.</p>" + sample(EXAMPLE["recommendation-letter"])))
+
+    # ------------------------------------------------------------ 40. overtime pay
+    tool("overtime-pay", "seekers", "Overtime pay calculator",
+         "Hourly rate and hours in a week give regular pay, overtime pay at time and a half or double time, the total and your average per hour.",
+         "Overtime Pay Calculator: Time and a Half",
+         "Work out a week’s pay with overtime: hourly rate, hours worked, the overtime threshold and time and a half or double time. Regular pay, overtime pay and total.",
+         "Work out your weekly pay with overtime",
+         "Overtime pay is the hours above the threshold, multiplied by your hourly rate and by the overtime multiplier, usually 1.5. "
+         "A long week is easy to underpay by mistake, and a payslip rarely shows the sum. "
+         "Enter your hourly rate and the hours you worked. The calculator splits them at the threshold, 40 hours a week unless you change it, and shows regular pay, overtime pay, the total and what you earned per hour on average. "
+         "Overtime rules differ by country and by state: this is arithmetic, not legal advice.",
+         wrap("overtime-pay",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _f("rate", "Hourly rate", "20") + _cur()
+              + _f("hours", "Hours worked in the week", "46")
+              + _f("threshold", "Overtime starts after, hours", val="40", hint="40 a week in United States federal law. Use your own rule.")
+              + _sel("mult", "Overtime is paid at", [("1.5", "Time and a half (1.5×)", True), ("2", "Double time (2×)")]) + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _board("Your pay for the week", "Enter your hourly rate and the hours you worked in the week.")
+              + '<p class="note tl-priv"><b>Not legal advice</b>Who must be paid overtime, from which hour and at what rate depends on the law where you work, on your contract and sometimes on a union agreement. '
+                'The page multiplies the numbers you type and does not know those rules. Nothing you type leaves your browser.</p>'),
+         "How overtime pay is calculated",
+         "<ul><li><code>regular hours = hours worked, up to the threshold</code></li>"
+         "<li><code>overtime hours = hours worked − threshold</code>, or zero when you worked no more than the threshold</li>"
+         "<li><code>regular pay = regular hours × hourly rate</code></li>"
+         "<li><code>overtime pay = overtime hours × hourly rate × multiplier</code></li>"
+         "<li><code>total = regular pay + overtime pay</code></li>"
+         "<li><code>average per hour = total ÷ hours worked</code></li></ul>"
+         "<p>The threshold is 40 hours a week unless you change it, and the multiplier is 1.5 (“time and a half”) or 2 (“double time”). Hours exactly at the threshold are all regular hours. "
+         "All figures are before tax and deductions.</p>"
+         "<p><strong>What the page does not know.</strong> In the United States, federal law (the Fair Labor Standards Act) sets overtime at one and a half times the regular rate for hours over 40 in a workweek, "
+         "for the employees it covers; many salaried jobs are exempt. Some states add their own rules: California, for example, also counts overtime by the day. "
+         "Other countries use other thresholds, rates and averaging periods. A bonus or shift pay can also change the “regular rate” that overtime is based on. "
+         "Check the rule that applies to you with your employer, your contract or your labor authority.</p>",
+         [("How do I calculate overtime pay?",
+           "Multiply the hours above the threshold by your hourly rate and by the overtime multiplier. At $20 an hour with 6 overtime hours at time and a half: 6 × $20 × 1.5 = $180, on top of $800 for the first 40 hours."),
+          ("What is time and a half?",
+           "One and a half times your normal hourly rate. If you earn $20 an hour, time and a half is $30 an hour and double time is $40."),
+          ("How much is 46 hours at $20 an hour with overtime?",
+           "$980 before tax, when overtime starts after 40 hours and is paid at time and a half: $800 for 40 regular hours plus $180 for 6 overtime hours. That is $21.30 for each hour worked."),
+          ("After how many hours does overtime start?",
+           "It depends on where you work. United States federal law uses 40 hours in a workweek for the employees it covers; some states also count by the day, and other countries set other limits. Change the threshold in the calculator to match your rule."),
+          ("Do salaried employees get overtime?",
+           "Some do. In the United States it depends on whether the job is “exempt” under the law, which turns on the duties and the pay and not on the word “salaried”. This page cannot tell you which you are: ask your employer or your labor authority."),
+          ("What is my average hourly rate in a week with overtime?",
+           "Your total for the week divided by the hours you worked. 46 hours for $980 is $21.30 an hour: more than the $20 base rate, because six of the hours were paid at $30."),
+          ("Does the calculator include tax?",
+           "No. It shows pay before tax and deductions. The take-home pay calculator on this site works out United States federal tax on a yearly salary.")],
+         ["salary-converter", "take-home-pay", "contractor-rate"], ["salaries/"],
+         ex=("Overtime pay example: $20 an hour, 46 hours in the week",
+             '<div class="tablewrap"><table><tr><th>Part of the week</th><th>Sum</th><th>Pay</th></tr>'
+             '<tr><td>Regular hours</td><td>40 × $20.00</td><td class="num">$800.00</td></tr>'
+             '<tr><td>Overtime hours at time and a half</td><td>6 × $30.00</td><td class="num">$180.00</td></tr>'
+             '<tr class="tl-total"><td>Total for the week</td><td>$800.00 + $180.00</td><td class="num">$980.00</td></tr>'
+             '<tr><td>Average per hour worked</td><td>$980.00 ÷ 46</td><td class="num">$21.30</td></tr></table></div>'
+             '<p class="note">Overtime starts after 40 hours, so 6 of the 46 hours are overtime, and time and a half of $20 is $30. At double time the same week pays 6 × $40.00 = $240.00 of overtime, $1,040.00 in total. '
+             'A week of exactly 40 hours pays 40 × $20.00 = $800.00 and no overtime.</p>'))
+
     # ------------------------------------------------------------ write the pages
     by_slug = {t["slug"]: t for t in TOOLS}
     org = {"@type": "Organization", "name": SITE, "url": FULL + "/"}
@@ -1560,15 +2218,19 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "salary-checker": "The median is the middle figure: half of the postings pay more and half pay less. This page shows the median and the usual range for a kind of work and a level, and where your salary sits among them.",
         "salary-converter": "Pay is quoted per hour, per day, per month or per year, and the figures cannot be compared until they are in one unit. This page converts one of them into all the others, using the hours you actually work.",
         "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
+        "overtime-pay": "Overtime is the hours you work above a set number in a week, usually 40. Those hours are often paid at a higher rate, such as one and a half times your normal rate, and this page adds up the week for you.",
+        "resume-skills": "A skill here means a tool, a programming language, a certificate or a spoken language that a job posting names. This page counts which of them today’s postings for one job title name most, so you know what to put first.",
+        "elevator-pitch": "An elevator pitch is what you say when someone asks what you do and you have half a minute to answer. This page puts your answer in order and tells you how long it takes to say.",
+        "referral-request": "A referral is when someone who works at a company passes your name to the people hiring there. This page writes the message that asks for one, in a way that is easy to say no to.",
     }
     for t in TOOLS:
         path = f"tools/{t['slug']}/"
         faq_html, faq_ld = faq_block(t["faq"])
-        related = [(f"tools/{s}/", by_slug[s]["name"], by_slug[s]["card"]) for s in t["rel"]] + [(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in t["site"]]
+        related = [(f"tools/{s}/", by_slug[s]["name"], by_slug[s]["card"]) for s in t["rel"] if s in by_slug] + [(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in t["site"]]
         app_ld = _ld({"@context": "https://schema.org", "@type": "WebApplication", "name": t["name"], "url": f"{FULL}/{path}", "description": t["desc"],
                       "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "browserRequirements": "Requires JavaScript", "isAccessibleForFree": True, "inLanguage": "en",
                       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": org})
-        extra = section("Advertised salaries by category and level", sal_table) if t["slug"] == "salary-checker" else ""
+        extra = section("Advertised salaries by category and level", sal_table) if t["slug"] == "salary-checker" else section(*t["ex"]) if t["ex"] else ""
         sub = (f'<nav class="tsub" aria-label="{"Tools for people hiring" if t["group"] == "employers" else "Tools for job seekers"}"><a class="all" href="{P}/tools/">All tools</a>'
                + "".join(f'<a href="{P}/tools/{o["slug"]}/"' + (' aria-current="page"' if o is t else "") + f'>{e(o["name"])}</a>' for o in TOOLS if o["group"] == t["group"]) + "</nav>")
         body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + (f'<p class="plain"><b>In plain words:</b> {e(PLAIN[t["slug"]])}</p>' if t["slug"] in PLAIN else "") + t["html"]
@@ -1650,6 +2312,33 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "interview-scorecard": ex + '<span class="ln">Five criteria, weights add up to 100</span><span class="big">4.05<small>out of 5, weighted</small></span>'
                                     '<span class="ln">Candidate A <b>4.05</b> · B <b>4.00</b> · C <b>3.95</b></span>',
     })
+    # the tools added on 17 Nov 2026: the figures are those of the worked example on each page (EXAMPLE), counted here so the two cannot drift apart
+    note_n, about_n, pitch_n = len(EXAMPLE["linkedin-connection-message"]), len(EXAMPLE["linkedin-summary"]), EXAMPLE["elevator-pitch-n"].split(" words")[0]
+    PREV.update({
+        "follow-up-email": ex + '<span class="ln"><b>Subject:</b> Following up on my application</span><span class="sk" style="width:92%"></span>'
+                                '<span class="ln">“Could you tell me <b>when you expect to choose</b> people to interview?”</span><span class="sk" style="width:38%"></span>',
+        "application-email": ex + '<span class="ln"><b>Subject:</b> Application for Marketing Manager</span><span class="sk" style="width:90%"></span><span class="sk h" style="width:64%"></span>'
+                                  '<span class="ln">Attached: <b>Alex-Morgan-Resume.pdf</b></span>',
+        "referral-request": ex + '<span class="ln"><b>Hi Sam,</b> Acme is hiring a Data Analyst…</span><span class="sk" style="width:88%"></span>'
+                                 '<span class="ln">“<b>Would you be willing to refer me?</b>”</span><span class="sk" style="width:52%"></span>',
+        "linkedin-connection-message": ex + f'<span class="big">{note_n}<small>of 300 characters</small></span><span class="mt"><i style="width:{round(100 * note_n / 300)}%"></i></span>'
+                                            '<span class="ln">“Hi Dana, I am a <b>product designer</b> with six years in fintech…”</span>',
+        "professional-bio": ex + '<span class="ln"><b>Alex Morgan</b> is a senior backend engineer at Acme…</span><span class="sk" style="width:94%"></span><span class="sk" style="width:70%"></span>'
+                                 '<span class="ln">One line · <b>50 words</b> · <b>100 words</b></span>',
+        "linkedin-summary": ex + f'<span class="big">{about_n:,}<small>of 2,600 characters</small></span><span class="mt"><i style="width:{round(100 * about_n / 2600)}%"></i></span>'
+                                 '<span class="ln">Role · strengths · <b>three results</b> · what you want next</span>',
+        "elevator-pitch": ex + '<span class="big">30 s<small>said aloud</small></span><span class="mt"><i style="left:41.7%;width:16.7%"></i><u style="left:50%"></u></span>'
+                               f'<span class="ln"><b>{pitch_n} words</b> at 150 words a minute</span>',
+        "resume-summary": ex + '<span class="ln"><b>Data analyst</b> with 4 years of experience in SQL, Excel and Tableau.</span><span class="sk" style="width:90%"></span>'
+                               '<span class="ln">Cut month-end close <b>from 8 days to 5</b></span>',
+        "recommendation-letter": ex + '<span class="ln"><b>To whom it may concern,</b></span><span class="sk" style="width:95%"></span>'
+                                      '<span class="ln">“What stands out most is <b>how calm she stays</b>…”</span><span class="sk" style="width:60%"></span>',
+        "overtime-pay": ex + '<span class="ln">$20 an hour · 46 hours in the week</span><span class="big">$980<small>for the week</small></span>'
+                             '<span class="ln"><b>$800</b> regular + <b>$180</b> overtime at time and a half</span>',
+    })
+    if "resume-skills" in by_slug:                              # today's real figures for the job title with the most postings
+        PREV["resume-skills"] = (f'<span class="ln">{e(top_nm)} · {top_n:,} postings today</span>'
+                                 + "".join(f'<span class="rw"><span>{e(t)}</span><span class="mt"><i style="width:{round(100 * k / top_sk[0][1])}%"></i></span><b>{pct(k, top_n)}</b></span>' for t, k in top_sk[:3]))
     g_all = groups.get("||")
     if g_all:                                                   # the market figures are today's; only the offer is made up
         med, p25, p75, p10, p90 = (g_all[3 + QS.index(q_)] for q_ in (50, 25, 75, 10, 90))
@@ -1708,7 +2397,19 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
         "job-offer-response": "Accept, decline or ask for more time",
         "cost-of-vacancy": "$577 per working day, $18,500 in 45 days",
         "candidate-rejection-email": "A clear, kind no, with one line of feedback",
+        "follow-up-email": "A week after applying: four short sentences",
+        "application-email": "Subject: Application for Marketing Manager",
+        "referral-request": "“Would you be willing to refer me?”",
+        "linkedin-connection-message": f"{note_n} of 300 characters",
+        "professional-bio": "One line, 50 words and 100 words",
+        "linkedin-summary": f"{about_n:,} of 2,600 characters",
+        "elevator-pitch": f"{pitch_n} words, about 30 seconds",
+        "resume-summary": "Two wordings of two lines each",
+        "recommendation-letter": "Two strengths, an example of each",
+        "overtime-pay": "46 hours at $20 = $980 for the week",
     }
+    if "resume-skills" in by_slug:
+        RES["resume-skills"] = f"{top_nm}: {top_sk[0][0]} in {pct(top_sk[0][1], top_n)} of postings"
     if len(mids) >= MIN_SAMPLE:
         RES["salary-checker"] = f"Median today {kmoney(q(.5))} across {len(mids):,} roles"
 
@@ -1724,9 +2425,10 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT):
     def group(key):
         return '<div class="tgrid">' + "".join(TILES[f"tools/{t['slug']}/"] for t in TOOLS if t["group"] == key) + "</div>"
     # job-seeker tools stand in the order of a search: the resume, applying, the offer, leaving. A tool that is not named here still appears, in a last group.
-    HUB = [("Resume and LinkedIn profile", ["resume-review", "resume-match", "job-description-keywords", "resume-bullet-builder", "linkedin-headline", "linkedin-review"]),
-           ("Applying and interviews", ["cover-letter", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email"]),
-           ("Pay and offers", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "equity-calculator", "contractor-rate"]),
+    HUB = [("Resume and LinkedIn profile", ["resume-review", "resume-match", "resume-skills", "job-description-keywords", "resume-summary", "resume-bullet-builder", "linkedin-headline", "linkedin-summary", "linkedin-review"]),
+           ("Applying and interviews", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
+           ("Networking and introductions", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
+           ("Pay and offers", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "contractor-rate"]),
            ("Remote work and leaving a job", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
     named = {s_ for _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]

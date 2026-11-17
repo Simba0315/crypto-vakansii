@@ -1617,7 +1617,23 @@ def main():
                    + meter(len(remote), n, "can be done from home") + meter(n_pay, n, "state the pay") + meter(n_ent, n, "are for beginners") + "</div></figure>"
                    + new_jobs_fig + "</div>")
     ROLE_TOP = [x for x in ROLE_TOP if x[2] >= 20][:12]
-    TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT)       # [(path, name, one line)]
+    # groupings that have a page among the roles but are not a job title a person holds (defined here, not further down, because the tools need it first)
+    BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
+    # /tools/resume-skills/, "skills to put on a resume" by job title: for each job title with a page, the skills its open postings name most.
+    # A skill needs 3 postings and 5% of the title's postings to count; a title needs 3 such skills, the first of them in 10% of its postings
+    # (postings for most sales, legal and office work name too few tools to say anything, so those titles are left out rather than shown thin).
+    # The ten titles with the most postings are a table on the page itself; tools.js reads all of them from data/role-skills.json.
+    # The tool's page and tools_test.js state these thresholds: change all three together.
+    ROLE_SKILLS = []            # (role slug, role name, postings, [(skill, postings that name it), …]), most postings first
+    for s_, (nm_, js_) in sorted(by_role.items(), key=lambda kv: (-len(kv[1][1]), kv[0])):
+        if s_ in BROAD or s_.endswith("-speaking"): continue
+        cnt_ = Counter(t for j in js_ for t in j["tags"])
+        top_ = [(t, k) for t, k in sorted(cnt_.items(), key=lambda kv: (-kv[1], kv[0].lower())) if k >= max(3, len(js_) * 0.05)][:15]
+        if len(top_) >= 3 and top_[0][1] >= len(js_) * 0.10: ROLE_SKILLS.append((s_, nm_, len(js_), top_))
+    write("data/role-skills.json", json.dumps({"date": fdate(TODAY), "roles": [[s_, nm_, n_, [[t, k] for t, k in top_]] for s_, nm_, n_, top_ in ROLE_SKILLS],
+                                               "slugs": {t: TAG_SLUG.get(t, slugify(t)) for t in sorted({t for _, _, _, top_ in ROLE_SKILLS for t, _ in top_})}},
+                                              ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT, role_skills=ROLE_SKILLS, skill_slug=lambda t: TAG_SLUG.get(t, slugify(t)))       # [(path, name, one line)]
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
                    for s in sorted((s for s in CAT if by_cat[s]), key=lambda s: (s == OTHER[0], -len(by_cat[s]))))
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)
@@ -2149,7 +2165,6 @@ def main():
     listing("remote/", "Remote jobs", f"Remote Jobs: {len(remote):,} Hiring Now, Updated Hourly | {SITE}",
             f"{roles(len(remote), 'remote job')} at companies: engineering, marketing, support, compliance and more.",
             remote, intro_for(remote, "remote "), extra=f'<ul class="tiles">{rcats}</ul>{rel(REL["remote"])}{remote_more}<div class="sec"><div class="sec-head"><h2>All remote jobs</h2></div></div>', feed=True, faq="remote jobs", faq_extra=rm_qa)
-    BROAD = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
     # Crypto: the hub answers the search "crypto jobs" (and "web3 jobs", "blockchain jobs"), so it shows what these jobs pay, who
     # hires, and links to every narrower list people search for by name: by kind, by profession, by place.
     crypto = [j for j in active if j.get("crypto")]

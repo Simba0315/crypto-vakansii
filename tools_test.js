@@ -918,5 +918,401 @@ eq('import: spoken languages with level; a programming language goes to the skil
 eq('import: the job is still read', R3.exp.map(function (x) { return [x.role, x.org]; }), [['Frontend Developer', 'Shopline']]);
 eq('import: no new sections in an old resume', [R1.proj, R1.cert, R1.lang], [[], [], []]);
 
+/* ================================================================ the eleven tools added on 17 Nov 2026 ================================================================ */
+{      // a block of its own: the names below are short and some are used above for other tools
+const clean11 = function (s) { return !/undefined|NaN|null| {2}| [.,;:?]|\.\.(?!\.)|\n{3}/.test(s); };          // nothing unfilled, no doubled spaces or full stops
+const has = function (s, list) { return list.every(function (x) { return s.indexOf(x) >= 0; }); };
+const distinct = function (list) { return new Set(list).size === list.length; };
+
+/* follow-up email: five situations, two tones */
+const FU = { to: 'Dana', name: 'Alex Morgan', role: 'Senior Backend Engineer', company: 'Acme Inc.', when_applied: 'On 4 November.', when_interview: 'on 5 November', promised: 'by Friday, 13 November',
+  when_second: 'last Tuesday', when_offer: 'on the phone last Thursday', when_recruiter: 'two weeks ago', add: 'since then I finished the cloud certificate the posting asks for' };
+const fuAll = [];
+T.FOLLOW_UPS.forEach(function (sit) {
+  ['friendly', 'brief'].forEach(function (tone) {
+    const m = T.followUp(Object.assign({}, FU, { situation: sit, tone: tone }));
+    fuAll.push(m.body);
+    ok('follow-up ' + sit + ' ' + tone + ': clean, with a subject, signed', clean11(m.text) && !/\[/.test(m.text) && m.text.indexOf('Subject: ' + m.subject + '\n\nHi Dana,\n\n') === 0 && /\nAlex Morgan$/.test(m.text), m.text);
+    ok('follow-up ' + sit + ' ' + tone + ': names the job, the company and the added line', has(m.body, ['Senior Backend Engineer', 'Acme Inc.', 'Since then I finished the cloud certificate the posting asks for.']), m.body);
+    ok('follow-up ' + sit + ' ' + tone + ': says when to send it', m.situation === sit && /^Send it /.test(m.tip));
+    const e = T.followUp({ situation: sit, tone: tone });
+    ok('follow-up ' + sit + ' ' + tone + ': empty form leaves brackets and no stray words', /\[job title\]/.test(e.text) && /\[Your name\]$/.test(e.text) && /^Hello,/.test(e.body) && clean11(e.text), e.text);
+  });
+  const f = T.followUp(Object.assign({}, FU, { situation: sit, tone: 'friendly' })), b = T.followUp(Object.assign({}, FU, { situation: sit, tone: 'brief' }));
+  ok('follow-up ' + sit + ': brief is shorter than friendly', T.wordCount(b.body) < T.wordCount(f.body), [T.wordCount(b.body), T.wordCount(f.body)]);
+});
+eq('follow-up: ten different emails, not one with a word swapped', distinct(fuAll), true);
+eq('follow-up: each situation reads its own date', [/on 4 November/.test(T.followUp(Object.assign({}, FU, { situation: 'applied' })).body), /on 4 November|by Friday/.test(T.followUp(Object.assign({}, FU, { situation: 'second' })).body),
+  /on 5 November\. You mentioned I would hear back by Friday, 13 November/.test(T.followUp(Object.assign({}, FU, { situation: 'interview' })).body), /I wrote last Tuesday/.test(T.followUp(Object.assign({}, FU, { situation: 'second' })).body),
+  /on the phone last Thursday/.test(T.followUp(Object.assign({}, FU, { situation: 'offer' })).body), /We last spoke two weeks ago/.test(T.followUp(Object.assign({}, FU, { situation: 'recruiter' })).body)], [true, false, true, true, true, true]);
+eq('follow-up: unknown situation and tone fall back to a week after applying, friendly', T.followUp(Object.assign({}, FU, { situation: 'x', tone: 'y' })).text, T.followUp(Object.assign({}, FU, { situation: 'applied', tone: 'friendly' })).text);
+ok('follow-up: the verbal offer asks for it in writing before giving notice', /offer in writing/.test(T.followUp({ situation: 'offer' }).body) && /before I give notice/.test(T.followUp({ situation: 'offer' }).body));
+ok('follow-up: the second one says it is the last', /my last note/.test(T.followUp({ situation: 'second' }).body) && /not write about it again/.test(T.followUp({ situation: 'second', tone: 'brief' }).body));
+ok('follow-up: "Acme Inc." at the end of a sentence keeps one full stop', /at Acme Inc\. Is it still open/.test(T.followUp(Object.assign({}, FU, { situation: 'applied', tone: 'brief', when_applied: '' })).body));
+
+/* the email that carries a resume */
+const AE = { to: 'Dana Lee', name: 'Alex Morgan', role: 'Marketing Manager', company: 'Acme', source: 'Jobs Every Hour', referrer: '', current: 'marketing manager', years: '6',
+  proof: 'last year I grew newsletter sign-ups from 8,000 to 31,000', why: 'I have used your scheduling app with two teams.', contact: 'alex@example.com', link: '', cover: false };
+const aeAll = [];
+['posted', 'speculative'].forEach(function (kind) {
+  ['Dana Lee', ''].forEach(function (to) {
+    ['Sam Ortiz', ''].forEach(function (ref) {
+      const m = T.applicationEmail(Object.assign({}, AE, { kind: kind, to: to, referrer: ref })), what = 'application email ' + kind + (to ? ', named' : ', general address') + (ref ? ', referred' : '');
+      aeAll.push(m.body);
+      ok(what + ': clean, signed, with the names', clean11(m.text) && !/\[/.test(m.text) && /\nAlex Morgan$/.test(m.text) && has(m.text, ['Subject: ', 'Acme', 'arketing manager', '6 years', 'from 8,000 to 31,000.', 'alex@example.com']), m.text);
+      ok(what + ': the greeting and the close follow the recipient', to ? m.body.indexOf('Dear Dana Lee,') === 0 && /Best regards,/.test(m.body) : m.body.indexOf('Dear Hiring Team,') === 0 && /pass (my resume|this) to the person/.test(m.body) && /Kind regards,/.test(m.body), m.body);
+      ok(what + ': the referral leads the subject and the first sentence', ref ? m.subject.indexOf('Sam Ortiz') >= 0 && m.body.split('\n\n')[1].indexOf('Sam Ortiz suggested I ') === 0 : m.text.indexOf('Sam Ortiz') < 0, m.text);
+      ok(what + ': posted names the posting, speculative says there is none', kind === 'posted' ? /role at Acme/.test(m.body) && /My resume is attached\./.test(m.body) && !/posted right now/.test(m.body)
+        : /I would like to work at Acme as a Marketing Manager/.test(m.body) && /[Nn]o such role is posted right now/.test(m.body) && /My resume is attached\./.test(m.body), m.body);
+    });
+  });
+});
+eq('application email: eight different emails', distinct(aeAll), true);
+let ae = T.applicationEmail(Object.assign({}, AE, { cover: true, link: 'alexmorgan.example/work' }));
+ok('application email: a cover letter is named, and the link ends its paragraph with no full stop after it', /My resume is attached, along with a cover letter\. Examples of my work: alexmorgan\.example\/work\n\n/.test(ae.body), ae.body);
+eq('application email: where the job was seen, the subject and the file name', [/which I found on Jobs Every Hour\./.test(ae.body), ae.subject, ae.file], [true, 'Application for Marketing Manager, Alex Morgan', 'Alex-Morgan-Resume.pdf']);
+ae = T.applicationEmail({});
+eq('application email: empty form', [/\[job title\]/.test(ae.text), /\[company\]/.test(ae.text), /\[Your name\]$/.test(ae.text), ae.file, clean11(ae.text)], [true, true, true, 'Firstname-Lastname-Resume.pdf', true]);
+ok('application email: speculative with nothing typed asks for a kind of work', /\[kind of work\]/.test(T.applicationEmail({ kind: 'speculative' }).text));
+ok('application email: experience without a title still reads as a sentence', /I have 3 years of experience in this kind of work\./.test(T.applicationEmail({ years: '3' }).body) && /I am an analyst\./.test(T.applicationEmail({ current: 'analyst' }).body));
+
+/* asking for a referral */
+const RR = { to: 'Sam', name: 'Alex Morgan', role: 'Data Analyst', company: 'Acme', link: 'acme.example/jobs/data-analyst', by: 'on Friday, 27 November', how_close: 'the three years we shared on the billing team at Example Co',
+  how_distant: 'the analytics meetup in Leeds last spring', how_stranger: 'I read your post about how the data team plans its quarters', fit: 'I have built sales reports for two retailers' };
+const rrAll = [];
+['close', 'distant', 'stranger'].forEach(function (who) {
+  const mail = T.referralRequest(Object.assign({}, RR, { who: who, channel: 'email' })), li = T.referralRequest(Object.assign({}, RR, { who: who, channel: 'linkedin' }));
+  rrAll.push(mail.body, li.body);
+  [mail, li].forEach(function (m) {
+    ok('referral ' + who + ' ' + m.channel + ': clean, signed, with the names and the reason', clean11(m.text) && !/\[/.test(m.text) && /\nAlex Morgan$/.test(m.text) &&
+      has(m.text, ['Sam,', 'Data Analyst', 'Acme', 'I have built sales reports for two retailers.', 'The posting: acme.example/jobs/data-analyst\n', who === 'close' && m.channel === 'linkedin' ? 'refer me' : RR['how_' + who]]), m.text);
+  });
+  ok('referral ' + who + ': the email has a subject and the closing date, the LinkedIn message neither', /^Subject: /.test(mail.text) && /closes on Friday, 27 November/.test(mail.body) && !/Subject:/.test(li.text) && li.text === li.body && !/27 November/.test(li.body) && li.subject === '');
+  ok('referral ' + who + ': the LinkedIn message is the shorter one and counts its characters', li.length === li.body.length && li.length < mail.length && li.length < 500, [li.length, mail.length]);
+  ok('referral ' + who + ': each version reads only its own "how we know each other"', ['close', 'distant', 'stranger'].every(function (o) { return o === who || mail.body.indexOf(RR['how_' + o]) < 0; }));
+});
+eq('referral: six different messages', distinct(rrAll), true);
+ok('referral: a close colleague is asked directly, and can say no', /Would you be willing to refer me\?/.test(T.referralRequest(RR).body) && /if you would rather not/.test(T.referralRequest(RR).body));
+ok('referral: a distant contact is asked whether they are comfortable', /Would you be comfortable referring me, or pointing me to the person who is hiring/.test(T.referralRequest(Object.assign({}, RR, { who: 'distant' })).body));
+ok('referral: a stranger is asked for a call, not to vouch', /not asking you to vouch/.test(T.referralRequest(Object.assign({}, RR, { who: 'stranger' })).body) && /15-minute call/.test(T.referralRequest(Object.assign({}, RR, { who: 'stranger' })).body) &&
+  !/refer me/.test(T.referralRequest(Object.assign({}, RR, { who: 'stranger', channel: 'linkedin' })).body));
+eq('referral: unknown choices fall back to a close colleague by email', T.referralRequest(Object.assign({}, RR, { who: 'x', channel: 'y' })).text, T.referralRequest(Object.assign({}, RR, { who: 'close', channel: 'email' })).text);
+eq('referral: empty form', [/\[job title\]/.test(T.referralRequest({}).text), /\[company\]/.test(T.referralRequest({}).text), /\[Your name\]$/.test(T.referralRequest({}).text), /^Hi,/.test(T.referralRequest({}).body), clean11(T.referralRequest({}).text)], [true, true, true, true, true]);
+
+/* LinkedIn connection note: never over the limit */
+eq('connection note: the limits', [T.NOTE_MAX, T.NOTE_SHORT], [300, 200]);
+const CN = { to: 'Dana', name: 'Alex', me: 'product designer with six years in fintech', company: 'Acme', job: 'Senior Product Designer', school: 'Leeds University', event: 'the Leeds Design Meetup',
+  detail: 'I have led design for two payment apps.', detail_event: 'Your point about testing prices with real customers stayed with me.' };
+const cnAll = [];
+['recruiter', 'manager', 'alumni', 'event', 'role'].forEach(function (kind) {
+  ['300', '200'].forEach(function (limit) {
+    const r = T.connectionNote(Object.assign({}, CN, { kind: kind, limit: limit })), max = +limit;
+    eq('connection note ' + kind + ' ' + limit + ': two notes inside the limit, counted', [r.max, r.notes.length, r.notes.every(function (x) { return x.length === x.text.length && x.length <= max && x.left === max - x.length && x.length > 60; })], [max, 2, true]);
+    ok('connection note ' + kind + ' ' + limit + ': greets by name, clean, whole sentences', r.notes.every(function (x) { return x.text.indexOf('Hi Dana, ') === 0 && clean11(x.text) && !/\[/.test(x.text) && /[.?]( Alex)?$/.test(x.text); }), r.notes);
+    if (limit === '300') {
+      r.notes.forEach(function (x) { cnAll.push(x.text); });
+      ok('connection note ' + kind + ': with room to spare nothing is left out and the name closes it', r.notes.every(function (x) { return !x.dropped.length && / Alex$/.test(x.text); }), r.notes);
+    }
+  });
+});
+eq('connection note: ten different notes', distinct(cnAll), true);
+let cn = T.connectionNote(Object.assign({}, CN, { kind: 'recruiter' }));
+eq('connection note: the recruiter example', [cn.notes[0].text, cn.notes[0].length, cn.notes[0].kind, cn.notes[1].kind, cn.notes[0].short],
+  ['Hi Dana, I am a product designer with six years in fintech. I saw that you recruit for Acme, and the Senior Product Designer role there fits what I do. I have led design for two payment apps. I would like to connect and send you my resume. Alex',
+   244, 'Straight to the point', 'With a question', false]);
+cn = T.connectionNote(Object.assign({}, CN, { kind: 'manager', limit: '200' }));
+eq('connection note: at 200 characters the least important parts go first', [cn.notes[0].dropped, cn.notes[1].dropped, cn.notes[0].short], [['the line about you'], ['the line about you', 'your extra line'], true]);
+ok('connection note: an event note uses the line about the conversation, the others the line about you', /testing prices/.test(T.connectionNote(Object.assign({}, CN, { kind: 'event' })).notes[0].text) && !/payment apps/.test(T.connectionNote(Object.assign({}, CN, { kind: 'event' })).notes[0].text) &&
+  /payment apps/.test(T.connectionNote(Object.assign({}, CN, { kind: 'alumni' })).notes[0].text) && /Leeds University/.test(T.connectionNote(Object.assign({}, CN, { kind: 'alumni' })).notes[1].text));
+{
+  let worst = 0, bad = [];
+  ['recruiter', 'manager', 'alumni', 'event', 'role'].forEach(function (kind) {
+    [300, 200].forEach(function (max) {
+      for (let n = 0; n <= 420; n += 7) {
+        const words = function (k) { return 'word '.repeat(Math.ceil(k / 5)).slice(0, k).trim(); };
+        const r = T.connectionNote({ kind: kind, limit: String(max), to: 'Dana', name: 'Alexandra', me: words(n), company: words(n % 60), job: words(n % 90), school: words(n % 50), event: words(n % 70), detail: words(n) + '.', detail_event: words(n) + '.' });
+        r.notes.forEach(function (x) { worst = Math.max(worst, x.length - max); if (x.length > max || x.length !== x.text.length || /\s$/.test(x.text)) bad.push([kind, max, n, x.length]); });
+      }
+    });
+  });
+  eq('connection note: 1,220 notes built from fields of every length all fit the limit', [bad, worst <= 0], [[], true]);
+}
+cn = T.connectionNote({ kind: 'manager', to: 'Dana', job: 'x'.repeat(400) });
+ok('connection note: one field that is itself too long is cut, and the count says so', cn.notes[0].length <= 300 && cn.notes[0].dropped.indexOf('the end of the note') >= 0);
+eq('connection note: unknown kind and limit, and the empty form', [T.connectionNote({ kind: 'x', limit: '250' }).kind, T.connectionNote({ kind: 'x', limit: '250' }).max, T.connectionNote({}).empty, T.connectionNote({ to: 'Dana' }).empty,
+  /\[what you do\]/.test(T.connectionNote({}).notes[0].text), /\[your school\]/.test(T.connectionNote({ kind: 'alumni' }).notes[0].text), /\[the event\]/.test(T.connectionNote({ kind: 'event' }).notes[1].text)], ['recruiter', 300, true, false, true, true, true]);
+
+/* professional bio: person, place, three lengths */
+const BIO = { name: 'Alex Morgan', role: 'senior backend engineer', company: 'Acme', years: '8', focus: 'payment systems for online shops', strengths: 'Python, PostgreSQL, system design',
+  proof: 'Rebuilt the checkout for two million shoppers and cut failed payments by 30%.', before: 'ran the billing team at Example Co for five years', degree: 'a BSc in computer science from the University of Leeds',
+  extra_linkedin: 'senior backend roles and conference talks', extra_company: 'anything about refunds, chargebacks and payment providers', extra_conference: 'moving a payment system to a new database without downtime',
+  outside: 'Coaching a youth football team', contact: 'hello@example.com' };
+const bioAll = [];
+['linkedin', 'company', 'conference'].forEach(function (place) {
+  [['first', ''], ['third', 'she'], ['third', 'he'], ['third', 'they'], ['third', 'name']].forEach(function (pp) {
+    const r = T.bio(Object.assign({}, BIO, { place: place, person: pp[0], pronoun: pp[1] })), what = 'bio ' + place + ' ' + pp[0] + ' ' + pp[1], all = [r.one, r.short, r.long];
+    bioAll.push(r.long.text);
+    ok(what + ': three lengths, each longer than the last, counted', all.every(function (x) { return x.words === T.wordCount(x.text) && x.length === x.text.length && clean11(x.text) && !/\[/.test(x.text); }) &&
+      r.one.words < r.short.words && r.short.words < r.long.words && r.one.words <= 25 && r.short.words >= 40 && r.short.words <= 55 && r.long.words >= 90 && r.long.words <= 115, all.map(function (x) { return x.words; }));
+    ok(what + ': opens with the person and carries the facts', all.every(function (x) { return x.text.indexOf(pp[0] === 'third' ? 'Alex Morgan is a senior backend engineer' : 'I am a senior backend engineer') === 0; }) &&
+      has(r.long.text, ['Acme', 'payment systems for online shops', 'rebuilt the checkout for two million shoppers and cut failed payments by 30%.', 'ran the billing team at Example Co', 'a BSc in computer science', 'coaching a youth football team', BIO['extra_' + place]]), r.long.text);
+    ok(what + ': first and third person do not mix', pp[0] === 'first' ? !/\b(she|he|they|her|his|their|Alex)\b/i.test(r.long.text) : !/\b(I|me|my)\b/.test(r.long.text), r.long.text);
+  });
+});
+eq('bio: fifteen different long bios', distinct(bioAll), true);
+let bio = T.bio(Object.assign({}, BIO, { person: 'third', pronoun: 'she' }));
+ok('bio: she takes the -s form', has(bio.long.text, ['Her strongest areas are', 'Recently, she rebuilt', 'Before that, she ran', 'She holds a BSc', 'She is open to', 'you will find her coaching', 'reach her is hello@example.com']), bio.long.text);
+bio = T.bio(Object.assign({}, BIO, { person: 'third', pronoun: 'they', place: 'company' }));
+ok('bio: they takes the plain form', has(bio.long.text, ['At Acme, they work on', 'Their background is in', 'They hold a BSc', 'come to them for', 'You can reach them at hello@example.com']) && /where they work on/.test(bio.one.text), bio.long.text);
+bio = T.bio(Object.assign({}, BIO, { person: 'third', pronoun: 'name', place: 'conference' }));
+ok('bio: with no pronoun the first name is repeated', has(bio.long.text, ['where Alex works on', 'Alex will talk about', 'Alex has worked in this field for 8 years', 'Alex’s work centres on', 'find Alex coaching']) && !/\b(she|he|they|her|his|their)\b/i.test(bio.long.text) &&
+  /speaks about moving a payment system/.test(bio.one.text), bio.long.text);
+bio = T.bio(Object.assign({}, BIO, { person: 'third', pronoun: 'he' }));
+ok('bio: he and his', has(bio.long.text, ['His strongest areas', 'he rebuilt', 'He holds', 'find him coaching']));
+eq('bio: the example, and unknown choices', [T.bio(BIO).short.text, T.bio(BIO).short.words, T.bio(BIO).long.words, T.bio(Object.assign({}, BIO, { place: 'x', person: 'y' })).long.text === T.bio(BIO).long.text],
+  ['I am a senior backend engineer at Acme with 8 years of experience in payment systems for online shops. My strongest areas are Python, PostgreSQL and system design. Recently, I rebuilt the checkout for two million shoppers and cut failed payments by 30%.', 43, 98, true]);
+eq('bio: empty form, and a name alone', [T.bio({}).empty, T.bio({}).one.text, T.bio({ name: 'Sam Lee', person: 'third' }).one.text, T.bio({ name: 'Sam Lee' }).empty, T.bio({ role: 'nurse', strengths: 'triage' }).short.text],
+  [true, 'I am a [job title].', 'Sam Lee is a [job title].', false, 'I am a nurse. My strongest area is triage.']);
+
+/* LinkedIn About section: three shapes, never over 2,600 characters */
+const AB = { role: 'senior backend engineer', years: '8', who: 'online shops that have outgrown their first payment system', strengths: 'Python, PostgreSQL, payment systems', how: 'I like to start from the numbers the business already tracks',
+  proofs: '- I rebuilt the checkout for two million shoppers and cut failed payments by 30%.\n2. I moved 30 services to a new database with no downtime\nI cut the monthly cloud bill from $41,000 to $27,000.\nA fourth line that is not used', next: 'Senior backend roles at product companies.', contact: '' };
+const abAll = ['story', 'list', 'short'].map(function (style) {
+  const r = T.linkedinAbout(Object.assign({}, AB, { style: style }));
+  ok('about ' + style + ': counted against the limit, clean, with the facts', r.length === r.text.length && r.left === T.ABOUT_MAX - r.length && r.words === T.wordCount(r.text) && r.length <= T.ABOUT_MAX && clean11(r.text.replace(/\n\n/g, ' ')) && !/\[/.test(r.text) &&
+    r.text.indexOf('I am a senior backend engineer with 8 years of experience. I work with online shops') === 0 && has(r.text, ['Python', 'PostgreSQL', 'cut failed payments by 30%.', 'senior backend roles at product companies', 'a message here on LinkedIn']) &&
+    !/fourth line/.test(r.text) && r.opening === r.text.slice(0, 300) && !r.cut && !r.dropped, r);
+  return r;
+});
+eq('about: three shapes of the same answers', [distinct(abAll.map(function (r) { return r.text; })), abAll[0].text.split('\n\n').length, (abAll[1].text.match(/^• /gm) || []).length, /\n/.test(abAll[2].text), abAll[2].length < abAll[0].length], [true, 6, 6, false, true]);
+ok('about: the story keeps all three results and the line in your own voice, the short one the first result only', has(abAll[0].text, ['I like to start from the numbers the business already tracks.', 'I moved 30 services to a new database with no downtime.', 'from $41,000 to $27,000.']) &&
+  !/30 services/.test(abAll[2].text) && /cut failed payments by 30%\./.test(abAll[2].text));
+ok('about: a contact replaces the LinkedIn message', /The quickest way to reach me is alex@example\.com\./.test(T.linkedinAbout(Object.assign({}, AB, { contact: 'alex@example.com' })).text) && /Contact: alex@example\.com\./.test(T.linkedinAbout(Object.assign({}, AB, { style: 'list', contact: 'alex@example.com' })).text));
+let about = T.linkedinAbout(Object.assign({}, AB, { proofs: ['one', 'two', 'three'].map(function (w) { return 'I did ' + w + ' ' + 'very long thing '.repeat(60); }).join('\n') }));
+eq('about: results that do not fit are left out from the last one', [about.length <= 2600, about.dropped, about.cut, /I did one/.test(about.text), /I did three/.test(about.text), /reach me is a message here on LinkedIn\.$/.test(about.text)], [true, 1, false, true, false, true]);
+about = T.linkedinAbout({ role: 'engineer', how: 'A sentence of ten words that goes on and on. '.repeat(80) });
+eq('about: answers that are still too long are cut at the end of a sentence', [about.length <= 2600, about.cut, /\.$/.test(about.text), about.left >= 0], [true, true, true, true]);
+about = T.linkedinAbout({ role: 'x'.repeat(4000) });
+eq('about: one endless word is dropped whole, never split past the limit', [about.text, about.cut, about.left], ['I am a', true, 2594]);
+[1, 500, 2590, 2600, 2601, 2650, 5000].forEach(function (n) { const r = T.linkedinAbout({ role: 'e', how: 'ab '.repeat(Math.ceil(n / 3)).slice(0, n) }); ok('about: ' + n + ' characters of text stay inside 2,600', r.length <= 2600 && r.length === r.text.length, r.length); });
+eq('about: unknown shape, empty form', [T.linkedinAbout(Object.assign({}, AB, { style: 'x' })).text === abAll[0].text, T.linkedinAbout({}).empty, T.linkedinAbout({ role: 'Nurse' }).empty, T.linkedinAbout({}).text.indexOf('I am a [Your job title].')], [true, true, false, 0]);
+
+/* elevator pitch: about 75 words, timed at 150 words a minute */
+eq('pitch: the pace', [T.PITCH_WPM, T.PITCH_WORDS, T.PITCH_WORDS / T.PITCH_WPM * 60], [150, 75, 30]);
+const PI = { name: 'Alex Morgan', role: 'data analyst', years: '4', best: 'Turning messy sales data into reports people actually use.', proof: 'built a weekly report that replaced six spreadsheets and saves the team a day a week',
+  goal_fair: 'an analyst role on a pricing team', goal_interview: 'you need someone to own reporting for a growing sales team', goal_networking: 'how other teams forecast demand', company: 'Acme', job: 'Senior Data Analyst' };
+const piAll = ['fair', 'interview', 'networking'].map(function (where) {
+  const r = T.pitch(Object.assign({}, PI, { where: where }));
+  ok('pitch ' + where + ': timed from its words, about 30 seconds, clean', r.words === T.wordCount(r.text) && r.seconds === Math.round(r.words / 150 * 60) && r.seconds >= 25 && r.seconds <= 35 && r.time === r.seconds + ' s' && r.fixes === 0 && clean11(r.text) && !/\[/.test(r.text) &&
+    r.checks.length === 2 && r.checks.every(function (c) { return c.level === 'ok'; }), r);
+  ok('pitch ' + where + ': what you do, what you do best, the result and the goal of this place', has(r.text, ['data analyst', 'turning messy sales data into reports people actually use.', 'built a weekly report that replaced six spreadsheets', PI['goal_' + where]]) &&
+    ['fair', 'interview', 'networking'].every(function (o) { return o === where || r.text.indexOf(PI['goal_' + o]) < 0; }), r.text);
+  return r;
+});
+eq('pitch: three different pitches', distinct(piAll.map(function (r) { return r.text; })), true);
+eq('pitch: the job fair example is 74 words, 30 seconds', [piAll[0].words, piAll[0].seconds, piAll[0].time, piAll[0].text.indexOf('Hi, I’m Alex Morgan. I’m a data analyst with 4 years of experience.'), /which is why I came over to Acme\. What do you look for/.test(piAll[0].text)], [74, 30, '30 s', 0, true]);
+ok('pitch: an interview opening skips the name and names the role; a networking one uses the first name and ends with a question', !/Alex/.test(piAll[1].text) && /^I’m a data analyst/.test(piAll[1].text) && /The Senior Data Analyst role at Acme caught my eye because you need/.test(piAll[1].text) &&
+  /^Hi, I’m Alex\. I work as a data analyst, 4 years now\./.test(piAll[2].text) && /\?$/.test(piAll[2].text) && !/Acme/.test(piAll[2].text));
+let pitch = T.pitch({ role: 'nurse' });
+eq('pitch: a job title alone is too short and says what is missing', [pitch.text, pitch.seconds, pitch.checks[0].level, /^Too short/.test(pitch.checks[0].t), pitch.checks.filter(function (c) { return /is missing$/.test(c.t); }).length, pitch.empty], ['Hi. I’m a nurse. What do you look for in people who apply for that?', 6, 'fix', true, 3, false]);
+pitch = T.pitch(Object.assign({}, PI, { proof: PI.proof + ' and ' + 'then did one more thing for the team '.repeat(8) }));
+ok('pitch: a long one is marked and the longest part is named', pitch.seconds > 45 && pitch.checks[0].level === 'fix' && /^Too long/.test(pitch.checks[0].t) && /longest part is your result/.test(pitch.checks[0].d), pitch.checks[0]);
+pitch = T.pitch(Object.assign({}, PI, { proof: PI.proof + ' and the sales team now trusts the figures in it enough to plan every week around them from Monday' }));
+ok('pitch: a little long is a warning', pitch.seconds >= 36 && pitch.seconds <= 45 && pitch.checks[0].level === 'warn' && /^A little long/.test(pitch.checks[0].t), [pitch.seconds, pitch.checks[0]]);
+ok('pitch: a result with no number is noticed, a number word counts', T.pitch(Object.assign({}, PI, { proof: 'built a report people like' })).checks.some(function (c) { return c.level === 'warn' && /No number/.test(c.t); }) &&
+  T.pitch(Object.assign({}, PI, { proof: 'cut the errors by half' })).checks.some(function (c) { return /has a number/.test(c.t); }));
+eq('pitch: no job title, unknown place, empty form', [T.pitch({ best: 'x' }).checks.some(function (c) { return c.level === 'fix' && /What you do is missing/.test(c.t); }), /\[what you do\]/.test(T.pitch({ best: 'x' }).text),
+  T.pitch(Object.assign({}, PI, { where: 'x' })).text === piAll[0].text, T.pitch({}).empty, T.pitch({}).words, T.pitch({}).text], [true, true, true, true, 0, '']);
+
+/* resume summary: five levels */
+const RSU = { role: 'data analyst', years: '4', skills: 'SQL, Excel, Tableau', result: 'Cut month-end close from 8 days to 5 by automating reconciliations.', study_none: 'A BSc in Economics (2026)', from_none: 'a six-month internship at a logistics firm',
+  study_changer: 'a nine-month data analytics course', from_changer: 'eight years of teaching mathematics', scope: 'pricing analytics for 300 stores', team: 'a team of 12 analysts' };
+const rsAll = [];
+T.SUMMARY_LEVELS.forEach(function (level) {
+  const r = T.resumeSummary(Object.assign({}, RSU, { level: level }));
+  eq('summary ' + level + ': two wordings', [r.level, r.variants.length, r.figure, r.result, r.empty], [level, 2, true, true, false]);
+  r.variants.forEach(function (v, i) {
+    rsAll.push(v.text);
+    ok('summary ' + level + ' ' + (i + 1) + ': two or three lines, no “I”, with the title, the skills and the result', clean11(v.text) && !/\[/.test(v.text) && !/\bI\b|\bmy\b/i.test(v.text) && /\.$/.test(v.text) && has(v.text, ['ata analyst', 'SQL, Excel and Tableau']) &&
+      /[Cc]ut month-end close from 8 days to 5 by automating reconciliations/.test(v.text) && v.length === v.text.length && v.words === T.wordCount(v.text) && v.lines === Math.ceil(v.length / T.LINE) && v.lines >= 2 && v.lines <= 3 && v.words >= 20 && v.words <= 45, v);
+  });
+});
+eq('summary: ten different texts', distinct(rsAll), true);
+eq('summary: a few years of experience', T.resumeSummary(RSU).variants.map(function (v) { return [v.kind, v.text]; }), [['Skills first', 'Data analyst with 4 years of experience in SQL, Excel and Tableau. Cut month-end close from 8 days to 5 by automating reconciliations.'],
+  ['Result first', 'Data analyst who cut month-end close from 8 days to 5 by automating reconciliations. 4 years of experience; strongest in SQL, Excel and Tableau.']]);
+let sm = T.resumeSummary(Object.assign({}, RSU, { level: 'none' }));
+ok('summary: no experience leads with the degree and where the practice came from, and leaves the years out', /^Entry-level data analyst with a BSc in Economics \(2026\) and working knowledge of SQL/.test(sm.variants[0].text) && /During a six-month internship at a logistics firm, cut month-end/.test(sm.variants[0].text) &&
+  /Looking for a first role as a data analyst\.$/.test(sm.variants[1].text) && !/4 years/.test(sm.variants[0].text + sm.variants[1].text), sm.variants);
+sm = T.resumeSummary(Object.assign({}, RSU, { level: 'senior' }));
+ok('summary: senior puts the responsibility before the skills', /with 4 years of experience, responsible for pricing analytics for 300 stores\. Expert in SQL/.test(sm.variants[0].text) && /Owns pricing analytics for 300 stores\./.test(sm.variants[1].text), sm.variants);
+sm = T.resumeSummary(Object.assign({}, RSU, { level: 'manager' }));
+ok('summary: a manager leads with the team', /now leading a team of 12 analysts\./.test(sm.variants[0].text) && /^Leads a team of 12 analysts as a data analyst, with 4 years in the field\./.test(sm.variants[1].text) && /Background in SQL/.test(sm.variants[0].text), sm.variants);
+sm = T.resumeSummary(Object.assign({}, RSU, { level: 'changer' }));
+ok('summary: a career changer leads with the work they come from and the course', /^Brings eight years of teaching mathematics to a data analyst role\. Completed a nine-month data analytics course; skilled in SQL/.test(sm.variants[0].text) &&
+  /Now moving into a data analyst role after eight years of teaching mathematics, with a nine-month data analytics course\./.test(sm.variants[1].text) && !/BSc/.test(sm.variants[0].text), sm.variants);
+eq('summary: without a result there is one wording and no figure; a manager without a team too', [T.resumeSummary({ role: 'nurse', years: '1' }).variants.map(function (v) { return v.text; }), T.resumeSummary({ role: 'nurse', years: '1' }).figure,
+  T.resumeSummary({ role: 'nurse', years: '1' }).result, T.resumeSummary({ level: 'manager', role: 'store manager', result: 'opened 3 shops' }).variants.length, T.resumeSummary({ role: 'nurse', result: 'trained new colleagues' }).figure],
+  [['Nurse with 1 year of experience.'], false, false, 1, false]);
+eq('summary: unknown level, empty form', [T.resumeSummary(Object.assign({}, RSU, { level: 'x' })).level, T.resumeSummary({}).empty, T.resumeSummary({ skills: 'SQL' }).empty, T.resumeSummary({}).variants[0].text], ['some', true, false, '[job title].']);
+
+/* skills by job title: the rows of data/role-skills.json */
+const RSD = { date: 'Nov 17, 2026', roles: [['data-analyst', 'Data analyst', 200, [['SQL', 120], ['Excel', 51], ['C++', 1]]], ['nurse', 'Nurse', 40, []]], slugs: { SQL: 'sql', 'C++': 'cpp' } };
+let rk = T.roleSkills(RSD, 'data-analyst');
+eq('role skills: share of postings, the page of each skill, the date', [rk.name, rk.n, rk.date, rk.skills.map(function (s) { return [s.name, s.n, s.pct, s.slug]; })], ['Data analyst', 200, 'Nov 17, 2026', [['SQL', 120, 60, 'sql'], ['Excel', 51, 25.5, ''], ['C++', 1, 0.5, 'cpp']]]);
+eq('role skills: unknown job title, no data, a title with no skills', [T.roleSkills(RSD, 'pilot'), T.roleSkills(null, 'nurse'), T.roleSkills({}, 'nurse'), T.roleSkills(RSD, 'nurse').skills], [null, null, null, []]);
+eq('role skills: the line to copy', [T.skillsLine(['SQL', ' Excel ', '', 'C++']), T.skillsLine([]), T.skillsLine(null)], ['Skills: SQL, Excel, C++', '', '']);
+
+/* letter of recommendation: who writes, about whom, two tones */
+const RL = { to: '', cand: 'Priya Shah', pronoun: 'she', role_employee: 'senior support agent', role_student: 'the BSc Economics program', role_contractor: 'web developer', org: 'Example Co', dur: 'three years', purpose: 'the Team Lead role at Acme',
+  s1: 'How calm she stays with upset customers.', e1: 'when our payment system failed last March, she answered 140 tickets in a day', s2: 'her clear writing', e2: 'She rewrote 60 help articles, and tickets about refunds fell by a third.',
+  name: 'Dana Lee', title: 'Head of Support', contact: 'dana.lee@example.com', date: '2026-11-17' };
+const rlAll = [];
+['manager', 'colleague', 'teacher', 'client'].forEach(function (writer) {
+  ['employee', 'student', 'contractor'].forEach(function (who) {
+    ['plain', 'warm'].forEach(function (tone) {
+      const m = T.recommendation(Object.assign({}, RL, { writer: writer, who: who, tone: tone })), what = 'recommendation ' + writer + ' about ' + who + ', ' + tone;
+      rlAll.push(m.body);
+      ok(what + ': a dated letter with no subject, clean, signed with name, title and organization', m.text === m.body && m.text.indexOf('November 17, 2026\n\nTo whom it may concern,\n\n') === 0 && !/Subject:/.test(m.text) && clean11(m.text) && !/\[/.test(m.text) &&
+        /\nDana Lee\nHead of Support, Example Co$/.test(m.text), m.text);
+      ok(what + ': names the person, the purpose, the time, both strengths and both examples', has(m.body, ['Priya Shah for the Team Lead role at Acme', 'for three years', 'how calm she stays with upset customers. When our payment system failed last March, she answered 140 tickets in a day.',
+        'her clear writing. She rewrote 60 help articles', 'dana.lee@example.com', RL['role_' + who].replace(/^the /, '')]) && ['employee', 'student', 'contractor'].every(function (o) { return o === who || m.body.indexOf(RL['role_' + o]) < 0; }), m.body);
+    });
+  });
+});
+eq('recommendation: twenty-four different letters', distinct(rlAll), true);
+const rl = function (o) { return T.recommendation(Object.assign({}, RL, o)).body; };
+ok('recommendation: who writes changes how they know the person', /I managed her at Example Co for three years, while she worked as a senior support agent\./.test(rl({})) && /We worked side by side at Example Co/.test(rl({ writer: 'colleague' })) &&
+  /I taught her at Example Co for three years, while she was a student in the BSc Economics program\./.test(rl({ writer: 'teacher', who: 'student' })) && /At Example Co, I was her client for three years, while she worked with us on contract as a web developer\./.test(rl({ writer: 'client', who: 'contractor' })) &&
+  /I supervised her/.test(rl({ who: 'student' })) && /We studied together at Example Co for three years, in the BSc Economics program\./.test(rl({ writer: 'colleague', who: 'student' })));
+ok('recommendation: plain and warm close differently', /What stands out most is/.test(rl({})) && /I recommend Priya without reservation\./.test(rl({})) && /Sincerely,/.test(rl({})) &&
+  /I am very glad to recommend/.test(rl({ tone: 'warm' })) && /I would hire Priya again without a second thought\. I recommend her wholeheartedly\./.test(rl({ tone: 'warm' })) && /With warm regards,/.test(rl({ tone: 'warm' })) &&
+  /have Priya in my class again/.test(rl({ tone: 'warm', writer: 'teacher' })) && /share a team with Priya again/.test(rl({ tone: 'warm', writer: 'colleague' })) && /give Priya our next project/.test(rl({ tone: 'warm', writer: 'client' })));
+ok('recommendation: he and they', /I managed him at/.test(rl({ pronoun: 'he' })) && /while he worked as/.test(rl({ pronoun: 'he' })) && /I recommend him wholeheartedly/.test(rl({ pronoun: 'he', tone: 'warm' })) && /I saw his work up close/.test(rl({ pronoun: 'he', tone: 'warm' })) &&
+  /I taught them at Example Co for three years, while they were a student in/.test(rl({ pronoun: 'they', writer: 'teacher', who: 'student' })) && /I managed them/.test(rl({ pronoun: 'x' })));
+ok('recommendation: a named reader, no date, no second strength, no contact', /^Dear Ms Rivera,\n\nI am writing/.test(rl({ to: 'Ms Rivera', date: '' })) && !/second strength/.test(rl({ s2: '', e2: '' })) && rl({ s2: '', e2: '' }).split('\n\n').length === 6 &&
+  /I am glad to answer any questions you have\./.test(rl({ contact: '' })) && /hear more\.\n\n/.test(rl({ contact: '', tone: 'warm' })) && /\nDana Lee$/.test(rl({ title: '', org: '' })));
+eq('recommendation: empty form keeps reminders in brackets', [/\[their name\]/.test(T.recommendation({}).text), /\[first strength\]/.test(T.recommendation({}).text), /\[Add one example that shows it\.\]/.test(T.recommendation({}).text), /\[Your name\]$/.test(T.recommendation({}).text),
+  T.recommendation({}).text.indexOf('To whom it may concern,'), T.recommendation({ writer: 'x', who: 'y', tone: 'z' }).text === T.recommendation({}).text], [true, true, true, true, 0, true]);
+
+/* overtime pay: weekly arithmetic, with the boundary at the threshold */
+let ot = T.overtime({ rate: '20', hours: '46', threshold: '40', mult: '1.5' });
+eq('overtime: $20 an hour, 46 hours, time and a half', [ot.regHours, ot.otHours, ot.otRate, ot.regPay, ot.otPay, ot.total, T.roundTo(ot.effective, 2), ot.premium, ot.year], [40, 6, 30, 800, 180, 980, 21.3, 60, 50960]);
+eq('overtime: the figures as the page prints them', [T.money(ot.regPay, '$', 2), T.money(ot.otPay, '$', 2), T.money(ot.total, '$', 2), T.money(ot.effective, '$', 2), T.money(T.overtime({ rate: 20, hours: 46, mult: 2 }).otPay, '$', 2), T.money(T.overtime({ rate: 20, hours: 46, mult: 2 }).total, '$', 2)],
+  ['$800.00', '$180.00', '$980.00', '$21.30', '$240.00', '$1,040.00']);
+ot = T.overtime({ rate: '20', hours: '40', threshold: '40', mult: '1.5' });
+eq('overtime: exactly at the threshold every hour is a regular hour', [ot.regHours, ot.otHours, ot.regPay, ot.otPay, ot.total, ot.effective, ot.premium], [40, 0, 800, 0, 800, 20, 0]);
+ot = T.overtime({ rate: '20', hours: '40.5', threshold: '40', mult: '1.5' });
+eq('overtime: half an hour over the threshold', [ot.regHours, ot.otHours, ot.otPay, ot.total], [40, 0.5, 15, 815]);
+ot = T.overtime({ rate: '20', hours: '39.75', threshold: '40' });
+eq('overtime: a quarter of an hour under the threshold', [ot.regHours, ot.otHours, ot.otPay, ot.total, ot.effective], [39.75, 0, 0, 795, 20]);
+ot = T.overtime({ rate: '18.50', hours: '50' });
+eq('overtime: the threshold and the multiplier default to 40 hours and time and a half', [ot.threshold, ot.mult, ot.regPay, ot.otPay, ot.total], [40, 1.5, 740, 277.5, 1017.5]);
+near('overtime: the average per hour is the total over the hours worked', ot.effective, 1017.5 / 50);
+ot = T.overtime({ rate: '30', hours: '45', threshold: '37.5', mult: '2' });
+eq('overtime: a 37.5-hour week at double time', [ot.regHours, ot.otHours, ot.otRate, ot.regPay, ot.otPay, ot.total], [37.5, 7.5, 60, 1125, 450, 1575]);
+ot = T.overtime({ rate: '10', hours: '8', threshold: '0', mult: '1.5' });
+eq('overtime: a threshold of zero makes every hour overtime', [ot.regHours, ot.otHours, ot.total, ot.effective], [0, 8, 120, 15]);
+ot = T.overtime({ rate: '25', hours: '0' });
+eq('overtime: no hours, no pay, and the average is the rate itself', [ot.total, ot.effective, ot.otHours], [0, 25, 0]);
+eq('overtime: a multiplier of 1 pays overtime hours at the plain rate', [T.overtime({ rate: 20, hours: 50, mult: 1 }).total, T.overtime({ rate: 20, hours: 50, mult: 1 }).premium], [1000, 0]);
+eq('overtime: figures with a currency sign and a comma', T.overtime({ rate: '$1,000', hours: '41' }).total, 41500);
+eq('overtime: what cannot be a week of work', [T.overtime({}), T.overtime({ rate: '', hours: '40' }), T.overtime({ rate: '0', hours: '40' }), T.overtime({ rate: '-5', hours: '40' }), T.overtime({ rate: '20', hours: '' }), T.overtime({ rate: '20', hours: '-1' }),
+  T.overtime({ rate: '20', hours: '169' }), T.overtime({ rate: '20', hours: '40', threshold: '200' }), T.overtime({ rate: '20', hours: '40', threshold: 'x' }), T.overtime({ rate: '20', hours: '40', mult: '0.5' }), T.overtime({ rate: '20', hours: '40', mult: 'x' })],
+  [null, null, null, null, null, null, null, null, null, null, null]);
+ok('overtime: 168 hours, the whole week, is still accepted', T.overtime({ rate: '20', hours: '168' }).otHours === 128);
+
+/* the built pages of the eleven tools: the worked example printed on each page is what its tool returns for the page's own sample details */
+const SITE11 = process.argv[3] ? path.dirname(path.dirname(path.resolve(process.argv[3]))) : '';
+const page11 = function (slug) { const f = path.join(SITE11, 'tools', slug, 'index.html'); return SITE11 && fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : ''; };
+const unesc = function (s) { return s.replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); };
+// "Show an example" as tools.js does it: every empty text field takes its example (data-ex, or the placeholder), selects and tick boxes keep their defaults
+function formOf(html) {
+  const tool = html.slice(html.indexOf('<div class="tl" data-tool='), html.indexOf('<div class="tl-after">')), v = {};
+  for (const m of tool.matchAll(/<(input|textarea)\b([^>]*)>/g)) {
+    const a = m[2], k = (a.match(/data-k="([^"]*)"/) || [])[1];
+    if (!k) continue;
+    if (/type="checkbox"/.test(a)) { v[k] = /\schecked/.test(a); continue; }
+    const ex = (a.match(/data-ex="([^"]*)"/) || [])[1], ph = unesc((a.match(/placeholder="([^"]*)"/) || [])[1] || ''), val = (a.match(/\svalue="([^"]*)"/) || [])[1];
+    v[k] = val != null ? unesc(val) : ex != null ? unesc(ex) : /^(paste|type|e\.g)\b/i.test(ph) ? '' : ph.split(' or ')[0];
+  }
+  for (const m of tool.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/g)) {
+    const k = (m[1].match(/data-k="([^"]*)"/) || [])[1], sel = m[2].match(/<option value="([^"]*)" selected>/) || m[2].match(/<option value="([^"]*)"/);
+    if (k) v[k] = sel ? unesc(sel[1]) : '';
+  }
+  return v;
+}
+const examplesOf = function (html) { return Array.from(html.matchAll(/<blockquote class="tl-ex">([\s\S]*?)<\/blockquote>/g), function (m) { return unesc(m[1]); }); };
+const NEW11 = {
+  'follow-up-email': function (v) { return [T.followUp(v).text]; },
+  'application-email': function (v) { return [T.applicationEmail(v).text]; },
+  'referral-request': function (v) { return [T.referralRequest(v).text]; },
+  'linkedin-connection-message': function (v) { return [T.connectionNote(v).notes[0].text]; },
+  'professional-bio': function (v) { return [T.bio(v).short.text, T.bio(v).one.text]; },
+  'linkedin-summary': function (v) { return [T.linkedinAbout(v).text]; },
+  'elevator-pitch': function (v) { return [T.pitch(v).text]; },
+  'resume-summary': function (v) { return T.resumeSummary(v).variants.map(function (x) { return x.text; }); },
+  'resume-skills': null,
+  'recommendation-letter': function (v) { return [T.recommendation(v).text]; },
+  'overtime-pay': null,
+};
+if (!page11('follow-up-email')) console.log('note: the built pages of the new tools were not found next to ' + (process.argv[3] || 'the skills file') + ', so the checks of the pages themselves are skipped');
+else {
+  Object.keys(NEW11).forEach(function (slug) {
+    const html = page11(slug), title = unesc((html.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || ''), desc = unesc((html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || '');
+    const faq = (html.match(/"@type": ?"Question"/g) || []).length, tool = html.slice(html.indexOf('<div class="tl" data-tool='), html.indexOf('<div class="tl-after">')), after = html.slice(html.indexOf('<div class="tl-after">'));
+    ok('page ' + slug + ': built, with a title of at most 65 characters that keeps the brand and a description of 140 to 160', html.length > 5000 && title.length <= 65 && / \| /.test(title) && desc.length >= 140 && desc.length <= 160, [title.length, desc.length, title]);
+    ok('page ' + slug + ': one h1, an answer-first lead, the tool, a worked example, how it works, at least five questions, related tools', (html.match(/<h1[\s>]/g) || []).length === 1 && /<p class="lead">[^<]{200,}<\/p>/.test(html) &&
+      tool.indexOf('data-tool="' + slug + '"') > 0 && (after.match(/<h2>/g) || []).length >= 4 && faq >= 5 && (after.match(/<div class="tl-faq">([\s\S]*?)<\/section>/)[1].match(/<h3>/g) || []).length === faq && /Related tools/.test(after), [faq]);
+    ok('page ' + slug + ': every field shown for one choice names a select of the form and values it has', Array.from(tool.matchAll(/data-on="([a-z]+):([^"]+)"/g)).every(function (m) {
+      const sel = tool.match(new RegExp('<select id="tl-' + m[1] + '" data-k="' + m[1] + '"[^>]*>([\\s\\S]*?)</select>'));
+      return sel && m[2].split(' ').every(function (val) { return sel[1].indexOf('<option value="' + val + '"') >= 0; });
+    }));
+    if (NEW11[slug]) {
+      const want = NEW11[slug](formOf(html)), got = examplesOf(html);
+      eq('page ' + slug + ': the example printed on the page is what the tool gives for the page’s own sample details', got, want);
+      ok('page ' + slug + ': the sample details leave nothing in brackets', want.every(function (x) { return x && !/\[/.test(x) && clean11(x.replace(/\n\n/g, ' ')); }), want);
+    }
+  });
+  // every choice of the select that shows and hides fields gives a text with no brackets left, when the sample details are used
+  const fu = formOf(page11('follow-up-email')); T.FOLLOW_UPS.forEach(function (s) { ok('page follow-up-email: the sample details fill the “' + s + '” email', !/\[/.test(T.followUp(Object.assign({}, fu, { situation: s })).text) && T.followUp(Object.assign({}, fu, { situation: s })).body.indexOf(fu['when_' + s]) > 0); });
+  const rr = formOf(page11('referral-request')); ['close', 'distant', 'stranger'].forEach(function (w) { ok('page referral-request: the sample details fill the “' + w + '” message', !/\[/.test(T.referralRequest(Object.assign({}, rr, { who: w })).text) && T.referralRequest(Object.assign({}, rr, { who: w })).body.indexOf(rr['how_' + w]) > 0); });
+  const cnf = formOf(page11('linkedin-connection-message')); ['recruiter', 'manager', 'alumni', 'event', 'role'].forEach(function (k) { ok('page linkedin-connection-message: the sample details fill the “' + k + '” notes', T.connectionNote(Object.assign({}, cnf, { kind: k })).notes.every(function (x) { return !/\[/.test(x.text) && x.length <= 300 && !x.dropped.length; })); });
+  const bf = formOf(page11('professional-bio')); ['linkedin', 'company', 'conference'].forEach(function (p) { const r = T.bio(Object.assign({}, bf, { place: p })); ok('page professional-bio: the sample details give about 50 and about 100 words for “' + p + '”', r.short.words >= 40 && r.short.words <= 55 && r.long.words >= 90 && r.long.words <= 110 && r.long.text.indexOf(bf['extra_' + p]) > 0, [r.short.words, r.long.words]); });
+  const pf = formOf(page11('elevator-pitch')); ['fair', 'interview', 'networking'].forEach(function (w) { const r = T.pitch(Object.assign({}, pf, { where: w })); ok('page elevator-pitch: the sample details give about 30 seconds for “' + w + '”', r.seconds >= 25 && r.seconds <= 35 && r.fixes === 0 && r.text.indexOf(pf['goal_' + w]) > 0, [r.words, r.seconds]); });
+  const sf = formOf(page11('resume-summary')); T.SUMMARY_LEVELS.forEach(function (l) { const r = T.resumeSummary(Object.assign({}, sf, { level: l })); ok('page resume-summary: the sample details give two summaries of two or three lines for “' + l + '”', r.variants.length === 2 && r.variants.every(function (x) { return !/\[/.test(x.text) && x.lines >= 2 && x.lines <= 3; }), r.variants); });
+  const lf = formOf(page11('recommendation-letter')); ['employee', 'student', 'contractor'].forEach(function (w) { ok('page recommendation-letter: the sample details fill the letter about “' + w + '”', !/\[/.test(T.recommendation(Object.assign({}, lf, { who: w })).text) && T.recommendation(Object.assign({}, lf, { who: w })).body.indexOf(lf['role_' + w].replace(/^the /, '')) > 0); });
+  const pitchPage = page11('elevator-pitch'), pv = T.pitch(pf);
+  ok('page elevator-pitch: the words and seconds named in the text are those of the example', pitchPage.indexOf(pv.words + ' words, about ' + pv.seconds + ' seconds at 150 words a minute.') > 0);
+  const notePage = page11('linkedin-connection-message'), aboutPage = page11('linkedin-summary');
+  ok('page linkedin-connection-message: the length named in the text is that of the example, inside the limit', notePage.indexOf(examplesOf(notePage)[0].length + ' characters long') > 0 && examplesOf(notePage)[0].length <= 300);
+  ok('page linkedin-summary: the length named in the text is that of the example, inside the limit', aboutPage.indexOf(T.fmt(examplesOf(aboutPage)[0].length) + ' of 2,600 characters') > 0 && examplesOf(aboutPage)[0].length <= 2600);
+  // overtime: the sample details and the table in the text
+  const of_ = formOf(page11('overtime-pay')), ov = T.overtime(of_), otPage = page11('overtime-pay');
+  eq('page overtime-pay: the sample details are $20 an hour for 46 hours, 40 hours and time and a half by default', [of_.rate, of_.hours, of_.threshold, of_.mult, ov.total], ['20', '46', '40', '1.5', 980]);
+  ok('page overtime-pay: the table in the text repeats what the calculator gives', has(otPage, ['40 × ' + T.money(ov.rate, '$', 2), '6 × ' + T.money(ov.otRate, '$', 2), '<td class="num">' + T.money(ov.regPay, '$', 2), '<td class="num">' + T.money(ov.otPay, '$', 2),
+    '<td class="num">' + T.money(ov.total, '$', 2), '<td class="num">' + T.money(ov.effective, '$', 2), T.money(T.overtime(Object.assign({}, of_, { mult: '2' })).total, '$', 2) + ' in total', 'not legal advice']));
+  // skills by job title: the data file and the table printed on the page
+  const rsFile = path.join(SITE11, 'data', 'role-skills.json'), rsData = fs.existsSync(rsFile) ? JSON.parse(fs.readFileSync(rsFile, 'utf8')) : null, rsPage = page11('resume-skills');
+  ok('role skills data: written by the build, with a date and job titles', !!rsData && /\d{4}$/.test(rsData.date) && rsData.roles.length >= 1, rsData && rsData.roles.length);
+  if (rsData) {
+    ok('role skills data: job titles from most postings to fewest, each with at least 20 postings and 3 to 15 skills', rsData.roles.every(function (r, i) { return r[2] >= 20 && r[3].length >= 3 && r[3].length <= 15 && (!i || rsData.roles[i - 1][2] >= r[2]); }));
+    ok('role skills data: skills from most named to least, none named in more postings than there are, none under 3 postings or 5%, the first in a tenth of the postings or more', rsData.roles.every(function (r) {
+      return r[3][0][1] >= r[2] * 0.10 && r[3].every(function (s, i) { return s[1] <= r[2] && s[1] >= 3 && s[1] >= r[2] * 0.05 && (!i || r[3][i - 1][1] >= s[1]); });
+    }));
+    ok('role skills data: every skill has a page address and every job title is listed once', rsData.roles.every(function (r) { return r[3].every(function (s) { return /^[a-z0-9-]+$/.test(rsData.slugs[s[0]] || ''); }); }) &&
+      distinct(rsData.roles.map(function (r) { return r[0]; })));
+    const opts = Array.from(rsPage.matchAll(/<option value="([a-z0-9-]+)"( selected)?>/g)).filter(function (m) { return !/^\d+$/.test(m[1]); });
+    eq('page resume-skills: the list offers every job title of the data file, and starts on the one with the most postings', [opts.length, opts.filter(function (m) { return m[2]; }).map(function (m) { return m[1]; }), opts.every(function (m) { return !!T.roleSkills(rsData, m[1]); })],
+      [rsData.roles.length, [rsData.roles[0][0]], true]);
+    const rows = rsPage.slice(rsPage.indexOf('Skills named most, with the share')).split('<tr>').slice(1, 11);
+    ok('page resume-skills: the table without JavaScript shows the ten job titles with the most postings, with the same shares as the tool', rows.length === Math.min(10, rsData.roles.length) && rows.every(function (row, i) {
+      const r = T.roleSkills(rsData, rsData.roles[i][0]);
+      return row.indexOf('/roles/' + r.slug + '/">') > 0 && row.indexOf('<td class="num">' + T.fmt(r.n) + '</td>') > 0 && row.indexOf('?role=' + r.slug + '"') > 0 &&
+        r.skills.slice(0, 6).every(function (s) { return row.indexOf('/skills/' + s.slug + '/">') > 0 && row.indexOf('<span class="note">' + T.plain(s.pct, 0) + '%</span>') > 0; });
+    }), rows[0]);
+  }
+}
+}
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
