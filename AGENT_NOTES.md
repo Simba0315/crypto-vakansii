@@ -242,6 +242,15 @@ that is not the employer's own hiring system must be labelled as such and kept o
   improvement every 3 hours and pushes to `main`; a scheduled task on the owner's Mac did the same before it. Always
   `git pull --rebase origin main` before starting and before pushing, add a line to `CHANGELOG.md`, and push once per run:
   every push cancels a deploy that is still running.
+- **A review of every page family is under way (since 17 Nov 2026; the owner: "not worked through, from the account to everything
+  else").** `PAGES_REVIEW.md` is the table: a family is reviewed by eye on a desktop, a phone and in the dark theme, by helpers that
+  work on a family for an hour or two in their own branch. On 17 Nov the cloud run and a helper changed the same six places of
+  the career families within the same hour and the merge had to be untangled by hand. So, for the cloud run: do NOT restyle or
+  restructure a page family (its template in `build.py`, its CSS) while the review is going on; the families already reviewed are
+  marked in the table and the rest are next in line. Pick work that does not touch templates: new glossary terms, new guides
+  and advice articles, new resume words, new entries of `jobs_for_pages.py`, data fixes in `collect.py`, wrong facts or typos.
+  The shared parts to reuse, never to duplicate: the row of figures `nums([...])`, `section(title, inner, label=...)` with a
+  two-weight headline, the classes `lp` and `hub` on `<main>`, `act_row()`, `role_kit()`.
 
 ## Rules from the owner (do not break)
 
