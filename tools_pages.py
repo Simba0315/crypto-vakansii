@@ -17,6 +17,30 @@ QS = [0, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100]      # percenti
 LEVELS = [("", "Any level"), ("Intern", "Intern"), ("Junior", "Junior"), ("none", "No level in the title"), ("Senior", "Senior"), ("Lead", "Lead and above")]
 
 
+# ---------------------------------------------------------------- figures for the tables printed on tool pages
+
+FED_2026 = {"single": (16100, [(12400, .10), (50400, .12), (105700, .22), (201775, .24), (256225, .32), (640600, .35), (None, .37)], 200000),
+            "joint": (32200, [(24800, .10), (100800, .12), (211400, .22), (403550, .24), (512450, .32), (768700, .35), (None, .37)], 250000)}
+
+
+def take_home_2026(salary, status="single"):
+    """(federal income tax, Social Security, Medicare, take-home) for a US salary in 2026, with no pre-tax contributions: the same
+    brackets, standard deduction and wage base the take-home pay page states and assets/tools.js uses."""
+    std, br, extra_from = FED_2026[status]
+    taxable, tax, lo = max(0, salary - std), 0.0, 0
+    for hi, rate in br:
+        top = taxable if hi is None else min(taxable, hi)
+        if top > lo: tax += (top - lo) * rate
+        if hi is None or taxable <= hi: break
+        lo = hi
+    ss = min(salary, 184500) * .062
+    med = salary * .0145 + max(0, salary - extra_from) * .009
+    return tax, ss, med, salary - tax - ss - med
+
+
+assert round(take_home_2026(75000)[3]) in (61592, 61593) and round(take_home_2026(100000)[3]) == 79180       # the two answers printed in the page's questions
+
+
 # ---------------------------------------------------------------- small HTML helpers
 
 def _ld(obj):
@@ -346,9 +370,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     # ------------------------------------------------------------ 3. salary converter
     tool("salary-converter", "seekers", "Salary converter",
          "Turn an hourly, daily, weekly or monthly rate into a yearly salary and back, with your own working hours.",
-         "Salary Calculator: Hourly, Monthly, Yearly Pay",
-         "Convert pay between hourly, daily, weekly, monthly and yearly figures. Set your own hours per week and paid weeks per year. Free, instant, no sign-up.",
-         "Salary calculator: hourly to yearly pay, and back",
+         "Hourly to Salary Calculator: Hourly, Monthly, Yearly Pay",
+         "Convert an hourly wage to a yearly salary and back: per hour, day, week, month and year, with your own hours and paid weeks. Table of $10 to $100 an hour. Free, no sign-up.",
+         "Hourly to salary calculator: any pay per hour, month and year",
          "One posting says $55 an hour, another $95,000 a year, and a recruiter quotes a day rate. You cannot compare them until they are in the same unit. "
          "Enter any one figure and your working hours: you get the hourly, daily, weekly, monthly and yearly equivalents at once.",
          wrap("salary-converter",
@@ -367,7 +391,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<li><code>monthly = yearly ÷ 12</code>, an average month.</li></ul>"
          "<p>All figures are before tax. For an employee with paid leave, leave “paid weeks” at 52: holidays are paid, so they are already inside the salary. "
          "For contract work, enter the number of weeks you expect to bill.</p>",
-         [('How much is $60,000 a year per hour?', 'About $28.85 an hour at 40 hours a week for 52 weeks (2,080 hours): divide the yearly figure by 2,080. Monthly it is $5,000 and weekly $1,153.85, before tax.'),
+         [('$35 an hour is how much a year?', '$72,800 a year before tax at 40 hours a week for 52 weeks (35 × 2,080 hours). That is $6,066.67 a month, $2,800 every two weeks and $1,400 a week. The table on this page gives the same for every rate from $10 to $100 an hour.'),
+          ('How much is $60,000 a year per hour?', 'About $28.85 an hour at 40 hours a week for 52 weeks (2,080 hours): divide the yearly figure by 2,080. Monthly it is $5,000 and weekly $1,153.85, before tax.'),
           ('What is a bi-weekly paycheck on $60,000 a year?', '$2,307.69 before tax: there are 26 bi-weekly pay periods in a year. Paid twice a month (semi-monthly, 24 periods) it is $2,500. This calculator works before tax; take-home pay depends on where you live and your deductions.'),
           ('Does this calculator show take-home pay after tax?', 'No: every figure here is before tax, the way job postings state pay. For a US salary after federal tax, Social Security and Medicare, use the take-home pay calculator on this site.'),
           ("How do I convert an hourly rate to a yearly salary?",
@@ -378,14 +403,24 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
            "Because a contractor is paid only for the hours billed. Holidays, sick days, gaps between contracts, equipment and employer-side taxes all come out of the rate. Lower “paid weeks per year” to see what a rate adds up to, or use the contractor rate calculator."),
           ("Is the result before or after tax?",
            "Before tax. The converter only changes the unit of time. Tax depends on the country, the state and your personal situation, so it is not estimated here.")],
-         ["take-home-pay", "raise-calculator", "contractor-rate", "compare-offers"], ["salaries/"])
+         ["take-home-pay", "overtime-pay", "raise-calculator", "contractor-rate", "compare-offers"], ["salaries/"],
+         # Search and AI answers check, 18 Nov 2026 ("hourly to salary calculator"): the first results print a table of common rates
+         # (Calculator.net, Omni, The Calculator Site), and "35 an hour is how much a year" is a related search of its own.
+         ex=("Hourly to salary table: $10 to $100 an hour",
+             "<p>A full-time year of 40 hours a week for 52 weeks is 2,080 paid hours. Before tax:</p>"
+             '<div class="tablewrap"><table class="rkt"><tr><th>Per hour</th><th>Per week</th><th>Every two weeks</th><th>Per month</th><th>Per year</th></tr>'
+             + "".join(f"<tr><td><strong>${h_}</strong></td><td>${h_ * 40:,}</td><td>${h_ * 80:,}</td><td>${h_ * 2080 / 12:,.0f}</td><td><strong>${h_ * 2080:,}</strong></td></tr>"
+                       for h_ in (10, 12, 15, 17, 18, 20, 22, 25, 28, 30, 35, 40, 45, 50, 60, 75, 100))
+             + "</table></div>"
+             f'<p class="note">Paid for more than 40 hours in some weeks? The <a href="{P}/tools/overtime-pay/">overtime pay calculator</a> adds time and a half. '
+             f'What is left after tax: the <a href="{P}/tools/take-home-pay/">take-home pay calculator</a>. Jobs by rate: <a href="{P}/jobs-that-pay/">jobs that pay $15 to $100 an hour</a>.</p>'))
 
     # ------------------------------------------------------------ 3b. take-home pay ("salary calculator": the first intent on Google is pay after tax,
     # SERP_WORK 35b, 15 Nov 2026). US federal tax and FICA for 2026, figures from the IRS and the SSA; state tax is not estimated.
     tool("take-home-pay", "seekers", "Take-home pay calculator",
          "A US salary after federal income tax, Social Security and Medicare for 2026: per paycheck, per month and per year.",
-         "Take-Home Pay Calculator 2026: Salary After Tax",
-         "Work out your US take-home pay for 2026: federal income tax, Social Security and Medicare taken off, per paycheck, month and year. Free, no sign-up, nothing sent.",
+         "Take-Home Pay Calculator 2026: Your Paycheck After Tax",
+         "Paycheck calculator for 2026: your US salary after federal income tax, Social Security and Medicare, per paycheck, month and year. Table of $40,000 to $200,000. Free, no sign-up.",
          "Salary after tax: your take-home pay in 2026",
          "Enter a yearly salary and how you file. The calculator takes off federal income tax with the 2026 brackets and standard deduction, Social Security and Medicare, "
          "and shows what lands in each paycheck. State and local income tax are not included: nine states have no income tax on wages, the others add their own.",
@@ -417,7 +452,18 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
            "This calculator works out the year’s federal tax itself, so the two can differ by a little."),
           ("Do 401(k) contributions lower my taxes?", "Traditional 401(k) contributions lower your income tax, because they are taken off before it; Social Security and Medicare are still due on them. "
            "Enter them as pre-tax contributions to see the difference.")],
-         ["salary-converter", "overtime-pay", "raise-calculator"], ["salaries/"])
+         ["salary-converter", "overtime-pay", "raise-calculator"], ["salaries/"],
+         # Search and AI answers check, 18 Nov 2026 ("take home pay calculator"): Google's answer walks through the five steps and the
+         # first results answer "how much is $X after taxes" for the round salaries; a table gives all of them at once.
+         ex=("Take-home pay table for 2026: $40,000 to $200,000",
+             "<p>A single filer with no pre-tax contributions, after federal income tax, Social Security and Medicare. State income tax is not taken off.</p>"
+             '<div class="tablewrap"><table class="rkt"><tr><th>Salary</th><th>Federal income tax</th><th>Social Security and Medicare</th><th>Take-home a year</th><th>A month</th><th>Every two weeks</th><th>Kept</th></tr>'
+             + "".join((lambda t_: f"<tr><td><strong>${sal_:,}</strong></td><td>${t_[0]:,.0f}</td><td>${t_[1] + t_[2]:,.0f}</td><td><strong>${t_[3]:,.0f}</strong></td><td>${t_[3] / 12:,.0f}</td>"
+                                   f"<td>${t_[3] / 26:,.0f}</td><td>{100 * t_[3] / sal_:.0f}%</td></tr>")(take_home_2026(sal_))
+                       for sal_ in (40000, 50000, 60000, 70000, 75000, 80000, 90000, 100000, 120000, 150000, 175000, 200000))
+             + "</table></div>"
+             '<p class="note">How it is worked out, in order: the salary, minus pre-tax contributions, minus the standard deduction, taxed by the 2026 brackets; then Social Security (6.2% up to $184,500) '
+             "and Medicare (1.45%, plus 0.9% above $200,000). Enter your own figures above for another salary, married filing jointly or pre-tax contributions.</p>"))
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",

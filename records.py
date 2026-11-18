@@ -96,6 +96,23 @@ def live_row(sql, args):
         con.close()
 
 
+class Cards:
+    """The other open jobs of the same company in the same field, for the "similar jobs" block of a job page: read from the records
+    when a page asks for them. (18 Nov 2026: they were held in memory as whole records, up to four for every company and field, about
+    100,000 records at 225,000 jobs. That was most of the page service's 900 MB, and every upload loaded a second set beside the old
+    one, so the service hit its 1 GB limit and was killed several times a day.) job_page() asks with .get() while Store.page() holds
+    the store's lock, so the store's own connection is used as it is."""
+
+    def __init__(self, store, slugs):
+        self.store, self.slugs = store, slugs               # {(company, category): [slug, ...]}
+
+    def get(self, key, default=()):
+        xs = self.slugs.get(key)
+        if not xs: return default
+        got = {s_: json.loads(r) for s_, r in self.store.con.execute(f"SELECT slug, rec FROM jobs WHERE slug IN ({','.join('?' * len(xs))})", xs)}
+        return [got[s_] for s_ in xs if s_ in got]
+
+
 class Store:
     """Reads data/jobs.db and builds job pages from it. When the hourly build puts a new file in place, the next request opens it."""
 
@@ -111,15 +128,16 @@ class Store:
         if st == self.stamp: return
         con = sqlite3.connect(f"file:{self.path}?mode=ro", uri=True, check_same_thread=False)
         ctx = {k: json.loads(v) for k, v in con.execute("SELECT k, v FROM ctx")}
-        want = {s for xs in ctx["sim_cat"].values() for s in xs} | {s for xs in ctx["sim_comp"].values() for s in xs}
-        cards, want = {}, sorted(want)
+        tup = lambda k: tuple(k.split(SEP))
+        b = self.b
+        b.SIM = {"cat": {}, "comp": {}}                         # the old set is let go before the new one is read: never two in memory
+        want = sorted({s for xs in ctx["sim_cat"].values() for s in xs})        # a dozen jobs for each field: these few stay in memory
+        cards = {}
         for i in range(0, len(want), 900):                      # the similar jobs are shown as cards, which need the record without the text
             part = want[i:i + 900]
             cards.update((s, json.loads(r)) for s, r in con.execute(f"SELECT slug, rec FROM jobs WHERE slug IN ({','.join('?' * len(part))})", part))
-        tup = lambda k: tuple(k.split(SEP))
-        b = self.b
         b.SIM = {"cat": {c: [cards[s] for s in xs if s in cards] for c, xs in ctx["sim_cat"].items()},
-                 "comp": {tup(k): [cards[s] for s in xs if s in cards] for k, xs in ctx["sim_comp"].items()}}
+                 "comp": Cards(self, {tup(k): xs for k, xs in ctx.pop("sim_comp").items()})}
         b.OPEN = collections.Counter(ctx["open"])
         b.FACT, b.CATMED, b.CLOSE_DAYS = ctx["fact"], ctx["catmed"], ctx["close_days"]
         b.TB = ctx.get("tb", {})                  # the employers' trust marks (absent in a store built before 15 Nov)

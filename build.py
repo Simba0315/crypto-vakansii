@@ -1091,6 +1091,16 @@ def faq_for(label, jobs, first=None, extra=()):
     return section(f"Questions about {label}", html_), ld
 
 
+def qa_sec(title, qa, label="", sid=""):
+    """A block of questions and its FAQPage markup, for a page whose questions are written by hand: (html, json-ld)."""
+    qa = [x for x in qa if x]
+    if not qa: return "", ""
+    html_ = '<dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(a_)}</dd></div>" for q, a_ in qa) + "</dl>"
+    ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    return section(title, html_, sid=sid, label=label), ld
+
+
 def pager_html(path, n, pages):
     if pages <= 1: return ""
     url = lambda i: f'{P}/{path}{"" if i == 1 else f"{i}/"}'
@@ -3952,10 +3962,30 @@ def main():
                     more=f"remote=1&etype={quote(et)}", links=(("remote/", "All remote jobs"),), **{**list_parts(h1, ej)[1], "stats": True})
     aw = [j for j in active if j.get("anywhere") and j["remote"]]
     if len(aw) >= 8:
+        # Search and AI answers check, 18 Nov 2026 ("work from anywhere jobs"): Google's answer names the kinds of work in groups and
+        # gives a list "what to check before applying" (real eligibility, employee or contractor, hours); the first results promise
+        # "no country restrictions" (We Work Remotely, Real Work From Anywhere). The page had the list and no word of either.
+        aw_cat = Counter(CAT[j["cat"]] for j in aw if j["cat"] != OTHER[0]).most_common(6)
+        aw_ct = sum(1 for j in aw if j.get("etype") == "Contract")
+        aw_checks = [("Is it open to your country?", f"Each of these {len(aw):,} postings names no country, or says worldwide. Read the requirements all the same: "
+                      "some ask for a set of time zones, a right to work somewhere, or a company registered in your own name."),
+                     ("Employee or contractor?", (f"{aw_ct:,} of them are listed as contract work. " if aw_ct else "")
+                      + "A company that hires in any country often pays through an employer of record or signs you as a contractor. Ask which, because it decides who pays your tax and whether there is paid leave."),
+                     ("Which hours?", "“Anywhere” seldom means any hours. Look for the words “overlap”, “core hours” or a named time zone, and ask in the first call when the team meets.")]
+        aw_after = section("What to [[check before]] you apply", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in aw_checks) + "</dl>", sid="check", label="Before you apply")
+        aw_parts = list_parts("Work-from-anywhere jobs", aw)
         listing("work-from-anywhere/", "Work-from-anywhere jobs", f"Work From Anywhere Jobs ({len(aw):,} open) | {SITE}",
                 f"{roles(len(aw), 'remote job')} open to candidates worldwide, with no country restriction in the listing.", aw,
-                intro_for(aw, "remote ", " listed as open worldwide", row=list_parts("Work-from-anywhere jobs", aw)[0]), trail=(("Remote", "remote/"),),
-                links=(("remote/", "All remote jobs"),), **list_parts("Work-from-anywhere jobs", aw)[1])
+                intro_for(aw, "remote ", " listed as open worldwide", row=aw_parts[0]) + " No country is named in any of them.", trail=(("Remote", "remote/"),),
+                links=(("remote/", "All remote jobs"),), after=aw_after, faq="work-from-anywhere jobs",
+                faq_first=("What jobs can be done remotely from anywhere?",
+                           "Today the work-from-anywhere postings here are mostly in " + ", ".join(f"{c} ({k:,})" for c, k in aw_cat[:-1]) + f" and {aw_cat[-1][0]} ({aw_cat[-1][1]:,}). "
+                           "These are jobs done on a computer with written, recorded work: software, design, marketing, support, sales and operations."),
+                faq_extra=(("What should I check before I apply to a work-from-anywhere job?",
+                            "Three things: that the posting really takes people in your country (some name time zones or a right to work), whether you would be an employee or a contractor, and which hours the team keeps."),
+                           ("What is the difference between a remote job and a work-from-anywhere job?",
+                            f"A remote job is done from home, but most are limited to one country or a few. A work-from-anywhere job names no country. Of the {len(remote):,} remote jobs here today, {len(aw):,} are open to any country.")),
+                **aw_parts[1])
 
     lap('Insights: ranked lists recalculated from live data every day')
     # Insights: ranked lists recalculated from live data every day
@@ -3979,18 +4009,18 @@ def main():
         return (f'<figure class="pic insc"><figcaption><b>The first {len(pts)}, drawn</b>' + (f"The bar is the column “{e(what)}” of the list below." if what else "") + '</figcaption><div class="hbars chart">'
                 + "".join(f'<a href="{e(h_) if h_ else "#"}"><span class="hn">{e(cut_(lab, 56))}</span><span class="hb"><i style="width:{max(2, round(100 * v / mx_))}%"></i></span><span class="hc">{e(raw[:24])}</span></a>'
                           for lab, v, raw, h_ in pts) + "</div></figure>")
-    def insight(slug, h1, desc, lead, head, rows_html, more, chart=(1, 2)):
+    def insight(slug, h1, desc, lead, head, rows_html, more, chart=(1, 2), tail="", head_ld="", title="", own_first=False):
         """A ranking (sections review, batch 3): the paragraph names the first three with their figures, so the answer is on the page
         in words; one button under it; the first ten drawn in a card; then the table, whose rows a phone shows as cards."""
         pts = INS_PREV[f"insights/{slug}/"] = ins_points(rows_html, chart)
         col_ = re.sub(r"<[^>]+>", "", head[chart[1]])
         sep_ = "; " if any("," in p_[0] for p_ in pts[:3]) else ", "          # job titles hold commas of their own
-        first = (f" First today ({e(col_[0].lower() + col_[1:])}): " + sep_.join(f"{e(lab)} ({e(raw)})" for lab, _, raw, _ in pts[:3]) + ".") if len(pts) >= 3 else ""
-        page(f"insights/{slug}/", f"{h1} — {month} | {SITE}", desc,
+        first = (f" First today ({e(col_[0].lower() + col_[1:])}): " + sep_.join(f"{e(lab)} ({e(raw)})" for lab, _, raw, _ in pts[:3]) + ".") if len(pts) >= 3 and not own_first else ""      # own_first: the paragraph given already names them
+        page(f"insights/{slug}/", title or f"{h1} — {month} | {SITE}", desc,
              crumbs(("Insights", "insights/"), (h1, "")) + f"<h1>{e(h1)}</h1><p class=\"lead\">{lead}{first} Recalculated every day from {n:,} open roles; this is the picture for {month}.</p>"
              + act_row(more[0], more[1], [("insights/", "All charts and rankings")])
              + ins_chart(pts, col_) + ttable(head, rows_html, "rkt rk1" if head[0] == "#" else "rkt")
-             + '<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p>' + cite(f"insights/{slug}/", f"{h1}, {month}"), cls="ins")
+             + '<p class="note">Salary figures are medians of advertised US-dollar ranges, not verified pay.</p>' + tail + cite(f"insights/{slug}/", f"{h1}, {month}"), head=head_ld, cls="ins")
         return (f"insights/{slug}/", h1, desc)
     sal_by_tag = sorted(((t, median([(lo + hi) / 2 for _, (lo, hi) in g]), len(g)) for t, g in g_tag.items() if len(g) >= 30), key=lambda x: -x[1])
     remote_co = sorted(((c, sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js)) for c, js in companies.items()), key=lambda x: -x[1])
@@ -4025,6 +4055,40 @@ def main():
         try: return (datetime.date.today() - datetime.date.fromisoformat((j["posted"] or j["first_seen"])[:10])).days
         except Exception: return 0
     co_act = {c: [j for j in js if j["active"]] for c, js in companies.items()}
+    # "Companies hiring the most right now" (search and AI answers check, 18 Nov 2026). Google's answer to this query names the
+    # employers with the number of open roles each (from TrueUp) and groups them by sector; the first results are lists ("100 Companies
+    # Now Hiring", "40+ Companies That Are Hiring Right Now"). The site had a ranking for the week and one per field, and no page that
+    # answered the plain question for all open roles.
+    most_co = sorted(((c, js) for c, js in co_act.items() if js), key=lambda x: -len(x[1]))
+    if len(most_co) >= 10:
+        co_field = lambda js: Counter(CAT[j["cat"]] for j in js if j["cat"] != OTHER[0]).most_common(1)
+        m_rows = [trow([rank(i), cl(c), f"<strong>{len(js):,}</strong>", f"{sum(1 for j in js if (j['posted'] or '') >= week):,}", f"{sum(j['remote'] for j in js):,}",
+                        e(fld[0][0]) if (fld := co_field(js)) else "—"]) for i, (c, js) in enumerate(most_co[:50])]
+        # the first three employers of each field, the way the AI answer lays it out
+        by_f = defaultdict(Counter)
+        for c, js in co_act.items():
+            for j in js:
+                if j["cat"] != OTHER[0]: by_f[j["cat"]][c] += 1
+        f_rows = [trow([f'<a href="{P}/jobs/{ck}/">{e(CAT[ck])}</a>', f"{sum(cn.values()):,}", ", ".join(f"{cl(c)} ({k:,})" for c, k in cn.most_common(3))])
+                  for ck, cn in sorted(by_f.items(), key=lambda kv: -sum(kv[1].values()))[:12] if len(cn) >= 3]
+        (c1, j1), (c2, j2), (c3, j3) = most_co[:3]
+        new_all = sum(1 for j in active if (j["posted"] or "") >= week)
+        big_f = sorted(by_f.items(), key=lambda kv: -sum(kv[1].values()))[:3]
+        m_tail, m_ld = qa_sec("Questions about who is hiring", [
+            ("What company is hiring the most right now?", f"{c1}, with {len(j1):,} open roles on {fdate(TODAY)}, then {c2} ({len(j2):,}) and {c3} ({len(j3):,}). "
+             f"The count is of open postings read from each employer’s own careers page, among the {len(co_act):,} employers this site reads."),
+            ("Which fields have the most open jobs right now?", ", ".join(f"{CAT[ck]} ({sum(cn.values()):,})" for ck, cn in big_f) + f": the three largest fields among the {n:,} open roles here today.") if len(big_f) == 3 else None,
+            ("How many new jobs were posted this week?", f"{new_all:,} of the {n:,} open roles were posted in the last seven days. The employers that posted the most are in the ranking for this week."),
+            ("Does a large number of openings mean a company is easy to get into?", "No. It means the company has many roles open at once. A large employer can still take few people for each role, and some postings stay open for months; the page on how long postings stay open has the figures."),
+            ("How is this list counted?", f"Every hour the site reads the careers pages of {len(co_act):,} employers and counts the postings that are open. A posting listed in several cities is one role. Employers the site does not read are not in the list, so it is not a count of the whole job market.")],
+            label="Questions")
+        INS.append(insight("companies-hiring-the-most", "Companies hiring the most right now", f"The {min(50, len(most_co))} employers with the most open jobs today, with new roles this week, remote roles and the field each hires most for. Recounted every hour.",
+                           f"{e(c1)} has the most open roles today: {len(j1):,}. Then {e(c2)} ({len(j2):,}) and {e(c3)} ({len(j3):,}).",
+                           ["#", "Company", "Open roles", "Posted this week", "Remote", "Hires most for"], m_rows, ("companies/", "All companies"),
+                           tail=(section("The largest employers in [[each field]]", ttable(["Field", "Open roles", "Most roles at"], f_rows, "rkt"), sid="fields", label="By field") if len(f_rows) >= 4 else "")
+                           + m_tail + f'<p class="note">Related: <a href="{P}/insights/companies-hiring-this-week/">who posted the most this week</a>, <a href="{P}/open-hiring-index/">the open hiring index</a> '
+                           f'(who states pay and closes old postings), <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>.</p>',
+                           head_ld=m_ld, title=f"Companies Hiring the Most Right Now ({month}): Top {min(50, len(most_co))} by Open Jobs | {SITE}", own_first=True))
     big = {c: js for c, js in co_act.items() if len(js) >= 20}
     pay_rank = sorted(((c, len(js), sum(bool(j["salary"]) for j in js)) for c, js in big.items()), key=lambda x: (-x[2] / x[1], -x[1]))
     INS.append(insight("pay-transparency", "Pay transparency: which companies publish salaries", "Which employers state the salary in their job postings and which never do, counted from live openings.",
@@ -5965,7 +6029,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     for a_ in jobs_for_pages.ENTRIES:
         if a_["slug"] not in jf_figs: continue
         f_ = jf_figs[a_["slug"]]
-        page(f"jobs-for/{a_['slug']}/", f"{a_['title']} | {SITE}", jobs_for_pages.desc(a_, f_),
+        page(f"jobs-for/{a_['slug']}/", f"{jobs_for_pages.page_title(a_, f_)} | {SITE}", jobs_for_pages.desc(a_, f_),
              crumbs(("Jobs for…", "jobs-for/"), (a_["name"], "")) + jobs_for_pages.render(a_, f_, e, P, fdate(TODAY), jf_have, n, nums),
              head=jobs_for_pages.head_ld(a_, f_, json, SITE, FULL, TODAY))
     if jf_figs:
@@ -6074,7 +6138,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + (section("For employers on the list", f'<p>The 50 highest have a badge that shows their place today. Put it on a careers page or in a post:</p><pre><code>{e(f"<a href=\"{FULL}/open-hiring-index/\"><img src=\"{FULL}/badge/open-hiring/{top1[1]}.svg\" alt=\"Open hiring index {qtr}\"></a>")}</code></pre>'
                     f'<p class="note">This is the badge of {e(top1[2]["name"])}. For another employer replace <code>{e(top1[1])}</code> with the last part of the address of its page on this site.</p>'
                     f'<p><img src="{P}/badge/open-hiring/{top1[1]}.svg" alt="Open hiring index badge" height="28"></p>') if top1 else "")
-         + f'<p class="note">Compare any two employers: <a href="{P}/companies/compare/">company against company</a>. Pay transparency alone: <a href="{P}/insights/pay-transparency/">the ranking</a>.</p>', cls="sp ohi")
+         + f'<p class="note">Who simply has the most open jobs: <a href="{P}/insights/companies-hiring-the-most/">companies hiring the most right now</a>. Compare any two employers: <a href="{P}/companies/compare/">company against company</a>. Pay transparency alone: <a href="{P}/insights/pay-transparency/">the ranking</a>.</p>', cls="sp ohi")
 
     lap('Facts for investors and partners: what exists, in numbers co')
     # Facts for investors and partners: what exists, in numbers counted on this build. No forecasts, no revenue claims.

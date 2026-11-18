@@ -3778,3 +3778,15 @@ main.nfp .kact>a:not(.btn){color:var(--text)}
 :root[data-theme=dark] main.sp ul.ticks li::before{background:var(--bg2);color:var(--text)}
 :root[data-theme=dark] main.frb .fbt .fb-y{color:var(--text)}
 :root[data-theme=dark] main.frb .fbt .fb-y::before{content:"✓ "}
+
+/* ---- Search and AI answers check, 18 Nov 2026: the three ranked lists on a "jobs for ..." page ---- */
+.jfcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:14px 0 26px}
+.jfcut{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.jfcut h3{margin:0 0 4px;font-size:17px}
+.jfcut p{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.jfcut ol{margin:0;padding:0;list-style:none;counter-reset:jf}
+.jfcut li{counter-increment:jf;display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
+.jfcut li::before{content:counter(jf);color:var(--muted);font-variant-numeric:tabular-nums;min-width:1.1em}
+.jfcut li a{flex:1;min-width:0}
+.jfcut li b{font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:820px){.jfcuts{grid-template-columns:1fr}}

@@ -535,3 +535,18 @@ plain HTML, so the page is readable without the map.
   the owner's decision to do last, do not push it.
 - **Tools' result board** is a light card that follows the theme (`.tl-board` in `assets/tools.css`): no green type on black
   anywhere; the owner dislikes it.
+
+## The server on 18 Nov 2026: an outage from outside, and the page service's memory
+
+- 02:55 to 03:17 UTC the site answered 522. The virtual machine was cut off and started again from outside: the journal of the previous
+  boot ends mid-work with no shutdown lines and no out-of-memory kill, memory stood at 60% and load at 1 to 2. Every service came back by
+  itself. When this happens again: check `uptime`, `last -x | grep boot`, `journalctl -b -1 | tail` before suspecting our own programs.
+- `hrn-site` (serve.py) has `MemoryMax=1G`. It held up to four whole records for every company and field (about 100,000 at 225,000 jobs)
+  and stood at the limit; systemd killed and restarted it about five times a day, mostly at uploads. Since 18 Nov those records are read
+  on demand (`records.Cards`). If the count of jobs doubles, look at its memory again: `systemctl show hrn-site -p MemoryCurrent` and
+  `grep -E "^(anon|file) " /sys/fs/cgroup/system.slice/hrn-site.service/memory.stat`.
+- `hrn-live` stands at about 1.9 GB of its own memory (limit 3 GB) with 1,479 boards. The server has 7.9 GB and no swap. Lifting the hold
+  from more boards must be done in parts with this figure watched.
+- Search and AI answers check: the working notes are in `SERP_AI_CHECK.md` (queries, what Google, Bing and Claude's search show, the gap
+  for each page). A helper's gap list is a lead, not a fact: several named things our pages already had. Check each against the page.
+

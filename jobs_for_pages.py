@@ -149,7 +149,7 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
     label = next(g[2] for g in GROUPS if g[0] == a["group"])
     h = (f'<article class="guide"><h1>{e(a["h1"])}{"" if a["h1"].endswith("?") else ":"} <span class="hl">{fig["k"]} kinds of work open today</span></h1>'
          f'<p class="stamp">{label} · figures recounted {when} from <b>{n_all:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
-         f'<p class="lead">{e(a["lead"])}</p>')
+         f'<p class="lead"><b>Short answer:</b> {e(short_answer(a, fig))}</p><p class="lead">{e(a["lead"])}</p>')
     if note_of(a): h += f'<div class="adv-short"><p>{e(note_of(a))}</p></div>'
     ths = ["Open jobs", "Median advertised pay", "Remote", "For beginners"] + [EXTRA[k]["th"] for k in fig["extras"]]
     top = fig["rows"][0]["n"]
@@ -165,6 +165,7 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
           f'Median advertised pay: the median of the middle of each stated yearly US-dollar range, shown when at least {PAY_MIN} postings state one; a dash means fewer do. '
           'Remote: the share of the postings marked remote. For beginners: postings with a junior or intern title. '
           + "".join(e(EXTRA[k]["note"]) + " " for k in fig["extras"]) + f'Counted {when} from employers’ own careers pages and recounted on every update.</p>')
+    h += cuts(a, fig, e, P)
     h += '<h2>What to check before you apply</h2><ul class="ticks">' + "".join(f"<li>{e(c)}</li>" for c in a["check"]) + "</ul>"
     h += f'<h2>Questions about {e(a["about"])}</h2><dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(x)}</dd></div>" for q, x in faq(a, fig)) + "</dl>"
     links = [(u, t) for u, t in a["more"] if u in have] + [("jobs-for/", "All lists by situation and by degree")]
@@ -173,11 +174,48 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
     return h + "</article>"
 
 
+def short_answer(a, fig):
+    """The answer in one sentence, from the day's figures: the kinds of work with the most openings, each with its count.
+    (Search and AI answers check, 18 Nov 2026: Google's and Bing's answers to "jobs for introverts" open with the names of the jobs;
+    the page opened with a remark about other lists.)"""
+    low = lambda nm: nm if nm[:2].isupper() else nm[0].lower() + nm[1:]             # "QA engineer" keeps its capitals
+    names = _and(f"{low(r['name'])} ({r['n']:,} open" + (f", {r['pay']} median" if r["med"] is not None else "") + ")" for r in fig["rows"][:5])
+    if a["group"] == "degree": return f"the kinds of work graduates of this subject commonly move into, with the most openings today, are {names}."
+    return f"the kinds of work that fit and have the most openings today are {names}."
+
+
+def cuts(a, fig, e, P):
+    """The same kinds of work ranked three ways, the way people narrow the search ("... that pay well", "remote ...", "... with no
+    experience" are related searches of nearly every "jobs for" query). Each list is shown only when it has three rows to rank."""
+    rows = fig["rows"]
+    li = lambda r, val: f'<li><a href="{P}/roles/{r["slug"]}/">{e(r["name"])}</a><b>{val}</b></li>'
+    out = []
+    paid = sorted((r for r in rows if r["med"] is not None), key=lambda r: -r["med"])[:5]
+    if len(paid) >= 3:
+        out.append(("That pay the most", "Median advertised pay, from postings that state a yearly range in US dollars.", "".join(li(r, r["pay"]) for r in paid)))
+    rem = sorted((r for r in rows if r["remote"] and r["n"] >= 20), key=lambda r: -r["remote"])[:5]
+    if len(rem) >= 3:
+        out.append(("That are remote most often", "The share of today’s postings marked remote.", "".join(li(r, f'{r["remote"]}%') for r in rem)))
+    ent = sorted((r for r in rows if r["entry"]), key=lambda r: -r["entry"])[:5]
+    if len(ent) >= 3:
+        out.append(("With the most openings for beginners", "Postings with a junior or intern title, open today.", "".join(li(r, f'{r["entry"]:,}') for r in ent)))
+    if not out: return ""
+    return ('<h2>The same kinds of work, ranked three ways</h2><div class="jfcuts">'
+            + "".join(f'<div class="jfcut"><h3>{t}</h3><p>{d}</p><ol>{lis}</ol></div>' for t, d, lis in out) + "</div>")
+
+
+def page_title(a, fig):
+    """The title with the count of kinds of work in front, as the first results write it ("24 Fulfilling Jobs for Introverts",
+    "12 best jobs for introverts"). Degree pages keep their question."""
+    t = a["title"]
+    return t if a["group"] == "degree" or t[0].isdigit() or t.startswith(("What ", "How ")) else f"{fig['k']} {t}"
+
+
 def head_ld(a, fig, json, site, full, today):
     """Article and FAQPage markup for one page; the questions are the ones shown on it, word for word."""
     dump = lambda d: '<script type="application/ld+json">' + json.dumps(d, ensure_ascii=False).replace("</", "<\\/") + "</script>"
     url = f"{full}/jobs-for/{a['slug']}/"
-    return (dump({"@context": "https://schema.org", "@type": "Article", "headline": a["title"], "description": desc(a, fig), "datePublished": PUBLISHED, "dateModified": today,
+    return (dump({"@context": "https://schema.org", "@type": "Article", "headline": page_title(a, fig), "description": desc(a, fig), "datePublished": PUBLISHED, "dateModified": today,
                   "author": {"@type": "Organization", "name": site, "url": full + "/about/"},
                   "publisher": {"@type": "Organization", "name": site, "logo": {"@type": "ImageObject", "url": full + "/og.jpg"}},
                   "mainEntityOfPage": url, "image": full + "/og.jpg"})
