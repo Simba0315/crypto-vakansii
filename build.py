@@ -4834,6 +4834,16 @@ def main():
                           + "<li>Put a number in every result: how many, how much, how fast.</li>"
                           "<li>No experience yet? Lead with a project, a course, an internship or volunteer work, and use the entry-level letter above.</li>"
                           "<li>Send it as a PDF or paste it into the form; name the file with your name and the role.</li></ul>")
+        # "Why this letter works", counted from the letter itself (search check of 18 Nov 2026: the resume and CV pages have such a box, the letter page had none)
+        body_ = letter_.split("Dear Hiring Manager,", 1)[1].rsplit("Sincerely", 1)[0]
+        words_cl = len(body_.split())
+        holes_ = list(dict.fromkeys(re.findall(r"\[[^\]]+\]", body_)))
+        num_cl = sum(1 for ln in lines_ if re.search(r"\d", ln))
+        pts_cl = [f"<b>About {round(words_cl, -1)} words in the body.</b> Under 250, so it fits one screen and the first lines are the ones read."]
+        if lines_ and num_cl: pts_cl.append(f"<b>{num_cl} of its {len(lines_)} results carry a number.</b> They are the same lines as in the <a href=\"{P}/resume/examples/{slug_r}/\">{e(low)} resume example</a>, so the letter and the resume agree.")
+        if tech_ and top_: pts_cl.append(f"<b>It names {len(top_)} skills that today’s postings ask for most:</b> {e(', '.join(top_))}. Screening software looks for the word itself.")
+        if holes_: pts_cl.append(f"<b>{len(holes_)} places are left for you</b> (such as {e(holes_[0])} and {e(holes_[1]) if len(holes_) > 1 else e(holes_[0])}). The reason for this company is the one paragraph nobody can write for you.")
+        why_cl = ('<div class="rexwhy"><p class="flabel">Why this letter works</p><ul class="ticks">' + "".join(f"<li>{x}</li>" for x in pts_cl) + "</ul></div>") if len(pts_cl) >= 3 else ""
         descs_ = [j for j in rj if j.get("desc")]
         ask_cl = sum(1 for j in descs_ if CL_RX.search(j["desc"])) if len(descs_) >= 30 else None
         mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in rj if j["usd"]]
@@ -4859,7 +4869,7 @@ def main():
              + '<div class="rexgrid wide"><div>'
              + f'<div class="rl-paper"><pre id="letter">{e(letter_)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-cover-letter" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-cover-letter" style="margin-top:0">PDF</button> '
                f'<a class="btn ghost sm" href="{P}/tools/cover-letter/" style="margin-top:0">Write yours with the free builder</a></p></div></div>'
-             + '<div class="rexside">' + how_cl + tips_cl + "</div></div>"
+             + '<div class="rexside">' + why_cl + how_cl + tips_cl + "</div></div>"
              + '<div class="kwlv">' + section(f"Entry-level {low} cover letter (no experience)", f'<div class="rl-paper"><pre id="letter2">{e(entry_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter2" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter2" data-name="{slug_r}-cover-letter-entry-level" style="margin-top:0">PDF</button></p></div>', sid="entry-level")
              + section(f"Senior {low} cover letter", f'<div class="rl-paper"><pre id="letter3">{e(senior_letter)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter3" data-raw="1" style="margin-top:0">Copy the letter</button> <button class="btn ghost sm" type="button" data-doc="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter3" data-name="{slug_r}-cover-letter-senior" style="margin-top:0">PDF</button></p></div>', sid="senior") + "</div>"
              + section(f"Questions about {art(low)} {low} cover letter", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cl_qa) + "</dl>")
