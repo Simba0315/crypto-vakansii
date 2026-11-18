@@ -549,4 +549,9 @@ plain HTML, so the page is readable without the map.
   from more boards must be done in parts with this figure watched.
 - Search and AI answers check: the working notes are in `SERP_AI_CHECK.md` (queries, what Google, Bing and Claude's search show, the gap
   for each page). A helper's gap list is a lead, not a fact: several named things our pages already had. Check each against the page.
+- For the cloud run: content gaps from `SERP_AI_CHECK.md` that need no template change and suit one run each (check the page first, as always):
+  (1) `builders_check.py`: add Teal, Canva, Adobe Express, Zety, MyPerfectResume and Resume-Now, each from its own pricing or help pages, the way
+  the first eleven were read; (2) more interview questions with a model answer for the most common roles (SQL, statistics, business cases for
+  analysts; the first results carry 50 to 80, we carry 26); (3) resume example variants (junior, senior) for the largest roles.
+  Template changes for the other gaps are made in the main session: leave `build.py`'s list, company and place templates alone.
 

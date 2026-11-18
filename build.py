@@ -5844,14 +5844,65 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     lap('5. skills in demand')
     # 5. skills in demand
     top_sk = skill_counts.most_common(15)
+    # Search and AI answers check, 18 Nov 2026 ("most in demand skills"): Bing's answer splits technical and workplace ("soft") skills
+    # and gives a reason for each; the first results show pay and roles per skill. The guide had fifteen bars and a line for each skill.
+    # Added from our own postings: a table with pay, remote share and new postings per skill; the workplace skills, counted in the full
+    # texts; the skills AI jobs ask for; answered questions. The first sentence now names the first five.
+    sk_tbl = []
+    for t, k in skill_counts.most_common(25):
+        js_t = by_tag.get(t, [])
+        mids_t = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_t if j.get("usd")]
+        sk_tbl.append(trow([f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>', f"<strong>{k:,}</strong>", f"{pc_(k, n)}%", money(median(mids_t)) if len(mids_t) >= 15 else "–",
+                            f"{pc_(sum(1 for j in js_t if j['remote']), len(js_t))}%", f"{sum(1 for j in js_t if (j['posted'] or '') >= week):,}"]))
+    SOFT = (("Communication", r"communication skills|written and verbal|verbal and written|communicat(?:e|es|ing) (?:clearly|effectively)"), ("Collaboration and teamwork", r"collaborat|teamwork|team player"),
+            ("Leadership", r"leadership"), ("Problem solving", r"problem[- ]solv"), ("Attention to detail", r"attention to detail|detail[- ]oriented"),
+            ("Project management", r"project management"), ("Analytical thinking", r"analytical (?:skills|thinking|mindset)|critical thinking"), ("Customer service", r"customer service"),
+            ("Time management and prioritizing", r"time management|prioriti[sz]"), ("Adaptability", r"adaptab|fast[- ]paced"), ("Initiative", r"self[- ]starter|proactive|takes? initiative"),
+            ("Interpersonal skills", r"interpersonal"))
+    soft_rx = re.compile("|".join(f"(?P<s{i}>{rx})" for i, (_, rx) in enumerate(SOFT)), re.I)
+    soft_n, full_n = Counter(), 0
+    for j in active:
+        if not j.get("desc"): continue
+        full_n += 1
+        for i in {m_.lastgroup for m_ in soft_rx.finditer(j["desc"])}: soft_n[i] += 1
+    soft_rows = sorted(((SOFT[int(g[1:])][0], k) for g, k in soft_n.items()), key=lambda x: -x[1]) if full_n >= 200 else []
+    ai_js = [j for j in active if any(t in AI_TAGS for t in j["tags"])]
+    ai_sk = Counter(t for j in ai_js for t in j["tags"]).most_common(8)
+    best_pay = sal_by_tag[:3]
+    grow = [(t, k, a_) for t, k, a_ in week_tag[:5] if k]
+    sk_qa = [(f"What skills are most in demand in {TODAY[:4]}?", "By the number of open postings that name them today: " + ", ".join(f"{t} ({k:,})" for t, k in top_sk[:8])
+              + f". Counted on {fdate(TODAY)} from {n:,} open jobs read from employers’ own careers pages. Most employers here are technology companies, so tools of that trade lead the list."),
+             ("Which skill pays the most?", ("By median advertised pay among skills with at least 30 postings that state a yearly US-dollar range: " + ", ".join(f"{t} ({money(m_)})" for t, m_, _ in best_pay)
+              + ". These are advertised ranges, and the roles that ask for a skill differ, so this compares postings, not people.") if best_pay else "Too few postings state pay today to rank skills by it."),
+             ("Which soft skills do employers want most?", ("In the " + f"{full_n:,} postings held here in full, the workplace skills named most often are " + ", ".join(f"{nm.lower()} ({pc_(k, full_n)}%)" for nm, k in soft_rows[:5])
+              + ". A posting is counted when its text uses the usual words for the skill.") if soft_rows else "The full texts held today are too few to count this."),
+             ("What skills should I learn for AI jobs?", (f"{len(ai_js):,} open postings ask for AI or machine-learning skills. Besides those, they most often name " + ", ".join(f"{t} ({k:,})" for t, k in ai_sk if t not in AI_TAGS)
+              + ".") if len(ai_js) >= 20 else "Too few AI postings are open today to count."),
+             ("Which skills have the most new postings this week?", ("By postings published in the last seven days: " + ", ".join(f"{t} ({k:,} new of {a_:,} open)" for t, k, a_ in grow) + ". A week is a short window; the ranking of new postings by skill is recounted daily.") if grow else None)]
+    sk_qa = [x for x in sk_qa if x and x[1]]
+    sk_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sk_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     guide("skills-in-demand", f"The {len(top_sk)} Most In-Demand Job Skills in {TODAY[:4]} (from {n:,} Jobs)",
           f"The 15 skills named in the most open job postings today, each explained in one line: from {top_sk[0][0]} ({top_sk[0][1]:,} jobs) down.", "Skills",
-          f"Job postings name tools and methods as if everyone knew them. These are the fifteen named most often in {n:,} open postings, with a plain line for each.",
+          "The skills named in the most open job postings today are " + ", ".join(f"{e(t)} ({k:,})" for t, k in top_sk[:4]) + f" and {e(top_sk[4][0])} ({top_sk[4][1]:,}), counted from {n:,} open postings. "
+          "Below: the first fifteen with a plain line for each, what postings that ask for them pay, and the workplace skills employers name in their own words.",
           "<h2>Asked for in the most postings</h2>" + bars_([(t, k, f"{k:,} jobs · {pc_(k, n)}%", f"skills/{tslug(t)}/") for t, k in top_sk])
+          + "<h2>Pay, remote share and new postings, skill by skill</h2>"
+          + ttable(["Skill", "Open jobs", "Share of all jobs", "Median advertised pay", "Remote", "Posted this week"], sk_tbl, "rkt")
+          + '<p class="note">Median advertised pay: the median of the middle of each stated yearly US-dollar range, shown when at least 15 postings that name the skill state one. A posting names several skills, so it counts in several rows.</p>'
+          + (("<h2>Workplace skills employers name</h2>"
+              f"<p>Counted in the text of the {full_n:,} open postings held here in full: the share that uses the usual words for each skill.</p>"
+              + bars_([(nm, k, f"{pc_(k, full_n)}% of postings", f"jobs/?q={quote(nm.split(' and ')[0].lower())}") for nm, k in soft_rows[:10]])
+              + '<p class="note">These words are in most postings whatever the job, so they tell you what to show with an example, not what sets a candidate apart.</p>') if soft_rows else "")
+          + (("<h2>What AI jobs ask for</h2>" f"<p>{len(ai_js):,} open postings ask for AI or machine-learning skills. The skills they name most often:</p>"
+              + bars_([(t, k, f"{k:,} jobs", f"skills/{tslug(t)}/") for t, k in ai_sk])) if len(ai_js) >= 20 else "")
           + '<h2>What each one is</h2><dl class="qa">' + "".join(f"<div><dt>{e(t)}</dt><dd>{e(skills_info.plain(t)) or 'No plain description yet.'}</dd></div>" for t, _ in top_sk) + "</dl>"
-          + f"<h2>Using this</h2><p>Write the skills you have by the names postings use: screening software looks for the word. The <a href=\"{P}/resume/\">resume builder</a> shows, while you type, how many open jobs ask for each skill it finds in your text.</p>",
+          + f"<h2>Using this</h2><p>Write the skills you have by the names postings use: screening software looks for the word. The <a href=\"{P}/resume/\">resume builder</a> shows, while you type, how many open jobs ask for each skill it finds in your text. "
+            f"To check what you know, there are <a href=\"{P}/skill-tests/\">ten-question tests</a> for the most common skills.</p>"
+          + '<h2>Questions about skills in demand</h2><dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sk_qa) + "</dl>",
           '' + mini([(t, k, f"{k:,}") for t, k in top_sk]),
-          (("skills/", "All skills"), ("insights/highest-paying-tech-skills/", "The skills with the highest advertised pay"), ("compare/", "Compare two skills")))
+          (("skills/", "All skills"), ("insights/highest-paying-tech-skills/", "The skills with the highest advertised pay"), ("insights/fastest-growing-tech-skills/", "Skills with the most new postings"), ("compare/", "Compare two skills")),
+          extra_head=sk_ld)
 
     lap('6. levels')
     # 6. levels

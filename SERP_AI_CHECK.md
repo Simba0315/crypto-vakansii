@@ -48,7 +48,7 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 31 | Tool | cover letter generator | `/tools/cover-letter/` | 15 Nov | no | no | – | paste a job posting to fill the letter; sample letters by role; format box |
 | 32 | Tool | take home pay calculator | `/tools/take-home-pay/` | 18 Nov | no | no | “paycheck” in the title, table $40,000 to $200,000 | state income tax (50 states and pages per state): the largest gap |
 | 33 | Insights | how long do job postings stay open | `/how-long-job-postings-stay-open/` | 15 Nov | yes | no | “should you still apply” table, why postings close or stay, four questions | closing rates by kind of work as a table; trend once history grows |
-| 34 | Guides | most in demand skills | `/guides/skills-in-demand/` | 15 Nov | yes | no | – | soft skills table; pay and remote share per skill; fastest growing; questions |
+| 34 | Guides | most in demand skills | `/guides/skills-in-demand/` | 15 Nov | yes | no | answer first; table with pay and remote share; workplace skills; AI skills; five questions | change against earlier weeks once history allows; skills by industry |
 | 35 | Resignation letters | resignation letter template | `/resignation-letters/` | 15 Nov | yes | no | – | count mismatch in title; Word and PDF download; “what every letter must include”; live fill-in fields |
 | 36 | Relocate | jobs in germany for foreigners | `/relocate/germany/` | 15 Nov | no | no | – | English-only and visa-sponsorship counts; Blue Card thresholds with official links |
 | 37 | Salary bands | jobs that pay 100k | `/salary/100k/` | 15 Nov | yes | no | – | “how much is $100K” box (hour, month, take-home); named titles by section |
