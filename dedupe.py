@@ -67,57 +67,87 @@ def url_key(url):
 
 def same_title(a, b):
     """a, b: word lists. The same role: equal, or 85% shared words with the same level words."""
-    if a == b: return True
+    if tuple(a) == tuple(b): return True
     sa, sb = set(a), set(b)
     if not sa or not sb or (sa & LEVEL) != (sb & LEVEL): return False
     return len(sa & sb) / max(len(sa), len(sb)) >= 0.85
 
 
 class Index:
-    """Every open job, grouped by company key. countries_of(location) -> set of country codes (the site's own reader)."""
+    """Every open job, found by company key. countries_of(location) -> set of country codes (the site's own reader).
+
+    Kept small, because the server's two long-running programs each hold one for every open job: a job is one tuple (SLUG ... ID below),
+    equal strings and sets are shared, and the look-up tables are keyed by a 64-bit hash, which only ever picks candidates that are then
+    compared word by word. On 18 Nov 2026 a job took 1.7 KB of memory here, with a dictionary of its own and its own copy of every word."""
+    SLUG, COMPANY, TITLE, LOCATION, REMOTE, WORDS, WHERE, ID = range(8)
 
     def __init__(self, countries_of=lambda loc: set()):
-        self.by_co, self.by_url, self.countries_of, self.size = {}, {}, countries_of, 0
-        self.exact = {}                      # (company key, title key) -> jobs: most checks end here, in one dictionary look-up
+        self.by_url, self.countries_of, self.size = {}, countries_of, 0
+        self.exact = {}                      # hash of (company key, title words) -> a job, or a list of jobs: most checks end here
         self.by_level = {}                   # (company key, level words) -> jobs: the only ones a near title can match
+        self._co, self._titles, self._places, self._sets = {}, {}, {}, {}        # what add() shares between jobs; done() lets them go
+
+    def done(self):
+        """The bulk loading is over: the tables that only made equal strings shared are not needed any more."""
+        self._co, self._titles, self._places, self._sets = {}, {}, {}, {}
 
     def add(self, slug, company, title, location="", remote=False, url="", extra=None):
-        words = title_words(title)
-        item = {"slug": slug, "company": company, "title": title, "location": location or "", "remote": bool(remote),
-                "words": words, "where": frozenset(self.countries_of(location or "")), **(extra or {})}
-        ck = company_key(company)
-        self.by_co.setdefault(ck, []).append(item)
-        self.exact.setdefault((ck, " ".join(words)), []).append(item)
+        location = location or ""
+        company, ck = self._co.get(company) or self._co.setdefault(company, (company, sys.intern(company_key(company))))
+        title, words = self._titles.get(title) or self._titles.setdefault(title, (title, tuple(sys.intern(w) for w in title_words(title))))
+        if location in self._places: location, where = self._places[location]
+        else:
+            where = frozenset(self.countries_of(location))
+            where = self._sets.setdefault(where, where)
+            self._places[location] = (location, where)
+        item = (slug, company, title, location, bool(remote), words, where, (extra or {}).get("id", ""))
+        key = hash((ck, words))
+        had = self.exact.get(key)
+        if had is None: self.exact[key] = item
+        elif type(had) is list: had.append(item)
+        else: self.exact[key] = [had, item]
         self.by_level.setdefault((ck, frozenset(set(words) & LEVEL)), []).append(item)
-        if url: self.by_url[url_key(url)] = item
+        if url: self.by_url[hash(url_key(url))] = item
         self.size += 1
 
+    @staticmethod
+    def _view(item, why):
+        out = {"slug": item[0], "company": item[1], "title": item[2], "location": item[3], "remote": item[4]}
+        if item[7]: out["id"] = item[7]
+        out["why"] = why
+        return out
+
     def find(self, company, title, location="", remote=False, url="", limit=5):
-        """The open jobs that are this one, best first: [{slug, title, company, location, why}]."""
-        out = []
-        if url and (hit := self.by_url.get(url_key(url))):
-            out.append(dict(hit, why="the same link to apply"))
-        words, where = title_words(title), frozenset(self.countries_of(location or ""))
-        ck, seen = company_key(company), {o["slug"] for o in out}
-        exact = self.exact.get((ck, " ".join(words)), [])
+        """The open jobs that are this one, best first: [{slug, company, title, location, remote, why}], with "id" when it was given."""
+        out, seen = [], set()
+        if url and (hit := self.by_url.get(hash(url_key(url)))):
+            out.append(self._view(hit, "the same link to apply")); seen.add(hit[0])
+        words, where = tuple(title_words(title)), frozenset(self.countries_of(location or ""))
+        ck = company_key(company)
+        got = self.exact.get(hash((ck, words)))
+        exact = [] if got is None else got if type(got) is list else [got]
         near = [] if len(exact) >= limit else self.by_level.get((ck, frozenset(set(words) & LEVEL)), [])
         for item in exact + near:
-            if item["slug"] in seen or not same_title(words, item["words"]): continue
-            if where and item["where"] and not (where & item["where"]) and not (remote or item["remote"]): continue
-            seen.add(item["slug"])
-            out.append(dict(item, why="the same company and role" + (" in the same place" if where & item["where"] else "")))
+            if item[0] in seen or not same_title(words, item[5]): continue
+            if where and item[6] and not (where & item[6]) and not (remote or item[4]): continue
+            seen.add(item[0])
+            out.append(self._view(item, "the same company and role" + (" in the same place" if where & item[6] else "")))
             if len(out) >= limit: break
-        return [{k: v for k, v in o.items() if k not in ("words", "where")} for o in out]
+        return out
+
+
+# what Index needs of a job in data/jobs.db, read by SQLite itself: parsing each whole record in Python was most of the time and the memory
+JOB_FIELDS = tuple(f"json_extract(rec, '$.{k}')" for k in ("title", "location", "remote", "url"))
 
 
 def from_db(path, countries_of=lambda loc: set()):
     """An index of the open jobs in data/jobs.db (records.py)."""
     idx = Index(countries_of)
     con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
-    for slug, company, rec in con.execute("SELECT slug, company, rec FROM jobs WHERE active = 1"):
-        j = json.loads(rec)
-        idx.add(slug, company, j.get("title", ""), j.get("location", ""), j.get("remote", False), j.get("url", ""))
+    for slug, company, title, location, remote, url in con.execute(f"SELECT slug, company, {', '.join(JOB_FIELDS)} FROM jobs WHERE active = 1"):
+        idx.add(slug, company, title or "", location or "", bool(remote), url or "")
     con.close()
+    idx.done()
     return idx
 
 
@@ -155,9 +185,9 @@ def _test():
 
 def _bench(path):
     t0 = time.perf_counter(); idx = from_db(path); t1 = time.perf_counter()
-    items = [i for xs in idx.by_co.values() for i in xs][:10000]
+    items = [i for xs in idx.by_level.values() for i in xs][:10000]
     t2 = time.perf_counter()
-    found = sum(bool(idx.find(i["company"], i["title"], i["location"], i["remote"])) for i in items)
+    found = sum(bool(idx.find(i[1], i[2], i[3], i[4])) for i in items)
     t3 = time.perf_counter()
     print(f"index of {idx.size:,} open jobs built in {t1 - t0:.1f} s; {len(items):,} checks in {(t3 - t2) * 1000:.0f} ms "
           f"({(t3 - t2) / max(len(items), 1) * 1e6:.0f} µs each), {found:,} found themselves")

@@ -796,3 +796,16 @@ perplexity.ai answers without a sign-in. Recorded as for ChatGPT: the sites it n
   counts and jobseveryhour.com. (2) To do on the site: a page that compares the job search engines that read company career pages
   (each from its own page: what it reads, how often, what happens to a closed job, what it costs), with this site in the table.
   An article on dev.to would need the owner's account and his word.
+
+### ChatGPT, section questions asked on 18 Nov 2026 (opened as chatgpt.com/?hints=search&q=…, no sign-in)
+| Question | Sites it links to | Are we in |
+|---|---|---|
+| best free resume builder with no paywall for PDF download | flowcv.com, rxresu.me, open-resume.com, canva.com, docs.google.com | no |
+| data analyst salary in the US right now | bls.gov, salary.com, indeed.com, findajobai.com | no |
+| jobs with visa sponsorship in the US, where to find them | myvisajobs.com, h1bgrader.com, visajob.us, rolebound.app, trylitos.com, indeed, linkedin, glassdoor, dice, wellfound, ziprecruiter, dol.gov, uscis.gov | no |
+| which companies are hiring the most right now, with numbers | applystead.com, jobdataapi.com, veritahire.com, jobs.opennash.com, launchyournextchapter.com | no |
+
+What it shows: the answers cite small and new sites next to the big ones, so size is not what keeps this site out. It answers from what search engines
+have indexed, and Bing has no page of this site. “Companies hiring the most” is answered from sites with less data than /insights/companies-hiring-the-most/.
+
+Perplexity answered one question without an account on 18 Nov; the next one replied “Sign up and repeat your request”. It stays unchecked until someone signs in to it in the built-in browser.

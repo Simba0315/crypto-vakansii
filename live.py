@@ -23,8 +23,22 @@ collect.ATS_LIMIT allows.
     python3 live.py --once 50       read 50 boards once and print what would change, writing nothing (a dry run)
 """
 import concurrent.futures as cf
-import datetime, hashlib, json, os, sqlite3, sys, time
+import ctypes, datetime, gc, hashlib, json, os, sqlite3, sys, time
 from pathlib import Path
+
+# Memory (18 Nov 2026: this program held 1.9 GB of its 3 GB at 275,000 jobs, and the boards on hold wait for room). Two malloc arenas instead
+# of one per thread: answers of many megabytes pass through 24 threads, and each thread's arena kept its high-water mark.
+try:
+    LIBC = ctypes.CDLL("libc.so.6")
+    LIBC.mallopt(-8, 2)                                  # M_ARENA_MAX
+except (OSError, AttributeError):
+    LIBC = None                                          # not Linux with glibc: nothing to tune
+
+
+def give_back():
+    """Hand memory that is free inside this program back to the system."""
+    gc.collect()
+    if LIBC: LIBC.malloc_trim(0)
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
@@ -84,18 +98,22 @@ class Live:
         duplicate index. Live entries the hourly record now has are dropped (its address wins)."""
         st = JOBS_DB.stat().st_mtime_ns
         if st == self.stamp: return False
+        # The old tables go first: built beside them, the new ones doubled what this program needed at every upload. Nothing reads them
+        # meanwhile (apply runs in this same thread), and if reading the file fails the program stops and systemd starts it again.
+        self.known, self.by_co, self.slugs, self.idx, self.stamp = {}, {}, set(), None, None
+        give_back()
         con = sqlite3.connect(f"file:{JOBS_DB}?mode=ro", uri=True)
         known, by_co, slugs = {}, {}, set()
         idx = dedupe.Index(lambda loc: {c for c, _ in build.countries_of(loc)})
         still_open = set()
-        for jid, slug, company, active, rec in con.execute("SELECT id, slug, company, active, rec FROM jobs"):
+        fields = ", ".join(f"CASE WHEN active THEN {f} END" for f in dedupe.JOB_FIELDS)
+        for jid, slug, company, active, title, location, remote, url in con.execute(f"SELECT id, slug, company, active, {fields} FROM jobs"):
             known[jid] = slug
-            if active: still_open.add(jid)
             slugs.add(slug)
             if active:
+                still_open.add(jid)
                 by_co.setdefault(company, set()).add(jid)
-                r = json.loads(rec)
-                idx.add(slug, company, r.get("title", ""), r.get("location", ""), r.get("remote", False), r.get("url", ""), {"id": jid})
+                idx.add(slug, company, title or "", location or "", bool(remote), url or "", {"id": jid})
         con.close()
         self.known, self.by_co, self.slugs, self.idx, self.stamp = known, by_co, slugs, idx, st
         dropped = 0
@@ -110,6 +128,9 @@ class Live:
                 r = json.loads(self.con.execute("SELECT rec FROM live WHERE id = ?", (jid,)).fetchone()[0])
                 self.slugs.add(slug)
                 idx.add(slug, r["company"], r["title"], r.get("location", ""), r.get("remote", False), r.get("url", ""), {"id": jid})
+        idx.done()
+        del still_open
+        give_back()
         log(f"hourly record: {len(known):,} jobs, {idx.size:,} open; {dropped} live entries now in it")
         return True
 
@@ -269,6 +290,7 @@ class Live:
                 if time.time() - tally_at >= 300:
                     log(f"last 5 min: {tally[0]} boards read, {tally[1]} did not answer, +{tally[2]} new, {tally[3]} closed, {tally[4]} duplicates skipped")
                     tally, tally_at = [0, 0, 0, 0, 0], time.time()
+                    give_back()
                 if self.reload(): srcs = sources()
                 if time.time() - srcs_at > 600: srcs, srcs_at = sources(), time.time()
                 self.resync_search()

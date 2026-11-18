@@ -483,6 +483,7 @@
       if ((live || rev) && products.featured) acts += '<button class="btn ghost sm" type="button" data-promote="' + esc(j.id) + '">Promote</button>';
       acts += '<button class="btn ' + (rej ? '' : 'ghost ') + 'sm" type="button" data-job-edit="' + esc(j.id) + '" aria-expanded="false">' + (rej ? 'Edit and send again' : 'Edit') + '</button>';
       if (live || rev) acts += '<button class="btn ghost sm" type="button" data-act="close" data-id="' + esc(j.id) + '">Close</button>';
+      acts += '<button class="btn ghost sm" type="button" data-job-copy="' + esc(j.id) + '">Post a similar job</button>';
       acts += '<button class="btn ghost sm" type="button" data-job-del="' + esc(j.id) + '">Delete</button>';
       return '<article class="acc-job' + (rej ? ' bad' : '') + '"><div class="acc-job-h"><div>' + state(ending ? 'pending' : j.status, ending ? 'Ends soon' : '') + '<h2 class="acc-job-t">' +
         (live ? '<a href="' + esc(D.site + j.page) + '">' + esc(j.title) + '</a>' : esc(j.title)) + '</h2><p class="js">' + esc(j.company) + (j.location ? ' · ' + esc(j.location) : '') + (j.remote ? ' · Remote' : '') + ' · posted ' + nice(j.posted) + '</p></div>' +
@@ -494,7 +495,7 @@
     }).join('');
     return head('Your jobs', 'Jobs <b>you posted</b>', S.jobs.length ? 'The status of each job, and what it brought: views of its page and clicks on Apply, each visitor counted once a day.' : '',
         S.jobs.length ? '<a class="btn primary" href="#post">Post a job</a>' : '') +
-      (S.jobs.length ? cards + '<p class="note">A new or changed job shows on the site after its next update, within the hour.</p>'
+      (S.jobs.length ? cards + '<p class="note">A new or changed job shows on the site after its next update, within the hour. <button class="linkbtn" type="button" id="jobs-csv">Download these figures (CSV)</button></p>'
         : empty('You have not posted a job yet.', ' Posting is free for 30 days. Its status, views and clicks on Apply show here.', '<a class="btn primary" href="#post">Post a job free</a>'));
   }
   function postPanel() {
@@ -672,7 +673,7 @@
       (S.orders.length ? part('Payments', '<div class="acc-list">' + S.orders.map(function (o) {
         return '<div class="acc-row"><div class="main">' + state(o.status) + ' <strong>' + esc(o.name) + '</strong><span class="js">' + (o.label && o.label !== o.name ? esc(o.label) + ' · ' : '') +
           (o.amount_usd ? money(o.amount_usd) : o.credits ? o.credits + ' credits' : 'Included') + ' · ' + nice(o.created) + '</span></div><div class="ctl">' +
-          (o.pay_url ? '<a class="btn sm" href="' + esc(o.pay_url) + '">Pay now</a>' : '') +
+          (o.pay_url ? '<a class="btn sm" href="' + esc(o.pay_url) + '">Pay now</a><button class="btn ghost sm" type="button" data-pay-copy="' + esc(o.pay_url) + '">Copy the link for whoever pays</button>' : '') +
           (o.status === 'paid' ? '<button class="btn ghost sm" type="button" data-receipt="' + esc(o.id) + '">Receipt</button>' : '') + '</div></div>';
       }).join('') + '</div><div id="receipt-out"></div>', 'payments') : '');
   }
@@ -883,6 +884,23 @@
           return load();
         });
       });
+    });
+    // a new job that starts as a copy of this one; the title and the link are the person's to change, so the link is left empty
+    on('[data-job-copy]', function (b) {
+      var j = S.jobs.filter(function (x) { return x.id === b.getAttribute('data-job-copy'); })[0]; if (!j) return;
+      H.set('hrn_job_draft', { company: j.company, company_url: j.company_url, title: j.title, apply_url: '', location: j.location || '', salary: j.salary || '', etype: j.etype || '', remote: !!j.remote, description: j.description || '' });
+      flash('The form is filled from “' + esc(j.title) + '”. Change the title, add the link of the new job, and publish.');
+      location.hash = '#post'; draw();
+    });
+    on('#jobs-csv', function () {
+      var cell = function (v) { v = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };      // a leading = would be a formula in a spreadsheet
+      var rows = [['Job', 'Company', 'Location', 'Status', 'Posted', 'On the site until', 'Views', 'Clicks on Apply']].concat(S.jobs.map(function (j) { return [j.title, j.company, j.location, j.status, j.posted, j.until, j.views || 0, j.applies || 0]; }));
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.map(function (r) { return r.map(cell).join(','); }).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'jobs-every-hour-jobs.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    });
+    on('[data-pay-copy]', function (b) {
+      var done = function () { b.textContent = 'Link copied'; setTimeout(function () { b.textContent = 'Copy the link for whoever pays'; }, 1800); };
+      if (navigator.clipboard) navigator.clipboard.writeText(b.getAttribute('data-pay-copy')).then(done, function () {}); else done();
     });
     on('[data-job-del]', function (b) {
       // asked on the page, not in a browser window: where such windows are switched off the button used to do nothing

@@ -3,7 +3,7 @@
 Closed jobs keep their pages forever (archive); only the JobPosting markup and the apply button are removed.
 """
 import datetime, hashlib, html, json, os, re, shutil, time
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, unquote, urlparse
 from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
@@ -808,7 +808,7 @@ def ask_ai_row():
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO_DARK}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
-<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
+<div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/senior-jobs/">Senior-level</a></li><li><a href="{P}/executive-jobs/">Executive</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
@@ -1309,6 +1309,19 @@ def act_row(href, label, more=(), note="", clip=""):
             + (f"<span>{e(note)}</span>" if note else "") + "</p>")
 
 
+def list_alert(h1, qs, jobs):
+    """The job alert of a list page, when an alert can ask for exactly what the list holds: its search filters are only words, a category,
+    a place and "remote" (server/src/alerts.js). Search check, 18 Nov 2026: the first results for "<work> jobs" offer an alert beside
+    the list; here only category and country pages had one."""
+    if not qs or len(jobs) < 5: return ""
+    f = dict(kv.split("=", 1) for kv in qs.split("&") if "=" in kv)
+    if not f or set(f) - {"cat", "loc", "remote", "q", "skills"} or ("q" in f and "skills" in f): return ""
+    words = unquote(f.get("q") or f.get("skills") or "")
+    # every word of an alert must be in the job's title, company or skills, so a long descriptive name of a role ("Sales leader and VP of sales") would catch nothing
+    if len(words.split()) > 3 or " and " in f" {words.lower()} ": return ""
+    return alert_form("new " + (rlow(h1) if "q" in f else h1 if "skills" in f else h1[0].lower() + h1[1:]), cat=f.get("cat", ""), loc=f.get("loc", ""), q=words, remote=f.get("remote") == "1")
+
+
 def list_narrow(qs, jobs):
     """A row of ways to narrow a list, each with the number of its jobs that pass: the list's own search with one more filter.
     (Search check, 18 Nov 2026: every first result for a "<work> jobs" query has filters over its list; these pages had a button
@@ -1334,14 +1347,14 @@ def list_save(h1, qs, feed_path="", links=()):
             '<span>My jobs then shows how many are new each time you come back. No account, no email.</span></p>')
 
 
-def alert_form(what, cat="", loc="", search=False):
+def alert_form(what, cat="", loc="", search=False, q="", remote=False):
     """"Email me new jobs like these": the free job alert sign-up (server/src/alerts.js), small and reusable. Shown only once the API is
     on (config.json api_url): a form that goes nowhere is not shown (rule 7). Without a script the form posts itself and the API answers
     with a page; with one, site.js sends it and writes the answer under it. On the search page (search=True) site.js copies the current
     search (words, category, place, remote, least pay) into the hidden fields when it is sent. The field "website" is for programs only."""
     if not CFG["api_url"]: return ""
-    uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (cat or loc or "search").lower())
-    hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc)) if v)
+    uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (q or cat or loc or "search").lower()).strip("-")
+    hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc), ("q", q), ("remote", "1" if remote else "")) if v)
     if search: hid = "".join(f'<input type="hidden" name="{k}" value="">' for k in ("q", "cat", "loc", "remote", "sal"))
     return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-labelledby="{uid}-h">'
             f'<h2 id="{uid}-h">Free job alerts: {e(what)}</h2>'
@@ -1376,6 +1389,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     ld = crumbs_ld(list(trail) + [(h1, "")]) if head_html is None else ""
     if accent: ld += f"<style>:root:root:root{{--hl:{accent};--accent-soft:color-mix(in srgb,{accent} 22%,var(--card))}}</style>"      # each section of the site has its own colour
     faq_html, faq_ld = faq_for(faq, jobs, faq_first, faq_extra) if faq else ("", "")
+    if more and head_html is None and "data-alert" not in after: after += list_alert(h1, more, jobs)
     for n in range(1, pages + 1):
         chunk = rows[(n - 1) * per:n * per]
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
@@ -2928,10 +2942,45 @@ def main():
                 f"{roles(len(hyb_), 'open job')} that mix days at home with days in the office, straight from employers’ careers pages. Updated hourly.", hyb_,
                 intro_for(hyb_, "", " that mix days at home with days in the office", row=list_parts("Hybrid jobs", hyb_)[0]), trail=(("All jobs", "jobs/"),), more="hybrid=1",
                 faq="hybrid jobs", links=(("remote/", "Remote jobs"),), **list_parts("Hybrid jobs", hyb_)[1])
+    lap('Jobs by level: senior, lead, executive')
+    # Jobs by level (hirehi.ru has a page for each level; search check, 18 Nov 2026: "senior level jobs" and "executive jobs" are answered by
+    # thin lists of Indeed and ZipRecruiter, and people also ask what counts as senior and what an executive job is). The level comes
+    # from the words of the title (collect.level); "Lead" holds lead, staff and principal, and director and above, split here.
+    EXEC_RX = re.compile(r"\b(director|vice president|vp|svp|evp|avp|head of|chief|cto|cfo|ceo|coo|cmo|cio|ciso|president|general manager)\b", re.I)
+    lv_exec = [j for j in active if j["level"] == "Lead" and EXEC_RX.search(j["title"])]
+    lv_lead = [j for j in active if j["level"] == "Lead" and not EXEC_RX.search(j["title"])]
+    lv_sen = [j for j in active if j["level"] == "Senior"]
+    def lv_pay(js):
+        m_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js if j.get("usd"))
+        return money(m_[len(m_) // 2]) if len(m_) >= 20 else ""
+    def lv_years(js):
+        y_ = sorted(j["years"] for j in js if j.get("years"))
+        return y_[len(y_) // 2] if len(y_) >= 20 else 0
+    def lv_titles(js, k=6):
+        names = Counter(re.sub(r"\s*[(,\-–|/].*$", "", j["title"]).strip() for j in js)
+        return ", ".join([t_ for t_, _ in names.most_common(k + 6) if t_.lower() not in ("senior", "sr", "sr.", "lead", "staff", "principal", "")][:k])
+    def lv_page(path, h1, js, what, first, more, alert, links):
+        if len(js) < 20: return
+        row_, kw_ = list_parts(h1, js)
+        p_, y_, low_ = lv_pay(js), lv_years(js), h1[0].lower() + h1[1:]
+        extra_ = [(f"How much do {low_} pay?", f"The middle advertised salary of these jobs is {p_} a year, counted from the postings that state pay on {fdate(TODAY)}. Pay is before tax.")] if p_ else []
+        if y_: extra_.append((f"How much experience do {low_} ask for?", f"The postings that name a number ask for {y_} years in the middle case."))
+        extra_.append(("Which titles are most common at this level?", f"Today: {lv_titles(js)}."))
+        listing(path, h1, f"{tcase(h1).replace('Senior-level', 'Senior Level')} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open job')} {what}, read from employers’ own careers pages and checked hourly. See who hires, where, and what the level pays.", js,
+                intro_for(js, "", f" {what}", row=row_), trail=(("All jobs", "jobs/"),), more=more, faq=low_, faq_first=first, faq_extra=extra_, after=alert, links=links, **kw_)
+    lv_page("senior-jobs/", "Senior-level jobs", lv_sen, "with “senior” or an equal level in the title",
+            ("What is considered a senior-level job?", "A role for someone who does the work without supervision, decides how it is done and helps others do it. Employers usually mark it in the title with “Senior” or “Sr.”, and most ask for about five years or more. It sits above mid-level and below lead, staff and principal."),
+            "lvl=Senior", alert_form("new senior-level jobs", q="senior"), (("lead-jobs/", "Lead and staff jobs"), ("executive-jobs/", "Executive jobs"), ("guides/job-levels-explained/", "What the level in a title means")))
+    lv_page("lead-jobs/", "Lead and staff jobs", lv_lead, "at lead, staff or principal level",
+            ("What is the difference between lead, staff and principal?", "A lead usually guides a team’s daily work. Staff and principal are senior roles without direct reports in most companies: they set the technical direction across several teams, principal more widely than staff. The exact meaning differs by employer, so read the posting."),
+            False, alert_form("new lead jobs", q="lead"), (("senior-jobs/", "Senior-level jobs"), ("executive-jobs/", "Executive jobs"), ("guides/job-levels-explained/", "What the level in a title means")))
+    lv_page("executive-jobs/", "Executive jobs", lv_exec, "for directors, heads of department, vice presidents and chief officers",
+            ("What kind of job is an executive job?", "A role that runs a department or a company and answers for its results: directors, heads of department, vice presidents and chief officers such as the CEO, CFO or CTO. Executives set strategy, budgets and hiring rather than doing the daily work themselves."),
+            False, alert_form("new director jobs", q="director"), (("senior-jobs/", "Senior-level jobs"), ("lead-jobs/", "Lead and staff jobs"), ("salary/200k/", "Jobs that pay $200K or more")))
     lap('The directory: every category with the kinds of work in it, ')
     # The directory: every category with the kinds of work in it, on one page, and a page with text for each category
     kinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
-        ("remote/", "Remote jobs"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work from anywhere"), ("new/", "New in the last 3 days"), ("entry-level/", "Entry-level jobs"), ("internships/", "Internships"),
+        ("remote/", "Remote jobs"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work from anywhere"), ("new/", "New in the last 3 days"), ("entry-level/", "Entry-level jobs"), ("senior-jobs/", "Senior-level jobs"), ("lead-jobs/", "Lead and staff jobs"), ("executive-jobs/", "Executive jobs"), ("internships/", "Internships"),
         ("contract/", "Contract jobs"), ("part-time/", "Part-time jobs"), ("with-salary/", "Jobs that state pay"), ("salary/200k/", "Jobs that pay $200K or more"), ("perks/visa-sponsorship/", "Jobs with visa sponsorship"),
         ("jobs-near-me/", "Jobs near me")) + tuple((p_, h_) for p_, h_, _, _ in HOURS))
     dir_tail = (f'<div class="dirb"><h2><a href="{P}/jobs/"><u>By type of work</u></a></h2><p>How and when the work is done.</p><ul>{kinds}</ul></div>'
@@ -3455,7 +3504,7 @@ def main():
                               "A recruiter who writes from an unrelated address, moves the talk to a messenger at once or asks for money or documents before a contract is a warning sign; the job offer safety page lists the checks."))
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'Open Job')}, Pay & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + f", {new7_:,} added this week. Pay by field, locations and remote roles, from its own careers page.",
-                act, head_html=head_html, after=overview, tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa)
+                act, head_html=head_html, after=overview + (alert_form(f"new jobs at {c}", q=c) if act else ""), tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa)
 
     lap('One-paragraph hiring summary per company, shown on each of i')
     # One-paragraph hiring summary per company, shown on each of its job pages
