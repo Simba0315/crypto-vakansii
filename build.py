@@ -4579,6 +4579,7 @@ def main():
                 '<p class="pp-h">Summary</p><p>' + e(d["summary"]) + '</p><p class="pp-h">Skills</p><p>' + e(d["skills"]) + '</p><p class="pp-h">Experience</p>'
                 + "".join(f'<p class="pp-job"><b>{e(x["role"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p><ul>' + "".join(f"<li>{e(ln)}</li>" for ln in x["text"].split("\n")) + "</ul>" for x in d["exp"])
                 + '<p class="pp-h">Education</p>' + "".join(f'<p class="pp-job"><b>{e(x["what"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p>' for x in d["edu"]) + "</div>")
+    rex_lv = {}                 # role -> {"entry": example, "senior": example}: the other levels, shown on the resume page and, in UK form, on the CV page
     def paper_text(d):
         """The example as plain text, for the "Copy as text" button: the same lines as the paper, a dash before each result."""
         out_ = [d["name"], d["title"], f'{d["place"]} · {d["email"]}', "", "SUMMARY", d["summary"], "", "SKILLS", d["skills"], "", "EXPERIENCE"]
@@ -4638,12 +4639,14 @@ def main():
         ent_l = [resume_examples.SLOT.sub(fill_, ln) for ln in getattr(resume_examples, "ENTRY", {}).get(slug_r, [])]
         sen_l = [resume_examples.SLOT.sub(fill_, ln) for ln in getattr(resume_examples, "SENIOR", {}).get(slug_r, [])]
         levels_ = ""
+        rex_lv[slug_r] = {}
         if len(ent_l) >= 3:
             et_ = getattr(resume_examples, "ENTRY_TITLE", {}).get(slug_r) or f"Junior {d['title']}"
             d_e = dict(d, title=et_, summary=f"{et_} starting out, with project and internship experience in {', '.join(skills_[:3])}.",
                        exp=[{"role": f"{d['title']} Intern", "org": "Example Company", "dates": "Summer 2026", "text": ent_l[0]},
                             {"role": "Projects", "org": "Course and personal projects", "dates": "2025 – 2026", "text": "\n".join(ent_l[1:3])}],
                        edu=[{"what": "Bachelor’s degree", "org": "Example University", "dates": "2022 – 2026"}])
+            rex_lv[slug_r]["entry"] = d_e
             levels_ += section(f"Entry-level {low} resume example (no experience)", paper(d_e) + '<p class="note">With no job of this kind yet, lead with projects, an internship or part-time work, each with a number.</p>')
         if len(sen_l) >= 3 and slug_r != "intern":
             # "Senior" goes in front only where it reads right: not "Senior Senior Accountant", "Senior Chief of Staff" or "Senior Tech Lead"
@@ -4651,6 +4654,7 @@ def main():
             d_s = dict(d, title=st_, summary=f"{st_} with ten years of experience, leading teams and programs. Strongest in {', '.join(skills_[:3])}.",
                        exp=[{"role": st_, "org": "Example Company", "dates": "2021 – now", "text": "\n".join(sen_l)},
                             {"role": d["title"], "org": "Another Example Ltd", "dates": "2016 – 2021", "text": d["exp"][0]["text"].split("\n")[0] if d["exp"] else ""}])
+            rex_lv[slug_r]["senior"] = d_s
             levels_ += section(f"Experienced {low} resume example" if st_ == d["title"] else f"Senior {low} resume example", paper(d_s) + '<p class="note">At this level the lines are about people led, budgets owned and results across teams.</p>')
         n_ex = 1 + (len(ent_l) >= 3) + (len(sen_l) >= 3 and slug_r != "intern")
         rex_three += n_ex == 3
@@ -4726,8 +4730,17 @@ def main():
                           "<tr><td><strong>Spelling and dates</strong></td><td>British spelling; day before month (03/2024 is March)</td><td>American spelling; month before day</td></tr>"
                           "<tr><td><strong>Pay, if mentioned</strong></td><td>In pounds or euros, a year</td><td>In dollars, a year or an hour</td></tr></table></div>"
                           f'<p class="note">The same example in the US form: <a href="{P}/resume/examples/{slug_r}/">{e(low)} resume example</a>.</p>', sid="differs", label="CV and resume")
+        uk_form = lambda h_: h_.replace('<p class="pp-h">Summary</p>', '<p class="pp-h">Personal profile</p>').replace('<p class="pp-h">Experience</p>', '<p class="pp-h">Employment history</p>')
+        lv_ = rex_lv.get(slug_r, {})
+        cv_lv = ""
+        if lv_.get("entry"):
+            cv_lv += section(f"Entry-level {low} CV example (no experience)", uk_form(paper(lv_["entry"])) + '<p class="note">With no job of this kind yet, lead with projects, a placement or part-time work, each with a number.</p>')
+        if lv_.get("senior"):
+            cv_lv += section(f"Senior {low} CV example", uk_form(paper(lv_["senior"])) + '<p class="note">At this level the lines are about people led, budgets owned and results across teams; two pages are normal.</p>')
+        if cv_lv: cv_lv = f'<div class="kwlv">{cv_lv}</div>'
+        cv_three = len(lv_) == 2
         cv_dir[fs].append((slug_r, rname, len(uk_)))
-        page(f"cv-examples/{slug_r}/", f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]}) | {SITE}",
+        page(f"cv-examples/{slug_r}/", (f"{tcase(rname)} CV Examples (UK): Entry-Level, Mid & Senior ({TODAY[:4]})" if cv_three else f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]})") + f" | {SITE}",
              f"{art(low).capitalize()} {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
              crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} CV example <span class=\"hl\">(UK format)</span></h1>"
              f'<p class="lead">The same document Americans call a resume, written the way UK and European employers expect it: a personal profile first, your employment history with results, '
@@ -4743,7 +4756,7 @@ def main():
                '<li><b>Leave out</b> photo, age, date of birth, marital status and national insurance number.</li>'
                '<li><b>British spelling and dates</b> (organised, 03/2024), and pay in pounds if you mention it.</li>'
                '<li><b>“References available on request”</b> can go; employers ask for them at the offer.</li></ol></div></div>'
-             + cv_diff + uk_who
+             + cv_lv + cv_diff + uk_who
              + section(f"Questions about {art(low)} {low} CV", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cv_qa) + "</dl>")
              + role_kit(slug_r, low, "cv")
              + f'<p class="note cmpl">Next: <a href="{P}/locations/united-kingdom/">jobs in the United Kingdom</a> · <a href="{P}/cover-letter-examples/{slug_r}/">{e(low)} cover letter</a> · <a href="{P}/cv-examples/">all CV examples</a></p>', head=ld_, cls="kw")
@@ -5143,7 +5156,7 @@ def main():
     def iq_li(q, why, good, sample=""):
         return (f'<li><h3>{e(q)}</h3><p class="why">{why}</p>' + (f'<p class="good"><b>A good answer shows:</b> {e(good)}</p>' if good else "")
                 + (f'<p class="good"><b>{"Answer" if not good else "Sample answer"}:</b> {e(sample)}</p>' if sample else "") + "</li>")
-    import quiz_pages
+    import quiz_pages, interview_bank
     QUIZ_BY_SKILL = {v["skill"]: (k, v) for k, v in quiz_pages.QUIZZES.items()}
     def iq_ol(items, start):
         return f'<ol class="iq" style="counter-reset:iq {start}">' + "".join(iq_li(*x) for x in items) + "</ol>"
@@ -5235,8 +5248,12 @@ def main():
                      ("What are your salary expectations?", (f"Only {paid_pct}% of today’s {e(low)} postings state pay, so be ready to name a figure." if paid_pct < 60 else f"{paid_pct}% of today’s {e(low)} postings state pay; know where you stand in the range."), pay_good),
                      ("What is one of your weaknesses?", "A classic, still asked.", "A real weakness that does not block this job, and what you do about it."),
                      ("Do you have any questions for us?", "The last question of almost every interview.", "Two or three questions you prepared; the list below has some.")]
-        groups = [(f"Questions about the skills {low} postings name", sk_items), (f"Technical {low} interview questions and answers", tech_items), (f"Questions about the work itself", du_items),
-                  (f"Questions about how you work", th_items), ("Questions almost every interview has", gen_items)]
+        # questions of the trade itself with a sample answer each (interview_bank.py): statistics, charts and business cases for
+        # analysts, and a set for every other field of work; chosen by the role, its family and the skills its postings name
+        bank_ = [(f"{h_[:-len(' questions')]} questions and answers", [(q_, e("What it checks: " + w_[0].lower() + w_[1:]), g_, a_) for q_, w_, g_, a_ in xs_])
+                 for h_, xs_ in interview_bank.pick(slug_r, fs, {t: k / n_ for t, k in cnt_.items()})]
+        groups = ([(f"Questions about the skills {low} postings name", sk_items), (f"Technical {low} interview questions and answers", tech_items)] + bank_
+                  + [(f"Questions about the work itself", du_items), (f"Questions about how you work", th_items), ("Questions almost every interview has", gen_items)])
         groups = [(h, xs) for h, xs in groups if xs]
         n_q, body_, k_ = sum(len(xs) for _, xs in groups), "", 0
         for h, xs in groups:
