@@ -32,7 +32,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 75        # 55 until 18 Nov 2026: a run that had read the released boards for 54 minutes saved the jobs and was stopped before it built the site
+    timeout-minutes: 110       # 75 until the evening of 18 Nov 2026: while 184 released boards fill and every posting is parsed once more after the rules fingerprint changed, a run may take over an hour; a run stopped at the limit builds nothing
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

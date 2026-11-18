@@ -25,7 +25,16 @@ TODAY = datetime.date.today().isoformat()
 # Full descriptions are stored for postings newer than this. GitHub Pages' size limit is gone (the site is served by our own server),
 # but data/jobs.json is pushed to the data branch every hour and every description is about 5 KB, so the old ones are still left out.
 DESC_SINCE = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
-RULES = hashlib.md5(Path(__file__).read_bytes()).hexdigest()[:8]       # part of every fingerprint: new rules, new records
+# RULES is part of every fingerprint: new rules, new records. It is made from this file WITHOUT the parts between the marks
+# "# >>> not rules" and "# <<< not rules": how fast and how many boards are read, the jobs posted in the account, and main().
+# Before 18 Nov 2026 it was made from the whole file, so every edit of those parts made each run parse every posting again
+# (107,909 postings and 47 minutes a run on that day, after five such edits). A change to how a posting is read still counts.
+def _rules_text():
+    return re.sub(r"(?ms)^# >>> not rules.*?^# <<< not rules[^\n]*\n", "", Path(__file__).read_text(encoding="utf-8"))
+
+
+RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
+# >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
@@ -46,6 +55,7 @@ DETAILS = int(os.environ.get("HRN_DETAILS") or 120)
 FILL_SINCE = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
 LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this many postings of a board (Workday lists 20 per request)
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
+# <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
 EXCLUDE = {"Casa", "Swan", "Sei", "Safe", "Circle", "Compound", "Ramp", "Robinhood Crypto",
@@ -1370,6 +1380,7 @@ def direct_desc(text):
     return "".join(f"<p>{html.escape(p_.strip())}</p>" for p_ in str(text or "").split("\n") if p_.strip())
 
 
+# >>> not rules (jobs posted in the account, placements, and the run itself: to the end of the file)
 def direct_and_paid(db, used_slugs, indexed, stats):
     """Jobs employers posted in their account, and paid placements, from our own API ("api_url" in config.json).
     A failed call changes nothing: posted jobs stay as they were and the previous placements file is kept."""
@@ -1569,3 +1580,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# <<< not rules

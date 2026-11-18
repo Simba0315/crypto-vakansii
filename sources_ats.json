@@ -1253,7 +1253,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Gotham Enterprises Ltd",
@@ -1274,7 +1274,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "The Home Depot",
@@ -1299,7 +1299,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "Fidelity Brokerage Services",
+"name": "Fidelity Investments",
 "ats": "workday",
 "token": "fmr.wd1/fidelitycareers",
 "count": 892,
@@ -1307,7 +1307,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Visa",
@@ -1323,7 +1323,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "The P&G Distributing",
+"name": "Procter & Gamble",
 "ats": "workday",
 "token": "pg.wd5/1000",
 "count": 876,
@@ -1333,7 +1333,7 @@
 "PL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Kyndryl",
@@ -1346,7 +1346,7 @@
 "HU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Intel",
@@ -1396,10 +1396,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Flextronics Technologies",
+"name": "Flex (Flextronics)",
 "ats": "workday",
 "token": "flextronics.wd1/Careers",
 "count": 850,
@@ -1409,7 +1409,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Boeing",
@@ -1432,7 +1432,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Guidehouse",
@@ -1443,7 +1443,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "GSK",
@@ -1456,7 +1456,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Essentia Health",
@@ -1467,7 +1467,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Allina Health",
@@ -1476,10 +1476,10 @@
 "count": 818,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Boeing Subsidiary Employees",
+"name": "Boeing Subsidiaries",
 "ats": "workday",
 "token": "boeing.wd1/external_subsidiary",
 "count": 807,
@@ -1488,10 +1488,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Merck Sharp & Dohme",
+"name": "Merck (MSD)",
 "ats": "workday",
 "token": "msd.wd5/SearchJobs",
 "count": 804,
@@ -1501,7 +1501,7 @@
 "ID"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Fuku",
@@ -1542,16 +1542,16 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "UA System",
+"name": "University of Arkansas System",
 "ats": "workday",
 "token": "uasys.wd5/UASYS",
 "count": 786,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Cox",
+"name": "Cox Enterprises",
 "ats": "workday",
 "token": "cox.wd1/Cox_External_Career_Site_1",
 "count": 784,
@@ -1559,10 +1559,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Academy",
+"name": "Academy Sports + Outdoors",
 "ats": "workday",
 "token": "academy.wd1/Careers",
 "count": 776,
@@ -1570,7 +1570,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "ITW",
@@ -1581,7 +1581,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Analog Devices",
@@ -1605,10 +1605,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Teledyne Digital Imaging",
+"name": "Teledyne FLIR",
 "ats": "workday",
 "token": "flir.wd1/flircareers",
 "count": 764,
@@ -1618,7 +1618,7 @@
 "FR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Heidelberg Materials",
@@ -1631,7 +1631,7 @@
 "PL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "BMC",
@@ -1642,7 +1642,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Memorial Hermann Health System",
@@ -1651,10 +1651,10 @@
 "count": 727,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Manufacturers and Traders Trust",
+"name": "M&T Bank",
 "ats": "workday",
 "token": "mtb.wd5/mtb",
 "count": 722,
@@ -1662,7 +1662,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Tyson Foods",
@@ -1685,7 +1685,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "PUMA",
@@ -1698,7 +1698,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Pfizer",
@@ -1723,7 +1723,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Medline",
@@ -1735,16 +1735,16 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Capri Holdings",
+"name": "Michael Kors",
 "ats": "workday",
 "token": "capri.wd1/Michael_Kors",
 "count": 687,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Cadence",
@@ -1758,7 +1758,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "International Schools Partnership. Please",
+"name": "International Schools Partnership",
 "ats": "workday",
 "token": "internationalschools.wd3/ISPCareers",
 "count": 684,
@@ -1768,10 +1768,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Universmichigan",
+"name": "Universal Logistics Holdings",
 "ats": "workday",
 "token": "hrone.wd1/universal_logistics_holdings",
 "count": 673,
@@ -1779,10 +1779,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "MUFG Bank",
+"name": "MUFG",
 "ats": "workday",
 "token": "mufgub.wd3/MUFG-Careers",
 "count": 671,
@@ -1792,10 +1792,10 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "GM Egypt",
+"name": "General Motors",
 "ats": "workday",
 "token": "generalmotors.wd5/Careers_GM",
 "count": 670,
@@ -1805,10 +1805,10 @@
 "PH"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "USC",
+"name": "University of Southern California",
 "ats": "workday",
 "token": "usc.wd5/ExternalUSCCareers",
 "count": 669,
@@ -1816,7 +1816,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "LSEG",
@@ -1829,7 +1829,7 @@
 "SG"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Memorial Healthcare System",
@@ -1838,7 +1838,7 @@
 "count": 659,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "McKesson",
@@ -1861,10 +1861,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "WUCA - Nash Pediatrics",
+"name": "Washington University in St. Louis",
 "ats": "workday",
 "token": "wustl.wd1/External",
 "count": 648,
@@ -1872,7 +1872,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Northern Trust",
@@ -1888,7 +1888,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "UT Austin",
+"name": "The University of Texas at Austin",
 "ats": "workday",
 "token": "utaustin.wd1/UTstaff",
 "count": 645,
@@ -1896,7 +1896,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Cinemark",
@@ -1907,10 +1907,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "RayzeBio",
+"name": "Bristol Myers Squibb",
 "ats": "workday",
 "token": "bristolmyerssquibb.wd5/BMS",
 "count": 642,
@@ -1919,10 +1919,10 @@
 "IE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Nexstar Media",
+"name": "Nexstar Media Group",
 "ats": "workday",
 "token": "nexstar.wd5/nexstar",
 "count": 636,
@@ -1930,7 +1930,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Gordon Food Service",
@@ -1942,7 +1942,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Entegris",
@@ -1954,7 +1954,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Amartha",
@@ -1978,7 +1978,7 @@
 "SG"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "White Cap",
@@ -1989,10 +1989,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Keystone Automotive Industries",
+"name": "LKQ Corporation",
 "ats": "workday",
 "token": "lkqcorp.wd5/ExternalCareerSite-LKQ",
 "count": 617,
@@ -2000,7 +2000,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "HUB International",
@@ -2012,7 +2012,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Geeks on Site",
@@ -2048,7 +2048,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Goodwill of Central & Northern Arizona",
@@ -2059,7 +2059,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Atkinson Industries",
