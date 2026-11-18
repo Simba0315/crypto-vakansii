@@ -32,7 +32,7 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 15 | How to hire | how to hire a data analyst | `/how-to-hire/data-analyst/` | 15 Nov | yes | no | – | hiring models table; cost and ramp-up; scorecard to download; red flags |
 | 16 | Interview questions | data analyst interview questions | `/interview-questions/data-analyst/` | 15 Nov | yes | no | technical questions with answers: up to 26 from three skill tests, easy to hard (38 questions for a data analyst, was 26) | statistics and business-case questions with model answers (no bank for them yet) |
 | 17 | Job descriptions | data analyst job description | `/job-descriptions/data-analyst/` | 15 Nov | yes | no | – | visible template (brief, duties, skills, qualifications); copy button; level variants |
-| 18 | Salaries | data analyst salary | `/salaries/data-analyst/` | 15 Nov | no | no | – | our median against BLS and others; 10th/median/90th chart; note on advertised pay |
+| 18 | Salaries | data analyst salary | `/salaries/data-analyst/` | 15 Nov | no | no | answer “why is this salary higher than on other sites” | our median against BLS and others; 10th/median/90th chart; note on advertised pay |
 | 19 | Resume words | another word for managed on resume | `/resume-words/managed/` | 18 Nov | no | no | – | none found: the page is level with the first results |
 | 20 | Glossary | what is an ats | `/glossary/ats/` | 15 Nov | yes | no | – | canonical address in links and sitemap (the short address is a stub) |
 | 21 | Skills | sql jobs | `/skills/sql/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
@@ -67,7 +67,7 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 50 | Open hiring index | companies hiring the most right now | `/open-hiring-index/` | 18 Nov | yes | no | new page /insights/companies-hiring-the-most/ | trend over time |
 | 51 | Safety | how to spot a fake job offer | `/safety/` | 18 Nov | yes | no | – | where to report (FTC, BBB); a figure on how common fake offers are, with its source |
 | 52 | Work from anywhere | work from anywhere jobs | `/work-from-anywhere/` | 18 Nov | no | no | “what to check before you apply”, three questions | roles in groups |
-| 53 | Career quiz | career quiz | `/career-quiz/` | 18 Nov | no | no | – | “what the quiz measures” and the result types as text on the page |
+| 53 | Career quiz | career quiz | `/career-quiz/` | 18 Nov | no | no | what the quiz measures; table of the fields with today's figures | “what the quiz measures” and the result types as text on the page |
 | 54 | Jobs near me | jobs near me | `/jobs-near-me/` | 15 Nov | no | no | – | local summary per place |
 
 ## What Google shows (read by the main session, 18 Nov; the 15 Nov readings are in `SERP_WORK.md`)

@@ -3566,6 +3566,13 @@ def main():
                   ("What is the typical range?", f"The middle half of the postings offer {money(pct(.25))} to {money(pct(.75))} a year. A quarter offer less and a quarter offer more."),
                   ("Where do these figures come from?", "From the pay ranges employers print in their own job postings, read from their careers pages every hour. The midpoint of each range is counted. "
                    "These are advertised ranges for open roles, mostly in the United States and in US dollars, not what people are actually paid.")]
+        # Search check, 18 Nov 2026 ("data analyst salary"): the first results (survey and government figures) show $71K to $99K where
+        # this page shows $136K. Both can be right; the page has to say why they differ, or the reader trusts neither.
+        sal_qa.insert(1, (f"Why is this {label} salary higher than on other sites?",
+                          "Salary surveys and government wage figures average what people in the job are paid at every kind of employer, in every part of the country. "
+                          f"This page counts only open postings that print a pay range ({len(mids):,} today), and those come mostly from technology companies in large US cities, "
+                          f"which pay above the wider market and are also the employers most likely to print a range. Read the figure as what such employers offer for an open {label} role today, "
+                          "not as the average for the occupation."))
         if best_c:
             sal_qa.insert(2, (f"Which companies advertise the highest {label} pay?", ", ".join(f"{k} ({money(m_)})" for m_, k in best_c) + ", by the median of their open postings that state pay (three postings or more)."))
         # Google's "People also ask" for "<job> salary" (checked 15 Nov 2026): "Is it a high paying job?", "How much can you earn?",
@@ -5666,6 +5673,17 @@ out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});});})();<
          '<p class="lead">Seven plain questions about what you enjoy, what you already do well and how you like to work. You get the three fields that fit you best, with how many jobs they have today and how to get in. No email, no sign-up: your answers stay in your browser.</p>'
          f'<form id="qz" class="qz">{qz_html}<p><button class="btn primary" type="submit">Show my best fits</button></p></form>'
          f'<section class="sec qz-out" id="qz-out" aria-live="polite" hidden></section><script type="application/json" id="qz-data">{qz_data}</script>{qz_js}'
+         # Search check, 18 Nov 2026 ("career quiz"): Google's answer prints the questions and the result types with the careers under
+         # each; the first results say what the quiz measures. The page showed its results only after the form was sent, so a reader
+         # (and a search engine) saw none of them. The fields the quiz chooses among now stand on the page, with today's figures.
+         + section("What the quiz measures, and [[the fields]] it chooses among",
+                   f'<p>Each answer adds points to the fields of work it fits: what you enjoy doing, what you are already good at, and how you like to work (alone or with people, steady or changing). '
+                   f'The three fields with the most points are your result. These are the {len(qz_fields)} fields, with what is open in each today:</p>'
+                   '<div class="tablewrap"><table class="rkt"><tr><th>Field</th><th>What the work is</th><th>Open jobs</th><th>Open to beginners</th><th>Median advertised pay</th><th>Remote</th></tr>'
+                   + "".join(f'<tr><td><a href="{P}/categories/{k_}/"><strong>{e(x_["n"])}</strong></a></td><td>{e(x_["d"][:1].upper() + x_["d"][1:])}</td><td>{x_["jobs"]:,}</td><td>{x_["beg"]:,}</td><td>{x_["pay"] or "–"}</td><td>{x_["rem"]}%</td></tr>'
+                             for k_, x_ in sorted(qz_fields.items(), key=lambda kv: -kv[1]["jobs"]))
+                   + '</table></div><p class="note">Counted from today’s open postings. Median advertised pay is shown when at least 20 postings of the field state a yearly US-dollar range.</p>',
+                   sid="fields", label="How it works")
          + section("Questions about [[the career quiz]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in qz_qa) + "</dl>", label="Questions"), head=qz_ld, cls="sp qzp")
 
     lap('Skill self-tests: ten questions per skill, scored in the bro')
