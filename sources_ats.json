@@ -2062,7 +2062,7 @@
 "lifted": "2026-11-18"
 },
 {
-"name": "Atkinson Industries",
+"name": "nVent",
 "ats": "workday",
 "token": "nvent.wd5/nVent",
 "count": 597,
@@ -2071,7 +2071,7 @@
 "ES"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "GE Aerospace",
@@ -2094,10 +2094,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Caribou Coffee Operating",
+"name": "Coffee & Bagel Brands",
 "ats": "workday",
 "token": "coffeeandbagelbrands.wd1/coffeeandbagelbrands",
 "count": 587,
@@ -2105,7 +2105,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "KeyBank",
@@ -2116,10 +2116,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Dpr Gp",
+"name": "DPR Construction",
 "ats": "workday",
 "token": "mydpr.wd5/11212017",
 "count": 562,
@@ -2127,16 +2127,16 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Marriott Ownership Resorts",
+"name": "Marriott Vacations Worldwide",
 "ats": "workday",
 "token": "mymvw.wd5/MVW",
 "count": 554,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Elevate",
@@ -2159,10 +2159,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Pierce Manufacturing",
+"name": "Oshkosh Corporation",
 "ats": "workday",
 "token": "oshkoshcorporation.wd5/Oshkosh",
 "count": 539,
@@ -2171,7 +2171,7 @@
 "AU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Towne Park",
@@ -2182,10 +2182,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Department Of Veterans Affairs",
+"name": "State of Oklahoma",
 "ats": "workday",
 "token": "okgov.wd1/okgovjobs",
 "count": 536,
@@ -2193,7 +2193,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Baxter",
@@ -2217,7 +2217,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Thomson Reuters",
@@ -2253,13 +2253,13 @@
 "added": "2026-11-15"
 },
 {
-"name": "MH-Memphis Hospitals",
+"name": "Methodist Le Bonheur Healthcare",
 "ats": "workday",
 "token": "methodisthealth.wd5/MLH",
 "count": 525,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Ivy Tech",
@@ -2270,7 +2270,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "ICBD",
@@ -2284,7 +2284,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "Aerospace",
+"name": "The Aerospace Corporation",
 "ats": "workday",
 "token": "aero.wd5/External",
 "count": 507,
@@ -2292,7 +2292,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "HLB",
@@ -2303,7 +2303,7 @@
 "SG"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Adventist HealthCare",
@@ -2314,7 +2314,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Dane Street, LLC",
@@ -2336,10 +2336,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Northeastern",
+"name": "Northeastern University",
 "ats": "workday",
 "token": "northeastern.wd1/careers",
 "count": 477,
@@ -2348,7 +2348,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Heartstrings Pet Hospice, In-Home Euthanasia & Aftercare",
@@ -2361,7 +2361,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "HSHS",
+"name": "Hospital Sisters Health System",
 "ats": "workday",
 "token": "hshs.wd1/hshscareers",
 "count": 464,
@@ -2369,7 +2369,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Gundersen Health System",
@@ -2378,7 +2378,7 @@
 "count": 464,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Wolters Kluwer",
@@ -2390,7 +2390,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "American Income Life",
@@ -2426,13 +2426,13 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "Avis Budget",
+"name": "Avis Budget Group",
 "ats": "workday",
 "token": "avisbudget.wd1/ABG_Careers",
 "count": 446,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Extendicare",
@@ -2443,7 +2443,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Unisys",
@@ -2456,7 +2456,7 @@
 "CO"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Amazing Athletes",
@@ -2479,7 +2479,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "J.B. Hunt",
@@ -2500,7 +2500,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Graybar",
@@ -2511,7 +2511,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Buc-ee's",
@@ -2520,7 +2520,7 @@
 "count": 427,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Lago",
@@ -2535,7 +2535,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "OU Medical Center Edmond",
+"name": "OU Health",
 "ats": "workday",
 "token": "oumedicine.wd5/OUHealthCareers",
 "count": 426,
@@ -2543,7 +2543,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Allstate",
@@ -2563,7 +2563,7 @@
 "count": 418,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Gilead Sciences",
@@ -2587,7 +2587,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Solventum",
@@ -2603,7 +2603,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "Rocket Loans",
+"name": "Rocket Companies",
 "ats": "workday",
 "token": "quickenloans.wd5/rocket_careers",
 "count": 407,
@@ -2611,7 +2611,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Barry-Wehmiller",
@@ -2624,7 +2624,7 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Travelers",
@@ -2647,7 +2647,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "AIG",
@@ -2660,7 +2660,7 @@
 "AE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Consigli Construction",
@@ -2679,7 +2679,7 @@
 "count": 405,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Air Products",
@@ -2702,7 +2702,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Broadcom",
@@ -2737,7 +2737,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Niagara Bottling",
@@ -2748,7 +2748,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "AdvisaCare",
@@ -2762,7 +2762,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "UChicago",
+"name": "University of Chicago",
 "ats": "workday",
 "token": "uchicago.wd5/External",
 "count": 387,
@@ -2770,7 +2770,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Brightli",
@@ -2781,7 +2781,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Capgemini",
@@ -2830,10 +2830,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Leesel Transportation",
+"name": "Beacon Mobility",
 "ats": "workday",
 "token": "gobeacon.wd1/beaconmobilitycareers",
 "count": 381,
@@ -2841,7 +2841,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "FleetPride",
@@ -2852,7 +2852,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "CrowdStrike",
@@ -2878,10 +2878,10 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "MCW",
+"name": "Medical College of Wisconsin",
 "ats": "workday",
 "token": "mcw.wd503/ExternalCareers",
 "count": 372,
@@ -2889,10 +2889,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "LLS Lineage Logistics Services",
+"name": "Lineage",
 "ats": "workday",
 "token": "onelineage.wd1/External",
 "count": 371,
@@ -2901,7 +2901,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "ICF",
@@ -2913,10 +2913,10 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Agilent Watch",
+"name": "Agilent Technologies",
 "ats": "workday",
 "token": "agilent.wd5/Agilent_Careers",
 "count": 364,
@@ -2926,7 +2926,7 @@
 "AU"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Nidec",
@@ -2938,7 +2938,7 @@
 "IT"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Workday",
@@ -2954,7 +2954,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "Tommy Bahama R&R",
+"name": "Tommy Bahama",
 "ats": "workday",
 "token": "oxford.wd5/TommyBahamaUS",
 "count": 361,
@@ -2963,7 +2963,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "IFF",
@@ -2976,10 +2976,10 @@
 "ES"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Marketplace Ministries",
+"name": "Marketplace Chaplains",
 "ats": "workday",
 "token": "mchapusa.wd5/MCHAP_External",
 "count": 355,
@@ -2987,7 +2987,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Iron Mountain",
@@ -3011,7 +3011,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Faith Technologies",
@@ -3020,7 +3020,7 @@
 "count": 352,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Deckers Brands",
@@ -3054,7 +3054,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Florida Cancer Specialists & Research Institute",
@@ -3065,7 +3065,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Cape Fear Valley Health",
@@ -3074,16 +3074,16 @@
 "count": 343,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "LSU",
+"name": "Louisiana State University",
 "ats": "workday",
 "token": "lsu.wd1/LSU",
 "count": 342,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "FedEx Express",
@@ -3122,7 +3122,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "4001US00 DUAL North America",
+"name": "DUAL North America",
 "ats": "workday",
 "token": "hyperiongrp.wd3/Hyperion_External",
 "count": 326,
@@ -3132,7 +3132,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Avomind",
@@ -3184,13 +3184,13 @@
 "added": "2026-11-15"
 },
 {
-"name": "GBMC",
+"name": "GBMC HealthCare",
 "ats": "workday",
 "token": "gbmc.wd1/gbmc",
 "count": 322,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "University of Arkansas for Medical Sciences",
@@ -3199,10 +3199,10 @@
 "count": 320,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Pepperidge Farm",
+"name": "The Campbell's Company",
 "ats": "workday",
 "token": "campbellsoup.wd5/ExternalCareers_GlobalSite",
 "count": 319,
@@ -3210,7 +3210,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "LPL Financial",
@@ -3221,7 +3221,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "HD Supply",
@@ -3232,7 +3232,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Vanguard",
@@ -3245,7 +3245,7 @@
 "GB"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Globus Medical",
@@ -3258,7 +3258,7 @@
 "NL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Broadridge Financial Solutions",
@@ -3284,7 +3284,7 @@
 "BR"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "LaBella Associates",
@@ -3307,7 +3307,7 @@
 "ES"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Humana",
@@ -3329,10 +3329,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "TRUMPF Smart Factory",
+"name": "TRUMPF",
 "ats": "workday",
 "token": "trumpf.wd3/TRUMPF_Graduates_and_Professionals",
 "count": 304,
@@ -3340,7 +3340,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Brown & Brown",
@@ -3362,7 +3362,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "PCI SCP Sherpa Clinical Packaging",
