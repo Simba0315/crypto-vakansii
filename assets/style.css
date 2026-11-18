@@ -3790,3 +3790,8 @@ main.nfp .kact>a:not(.btn){color:var(--text)}
 .jfcut li a{flex:1;min-width:0}
 .jfcut li b{font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:820px){.jfcuts{grid-template-columns:1fr}}
+
+/* ---- Search and AI answers check, 18 Nov 2026: "Narrow this list" over a list of jobs, the official source line on a company page ---- */
+.pillrow.lnarrow{align-items:center;margin:2px 0 18px}
+.pillrow.lnarrow b{font-size:14px;font-weight:600;color:var(--muted);margin-right:4px}
+.cosrc{margin:2px 0 14px}

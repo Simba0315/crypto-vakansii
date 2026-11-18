@@ -3,7 +3,7 @@
 Closed jobs keep their pages forever (archive); only the JobPosting markup and the apply button are removed.
 """
 import datetime, hashlib, html, json, os, re, shutil, time
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
@@ -170,6 +170,7 @@ PLACES += [(nm, re.sub(r"[^a-z0-9]+", "-", nm.lower()).strip("-"), code) for cod
 PLACE_CODE = {slug: ("" if rule == "region" else rule if isinstance(rule, str) else rule[1]) for _, slug, rule in PLACES}      # a city or state carries its country's flag
 REGION_FLAG = {"europe": "\U0001F1EA\U0001F1FA", "asia-pacific": "\U0001F30F", "latin-america": "\U0001F30E", "africa": "\U0001F30D"}
 PATH_PLACE = re.compile(r"^(?:locations|crypto/in)/([a-z0-9-]+)/")
+HOURLY_LISTS = {"part-time/", "night-shift/", "weekend/", "temporary/", "summer/", "remote/part-time/"}      # lists whose pay is quoted by the hour
 EURO_CC = {"DE", "FR", "NL", "ES", "PT", "IE", "IT", "AT", "BE", "FI", "GR", "LU", "EE", "LV", "LT", "SK", "SI", "MT", "CY", "HR"}      # countries paid in euros
 
 
@@ -452,6 +453,34 @@ def usd_hourly(s):
 
 def money(v):
     return f"${v / 1000:,.0f}K"
+
+
+ATS_HOSTS = (("greenhouse.io", "Greenhouse", 1), ("ashbyhq.com", "Ashby", 1), ("lever.co", "Lever", 1), ("myworkdayjobs.com", "Workday", 0), ("workable.com", "Workable", 1),
+             ("smartrecruiters.com", "SmartRecruiters", 1), ("recruitee.com", "Recruitee", 0), ("bamboohr.com", "BambooHR", 0), ("teamtailor.com", "Teamtailor", 0),
+             ("icims.com", "iCIMS", 0), ("jobvite.com", "Jobvite", 1), ("breezy.hr", "Breezy", 0), ("personio.de", "Personio", 0), ("personio.com", "Personio", 0),
+             ("pinpointhq.com", "Pinpoint", 0), ("rippling.com", "Rippling", 1), ("gem.com", "Gem", 1), ("oraclecloud.com", "Oracle", 0), ("successfactors.com", "SAP SuccessFactors", 0))
+
+
+def official_source(jobs):
+    """Where a company publishes its jobs, read from the links of its own postings: (host, address to open, name of the hiring
+    system or ""), or None. The address is the board of a hiring system (boards.greenhouse.io/stripe) or the front page of the
+    company's own site: both always exist, which a guessed "/careers" would not. (Search check, 18 Nov 2026: for "stripe careers"
+    people want the official page, and a company page here named none.)"""
+    seen = Counter()
+    for j in jobs:
+        u = urlparse(j.get("url") or "")
+        if u.scheme in ("http", "https") and u.netloc: seen[(u.scheme, u.netloc.lower())] += 1
+    if not seen: return None
+    (scheme, host), k = seen.most_common(1)[0]
+    if k * 2 < sum(seen.values()): return None                    # postings spread over several sites: no single official page to name
+    for dom, name, seg in ATS_HOSTS:
+        if host == dom or host.endswith("." + dom):
+            path_ = next((urlparse(j["url"]).path for j in jobs if urlparse(j.get("url") or "").netloc.lower() == host), "")
+            first = path_.strip("/").split("/")[0]
+            wd = re.match(r"(/(?:[a-z]{2}-[A-Z]{2}/)?[A-Za-z0-9_.-]{2,80})/job/", path_) if name == "Workday" else None      # a Workday site: the part before /job/
+            board = wd.group(1).lstrip("/") + "/" if wd else first + "/" if seg and re.fullmatch(r"[A-Za-z0-9_.-]{2,60}", first or "") else ""
+            return host, f"{scheme}://{host}/{board}", name
+    return host.removeprefix("www."), f"{scheme}://{host}/", ""
 
 
 def median(xs):
@@ -1218,6 +1247,20 @@ def act_row(href, label, more=(), note="", clip=""):
             + (f"<span>{e(note)}</span>" if note else "") + "</p>")
 
 
+def list_narrow(qs, jobs):
+    """A row of ways to narrow a list, each with the number of its jobs that pass: the list's own search with one more filter.
+    (Search check, 18 Nov 2026: every first result for a "<work> jobs" query has filters over its list; these pages had a button
+    that kept the list and no way to narrow it without opening the search.) A filter the list already has, or that leaves fewer
+    than three jobs or all of them, is not shown."""
+    if not qs or len(jobs) < 20: return ""
+    week = HUB["week"] or (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    opts = [("remote=1", "Remote", sum(1 for j in jobs if j["remote"])), ("entry=1", "Entry-level", sum(1 for j in jobs if j.get("entry"))),
+            ("salary=1", "Pay stated", sum(1 for j in jobs if j.get("salary"))), ("age=7", "Posted this week", sum(1 for j in jobs if (j["posted"] or "") >= week))]
+    have = {kv.split("=")[0] for kv in qs.split("&")}
+    items = [f'<a href="{P}/jobs/?{e(qs)}&amp;{kv}">{lab}<i>{k:,}</i></a>' for kv, lab, k in opts if kv.split("=")[0] not in have and 3 <= k < len(jobs)]
+    return ('<div class="pillrow lnarrow" role="navigation" aria-label="Narrow this list"><b>Narrow this list</b>' + "".join(items) + "</div>") if len(items) >= 2 else ""
+
+
 def list_save(h1, qs, feed_path="", links=()):
     """A list page's main action on the first phone screen: keep the list. It goes into My jobs as the search that gives the same
     jobs, and My jobs counts the jobs posted since the last look (site.js; nothing is sent anywhere). The list's RSS feed beside it,
@@ -1275,7 +1318,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         chunk = rows[(n - 1) * per:n * per]
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
                                                        + (hub_stats(jobs, stats == "rest") if stats and n == 1 else "")
-                                                       + (list_save(h1, more, path if feed else "", links) if n == 1 else ""))
+                                                       + (list_save(h1, more, path if feed else "", links) + list_narrow(more, jobs) if n == 1 else ""))
         the_list = ((f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                     + pager_html(path, n, pages) + note)
@@ -1288,6 +1331,11 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             # A page about a place paid in pounds or euros never carries a dollar range in its title (search check, 18 Nov 2026:
             # "Python jobs in London ($185K–$254K)" stood among results that all quote pounds). The range in the local currency
             # when ten postings state one, else the month, as on a list with no pay.
+            # Lists of work that is paid by the hour show the hourly range, not a yearly one (search check, 18 Nov 2026: for
+            # "part time jobs" and "night shift jobs" every first result leads with dollars an hour; ours said "$76K–$145K").
+            if path in HOURLY_LISTS and "$" not in title:
+                hr_l = sorted((lo + hi) / 2 for j in jobs if (hh_ := usd_hourly(j.get("salary"))) for lo, hi in [hh_])
+                if len(hr_l) >= 15: pay_l = f", ${hr_l[len(hr_l) // 4]:,.0f}–${hr_l[3 * len(hr_l) // 4]:,.0f} an hour"
             m_pl = PATH_PLACE.match(path)
             sym_l = {"GB": "£"}.get(PLACE_CODE.get(m_pl.group(1), ""), "€" if m_pl and PLACE_CODE.get(m_pl.group(1), "") in EURO_CC else "") if m_pl else ""
             if sym_l and "$" not in title:
@@ -3254,6 +3302,8 @@ def main():
                      # the page's one action is an ink button under the heading, as "Save this list" is on every other list
                      + f'<p class="lact"><button class="btn primary sm" id="follow" type="button" data-slug="{slug}" data-name="{e(c)}">Follow {e(c)}</button>'
                        '<span>Get a “new roles” count for this company in My jobs. No account, no email.</span></p>'
+                     + (f'<p class="note cosrc">Official source: {e(c)} publishes these jobs on <a href="{e(src_[1])}" rel="nofollow noopener">{e(src_[0])}</a>'
+                        + (f" (its hiring system, {e(src_[2])})" if src_[2] else "") + ". Every job below opens its posting there; you apply on that site.</p>" if (src_ := official_source(act)) else "")
                      + (f'<dl class="nums">{"".join(chips)}</dl>' if act else "") + tbadges
                      # a <div>, not a <nav>: the phone menu's styles caught the <nav> and stood the links in a tall sticky column
                      + '<div class="anch" role="navigation" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
@@ -3281,6 +3331,11 @@ def main():
                 co_qa.append((f"Where are {c}'s jobs located?", ", ".join(f"{PLACE_NAME[p_]} ({k})" for p_, k in where) + f"; {sum(1 for j in act if j['remote']):,} of its open roles are remote."))
             if interns_:
                 co_qa.append((f"Does {c} have internships?", f"Yes: {interns_:,} open internship{'s' if interns_ > 1 else ''} as of {fdate(TODAY)}."))
+            if (src_q := official_source(act)):
+                co_qa.append((f"Where is the official {c} careers page?", f"{c} publishes its jobs on {src_q[0]}" + (f", through the hiring system {src_q[2]}" if src_q[2] else "")
+                              + f". The {len(act):,} roles listed here were read from there, and “Apply on company site” on each job opens that posting. {SITE} lists the jobs and takes no applications itself."))
+                co_qa.append((f"How do I know a job offer from {c} is real?", f"Check that the role is on {src_q[0]}, where {c} publishes its openings, and apply only there. "
+                              "A recruiter who writes from an unrelated address, moves the talk to a messenger at once or asks for money or documents before a contract is a warning sign; the job offer safety page lists the checks."))
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'Open Job')}, Pay & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + f", {new7_:,} added this week. Pay by field, locations and remote roles, from its own careers page.",
                 act, head_html=head_html, after=overview, tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa)

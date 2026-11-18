@@ -16,12 +16,12 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | # | Section | Query | Our page | Google read | Copilot answer on Bing | Are we in | Done 18 Nov | Largest gap still open |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Home | jobs hiring now | `/` | 15 Nov | no | no | – | chips for “hiring immediately / no experience / part time”; date in the title |
-| 2 | Roles | data analyst jobs | `/roles/data-analyst/` | 15 Nov | no | no | – | filter chips on the list (remote, entry-level, pay stated, this week); alert box |
+| 2 | Roles | data analyst jobs | `/roles/data-analyst/` | 15 Nov | no | no | “Narrow this list” row with counts (every list page) | filter chips on the list (remote, entry-level, pay stated, this week); alert box |
 | 3 | Role x place | data analyst jobs new york | `/roles/data-analyst/new-york/` | 15 Nov | no | no | – | freshness line (“N added this week”); nearby areas |
 | 4 | Places | jobs in austin | `/locations/austin/` | 15 Nov | no | no | – | public employers and universities; “how do I get a job in <city>”; metro area |
 | 5 | Place x skill | python jobs london | `/locations/london/skills/python/` | 15 Nov | no | no | pay in pounds or euros in the title of UK and eurozone place pages | pay percentiles in pounds; contract and permanent split; areas of the city |
 | 6 | Place x category | finance jobs atlanta | `/locations/atlanta/finance/` | 15 Nov | no | no | the field by the word people type (“Finance jobs in Atlanta”) | sub-role chips with counts; pay by level table |
-| 7 | Companies | stripe careers | `/companies/stripe/` | 15 Nov | no | no | – | official careers link; hiring process section; early-career block |
+| 7 | Companies | stripe careers | `/companies/stripe/` | 15 Nov | no | no | official source line with a link; two answered questions (all company pages) | official careers link; hiring process section; early-career block |
 | 8 | Company lists | s&p 500 companies hiring | `/companies/sp-500/` | 18 Nov | no | no | – | example role with pay per company; remote column; trend over time |
 | 9 | Company compare | spacex vs anduril careers | `/companies/compare/spacex-vs-anduril-industries/` | 15 Nov | yes | no | “Careers” and both counts in the title, the answer in the first sentence | role-mix and location tables; intern and new-grad counts |
 | 10 | Resume builder | free resume builder | `/resume/` | 18 Nov | no | no | four more answered questions (PDF and Word, red flags, the 7-second rule, on a phone) | table “what is really free” against other builders; template previews; import of an existing resume |
@@ -35,11 +35,11 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 18 | Salaries | data analyst salary | `/salaries/data-analyst/` | 15 Nov | no | no | – | our median against BLS and others; 10th/median/90th chart; note on advertised pay |
 | 19 | Resume words | another word for managed on resume | `/resume-words/managed/` | 18 Nov | no | no | – | none found: the page is level with the first results |
 | 20 | Glossary | what is an ats | `/glossary/ats/` | 15 Nov | yes | no | – | canonical address in links and sitemap (the short address is a stub) |
-| 21 | Skills | sql jobs | `/skills/sql/` | 15 Nov | no | no | – | filter chips; alert box |
+| 21 | Skills | sql jobs | `/skills/sql/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
 | 22 | Crypto | crypto jobs | `/crypto/` | 15 Nov | yes | no | – | median pay and remote share in the first answer |
 | 23 | Compare roles | data analyst vs data scientist | `/compare/data-analyst-vs-data-scientist/` | 15 Nov | yes | no | – | tools per role table, education row, typical tasks, verdict first |
-| 24 | Remote | remote jobs | `/remote/` | 15 Nov | no | no | – | filter chips; alert box |
-| 25 | Categories | customer service jobs | `/jobs/support/` | 15 Nov | no | no | – | filter chips; alert box |
+| 24 | Remote | remote jobs | `/remote/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
+| 25 | Categories | customer service jobs | `/jobs/support/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
 | 26 | Perks | jobs with visa sponsorship | `/perks/visa-sponsorship/` | 15 Nov | yes | no | – | by industry and by visa type; “how to find a sponsor”; questions |
 | 27 | Site vs site | indeed vs linkedin | `/vs/indeed-vs-linkedin/` | 15 Nov | yes | no | – | the query maps to /vs/indeed-vs-linkedin-jobs/ (the short address is a stub) |
 | 28 | Jobs for | jobs for introverts | `/jobs-for/introverts/` | 18 Nov | yes | no | short answer first, three ranked lists, the count in the title (all 53 pages) | per-page traits list; questions for the related searches |
@@ -58,7 +58,7 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 41 | Entry-level | entry level jobs | `/entry-level/` | 15 Nov | no | no | – | split internships and entry-level full-time; “that pay well”; “no degree” |
 | 42 | Internships | internships | `/internships/` | – | no | no | – | see the block |
 | 43 | New jobs | new jobs posted today | `/new/` | 15 Nov | no | no | – | “posted today” count and tab; visible “last updated” time |
-| 44 | Part-time | part time jobs | `/part-time/` | – | no | no | – | hourly pay in the title and by title, not yearly |
+| 44 | Part-time | part time jobs | `/part-time/` | – | no | no | hourly range in the title | hourly pay in the title and by title, not yearly |
 | 45 | Night shift | night shift jobs | `/night-shift/` | 18 Nov | no | no | four answered questions (a good night job, night pay, hours, remote) | hourly pay and night premium table; groups by industry |
 | 46 | Post a job | post a job for free | `/post-a-job/` | 18 Nov | yes | no | – | table of free options elsewhere (Indeed, LinkedIn, ZipRecruiter) with their limits |
 | 47 | Pricing | job posting sites for employers | `/pricing/` | – | yes | no | – | a new page: job posting sites for employers compared (12 to 15 rows) |
