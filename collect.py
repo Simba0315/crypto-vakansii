@@ -30,7 +30,9 @@ RULES = hashlib.md5(Path(__file__).read_bytes()).hexdigest()[:8]       # part of
 ROTATING = ("sources_more.json", "sources_ats.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
-ATS_LIMIT = {"workday": 12, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6}
+# Workday: 24 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s;
+# with 134 released boards read on every run, 12 at a time made the run about 20 minutes longer.
+ATS_LIMIT = {"workday": 24, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6}
 ATS_GAP = {"workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
@@ -1465,7 +1467,7 @@ def main():
     import multiprocessing
     PARSE = cf.ProcessPoolExecutor(int(os.environ.get("HRN_PARSERS") or os.cpu_count() or 2), mp_context=multiprocessing.get_context("spawn"))
     try:
-        with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 32)) as ex:
+        with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 44)) as ex:
             results = list(ex.map(read, sources))
         # second, gentler pass for feeds that timed out or were rate-limited the first time
         by_name = {s["name"]: s for s in sources}
