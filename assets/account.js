@@ -559,28 +559,25 @@
         return '<div class="acc-row"><div class="main"><strong>' + esc(o.name) + '</strong><span class="js">' + (o.label && o.label !== o.name ? esc(o.label) + ' · ' : '') + nice(o.created) + '</span></div>' +
           '<div class="ctl">' + o.credits + ' credits</div></div>'; }).join('') + '</div>', 'spent') : '');
   }
-  /* What a paid product looks like on the site, drawn with the site's own job row and the account's own job and company, so the
-     picture cannot go out of date the way a screenshot does. One small figure per product card. */
+  /* What a paid product looks like on the site: a piece cut from a real page of the site (the owner, 18 Nov 2026: "not a drawing,
+     a cut-out screenshot of the home page and the other pages, how it will be promoted"). The pictures show an example company;
+     they were taken from a build in which every product was bought for it in test mode, and live in assets/paid/. A click opens
+     the picture in full size. */
+  var SHOTS = {
+    featured: [['boost-standard', 'A job with a Standard boost in a list: the green “Featured” mark, above the free jobs.']],
+    premium: [['boost-premium', 'A Premium job leads its list, with “Featured” and “Urgently hiring” and the company’s logo.'], ['boost-premium-page', 'The page of a Premium job: the logo, the badge and the cover picture.']],
+    urgent: [['badge-urgent', 'A job with only the badge: it keeps its place by date and says “Urgently hiring”.']],
+    bump: [['bump', 'A job posted two weeks ago and bumped today stands above jobs posted today; its own date stays on it.']],
+    spotlight: [['spotlight-home', '“Featured employers” on the home page.'], ['spotlight-company', 'The company page with the “Featured employer” badge.']],
+    pass: [['boost-premium', 'Every job of the company is boosted while the pass runs, and three of them can be Premium.'], ['spotlight-home', 'The company is in “Featured employers” for the same 30 days.']],
+    sponsor: [['sponsor', 'The top of a category page with the sponsor’s name, logo and open roles.']]
+  };
   function demo(id) {
-    var job = (S.jobs.filter(function (j) { return j.status === 'live' || j.status === 'review'; })[0] || {}).title || 'Your job title', co = me.company || 'Your company';
-    var row = function (title, sub, pills, cls, when) {
-      return '<span class="pcd-row' + (cls ? ' ' + cls : '') + '"><span class="pcd-av">' + esc(((cls && /mine/.test(cls) ? co : sub) || 'C').charAt(0).toUpperCase()) + '</span><span class="pcd-t"><b>' + esc(title) + '</b><i>' + esc(sub) + '</i></span>' +
-        '<span class="pcd-p">' + (pills || '') + '<em>' + (when || '') + '</em></span></span>';
-    };
-    var feat = '<span class="pill acc">Featured</span>', urg = '<span class="pill urg">Urgently hiring</span>';
-    var other = function (n, when) { return row(['Account manager', 'Data analyst', 'Office coordinator'][n], ['Another company', 'Another company', 'Another company'][n], '', 'dim', when); };
-    var fig = function (inner, cap) { return '<figure class="pcd" aria-label="How it looks on the site"><figcaption>How it looks</figcaption><div class="pcd-list">' + inner + '</div><p>' + cap + '</p></figure>'; };
-    if (id === 'featured') return fig(row(job, co, feat, 'mine feat', '12 days ago') + other(0, 'today') + other(1, 'yesterday'), 'Your job stands above the free ones in its lists and in search for 30 days, with the green mark.');
-    if (id === 'premium') return fig('<span class="pcd-cover"></span>' + row(job, co, feat + urg, 'mine feat logo', '12 days ago') + other(0, 'today'),
-      'First in its lists, taking turns with other Premium jobs; your logo, “Urgently hiring” for 14 days, and a cover picture on the job page.');
-    if (id === 'urgent') return fig(other(0, 'today') + row(job, co, urg, 'mine', '3 days ago') + other(1, '4 days ago'), 'The job keeps its place by date and carries the badge in every list and on its page for 14 days.');
-    if (id === 'bump') return fig(row(job, co, '', 'mine up', '12 days ago') + other(0, 'today') + other(1, 'yesterday'), 'The job goes back to the top of its lists, as if it was posted today. Its real date stays on it.');
-    if (id === 'extend') return '<figure class="pcd" aria-label="How it looks on the site"><figcaption>How it looks</figcaption><div class="pcd-bar"><span>30 days running</span><span class="more">+30 days</span></div><p>The boost that is running now simply ends 30 days later.</p></figure>';
-    if (id === 'spotlight') return fig('<span class="pcd-h">Featured employers</span>' + row(co, 'open roles · featured', '', 'mine logo'), 'On the home page and at the top of the companies list, with a “Featured employer” badge on your company page.');
-    if (id === 'pass') return fig(row(job, co, feat, 'mine feat logo') + row('Every other job of ' + co, co, feat, 'mine feat logo') + '<span class="pcd-h">Featured employers · ' + esc(co) + '</span>',
-      'Every job of the company is boosted while the pass runs, three of them can be Premium, and the company is in the spotlight.');
-    if (id === 'sponsor') return fig('<span class="pcd-h big">Customer service jobs</span><span class="pcd-s">SPONSORED · <b>' + esc(co) + '</b> · your open roles</span>' + other(0, 'today'), 'Your company is named at the top of the category or skill page you choose, with a link to your jobs.');
-    return '';
+    if (id === 'extend') return '<figure class="pcd"><figcaption>How it works</figcaption><div class="pcd-bar"><span>30 days running</span><span class="more">+30 days</span></div><p>The boost that is running now simply ends 30 days later.</p></figure>';
+    var list = SHOTS[id]; if (!list) return '';
+    var base = (document.documentElement.getAttribute('data-base') || '') + '/paid/';
+    return '<figure class="pcd shot"><figcaption>How it looks on the site (an example company)</figcaption>' + list.map(function (x) {
+      return '<a href="' + base + x[0] + '.jpg" target="_blank" rel="noopener" title="Open the picture in full size"><img src="' + base + x[0] + '.jpg" alt="' + esc(x[1]) + '" loading="lazy"></a><p>' + esc(x[1]) + '</p>'; }).join('') + '</figure>';
   }
   function promotePanel() {
     var mine = S.jobs.filter(function (j) { return j.status === 'live' || j.status === 'review'; }), claimed = S.claims.filter(function (c) { return c.status === 'verified'; });
@@ -762,13 +759,16 @@
     });
     on('[data-res-open]', function (b) {
       var cur = H.get('hrn_resume', null);
-      if (cur && !confirm('Open this version in the builder? It replaces the resume that is in the builder now.')) return;
-      b.disabled = true;
-      api('GET', '/api/resumes/' + b.getAttribute('data-res-open')).then(function (r) { H.set('hrn_resume', r.resume.resume); location.href = D.site + '/resume/'; }, function (e) { b.disabled = false; fail(e); });
+      (cur ? H.sure(b, 'Open this version in the builder? It replaces the resume that is in the builder now.', 'Open it') : Promise.resolve(true)).then(function (ok) {
+        if (!ok) return;
+        b.disabled = true;
+        api('GET', '/api/resumes/' + b.getAttribute('data-res-open')).then(function (r) { H.set('hrn_resume', r.resume.resume); location.href = D.site + '/resume/'; }, function (e) { b.disabled = false; fail(e); });
+      });
     });
     on('[data-res-del]', function (b) {
-      if (!confirm('Delete this version from your account?')) return;
-      api('DELETE', '/api/resumes/' + b.getAttribute('data-res-del')).then(function () { flash('The version is deleted.'); return load(); }, fail);
+      H.sure(b, 'Delete this version from your account?', 'Delete').then(function (ok) {
+        if (ok) api('DELETE', '/api/resumes/' + b.getAttribute('data-res-del')).then(function () { flash('The version is deleted.'); return load(); }, fail);
+      });
     });
     on('[data-alert-del]', function (b) { b.disabled = true; api('DELETE', '/api/alerts/' + b.getAttribute('data-alert-del')).then(function () { flash('The alert is deleted. No more letters for it.'); return load(); }, function (e) { b.disabled = false; fail(e); }); });
     on('[data-alert-pause]', function (b) {
@@ -794,10 +794,12 @@
       var data = {}; SYNC_KEYS.forEach(function (k) { var v = H.get(k, null); if (v != null) data[k] = v; });
       b.disabled = true; api('PUT', '/api/sync', { data: data }).then(function () { flash('Your lists are copied to your account.'); return load(); }, function (e) { b.disabled = false; fail(e); });
     });
-    on('#sync-down', function () {
-      if (!confirm('Replace the lists in this browser with the copy in your account?')) return;
-      var data = (S.sync && S.sync.data) || {}; SYNC_KEYS.forEach(function (k) { if (k in data) H.set(k, data[k]); });
-      flash('Your lists are in this browser now.'); draw();
+    on('#sync-down', function (b) {
+      H.sure(b, 'Replace the lists in this browser with the copy in your account?', 'Replace').then(function (ok) {
+        if (!ok) return;
+        var data = (S.sync && S.sync.data) || {}; SYNC_KEYS.forEach(function (k) { if (k in data) H.set(k, data[k]); });
+        flash('Your lists are in this browser now.'); draw();
+      });
     });
     submit(document.getElementById('talent-on'), function (v) {
       return api('PUT', '/api/talent/profile', Object.assign(talentValues(v), { consent: true, consent_text: S.talent.consent_text, resume: H.get('hrn_resume', null) })).then(function () { flash('Employers can now find your resume, without your name and contacts.'); return load(); });
@@ -805,9 +807,10 @@
     submit(document.getElementById('talent-set'), function (v) { return api('PUT', '/api/talent/profile', talentValues(v)).then(function () { flash('Saved.'); return load(); }); });
     on('#talent-update', function () { api('PUT', '/api/talent/profile', { resume: H.get('hrn_resume', null) }).then(function () { flash('The copy employers see is updated.'); return load(); }, fail); });
     on('#talent-pause', function () { api('PUT', '/api/talent/profile', { paused: !S.talent.profile.paused }).then(load, fail); });
-    on('#talent-del', function () {
-      if (!confirm('Delete your resume from our server for good? Employers will no longer find it.')) return;
-      api('DELETE', '/api/talent/profile').then(function (r) { flash(esc(r.message)); return load(); }, fail);
+    on('#talent-del', function (b) {
+      H.sure(b, 'Delete your resume from our server for good? Employers will no longer find it.', 'Delete').then(function (ok) {
+        if (ok) api('DELETE', '/api/talent/profile').then(function (r) { flash(esc(r.message)); return load(); }, fail);
+      });
     });
     on('[data-q]', function (b) { b.disabled = true; api('POST', '/api/talent/requests/' + b.getAttribute('data-id') + '/' + b.getAttribute('data-q')).then(load, function (e) { b.disabled = false; fail(e); }); });
 
@@ -882,8 +885,11 @@
       });
     });
     on('[data-job-del]', function (b) {
-      if (!confirm('Delete this job for good? It leaves the site, and what was bought for it stops.')) return;
-      b.disabled = true; api('DELETE', '/api/jobs/' + b.getAttribute('data-job-del')).then(function () { flash('The job is deleted.'); return load(); }, function (e) { b.disabled = false; fail(e); });
+      // asked on the page, not in a browser window: where such windows are switched off the button used to do nothing
+      H.sure(b, 'Delete this job for good? It leaves the site at its next update, and what was bought for it stops.', 'Delete the job').then(function (ok) {
+        if (!ok) return;
+        b.disabled = true; api('DELETE', '/api/jobs/' + b.getAttribute('data-job-del')).then(function () { flash('The job is deleted. It leaves the site at the next update, within the hour.'); return load(); }, function (e) { b.disabled = false; fail(e); });
+      });
     });
     on('[data-act]', function (b) {
       var act = b.getAttribute('data-act'); b.disabled = true;

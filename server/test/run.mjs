@@ -513,6 +513,7 @@ async function quiet(run) {                    // runs something that is expecte
   r = await call(env, 'DELETE', '/api/jobs/' + second, { token: stranger }); eq(r.status, 404, "someone else's job cannot be deleted");
   r = await call(env, 'POST', '/api/jobs/' + second + '/delete', { token }); eq(r.status, 200, 'the employer deletes a job');
   x = await exported(); eq(x.jobs.map((j) => j.id), [first], 'a deleted job leaves the export');
+  eq(x.gone, [second], 'and the export names it as gone, so the site drops its page instead of keeping it as a closed one');
   r = await call(env, 'GET', '/api/jobs', { token }); eq(r.body.jobs.map((j) => j.id), [first], 'and the list of my jobs');
   r = await call(env, 'POST', '/api/jobs/' + second + '/renew', { token }); eq(r.status, 404, 'a deleted job cannot be published again');
 

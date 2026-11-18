@@ -1413,6 +1413,11 @@ def direct_and_paid(db, used_slugs, indexed, stats):
     for jid, old in db.items():
         if old.get("direct") and old["active"] and jid not in seen:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
+    # A job its owner deleted for good, or a moderator took down, leaves the site altogether: no page marked "closed" is kept for
+    # it (the owner deleted his own test job on 18 Nov 2026 and expected it gone). The API names such jobs in "gone" for 45 days.
+    gone = {str(x) for x in exp.get("gone") or [] if isinstance(x, str) and x}
+    for jid in [k for k, old in db.items() if old.get("direct") and any(k.endswith("-" + g) for g in gone)]:
+        used_slugs.discard(db[jid].get("slug")); del db[jid]
     keep = lambda rows, keys: [{k: str(r.get(k, "")) for k in keys} for r in rows if isinstance(r, dict)]
     # company pages kept by the companies themselves (a verified claim): the text, the site, the places, and the logo, which is saved
     # as data/logos/<company>.png so that every page shows it the way it shows the logos we hold ourselves (build.LOGOS)

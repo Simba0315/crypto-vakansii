@@ -249,7 +249,33 @@
       else if (seen[slug]) a.parentNode.classList.add('seen');
     });
   }
-  window.HRN = { mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  /* "Are you sure?" drawn on the page, next to the button that was pressed. The browser's own confirm() and prompt() windows are
+     switched off in some browsers and in-app views; there they answer "no" without showing anything, so a Delete button did
+     nothing at all (the owner pressed Delete on a job on 18 Nov 2026 and no request ever left the page). sure() resolves to
+     true or false; askText() to the text typed, or null. */
+  function sureBox(btn, text, inner, pick) {
+    return new Promise(function (done) {
+      var old = document.querySelector('.sure-box'); if (old && old._end) old._end();
+      var box = document.createElement('div'), inDom = btn && btn.parentNode && document.body.contains(btn);
+      box.className = 'sure-box' + (inDom ? '' : ' float'); box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-label', text);
+      box.innerHTML = '<p class="sure-t">' + esc(text) + '</p>' + inner;
+      var end = function (v) { if (!box.parentNode) return; box.parentNode.removeChild(box); if (inDom && btn.focus) { try { btn.focus(); } catch (e) {} } done(v); };
+      box._end = function () { end(pick(box, false)); };
+      box.addEventListener('click', function (ev) { var b = ev.target.closest ? ev.target.closest('[data-sure]') : null; if (b) { ev.preventDefault(); ev.stopPropagation(); end(pick(box, b.getAttribute('data-sure') === '1')); } });
+      box.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') end(pick(box, false)); else if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); end(pick(box, true)); } });
+      if (inDom) btn.parentNode.insertBefore(box, btn.nextSibling); else document.body.appendChild(box);
+      var first = box.querySelector('input') || box.querySelector('[data-sure="0"]'); if (first) { try { first.focus(); if (first.select) first.select(); } catch (e) {} }
+    });
+  }
+  function sure(btn, text, yes) {
+    return sureBox(btn, text, '<p class="sure-act"><button type="button" class="btn sm" data-sure="1">' + esc(yes || 'Yes') + '</button><button type="button" class="btn ghost sm" data-sure="0">Cancel</button></p>',
+      function (box, ok) { return !!ok; });
+  }
+  function askText(btn, text, value, yes) {
+    return sureBox(btn, text, '<p class="sure-act"><input type="text" maxlength="80" value="' + esc(value || '') + '" aria-label="' + esc(text) + '"><button type="button" class="btn sm" data-sure="1">' + esc(yes || 'Save') +
+      '</button><button type="button" class="btn ghost sm" data-sure="0">Cancel</button></p>', function (box, ok) { return ok ? box.querySelector('input').value : null; });
+  }
+  window.HRN = { sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
      the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */
@@ -847,9 +873,13 @@
     var saveBtn = q1('#save'), appliedBtn = q1('#applied');
     if (!saveBtn) return;
     var shareRow = q1('#share');
-    if (shareRow && !shareRow.firstChild) shareRow.innerHTML = '<span>Share:</span><button class="linkbtn" id="copy" type="button">Copy link</button>' +
-      ['LinkedIn', 'X', 'Telegram', 'WhatsApp', 'Reddit', 'Email'].map(function (n) { return '<button class="linkbtn" type="button" data-share="' + n.toLowerCase() + '">' + n + '</button>'; }).join('') +
-      '<button class="linkbtn" id="hide" type="button">Not interested</button><button class="linkbtn" id="mute" type="button">Hide this company</button>';
+    // The share row as round icon buttons (the owner, 18 Nov 2026: nine words in three lines "looked untidy, better as icons"); each
+    // has its name for screen readers and as a tip. The two "do not show me this" actions stand under them as quiet words.
+    var SHARE_ICON = {"copy": "<path d=\"M9 9h10v11H9zM5 15V4h10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>", "linkedin": "<path d=\"M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3zM10 9.75h3.8v1.6h.06c.53-1 1.83-1.95 3.76-1.95C21.2 9.4 22 11.6 22 14.6V21h-4v-5.7c0-1.4-.03-3.1-1.9-3.1s-2.2 1.5-2.2 3V21H10z\" fill=\"currentColor\"/>", "x": "<path d=\"M17.5 3h3.2l-7 8 8.2 10h-6.4l-5-6.1L4.8 21H1.6l7.5-8.6L1.2 3h6.6l4.5 5.6zm-1.1 16h1.8L7.7 4.9H5.8z\" fill=\"currentColor\"/>", "telegram": "<path d=\"M21.9 4.3 18.7 19.6c-.2 1-.9 1.3-1.8.8l-5-3.7-2.400 2.300c-.3.3-.5.5-1 .5l.4-5.100 9.300-8.400c.4-.4-.1-.6-.6-.200L6.100 13.300 1.200 11.700c-1.100-.3-1.100-1.100.2-1.600L20.500 2.700c.9-.3 1.700.2 1.400 1.600z\" fill=\"currentColor\"/>", "whatsapp": "<path d=\"M12 2.2a9.800 9.800 0 0 0-8.400 14.900L2.200 21.800l4.900-1.300A9.800 9.800 0 1 0 12 2.200zm0 1.800a8 8 0 1 1-4.100 14.900l-.300-.200-2.900.800.800-2.800-.200-.300A8 8 0 0 1 12 4zm-3.300 3.900c-.200 0-.500.100-.700.400-.300.300-1 .900-1 2.300s1 2.700 1.100 2.900c.200.200 2 3.100 4.900 4.200 2.400 1 2.900.800 3.400.700.500 0 1.700-.700 1.900-1.300.200-.700.200-1.200.200-1.300-.100-.200-.300-.200-.600-.400l-1.900-.900c-.300-.100-.500-.200-.700.100l-.900 1.100c-.200.200-.300.200-.600.100-.300-.200-1.200-.500-2.300-1.400-.800-.800-1.400-1.700-1.600-2-.100-.300 0-.400.100-.600l.500-.500c.100-.200.200-.300.300-.500.100-.200 0-.400 0-.500l-.900-2.100c-.200-.500-.400-.500-.600-.500z\" fill=\"currentColor\"/>", "reddit": "<path d=\"M22 12.100a2.200 2.200 0 0 0-3.700-1.600c-1.500-1-3.400-1.600-5.500-1.700l1-4.400 3.100.700a1.600 1.600 0 1 0 .200-.900l-3.600-.800a.500.500 0 0 0-.600.400l-1.100 5c-2.100.100-4 .700-5.500 1.700A2.200 2.200 0 1 0 3.900 14c0 .300-.100.500-.100.800 0 3.200 3.700 5.800 8.200 5.800s8.200-2.600 8.200-5.800c0-.300 0-.500-.100-.800.900-.400 1.500-1.200 1.500-2.200zM7.500 13.800a1.500 1.500 0 1 1 3 0 1.500 1.500 0 0 1-3 0zm8.200 3.900c-1 .900-2.900 1.100-3.700 1.100s-2.700-.100-3.700-1.100a.400.400 0 0 1 .600-.600c.600.600 2 .800 3.100.800s2.500-.200 3.100-.800a.400.400 0 0 1 .600.600zm-.200-2.400a1.500 1.500 0 1 1 0-3 1.500 1.500 0 0 1 0 3z\" fill=\"currentColor\"/>", "email": "<path d=\"M3 6h18v12H3zM3.500 6.500l8.500 7 8.500-7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>"};
+    var shareIcon = function (k) { return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' + SHARE_ICON[k] + '</svg>'; };
+    if (shareRow && !shareRow.firstChild) shareRow.innerHTML = '<span class="share-l">Share</span><span class="share-i"><button class="shbtn" id="copy" type="button" aria-label="Copy the link" title="Copy the link">' + shareIcon('copy') + '</button>' +
+      ['LinkedIn', 'X', 'Telegram', 'WhatsApp', 'Reddit', 'Email'].map(function (n) { return '<button class="shbtn" type="button" data-share="' + n.toLowerCase() + '" aria-label="Share on ' + n + '" title="' + n + '">' + shareIcon(n.toLowerCase()) + '</button>'; }).join('') +
+      '</span><span class="share-say" id="copy-say" role="status"></span><span class="share-more"><button class="linkbtn" id="hide" type="button">Not interested</button><button class="linkbtn" id="mute" type="button">Hide this company</button></span>';
     var me = { s: saveBtn.getAttribute('data-slug'), t: saveBtn.getAttribute('data-title'), c: saveBtn.getAttribute('data-company'), l: root.querySelector('.jhead .ava.has') ? 1 : 0 };
     var label = function () {
       var rec = jobs[me.s];
@@ -877,7 +907,7 @@
     var copy = q1('#copy');
     if (copy) copy.addEventListener('click', function () {
       var link = root === document ? location.href : location.origin + P + '/job/' + me.s + '/';
-      var done = function () { copy.textContent = 'Link copied'; setTimeout(function () { copy.textContent = 'Copy link'; }, 1600); };
+      var say = q1('#copy-say'), done = function () { if (say) say.textContent = 'Link copied'; copy.classList.add('ok'); setTimeout(function () { if (say) say.textContent = ''; copy.classList.remove('ok'); }, 1600); };
       if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, function () {}); else done();
     });
     // share links are built on click, so pages do not carry five long addresses each
@@ -1528,11 +1558,13 @@
         reader.readAsText(file);
       });
       $('mj-erase').addEventListener('click', function () {
-        if (!window.confirm('Erase everything this site keeps in this browser: saved jobs, applications, notes, searches, hidden items, your skill profile, your resume and what you typed into the tools? This cannot be undone.')) return;
+       sure($('mj-erase'), 'Erase everything this site keeps in this browser: saved jobs, applications, notes, searches, hidden items, your skill profile, your resume and what you typed into the tools? This cannot be undone.', 'Erase everything').then(function (ok) {
+        if (!ok) return;
         try {
           Object.keys(localStorage).forEach(function (k) { if (KEYS.indexOf(k) >= 0 || k.indexOf('hrn_tool_') === 0) localStorage.removeItem(k); });
         } catch (e) {}
         location.reload();
+       });
       });
     }
 

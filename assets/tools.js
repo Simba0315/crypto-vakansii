@@ -2120,9 +2120,10 @@
       }
       var b = ev.target.closest ? ev.target.closest('[data-clear]') : null;
       if (!b) return;
-      if (b.getAttribute('data-clear') === 'ask' && !window.confirm('Erase everything you typed here from this browser?')) return;
-      try { localStorage.removeItem(KEY); } catch (e) {}
-      put({}); render(read(), '', api);
+      var wipe = function () { try { localStorage.removeItem(KEY); } catch (e) {} put({}); render(read(), '', api); };
+      // asked on the page (site.js: HRN.sure); a browser window may be switched off and then the button did nothing
+      if (b.getAttribute('data-clear') === 'ask' && window.HRN && window.HRN.sure) { window.HRN.sure(b, 'Erase everything you typed here from this browser?', 'Erase').then(function (ok) { if (ok) wipe(); }); return; }
+      wipe();
     });
     render(read(), '', api);
     return api;

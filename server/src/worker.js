@@ -1795,7 +1795,10 @@ async function exportForSite(env) {
   // the company wrote there (about, site, logo, where it hires)
   const claimed = pages.map((c) => ({ company: c.company, since: isoDay(c.decided_at), about: c.about || '', website: c.website || '', logo: c.logo ? mediaUrl(env, c.logo) : '',
     locations: String(c.locations || '').split('\n').filter(Boolean) }));
-  return { generated: new Date(t * 1000).toISOString(), boosts, sponsors, jobs, claimed };
+  // jobs their owner deleted for good, or a moderator took down, in the last 45 days: the site drops their pages altogether (a job
+  // that was only closed, or ran out, keeps its page marked as closed, like every job the site lists)
+  const gone = (await db(env, "SELECT id FROM jobs WHERE status = 'removed' AND ended_at > ? ORDER BY ended_at", t - 45 * DAY).all()).results.map((r) => r.id);
+  return { generated: new Date(t * 1000).toISOString(), boosts, sponsors, jobs, claimed, gone };
 }
 /* Ask GitHub to rebuild the site so a change shows up within minutes instead of at the next daily run. At most once in ten minutes. */
 async function requestRebuild(env, fromTimer) {

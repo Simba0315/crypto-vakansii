@@ -3829,7 +3829,7 @@ table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
 .coabout .sec-label{margin:0 0 6px}
 .coabout p{margin:0 0 8px}
 .coabout p:last-child{margin-bottom:0}
-.cohead .pills{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.cohead .pills{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}      /* on a phone the heading is a grid: without its own full row the badges widened the logo's column and pushed the heading off the screen */
 
 /* ---- account, 18 Nov 2026 (the owner's screenshot: "Continue to payment" ran out of the narrow credit cards) ----
    A button keeps its words on one line everywhere (.btn), and a grid item is never narrower than its words, so in a card narrower
@@ -3879,3 +3879,28 @@ table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
 .acc-paste{margin:0 0 14px}
 .acc-paste textarea{width:100%;min-height:96px}
 .acc-paste .acc-btns{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:10px 0 0}
+
+/* ---- the share row of a job as icons (18 Nov 2026) ---- */
+.share{gap:10px 12px}
+.share .share-l{font-size:13px;color:var(--muted)}
+.share .share-i{display:inline-flex;flex-wrap:wrap;gap:6px}
+.shbtn{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;padding:0}
+.shbtn:hover{border-color:var(--text)}
+.shbtn.ok{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.share .share-say{font-size:13px;color:var(--green);min-width:0}
+.share .share-more{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:0 14px;font-size:13px}
+/* ---- "Are you sure?" on the page, next to the button (site.js: HRN.sure) ---- */
+.sure-box{flex:1 1 100%;margin:10px 0 0;padding:12px 14px;border:1px solid var(--text);border-radius:12px;background:var(--card);font-size:14.5px;line-height:1.4;max-width:560px;text-align:left;color:var(--text)}
+.sure-box .sure-t{margin:0 0 10px;font-weight:600}
+.sure-box .sure-act{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sure-box .sure-act .btn{width:auto;margin:0}
+.sure-box input{flex:1 1 180px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--text)}
+.sure-box.float{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;width:min(560px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.18)}
+
+/* the examples in the product cards are pieces cut from real pages */
+.pcd.shot{padding:10px}
+.pcd.shot a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;margin:0 0 6px}
+.pcd.shot a+p{margin:0 0 10px}
+.pcd.shot a+p:last-child{margin-bottom:0}
+.pcd.shot img{display:block;width:100%;height:auto}
+.pcd.shot a:hover{border-color:var(--text)}

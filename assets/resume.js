@@ -165,12 +165,14 @@
       }).join('\n');
     });
   };
-  var useImport = function (r, how) {
+  var useImport = function (r, how, sureDone) {
     if (!r || !(r.name || r.summary || r.skills || r.exp.length)) { impMsg = 'Nothing could be read from ' + esc(how) + '. Paste the text instead, or fill in the form.'; drawForm(); return; }
-    if (hasContent(data)) {
-      if (!confirm('Open the resume from ' + how + ' as a new resume? The one you have now stays in the list above the form.')) return;
-      if (!addResume({ tpl: data.tpl })) return;
+    if (hasContent(data) && !sureDone) {              // asked on the page; the answer calls this again
+      H.sure(document.getElementById('rb-pasteread') || document.getElementById('rb-paste'), 'Open the resume from ' + how + ' as a new resume? The one you have now stays in the list above the form.', 'Open as new')
+        .then(function (ok) { if (ok) useImport(r, how, true); });
+      return;
     }
+    if (hasContent(data) && !addResume({ tpl: data.tpl })) return;
     ['name', 'title', 'email', 'phone', 'place', 'links', 'summary', 'skills'].forEach(function (k) { data[k] = r[k] || ''; });
     data.exp = r.exp.length ? r.exp.map(function (x) { return { role: x.role || '', org: x.org || '', dates: x.dates || '', text: x.text || '' }; }) : copy(blank.exp);
     data.edu = r.edu.length ? r.edu.map(function (x) { return { what: x.what || '', org: x.org || '', dates: x.dates || '' }; }) : copy(blank.edu);
@@ -390,11 +392,14 @@
     }
     else if (t.id === 'rb-new') { if (addResume({ name: data.name, email: data.email, phone: data.phone, place: data.place, links: data.links, tpl: data.tpl })) { setTab('contact'); redraw(); } }
     else if (t.id === 'rb-dup') { var src = copy(data), lb = labelOf(curItem()); if (addResume(src, lb + ' (copy)', jd)) redraw(); }
-    else if (t.id === 'rb-ren') { var nm = prompt('Name this resume (only you see the name):', labelOf(curItem())); if (nm != null) { curItem().label = nm.trim().slice(0, 60); keepSet(); drawSet(); } }
+    else if (t.id === 'rb-ren') { H.askText(t, 'Name this resume (only you see the name):', labelOf(curItem()), 'Save the name').then(function (nm) { if (nm != null) { curItem().label = nm.trim().slice(0, 60); keepSet(); drawSet(); } }); }
     else if (t.id === 'rb-delr') {
-      if (SET.items.length < 2 || !confirm('Delete “' + labelOf(curItem()) + '” from this browser? The other resumes stay.')) return;
-      SET.items = SET.items.filter(function (x) { return x.id !== SET.cur; });
-      var nx = SET.items[0]; data = fill(nx.data); setJd(nx.jd); delete nx.data; delete nx.jd; SET.cur = nx.id; keepSet(); save(); redraw();
+      if (SET.items.length < 2) return;
+      H.sure(t, 'Delete “' + labelOf(curItem()) + '” from this browser? The other resumes stay.', 'Delete').then(function (ok) {
+        if (!ok) return;
+        SET.items = SET.items.filter(function (x) { return x.id !== SET.cur; });
+        var nx = SET.items[0]; data = fill(nx.data); setJd(nx.jd); delete nx.data; delete nx.jd; SET.cur = nx.id; keepSet(); save(); redraw();
+      });
     }
     else if (t.closest && t.closest('[data-tab]')) setTab(t.closest('[data-tab]').getAttribute('data-tab'));
     else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); drawPreview(); }
@@ -406,7 +411,7 @@
     else if (t.id === 'rb-json') jsonFile();
     else if (t.id === 'rb-paste') { var pb = $('rb-pastebox'); pb.hidden = !pb.hidden; if (!pb.hidden) $('rb-pastetext').focus(); }
     else if (t.id === 'rb-pasteread') { var txt = $('rb-pastetext').value; if (txt.trim()) useImport(window.HRNT.parseResume(txt), 'the pasted text'); }
-    else if (t.id === 'rb-clear') { if (confirm('Erase this resume from this browser?')) { data = fill({ tpl: data.tpl }); save(); drawForm(); drawPreview(); } }
+    else if (t.id === 'rb-clear') { H.sure(t, 'Erase this resume from this browser?', 'Erase').then(function (ok) { if (ok) { data = fill({ tpl: data.tpl }); save(); drawForm(); drawPreview(); } }); }
     else if (t.id === 'rb-match') {
       var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; }), data.proj.map(function (x) { return x.name + ' ' + x.text; })).join('\n');
       t.textContent = 'Matching…';

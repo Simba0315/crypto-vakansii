@@ -1701,7 +1701,7 @@ def job_page(j, active_by_cat):
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
-            + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}" loading="lazy"></p>' if j.get("cover") and j["active"] else "")
+            + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}"></p>' if j.get("cover") and j["active"] else "")
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
             + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
@@ -9318,6 +9318,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
+    if (ROOT / "assets" / "paid").exists(): shutil.copytree(ROOT / "assets" / "paid", OUT / "paid")      # pictures of the paid products, cut from real pages (account.js: SHOTS)
     shutil.copytree(ROOT / "assets" / "brand", OUT / "brand", dirs_exist_ok=True)
     lap('service worker: keeps versioned scripts and styles, fonts an')
     # service worker: keeps versioned scripts and styles, fonts and logos in the browser, so repeat views skip the network for them

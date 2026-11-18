@@ -178,8 +178,9 @@
     each('[data-rep]', function (b) { b.addEventListener('click', function () { act(b, function () { return api('POST', '/api/admin/reports/' + b.getAttribute('data-id') + '/decide', { decision: b.getAttribute('data-rep') }); }, 'Решение по жалобе записано.'); }); });
     each('[data-job-rm]', function (b) { b.addEventListener('click', function () {
       // in the table one click is close to the links, so it asks first; on a report's card the button stands alone
-      if (b.closest('.adm-row') && !window.confirm('Снять эту вакансию с сайта? Она пропадёт при ближайшем обновлении, работодатель увидит её в кабинете как снятую.')) return;
-      act(b, function () { return api('POST', '/api/admin/jobs/' + b.getAttribute('data-job-rm') + '/remove'); }, 'Вакансия снята с сайта.'); }); });
+      var go = function () { act(b, function () { return api('POST', '/api/admin/jobs/' + b.getAttribute('data-job-rm') + '/remove'); }, 'Вакансия снята с сайта: пропадёт при ближайшем обновлении, в течение часа.'); };
+      if (!b.closest('.adm-row')) return go();
+      H.sure(b, 'Снять эту вакансию с сайта? Она пропадёт при ближайшем обновлении, работодатель увидит её в кабинете как снятую.', 'Да, снять').then(function (ok) { if (ok) go(); }); }); });
   }
 
   if (!token) return gate('Сначала войдите в свой аккаунт на сайте, потом откройте эту страницу снова.', true);
