@@ -4699,6 +4699,22 @@ def main():
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cv_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         facts_cv = [(f"{len(uk_):,}", f"open {e(low)} jobs in the UK"), (f"{len(eu_):,}", "open in Europe"), (f"{len(rj):,}", "open anywhere")] + ([(f"£{median(gbp_):,.0f}", "median UK pay stated")] if len(gbp_) >= 5 else [])
+        # Search check, 18 Nov 2026 ("<work> cv example"): the CV pages were the thinnest of the three example families (about 570
+        # words): the example, five rules and four questions. Added: the copy button and the "why it works" box of the resume pages,
+        # a table of what differs between a UK CV and a US resume, and who hires for this work in the UK today, from the postings.
+        top_cv = resume_examples.asked(slug_r, Counter(t for j in rj for t in j["tags"]).most_common(), len(rj))
+        cv_text = paper_text(d_cv).replace("\nSUMMARY\n", "\nPERSONAL PROFILE\n").replace("\nEXPERIENCE\n", "\nEMPLOYMENT HISTORY\n")
+        uk_co = Counter(j["company"] for j in uk_).most_common(8)
+        uk_who = (section(f"Who is hiring for {low} work in the UK today", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c_)}/", c_, k_, True) for c_, k_ in uk_co) + "</ul>"
+                          f'<p class="note">{len(uk_):,} open {e(low)} postings name a place in the United Kingdom today. The number is each employer’s open roles of this kind there.</p>') if len(uk_co) >= 4 else "")
+        cv_diff = section("CV or resume: [[what differs]]", '<div class="tablewrap"><table class="rkt"><tr><th></th><th>CV (UK, Ireland, most of Europe)</th><th>Resume (US, Canada)</th></tr>'
+                          "<tr><td><strong>Length</strong></td><td>Up to two pages of A4</td><td>One page of US Letter, two for long careers</td></tr>"
+                          "<tr><td><strong>Opens with</strong></td><td>Personal profile: three or four lines</td><td>Summary: two or three lines, or none</td></tr>"
+                          "<tr><td><strong>Jobs section is called</strong></td><td>Employment history or Work experience</td><td>Experience</td></tr>"
+                          "<tr><td><strong>Photo, age, marital status</strong></td><td>Left out in the UK and Ireland; some countries of continental Europe expect a photo</td><td>Left out</td></tr>"
+                          "<tr><td><strong>Spelling and dates</strong></td><td>British spelling; day before month (03/2024 is March)</td><td>American spelling; month before day</td></tr>"
+                          "<tr><td><strong>Pay, if mentioned</strong></td><td>In pounds or euros, a year</td><td>In dollars, a year or an hour</td></tr></table></div>"
+                          f'<p class="note">The same example in the US form: <a href="{P}/resume/examples/{slug_r}/">{e(low)} resume example</a>.</p>', sid="differs", label="CV and resume")
         cv_dir[fs].append((slug_r, rname, len(uk_)))
         page(f"cv-examples/{slug_r}/", f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]}) | {SITE}",
              f"{art(low).capitalize()} {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
@@ -4707,13 +4723,16 @@ def main():
              f'no photo, age or marital status. Below, an example to start from and what {len(rj):,} open {e(low)} postings ask for.</p>'
              + nums(facts_cv) + act_row(f"resume/?example={slug_r}", "Open this CV in the builder", [(f"resume/examples/{slug_r}/", "US resume version")], note=FREE_RB)
              + '<div class="rexgrid"><div>' + paper_cv + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
-             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this CV in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/resume/examples/{slug_r}/">US resume version</a></p></div>'
+             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this CV in the builder</a> <button class="btn ghost" style="margin-top:0" type="button" data-clip="cv-text" data-raw>Copy as text</button> '
+             f'<a class="btn ghost" style="margin-top:0" href="{P}/resume/examples/{slug_r}/">US resume version</a></p><pre id="cv-text" hidden>{e(cv_text)}</pre>'
+             + why_works(d_cv, top_cv, slug_r in resume_examples.TECH).replace("Why this example works", "Why this CV works") + "</div>"
              '<div class="rexside">'
              + '<h2>UK CV rules in one minute</h2><ol class="steps"><li><b>Two pages of A4 at most.</b> One is fine early on.</li>'
                '<li><b>Personal profile, not objective.</b> Three or four lines on who you are and one result.</li>'
                '<li><b>Leave out</b> photo, age, date of birth, marital status and national insurance number.</li>'
                '<li><b>British spelling and dates</b> (organised, 03/2024), and pay in pounds if you mention it.</li>'
                '<li><b>“References available on request”</b> can go; employers ask for them at the offer.</li></ol></div></div>'
+             + cv_diff + uk_who
              + section(f"Questions about {art(low)} {low} CV", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cv_qa) + "</dl>")
              + role_kit(slug_r, low, "cv")
              + f'<p class="note cmpl">Next: <a href="{P}/locations/united-kingdom/">jobs in the United Kingdom</a> · <a href="{P}/cover-letter-examples/{slug_r}/">{e(low)} cover letter</a> · <a href="{P}/cv-examples/">all CV examples</a></p>', head=ld_, cls="kw")
@@ -5931,10 +5950,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             ("Time management and prioritizing", r"time management|prioriti[sz]"), ("Adaptability", r"adaptab|fast[- ]paced"), ("Initiative", r"self[- ]starter|proactive|takes? initiative"),
             ("Interpersonal skills", r"interpersonal"))
     soft_rx = re.compile("|".join(f"(?P<s{i}>{rx})" for i, (_, rx) in enumerate(SOFT)), re.I)
-    soft_n, full_n = Counter(), 0
-    for j in active:
-        if not j.get("desc"): continue
-        full_n += 1
+    # A share needs a sample, not every text: on the full record (225,000 postings with their text) reading all of them took
+    # 115 s of the build on GitHub (18 Nov 2026). Every k-th posting, 15,000 at most, gives the same shares to within a point.
+    soft_all = [j for j in active if j.get("desc")]
+    soft_all = soft_all[::max(1, len(soft_all) // 15000)]
+    soft_n, full_n = Counter(), len(soft_all)
+    for j in soft_all:
         for i in {m_.lastgroup for m_ in soft_rx.finditer(j["desc"])}: soft_n[i] += 1
     soft_rows = sorted(((SOFT[int(g[1:])][0], k) for g, k in soft_n.items()), key=lambda x: -x[1]) if full_n >= 200 else []
     ai_js = [j for j in active if any(t in AI_TAGS for t in j["tags"])]
@@ -5945,7 +5966,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               + f". Counted on {fdate(TODAY)} from {n:,} open jobs read from employers’ own careers pages. Most employers here are technology companies, so tools of that trade lead the list."),
              ("Which skill pays the most?", ("By median advertised pay among skills with at least 30 postings that state a yearly US-dollar range: " + ", ".join(f"{t} ({money(m_)})" for t, m_, _ in best_pay)
               + ". These are advertised ranges, and the roles that ask for a skill differ, so this compares postings, not people.") if best_pay else "Too few postings state pay today to rank skills by it."),
-             ("Which soft skills do employers want most?", ("In the " + f"{full_n:,} postings held here in full, the workplace skills named most often are " + ", ".join(f"{nm.lower()} ({pc_(k, full_n)}%)" for nm, k in soft_rows[:5])
+             ("Which soft skills do employers want most?", ("In the " + f"{full_n:,} postings read for this, the workplace skills named most often are " + ", ".join(f"{nm.lower()} ({pc_(k, full_n)}%)" for nm, k in soft_rows[:5])
               + ". A posting is counted when its text uses the usual words for the skill.") if soft_rows else "The full texts held today are too few to count this."),
              ("What skills should I learn for AI jobs?", (f"{len(ai_js):,} open postings ask for AI or machine-learning skills. Besides those, they most often name " + ", ".join(f"{t} ({k:,})" for t, k in ai_sk if t not in AI_TAGS)
               + ".") if len(ai_js) >= 20 else "Too few AI postings are open today to count."),
@@ -5962,7 +5983,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           + ttable(["Skill", "Open jobs", "Share of all jobs", "Median advertised pay", "Remote", "Posted this week"], sk_tbl, "rkt")
           + '<p class="note">Median advertised pay: the median of the middle of each stated yearly US-dollar range, shown when at least 15 postings that name the skill state one. A posting names several skills, so it counts in several rows.</p>'
           + (("<h2>Workplace skills employers name</h2>"
-              f"<p>Counted in the text of the {full_n:,} open postings held here in full: the share that uses the usual words for each skill.</p>"
+              f"<p>Counted in the text of {full_n:,} open postings (every posting held here in full, or an even sample of them): the share that uses the usual words for each skill.</p>"
               + bars_([(nm, k, f"{pc_(k, full_n)}% of postings", f"jobs/?q={quote(nm.split(' and ')[0].lower())}") for nm, k in soft_rows[:10]])
               + '<p class="note">These words are in most postings whatever the job, so they tell you what to show with an example, not what sets a candidate apart.</p>') if soft_rows else "")
           + (("<h2>What AI jobs ask for</h2>" f"<p>{len(ai_js):,} open postings ask for AI or machine-learning skills. The skills they name most often:</p>"
