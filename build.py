@@ -2359,7 +2359,8 @@ def main():
             + kpanel(section("How ghost jobs are [[kept out]]", ghost, ("promise/", "What we will never do"), sub="Five rules every listing passes, and four habits of job sites you will not meet here.", label="No ghost jobs"), "card")
             + section("[[Free tools]], no sign-up", free_tabs, ("tools/", f"All {n_tools} tools"), sub="Nothing to sign up for: the tools work in your browser and send us nothing.", label="Free")
             + plus_band + band
-            + section("Where the jobs come from and [[how the site works]]", faq_html, sid="faq", label="Questions"))
+            + section("Where the jobs come from and [[how the site works]]", faq_html
+                      + f'<p class="note">More: <a href="{P}/guides/how-we-check-jobs-every-hour/">how the hourly check works</a> · <a href="{P}/job-search-engines/">job search engines that read company career pages, compared</a></p>', sid="faq", label="Questions"))
     home_desc = f"Job search without ghost jobs: {n:,} jobs hiring now at {m:,} companies, read from their own career pages {EVERY}. {new_today:,} new today. Free, no account."
     if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
     page("", f"Job Search: {n:,} Jobs Hiring Now, Checked Every Hour | {SITE}",
@@ -6224,9 +6225,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           f'The rules are listed on the <a href="{P}/methodology/">methodology page</a>.</p>'
           f"<h2>What the hourly check does not do</h2><p>It does not check that the role is still being filled, only that the employer still lists it. It does not cover companies that hire only through a recruiter or on a site we do not read. "
           f'Of the open postings, {long_all:,} have been listed for {LONG_OPEN} days or more and carry a mark for it; the <a href="{P}/guides/is-this-job-still-open/">guide to old postings</a> says what to do about them.</p>'
-          f'<p>The last run, its length and the companies whose lists failed are on the <a href="{P}/status/">data status page</a>.</p>',
+          f'<p>The last run, its length and the companies whose lists failed are on the <a href="{P}/status/">data status page</a>. '
+          f'How other job search engines that read company career pages describe their own checks: <a href="{P}/job-search-engines/">the comparison, from their own pages</a>.</p>',
           '<span class="ln"><b>Read from the employer</b> · every hour</span>' + skel,
-          (("status/", "Is the data fresh?"), ("methodology/", "Methodology"), ("guides/is-this-job-still-open/", "Is this job still open?")))
+          (("job-search-engines/", "Job search engines that read career pages"), ("status/", "Is the data fresh?"), ("methodology/", "Methodology"), ("guides/is-this-job-still-open/", "Is this job still open?")))
     guide("how-to-read-a-job-posting", "How to read a job posting: what each part tells you",
           "The six parts of a job posting and what to look for in each: the title, the place, the pay, what you must have, what is nice to have, and how to apply.", "Reading postings",
           "A posting is written by a busy person from a template. Knowing what each part usually means saves you from applying to the wrong jobs and from skipping the right ones.",
@@ -7207,6 +7209,67 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 go("post-a-job/", "Post a job") + f'<a href="{P}/pricing/#employers">Prices for employers</a>')
          + section("Sources", js_src + f'<p class="note">Read on {js_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
          head=js_ld, cls="hub sp frb")
+    lap('Job search engines that read company career pages: this site')
+    # Job search engines that read company career pages: this site and the others, each from its own pages (career_engines.py).
+    # Search and AI answer check, 18 Nov 2026: Google's AI answer, ChatGPT and Perplexity all answer "is there a job search engine
+    # that reads company career pages and removes closed jobs" with a list or a table of such sites, and this site, which does
+    # exactly that, was in none of them. The page says what this site reads, how often and what happens to a closed job, in the
+    # same columns as the others.
+    import career_engines as CE
+    ce_when = fdate(CE.READ)
+    ce_sys = [ats_name[k_] for k_, _ in ats_jobs.most_common()]
+    ce_sys_txt = (", ".join(ce_sys[:-1]) + " and " + ce_sys[-1]) if len(ce_sys) > 1 else (ce_sys[0] if ce_sys else "hiring systems")
+    ce_us = {"name": SITE, "url": FULL + "/", "kind": "site",
+             "reads": f"The public job lists of {m:,} companies on {ce_sys_txt}",
+             "jobs": f"{n:,} on {fdate(TODAY)}",
+             "refresh": (f"{m_hourly:,} companies every hour, the rest every four hours" if ROTATING else "Every hour"),
+             "closed": "Marked closed and taken off the lists; its page stays at the same address",
+             "price": "Free; no account needed",
+             "apply": "The company’s own page",
+             "also": "Salaries counted from the postings, a resume builder, alerts, a free API."}
+    ce_cell = lambda v_: e(v_) if v_ else '<span class="fb-u">Not stated</span>'
+    ce_rows = [ce_us] + CE.ENGINES
+    ce_table = ('<div class="tablewrap fbwrap"><table class="fbt"><thead><tr><th>Site</th>' + "".join(f"<th>{e(CE.COL_NAMES[k_])}</th>" for k_ in CE.COLS) + "</tr></thead><tbody>"
+                + "".join(f'<tr><th scope="row">' + (f'<b>{e(x["name"])}</b> (this site)' if x is ce_us else f'<a href="{e(x["url"])}" rel="nofollow noopener">{e(x["name"])}</a>' + (" (a tool for developers)" if x["kind"] == "tool" else ""))
+                          + "</th>" + "".join(f"<td>{ce_cell(x[k_])}</td>" for k_ in CE.COLS) + "</tr>" for x in ce_rows) + "</tbody></table></div>")
+    ce_not = "; ".join(f"{nm_}: {why_}" for nm_, why_ in CE.NOT_READ)
+    ce_qa = [("Is there a job search engine that reads company career pages?",
+              f"Yes. {SITE} reads the public job lists of {m:,} companies on {ce_sys_txt} {EVERY} and lists {n:,} open jobs, free and with no account. "
+              + " ".join(f"{x['name']} says it reads {x['reads'].strip('“”').rstrip('.')}." for x in CE.ENGINES if x["kind"] == "site" and x["reads"].startswith("“"))),
+             ("Do these sites remove closed jobs?",
+              f"{SITE} marks a job closed in the hour its company takes it down: it leaves the lists and its page stays, marked as closed. "
+              + " ".join(f"{x['name']}: {x['closed'].strip('“”').rstrip('.')}." for x in CE.ENGINES if x["closed"])
+              + (" " + ", ".join(x["name"] for x in CE.ENGINES if not x["closed"]) + ": the pages we read do not say." if any(not x["closed"] for x in CE.ENGINES) else "")),
+             ("Why do their job counts differ so much?",
+              "Each site reads a different set of companies and hiring systems and counts in its own way, so the totals are not measures of the same thing. "
+              f"The count here, {n:,}, is of jobs that were on the companies’ own lists at the last reading; a job is counted once."),
+             ("What does “reads company career pages” mean?",
+              "Most companies keep their open jobs in a hiring system, a program that holds each opening and its application form and publishes the list that fills the company’s Careers page. "
+              "A job search engine of this kind reads those lists itself instead of copying postings from another job board, so a job that is taken down disappears from it too."),
+             ("How was this checked?",
+              f"On {ce_when} we opened each site’s own pages in a browser and wrote down only what they said; words in quotation marks are the site’s own. A fact the pages did not state is shown as “Not stated”. "
+              f"Named in answers to this question and not in the table: {ce_not}.")]
+    ce_qh, ce_ld = qa_sec("", ce_qa)
+    page("job-search-engines/", f"Job Search Engines That Read Company Career Pages ({TODAY[:4]}) | {SITE}",
+         f"Job search engines that read jobs straight from company career pages, compared from their own pages on {ce_when}: what each reads, how often, what happens to a closed job, the price.",
+         crumbs(("Guides", "guides/"), ("Job search engines that read career pages", ""))
+         + '<h1>Job search engines that read <span class="hl">company career pages</span></h1>'
+         + f'<p class="tldr"><strong>Yes, they exist.</strong> {e(SITE)} reads the public job lists of {m:,} companies on {e(ce_sys_txt)} {EVERY}, lists {n:,} open jobs and marks a job closed when its company takes it down. '
+         + f'It is free and needs no account. The table sets it beside {len(CE.ENGINES)} others that say they read company career pages, each from its own pages on {ce_when}.</p>'
+         + '<p class="lead">Nothing here is a ranking. Each row repeats what the site itself says; the column that matters to you decides.</p>'
+         + nums([(f"{n:,}", "open jobs here today"), (f"{m:,}", "companies whose own lists are read"), (f"{len(ce_sys)}", "hiring systems read"), ("1 hour", "between two readings of most lists")], src=False)
+         + act_row("jobs/", f"Search {n:,} open jobs", [("#table", "The table"), ("guides/how-we-check-jobs-every-hour/", "How the hourly check works")], note="Free. No account.")
+         + section(f"What each one reads, [[how often]] and what happens to a closed job", ce_table
+                   + f'<p class="note">Words in quotation marks are the site’s own, read on {ce_when}. “Not stated” means the pages we read do not say. Not in the table: {e(ce_not)}.</p>', sid="table", label="The table")
+         + section("What sets them [[apart]]", '<dl class="qa">'
+                   "<div><dt>How old a job may be</dt><dd>One site deletes every job three days after it was posted. Here a job stays for as long as the company keeps it open, and its page says how many days that has been.</dd></div>"
+                   "<div><dt>What happens when a job closes</dt><dd>A job that only disappears leaves you guessing. Here the page of a closed job stays at its address and says it is closed, so a saved link never leads to nothing.</dd></div>"
+                   "<div><dt>What you can check yourself</dt><dd>Every job here names the hiring system it was read from and links to the company’s own posting; the hourly check is described step by step, with today’s figures.</dd></div>"
+                   + "".join(f'<div><dt>{e(x["name"])} also has</dt><dd>{e(x["also"])}</dd></div>' for x in CE.ENGINES if x["also"]) + "</dl>", sid="apart", label="Differences")
+         + section("Questions", ce_qh, label="Questions")
+         + section("Sources", '<ul class="vs-src">' + "".join(f'<li><b>{e(x["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in x["sources"]) + "</li>" for x in CE.ENGINES)
+                   + f'</ul><p class="note">Read on {ce_when}. Sites change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
+         head=ce_ld, cls="hub sp frb")
 
     lap('Glossary: the words of a job search in plain English, one pa')
     # Glossary: the words of a job search in plain English, one page per term (glossary_terms.py) and an index with the old anchors,
