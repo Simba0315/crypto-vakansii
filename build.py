@@ -3878,9 +3878,14 @@ def main():
            ("content-writer", "technical-writer"), ("recruiter", "technical-recruiter"), ("financial-analyst", "data-analyst"), ("legal-counsel", "paralegal"),
            ("operations-manager", "project-manager"), ("engineering-manager", "tech-lead"), ("staff-engineer", "engineering-manager"), ("mechanical-engineer", "electrical-engineer"),
            ("hardware-engineer", "embedded-engineer"), ("executive-assistant", "chief-of-staff"), ("ux-researcher", "data-analyst")]
+    ADV_DEG = re.compile(r"\bmaster(?:’|')?s\b|\bm\.?sc\b|\bmba\b|\bph\.?d\b|\bdoctorate\b|\bgraduate degree\b|\badvanced degree\b", re.I)
     def role_facts(r_):
         nm_, rj_ = by_role[r_]
         k_ = len(rj_)
+        # the share of the postings held in full that name a master's degree or a doctorate (search check, 18 Nov 2026: Bing's answer to
+        # "data analyst vs data scientist" has an education line, bachelor against master or PhD; here it is counted, not remembered)
+        full_ = [j for j in rj_ if j.get("desc")][:3000]
+        adv_ = (100 * sum(1 for j in full_ if ADV_DEG.search(j["desc"])) / len(full_), len(full_)) if len(full_) >= 20 else None
         mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj_ if j["usd"])
         yrs_ = sorted(j["years"] for j in rj_ if j.get("years"))
         tg_ = Counter(t for j in rj_ for t in j["tags"])
@@ -3890,7 +3895,7 @@ def main():
                     sen=100 * sum(1 for j in rj_ if j["level"] in ("Senior", "Lead")) / k_, yrs=yrs_[len(yrs_) // 2] if len(yrs_) >= 10 else None,
                     ai=100 * sum(1 for j in rj_ if any(t in AI_TAGS for t in j["tags"])) / k_, pct={t: 100 * c_ / k_ for t, c_ in tg_.items()},
                     skills=[t for t, _ in tg_.most_common(8)], top=Counter(j["company"] for j in rj_).most_common(5),
-                    new=sum(1 for j in rj_ if (j["posted"] or "") >= week))
+                    new=sum(1 for j in rj_ if (j["posted"] or "") >= week), adv=adv_)
     rvs_done = []
     for a_, b_ in RVS:
         if a_ not in by_role or b_ not in by_role: continue
@@ -3919,6 +3924,7 @@ def main():
                   ("Senior and lead roles", pct_(A["sen"]), pct_(B["sen"])),
                   ("Experience asked (median)", f"{A['yrs']} years" if A["yrs"] is not None else "–", f"{B['yrs']} years" if B["yrs"] is not None else "–"),
                   ("Ask for AI or machine-learning skills", pct_(A["ai"]), pct_(B["ai"])),
+                  *([("Name a master’s degree or a PhD", f"{A['adv'][0]:.0f}% of {A['adv'][1]:,} postings read in full", f"{B['adv'][0]:.0f}% of {B['adv'][1]:,} postings read in full")] if A["adv"] and B["adv"] else []),
                   ("Skills asked most", e(", ".join(A["skills"][:6])), e(", ".join(B["skills"][:6]))), ("Hiring the most", comp_(A), comp_(B))]
         tbl_ = ('<div class="tablewrap"><table><tr><th></th>' + f'<th><a href="{P}/roles/{a_}/">{e(an_)}</a></th><th><a href="{P}/roles/{b_}/">{e(bn_)}</a></th></tr>'
                 + "".join(f"<tr><td>{e(r_)}</td><td>{x_}</td><td>{y_}</td></tr>" for r_, x_, y_ in rows_r) + "</table></div>"
@@ -3934,6 +3940,11 @@ def main():
             qa_r.append((f"Which pays more, {A['psn']} or {B['psn']}?", verdict_[1][1] + " These are advertised ranges from job postings, not verified pay."))
         if gap_ab:
             qa_r.append((f"Can {art_a} {A['psn']} become {art_b} {B['psn']}?", f"Yes, and the skills to add are the ones {B['low']} postings ask for much more often: " + ", ".join(f"{t} ({v:.0f}% against {w:.0f}%)" for t, v, w in gap_ab[:4]) + "."))
+        if A["adv"] and B["adv"]:
+            more_d, less_d = (A, B) if A["adv"][0] >= B["adv"][0] else (B, A)
+            qa_r.append((f"Do you need a master’s degree to be {art(more_d['psn'])} {more_d['psn']}?",
+                         f"{more_d['adv'][0]:.0f}% of the {more_d['adv'][1]:,} {more_d['low']} postings read in full name a master’s degree or a PhD, against {less_d['adv'][0]:.0f}% of {less_d['low']} postings. "
+                         "A posting that names one often adds “or equivalent experience”, so read the requirements line of each job."))
         qa_r.append((f"Will AI replace {A['psns']}?",
                      f"Employers still post {A['n']:,} {A['low']} jobs today, and {A['ai']:.0f}% of them ask for AI or machine-learning skills ({B['ai']:.0f}% of {B['low']} jobs): AI is becoming part of the work rather than replacing it outright, judging by the postings."))
         qa_r.append((f"Is {art_a} {A['psn']} a dead-end job?", f"No sign of it in the postings: {A['sen']:.0f}% of open {A['low']} jobs are senior or lead roles, so the path up exists, and the skills above show the way across to {B['low']} work."))

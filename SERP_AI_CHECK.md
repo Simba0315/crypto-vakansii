@@ -37,7 +37,7 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 20 | Glossary | what is an ats | `/glossary/ats/` | 15 Nov | yes | no | – | canonical address in links and sitemap (the short address is a stub) |
 | 21 | Skills | sql jobs | `/skills/sql/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
 | 22 | Crypto | crypto jobs | `/crypto/` | 15 Nov | yes | no | – | median pay and remote share in the first answer |
-| 23 | Compare roles | data analyst vs data scientist | `/compare/data-analyst-vs-data-scientist/` | 15 Nov | yes | no | – | tools per role table, education row, typical tasks, verdict first |
+| 23 | Compare roles | data analyst vs data scientist | `/compare/data-analyst-vs-data-scientist/` | 15 Nov | yes | no | education row counted from postings; a question about the degree (tools per role, pay and the verdict were there already) | typical tasks per role |
 | 24 | Remote | remote jobs | `/remote/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
 | 25 | Categories | customer service jobs | `/jobs/support/` | 15 Nov | no | no | “Narrow this list” row | filter chips; alert box |
 | 26 | Perks | jobs with visa sponsorship | `/perks/visa-sponsorship/` | 15 Nov | yes | no | – | by industry and by visa type; “how to find a sponsor”; questions |
