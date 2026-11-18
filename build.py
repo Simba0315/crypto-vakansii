@@ -5367,6 +5367,29 @@ def main():
                           + "".join(f'<tr><td><a href="{P}/roles/{r_}/">{e(by_role[r_][0])}</a></td><td>{len(by_role[r_][1]):,}</td><td>{r_med(r_)}</td>'
                                     + (f'<td><a href="{P}/how-to-hire/{r_}/">How to hire</a></td>' if r_ in rex_data else "<td>–</td>") + "</tr>" for r_ in fam_r)
                           + "</table></div>") if fam_r else "")
+        # Search check, 18 Nov 2026 ("how to hire a data analyst"): the first results and Bing's answer list the mistakes employers
+        # make (no pay, a wish list of skills, slow decisions). Here each one is counted in today's postings for this very work, which
+        # no guide written from memory can do. A line is shown only when its count says something (at least 20 postings).
+        no_pay = pc_(sum(1 for j in rj if not j.get("salary")), n_)
+        tag_n = sorted(len(j["tags"]) for j in rj)
+        old_n = sum(1 for j in rj if age_days(j) > 90)
+        ent_j = [j for j in rj if j.get("entry") and j.get("years")]
+        ent_2 = sum(1 for j in ent_j if j["years"] >= 2)
+        mist = []
+        if n_ >= 20:
+            mist.append(("Leaving the pay out", f"{no_pay}% of today’s {n_:,} {low} postings state no pay. Candidates filter by pay first, so a posting without it is seen by fewer of them; "
+                         f"the {100 - no_pay}% that state it are the ones you compete with."))
+            if tag_n[len(tag_n) // 2] >= 2:
+                mist.append(("Asking for everything", f"The median {low} posting names {tag_n[len(tag_n) // 2]} skills, and one in ten names {tag_n[min(len(tag_n) - 1, 9 * len(tag_n) // 10)]} or more. "
+                             "Name the three or four the work cannot be done without and call the rest “nice to have”: a long list turns away people who could do the job."))
+            if old_n:
+                mist.append(("Letting the posting sit for months", f"{pc_(old_n, n_)}% of today’s {low} postings ({old_n:,}) have been open more than 90 days. A posting that old reads as a job nobody is hiring for; "
+                             "close it when the search pauses and post it again when it resumes."))
+            if len(ent_j) >= 10 and ent_2:
+                mist.append(("Calling it junior and asking for years", f"Of the {len(ent_j):,} junior and intern {low} postings that state experience, {ent_2:,} ask for two years or more. "
+                             "A beginner reads that as “not for me” and does not apply."))
+        mist_sec = (section(f"Mistakes to avoid, counted in today’s {low} postings", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in mist) + "</dl>", sid="mistakes", label="By the numbers")
+                    if len(mist) >= 3 else "")
         hr_r = sorted(h_[0] for j in rj if (h_ := usd_hourly(j["salary"])))
         con_pct = pc_(sum(1 for j in rj if j.get("etype") == "Contract"), n_)
         task_ = section(f"A take-home task for {art(psn)} {psn}", '<ul class="ticks">'
@@ -5405,6 +5428,7 @@ def main():
              + section("What you compete with", '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{v}</td></tr>" for k, v in rows_) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>')
              + which_
+             + mist_sec
              + task_
              + section(f"Questions about hiring {many}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hh_qa + hh_more) + "</dl>")
              + role_kit(slug_r, low, "hire")
