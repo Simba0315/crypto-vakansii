@@ -5126,11 +5126,19 @@ def main():
                     "Then say what you would do differently.")
         sk_items = [(SK_Q[i][0].format(t=t), f"{pc_(k, n_)}% of today’s {n_:,} open {e(low)} postings name {e(t)}.", SK_Q[i][1], sample_for(t, i)) for i, (t, k) in enumerate(top_)]
         # concrete technical questions with the answer, for the skills this work asks for most that have a skill test on the site
-        tech_items = []
+        # Search and AI answers check, 18 Nov 2026 ("data analyst interview questions"): Bing's answer lists about fifty questions in
+        # groups and the first results carry 54 to 80; a page here showed the four easiest questions of two skills. Now up to three
+        # skills, with questions taken evenly from the easiest to the hardest of each test (joins, window functions and running totals
+        # are at the hard end of the SQL test, and they are what the answer names): twelve for the first skill, eight and six after.
+        tech_items, tech_k = [], 0
         for t, k in cnt_.most_common(10):
-            if t in QUIZ_BY_SKILL and k >= max(5, n_ * 0.1) and len(tech_items) < 8:
+            if t in QUIZ_BY_SKILL and k >= max(5, n_ * 0.1) and tech_k < 3:
                 qk, qv = QUIZ_BY_SKILL[t]
-                for q_, opts, right, why in qv["qs"][:4]:
+                take = (12, 8, 6)[tech_k]; tech_k += 1
+                qs_all = qv["qs"]
+                idx_ = sorted({round(i_ * (len(qs_all) - 1) / (take - 1)) for i_ in range(take)}) if len(qs_all) > take else range(len(qs_all))
+                for i_ in idx_:
+                    q_, opts, right, why = qs_all[i_]
                     tech_items.append((q_, f'A {e(t)} question ({pc_(k, n_)}% of today’s postings name {e(t)}). More in the <a href="{P}/skill-tests/{qk}/">{e(t)} skill test</a>.',
                                        "", f"{opts[right]}. {why}"))
         du_items = [(DU_Q[i][0].format(x=x), f"One of the core duties of {e(low)} work.", DU_Q[i][1]) for i, x in enumerate(focus)]

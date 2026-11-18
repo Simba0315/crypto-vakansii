@@ -30,7 +30,7 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 13 | CV examples | data analyst cv example | `/cv-examples/data-analyst/` | – | no | no | – | the thinnest of the three (607 words): fuller example, variants |
 | 14 | How to become | how to become a data analyst | `/how-to-become/data-analyst/` | 15 Nov | yes | no | – | timeline table (degree, self-taught, career change); “without a degree”; portfolio ideas |
 | 15 | How to hire | how to hire a data analyst | `/how-to-hire/data-analyst/` | 15 Nov | yes | no | – | hiring models table; cost and ramp-up; scorecard to download; red flags |
-| 16 | Interview questions | data analyst interview questions | `/interview-questions/data-analyst/` | 15 Nov | yes | no | – | 50+ questions with model answers: SQL, statistics, visualization, business cases |
+| 16 | Interview questions | data analyst interview questions | `/interview-questions/data-analyst/` | 15 Nov | yes | no | technical questions with answers: up to 26 from three skill tests, easy to hard (38 questions for a data analyst, was 26) | statistics and business-case questions with model answers (no bank for them yet) |
 | 17 | Job descriptions | data analyst job description | `/job-descriptions/data-analyst/` | 15 Nov | yes | no | – | visible template (brief, duties, skills, qualifications); copy button; level variants |
 | 18 | Salaries | data analyst salary | `/salaries/data-analyst/` | 15 Nov | no | no | – | our median against BLS and others; 10th/median/90th chart; note on advertised pay |
 | 19 | Resume words | another word for managed on resume | `/resume-words/managed/` | 18 Nov | no | no | – | none found: the page is level with the first results |
