@@ -4960,6 +4960,8 @@ def main():
                 "marketing": "Publish samples: a campaign with its results, a post, a landing page, each with the number it moved.",
                 "sales-bd": "Keep the numbers: quota reached, deals closed, pipeline built, written as results on the resume.",
                 "security": "Write up a lab or capture-the-flag result on GitHub or a blog; a certification helps here more than in most work."}
+    DEGREE_RX = re.compile(r"\b(bachelor'?s?|master'?s?|b\.?s\.?|m\.?s\.?|b\.?a\.|ph\.?d|(?:college|university|four-year|4-year) degree|degree in)\b", re.I)
+    SWITCH_RX = re.compile(r"career (?:chang|switch|transition)\w*|chang(?:e|ing) (?:careers?|fields?)|transferable skills|boot ?camp|self-taught|non-traditional (?:background|path)", re.I)
     CERT_RX = re.compile(r"\b(AWS Certified[\w -]{0,30}|Azure [\w ]{0,20}Certifi\w+|Google (?:Cloud|Data Analytics)[\w ]{0,20}Certifi\w+|PMP|CPA|CFA|CISSP|CISM|Security\+|"
                          r"CompTIA [A-Z][\w+]*|Scrum Master|CSM|Salesforce Certified[\w -]{0,25}|Tableau Certified[\w -]{0,20}|ITIL|SHRM-(?:CP|SCP)|PHR|CKA|Six Sigma)\b")
     for slug_r, d in rex_data.items():
@@ -5028,6 +5030,23 @@ def main():
                                 + "".join(f"<tr><td>{e(nm_)}</td><td><strong>{money(md_)}</strong></td><td>{c_:,}</td></tr>" for nm_, md_, c_ in ladder)
                                 + '</table></div><p class="note">The step is the level word in the job title; “No level in the title” is usually the mid-level role. '
                                 f'After senior, people move into lead, staff or principal roles, or into managing a team. <a href="{P}/guides/job-levels-explained/">What each level means</a>.</p>')
+        # Three ways in (PLAN_RU step 5): what the postings say about a degree, counted in the postings that carry text
+        txt_ = [j for j in rj if (j.get("desc") or j.get("excerpt"))]
+        if len(txt_) >= 20:
+            tx_ = lambda j: (j.get("desc") or j.get("excerpt") or "")
+            nd_k = [j for j in txt_ if "No degree required" in j.get("perks", [])]
+            dg_k = [j for j in txt_ if "No degree required" not in j.get("perks", []) and DEGREE_RX.search(tx_(j))]
+            sw_k = [j for j in txt_ if SWITCH_RX.search(tx_(j))]
+            tn_ = len(txt_)
+            rows_ = [("With a degree", len(dg_k), "name a degree among their requirements and do not accept experience instead",
+                      "Check the wording: “or equivalent experience” is a different posting."),
+                     ("Without a degree", len(nd_k), "say a degree is not needed, or accept equivalent experience",
+                      "Lead with proof of work: projects, results with numbers, a portfolio."),
+                     ("From another kind of work", len(sw_k), "mention career changers, transferable skills, bootcamps or self-taught people",
+                      "Write the resume around the duties you already did that match the posting.")]
+            extra_hb += section(f"Three ways in to {low} work, counted in postings", '<div class="tablewrap"><table class="t4"><tr><th>Way in</th><th>Postings</th><th>Share</th><th>What it means for you</th></tr>'
+                                + "".join(f"<tr><td><strong>{e(a_)}</strong></td><td>{c_:,}</td><td>{(str(pc_(c_, tn_)) + "%") if pc_(c_, tn_) or not c_ else "under 1%"}</td><td>Postings that {e(b_)}. {e(c2_)}</td></tr>" for a_, c_, b_, c2_ in rows_)
+                                + f'</table></div><p class="note">Counted in the {tn_:,} of today’s {n_:,} open {e(low)} postings that carry their text. The rest say nothing either way; a posting can appear in more than one row.</p>')
         goals_ = [f"Get fluent in {top_[0][0]}, the skill today’s postings name most, and prove it with a project you can show." if top_ else "Build one piece of work you can show and talk about in an interview.",
                   (f"Earn a certification employers name in this work: {', '.join(c for c, _ in certs_.most_common(2))}." if certs_ else "Take one short course in the field and finish it with a project, not only a certificate."),
                   "Keep a list of your results with numbers, updated every month: it becomes your resume lines and your interview stories.",
