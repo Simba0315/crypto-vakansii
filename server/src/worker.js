@@ -2365,9 +2365,12 @@ async function claimCompanyPage(env, req, user) {
   await limit(env, 'claim:' + user.id, 10, 3600);
   const wanted = line((await body(req)).company, 80, 2);
   if (!wanted) throw bad('company', 'Enter the company name as the site shows it.');
-  const key = companyKey(wanted), company = (await indexedCompanies(env)).get(key);
-  if (!company) throw bad('not_listed', 'The site lists no company by that name. Check the spelling on its page, or post a job: a company that posts its own jobs has its page already.', 404);
-  const held = await db(env, 'SELECT user_id FROM companies WHERE k = ?', key).first();
+  const key = companyKey(wanted), held = await db(env, 'SELECT name, user_id FROM companies WHERE k = ?', key).first();
+  // A company that posts its own jobs here (its name is held by this account from its first job, live or still waiting for review) is
+  // not in the site's index until that job is live and the site is rebuilt. Its page is this account's all the same (the owner tried
+  // it on 18 Nov 2026 and was told "the site lists no company by that name" for the company he had just posted a job for).
+  const own_ = !!(held && held.user_id === user.id), company = (await indexedCompanies(env)).get(key) || (own_ ? held.name : null);
+  if (!company) throw bad('not_listed', 'The site lists no company by that name. Check the spelling on its page. A company that is new here gets its page when it posts its first job: post one, and the page is yours at once.', 404);
   if (held && held.user_id !== user.id) throw bad('company_taken', COMPANY_TAKEN, 409);
   const taken = bad('claimed', 'Another account already manages this company’s page. If that is wrong, write to the jobs address on the site.', 409);
   const verified = await db(env, "SELECT * FROM company_claims WHERE company_key = ? AND status = 'verified'", key).first();
@@ -2377,7 +2380,8 @@ async function claimCompanyPage(env, req, user) {
   if (!mine && Number(await db(env, "SELECT COUNT(*) AS n FROM company_claims WHERE user_id = ? AND status != 'rejected'", user.id).first('n')) >= CLAIMS_PER_ACCOUNT)
     throw bad('limit', 'One account can manage ' + CLAIMS_PER_ACCOUNT + ' company pages.', 429);
   const site = await companySite(env, company), reasons = [], brand = brandIn(company), odd = lookalike(own);
-  if (!site) reasons.push('the site does not know ' + company + '’s own domain: check that ' + own + ' is it');
+  if (own_) { /* its own jobs are posted from this account: there is no other owner to compare the domain with */ }
+  else if (!site) reasons.push('the site does not know ' + company + '’s own domain: check that ' + own + ' is it');
   else if (site !== own) reasons.push('the domain the site knows for ' + company + ' is ' + site + ', and the account is tied to ' + own);
   if (odd) reasons.push(odd);
   if (brand && !BRANDS[brand].includes(own)) reasons.push('the company is named “' + company + '”, and the account is not on a domain of ' + brand[0].toUpperCase() + brand.slice(1));
@@ -2389,6 +2393,30 @@ async function claimCompanyPage(env, req, user) {
   } catch (err) { if (/UNIQUE/i.test(String(err && err.message))) throw taken; throw err; }      // two accounts verified for one company at the same moment
   if (status === 'verified') await requestRebuild(env);
   return { claim: claimView(await db(env, 'SELECT * FROM company_claims WHERE id = ?', id).first()) };
+}
+/* The page of a company that posts its own jobs from this account needs no claim to be asked for: the first time the account opens its
+   company pages, each such company gets a verified claim, so the form for the logo, the text and the places is there at once. The same
+   guards as a claim made by hand: a confirmed email on a company domain, no look-alike domain, no borrowed brand name; a name that
+   fails one of them is left to the claim form, where a person looks at it. */
+async function ownCompanyPages(env, user) {
+  const own = user.confirmed_at ? domainOf(user) : '';
+  if (!own || lookalike(own)) return;
+  const rows = (await db(env, 'SELECT k, name FROM companies WHERE user_id = ? AND k NOT IN (SELECT company_key FROM company_claims)', user.id).all()).results;
+  if (!rows.length) return;
+  let room = CLAIMS_PER_ACCOUNT - Number(await db(env, "SELECT COUNT(*) AS n FROM company_claims WHERE user_id = ? AND status != 'rejected'", user.id).first('n'));
+  let made = 0;
+  for (const c of rows) {
+    if (room <= 0) break;
+    const brand = brandIn(c.name);
+    if (brand && !BRANDS[brand].includes(own)) continue;
+    const t = now();
+    try {
+      await db(env, 'INSERT INTO company_claims (id, user_id, company, company_key, domain, site, status, reason, created_at, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        rid('k_'), user.id, c.name, c.k, own, '', 'verified', '', t, t).run();
+      room--; made++;
+    } catch (err) { if (!/UNIQUE/i.test(String(err && err.message))) throw err; }      // another request of the same account made it a moment ago
+  }
+  if (made) await requestRebuild(env);
 }
 // views and clicks on "Apply" per job page of a claimed company: in all, and the last HIT_DAYS days one by one
 async function claimStats(env, user, id, t) {
@@ -3155,6 +3183,7 @@ async function route(env, req, url, ctx) {
   }
   if (path === '/api/claims' && m === 'POST') return claimCompanyPage(env, req, user);
   if (path === '/api/claims' && m === 'GET') {            // a verified claim carries what its company page says now, for the form; one that waits or was turned down has none
+    await ownCompanyPages(env, user);
     const rows = (await db(env, 'SELECT c.*, p.about, p.website, p.logo, p.locations FROM company_claims c LEFT JOIN company_pages p ON p.company_key = c.company_key WHERE c.user_id = ? ORDER BY c.created_at DESC', user.id).all()).results;
     return { claims: rows.map((c) => ({ ...claimView(c), page: c.status === 'verified' ? { about: c.about || '', website: c.website || '', logo: mediaUrl(env, c.logo || ''), locations: String(c.locations || '').split('\n').filter(Boolean) } : null })) };
   }

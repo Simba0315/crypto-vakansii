@@ -1053,6 +1053,14 @@ def fingerprint(raw):
     return hashlib.md5((RULES + json.dumps(raw, sort_keys=True, ensure_ascii=False, default=str)).encode()).hexdigest()[:12]
 
 
+def raw_hash(raw):
+    """The fingerprint of the feed's entry alone, without the rules: it changes only when the employer changes the posting."""
+    return hashlib.md5(json.dumps(raw, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:12]
+
+
+REREAD = os.environ.get("HRN_REREAD") == "1"        # read the text of every Workday and SmartRecruiters posting again, whatever the record holds
+
+
 PARSE = None        # main() puts a pool of worker processes here: norm() is CPU work, and threads share one CPU
 
 
@@ -1145,16 +1153,22 @@ def fetch_feed(src, reuse=None):
             full_id = f"{ats}-{slugify(name)}-{jid}"
             if reuse and (rec := reuse(full_id, fingerprint(raw))) is not None:
                 out.append(rec); continue
-            wait.append((bool(reuse) and reuse(full_id) is not None, p, jid, raw, full_id))
-        # Postings the record has never held are read first (the backlog of a board just added), then those it holds from older rules or
-        # an older text. Before 18 Nov 2026 the order was simply newest first, so after any change to this file (which changes every
-        # fingerprint) a board spent its reads on postings it already had, and its backlog waited. The sort is stable: newest first in each.
-        for _, p, jid, raw, full_id in sorted(wait, key=lambda w: w[0]):
+            old, rh = (reuse(full_id) if reuse else None), raw_hash(raw)
+            # The feed says about this posting what it said when its text was read ("rh", the fingerprint of the feed's entry alone), and
+            # only the rules of this file changed: the record is kept as it is. Reading it again costs a request, and after every edit of
+            # this file that was a request for every posting of every Workday board (on 18 Nov 2026 a run spent over 20 minutes on it).
+            # A record made before "rh" existed is taken as unchanged once. HRN_REREAD=1 reads everything again.
+            if old is not None and old.get("rh", rh) == rh and not REREAD:
+                old["rh"] = rh; out.append(old); continue
+            wait.append((old is not None, p, jid, raw, full_id, rh))
+        # Postings the record has never held are read first (the backlog of a board just added), then those whose entry in the feed
+        # changed. Before 18 Nov 2026 the order was simply newest first. The sort is stable: newest first in each.
+        for _, p, jid, raw, full_id, rh in sorted(wait, key=lambda w: w[0]):
             rec = None
             if asked < DETAILS:
                 asked += 1
                 rec = read(p, jid)
-                if rec is not None: rec["h"] = fingerprint(raw)
+                if rec is not None: rec["h"], rec["rh"] = fingerprint(raw), rh
             if rec is None and reuse: rec = reuse(full_id)
             if rec is not None: out.append(rec)
 

@@ -299,7 +299,9 @@
       if (!S.jobs.length) steps.push(['Post your first job', 'Free for 30 days. Its status, views and clicks on Apply show here.', '#post']);
       if (!me.verified) steps.push(['Add your work email', 'Jobs from a company address go live without the wait.', '#hiring']);
       if (S.jobs.some(function (j) { return j.status === 'live' || j.status === 'review'; }) && !S.placements.length && products.featured) steps.push(['Promote a job', 'More views and clicks on Apply' + (products.bump ? ', from ' + money(products.bump.usd) : '') + '. One payment, nothing renews.', '#promote']);
-      if (me.verified && !S.claims.length) steps.push(['Claim your company page', 'Your logo and text on it, and views and clicks for every job.', '#company']);
+      if (me.verified && !S.claims.length) steps.push(S.jobs.length ? ['Claim your company page', 'Your logo and text on it, and views and clicks for every job.', '#company'] :
+        ['Your company page', 'It is made with your first job. A company the site already lists can claim its page now.', '#company']);
+      else if (S.claims.some(function (c) { return c.status === 'verified' && c.page && !c.page.logo && !c.page.about; })) steps.push(['Add your logo and a few lines about the company', 'They show on your company page and next to your jobs.', '#company']);
     } else {
       var t = tally(), nres = S.resumes ? S.resumes.resumes.length : 0;
       (S.incoming || []).forEach(function (q) { if (q.status === 'sent') up('warn', '<b>' + esc(q.company) + '</b> asked to contact you about a job.', '#talent', 'Answer'); });
@@ -511,6 +513,11 @@
       part('Credits: pay once, use on anything for 12 months', '<div class="acc-grid four">' + ['credits100', 'credits250', 'credits550', 'credits1200'].map(function (id) { return productCard(id, 'none'); }).join('') + '</div>' +
         (pub.payments === 'off' ? '' : '<p class="note">You pay on a crypto checkout page. What you bought switches on by itself when the network confirms the payment.</p>')) + data;
   }
+  // a company that posts its own jobs from this account and has none live yet: its page is not on the site so far
+  function ownNotLive(c) {
+    var k = String(c.company || '').toLowerCase(), mine = S.jobs.filter(function (j) { return String(j.company || '').toLowerCase() === k; });
+    return mine.length > 0 && !mine.some(function (j) { return j.status === 'live'; });
+  }
   function companyPanel() {
     var top = head('Company page', 'Your <b>company page</b>', 'Your logo, your text and the places where you hire, on the page that lists your open jobs. You also see views and clicks on Apply for every job on it.');
     if (me.posts_as.indexOf('employer') < 0) return top + empty('A company page needs an account at the company’s address.', ' Add your work email first; then you can claim the page here.', '<a class="btn primary" href="#hiring">Add my work email</a>');
@@ -518,7 +525,8 @@
       var ok = c.status === 'verified', wait = c.status === 'pending';
       return '<article class="acc-job' + (c.status === 'rejected' ? ' bad' : '') + '"><div class="acc-job-h"><div>' + state(c.status, wait ? 'Being checked' : '') + '<h2 class="acc-job-t">' + esc(c.company) + '</h2><p class="js">' + esc(c.domain) + ' · since ' + nice(c.since) + '</p></div></div>' +
         (wait ? '<p class="acc-job-s">A person checks that ' + esc(c.domain) + ' belongs to ' + esc(c.company) + ', usually within a day. You get an email either way.</p>' :
-          c.status === 'rejected' ? '<p class="acc-job-s"><b>Not accepted' + (c.reason ? ':</b> ' + esc(c.reason) + '.' : '.</b>') + '</p>' : '') +
+          c.status === 'rejected' ? '<p class="acc-job-s"><b>Not accepted' + (c.reason ? ':</b> ' + esc(c.reason) + '.' : '.</b>') + '</p>' :
+          ownNotLive(c) ? '<p class="acc-job-s">This is your company’s page. It goes on the site with your first live job; what you save here is shown on it from that moment.</p>' : '') +
         (ok ? '<form class="claim-page" data-id="' + esc(c.id) + '" novalidate>' +
           '<div class="logo-up"><span class="logo-prev" aria-hidden="true">' + (c.page && c.page.logo ? '<img src="' + esc(c.page.logo) + '" alt="">' : esc(c.company.charAt(0))) + '</span><div><p class="fld-l">Company logo</p>' +
           fileBtn('logo_file', 'image/png,image/jpeg,image/webp', c.page && c.page.logo ? 'Change the logo' : 'Upload a logo') + '<p class="hint">PNG, JPG or WebP, square, up to 150 KB.</p></div></div>' +
@@ -528,7 +536,9 @@
           '<p class="acc-btns"><button class="btn primary" type="submit">Save the page</button><button class="btn ghost" type="button" data-stats="' + esc(c.id) + '">Views and clicks</button></p><div class="stats-out"></div></form>' : '') + '</article>';
     }).join('');
     return top + list + '<form class="card acc-form" id="claim" novalidate><h2 class="acc-h2">' + (S.claims.length ? 'Claim another page' : 'Claim your page') + '</h2>' +
-      '<p class="acc-sub">We read the jobs of thousands of companies from their own hiring systems. If yours is one of them, claim its page. A company that is new here gets its page with its first live job; claim it after that.</p>' +
+      '<p class="acc-sub">' + (S.claims.length ? 'Is your company also on the site under another name, read from its own hiring system? Claim that page too.' :
+        'New here? <a href="#post">Post your first job</a>: your company page is made with it and appears on this tab at once, ready for your logo and text. ' +
+        'Is your company already on the site (we read the jobs of thousands of companies from their own hiring systems)? Claim its page:') + '</p>' +
       '<div class="acc-inline flat">' + field('Company, as the site names it', 'company', 'type="text" list="acc-companies2" maxlength="80" required data-need="Enter the company name as the site shows it."') + '<button class="btn' + (S.claims.length ? ' ghost' : ' primary') + '" type="submit">Claim the page</button></div>' + err +
       '<p class="note">If the site already knows that ' + esc(me.domain) + ' is the company’s own address, the page is yours at once. If not, a person checks it, usually within a day.</p>' +
       '<datalist id="acc-companies2">' + D.companies.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></form>';

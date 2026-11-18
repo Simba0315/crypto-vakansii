@@ -2534,6 +2534,20 @@ const recs = (jobs) => ({ watermark: () => jobs.reduce((top, j) => (j.first_seen
   await adm('POST', 'accounts/' + (await one(env, "SELECT id FROM users WHERE email = 'talent@stripe.com'")) + '/ban');
   eq([await one(env, "SELECT COUNT(*) FROM company_claims WHERE company = 'Stripe'"), (await call(env, 'GET', '/api/public/export.json')).body.claimed.map((c) => c.company)], [0, ['Harvey']], 'Claim: a banned account loses its claims');
   r = await call(env, 'POST', '/api/claims', { token: await fresh(env, 'cto@stripe.com'), data: { company: 'Stripe' } }); eq(r.body.claim.status, 'verified', 'Claim: and the company can be claimed again by its own people');
+  // a company that posts its own jobs (18 Nov 2026): its page is the account's from the first job, with no claim to ask for
+  r = await call(env, 'GET', '/api/claims', { token: trusted });
+  eq([r.status, r.body.claims.length, r.body.claims[0] && r.body.claims[0].company, r.body.claims[0] && r.body.claims[0].status, r.body.claims[0] && r.body.claims[0].page],
+    [200, 1, 'Globex', 'verified', { about: '', website: '', logo: '', locations: [] }], 'Own company: an account that posted a job finds its company page ready, with no claim asked for');
+  const globexClaim = r.body.claims[0].id;
+  r = await call(env, 'GET', '/api/claims', { token: trusted }); eq([r.body.claims.length, r.body.claims[0].id], [1, globexClaim], 'Own company: opening the page again makes no second claim');
+  r = await call(env, 'POST', '/api/claims', { token: trusted, data: { company: 'globex' } }); eq([r.status, r.body.claim.id, r.body.claim.status], [200, globexClaim, 'verified'], 'Own company: asking for it by hand answers with the same page');
+  r = await call(env, 'PUT', '/api/claims/' + globexClaim + '/page', { token: trusted, data: { about: 'Globex builds data tools for logistics companies. We hire engineers and analysts in Europe.', locations: ['Berlin'] } });
+  eq([r.status, r.body.page && r.body.page.locations], [200, ['Berlin']], 'Own company: the text and the places can be saved before the first job is on the site');
+  r = await call(env, 'POST', '/api/claims', { token: harvey, data: { company: 'Globex' } }); eq([r.status, r.body.error], [404, 'not_listed'], 'Own company: another account cannot claim a company that posts its own jobs (to it the name is simply not on the site)');
+  const newco = await fresh(env, 'founder@initech.dev');
+  r = await call(env, 'POST', '/api/claims', { token: newco, data: { company: 'Initech' } }); eq([r.status, r.body.error], [404, 'not_listed'], 'Own company: before its first job a new company has no page to claim, and the answer says to post one');
+  ok(/post one, and the page is yours at once/.test(r.body.message || ''), 'Own company: the answer tells a new company what to do');
+  eq((await call(env, 'GET', '/api/claims', { token: newco })).body.claims, [], 'Own company: and nothing is made for an account that has posted nothing');
   globalThis.fetch = realFetch;
 }
 
