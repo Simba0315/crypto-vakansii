@@ -7050,6 +7050,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Five plain one-column templates that applicant tracking systems read cleanly '
          '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
          'Fill in the form, watch the page update, download. No account; nothing leaves this browser.</p>'
+         '<p class="plain"><b>In plain words:</b> many employers first run every resume through a program, called an applicant tracking system, that reads the text and sorts the applications. Fancy layouts with columns and icons can turn into jumbled text for that program, so these templates keep one plain column that both the program and a person can read.</p>'
          # Sections review, batch 5: the builder is the page's first screen. Above it stand the heading, one paragraph and the one
          # action (on a phone it jumps to the form, not to the row of download buttons); the bar of downloads is the top of the
          # tool; the notes and the Plus line moved under the tool. The action row is "no-print": it used to print into the PDF.
@@ -7371,7 +7372,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          khero(crumbs(("Partners", "")), "Partners", "Partner with us",
                'If your readers, students or members ask who is hiring, you can show them a live list from this site instead of keeping one by hand. It is free. Here is what we can set up.',
                f'<p class="kact">{go("widgets/", "Build a free job widget")}<a href="#contact">Get in touch</a></p>',
-               after=nums([(f"{n:,}", "open jobs to show, from employers’ own pages"), (f"{m:,}", "employers read every hour"), (f"{n_feeds}", f'<a href="{P}/feeds/">feeds for channels and chats</a>'), ("Free", "the widget, the feeds and the API")]))
+               after=nums([(f"{n:,}", "open jobs to show, from employers’ own pages"), (f"{m:,}", "employers read every hour"), (f"{n_feeds}", f'<a href="{P}/feeds/">feeds for channels and chats</a>'), ("Free", "the widget, the feeds and the API")])
+               + '<p class="plain"><b>In plain words:</b> a widget is a small box with a list of jobs that sits on your own web page. A feed is an address that a chat or an app reads to post each new job by itself, and the API is the same list in a form that programmers can use. All three are free, and you do not need to write any code to use the widget.</p>')
          + section("What we can [[set up]]", krows([
              ("Communities and newsletters", "A live jobs widget, feed or weekly list for your niche",
               f'<p>A live jobs widget, feed or weekly list for your niche: one skill, one city, remote only. Free, with a link back.</p><p class="kact">{go("widgets/", "Build a widget", "ghost")}<a href="{P}/feeds/">Pick a feed</a></p>'),
@@ -9115,6 +9117,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          crumbs(("Job widget", "widgets/"), ("Hiring badge", "")) + '<h1>Free hiring badge with a live count</h1>'
          '<p class="lead">A “we’re hiring” picture says nothing new after the first week. These badges carry today’s number of open roles and update themselves. '
          f'Copy one below, or <a href="{P}/widgets/">pick any skill, city, category or company in the builder</a>.</p>'
+         '<p class="plain"><b>In plain words:</b> a badge is a small picture that shows a number, here the number of jobs that are open right now. You paste one line of code where the picture should appear, such as the footer of your website or the front page of a project, and the number changes by itself.</p>'
          + act_row("widgets/#wb-badge-sec", "Make a badge for your company", [("widgets/", "The job widget")], note="Free, no account.")
          + f'<div class="feats hbgrid">{badge_rows}</div>'
          + section("Questions about [[the hiring badge]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hb_faq) + "</dl>", label="Questions"),
