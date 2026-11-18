@@ -4293,7 +4293,7 @@ def main():
         col_ = re.sub(r"<[^>]+>", "", head[chart[1]])
         sep_ = "; " if any("," in p_[0] for p_ in pts[:3]) else ", "          # job titles hold commas of their own
         first = (f" First today ({e(col_[0].lower() + col_[1:])}): " + sep_.join(f"{e(lab)} ({e(raw)})" for lab, _, raw, _ in pts[:3]) + ".") if len(pts) >= 3 and not own_first else ""      # own_first: the paragraph given already names them
-        page(f"insights/{slug}/", title or f"{h1} — {month} | {SITE}", desc,
+        page(f"insights/{slug}/", title or (f"{h1} — {month} | {SITE}" if len(f"{h1} — {month}") <= 65 else f"{tcase(h1)} | {SITE}"), desc,      # cut at its colon a long title left two words ("Pay transparency")
              crumbs(("Insights", "insights/"), (h1, "")) + f"<h1>{e(h1)}</h1><p class=\"lead\">{lead}{first} Recalculated every day from {n:,} open roles; this is the picture for {month}.</p>"
              + act_row(more[0], more[1], [("insights/", "All charts and rankings")])
              + ins_chart(pts, col_) + ttable(head, rows_html, "rkt rk1" if head[0] == "#" else "rkt")
@@ -4667,7 +4667,7 @@ def main():
         ("A resume that knows what is in demand", "While you type in the resume builder, it shows how many open jobs ask for each skill you mention and how many jobs fit the resume as it stands.", "resume/",
          ex_ + '<span class="rw"><span>Python</span><span class="mt"><i style="width:100%"></i></span><b>8,341</b></span><span class="rw"><span>SQL</span><span class="mt"><i style="width:52%"></i></span><b>4,254</b></span><span class="ln">1,240 jobs ask for three of your skills</span>'),
     ]
-    page("ahead/", f"From the Future: {len(ahead_cards)} Things This Job Site Does That Others Do Not Yet | {SITE}",
+    page("ahead/", f"{len(ahead_cards)} Things Other Job Sites Do Not Do Yet | {SITE}",
          "The chance a job is still open next week, a skill GPS, interview practice out loud, an AI assistant briefed with your resume, and more things job sites do not do yet.",
          crumbs(("From the future", "")) + f'<h1>From the future: <span class="hl">{len(ahead_cards)} things job sites do not do yet</span></h1>'
          '<p class="lead">Each of them works in your browser, with no account and nothing sent to us. Open any of them and try.</p>'
@@ -5000,7 +5000,7 @@ def main():
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         facts_ = nums([(f"{len(rj):,}", f"open {e(low)} jobs today"), (f"{pc_(sum(j['remote'] for j in rj), len(rj))}%", "can be done from home")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 30 else []))
         cl_dir[fs].append((slug_r, rname, len(rj)))
-        page(f"cover-letter-examples/{slug_r}/", f"{tcase(rname)} Cover Letter: 3 Examples & Template ({TODAY[:4]}) | {SITE}",
+        page(f"cover-letter-examples/{slug_r}/", next(c_ for c_ in (f"{tcase(rname)} Cover Letter: 3 Examples & Template ({TODAY[:4]})", f"{tcase(rname)} Cover Letter Examples ({TODAY[:4]})", f"{tcase(rname)} Cover Letter Example", f"{tcase(rname)[:44].rsplit(' ', 1)[0]} Cover Letter Example") if len(c_) <= 65) + f" | {SITE}",      # 189 long names lost the word "example" when the title was cut at its colon
              f"{art(low).capitalize()} {low} cover letter example built around measured results, with what today’s {len(rj):,} open {low} postings ask for. Copy it and fill in the brackets.",
              crumbs(("Cover letter examples", "cover-letter-examples/"), (rname, "")) + f'<h1>{e(rname)} cover letter example: <span class="hl">results first</span></h1>'
              f'<p class="lead">A cover letter for {e(low)} jobs that leads with what you achieved, not with what you were responsible for. Copy it, replace the parts in [brackets] and use the words of the posting you answer.</p>'
@@ -6915,7 +6915,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "have it corrected, have it deleted, or object to its use. We answer within 30 days, usually much sooner. Deleting removes the alerts of that address, the record of letters to it, the limit counters kept under it, "
           "and the account with its sessions and company pages; jobs it posted come down. Records of payments, once there are any, are kept as long as the law requires. "
           "You can also complain to the data protection authority where you live.</p>")
-    page("privacy/", f"Privacy | {SITE}", ("What this site keeps: no tracking cookies, saved jobs stay in your browser; for job alerts and accounts your email and what you asked for, deleted on request."
+    page("privacy/", f"Privacy Policy | {SITE}", ("What this site keeps: no tracking cookies, saved jobs stay in your browser; for job alerts and accounts your email and what you asked for, deleted on request."
                                            if api_on else "What this site stores and what it does not: no accounts, no tracking cookies, your saved jobs stay in your browser."),
          crumbs(("Privacy", "")) + "<h1>Privacy</h1>"
          + ("<p class=\"lead\">Short version: searching and applying need no account, there are no tracking cookies, and your saved jobs never leave your browser. "

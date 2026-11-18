@@ -1043,7 +1043,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     # ------------------------------------------------------------ 17. thank-you email
     tool("thank-you-email", "seekers", "Thank-you email after an interview",
          "Who you met, the role and one thing you discussed become a short thank-you email in one of three tones. A template, not AI.",
-         "Thank-You Email After an Interview: Template & Timing",
+         "Thank-You Email Generator: Free, Ready in a Minute",
          "Write a thank-you email after a job interview from a few fields: who you met, the role and one thing you discussed. Three tones. Template-based, private, free.",
          "Write the thank-you email on the day of the interview",
          "A thank-you email is four or five sentences, and it still sits unsent when the wording feels awkward. A generic note says nothing about the conversation you had. "
@@ -1118,7 +1118,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     # ------------------------------------------------------------ 18. resignation letter
     tool("resignation-letter", "seekers", "Resignation letter builder",
          "Your last day, your notice period, optional thanks and a handover offer become a short, neutral letter to copy or print.",
-         "Resignation Letter Template: Short and Neutral",
+         "Resignation Letter Generator: Free, Short and Neutral",
          "Build a short, neutral resignation letter: last working day, notice period, optional thanks and a handover offer. Copy, download or print. Private, no sign-up.",
          "Write a short resignation letter that states the facts",
          "A resignation letter has one job: to put on record that you are leaving and on which day. Anything more, such as reasons or complaints, stays in your file after you have gone. "

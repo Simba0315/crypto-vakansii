@@ -1400,7 +1400,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
     r = await login(MAC); eq([r.status, outbox.length], [200, 0], 'F: signing in from the browser that made the account sends no notice');
     r = await login(MAC_UPDATED); eq([r.status, outbox.length], [200, 0], 'F: an update of the same browser is not a new device');
     r = await login(LINUX); const fromLinux = r.body.token;
-    eq([r.status, outbox.length, outbox[0].to, outbox[0].from, outbox[0].subject], [200, 1, 'hr@nova.dev', 'no-reply@site.test', 'A new sign-in to your employer account'], 'F: a sign-in from another browser sends a notice to the address of the account');
+    eq([r.status, outbox.length, outbox[0].to, outbox[0].from, outbox[0].subject], [200, 1, 'hr@nova.dev', 'no-reply@site.test', 'A new sign-in to your account'], 'F: a sign-in from another browser sends a notice to the address of the account');
     const said = outbox[0].text;
     ok(said.includes(SITE) && /not been used in before/.test(said) && /Forgot password/.test(said), 'F: the notice says what happened and what to do if it was somebody else');
     ok(!said.includes(fromLinux) && !said.includes(session) && !said.includes(PASS) && !/[a-f0-9]{32,}/.test(said) && !said.includes('#'), 'F: the notice carries no token, no password and no link that signs anyone in');
@@ -1412,7 +1412,7 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
     const devices = (await env.DB.prepare('SELECT * FROM devices').all()).results;
     ok(devices.length === 3 && devices.every((d) => /^[a-f0-9]{32}$/.test(d.ua_hash)) && !/Mozilla|Chrome|Firefox|iPhone/.test(JSON.stringify(devices)), 'F: of a browser only a hash is kept');
     await call(env, 'POST', '/api/auth/signup', { data: { email: 'hr@orbit.dev', password: PASS }, ua: MAC });
-    r = await login(LINUX, PASS, 'hr@orbit.dev'); eq([r.status, outbox.length, outbox[outbox.length - 1].to, outbox[outbox.length - 1].subject], [200, 4, 'hr@orbit.dev', 'A new sign-in to your employer account'],
+    r = await login(LINUX, PASS, 'hr@orbit.dev'); eq([r.status, outbox.length, outbox[outbox.length - 1].to, outbox[outbox.length - 1].subject], [200, 4, 'hr@orbit.dev', 'A new sign-in to your account'],
       'F: a browser known to one account is new to another');
     const waited = [];
     r = await login('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edge', PASS, 'hr@nova.dev', { ctx: { waitUntil: (w) => waited.push(w) } }); await Promise.all(waited);
@@ -3232,6 +3232,39 @@ await smtpServer.close();
   const dir = mkdtempSync(path.join(os.tmpdir(), 'hrn-admin-')), penv = productionEnv({ ADMIN_EMAILS: 'owner@example.com, b@owner.dev', DB_FILE: path.join(dir, 'a.db') }, { serverDir: path.join(here, '..') });
   eq([penv.ADMIN_EMAILS, /moderators 2/.test(describeEnv(penv)), describeEnv(penv).includes('owner@example.com')], ['owner@example.com, b@owner.dev', true, false], 'Settings: ADMIN_EMAILS reaches the worker; the log says how many moderators, not who');
   penv.DB.close(); rmSync(dir, { recursive: true, force: true });
+}
+
+/* ---- signing in with a link from the mail; the letter before a job ends ---- */
+{
+  const outbox = [], env = newEnv({ MAIL: { send: async (m) => { outbox.push(m); } }, MAIL_FROM: 'no-reply@site.test' }), token = await account(env);
+  const ask = (email) => call(env, 'POST', '/api/auth/link/request', { data: { email } }), use = (t) => call(env, 'POST', '/api/auth/link/confirm', { data: { token: t } });
+  outbox.length = 0;
+  const known = await ask('Boss@Acme.dev'), unknown = await ask('nobody@acme.dev');
+  eq([known.status, known.body], [200, unknown.body], 'Link: the answer is the same for a known and an unknown email');
+  eq([outbox.length, outbox[0].to, outbox[0].kind], [1, 'boss@acme.dev', 'signin'], 'Link: one letter, to the account that exists');
+  const tok = (/#signin=([a-f0-9]{64})\b/.exec(outbox[0].text) || [])[1];
+  ok(tok && !JSON.stringify((await env.DB.prepare('SELECT * FROM signin_links').all()).results).includes(tok), 'Link: only the hash of the token is stored');
+  await env.DB.exec("UPDATE users SET confirmed_at = 0 WHERE email = 'boss@acme.dev'");
+  let r = await use('f'.repeat(64)); eq([r.status, r.body.error], [400, 'signin'], 'Link: a made-up token is refused');
+  r = await use(tok); eq([r.status, !!r.body.token, r.body.user.email], [200, true, 'boss@acme.dev'], 'Link: the link signs in');
+  ok((await one(env, "SELECT confirmed_at FROM users WHERE email = 'boss@acme.dev'")) > 0, 'Link: opening it confirms the address');
+  eq((await call(env, 'GET', '/api/me', { token: r.body.token })).status, 200, 'Link: the new session works');
+  eq((await use(tok)).status, 400, 'Link: it works once');
+  eq((await call(env, 'GET', '/api/me', { token })).status, 200, 'Link: other browsers stay signed in');
+  await ask('boss@acme.dev'); const late = (/#signin=([a-f0-9]{64})\b/.exec(outbox[outbox.length - 1].text) || [])[1];
+  await env.DB.exec('UPDATE signin_links SET expires_at = 1'); eq((await use(late)).status, 400, 'Link: an old link is refused');
+
+  r = await call(env, 'POST', '/api/jobs', { token, data: GOOD }); const id = r.body.job.id;
+  await env.DB.exec("UPDATE jobs SET status = 'live'");
+  const ending = () => outbox.filter((m) => m.kind === 'job_ending'), soon = Math.floor(Date.now() / 1000) + 2 * 86400;
+  await worker.scheduled({}, env); eq(ending().length, 0, 'Reminder: nothing while the job has weeks left');
+  await env.DB.prepare('UPDATE jobs SET expires_at = ? WHERE id = ?').bind(soon, id).run();
+  await worker.scheduled({}, env); await worker.scheduled({}, env);
+  eq([ending().length, ending()[0].to, ending()[0].text.includes('/account/#jobs')], [1, 'boss@acme.dev', true], 'Reminder: one letter three days before the end, with the way to keep the job');
+  eq((await call(env, 'POST', '/api/jobs/' + id + '/renew', { token })).status, 200, 'Reminder: the job can be kept');
+  eq(await one(env, 'SELECT reminded_at FROM jobs WHERE id = ?', id), 0, 'Reminder: renewing starts a new term, with a letter of its own');
+  await env.DB.prepare("UPDATE jobs SET expires_at = ?, status = 'closed' WHERE id = ?").bind(soon, id).run();
+  await worker.scheduled({}, env); eq(ending().length, 1, 'Reminder: a closed job gets none');
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');

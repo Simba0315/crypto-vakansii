@@ -153,7 +153,13 @@
     var typed = (root.querySelector('.acc-auth input[name=email]') || {}).value || '';
     var ban = notice ? '<div class="banner' + (noticeBad ? '' : ' ok') + '" role="status">' + notice + '</div>' : '';
     notice = ''; noticeBad = false;
-    if (mode === 'forgot') {
+    if (mode === 'link') {
+      root.innerHTML = '<div class="acc-gate one"><div class="card acc-auth">' + ban + '<p class="acc-lbl">Sign in</p><h1 class="acc-t sm">Sign in <b>without a password</b></h1>' +
+        '<p class="acc-sub">Enter the email of your account. We send a link to it; open it on this device and you are in. It works once, for 15 minutes.</p><form novalidate>' +
+        field('Email', 'email', 'type="email" autocomplete="email" required value="' + esc(typed) + '"') + err + '<button class="btn primary lg wide" type="submit">Send me the link</button></form>' +
+        '<p class="acc-alt"><a href="#" data-mode="in">Back to sign in</a></p></div></div>';
+      submit(root.querySelector('form'), function (v) { return api('POST', '/api/auth/link/request', v).then(function (r) { flash(esc(r.message)); drawAuth('in'); }); });
+    } else if (mode === 'forgot') {
       root.innerHTML = '<div class="acc-gate one"><div class="card acc-auth">' + ban + '<p class="acc-lbl">Password</p><h1 class="acc-t sm">Get a link to <b>a new password</b></h1>' +
         '<p class="acc-sub">Enter the email of your account. We send a link to it; open the link and choose a new password.</p><form novalidate>' +
         field('Email', 'email', 'type="email" autocomplete="email" required value="' + esc(typed) + '"') + err + '<button class="btn primary lg wide" type="submit">Send me the link</button></form>' +
@@ -178,7 +184,7 @@
         field('Password', 'password', 'type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" required' + (up ? ' minlength="8"' : ''), up ? 'At least 8 characters.' : '') +
         (up && emp ? field('Company', 'company', 'type="text" autocomplete="organization" maxlength="80"', 'As it should read on the site. You can leave it empty for now.') : '') +
         err + '<button class="btn primary lg wide" type="submit">' + (up ? (emp ? 'Create employer account' : 'Create free account') : 'Sign in') + '</button></form>' +
-        '<p class="acc-alt">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address. <a href="' + esc(D.site) + '/privacy/">What we keep and why</a>' : '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>' +
+        '<p class="acc-alt">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address. <a href="' + esc(D.site) + '/privacy/">What we keep and why</a>' : (pub.email_link === 'on' ? '<a href="#" data-mode="link">Email me a sign-in link</a> · ' : '') + '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>' +
         '<ul class="acc-why">' + why.map(function (x) { return '<li><b>' + x[0] + '</b><span>' + x[1] + '</span></li>'; }).join('') + '</ul></div>';
       submit(root.querySelector('form'), function (v) {
         return api('POST', up ? '/api/auth/signup' : '/api/auth/login', v).then(function (r) { token = r.token; H.set('hrn_token', token); fresh = !up; flash(''); return load(); });
@@ -195,7 +201,7 @@
       });
     }
     Array.prototype.forEach.call(root.querySelectorAll('[data-mode]'), function (t) { t.addEventListener('click', function (ev) { ev.preventDefault(); drawAuth(t.getAttribute('data-mode')); }); });
-    Array.prototype.forEach.call(root.querySelectorAll('[data-role]'), function (t) { t.addEventListener('click', function () { setRole(t.getAttribute('data-role')); drawAuth(mode === 'forgot' ? 'in' : mode); }); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-role]'), function (t) { t.addEventListener('click', function () { setRole(t.getAttribute('data-role')); drawAuth(mode === 'forgot' || mode === 'link' ? 'in' : mode); }); });
   }
   function authSay(msg) { var box = root.querySelector('.acc-auth .acc-err'); if (box) { box.textContent = msg; box.hidden = false; } }
   function drawReset(resetToken) {
@@ -1090,6 +1096,10 @@
       return api('POST', '/api/auth/confirm', { token: m[1] }).then(function () { flash('<b>Your email is confirmed.</b>'); }, function (e) { flash(esc(e.message), true); usedLink = true; }).then(begin);
     }
     if ((m = /^#reset=([a-f0-9]{64})$/.exec(hash))) { cleanUrl(); return drawReset(m[1]); }
+    if ((m = /^#signin=([a-f0-9]{64})$/.exec(hash))) {
+      cleanUrl();
+      return api('POST', '/api/auth/link/confirm', { token: m[1] }).then(function (r) { token = r.token; H.set('hrn_token', token); fresh = true; flash('<b>You are signed in.</b>'); }, function (e) { flash(esc(e.message), true); usedLink = true; }).then(begin);
+    }
     if ((m = /^#work=([a-f0-9]{64})$/.exec(hash))) {
       cleanUrl();
       return api('POST', '/api/domain/email/confirm', { token: m[1] }).then(function (r) { flash(esc(r.message || 'Your work email is confirmed: your account is tied to your company.')); }, function (e) { flash(esc(e.message), true); }).then(begin);
@@ -1118,7 +1128,7 @@
     return drawAuth(notice || H.get('hrn_known', 0) ? 'in' : 'up');      // a browser that has been signed in before opens on "Sign in", a new one on "Create account"
   }
   window.addEventListener('hashchange', function () {
-    if (/^#(confirm|reset|work)=/.test(location.hash)) return start();      // a link from a letter opened in a tab where the account is open already
+    if (/^#(confirm|reset|work|signin)=/.test(location.hash)) return start();      // a link from a letter opened in a tab where the account is open already
     if (!me || !root.querySelector('.acc-shell')) return;
     if (Date.now() - saidAt > 1500) { var box = document.getElementById('acc-say'); if (box) box.innerHTML = ''; }
     showTab(); if (!ALIAS[location.hash.slice(1)]) toTop();

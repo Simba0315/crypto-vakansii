@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS resets (
 );
 CREATE INDEX IF NOT EXISTS resets_user ON resets (user_id);
 
+-- Sign-in links sent by email (no password needed): the same shape as resets. Only the hash is kept; a link works once and for 15 minutes.
+CREATE TABLE IF NOT EXISTS signin_links (
+  token_hash TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS signin_links_user ON signin_links (user_id);
+
 -- Links that confirm the email of a new account: the same shape as resets. Only the hash of the token is kept; a link works once and for 24 hours.
 CREATE TABLE IF NOT EXISTS confirms (
   token_hash TEXT PRIMARY KEY,
@@ -187,9 +196,11 @@ CREATE TABLE IF NOT EXISTS jobs (
   checked_at INTEGER NOT NULL DEFAULT 0,
   posted_by TEXT NOT NULL DEFAULT '',
   recruiter_name TEXT NOT NULL DEFAULT '',
+  reminded_at INTEGER NOT NULL DEFAULT 0,       -- when the letter "this job leaves the site soon" went out for its present term; 0: not yet
   created_at INTEGER NOT NULL,
   expires_at INTEGER NOT NULL
 );
+-- column: jobs reminded_at INTEGER NOT NULL DEFAULT 0
 CREATE INDEX IF NOT EXISTS jobs_user ON jobs (user_id);
 CREATE INDEX IF NOT EXISTS jobs_company ON jobs (company_key);
 CREATE INDEX IF NOT EXISTS jobs_status ON jobs (status, checked_at);

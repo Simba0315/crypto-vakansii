@@ -467,10 +467,42 @@ async function login(env, req, ctx) {
   const p = await hashPassword(typeof b.password === 'string' ? b.password : '', user ? user.pass_salt : '00'.repeat(16));
   if (!user || user.banned || !sameText(p.hash, user.pass_hash)) throw bad('credentials', 'Wrong email or password.', 401);
   if (!(await knownDevice(env, req, user.id))) {
-    await later(ctx, sendMail(env, user.email, 'A new sign-in to your employer account', 'Your employer account at ' + env.SITE_URL + ' was just signed in to from a browser it has not been used in before (' +
+    await later(ctx, sendMail(env, user.email, 'A new sign-in to your account', 'Your account at ' + env.SITE_URL + ' was just signed in to from a browser it has not been used in before (' +
       new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC).\n\nIf that was you, there is nothing to do.\n\nIf it was not, open ' + env.SITE_URL + '/account/ and choose "Forgot password" to set a new one: ' +
       'that signs out every browser.\n', { kind: 'device' }));
   }
+  return { token: await openSession(env, user.id), user: await userView(env, user) };
+}
+/* Signing in with a link sent to the address, for someone who has no password at hand (hirehi.ru signs in by a code in the mail; 18 Nov 2026).
+   Answered the same whether or not there is such an account. Opening the link proves the mailbox, so it also confirms the address.
+   Asking for a link changes nothing: the password stays valid and other browsers stay signed in. */
+const LINK_MINUTES = 15;
+async function linkRequest(env, req, ctx) {
+  await limit(env, 'link-ip:' + clientIp(req), 5, 3600);
+  const b = await body(req), email = cleanEmail(b.email);
+  if (!email) throw bad('email', 'Enter a valid email address.');
+  const out = { ok: true, message: 'If there is an account with this email, a sign-in link is on its way. It works for ' + LINK_MINUTES + ' minutes.' };
+  const token = rid('', 32), t = now();
+  const user = (await allowed(env, 'link:' + email, 3, 3600)) ? await db(env, 'SELECT id FROM users WHERE email = ? AND banned = 0', email).first() : null;
+  if (user) {
+    await db(env, 'INSERT INTO signin_links (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)', await sha256(token), user.id, t, t + LINK_MINUTES * 60).run();
+    await later(ctx, sendMail(env, email, 'Your sign-in link', 'Open this link within ' + LINK_MINUTES + ' minutes to sign in to your account at ' + env.SITE_URL + ':\n' + env.SITE_URL + '/account/#signin=' + token +
+      '\n\nIt works once. If you did not ask for it, ignore this message: nobody can sign in without it.\n', { kind: 'signin' }));
+  }
+  if (env.PAY_MODE === 'test') out.token = token;      // developer machines only: there is no mailbox to read the link from
+  return out;
+}
+async function linkConfirm(env, req) {
+  await limit(env, 'link-try:' + clientIp(req), 10, 600);
+  const b = await body(req), token = typeof b.token === 'string' && /^[a-f0-9]{64}$/.test(b.token) ? b.token : '', t = now();
+  const stale = bad('signin', 'This link does not work any more. Ask for a new one.'), hash = token ? await sha256(token) : '';
+  const row = hash ? await db(env, 'SELECT l.user_id FROM signin_links l JOIN users u ON u.id = l.user_id WHERE l.token_hash = ? AND l.expires_at > ? AND u.banned = 0', hash, t).first() : null;
+  if (!row) throw stale;
+  // deleting the row is what spends the link: of two requests at once only one finds it
+  if (!(await db(env, 'DELETE FROM signin_links WHERE token_hash = ?', hash).run()).meta.changes) throw stale;
+  await db(env, 'UPDATE users SET confirmed_at = ? WHERE id = ? AND confirmed_at = 0', t, row.user_id).run();
+  await knownDevice(env, req, row.user_id);
+  const user = await db(env, 'SELECT * FROM users WHERE id = ?', row.user_id).first();
   return { token: await openSession(env, user.id), user: await userView(env, user) };
 }
 async function logout(env, req) {
@@ -1578,7 +1610,7 @@ async function updateJob(env, req, user, id, action) {
     const cap = back && (always || !trusted(user, t)) ? NEW_LIVE_JOBS : 1e9;
     const why = recruiter ? recruiterReason(old.recruiter_name) + ' (published again)' : always ? UNVERIFIED_REASON + ' (published again)' : '';      // given only where the job has no reason of its own
     const done = await env.DB.batch([db(env, "UPDATE jobs SET held_at = CASE WHEN (review_reason != '' OR ? != '') AND status != 'review' THEN ? ELSE held_at END, " +
-      "status = CASE WHEN review_reason != '' OR ? != '' THEN 'review' ELSE 'live' END, review_reason = CASE WHEN review_reason = '' THEN ? ELSE review_reason END, expires_at = ? " +
+      "status = CASE WHEN review_reason != '' OR ? != '' THEN 'review' ELSE 'live' END, review_reason = CASE WHEN review_reason = '' THEN ? ELSE review_reason END, reminded_at = 0, expires_at = ? " +
       "WHERE id = ? AND status IN ('live', 'review', 'closed') AND (SELECT COUNT(*) FROM jobs c WHERE c.user_id = ? AND c.id != ? AND c.status IN ('live', 'review') AND c.expires_at > ? AND (? = 0 OR c.posted_by = 'recruiter')) < ?",
       why, t, why, clip(why, 500), t + FREE_JOB_DAYS * DAY, id, user.id, id, t, recruiter ? 1 : 0, cap), ...(always ? [holdPlacements(env, id, t)] : [])]);
     if (!done[0].meta.changes) throw bad('limit', recruiter ? RECRUITER_ROOM : NO_ROOM, 429);
@@ -1756,6 +1788,17 @@ async function shownNow(env, t, liveJobs) {
     const k = companyKey(type === 'company' ? rest : rest.slice(rest.indexOf('|') + 1));
     return !postedHere.has(k) || liveHere.has(k);
   };
+}
+/* A free job ends after 30 days without a word to its owner unless someone looks; three days before, one letter says so and where to keep it
+   (Remote OK and others send such a reminder). At most one letter for each term of a job: renewing starts a new term. */
+const REMIND_DAYS = 3;
+async function remindEnding(env, t) {
+  const rows = (await db(env, "SELECT j.id, j.title, j.company, j.expires_at, u.email FROM jobs j JOIN users u ON u.id = j.user_id WHERE j.status = 'live' AND j.reminded_at = 0 AND j.expires_at > ? AND j.expires_at <= ? AND u.banned = 0 LIMIT 100", t, t + REMIND_DAYS * DAY).all()).results;
+  for (const j of rows) {
+    if (!(await db(env, 'UPDATE jobs SET reminded_at = ? WHERE id = ? AND reminded_at = 0', t, j.id).run()).meta.changes) continue;      // another run took it
+    await sendMail(env, j.email, 'Your job leaves the site on ' + isoDay(j.expires_at), '“' + j.title + '” at ' + j.company + ' leaves ' + env.SITE_URL + ' on ' + isoDay(j.expires_at) + '.\n\n' +
+      'If the role is still open, keep it for 30 more days, free:\n' + env.SITE_URL + '/account/#jobs\n\nIf it is filled there is nothing to do.\n', { kind: 'job_ending' });
+  }
 }
 async function exportForSite(env) {
   const t = now();
@@ -3088,12 +3131,14 @@ async function route(env, req, url, ctx) {
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
       // for the pages to know which buttons to show: sign-in with LinkedIn, and the AI tools of Plus
       linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off',
-      talent: env.TALENT_DB === 'on' ? 'on' : 'off', google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URL ? 'on' : 'off' };
+      email_link: 'on', talent: env.TALENT_DB === 'on' ? 'on' : 'off', google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URL ? 'on' : 'off' };
   }
   if (path === '/api/auth/signup' && m === 'POST') return signup(env, req, ctx);
   if (path === '/api/auth/login' && m === 'POST') return login(env, req, ctx);
   if (path === '/api/auth/logout' && m === 'POST') return logout(env, req);
   if (path === '/api/auth/confirm' && m === 'POST') return confirmEmail(env, req);
+  if (path === '/api/auth/link/request' && m === 'POST') return linkRequest(env, req, ctx);
+  if (path === '/api/auth/link/confirm' && m === 'POST') return linkConfirm(env, req);
   if (path === '/api/auth/reset/request' && m === 'POST') return resetRequest(env, req, ctx);
   if (path === '/api/auth/reset/confirm' && m === 'POST') return resetConfirm(env, req);
   if (path === '/api/webhooks/cryptomus' && m === 'POST') return cryptomusWebhook(env, req, ctx);
@@ -3471,6 +3516,8 @@ export default {
     await step('talent', () => env.DB.batch([talentRefund(env, 'r.created_at < ?', t - TALENT_REQUEST_DAYS * DAY),
       db(env, "UPDATE talent_requests SET status = 'expired', answered_at = ? WHERE status = 'sent' AND created_at < ?", t, t - TALENT_REQUEST_DAYS * DAY)]));           // the log of letters is kept 30 days
     await step('alerts', () => db(env, "DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", t - PENDING_DAYS * DAY).run());   // nobody confirmed them
+    await step('job reminders', () => remindEnding(env, t));
+    await step('sign-in links', () => db(env, 'DELETE FROM signin_links WHERE expires_at < ?', t).run());
     await step('reruns', () => rerunBoosts(env, t));          // the free re-run of a paid boost that brought fewer than RERUN_APPLIES clicks on Apply
     await step('rebuild', async () => { if ((await db(env, "SELECT v FROM meta WHERE k = 'rebuild_wanted'").first('v')) === '1') await requestRebuild(env, true); });
   },
