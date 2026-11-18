@@ -3497,7 +3497,11 @@ def main():
                                      "percentile25": round(pct(.25)), "median": round(median(mids)), "percentile75": round(pct(.75))}]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         # the figures are the reason to click, so they stay in the title and the site name gives way (a title holds about 65 characters)
         t_long = f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})"
-        page(f"salaries/{slug}/", t_long if len(t_long) <= 65 else f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median",
+        # a long role name must not push a figure out of the title: drop the date, then the average, then both, never cut a number in half
+        t_pick = next((c for c in (t_long, f"{label} Salary: {money(mean_)} Average, {money(median(mids))} Median",
+                                   f"{label} Salary: {money(median(mids))} Median ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})",
+                                   f"{label} Salary: {money(median(mids))} Median", f"{label} Salary") if len(c) <= 65), f"{label} Salary")
+        page(f"salaries/{slug}/", t_pick,
              f"The average {label} salary at companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
