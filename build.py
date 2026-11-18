@@ -43,6 +43,7 @@ def mail_a(kind, subject=""):
     addr = MAIL.get(kind) or CFG.get("contact_email", "")
     return f'<a href="mailto:{e(addr)}{e("?subject=" + quote(subject)) if subject else ""}">{e(addr)}</a>' if addr else ""
 CAT = {s: n for s, n, _ in CATS} | {OTHER[0]: OTHER[1]}
+CAT_Q = {"finance": "Finance", "sales-bd": "Sales", "marketing": "Marketing", "support": "Customer Service", "consulting": "Consulting"}      # a field by the one word people search it by, for headings of place pages
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 # ---------------------------------------------------------------- where a job is
 # A location line is split into parts ("Berlin; New York, NY"), and each part is read on its own: a country or a US state
@@ -169,6 +170,7 @@ PLACES += [(nm, re.sub(r"[^a-z0-9]+", "-", nm.lower()).strip("-"), code) for cod
 PLACE_CODE = {slug: ("" if rule == "region" else rule if isinstance(rule, str) else rule[1]) for _, slug, rule in PLACES}      # a city or state carries its country's flag
 REGION_FLAG = {"europe": "\U0001F1EA\U0001F1FA", "asia-pacific": "\U0001F30F", "latin-america": "\U0001F30E", "africa": "\U0001F30D"}
 PATH_PLACE = re.compile(r"^(?:locations|crypto/in)/([a-z0-9-]+)/")
+EURO_CC = {"DE", "FR", "NL", "ES", "PT", "IE", "IT", "AT", "BE", "FI", "GR", "LU", "EE", "LV", "LT", "SK", "SI", "MT", "CY", "HR"}      # countries paid in euros
 
 
 def pfl(slug):
@@ -1283,6 +1285,14 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
             mids_l = sorted((lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]])
             pay_l = f", {money(mids_l[len(mids_l) // 4])}–{money(mids_l[3 * len(mids_l) // 4])}" if len(mids_l) >= 15 and "$" not in title else ""
+            # A page about a place paid in pounds or euros never carries a dollar range in its title (search check, 18 Nov 2026:
+            # "Python jobs in London ($185K–$254K)" stood among results that all quote pounds). The range in the local currency
+            # when ten postings state one, else the month, as on a list with no pay.
+            m_pl = PATH_PLACE.match(path)
+            sym_l = {"GB": "£"}.get(PLACE_CODE.get(m_pl.group(1), ""), "€" if m_pl and PLACE_CODE.get(m_pl.group(1), "") in EURO_CC else "") if m_pl else ""
+            if sym_l and "$" not in title:
+                lm_l = sorted(m_ for j in jobs if (m_ := local_mid(j.get("salary"), sym_l)))
+                pay_l = f", {sym_l}{lm_l[len(lm_l) // 4] / 1000:,.0f}K–{sym_l}{lm_l[3 * len(lm_l) // 4] / 1000:,.0f}K" if len(lm_l) >= 10 else ""
             page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open{pay_l or ', ' + MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld, cls="lp")
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
@@ -2336,8 +2346,12 @@ def main():
             f"loc={slug}&remote=1", "remote ", f" in {e(name)}", [("place:" + slug, "Remote"), ("remote", f"Remote in {short}")])
         for cs, cname in CAT.items():
             if cs == OTHER[0]: continue
-            add(f"locations/{slug}/{cs}/", f"{cname} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
-                f"loc={slug}&cat={cs}", f"{e(cname)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
+            # The words people type (search check, 18 Nov 2026: the query is "finance jobs atlanta", every first result is titled
+            # "Finance jobs in Atlanta", and ours said "Finance & Trading jobs in Atlanta"). Only where the short word covers the
+            # whole field: "Retail & Hospitality" and "Manufacturing & Trades" keep both halves.
+            cq = CAT_Q.get(cs, cname)
+            add(f"locations/{slug}/{cs}/", f"{cq} jobs in {name}", [j for j in pj if j["cat"] == cs], (("Locations", "locations/"), (short, f"locations/{slug}/")),
+                f"loc={slug}&cat={cs}", f"{e(cq)} ", f" in {e(name)}", [("cat:" + cs, f"{cname} in {short}"), ("place:" + slug, cname)])
     HUB["roles"] = {slug: (nm, {j["id"] for j in rj_}) for slug, (nm, rj_) in by_role.items()}
     job_roles = defaultdict(list)                              # job id -> the kinds of work it belongs to
     for slug, (nm, rj_) in by_role.items():
@@ -2749,8 +2763,28 @@ def main():
         if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
     for p_, h_, w_, js_ in HOURS:
         row_h, kw_h = list_parts(h_, js_)
+        fq_first, fq_extra = None, ()
+        if p_ == "night-shift/":
+            # Search check, 18 Nov 2026 ("night shift jobs"): Google's answer lists the kinds of night work in groups and opens with the
+            # night pay premium; "What's a good night shift job?" is the first question people also ask.
+            n_cat = Counter(CAT[j["cat"]] for j in js_ if j["cat"] != OTHER[0]).most_common(5)
+            n_ti = Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in js_)
+            n_ti = [(t_, k_) for t_, k_ in n_ti.most_common(12) if k_ >= 2 and 3 <= len(t_) <= 60][:6]
+            n_diff = sum(1 for j in js_ if re.search(r"shift differential|night differential|shift premium|night premium", (j["excerpt"] or "") + " " + (j.get("desc") or ""), re.I))
+            n_rem = sum(1 for j in js_ if j["remote"])
+            fq_first = ("What is a good night shift job?", ("By what is open today, the most common are " + ", ".join(f"{t_} ({k_:,})" for t_, k_ in n_ti) + ". " if len(n_ti) >= 3 else "")
+                        + "The fields with the most night work here are " + ", ".join(f"{c_} ({k_:,})" for c_, k_ in n_cat) + ". A good one is the one whose hours you can keep: check whether the shift is fixed or rotates.")
+            fq_extra = (("Do night shifts pay more?", "Often, through a shift differential: extra pay per hour for evening and night hours. "
+                         + (f"{n_diff:,} of the {len(js_):,} night shift postings here name a differential or a premium in their text; the others may still pay one, so ask for the night rate in the first call. " if n_diff
+                            else "Few postings state it, so ask for the night rate in the first call. ")
+                         + "In the United States no federal law requires extra pay for night work as such; it is the employer’s policy or a union contract."),
+                        ("What hours is a night shift?", "Postings use the words differently. Second shift or swing shift usually runs from the afternoon to about midnight; third shift, overnight or graveyard from about 10 or 11 p.m. to 6 or 7 a.m. "
+                         "The posting’s own schedule line is the only one that counts."),
+                        ("Are there remote night shift jobs?", (f"{n_rem:,} of the {len(js_):,} night shift postings here are marked remote: mostly customer support, dispatch and monitoring work that has to be covered round the clock." if n_rem else
+                                                                "None of the night shift postings here is marked remote today; such roles are mostly customer support, dispatch and monitoring, and they appear as employers post them.")))
         listing(p_, h_, f"{h_} ({len(js_):,} open) | {SITE}", f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
-                intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], links=(("jobs/", "Search every job"),), **kw_h)
+                intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
+                links=(("jobs/", "Search every job"),), **kw_h)
     lap('Hybrid: some days at home, some in the office (FlexJobs show')
     # Hybrid: some days at home, some in the office (FlexJobs shows it as its own kind of work; the search has the same filter)
     hyb_ = [j for j in active if j.get("hybrid")]
@@ -4225,12 +4259,18 @@ def main():
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         side = lambda F: (f'<div><p class="flabel">{e(F["name"])} hires most in</p><p>{e(", ".join(F["fields"]))}</p>' + (f'<p class="flabel">Skills it asks for most</p><p>{e(", ".join(F["skills"]))}</p>' if F["skills"] else "") + "</div>")
         others_ = [x for x in vs_top if x not in (sa, sb)][:6]
-        page(vs_path(sa, sb), f"{A['name']} vs {B['name']}: Jobs, Pay, Remote & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
+        # Search check, 18 Nov 2026 ("spacex vs anduril careers"): the word "careers" and both counts in the title, and the answer
+        # in the first sentence (Bing's answer card for such a query is a two-line verdict).
+        vs_t0 = f"{A['name']} vs {B['name']} Careers"
+        vs_t = next((c_ for c_ in (f"{vs_t0}: {A['n']:,} vs {B['n']:,} Open Jobs, Pay, Remote ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})",
+                                   f"{vs_t0}: {A['n']:,} vs {B['n']:,} Open Jobs, Pay, Remote", f"{vs_t0}: {A['n']:,} vs {B['n']:,} Open Jobs") if len(c_) <= 65), vs_t0)      # the longest that fits: the counts before the month
+        page(vs_path(sa, sb), f"{vs_t} | {SITE}",
              f"{A['name']} against {B['name']} by their own job postings: {A['n']:,} and {B['n']:,} open roles, the share that is remote, how often pay is stated and what is advertised. Counted {fdate(TODAY)}.",
              crumbs(("Companies", "companies/"), ("Compare", "companies/compare/"), (f"{A['name']} vs {B['name']}", "")) + f"<h1>{e(A['name'])} vs {e(B['name'])}: hiring side by side</h1>"
-             f'<p class="lead">What each company’s own job postings show on {fdate(TODAY)}. {e(A["name"])} has {A["n"]:,} open roles, most in {e(" and ".join(A["fields"][:2]))}'
-             + (f', hiring mostly in {e(", ".join(XA["places"][:2]))}' if XA["places"] else "") + f'. {e(B["name"])} has {B["n"]:,}, most in {e(" and ".join(B["fields"][:2]))}'
-             + (f', hiring mostly in {e(", ".join(XB["places"][:2]))}' if XB["places"] else "") + '.</p>'
+             f'<p class="lead">{e(more_[0]["name"])} has more open jobs than {e(more_[1]["name"])}: {more_[0]["n"]:,} against {more_[1]["n"]:,} on {fdate(TODAY)}, by each company’s own careers page. '
+             f'{e(A["name"])} hires most in {e(" and ".join(A["fields"][:2]))}'
+             + (f', mostly in {e(", ".join(XA["places"][:2]))}' if XA["places"] else "") + f'; {e(B["name"])} in {e(" and ".join(B["fields"][:2]))}'
+             + (f', mostly in {e(", ".join(XB["places"][:2]))}' if XB["places"] else "") + '.</p>'
              + vs_head(A, B, sa, sb) + f'<div class="vs">{vs_rows(A, B)}</div>'
              + '<div class="card verdict">' + "".join(f"<p>{e(v)}</p>" for v in verdict) + "</div>"
              + f'<div class="vsside">{side(A)}{side(B)}</div>' + side_tbl
@@ -6617,7 +6657,14 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               "That is how this builder is made, and the comparison of free builders shows how others handle the download."),
              ("Do I need to sign up to make a resume here?", "No. You type in the form, the page updates as you go, and you download. Nothing leaves your browser; the draft is kept in this browser so you can come back to it."),
              ("Will an applicant tracking system read this resume?", "The templates are single-column text with standard headings and no tables, icons or text boxes, which is what screening software reads best. "
-              "Match it to a posting with the resume match checker before you apply.")]
+              "Match it to a posting with the resume match checker before you apply."),
+             ("Can I download my resume as a PDF and as a Word file?", "Yes, both, free. “Save as PDF” opens your browser’s print window, where you choose “Save as PDF”; “Download for Word” gives a file that Word, Google Docs and Pages open. "
+              "There is no watermark and no limit on downloads."),
+             ("What is a red flag on a resume?", "What makes a reader stop: typos, dates that leave a gap with no word about it, a list of duties with no result or number, several pages for a few years of work, "
+              "and a layout that screening software scrambles. The free resume review on this site checks the dates, the wording, the numbers and the length."),
+             ("What is the 7-second rule for a resume?", "The idea that a recruiter’s first look lasts only a few seconds; it comes from an eye-tracking study by Ladders (2018), which measured about 7.4 seconds. "
+              "So the top third of the page has to carry your job title, your years of experience and your strongest result."),
+             ("Can I make a resume on my phone?", "Yes. The form and the preview work on a phone, and “Save as PDF” uses the phone’s own print window. The draft stays in that browser, so finish it on the device you started on.")]
     rb_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("resume/", f"Free Resume Builder: Free PDF & Word Download, No Sign-Up | {SITE}",
@@ -6681,6 +6728,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "The table shows, for each builder, what its own pages say a free user can download, and what the cheapest paid option costs."),
         ("Can I make a resume for free without signing up?",
          f"Yes, here: the builder on {SITE} runs in your browser, keeps the resume in the browser and downloads it as a PDF or a Word file for free, with no account and no watermark."),
+        *([("Is the Indeed resume builder actually free?",
+            f"By Indeed’s own pages on {bc_when}: yes, the PDF download is free. It needs an Indeed account, and the limit is {bc_ind['limits'][0].lower() + bc_ind['limits'][1:]}.")] if (bc_ind := next((b for b in BC.BUILDERS if b["name"] == "Indeed"), None)) and bc_ind["pdf"][0] == "yes" and bc_ind.get("limits") else []),
+        ("Which free resume builder is best?",
+         "The one that passes three tests on the day you need the file: the PDF downloads without payment, there is no watermark, and the layout is one column of plain text that screening software can read. "
+         f"The table shows the first two for {len(BC.BUILDERS)} builders by their own pages; the third you can check by pasting the finished resume into a plain-text editor."),
         ("How was this checked?",
          f"We read each builder’s own pricing page, help pages or terms on {bc_when} and wrote down only what they state; a fact a page does not state is shown as “Not stated”. "
          "Reviews and lists by others were not used as a source. Prices are those the pages showed us that day, in US dollars; several builders say prices differ by country. "
@@ -6689,7 +6741,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     bc_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in bc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     bc_src = '<ul class="vs-src">' + "".join(f'<li><b>{e(b["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in b["sources"]) + "</li>" for b in BC.BUILDERS) + "</ul>"
-    page("free-resume-builders/", f"Free Resume Builders: Which Let You Download the PDF Free | {SITE}",
+    page("free-resume-builders/", f"Free Resume Builders Compared ({TODAY[:4]}): Which Give the PDF Free | {SITE}",
          f"We read the pricing pages of {len(BC.BUILDERS)} resume builders on {bc_when}: which give a free PDF, which add a watermark, which ask for a paid trial first.",
          crumbs(("Resume builder", "resume/"), ("Free resume builders compared", ""))
          + f'<h1>Which free resume builders let you <span class="hl">download the PDF</span>?</h1>'
@@ -7951,8 +8003,46 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                   f"Of the {len(age_cl):,} postings that employers took down since {since_s}, half had been open {med_cl} days or more. "
                   + (f"At the closing rates seen in {'the first ' if early else ''}{days_s} days of records, about {pc(c7)} of new postings close within 7 days and {pc(c30)} within 30" + (f", {pc(c90)} within 90" if c90 is not None else "") + ". " if c7 is not None and c30 is not None else "")
                   + f"{pc(old90 / max(1, len(active)))} of the {len(active):,} jobs open today were posted more than 90 days ago.")
+        # Search and AI answers check, 18 Nov 2026 ("how long do job postings stay open"): Bing's answer is built from pages with
+        # their own counts (Indeed, 31,590 postings; a tracker with 30,827) and adds what this page lacked: why postings close or stay,
+        # what the job boards do, and what it means for someone about to apply. The table answers the last from our own closing rates.
+        hz_ = SURV["all"]
+        ages_ = [d_ for d_ in (days_between(j["posted"], TODAY) for j in active) if d_ is not None]
+        apply_rows = []
+        for i_, (lab_, lo_, hi_, do_) in enumerate((("Up to 7 days", 0, 7, "Apply now: it is new, and the first applicants are read first."),
+                                                   ("8 to 30 days", 8, 30, "Apply: most postings of this age are still being filled."),
+                                                   ("31 to 90 days", 31, 90, "Apply, and say in the first line that you saw the role is still listed. Some of these are hard to fill."),
+                                                   ("More than 90 days", 91, 10 ** 6, "Ask before you invest hours: it may be a standing posting that collects applications all year."))):
+            h_ = hz_[i_] if hz_ and i_ < len(hz_) else None
+            k_ = sum(1 for d_ in ages_ if lo_ <= d_ <= hi_)
+            if h_ is None or not k_: continue
+            apply_rows.append((lab_, k_, 1 - (1 - h_) ** 7, 1 - (1 - h_) ** 30, do_))
+        apply_tbl = (section("Should you [[still apply]]? By the age of the posting",
+                             '<div class="tablewrap"><table class="rkt"><tr><th>Posted</th><th>Open jobs of this age today</th><th>Close within the next 7 days</th><th>Close within the next 30 days</th><th>What to do</th></tr>'
+                             + "".join(f"<tr><td><strong>{e(lab_)}</strong></td><td>{k_:,}</td><td>{pc(w_)}</td><td>{pc(m_)}</td><td>{e(do_)}</td></tr>" for lab_, k_, w_, m_, do_ in apply_rows)
+                             + f'</table></div><p class="note">{"Early estimate" if early else "Estimate"} from the daily closing chance seen for postings of each age since {since_s}. '
+                             "A posting that closes is not always a hire: some are withdrawn, some are posted again.</p>", sid="apply", label="For applicants") if len(apply_rows) >= 3 else "")
+        why_ = section("Why a posting [[closes or stays]]",
+                       '<dl class="qa"><div><dt>Why postings close</dt><dd>The role was filled, often by someone already in the process; the employer has enough applicants and stops taking more; '
+                       "the budget was frozen or the role changed; or the hiring system closed it on a date set in advance.</dd></div>"
+                       "<div><dt>Why postings stay for months</dt><dd>The role is hard to fill; the employer hires for it all year and keeps one standing posting; several people are hired through one posting; "
+                       "or nobody took it down. A posting kept up with no hiring behind it is what people call a ghost job.</dd></div>"
+                       "<div><dt>Employer’s page and job boards</dt><dd>These figures are for employers’ own careers pages, where a posting stays until the employer removes it. Job boards add limits of their own: "
+                       "LinkedIn says a free job post stays active for up to 14 days and is then paused, and Indeed says a free posting stays live for up to 30 days (their own help pages, read Nov 18, 2026). "
+                       "So a job can vanish from a board while it is still open on the employer’s site, and the other way round.</dd></div></dl>", sid="why", label="Reasons")
+        w30_ = next((r_ for r_ in apply_rows if r_[0] == "8 to 30 days"), None)
         st_qa = [
             ("How long do job postings stay open?", lead_s),
+            ("Should I apply to a job that was posted a month ago?", (f"Yes. At the closing rates seen since {since_s}, about {pc(w30_[2])} of postings that are 8 to 30 days old close within the next week "
+             f"and {pc(w30_[3])} within the next month, so most are still open when you apply. " if w30_ else "Yes: most postings of that age are still open. ")
+             + f"Past 90 days it is worth asking first: {old90:,} of today’s {len(active):,} open jobs are that old."),
+            ("How soon should I apply after a job is posted?", (f"In the first week if you can: about {pc(c7)} of new postings close within 7 days. " if c7 is not None else "In the first week if you can. ")
+             + f"The rest stay much longer, and half of all closings come after {med_cl} days or more, so a later application is still read at most employers."),
+            ("How long do job postings stay up on LinkedIn and Indeed?", f"On an employer’s own careers page a posting stays until the employer takes it down; the median here is {med_cl} days. "
+             "Job boards add their own limits: LinkedIn says a free job post stays active for up to 14 days and is then paused, and Indeed says a free posting stays live for up to 30 days "
+             "(their help pages, read Nov 18, 2026). A posting can therefore leave a board while the job is still open on the employer’s site."),
+            ("What is a ghost job?", f"A posting the employer keeps up without hiring for it now. No count of postings can prove which ones those are. What can be counted: {old90:,} of today’s {len(active):,} open jobs "
+             f"({pc(old90 / max(1, len(active)))}) were posted more than 90 days ago, and each of their pages on this site says so."),
             ("How many job postings are entry level?", f"{len(ent):,} of {len(active):,} open postings ({pc(len(ent) / max(1, len(active)))}) are marked junior or intern in the title or by the employer: "
              f"{ent_int:,} internships and {len(ent) - ent_int:,} junior roles. {ent_exp2:,} of them ({pc(ent_exp2 / max(1, len(ent)))}) still ask for two years of experience or more."),
             ("Why are some postings open for months?", f"The page does not say why: a posting stays open as long as the employer keeps it on its careers page. "
@@ -7985,6 +8075,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        f'<figure class="pic"><figcaption><b>Still open after…</b>The {"early " if early else ""}estimated share of new postings still on the employer’s page that many days after posting, up to {reach} days.</figcaption>{surv_bars}</figure>'
                        f'<figure class="pic"><figcaption><b>Age at closing</b>The {len(age_cl):,} postings that closed since {since_s}, by how many days they had been up. The median is {med_cl} days.</figcaption>'
                        + vcols(cl_pts, aria="Closed postings by days since posting") + "</figure></div>", label="Closings")
+             + apply_tbl + why_
              + section("How old [[today’s open jobs]] are", '<div class="pics two">'
                        f'<figure class="pic"><figcaption><b>Open jobs by age</b>All {len(active):,} open postings, by days since the employer posted them.</figcaption>'
                        + vcols(age_pts, hi=next((i for i, (lo, hi, _) in enumerate(AGE_B) if lo > 90), None), aria="Open jobs by days since posting") + "</figure>"
