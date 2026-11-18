@@ -1319,6 +1319,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
                                                        + (hub_stats(jobs, stats == "rest") if stats and n == 1 else "")
                                                        + (list_save(h1, more, path if feed else "", links) + list_narrow(more, jobs) if n == 1 else ""))
+        if n > 1: top = top.replace("</h1>", f", page {n}</h1>", 1)        # page 2 and later do not repeat the first page's heading word for word (SEO_AUDIT.md, pattern E)
         the_list = ((f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                     + pager_html(path, n, pages) + note)
@@ -1395,7 +1396,7 @@ def intern_hub(path, h1, yr, ej):
     rss(f"{path}feed.xml", f"{h1} — {SITE}", path, order(ej))
     for n in range(1, pages + 1):
         chunk = shown[(n - 1) * per:n * per]
-        body = top if n == 1 else crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}</h1>"
+        body = top if n == 1 else crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}, page {n}</h1>"
         the_list = f'<ul class="jobs">{"".join(card(j, x) for j, x in chunk)}</ul>' + pager_html(path, n, pages) + note
         # sections review, batch 4: the order of every reviewed list (figures, the action, a row of links, the pictures, the jobs). The
         # table of seasons and the chart stand side by side above the list on a wide screen and under it on a phone, where the list
@@ -2320,7 +2321,7 @@ def main():
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     group = lambda label, inner, cls="": f'<div class="fgroup{" " + cls if cls else ""}"><span class="flabel">{label}</span>{inner}</div>'
-    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">Search jobs</h1>'
+    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (SEO_AUDIT.md, pattern D)
               f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
@@ -2358,7 +2359,7 @@ def main():
               + alert_form("new jobs for this search", search=True)
               + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in dict.fromkeys(top_skills + [rlow(nm) for nm, s_, _ in ROLES if s_ in by_role] + [c for c, _ in comp_items[:200]])) + "</datalist>"
               + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script>')
-    page("jobs/", f"Search {roles(n, 'Job')} | {SITE}",
+    page("jobs/", f"All Jobs: {n:,} Open Roles, Filter by Title, Place and Pay | {SITE}",
          "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search,
          head=f'<link rel="preload" href="{P}/data/head.json" as="fetch" crossorigin><link rel="preload" href="{P}/data/index.json" as="fetch" crossorigin>', cls="srch")
 

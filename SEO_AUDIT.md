@@ -23,7 +23,7 @@ jobs, so it has more pages of each kind; the patterns are the same. Run it again
 | D | Home and the search page | `/` “Job Search: … Jobs Hiring Now” and `/jobs/` “Search 41,187 Jobs” | 1 | `/jobs/` is titled as the full list with filters (“All jobs: …”), the words “job search” stay with the home page |
 | E | Page 2, 3, … of a company's jobs carry the first page's heading | `/companies/spacex/2/` “Jobs at SpaceX” | 33 companies | “Jobs at SpaceX, page 2” in the heading (the titles already differ) |
 
-Fixed on 18 Nov with this pass: the title “Crypto crypto custody and wallet specialist jobs” (a doubled word).
+Fixed on 18 Nov with this pass: pattern D (the search page is now “All jobs”, title “All Jobs: N Open Roles, Filter by Title, Place and Pay”); pattern E (page 2 and later of every list say “…, page N” in the heading); the title “Crypto crypto custody and wallet specialist jobs” (a doubled word). Patterns A, A2, B and C wait for part 6: each needs a choice of the one page per query, made on the full site.
 
 ## Not conflicts (the check groups them because it drops numbers and filler words)
 
