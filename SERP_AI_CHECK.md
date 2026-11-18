@@ -780,3 +780,19 @@ sources it cites, whether we are in the answer. The 54 queries of the table are 
   engines know it: a page that states plainly which hiring systems are read, how often, how many companies, and what happens to a closed job.
   To do: a page “How it works: where the jobs come from” with exactly those four facts in a table (the guide
   /guides/how-we-check-jobs-every-hour/ exists; check that it names the systems and the counts), linked from the home page.
+
+## Perplexity (added on 18 Nov 2026: the owner named it, with the AI sections of Google and Bing)
+
+perplexity.ai answers without a sign-in. Recorded as for ChatGPT: the sites it names, its sources, whether we are in the answer.
+
+### Home, question 2: “Is there a free job search engine that reads jobs directly from company career pages (Greenhouse, Lever, Ashby, Workday) and removes closed jobs? Name the sites.”
+- **Names:** HiringCafe, Crawlora, JobBloom, Drivetube, Open Jobs Search, JobYap, CrawlJobs, in a table with four columns:
+  direct career-page sourcing, closed jobs, free or not, notes.
+- **Sources cited:** github.com (12 links), dev.to (5), crawlora.net (4), drivetube.ai (4), scoutify.com (4), fresume.com (2).
+- **Are we in:** no.
+- **What it means for us:** Perplexity builds this answer from a comparison article on dev.to and from GitHub pages, not from the big
+  job boards. Two things follow. (1) Our public repository said “Hiring Right Now … about 36,000 open roles”, with the old address,
+  and its GitHub description read “Crypto and web3 job board (RU)”: both now state what the site is, with the hiring systems, the
+  counts and jobseveryhour.com. (2) To do on the site: a page that compares the job search engines that read company career pages
+  (each from its own page: what it reads, how often, what happens to a closed job, what it costs), with this site in the table.
+  An article on dev.to would need the owner's account and his word.

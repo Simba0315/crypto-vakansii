@@ -8115,10 +8115,15 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     demo_job = {"featured": True, "active": True, "remote": True, "salary": "$140K - $180K", "level": "", "tags": [], "location": "Remote, Europe", "company": "Your company",
                 "slug": "", "title": "Senior Backend Engineer (your Premium boost)", "posted": TODAY}      # few pills: the urgent badge must fit in the row
     urgent = '<span class="pill urg">Urgently hiring</span>'
-    prem_row = (eg(card(demo_job)).replace('<li class="job feat">', '<li class="job feat prem">', 1)
-                .replace('<span class="pill acc">Featured</span>', '<span class="pill acc">Featured</span>' + urgent, 1))
+    prem_row = eg(card(dict(demo_job, urgent=True))).replace('<li class="job feat">', '<li class="job feat prem">', 1)
+    # every paid product for one job, in the order the list would show them: Premium, a Standard boost, a job two weeks old that was
+    # bumped today, then real listings by date with one that carries only the badge
+    old_day = (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=12)).isoformat()
     demo_html = ('<ul class="jobs demo">' + prem_row + eg(card(dict(demo_job, title="Product Designer (your Standard boost)", salary="", tags=["Figma"], level="")))
-                 + "".join(card(j) for j in demo_rows) + "</ul>")
+                 + eg(card(dict(demo_job, featured=False, title="QA Engineer (your job, bumped to the top today)", salary="", posted=old_day)))
+                 + "".join(card(j) for j in demo_rows[:1])
+                 + eg(card(dict(demo_job, featured=False, urgent=True, title="Support Specialist (your “Urgently hiring” badge)", salary="")))
+                 + "".join(card(j) for j in demo_rows[1:]) + "</ul>")
     prem_page = ('<div class="pjob"><div class="pjob-cover" aria-hidden="true"><span class="ex">example</span></div><div class="pjob-head"><span class="pjob-logo" aria-hidden="true">Y</span>'
                  + '<div><b>Senior Backend Engineer</b><span>Your company · Remote, Europe · $140K – $180K</span></div>' + urgent + "</div>"
                  '<div class="pjob-body" aria-hidden="true"><span class="sk" style="width:92%"></span><span class="sk" style="width:78%"></span><span class="sk" style="width:86%"></span></div></div>'
@@ -8159,10 +8164,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Three ways to list a job, [[the first one free]]", emp_tiers
                    + kmore("Standard, Standard boost and Premium boost, side by side", emp_pt) + f'<p class="note">“Our advice” is ours, for a role that has to be seen this month; it is not a count of sales. '
                    f'Looking for work, not hiring? Job seekers have their own table on the <a href="{P}/pricing/">pricing page</a>.</p>', sid="prices", label="Prices")
-         + section("How your job [[looks in the list]]", '<div class="klooks"><div>' + '<p class="note">The first row is an example of a Premium boost, the second of a Standard boost; the others are real listings from today.</p>' + demo_html + "</div>"
+         + section("How your job [[looks in the list]]", '<div class="klooks"><div>' + '<p class="note">The rows that say “your” are examples: a Premium boost, a Standard boost, a job posted 12 days ago and bumped to the top, and a job with only the “Urgently hiring” badge. The others are real listings from today.</p>' + demo_html + "</div>"
                    '<div class="klooks-s"><div><h3>What a Premium boost adds to the job page</h3>' + prem_page + "</div><div><h3>How a company spotlight looks</h3>"
                    + '<div class="spot"><a class="eg">' + ava("Your company") + '<span><b>Your company</b><span class="s">42 open roles · featured</span></span></a></div>'
-                   '<p class="note">Shown on the home page and at the top of the companies list.</p>' + "</div></div></div>", label="See it")
+                   '<p class="note">Shown on the home page and at the top of the companies list.</p>'
+                   + '<h3>How a category or skill sponsor looks</h3><p class="sponsor"><span class="sponsor-l">Sponsored</span><a class="eg">' + ava("Your company") + "<b>Your company</b><span>42 open roles</span></a></p>"
+                   '<p class="note">At the top of the category or skill page you choose, with a link to your jobs.</p>' + "</div></div></div>", label="See it")
          + kpanel(section("What appears in your account [[at once]]", emp_cab, label="Your account"))
          + section("If a boost [[brings no one]]", guarantee, label="Guarantee")
          + section("Hiring Pass, add-ons, credits and [[resume search]]", krows([r_ for r_ in (
