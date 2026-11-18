@@ -1094,7 +1094,10 @@
     });
     document.head.appendChild(spec);
   }
-  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register(P + '/sw.js').catch(function () {});
+  // The worker is registered under the build's version, so a new build is a new address. Under the bare /sw.js the CDN kept the
+  // copy of 14 Nov 2026 for 30 days (the address ends in .js) and no browser ever received a newer worker.
+  var swVer = ((document.querySelector('script[src*="/site.js?v="]') || {}).src || '').match(/[?&]v=([a-f0-9]+)/);
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register(P + '/sw.js' + (swVer ? '?v=' + swVer[1] : '')).catch(function () {});
   var warmed = {};
   if (!specOk) document.addEventListener('mouseover', function (ev) {
     var a = ev.target.closest && ev.target.closest('.job > a');
