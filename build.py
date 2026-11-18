@@ -3146,8 +3146,25 @@ def main():
             k_ = (rows_l[c][1] or "Not stated").casefold()
             sec_nm.setdefault(k_, rows_l[c][1] or "Not stated")
             by_sec[k_][0] += 1; by_sec[k_][1] += len(v)
+        # Search check, 18 Nov 2026 ("s&p 500 companies hiring"): Google's answer says, for each company, what it hires for and gives an
+        # example role with place and pay; "… hiring remote" is a search of its own. Two columns and two short sections answer both.
+        top_f = lambda v: (lambda c_: c_[0][0] if c_ else "–")(Counter(CAT[j["cat"]] for j in v if j["cat"] != OTHER[0]).most_common(1))
         rows_t = "".join(f'<tr><td>{i_ + 1}</td>{co_cell(c)}<td>{len(v):,}</td><td>{("+" + format(new_(c), ",")) if new_(c) else "–"}</td>'
+                         + f'<td>{sum(1 for j in v if j["remote"]):,}</td><td>{e(top_f(v))}</td>'
                          + (f'<td>{e(sec_nm[rows_l[c][1].casefold()]) if rows_l[c][1] else "–"}</td>' if has_sec else "") + f'<td>{med_(v)}</td></tr>' for i_, (c, v) in enumerate(hits))
+        rem_co = sorted(((c, sum(1 for j in v if j["remote"]), len(v)) for c, v in hits), key=lambda x: -x[1])
+        rem_co = [x for x in rem_co if x[1]][:8]
+        rem_sec = (section(f"{short_} hiring [[remotely]]", sid="remote", label="Remote", sub="Members of the list with the most open remote roles today.",
+                           inner='<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k_, True) for c, k_, _ in rem_co) + "</ul>"
+                           '<p class="note">The number is the company’s open roles marked remote. A remote role is often limited to certain countries: read the place line of each job.</p>')
+                   if len(rem_co) >= 4 else "")
+        ex_rows = []
+        for c, v in hits[:12]:
+            jx = next((j for j in order(v) if j.get("salary") and not j.get("pool")), None)
+            if jx: ex_rows.append(f'<tr>{co_cell(c)}<td><a href="{P}/job/{jx["slug"]}/">{e(jx["title"])}</a></td><td>{e(jx["location"] or ("Remote" if jx["remote"] else "–"))}</td><td>{e(jx["salary"])}</td></tr>')
+        ex_sec = (section("What they are [[hiring for]]: one role from each", sid="examples", label="Examples", sub="The newest posting of each company that states its pay.",
+                          inner='<div class="tablewrap"><table class="lstab"><tr><th>Company</th><th>Role</th><th>Place</th><th>Pay as stated</th></tr>' + "".join(ex_rows[:8]) + "</table></div>")
+                  if len(ex_rows) >= 4 else "")
         sec_rows = "".join(f"<tr><td>{e(sec_nm[k_])}</td><td>{a_:,}</td><td>{b_:,}</td></tr>" for k_, (a_, b_) in sorted(by_sec.items(), key=lambda kv: -kv[1][1])[:15])
         rem_ = sum(1 for _, v in hits for j in v if j["remote"])
         ent_ = sum(1 for _, v in hits for j in v if j["entry"])
@@ -3158,6 +3175,8 @@ def main():
                  f"No. {len(hits):,} of the {d_.get('members', 0):,} are here: the ones whose own careers pages this site reads every hour and that have open jobs today. "
                  "The others use hiring systems we do not read yet, or have nothing open."),
                 (f"How many of these jobs are remote or for beginners?", f"Of the {n_jobs:,} open jobs, {rem_:,} can be done from home and {ent_:,} are junior roles or internships."),
+                *([(f"Which {short_[0].lower() + short_[1:] if ls_ == 'unicorns' else short_} hire remotely?",
+                    "By open remote roles today: " + ", ".join(f"{c} ({k_:,} of its {a_:,})" for c, k_, a_ in rem_co[:5]) + ". Remote roles are often limited to certain countries or time zones.")] if len(rem_co) >= 4 else []),
                 ("Where does the list of companies come from?",
                  f"Who is in the list comes from Wikipedia (“{d_.get('source', '')}”), read on {read_}. Lists like this change, so a company that joined or left since then may be missing or still shown. "
                  "The job counts and the pay are counted by this site from each company’s own postings.")]
@@ -3172,9 +3191,10 @@ def main():
                      (f"{rem_:,}", "can be done from home"), (f"{ent_:,}", "junior roles and internships")])
              + lists_nav(ls_)
              + section(f"{short_} [[with open jobs]]", sid="list", label="The list", sub="Each name opens all of that company’s open roles.",
-                       inner='<div class="tablewrap"><table class="lstab"><tr><th>#</th><th>Company</th><th>Open jobs</th><th>New this week</th>'
+                       inner='<div class="tablewrap"><table class="lstab"><tr><th>#</th><th>Company</th><th>Open jobs</th><th>New this week</th><th>Remote</th><th>Hires most for</th>'
                        + (f"<th>{sec_w.capitalize()}</th>" if has_sec else "") + "<th>Median advertised pay</th></tr>" + rows_t + "</table></div>"
                        '<p class="note">Median advertised pay is shown when at least five of a company’s open postings state a yearly US-dollar range.</p>')
+             + ex_sec + rem_sec
              + (section(f"Open jobs [[by {sec_w}]]", sid="by", label=f"By {sec_w}", sub=f"The {sec_w} is the one the source list gives for each company.",
                         inner=f'<div class="tablewrap"><table><tr><th>{sec_w.capitalize()}</th><th>Companies</th><th>Open jobs</th></tr>'
                         + sec_rows + "</table></div>") if has_sec and len(by_sec) >= 3 else "")
