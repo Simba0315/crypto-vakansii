@@ -23,6 +23,21 @@ jobs in English are counted (and collected). On Workday a board is counted up to
 
 ## Read now, and on hold
 
+**Update, 18 Nov 2026 (the owner: "почему так мало? можешь собирать больше и не тратить кредиты Claude?").** Where the record stood:
+228,337 open jobs from about 6,540 boards on eight hiring systems (Greenhouse, Ashby, Lever, Workable, Workday, Personio, Recruitee,
+Teamtailor). Why it grew so slowly after the release of 17 Nov: a released Workday board got 40 texts on each of its reads, its turn
+came once in eight hourly runs, and GitHub starts only a few of those a day, so a board of 1,000 jobs needed weeks; the record grew by
+about 7,000 jobs in a day instead of the 18,000 planned. Changed that day: 120 texts a read (`DETAILS`); a board released in the last
+ten days is read on every run (`FILL_SINCE`); postings the record has never held are read before known ones (`details_from`); and the
+60 largest boards still on hold were released (59,937 jobs at the check, `"lifted": "2026-11-18"`): TD Bank, U.S. Bank, HPE, Booz Allen
+Hamilton, CarMax, JLL, Maersk, Takeda, Hitachi, UPS, Levi Strauss, Abercrombie & Fitch, J.Crew, Papa John's, Wendy's, Dutch Bros and
+others; sixteen got their plain names. 194 boards (83,796 jobs) are still on hold, to be released in parts while the server's memory
+is watched (7.9 GB, no swap; the collector there held 1.6 GB, the page service 0.45 GB). None of this uses Claude: the collector is
+plain Python that runs on GitHub's machines every hour and on our own server all the time. What can still add jobs, in order of size:
+the rest of the hold; more than 1,000 jobs a board on Workday (`LIST_MAX`); new hiring systems (SmartRecruiters is already in the
+code and has no boards yet; Oracle, SuccessFactors, iCIMS, BambooHR, UKG, Paylocity and others each need a reader); more boards on the
+systems already read (the candidate list is used up: 25 boards left).
+
 **Update, 17 Nov 2026:** 74 of the boards on hold were released: the companies that are in a well-known list (S&P 500, Nasdaq-100,
 unicorns, Y Combinator; `company_lists.json`), 48,636 jobs at the check: NVIDIA, Cisco, Intel, Boeing, Pfizer, Visa, Bank of America,
 Morgan Stanley, Johnson & Johnson, Adobe and others. They carry `"lifted": "2026-11-17"` in `sources_ats.json`. Their jobs come in

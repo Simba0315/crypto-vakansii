@@ -8,7 +8,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Abbott",
@@ -42,7 +42,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Brink's",
@@ -55,7 +55,7 @@
 "LV"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Wendy's (Carlisle)",
@@ -64,7 +64,7 @@
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Caterpillar",
@@ -120,7 +120,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "First Student",
@@ -163,7 +163,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Greystar",
@@ -174,7 +174,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Highmark Health",
@@ -185,7 +185,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Hitachi",
@@ -198,7 +198,7 @@
 "SA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Hy-Vee",
@@ -224,7 +224,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "JCrew Stores",
+"name": "J.Crew",
 "ats": "workday",
 "token": "jcrew.wd1/JCrewCareers",
 "count": 1000,
@@ -232,7 +232,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "JD Sports",
@@ -243,7 +243,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "JLL",
@@ -256,7 +256,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "KLA",
@@ -272,7 +272,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "KnitWell",
+"name": "KnitWell Group",
 "ats": "workday",
 "token": "knitwellgroup.wd1/US_Retail_Jobs",
 "count": 1000,
@@ -280,7 +280,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Labcorp",
@@ -300,7 +300,7 @@
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Live Nation Entertainment",
@@ -316,7 +316,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "LVHN",
+"name": "Lehigh Valley Health Network",
 "ats": "workday",
 "token": "lvhn.wd1/LVHN",
 "count": 1000,
@@ -324,7 +324,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Maersk",
@@ -337,7 +337,7 @@
 "TH"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Mondelez International",
@@ -439,7 +439,7 @@
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Petco",
@@ -481,7 +481,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Rochester Regional Health",
@@ -490,7 +490,7 @@
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Abercrombie & Fitch",
@@ -502,7 +502,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Sutter Health",
@@ -535,7 +535,7 @@
 "IE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Target",
@@ -557,7 +557,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Thriveworks",
@@ -568,7 +568,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "TJX",
@@ -590,10 +590,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "UMass Memorial Medical",
+"name": "UMass Memorial Health",
 "ats": "workday",
 "token": "ummh.wd1/Careers",
 "count": 1000,
@@ -601,7 +601,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "United Overseas Bank",
@@ -614,7 +614,7 @@
 "ID"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "United Rentals",
@@ -637,10 +637,10 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "VF Outdoor",
+"name": "VF Corporation",
 "ats": "workday",
 "token": "vfc.wd5/vfc_careers",
 "count": 1000,
@@ -649,7 +649,7 @@
 "JP"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Walmart",
@@ -664,7 +664,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "Wawa Beverage",
+"name": "Wawa",
 "ats": "workday",
 "token": "wawa.wd1/careers",
 "count": 1000,
@@ -672,19 +672,19 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "WVU Medicine Golisano Children’s",
+"name": "WVU Medicine",
 "ats": "workday",
 "token": "wvumedicine.wd1/WVUH",
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Albert Einstein Medical Center",
+"name": "Jefferson Health",
 "ats": "workday",
 "token": "jeffersonhealth.wd5/ThomasJeffersonExternal",
 "count": 1000,
@@ -692,7 +692,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Amgen",
@@ -720,7 +720,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "ASM Global-SMG",
+"name": "ASM Global",
 "ats": "workday",
 "token": "asmglobal.wd1/careers",
 "count": 1000,
@@ -728,7 +728,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "AT&T",
@@ -750,7 +750,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Beth Israel Lahey Health",
@@ -761,7 +761,7 @@
 "IL"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "BHS Baptist Healthcare",
@@ -772,7 +772,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "BJ’s Wholesale Club",
@@ -794,10 +794,10 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Boyd",
+"name": "Boyd Group",
 "ats": "workday",
 "token": "boydgroup.wd1/boydcareers",
 "count": 1000,
@@ -805,7 +805,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Caliber Collision",
@@ -816,7 +816,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "CarMax",
@@ -829,7 +829,7 @@
 "CA"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Concentrix",
@@ -842,10 +842,10 @@
 "CO"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Conviva Care Solutions",
+"name": "CenterWell",
 "ats": "workday",
 "token": "humana.wd5/centerwell_external_career_site",
 "count": 1000,
@@ -853,7 +853,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Northrop Grumman",
@@ -877,7 +877,7 @@
 "ES"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Danaher",
@@ -901,7 +901,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "DICK'S Sporting Goods",
@@ -922,7 +922,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "GDIT",
@@ -933,7 +933,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "GE Vernova",
@@ -954,7 +954,7 @@
 "IT"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "RTX",
@@ -992,7 +992,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "HP",
@@ -1044,7 +1044,7 @@
 "AE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Leidos",
@@ -1060,7 +1060,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "Little Caesar Enterprises",
+"name": "Little Caesars",
 "ats": "workday",
 "token": "ilitch.wd5/LC",
 "count": 1000,
@@ -1068,7 +1068,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Lowe's",
@@ -1113,7 +1113,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Amentum",
@@ -1124,7 +1124,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Papa John's",
@@ -1135,7 +1135,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Ohio State University",
@@ -1144,7 +1144,7 @@
 "count": 1000,
 "lands": [],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Teleperformance",
@@ -1156,10 +1156,10 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Uoh Ups",
+"name": "UPS",
 "ats": "workday",
 "token": "hcmportal.wd5/Search",
 "count": 1000,
@@ -1169,7 +1169,7 @@
 "MX"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Johnson Controls",
@@ -1185,7 +1185,7 @@
 "lifted": "2026-11-17"
 },
 {
-"name": "Kansas Health System",
+"name": "The University of Kansas Health System",
 "ats": "workday",
 "token": "kansashealthsystem.wd1/careers",
 "count": 997,
@@ -1193,7 +1193,7 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Valeo",
@@ -1206,7 +1206,7 @@
 "IN"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Dutch Bros",
@@ -1217,10 +1217,10 @@
 "US"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Dematic",
+"name": "KION Group",
 "ats": "workday",
 "token": "kiongroup.wd3/KIONGroup",
 "count": 976,
@@ -1230,10 +1230,10 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
-"name": "Carl Zeiss Vision",
+"name": "ZEISS",
 "ats": "workday",
 "token": "zeissgroup.wd3/External",
 "count": 976,
@@ -1242,7 +1242,7 @@
 "DE"
 ],
 "added": "2026-11-15",
-"hold": true
+"lifted": "2026-11-18"
 },
 {
 "name": "Lithia & Driveway",

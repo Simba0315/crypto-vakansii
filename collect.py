@@ -34,7 +34,13 @@ ATS_LIMIT = {"workday": 12, "smartrecruiters": 2, "workable": 4, "recruitee": 6,
 ATS_GAP = {"workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
-DETAILS = int(os.environ.get("HRN_DETAILS") or 40)
+# 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
+# once in eight hourly runs, of which GitHub starts only a few a day, so the board needed weeks to fill and the record grew by a
+# few thousand jobs a day instead of the 18,000 planned. At one request every 0.3 s to a board that is 36 seconds of reading.
+DETAILS = int(os.environ.get("HRN_DETAILS") or 120)
+# A board released from hold in the last ten days ("lifted" in the sources file) is read on every run, not only on its turn, until
+# its backlog is in.
+FILL_SINCE = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
 LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this many postings of a board (Workday lists 20 per request)
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 
@@ -1133,12 +1139,17 @@ def fetch_feed(src, reuse=None):
     def details_from(posts, ident, raw_of, read):
         """Workday and SmartRecruiters: the postings' text costs one request each. Unchanged postings keep last run's record, at most
         DETAILS others are read (the list is newest first), and a posting not read this time keeps its old record if it has one."""
-        asked = 0
+        asked, wait = 0, []
         for p in posts:
             jid, raw = ident(p), raw_of(p)
             full_id = f"{ats}-{slugify(name)}-{jid}"
             if reuse and (rec := reuse(full_id, fingerprint(raw))) is not None:
                 out.append(rec); continue
+            wait.append((bool(reuse) and reuse(full_id) is not None, p, jid, raw, full_id))
+        # Postings the record has never held are read first (the backlog of a board just added), then those it holds from older rules or
+        # an older text. Before 18 Nov 2026 the order was simply newest first, so after any change to this file (which changes every
+        # fingerprint) a board spent its reads on postings it already had, and its backlog waited. The sort is stable: newest first in each.
+        for _, p, jid, raw, full_id in sorted(wait, key=lambda w: w[0]):
             rec = None
             if asked < DETAILS:
                 asked += 1
@@ -1410,7 +1421,7 @@ def main():
             if (s["ats"], s["token"]) in taken or s["name"].lower() in taken or s["name"] in EXCLUDE_TECH: continue
             taken |= {(s["ats"], s["token"]), s["name"].lower()}
             r = rot * 2 if s["ats"] in SLOW_ATS else rot
-            if int(hashlib.md5(s["token"].encode()).hexdigest(), 16) % r == hour % r:
+            if (s.get("lifted") or "") >= FILL_SINCE or int(hashlib.md5(s["token"].encode()).hexdigest(), 16) % r == hour % r:
                 sources.append(dict(s, crypto=False))
             else:
                 resting.add(s["name"])
