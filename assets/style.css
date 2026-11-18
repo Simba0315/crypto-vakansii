@@ -169,6 +169,7 @@ p a:hover,.lead a:hover,.note a:hover,dd a:hover{text-decoration-color:var(--tex
 .pill.ok{background:var(--green-soft);color:var(--green);font-weight:600}
 .pill.sal{font-family:var(--mono);font-weight:600;background:transparent;color:var(--text);padding-left:0}
 .pill.acc{background:var(--hl);color:var(--hl-ink);font-weight:700}
+.pill.urg,.job .pill.urg{background:#fff0dc;color:#8a4300;font-weight:700}      /* "Urgently hiring", a badge an employer buys: warm, so it is not read as the green "Featured" */
 .pill.perk{background:var(--green-soft);color:var(--green)}
 a.pill:hover{color:var(--text);text-decoration:underline;text-underline-offset:3px}
 /* in a list the tags are plain words, not boxes */
@@ -420,8 +421,12 @@ label.rl{display:block;font-size:13px;color:var(--muted);margin-bottom:10px}
 .spot a:hover b{text-decoration:underline;text-underline-offset:3px}
 .spot b{display:block;font-size:15.5px}
 .spot span.s{font-size:13px;color:var(--faint)}
-.sponsor{font-size:13.5px;color:var(--muted);margin:-8px 0 18px}
-.sponsor a{font-weight:600;text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+.sponsor{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:14px;color:var(--muted);margin:-4px 0 18px}
+.sponsor-l{font:700 11px/1 "Public Sans",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.sponsor a{display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 5px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--muted);max-width:100%}
+.sponsor a b{color:var(--text);font-weight:700}
+.sponsor a:hover{border-color:var(--text)}
+.sponsor .ava{width:28px;height:28px;border-radius:50%;font-size:12px;flex:none}
 
 /* Skip link for keyboard users */
 .skip{position:absolute;left:-9999px;top:0;background:var(--text);color:var(--bg);padding:10px 14px;z-index:50;font-weight:600}
@@ -729,7 +734,7 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
   .job>a{grid-template-columns:auto minmax(0,1fr) 168px 216px 44px;gap:16px}
   .job .jr{display:contents}
   .job .jp{text-align:right}
-  .job .pills{justify-content:flex-start;flex-wrap:nowrap;overflow:hidden}
+  .job .pills{justify-content:flex-start;flex-wrap:wrap;overflow:hidden;max-height:21px}      /* a mark that does not fit drops out whole: with nowrap the third one was cut in the middle of a word ("Rem") */
   .job time{text-align:right}
   /* the search page list sits in a narrower column: tags go under the title there */
   .sgrid .job>a{grid-template-columns:auto minmax(0,1fr) 150px 44px}
@@ -2177,7 +2182,7 @@ select:not([multiple]):hover{border-color:var(--text)}
 .has-toc.doc .toc-main h2.h2s{margin:44px 0 10px;font-size:23px;scroll-margin-top:84px}
 .has-toc.doc .toc-main p{line-height:1.65}
 /* tile names wrap to a second line instead of being cut ("San Francisco Bay ...") */
-.tile .n{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+.tile .n{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;overflow-wrap:anywhere}      /* one long word ("ComplyAdvantage") wraps instead of losing its last letters */
 /* the moderator's page (/admin/, for the owner) */
 .adm-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:0 0 12px}
 .adm-h{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
@@ -3746,7 +3751,8 @@ main.reports .tgrid.rep-more{grid-template-columns:repeat(4,minmax(0,1fr))}
 main.hbp .hbgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:8px}
 main.hbp .hbc{min-width:0;padding:24px 26px 22px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
 main.hbp .hbc-pic{display:flex;align-items:center;justify-content:center;min-height:92px;margin:0 0 16px;border-radius:12px;background:var(--bg2)}
-main.hbp .hbc-pic img{height:34px;width:auto}
+main.hbp .hbc-pic{padding:0 10px;overflow:hidden}
+main.hbp .hbc-pic img{height:auto;max-height:34px;width:auto;max-width:100%}      /* a long badge on a phone ran 17px out of its box */
 main.hbp .hbc-n{margin:0 0 4px;font-size:17px;color:var(--text)}
 main.hbp .hbc .flabel{display:block;margin:12px 0 6px}
 main.hbp .hbc textarea{display:block;width:100%;font:500 12.5px/1.5 var(--mono);resize:none}
@@ -3812,3 +3818,57 @@ table.adm-acc td{vertical-align:top}
 table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
 #adm .banner a{text-decoration:underline;text-underline-offset:3px;font-weight:600}
 #adm table td a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}
+
+/* ---- what an employer's account adds to the public pages (18 Nov 2026): the cover of a Premium job, the company's own words ---- */
+.jcover{margin:18px 0 0}
+.jcover img{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:16px;border:1px solid var(--line)}
+.coabout{margin:14px 0 4px;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--card,#fff);max-width:820px}
+.coabout .sec-label{margin:0 0 6px}
+.coabout p{margin:0 0 8px}
+.coabout p:last-child{margin-bottom:0}
+.cohead .pills{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+
+/* ---- account, 18 Nov 2026 (the owner's screenshot: "Continue to payment" ran out of the narrow credit cards) ----
+   A button keeps its words on one line everywhere (.btn), and a grid item is never narrower than its words, so in a card narrower
+   than the label the button stuck out of the card. Inside cards a button may wrap and may shrink. */
+.pc-act{grid-template-columns:minmax(0,1fr)}
+.acc-card{min-width:0}
+.acc-card .btn,.plan .btn,.side .btn{white-space:normal;text-align:center;min-width:0;line-height:1.25}
+#acc .acc-card .price small{white-space:nowrap}
+/* the Credits tab: the balance first, then how it works */
+.acc-bal{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 28px;align-items:center;margin:18px 0;padding:22px 24px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.acc-bal-n b{display:block;font:800 44px/1 var(--display);letter-spacing:-.03em}
+.acc-bal-n span{display:block;margin-top:6px;font-size:14px;color:var(--muted)}
+.acc-bal-t p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.acc-bal-t .btn{width:auto}
+.acc-how{margin:0;padding:0;list-style:none;counter-reset:how;display:grid;gap:10px}
+.acc-how li{counter-increment:how;position:relative;padding:14px 16px 14px 54px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:15px;line-height:1.45}
+.acc-how li::before{content:counter(how);position:absolute;left:14px;top:13px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);font:700 14px/1 system-ui}
+#acc .acc-nav a i{white-space:nowrap}
+@media(max-width:560px){.acc-bal{grid-template-columns:minmax(0,1fr)}}
+/* "How it looks": the product drawn with the site's own job row, inside its card */
+.pcd{margin:2px 0 14px;padding:10px;border:1px dashed var(--line);border-radius:12px;background:var(--bg2);min-width:0}
+.pcd figcaption{font:700 11px/1 "Public Sans",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.pcd p{margin:8px 0 0;font-size:12.5px;line-height:1.4;color:var(--muted)}
+.pcd-list{display:grid;gap:4px;min-width:0}
+.pcd-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;background:var(--card);border:1px solid var(--line);min-width:0}
+.pcd-row.dim{opacity:.55}
+.pcd-row.feat{background:var(--accent-soft)}
+.pcd-row.mine{border-color:var(--text)}
+.pcd-av{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:var(--bg2);font:700 11px/1 system-ui;color:var(--muted)}
+.pcd-row.logo .pcd-av{background:var(--text);color:var(--bg)}
+.pcd-t{min-width:0;display:grid}
+.pcd-t b{font-size:12.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcd-t i{font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcd-p{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0}
+.pcd-p .pill{font-size:10px;padding:0 5px;border-radius:3px;white-space:nowrap;line-height:1.6}
+.pcd-p em{font-style:normal;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.pcd-row.up{position:relative}
+.pcd-row.up::after{content:"↑ back on top";position:absolute;right:8px;top:-9px;padding:1px 6px;border-radius:999px;background:var(--text);color:var(--bg);font:700 10px/1.5 system-ui}
+.pcd-cover{display:block;height:34px;border-radius:8px;background:linear-gradient(120deg,var(--text) 0 55%,var(--green) 55% 100%);opacity:.85}
+.pcd-h{font:700 12px/1.3 var(--display);padding:2px 2px 0}
+.pcd-h.big{font-size:15px}
+.pcd-s{font-size:11.5px;color:var(--muted);padding:0 2px 4px}
+.pcd-bar{display:grid;grid-template-columns:1fr 1fr;border-radius:8px;overflow:hidden;font:600 11.5px/1 system-ui;text-align:center}
+.pcd-bar span{padding:9px 4px;background:var(--card);border:1px solid var(--line)}
+.pcd-bar .more{background:var(--accent-soft);border-color:var(--text);font-weight:700}

@@ -15,6 +15,15 @@ def get_text(url, timeout=30, accept="application/json", data=None):
         return None
 
 
+def get_bytes(url, timeout=30):
+    """Fetch a URL with curl and return the body as bytes (a picture), or None on any failure."""
+    try:
+        r = subprocess.run(["curl", "-s", "-4", "-L", "--fail", "--max-time", str(timeout), "--max-filesize", "700000", "-A", UA, url], capture_output=True, timeout=timeout + 5)
+        return r.stdout if r.returncode == 0 and r.stdout else None
+    except Exception:
+        return None
+
+
 def get_json(url, timeout=30):
     """Fetch a URL with curl and return parsed JSON, or None on any failure."""
     try:

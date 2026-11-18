@@ -58,7 +58,13 @@ for rel in sample:
     if not title or not (10 <= len(html.unescape(title.group(1))) <= 75): fails[t]["title length outside 10-75"] += 1
     if not desc or not (70 <= len(html.unescape(desc.group(1))) <= 170): fails[t]["description length outside 70-170"] += 1
     want = FULL + "/" + ("" if rel == "index.html" else rel[:-len("index.html")])
-    if not canon or canon.group(1) != want: fails[t]["canonical is not self"] += 1
+    # A list page may name a fuller page with the same words in its title as canonical (build.one_page_per_query): that is allowed
+    # when the page it names exists and names itself. Anything else is a mistake.
+    if not canon: fails[t]["canonical is not self"] += 1
+    elif canon.group(1) != want:
+        other = SITE / canon.group(1)[len(FULL) + 1:] / "index.html" if canon.group(1).startswith(FULL + "/") else None
+        ok_ = bool(other and other.exists() and f'<link rel="canonical" href="{canon.group(1)}"' in other.read_text(encoding="utf-8", errors="replace")[:6000])
+        if not ok_: fails[t]["canonical is not self"] += 1
     if 'lang="en"' not in h[:200]: fails[t]["no lang"] += 1
     heads = [int(x) for x in re.findall(r"<h([1-6])[\s>]", h.split("<footer")[0])]
     if any(b - a > 1 for a, b in zip(heads, heads[1:])): fails[t]["heading level skipped"] += 1

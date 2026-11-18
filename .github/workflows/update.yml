@@ -62,6 +62,9 @@ jobs:
             bash datastore.sh unpack          # the database is kept in parts under GitHub's 100 MB file limit (datastore.sh)
             git show FETCH_HEAD:reports.json > data/reports.json 2>/dev/null || rm -f data/reports.json
             git show FETCH_HEAD:posted.json > data/posted.json 2>/dev/null || rm -f data/posted.json      # what post.py already sent to the channels
+            # paid placements, company pages and the logos companies uploaded: a build that does not collect (a push) must still show them
+            git show FETCH_HEAD:placements.json > data/placements.json 2>/dev/null || rm -f data/placements.json
+            git archive FETCH_HEAD logos 2>/dev/null | tar -x -C data 2>/dev/null || true
             echo "restored $(wc -c < data/jobs.json) bytes"
             echo "PREV_BYTES=$(wc -c < data/jobs.json | tr -d ' ')" >> "$GITHUB_ENV"
             # How old the saved jobs are. A push normally builds from them as they are (a design change reaches the site in minutes);
@@ -94,6 +97,8 @@ jobs:
           bash datastore.sh pack "$tmp"
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
+          [ -s data/placements.json ] && cp data/placements.json "$tmp/placements.json"
+          [ -d data/logos ] && cp -R data/logos "$tmp/logos"
           cd "$tmp"
           git init -q -b data
           git config user.name "github-actions[bot]"
@@ -124,6 +129,8 @@ jobs:
           bash datastore.sh pack "$tmp"
           cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
+          [ -s data/placements.json ] && cp data/placements.json "$tmp/placements.json"
+          [ -d data/logos ] && cp -R data/logos "$tmp/logos"
           cd "$tmp"
           git init -q -b data
           git config user.name "github-actions[bot]"
@@ -151,7 +158,7 @@ jobs:
           printf '%s\n' "$KEY" > "$RUNNER_TEMP/hrn_key"
           if [ -n "$HOSTKEY" ]; then printf '%s\n' "$HOSTKEY" > "$RUNNER_TEMP/hrn_known"; chk="-o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/hrn_known"; else chk="-o StrictHostKeyChecking=accept-new"; fi
           rsync -az --delete --delay-updates -e "ssh -i $RUNNER_TEMP/hrn_key $chk" \
-            --exclude='/site/job/' --include='/site/***' --include='/data/' --include='/data/jobs.db' \
+            --exclude='/site/job/' --include='/site/***' --include='/data/' --include='/data/jobs.db' --include='/data/logos/***' \
             --include='/*.py' --include='/*.json' --include='/assets/***' --exclude='*' ./ "hrn@$HOST:/"
           rm -f "$RUNNER_TEMP/hrn_key" "$RUNNER_TEMP/hrn_known"
       # Switched: the old address turns into redirects only once the new site reached the server; if the upload failed, GitHub
@@ -208,6 +215,8 @@ jobs:
           bash datastore.sh pack "$tmp"
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
+          [ -s data/placements.json ] && cp data/placements.json "$tmp/placements.json"
+          [ -d data/logos ] && cp -R data/logos "$tmp/logos"
           cd "$tmp"
           git init -q -b data
           git config user.name "github-actions[bot]"

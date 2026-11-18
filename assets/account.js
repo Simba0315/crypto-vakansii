@@ -483,11 +483,56 @@
     var p = products[id]; if (!p) return '';
     var pl = (D.plans || {})[p.name], best = id === 'premium' || id === 'pass';
     return '<form class="acc-card' + (best ? ' best' : '') + '" data-product="' + id + '" data-kind="' + kind + '" novalidate>' + (id === 'premium' ? '<span class="pc-flag">Most chosen</span>' : id === 'pass' ? '<span class="pc-flag">Best value</span>' : '') +
-      '<p class="pname">' + esc(p.name) + '</p><p class="price">' + money(p.usd) + (p.credits ? ' <small>valid for 12 months</small>' : p.days ? ' <small>for ' + p.days + ' days</small>' : '') + '</p>' +
+      '<p class="pname">' + esc(p.name) + '</p><p class="price">' + money(p.usd) + (!p.credits && p.days ? ' <small>for ' + p.days + ' days</small>' : '') + '</p>' +
       (pl ? '<ul class="pc-inc">' + pl[0].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' + (pl[1] ? '<p class="pc-vs"><b>Elsewhere:</b> ' + esc(pl[1]) + '</p>' : '')
-        : '<p class="what">' + esc(D.what[p.name] || '') + '</p>') + (fields || '') + err +
-      '<div class="pc-act"><button class="btn ' + (best ? 'primary' : 'ghost') + '" type="submit"' + (pub.payments === 'off' ? ' disabled' : '') + '>Continue to payment</button>' +
+        : '<p class="what">' + esc(D.what[p.name] || '') + '</p>') + demo(id) + (fields || '') + err +
+      '<div class="pc-act"><button class="btn ' + (best ? 'primary' : 'ghost') + '" type="submit"' + (pub.payments === 'off' ? ' disabled' : '') + '>' + (p.credits ? 'Buy credits' : 'Continue to payment') + '</button>' +
       (me.credits && kind !== 'none' && pub.payments !== 'off' ? '<button class="btn ghost" type="submit" data-credit="1">Pay from my credits (' + money(me.credits) + ' left)</button>' : '') + '</div></form>';
+  }
+  function creditsNow() { var B = S.billing || {}; return me.credits || (B.wallet && B.wallet.balance) || 0; }
+  /* ---------- credits: the balance, how they work, buying more, what was bought and what they were spent on ---------- */
+  function creditsPanel() {
+    var W = (S.billing || {}).wallet || {}, bal = creditsNow(), lots = W.lots || [];
+    var spent = S.orders.filter(function (o) { return o.status === 'paid' && o.credits && !/^credits/.test(o.product || ''); });
+    var top = head('Credits', 'Your <b>credits</b>', 'One credit is one US dollar on this site. You buy them once and spend them on any promotion within 12 months.');
+    var balance = '<div class="acc-bal"><div class="acc-bal-n"><b>' + money(bal) + '</b><span>in credits now</span></div><div class="acc-bal-t">' +
+      (bal ? '<p>' + (W.next_expiry ? 'The first of them run out on ' + nice(W.next_expiry) + '.' : 'They are valid for 12 months from the day you bought them.') + '</p><a class="btn primary" href="#promote">Spend on a promotion</a>'
+        : '<p>You have no credits yet. Buy some below and they show here as soon as the payment is confirmed.</p>') + '</div></div>';
+    var how = '<ol class="acc-how"><li><b>Buy credits below.</b> When the payment is confirmed they are added to this account and the balance above grows. Nothing else changes.</li>' +
+      '<li><b>Open Promote</b> and pick a job or your company. Every card there gets a second button: “Pay from my credits”.</li>' +
+      '<li><b>The price comes off the balance</b> and the promotion starts at once, with no checkout page. What is left stays here for the next one.</li></ol>';
+    var buy = '<div class="acc-grid four">' + ['credits100', 'credits250', 'credits550', 'credits1200'].map(function (id) { return productCard(id, 'none'); }).join('') + '</div>' +
+      (pub.payments === 'off' ? '<p class="note">Credits are not on sale yet.</p>' : '<p class="note">You pay on a crypto checkout page. Credits buy every promotion here; they cannot be turned back into money.</p>');
+    return top + balance + testNote() + part('How credits work', how, 'how') + part('Top up', buy, 'buy') +
+      (lots.length ? part('Credits you bought', '<div class="acc-list">' + lots.map(function (l) {
+        return '<div class="acc-row"><div class="main"><strong>' + l.credits + ' credits</strong><span class="js">Bought ' + nice(l.bought) + ' · ' + (l.expired ? 'ran out ' : 'valid until ') + nice(l.expires) + '</span></div>' +
+          '<div class="ctl"><b>' + money(l.remaining) + '</b> left</div></div>'; }).join('') + '</div>', 'lots') : '') +
+      (spent.length ? part('What you paid for with credits', '<div class="acc-list">' + spent.map(function (o) {
+        return '<div class="acc-row"><div class="main"><strong>' + esc(o.name) + '</strong><span class="js">' + (o.label && o.label !== o.name ? esc(o.label) + ' · ' : '') + nice(o.created) + '</span></div>' +
+          '<div class="ctl">' + o.credits + ' credits</div></div>'; }).join('') + '</div>', 'spent') : '');
+  }
+  /* What a paid product looks like on the site, drawn with the site's own job row and the account's own job and company, so the
+     picture cannot go out of date the way a screenshot does. One small figure per product card. */
+  function demo(id) {
+    var job = (S.jobs.filter(function (j) { return j.status === 'live' || j.status === 'review'; })[0] || {}).title || 'Your job title', co = me.company || 'Your company';
+    var row = function (title, sub, pills, cls, when) {
+      return '<span class="pcd-row' + (cls ? ' ' + cls : '') + '"><span class="pcd-av">' + esc(((cls && /mine/.test(cls) ? co : sub) || 'C').charAt(0).toUpperCase()) + '</span><span class="pcd-t"><b>' + esc(title) + '</b><i>' + esc(sub) + '</i></span>' +
+        '<span class="pcd-p">' + (pills || '') + '<em>' + (when || '') + '</em></span></span>';
+    };
+    var feat = '<span class="pill acc">Featured</span>', urg = '<span class="pill urg">Urgently hiring</span>';
+    var other = function (n, when) { return row(['Account manager', 'Data analyst', 'Office coordinator'][n], ['Another company', 'Another company', 'Another company'][n], '', 'dim', when); };
+    var fig = function (inner, cap) { return '<figure class="pcd" aria-label="How it looks on the site"><figcaption>How it looks</figcaption><div class="pcd-list">' + inner + '</div><p>' + cap + '</p></figure>'; };
+    if (id === 'featured') return fig(row(job, co, feat, 'mine feat', '12 days ago') + other(0, 'today') + other(1, 'yesterday'), 'Your job stands above the free ones in its lists and in search for 30 days, with the green mark.');
+    if (id === 'premium') return fig('<span class="pcd-cover"></span>' + row(job, co, feat + urg, 'mine feat logo', '12 days ago') + other(0, 'today'),
+      'First in its lists, taking turns with other Premium jobs; your logo, “Urgently hiring” for 14 days, and a cover picture on the job page.');
+    if (id === 'urgent') return fig(other(0, 'today') + row(job, co, urg, 'mine', '3 days ago') + other(1, '4 days ago'), 'The job keeps its place by date and carries the badge in every list and on its page for 14 days.');
+    if (id === 'bump') return fig(row(job, co, '', 'mine up', '12 days ago') + other(0, 'today') + other(1, 'yesterday'), 'The job goes back to the top of its lists, as if it was posted today. Its real date stays on it.');
+    if (id === 'extend') return '<figure class="pcd" aria-label="How it looks on the site"><figcaption>How it looks</figcaption><div class="pcd-bar"><span>30 days running</span><span class="more">+30 days</span></div><p>The boost that is running now simply ends 30 days later.</p></figure>';
+    if (id === 'spotlight') return fig('<span class="pcd-h">Featured employers</span>' + row(co, 'open roles · featured', '', 'mine logo'), 'On the home page and at the top of the companies list, with a “Featured employer” badge on your company page.');
+    if (id === 'pass') return fig(row(job, co, feat, 'mine feat logo') + row('Every other job of ' + co, co, feat, 'mine feat logo') + '<span class="pcd-h">Featured employers · ' + esc(co) + '</span>',
+      'Every job of the company is boosted while the pass runs, three of them can be Premium, and the company is in the spotlight.');
+    if (id === 'sponsor') return fig('<span class="pcd-h big">Customer service jobs</span><span class="pcd-s">SPONSORED · <b>' + esc(co) + '</b> · your open roles</span>' + other(0, 'today'), 'Your company is named at the top of the category or skill page you choose, with a link to your jobs.');
+    return '';
   }
   function promotePanel() {
     var mine = S.jobs.filter(function (j) { return j.status === 'live' || j.status === 'review'; }), claimed = S.claims.filter(function (c) { return c.status === 'verified'; });
@@ -510,8 +555,9 @@
       part('For one job', jobCards + coverForm) +
       part('For your company', '<div class="card acc-pick">' + field('Company, as it is named on the site', 'company', 'type="text" id="pr-company" list="acc-companies" value="' + esc(me.company || '') + '" maxlength="80"') + '</div>' +
         '<div class="acc-grid">' + productCard('spotlight', 'company') + productCard('pass', 'company') + productCard('sponsor', 'company', pages) + '</div>') +
-      part('Credits: pay once, use on anything for 12 months', '<div class="acc-grid four">' + ['credits100', 'credits250', 'credits550', 'credits1200'].map(function (id) { return productCard(id, 'none'); }).join('') + '</div>' +
-        (pub.payments === 'off' ? '' : '<p class="note">You pay on a crypto checkout page. What you bought switches on by itself when the network confirms the payment.</p>')) + data;
+      '<p class="acc-synced">' + (creditsNow() ? '<b>' + money(creditsNow()) + ' in credits.</b> Press “Pay from my credits” on any card above to spend them. ' : '<b>Credits:</b> pay once, spend on anything here within 12 months. ') +
+        '<a href="#credits">' + (creditsNow() ? 'Top up or see what you spent' : 'See how credits work and buy some') + '</a></p>' +
+      (pub.payments === 'off' ? '' : '<p class="note">You pay on a crypto checkout page. What you bought switches on by itself when the network confirms the payment.</p>') + data;
   }
   // a company that posts its own jobs from this account and has none live yet: its page is not on the site so far
   function ownNotLive(c) {
@@ -604,8 +650,8 @@
   }
 
   var TABS = { seeker: [['overview', 'Overview'], ['saved', 'Saved jobs'], ['resumes', 'Resumes'], ['alerts', 'Job alerts'], ['settings', 'Settings']],
-    employer: [['overview', 'Overview'], ['jobs', 'Your jobs'], ['post', 'Post a job'], ['promote', 'Promote'], ['company', 'Company page'], ['team', 'Team'], ['find', 'Find candidates'], ['billing', 'Billing'], ['settings', 'Settings']] };
-  var TAB_ROLE = { saved: 'seeker', resumes: 'seeker', alerts: 'seeker', jobs: 'employer', post: 'employer', promote: 'employer', company: 'employer', team: 'employer', find: 'employer', billing: 'employer' };
+    employer: [['overview', 'Overview'], ['jobs', 'Your jobs'], ['post', 'Post a job'], ['promote', 'Promote'], ['credits', 'Credits'], ['company', 'Company page'], ['team', 'Team'], ['find', 'Find candidates'], ['billing', 'Billing'], ['settings', 'Settings']] };
+  var TAB_ROLE = { saved: 'seeker', resumes: 'seeker', alerts: 'seeker', jobs: 'employer', post: 'employer', promote: 'employer', credits: 'employer', company: 'employer', team: 'employer', find: 'employer', billing: 'employer' };
   // older links and the links in our letters (#talent) name a block inside a part: open the part, then go to the block
   var ALIAS = { talent: 'resumes', sync: 'saved', myresumes: 'resumes', hiring: 'post', payments: 'billing', running: 'billing', data: 'settings', account: 'settings' };
   function toTop() { var r = root.getBoundingClientRect(); if (r.top < 0) window.scrollTo(0, Math.max(0, window.scrollY + r.top - 76)); }
@@ -629,12 +675,13 @@
     if (hd) hd.hidden = true;
     if (otherSide()) setRole(otherSide());
     var emp = ROLE === 'employer', P = { overview: overview(), settings: settingsPanel() };
-    if (emp) { P.jobs = jobsPanel(); P.post = postPanel(); P.promote = promotePanel(); P.company = companyPanel(); P.team = teamPanel(); P.find = findPanel(); P.billing = billingPanel(); }
+    if (emp) { P.jobs = jobsPanel(); P.post = postPanel(); P.promote = promotePanel(); P.credits = creditsPanel(); P.company = companyPanel(); P.team = teamPanel(); P.find = findPanel(); P.billing = billingPanel(); }
     else { P.saved = savedPanel(); P.resumes = resumesPanel(); P.alerts = alertsPanel(); }
     var nav = '', panels = '';
     TABS[ROLE].forEach(function (t) {
       if (!P[t[0]]) return;
       var n = t[0] === 'jobs' ? S.jobs.length : t[0] === 'alerts' ? S.alerts.length : t[0] === 'resumes' && S.resumes ? S.resumes.resumes.length : 0;
+      if (t[0] === 'credits' && creditsNow()) n = money(creditsNow());                    // the balance stands next to the word, so it is never a question where bought credits went
       nav += '<a href="#' + t[0] + '">' + t[1] + (n ? '<i>' + n + '</i>' : '') + '</a>';
       panels += '<section class="acc-panel" data-tab="' + t[0] + '" hidden>' + P[t[0]] + '</section>';
     });

@@ -17,7 +17,7 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from html.parser import HTMLParser
 from pathlib import Path
-from net import get_json, get_text, post_json
+from net import get_bytes, get_json, get_text, post_json
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data" / "jobs.json"
@@ -1390,7 +1390,11 @@ def direct_and_paid(db, used_slugs, indexed, stats):
         j["desc"] = direct_desc(d.get("text"))      # the employer's own words, whole and escaped: short texts are kept too (clean_html drops anything under 200 characters)
         j.pop("_crypto")
         if not j["title"] or not j["company"] or not str(j["url"]).startswith("https://"): continue
-        j.update(crypto=False, direct=True, featured_until=str(d.get("featured_until") or ""), pinned_until=str(d.get("pinned_until") or ""))
+        # what the account sold for this job (server: exportForSite): a Standard boost, a Premium boost (with its cover picture), the
+        # "Urgently hiring" badge, and a bump, which says when it was bought. Until 18 Nov 2026 only featured_until was read here, so
+        # Premium, the badge and the bump could be bought and showed nowhere.
+        j.update(crypto=False, direct=True, featured_until=str(d.get("featured_until") or ""), premium_until=str(d.get("premium_until") or ""),
+                 urgent_until=str(d.get("urgent_until") or ""), bumped=str(d.get("bumped") or ""), cover=str(d.get("cover") or ""))
         seen.add(j["id"])
         old = db.get(j["id"])
         if old:
@@ -1410,9 +1414,24 @@ def direct_and_paid(db, used_slugs, indexed, stats):
         if old.get("direct") and old["active"] and jid not in seen:
             old.update(active=False, closed=TODAY); stats["closed"] += 1
     keep = lambda rows, keys: [{k: str(r.get(k, "")) for k in keys} for r in rows if isinstance(r, dict)]
-    (ROOT / "data" / "placements.json").write_text(json.dumps({"boosts": keep(exp.get("boosts") or [], ("slug", "kind", "until")),
-                                                               "sponsors": keep(exp.get("sponsors") or [], ("company", "slot", "until"))}, ensure_ascii=False))
-    print(f"placements: {len(seen)} posted jobs, {len(exp.get('boosts') or [])} promoted, {len(exp.get('sponsors') or [])} sponsors")
+    # company pages kept by the companies themselves (a verified claim): the text, the site, the places, and the logo, which is saved
+    # as data/logos/<company>.png so that every page shows it the way it shows the logos we hold ourselves (build.LOGOS)
+    claimed = [{"company": str(c.get("company") or ""), "since": str(c.get("since") or ""), "about": str(c.get("about") or ""), "website": str(c.get("website") or ""),
+                "locations": [str(x) for x in (c.get("locations") or []) if isinstance(x, str)][:12]} for c in exp.get("claimed") or [] if isinstance(c, dict) and c.get("company")]
+    logos = ROOT / "data" / "logos"
+    logos.mkdir(parents=True, exist_ok=True)
+    held = set()
+    for c in exp.get("claimed") or []:
+        url, slug = (str(c.get("logo") or ""), slugify(str(c.get("company") or ""))) if isinstance(c, dict) else ("", "")
+        if not slug or not url.startswith(api + "/"): continue                       # a logo is taken only from our own API
+        held.add(slug)
+        pic = get_bytes(url, 20)
+        if pic and len(pic) <= 600_000 and pic[:4] in (b"\x89PNG", b"\xff\xd8\xff\xe0", b"\xff\xd8\xff\xe1", b"\xff\xd8\xff\xdb", b"RIFF"): (logos / f"{slug}.png").write_bytes(pic)
+    for f in logos.glob("*.png"):
+        if f.stem not in held: f.unlink()                                               # the claim ended or the logo was removed
+    (ROOT / "data" / "placements.json").write_text(json.dumps({"boosts": keep(exp.get("boosts") or [], ("slug", "kind", "until", "at", "cover")),
+                                                               "sponsors": keep(exp.get("sponsors") or [], ("company", "slot", "until")), "claimed": claimed}, ensure_ascii=False))
+    print(f"placements: {len(seen)} posted jobs, {len(exp.get('boosts') or [])} promoted, {len(exp.get('sponsors') or [])} sponsors, {len(claimed)} company pages, {len(held)} logos")
 
 
 def main():

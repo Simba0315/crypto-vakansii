@@ -399,6 +399,41 @@ TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs",
             "FP&A": "fpa", "M&A": "mergers-and-acquisitions", "GD&T": "gdt", "Driver's license": "drivers-license", "Security+": "security-plus",
             "CompTIA A+": "comptia-a-plus"}
 URLS = []
+# One page per query (the owner, 18 Nov 2026: "никаких конфликтов не должно быть"). The site files a job under a field (/jobs/<field>/),
+# under a group of kinds of work (/categories/<group>/), under a kind of work (/roles/<role>/) and under a place, and some of these
+# lists carry the same words: "Security jobs" twice, "Consulting jobs in London" twice, "Remote security jobs" twice. Every list page
+# of these sections is noted here by the words of its title; at the end of the build one page of each group stays the page for
+# search (the section standing first in SAME_QUERY_ORDER) and the others name it as canonical and leave the sitemap. Nothing is
+# deleted: the other pages stay for visitors and for the links that lead to them.
+SAME_QUERY_ORDER = ("categories", "locations", "jobs", "remote", "skills", "roles", "crypto")
+SAME_QUERY = defaultdict(list)       # the words of a title -> the paths that carry them
+
+
+def query_key(title):
+    """What a list's title is about: no brand, no counts in brackets, "&" as "and", the words in a fixed order. Numbers stay, so
+    "$25 an hour" and "$50 an hour" are different queries."""
+    t = re.sub(r"\([^)]*\)", " ", title.rsplit(" | ", 1)[0].lower()).replace("&", " and ")
+    return " ".join(sorted(w for w in re.findall(r"[a-z0-9$+#.]+", t) if w != "and"))
+
+
+def one_page_per_query():
+    """Runs when every page is written. Returns how many pages now name another page as canonical."""
+    rank = {s_: i for i, s_ in enumerate(SAME_QUERY_ORDER)}
+    moved = 0
+    for key, paths in SAME_QUERY.items():
+        paths = [p_ for p_ in dict.fromkeys(paths) if (OUT / p_ / "index.html").exists()]
+        if len(paths) < 2: continue
+        paths.sort(key=lambda p_: (rank[p_.split("/", 1)[0]], len(p_), p_))
+        keep = paths[0]
+        for p_ in paths[1:]:
+            f = OUT / p_ / "index.html"
+            page_ = f.read_text(encoding="utf-8")
+            own = f'<link rel="canonical" href="{e(FULL + "/" + p_)}">'
+            if own not in page_: continue
+            f.write_text(page_.replace(own, f'<link rel="canonical" href="{e(FULL + "/" + keep)}">', 1), encoding="utf-8")
+            if p_ in URLS: URLS.remove(p_)
+            moved += 1
+    return moved
 ORG_LD = [""]
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js"))).hexdigest()[:8]   # cache-busting version
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
@@ -579,6 +614,7 @@ def hue(name):
 
 
 LOGOS = {f.stem for f in (ROOT / "assets" / "logos").glob("*.png")} if (ROOT / "assets" / "logos").exists() else set()
+LOGOS |= {f.stem for f in (ROOT / "data" / "logos").glob("*.png")}      # logos companies uploaded for their own pages in the account (collect.direct_and_paid)
 LOGO_SITE = json.loads((ROOT / "logos.json").read_text()) if (ROOT / "logos.json").exists() else {}     # company -> its own site (checked by hand or by name)
 LOGO_SITE = {k: v for k, v in LOGO_SITE.items() if not v.startswith("board:")}      # "board:<ats>/<token>": the logo came from the job board, the site is unknown
 
@@ -737,6 +773,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
     if path == "":      # search-engine ownership tags (config.json "verify"): the owner pastes the code each webmaster tool gives him
         vf = CFG.get("verify") or {}
         head += "".join(f'<meta name="{n_}" content="{e(vf[k_])}">' for k_, n_ in (("google", "google-site-verification"), ("bing", "msvalidate.01"), ("yandex", "yandex-verification")) if vf.get(k_))
+    if path.split("/", 1)[0] in SAME_QUERY_ORDER and 'content="noindex' not in head and not re.search(r"/\d+/$", path): SAME_QUERY[query_key(title)].append(path)
     write(path, f"""<!doctype html>
 <html lang="en" data-base="{P}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
@@ -864,6 +901,7 @@ def path_icon(path):
 def card(j, extra=0):
     b = []
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
+    if j.get("urgent"): b.append('<span class="pill urg">Urgently hiring</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
     if j["remote"]: b.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')   # how the work is done
     elif j.get("hybrid"): b.append('<span class="pill">Hybrid</span>')
@@ -966,8 +1004,21 @@ def kcta(label, h2, text, actions, gets=(), kind="soft", sid=""):
             + ('<ul class="kgets">' + "".join(f"<li>{g_}</li>" for g_ in gets) + "</ul>" if gets else "") + "</section>")
 
 
+def bump_stamp(at):
+    """The moment a "Bump to top" was bought, as a timestamp for sorting; 0 when there is none."""
+    try:
+        return int(datetime.datetime.fromisoformat(str(at).replace("Z", "+00:00")).timestamp()) if at else 0
+    except Exception:
+        return 0
+
+
 def order(jobs):
-    return sorted(jobs, key=lambda j: (not j.get("pinned"), not j["featured"], -(j.get("ts") or stamp(j))))
+    """Paid first, then the newest. Premium jobs lead and take turns: their order changes with every build (the seed is the day and
+    the number of open jobs, so one build and the records made from it agree), which is the "turn in the top 3" a Premium boost
+    promises when a list holds more than three of them. A bumped job is as new as its bump."""
+    seed = f"{TODAY}-{ALL_OPEN[0]}-"
+    return sorted(jobs, key=lambda j: (not j.get("premium"), hashlib.md5((seed + j["slug"]).encode()).hexdigest() if j.get("premium") else "", not j.get("pinned"), not j["featured"],
+                                       -max(j.get("ts") or stamp(j), j.get("bump") or 0)))
 
 
 def diverse(jobs, k, per=2):
@@ -1319,7 +1370,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
                                                        + (hub_stats(jobs, stats == "rest") if stats and n == 1 else "")
                                                        + (list_save(h1, more, path if feed else "", links) + list_narrow(more, jobs) if n == 1 else ""))
-        if n > 1: top = top.replace("</h1>", f", page {n}</h1>", 1)        # page 2 and later do not repeat the first page's heading word for word (SEO_AUDIT.md, pattern E)
+        if n > 1: top = top.replace("</h1>", f", page {n}</h1>", 1)        # page 2 and later do not repeat the first page's heading word for word (one page per query, 18 Nov 2026)
         the_list = ((f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                     + pager_html(path, n, pages) + note)
@@ -1523,6 +1574,7 @@ def job_page(j, active_by_cat):
                                 else f"{e(j['company'])}’s own posting")))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
+    if j.get("urgent"): pills.append('<span class="pill urg">Urgently hiring</span>')
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
     if j["remote"]: pills.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')
     elif j.get("hybrid"): pills.append('<span class="pill">Hybrid</span>')
@@ -1594,7 +1646,9 @@ def job_page(j, active_by_cat):
                 + (f' on {fdate(j["posted"])}' if j["posted"] else "") + f'.{pay_line} We read it from the channel’s public page; it was not checked with {e(j["company"])}.</p>') if j.get("tg") else \
                (f'<p class="tldr"><strong>{e(j["title"])}</strong> is open at {e(j["company"])}{where}.{pay_line}'
                 + (f' Posted on {fdate(j["posted"])}' if j["posted"] else " It is")
-                + (f'{", and" if j["posted"] else ""} still on {e(j["company"])}’s careers page when we last checked, on {fdate(j["last_seen"])}.' if j.get("last_seen") else (". It is open now." if j["posted"] else " open now.")) + "</p>")
+                # a job the employer posted in its account was never read from a careers page: it is listed until the employer closes it
+                + (f'{", and" if j["posted"] else ""} listed here by {e(j["company"])} itself; it was open when we last checked, on {fdate(j["last_seen"])}.' if j.get("last_seen") and j.get("direct")
+                   else f'{", and" if j["posted"] else ""} still on {e(j["company"])}’s careers page when we last checked, on {fdate(j["last_seen"])}.' if j.get("last_seen") else (". It is open now." if j["posted"] else " open now.")) + "</p>")
     else:
         tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> at {e(j["company"])}{where} is closed. '
                 f'{"It closed on " + fdate(j["closed"]) if j.get("closed") else "The employer took it down"} and it no longer takes applications.</p>')
@@ -1636,6 +1690,7 @@ def job_page(j, active_by_cat):
             + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
+            + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}" loading="lazy"></p>' if j.get("cover") and j["active"] else "")
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
             + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
@@ -1743,11 +1798,19 @@ def main():
     PAID = json.loads(place_file.read_text()) if place_file.exists() else {}
     boost = defaultdict(dict)
     for b in PAID.get("boosts", []):
-        if b.get("until", "") >= TODAY: boost[b.get("slug")][b.get("kind")] = b["until"]
+        if b.get("until", "") >= TODAY: boost[b.get("slug")][b.get("kind")] = b
     for j in jobs:
+        # What the account sold for this job, each with its last day: a Standard boost ("featured"), a Premium boost (a turn in the top
+        # of its lists, the cover picture), the "Urgently hiring" badge, and a bump, which sorts the job as if it was posted when the
+        # bump was bought. A job posted in the account carries these itself; a job we read from a careers page gets them by its slug.
         bought = boost.get(j["slug"], {})
-        j["pinned"] = bool(j["active"] and max(j.get("pinned_until", ""), bought.get("pinned", "")) >= TODAY)
-        j["featured"] = bool(j["pinned"] or (j["active"] and max(j.get("featured_until", ""), bought.get("featured", "")) >= TODAY))
+        till = lambda k_: max(j.get(k_ + "_until") or "", (bought.get(k_) or {}).get("until", ""))
+        j["premium"] = bool(j["active"] and till("premium") >= TODAY)
+        j["pinned"] = bool(j["premium"] or (j["active"] and till("pinned") >= TODAY))
+        j["featured"] = bool(j["pinned"] or (j["active"] and till("featured") >= TODAY))
+        j["urgent"] = bool(j["active"] and till("urgent") >= TODAY)
+        j["bump"] = bump_stamp(j.get("bumped") or (bought.get("bump") or {}).get("at", "")) if j["active"] else 0
+        j["cover"] = (j.get("cover") or (bought.get("premium") or {}).get("cover", "")) if j["premium"] else ""
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
         j["title"] = calm_title(j["title"])
         j["entry"] = j["level"] in ("Junior", "Intern")
@@ -1816,11 +1879,15 @@ def main():
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
     SPONSORS = [sp for sp in CFG.get("sponsors", []) + PAID.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
     spot_cos = [sp["company"] for sp in SPONSORS if sp.get("slot") in ("home", "spotlight", "companies")]
+    # company pages kept by the companies themselves in the account: a few lines about the company, its site and the places it hires in
+    CLAIMED = {c_["company"]: c_ for c_ in PAID.get("claimed", []) if isinstance(c_, dict) and c_.get("company") in companies}
     def spot_tiles(names):
         return '<div class="spot">' + "".join(f'<a href="{P}/companies/{slugify(c)}/">{ava(c)}<span><b>{e(c)}</b><span class="s">{roles(OPEN[c], "open role")} · featured</span></span></a>' for c in names) + "</div>"
     def sponsor_line(slot):
         cs_ = [sp["company"] for sp in SPONSORS if sp.get("slot") == slot]
-        return ('<p class="sponsor">Supported by ' + ", ".join(f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a> ({roles(OPEN[c], "open role")})' for c in cs_) + "</p>") if cs_ else ""
+        # a paid place, and said so: the label, then the company with its logo and its open roles
+        return ('<p class="sponsor"><span class="sponsor-l">Sponsored</span>' + "".join(
+            f'<a href="{P}/companies/{slugify(c)}/">{ava(c)}<b>{e(c)}</b><span>{roles(OPEN[c], "open role")}</span></a>' for c in cs_) + "</p>") if cs_ else ""
     for s in CAT:
         SIM["cat"][s] = diverse(order(by_cat[s]), 12)
     by_comp_cat = defaultdict(list)
@@ -2321,7 +2388,7 @@ def main():
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     group = lambda label, inner, cls="": f'<div class="fgroup{" " + cls if cls else ""}"><span class="flabel">{label}</span>{inner}</div>'
-    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (SEO_AUDIT.md, pattern D)
+    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (one page per query, 18 Nov 2026)
               f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
@@ -2616,7 +2683,7 @@ def main():
         cadd(ckinds, "crypto/work-from-anywhere/", "Crypto jobs open to any country", [j for j in crypto if j.get("anywhere")], "{n} at crypto and web3 companies that do not tie the job to one country.", "", " at crypto and web3 companies open to any country")      # no qs: the search's "work from anywhere" also asks for remote, this list does not
         for s_, (nm, rj) in by_role.items():
             if s_ in BROAD or s_.endswith("-speaking"): continue
-            own = s_ in ("blockchain-engineer", "smart-contract-engineer", "trader") or rlow(nm).startswith("crypto")       # the name already says crypto ("Crypto crypto custody ..." otherwise)
+            own = s_ in ("blockchain-engineer", "smart-contract-engineer") or rlow(nm).startswith("crypto")       # the name already says crypto ("Crypto crypto custody ..." otherwise)
             cadd(croles, f"crypto/roles/{s_}/", (f"{nm} jobs" if own else f"Crypto {rlow(nm)} jobs"), [j for j in rj if j.get("crypto")],
                  "{n} for " + rlow(nm).replace("{", "").replace("}", "") + " work at crypto and web3 companies: exchanges, wallets, infrastructure and DeFi.", f"{e(rlow(nm))} ", least=10, label=nm, skip="roles", up=((f"roles/{s_}/", f"All {rlow(nm)} jobs"),))
         for name, slug, pj in places:
@@ -3284,7 +3351,8 @@ def main():
         # the first sentence answers "is X hiring?" in words (what a search snippet or an AI assistant quotes); the row of figures has the rest
         lead = (((f"{e(c)} has {roles(len(act), 'open role')} right now" + (f", {rem_c:,} of them remote" if rem_c else "") + ". ")
                  + (f"Most are in {', '.join(cats_txt[:-1]) + ' and ' + cats_txt[-1] if len(cats_txt) > 1 else cats_txt[0]}. " if cats_txt else "")
-                 + f"Every role here is read from {e(c)}’s own careers page and was checked on {fdate(TODAY, False)}.") if act else "No open roles right now. Past openings are below.")
+                 + (f"{e(c)} posted these roles here itself; each apply link was checked when the role was published." if all(j.get("direct") for j in act)
+                    else f"Every role here is read from {e(c)}’s own careers page and was checked on {fdate(TODAY, False)}.")) if act else "No open roles right now. Past openings are below.")
         closed = section(f"Closed jobs at {c}", f'<ul class="jobs">{"".join(card(j) for j in arc[:200])}</ul>', sid="closed") if arc else ""
         careers_link = f'<a href="{FULL}/companies/{slug}/">Open roles at {c}</a>'
         embed = (f'<details class="embed"><summary>Work at {e(c)}? Link your careers page to this list</summary>'
@@ -3326,7 +3394,16 @@ def main():
             overview += section(f"Companies like {c}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(o)}/", o, OPEN[o], True) for _, _, o in sim) + "</ul>"
                                 '<p class="note">Based on the skills they hire for.</p>', sid="similar")
         head_html = (crumbs(("Companies", "companies/"), (c, ""))
-                     + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at {e(c)}</h1><span class="js">{lead}</span></div></div>'
+                     + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at {e(c)}</h1><span class="js">{lead}</span>'
+                     # the badge a Company spotlight buys, and the mark of a page the company keeps itself
+                     + ('<div class="pills">' + ('<span class="pill acc">Featured employer</span>' if c in spot_cos else "")
+                        + ('<span class="pill ok">Page kept by the company</span>' if c in CLAIMED else "") + "</div>" if c in spot_cos or c in CLAIMED else "") + "</div></div>"
+                     + ((f'<div class="coabout"><p class="sec-label">From {e(c)}</p>' + (f'<p>{e(cl_["about"])}</p>' if cl_.get("about") else "")
+                         + '<p class="note">' + " · ".join(x_ for x_ in (
+                             f'<a href="{e(cl_["website"])}" rel="nofollow noopener">{e(cl_["website"].split("//", 1)[-1])}</a>' if str(cl_.get("website", "")).startswith("https://") else "",
+                             ("Hires in " + ", ".join(e(x_) for x_ in cl_.get("locations", [])[:8])) if cl_.get("locations") else "",
+                             f"Written by the company, which has kept this page since {fdate(cl_['since'])}" if cl_.get("since") else "Written by the company") if x_) + "</p></div>")
+                        if (cl_ := CLAIMED.get(c)) and (cl_.get("about") or cl_.get("website") or cl_.get("locations")) else "")
                      # the page's one action is an ink button under the heading, as "Save this list" is on every other list
                      + f'<p class="lact"><button class="btn primary sm" id="follow" type="button" data-slug="{slug}" data-name="{e(c)}">Follow {e(c)}</button>'
                        '<span>Get a “new roles” count for this company in My jobs. No account, no email.</span></p>'
@@ -9075,7 +9152,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if j["slug"] == base: return 0
         tail = j["slug"][len(base) + 1:]
         return int(tail) if j["slug"].startswith(base + "-") and tail.isdigit() and tail[0] != "0" else j["slug"]
-    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))) | 16 * int(j["pool"]) | 32 * int(bool(j.get("hybrid"))),
+    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))) | 16 * int(j["pool"]) | 32 * int(bool(j.get("hybrid"))) | 64 * int(bool(j.get("urgent"))),
               cat_list.index(j["cat"]), lvl_list.index(j["level"]) if j["level"] in lvl_list else 0, [ti[t] for t in j["tags"] if t in ti], j["salary"],
               int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0), int(j["usd"][1]) if j["usd"] else 0, [pi[p_] for p_ in j["places"]],
               [perk_list.index(x) for x in j.get("perks", []) if x in perk_list], et_list.index(j.get("etype", "")) if j.get("etype", "") in et_list else 0,
@@ -9086,7 +9163,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # the newest rows on their own: the search page paints from this small file while the full index is still loading
     write("data/head.json", json.dumps({**idx, "n": len(rows_), "r": rows_[:300]}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     shutil.copy(ROOT / "assets" / "og.jpg", OUT / "og.jpg")
-    if LOGOS: shutil.copytree(ROOT / "assets" / "logos", OUT / "logos")
+    if (ROOT / "assets" / "logos").exists(): shutil.copytree(ROOT / "assets" / "logos", OUT / "logos")
+    for f_ in (ROOT / "data" / "logos").glob("*.png"):                  # a company's own upload stands in place of the logo we held for it
+        (OUT / "logos").mkdir(exist_ok=True); shutil.copyfile(f_, OUT / "logos" / f_.name)
 
     lap('Public JSON feeds (used by the widget and documented on /api')
     # Public JSON feeds (used by the widget and documented on /api/)
@@ -9200,6 +9279,8 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     import crosslinks
     n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")])
     print(f"cross-links: {n_x:,} pages got links up, down or across ({n_l:,} narrow-to-broad pairs)")
+    n_same = one_page_per_query()
+    print(f"one page per query: {n_same:,} list pages name a fuller page with the same words as canonical")
     job_mod = {f"job/{j['slug']}/": (j.get("last_seen") if j["active"] else j.get("closed")) or TODAY for j in jobs}      # a closed job's page last changed the day it closed
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                            + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{job_mod.get(u, TODAY)}</lastmod></url>" for u in urls) + "</urlset>")

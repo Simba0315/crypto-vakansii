@@ -78,7 +78,7 @@ def brief_card(j):
     co = build.slugify(j["company"])
     b.update({"t": j.get("t") or 0, "ts": j.get("ts") or 0, "level": j.get("level") or "", "tags": list(j.get("tags") or [])[:3],
               "cc": [c for c, _ in build.countries_of(b["location"])[:3]] if b["location"] else [],
-              "logo": co if co in build.LOGOS else "", "pool": bool(j.get("pool")), "featured": bool(j.get("featured")),
+              "logo": co if co in build.LOGOS else "", "pool": bool(j.get("pool")), "featured": bool(j.get("featured")), "urgent": bool(j.get("urgent")),
               "anywhere": bool(j.get("anywhere")), "hybrid": bool(j.get("hybrid"))})
     return b
 

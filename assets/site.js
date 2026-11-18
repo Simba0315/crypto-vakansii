@@ -36,7 +36,7 @@
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
   //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere, 21 logo, 22 talent pool,
   //       23 exact posting time in minutes since 1970 (0 when only the day is known or the job is over a week old),
-  //       24 country codes of the places the job is in, for the flags, 25 hybrid]
+  //       24 country codes of the places the job is in, for the flags, 25 hybrid, 26 "Urgently hiring" badge bought for the job]
   var cache, headCache;
   function expand(d) {
     var cslug = d.c.map(function (c) { return slugOf(c) || 'job'; });
@@ -47,7 +47,7 @@
           pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', li === 1 || li === 2 ? 1 : 0, r[4] & 2 ? 1 : 0, hue(c), r[10],
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
           (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0, r[14] || 0,
-          d.f ? r[11].map(function (i) { return d.f[i]; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).slice(0, 3) : [], r[4] & 32 ? 1 : 0];
+          d.f ? r[11].map(function (i) { return d.f[i]; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).slice(0, 3) : [], r[4] & 32 ? 1 : 0, r[4] & 64 ? 1 : 0];
     });
   }
   function load() {
@@ -222,7 +222,7 @@
     }).join('');
   }
   function card(j, more, badge) {
-    var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') +
+    var pills = (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[26] ? '<span class="pill urg">Urgently hiring</span>' : '') +
       (j[4] ? '<span class="pill ok">' + (j[20] ? 'Remote, anywhere' : 'Remote') + '</span>' : j[25] ? '<span class="pill">Hybrid</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6] === 'Lead' ? 'Lead and above' : j[6]) + '</span>' : '') +
       tagPills(j[7]);
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
@@ -310,7 +310,7 @@
       var p = isoDay(o.posted), j = [];                       // the same row as every list: card() reads these places of a job
       j[0] = o.slug; j[1] = o.title; j[2] = o.company; j[3] = o.location || ''; j[4] = o.remote ? 1 : 0; j[6] = o.level || '';
       j[7] = o.tags || []; j[8] = o.salary || ''; j[11] = o.featured ? 1 : 0; j[16] = p ? p[0] * 10000 + p[1] * 100 + p[2] : 0;
-      j[20] = o.anywhere ? 1 : 0; j[25] = o.hybrid ? 1 : 0;
+      j[20] = o.anywhere ? 1 : 0; j[25] = o.hybrid ? 1 : 0; j[26] = o.urgent ? 1 : 0;
       j[21] = o.logo || ''; j[23] = o.t && Date.now() / 1000 - o.t < 7 * 86400 ? Math.floor(o.t / 60) : 0; j[24] = o.cc || [];
       var box = document.createElement('ul'); box.innerHTML = card(j);
       var li = box.firstChild, ft = foundText(o);
