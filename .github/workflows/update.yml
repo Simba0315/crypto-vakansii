@@ -59,7 +59,7 @@ jobs:
           # be confused: starting empty after a network error would overwrite everything a few steps later.
           if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
             git fetch --depth=1 origin data
-            git show FETCH_HEAD:jobs.json.gz | gunzip > data/jobs.json
+            bash datastore.sh unpack          # the database is kept in parts under GitHub's 100 MB file limit (datastore.sh)
             git show FETCH_HEAD:reports.json > data/reports.json 2>/dev/null || rm -f data/reports.json
             git show FETCH_HEAD:posted.json > data/posted.json 2>/dev/null || rm -f data/posted.json      # what post.py already sent to the channels
             echo "restored $(wc -c < data/jobs.json) bytes"
@@ -91,7 +91,7 @@ jobs:
             echo "the new database ($new bytes) is less than half of the previous one ($PREV_BYTES bytes): not saving it"; exit 1
           fi
           tmp="$(mktemp -d)"
-          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          bash datastore.sh pack "$tmp"
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
           cd "$tmp"
@@ -121,7 +121,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tmp="$(mktemp -d)"
-          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          bash datastore.sh pack "$tmp"
           cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
           cd "$tmp"
@@ -205,7 +205,7 @@ jobs:
           python3 post.py
           # keep the record of what was posted next to the jobs database, or the next run would post the same jobs again
           tmp="$(mktemp -d)"
-          gzip -9 -c data/jobs.json > "$tmp/jobs.json.gz"
+          bash datastore.sh pack "$tmp"
           [ -s data/reports.json ] && cp data/reports.json "$tmp/reports.json"
           [ -s data/posted.json ] && cp data/posted.json "$tmp/posted.json"
           cd "$tmp"

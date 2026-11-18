@@ -128,7 +128,7 @@ paging; the search page works on a phone-width screen; no console errors on the 
 ## Local work
 
 ```
-git fetch origin data && mkdir -p data && git show FETCH_HEAD:jobs.json.gz | gunzip > data/jobs.json   # fast; do not run collect.py locally unless needed
+git fetch origin data && bash datastore.sh unpack   # fast; do not run collect.py locally unless needed
 python3 build.py && python3 check.py        # must end with every template OK
 python3 -m http.server 8765 --directory <a folder that contains site/ as crypto-vakansii/>   # pages use the /crypto-vakansii prefix
 ```
