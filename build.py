@@ -608,14 +608,18 @@ def fit_title(t):
     if len(t) <= 65: return t
     t2 = re.sub(r" \([\d,]+ (?:open|roles?)\)", "", t)
     if len(t2) <= 65: return t2
-    if " | " in t2:                                           # shorten the descriptive part, never drop the brand
+    if " | " in t2:
         left, brand = t2.rsplit(" | ", 1)
         if len(left) <= 65: return left           # a title that names a place or a figure keeps it; the brand gives way first
         head_ = re.split(r" — |: ", left)[0]
         if len(head_) >= 12: left = head_
-        room = 65 - len(brand) - 3
-        if len(left) > room: left = re.sub(r" \([\d,]*$", "", left[:room + 1].rsplit(" ", 1)[0]).rstrip(" ,-–—:&")      # never "… jobs in Europe (74 | Brand": a count cut out of its bracket goes whole
-        return f"{left} | {brand}"
+        if len(left) + len(brand) + 3 <= 65: return f"{left} | {brand}"
+        # The brand gives way before a word of the key does (18 Nov 2026): cutting to make room for it left 270 titles without
+        # the word people search for ("12 Sales Leader and VP of Sales Interview | Brand", "How to Become a Sales Development | Brand").
+        if len(left) > 65:
+            left = re.sub(r" \([^)]*$", "", left[:66].rsplit(" ", 1)[0])           # never a count or a year cut out of its bracket
+            left = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|&))+$", "", left.rstrip(" ,-–—:&("))
+        return left
     return t2 if len(t2) <= 70 else t2[:68].rsplit(" ", 1)[0].rstrip(" ,-–—:&(")
 
 
