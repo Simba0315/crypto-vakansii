@@ -3793,5 +3793,12 @@ main.nfp .kact>a:not(.btn){color:var(--text)}
 
 /* ---- Search and AI answers check, 18 Nov 2026: "Narrow this list" over a list of jobs, the official source line on a company page ---- */
 .pillrow.lnarrow{align-items:center;margin:2px 0 18px}
-.pillrow.lnarrow b{font-size:14px;font-weight:600;color:var(--muted);margin-right:4px}
+.pillrow.lnarrow b{flex:none;font-size:14px;font-weight:600;color:var(--muted);margin-right:4px;white-space:nowrap}
+@media(max-width:700px){.pillrow.lnarrow{margin:2px -20px 14px}}      /* on a phone the row scrolls sideways edge to edge, and its label stays on one line */
 .cosrc{margin:2px 0 14px}
+
+/* ---- Search and AI answers check, 18 Nov 2026: "Why this example works" under a resume example ---- */
+.rexwhy{margin:18px 0 0;padding:18px 20px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.rexwhy .flabel{margin:0 0 8px}
+.rexwhy ul{margin:0}
+.rexwhy li{font-size:15px}

@@ -4568,6 +4568,30 @@ def main():
                 '<p class="pp-h">Summary</p><p>' + e(d["summary"]) + '</p><p class="pp-h">Skills</p><p>' + e(d["skills"]) + '</p><p class="pp-h">Experience</p>'
                 + "".join(f'<p class="pp-job"><b>{e(x["role"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p><ul>' + "".join(f"<li>{e(ln)}</li>" for ln in x["text"].split("\n")) + "</ul>" for x in d["exp"])
                 + '<p class="pp-h">Education</p>' + "".join(f'<p class="pp-job"><b>{e(x["what"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p>' for x in d["edu"]) + "</div>")
+    def paper_text(d):
+        """The example as plain text, for the "Copy as text" button: the same lines as the paper, a dash before each result."""
+        out_ = [d["name"], d["title"], f'{d["place"]} · {d["email"]}', "", "SUMMARY", d["summary"], "", "SKILLS", d["skills"], "", "EXPERIENCE"]
+        for x in d["exp"]:
+            out_ += [f'{x["role"]}, {x["org"]} ({x["dates"]})'] + ["- " + ln for ln in x["text"].split("\n")] + [""]
+        out_ += ["EDUCATION"] + [f'{x["what"]}, {x["org"]} ({x["dates"]})' for x in d["edu"]]
+        return "\n".join(out_)
+    NOT_VERB = {"The", "A", "An", "I", "My", "Our", "We", "Responsible", "In", "On", "At", "With", "For", "As", "During", "While", "Worked", "Helped"}
+    def why_works(d, top_, tech_):
+        """Why the example reads well, counted from the example itself: how many of its lines carry a number, which of the skills
+        today's postings ask for it names, how long it is. (Search check, 18 Nov 2026: the first results for "<work> resume example"
+        put a "why this works" box beside the example; ours said only that the example was invented.)"""
+        lines_ = [ln for x in d["exp"] for ln in x["text"].split("\n") if ln.strip()]
+        num_ = sum(1 for ln in lines_ if re.search(r"\d", ln))
+        verb_ = sum(1 for ln in lines_ if (w0 := ln.split()[0]).isalpha() and w0[0].isupper() and w0 not in NOT_VERB)       # the lines are written verb first (resume_examples.test); this guards the sentence, not the data
+        blob_ = (d["skills"] + " " + d["summary"] + " " + " ".join(lines_)).lower()
+        named = [t for t, _ in top_[:6] if t.lower() in blob_]
+        words_ = len(paper_text(d).split())
+        pts = []
+        if lines_ and num_ * 2 >= len(lines_): pts.append(f"<b>{num_} of its {len(lines_)} lines carry a number.</b> A reader can check a number; “improved reporting” they cannot.")
+        if lines_ and verb_ * 5 >= len(lines_) * 4: pts.append("<b>Every line opens with what was done.</b> A verb first, then the tool, then the result.")
+        if tech_ and len(named) >= 3: pts.append(f"<b>It names {len(named)} of the {len(top_[:6])} skills today’s postings ask for most:</b> {e(', '.join(named))}. Screening software looks for the word itself.")
+        pts.append(f"<b>About {round(words_, -1)} words.</b> One page with room to spare: the first third decides whether the rest is read.")
+        return ('<div class="rexwhy"><p class="flabel">Why this example works</p><ul class="ticks">' + "".join(f"<li>{x}</li>" for x in pts) + "</ul></div>") if len(pts) >= 3 else ""
     for slug_r, (rname, rj) in by_role.items():
         if not has_rex(slug_r): continue
         fs, fn = fam_of.get(slug_r, ("operations-administration", "Operations and administration"))
@@ -4642,7 +4666,8 @@ def main():
              f'<p class="lead">' + (f"A person in this job {e(w_)}. " if w_ else "") + f"Below: an example to start from, and what {len(rj):,} open postings for this work ask for today.</p>"
              + nums(facts_) + act_row(f"resume/?example={slug_r}", "Open this example in the builder", [("tools/resume-review/", "Check your own resume")], note=FREE_RB)
              + '<div class="rexgrid"><div>' + paper(d) + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
-             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this example in the builder</a> <a class="btn ghost" style="margin-top:0" href="{P}/tools/resume-review/">Check your own resume</a></p></div>'
+             f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this example in the builder</a> <button class="btn ghost" style="margin-top:0" type="button" data-clip="rex-text" data-raw>Copy as text</button> '
+             f'<a class="btn ghost" style="margin-top:0" href="{P}/tools/resume-review/">Check your own resume</a></p><pre id="rex-text" hidden>{e(paper_text(d))}</pre>' + why_works(d, top_, tech_) + "</div>"
              '<div class="rexside">' + ask_
              + ("<h2>Titles employers use</h2><p>" + e("; ".join(titles_)) + ".</p>" if titles_ else "")
              + '<h2>Make it yours</h2><ol class="steps"><li><b>Keep the form, change every fact.</b> A verb first, what changed, one number.</li>'
