@@ -528,8 +528,9 @@ async function resetConfirm(env, req) {
 /* Confirming the email of an account: the same shape as the password reset. Sign-up stores the hash of a random token and mails the
    link; the link works once and for CONFIRM_HOURS. Until it is used the account cannot publish a job or buy a placement. */
 const CONFIRM_FIRST = 'Confirm your email first: open the link we sent to your address, or ask for a new one on the account page.';
-const confirmText = (env, token) => 'Thank you for opening an employer account at ' + env.SITE_URL + '.\n\nOpen this link within ' + CONFIRM_HOURS + ' hours to confirm your email:\n' +
-  env.SITE_URL + '/account/#confirm=' + token + '\n\nUntil then you can sign in and prepare a job, but not publish it.\n\nIf you did not open an account, ignore this message.\n';
+// one letter for both sides of the site: a job seeker used to be thanked for "an employer account"
+const confirmText = (env, token) => 'Thank you for opening an account at ' + env.SITE_URL + '.\n\nOpen this link within ' + CONFIRM_HOURS + ' hours to confirm your email:\n' +
+  env.SITE_URL + '/account/#confirm=' + token + '\n\nUntil then you can sign in and look around. Posting a job needs a confirmed email.\n\nIf you did not open an account, ignore this message.\n';
 async function confirmRequest(env, user, ctx) {      // a new link for the account that is signed in
   if (user.confirmed_at) return { ok: true, confirmed: true };
   await limit(env, 'confirm:' + user.id, 3, 3600);

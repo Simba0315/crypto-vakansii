@@ -1188,7 +1188,7 @@ h2{letter-spacing:-.025em}
   .hero.v2 .searchbar input[type=search]{flex:1 1 100%;border-bottom:1px solid var(--line);padding:10px 4px}
   .hero.v2 .searchbar svg{display:none}
   .hero.v2 .searchbar input[name=q]{flex:1 1 60%}
-  .hero.v2 .stamp .wide-only{display:none}
+  .hero.v2 .stamp .wide-only,.hero.v2 .sub .wide-only{display:none}
   .shot-bar .dots{display:none}
   .hero.v2 .searchbar .btn{width:100%;margin-top:8px}
   .job>a{padding:14px 14px}

@@ -753,3 +753,30 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 - **Gap:** (a) a location search box (city or ZIP) with a "Change location" control; outline shows 0 form fields (the geolocation prompt may be a button; check). (b) a local summary block per detected place: total jobs, new jobs this week, top titles with counts, job types counts (full-time, part-time, contract, seasonal), nearby cities with counts, as on SimplyHired's local page; our page is global, not local. (c) 111 cities is small for the query; the real wins are pages per city that exist ("jobs in Austin") linked from here with counts; list the top 50 US cities in a visible grid with counts (check what "Pick a city" shows). (d) pay per hour or per year on cards (cards 30, check whether they show pay). (e) FAQ additions from PAA: "What jobs can I do from home?", "How to find a job near me", "How do I find jobs hiring immediately near me?". (f) job-type chips (full-time, part-time, contract, per diem, seasonal, remote), and an industry list (37 on SimplyHired). (g) date in the title/line ("Nov 18, 2026") like ZipRecruiter. (h) US focus: the page mixes 111 "cities and countries"; consider a US-only block above the fold since the query is US-English. (i) low realistic ranking: this key is dominated by Indeed, ZipRecruiter, Monster and Google's local pack; value lies in long-tail city and job-type pages. Our edge: official employer pages, hourly.
 - **Are we in:** Copilot no · Bing no · Claude search no
 
+
+## ChatGPT (added on 18 Nov 2026: the owner named it with Google, Bing and Claude)
+
+chatgpt.com answers without a sign-in and searches the web. Each question is asked in a new chat; recorded: the sites it names, the
+sources it cites, whether we are in the answer. The 54 queries of the table are still to be asked; the two below are for the home page.
+
+### Home, question 1: “What are the best job search sites right now? I want real open jobs, not ghost jobs or expired listings.”
+- **Names, in its order:** LinkedIn Jobs, Indeed, Wellfound, Google Jobs, Welcome to the Jungle, FlexJobs, USAJOBS, Dice, We Work Remotely, Himalayas.
+- **Its own advice:** “the best source of truth is usually the employer's own careers page, not the job board”, and it names Greenhouse,
+  Lever and Ashby as the systems behind those pages. A seven-point check for ghost jobs (posting date within 7–14 days, the same job on the
+  company's site, a working application link, specific details, hiring activity, no repeats with new dates, no payment requests).
+- **Sources cited:** Money, SFGATE (a news item on LinkedIn removing about 900 misleading postings, November 2026).
+- **Are we in:** no.
+- **What it means for us:** the answer describes what this site does (reads the employers' own pages, drops closed jobs) and names no site
+  that does it. The home page now says so in its heading and first sentence, and answers “What is Jobs Every Hour?”.
+
+### Home, question 2: “Is there a job search engine that reads jobs directly from company career pages (Greenhouse, Lever, Ashby, Workday) and removes closed jobs?”
+- **Names:** LinkUp (“more of a job-data platform than a conventional free job-search website”), Spool Job Search (a search tool on Apify),
+  then six data services on Apify (Career Sites API, ATS Jobs Feed and others), Hidden Roles.
+- **Its own words:** “These are mostly data extraction services, not ready-made job search websites.”
+- **Sources cited:** apify.com (7 links), linkup.com, hiddenroles.co, github.com.
+- **Google's AI answer to the same question (read the same day):** HiringCafe, LinkUp, Indeed, SimplyHired, Glassdoor, Built In, Ladders.
+- **Are we in:** no (ChatGPT), no (Google).
+- **What it means for us:** ChatGPT finds no ordinary free site for this question. It is the question this site can win once search
+  engines know it: a page that states plainly which hiring systems are read, how often, how many companies, and what happens to a closed job.
+  To do: a page “How it works: where the jobs come from” with exactly those four facts in a table (the guide
+  /guides/how-we-check-jobs-every-hour/ exists; check that it names the systems and the counts), linked from the home page.
