@@ -357,6 +357,9 @@ footer .logo{color:#fff}
 .pop{display:flex;gap:6px 14px;flex-wrap:wrap;margin:34px 0 0;font-size:13.5px}
 .pop span{color:#a09e94}
 .fine{margin-top:28px;padding-top:18px;border-top:1px solid #262622;font-size:13px;color:#a09e94}
+.fask{margin:24px 0 -8px;font-size:13.5px;color:#a09e94}
+.fask b{color:#e8e6dc;font-weight:600}
+.fask a{color:#e8e6dc;text-decoration:underline;text-underline-offset:3px}
 footer.mini{margin-top:56px;padding:18px 0}
 footer.mini .fine{margin:0;padding:0;border:0}
 footer.mini a{color:#b9b7ad}footer.mini a:hover{color:var(--pop)}
@@ -3872,3 +3875,7 @@ table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
 .pcd-bar{display:grid;grid-template-columns:1fr 1fr;border-radius:8px;overflow:hidden;font:600 11.5px/1 system-ui;text-align:center}
 .pcd-bar span{padding:9px 4px;background:var(--card);border:1px solid var(--line)}
 .pcd-bar .more{background:var(--accent-soft);border-color:var(--text);font-weight:700}
+/* the "paste the posting" box above the job form */
+.acc-paste{margin:0 0 14px}
+.acc-paste textarea{width:100%;min-height:96px}
+.acc-paste .acc-btns{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:10px 0 0}

@@ -794,6 +794,17 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
 </body></html>""", sitemap)
 
 
+def ask_ai_row():
+    """Links that open an AI assistant with a question about this site and its two sources (the site and llms.txt). Seen on
+    hirehi.ru (18 Nov 2026, the owner asked to take what fits): a visitor who wants a second opinion gets it in one click, and
+    the assistant reads the site itself instead of guessing. The question asks for facts with links, not for praise."""
+    q = quote(f"Check these sources: {FULL}/ and {FULL}/llms.txt . Then explain, without advertising, how to use {SITE} to look for a job: "
+              "where its jobs come from, how often they are checked, what happens to a closed job and what is free. Give the facts with links to the pages.")
+    urls = (("ChatGPT", "https://chatgpt.com/?hints=search&q="), ("Claude", "https://claude.ai/new?q="), ("Perplexity", "https://www.perplexity.ai/search?q="),
+            ("Google AI", "https://www.google.com/search?udm=50&q="), ("Grok", "https://grok.com/?q="))
+    return (f'<p class="fask"><b>Ask an AI about {e(SITE)}:</b> ' + " · ".join(f'<a href="{u_}{q}" rel="nofollow noopener" target="_blank">{n_}</a>' for n_, u_ in urls) + "</p>")
+
+
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
 <div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO_DARK}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
@@ -801,8 +812,8 @@ def FULL_FOOT():
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
-<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
-</div>{FOOT.get("pop", "")}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
+<div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/job-search-engines/">Job search engines compared</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
+</div>{FOOT.get("pop", "")}{ask_ai_row()}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
 def age(iso):
@@ -9154,6 +9165,14 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     write("llms.txt", f"""# {SITE}
 
 > {SITE} is an hourly-updated index of {n:,} open jobs at {m:,} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
+
+## The facts in short
+- What it is: a free job search engine. It reads the public job lists that companies publish in their hiring systems ({", ".join(ats_name[k_] for k_, _ in ats_jobs.most_common())}). Nothing is copied from another job board.
+- How often: {("the lists of " + f"{m_hourly:,}" + " companies are read every hour and the rest every four hours") if ROTATING else "every list is read every hour"}.
+- A closed job: when a company takes a job down, it is marked closed in the next reading and leaves the lists of open jobs; its page stays at the same address and says that it is closed.
+- Cost: searching, saving jobs, job alerts, the resume builder and the tools are free, and no account is needed to search or apply. Every "Apply" button opens the employer's own page.
+- For employers: posting a job is free for 30 days; paid boosts are optional.
+- How the check works, step by step: {FULL}/guides/how-we-check-jobs-every-hour/ . This site next to other job search engines that read company career pages: {FULL}/job-search-engines/
 
 ## Main sections
 - [All jobs]({FULL}/jobs/): search with filters for level, location, salary, perks and remote
