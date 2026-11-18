@@ -60,10 +60,10 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 43 | New jobs | new jobs posted today | `/new/` | 15 Nov | no | no | – | “posted today” count and tab; visible “last updated” time |
 | 44 | Part-time | part time jobs | `/part-time/` | – | no | no | hourly range in the title | hourly pay in the title and by title, not yearly |
 | 45 | Night shift | night shift jobs | `/night-shift/` | 18 Nov | no | no | four answered questions (a good night job, night pay, hours, remote) | hourly pay and night premium table; groups by industry |
-| 46 | Post a job | post a job for free | `/post-a-job/` | 18 Nov | yes | no | – | table of free options elsewhere (Indeed, LinkedIn, ZipRecruiter) with their limits |
-| 47 | Pricing | job posting sites for employers | `/pricing/` | – | yes | no | – | a new page: job posting sites for employers compared (12 to 15 rows) |
+| 46 | Post a job | post a job for free | `/post-a-job/` | 18 Nov | yes | no | linked to the comparison of job posting sites | – |
+| 47 | Pricing | job posting sites for employers | `/pricing/` | – | yes | no | new page /job-posting-sites/ (16 sites from their own pricing pages) | the six sites whose pricing pages did not open (ZipRecruiter, Monster and others) |
 | 48 | Interview practice | interview practice | `/interview-practice/` | 15 Nov | no | no | – | minor |
-| 49 | Free resume builders | best free resume builders | `/free-resume-builders/` | 18 Nov | yes | no | the year and “compared” in the title, two questions (Indeed; which is best) | more builders in the table (Teal, Canva, Adobe Express, Zety, MyPerfectResume, Resume-Now); a “best for” line |
+| 49 | Free resume builders | best free resume builders | `/free-resume-builders/` | 18 Nov | yes | no | the year and “compared” in the title, two questions (Indeed; which is best); six more builders (Teal, Canva, Adobe Express, Zety, MyPerfectResume, Resume Now): 17 in all | a “best for” line per builder |
 | 50 | Open hiring index | companies hiring the most right now | `/open-hiring-index/` | 18 Nov | yes | no | new page /insights/companies-hiring-the-most/ | trend over time |
 | 51 | Safety | how to spot a fake job offer | `/safety/` | 18 Nov | yes | no | – | where to report (FTC, BBB); a figure on how common fake offers are, with its source |
 | 52 | Work from anywhere | work from anywhere jobs | `/work-from-anywhere/` | 18 Nov | no | no | “what to check before you apply”, three questions | roles in groups |

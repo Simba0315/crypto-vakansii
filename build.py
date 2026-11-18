@@ -957,7 +957,7 @@ def kmore(title, inner):
     return f'<details class="kmore"><summary><span>{e(title)}</span></summary>{inner}</details>'
 
 
-def kcta(label, h2, text, actions, gets=(), kind="ink", sid=""):
+def kcta(label, h2, text, actions, gets=(), kind="soft", sid=""):
     """A panel in two parts, the markup of the home page's band for employers (sections review, batch 5: the single pages end
     with it): a label, a two-weight headline ([[ ]] marks the bold words), one paragraph (HTML) and the action on the left;
     `gets`, a short ruled list (HTML items), on the right. Without `gets` the text takes the whole width."""
@@ -6842,7 +6842,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     bc_rows += f'<tr class="fb-ours"><th>{e(SITE)}<span>this site</span></th>{bc_tds(BC.OURS)}</tr>'
     bc_table = ('<div class="tablewrap fbwrap"><table class="fbt"><thead><tr><th>Builder</th>' + "".join(f"<th>{e(l_)}</th>" for l_ in BC_COLS)
                 + '</tr></thead><tbody>' + bc_rows + "</tbody></table></div>")
-    bc_when = fdate(BC.CHECKED)
+    bc_first = fdate(BC.CHECKED)
+    bc_later = [b["name"] for b in BC.BUILDERS if b.get("read")]             # builders read on a later day than the rest
+    bc_when = bc_first + (f" and {fdate(BC.CHECKED_MORE)}" if bc_later else "")
+    bc_later_s = (f" {bc_list([{'name': n_} for n_ in bc_later])} were read on {fdate(BC.CHECKED_MORE)}, the others on {bc_first}." if bc_later else "")
     bc_qa = [
         ("Which resume builders let you download a PDF for free?",
          f"On {bc_when}, the free plans of {bc_list(bc_free)} let you download a PDF without paying"
@@ -6855,14 +6858,14 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         ("Can I make a resume for free without signing up?",
          f"Yes, here: the builder on {SITE} runs in your browser, keeps the resume in the browser and downloads it as a PDF or a Word file for free, with no account and no watermark."),
         *([("Is the Indeed resume builder actually free?",
-            f"By Indeed’s own pages on {bc_when}: yes, the PDF download is free. It needs an Indeed account, and the limit is {bc_ind['limits'][0].lower() + bc_ind['limits'][1:]}.")] if (bc_ind := next((b for b in BC.BUILDERS if b["name"] == "Indeed"), None)) and bc_ind["pdf"][0] == "yes" and bc_ind.get("limits") else []),
+            f"By Indeed’s own pages on {bc_first}: yes, the PDF download is free. It needs an Indeed account, and the limit is {bc_ind['limits'][0].lower() + bc_ind['limits'][1:]}.")] if (bc_ind := next((b for b in BC.BUILDERS if b["name"] == "Indeed"), None)) and bc_ind["pdf"][0] == "yes" and bc_ind.get("limits") else []),
         ("Which free resume builder is best?",
          "The one that passes three tests on the day you need the file: the PDF downloads without payment, there is no watermark, and the layout is one column of plain text that screening software can read. "
          f"The table shows the first two for {len(BC.BUILDERS)} builders by their own pages; the third you can check by pasting the finished resume into a plain-text editor."),
         ("How was this checked?",
          f"We read each builder’s own pricing page, help pages or terms on {bc_when} and wrote down only what they state; a fact a page does not state is shown as “Not stated”. "
          "Reviews and lists by others were not used as a source. Prices are those the pages showed us that day, in US dollars; several builders say prices differ by country. "
-         f"{bc_list([{'name': n_} for n_ in BC.LEFT_OUT])} are not in the table: their pages did not open for our reader that day."),
+         + (f"{bc_list([{'name': n_} for n_ in BC.LEFT_OUT])} are not in the table: their pages did not open for our reader that day." if BC.LEFT_OUT else bc_later_s.strip())),
     ]
     bc_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in bc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -6879,13 +6882,92 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          # Sections review, batch 5: the one action under the opening lines (the page had none above its last screen); the
          # builder of this site as a closing panel; the questions after the table they are about.
          + act_row("resume/", "Open the free resume builder", [("#table", "The table"), ("#sources", "Every page we read")], note="No account, no watermark.")
-         + section(f"Free plans [[side by side]], {bc_when}", bc_table + f'<p class="note">Not in the table: {e(bc_list([{"name": n_} for n_ in BC.LEFT_OUT]))}, whose pages did not open for our reader on {bc_when}. “Not stated” means the builder’s own pages do not say.</p>', sid="table", label="The table")
+         + section(f"Free plans [[side by side]], {bc_when}", bc_table + '<p class="note">' + (f'Not in the table: {e(bc_list([{"name": n_} for n_ in BC.LEFT_OUT]))}, whose pages did not open for our reader on {bc_when}. ' if BC.LEFT_OUT else e(bc_later_s.strip()) + " ")
+                   + '“Not stated” means the builder’s own pages do not say.</p>', sid="table", label="The table")
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in bc_qa) + "</dl>", label="Questions")
          + kcta("This site’s builder", "Make yours here, [[free]]", 'Five one-column templates that screening software can read, a score with fixes as you type, your old resume imported from Word or PDF, '
                 'and a PDF or Word download at the end. Everything stays in your browser.',
                 go("resume/", "Open the resume builder") + f'<a href="{P}/resume/examples/">See resume examples</a>')
          + section("Sources", bc_src + f'<p class="note">Read on {bc_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
          head=bc_ld, cls="hub sp frb")
+
+    lap('Job posting sites for employers, compared from their own pri')
+    # Job posting sites for employers, compared from their own pricing pages (job_sites.py; the notes are PRICING_RESEARCH.md, 13 Nov
+    # 2026). Search and AI answers check, 18 Nov 2026: for "job posting sites for employers" and "post a job for free" every first
+    # result and both AI answers are a list of sites with what a post costs and what is free; the site had its own prices and no
+    # such list. Every figure is one the site's own page stated; what a page did not state is shown as "Not stated".
+    import job_sites as JS
+    js_rows = [x for x in JS.SITES if x["kind"] != "regional"]
+    js_when = fdate(JS.READ)
+    js_free = [x for x in js_rows if x["free"][0] in ("yes", "limited")]
+    js_usd = lambda x: (lambda m_: int(m_.group(1).replace(",", "")) if m_ else None)(re.search(r"\$(\d[\d,]*)", x["price"])) if x["free"][0] == "no" else None
+    js_priced = sorted((v_, x["name"]) for x in js_rows if (v_ := js_usd(x)))
+    js_noprice = [x for x in js_rows if not x["price"]]
+    js_renew = [x for x in js_rows if "renew" in x["billing"].lower()]
+    JS_COLS = ["For", "Free posting", "One job post", "Stays up", "How you pay", "Upgrades and bundles"]
+    def js_tds(x):
+        cells_ = [e(JS.FOR[x["kind"]]), bc_cell(x["free"][1], x["free"][0])] + [bc_cell(x[k_]) for k_ in ("price", "runs", "billing", "extras")]
+        return "".join(f'<td data-l="{e(l_)}"><div>{c_}</div></td>' for l_, c_ in zip(JS_COLS, cells_))
+    js_ours = {"kind": "general", "free": ("yes", "Yes: a standard listing is free"), "price": "$0; a boost is $99 or $249", "runs": "30 days",
+               "billing": "one payment in crypto; nothing renews", "extras": "Standard boost $99, Premium boost $249, company spotlight"}
+    js_table = ('<div class="tablewrap fbwrap"><table class="fbt"><thead><tr><th>Site</th>' + "".join(f"<th>{e(l_)}</th>" for l_ in JS_COLS) + "</tr></thead><tbody>"
+                + "".join(f'<tr><th><a href="{e(x["url"])}" rel="nofollow noopener">{e(x["name"])}</a></th>{js_tds(x)}</tr>' for x in js_rows)
+                + f'<tr class="fb-ours"><th>{e(SITE)}<span>this site</span></th>{js_tds(js_ours)}</tr></tbody></table></div>')
+    js_names = lambda xs: ", ".join(x["name"] for x in xs[:-1]) + (" and " if len(xs) > 1 else "") + (xs[-1]["name"] if xs else "")
+    js_lo, js_hi = (js_priced[0], js_priced[-1]) if js_priced else ((0, ""), (0, ""))
+    js_mid = js_priced[len(js_priced) // 2][0] if js_priced else 0
+    js_qa = [("What is the best site to post a job for free?",
+              f"By their own pricing pages on {js_when}, {js_names(js_free)} let an employer post a job without paying, each with the limits in the table. "
+              f"On {SITE} a standard listing is free for 30 days. “Best” depends on who reads the board: a general board reaches everyone, a board for remote, startup or crypto jobs reaches fewer people who are all looking for that."),
+             ("How much does it cost to post a job online?",
+              (f"On the boards that print a price for one post, from ${js_lo[0]:,} ({js_lo[1]}) to ${js_hi[0]:,} ({js_hi[1]}), with ${js_mid:,} in the middle, usually for 30 days. " if js_priced else "")
+              + f"{len(js_noprice)} of the {len(js_rows)} sites print no price: they charge per click or per application, or ask you to contact sales ({js_names(js_noprice)})."),
+             ("Can I still post a job on Indeed for free?",
+              "Yes, with limits. Indeed’s pricing page lists a Free plan beside three paid ones and prints no prices; its employer page says an employer who posts directly can post up to three free jobs a calendar month, "
+              "each live for up to 30 days (as search showed that page on Nov 18, 2026). A free post gets less room in the results than a sponsored one."),
+             ("Can I post a job on LinkedIn for free?",
+              "LinkedIn’s help page says a member can have one free job post active at a time; it stays active for up to 14 days and is then paused, to be promoted or closed (as search showed that page on Nov 18, 2026). "
+              "Its pricing page for employers prints no prices."),
+             ("Can I post a job on Google for free?",
+              "Google has no job board of its own to post on. Its job search shows openings it finds on other sites: an employer’s careers page or a job board whose pages carry job posting markup. "
+              f"A job posted on a site that publishes that markup, as every job page on {SITE} does, can be picked up by Google at no charge."),
+             ("Which sites renew a job post by themselves?",
+              (f"On {js_when}, {js_names(js_renew)} said a post renews after 30 days unless that is turned off; on one of them the box was ticked when the page loaded. " if js_renew else "")
+              + "Read the checkout page before you pay: “one payment” and “renews every 30 days” are different products at the same price."),
+             ("How was this checked?",
+              f"We opened each site’s own pricing page on {js_when} and wrote down only what it stated; a fact the page did not state is shown as “Not stated”, and a figure that reached us second-hand is left out. "
+              + (f"{', '.join(JS.NOT_READ[:-1])} and {JS.NOT_READ[-1]} are not in the table: their pricing pages showed a bot check or an error that day." if JS.NOT_READ else ""))]
+    js_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in js_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    js_src = '<ul class="vs-src">' + "".join(f'<li><b>{e(x["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">its pricing page</a>, {e(w_)}' for u_, w_ in x["sources"]) + "</li>" for x in js_rows) + "</ul>"
+    js_t0 = f"Job Posting Sites for Employers ({TODAY[:4]})"
+    js_t = next((c_ for c_ in (f"{js_t0}: Free Options and Prices, {len(js_rows)} Compared", f"{js_t0}: {len(js_rows)} Compared, Free & Paid", f"{js_t0}: {len(js_rows)} Compared") if len(c_) <= 65), js_t0)
+    page("job-posting-sites/", f"{js_t} | {SITE}",
+         f"What it costs to post one job on {len(js_rows)} job sites, from their own pricing pages on {js_when}: which are free, the price of a post, how long it stays up, which renew by themselves.",
+         crumbs(("For employers", "post-a-job/"), ("Job posting sites compared", ""))
+         + f'<h1>Job posting sites for employers: free options and prices on <span class="hl">{len(js_rows)} sites</span></h1>'
+         + f'<p class="tldr"><strong>Checked on {js_when}:</strong> of {len(js_rows)} job sites, {len(js_free)} let an employer post a job free ({e(js_names(js_free))}, each with limits). '
+         + (f'Where a price for one post is printed it runs from ${js_lo[0]:,} to ${js_hi[0]:,}, mostly for 30 days. ' if js_priced else "")
+         + f'{len(js_noprice)} print no price. On this site a standard listing is free for 30 days.</p>'
+         + '<p class="lead">Every figure below is one the site’s own pricing page stated, with a link to that page. Nothing here is a ranking: the right board is the one your candidates read.</p>'
+         + nums([c_ for c_ in ((f"{len(js_rows)}", "job sites whose own pricing pages were read"), (f"{len(js_free)}", "let an employer post a job free"),
+                                (f"${js_mid:,}", "the middle price of one paid post, where a price is printed") if js_priced else None,
+                                (f"{len(js_renew)}", "renew a post by themselves unless you turn that off")) if c_], src=False)
+         + act_row("post-a-job/", "Post a job here, free", [("#table", "The table"), ("#sources", "Every page we read")], note="Free for 30 days. No card.")
+         + section(f"What a job post costs, [[site by site]], {js_when}", js_table
+                   + '<p class="note">“Not stated” means the site’s own pricing page does not say. Prices are in US dollars as the pages showed them that day; taxes and discounts for bundles are left out.'
+                   + (f" Not in the table: {e(', '.join(JS.NOT_READ))}, whose pricing pages did not open for our reader that day." if JS.NOT_READ else "") + "</p>", sid="table", label="The table")
+         + section("How to [[choose]] where to post", '<dl class="qa">'
+                   "<div><dt>Who reads the board</dt><dd>A general board has the most readers and the most applications to sort. A board for remote, startup, tech or crypto jobs has fewer readers, all looking for that kind of work.</dd></div>"
+                   "<div><dt>One payment or a renewal</dt><dd>Some sites sell a post for 30 days and stop; some renew it every 30 days until you turn that off. The column “How you pay” says which, where the page said so.</dd></div>"
+                   "<div><dt>What the free post does not include</dt><dd>A free post usually sits below the paid ones, runs for a shorter time, or has a cap on applications. The limits are in the column “Free posting”.</dd></div>"
+                   f'<div><dt>Your own careers page first</dt><dd>A posting on your own careers page costs nothing and is what job search engines read. {e(SITE)} reads employers’ careers pages every hour and lists the jobs free.</dd></div></dl>',
+                   sid="choose", label="Before you pay")
+         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in js_qa) + "</dl>", label="Questions")
+         + kcta("This site", "Post a job here, [[free for 30 days]]", f'{n:,} open jobs from {m:,} employers are listed here, read from their own careers pages every hour. A standard listing costs nothing; a boost keeps a job above the free ones.',
+                go("post-a-job/", "Post a job") + f'<a href="{P}/pricing/#employers">Prices for employers</a>')
+         + section("Sources", js_src + f'<p class="note">Read on {js_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
+         head=js_ld, cls="hub sp frb")
 
     lap('Glossary: the words of a job search in plain English, one pa')
     # Glossary: the words of a job search in plain English, one page per term (glossary_terms.py) and an index with the old anchors,
@@ -7859,7 +7941,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    "<div><dt>Can I get a refund?</dt><dd>A purchase switches on the moment the payment is confirmed, so there is nothing to refund before it runs. A boost with fewer than 10 clicks on Apply in 14 days runs again for free. "
                    "If anything paid did not run as described, write to us and it will be extended or refunded.</dd></div>"
                    "</dl>", label="Good to know")
-         + section("Questions about [[posting a job for free]]", faq_html(pj_qa), label="Questions"), head=faq_ld(pj_qa), cls="kp sell")
+         + section("Questions about [[posting a job for free]]", faq_html(pj_qa)
+                   + f'<p class="note">What other job sites charge and which let you post free: <a href="{P}/job-posting-sites/">job posting sites for employers, compared from their own pricing pages</a>.</p>', label="Questions"),
+         head=faq_ld(pj_qa), cls="kp sell")
 
     lap('---- /pricing/: both sides on one page, each with its own ca')
     # ---- /pricing/: both sides on one page, each with its own cards and tables. A person looking for work and a company hiring buy
@@ -8154,7 +8238,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        "<div><dt>Why postings stay for months</dt><dd>The role is hard to fill; the employer hires for it all year and keeps one standing posting; several people are hired through one posting; "
                        "or nobody took it down. A posting kept up with no hiring behind it is what people call a ghost job.</dd></div>"
                        "<div><dt>Employer’s page and job boards</dt><dd>These figures are for employers’ own careers pages, where a posting stays until the employer removes it. Job boards add limits of their own: "
-                       "LinkedIn says a free job post stays active for up to 14 days and is then paused, and Indeed says a free posting stays live for up to 30 days (their own help pages, read Nov 18, 2026). "
+                       "LinkedIn says a free job post stays active for up to 14 days and is then paused, and Indeed says a free posting stays live for up to 30 days (their own pages, as search showed them on Nov 18, 2026). "
                        "So a job can vanish from a board while it is still open on the employer’s site, and the other way round.</dd></div></dl>", sid="why", label="Reasons")
         w30_ = next((r_ for r_ in apply_rows if r_[0] == "8 to 30 days"), None)
         st_qa = [
@@ -8166,7 +8250,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              + f"The rest stay much longer, and half of all closings come after {med_cl} days or more, so a later application is still read at most employers."),
             ("How long do job postings stay up on LinkedIn and Indeed?", f"On an employer’s own careers page a posting stays until the employer takes it down; the median here is {med_cl} days. "
              "Job boards add their own limits: LinkedIn says a free job post stays active for up to 14 days and is then paused, and Indeed says a free posting stays live for up to 30 days "
-             "(their help pages, read Nov 18, 2026). A posting can therefore leave a board while the job is still open on the employer’s site."),
+             "(their own pages, as search showed them on Nov 18, 2026). A posting can therefore leave a board while the job is still open on the employer’s site."),
             ("What is a ghost job?", f"A posting the employer keeps up without hiring for it now. No count of postings can prove which ones those are. What can be counted: {old90:,} of today’s {len(active):,} open jobs "
              f"({pc(old90 / max(1, len(active)))}) were posted more than 90 days ago, and each of their pages on this site says so."),
             ("How many job postings are entry level?", f"{len(ent):,} of {len(active):,} open postings ({pc(len(ent) / max(1, len(active)))}) are marked junior or intern in the title or by the employer: "

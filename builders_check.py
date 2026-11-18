@@ -12,8 +12,23 @@ Run `python3 builders_check.py` to check the data.
 """
 
 CHECKED = "2026-11-14"
+CHECKED_MORE = "2026-11-18"        # the entries with "read": six builders added after the search check (the ones Google and Bing name)
 
 BUILDERS = [        # alphabetical; read on 14 Nov 2026
+    {"name": 'Adobe Express', "url": 'https://www.adobe.com/express/', "read": "2026-11-18",
+     "pdf": ('yes', 'Yes: download as PDF, free to use'), "watermark": '', "docx": '',
+     "signup": 'No: free to use with no sign-in or credit card', "limits": 'Free plan has limited AI credits and fewer templates and assets',
+     "paid": 'Premium, $9.99 a month, no annual commitment; 30-day free trial, then renews until cancelled',
+     "sources": [('https://www.adobe.com/express/create/resume', 'free, no sign-in, PDF download'),
+                 ('https://www.adobe.com/express/pricing', 'free plan, Premium price, trial and renewal')]},
+    {"name": 'Canva', "url": 'https://www.canva.com/', "read": "2026-11-18",
+     "pdf": ('limited', 'Yes: free downloads; premium elements carry a watermark until paid'), "watermark": 'Yes: only on premium elements, until you pay', "docx": '',
+     "signup": '', "limits": 'Premium elements watermarked; some download options are Pro only',
+     "paid": 'Canva Pro, billed monthly or yearly, renews automatically; prices vary by country',
+     "sources": [('https://www.canva.com/create/resumes/', 'resume page: save as PDF, JPG or PNG'),
+                 ('https://www.canva.com/help/download-or-purchase/', 'download limits and free-plan rules'),
+                 ('https://www.canva.com/help/watermarks-design/', 'watermarks on premium elements'),
+                 ('https://www.canva.com/help/subscription-options/', 'billing and automatic renewal')]},
     {"name": "Enhancv", "url": "https://enhancv.com/",
      "pdf": ("unknown", "Not stated: the free plan lasts 7 days, and no page says what a free user can download"),
      "watermark": "Yes: Enhancv branding, removed only on Pro", "docx": "No: resumes download as PDF",
@@ -46,6 +61,11 @@ BUILDERS = [        # alphabetical; read on 14 Nov 2026
      "paid": "$19 a month, $27 every 3 months or $54 a year; renews until cancelled; 14-day money back",
      "sources": [("https://www.kickresume.com/en/pricing/", "free plan, prices"), ("https://www.kickresume.com/en/templates/resume/free/", "no watermark, account"),
                  ("https://www.kickresume.com/terms/", "auto-renewal")]},
+    {"name": 'MyPerfectResume', "url": 'https://www.myperfectresume.com/', "read": "2026-11-18",
+     "pdf": ('trial', 'No: TXT only; PDF and Word come with a $2.95 trial of 14 days'), "watermark": '', "docx": 'No: Word needs paid access',
+     "signup": '', "limits": 'Builder and content suggestions free; downloads in TXT only',
+     "paid": '$2.95 for 14 days, then $23.95 every 4 weeks, or $95.40 a year; renews until cancelled; refund within 14 days',
+     "sources": [('https://www.myperfectresume.com/pricing', 'free plan formats, prices, renewal, refund')]},
     {"name": "Novoresume", "url": "https://novoresume.com/",
      "pdf": ("limited", "Yes: one page, free features only; its help centre says free access lasts a limited time"),
      "watermark": "Yes: Novoresume branding on the PDF", "docx": "", "signup": "Yes; no card needed",
@@ -66,6 +86,11 @@ BUILDERS = [        # alphabetical; read on 14 Nov 2026
      "paid": "$2.95 for 14 days, then $23.95 every 4 weeks unless cancelled; or $95.40 a year",
      "sources": [("https://resumegenius.com/pricing", "free plan, trial and renewal"), ("https://resumegenius.com/support", "sign-in for the TXT"),
                  ("https://resumegenius.com/faq/is-resume-genius-free", "PDF and Word need the paid trial")]},
+    {"name": 'Resume Now', "url": 'https://www.resume-now.com/', "read": "2026-11-18",
+     "pdf": ('trial', 'No: its pricing page lists paid access only; PDF and DOC come with it'), "watermark": '', "docx": 'No: DOC comes with paid access',
+     "signup": '', "limits": 'No free plan on the pricing page',
+     "paid": '$1.85 for 14 days, then $23.95 every 4 weeks, or $70.20 a year; renews until cancelled; money-back guarantee',
+     "sources": [('https://www.resume-now.com/pricing', 'plans, prices, renewal, formats, money-back')]},
     {"name": "Resume.com", "url": "https://www.resume.com/",
      "pdf": ("yes", "Yes: also plain text"), "watermark": "", "docx": "",
      "signup": "Sign-in is an Indeed account; guest sessions may not keep the resume", "limits": "None stated: several resumes and cover letters",
@@ -86,9 +111,20 @@ BUILDERS = [        # alphabetical; read on 14 Nov 2026
      "paid": "$29 a month, or $149 once for life; 30-day refund",
      "sources": [("https://www.rezi.ai/pricing", "free plan, prices, refund"), ("https://www.rezi.ai/rezi-docs/the-finish-up-tab", "3 PDFs, Word needs an upgrade"),
                  ("https://www.rezi.ai/ai-resume-builder", "free account")]},
+    {"name": 'Teal', "url": 'https://www.tealhq.com/', "read": "2026-11-18",
+     "pdf": ('yes', 'Yes: unlimited PDF downloads, no paywall'), "watermark": '', "docx": '',
+     "signup": 'Yes: a free account; no card needed', "limits": '10 templates, basic design settings, top 5 keywords, limited AI credits',
+     "paid": 'Teal+, $13 a week, $29 every 30 days or $79 every 90 days; cancel any time',
+     "sources": [('https://www.tealhq.com/tools/resume-builder', 'free unlimited PDF downloads, free plan'),
+                 ('https://www.tealhq.com/pricing', 'free plan limits, Teal+ prices, cancellation, refunds')]},
+    {"name": 'Zety', "url": 'https://zety.com/', "read": "2026-11-18",
+     "pdf": ('trial', 'No: TXT only; PDF and Word come with a $1.70 trial of 14 days'), "watermark": '', "docx": 'No: Word needs the paid plan',
+     "signup": '', "limits": 'Builder, templates and resume check free; downloads in TXT only',
+     "paid": '$1.70 for 14 days, then $23.95 every 4 weeks, or $71.40 a year; renews until cancelled',
+     "sources": [('https://zety.com/pricing', 'free plan formats, trial and annual prices, renewal')]},
 ]
 # Builders whose own pages did not open for our reader on CHECKED (403 or a bot check, not worked around): left out, named on the page.
-LEFT_OUT = ["Canva", "Teal", "Zety"]
+LEFT_OUT = []            # Canva, Teal and Zety were read on 18 Nov 2026 (their pages had not opened on the 14th)
 
 # This site's builder, from its code (assets/resume.js): the PDF comes from the browser's print window, the Word file is a .doc
 # that Word opens, the resume is kept in the browser (localStorage), one at a time.
