@@ -736,9 +736,11 @@
           say('<b>The job passes our checks.</b> ' + (r.review ? 'A person will read it before it appears, usually within a day. ' : '') + 'It is kept in this browser: confirm your email, then press “Publish the job”.');
         });
         return api('POST', '/api/jobs', v).then(function (r) {
-          var j = r.job; H.set('hrn_job_draft', null);
-          flash(j.status === 'live' ? '<b>Your job is live:</b> ' + esc(j.title) + '. It is on the site after the next update, within the hour.' :
-            '<b>Your job “' + esc(j.title) + '” is saved.</b> A person reads it before it appears, usually within a day; you get an email either way.');
+          var j = r.job, first = !S.jobs.length && me.domain; H.set('hrn_job_draft', null);
+          // the first job makes the company's page: say so, with the way to it (the owner looked for "create a company" and found nothing)
+          flash((j.status === 'live' ? '<b>Your job is live:</b> ' + esc(j.title) + '. It is on the site after the next update, within the hour.' :
+            '<b>Your job “' + esc(j.title) + '” is saved.</b> A person reads it before it appears, usually within a day; you get an email either way.') +
+            (first ? ' Your company page is ready too: <a href="#company">add your logo and a few lines about ' + esc(j.company || 'the company') + '</a>.' : ''));
           var done = function () { location.hash = '#jobs'; return load(); };
           if (!boost) return done();
           return api('POST', '/api/orders', { product: boost, target: { job_id: j.id } }).then(function (o) {

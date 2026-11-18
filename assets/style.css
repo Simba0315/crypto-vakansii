@@ -3802,3 +3802,13 @@ main.nfp .kact>a:not(.btn){color:var(--text)}
 .rexwhy .flabel{margin:0 0 8px}
 .rexwhy ul{margin:0}
 .rexwhy li{font-size:15px}
+
+/* ---- the moderator's page, 18 Nov 2026: links to the parts, the accounts table ---- */
+#adm .pillrow{margin:0 0 18px}
+#adm .sec{scroll-margin-top:84px}
+.adm-bad{color:var(--red,#b42318);font-weight:600}
+table.adm-acc{font-size:14px}
+table.adm-acc td{vertical-align:top}
+table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
+#adm .banner a{text-decoration:underline;text-underline-offset:3px;font-weight:600}
+#adm table td a{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:3px}

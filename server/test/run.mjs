@@ -3137,9 +3137,9 @@ await smtpServer.close();
   const plain = newEnv(), nobody = await fresh(plain, 'owner@example.com');
   eq([(await me(nobody, plain)).admin, (await call(plain, 'GET', '/api/admin/review', { token: nobody })).status], [false, 403], 'Moderator: with ADMIN_EMAILS not set nothing changes: no session opens /api/admin/');
 
-  const READS = ['overview', 'review', 'audience', 'claims', 'reports'];
-  eq(await Promise.all(READS.map(async (p) => (await as(mod, 'GET', p)).status)), [200, 200, 200, 200, 200], 'Moderator: its session reads the overview, the queue, the counts, the claims and the reports');
-  eq(await Promise.all(READS.map(async (p) => (await as(hr, 'GET', p)).status)), [403, 403, 403, 403, 403], 'Moderator: another account’s session is refused on every one of them');
+  const READS = ['overview', 'review', 'audience', 'claims', 'reports', 'accounts'];
+  eq(await Promise.all(READS.map(async (p) => (await as(mod, 'GET', p)).status)), [200, 200, 200, 200, 200, 200], 'Moderator: its session reads the overview, the queue, the counts, the claims, the reports and the accounts');
+  eq(await Promise.all(READS.map(async (p) => (await as(hr, 'GET', p)).status)), [403, 403, 403, 403, 403, 403], 'Moderator: another account’s session is refused on every one of them');
   eq([(await as(unconfirmed, 'GET', 'review')).status, (await as('f'.repeat(64), 'GET', 'review')).status, (await as(undefined, 'GET', 'review')).status], [403, 403, 403], 'Moderator: so is an owner’s address nobody confirmed, a made-up token and no token');
   const hrId = await one(env, "SELECT id FROM users WHERE email = 'hr@orbit.dev'");
   const TOKEN_ONLY = [['POST', 'erase', { email: 'x@y.dev' }], ['POST', 'users/' + hrId + '/ban'], ['POST', 'accounts/' + hrId + '/ban'], ['POST', 'talent/credits', { account: hrId, n: 5 }], ['GET', 'talent'], ['GET', 'nothing-here']];
@@ -3160,6 +3160,19 @@ await smtpServer.close();
     'Letters: an approved job: its title, its page on the site, the 30 days, and that what was bought starts');
   r = await call(env, 'POST', '/api/orders', { token: hr, data: { product: 'bump', target: { job_id: j1 } } }); await hook(env, r.body.order.id);
   ok(/It is on now/.test(letters('hr@orbit.dev', 'Payment received')[1].text), 'Letters: a payment for a live job says it is on');
+
+  // the list of accounts, and the way from a job to its pages (the owner, 18 Nov 2026: "which accounts are there, their emails, how much each paid")
+  r = await as(mod, 'GET', 'accounts');
+  const acc = (r.body.accounts || []).find((a) => a.email === 'hr@orbit.dev') || {}, own = (r.body.accounts || []).find((a) => a.email === 'owner@example.com') || {};
+  eq([r.status, r.body.total, r.body.accounts.length, r.body.paid_orders, acc.side, acc.confirmed, acc.email_domain, acc.jobs, acc.jobs_live, acc.jobs_review, acc.paid_orders, acc.paid_usd === r.body.paid_usd && acc.paid_usd > 99, acc.last_paid.length, acc.last_signin.length],
+    [200, 3, 3, 2, 'employer', true, 'orbit.dev', 1, 1, 0, 2, true, 10, 10], 'Accounts: the moderator sees every account with its email, its jobs and what it paid');
+  eq([own.side, own.jobs, own.paid_usd, r.body.accounts.find((a) => a.email === 'second@owner.dev').confirmed], ['nothing yet', 0, 0, false], 'Accounts: an account that posted and paid nothing shows zeros and no side yet, an unconfirmed one says so');
+  eq([(await as(mod, 'GET', 'accounts?q=ORBIT')).body.accounts.map((a) => a.email), (await as(mod, 'GET', 'accounts?q=nobody-like-this')).body.accounts.length], [['hr@orbit.dev'], 0], 'Accounts: ?q= finds by a part of the email or the company, without case');
+  eq([(await as(hr, 'GET', 'accounts')).status, (await as(undefined, 'GET', 'accounts')).status, (await as(ADMIN, 'GET', 'accounts')).status], [403, 403, 200], 'Accounts: another account and no token are refused; the owner’s token reads them too');
+  ok(!JSON.stringify((await as(mod, 'GET', 'accounts')).body).includes('pass_'), 'Accounts: nothing about passwords is in the answer');
+  r = await as(mod, 'GET', 'overview');
+  eq([r.body.recent_jobs[0].page, r.body.recent_jobs[0].company_page, r.body.recent_jobs[0].email, r.body.recent_jobs[0].status, r.body.recent_orders[0].email],
+    ['/job/senior-rust-engineer-orbit-labs/', '/companies/orbit-labs/', 'hr@orbit.dev', 'live', 'hr@orbit.dev'], 'Overview: a recent job carries its page, its company’s page and the account that posted it; an order carries its account');
 
   // rejection with its letter; the job can be edited and sent again
   await nextDay(env);

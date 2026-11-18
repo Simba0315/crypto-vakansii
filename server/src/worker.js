@@ -3218,10 +3218,11 @@ async function route(env, req, url, ctx) {
 const settleReports = (env, id, t) => [             // a job taken off the site for good: the open reports about it were right, and the account loses its trust
   db(env, 'UPDATE users SET upheld_reports = upheld_reports + 1 WHERE id = (SELECT user_id FROM jobs WHERE id = ?) AND EXISTS (SELECT 1 FROM reports WHERE job_id = ? AND decided_at = 0)', id, id),
   db(env, "UPDATE reports SET decision = 'upheld', decided_at = ? WHERE job_id = ? AND decided_at = 0", t, id)];
-// what a moderator's session may do under /api/admin/: read the overview, the queue and the counts, decide jobs, claims and reports
+// what a moderator's session may do under /api/admin/: read the overview, the queue, the counts and the list of accounts, decide jobs,
+// claims and reports. Bans, credits and erasing a person's data stay with the owner's token.
 const moderation = (seg, m) => {
   const [, what, id, act] = seg;
-  if (m === 'GET') return ['overview', 'review', 'audience', 'claims', 'reports'].includes(what) && !id;
+  if (m === 'GET') return ['overview', 'review', 'audience', 'claims', 'reports', 'accounts'].includes(what) && !id;
   return m === 'POST' && !!id && ((what === 'jobs' && ['approve', 'reject', 'remove'].includes(act)) || (what === 'claims' && ['approve', 'reject'].includes(act)) || (what === 'reports' && act === 'decide'));
 };
 // The letters a decision sends to the account it is about, after the change is stored; a letter that does not go changes nothing.
@@ -3303,12 +3304,42 @@ async function admin(env, req, seg, m, ctx) {
   }
   if (seg[1] === 'overview' && m === 'GET') {
     const one = (sql) => db(env, sql).first('n');
-    const jobs = (await db(env, 'SELECT id, company, title, apply_url, status, created_at FROM jobs ORDER BY created_at DESC LIMIT 30').all()).results;
+    // page, company_page: where the job and its company are on the site (they appear with the site's next update after the job goes
+    // live); email: the account that posted it. The owner approved a job on 18 Nov 2026 and found no way from this page to either.
+    const jobs = (await db(env, 'SELECT j.id, j.company, j.title, j.apply_url, j.status, j.created_at, j.expires_at, j.user_id, u.email FROM jobs j JOIN users u ON u.id = j.user_id ORDER BY j.created_at DESC LIMIT 50').all()).results
+      .map((j) => ({ ...j, status: j.status === 'live' && j.expires_at <= t ? 'expired' : j.status, until: j.status === 'live' ? isoDay(j.expires_at) : '',
+        page: '/job/' + jobSlug(j.title, j.company) + '/', company_page: '/companies/' + slugify(j.company) + '/' }));
     const hits = await hitsOf(env, 'j.created_at >= ?', jobs.length ? jobs[jobs.length - 1].created_at : 0, t);
     return { users: await one('SELECT COUNT(*) AS n FROM users'), paid_orders: await one("SELECT COUNT(*) AS n FROM orders WHERE status = 'paid' AND amount_usd > 0"),
       revenue_usd: await one("SELECT COALESCE(SUM(amount_usd), 0) AS n FROM orders WHERE status = 'paid'"), live_jobs: await one("SELECT COUNT(*) AS n FROM jobs WHERE status = 'live'"),
-      recent_orders: (await db(env, 'SELECT id, product, label, amount_usd, status, created_at FROM orders ORDER BY created_at DESC LIMIT 30').all()).results,
+      recent_orders: (await db(env, 'SELECT o.id, o.product, o.label, o.amount_usd, o.credits, o.status, o.created_at, o.paid_at, u.email FROM orders o JOIN users u ON u.id = o.user_id ORDER BY o.created_at DESC LIMIT 50').all()).results,
       recent_jobs: jobs.map((j) => ({ ...j, ...hits(j.id) })) };
+  }
+  // Every account, newest first, for the owner's page (he asked on 18 Nov 2026 to see which accounts there are, their emails and what
+  // each has paid): who signed up and when, whether the email is confirmed, what the account posts as, its jobs, its company pages, its
+  // resumes, what it paid, and when it last signed in. Read-only. ?q= keeps the accounts whose email or company holds the words;
+  // 500 rows at most, with the count of all.
+  if (seg[1] === 'accounts' && !id && m === 'GET') {
+    // which side of the site the account has used so far: by what it did, not by its address (a job seeker may sign up from a work mailbox)
+    const sideOf = (u) => { const hires = u.jobs > 0 || u.pages > 0 || !!u.company, seeks = u.resumes > 0; return hires && seeks ? 'both' : hires ? 'employer' : seeks ? 'job seeker' : 'nothing yet'; };
+    const q = '%' + String(new URL(req.url).searchParams.get('q') || '').trim().toLowerCase().replace(/[%_]/g, '').slice(0, 80) + '%';
+    const rows = (await db(env, 'SELECT u.id, u.email, u.company, u.domain, u.domain_proof, u.confirmed_at, u.created_at, u.banned, u.plus_until, u.linkedin_sub, u.approved_jobs, u.upheld_reports, ' +
+      "(SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status != 'removed') AS jobs, " +
+      "(SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live' AND j.expires_at > ?) AS jobs_live, " +
+      "(SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'review') AS jobs_review, " +
+      "(SELECT COALESCE(SUM(o.amount_usd), 0) FROM orders o WHERE o.user_id = u.id AND o.status = 'paid') AS paid_usd, " +
+      "(SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status = 'paid' AND o.amount_usd > 0) AS paid_orders, " +
+      "(SELECT COALESCE(MAX(o.paid_at), 0) FROM orders o WHERE o.user_id = u.id AND o.status = 'paid') AS last_paid, " +
+      "(SELECT COUNT(*) FROM company_claims c WHERE c.user_id = u.id AND c.status = 'verified') AS pages, " +
+      '(SELECT COUNT(*) FROM resumes r WHERE r.user_id = u.id) AS resumes, ' +
+      '(SELECT COALESCE(MAX(x.created_at), 0) FROM sessions x WHERE x.user_id = u.id) AS last_signin ' +
+      'FROM users u WHERE lower(u.email) LIKE ? OR lower(u.company) LIKE ? ORDER BY u.created_at DESC LIMIT 500', t, q, q).all()).results;
+    const sum = await db(env, "SELECT COALESCE(SUM(amount_usd), 0) AS usd, COUNT(*) AS n FROM orders WHERE status = 'paid' AND amount_usd > 0").first();
+    return { total: Number(await db(env, 'SELECT COUNT(*) AS n FROM users').first('n')), paid_usd: Number(sum.usd) || 0, paid_orders: Number(sum.n) || 0,
+      accounts: rows.map((u) => ({ id: u.id, email: u.email, company: u.company, email_domain: domainOf(u), proved_by: proofsOf(u), side: sideOf(u),
+        created: isoDay(u.created_at), confirmed: u.confirmed_at > 0, banned: !!u.banned, plus_until: u.plus_until > t ? isoDay(u.plus_until) : '',
+        jobs: u.jobs, jobs_live: u.jobs_live, jobs_review: u.jobs_review, approved_jobs: u.approved_jobs, upheld_reports: u.upheld_reports, company_pages: u.pages, resumes: u.resumes,
+        paid_usd: Number(u.paid_usd) || 0, paid_orders: u.paid_orders, last_paid: u.last_paid ? isoDay(u.last_paid) : '', last_signin: u.last_signin ? isoDay(u.last_signin) : '' })) };
   }
   // Claims of company pages that wait for a person: the company, the domain the account proved and how, the domain the site knows for
   // the company, and why it waits. approve makes it the company's one verified claim; reject (with a reason the account reads) ends it.
