@@ -924,7 +924,7 @@ def card(j, extra=0):
     label, fresh = age(j["posted"])
     return (f'<li class="job{" feat" if j["featured"] else ""}"><a href="{P}/job/{j["slug"]}/">{ava(j["company"])}'
             f'<span><span class="jt">{e(j["title"])}</span><span class="js">{sub}</span></span>'
-            f'<span class="jr"><span class="jp{"" if j["salary"] else " none"}">{e(j["salary"][:28]) if j["salary"] else "—"}</span><span class="pills">{"".join(b)}</span><time {when(j)}{" class=\"new\"" if fresh and j["active"] else ""}>{label}</time></span></a></li>')
+            f'<span class="jr"><span class="jp{"" if j["salary"] else " none"}">{e(pay_shown(j["salary"])[:28]) if j["salary"] else "—"}</span><span class="pills">{"".join(b)}</span><time {when(j)}{" class=\"new\"" if fresh and j["active"] else ""}>{label}</time></span></a></li>')
 
 
 def eg(html):
@@ -1117,7 +1117,7 @@ def faq_for(label, jobs, first=None, extra=()):
     cap = label[0].upper() + label[1:]
     n_co = len(set(j["company"] for j in jobs))
     qa = [(f"How many {label} are open right now?",
-           f"There are {n_:,} open {label}{f' at {n_co:,} companies' if n_co > 1 else ''} on {SITE} as of {fdate(TODAY)}. {new7:,} of them were posted in the last seven days. The list is rebuilt every hour from the employers' own careers pages.")]
+           f"There are {n_:,} open {label}{f' at {n_co:,} companies' if n_co > 1 else ''} on {SITE} as of {fdate(TODAY)}.{f" {new7:,} of them were posted in the last seven days." if new7 else ""} The list is rebuilt every hour from the employers' own careers pages.")]
     if first: qa.insert(0, first)
     qa[1:1] = list(extra)                       # questions only this page can answer (a company's own hiring, say)
     if len(top) > 1:
@@ -1154,7 +1154,7 @@ def faq_for(label, jobs, first=None, extra=()):
         qa.append((f"Is it hard to get {one_}?",
                    f"{ent:,} of the {n_:,} open {label} ({100 * ent / n_:.0f}%) are for beginners: junior roles and internships."
                    + (f" Of the {len(yrs):,} postings that state experience, the median asks for {yrs[len(yrs) // 2]} {'year' if yrs[len(yrs) // 2] == 1 else 'years'}." if len(yrs) >= 10 else "")
-                   + f" {n_co:,} {'company is' if n_co == 1 else 'companies are'} hiring and {new7:,} roles were posted in the last seven days. Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
+                   + f" {n_co:,} {'company is' if n_co == 1 else 'companies are'} hiring" + (f" and {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days" if new7 else "") + ". Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
     ai_ = Counter(t for j in jobs for t in j.get("tags", []) if t in AI_TAGS)
     k_ai = sum(1 for j in jobs if any(t in AI_TAGS for t in j.get("tags", [])))
     if n_ >= 20:
@@ -1175,7 +1175,7 @@ def faq_for(label, jobs, first=None, extra=()):
     if n_ >= 20 and ALL_OPEN[0]:
         qa.append((f"Are {label} in demand in {TODAY[:4]}?",
                    f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, {100 * n_ / ALL_OPEN[0]:.1f}% of all {ALL_OPEN[0]:,} open jobs here; "
-                   f"{new7:,} were posted in the last seven days." + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
+                   + (f"{new7:,} were posted in the last seven days." if new7 else "") + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
                    + f" {r:,} ({100 * r / n_:.0f}%) can be done remotely."))
     qa.append((f"How do I apply for {label}?",
                f"Open a job and press “Apply on company site”. You go straight to the employer's own careers page and apply there. {SITE} needs no account and charges nothing for applying."))
@@ -1487,6 +1487,11 @@ def intern_hub(path, h1, yr, ej):
         else: page(f"{path}{n}/", f"{h1}{yr}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
 
+def pay_shown(pay):
+    """"$0 - $125 an hour" in a posting means up to $125 an hour."""
+    return re.sub(r"^[$]0 *[-–] *", "Up to ", pay)
+
+
 def intro_for(jobs, pre="", post="", hub=False, row=False):
     """The opening paragraph of a list. `hub`: the employers only (the figures stand in the row of numbers). `row`: how many are
     open and who has the most, in that order, with the other figures left to the row (listing(stats="rest"))."""
@@ -1607,7 +1612,7 @@ def job_page(j, active_by_cat):
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
     if j["remote"]: pills.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')
     elif j.get("hybrid"): pills.append('<span class="pill">Hybrid</span>')
-    if j["salary"]: pills.append(f'<span class="pill sal">{e(j["salary"])}</span>')
+    if j["salary"]: pills.append(f'<span class="pill sal">{e(pay_shown(j["salary"]))}</span>')
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
     if j["pool"]: pills.append('<span class="pill warn">Talent pool</span>')
     pills += [(f'<a class="pill perk" href="{P}/perks/{PERK_SLUG[x]}/">{e(x)}</a>' if x in PERK_OK else f'<span class="pill perk">{e(x)}</span>') for x in j.get("perks", []) if x in PERK_SLUG]
@@ -3760,7 +3765,7 @@ def main():
         for j, (lo, hi) in group:
             for t in j.get("tags", []): with_t[t].append((lo + hi) / 2)
         prem = sorted(((median(v) - median(mids), t, len(v)) for t, v in with_t.items() if len(v) >= max(5, len(mids) // 10) and len(v) < len(mids)), reverse=True)[:5]
-        prem = [x for x in prem if x[0] > 0]
+        prem = [x for x in prem if x[0] >= 1000]                 # "+$0K" says nothing
         sal_qa[3:3] = [
             # `psn` is the person of a kind of work ("an accountant"). A skill, a field or a language has none and is asked about
             # as jobs: "Are Python jobs high-paying?", not "Is a python a high-paying job?"
@@ -7388,7 +7393,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              ("How was this checked?",
               f"On {ce_when} we opened each site’s own pages in a browser and wrote down only what they said; words in quotation marks are the site’s own. A fact the pages did not state is shown as “Not stated”. "
               f"Named in answers to this question and not in the table: {ce_not}.")]
-    ce_qh, ce_ld = qa_sec("", ce_qa)
+    ce_qh, ce_ld = qa_sec("Questions about job search engines", ce_qa)
     page("job-search-engines/", f"Job Search Engines That Read Company Career Pages ({TODAY[:4]}) | {SITE}",
          f"Job search engines that read jobs straight from company career pages, compared from their own pages on {ce_when}: what each reads, how often, what happens to a closed job, the price.",
          crumbs(("Guides", "guides/"), ("Job search engines that read career pages", ""))
