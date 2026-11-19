@@ -3938,3 +3938,6 @@ table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
 .mj-card select{width:100%;min-height:36px;font:inherit;font-size:14px}
 .mj-closed{grid-column:1/-1}
 @media (max-width:760px){.mj-board{grid-template-columns:1fr}}
+
+/* the counts beside links in a row of lists ("Every list of jobs in London") */
+.lrow a b{margin-left:5px;font-weight:600;color:var(--faint);font-size:.92em}

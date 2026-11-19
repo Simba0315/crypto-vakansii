@@ -797,11 +797,34 @@ def frame_first(path, body):
     return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}</div>{nums}</div>' + body[m.end():]
 
 
+# Design, step 5 (19 Nov 2026): every titled section of a page carries a small label above its heading, as the hub pages and dLocal's
+# pages do, so a long page reads as a set of named parts. The label comes from what the heading says; a heading that matches none of
+# these keeps the plain look. Job pages are left as they are.
+SEC_LABELS = [(re.compile(r"^questions|questions about|people ask", re.I), "Questions"), (re.compile(r"^skills|skills asked|tech stack|tools and software", re.I), "Skills"),
+              (re.compile(r"^who is hiring|^companies|employers|hiring for", re.I), "Employers"), (re.compile(r"^newest|newest first|^open jobs|^all .* jobs$", re.I), "Open jobs"),
+              (re.compile(r"\bpay\b|salar", re.I), "Pay"), (re.compile(r"^where|locations|by place|places", re.I), "Places"),
+              (re.compile(r"^every list|^narrow down|^more like|^related|^more for", re.I), "Directory"), (re.compile(r"alert", re.I), "Alerts"),
+              (re.compile(r"^job titles|titles employers", re.I), "Titles"), (re.compile(r"^how |steps|^five steps|^six steps", re.I), "How to"),
+              (re.compile(r"tools$|^free tools", re.I), "Tools"), (re.compile(r"level", re.I), "Levels")]
+SEC_PLAIN = re.compile(r'<section class="sec"((?: id="[^"]*")?)><div class="sec-head( has-sub)?"><h2>(.*?)</h2>', re.S)
+
+
+def sec_labels(path, body):
+    if path.startswith(("job/", "archive/")) or not path: return body
+    def one(m):
+        text = re.sub(r"<[^>]+>", "", m.group(3))
+        lab = next((l for rx, l in SEC_LABELS if rx.search(text)), "")
+        if not lab: return m.group(0)
+        return (f'<section class="sec hsec"{m.group(1)}><div class="sec-head{m.group(2) or ""}"><div class="sec-ttl"><p class="sec-label">{lab}</p>'
+                f'<h2>{m.group(3)}</h2></div>')
+    return SEC_PLAIN.sub(one, body)
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls=""):
     """cls: a class on <main> ("lp" on list pages, "hub" on directory pages): the styles of the sections review are scoped by it,
     so job pages, built by the same function, keep their look."""
     url = f"{FULL}/{path}"
-    body = frame_first(path, with_toc(path, body))
+    body = sec_labels(path, frame_first(path, with_toc(path, body)))
     title, desc = fit_title(title), fit_desc(desc)
     if '"BreadcrumbList"' not in head:                 # every page with a visible trail carries the same trail as markup
         m_ = CRUMB_RX.search(body)
