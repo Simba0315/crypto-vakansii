@@ -2968,7 +2968,12 @@ main.kp a.btn{text-decoration:none}
 .khero .banner{margin:30px 0 0;padding:14px 18px;border-radius:14px;font-size:15px}
 main.kp .khero+.sec{margin-top:clamp(64px,7vw,96px)}
 /* lists: the same framed first screen, a little tighter, so the first jobs stay near the top */
-.lhero,.phero{padding:32px 44px 36px}
+.lhero,.phero,.chero{padding:32px 44px 36px}
+.chero .jhead.cohead{margin:0}
+.chero .cohead h1{max-width:none;font-size:clamp(30px,3.8vw,48px)}
+.chero .lact{margin:24px 0 0}
+.chero .nums{margin:24px 0 0}
+.chero .tbadges{margin:16px 0 0}
 .phero h1{max-width:30ch;font-size:clamp(30px,3.6vw,46px)}
 .toc-main .phero{margin-top:6px}
 .phero .nums{margin:28px 0 0}
@@ -2983,7 +2988,7 @@ main.kp .khero+.sec{margin-top:clamp(64px,7vw,96px)}
   .khero h1{font-size:clamp(30px,8.6vw,36px)}
   .khero .lead{font-size:16.5px}
   .khero .nums{margin-top:28px}
-  .lhero,.phero{padding:18px 20px 24px}
+  .lhero,.phero,.chero{padding:18px 20px 24px}
   .khero .ptrust{margin-top:24px}
   .kact{margin-top:22px}
 }

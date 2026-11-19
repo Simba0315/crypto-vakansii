@@ -3605,8 +3605,9 @@ def main():
         if sim:
             overview += section(f"Companies like {c}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(o)}/", o, OPEN[o], True) for _, _, o in sim) + "</ul>"
                                 '<p class="note">Based on the skills they hire for.</p>', sid="similar")
-        head_html = (crumbs(("Companies", "companies/"), (c, ""))
-                     + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at {e(c)}</h1><span class="js">{lead}</span>'
+        # design, step 3 (19 Nov 2026): the company's first screen in the same framed panel as the lists and the key pages
+        head_html = ('<div class="khero chero"><div class="khero-t">' + crumbs(("Companies", "companies/"), (c, "")) + '<p class="sec-label">Company</p>'
+                     + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at <span class="hl">{e(c)}</span></h1><span class="js">{lead}</span>'
                      # the badge a Company spotlight buys, and the mark of a page the company keeps itself
                      + ('<div class="pills">' + ('<span class="pill acc">Featured employer</span>' if c in spot_cos else "")
                         + ('<span class="pill ok">Page kept by the company</span>' if c in CLAIMED else "") + "</div>" if c in spot_cos or c in CLAIMED else "") + "</div></div>"
@@ -3615,13 +3616,13 @@ def main():
                              f'<a href="{e(cl_["website"])}" rel="nofollow noopener">{e(cl_["website"].split("//", 1)[-1])}</a>' if str(cl_.get("website", "")).startswith("https://") else "",
                              ("Hires in " + ", ".join(e(x_) for x_ in cl_.get("locations", [])[:8])) if cl_.get("locations") else "",
                              f"Written by the company, which has kept this page since {fdate(cl_['since'])}" if cl_.get("since") else "Written by the company") if x_) + "</p></div>")
-                        if (cl_ := CLAIMED.get(c)) and (cl_.get("about") or cl_.get("website") or cl_.get("locations")) else "")
+                        if (cl_ := CLAIMED.get(c)) and (cl_.get("about") or cl_.get("website") or cl_.get("locations")) else "") + "</div>"
                      # the page's one action is an ink button under the heading, as "Save this list" is on every other list
                      + f'<p class="lact"><button class="btn primary sm" id="follow" type="button" data-slug="{slug}" data-name="{e(c)}">Follow {e(c)}</button>'
                        '<span>Get a “new roles” count for this company in My jobs. No account, no email.</span></p>'
                      + (f'<p class="note cosrc">Official source: {e(c)} publishes these jobs on <a href="{e(src_[1])}" rel="nofollow noopener">{e(src_[0])}</a>'
                         + (f" (its hiring system, {e(src_[2])})" if src_[2] else "") + ". Every job below opens its posting there; you apply on that site.</p>" if (src_ := official_source(act)) else "")
-                     + (f'<dl class="nums">{"".join(chips)}</dl>' if act else "") + tbadges
+                     + (f'<dl class="nums">{"".join(chips)}</dl>' if act else "") + tbadges + "</div>"
                      # a <div>, not a <nav>: the phone menu's styles caught the <nav> and stood the links in a tall sticky column
                      + '<div class="anch" role="navigation" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
                      + ('<a href="#pay">Pay</a>' if pay_rows else "") + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
