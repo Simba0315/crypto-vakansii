@@ -74,10 +74,16 @@
   T.stateTax = function (S, salary, status, pretax) {
     var g = num(salary), k = clean(pretax) === '' ? 0 : num(pretax), st = status === 'joint' ? 'joint' : 'single', f = S[st === 'joint' ? 'j' : 's'];
     if (!(g > 0) || g > 1e8 || !(k >= 0) || k > g) return null;
-    var wages = S.pt ? g : g - k, ex = S.exMax && wages > S.exMax[st] ? 0 : f.e;
-    var taxable = S.base === 'fed' ? Math.max(0, g - k - T.TAX2026.std[st]) : Math.max(0, wages - f.d - ex), tax = 0, lo = 0;
+    var wages = S.pt ? g : g - k, ex = S.exMax && wages > S.exMax[st] ? 0 : f.e, std = f.d, credit = f.c, ded = 0;
+    var upTo = function (list) { return list.filter(function (x) { return x[0] == null || wages <= x[0]; })[0][1]; };
+    if (S.xs) ex = upTo(S.xs) * (st === 'joint' ? 2 : 1);                                  // an exemption that depends on income
+    if (S.sp) std = Math.max(0, std - S.sp[st][1] * Math.max(0, wages - S.sp[st][0]));     // a deduction or credit that shrinks with income
+    if (S.cp) credit = Math.max(0, credit - S.cp[st][1] * Math.max(0, wages - S.cp[st][0]));
+    if (S.fd) ded = Math.min(S.fd.cap[st], upTo(S.fd.steps) * T.takeHome(g, st, k).fed);   // part of the federal tax is deductible
+    var taxable = S.base === 'fed' ? Math.max(0, g - k - T.TAX2026.std[st]) : Math.max(0, wages - std - ex - ded), tax = 0, lo = 0;
     f.b.forEach(function (b) { var hi = b[0] == null ? Infinity : b[0]; if (taxable > lo) tax += (Math.min(taxable, hi) - lo) * b[1]; lo = hi; });
-    tax = Math.max(0, tax - f.c);
+    if (S.ao && taxable > S.ao[0]) tax += S.ao[1];
+    tax = Math.max(0, tax - credit);
     var pay = (S.pay || []).map(function (p) { var a = p[1] * (p[2] == null ? g : Math.min(g, p[2])); return { name: p[0], amount: p[3] == null ? a : Math.min(a, p[3]) }; });
     var payTotal = pay.reduce(function (t, x) { return t + x.amount; }, 0);
     return { taxable: taxable, tax: tax, pay: pay, payTotal: payTotal, total: tax + payTotal };

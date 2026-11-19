@@ -421,7 +421,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     ST = state_tax.STATES
     assert state_tax.FED_STD == {k: v[0] for k, v in FED_2026.items()}
     st_data = json.dumps({c: {"n": x["name"], "base": x["base"], "s": x["single"], "j": x["joint"], "pay": x["pay"],
-                              **({"exMax": x["ex_max"]} if x.get("ex_max") else {}), **({"pt": 1} if x.get("pretax_taxed") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+                              **({"exMax": x["ex_max"]} if x.get("ex_max") else {}), **({"pt": 1} if x.get("pretax_taxed") else {}),
+                              **({"sp": x["std_phase"]} if x.get("std_phase") else {}), **({"cp": x["credit_phase"]} if x.get("credit_phase") else {}), **({"ao": x["add_over"]} if x.get("add_over") else {}),
+                              **({"xs": x["ex_steps"]} if x.get("ex_steps") else {}), **({"fd": x["fed_ded"]} if x.get("fed_ded") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
     def th_form(code=""):
         """The calculator; on a state's own page that state is chosen when the page opens (tools.js reads data-state)."""
@@ -431,7 +433,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                      + _sel("status", "Filing status", [("single", "Single", True), ("joint", "Married filing jointly")])
                      + _sel("freq", "Paid", [("biweek", "Every two weeks (26)", True), ("semimonth", "Twice a month (24)"), ("month", "Monthly (12)"), ("week", "Weekly (52)")])
                      + "</div>" + '<div class="tl-grid c2">'
-                     + _sel("state", "State", [("", "Federal only", True)] + [(c, x["name"]) for c, x in ST.items()], hint=f"{len(ST)} states so far.")
+                     + _sel("state", "State", [("", "Federal only", True)] + [(c, x["name"]) for c, x in ST.items()], hint=f"{len(ST)} of 51, counting Washington, DC.")
                      + _f("pretax", "Pre-tax contributions a year (optional)", "0", hint="401(k), HSA and similar amounts taken before income tax.") + "</div>"
                      + '<div class="tl-actions">' + _clear() + "</div></div>"
                      + _private(" The figures are worked out inside your browser and never sent anywhere.")
@@ -441,7 +443,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
 
     def st_after(code, sal, status="single"):
         tx, ss, med, net = take_home_2026(sal, status)
-        r = state_tax.state_tax(code, sal, status)
+        r = state_tax.state_tax(code, sal, status, 0, tx)
         return tx, ss + med, r, net - r["total"] + 1e-6              # half a dollar rounds up, as in the calculator
     st_row = lambda c: (lambda a: f'<tr><td><a href="{P}/tools/take-home-pay/{ST[c]["slug"]}/">{_e(ST[c]["name"])}</a></td><td>${a[2]["tax"]:,.0f}</td><td>${a[2]["pay_total"]:,.0f}</td><td><strong>${a[3]:,.0f}</strong></td><td>${a[3] / 12:,.0f}</td></tr>')(st_after(c, 75000))
 
@@ -459,7 +461,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "married filing jointly: $24,800, $100,800, $211,400, $403,550, $512,450, $768,700 and above). Source: IRS Revenue Procedure 2025-32.</li>"
          "<li><strong>Social Security</strong>: 6.2% of wages up to $184,500 (the 2026 wage base, Social Security Administration).</li>"
          "<li><strong>Medicare</strong>: 1.45% of all wages, plus 0.9% above $200,000 single or $250,000 married filing jointly.</li>"
-         f"<li><strong>State income tax</strong>, if you choose a state: its 2026 brackets, standard deduction, exemption and credit, read from the state’s own pages, and the payroll deductions it charges employees. Each state’s page lists its figures and sources. Still to come: {state_tax.WAITING}.</li></ul>"
+         f"<li><strong>State income tax</strong>, if you choose a state: its 2026 brackets, standard deduction, exemption and credit, and the payroll deductions it charges employees. Each state’s page lists its figures and sources, and says so where the state’s own site could not be opened. Still to come: {state_tax.WAITING}.</li></ul>"
          "<p>Not included: city and county taxes, credits (child tax credit and others), itemized deductions, bonuses taxed at a flat rate, and benefits taken from pay "
          "such as health insurance. Your employer’s withholding can differ a little from this year-end figure. This is an estimate, not tax advice.</p>",
          [("How much is $75,000 a year after taxes?", "For a single filer with no pre-tax contributions, $61,593 a year after 2026 federal income tax ($7,670), Social Security ($4,650) "
@@ -486,7 +488,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
              "and Medicare (1.45%, plus 0.9% above $200,000). Enter your own figures above for another salary, married filing jointly or pre-tax contributions.</p>"
              f'<h3>$75,000 a year, state by state</h3><p>A single filer with no pre-tax contributions. Each state links to its own paycheck calculator, figures and sources.</p>'
              '<div class="tablewrap"><table class="rkt"><tr><th>State</th><th>State income tax</th><th>State payroll deductions</th><th>Take-home a year</th><th>A month</th></tr>'
-             + "".join(st_row(c) for c in ST) + f'</table></div><p class="note">Still to come, once every figure is confirmed on the state’s own pages and its special rules are built: {state_tax.WAITING}.</p>'))
+             + "".join(st_row(c) for c in ST) + f'</table></div><p class="note">Still to come, once their special rules are built and their figures agree: {state_tax.WAITING}.</p>'))
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",
@@ -2354,6 +2356,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         if x["note"]: facts.append(("Good to know", x["note"]))
         how = (('<div class="st-tabs">' + "".join(f'<div><p class="tl-t">{lab} taxable income</p><div class="tablewrap"><table><tr><th>Taxable income</th><th>Rate</th></tr>{band(x[k_]["b"])}</table></div></div>' for k_, lab in (("single", "Single:"), ("joint", "Married filing jointly:"))) + "</div>") if has_tax else f"<p>{_e(name)} does not tax wages.</p>")
         how += ('<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{_e(k_)}</th><td>{_e(v_)}</td></tr>" for k_, v_ in facts) + "</table></div>" if facts else "")
+        how += ("<p>The state’s own site could not be opened for this check, so these figures come from excerpts of its official documents and from the Tax Foundation’s table of state tax rates. Compare them with the state’s pages before relying on them.</p>" if x.get("secondary") else "")
         how += f'<p class="note">Tax year {x["year"]}, read {state_tax.READ}. Sources: ' + " · ".join(f'<a href="{_e(u_)}" rel="noopener">{_e(l_)}</a>' for l_, u_ in x["src"]) + ". An estimate, not tax advice.</p>"
         others = '<p class="rel">' + "".join(f'<a href="{P}/tools/take-home-pay/{o["slug"]}/">{_e(o["name"])}</a>' for c_, o in ST.items() if c_ != code) + "</p>"
         lead = (f"{name} has {says}. Enter your salary to see your paycheck after federal income tax, Social Security and Medicare" + (f", {name} income tax" if has_tax else "") + (f" and {pays}" if pays else "")

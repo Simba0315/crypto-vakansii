@@ -1411,7 +1411,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             # when ten postings state one, else the month, as on a list with no pay.
             # Lists of work that is paid by the hour show the hourly range, not a yearly one (search check, 18 Nov 2026: for
             # "part time jobs" and "night shift jobs" every first result leads with dollars an hour; ours said "$76K–$145K").
-            if path in HOURLY_LISTS and "$" not in title:
+            if (path in HOURLY_LISTS or re.fullmatch(r"locations/[^/]+/part-time/", path)) and "$" not in title:
                 hr_l = sorted((lo + hi) / 2 for j in jobs if (hh_ := usd_hourly(j.get("salary"))) for lo, hi in [hh_])
                 if len(hr_l) >= 15: pay_l = f", ${hr_l[len(hr_l) // 4]:,.0f}–${hr_l[3 * len(hr_l) // 4]:,.0f} an hour"
             m_pl = PATH_PLACE.match(path)
@@ -2502,6 +2502,13 @@ def main():
         short = name.removeprefix("the ")
         add(f"locations/{slug}/remote/", f"Remote jobs in {name}", [j for j in pj if j["remote"]], (("Locations", "locations/"), (short, f"locations/{slug}/")),
             f"loc={slug}&remote=1", "remote ", f" in {e(name)}", [("place:" + slug, "Remote"), ("remote", f"Remote in {short}")])
+        # "part time jobs in <city>", "entry level jobs in <city>", "internships in <city>": some of the most searched forms of a city query
+        for h_, seg_, pick_, qs_, pre_, lab_ in (("Part-time jobs", "part-time", lambda j: j.get("etype") == "Part-time", "etype=Part-time", "part-time ", "Part-time"),
+                                                 ("Entry-level jobs", "entry-level", lambda j: j.get("entry"), "entry=1", "entry-level ", "Entry-level"),
+                                                 ("Internships", "internships", lambda j: j.get("etype") == "Internship", "etype=Internship", "internship ", "Internships"),
+                                                 ("Contract jobs", "contract", lambda j: j.get("etype") == "Contract", "etype=Contract", "contract ", "Contract")):
+            add(f"locations/{slug}/{seg_}/", f"{h_} in {name}", [j for j in pj if pick_(j)], (("Locations", "locations/"), (short, f"locations/{slug}/")),
+                f"loc={slug}&{qs_}", pre_, f" in {e(name)}", [("place:" + slug, lab_)])
         for cs, cname in CAT.items():
             if cs == OTHER[0]: continue
             # The words people type (search check, 18 Nov 2026: the query is "finance jobs atlanta", every first result is titled
@@ -2632,7 +2639,7 @@ def main():
     for path, h1, js, trail, qs, pre, post in combos:
         # these lists had the list and nothing else (SERP_WORK rows 10, 11, 13, 14, 17: "only 1 H2"); the views the big pages have
         seg_ = path.strip("/").split("/")
-        lab_ = h1[0].lower() + h1[1:] if h1.split()[0] in ("Remote", "Senior", "Junior", "Internship", "Lead", "Jobs", "Entry-level") else h1
+        lab_ = h1[0].lower() + h1[1:] if h1.split()[0] in ("Remote", "Senior", "Junior", "Internship", "Internships", "Lead", "Jobs", "Entry-level", "Part-time", "Contract") else h1
         # "Software engineer jobs in London" -> "software engineer jobs in London"; a heading that starts with another word ("Remote
         # software engineer jobs") is already lower-cased above (it used to come out as "software engineerngineer roles")
         if seg_[0] == "roles" and seg_[1] in by_role and h1.startswith(by_role[seg_[1]][0]): lab_ = rlow(by_role[seg_[1]][0]) + h1[len(by_role[seg_[1]][0]):]
@@ -4208,6 +4215,15 @@ def main():
                             + f'<p class="note">Counted from the text of the {len(pj):,} open postings that mention visa sponsorship; many name no visa type. Always confirm with the employer.</p>')
         if cos_:
             out_ += section("Companies that mention sponsorship most", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in cos_) + "</ul>")
+        out_ += section("How do I find an employer that sponsors a visa?", '<ol class="steps">'
+                        "<li><b>Start with postings that say it.</b> The list on this page holds jobs whose text mentions sponsorship. Read the wording: some offer it, and some say it is not available.</li>"
+                        "<li><b>Check the employer in the official list for the country.</b> The table below links to the government’s own records.</li>"
+                        "<li><b>Ask before you spend time.</b> In the first conversation, ask whether this role can be sponsored and for which visa. A past sponsorship does not promise one for this job.</li></ol>"
+                        '<div class="tablewrap"><table><tr><th>Country</th><th>Official list</th><th>What it shows</th></tr>'
+                        '<tr><td>United States</td><td><a href="https://www.uscis.gov/tools/reports-and-studies/h-1b-employer-data-hub" rel="noopener">H-1B Employer Data Hub</a></td><td>Employers that have filed H-1B petitions, searchable by name</td></tr>'
+                        '<tr><td>United Kingdom</td><td><a href="https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers" rel="noopener">Register of licensed sponsors</a></td><td>Organisations licensed to sponsor workers</td></tr>'
+                        '<tr><td>Netherlands</td><td><a href="https://ind.nl/en/public-register-recognised-sponsors" rel="noopener">Register of recognised sponsors</a></td><td>Organisations the immigration service has approved, including for work</td></tr>'
+                        '<tr><td>Canada</td><td><a href="https://www.canada.ca/en/employment-social-development/services/foreign-workers/reports.html" rel="noopener">Positive LMIA employers list</a></td><td>Employers that received a positive Labour Market Impact Assessment</td></tr></table></div>')
         return out_
     lap('Perks, employment type, work from anywhere')
     # Perks, employment type, work from anywhere
@@ -6117,15 +6133,23 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              + section("Questions about this test", '<dl class="qa">' + "".join(f"<div><dt>{e(a_)}</dt><dd>{e(b_)}</dd></div>" for a_, b_ in iqa) + "</dl>")
              + '<p class="rel chips">More tests: ' + " ".join(f'<a href="{P}/skill-tests/{o_}/">{e(quiz_pages.QUIZZES[o_]["name"])}</a>' for o_ in quiz_pages.QUIZZES if o_ != qs_) + f' <a href="{P}/skill-tests/">All tests</a></p>', head=ild)
         sk_cards.append((qs_, q_["name"], q_["plain"], sk_n))
+    sk_names = [nm_ for _, nm_, _, _ in sk_cards]
+    sk_qa = [("Are these skill tests free?", "Yes. There is no sign-up and no payment, and your answers are scored in your browser, so they are not sent anywhere."),
+             ("Do I get a certificate?", "No. These tests are for checking yourself before an interview. Each result shows your score by topic, the right answers and the reason behind them."),
+             ("Which test should I take first?", "The one for the skill the job posting names first. If you are not applying yet, start with the skill that appears most often in the postings you would apply to."),
+             ("What score is good enough?", "There is no official pass mark. Look at the score by topic instead: study the topics you missed, then take the test again and try to explain each answer in your own words.")]
+    sk_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sk_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("skill-tests/", f"Skill Tests for Job Interviews: SQL, Excel, Python and More | {SITE}",
-         "Free tests of 24 questions, beginner to advanced, for the skills employers ask for most: SQL, Excel, Python, JavaScript, React, Linux and Docker. Scored in your browser by topic, with the reason behind each answer.",
+         f"Free tests of 24 questions, beginner to advanced, for skills employers ask for: {', '.join(sk_names[:-1])} and {sk_names[-1]}. Scored in your browser by topic, with reasons.",
          crumbs(("Skill tests", "")) + '<h1>Skill tests: <span class="hl">check yourself before the interview</span></h1>'
          '<p class="lead">A first interview often starts with questions on the skills listed in the posting. These tests cover the questions that come up most, so you find your gaps at home and not in the call. Free, no sign-up, nothing leaves your browser.</p>'
          + nums([("Free", "no sign-up, scored in your browser"), (f"{len(sk_cards)}", "tests, one skill each"),
                  (f"{sum(len(q_['qs']) for q_ in quiz_pages.QUIZZES.values()):,}", "questions in all, beginner to advanced"), ("10 to 15 min", "to finish one test")], src=False)
          + '<p class="plain"><b>In plain words:</b> a skill test is a short quiz. You answer 24 questions about one skill, such as SQL or Excel, and see which answers were right, why, and your score by topic.</p>'
          '<div class="feats">' + "".join(f'<a class="feat" href="{P}/skill-tests/{s_}/"><h2>{e(nm_)} test</h2><p>{e(pl_)}' + (f" {k_:,} open jobs name it today." if k_ else "") + "</p></a>" for s_, nm_, pl_, k_ in sk_cards) + "</div>"
-         f'<p class="note">After the test: <a href="{P}/interview-questions/">interview questions by job</a>, the <a href="{P}/resume/">resume builder</a> and the <a href="{P}/tools/resume-match/">resume match</a>.</p>', cls="hub")
+         + section("Questions about these skill tests", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sk_qa) + "</dl>")
+         + f'<p class="note">After the test: <a href="{P}/interview-questions/">interview questions by job</a>, the <a href="{P}/resume/">resume builder</a> and the <a href="{P}/tools/resume-match/">resume match</a>.</p>', head=sk_ld, cls="hub")
 
     lap('Guides: the blog. The owner asked whether the site needs one')
     # Guides: the blog. The owner asked whether the site needs one after looking at the blogs of hh.ru and Indeed. Theirs are written
@@ -7203,6 +7227,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div>', label="Three rules")
+         + section("What is [[free]] in this resume builder", '<div class="tablewrap"><table class="kv">'
+                   + "".join(f"<tr><th>{k_}</th><td>{v_}</td></tr>" for k_, v_ in (("PDF download", "Free"), ("Word download", "Free"), ("Account", "None needed"), ("Watermark", "None"), ("Templates", "All 6 free"), ("Your resume", "Stays in this browser"), ("Matching it to open jobs", "Free")))
+                   + f'</table></div><p class="note">Many builders are free to write in and ask for payment at the download. <a href="{P}/free-resume-builders/">See what {len(builders_check.BUILDERS)} builders’ own pages say</a>.</p>', label="No catch")
          + section("Questions about [[this resume builder]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rb_qa) + "</dl>", label="Questions") + "</div>"
          + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>', head=rb_ld, cls="sp rbp")
 
