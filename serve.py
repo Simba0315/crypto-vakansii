@@ -253,7 +253,7 @@ class Handler(SimpleHTTPRequestHandler):
         if os.environ.get("HRN_QUIET") != "1": super().log_message(fmt, *args)
 
 
-CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "search_engine.py", "dedupe.py", "config.json")]
+CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "search_engine.py", "dedupe.py", "config.json", "texts.py")]
 
 
 def watch(seen):

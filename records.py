@@ -10,6 +10,8 @@ out once per build; they are stored next to the records in the table ctx and loa
 import collections, datetime, html, json, os, re, sqlite3, threading, time
 from pathlib import Path
 
+import texts
+
 SCHEMA = """
 CREATE TABLE jobs (slug TEXT PRIMARY KEY, id TEXT NOT NULL, active INTEGER NOT NULL, company TEXT NOT NULL, cat TEXT NOT NULL,
                    first_seen TEXT NOT NULL, rec TEXT NOT NULL, descr TEXT NOT NULL);
@@ -206,7 +208,8 @@ class Store:
             row = self.con.execute("SELECT rec, descr FROM jobs WHERE slug = ?", (slug,)).fetchone()
         if row is None: return None
         j = json.loads(row[0])
-        if row[1]: j["desc"] = row[1]
+        text = row[1] or (texts.get(j.get("id")) if self.live else "")
+        if text: j["desc"] = text
         return j
 
     def page(self, slug):
@@ -222,7 +225,9 @@ class Store:
                 row = live[0][:2]                       # a job live.py found after the last upload
             if row is None: return None
             j = json.loads(row[0])
-            if row[1]: j["desc"] = row[1]
+            # the record's own text, else on our server the one texts.py kept (the record keeps texts of recent postings only)
+            text = row[1] or (texts.get(j.get("id")) if self.live else "")
+            if text: j["desc"] = text
             if live and live[0][2] and j.get("active"):  # live.py saw it leave its board: closed now, not at the next upload
                 j.update(active=False, closed=live[0][2])
             b, out = self.b, {}

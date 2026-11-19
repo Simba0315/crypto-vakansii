@@ -29,7 +29,7 @@ and the [methodology](https://jobseveryhour.com/methodology/).
 `collect.py` reads the public hiring feeds listed in the `sources*.json` files and compares each list with the last reading: a job
 that is new gets its first-seen time, a job that is missing is closed. `build.py` generates the site; `check.py` verifies every kind
 of page against a quality checklist; `records.py` and `serve.py` serve job pages from records on the server; `live.py` re-reads the
-boards between builds. A GitHub Actions workflow runs the collection and the build every hour and uploads the result.
+boards between builds; `texts.py` keeps the full text of every open job on the server, so every job page carries Google's job markup. A GitHub Actions workflow runs the collection and the build every hour and uploads the result.
 `server/` holds the accounts API (job alerts, saved jobs, employer accounts). Details: `AGENT_NOTES.md`.
 
 Company names and logos belong to their owners and are shown only to identify the employer.

@@ -42,7 +42,7 @@ def give_back():
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
-import build, collect, dedupe, search_engine            # noqa: E402
+import build, collect, dedupe, search_engine, texts     # noqa: E402
 
 JOBS_DB = ROOT / "data" / "jobs.db"
 LIVE_DB = Path(os.environ.get("HRN_LIVE_DB") or ROOT.parent / "live.db")
@@ -53,7 +53,15 @@ SLOW = collect.SLOW_ATS                                  # one request per 20 or
 # 15 since 17 Nov 2026 (5 before): GitHub starts the hourly run only 4 or 5 times a day, so the backlog of a newly added board was
 # filled mostly from here, 5 texts an hour: a board with 1,000 jobs took a week. 15 an hour is still one request every few minutes
 # to an employer's site.
-collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15)
+# Full texts for every job page's Google markup (texts.py, 19 Nov 2026). Here every posting keeps its whole text, whenever it was
+# published: the 14-day limit (collect.DESC_SINCE) is for the data file of the hourly run on GitHub, not for our server.
+collect.DESC_SINCE = ""
+# For a job the site has without its text, the text is read on the next read of its board: at most TEXTS_SLOW of them per read on
+# Workday, SmartRecruiters and JazzHR (one request each, after the postings new to the site; 891 Workday boards lacked 103,000 texts
+# on 19 Nov 2026, at most 905 on one board: a day of hourly reads), at most TEXTS_LIST elsewhere (the text is in the list already;
+# only the parsing costs, so a board of thousands is spread over a few reads).
+TEXTS_SLOW, TEXTS_LIST = 40, 500
+collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 24)
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
@@ -91,6 +99,8 @@ class Live:
         self.con.execute("PRAGMA journal_mode=WAL")
         self.stamp, self.alias, self.idx = None, None, None
         self.known, self.by_co, self.slugs = {}, {}, set()
+        self.texts = texts.Keeper(texts.DB if write else ":memory:")
+        self.textless, self.pruned = set(), ""                 # open jobs whose text the hourly record lacks; the day texts were last pruned
 
     # --- the hourly record ---------------------------------------------------------------------------------------------------
     def reload(self):
@@ -100,22 +110,24 @@ class Live:
         if st == self.stamp: return False
         # The old tables go first: built beside them, the new ones doubled what this program needed at every upload. Nothing reads them
         # meanwhile (apply runs in this same thread), and if reading the file fails the program stops and systemd starts it again.
-        self.known, self.by_co, self.slugs, self.idx, self.stamp = {}, {}, set(), None, None
+        self.known, self.by_co, self.slugs, self.idx, self.stamp, self.textless = {}, {}, set(), None, None, set()
         give_back()
         con = sqlite3.connect(f"file:{JOBS_DB}?mode=ro", uri=True)
-        known, by_co, slugs = {}, {}, set()
+        known, by_co, slugs, textless = {}, {}, set(), set()
         idx = dedupe.Index(lambda loc: {c for c, _ in build.countries_of(loc)})
         still_open = set()
         fields = ", ".join(f"CASE WHEN active THEN {f} END" for f in dedupe.JOB_FIELDS)
-        for jid, slug, company, active, title, location, remote, url in con.execute(f"SELECT id, slug, company, active, {fields} FROM jobs"):
+        for jid, slug, company, active, bare, title, location, remote, url in con.execute(
+                f"SELECT id, slug, company, active, CASE WHEN active THEN {texts.BYTES}(descr) = 0 END, {fields} FROM jobs"):
             known[jid] = slug
             slugs.add(slug)
             if active:
                 still_open.add(jid)
                 by_co.setdefault(company, set()).add(jid)
                 idx.add(slug, company, title or "", location or "", bool(remote), url or "", {"id": jid})
+                if bare: textless.add(jid)
         con.close()
-        self.known, self.by_co, self.slugs, self.idx, self.stamp = known, by_co, slugs, idx, st
+        self.known, self.by_co, self.slugs, self.idx, self.stamp, self.textless = known, by_co, slugs, idx, st, textless
         dropped = 0
         for jid, slug, closed in self.con.execute("SELECT id, slug, closed FROM live").fetchall():
             if jid in known and closed and jid in still_open:
@@ -129,6 +141,16 @@ class Live:
                 self.slugs.add(slug)
                 idx.add(slug, r["company"], r["title"], r.get("location", ""), r.get("remote", False), r.get("url", ""), {"id": jid})
         idx.done()
+        if self.write:
+            try:
+                copied, today = self.texts.take_from(JOBS_DB), datetime.date.today().isoformat()
+                if self.pruned != today:
+                    gone = self.texts.prune(still_open | {i for (i,) in self.con.execute("SELECT id FROM live WHERE closed = ''")})
+                    self.pruned = today
+                    if gone: log(f"texts: {gone:,} of jobs closed for {texts.KEEP_CLOSED} days dropped")
+                log(f"texts: {copied:,} copied from the hourly record, {self.texts.count():,} kept; {len(textless):,} open jobs lack theirs in the record")
+            except sqlite3.Error as ex:
+                log(f"texts: {type(ex).__name__}: {ex}")
         del still_open
         give_back()
         log(f"hourly record: {len(known):,} jobs, {idx.size:,} open; {dropped} live entries now in it")
@@ -161,10 +183,27 @@ class Live:
     def skip_known(self, src):
         """For collect.fetch (its "reuse"): a posting the site already has, in the hourly record or open in the live store, needs no
         parsing and, on Workday and SmartRecruiters, no request for its text. apply() only needs its id. Made in the main thread,
-        because the live store's connection belongs to it."""
-        known = self.known
-        live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (src["name"],))}
-        return lambda jid, h=None: {"id": jid, "title": "-", "url": "-"} if jid in known or jid in live_ids else None
+        because the live store's connection belongs to it.
+
+        The exception is a job whose full text neither the record nor texts.db has (texts.py): a few of those each read (TEXTS_SLOW,
+        TEXTS_LIST) are read in full, and apply() keeps their text. Workday's reader asks twice before it reads a posting's page
+        (details_from), so such a job gets "nothing kept" twice; a third question means its page was not read this time, and the
+        stand-in keeps the job open (a job missing from what a read returns is closed)."""
+        known, name = self.known, src["name"]
+        live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (name,))}
+        need = (self.by_co.get(name, set()) & self.textless) | {jid for (jid,) in self.con.execute(
+            "SELECT id FROM live WHERE company = ? AND closed = '' AND descr = ''", (name,))}
+        if need: need -= self.texts.have(name)
+        budget, asked = TEXTS_SLOW if src.get("ats") in SLOW else TEXTS_LIST, {}
+
+        def reuse(jid, h=None):
+            if jid in need:
+                n = asked.get(jid, 0)
+                if n < 2 and (n or len(asked) < budget):
+                    asked[jid] = n + 1
+                    return None
+            return {"id": jid, "title": "-", "url": "-"} if jid in known or jid in live_ids else None
+        return reuse
 
     def slug_for(self, j):
         base = f"{collect.slugify(j['title'])}-{collect.slugify(j['company'])}"
@@ -187,12 +226,15 @@ class Live:
             seen.add(j["id"])
             if j["id"] in shut and j["id"] in self.known:
                 back.append(j["id"]); continue          # we closed it and the board lists it again
-            if j["id"] in self.known or j["id"] in live_ids: continue
+            if j["id"] in self.known or j["id"] in live_ids:
+                if j.get("desc") and self.write: self.texts.put(j["id"], name, j["desc"])      # a text skip_known asked for
+                continue
             ats = j["id"].split("-", 1)[0]
             if any(m.get("id") != j["id"] and (m.get("id", "").split("-", 1)[0] != ats or m["why"] == "the same link to apply")
                    for m in self.idx.find(j["company"], j["title"], j["location"], j["remote"], j["url"], limit=3)):
                 dup += 1; continue          # the same job from another source (or the same link): two postings on one board are two jobs
             desc = j.pop("desc", "") or ""
+            if desc and self.write: self.texts.put(j["id"], name, desc)       # kept beyond the live entry, which the next record replaces
             j.update(slug=self.slug_for(j), crypto=bool(src.get("crypto")), first_seen=today, first_seen_at=collect.utc_now(), last_seen=today,
                      active=True, pinned=False, featured=False, entry=j["level"] in ("Junior", "Intern"), pool=bool(build.POOL_RX.search(j["title"])),
                      usd=build.usd_range(j["salary"]), places=build.places_of(j["location"]) if j["location"] else [], live=True)
@@ -343,7 +385,7 @@ def once(n):
     print(f"{len(srcs)} boards in {time.time() - t0:.0f} s: {tot[0]} new, {tot[1]} closed, {tot[2]} duplicates skipped")
 
 
-CODE = [ROOT / f for f in ("live.py", "collect.py", "net.py", "build.py", "dedupe.py", "search_engine.py")]
+CODE = [ROOT / f for f in ("live.py", "collect.py", "net.py", "build.py", "dedupe.py", "search_engine.py", "texts.py")]
 
 
 def watch(seen):
