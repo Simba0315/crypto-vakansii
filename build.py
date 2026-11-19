@@ -2904,12 +2904,19 @@ def main():
             out_ += section(f"Test your {t}", f'<p>A free <a href="{P}/skill-tests/{qk_}/">{e(t)} test</a> of {qn_} questions, beginner to advanced, scored by topic in your browser. '
                             f'Then the <a href="{P}/interview-questions/">interview questions</a> for the job you want.</p>')
         return out_
+    # One page per query (owner, 19 Nov: "SEO is a very popular query and something is off"). Where a skill and a kind of work share
+    # a name (SEO, SAP, Workday…), "<name> jobs" belongs to the kind of work, or to the company of that name; the skill's page is the
+    # list of jobs that ask for the skill, says so in its title, and points to the other page.
+    SKILL_ROLE = {t: tslug(t) for t in by_tag if tslug(t) in by_role}
     for t, js in by_tag.items():
-        listing(f"skills/{tslug(t)}/", f"{t} jobs", f"{t} Jobs ({len(js):,} open) | {SITE}",
+        sr_ = SKILL_ROLE.get(t)
+        listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {t} ({len(js):,} open) | {SITE}" if sr_ else f"{t} Jobs ({len(js):,} open) | {SITE}",
                 f"{roles(len(js))} at companies that ask for {t}.", js,
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
-                trail=(("All jobs", "jobs/"),), feed=True, stats=True, extra=sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t), pics=hub_sections(f"{t} roles", js, "skills,who")[0], hub=hub_sections(f"{t} roles", js, "skills,who")[1], list_title=f"Newest {t} jobs",
-                faq=f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
+                trail=(("All jobs", "jobs/"),), feed=True, stats=True,
+                extra=(f'<p class="note">Looking for jobs whose work is {e(t)} itself? See <a href="{P}/roles/{sr_}/">{len(by_role[sr_][1]):,} {e(rlow(by_role[sr_][0]))} jobs</a>.</p>' if sr_ else "")
+                      + sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t), pics=hub_sections(f"{t} roles", js, "skills,who")[0], hub=hub_sections(f"{t} roles", js, "skills,who")[1], list_title=f"Newest {t} jobs",
+                faq=f"jobs that ask for {t}" if sr_ else f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
                 after=skill_more(t, js) + section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     lap('Which kinds of work sit close to each other: two roles are n')
@@ -2953,7 +2960,10 @@ def main():
         secs = hub_sections(f"{low} roles", rj, "roles,who")        # the employers' tiles stand once, under "Companies hiring ..."
         mids_r = sorted((lo + hi) / 2 for j in rj if j["usd"] for lo, hi in [j["usd"]])
         pay_r = f", {money(mids_r[len(mids_r) // 4])}–{money(mids_r[3 * len(mids_r) // 4])}" if len(mids_r) >= 15 else ""     # the pay range in the title, as the top results show it
-        listing(f"roles/{slug_r}/", f"{rname} jobs", f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r}) | {SITE}",
+        # a kind of work named after a skill that is not also a company (SEO, computer vision, DeFi, AML/KYC) takes "<skill> jobs"
+        sk_q = next((t for t, s_ in SKILL_ROLE.items() if s_ == slug_r and t not in OPEN and t not in ("SAP", "Salesforce", "Workday", "Oracle", "HubSpot", "Zendesk", "Snowflake", "Databricks")), None)
+        r_title = (lambda t1, t2: t1 if len(t1) <= 65 else t2)(f"{sk_q} Jobs ({len(rj):,} open{pay_r}): {tcase(rname)}", f"{sk_q} Jobs ({len(rj):,} open{pay_r})") if sk_q else f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r})"
+        listing(f"roles/{slug_r}/", f"{sk_q} jobs" if sk_q else f"{rname} jobs", f"{r_title} | {SITE}",
                 f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated hourly.",
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
                 trail=(("Categories", "categories/"),), feed=True, stats=True, extra=fam_line + rel(REL["role:" + slug_r], ("roles/", "All roles")), pics=mini_pics(rj) + secs[0], faq=f"{low} jobs",
