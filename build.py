@@ -1487,6 +1487,17 @@ def intern_hub(path, h1, yr, ej):
         else: page(f"{path}{n}/", f"{h1}{yr}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
 
+# What a posting itself says about how soon it hires and what it asks for ("hiring immediately", "no experience jobs"). Recruiters' own
+# postings talk about "immediate hiring needs" and are about other people's jobs, so they are left out.
+IMMEDIATE_RX = re.compile(r"\b(?:start(?:ing)? immediately|immediate start|hiring immediately|immediate hiring(?! needs?)|immediate openings?|urgently hiring|immediately hiring)\b", re.I)
+NO_EXPERIENCE_RX = re.compile(r"\b(?:no (?:prior |previous |relevant |work )?experience (?:is |are )?(?:required|necessary|needed)|experience (?:is )?not required)\b", re.I)
+RECRUITING_TITLE = re.compile(r"recruit|sourc(?:er|ing)|talent|staffing", re.I)
+
+
+def says_so(jobs, rx):
+    return [j for j in jobs if not RECRUITING_TITLE.search(j["title"]) and rx.search(" ".join((j["title"], j.get("excerpt") or "", j.get("desc") or "")))]
+
+
 def pay_shown(pay):
     """"$0 - $125 an hour" in a posting means up to $125 an hour."""
     return re.sub(r"^[$]0 *[-–] *", "Up to ", pay)
@@ -2215,6 +2226,8 @@ def main():
     shot_panels = "".join(f'<ul class="jobs" data-panel="{i_}"{" data-live=home" if i_ == 0 else " hidden"}>{r_}</ul>' for i_, (_, _, r_) in enumerate(shot_tabs))   # "Latest jobs" takes new jobs live (site.js)
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
+    imm_jobs, noexp_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX)
+    say_chips = (f'<a href="{P}/hiring-immediately/">Hiring immediately</a>' if len(imm_jobs) >= 20 else "") + (f'<a href="{P}/no-experience-jobs/">No experience</a>' if len(noexp_jobs) >= 20 else "")
     hero = (f'<section class="hero v2"><div class="wrap">'
             f'<p class="stamp"><i></i>Jobs hiring now · <b>{n:,}</b> open, checked {fdate(TODAY, False)} <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
             # the words people type ("job search": the home pages of Indeed, LinkedIn, ZipRecruiter and Monster stand first for it) are the heading;
@@ -2224,7 +2237,7 @@ def main():
             f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Software engineer, data analyst, customer service…" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
             f'<p class="popular"><a class="pop-tech" href="{P}/tech/">Tech jobs</a>{hero_chips}<a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a>'
-            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/part-time/">Part-time</a><a href="{P}/jobs-near-me/">Jobs near me</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
+            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/part-time/">Part-time</a>{say_chips}<a href="{P}/jobs-near-me/">Jobs near me</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
@@ -2696,7 +2709,7 @@ def main():
                + (f", most in {', '.join(cats104_)}." if cats104_ else ".") + " The remote lists of jobs that pay $100K and $150K or more are linked above."),
               ("Can I earn $500 a day working from home?", f"$500 a day over about 260 working days is $130,000 a year. {n130_:,} open remote jobs state a range that starts at that or more."),
               ("Which remote jobs need no experience?", f"{sum(1 for j in remote if j['entry']):,} remote roles are junior roles or internships; the remote entry-level list has them all. Remote roles for beginners are fewer and draw many applicants, so apply early.")]
-    listing("remote/", "Remote jobs", f"Remote Jobs: {len(remote):,} Hiring Now, Updated Hourly | {SITE}",
+    listing("remote/", "Remote jobs", f"Remote & Work From Home Jobs: {len(remote):,} Hiring Now | {SITE}",
             f"{roles(len(remote), 'remote job')} at companies: engineering, marketing, support, compliance and more.",
             # sections review, batch 4. Two grids of tiles without a heading between them and a lone box of links stood above the jobs
             # (the second screen of a desktop, the fifth of a phone). Now: the count in the first sentence, the other figures as a row,
@@ -2933,9 +2946,18 @@ def main():
         ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
         ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
         if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
+    HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs)) if len(x[3]) >= 20]
     for p_, h_, w_, js_ in HOURS:
         row_h, kw_h = list_parts(h_, js_)
         fq_first, fq_extra = None, ()
+        if p_ == "hiring-immediately/":
+            fq_first = ("Which jobs are hiring immediately?", f"{len(js_):,} open postings here say so in their own words, such as “immediate start” or “hiring immediately”. They are listed newest first, and each links to the employer’s own page.")
+            fq_extra = (("How do I get hired quickly?", "Apply on the day a posting appears, keep your resume to the skills the posting names, and say when you can start. Have your documents ready, and ask how soon the employer decides."),
+                        ("Is a job that hires immediately a scam?", "Usually not, but pressure to decide at once is one of the warning signs. A real employer does not ask you to pay, or to hand over bank details before there is a contract. Our safety page lists the checks."))
+        if p_ == "no-experience-jobs/":
+            fq_first = ("Which jobs need no experience?", f"{len(js_):,} open postings here state in their own words that no experience is required. They are listed newest first, and each links to the employer’s own page.")
+            fq_extra = (("How do I get a job with no experience?", "Lead your resume with what you can already do: studies, projects, volunteering and part-time work, each with a result. Apply to postings that say no experience is required and to entry-level roles."),
+                        ("Is no experience the same as entry level?", "Not quite. An entry-level job is meant for beginners but may still ask for a degree or an internship. These postings say outright that no experience is needed."))
         if p_ == "night-shift/":
             # Search check, 18 Nov 2026 ("night shift jobs"): Google's answer lists the kinds of night work in groups and opens with the
             # night pay premium; "What's a good night shift job?" is the first question people also ask.
@@ -6980,8 +7002,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "the name, member id and verified email LinkedIn gives us if you choose to attach a LinkedIn profile; the address, name and account id Google gives us if you sign in with Google; "
           "the saved jobs, statuses and searches you choose to keep in sync between your devices; the colleagues you add to your company’s team; the jobs you post, with the notes of the person who reviewed them; "
           "the company pages you claim; and how many times a month you used paid AI tools, if you have them (counts only, never what you sent).</p>"
-          "<p>To keep accounts safe we also keep a hash of the session key while you are signed in (30 days at most), one-time links to confirm an address or set a new password "
-          "(only their hash, for 24 hours and 30 minutes), and a hash of the browser description you signed in from, so that a sign-in from a new browser can be reported to you by email.</p>"
+          "<p>To keep accounts safe we also keep a hash of the session key while you are signed in (30 days at most), one-time links to confirm an address, set a new password or sign in by email "
+          "(only their hash, for 24 hours, 30 minutes and 15 minutes), and a hash of the browser description you signed in from, so that a sign-in from a new browser can be reported to you by email.</p>"
         + h2p("Counts, reports and limits")
         + "<p>For jobs posted here and for companies that manage their page here, we count views of a job page and clicks on “Apply”: two numbers per job and day. "
           "To count a visitor once a day, a salted hash of the IP address is kept until the end of that day (UTC), then deleted. "
