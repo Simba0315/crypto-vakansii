@@ -36,14 +36,16 @@ def _rules_text():
 RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
-ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json")
+ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
 # With 134 released boards read on every run (a list of up to 50 pages and 120 texts each, at about a second and a half a request),
 # 12 at a time took 54 minutes of a run and 24 at a time about 25; the run's limit is 55.
-ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6}
-ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1}
+# JazzHR (19 Nov 2026): every customer's board is a subdomain of applytojob.com, one service, so 4 boards at a time and at most four
+# requests a second in all; its pages take a second or two to answer, so in practice it is two or three a second.
+ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4}
+ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.25}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -55,6 +57,9 @@ DETAILS = int(os.environ.get("HRN_DETAILS") or 120)
 FILL_SINCE = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
 LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this many postings of a board (Workday lists 20 per request)
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
+# JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
+# own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
+SLOW_ATS |= {"jazzhr"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -1457,15 +1462,133 @@ def fetch_usajobs(src, reuse=None):
     return name, out
 
 
+# JazzHR (19 Nov 2026, the owner: "find more jobs"). Small and mid-sized US employers' own job boards, each at
+# https://<company>.applytojob.com/apply (sources_jazz.json, "token": the subdomain; discover_jazz.py finds them). robots.txt of
+# app.jazz.co and of every board allows everything but /cb to any crawler. A board is read the way its careers page shows it: the
+# list page gives every open job with its address, title, place and department in one request (JazzHR's five sitemaps, which
+# discover_jazz.py reads, miss some jobs and give a fifth of the rest under an older address that answers "410 Gone"). Each job
+# new to the record costs one more request, its own page, for the text: the JobPosting data in it (date, type, pay, text) when
+# the employer publishes it to search engines, else the page itself. At most DETAILS such pages per board in one read (120 here,
+# 15 in live.py), postings the record has never held first; the rest wait for the next read, as on Workday.
+import net as _net                        # noqa: E402  (net.get_text itself: discover_ats.py swaps collect.get_text for a cache)
+
+JAZZ_JOB = re.compile(r"""https?://([a-z0-9-]+)\.applytojob\.com/apply/([A-Za-z0-9]{6,20})/([^"'?#<\s]*)""")
+JAZZ_LD = re.compile(r"""<script[^>]*application/ld\+json[^>]*>(.*?)</script>""", re.S)
+_jazz_skip = set()                         # postings found not in English since this process started (live.py): not asked for again
+
+
+def jazz_list(page):
+    """The jobs on a JazzHR board's list page: [(id, address, title, place, department)], or None when it is not a board's list."""
+    if page and "This account is no longer active" in page: return []       # the company left JazzHR: its jobs are closed
+    if not page or "resumator-jobboard" not in page: return None
+    found = list(JAZZ_JOB.finditer(page))
+    out, seen = [], set()
+    for i, m in enumerate(found):
+        jid = m.group(2)
+        if jid in seen: continue
+        end = found[i + 1].start() if i + 1 < len(found) else len(page)
+        seg = page[m.end():end]
+        seg = seg[:seg.find("</ul>")] if "</ul>" in seg else seg              # the job's own line of facts, not what follows the list
+        t = re.match(r"""[^>]*>(.*?)</a>""", seg, re.S)
+        title = html.unescape(re.sub(r"<[^>]+>|\s+", " ", t.group(1))).strip() if t else ""
+        if not title: continue
+        seen.add(jid)
+        def field(icon):
+            f = re.search(rf"""<i class=['"]fa {icon}['"]></i>([^<]*)""", seg)
+            return re.sub(r"\s+", " ", html.unescape(f.group(1))).strip() if f else ""
+        place = ", ".join(dict.fromkeys(p.strip() for p in field("fa-map-marker").split(",") if p.strip()))   # "Singapore, Singapore, Singapore"
+        out.append((jid, f"https://{m.group(1)}.applytojob.com/apply/{jid}/{m.group(3)}", title, place, field("fa-sitemap")))
+    return out
+
+
+def jazz_page(page):
+    """What a JazzHR job page says: its JobPosting data when it has some, else the description and attributes of the page itself."""
+    for b in JAZZ_LD.findall(page or ""):
+        try: d = json.loads(b, strict=False)
+        except ValueError: continue
+        if isinstance(d, dict) and d.get("@type") == "JobPosting" and d.get("description"): return d
+    m = re.search(r"""id=["']job-description["'][^>]*>(.*?)(?:<div[^>]*resumator-mobile-apply-wrapper|<div[^>]*id=["']job-application-form-container)""", page or "", re.S)
+    if not m: return {}
+    def attr(name):
+        a = re.search(rf"""title=["']{name}["'][^>]*>\s*(?:<i[^>]*></i>)?([^<]*)""", page)
+        return re.sub(r"\s+", " ", html.unescape(a.group(1))).strip() if a else ""
+    return {"description": re.sub(r"(?:\s*</div>)+\s*$", "", m.group(1)), "employmentType": attr("Type"), "department": attr("Department")}
+
+
+def jazz_pay(d):
+    """baseSalary of a JobPosting as text tidy_pay reads ("100000 - 120000 USD", "18 - 22 USD per hour"), or ""."""
+    s = d.get("baseSalary") if isinstance(d.get("baseSalary"), dict) else {}
+    v = s.get("value") if isinstance(s.get("value"), dict) else {"value": s.get("value")}
+    try:
+        lo, hi = float(v.get("minValue") or v.get("value") or 0), float(v.get("maxValue") or v.get("value") or 0)
+    except (TypeError, ValueError):
+        return ""
+    if lo <= 0 or hi < lo: return ""
+    num = lambda x: f"{x:.2f}" if x < 1000 else f"{x:.0f}"           # hourly pay keeps its cents
+    return (f"{num(lo)} - {num(hi)}" if hi > lo else num(lo)) + f" {s.get('currency') or v.get('currency') or 'USD'}{per_unit(v.get('unitText'))}"
+
+
+def fetch_jazzhr(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    src["not_english"] = 0
+    polite("jazzhr")
+    jobs = jazz_list(_net.get_text(f"https://{tok}.applytojob.com/apply", 60, accept="text/html", compressed=True))
+    if jobs is None: return name, None                     # no answer, or not a board: the company stays as it was
+    out, wait = [], []
+    for jid, url, title, place, dept in jobs:
+        raw = {"url": url, "title": title, "place": place, "dept": dept}
+        full_id = f"jazzhr-{slugify(name)}-{jid}"
+        if reuse and (rec := reuse(full_id, fingerprint(raw))) is not None:
+            out.append(rec); continue
+        old, rh = (reuse(full_id) if reuse else None), raw_hash(raw)
+        # unchanged on the list and only these rules changed: keep the record rather than ask for the page again (as on Workday)
+        if old is not None and old.get("rh", rh) == rh and not REREAD:
+            old["rh"] = rh; out.append(old); continue
+        wait.append((old is not None, jid, url, title, place, dept, raw, rh, full_id))
+    asked = 0
+    for _, jid, url, title, place, dept, raw, rh, full_id in sorted(wait, key=lambda w: w[0]):
+        rec = None
+        if asked < DETAILS and full_id not in _jazz_skip:
+            asked += 1
+            polite("jazzhr")
+            d = jazz_page(_net.get_text(url, 40, accept="text/html", compressed=True))
+            desc = str(d.get("description") or "")
+            if "<" not in desc and "&lt;" in desc: desc = html.unescape(desc)        # markup written as text inside the JSON
+            text = strip_html(desc)
+            if not d:
+                pass                                       # gone since the list was read, or no answer: asked again next time
+            elif not english(f"{title}\n{text}"):
+                src["not_english"] += 1; _jazz_skip.add(full_id)
+            else:
+                lt = d.get("jobLocationType")
+                remote = "TELECOMMUTE" in (lt if isinstance(lt, list) else [lt])
+                if not place:                              # the list names no place: the JobPosting's addresses, if any
+                    locs = d.get("jobLocation") if isinstance(d.get("jobLocation"), list) else [d.get("jobLocation")]
+                    addrs = [l["address"] for l in locs if isinstance(l, dict) and isinstance(l.get("address"), dict)]
+                    parts = [", ".join(str(a[k]).strip() for k in ("addressLocality", "addressRegion", "addressCountry") if str(a.get(k) or "").strip())
+                             for a in addrs[:3]]
+                    place = "; ".join(dict.fromkeys(p for p in parts if p))
+                kind = d.get("employmentType")
+                kind = " ".join(kind) if isinstance(kind, list) else str(kind or "")
+                rec = parse(name, "jazzhr", jid, title, url, place, remote, dept or d.get("department") or "", str(d.get("datePosted") or "")[:10],
+                            text, jazz_pay(d), kind, desc)
+                if rec is not None: rec["h"], rec["rh"] = fingerprint(raw), rh
+        if rec is None and reuse: rec = reuse(full_id)
+        if rec is not None: out.append(rec)
+    return name, out
+
+
 _fetch_any = fetch
+READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr}      # the systems read outside fetch_feed
 
 
-def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS)
-    if src.get("ats") == "usajobs":
-        gate = _gate.get("usajobs")
+def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)
+    read = READERS.get(src.get("ats"))
+    if read:
+        gate = _gate.get(src.get("ats"))
         try:
             if gate: gate.acquire()
-            return fetch_usajobs(src, reuse)
+            return read(src, reuse)
         except Exception as ex:
             print(f"feed error for {src.get('name')}: {type(ex).__name__}: {ex}")
             return src["name"], None
