@@ -756,11 +756,29 @@ def with_toc(path, body):
 ACCT_HEAD = (f'<a class="hsign" id="hsign" href="{P}/account/" data-api="{e(CFG["api_url"])}">Sign in</a>' if CFG.get("api_url") else "")
 
 
+# The first screen of the content pages (examples, guides by job, salaries, comparisons…) as one framed panel, the way the lists and the
+# key pages open (design, step 2, 19 Nov 2026). The trail, a label, the heading, the opening paragraph and the row of figures go into
+# the panel; the rest of the page is untouched. Only the page kinds named here, and only when the page opens in that order.
+FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover letter example", "cv-examples": "CV example", "job-descriptions": "Job description",
+               "how-to-become": "Career guide", "how-to-hire": "Hiring guide", "interview-questions": "Interview questions", "salaries": "Salary",
+               "compare": "Compare", "insights": "Insight", "vs": "Compared", "relocate": "Relocate", "jobs-for": "Jobs for…",
+               "resignation-letters": "Resignation letter", "resume-words": "Resume words", "skill-tests": "Skill test", "locations": "Places"}
+FRAME_RX = re.compile(r'^(<div class="has-toc"><div class="toc-main">)?(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(<p class="(?:lead|tldr)[^"]*">.*?</p>)((?:<dl class="nums">.*?</dl>)?)', re.S)
+def frame_first(path, body):
+    seg = path.strip("/").split("/")
+    if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
+    if len(seg) == 1 and seg[0] in ("locations",): return body
+    m = FRAME_RX.match(body)
+    if not m: return body
+    pre, cr, h1, lead, nums = (g or "" for g in m.groups())
+    return pre + f'<div class="khero phero"><div class="khero-t">{cr}<p class="sec-label">{FRAME_LABEL[seg[0]]}</p>{h1}{lead}</div>{nums}</div>' + body[m.end():]
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls=""):
     """cls: a class on <main> ("lp" on list pages, "hub" on directory pages): the styles of the sections review are scoped by it,
     so job pages, built by the same function, keep their look."""
     url = f"{FULL}/{path}"
-    body = with_toc(path, body)
+    body = frame_first(path, with_toc(path, body))
     title, desc = fit_title(title), fit_desc(desc)
     if '"BreadcrumbList"' not in head:                 # every page with a visible trail carries the same trail as markup
         m_ = CRUMB_RX.search(body)
