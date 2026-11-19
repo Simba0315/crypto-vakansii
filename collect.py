@@ -1615,9 +1615,14 @@ def detail_board(src, reuse, ats, items, read):
 # its careers page reads: every published position with its place, remote flag, type, date and pay. The text is on the position's
 # own page, in the JobPosting data it publishes for search engines. robots.txt of a board (19 Nov 2026) keeps crawlers out of
 # /css, /fonts, /stylesheets and /javascripts only.
+def _nm(x):
+    """A field Breezy gives either as {"name": ...} or as plain text."""
+    return str((x.get("name") if isinstance(x, dict) else x) or "").strip()
+
+
 def breezy_place(loc):
     loc = loc if isinstance(loc, dict) else {}
-    parts = [str(loc.get("city") or "").strip(), str((loc.get("state") or {}).get("name") or "").strip(), str((loc.get("country") or {}).get("name") or "").strip()]
+    parts = [_nm(loc.get("city")), _nm(loc.get("state")), _nm(loc.get("country"))]
     return ", ".join(dict.fromkeys(p for p in parts if p)) or str(loc.get("name") or "").strip()
 
 
@@ -1630,10 +1635,10 @@ def fetch_breezy(src, reuse=None):
     for p in d:
         if not isinstance(p, dict) or not p.get("id") or not p.get("name") or not p.get("url"): continue
         locs = [l for l in (p.get("locations") or [p.get("location")]) if isinstance(l, dict)]
-        rd = [str((l.get("remote_details") or {}).get("value") or "") for l in locs]
+        rd = [str((l.get("remote_details") if isinstance(l.get("remote_details"), dict) else {}).get("value") or "") for l in locs]
         items.append((p["id"], {"url": p["url"], "title": p["name"], "place": "; ".join(dict.fromkeys(x for x in map(breezy_place, locs[:4]) if x)),
                                 "remote": any(l.get("is_remote") for l in locs) and "hybrid" not in rd, "hybrid": "hybrid" in rd,
-                                "type": str((p.get("type") or {}).get("name") or ""), "dept": str(p.get("department") or ""),
+                                "type": _nm(p.get("type")), "dept": _nm(p.get("department")),
                                 "posted": str(p.get("published_date") or ""), "pay": str(p.get("salary") or "")}))
 
     def read(jid, raw):

@@ -79,7 +79,11 @@ def read_cc(out_dir, crawls):
                 body = get(base + f"&output=json&fl=url&page={p}")
                 time.sleep(2)
                 if body is None: print(f"{crawl} {name} page {p}: failed", flush=True); continue
-                urls = [json.loads(l).get("url", "") for l in body.splitlines() if l.startswith("{")]
+                urls = []
+                for l in body.splitlines():
+                    if not l.startswith("{"): continue
+                    try: urls.append(json.loads(l).get("url", ""))
+                    except ValueError: pass                 # a line cut short when the index answered in part
                 f.write_text("\n".join(urls))
                 print(f"{crawl} {name} page {p + 1}/{pages}: {len(urls)} addresses", flush=True)
 
@@ -249,7 +253,7 @@ def verify_detail(ats, tok):
     if not isinstance(posts, list): return None, "feed not readable"
     if len(posts) < 3: return None, f"{len(posts)} jobs"
     if ats == "breezy":
-        name = clean_name(str(((posts[0] if isinstance(posts[0], dict) else {}).get("company") or {}).get("name") or ""))
+        name = clean_name(collect._nm((posts[0] if isinstance(posts[0], dict) else {}).get("company")))
     else:
         collect.polite(ats)
         info = net.get_json(f"https://{tok}.bamboohr.com/careers/company-info", 30) or {}

@@ -1,0 +1,7142 @@
+[
+{
+"name": "American Logistics Authority",
+"ats": "breezy",
+"token": "american-logistics-authority",
+"count": 2760,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "one driver job posted in thousands of places"
+},
+{
+"name": "ThirdChannel",
+"ats": "breezy",
+"token": "thirdchannel-inc",
+"count": 666,
+"lands": [
+"US",
+"CY"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "gig merchandising in every town"
+},
+{
+"name": "Kimmel & Associates",
+"ats": "breezy",
+"token": "kimmel-associates",
+"count": 504,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "an executive search firm"
+},
+{
+"name": "KARE",
+"ats": "breezy",
+"token": "kare",
+"count": 435,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "a staffing app"
+},
+{
+"name": "Home Genius Exteriors",
+"ats": "breezy",
+"token": "home-genius-exteriors",
+"count": 410,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Everstar",
+"ats": "breezy",
+"token": "everstar",
+"count": 395,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SRS Merchandising",
+"ats": "breezy",
+"token": "srs-merchandising",
+"count": 393,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "gig merchandising in every town"
+},
+{
+"name": "Sage Haus",
+"ats": "breezy",
+"token": "sage-haus",
+"count": 329,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Prep Academy Tutors",
+"ats": "breezy",
+"token": "prep-academy-tutors",
+"count": 325,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Family Resource Home Care",
+"ats": "breezy",
+"token": "family-resource-home-care",
+"count": 295,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Vanguard-IP",
+"ats": "breezy",
+"token": "vanguard-ip",
+"count": 290,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reiss",
+"ats": "breezy",
+"token": "reiss",
+"count": 269,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Meron Financial Agency",
+"ats": "breezy",
+"token": "meron-financial-agency",
+"count": 250,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "agent recruiting"
+},
+{
+"name": "DrHouse",
+"ats": "breezy",
+"token": "drhouse-inc",
+"count": 247,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Chess Wizards",
+"ats": "breezy",
+"token": "chess-wizards",
+"count": 243,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Turner Mining",
+"ats": "breezy",
+"token": "turner-mining-group",
+"count": 208,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Small Potato Trucking",
+"ats": "breezy",
+"token": "small-potato-trucking",
+"count": 207,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ensemble Performing Arts",
+"ats": "breezy",
+"token": "ensemble-performing-arts",
+"count": 206,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Dentsu Creative",
+"ats": "breezy",
+"token": "mktg",
+"count": 203,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "KMG Prestige",
+"ats": "breezy",
+"token": "kmg-prestige",
+"count": 187,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Blue Sky Hospitality Solutions",
+"ats": "breezy",
+"token": "blue-sky-hospitality-solutions",
+"count": 180,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "hospitality staffing"
+},
+{
+"name": "Gold Care Homes",
+"ats": "breezy",
+"token": "gold-care-homes",
+"count": 175,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bitdeer Technologies",
+"ats": "breezy",
+"token": "bitdeer",
+"count": 158,
+"lands": [
+"SG"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Salmonjobs",
+"ats": "breezy",
+"token": "salmonjobs",
+"count": 146,
+"lands": [
+"CL"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "a job board"
+},
+{
+"name": "Terrestris Global Solutions",
+"ats": "breezy",
+"token": "terrestris-global-solutions",
+"count": 140,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NationsBenefits",
+"ats": "breezy",
+"token": "nationsbenefits",
+"count": 139,
+"lands": [
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Zifty",
+"ats": "breezy",
+"token": "zifty",
+"count": 128,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Gastro Health",
+"ats": "breezy",
+"token": "gastro-health",
+"count": 123,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "MTM",
+"ats": "breezy",
+"token": "mtm-llc",
+"count": 120,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Black & McDonald",
+"ats": "breezy",
+"token": "black-mcdonald-limited",
+"count": 118,
+"lands": [
+"CA",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Seek Now",
+"ats": "breezy",
+"token": "seeknow",
+"count": 117,
+"lands": [
+"US"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "gig inspections in every town"
+},
+{
+"name": "Uvation",
+"ats": "breezy",
+"token": "uvation",
+"count": 113,
+"lands": [
+"IN",
+"RO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Absolute Pets",
+"ats": "breezy",
+"token": "absolute-pets",
+"count": 111,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Next Generation",
+"ats": "breezy",
+"token": "next-generation-inc",
+"count": 108,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Sourcefit",
+"ats": "breezy",
+"token": "sourcefit",
+"count": 102,
+"lands": [
+"PH"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "an outsourcing firm"
+},
+{
+"name": "Seven Retail",
+"ats": "breezy",
+"token": "seven-retail",
+"count": 100,
+"lands": [
+"ID"
+],
+"added": "2026-11-20"
+},
+{
+"name": "J Rose Logistics",
+"ats": "breezy",
+"token": "j-rose-enterprises-llc",
+"count": 99,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "By Landmark",
+"ats": "breezy",
+"token": "landmark-hospitality",
+"count": 97,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Marshall Dennehey",
+"ats": "breezy",
+"token": "marshall-dennehey",
+"count": 94,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "YiYiEnglish",
+"ats": "breezy",
+"token": "yiyienglish",
+"count": 94,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Barnhart Crane & Rigging",
+"ats": "breezy",
+"token": "barnhart-crane-rigging",
+"count": 93,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Marex",
+"ats": "breezy",
+"token": "marex",
+"count": 93,
+"lands": [
+"GB",
+"SG"
+],
+"added": "2026-11-20"
+},
+{
+"name": "In All Media",
+"ats": "breezy",
+"token": "inallmedia-llc",
+"count": 91,
+"lands": [
+"CO",
+"BR",
+"AR"
+],
+"added": "2026-11-20",
+"hold": true,
+"why": "staff augmentation"
+},
+{
+"name": "Spark Power",
+"ats": "breezy",
+"token": "spark-power",
+"count": 87,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "YMCA of Central Texas",
+"ats": "breezy",
+"token": "ymca-of-central-texas",
+"count": 86,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "North Wind",
+"ats": "breezy",
+"token": "north-wind-group",
+"count": 83,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Community Dental Partners",
+"ats": "breezy",
+"token": "community-dental-partners",
+"count": 80,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Limitlessli",
+"ats": "breezy",
+"token": "casm-limitlessli",
+"count": 79,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DivaDance",
+"ats": "breezy",
+"token": "divadance",
+"count": 78,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hospitality Health ER",
+"ats": "breezy",
+"token": "hospitality-health-er",
+"count": 77,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Terzo Enterprises",
+"ats": "breezy",
+"token": "terzo-enterprises",
+"count": 77,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Integral",
+"ats": "breezy",
+"token": "integral-uk",
+"count": 75,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Zameen Media Pvt",
+"ats": "breezy",
+"token": "zameen",
+"count": 75,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Doorstead",
+"ats": "breezy",
+"token": "doorstead",
+"count": 73,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Goodcents",
+"ats": "breezy",
+"token": "goodcents",
+"count": 73,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kredivo",
+"ats": "breezy",
+"token": "kredivo-group",
+"count": 73,
+"lands": [
+"ID"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Highlights Healthcare",
+"ats": "breezy",
+"token": "highlights-healthcare",
+"count": 72,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Thoroughbred Express Auto Wash",
+"ats": "breezy",
+"token": "thoroughbred-express",
+"count": 72,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Everlight Solar",
+"ats": "breezy",
+"token": "everlight-solar",
+"count": 71,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "VALD",
+"ats": "breezy",
+"token": "vald",
+"count": 71,
+"lands": [
+"AU",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lumio Dental",
+"ats": "breezy",
+"token": "lumio-dental-practice-locations",
+"count": 70,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Zantech",
+"ats": "breezy",
+"token": "zantech-it",
+"count": 69,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Barnakademin - Solidum Sverige AB",
+"ats": "breezy",
+"token": "solidum-sverige-ab",
+"count": 68,
+"lands": [
+"SE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ondemand Education",
+"ats": "breezy",
+"token": "learn-corporation",
+"count": 67,
+"lands": [
+"TH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Betclic",
+"ats": "breezy",
+"token": "betclic-group",
+"count": 65,
+"lands": [
+"FR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Incubeta",
+"ats": "breezy",
+"token": "incubeta-global",
+"count": 65,
+"lands": [
+"ZA",
+"GB",
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "VetsEZ",
+"ats": "breezy",
+"token": "vetsez",
+"count": 65,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Children's Dental FunZone",
+"ats": "breezy",
+"token": "children-s-dental-funzone",
+"count": 61,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "LINE MAN Wongnai",
+"ats": "breezy",
+"token": "wongnai-media-co-ltd",
+"count": 58,
+"lands": [
+"TH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Avanceon MEA",
+"ats": "breezy",
+"token": "avanceon",
+"count": 57,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "International Automotive Components",
+"ats": "breezy",
+"token": "international-automotive-components",
+"count": 55,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Embraer",
+"ats": "breezy",
+"token": "embraer",
+"count": 54,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mobility",
+"ats": "breezy",
+"token": "mobilizejobs",
+"count": 53,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Prolift Rigging",
+"ats": "breezy",
+"token": "prolift-rigging",
+"count": 52,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Rose Roofing & Restoration",
+"ats": "breezy",
+"token": "rose-roofing-restoration",
+"count": 50,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BeeX",
+"ats": "breezy",
+"token": "beex",
+"count": 49,
+"lands": [
+"SG"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Elevation Church",
+"ats": "breezy",
+"token": "elevation-church",
+"count": 49,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Helpware",
+"ats": "breezy",
+"token": "helpware-inc",
+"count": 48,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AVTECH Global",
+"ats": "breezy",
+"token": "aviation-technology-associates-llc",
+"count": 47,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Independent Food",
+"ats": "breezy",
+"token": "independent-food-company",
+"count": 47,
+"lands": [
+"AE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BFS Children's Services",
+"ats": "breezy",
+"token": "big-fat-smile-group-ltd",
+"count": 46,
+"lands": [
+"GB",
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Genesis",
+"ats": "breezy",
+"token": "gen-tech",
+"count": 46,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JMI Reports",
+"ats": "breezy",
+"token": "jmi-reports",
+"count": 46,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Oregano's",
+"ats": "breezy",
+"token": "oreganos",
+"count": 45,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SnappyCX",
+"ats": "breezy",
+"token": "snappycx",
+"count": 45,
+"lands": [
+"PH",
+"KE",
+"CO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Assessment Intervention Management",
+"ats": "breezy",
+"token": "assessment-intervention-management",
+"count": 44,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bear Robotics",
+"ats": "breezy",
+"token": "bear-robotics",
+"count": 42,
+"lands": [
+"KR",
+"JP"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DiGeronimo Companies",
+"ats": "breezy",
+"token": "independence-excavating",
+"count": 42,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "OurAssistants",
+"ats": "breezy",
+"token": "ourassistants",
+"count": 42,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Competitive Range Solutions",
+"ats": "breezy",
+"token": "competitive-range-solutions-llc",
+"count": 41,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "EcoCeres",
+"ats": "breezy",
+"token": "ecoceres",
+"count": 41,
+"lands": [
+"HK",
+"MY",
+"CN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reliant Mission",
+"ats": "breezy",
+"token": "reliant-collegiate-program",
+"count": 41,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Babylonstoren",
+"ats": "breezy",
+"token": "babylonstoren",
+"count": 40,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cronos Europa",
+"ats": "breezy",
+"token": "cronoseuropa",
+"count": 40,
+"lands": [
+"BE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Strata-G",
+"ats": "breezy",
+"token": "strata-g-llc",
+"count": 40,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Xcite Automotive",
+"ats": "breezy",
+"token": "xciteauto",
+"count": 40,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Herotel",
+"ats": "breezy",
+"token": "herotel-5f74feffb7e1",
+"count": 39,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Matrix Technologies",
+"ats": "breezy",
+"token": "matrix-technologies-inc",
+"count": 38,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Capricorn",
+"ats": "breezy",
+"token": "capricorn",
+"count": 37,
+"lands": [
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cove Living",
+"ats": "breezy",
+"token": "cove",
+"count": 37,
+"lands": [
+"ID"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JND",
+"ats": "breezy",
+"token": "jnd-inc",
+"count": 37,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Social Discovery",
+"ats": "breezy",
+"token": "social-discovery-ventures",
+"count": 37,
+"lands": [
+"PL",
+"RS",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ehvert Engineering a Salas O'Brien",
+"ats": "breezy",
+"token": "ehvert-engineering-inc",
+"count": 36,
+"lands": [
+"UA",
+"PH",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Erdman Anthony",
+"ats": "breezy",
+"token": "erdman-anthony",
+"count": 36,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "FreeUp",
+"ats": "breezy",
+"token": "freeeup",
+"count": 36,
+"lands": [
+"PH",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "IIX Global",
+"ats": "breezy",
+"token": "iix-global",
+"count": 36,
+"lands": [
+"PH",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SD Solutions",
+"ats": "breezy",
+"token": "sd-solutions",
+"count": 36,
+"lands": [
+"PL",
+"RS",
+"RO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Turning Point",
+"ats": "breezy",
+"token": "turning-point-usa",
+"count": 36,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Atlas Technica",
+"ats": "breezy",
+"token": "atlas-technica",
+"count": 35,
+"lands": [
+"US",
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Quirk Auto Group Maine",
+"ats": "breezy",
+"token": "village-car-company",
+"count": 35,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "A-Core Concrete Specialists",
+"ats": "breezy",
+"token": "a-core-concrete-specialists",
+"count": 34,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Commerzbank AG – Poland",
+"ats": "breezy",
+"token": "commerzbank-poland",
+"count": 34,
+"lands": [
+"PL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "German American Chambers of Commerce",
+"ats": "breezy",
+"token": "german-american-chambers-of-commerce",
+"count": 34,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Navaide",
+"ats": "breezy",
+"token": "navaide",
+"count": 33,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Inteldot",
+"ats": "breezy",
+"token": "inteldot",
+"count": 32,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Kaniksu Community Health",
+"ats": "breezy",
+"token": "kaniksu-community-health",
+"count": 32,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lufco",
+"ats": "breezy",
+"token": "lufco",
+"count": 32,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Talentuch",
+"ats": "breezy",
+"token": "talentuch",
+"count": 32,
+"lands": [
+"CO",
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mindoula Health",
+"ats": "breezy",
+"token": "mindoula-health-inc",
+"count": 31,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "RhynoCare",
+"ats": "breezy",
+"token": "rhynocare",
+"count": 31,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Sentral",
+"ats": "breezy",
+"token": "sentral",
+"count": 31,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Advantia Health",
+"ats": "breezy",
+"token": "advantia-health",
+"count": 29,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "PsyPhyCare",
+"ats": "breezy",
+"token": "psyphycare-7d99d547f19b",
+"count": 29,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Rohloff",
+"ats": "breezy",
+"token": "rohloff-group",
+"count": 29,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Activate",
+"ats": "breezy",
+"token": "activate-group-limited",
+"count": 28,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ROC Ventures",
+"ats": "breezy",
+"token": "roc-ventures",
+"count": 28,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Smart Africa",
+"ats": "breezy",
+"token": "smart-codes-eae513730598",
+"count": 28,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Exit Factor",
+"ats": "breezy",
+"token": "exf",
+"count": 27,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Fastenal Europe",
+"ats": "breezy",
+"token": "fastenal",
+"count": 27,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "OTTO Engineering",
+"ats": "breezy",
+"token": "otto-engineering-inc",
+"count": 27,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Technica Mining",
+"ats": "breezy",
+"token": "technica-mining",
+"count": 27,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "zerohash",
+"ats": "breezy",
+"token": "zero-hash",
+"count": 27,
+"lands": [
+"US",
+"GB",
+"NL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Boba Guys",
+"ats": "breezy",
+"token": "boba-guys",
+"count": 26,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Carda Health",
+"ats": "breezy",
+"token": "cardahealth",
+"count": 26,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Engineering",
+"ats": "breezy",
+"token": "rh2-engineering-inc",
+"count": 26,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Red Rabbit",
+"ats": "breezy",
+"token": "red-rabbit",
+"count": 26,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Thrasher",
+"ats": "breezy",
+"token": "thrasher",
+"count": 26,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bosun",
+"ats": "breezy",
+"token": "bosun-25f9d5ec70da",
+"count": 25,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CKH",
+"ats": "breezy",
+"token": "ckh-group",
+"count": 25,
+"lands": [
+"US",
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Doodle Labs",
+"ats": "breezy",
+"token": "doodle-labs-llc",
+"count": 25,
+"lands": [
+"SG",
+"DE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "INFRAPIPES",
+"ats": "breezy",
+"token": "infra-pipe-solutions",
+"count": 25,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Netrix Global",
+"ats": "breezy",
+"token": "netrix-global",
+"count": 25,
+"lands": [
+"IN",
+"AR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Surrey Choices",
+"ats": "breezy",
+"token": "surrey-choices",
+"count": 25,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Pros Weddings",
+"ats": "breezy",
+"token": "the-pros-weddings",
+"count": 25,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "1001",
+"ats": "breezy",
+"token": "1001",
+"count": 23,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "City of Baltimore, Mayor's Office of Employment Development",
+"ats": "breezy",
+"token": "city-of-baltimore-mayor-s-office-of-employment-development",
+"count": 23,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Concurrent Technologies",
+"ats": "breezy",
+"token": "concurrent-technologies-corporation",
+"count": 23,
+"lands": [
+"US",
+"KR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Unlimited Biking",
+"ats": "breezy",
+"token": "unlimited-biking",
+"count": 23,
+"lands": [
+"DE",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ABA Therapy Partners",
+"ats": "breezy",
+"token": "aba-therapy-partners",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Beta Bionics",
+"ats": "breezy",
+"token": "beta-bionics-inc",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DoveLewis Veterinary Emergency and Specialty Hospital",
+"ats": "breezy",
+"token": "dovelewis-veterinary-emergency-and-specialty-hospital",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Earth Angels Home Care",
+"ats": "breezy",
+"token": "earth-angels-home-care",
+"count": 22,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Katapult Network",
+"ats": "breezy",
+"token": "katapult",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NucleusTeq",
+"ats": "breezy",
+"token": "nucleusteq",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "O'Mally Management",
+"ats": "breezy",
+"token": "o-mally-management-group",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Precision",
+"ats": "breezy",
+"token": "precision-strategies",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Raising The Village",
+"ats": "breezy",
+"token": "raisingthevillage",
+"count": 22,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Seasats",
+"ats": "breezy",
+"token": "seasats",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TalentC",
+"ats": "breezy",
+"token": "talentc",
+"count": 22,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Unitarian Universalist Association",
+"ats": "breezy",
+"token": "unitarian-universalist-association",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Zeno Power",
+"ats": "breezy",
+"token": "zeno-power",
+"count": 22,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Aimpoint Digital",
+"ats": "breezy",
+"token": "aimpoint-digital",
+"count": 21,
+"lands": [
+"US",
+"CO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "City Lodge Hotels",
+"ats": "breezy",
+"token": "citylodgehotels",
+"count": 21,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CloudCommerce",
+"ats": "breezy",
+"token": "cloudcommerce",
+"count": 21,
+"lands": [
+"TH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Keelson Strategic",
+"ats": "breezy",
+"token": "keelson-strategic",
+"count": 21,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Offit Kurman",
+"ats": "breezy",
+"token": "offit-kurman",
+"count": 21,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Prudent Engineering",
+"ats": "breezy",
+"token": "prudent-engineering",
+"count": 21,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SALT Service",
+"ats": "breezy",
+"token": "salt-home-services",
+"count": 21,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The SPEAK Center for Language and Learning",
+"ats": "breezy",
+"token": "casa-speech-and-development",
+"count": 21,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Alphanumeric Systems",
+"ats": "breezy",
+"token": "alphanumeric-systems",
+"count": 20,
+"lands": [
+"BR",
+"PT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Andrews Senior Care",
+"ats": "breezy",
+"token": "andrews-senior-care",
+"count": 20,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AQUA BLUE POOLS",
+"ats": "breezy",
+"token": "aqua-blue-pools",
+"count": 20,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Be Caring",
+"ats": "breezy",
+"token": "be-caring-ltd",
+"count": 20,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Behavior Treatment & Analysis",
+"ats": "breezy",
+"token": "behavior-treatment-analysis",
+"count": 20,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Blue Projects",
+"ats": "breezy",
+"token": "blue-projects",
+"count": 20,
+"lands": [
+"RO",
+"KZ"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Buddhist Compassion Relief Tzu-Chi Foundation",
+"ats": "breezy",
+"token": "buddhist-compassion-relief-tzu-chi-foundation-singapore",
+"count": 20,
+"lands": [
+"SG"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Dayton Granger",
+"ats": "breezy",
+"token": "dayton-granger-inc",
+"count": 20,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DyFlex Solutions",
+"ats": "breezy",
+"token": "dyflex",
+"count": 20,
+"lands": [
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ice Cream Insurance Broker",
+"ats": "breezy",
+"token": "sunday",
+"count": 20,
+"lands": [
+"TH",
+"ID"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Nature's Herbs and Wellness",
+"ats": "breezy",
+"token": "natures-herbs-and-wellness",
+"count": 20,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Q-Block Computing",
+"ats": "breezy",
+"token": "q-block-computing",
+"count": 20,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Revamp Engineering",
+"ats": "breezy",
+"token": "revamp-engineering-inc",
+"count": 20,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Transparent Hiring",
+"ats": "breezy",
+"token": "transparent-hiring",
+"count": 20,
+"lands": [
+"RS",
+"KZ",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TSU",
+"ats": "breezy",
+"token": "tsu",
+"count": 20,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "A2H",
+"ats": "breezy",
+"token": "a2h",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Advanced Disaster Recovery",
+"ats": "breezy",
+"token": "advanced-dri",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Anovia",
+"ats": "breezy",
+"token": "anovia",
+"count": 19,
+"lands": [
+"IN",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Beech Valley Solutions",
+"ats": "breezy",
+"token": "beech-valley-solutions",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Givzey",
+"ats": "breezy",
+"token": "givzey",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hankook Tire",
+"ats": "breezy",
+"token": "careers-hankooktire",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Inspect",
+"ats": "breezy",
+"token": "us-inspect",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JWay",
+"ats": "breezy",
+"token": "jway-group",
+"count": 19,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Madison Core Laboratories",
+"ats": "breezy",
+"token": "madison-core-laboratories",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Midtown Home Improvements",
+"ats": "breezy",
+"token": "midtown-home-improvements",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ricart Automotive",
+"ats": "breezy",
+"token": "ricart-automotive",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Care Bureau",
+"ats": "breezy",
+"token": "the-care-bureau",
+"count": 19,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Crossing Church",
+"ats": "breezy",
+"token": "thecrossing",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Vantage Point Solutions",
+"ats": "breezy",
+"token": "vantage-point-solutions-inc",
+"count": 19,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Veta Virtual",
+"ats": "breezy",
+"token": "veta-virtual-inc",
+"count": 19,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "AdNet AccountNet",
+"ats": "breezy",
+"token": "adnet-accountnet-inc",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Artidis",
+"ats": "breezy",
+"token": "artidis-ag",
+"count": 18,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Astro Shapes",
+"ats": "breezy",
+"token": "astro-shapes-llc",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Felician Sisters of North America",
+"ats": "breezy",
+"token": "felician-sisters-of-north-america",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Heritage Construction",
+"ats": "breezy",
+"token": "heritage-roofing-and-construction",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Idea Peddler",
+"ats": "breezy",
+"token": "idea-peddler",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ingenius Prep",
+"ats": "breezy",
+"token": "ingenius-prep",
+"count": 18,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "SWA",
+"ats": "breezy",
+"token": "swa-group",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TELUS Agriculture & Consumer Goods",
+"ats": "breezy",
+"token": "telus-agriculture",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Turning Point Action",
+"ats": "breezy",
+"token": "tpaction",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "USA",
+"ats": "breezy",
+"token": "p3-usa",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "VITRA Health",
+"ats": "breezy",
+"token": "vitra-health",
+"count": 18,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Austin Retina Associates",
+"ats": "breezy",
+"token": "austin-retina-associates",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Circle Medical",
+"ats": "breezy",
+"token": "circle-medical",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Expression",
+"ats": "breezy",
+"token": "expression-networks",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Good Company Doughnuts & Cafe",
+"ats": "breezy",
+"token": "good-company",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Helping Hand Nurse",
+"ats": "breezy",
+"token": "helping-hand-nurse-llc",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Murphy's Pharmacies",
+"ats": "breezy",
+"token": "murphy-s-pharmacies",
+"count": 17,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Peachtree Bikes | Motion Makers | Sycamore Cycles",
+"ats": "breezy",
+"token": "peachtree-bikes",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Respond.io",
+"ats": "breezy",
+"token": "respond-io",
+"count": 17,
+"lands": [
+"MX",
+"DE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "St.Amant",
+"ats": "breezy",
+"token": "st-amant",
+"count": 17,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Vale Concepts",
+"ats": "breezy",
+"token": "vale-concepts",
+"count": 17,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Alabama Oncology",
+"ats": "breezy",
+"token": "alabama-oncology",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Alabaster City Schools",
+"ats": "breezy",
+"token": "alabaster-city-schools",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Apollo After School",
+"ats": "breezy",
+"token": "apollo-after-school",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Artemis Connection",
+"ats": "breezy",
+"token": "artemis-connection",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "END",
+"ats": "breezy",
+"token": "end",
+"count": 16,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hassle Free Home Services",
+"ats": "breezy",
+"token": "hassle-free-home-services",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "HomeBuys",
+"ats": "breezy",
+"token": "homebuys-inc",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JUMBO Consulting Group A",
+"ats": "breezy",
+"token": "jumbo-consulting-group-a-s",
+"count": 16,
+"lands": [
+"DK",
+"GB",
+"PL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kastech Software Solutions",
+"ats": "breezy",
+"token": "kastech-canada-inc",
+"count": 16,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Local Restaurant",
+"ats": "breezy",
+"token": "andolini-s-llc",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lula",
+"ats": "breezy",
+"token": "lulalend",
+"count": 16,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "My Hero VA",
+"ats": "breezy",
+"token": "my-hero-va",
+"count": 16,
+"lands": [
+"AR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Pyrovio",
+"ats": "breezy",
+"token": "pyrovio",
+"count": 16,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Sense Engineering",
+"ats": "breezy",
+"token": "sense-engineering",
+"count": 16,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ShopriteX",
+"ats": "breezy",
+"token": "shopritex",
+"count": 16,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SMDigital",
+"ats": "breezy",
+"token": "smdigital",
+"count": 16,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Vagaro",
+"ats": "breezy",
+"token": "vagaro",
+"count": 16,
+"lands": [
+"US",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AGBO",
+"ats": "breezy",
+"token": "agbo",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Allana Buick & Bers",
+"ats": "breezy",
+"token": "allana-buick-bers",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Brand Momentum",
+"ats": "breezy",
+"token": "lindt-sprunglicanada",
+"count": 15,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kaufman Borgeest & Ryan",
+"ats": "breezy",
+"token": "kbr",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mind Computing",
+"ats": "breezy",
+"token": "mind-computing",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "My Burger",
+"ats": "breezy",
+"token": "my-burger",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Remote Craft",
+"ats": "breezy",
+"token": "remote-craft",
+"count": 15,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Therapy Associates",
+"ats": "breezy",
+"token": "therapy-associates",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Throne Labs",
+"ats": "breezy",
+"token": "thronelabs",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Unifin",
+"ats": "breezy",
+"token": "unifin-inc",
+"count": 15,
+"lands": [
+"PH",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Wayne Memorial Hospital - Jesup, GA",
+"ats": "breezy",
+"token": "wayne-memorial-hospital",
+"count": 15,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CENSUS SA",
+"ats": "breezy",
+"token": "census",
+"count": 14,
+"lands": [
+"GR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DMS International",
+"ats": "breezy",
+"token": "dms-international",
+"count": 14,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "eigenblue",
+"ats": "breezy",
+"token": "eigenblue",
+"count": 14,
+"lands": [
+"DE",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Eureka Robotics",
+"ats": "breezy",
+"token": "eurekarobotics",
+"count": 14,
+"lands": [
+"VN",
+"US",
+"JP"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Grid United",
+"ats": "breezy",
+"token": "grid-united",
+"count": 14,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lexlegis AI",
+"ats": "breezy",
+"token": "lexlegis",
+"count": 14,
+"lands": [
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "LITOSTROJ POWER d.o.o",
+"ats": "breezy",
+"token": "litostroj-power",
+"count": 14,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "MarinHealth",
+"ats": "breezy",
+"token": "marinhealth-medical-network",
+"count": 14,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mountains Community Hospital",
+"ats": "breezy",
+"token": "mch-careers",
+"count": 14,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Pleasant Valley",
+"ats": "breezy",
+"token": "pleasant-valley-corporation",
+"count": 14,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Raldex Hospitality",
+"ats": "breezy",
+"token": "raldex",
+"count": 14,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "WeAssist.io",
+"ats": "breezy",
+"token": "weassist-io",
+"count": 14,
+"lands": [
+"PH",
+"CO",
+"AR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Barloworld Equipment",
+"ats": "breezy",
+"token": "barloworldequipment",
+"count": 13,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BETER",
+"ats": "breezy",
+"token": "beter",
+"count": 13,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BetterMe",
+"ats": "breezy",
+"token": "betterme",
+"count": 13,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bradshaw Home",
+"ats": "breezy",
+"token": "bradshaw-home",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bristow and Sutor",
+"ats": "breezy",
+"token": "bristow-and-sutor-group",
+"count": 13,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Carnegie Robotics",
+"ats": "breezy",
+"token": "carnegie-robotics",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Columbia-Greene Community College",
+"ats": "breezy",
+"token": "columbia-greene-community-college",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Compass Family Services",
+"ats": "breezy",
+"token": "compass-family-services",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CWS Construction",
+"ats": "breezy",
+"token": "cws-construction-group-inc",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Destro AI",
+"ats": "breezy",
+"token": "destro-ai",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Foods Manufacturing",
+"ats": "breezy",
+"token": "1440-foods-manufacturing",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Framework",
+"ats": "breezy",
+"token": "framework",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "How to Manage a Small Law Firm",
+"ats": "breezy",
+"token": "how-to-manage-a-small-law-firm",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Isaac Health",
+"ats": "breezy",
+"token": "isaac-health",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mentoring Alliance",
+"ats": "breezy",
+"token": "thementoringalliance",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Playdead",
+"ats": "breezy",
+"token": "playdead",
+"count": 13,
+"lands": [
+"DK"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Prospere Companies",
+"ats": "breezy",
+"token": "exit-factor",
+"count": 13,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "VSA",
+"ats": "breezy",
+"token": "vsa",
+"count": 13,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Aidaptive",
+"ats": "breezy",
+"token": "jarvis-ml",
+"count": 12,
+"lands": [
+"US",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AmazingTalker",
+"ats": "breezy",
+"token": "amazingtalker",
+"count": 12,
+"lands": [
+"TW",
+"CN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ATP Flight School",
+"ats": "breezy",
+"token": "atp-flight-school",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Baisch Engineering",
+"ats": "breezy",
+"token": "baisch-engineering",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Benchmark Space Systems",
+"ats": "breezy",
+"token": "benchmark-space-systems-inc",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Clear Behavioral Health",
+"ats": "breezy",
+"token": "clear-behavioral-health",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Code Street",
+"ats": "breezy",
+"token": "code-street",
+"count": 12,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Compass Homecare",
+"ats": "breezy",
+"token": "compass-homecare",
+"count": 12,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Contrarian Thinking",
+"ats": "breezy",
+"token": "contrarian-thinking",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Drips",
+"ats": "breezy",
+"token": "drips",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "FinStrat Management",
+"ats": "breezy",
+"token": "finstrat-management",
+"count": 12,
+"lands": [
+"PH",
+"AR",
+"CO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Gaggle Net",
+"ats": "breezy",
+"token": "gaggle",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Matheson Constructors",
+"ats": "breezy",
+"token": "matheson-constructors",
+"count": 12,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Matroid",
+"ats": "breezy",
+"token": "matroid",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NETSEA Technologies",
+"ats": "breezy",
+"token": "netsea-technologies",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Netsync Network Solutions",
+"ats": "breezy",
+"token": "netsync-network-solutions",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NinjaHoldings",
+"ats": "breezy",
+"token": "ninjaholdings",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Nolia Health",
+"ats": "breezy",
+"token": "magnolia-care-services-inc",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "RiverMead",
+"ats": "breezy",
+"token": "rivermead",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SecureSpace Management",
+"ats": "breezy",
+"token": "securespace-self-storage",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Services",
+"ats": "breezy",
+"token": "mainstream-home-services",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SkySpecs",
+"ats": "breezy",
+"token": "skyspecs",
+"count": 12,
+"lands": [
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Spinnaker Software",
+"ats": "breezy",
+"token": "archsoftware",
+"count": 12,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Takwene",
+"ats": "breezy",
+"token": "takwene",
+"count": 12,
+"lands": [
+"SA",
+"AE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TELUS Health",
+"ats": "breezy",
+"token": "telus-health-care-centers",
+"count": 12,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Turaco",
+"ats": "breezy",
+"token": "turaco",
+"count": 12,
+"lands": [
+"KE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Witham Family Hotels",
+"ats": "breezy",
+"token": "witham-family-hotels",
+"count": 12,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AccelOne",
+"ats": "breezy",
+"token": "accelone",
+"count": 11,
+"lands": [
+"AR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "All Cares",
+"ats": "breezy",
+"token": "allcares",
+"count": 11,
+"lands": [
+"UA",
+"ES",
+"PL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "almentor",
+"ats": "breezy",
+"token": "almentor",
+"count": 11,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Ancient Crunch",
+"ats": "breezy",
+"token": "ancient-crunch",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CEG Solutions",
+"ats": "breezy",
+"token": "ceg-solutions-llc",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Church of the Highlands",
+"ats": "breezy",
+"token": "church-of-the-highlands",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Commercial Cleaning Services",
+"ats": "breezy",
+"token": "commercial-cleaning-services",
+"count": 11,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Compass Datacenters",
+"ats": "breezy",
+"token": "compass-datacenters",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Critical Software",
+"ats": "breezy",
+"token": "critical-software",
+"count": 11,
+"lands": [
+"US",
+"ES",
+"PT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cytracom",
+"ats": "breezy",
+"token": "cytracom",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ENCON Equipment",
+"ats": "breezy",
+"token": "encon-equipment",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Float Health",
+"ats": "breezy",
+"token": "nursing-float-health",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Freyssinet",
+"ats": "breezy",
+"token": "freyssinet-incorporated",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Glenholme Healthcare",
+"ats": "breezy",
+"token": "glenholme-healthcare",
+"count": 11,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Granite Hills",
+"ats": "breezy",
+"token": "granite-hills-group",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Highly Likely",
+"ats": "breezy",
+"token": "delicious-monster",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "HSP Direct",
+"ats": "breezy",
+"token": "hsp-direct",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Manabie",
+"ats": "breezy",
+"token": "manabie",
+"count": 11,
+"lands": [
+"VN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Napthens",
+"ats": "breezy",
+"token": "napthens-llp",
+"count": 11,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Park West Gallery",
+"ats": "breezy",
+"token": "park-west-gallery",
+"count": 11,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Redial BPO",
+"ats": "breezy",
+"token": "redial-bpo",
+"count": 11,
+"lands": [
+"MX"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reveleer",
+"ats": "breezy",
+"token": "reveleer",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ryther",
+"ats": "breezy",
+"token": "ryther-child-center",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Savvital",
+"ats": "breezy",
+"token": "savvital",
+"count": 11,
+"lands": [
+"MY"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Tactibit Technologies",
+"ats": "breezy",
+"token": "tactibit-technologies-llc",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TruePoint Communications",
+"ats": "breezy",
+"token": "truepoint-communications",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Zeus Fire and Security",
+"ats": "breezy",
+"token": "martin-systems",
+"count": 11,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ablefy",
+"ats": "breezy",
+"token": "ablefy",
+"count": 10,
+"lands": [
+"DE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Accrete",
+"ats": "breezy",
+"token": "accrete-ai",
+"count": 10,
+"lands": [
+"IN",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Aspinal of London",
+"ats": "breezy",
+"token": "aspinal-of-london",
+"count": 10,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Blenderbox",
+"ats": "breezy",
+"token": "blenderbox",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bluestem Biosciences",
+"ats": "breezy",
+"token": "bluestem-biosciences",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BRight",
+"ats": "breezy",
+"token": "value-virtual-assistants",
+"count": 10,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DESFO",
+"ats": "breezy",
+"token": "desfo",
+"count": 10,
+"lands": [
+"PT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Engage Squared",
+"ats": "breezy",
+"token": "engage-squared",
+"count": 10,
+"lands": [
+"AU",
+"NZ"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Equipment Sales & Service",
+"ats": "breezy",
+"token": "equipment-sales-service-limited",
+"count": 10,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "GAMURS",
+"ats": "breezy",
+"token": "gamurs",
+"count": 10,
+"lands": [
+"PH",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Handsome Brook Farms",
+"ats": "breezy",
+"token": "handsome-brook-farms",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "HCTec",
+"ats": "breezy",
+"token": "hctec",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "i5invest corporate development",
+"ats": "breezy",
+"token": "i5invest",
+"count": 10,
+"lands": [
+"AT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ignite HR Solutions and our Clients",
+"ats": "breezy",
+"token": "ignite-hr-solutions",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ISHIR",
+"ats": "breezy",
+"token": "ishir",
+"count": 10,
+"lands": [
+"US",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mohawk Ambulance",
+"ats": "breezy",
+"token": "mohawk-ambulance-service",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Neuro Wellness Spa",
+"ats": "breezy",
+"token": "neuro-wellness-spa",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "New York",
+"ats": "breezy",
+"token": "new-york-holdings",
+"count": 10,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SCB Tech X",
+"ats": "breezy",
+"token": "scb-techx-co-ltd",
+"count": 10,
+"lands": [
+"TH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Smartrend Manufacturing",
+"ats": "breezy",
+"token": "smartrend-manufacturing-group",
+"count": 10,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SOCRadar",
+"ats": "breezy",
+"token": "socradar",
+"count": 10,
+"lands": [
+"CA",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Bob & Ronna",
+"ats": "breezy",
+"token": "bobandronna",
+"count": 10,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "wega Informatik",
+"ats": "breezy",
+"token": "wega-informatik-ag",
+"count": 10,
+"lands": [
+"FR",
+"DE",
+"NL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Westair Group of Companies",
+"ats": "breezy",
+"token": "westairgroupofcompanies",
+"count": 10,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "AVI Health and Community Services",
+"ats": "breezy",
+"token": "avi-health-community-services-9eb7555be744",
+"count": 9,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Avidyne",
+"ats": "breezy",
+"token": "avidyne",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bidvest Bank",
+"ats": "breezy",
+"token": "bidvestbank",
+"count": 9,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bota Systems",
+"ats": "breezy",
+"token": "bota-systems-ag",
+"count": 9,
+"lands": [
+"CH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bounce Therapy",
+"ats": "breezy",
+"token": "bounce-therapy",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Carmen Schools of Science & Technology",
+"ats": "breezy",
+"token": "carmen-schools-of-science-technology",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Compose.ly",
+"ats": "breezy",
+"token": "compose-ly",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Creative Capsule",
+"ats": "breezy",
+"token": "creative-capsule",
+"count": 9,
+"lands": [
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Etoile Academy Charter School",
+"ats": "breezy",
+"token": "etoile-academy-charter-school",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Home Spritz",
+"ats": "breezy",
+"token": "home-spritz",
+"count": 9,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Inspired Testing",
+"ats": "breezy",
+"token": "inspired-testing",
+"count": 9,
+"lands": [
+"GB",
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JKZ",
+"ats": "breezy",
+"token": "jkz-llp",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Joom",
+"ats": "breezy",
+"token": "joom-group",
+"count": 9,
+"lands": [
+"PT",
+"BR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Karen Clark",
+"ats": "breezy",
+"token": "karen-clark-company",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Maleda Tech",
+"ats": "breezy",
+"token": "maleda-tech",
+"count": 9,
+"lands": [
+"US",
+"KR",
+"ES"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Modern Pediatrics",
+"ats": "breezy",
+"token": "modern-pediatrics",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Movandi",
+"ats": "breezy",
+"token": "movandi",
+"count": 9,
+"lands": [
+"SA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mukuru",
+"ats": "breezy",
+"token": "mukuru",
+"count": 9,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Norbert Health",
+"ats": "breezy",
+"token": "norbert-health",
+"count": 9,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Online Labels",
+"ats": "breezy",
+"token": "online-labels",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Pillr Health",
+"ats": "breezy",
+"token": "pillrhealth",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Printfly",
+"ats": "breezy",
+"token": "printfly",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Quantios",
+"ats": "breezy",
+"token": "quantios",
+"count": 9,
+"lands": [
+"MY",
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reconstruct",
+"ats": "breezy",
+"token": "reconstruct-inc",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "RhythmScience",
+"ats": "breezy",
+"token": "rhythmscience",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "School of Visual Arts",
+"ats": "breezy",
+"token": "sva",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Skiptown",
+"ats": "breezy",
+"token": "skipper",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "tawk.to",
+"ats": "breezy",
+"token": "tawk-to",
+"count": 9,
+"lands": [
+"MY"
+],
+"added": "2026-11-20"
+},
+{
+"name": "WashU Carwash",
+"ats": "breezy",
+"token": "washu-carwash",
+"count": 9,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Wellio",
+"ats": "breezy",
+"token": "wellio",
+"count": 9,
+"lands": [
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Aeroseal",
+"ats": "breezy",
+"token": "aeroseal",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Alfabs",
+"ats": "breezy",
+"token": "alfabs",
+"count": 8,
+"lands": [
+"GB",
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Archangel Autonomy",
+"ats": "breezy",
+"token": "archangelautonomy",
+"count": 8,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BAD Marketing",
+"ats": "breezy",
+"token": "bad-marketing",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Behavioral Health Field",
+"ats": "breezy",
+"token": "behavioral-health-field-inc",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Brisbane Powerhouse",
+"ats": "breezy",
+"token": "brisbane-powerhouse",
+"count": 8,
+"lands": [
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Busha",
+"ats": "breezy",
+"token": "busha",
+"count": 8,
+"lands": [
+"KE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CENTRL",
+"ats": "breezy",
+"token": "centrl",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ceresti Health",
+"ats": "breezy",
+"token": "ceresti-health",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Chinook Systems",
+"ats": "breezy",
+"token": "chinook-systems",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Clever Real Estate",
+"ats": "breezy",
+"token": "clever-real-estate",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DigiSay",
+"ats": "breezy",
+"token": "digisay",
+"count": 8,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Dubizzle Labs",
+"ats": "breezy",
+"token": "dubizzlelabs",
+"count": 8,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Edward Snell",
+"ats": "breezy",
+"token": "edwardsnell",
+"count": 8,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Empyrean Hospice",
+"ats": "breezy",
+"token": "empyrean-hospice",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Fortis Care",
+"ats": "breezy",
+"token": "fortis-care",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Gaskins + LeCraw a Pape-Dawson",
+"ats": "breezy",
+"token": "gaskinslecraw",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Heartland Women's Health",
+"ats": "breezy",
+"token": "heartland-womens-health",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "HighKey Agency",
+"ats": "breezy",
+"token": "highkey",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "HungerRush",
+"ats": "breezy",
+"token": "hungerrush",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "iFixit",
+"ats": "breezy",
+"token": "ifixit",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Industries",
+"ats": "breezy",
+"token": "c3industries",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Jabu",
+"ats": "breezy",
+"token": "jabu",
+"count": 8,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Manifest Health",
+"ats": "breezy",
+"token": "atlasprimary",
+"count": 8,
+"lands": [
+"US",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Matrix Design",
+"ats": "breezy",
+"token": "matrix-design-group",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Merante",
+"ats": "breezy",
+"token": "a-merante-contracting-inc",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Morgan's Camp",
+"ats": "breezy",
+"token": "morgan-s-wonderland-camp",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Newhouse Project Consulting",
+"ats": "breezy",
+"token": "newhouse-project-consulting",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Precision Well Servicing",
+"ats": "breezy",
+"token": "precision-well-servicing",
+"count": 8,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Prisms VR",
+"ats": "breezy",
+"token": "prisms-vr",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Rubicon",
+"ats": "breezy",
+"token": "rubicon-group",
+"count": 8,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Schauenburg Systems",
+"ats": "breezy",
+"token": "schauenburgsystems",
+"count": 8,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Simera Sense",
+"ats": "breezy",
+"token": "simera-sense",
+"count": 8,
+"lands": [
+"FR",
+"GB",
+"BE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Skirball Cultural Center",
+"ats": "breezy",
+"token": "skirball-cultural-center",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Smart City Locating",
+"ats": "breezy",
+"token": "smart-city-locating",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Snake Oil Cocktail",
+"ats": "breezy",
+"token": "snake-oil-cocktail-company",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Southern California Institute of Technology",
+"ats": "breezy",
+"token": "southern-california-institute-of-technology",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Tonti Properties",
+"ats": "breezy",
+"token": "tonti-properties",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Tri-County Mennonite Homes",
+"ats": "breezy",
+"token": "tri-county-mennonite-homes",
+"count": 8,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TrustPoint",
+"ats": "breezy",
+"token": "trustpoint",
+"count": 8,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "6037",
+"ats": "breezy",
+"token": "6037",
+"count": 7,
+"lands": [
+"UA",
+"PL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Anthem Engineering",
+"ats": "breezy",
+"token": "anthem-engineering",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Archangel Lightworks",
+"ats": "breezy",
+"token": "archangellightworks",
+"count": 7,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Balani Custom Clothiers",
+"ats": "breezy",
+"token": "balani-custom-clothiers",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bluetree",
+"ats": "breezy",
+"token": "bluetree-group",
+"count": 7,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Center for Responsive Schools",
+"ats": "breezy",
+"token": "center-for-responsive-schools",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Coakley Brothers",
+"ats": "breezy",
+"token": "coakley-brothers-company",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Converge Insurance",
+"ats": "breezy",
+"token": "converge-cybersecurity-insurance",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DUG Technology",
+"ats": "breezy",
+"token": "dug",
+"count": 7,
+"lands": [
+"MY",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hall Ambulance",
+"ats": "breezy",
+"token": "hall-ambulance",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Jonathan's Landing Golf Club",
+"ats": "breezy",
+"token": "jonathan-s-landing-golf-club",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "KaiPod Learning",
+"ats": "breezy",
+"token": "kaipod-learning",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Masters Insurance",
+"ats": "breezy",
+"token": "masters-insurance",
+"count": 7,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Modern Thyroid Clinic",
+"ats": "breezy",
+"token": "modern-thyroid-clinic",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NewGround",
+"ats": "breezy",
+"token": "newground",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Oso Semiconductor",
+"ats": "breezy",
+"token": "oso-semiconductor",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Plan Left",
+"ats": "breezy",
+"token": "plan-left-llc",
+"count": 7,
+"lands": [
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Quinn PR",
+"ats": "breezy",
+"token": "quinn-co-of-ny-ltd",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ReSupply",
+"ats": "breezy",
+"token": "resupply",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Sabanto",
+"ats": "breezy",
+"token": "sabanto",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Sealing Technologies, a Parsons",
+"ats": "breezy",
+"token": "sealing-technologies-inc",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Share Food Program",
+"ats": "breezy",
+"token": "share-food-program",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SunPower",
+"ats": "breezy",
+"token": "sunpower",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Team UIS",
+"ats": "breezy",
+"token": "team-uis",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The New York Immigration Coalition",
+"ats": "breezy",
+"token": "nyic",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TSG Risk Management",
+"ats": "breezy",
+"token": "the-sugrue-group-llc",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Tuva",
+"ats": "breezy",
+"token": "tuva",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "UC Law SF",
+"ats": "breezy",
+"token": "uclawsf",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "UniConcepts",
+"ats": "breezy",
+"token": "uniconcepts",
+"count": 7,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "25madison",
+"ats": "breezy",
+"token": "25madison-llc",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "2ULaundry",
+"ats": "breezy",
+"token": "2ulaundry",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "75F APAC",
+"ats": "breezy",
+"token": "75f-apac",
+"count": 6,
+"lands": [
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Active Dental",
+"ats": "breezy",
+"token": "active-dental-management",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Aligned Modern Health",
+"ats": "breezy",
+"token": "aligned-modern-health",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Alma del Mar Charter School",
+"ats": "breezy",
+"token": "alma-del-mar-charter-school",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Assisted Rehab",
+"ats": "breezy",
+"token": "assisted-rehab",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ATBS",
+"ats": "breezy",
+"token": "atbs",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "B",
+"ats": "breezy",
+"token": "b-spoke-studios",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Behavior Intervention",
+"ats": "breezy",
+"token": "behavior-intervention-group",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Brella",
+"ats": "breezy",
+"token": "brella",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Crowd Cow",
+"ats": "breezy",
+"token": "crowd-cow",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Dalal & Mehta Law Firm",
+"ats": "breezy",
+"token": "dalal-mehta-law-llc",
+"count": 6,
+"lands": [
+"MX",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "DTCP",
+"ats": "breezy",
+"token": "dtcp",
+"count": 6,
+"lands": [
+"ES",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Federal Public Defender, Western District of Texas",
+"ats": "breezy",
+"token": "federal-public-defender-western-district-of-texas",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hubble.Build",
+"ats": "breezy",
+"token": "hubble",
+"count": 6,
+"lands": [
+"SG"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hudhud Maps",
+"ats": "breezy",
+"token": "hudhud",
+"count": 6,
+"lands": [
+"SA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Human Capital Enterprises",
+"ats": "breezy",
+"token": "human-capital-enterprises",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hunt Forest Products",
+"ats": "breezy",
+"token": "hunt-forest-products",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "IMPaCT Care",
+"ats": "breezy",
+"token": "impact-chw",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Impireum",
+"ats": "breezy",
+"token": "impireum-managed-services",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ITtude",
+"ats": "breezy",
+"token": "ittude",
+"count": 6,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Linear Agency",
+"ats": "breezy",
+"token": "linear-agency",
+"count": 6,
+"lands": [
+"ZA",
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Magellan AI",
+"ats": "breezy",
+"token": "magellan-ai",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "MainStreaming",
+"ats": "breezy",
+"token": "mainstreaming-spa",
+"count": 6,
+"lands": [
+"IT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "MedSchoolCoach",
+"ats": "breezy",
+"token": "medschoolcoach",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Nectar",
+"ats": "breezy",
+"token": "insource-services-group",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "O'Keefe Media",
+"ats": "breezy",
+"token": "o-keefe-media-group",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "PALS Home Health",
+"ats": "breezy",
+"token": "pals-home-health",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Paynovate",
+"ats": "breezy",
+"token": "paynovate",
+"count": 6,
+"lands": [
+"BE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "PragerU",
+"ats": "breezy",
+"token": "prageru",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "PUNCH Cyber Analytics",
+"ats": "breezy",
+"token": "punch-cyber-analytics-group",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "RGroup Realty",
+"ats": "breezy",
+"token": "rgroup-realty",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "RightMove Health",
+"ats": "breezy",
+"token": "rightmove-health",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Rusin Concrete Construction",
+"ats": "breezy",
+"token": "rusinconcrete",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Solomons Europe",
+"ats": "breezy",
+"token": "solomons-europe",
+"count": 6,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Streib",
+"ats": "breezy",
+"token": "streib-company",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SUBSCRIBE",
+"ats": "breezy",
+"token": "subscribe",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Totara Learning Solutions",
+"ats": "breezy",
+"token": "totara-learning-solutions",
+"count": 6,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TRULEO",
+"ats": "breezy",
+"token": "truleo",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Tyton Partners",
+"ats": "breezy",
+"token": "tyton-partners",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "UMAI",
+"ats": "breezy",
+"token": "umai",
+"count": 6,
+"lands": [
+"PT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Voltify",
+"ats": "breezy",
+"token": "voltify",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Vontive",
+"ats": "breezy",
+"token": "vontive",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Waiter.com",
+"ats": "breezy",
+"token": "waiter-com",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "WineDirect Fulfillment",
+"ats": "breezy",
+"token": "winedirect",
+"count": 6,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "YallaPlay",
+"ats": "breezy",
+"token": "yallaplay",
+"count": 6,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Alliance",
+"ats": "breezy",
+"token": "alliance",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Aloha",
+"ats": "breezy",
+"token": "review-wave",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "American AC Heat & Plumbing",
+"ats": "breezy",
+"token": "american-air-conditioning-heating",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Artifex Interior Systems",
+"ats": "breezy",
+"token": "artifex-interior-systems-limited",
+"count": 5,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Asian Law Caucus",
+"ats": "breezy",
+"token": "asian-law-caucus",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BasicBlock",
+"ats": "breezy",
+"token": "basicblock-inc",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bexorg",
+"ats": "breezy",
+"token": "bexorg",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Boldare",
+"ats": "breezy",
+"token": "boldare",
+"count": 5,
+"lands": [
+"PL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Boxbar Tech",
+"ats": "breezy",
+"token": "boxbar-tech",
+"count": 5,
+"lands": [
+"GB",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "BVN Architecture",
+"ats": "breezy",
+"token": "bvn",
+"count": 5,
+"lands": [
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Creative Spirit",
+"ats": "breezy",
+"token": "creative-spirit",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ctrack",
+"ats": "breezy",
+"token": "ctrack",
+"count": 5,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Dozuki",
+"ats": "breezy",
+"token": "dozuki",
+"count": 5,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Elevate Counseling + Wellness",
+"ats": "breezy",
+"token": "elevate-counseling-wellness",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Export Credit Insurance Corporation of SA SOC",
+"ats": "breezy",
+"token": "ecic",
+"count": 5,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "FairSquare",
+"ats": "breezy",
+"token": "fairsquare",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "GO-HR",
+"ats": "breezy",
+"token": "go-hr",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Honestly Farm Kitchens",
+"ats": "breezy",
+"token": "drumanilra",
+"count": 5,
+"lands": [
+"IE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Insure Connect Services",
+"ats": "breezy",
+"token": "insure-connect-services",
+"count": 5,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Interlune",
+"ats": "breezy",
+"token": "interlune",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kindgeek",
+"ats": "breezy",
+"token": "kindgeeks",
+"count": 5,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Legna Software",
+"ats": "breezy",
+"token": "legna-software",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lithios",
+"ats": "breezy",
+"token": "lithios-inc",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "LTG",
+"ats": "breezy",
+"token": "ltg",
+"count": 5,
+"lands": [
+"CO",
+"GB",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Manara",
+"ats": "breezy",
+"token": "manara",
+"count": 5,
+"lands": [
+"SA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Monocle",
+"ats": "breezy",
+"token": "monocle",
+"count": 5,
+"lands": [
+"GB",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "New Incentives",
+"ats": "breezy",
+"token": "new-incentives",
+"count": 5,
+"lands": [
+"NG"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Observador",
+"ats": "breezy",
+"token": "observador",
+"count": 5,
+"lands": [
+"PT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ODC İş Çözümleri Danışmanlık Ticaret A.Ş - SmartMessage",
+"ats": "breezy",
+"token": "smartmessage",
+"count": 5,
+"lands": [
+"TR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "One Step",
+"ats": "breezy",
+"token": "one-step",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Partner Retail Services",
+"ats": "breezy",
+"token": "partner-retail-services",
+"count": 5,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Primeforge",
+"ats": "breezy",
+"token": "primeforge",
+"count": 5,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "ProDev",
+"ats": "breezy",
+"token": "prodev",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Raftelis",
+"ats": "breezy",
+"token": "raftelis",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Scimitar",
+"ats": "breezy",
+"token": "scimitar-inc",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Simple Organic Beauty",
+"ats": "breezy",
+"token": "simple-organic-beauty",
+"count": 5,
+"lands": [
+"BR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Streamhub",
+"ats": "breezy",
+"token": "streamhub",
+"count": 5,
+"lands": [
+"IN",
+"JP"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Texada Software",
+"ats": "breezy",
+"token": "texada-software",
+"count": 5,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The English School",
+"ats": "breezy",
+"token": "the-english-school",
+"count": 5,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "TikTak",
+"ats": "breezy",
+"token": "tiktak",
+"count": 5,
+"lands": [
+"TR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Totalstay",
+"ats": "breezy",
+"token": "totalstay",
+"count": 5,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TravelLab Africa",
+"ats": "breezy",
+"token": "travellab",
+"count": 5,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Verity",
+"ats": "breezy",
+"token": "verity-ag",
+"count": 5,
+"lands": [
+"CH",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Voters of Tomorrow",
+"ats": "breezy",
+"token": "voters-of-tomorrow",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "WalkerHughes",
+"ats": "breezy",
+"token": "walkerhughes",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Warrior Coal",
+"ats": "breezy",
+"token": "warrior-coal-llc",
+"count": 5,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "1st Edge",
+"ats": "breezy",
+"token": "1st-edge-llc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Accordus",
+"ats": "breezy",
+"token": "accordus",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Altus Pediatric Billing",
+"ats": "breezy",
+"token": "altus-pediatric-billing",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "American Coatings Association & PaintCare",
+"ats": "breezy",
+"token": "american-coatings-association",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Anchour",
+"ats": "breezy",
+"token": "anchour",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AngioSafe",
+"ats": "breezy",
+"token": "angiosafe",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ARRCC",
+"ats": "breezy",
+"token": "arrcc",
+"count": 4,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Autoroboto",
+"ats": "breezy",
+"token": "autoroboto-llc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Benzinga",
+"ats": "breezy",
+"token": "benzinga",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Care of Chan",
+"ats": "breezy",
+"token": "care-of-chan",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cloverleaf Bio",
+"ats": "breezy",
+"token": "cloverleaf-bio",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Codebase",
+"ats": "breezy",
+"token": "codebase",
+"count": 4,
+"lands": [
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Corporate Traffic Logistics",
+"ats": "breezy",
+"token": "corporate-traffic-logistics",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Dance To EvOLvE",
+"ats": "breezy",
+"token": "dance-to-evolve",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Darkhorse Tech",
+"ats": "breezy",
+"token": "darkhorse-tech",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Dolly's Life of Many Colors Museum",
+"ats": "breezy",
+"token": "dolly-s-life-of-many-colors-museum",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Eyes On Eyecare",
+"ats": "breezy",
+"token": "eyesoneyecare",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Futamura",
+"ats": "breezy",
+"token": "futamura-usa-inc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "FX Digital",
+"ats": "breezy",
+"token": "fx-digital",
+"count": 4,
+"lands": [
+"GB",
+"ES"
+],
+"added": "2026-11-20"
+},
+{
+"name": "GCI Security",
+"ats": "breezy",
+"token": "gci-security-inc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "GOODWILL IND OF THE CHESAPEAKE",
+"ats": "breezy",
+"token": "goodwill-ind-of-the-chesapeake-inc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "GripFusion",
+"ats": "breezy",
+"token": "gripfusion",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Harper",
+"ats": "breezy",
+"token": "harper",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Hendriks Greenhouses",
+"ats": "breezy",
+"token": "hendriks-greenhouses",
+"count": 4,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JHA Companies",
+"ats": "breezy",
+"token": "jha-companies",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kivo",
+"ats": "breezy",
+"token": "kivo-inc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lab37",
+"ats": "breezy",
+"token": "lab37",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lorain County Commissioners",
+"ats": "breezy",
+"token": "lorain-county-commissioners",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "mtheory",
+"ats": "breezy",
+"token": "mtheory",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NorthPoint Fresh",
+"ats": "breezy",
+"token": "northpoint-development",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Oaktenn",
+"ats": "breezy",
+"token": "oak-tenn",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Officetotal Food Brands, Lda",
+"ats": "breezy",
+"token": "officetotal-food-brands-lda",
+"count": 4,
+"lands": [
+"PT"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ohnstad Twichell",
+"ats": "breezy",
+"token": "ohnstad-twichell",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Park Avenue Center",
+"ats": "breezy",
+"token": "park-avenue-center",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Pillar Properties",
+"ats": "breezy",
+"token": "pillar-properties",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Prodeo Academy",
+"ats": "breezy",
+"token": "prodeo-academy",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ProperExpression",
+"ats": "breezy",
+"token": "proper-expression",
+"count": 4,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Rechat",
+"ats": "breezy",
+"token": "rechat-inc",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reface",
+"ats": "breezy",
+"token": "reface",
+"count": 4,
+"lands": [
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Rootstock Software",
+"ats": "breezy",
+"token": "rootstock-software",
+"count": 4,
+"lands": [
+"US",
+"CA",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Ruvixx",
+"ats": "breezy",
+"token": "ruvixx",
+"count": 4,
+"lands": [
+"BR",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SAOTA",
+"ats": "breezy",
+"token": "saota",
+"count": 4,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "School of the Nations, Macau",
+"ats": "breezy",
+"token": "school-of-the-nations",
+"count": 4,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Splash Sports",
+"ats": "breezy",
+"token": "betterpool",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Spotlight Marketing and Branding",
+"ats": "breezy",
+"token": "spotlight-marketing-and-branding",
+"count": 4,
+"lands": [
+"MX",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Stake",
+"ats": "breezy",
+"token": "stake",
+"count": 4,
+"lands": [
+"GB",
+"AU"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Statusphere",
+"ats": "breezy",
+"token": "statusphere",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Taylor Stitch",
+"ats": "breezy",
+"token": "taylor-stitch",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Dyrt",
+"ats": "breezy",
+"token": "the-dyrt",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "TMTG",
+"ats": "breezy",
+"token": "tmtg",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Transak",
+"ats": "breezy",
+"token": "transak-inc",
+"count": 4,
+"lands": [
+"US",
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Valkyrie Aero",
+"ats": "breezy",
+"token": "valkyrie-aero",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Veev",
+"ats": "breezy",
+"token": "veev",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Vyntra",
+"ats": "breezy",
+"token": "vyntra",
+"count": 4,
+"lands": [
+"CH",
+"BE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Warhorse Studios",
+"ats": "breezy",
+"token": "warhorsestudios",
+"count": 4,
+"lands": [
+"CZ"
+],
+"added": "2026-11-20"
+},
+{
+"name": "WearLinq",
+"ats": "breezy",
+"token": "wearlinq",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Westrocon",
+"ats": "breezy",
+"token": "westrocon",
+"count": 4,
+"lands": [
+"ZA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "William Thomas Digital",
+"ats": "breezy",
+"token": "william-thomas-digital-inc",
+"count": 4,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Winter Environmental",
+"ats": "breezy",
+"token": "winter-environmental",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "WSNA",
+"ats": "breezy",
+"token": "wsna",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Your Money Line",
+"ats": "breezy",
+"token": "your-money-line",
+"count": 4,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Zendar",
+"ats": "breezy",
+"token": "zendar",
+"count": 4,
+"lands": [
+"US",
+"DE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "AdQuick",
+"ats": "breezy",
+"token": "adquick",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Allies4Outcomes",
+"ats": "breezy",
+"token": "allies4outcomes",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "American Equipment Services",
+"ats": "breezy",
+"token": "1aes",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Anthos Home",
+"ats": "breezy",
+"token": "anthos-home",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Artis Defense",
+"ats": "breezy",
+"token": "artis-llc",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Assignar",
+"ats": "breezy",
+"token": "assignar",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Astanza Laser",
+"ats": "breezy",
+"token": "astanza-laser",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Avalon Salons I Spa",
+"ats": "breezy",
+"token": "avalon-salons-and-spa",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Barn2Door",
+"ats": "breezy",
+"token": "barn2door-inc",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bird&Be",
+"ats": "breezy",
+"token": "bird-be",
+"count": 3,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bitbean",
+"ats": "breezy",
+"token": "bitbean",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Blessings in a Backpack",
+"ats": "breezy",
+"token": "blessings-in-a-backpack",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Bullseye Strategy",
+"ats": "breezy",
+"token": "bullseye-strategy",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cariina",
+"ats": "breezy",
+"token": "cariina",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CEFALY Technology",
+"ats": "breezy",
+"token": "cefaly-technology",
+"count": 3,
+"lands": [
+"US",
+"BE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Chazin",
+"ats": "breezy",
+"token": "chazin-company",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Clarity RCM",
+"ats": "breezy",
+"token": "clarity-rcm",
+"count": 3,
+"lands": [
+"US",
+"IN"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Clean Air Task Force",
+"ats": "breezy",
+"token": "clean-air-task-force",
+"count": 3,
+"lands": [
+"US",
+"GB",
+"BE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cloverleaf Care",
+"ats": "breezy",
+"token": "cloverleaf-care",
+"count": 3,
+"lands": [
+"KE",
+"IN",
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Codeminders",
+"ats": "breezy",
+"token": "codeminders",
+"count": 3,
+"lands": [
+"PL"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cogent Labs",
+"ats": "breezy",
+"token": "cogentlabs",
+"count": 3,
+"lands": [
+"JP"
+],
+"added": "2026-11-20"
+},
+{
+"name": "CoinRoutes",
+"ats": "breezy",
+"token": "coinroutes-inc",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Cometeer",
+"ats": "breezy",
+"token": "cometeer",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Consolidated Bus Transit",
+"ats": "breezy",
+"token": "consolidated-bus-transit",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Countable Labs",
+"ats": "breezy",
+"token": "countablelabs",
+"count": 3,
+"lands": [
+"US",
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Djamo",
+"ats": "breezy",
+"token": "djamo",
+"count": 3,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "eiGroup",
+"ats": "breezy",
+"token": "eigroup",
+"count": 3,
+"lands": [
+"AZ"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Erbis",
+"ats": "breezy",
+"token": "erbis",
+"count": 3,
+"lands": [
+"PL",
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Executive Insight",
+"ats": "breezy",
+"token": "executive-insight",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Fohr",
+"ats": "breezy",
+"token": "fohr",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Forrest Technical Coatings",
+"ats": "breezy",
+"token": "forrest-technical-coatings",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Founder's CPA",
+"ats": "breezy",
+"token": "founder-s-cpa",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Fugo Games",
+"ats": "breezy",
+"token": "fugo-games",
+"count": 3,
+"lands": [
+"TR"
+],
+"added": "2026-11-20"
+},
+{
+"name": "i-Tech Support",
+"ats": "breezy",
+"token": "i-tech",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "IOU Financial",
+"ats": "breezy",
+"token": "iou-financial",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Jibble",
+"ats": "breezy",
+"token": "jibble-group",
+"count": 3,
+"lands": [
+"AE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "JumpSeat",
+"ats": "breezy",
+"token": "jumpseat",
+"count": 3,
+"lands": [
+"AR",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kickstart Accounting",
+"ats": "breezy",
+"token": "kickstart-accounting-inc",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Kiki Club",
+"ats": "breezy",
+"token": "kiki-club",
+"count": 3,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Lava",
+"ats": "breezy",
+"token": "lava",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "LOVE CORN",
+"ats": "breezy",
+"token": "love-corn",
+"count": 3,
+"lands": [
+"US",
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Mae Health",
+"ats": "breezy",
+"token": "mae-health",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Manyone",
+"ats": "breezy",
+"token": "manyone",
+"count": 3,
+"lands": [
+"NO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "MKThink",
+"ats": "breezy",
+"token": "mk-think",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Moser Consulting",
+"ats": "breezy",
+"token": "moser-consulting",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "MTI",
+"ats": "breezy",
+"token": "mti-efc42e758443",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Nine Feet Tall",
+"ats": "breezy",
+"token": "nine-feet-tall",
+"count": 3,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NOACA",
+"ats": "breezy",
+"token": "noaca",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NurseDash",
+"ats": "breezy",
+"token": "nursedash",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "NurtureCare",
+"ats": "breezy",
+"token": "nurturecare",
+"count": 3,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Odisea Cultura | Cultsure",
+"ats": "breezy",
+"token": "odisea-cultura",
+"count": 3,
+"lands": [
+"CO"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Organization for Research and Learning",
+"ats": "breezy",
+"token": "organization-for-research-and-learning",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Percival Engineering",
+"ats": "breezy",
+"token": "percival-engineering",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Pharmacy Data Management",
+"ats": "breezy",
+"token": "pdmi",
+"count": 3,
+"lands": [
+"PL",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Poseidon Digital",
+"ats": "breezy",
+"token": "poseidon",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Powered by search",
+"ats": "breezy",
+"token": "powered-by-search",
+"count": 3,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "ProQuest Consulting",
+"ats": "breezy",
+"token": "proquest-consulting",
+"count": 3,
+"lands": [
+"AU",
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Quatrain Creative",
+"ats": "breezy",
+"token": "quatrain-creative",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reamcare",
+"ats": "breezy",
+"token": "reamcare",
+"count": 3,
+"lands": [
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Reed College",
+"ats": "breezy",
+"token": "reed-college",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Repair the World",
+"ats": "breezy",
+"token": "repair-the-world",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Safe Passage Project",
+"ats": "breezy",
+"token": "safe-passage-project-corporation",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Scarpel Telecom",
+"ats": "breezy",
+"token": "scarpel-telecom",
+"count": 3,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Sentinel Blue",
+"ats": "breezy",
+"token": "sentinel-blue",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Shearwater Aerospace",
+"ats": "breezy",
+"token": "shearwater-aerospace",
+"count": 3,
+"lands": [
+"US",
+"CA",
+"UA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Signal",
+"ats": "breezy",
+"token": "signal-group",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SikhRI",
+"ats": "breezy",
+"token": "sikhri",
+"count": 3,
+"lands": [
+"CA",
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Skywire Networks",
+"ats": "breezy",
+"token": "skywirenetworks",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Solugen",
+"ats": "breezy",
+"token": "solugen",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Sparx Hockey",
+"ats": "breezy",
+"token": "sparx-hockey",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "StartupBlink",
+"ats": "breezy",
+"token": "startupblink",
+"count": 3,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "Sterling Fleet Outfitters",
+"ats": "breezy",
+"token": "sterling-fleet-outfitters",
+"count": 3,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SugarShot",
+"ats": "breezy",
+"token": "sugarshot",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "SURJ",
+"ats": "breezy",
+"token": "surj",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Switchboard",
+"ats": "breezy",
+"token": "switchboard",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Synnefa",
+"ats": "breezy",
+"token": "synnefa",
+"count": 3,
+"lands": [
+"KE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Syteca",
+"ats": "breezy",
+"token": "syteca",
+"count": 3,
+"lands": [
+"CO",
+"MX"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Tau Six",
+"ats": "breezy",
+"token": "tau-six",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Croghan Colonial Bank",
+"ats": "breezy",
+"token": "the-croghan-colonial-bank",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The HOTH",
+"ats": "breezy",
+"token": "the-hoth",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Law Firm for Truck Safety",
+"ats": "breezy",
+"token": "the-law-firm-for-truck-safety",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "The Timothy School",
+"ats": "breezy",
+"token": "the-timothy-school",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Third and Grove",
+"ats": "breezy",
+"token": "thirdandgrove",
+"count": 3,
+"lands": [
+"US",
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Threatscape",
+"ats": "breezy",
+"token": "threatscape",
+"count": 3,
+"lands": [
+"GB",
+"IE"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Transcend Specialized Dentistry",
+"ats": "breezy",
+"token": "transcend-specialized-dentistry",
+"count": 3,
+"lands": [
+"CA"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Triad Electronic Technologies",
+"ats": "breezy",
+"token": "triad-electronic-technologies",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "V-Thru",
+"ats": "breezy",
+"token": "v-thru",
+"count": 3,
+"lands": [],
+"added": "2026-11-20"
+},
+{
+"name": "VISITS",
+"ats": "breezy",
+"token": "visits",
+"count": 3,
+"lands": [
+"AU",
+"GB"
+],
+"added": "2026-11-20"
+},
+{
+"name": "VitalCheck Wellness",
+"ats": "breezy",
+"token": "vitalcheck-wellness",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Xplor Education",
+"ats": "breezy",
+"token": "xplor-education",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Your Behavioral Health",
+"ats": "breezy",
+"token": "your-behavioral-health",
+"count": 3,
+"lands": [
+"US"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Urrly",
+"ats": "breezy",
+"token": "urrly",
+"count": 41,
+"lands": [
+"US",
+"PH"
+],
+"added": "2026-11-20"
+},
+{
+"name": "Viamo",
+"ats": "breezy",
+"token": "viamo-inc",
+"count": 6,
+"lands": [
+"CA",
+"NG"
+],
+"added": "2026-11-20"
+}
+]
