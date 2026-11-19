@@ -44,9 +44,9 @@ Every result on the first page of Google for the two main phrases is kind (b). T
 
 ## Still open (in order of value)
 
-1. A page per platform: `/widgets/wordpress/`, `/widgets/webflow/`, `/widgets/wix/`, `/widgets/squarespace/`,
+1. ✅ (done 15–17 Nov 2026, found already built on 19 Nov) A page per platform: `/widgets/wordpress/`, `/widgets/webflow/`, `/widgets/wix/`, `/widgets/squarespace/`,
    `/widgets/shopify/`, `/widgets/framer/`, `/widgets/notion/`, each with its own steps and screenshots of the result.
-2. Pages for the neighbouring searches: "remote jobs widget", "careers page widget", "embed job listings on website",
+2. ✅ (done 17 Nov 2026: `/widgets/remote-jobs/`, `/widgets/careers-page/`, `/widgets/embed-job-listings/`) Pages for the neighbouring searches: "remote jobs widget", "careers page widget", "embed job listings on website",
    "greenhouse job board embed", "lever jobs embed", "hiring badge".
 3. A WordPress plugin (shortcode and block) published on wordpress.org: needs the owner's wordpress.org account.
 4. More hiring systems in own-board mode where the public feed allows cross-origin reads (Workable, Recruitee, SmartRecruiters,
