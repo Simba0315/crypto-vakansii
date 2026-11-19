@@ -74,19 +74,35 @@
   T.stateTax = function (S, salary, status, pretax) {
     var g = num(salary), k = clean(pretax) === '' ? 0 : num(pretax), st = status === 'joint' ? 'joint' : 'single', f = S[st === 'joint' ? 'j' : 's'];
     if (!(g > 0) || g > 1e8 || !(k >= 0) || k > g) return null;
-    var wages = S.pt ? g : g - k, ex = S.exMax && wages > S.exMax[st] ? 0 : f.e, std = f.d, credit = f.c, ded = 0;
+    var wages = S.pt ? g : g - k, ex = S.exMax && wages > S.exMax[st] ? 0 : f.e, std = f.d, credit = f.c, ded = 0, b = f.b;
     var upTo = function (list) { return list.filter(function (x) { return x[0] == null || wages <= x[0]; })[0][1]; };
+    var sched = function (x) { var t = 0, lo = 0; b.forEach(function (r) { var hi = r[0] == null ? Infinity : r[0]; if (x > lo) t += (Math.min(x, hi) - lo) * r[1]; lo = hi; }); return t; };
     if (S.xs) ex = upTo(S.xs) * (st === 'joint' ? 2 : 1);                                  // an exemption that depends on income
+    if (S.xb) ex = upTo(S.xb[st]);
     if (S.sp) std = Math.max(0, std - S.sp[st][1] * Math.max(0, wages - S.sp[st][0]));     // a deduction or credit that shrinks with income
+    if (S.ss) std = Math.max(S.ss[st][3], std - S.ss[st][2] * Math.ceil(Math.max(0, wages - S.ss[st][0]) / S.ss[st][1]));
     if (S.cp) credit = Math.max(0, credit - S.cp[st][1] * Math.max(0, wages - S.cp[st][0]));
-    if (S.fd) ded = Math.min(S.fd.cap[st], upTo(S.fd.steps) * T.takeHome(g, st, k).fed);   // part of the federal tax is deductible
-    var taxable = S.base === 'fed' ? Math.max(0, g - k - T.TAX2026.std[st]) : Math.max(0, wages - std - ex - ded), tax = 0, lo = 0;
-    f.b.forEach(function (b) { var hi = b[0] == null ? Infinity : b[0]; if (taxable > lo) tax += (Math.min(taxable, hi) - lo) * b[1]; lo = hi; });
+    if (S.cm && wages > S.cm[st]) credit = 0;
+    if (S.fd) {                                                                             // part of the federal tax is deductible
+      var cap = S.fd.cap_steps ? upTo(S.fd.cap_steps[st]) : S.fd.cap ? S.fd.cap[st] : null;
+      ded = upTo(S.fd.steps) * T.takeHome(g, st, k).fed; if (cap != null) ded = Math.min(cap, ded);
+    }
+    var taxable = S.base === 'fed' ? Math.max(0, g - k - T.TAX2026.std[st]) : Math.max(0, wages - std - ex - ded), tax = sched(taxable);
     if (S.ao && taxable > S.ao[0]) tax += S.ao[1];
+    if (S.rc && wages > S.rc.from_income) {                                                // New York takes back the lower rates above $107,650
+      var first = S.rc[st], kk = first;
+      for (var i = 0; i < b.length; i++) if (b[i][0] == null || taxable <= b[i][0]) { kk = Math.max(first, i); break; }
+      if (wages > S.rc.flat_over) tax = taxable * b[b.length - 1][1];
+      else {
+        var low = b[kk - 1][0], base = kk === first ? 0 : low * b[kk - 1][1] - sched(low), start = kk === first ? S.rc.from_income : low;
+        tax = tax + base + (taxable * b[kk][1] - tax - base) * Math.min(1, (wages - start) / 50000);
+      }
+    }
     tax = Math.max(0, tax - credit);
+    var local = S.lr ? taxable * S.lr[0] : 0;
     var pay = (S.pay || []).map(function (p) { var a = p[1] * (p[2] == null ? g : Math.min(g, p[2])); return { name: p[0], amount: p[3] == null ? a : Math.min(a, p[3]) }; });
     var payTotal = pay.reduce(function (t, x) { return t + x.amount; }, 0);
-    return { taxable: taxable, tax: tax, pay: pay, payTotal: payTotal, total: tax + payTotal };
+    return { taxable: taxable, tax: tax, local: local, localName: S.lr ? S.lr[1] : '', pay: pay, payTotal: payTotal, total: tax + local + payTotal };
   };
 
   /* ---------- pay raise ---------- */
@@ -2268,10 +2284,10 @@
       var s = S ? T.stateTax(S, v.salary, v.status, v.pretax) : null, net = r.net - (s ? s.total : 0), gone = r.fed + r.ss + r.med + (s ? s.total : 0);
       board(out, title, 'Tax year 2026' + (S ? ' · ' + S.n : ''),
         big(money(net / n, '$', 2), 'per paycheck, ' + perName[v.freq || 'biweek']) +
-        sub(esc(money(net, '$', 0)) + ' a year after ' + (S ? 'federal and ' + esc(S.n) + ' taxes' : 'federal income tax, Social Security and Medicare') + '; ' + esc(fmt(gone / r.gross * 100, 1)) + '% of the salary goes to them. ' + (S ? 'City and county taxes are not included.' : 'Choose a state to take off its tax as well.')) +
+        sub(esc(money(net, '$', 0)) + ' a year after ' + (S ? 'federal and ' + esc(S.n) + ' taxes' : 'federal income tax, Social Security and Medicare') + '; ' + esc(fmt(gone / r.gross * 100, 1)) + '% of the salary goes to them. ' + (S ? (S.lr ? 'The county tax is included; city taxes are not.' : 'City and county taxes are not included.') : 'Choose a state to take off its tax as well.')) +
         kv([['Salary', money(r.gross, '$', 0)], r.pretax ? ['Pre-tax contributions', '−' + money(r.pretax, '$', 0)] : null,
             ['Federal income tax', '−' + money(r.fed, '$', 0)], ['Social Security (6.2%)', '−' + money(r.ss, '$', 0)], ['Medicare', '−' + money(r.med, '$', 0)]]
-          .concat(s ? [[S.n + ' income tax', '−' + money(s.tax, '$', 0)]].concat(s.pay.map(function (x) { return [x.name, '−' + money(x.amount, '$', 0)]; })) : [])
+          .concat(s ? [[S.n + ' income tax', '−' + money(s.tax, '$', 0)]].concat(s.local ? [[s.localName, '−' + money(s.local, '$', 0)]] : []).concat(s.pay.map(function (x) { return [x.name, '−' + money(x.amount, '$', 0)]; })) : [])
           .concat([['Take-home per year', money(net, '$', 0)], ['Take-home per month', money(net / 12, '$', 0)], ['Top federal rate on your next dollar', fmt(r.marg * 100, 0) + '%']])));
     });
     var st = root.getAttribute('data-state');

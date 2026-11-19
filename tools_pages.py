@@ -423,7 +423,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     st_data = json.dumps({c: {"n": x["name"], "base": x["base"], "s": x["single"], "j": x["joint"], "pay": x["pay"],
                               **({"exMax": x["ex_max"]} if x.get("ex_max") else {}), **({"pt": 1} if x.get("pretax_taxed") else {}),
                               **({"sp": x["std_phase"]} if x.get("std_phase") else {}), **({"cp": x["credit_phase"]} if x.get("credit_phase") else {}), **({"ao": x["add_over"]} if x.get("add_over") else {}),
-                              **({"xs": x["ex_steps"]} if x.get("ex_steps") else {}), **({"fd": x["fed_ded"]} if x.get("fed_ded") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+                              **({"xs": x["ex_steps"]} if x.get("ex_steps") else {}), **({"fd": x["fed_ded"]} if x.get("fed_ded") else {}),
+                              **({"xb": x["ex_by"]} if x.get("ex_by") else {}), **({"ss": x["std_steps"]} if x.get("std_steps") else {}), **({"cm": x["credit_max"]} if x.get("credit_max") else {}),
+                              **({"rc": x["recapture"]} if x.get("recapture") else {}), **({"lr": x["local_rate"]} if x.get("local_rate") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
     def th_form(code=""):
         """The calculator; on a state's own page that state is chosen when the page opens (tools.js reads data-state)."""
@@ -444,6 +446,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     def st_after(code, sal, status="single"):
         tx, ss, med, net = take_home_2026(sal, status)
         r = state_tax.state_tax(code, sal, status, 0, tx)
+        r = dict(r, tax=r["tax"] + r["local"])                         # a county tax every resident pays (Maryland) counts as state tax in the tables
         return tx, ss + med, r, net - r["total"] + 1e-6              # half a dollar rounds up, as in the calculator
     st_row = lambda c: (lambda a: f'<tr><td><a href="{P}/tools/take-home-pay/{ST[c]["slug"]}/">{_e(ST[c]["name"])}</a></td><td>${a[2]["tax"]:,.0f}</td><td>${a[2]["pay_total"]:,.0f}</td><td><strong>${a[3]:,.0f}</strong></td><td>${a[3] / 12:,.0f}</td></tr>')(st_after(c, 75000))
 
@@ -2352,6 +2355,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         for k_, lab in (("d", "Standard deduction"), ("e", "Personal exemption"), ("c", "Credit against the tax")):
             if f_[k_] or x["joint"][k_]: facts.append((lab, f"${f_[k_]:,} single, ${x['joint'][k_]:,} joint"))
         facts += [(p[0], pc_(p[1]) + (f" of wages up to ${p[2]:,}" if p[2] else " of wages") + (f", at most ${p[3]:,} a year" if p[3] else "")) for p in x["pay"]]
+        if x.get("local_rate"): facts.append((x["local_rate"][1].split(" (")[0], f"{pc_(x['local_rate'][0])} of {name} taxable income, included in the figures here"))
         if x["local"]: facts.append(("City and county taxes", x["local"] + " Not included here."))
         if x["note"]: facts.append(("Good to know", x["note"]))
         how = (('<div class="st-tabs">' + "".join(f'<div><p class="tl-t">{lab} taxable income</p><div class="tablewrap"><table><tr><th>Taxable income</th><th>Rate</th></tr>{band(x[k_]["b"])}</table></div></div>' for k_, lab in (("single", "Single:"), ("joint", "Married filing jointly:"))) + "</div>") if has_tax else f"<p>{_e(name)} does not tax wages.</p>")
