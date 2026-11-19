@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-19 — Internal links: every city and country page now lists every narrower list under it (ways to work, kinds of work, fields, skills, perks), and /remote/ lists every remote list, with no cap of 14; the three “near me” pages link to each other; the badge card on the home page leads to /hiring-badge/. Of 11,594 pages other than job pages, 5 have no link from another page's body (all five are in the header or footer) and 368 have one.
 - 2026-11-19 — My jobs (/my-jobs/): a board view beside the list, one column per stage (Saved, Applied, Interviewing, Offer) as on Indeed's tracker; a card moves by its menu or by dragging it to another column, and the choice of view is remembered in this browser.
 - 2026-11-19 — Company directory (/companies/): a field filter beside the name filter, each company placed in the field it hires for most. Pricing pages of ZipRecruiter and Adzuna show a bot check, so they stay out of /job-posting-sites/.
 - 2026-11-19 — Company pages: “How hiring works at …” (the steps the company's own postings name: recruiter call, take-home task, technical interview, final round, background check and others, each with how many postings name it, plus a question) and “Internships and first jobs at …” when there are three or more. Company comparisons: what each hires most for and how many junior roles each has. Part-time jobs: hourly pay by job title.

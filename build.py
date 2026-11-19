@@ -1077,6 +1077,18 @@ def labrow(label, items, more=None):
     return f'<div class="lrow"><b>{e(label)}</b><div>{"".join(items)}{tail}</div></div>'
 
 
+def every_list(title, entries, groups):
+    """Every narrower list under one page, grouped, with no cap (internal links, owner 18 Nov: "a link that boosts every page"):
+    rel() shows the 14 largest, so the small lists of a big city were reached from nowhere. entries: [(path, label, count)];
+    groups: [(label, regex on the path)], the first group that matches takes the entry."""
+    seen, rows = set(), ""
+    for label, rx in groups:
+        xs = [x for x in entries if x[0] not in seen and re.search(rx, x[0])]
+        seen |= {x[0] for x in xs}
+        if xs: rows += labrow(label, [f'<a href="{P}/{u}">{e(t)} <b>{n:,}</b></a>' for u, t, n in sorted(xs, key=lambda x: -x[2])])
+    return section(title, rows) if rows else ""
+
+
 def rel(links, more=None):
     """Row of related listing links: [(path, label, count)], biggest first; `more` = (path, label) of the full directory."""
     links = sorted(links, key=lambda x: -x[2])[:14]
@@ -2398,7 +2410,7 @@ def main():
                  '<span class="wl"><b>Senior Data Engineer</b><span>Spotify · Remote</span></span><span class="wl"><b>Product Designer</b><span>Monzo · London</span></span>'
                  '<span class="wl"><b>DevOps Engineer</b><span>GitLab · Remote</span></span></span>'
                  '<span class="tbody"><b>A list of jobs for your site</b><span>For a blog, a community or a company site: paste a short code once and the list stays fresh by itself.</span><i><u>Make yours</u></i></span></a>'
-                 f'<a class="tcard" href="{P}/widgets/"><span class="tprev center" aria-hidden="true"><img src="{P}/hiring-badge.svg" alt="" width="220" height="48" loading="lazy"></span>'
+                 f'<a class="tcard" href="{P}/hiring-badge/"><span class="tprev center" aria-hidden="true"><img src="{P}/hiring-badge.svg" alt="" width="220" height="48" loading="lazy"></span>'
                  '<span class="tbody"><b>A “we’re hiring” badge with a live number</b><span>A small picture that shows how many roles are open today, for a footer, a post or a project page.</span><i><u>Get the badge</u></i></span></a>'
                  f'<a class="tcard" href="{P}/board/"><span class="tprev tv" aria-hidden="true"><span class="tvh"><b>Fresh on the board</b><span>2 / 4 · 19:34</span></span>'
                  '<span class="tvr"><em>1D</em>Data Engineer<span>itD Tech</span></span><span class="tvr"><em>1D</em>Account Executive<span>Staffbase</span></span>'
@@ -2727,6 +2739,8 @@ def main():
             remote, intro_for(remote, "remote ", row=True), stats="rest", extra=labrow("Kind", rkinds) + rel(REL["remote"]),
             pics=hub_sections("remote roles", remote)[0], list_title="All remote jobs, newest first",
             hub=(section("Remote jobs by category", f'<ul class="tiles">{rcats}</ul>', ("jobs/", "Search every job")) if rcats else "") + remote_more + hub_sections("remote roles", remote)[1],
+            after=every_list("Every list of remote jobs", REL["remote"], (("Kind of contract and level", r"^remote/(?!skills/)[^/]+/$"), ("By kind of work", r"^roles/"),
+                             ("By place", r"^locations/"), ("By skill", r"^remote/skills/"), ("By pay", r"^salary/"), ("More", r"."))),
             feed=True, faq="remote jobs", faq_extra=rm_qa)
     lap('Crypto: the hub answers the search "crypto jobs" (and "web3 ')
     # Crypto: the hub answers the search "crypto jobs" (and "web3 jobs", "blockchain jobs"), so it shows what these jobs pay, who
@@ -3158,7 +3172,10 @@ def main():
         listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {name} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'job')} in {name}. Startups and established companies hiring now.",
                 js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), stats=True, links=co_link, extra=rel(REL["place:" + slug], ("locations/", "All locations")), pics=hub_sections(f"roles in {name}", js, "places")[0], faq=f"jobs in {name}", faq_extra=pl_qa, feed=True,
-                hub=hub_sections(f"roles in {name}", js, "places")[1], list_title=f"Newest jobs in {name}", after=alert_form(f"new jobs in {short}", loc=slug))
+                hub=hub_sections(f"roles in {name}", js, "places")[1], list_title=f"Newest jobs in {name}",
+                after=every_list(f"Every list of jobs in {short}", REL["place:" + slug], (("Ways to work", r"^locations/[^/]+/(?:remote|part-time|entry-level|internships|contract)/$"),
+                                 ("By kind of work", r"^roles/"), ("By field", r"^locations/[^/]+/(?!skills/|companies/)[^/]+/$"), ("By skill", r"^locations/[^/]+/skills/"),
+                                 ("With a perk", r"^perks/"), ("More", r"."))) + alert_form(f"new jobs in {short}", loc=slug))
     week7 = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     for name, slug, js in places:
         if slug not in co_in: continue
@@ -8618,6 +8635,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        f'<a class="feat" href="{P}/part-time/"><h3>Part-time jobs</h3><p>{sum(1 for j in active if j.get("etype") == "Part-time"):,} jobs for fewer hours than a full week.</p></a>'
                        f'<a class="feat" href="{P}/map/"><h3>Jobs on a map</h3><p>Every city with open jobs as a dot on a world map. Search a skill and see where it is hiring.</p></a></div>', label="No commute")
              + static_list
+             + '<p class="note cmpl">Near you: ' + " · ".join(f'<a href="{P}/{u_}">{l_}</a>' for u_, l_ in (("jobs-near-me/", "All jobs near me"), ("full-time-jobs-near-me/", "Full-time jobs near me"), ("part-time-jobs-near-me/", "Part-time jobs near me")) if u_ != path) + "</p>"
              + section(f"Questions about {word}jobs [[near you]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>", label="Questions"), head=ld_, cls="hub sp nearp")
     near_page("jobs-near-me/", "", "Jobs near me", f"Jobs Near Me: {len(active):,} open jobs in {len(places)} cities and countries | {SITE}",
               f"Jobs near you, hiring now: {len(active):,} open jobs in {len(places)} cities and countries, read from employers’ own pages every hour. Your country is found from the time zone; pick a city or allow location for the nearest one.",
