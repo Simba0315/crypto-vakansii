@@ -36,7 +36,7 @@ def _rules_text():
 RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
-ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json")
+ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -44,8 +44,11 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # 12 at a time took 54 minutes of a run and 24 at a time about 25; the run's limit is 55.
 # JazzHR (19 Nov 2026): every customer's board is a subdomain of applytojob.com, one service, so 4 boards at a time and at most four
 # requests a second in all; its pages take a second or two to answer, so in practice it is two or three a second.
-ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4}
-ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5}
+# Breezy and BambooHR (19 Nov 2026): one service each as well (every board a subdomain), so the same care as JazzHR.
+ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
+             "breezy": 4, "bamboohr": 4}
+ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
+           "breezy": 0.3, "bamboohr": 0.3}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -59,7 +62,7 @@ LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this 
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
-SLOW_ATS |= {"jazzhr"}
+SLOW_ATS |= {"jazzhr", "breezy", "bamboohr"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -1578,8 +1581,113 @@ def fetch_jazzhr(src, reuse=None):
     return name, out
 
 
+def detail_board(src, reuse, ats, items, read):
+    """A board whose list names its postings and whose text costs one request a posting (Breezy, BambooHR), read as fetch_jazzhr
+    reads JazzHR: an unchanged posting keeps its record, at most DETAILS others are read (those the record has never held first),
+    and the rest wait for the next read. items: [(id, what the list says of it)]; read(id, raw) gives the record, or None."""
+    name, out, wait = src["name"], [], []
+    src["not_english"] = 0
+    for jid, raw in items:
+        full_id = f"{ats}-{slugify(name)}-{jid}"
+        if reuse and (rec := reuse(full_id, fingerprint(raw))) is not None:
+            out.append(rec); continue
+        old, rh = (reuse(full_id) if reuse else None), raw_hash(raw)
+        if old is not None and old.get("rh", rh) == rh and not REREAD:
+            old["rh"] = rh; out.append(old); continue
+        wait.append((old is not None, jid, raw, rh, full_id))
+    asked = 0
+    for _, jid, raw, rh, full_id in sorted(wait, key=lambda w: w[0]):
+        rec = None
+        if asked < DETAILS and full_id not in _jazz_skip:
+            asked += 1
+            polite(ats)
+            rec = read(jid, raw)
+            if rec == "not english":
+                src["not_english"] += 1; _jazz_skip.add(full_id); rec = None
+            elif rec is not None:
+                rec["h"], rec["rh"] = fingerprint(raw), rh
+        if rec is None and reuse: rec = reuse(full_id)
+        if rec is not None: out.append(rec)
+    return name, out
+
+
+# Breezy HR (https://<company>.breezy.hr, sources_breezy.json, "token": the subdomain; discover_ats.py finds them). /json is the list
+# its careers page reads: every published position with its place, remote flag, type, date and pay. The text is on the position's
+# own page, in the JobPosting data it publishes for search engines. robots.txt of a board (19 Nov 2026) keeps crawlers out of
+# /css, /fonts, /stylesheets and /javascripts only.
+def breezy_place(loc):
+    loc = loc if isinstance(loc, dict) else {}
+    parts = [str(loc.get("city") or "").strip(), str((loc.get("state") or {}).get("name") or "").strip(), str((loc.get("country") or {}).get("name") or "").strip()]
+    return ", ".join(dict.fromkeys(p for p in parts if p)) or str(loc.get("name") or "").strip()
+
+
+def fetch_breezy(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("breezy")
+    d = get_json(f"https://{tok}.breezy.hr/json", 60)
+    if not isinstance(d, list): return name, None
+    items = []
+    for p in d:
+        if not isinstance(p, dict) or not p.get("id") or not p.get("name") or not p.get("url"): continue
+        locs = [l for l in (p.get("locations") or [p.get("location")]) if isinstance(l, dict)]
+        rd = [str((l.get("remote_details") or {}).get("value") or "") for l in locs]
+        items.append((p["id"], {"url": p["url"], "title": p["name"], "place": "; ".join(dict.fromkeys(x for x in map(breezy_place, locs[:4]) if x)),
+                                "remote": any(l.get("is_remote") for l in locs) and "hybrid" not in rd, "hybrid": "hybrid" in rd,
+                                "type": str((p.get("type") or {}).get("name") or ""), "dept": str(p.get("department") or ""),
+                                "posted": str(p.get("published_date") or ""), "pay": str(p.get("salary") or "")}))
+
+    def read(jid, raw):
+        d = jazz_page(_net.get_text(raw["url"], 40, accept="text/html", compressed=True))
+        desc = str(d.get("description") or "")
+        if not d or not desc: return None
+        text = strip_html(desc)
+        if not english(f"{raw['title']}\n{text}"): return "not english"
+        return parse(name, "breezy", jid, raw["title"], raw["url"], raw["place"], raw["remote"], raw["dept"], str(d.get("datePosted") or raw["posted"])[:10],
+                     text, raw["pay"] or jazz_pay(d), raw["type"], desc, raw["hybrid"], posted_at=raw["posted"] or None)
+    return detail_board(src, reuse, "breezy", items, read)
+
+
+# BambooHR (https://<company>.bamboohr.com/careers, sources_bamboo.json, "token": the subdomain). /careers/list is the list its
+# careers page reads; /careers/<id>/detail gives one opening with its text, date, pay and address. robots.txt of a board
+# (19 Nov 2026): "Disallow:" with nothing after it, so everything may be read.
+BAMBOO_TYPE = {"1": "remote", "2": "hybrid"}            # locationType of an opening; anything else is on site
+
+
+def bamboo_place(loc, ats_loc=None):
+    loc, al = (loc if isinstance(loc, dict) else {}), (ats_loc if isinstance(ats_loc, dict) else {})
+    parts = [loc.get("city") or al.get("city"), loc.get("state") or al.get("state") or al.get("province"), loc.get("addressCountry") or al.get("country")]
+    return ", ".join(dict.fromkeys(str(p).strip() for p in parts if p and str(p).strip()))
+
+
+def fetch_bamboohr(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("bamboohr")
+    d = get_json(f"https://{tok}.bamboohr.com/careers/list", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("result"), list): return name, None
+    items = []
+    for p in d["result"]:
+        if not isinstance(p, dict) or not p.get("id") or not p.get("jobOpeningName"): continue
+        kind = BAMBOO_TYPE.get(str(p.get("locationType") or ""), "")
+        items.append((str(p["id"]), {"title": p["jobOpeningName"], "place": bamboo_place(p.get("location"), p.get("atsLocation")),
+                                     "remote": bool(p.get("isRemote")) or kind == "remote", "hybrid": kind == "hybrid",
+                                     "type": str(p.get("employmentStatusLabel") or ""), "dept": str(p.get("departmentLabel") or "")}))
+
+    def read(jid, raw):
+        x = (get_json(f"https://{tok}.bamboohr.com/careers/{jid}/detail", 40) or {}).get("result") or {}
+        o = x.get("jobOpening") if isinstance(x, dict) else None
+        if not isinstance(o, dict) or not o.get("description"): return None
+        desc, url = str(o["description"]), str(o.get("jobOpeningShareUrl") or f"https://{tok}.bamboohr.com/careers/{jid}")
+        text = strip_html(desc)
+        if not english(f"{raw['title']}\n{text}"): return "not english"
+        kind = BAMBOO_TYPE.get(str(o.get("locationType") or ""), "")
+        return parse(name, "bamboohr", jid, raw["title"], url, bamboo_place(o.get("location"), o.get("atsLocation")) or raw["place"],
+                     raw["remote"] or kind == "remote", raw["dept"], str(o.get("datePosted") or "")[:10], text, str(o.get("compensation") or "").strip(),
+                     str(o.get("employmentStatusLabel") or raw["type"]), desc, raw["hybrid"] or kind == "hybrid")
+    return detail_board(src, reuse, "bamboohr", items, read)
+
+
 _fetch_any = fetch
-READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr}      # the systems read outside fetch_feed
+READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr}      # the systems read outside fetch_feed
 
 
 def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)

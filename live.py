@@ -58,11 +58,16 @@ SLOW = collect.SLOW_ATS                                  # one request per 20 or
 collect.DESC_SINCE = ""
 # For a job the site has without its text, the text is read on the next read of its board: at most TEXTS_SLOW of them per read on
 # Workday, SmartRecruiters and JazzHR (one request each, after the postings new to the site; 891 Workday boards lacked 103,000 texts
-# on 19 Nov 2026, at most 905 on one board: a day of hourly reads), at most TEXTS_LIST elsewhere (the text is in the list already;
-# only the parsing costs, so a board of thousands is spread over a few reads).
-TEXTS_SLOW, TEXTS_LIST = 40, 500
+# on 19 Nov 2026, at most 905 on one board: a day and a half of hourly reads), at most TEXTS_LIST elsewhere (the text is in the list
+# already; only the parsing costs, so a board of thousands is spread over a few reads).
+# 25, not 40 as on the first day: with 40 a Workday board took over a minute to read, 48 of them filled every place in the loop, and
+# the other boards waited (68 boards read in five minutes instead of a thousand). LIVE_CAP keeps such systems to half the places.
+TEXTS_SLOW, TEXTS_LIST = 25, 500
 collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 24)
+# Boards of these systems read at once here, at most: their reads take long (a request per posting's text), and without a cap they
+# can hold every place of the loop (WORKERS * 2) while the quick boards of the other systems wait.
+LIVE_CAP = {"workday": WORKERS, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4}
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
 CREATE TABLE IF NOT EXISTS moved (slug TEXT PRIMARY KEY, to_slug TEXT);
@@ -353,7 +358,7 @@ class Live:
                     if len(running) >= WORKERS * 2: break
                     if f"{s['ats']}:{s['token']}" in busy: continue
                     # no more boards of one system than it allows at once: the others would only hold workers while they wait
-                    if per_ats.get(s["ats"], 0) >= collect.ATS_LIMIT.get(s["ats"], WORKERS * 2): continue
+                    if per_ats.get(s["ats"], 0) >= min(collect.ATS_LIMIT.get(s["ats"], WORKERS * 2), LIVE_CAP.get(s["ats"], WORKERS * 2)): continue
                     per_ats[s["ats"]] = per_ats.get(s["ats"], 0) + 1
                     running[ex.submit(collect.fetch, s, self.skip_known(s))] = s
                 if not running:

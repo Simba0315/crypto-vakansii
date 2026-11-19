@@ -1,7 +1,8 @@
-"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio and Workday, and add the ones with English jobs to
+"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy and BambooHR, and add the ones with English jobs to
 sources_ats.json (15 Nov 2026; the owner: "too few jobs, competitors add far more").
 
-    python3 discover_ats.py --cc DIR CRAWL[,CRAWL...]   read Common Crawl's URL index for the systems' addresses into DIR (one file a page)
+    python3 discover_ats.py --cc DIR CRAWL[,CRAWL...]   read Common Crawl's URL index for the systems' addresses into DIR (one file a page;
+                                                       HRN_CC_HOSTS=breezy,bamboohr reads only those systems)
     python3 discover_ats.py FILE_OR_DIR [...]          take every board address in these files (URLs, one a line: Common Crawl's index,
                                                        sitemaps, lists), verify the boards and add the good ones to sources_ats.json
                                                        (HRN_DISCOVER_LOG=FILE keeps what was checked, so a second run skips it)
@@ -25,19 +26,25 @@ ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 import collect, dedupe, net          # noqa: E402
 
-OUT = ROOT / "sources_ats.json"
+OUT = Path(os.environ.get("HRN_DISCOVER_OUT") or ROOT / "sources_ats.json")       # HRN_DISCOVER_OUT=sources_breezy.json: another file
 TODAY = datetime.date.today().isoformat()
 CC_HOSTS = {"workable": "apply.workable.com/*", "recruitee": "*.recruitee.com", "teamtailor": "*.teamtailor.com",
-            "personio_de": "*.jobs.personio.de", "personio_com": "*.jobs.personio.com", "workday": "*.myworkdayjobs.com"}
+            "personio_de": "*.jobs.personio.de", "personio_com": "*.jobs.personio.com", "workday": "*.myworkdayjobs.com",
+            "breezy": "*.breezy.hr", "bamboohr": "*.bamboohr.com"}
+# BambooHR's subdomains are every customer's whole account (sign-in, staff pages): only addresses of its careers pages are asked for
+CC_FILTER = {"bamboohr": "~url:/careers"}
 # addresses on these hosts that are the system's own pages, not a company's board
 NOT_BOARDS = {"www", "app", "api", "help", "support", "status", "blog", "docs", "developer", "developers", "partner", "partners", "academy",
               "marketplace", "cdn", "assets", "static", "tt", "career-site", "login", "signup", "j", "jobs", "careers-page", "oauth", "_next",
-              "embed", "widget", "events", "community", "go", "info", "mail", "email", "media", "press", "investors"}
+              "embed", "widget", "events", "community", "go", "info", "mail", "email", "media", "press", "investors", "assets-cdn", "resources",
+              "marketing", "partners-portal", "integrations", "sandbox", "demo", "test"}
 URL_RX = [
     ("workable", re.compile(r"https?://apply\.workable\.com/([A-Za-z0-9][A-Za-z0-9_-]{1,60})(?:[/?#]|$)")),
     ("recruitee", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.recruitee\.com(?:[/:?#]|$)", re.I)),
     ("teamtailor", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.teamtailor\.com(?:[/:?#]|$)", re.I)),
     ("personio", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60}\.jobs\.personio\.(?:de|com))(?:[/:?#]|$)", re.I)),
+    ("breezy", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.breezy\.hr(?:[/:?#]|$)", re.I)),
+    ("bamboohr", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.bamboohr\.com/(?:careers|jobs)(?:[/?#]|$)", re.I)),
     ("workday", re.compile(r"https?://([a-z0-9][a-z0-9-]{0,60}\.wd\d{1,3})\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})(?:[/?#]|$)")),
 ]
 # Recruitment agencies and job marketplaces post other companies' jobs, often the same one many times: left out, as in sources_more.json.
@@ -60,7 +67,9 @@ def read_cc(out_dir, crawls):
         return None
     for crawl in crawls:
         for name, pat in CC_HOSTS.items():
+            if os.environ.get("HRN_CC_HOSTS") and name not in os.environ["HRN_CC_HOSTS"].split(","): continue     # HRN_CC_HOSTS=breezy,bamboohr
             base = f"https://index.commoncrawl.org/{crawl}-index?url={urllib.parse.quote(pat, safe='*/')}"
+            if name in CC_FILTER: base += "&filter=" + urllib.parse.quote(CC_FILTER[name], safe="~:/")
             try: pages = json.loads(get(base + "&showNumPages=true", 60) or "")["pages"]
             except Exception: print(f"{crawl} {name}: the index did not say how many pages", flush=True); continue
             time.sleep(2)
@@ -205,6 +214,7 @@ def lands_of(locations):
 def verify(ats, tok):
     """(entry for sources_ats.json, None) or (None, why not)."""
     if ats == "workday": return verify_workday(tok)
+    if ats in ("breezy", "bamboohr"): return verify_detail(ats, tok)
     url, accept = feed(ats, tok)
     collect.polite(ats)
     body = net.get_text(url, 60, accept="application/json" if accept == "json" else accept)
@@ -224,6 +234,36 @@ def verify(ats, tok):
     if len(jobs) < 3: return None, f"{len(jobs)} English jobs of {total}"
     if len(jobs) < 0.6 * total and len(jobs) < 15: return None, f"mostly not English ({len(jobs)} of {total})"
     return {"name": name, "ats": ats, "token": tok, "count": len(jobs), "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
+
+
+def verify_detail(ats, tok):
+    """Breezy and BambooHR: the list in one request, then the text of the first postings (collect.DETAILS, 3 while discovering):
+    kept with 3 or more open jobs of which 2 of those read are in English."""
+    list_url = f"https://{tok}.breezy.hr/json" if ats == "breezy" else f"https://{tok}.bamboohr.com/careers/list"
+    collect.polite(ats)
+    body = net.get_text(list_url, 60, accept="application/json")
+    if not body: return None, "no answer"
+    try: d = json.loads(body)
+    except ValueError: return None, "feed not readable"
+    posts = d if ats == "breezy" else (d.get("result") if isinstance(d, dict) else None)
+    if not isinstance(posts, list): return None, "feed not readable"
+    if len(posts) < 3: return None, f"{len(posts)} jobs"
+    if ats == "breezy":
+        name = clean_name(str(((posts[0] if isinstance(posts[0], dict) else {}).get("company") or {}).get("name") or ""))
+    else:
+        collect.polite(ats)
+        info = net.get_json(f"https://{tok}.bamboohr.com/careers/company-info", 30) or {}
+        name = clean_name(str((info.get("result") or {}).get("name") or "")) if isinstance(info, dict) else ""
+    name = name or pretty(tok)
+    _cache[list_url] = body
+    src = {"name": name, "ats": ats, "token": tok}
+    _, jobs = collect.READERS[ats](src)                  # not collect.fetch: main() already holds this system's gate
+    _cache.pop(list_url, None)
+    if jobs is None: return None, "feed not readable"
+    read = len(jobs) + src.get("not_english", 0)
+    if not read: return None, "no text readable"
+    if len(jobs) < min(2, read): return None, f"mostly not English ({len(jobs)} of {read} read)"
+    return {"name": name, "ats": ats, "token": tok, "count": len(posts), "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
 
 
 def verify_workday(tok):
@@ -294,6 +334,7 @@ def main(paths):
         for f in (sorted(p.glob("*.txt")) if p.is_dir() else [p]):
             lines += f.read_text(errors="replace").splitlines()
     found = boards_in(lines)
+    collect.DETAILS = 3                                 # Breezy, BambooHR: three texts are enough to see the language
     have = [s for f in sorted(ROOT.glob("sources*.json")) if "candidates" not in f.name for s in json.loads(f.read_text())]
     have_keys = {(s["ats"], s["token"].lower()) for s in have}
     have_cos = {dedupe.company_key(s["name"]) for s in have}
