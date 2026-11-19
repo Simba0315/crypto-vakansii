@@ -105,6 +105,7 @@ class Live:
         self.con = sqlite3.connect(LIVE_DB if write else ":memory:", isolation_level=None)
         self.con.executescript(SCHEMA)
         self.con.execute("PRAGMA journal_mode=WAL")
+        self.con.execute("PRAGMA synchronous=NORMAL")     # in WAL mode still safe from corruption; a power cut may lose the last few rows, read again
         self.stamp, self.alias, self.idx = None, None, None
         self.known, self.by_co, self.slugs = {}, {}, set()
         self.texts = texts.Keeper(texts.DB if write else ":memory:")
@@ -173,10 +174,25 @@ class Live:
             return
         if target == self.alias: return
         self.alias = target
+        # In batches (OpenSearch's _bulk), not one request a job: one by one, 58,000 live jobs took five minutes after every upload, and
+        # this loop read no boards meanwhile (19 Nov 2026).
         rows = self.con.execute("SELECT slug, rec, descr, closed FROM live").fetchall()
+        batch, failed = [], 0
+        def flush():
+            nonlocal failed
+            if not batch: return
+            try:
+                r = search_engine.call("POST", f"/{target}/_bulk", "".join(batch), timeout=120, ndjson=True)
+                failed += sum(1 for it in r.get("items", []) for v in it.values() if v.get("error") and v.get("status") != 404)
+            except Exception as ex:
+                log(f"search: a batch of {len(batch)} not put back ({type(ex).__name__}: {ex})"); failed += len(batch)
+            batch.clear()
         for slug, rec, descr, closed in rows:
-            self.search_put(json.loads(rec), descr, closed)
-        if rows: log(f"search index {target}: {len(rows)} live jobs put back")
+            if closed: batch.append(json.dumps({"delete": {"_id": slug}}) + "\n")
+            else: batch.append(json.dumps({"index": {"_id": slug}}) + "\n" + json.dumps(search_engine.doc(json.loads(rec), descr), ensure_ascii=False) + "\n")
+            if len(batch) >= 500: flush()
+        flush()
+        if rows: log(f"search index {target}: {len(rows)} live jobs put back" + (f", {failed} failed" if failed else ""))
 
     def search_put(self, rec, descr, closed=""):
         if not search_engine.URL or not self.write: return
@@ -227,7 +243,7 @@ class Live:
         today = datetime.date.today().isoformat()
         live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (name,))}
         shut = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed != ''", (name,))}     # closed on an earlier read
-        seen, new, dup, back = set(), 0, 0, []
+        seen, new, dup, back, keep = set(), 0, 0, [], []        # keep: texts to store, in one transaction at the end
         for j in jobs:
             j.pop("_crypto", None)
             if not j.get("title") or not j.get("url"): continue
@@ -235,14 +251,14 @@ class Live:
             if j["id"] in shut and j["id"] in self.known:
                 back.append(j["id"]); continue          # we closed it and the board lists it again
             if j["id"] in self.known or j["id"] in live_ids:
-                if j.get("desc") and self.write: self.texts.put(j["id"], name, j["desc"])      # a text skip_known asked for
+                if j.get("desc"): keep.append((j["id"], name, j["desc"]))      # a text skip_known asked for
                 continue
             ats = j["id"].split("-", 1)[0]
             if any(m.get("id") != j["id"] and (m.get("id", "").split("-", 1)[0] != ats or m["why"] == "the same link to apply")
                    for m in self.idx.find(j["company"], j["title"], j["location"], j["remote"], j["url"], limit=3)):
                 dup += 1; continue          # the same job from another source (or the same link): two postings on one board are two jobs
             desc = j.pop("desc", "") or ""
-            if desc and self.write: self.texts.put(j["id"], name, desc)       # kept beyond the live entry, which the next record replaces
+            if desc: keep.append((j["id"], name, desc))       # kept beyond the live entry, which the next record replaces
             j.update(slug=self.slug_for(j), crypto=bool(src.get("crypto")), first_seen=today, first_seen_at=collect.utc_now(), last_seen=today,
                      active=True, pinned=False, featured=False, entry=j["level"] in ("Junior", "Intern"), pool=bool(build.POOL_RX.search(j["title"])),
                      usd=build.usd_range(j["salary"]), places=build.places_of(j["location"]) if j["location"] else [], live=True)
@@ -253,6 +269,7 @@ class Live:
             self.idx.add(j["slug"], name, j["title"], j["location"], j["remote"], j["url"], {"id": j["id"]})
             self.search_put(j, desc)
             new += 1
+        if keep and self.write: self.texts.put_many(keep)
         if back: self.reopen(name, back)
         closed = 0
         # without the ones already closed here: after every new hourly record they are "open" in it again until it catches up, and

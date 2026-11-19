@@ -59,6 +59,9 @@ class Keeper:
     def __init__(self, path=None):
         self.con = sqlite3.connect(str(path or DB), isolation_level=None)
         self.con.execute("PRAGMA journal_mode=WAL")
+        # Not every write waits for the disk: a text lost to a power cut is read again from its board. (19 Nov 2026: each text written
+        # as its own waited-for transaction made a board of 500 texts take seconds, and live.py's loop stood still meanwhile.)
+        self.con.execute("PRAGMA synchronous=NORMAL")
         self.con.executescript(SCHEMA)
 
     def have(self, company):
@@ -69,6 +72,20 @@ class Keeper:
         if not jid or not text: return
         self.con.execute("INSERT OR REPLACE INTO texts VALUES (?, ?, ?, ?)",
                          (jid, company, zlib.compress(text.encode(), 6), datetime.date.today().isoformat()))
+
+    def put_many(self, rows):
+        """[(id, company, text)] in one transaction: what one read of a board brought."""
+        rows = [r for r in rows if r[0] and r[2]]
+        if not rows: return
+        today = datetime.date.today().isoformat()
+        self.con.execute("BEGIN")
+        try:
+            self.con.executemany("INSERT OR REPLACE INTO texts VALUES (?, ?, ?, ?)",
+                                 [(jid, company, zlib.compress(text.encode(), 6), today) for jid, company, text in rows])
+            self.con.execute("COMMIT")
+        except BaseException:
+            self.con.execute("ROLLBACK")
+            raise
 
     def take_from(self, jobs_db):
         """Copy the texts an hourly record (data/jobs.db) holds and this store does not yet. The first time every text; then only those
@@ -125,7 +142,7 @@ def test():
     k = Keeper(d / "texts.db")
     assert k.take_from(d / "jobs.db") == 2 and k.take_from(d / "jobs.db") == 0
     assert k.have("Acme") == {"greenhouse-acme-1"}
-    k.put("greenhouse-acme-2", "Acme", "<p>Test things.</p>")
+    k.put_many([("greenhouse-acme-2", "Acme", "<p>Test things.</p>"), ("", "Acme", "x"), ("y", "Acme", "")])
     assert get("greenhouse-acme-2", d / "texts.db") == "<p>Test things.</p>"
     assert get("greenhouse-acme-1", d / "texts.db") == "<p>Build things.</p>" * 50
     assert get("nope", d / "texts.db") == "" and get("x", d / "none.db") == ""
