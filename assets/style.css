@@ -2976,6 +2976,11 @@ main.kp .khero+.sec{margin-top:clamp(64px,7vw,96px)}
 .chero .tbadges{margin:16px 0 0}
 .phero h1{max-width:30ch;font-size:clamp(30px,3.6vw,46px)}
 .toc-main .phero{margin-top:6px}
+.phero .stamp{margin:16px 0 0}
+.phero .plain{margin:18px 0 0;max-width:70ch}
+.phero .gl-top{margin:26px 0 0}
+.phero + .tsub{margin-top:20px}
+article.guide .phero{margin-bottom:28px}
 .phero .nums{margin:28px 0 0}
 .lhero h1{max-width:28ch;font-size:clamp(32px,4vw,50px)}
 .lhero .nums{margin:30px 0 0}

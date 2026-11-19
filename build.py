@@ -762,16 +762,39 @@ ACCT_HEAD = (f'<a class="hsign" id="hsign" href="{P}/account/" data-api="{e(CFG[
 FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover letter example", "cv-examples": "CV example", "job-descriptions": "Job description",
                "how-to-become": "Career guide", "how-to-hire": "Hiring guide", "interview-questions": "Interview questions", "salaries": "Salary",
                "compare": "Compare", "insights": "Insight", "vs": "Compared", "relocate": "Relocate", "jobs-for": "Jobs for…",
-               "resignation-letters": "Resignation letter", "resume-words": "Resume words", "skill-tests": "Skill test", "locations": "Places"}
+               "resignation-letters": "Resignation letter", "resume-words": "Resume words", "skill-tests": "Skill test", "locations": "Places",
+               "glossary": "Glossary", "guides": "Guide", "tools": "Free tool", "categories": "Fields", "skills": "Skills", "roles": "Kinds of work",
+               "companies": "Companies", "jobs-for": "Jobs for…", "trends": "Trends", "reports": "Reports", "open-hiring-index": "Open hiring index"}
+FRAME_ARTICLE = re.compile(r'^(<div class="has-toc"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)(<p class="lead">.*?</p>)', re.S)
+FRAME_TOOL = re.compile(r'^(<div class="crumbs">.*?</div>)(<nav class="tsub".*?</nav>)(<h1[^>]*>.*?</h1>)(<p class="lead">.*?</p>)((?:<p class="plain">.*?</p>)?)', re.S)
+FRAME_TERM = re.compile(r'^(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(?=<div class="gl-top">)', re.S)
+
+
+def _div_end(s, at):
+    """The end of the <div> that opens at `at`, counting the divs inside it."""
+    depth, i = 0, at
+    for m in re.finditer(r"<(/?)div\b", s[at:]):
+        depth += -1 if m.group(1) else 1
+        if depth == 0: return at + m.start() + s[at + m.start():].find(">") + 1
+    return -1
 FRAME_RX = re.compile(r'^(<div class="has-toc"><div class="toc-main">)?(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(<p class="(?:lead|tldr)[^"]*">.*?</p>)((?:<dl class="nums">.*?</dl>)?)', re.S)
 def frame_first(path, body):
     seg = path.strip("/").split("/")
     if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
     if len(seg) == 1 and seg[0] in ("locations",): return body
+    lab = f'<p class="sec-label">{FRAME_LABEL[seg[0]]}</p>'
+    if (m := FRAME_ARTICLE.match(body)):                 # guides and "jobs for": the panel opens the article
+        pre, cr, h1, stamp, lead = (g or "" for g in m.groups())
+        return pre + f'<article class="guide"><div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{stamp}</div></div>' + body[m.end():]
+    if (m := FRAME_TOOL.match(body)):                    # a tool: the panel, then the row of the other tools
+        cr, nav, h1, lead, plain = (g or "" for g in m.groups())
+        return f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div></div>{nav}' + body[m.end():]
+    if (m := FRAME_TERM.match(body)) and (end := _div_end(body, m.end())) > 0:     # a glossary term: the definition goes into the panel
+        return f'<div class="khero phero"><div class="khero-t">{m.group(1)}{lab}{m.group(2)}</div>{body[m.end():end]}</div>' + body[end:]
     m = FRAME_RX.match(body)
     if not m: return body
     pre, cr, h1, lead, nums = (g or "" for g in m.groups())
-    return pre + f'<div class="khero phero"><div class="khero-t">{cr}<p class="sec-label">{FRAME_LABEL[seg[0]]}</p>{h1}{lead}</div>{nums}</div>' + body[m.end():]
+    return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}</div>{nums}</div>' + body[m.end():]
 
 
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls=""):
