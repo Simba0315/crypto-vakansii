@@ -2967,12 +2967,20 @@ main.kp a.btn{text-decoration:none}
 .khero .ptrust{margin:34px 0 0}
 .khero .banner{margin:30px 0 0;padding:14px 18px;border-radius:14px;font-size:15px}
 main.kp .khero+.sec{margin-top:clamp(64px,7vw,96px)}
+/* lists: the same framed first screen, a little tighter, so the first jobs stay near the top */
+.lhero{padding:32px 44px 36px}
+.lhero h1{max-width:28ch;font-size:clamp(32px,4vw,50px)}
+.lhero .nums{margin:30px 0 0}
+.lhero .nums-src{margin:10px 0 0}
+.lhero .lact,.lhero .lsave{margin:22px 0 0}
+.lhero + .lrow,.lhero + .narrow{margin-top:22px}
 @media(max-width:700px){
   .khero{margin:8px -10px 0;padding:18px 20px 28px;border-radius:22px}
   .khero .crumbs{margin-bottom:16px}
   .khero h1{font-size:clamp(30px,8.6vw,36px)}
   .khero .lead{font-size:16.5px}
   .khero .nums{margin-top:28px}
+  .lhero{padding:18px 20px 24px}
   .khero .ptrust{margin-top:24px}
   .kact{margin-top:22px}
 }

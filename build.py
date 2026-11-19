@@ -1225,6 +1225,29 @@ CAT_ACCENT = {}                       # sections once had their own colours; the
 HUB = {"roles": {}, "week": "", "job_roles": {}}       # role slug -> (name, ids of its jobs); job id -> its role slugs; filled in main()
 
 
+LIST_LABEL = {"jobs": "Field", "roles": "Kind of work", "skills": "Skill", "locations": "Place", "remote": "Remote work", "crypto": "Crypto and web3",
+              "perks": "Perk", "salary": "Pay", "jobs-that-pay": "Hourly pay", "companies": "Company", "new": "New today", "entry-level": "First jobs",
+              "internships": "Internships", "part-time": "Part-time", "contract": "Contract", "hybrid": "Hybrid", "tech": "Tech",
+              "senior-jobs": "Level", "lead-jobs": "Level", "executive-jobs": "Level", "night-shift": "Shifts", "weekend": "Shifts",
+              "summer": "Season", "temporary": "Season", "with-salary": "Pay stated", "work-from-anywhere": "Remote work",
+              "hiring-immediately": "Hiring now", "no-experience-jobs": "First jobs", "categories": "Field"}
+
+
+def list_label(path):
+    """The small label above a list's heading: what kind of list it is ("Place", "Skill"), from its address."""
+    seg = path.strip("/").split("/")
+    if seg[0] == "locations" and len(seg) > 2: return {"remote": "Remote work", "skills": "Skill", "companies": "Companies"}.get(seg[2], "Place")
+    if seg[0] == "roles" and len(seg) > 2: return "Kind of work"
+    return LIST_LABEL.get(seg[0], "Jobs")
+
+
+def h1_marked(h1):
+    """The heading with its key word marked in green, as on the key pages: "Engineering <jobs>", "Internships in Paris"."""
+    m = re.search(r"\b(jobs|internships|roles)\b", h1, re.I)
+    if not m: return e(h1)
+    return e(h1[:m.start()]) + f'<span class="hl">{e(m.group(0))}</span>' + e(h1[m.end():])
+
+
 def hub_stats(js, lead=False):
     """The headline numbers of a set of jobs, as a row of figures. `lead`: the paragraph above the row already says how many are open
     (that first sentence is what search engines and assistants quote), so the row holds the other figures only."""
@@ -1405,9 +1428,15 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     if more and head_html is None and "data-alert" not in after: after += list_alert(h1, more, jobs)
     for n in range(1, pages + 1):
         chunk = rows[(n - 1) * per:n * per]
-        top = head_html if head_html is not None else (crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro and n == 1 else "")
-                                                       + (hub_stats(jobs, stats == "rest") if stats and n == 1 else "")
-                                                       + (list_save(h1, more, path if feed else "", links) + list_narrow(more, jobs) if n == 1 else ""))
+        if head_html is not None: top = head_html
+        elif n == 1:
+            # The first screen of a list as one framed panel, as on the key pages (owner, 17 and 19 Nov 2026: dLocal's way of building a
+            # page, "the design of every page"): the trail, a small label, the heading with its key word marked, the opening paragraph,
+            # the figures and the actions inside the panel; the narrowing row under it.
+            top = ('<div class="khero lhero"><div class="khero-t">' + crumbs(*trail, (h1, "")) + f'<p class="sec-label">{e(list_label(path))}</p>'
+                   + f"<h1>{path_fl(path)}{h1_marked(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro else "") + "</div>"
+                   + (hub_stats(jobs, stats == "rest") if stats else "") + list_save(h1, more, path if feed else "", links) + "</div>" + list_narrow(more, jobs))
+        else: top = crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>"
         if n > 1: top = top.replace("</h1>", f", page {n}</h1>", 1)        # page 2 and later do not repeat the first page's heading word for word (one page per query, 18 Nov 2026)
         the_list = ((f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
