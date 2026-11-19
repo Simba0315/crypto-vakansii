@@ -60,14 +60,17 @@ collect.DESC_SINCE = ""
 # Workday, SmartRecruiters and JazzHR (one request each, after the postings new to the site; 891 Workday boards lacked 103,000 texts
 # on 19 Nov 2026, at most 905 on one board: a day and a half of hourly reads), at most TEXTS_LIST elsewhere (the text is in the list
 # already; only the parsing costs, so a board of thousands is spread over a few reads).
-# 25, not 40 as on the first day: with 40 a Workday board took over a minute to read, 48 of them filled every place in the loop, and
-# the other boards waited (68 boards read in five minutes instead of a thousand). LIVE_CAP keeps such systems to half the places.
-TEXTS_SLOW, TEXTS_LIST = 25, 500
+# 15, not 40 as on the first day: a Workday posting's page takes two or three seconds to answer, so with 40 a board took about three
+# minutes to read, Workday boards held every thread, and the other boards waited (60 to 70 boards read in five minutes instead of
+# about a thousand). LIVE_CAP keeps such systems to two thirds of the threads.
+TEXTS_SLOW, TEXTS_LIST = 15, 500
 collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
-WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 24)
+# 36 threads since 19 Nov 2026 (24 before): the reading is waiting on answers, not work, and the slow systems below now keep a third
+# of the threads free for the quick boards.
+WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 36)
 # Boards of these systems read at once here, at most: their reads take long (a request per posting's text), and without a cap they
-# can hold every place of the loop (WORKERS * 2) while the quick boards of the other systems wait.
-LIVE_CAP = {"workday": WORKERS, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4}
+# can hold every thread while the quick boards of the other systems wait (the loop keeps WORKERS * 2 reads queued, WORKERS run).
+LIVE_CAP = {"workday": WORKERS * 2 // 3, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4}
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
 CREATE TABLE IF NOT EXISTS moved (slug TEXT PRIMARY KEY, to_slug TEXT);
