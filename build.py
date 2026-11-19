@@ -780,7 +780,7 @@ def _div_end(s, at):
         depth += -1 if m.group(1) else 1
         if depth == 0: return at + m.start() + s[at + m.start():].find(">") + 1
     return -1
-FRAME_RX = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)((?:<p class="plain">.*?</p>)?)((?:<p class="(?:lead|tldr)[^"]*">.*?</p>)?)((?:<dl class="nums">.*?</dl>)?)', re.S)
+FRAME_RX = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)((?:<p class="plain">.*?</p>)?)((?:<p class="(?:lead|tldr)[^"]*">.*?</p>)?)((?:<p class="lact">.*?</p>|<dl class="nums">.*?</dl>|<p class="nums-src">.*?</p>)*)', re.S)
 def frame_first(path, body):
     seg = path.strip("/").split("/")
     if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
