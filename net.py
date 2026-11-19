@@ -3,10 +3,12 @@ import json, subprocess
 UA = "Mozilla/5.0 (job-board aggregator)"
 
 
-def get_text(url, timeout=30, accept="application/json", data=None):
+def get_text(url, timeout=30, accept="application/json", data=None, compressed=False):
     """Fetch a URL with curl and return the body as text, or None on any failure (a network error or an HTTP error status).
-    With data (a dict) the request is a POST of that JSON, the way Workday's job lists are asked for."""
+    With data (a dict) the request is a POST of that JSON, the way Workday's job lists are asked for. compressed asks for a gzip
+    answer (HTML pages: about a quarter of the bytes for both sides)."""
     cmd = ["curl", "-s", "-4", "-L", "--fail", "--max-time", str(timeout), "-H", f"Accept: {accept}", "-A", UA]
+    if compressed: cmd.append("--compressed")
     if data is not None: cmd += ["-H", "Content-Type: application/json", "--data-binary", json.dumps(data)]
     try:
         r = subprocess.run(cmd + [url], capture_output=True, timeout=timeout + 5)
