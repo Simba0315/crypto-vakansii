@@ -2549,3 +2549,4 @@ sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS
 - ⛔ Любые действия с кошельком владельца, ввод его паролей и ключей.
 
 - ✅ 18.11 (облачный запуск): строки «In plain words» на трёх страницах, где был жаргон без пояснения: /resume/ (что такое система отбора резюме), /partners/ (виджет, лента, API), /hiring-badge/ (что такое значок). Остальные технические страницы уже имели такую строку.
+- ✅ (19.11, облачный прогон) Глоссарий: ещё 12 терминов (H-1B, OPT, green card, passive candidate, candidate experience, employer brand, pay freeze, zero-hours contract, tech stack, quiet quitting, work-life balance, burnout), теперь 224.
