@@ -768,7 +768,7 @@ FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover lette
                "privacy": "Privacy", "terms": "Terms", "methodology": "Methodology", "safety": "Safety", "promise": "Our promise", "status": "Status",
                "help": "Help", "job-posting-sites": "For employers", "job-search-engines": "Compared", "free-resume-builders": "Compared",
                "how-long-job-postings-stay-open": "Insight", "internships": "Internships", "jobs-near-me": "Near you", "my-jobs": "Your tracker"}
-FRAME_ARTICLE = re.compile(r'^(<div class="has-toc"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)(<p class="lead">.*?</p>)', re.S)
+FRAME_ARTICLE = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)(<p class="lead">.*?</p>)', re.S)
 FRAME_TOOL = re.compile(r'^(<div class="crumbs">.*?</div>)(<nav class="tsub".*?</nav>)(<h1[^>]*>.*?</h1>)(<p class="lead">.*?</p>)((?:<p class="plain">.*?</p>)?)', re.S)
 FRAME_TERM = re.compile(r'^(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(?=<div class="gl-top">)', re.S)
 
@@ -780,7 +780,7 @@ def _div_end(s, at):
         depth += -1 if m.group(1) else 1
         if depth == 0: return at + m.start() + s[at + m.start():].find(">") + 1
     return -1
-FRAME_RX = re.compile(r'^(<div class="has-toc"><div class="toc-main">)?(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(<p class="(?:lead|tldr)[^"]*">.*?</p>)((?:<dl class="nums">.*?</dl>)?)', re.S)
+FRAME_RX = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)((?:<p class="plain">.*?</p>)?)((?:<p class="(?:lead|tldr)[^"]*">.*?</p>)?)((?:<dl class="nums">.*?</dl>)?)', re.S)
 def frame_first(path, body):
     seg = path.strip("/").split("/")
     if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
@@ -796,8 +796,8 @@ def frame_first(path, body):
         return f'<div class="khero phero"><div class="khero-t">{m.group(1)}{lab}{m.group(2)}</div>{body[m.end():end]}</div>' + body[end:]
     m = FRAME_RX.match(body)
     if not m: return body
-    pre, cr, h1, lead, nums = (g or "" for g in m.groups())
-    return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}</div>{nums}</div>' + body[m.end():]
+    pre, cr, h1, plain, lead, nums = (g or "" for g in m.groups())
+    return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div>{nums}</div>' + body[m.end():]
 
 
 # Design, step 5 (19 Nov 2026): every titled section of a page carries a small label above its heading, as the hub pages and dLocal's
