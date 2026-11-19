@@ -1533,6 +1533,21 @@
           '</select><button class="unsave" type="button">Remove</button></div></li>';
       }).join('');
       $('mj-empty').hidden = shownKeys.length > 0;
+      // the board: one column per stage, as on Indeed's tracker; a card moves by its menu or by dragging it to another column
+      var board = $('mj-board'), list = $('mj-list'), boardOn = get('hrn_mj_view', '') === 'board';
+      if (board) {
+        board.hidden = !boardOn; list.hidden = boardOn; $('mj-tabs').hidden = boardOn;
+        var vb = $('mj-view'); if (vb) { vb.setAttribute('aria-pressed', String(boardOn)); vb.textContent = boardOn ? 'List view' : 'Board view'; }
+        if (boardOn) board.innerHTML = STATUS.filter(function (s) { return s[0] !== 'closed'; }).map(function (s) {
+          var ks = keys.filter(function (k) { return jobs[k].st === s[0]; });
+          return '<section class="mj-col" data-col="' + s[0] + '"><h3>' + s[1] + ' <i>' + ks.length + '</i></h3>' + ks.map(function (k) {
+            var r = jobs[k], gone = openSet && !openSet[k];
+            return '<div class="mj-card" draggable="true" data-s="' + esc(k) + '"><a class="tt" href="' + P + '/job/' + encodeURIComponent(k) + '/">' + esc(r.t) + '</a><span class="js">' + esc(r.c) + (gone ? ' · closed by the employer' : '') + '</span>' +
+              '<select aria-label="Move to">' + STATUS.map(function (x) { return '<option value="' + x[0] + '"' + (r.st === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></div>';
+          }).join('') + (ks.length ? '' : '<p class="note">Nothing here yet.</p>') + '</section>';
+        }).join('') + (counts.closed ? '<p class="note mj-closed">' + counts.closed + ' marked “Not moving forward”: switch to the list view to see them.</p>' : '');
+        if (boardOn) $('mj-empty').hidden = keys.length > 0;
+      }
       var quiet = keys.filter(function (k) { return jobs[k].st === 'applied' && daysSince(jobs[k].sa || jobs[k].at) >= 10 && !(openSet && !openSet[k]); }).length, nudge = $('mj-nudge');
       if (nudge) {
         nudge.hidden = !quiet;
@@ -1546,6 +1561,7 @@
     };
     root.addEventListener('click', function (ev) {
       var t = ev.target;
+      if (t.id === 'mj-view') { set('hrn_mj_view', get('hrn_mj_view', '') === 'board' ? '' : 'board'); draw(); return; }
       if (t.closest && t.closest('.tab')) { tab = t.closest('.tab').getAttribute('data-tab'); draw(); return; }
       if (t.classList.contains('unsave') && t.closest('.trow') && t.closest('#mj-list')) { delete jobs[t.closest('.trow').getAttribute('data-s')]; store(); draw(); return; }
       if (t.id === 'mj-export') {
@@ -1562,8 +1578,17 @@
         document.body.appendChild(a); a.click(); a.remove();
       }
     });
+    var dragKey = null;
+    root.addEventListener('dragstart', function (ev) { var c = ev.target.closest && ev.target.closest('.mj-card'); if (!c) return; dragKey = c.getAttribute('data-s'); try { ev.dataTransfer.setData('text/plain', dragKey); } catch (e) {} });
+    root.addEventListener('dragover', function (ev) { if (dragKey && ev.target.closest && ev.target.closest('.mj-col')) ev.preventDefault(); });
+    root.addEventListener('drop', function (ev) {
+      var col = ev.target.closest && ev.target.closest('.mj-col'); if (!col || !dragKey || !jobs[dragKey]) return;
+      ev.preventDefault(); var st = col.getAttribute('data-col');
+      if (jobs[dragKey].st !== st) { jobs[dragKey].st = st; jobs[dragKey].sa = Date.now(); store(); }
+      dragKey = null; draw();
+    });
     root.addEventListener('change', function (ev) {
-      var row = ev.target.closest && ev.target.closest('.trow'); if (!row) return;
+      var row = ev.target.closest && (ev.target.closest('.trow') || ev.target.closest('.mj-card')); if (!row) return;
       var rec = jobs[row.getAttribute('data-s')]; if (!rec) return;
       if (ev.target.tagName === 'SELECT') { rec.st = ev.target.value; rec.sa = Date.now(); store(); draw(); }
       else if (ev.target.classList.contains('nt')) { rec.note = ev.target.value; store(); }

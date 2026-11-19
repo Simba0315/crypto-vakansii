@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-19 — My jobs (/my-jobs/): a board view beside the list, one column per stage (Saved, Applied, Interviewing, Offer) as on Indeed's tracker; a card moves by its menu or by dragging it to another column, and the choice of view is remembered in this browser.
 - 2026-11-19 — Company directory (/companies/): a field filter beside the name filter, each company placed in the field it hires for most. Pricing pages of ZipRecruiter and Adzuna show a bot check, so they stay out of /job-posting-sites/.
 - 2026-11-19 — Company pages: “How hiring works at …” (the steps the company's own postings name: recruiter call, take-home task, technical interview, final round, background check and others, each with how many postings name it, plus a question) and “Internships and first jobs at …” when there are three or more. Company comparisons: what each hires most for and how many junior roles each has. Part-time jobs: hourly pay by job title.
 - 2026-11-19 — Take-home pay: New York (the state's recapture of its lower rates above $107,650, with Paid Family Leave and disability contributions at their 2026 caps), Maryland (with the county income tax every resident pays, at 3.20%), Oregon (federal tax deduction and credit with their income limits) and Alabama (a deduction that shrinks in steps, federal tax deductible): 47 of 51 now, each with its own page. Still to come: Arkansas, Connecticut, Maine and Vermont.

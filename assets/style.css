@@ -3905,3 +3905,15 @@ table.adm-acc td:nth-child(2){word-break:break-all;min-width:180px}
 .pcd.shot a+p:last-child{margin-bottom:0}
 .pcd.shot img{display:block;width:100%;height:auto}
 .pcd.shot a:hover{border-color:var(--text)}
+
+/* My jobs: the board view, one column per stage */
+.mj-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.mj-col{background:var(--bg2);border-radius:12px;padding:12px;min-height:120px}
+.mj-col h3{font-size:14px;margin:0 0 10px;display:flex;justify-content:space-between}
+.mj-col h3 i{font-style:normal;color:var(--muted)}
+.mj-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;margin:0 0 8px;display:grid;gap:6px;cursor:grab}
+.mj-card .tt{font-weight:600;line-height:1.3}
+.mj-card .js{color:var(--muted);font-size:13px}
+.mj-card select{width:100%;min-height:36px;font:inherit;font-size:14px}
+.mj-closed{grid-column:1/-1}
+@media (max-width:760px){.mj-board{grid-template-columns:1fr}}

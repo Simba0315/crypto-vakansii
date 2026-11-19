@@ -4228,7 +4228,8 @@ def main():
     # My jobs: tracker kept in the visitor's browser, no account needed
     page("my-jobs/", f"Job Application Tracker — free, no sign-up, no spreadsheet | {SITE}", "A free job application tracker in your browser: save jobs, mark where you applied, add notes, export to CSV. No account and no spreadsheet to maintain.",
          crumbs(("My jobs", "")) + '<h1>My jobs: your application tracker</h1><p class="lead">Saved jobs, applications, notes and searches in one place, so you know what you applied to and who answered. It is all kept in this browser; nothing is uploaded.</p>'
-         '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
+         '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-view" type="button" aria-pressed="false">Board view</button><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
+         '<div class="mj-board" id="mj-board" hidden></div>'
          '<p class="note" id="mj-nudge" hidden></p>'
          # Sections review, batch 5: an empty list is one sentence and one action (it was a dashed box with a link inside the
          # sentence); the four smaller lists stand two to a row on a wide screen, so an empty tracker is one screen, not four.
