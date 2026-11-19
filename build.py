@@ -764,7 +764,10 @@ FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover lette
                "compare": "Compare", "insights": "Insight", "vs": "Compared", "relocate": "Relocate", "jobs-for": "Jobs for…",
                "resignation-letters": "Resignation letter", "resume-words": "Resume words", "skill-tests": "Skill test", "locations": "Places",
                "glossary": "Glossary", "guides": "Guide", "tools": "Free tool", "categories": "Fields", "skills": "Skills", "roles": "Kinds of work",
-               "companies": "Companies", "jobs-for": "Jobs for…", "trends": "Trends", "reports": "Reports", "open-hiring-index": "Open hiring index"}
+               "companies": "Companies", "jobs-for": "Jobs for…", "trends": "Trends", "reports": "Reports", "open-hiring-index": "Open hiring index",
+               "privacy": "Privacy", "terms": "Terms", "methodology": "Methodology", "safety": "Safety", "promise": "Our promise", "status": "Status",
+               "help": "Help", "job-posting-sites": "For employers", "job-search-engines": "Compared", "free-resume-builders": "Compared",
+               "how-long-job-postings-stay-open": "Insight", "internships": "Internships", "jobs-near-me": "Near you", "my-jobs": "Your tracker"}
 FRAME_ARTICLE = re.compile(r'^(<div class="has-toc"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)(<p class="lead">.*?</p>)', re.S)
 FRAME_TOOL = re.compile(r'^(<div class="crumbs">.*?</div>)(<nav class="tsub".*?</nav>)(<h1[^>]*>.*?</h1>)(<p class="lead">.*?</p>)((?:<p class="plain">.*?</p>)?)', re.S)
 FRAME_TERM = re.compile(r'^(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(?=<div class="gl-top">)', re.S)
