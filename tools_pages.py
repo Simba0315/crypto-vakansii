@@ -646,9 +646,13 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "Build a short, clear cover letter from a few facts about you and the job. Three tones; copy, download or print. Template-based, private, no sign-up.",
          "Cover letter generator: write one without staring at a blank page",
          "The empty page is the slowest part of applying. Fill in a few facts about the job and about you, pick a tone, and you have a short, clean letter to edit. "
+         "Paste the job posting and the page fills in the title and company and shows the skills it names. "
          "It is a fill-in template, not AI: every sentence is built from what you type, so nothing is invented for you. Nothing is uploaded.",
          wrap("cover-letter",
-              '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
+              '<div class="tl-split"><div class="card tl-form"><div class="tl-paste">'
+              + _area("posting", "Job posting (optional)", 4, "Paste the text of the job posting here", cls="")
+              + '<div class="tl-actions"><button class="btn ghost" type="button" id="tl-fill">Read the posting</button><span class="note" id="tl-fill-out" role="status"></span></div>'
+              + '<div class="tl-found" id="tl-found" hidden></div></div><div class="tl-grid">'
               + _f("title", "Job title you are applying for", "Senior Backend Engineer", mode="")
               + _f("company", "Company", "Acme", mode="", auto="organization")
               + _f("manager", "Hiring manager’s name (optional)", "Dana Lee", mode="")
@@ -668,8 +672,11 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<p>The letter has up to six short parts: a greeting, the job you are applying for, who you are, one result, why this company, and a closing line with your contact details. "
          "Each part is built from one or two fields. A field you leave empty drops its sentence, and the three things a letter cannot do without (job title, company, your name) appear in [brackets] until you fill them in.</p>"
          "<p>The tone changes the wording, never the facts: “direct” is plain and brief, “warm” is friendlier, “formal” suits banks, law firms and the public sector. "
-         "No AI is involved and nothing is generated: what you read is what you typed, arranged. Treat it as a first draft and change any sentence that does not sound like you.</p>",
-         [('Is there a free cover letter generator with no sign-up?', 'This one: fill in a few facts about you and the job, pick a tone, and copy, download or print the letter. No account, no email, and nothing is uploaded.'),
+         "No AI is involved and nothing is generated: what you read is what you typed, arranged. Treat it as a first draft and change any sentence that does not sound like you.</p>"
+         "<p>A pasted posting is read in your browser by plain rules: the title from its first lines or a “Title:” label, the company from a “Company:” label or “at Acme”, and the skills from this site’s list. "
+         "A skill reaches the letter only when you tap it, because the letter must say what is true of you.</p>",
+         [('Can it write a cover letter from a job description?', 'It can start one. Paste the posting: the job title and company are filled in and the skills it names appear as buttons. Tap the ones you really have, add one result and one reason for choosing this company, and the letter is ready to edit. Nothing is sent anywhere.'),
+          ('Is there a free cover letter generator with no sign-up?', 'This one: fill in a few facts about you and the job, pick a tone, and copy, download or print the letter. No account, no email, and nothing is uploaded.'),
           ('Can I use ChatGPT to write a cover letter?', 'Yes, as a first draft. Then make it yours: replace general claims with your own results and numbers, use the posting’s words and cut it to under 250 words. A letter that could go to any company reads as generated. This generator builds every sentence from the facts you type, so nothing is invented.'),
           ("Is this cover letter written by AI?",
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated, guessed or sent to a server, so the letter contains only facts you typed."),
@@ -915,13 +922,13 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
 
     # ------------------------------------------------------------ 14. resume review
     tool("resume-review", "seekers", "Resume review",
-         "Paste your resume: a score out of 10 from six plain checks, with strengths, weaknesses and what to fix, each quoting your own line.",
-         "Free Resume Checker: Score Out of 10 and Fixes",
-         "Paste your resume for a rule-based review: a score out of 10 from six checks, strengths, weaknesses and what to fix, quoting your own lines. No AI, private.",
-         "Resume checker: see your resume the way a recruiter skims it",
-         "A recruiter’s first pass over a resume is a skim: the top of the page, a few bullet points, the dates. This review reads your text the same way with six plain checks: "
-         "what the first screen holds, duty wording, numbers, the skills list, gaps between dates and length. You get a score out of 10 from a formula printed on this page, "
-         "strengths, weaknesses and a list of fixes, each quoting your own line. It works by rules, not AI, and nothing is uploaded.",
+         "Paste your resume: whether a hiring system can read it, a score out of 10 from six plain checks, and what to fix, each quoting your own line.",
+         "Free ATS Resume Checker: Score, Readability and Fixes",
+         "Paste your resume to see whether a hiring system can read it, a score out of 10 and what to fix, quoting your own lines. Free, no AI, nothing uploaded.",
+         "ATS resume checker: what a hiring system and a recruiter see",
+         "A resume is read twice. A hiring system (an ATS) first turns it into fields: contact details, jobs, dates, education, skills. Then a recruiter skims the top of the page, a few bullet points and the dates. "
+         "This page checks both. Six checks show whether the software can find what it needs, and six more give a score out of 10 from a formula printed on this page: "
+         "the first screen, duty wording, numbers, the skills list, gaps between dates and length. Every fix quotes your own line. It works by rules, not AI, and nothing is uploaded.",
          wrap("resume-review",
               '<div class="card tl-form">'
               + _area("text", "Your resume", 16, "Paste the text of your resume here, with its headings and dates, or open the file above", tall=True, ex=EX_REVIEW, file=True)
@@ -948,8 +955,12 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "No line under your jobs longer than 200 characters, about two lines of the page: 0.5.</li></ul>"
          "<p>8.5 and above is labelled “reads well on a first skim”, 6.5 to 8 “solid”, 4.5 to 6 “readable”, anything lower “hard to skim”. The points and thresholds are our own rules of thumb, "
          "written down so that you can check them; they are not an industry standard. The review cannot tell whether what you wrote is true, how the page looks or whether you fit a particular job. "
-         "A break in the dates is a question a reader may ask, not a fault.</p>",
-         [('Is 80% a good ATS score?', 'There is no single ATS score. An employer’s applicant tracking system stores resumes and lets recruiters search them; the percentages people quote come from third-party checkers, each with its own formula. On this site the resume match checker scores the keyword overlap with one posting (75 and above is labelled a strong match), and this review scores how well the page reads on a first skim, out of 10.'),
+         "A break in the dates is a question a reader may ask, not a fault.</p>"
+         "<p><strong>Can a hiring system read it?</strong> A separate list that does not change the score. It looks for an email address and a phone number; the headings Experience, Education and Skills under their usual names; "
+         "at least one date range it can read; three or more lines that look like columns or a table (a tab or three spaces between words, or a line that begins or ends with a vertical bar); and icons, emoji or broken characters. "
+         "It sees only the text, so a picture, a text box or a page header in your file shows up here only as something missing. To test a PDF, copy all its text and paste it in.</p>",
+         [('Is this an ATS resume checker?', 'Yes, as far as text can show it. It checks that an applicant tracking system can find your email, phone, standard headings and dates, and it looks for columns, tables, icons and broken characters. No public tool can run the software a particular employer uses, so none can promise that a resume will pass.'),
+          ('Is 80% a good ATS score?', 'There is no single ATS score. An employer’s applicant tracking system stores resumes and lets recruiters search them; the percentages people quote come from third-party checkers, each with its own formula. On this site the resume match checker scores the keyword overlap with one posting (75 and above is labelled a strong match), and this review scores how well the page reads on a first skim, out of 10.'),
           ('How do I check if my resume is good?', 'Three questions cover most of it: does the top third show your title, years and strongest skills; does every line under a job say what changed, with a number; and does it use the words of the posting you apply to. This review checks the first two; the resume match checker checks the third against a real posting.'),
           ("How is the resume score calculated?",
            "It is the sum of six checks worth 10 points in all: first screen 2, wording 2, numbers 2, skills 1.5, gaps 1 and length 1.5. The exact rule for each check is under “How the score is calculated”, so the same text always gets the same score."),

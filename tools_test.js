@@ -41,6 +41,31 @@ near('15k single: nothing taxable after the standard deduction', T.takeHome('150
 eq('take-home: contributions above the salary', T.takeHome('60000', 'single', '70000'), null);
 eq('take-home: empty salary', T.takeHome('', 'single', ''), null);
 
+ok('cover letter: one skill reads as one', /My strongest skill is Python\./.test(T.coverLetter({ title: 'Engineer', company: 'Acme', name: 'Alex', skills: 'Python', tone: 'direct' })));
+
+/* can a hiring system read the resume */
+{
+  const FILL = ' Built and ran services for paying customers and wrote the tests for them every week of the year.'.repeat(9);
+  const GOOD = 'Alex Morgan\nalex@example.com · +1 415 555 0134\n\nExperience\nEngineer, Acme\nJan 2021 – Mar 2023\n-' + FILL + '\n\nEducation\nBSc, Example University\n2015 – 2018\n\nSkills\nPython, Go';
+  const by = function (r) { const o = {}; r.items.forEach(function (x) { o[x.id] = x.ok; }); return o; };
+  let a = T.atsCheck(GOOD, new Date(2026, 10, 19));
+  eq('ats: a plain resume passes all six', [a.passed, a.total], [6, 6]);
+  eq('ats: too short is not judged', T.atsCheck('one two three').error, 'short');
+  eq('ats: a pair of years is not a phone number', by(T.atsCheck(GOOD.replace(' · +1 415 555 0134', '').replace('2015 – 2018', '2015 - 2018'))).phone, false);
+  a = T.atsCheck(GOOD.replace('alex@example.com · ', '').replace('Experience\n', 'Where I have been\n').replace('Skills\n', 'S K I L L S\n'));
+  eq('ats: no email, unknown headings', [by(a).email, by(a).headings, by(a).phone], [false, false, true]);
+  eq('ats: problems come first', a.items[0].level, 'fix');
+  ok('ats: names the headings it missed', /Experience, Skills/.test(a.items.filter(function (x) { return x.id === 'headings'; })[0].t));
+  eq('ats: dates in no known form', by(T.atsCheck(GOOD.replace('Jan 2021 – Mar 2023', 'Spring').replace('2015 – 2018', 'Autumn'))).dates, false);
+  const COLS = '\nEngineer    Skills\nAcme\tPython\nBerlin     Go\n';
+  eq('ats: side-by-side lines', by(T.atsCheck(GOOD + COLS)).columns, false);
+  eq('ats: two such lines are let through', by(T.atsCheck(GOOD + '\nEngineer    Skills\nAcme\tPython\n')).columns, true);
+  eq('ats: bars between parts of a job line are normal', by(T.atsCheck(GOOD + '\nA | B | C\nD | E | F\nG | H | I\n')).columns, true);
+  const sym = T.atsCheck(GOOD + '\n\uF0E0 alex at home\n(cid:127) item\n☎ call');
+  eq('ats: icons and broken characters', [by(sym).symbols, sym.items.filter(function (x) { return x.id === 'symbols'; })[0].q.length], [false, 2]);
+  eq('ats: a warning does not outrank a fix', T.atsCheck(GOOD.replace('alex@example.com · ', '') + '\n☎').items.slice(0, 2).map(function (x) { return x.id; }), ['email', 'symbols']);
+}
+
 /* pay converter */
 let c = T.convertPay('50', 'hour', '40', '52', '5');
 near('hourly 50 -> year', c.year, 104000);

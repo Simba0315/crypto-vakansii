@@ -2215,7 +2215,7 @@ def main():
             f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Software engineer, data analyst, customer service…" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
             f'<p class="popular"><a class="pop-tech" href="{P}/tech/">Tech jobs</a>{hero_chips}<a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a>'
-            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
+            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/part-time/">Part-time</a><a href="{P}/jobs-near-me/">Jobs near me</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
             f'<p class="near" id="near" hidden></p>'
             f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
             f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
@@ -2571,7 +2571,12 @@ def main():
             rr_ = role_rows(rich, 10)
             nd_ = [j for j in rich if "No degree required" in j.get("perks", [])]
             en_ = [j for j in rich if j.get("entry")]
-            blk_ = ""
+            y_k = k_ * 1000
+            net_ = tools_pages.take_home_2026(y_k)[3]
+            blk_ = section(f"How much is ${k_}K a year?", '<div class="tablewrap"><table><tr><th>Per</th><th>Before tax</th><th>After federal tax, Social Security and Medicare</th></tr>'
+                           + "".join(f"<tr><td>{w_}</td><td>${y_k / d_:,.{c_}f}</td><td>${net_ / d_:,.{c_}f}</td></tr>" for w_, d_, c_ in (("Year", 1, 0), ("Month", 12, 0), ("Two weeks", 26, 0), ("Week", 52, 0), ("Hour (2,080 a year)", 2080, 2)))
+                           + f'</table></div><p class="note">After tax: a single filer in tax year 2026 with the standard deduction and no pre-tax contributions. State and local income tax would come off as well. '
+                             f'Your own figures: <a href="{P}/tools/take-home-pay/">take-home pay calculator</a> · <a href="{P}/tools/salary-converter/">hourly to salary calculator</a>.</p>')
             if len(rr_) >= 3:
                 shr_ = lambda s_: (lambda rp_: f"{100 * sum(1 for j in rp_ if j['usd'][0] >= k_ * 1000) / len(rp_):.0f}%" if len(rp_) >= 10 else "–")([j for j in by_role[s_][1] if j["usd"]])
                 blk_ += section(f"{min(25, len(rr_))} job titles with the most openings at ${k_}K or more", f'<div class="tablewrap"><table><tr><th>#</th><th>Kind of work</th><th>Open at ${k_}K+</th><th>Median advertised pay</th><th>Share of its postings with pay that start at ${k_}K+</th></tr>'
@@ -2757,13 +2762,15 @@ def main():
                       "is a common way in. Show you know the product: use the exchange or wallet, read the docs, and say so in your letter."),
                      ("Are crypto job offers safe?", "Fake recruiters are common in crypto: a real employer never asks you to pay, to install a wallet or a program for an interview, or to move to a chat app before a proper interview. "
                       "Every job here links to the employer’s own careers page, so you apply where the company itself takes applications.")]
+        c_mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in crypto if j["usd"]]
+        crypto_pay_ = (f" The median advertised salary is {money(median(c_mids_))}, and {round(100 * sum(1 for j in crypto if j['remote']) / len(crypto))}% of the jobs are remote." if len(c_mids_) >= 15 else "")
         listing("crypto/", "Crypto jobs", f"Crypto Jobs: {len(crypto):,} Web3 & Blockchain Roles, {new7_c:,} New This Week | {SITE}",
                 f"{roles(len(crypto), 'open job')} at crypto, web3 and blockchain companies: exchanges, wallets, infrastructure and DeFi. Remote and on-site, with pay where the employer states it. Updated hourly.",
                 # sections review, batch 4. The order was: two pictures, tiles of fields, the employers, four columns of links, and only
                 # then the jobs (the fifth screen of a desktop, the twelfth of a phone). Now: the count in the first sentence, the other
                 # figures as a row, the action, two rows of links that narrow the list, the pictures, the jobs; then the employers and
                 # the directory of every narrower list.
-                crypto, intro_for(crypto, "", " at crypto, web3 and blockchain companies", row=True), stats="rest",
+                crypto, intro_for(crypto, "", " at crypto, web3 and blockchain companies", row=True) + crypto_pay_, stats="rest",
                 extra=labrow("Kind", [f'<a href="{P}/{u}">{e(nm)}</a>' for u, nm, _ in ckinds])
                 + labrow("Field", [f'<a href="{P}/crypto/{s}/">{e(CAT[s])}</a>' for s in CAT if sum(1 for j in crypto if j["cat"] == s) >= 5]),
                 pics=mini_pics(crypto), list_title="All crypto jobs, newest first",
@@ -5073,6 +5080,21 @@ def main():
                     ([("Benefits named most", ", ".join(f"{x} ({pc_(k, n_)}%)" for x, k in perk_))] if perk_ else []) + \
                     ([("Most common level", f"{lvl_[0][0]} ({pc_(lvl_[0][1], n_)}% of postings)")] if lvl_ else []) + \
                     ([("Titles employers use", ", ".join(titles_))] if titles_ else [])
+        jd_lv = []
+        for lv_, tip_ in (("Intern", "Name the mentor, the length of the placement and the pay. Ask for coursework or projects, not experience."),
+                          ("Junior", "Replace most of the years with what the person can already do, and say who will coach them."),
+                          ("", "Use the template as it stands."),
+                          ("Senior", "Raise the first-year result and name the system or area the person will own and who they will mentor."),
+                          ("Lead", "Add the size of the team or the scope, the hiring and planning duties, and who the person reports to.")):
+            g_ = [j for j in rj if j["level"] == lv_]
+            if len(g_) < 10: continue
+            y_ = sorted(j["years"] for j in g_ if j.get("years"))
+            m_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in g_ if j["usd"]]
+            jd_lv.append((lv_, LVL_NAME[lv_], len(g_), f"{y_[len(y_) // 2]} years" if len(y_) >= 10 else "–", money(median(m_)) if len(m_) >= 15 else "–", tip_))
+        jd_lv_html = (section(f"{rname} job description by level", '<div class="tablewrap"><table><tr><th>Level in the title</th><th>Open postings</th><th>Experience asked, median</th><th>Advertised pay, median</th><th>What to change in the template</th></tr>'
+                              + "".join(f"<tr><td>{e(nm_)}</td><td>{k_:,}</td><td>{y_}</td><td>{m_}</td><td>{e(t_)}</td></tr>" for _, nm_, k_, y_, m_, t_ in jd_lv)
+                              + f'</table></div><p class="note">Levels are read from the job titles of today’s open {e(low)} postings. A dash means too few postings state the figure.</p>')
+                      if sum(1 for r_ in jd_lv if r_[0]) >= 2 else "")
         jd_qa = [(f"What should {art(low)} {low} job description include?", "What the person will achieve in the first year, the duties, the must-have experience, the pay range and how the hiring steps work. "
                   + (f"For this work, today’s postings name {', '.join(t for t, _ in top_[:3])} most often." if top_ else "Use the words candidates search for, not internal team names.")),
                  (f"Should {art(low)} {low} job posting show the salary?", f"Yes, if you can: {paid_pct}% of today’s {n_:,} open {low} postings here do. A range filters out people who would turn the offer down, and several US states and EU countries now require it."),
@@ -5100,6 +5122,7 @@ def main():
                f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div></div>'
              + (f'<div class="rexside"><h2>What today’s {e(low)} postings say</h2>' + '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{e(v)}</td></tr>" for k, v in data_rows) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages. Recounted on every update.</p></div></div>')
+             + jd_lv_html
              + section(f"Questions about hiring {art(psn)} {psn}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in jd_qa) + "</dl>")
              + role_kit(slug_r, low, "jd")
              + f'<p class="note cmpl">See also: <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
@@ -6789,7 +6812,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "How to tell a real job offer from a fake one: seven warning signs, four schemes spreading now, how to check a recruiter, extra checks for crypto hiring, and what to do if you already paid.",
          crumbs(("Safety", "")) + "<h1>How to check that a job offer is real</h1>"
          '<p class="lead">Fake recruiters borrow the names of real companies, hold “interviews” in a chat app and ask for money, documents or wallet access before any contract exists. '
-         f'Ten minutes of checking catches most of it. Last reviewed {fdate(TODAY)}.</p>'
+         f'Ten minutes of checking catches most of it. The US Federal Trade Commission counted <a href="https://www.ftc.gov/business-guidance/blog/2025/09/ftc-takes-steps-stop-deceptive-unfair-labor-market-practices" rel="noopener">over 105,000 reports of job scams in 2024</a>, nearly three times the number in 2020, with reported losses of over $513 million. Last reviewed {fdate(TODAY)}.</p>'
          + section("Seven signs that a job offer is a scam", '<ol class="steps">'
                    "<li><b>You are asked to pay.</b> For training, equipment, “verification”, a visa or a deposit. Employers pay you, never the reverse.</li>"
                    "<li><b>Everything happens in a messenger.</b> No video call, no email from the company’s domain, no page on its site.</li>"
@@ -6823,10 +6846,17 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    f"a role that disappears from the employer’s page is marked closed the same day. Each job page names its source and the date of the last check. {NO_ANON}, "
                    f'and we never ask you for money, documents or an account. Details: <a href="{P}/methodology/">how listings are collected</a> and <a href="{P}/status/">today’s data status</a>.</p>')
          + section("What should I do if I already sent money or data?", "<p>Act the same day. Call your bank or card issuer and ask to stop or dispute the payment. Change the passwords of any account you shared, starting with email. "
-                   "If a seed phrase or key was exposed, move the funds to a new wallet at once. Then report it: in the United States to "
-                   '<a href="https://reportfraud.ftc.gov/" rel="noopener">reportfraud.ftc.gov</a> and <a href="https://www.ic3.gov/" rel="noopener">ic3.gov</a>; in the United Kingdom to '
-                   '<a href="https://www.actionfraud.police.uk/" rel="noopener">Action Fraud</a>; elsewhere to your national consumer-protection body or police cyber unit. '
-                   "Tell the real company too, so it can warn other candidates.</p>")
+                   "If a seed phrase or key was exposed, move the funds to a new wallet at once. Then report it, using the table below, and tell the real company too, so it can warn other candidates.</p>")
+         + section("Where do I report a fake job offer?", '<div class="tablewrap"><table><tr><th>Where you live</th><th>Report it to</th><th>What it is</th></tr>'
+                   + "".join(f'<tr><td>{w_}</td><td><a href="{u_}" rel="noopener">{n_}</a></td><td>{d_}</td></tr>' for w_, n_, u_, d_ in (
+                       ("United States", "ReportFraud.ftc.gov", "https://reportfraud.ftc.gov/", "The Federal Trade Commission’s reporting site, the place its job scam advice sends you."),
+                       ("United States", "Your state attorney general", "https://www.naag.org/find-my-ag/", "The FTC suggests reporting a job scam here as well."),
+                       ("United States", "FBI IC3", "https://www.ic3.gov/", "The FBI’s complaint centre for fraud and scams committed online."),
+                       ("United States", "BBB Scam Tracker", "https://www.bbb.org/scamtracker", "Search scams others have reported and add your own, so the next person can find it."),
+                       ("England, Wales, Northern Ireland", "Report Fraud", "https://www.reportfraud.police.uk/", "The UK’s national fraud and cyber crime reporting service. In Scotland, call the police on 101."),
+                       ("Canada", "Canadian Anti-Fraud Centre", "https://antifraudcentre-centreantifraude.ca/report-signalez-eng.htm", "Report online or by phone, as a victim or a witness; you can stay anonymous."),
+                       ("Anywhere else", "Your national police or consumer protection body", "", "Keep the messages, addresses, payment details and the job ad: they will be asked for."))).replace('<a href="" rel="noopener">', "<b>").replace("body</a>", "body</b>")
+                   + "</table></div>")
          + section("Job offer safety: questions and answers", safety_faq), head=safety_ld, cls="sp docp safety")
 
     lap('Our side of the deal, in plain words and with a date')
@@ -8827,7 +8857,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     RS = resignation_pages.STANDARD
     rl_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rl_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("resignation-letters/", f"Resignation Letter Template: {len(RL) + 1} Free Letters, Word & PDF ({rl_year}) | {SITE}",
+    page("resignation-letters/", f"Resignation Letter Template: {len(RL)} Free Letters, Word & PDF ({rl_year}) | {SITE}",
          f"{len(RL)} resignation letter templates you can copy: two weeks notice, effective immediately, by email, for a new job, relocation, health or family reasons, retirement and more.",
          crumbs(("Resignation letters", "")) + f'<h1>Resignation letter templates: <span class="hl">{len(RL)} examples</span></h1>'
          '<p class="lead">Pick the letter that fits your case. Each one is complete: copy it, replace the parts in [brackets], and send it. '

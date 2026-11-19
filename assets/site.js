@@ -275,7 +275,51 @@
     return sureBox(btn, text, '<p class="sure-act"><input type="text" maxlength="80" value="' + esc(value || '') + '" aria-label="' + esc(text) + '"><button type="button" class="btn sm" data-sure="1">' + esc(yes || 'Save') +
       '</button><button type="button" class="btn ghost sm" data-sure="0">Cancel</button></p>', function (box, ok) { return ok ? box.querySelector('input').value : null; });
   }
-  window.HRN = { sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  /* A pasted posting -> the fields of the form, by plain rules (seen on hirehi.ru, 18 Nov 2026: "paste the text and the fields fill
+     themselves"; there an AI does it, here nothing leaves the browser). What the rules do not find stays for the person to type. */
+  function readPosting(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n').map(function (l) { return l.replace(/[​-‍﻿]/g, '').trim(); }), out = {}, used = {};
+    var body = lines.filter(Boolean), all = body.join('\n');
+    if (!body.length || all.length < 60) return out;           // a word or two is not a posting
+    var label = function (names) {                              // "Location: Berlin", "Salary - $90K", "Company | Acme"
+      for (var i = 0; i < body.length; i++) {
+        var m = new RegExp('^(?:[^A-Za-z0-9]{0,4})(?:' + names + ')\\s*[:\\-–|]\\s*(.{2,140})$', 'i').exec(body[i]);
+        if (m) { used[i] = 1; return m[1].trim(); }
+      }
+      return '';
+    };
+    var url = /https?:\/\/[^\s<>"')\]]+/g, links = all.match(url) || [];
+    var apply = links.filter(function (u) { return /apply|career|jobs?[./-]|greenhouse|lever\.co|ashby|workable|workday|recruitee|personio|teamtailor|smartrecruiters/i.test(u); })[0] || links[0] || '';
+    if (apply) out.apply_url = apply.replace(/[.,;]+$/, '');
+    var t = label('job title|title|position|role|vacancy');
+    if (!t) for (var i = 0; i < body.length; i++) {            // else the first line that reads like a title
+      var l = body[i].replace(/#[\w-]+/g, '').replace(/^[^A-Za-z0-9(]+/, '').replace(/^(?:we(?:['’]| a)re hiring|hiring|now hiring|vacancy|job|open role|open position)\s*[:!\-–]\s*/i, '').trim();
+      if (l.length >= 4 && l.length <= 120 && !/^https?:/i.test(l) && !/[.!?]$/.test(l) && l.split(' ').length <= 14) { t = l; used[i] = 1; break; }
+    }
+    if (t) {
+      var at = /^(.{4,90}?)\s+(?:at|@)\s+([A-Z][\w&.,' -]{1,60})$/.exec(t);             // "Senior Engineer at Acme"
+      if (at) { t = at[1].trim(); out.company = at[2].trim(); }
+      out.title = t.replace(/\s*[(\[](?:m\/f\/d|f\/m\/d|m\/w\/d|all genders)[)\]]/i, '').replace(/\s{2,}/g, ' ').slice(0, 120);
+    }
+    var co = label('company|employer');
+    if (co) out.company = co.slice(0, 80);
+    var pay = label('salary|compensation|pay|rate');
+    if (!pay) { var pm = /(?:[$€£]\s?\d[\d,.]*\s?[kK]?(?:\s?(?:-|–|—|to)\s?[$€£]?\s?\d[\d,.]*\s?[kK]?)?|\d{2,3}(?:[,.]\d{3})?\s?[kK]?\s?(?:-|–|—|to)\s?\d{2,3}(?:[,.]\d{3})?\s?[kK]?\s?(?:USD|EUR|GBP|usd|eur|gbp))(?:\s?(?:\/|per|a|an)\s?(?:year|yr|annum|month|mo|hour|hr))?/.exec(all); if (pm) pay = pm[0]; }
+    if (pay) out.salary = pay.replace(/\s+/g, ' ').trim().slice(0, 60);
+    var loc = label('location|where|based in|office|city');
+    var remote = /\b(?:fully remote|100% remote|remote[- ]first|remote|work from home|work from anywhere|wfh|distributed team)\b/i.test(all) && !/\b(?:not remote|no remote|on-?site only)\b/i.test(all);
+    var hybrid = /\bhybrid\b/i.test(all);
+    if (!loc && remote) { var rg = /\bremote\s*(?:[,(–-]|in|within|from|across)\s*\(?((?:the )?(?:US|USA|United States|UK|United Kingdom|EU|Europe|EMEA|APAC|LATAM|Americas|Canada|Germany|worldwide|anywhere))\b/i.exec(all); loc = rg ? 'Remote, ' + rg[1].replace(/^the /i, '').trim() : 'Remote'; }
+    if (loc) out.location = loc.replace(/\s+/g, ' ').slice(0, 120);
+    if (remote && !hybrid) out.remote = true;
+    var ty = label('employment type|job type|type|contract type|commitment') + ' ' + all.slice(0, 1500);
+    out.etype = /\bintern(?:ship)?\b/i.test(ty) ? 'Internship' : /\bpart[- ]time\b/i.test(ty) ? 'Part-time' : /\b(?:contract(?:or)?|freelance|temporary|fixed[- ]term)\b/i.test(ty) ? 'Contract' : /\bfull[- ]time\b/i.test(ty) ? 'Full-time' : '';
+    var rest = body.filter(function (l, i) { return !used[i] && !/^https?:\/\/\S+$/.test(l) && !/^(?:full[- ]time|part[- ]time|contract|internship|remote|hybrid|on-?site)$/i.test(l) && !/^(?:[^A-Za-z0-9]{0,4})(?:location|where|salary|compensation|pay|rate|company|employer|employment type|job type|type|apply|how to apply|contact)\s*[:\-–|]/i.test(l); }).join('\n').replace(url, '').replace(/[ \t]{2,}/g, ' ').trim();
+    if (rest.length > 1500) { rest = rest.slice(0, 1500); rest = rest.slice(0, Math.max(rest.lastIndexOf('. '), rest.lastIndexOf('\n'), 1200) + 1).trim(); }
+    if (rest.length >= 80) out.description = rest;
+    return out;
+  }
+  window.HRN = { readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
      the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */

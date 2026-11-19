@@ -350,7 +350,7 @@
     if (current && years) bg.push(pick('I am ' + role + ' with ' + years + ' of experience.', 'I have spent ' + years + ' in this field and currently work as ' + role + '.', 'I am ' + role + ' with ' + years + ' of professional experience.'));
     else if (current) bg.push(pick('I work as ' + role + '.', 'I currently work as ' + role + '.', 'I am currently employed as ' + role + '.'));
     else if (years) bg.push(pick('I have ' + years + ' of relevant experience.', 'I have spent ' + years + ' doing this kind of work.', 'I bring ' + years + ' of relevant professional experience.'));
-    if (skills.length) bg.push(pick('My strongest skills are ', 'The work I enjoy most draws on ', 'My principal areas of expertise are ') + andList(skills) + '.');
+    if (skills.length) bg.push((skills.length === 1 ? pick('My strongest skill is ', 'The work I enjoy most draws on ', 'My principal area of expertise is ') : pick('My strongest skills are ', 'The work I enjoy most draws on ', 'My principal areas of expertise are ')) + andList(skills) + '.');
     var paras = [greet, open];
     if (bg.length) paras.push(bg.join(' '));
     if (ach) paras.push(pick('One result that shows how I work: ', 'A piece of work I am proud of: ', 'A representative example of my work: ') + ach);
@@ -1565,6 +1565,49 @@
       bullets: bullets.length, withNumbers: withNum.length, skills: skills, unused: unused, ranges: ranges, gaps: gaps, firstJob: firstJob, summaryWords: sumWords, duty: duty.length };
   };
 
+  /* ---------- can a hiring system read it? ---------- */
+  // A hiring system (ATS) turns a resume into fields: contact details, jobs, dates, education, skills. These six checks look for what such a
+  // reader needs and for the signs of a layout that falls apart when a file becomes text. They see text only and do not touch the score above.
+  T.atsCheck = function (text, today) {
+    text = String(text || '').replace(/\r/g, '');
+    var words = wordCount(text);
+    if (words < 80) return { error: 'short', words: words };
+    var lines = text.split('\n').filter(function (l) { return l.trim(); }), found = {}, items = [];
+    var add = function (id, ok, good, bad, d, q, level) { items.push({ id: id, ok: ok, level: ok ? 'ok' : level || 'fix', t: ok ? good : bad, d: ok ? '' : d, q: ok ? [] : q || [] }); };
+    var sample = function (list) { return list.slice(0, 2).map(function (l) { return cut(l, 90); }); };
+    lines.forEach(function (l) { var h = heading(l.trim()); if (h) found[h.section] = 1; });
+
+    var phone = false, rx = /\+?\d[\d ().\-]{6,18}\d/g, m;
+    while (!phone && (m = rx.exec(text))) {
+      var n = m[0].replace(/\D/g, '').length;
+      phone = n >= 8 && n <= 15 && (m[0].match(/\b(?:19|20)\d{2}\b/g) || []).length < 2;       // "2015 - 2018" is a date range, not a number to call
+    }
+    var email = /[^\s@<>()|,;:]+@[^\s@<>()|,;:]+\.[a-z]{2,}/i.exec(text);
+    add('email', !!email, 'Email address found: ' + (email ? email[0] : ''), 'No email address found', 'Put it in the body of the page as plain text, near your name. Text in a page header or inside a picture is often not read.');
+    add('phone', phone, 'Phone number found', 'No phone number found', 'Add one next to your email, with the country code if you apply abroad.', null, 'warn');
+
+    var names = { experience: 'Experience', education: 'Education', skills: 'Skills' }, none = Object.keys(names).filter(function (k) { return !found[k]; }).map(function (k) { return names[k]; });
+    var spaced = lines.filter(function (l) { return /^(?:\S ){3,}\S$/.test(l.trim()); });
+    add('headings', !none.length, 'Standard headings found: Experience, Education, Skills', 'Heading not recognised: ' + none.join(', '),
+      'Give each part a plain one-line heading with the usual name. Creative names such as “Where I’ve been” tell a parser nothing.' + (spaced.length ? ' Letters with spaces between them are read as separate letters.' : ''), sample(spaced));
+
+    var ranges = T.dateRanges(text, today);
+    add('dates', ranges.length > 0, ranges.length + (ranges.length === 1 ? ' date range can be read' : ' date ranges can be read'), 'No date range can be read',
+      'Write the dates of each job the same way, on the job’s own line: Jan 2021 – Mar 2023, 03/2021 – 03/2023 or 2021 – 2023. Hiring systems use them to work out your experience.');
+
+    var cols = lines.filter(function (l) { var s = l.trim(); return /\S(?:\t| {3,})\S/.test(s) || /^[|│┃]|[|│┃]$/.test(s); });
+    add('columns', cols.length < 3, 'One column: no sign of a table or side-by-side text', cols.length + ' lines look like columns or a table',
+      'Text placed side by side can be read straight across, mixing two parts of the page. Keep everything in one column, with no tables or text boxes.', sample(cols));
+
+    var odd = lines.filter(function (l) { return /[-�☀-➿]|[\uD83C-\uD83E][\uDC00-\uDFFF]|\(cid:\d+\)/.test(l); });
+    add('symbols', !odd.length, 'No icons or broken characters', odd.length + (odd.length === 1 ? ' line has' : ' lines have') + ' icons or broken characters',
+      'Icons from special fonts and emoji can turn into empty boxes or stray codes. Write “Email” and “Phone” as words, and keep plain dots or dashes for lists.', sample(odd), 'warn');
+
+    var rank = { fix: 0, warn: 1, ok: 2 }, passed = items.filter(function (x) { return x.ok; }).length;
+    items = items.map(function (x, i) { return [x, i]; }).sort(function (a, b) { return rank[a[0].level] - rank[b[0].level] || a[1] - b[1]; }).map(function (x) { return x[0]; });
+    return { passed: passed, total: items.length, items: items };
+  };
+
   /* ---------- LinkedIn profile review: headline and About ---------- */
   var BUZZ = ['passionate', 'results-driven', 'results-oriented', 'guru', 'ninja', 'rockstar', 'rock star', 'wizard', 'synergy', 'synergies', 'thought leader', 'visionary', 'detail-oriented', 'team player',
     'self-starter', 'go-getter', 'hard-working', 'hardworking', 'motivated', 'innovative', 'strategic thinker', 'proven track record', 'outside the box', 'out of the box', 'game-changer', 'seasoned', 'driven'];
@@ -2485,11 +2528,42 @@
 
   /* ---------- cover letter ---------- */
   tools['cover-letter'] = function () {
-    var paper = $('tl-paper'), count = $('tl-count');
-    form(function (v) {
+    var paper = $('tl-paper'), count = $('tl-count'), go = $('tl-fill'), said = $('tl-fill-out'), box = $('tl-found'), pats = null;
+    var F = form(function (v) {
+      if (box && !clean(v.posting)) { box.hidden = true; box.innerHTML = ''; said.textContent = ''; }
       var text = T.coverLetter(v), n = T.wordCount(text), todo = (text.match(/\[[^\]]+\]/g) || []).length;
       paper.textContent = text;
       count.textContent = n + ' words' + (todo ? ' · ' + todo + ' blank' + (todo === 1 ? '' : 's') + ' in [brackets] still to fill' : n > 320 ? ' · long for a cover letter: shorten your answers' : ' · fits on one page');
+    });
+    var skillsNow = function () { return F.read().skills.split(',').map(clean).filter(Boolean); };
+    var chips = function (names) {                        // only what the posting names; a skill goes into the letter when the person says it is theirs
+      var have = skillsNow().map(function (x) { return x.toLowerCase(); });
+      box.hidden = !names.length;
+      box.innerHTML = names.length ? '<p class="tl-h">The posting names these skills. Tap the ones you really have to add them to the letter.</p><div class="tl-pills">' + names.slice(0, 14).map(function (x) {
+        var on = have.indexOf(x.toLowerCase()) >= 0;
+        return '<button type="button" class="pill tl-chip' + (on ? ' ok' : '') + '" data-skill="' + esc(x) + '" aria-pressed="' + on + '">' + (on ? '✓ ' : '+ ') + esc(x) + '</button>';
+      }).join('') + '</div>' : '';
+    };
+    var read = function () {
+      var text = F.read().posting, got = H.readPosting ? H.readPosting(text) : {}, done = [];
+      [['title', 'job title'], ['company', 'company']].forEach(function (x) { if (got[x[0]]) { F.set(x[0], got[x[0]]); done.push(x[1]); } });
+      var names = T.findSkills(text, pats || []);
+      chips(names);
+      F.draw(); F.save();
+      said.textContent = done.length ? 'Filled in: ' + done.join(' and ') + '. Check them against the posting.' : clean(text) ? 'No job title or company could be read. Type them in below.' : 'Paste the posting first.';
+    };
+    if (go) go.addEventListener('click', function () {
+      if (pats) return read();
+      said.textContent = 'Reading the posting…';
+      fetch(H.base + '/data/skills.json').then(function (res) { if (!res.ok) throw new Error('skills'); return res.json(); })
+        .then(function (data) { pats = T.compilePats(data); read(); }).catch(function () { pats = []; read(); });
+    });
+    if (box) box.addEventListener('click', function (ev) {
+      var b = ev.target.closest ? ev.target.closest('[data-skill]') : null; if (!b) return;
+      var x = b.getAttribute('data-skill'), list = skillsNow(), at = list.map(function (y) { return y.toLowerCase(); }).indexOf(x.toLowerCase());
+      if (at >= 0) list.splice(at, 1); else list.push(x);
+      F.set('skills', list.join(', ')); F.draw(); F.save();
+      var on = at < 0; b.classList.toggle('ok', on); b.setAttribute('aria-pressed', String(on)); b.textContent = (on ? '✓ ' : '+ ') + x;
     });
   };
 
@@ -2864,7 +2938,10 @@
       board(out, title, fmt(r.words) + ' words · ' + r.pages, big(plain(r.score, 1), '/ 10') + meter(r.score * 10) +
         sub('<b>' + esc(r.verdict) + '.</b> The score is the sum of the six checks below. It rates how the page reads on a first skim; it cannot tell whether the content is true, how the layout looks or how well you fit a particular job.') +
         kv(r.checks.map(function (c) { return [c.name, pts(c)]; })));
-      detail.innerHTML = '<p class="tl-t">Strengths</p>' + (r.strengths.length ? list(r.strengths.map(function (x) { return { level: 'ok', t: x.name + ': ' + x.t, d: x.d }; })) : '<p class="note">No check has full points yet.</p>') +
+      var ats = T.atsCheck(v.text);
+      detail.innerHTML = '<p class="tl-t">Can a hiring system read it? ' + ats.passed + ' of ' + ats.total + ' checks passed</p>' + list(ats.items) +
+        '<p class="note">Each hiring system reads files its own way, so this is a check of the common causes of trouble and no guarantee. To test a PDF, open it, select all the text, copy it and paste it here: that shows the order the words really come out in.</p>' +
+        '<p class="tl-t">Strengths</p>' + (r.strengths.length ? list(r.strengths.map(function (x) { return { level: 'ok', t: x.name + ': ' + x.t, d: x.d }; })) : '<p class="note">No check has full points yet.</p>') +
         '<p class="tl-t">Weaknesses</p>' + (r.weaknesses.length ? list(r.weaknesses.map(function (c) { return { level: 'warn', t: c.name + ': ' + c.t, d: 'Points: ' + pts(c) + '.' }; })) : '<p class="note">Every check has full points.</p>') +
         '<p class="tl-t">What to fix, starting with what costs the most points</p>' + (r.fixes.length ? list(r.fixes.map(function (x) { return { level: 'fix', t: x.t, d: x.d, q: x.q }; })) : '<p class="note">Nothing on our list. Read the first lines of the page once more: that is the part that gets read.</p>');
     });

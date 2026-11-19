@@ -43,9 +43,9 @@ lacks, build it, and be in every answer. Engines: Google, Bing, Claude's web sea
 | 26 | Perks | jobs with visa sponsorship | `/perks/visa-sponsorship/` | 15 Nov | yes | no | – | by industry and by visa type; “how to find a sponsor”; questions |
 | 27 | Site vs site | indeed vs linkedin | `/vs/indeed-vs-linkedin/` | 15 Nov | yes | no | – | the query maps to /vs/indeed-vs-linkedin-jobs/ (the short address is a stub) |
 | 28 | Jobs for | jobs for introverts | `/jobs-for/introverts/` | 18 Nov | yes | no | short answer first, three ranked lists, the count in the title (all 53 pages) | per-page traits list; questions for the related searches |
-| 29 | Tool | resume checker | `/tools/resume-review/` | 15 Nov | no | no | – | ATS readability check (columns, tables, contact details) so that “ATS” can honestly stand in the title; checklist of all checks |
+| 29 | Tool | resume checker | `/tools/resume-review/` | 15 Nov | no | no | 19 Nov: ATS readability list, “ATS” in the title and heading | list of all checks as a table; checklist of all checks |
 | 30 | Tool | hourly to salary calculator | `/tools/salary-converter/` | – | no | no | “Hourly to Salary Calculator” in the title, table $10 to $100 an hour, a question | overtime and unpaid weeks fields; US median pay as a benchmark |
-| 31 | Tool | cover letter generator | `/tools/cover-letter/` | 15 Nov | no | no | – | paste a job posting to fill the letter; sample letters by role; format box |
+| 31 | Tool | cover letter generator | `/tools/cover-letter/` | 15 Nov | no | no | 19 Nov: paste a posting: title, company, skills to tap | sample letters by role; format box |
 | 32 | Tool | take home pay calculator | `/tools/take-home-pay/` | 18 Nov | no | no | “paycheck” in the title, table $40,000 to $200,000 | state income tax (50 states and pages per state): the largest gap |
 | 33 | Insights | how long do job postings stay open | `/how-long-job-postings-stay-open/` | 15 Nov | yes | no | “should you still apply” table, why postings close or stay, four questions | closing rates by kind of work as a table; trend once history grows |
 | 34 | Guides | most in demand skills | `/guides/skills-in-demand/` | 15 Nov | yes | no | answer first; table with pay and remote share; workplace skills; AI skills; five questions | change against earlier weeks once history allows; skills by industry |
