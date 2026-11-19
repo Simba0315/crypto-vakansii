@@ -1491,6 +1491,16 @@ def intern_hub(path, h1, yr, ej):
 # postings talk about "immediate hiring needs" and are about other people's jobs, so they are left out.
 IMMEDIATE_RX = re.compile(r"\b(?:start(?:ing)? immediately|immediate start|hiring immediately|immediate hiring(?! needs?)|immediate openings?|urgently hiring|immediately hiring)\b", re.I)
 NO_EXPERIENCE_RX = re.compile(r"\b(?:no (?:prior |previous |relevant |work )?experience (?:is |are )?(?:required|necessary|needed)|experience (?:is )?not required)\b", re.I)
+# The steps of hiring a posting names in its own text, in the order they usually come (company pages: "How hiring works at …")
+HIRE_STEPS = [("A call with a recruiter", re.compile(r"recruiter (?:screen|call|phone)|phone screen|initial (?:call|screen|conversation)|intro(?:ductory)? call", re.I)),
+              ("A conversation with the hiring manager", re.compile(r"hiring manager (?:call|interview|screen|conversation)", re.I)),
+              ("A take-home task or case study", re.compile(r"take[- ]home (?:assignment|exercise|task|test|challenge|project)|case study (?:interview|exercise|presentation)|work sample", re.I)),
+              ("A technical or coding interview", re.compile(r"technical interview|coding (?:interview|challenge|exercise|test)|live coding|pair programming (?:session|interview)|system design interview", re.I)),
+              ("A panel or final round", re.compile(r"on-?site interview|panel interview|final[- ]round|virtual on-?site|interview loop", re.I)),
+              ("A paid trial", re.compile(r"paid trial|trial day|work trial", re.I)),
+              ("A background check", re.compile(r"background (?:check|screening|investigation)", re.I)),
+              ("Reference checks", re.compile(r"reference checks?", re.I)),
+              ("A drug test", re.compile(r"drug (?:test|screen)", re.I))]
 RECRUITING_TITLE = re.compile(r"recruit|sourc(?:er|ing)|talent|staffing", re.I)
 
 
@@ -3500,6 +3510,20 @@ def main():
             duo += section(f"Where {c} is hiring", '<div class="rel chips">' + "".join(f'<a href="{P}/locations/{p_}/">{pfl(p_)}{e(PLACE_NAME[p_])} <b>{k:,}</b></a>' for p_, k in where) + "</div>"
                            '<p class="note">Open roles in each place; a role that lists several places is counted in each.</p>', sid="where")
         if duo: overview += f'<div class="duo">{duo}</div>'
+        # How hiring works here and the way in for beginners, from the postings themselves (plan, part 1, item 16)
+        hire_qa = []
+        full_c = [j for j in act if j.get("desc")]
+        if len(full_c) >= 10:
+            steps_c = [(n_, sum(1 for j in full_c if rx_.search(j["desc"]))) for n_, rx_ in HIRE_STEPS]
+            steps_c = [(n_, k_) for n_, k_ in steps_c if k_ >= max(2, len(full_c) // 20)]
+            if len(steps_c) >= 2:
+                overview += section(f"How hiring works at {c}", '<ol class="steps">' + "".join(f"<li><b>{e(n_)}</b> is named in {k_:,} of the {len(full_c):,} postings we hold in full.</li>" for n_, k_ in steps_c) + "</ol>"
+                                    f'<p class="note">Counted from the words of {e(c)}’s own open postings, in the order these steps usually come. A step a posting does not mention may still be part of the process.</p>', sid="hiring")
+                hire_qa.append((f"What is the hiring process at {c}?", f"Its open postings most often name these steps: " + ", ".join(n_[0].lower() + n_[1:] for n_, _ in steps_c[:5]) + ". The order and the details differ by team, so ask the recruiter in the first call."))
+        ent_c = [j for j in act if j.get("entry")]
+        if len(ent_c) >= 3:
+            overview += section(f"Internships and first jobs at {c}", f'<ul class="jobs">{"".join(card(j) for j in sorted(ent_c, key=lambda j: j["posted"] or "", reverse=True)[:6])}</ul>'
+                                + (f'<p class="note">{len(ent_c):,} junior roles and internships are open at {e(c)} today. More at other companies: <a href="{P}/entry-level/">entry-level jobs</a>.</p>'), sid="entry")
         if sim:
             overview += section(f"Companies like {c}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(o)}/", o, OPEN[o], True) for _, _, o in sim) + "</ul>"
                                 '<p class="note">Based on the skills they hire for.</p>', sid="similar")
@@ -3531,7 +3555,7 @@ def main():
         lv_ = Counter(j["level"] for j in act if j["level"])
         pay_c = sorted((lo + hi) / 2 for j in act if j["usd"] for lo, hi in [j["usd"]])
         interns_ = sum(1 for j in act if j["level"] == "Intern")
-        co_qa = []
+        co_qa = list(hire_qa)
         if act:
             co_qa.append((f"Is {c} hiring right now?", f"Yes: {len(act):,} open {'job' if len(act) == 1 else 'jobs'} on its own careers page as of {fdate(TODAY)}; {new7_:,} were added in the last seven days"
                           + f" and {shut7_:,} closed." + " We re-read the page " + ("every hour." if CFG.get("live_collector") else "several times a day.")))
@@ -4300,6 +4324,17 @@ def main():
                 intern_hub(path, h1, yr, ej)
                 continue
             row_e, kw_e = list_parts(h1, ej)
+            if et == "Part-time":
+                # hourly pay by job title: what the first results for "part time jobs" lead with (search check, 18 Nov 2026)
+                hr_t = defaultdict(list)
+                for j in ej:
+                    if (h_ := usd_hourly(j.get("salary"))): hr_t[re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip()].append((h_[0] + h_[1]) / 2)
+                hr_rows = sorted(((t_, sorted(v_)) for t_, v_ in hr_t.items() if len(v_) >= 3 and 3 <= len(t_) <= 60), key=lambda x: -len(x[1]))[:15]
+                if len(hr_rows) >= 3:
+                    kw_e = dict(kw_e)
+                    kw_e["after"] = section("Part-time pay by job title", '<div class="tablewrap"><table><tr><th>Job title</th><th>Open postings with an hourly rate</th><th>Median hourly pay</th></tr>'
+                                            + "".join(f"<tr><td>{e(t_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td></tr>" for t_, v_ in hr_rows)
+                                            + '</table></div><p class="note">The middle of each posting’s hourly range, for titles with three or more open part-time postings that state one.</p>') + kw_e.get("after", "")
             listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
                     intro_for(ej, f"{et.lower()} ", row=row_e), trail=(("All jobs", "jobs/"),), faq=h1[0].lower() + h1[1:], **kw_e)
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
@@ -4548,6 +4583,10 @@ def main():
                      ("Hiring most in", ", ".join(XA["places"]) or "–", ", ".join(XB["places"]) or "–"),
                      ("Levels named in titles", ", ".join(f"{k} {v:,}" for k, v in XA["levels"].most_common(3)) or "–", ", ".join(f"{k} {v:,}" for k, v in XB["levels"].most_common(3)) or "–"),
                      ("Experience asked (median)", f"{XA['yrs']} years" if XA["yrs"] is not None else "too few postings say", f"{XB['yrs']} years" if XB["yrs"] is not None else "too few postings say")]
+        ja_, jb_ = co_act.get(A["name"], []), co_act.get(B["name"], [])
+        top_kinds = lambda js_: ", ".join(f"{rlow(nm_)} ({c_:,})" for c_, _, nm_, _, _ in role_rows(js_, 3)[:3]) or "–"
+        side_rows[2:2] = [("Hiring most for", top_kinds(ja_), top_kinds(jb_)),
+                          ("Internships and junior roles", f"{sum(1 for j in ja_ if j['entry']):,}", f"{sum(1 for j in jb_ if j['entry']):,}")]
         side_rows += [(f"Median pay: {CAT[k]}", money(XA["pay_f"][k]), money(XB["pay_f"][k])) for k in both_f[:5]]
         side_rows += [(f"Median pay: {k}", money(XA["pay_l"][k]), money(XB["pay_l"][k])) for k in both_l]
         side_tbl = section(f"{A['name']} and {B['name']} in detail", f'<div class="tablewrap"><table><tr><th></th><th>{e(A["name"])}</th><th>{e(B["name"])}</th></tr>'
