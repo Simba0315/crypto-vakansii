@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
+import bls_wages                        # US government wage figures beside advertised pay (/salaries/<role>/)
 import tools_pages                      # the free tools section: /tools/ and one page per tool
 import brand                            # the brand: three directions, the logo files, the colours (brand.py, /brand/)
 import roles_info
@@ -1502,7 +1503,10 @@ def intro_for(jobs, pre="", post="", hub=False, row=False):
     if row and len(jobs) >= 20 and len(names) >= 3: return f"{roles(len(jobs), 'open ' + pre + 'role')}{post} as of {fdate(TODAY)}. {who.strip()}"
     bits = ([f"{r:,} {'is' if r == 1 else 'are'} remote"] if 0 < r < len(jobs) else []) + ([f"the median advertised salary is {money(median(mids))}"] if len(mids) >= 15 else [])
     tail = " and ".join(bits)
-    return f"{roles(len(jobs), 'open ' + pre + 'role')}{post} as of {fdate(TODAY)}. {who}" + (tail[0].upper() + tail[1:] + "." if tail else "")
+    week_ago = (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=7)).isoformat()
+    new7 = sum(1 for j in jobs if (j.get("posted") or "") >= week_ago)
+    fresh = f" {new7:,} {'was' if new7 == 1 else 'were'} posted in the last 7 days." if new7 else ""
+    return f"{roles(len(jobs), 'open ' + pre + 'role')}{post} as of {fdate(TODAY)}. " + (who + (tail[0].upper() + tail[1:] + "." if tail else "")).strip() + fresh
 
 
 def list_parts(h1, js, skip="", proper=False, drop_tag=""):
@@ -3102,6 +3106,10 @@ def main():
         if len(rr_p) >= 3:
             pl_qa.append((f"What jobs are in high demand in {short}?", "By open postings today: " + ", ".join(f"{rlow(nm_)} ({c_:,})" for c_, _, nm_, _, _ in rr_p[:6])
                           + f". {sum(1 for j in js if (j['posted'] or '') >= HUB['week']):,} jobs in {name} were posted in the last seven days."))
+            cos_p = Counter(j["company"] for j in js)
+            if len(cos_p) >= 3:
+                pl_qa.append((f"How do I find a job in {short}?", f"Start with the work hiring most here: {rlow(rr_p[0][2])}, {rlow(rr_p[1][2])} and {rlow(rr_p[2][2])}. Then go through the {len(cos_p):,} companies with open jobs in {name}, "
+                              f"led by {', '.join(c_ for c_, _ in cos_p.most_common(2))} and {cos_p.most_common(3)[2][0]}, and apply on each employer’s own page. Set a free alert on this page so new jobs reach you while they are fresh."))
         co_link = ((f"locations/{slug}/companies/", f"All {len(co_in[slug]):,} companies hiring in {short}"),) if slug in co_in else ()      # beside the page's main action
         listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {name} ({len(js):,} open) | {SITE}",
                 f"{roles(len(js), 'job')} in {name}. Startups and established companies hiring now.",
@@ -3721,7 +3729,22 @@ def main():
                    "These are advertised ranges for open roles, mostly in the United States and in US dollars, not what people are actually paid.")]
         # Search check, 18 Nov 2026 ("data analyst salary"): the first results (survey and government figures) show $71K to $99K where
         # this page shows $136K. Both can be right; the page has to say why they differ, or the reader trusts neither.
-        sal_qa.insert(1, (f"Why is this {label} salary higher than on other sites?",
+        gov_c = bls_wages.ROLE.get(slug) if role else None
+        gov_ = bls_wages.OCC[gov_c] if gov_c else None
+        gov_html, gov_lead = "", ""
+        if gov_:
+            g_t, g_n, g_lo, g_med, g_hi = gov_
+            g_note = bls_wages.NOTE.get(slug, "")
+            g_src = f'<a href="{bls_wages.SOURCE}" rel="noopener">US Bureau of Labor Statistics</a>'
+            gov_lead = f" For comparison, the US government’s median for {e(g_t)}, the closest occupation it counts, is ${g_med:,} ({bls_wages.PERIOD})."
+            gov_html = section(f"{label} pay: job postings and government figures", '<div class="tablewrap"><table><tr><th></th><th>Advertised in open postings here</th><th>US government figure, all employers</th></tr>'
+                               + f"<tr><td>Lowest tenth earn or are offered under</td><td>{money(pct(.1))}</td><td>${g_lo:,}</td></tr><tr><td><b>Median</b></td><td><b>{money(median(mids))}</b></td><td><b>${g_med:,}</b></td></tr>"
+                               + f"<tr><td>Top tenth earn or are offered over</td><td>{money(pct(.9))}</td><td>${g_hi:,}</td></tr><tr><td>Counted</td><td>{len(mids):,} postings</td><td>{g_n:,} people employed</td></tr></table></div>"
+                               + f'<p class="note">Government column: {g_src}, Occupational Employment and Wage Statistics, {bls_wages.PERIOD}, national figures for “{e(g_t)}”, the closest occupation it counts. {e(g_note)} '
+                                 "It shows what people in the occupation are paid at every kind of employer; the postings show what employers that print a range offer for open roles today.</p>")
+            sal_qa.append((f"What does the US government say {label} roles pay?", f"The Bureau of Labor Statistics puts the median yearly pay of {g_t} at ${g_med:,} for {bls_wages.PERIOD}, with the lowest tenth under ${g_lo:,} and the top tenth over ${g_hi:,}, "
+                           f"across {g_n:,} people employed in the United States. {g_note}".strip()))
+        if not gov_ or median(mids) > gov_[3]: sal_qa.insert(1, (f"Why is this {label} salary higher than on other sites?",
                           "Salary surveys and government wage figures average what people in the job are paid at every kind of employer, in every part of the country. "
                           f"This page counts only open postings that print a pay range ({len(mids):,} today), and those come mostly from technology companies in large US cities, "
                           f"which pay above the wider market and are also the employers most likely to print a range. Read the figure as what such employers offer for an open {label} role today, "
@@ -3775,9 +3798,9 @@ def main():
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
              f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}, '
-             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.</p>'
+             f'counted from {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.{gov_lead}</p>'
              + act_row("tools/offer-check/", "Check an offer against these figures", [back] if isinstance(back, tuple) else ()) + stats + pics
-             + cut + (section(f"Skills that pay more for {label} roles", '<div class="tablewrap"><table><tr><th>Skill</th><th>Median with it</th><th>Above the median</th><th>Postings</th></tr>'
+             + gov_html + cut + (section(f"Skills that pay more for {label} roles", '<div class="tablewrap"><table><tr><th>Skill</th><th>Median with it</th><th>Above the median</th><th>Postings</th></tr>'
                                 + "".join(f'<tr><td><a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a></td><td>{money(median(mids) + d)}</td><td>+{money(d)}</td><td>{k:,}</td></tr>' for d, t, k in prem)
                                 + "</table></div>") if prem else "")
              + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
@@ -5244,6 +5267,12 @@ def main():
                   "Keep a list of your results with numbers, updated every month: it becomes your resume lines and your interview stories.",
                   "Find one person a few years ahead of you in this work and ask for a 20-minute talk each quarter."]
         extra_hb += section(f"Professional development goals for {art(psn)} {psn}", '<ul class="ticks">' + "".join(f"<li>{e(g_)}</li>" for g_ in goals_) + "</ul>")
+        foc_ = [x.strip() for x in (resume_examples.ROLE.get(slug_r, (None, ""))[1] or "").split(",") if x.strip()][:3]
+        if foc_:
+            extra_hb += section(f"Portfolio ideas for {art(psn)} {psn}", '<ul class="ticks">'
+                                + "".join(f"<li><b>{e(x[0].upper() + x[1:])}.</b> {t_}</li>" for x, t_ in zip(foc_, ("One finished example: the problem, what you did and what changed.", "Show the steps as well as the result, so a reader can follow how you think.", "Add one number: time saved, errors cut, or how many people used it.")))
+                                + (f"<li><b>The tools postings name.</b> Use {' and '.join(e(t) for t, _ in top_[:2])} in at least one example, and say where.</li>" if len(top_) >= 2 else "")
+                                + "<li><b>Practice work counts.</b> Say that it is practice, and never show an employer’s confidential material.</li></ul>")
         li_skills = " · ".join(t for t, _ in top_[:3]) if top_ else ""
         extra_hb += section(f"LinkedIn profile tips for {art(psn)} {psn}", '<ul class="ticks">'
                             + f'<li><b>Headline:</b> the title employers search for, then your strongest skills and one result: “{e(tcase(psn))}' + (f" | {e(li_skills)}" if li_skills else "") + ' | [one result with a number]”.</li>'
@@ -5626,6 +5655,23 @@ def main():
                            "<li>Score every answer on the same points: correctness, clarity and judgement.</li>")
                         + "<li>Talk it through in the next interview: how they explain their choices tells as much as the result.</li>"
                         "<li>Not sure yet? A short paid trial project or a contract-to-hire term lets both sides check the fit.</li></ul>")
+        crit_ = [(t, "Has used it on real work and can say why one approach was chosen over another", "Knows the name but gives no example") for t, _ in top_[:4]] + [
+            ("Results", "Names a result with a number and says which part was their own", "Describes duties, not what changed"),
+            ("Judgement", "Says what they would do differently next time, and why", "Every decision was right, or was someone else’s"),
+            ("Explaining the work", "Someone outside the field can follow the answer", "Stays in jargon when asked to explain"),
+            ("Why this job", "What they want next matches what the job offers", "Could say the same about any employer")]
+        card_txt = (f"Interview scorecard: {psn}\nCandidate:\nInterviewer:\nDate:\n\nScore each line from 1 to 5 and write one line of evidence.\n\n"
+                    + "\n\n".join(f"{c_}\n5: {a_}\n1: {b_}\nScore:\nEvidence:" for c_, a_, b_ in crit_) + "\n\nHire / No hire, and the main reason:")
+        card_ = section(f"Interview scorecard for {art(psn)} {psn}", "<p>Ask every candidate the same questions. Each interviewer fills this in alone, before the group talks, so the first opinion voiced does not become everyone’s. "
+                        + ("The first lines are the skills today’s postings for this work name most." if top_ else "") + "</p>"
+                        + '<div class="tablewrap"><table><tr><th>What you score</th><th>A 5 sounds like</th><th>A 1 sounds like</th><th>Score</th></tr>'
+                        + "".join(f"<tr><td><b>{e(c_)}</b></td><td>{e(a_)}</td><td>{e(b_)}</td><td>1 to 5</td></tr>" for c_, a_, b_ in crit_) + "</table></div>"
+                        + f'<p class="rl-act"><button class="btn ghost sm" type="button" data-clip="score-text" data-raw="1" style="margin-top:0">Copy the scorecard</button></p><pre id="score-text" hidden>{e(card_txt)}</pre>')
+        foc_h = [x.strip() for x in (resume_examples.ROLE.get(slug_r, (None, ""))[1] or "").split(",") if x.strip()][:2]
+        plan_ = section(f"The first 90 days of a new {psn}", '<ol class="steps">'
+                        "<li><b>Days 1 to 30: learn.</b> Accounts and tools ready on the first morning, one named person to ask, meetings with the people they will work with, and one small task finished in the first week.</li>"
+                        + f"<li><b>Days 31 to 60: contribute.</b> They take over {e(foc_h[0]) if foc_h else 'a defined part of the work'} with a colleague checking the results, and you talk once a week about what is unclear.</li>"
+                        + "<li><b>Days 61 to 90: own it.</b> They deliver the first result you agreed at the start, you compare the work with the job description, and together you set goals for the next six months.</li></ol>")
         hh_more = [(f"Should I hire a freelance {psn} or a full-time one?", f"{con_pct}% of today’s {low} postings are contract roles. Freelance suits a defined project with an end date; full-time suits ongoing work and anything that needs "
                     "knowledge of your business. A paid trial project or a contract-to-hire term lets both sides check the fit first."),
                    (f"How much does a freelance {psn} cost per hour?", (f"The {len(hr_r):,} postings for this work that state an hourly rate advertise a median of ${hr_r[len(hr_r) // 2]:,.0f} an hour." if len(hr_r) >= 5 else
@@ -5656,6 +5702,8 @@ def main():
              + which_
              + mist_sec
              + task_
+             + card_
+             + plan_
              + section(f"Questions about hiring {many}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hh_qa + hh_more) + "</dl>")
              + role_kit(slug_r, low, "hire")
              + f'<p class="note cmpl">See also: <a href="{P}/job-descriptions/{slug_r}/">{e(low)} job description template</a> · <a href="{P}/roles/{slug_r}/">{n_:,} open {e(low)} jobs</a> · '
