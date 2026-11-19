@@ -36,14 +36,14 @@ def _rules_text():
 RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
-ROTATING = ("sources_more.json", "sources_ats.json")
+ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
 # With 134 released boards read on every run (a list of up to 50 pages and 120 texts each, at about a second and a half a request),
 # 12 at a time took 54 minutes of a run and 24 at a time about 25; the run's limit is 55.
-ATS_LIMIT = {"workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6}
-ATS_GAP = {"workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1}
+ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6}
+ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -1381,6 +1381,99 @@ def direct_desc(text):
 
 
 # >>> not rules (jobs posted in the account, placements, and the run itself: to the end of the file)
+# US federal jobs (19 Nov 2026, the owner: "find more jobs; I think USAJOBS has an open API"). USAJOBS is the federal government's own
+# hiring site, so a federal job read from it is read from the employer, as everywhere else on this site. Its Historic JOA endpoint
+# needs no key and its robots.txt allows it; it gives every announcement with its dates, pay, places and schedule, but not the text,
+# so the record's text is written from those fields. One board per department (sources_gov.json, "token": the department code); an
+# announcement counts while USAJOBS says it is accepting applications and its closing date has not passed.
+USAJOBS = "https://data.usajobs.gov"
+USAJOBS_JUNK = re.compile(r"\btest\b.*\b(?:expire|reminder|ignore)\b|do not apply|don.t apply", re.I)
+
+
+def gov_title(t):
+    """Many announcements are titled in capitals ("AIRCRAFT ENGINE MECHANIC (Title 32)"): capitalised normally, short words and
+    known abbreviations kept."""
+    t = re.sub(r"\s+", " ", t or "").strip()
+    if sum(c.isupper() for c in t) < 0.6 * max(1, sum(c.isalpha() for c in t)): return t
+    small = {"of", "and", "or", "the", "for", "in", "on", "at", "to", "a", "an", "with"}
+    keep = {"IT", "HR", "US", "U.S.", "VA", "DOD", "GS", "WG", "RN", "LPN", "EMT", "ICU", "OR", "ER", "TSA", "FBI", "IRS", "NASA", "II", "III", "IV", "MD", "PA", "NP"}
+    out = []
+    for i, w in enumerate(t.split(" ")):
+        core = w.strip("()[],/-")
+        if core.upper() in keep: out.append(w.upper() if core.isalpha() else w)
+        elif i and core.lower() in small: out.append(w.lower())
+        else: out.append("-".join(x[:1].upper() + x[1:].lower() for x in w.split("-")))
+    return " ".join(out)
+
+
+def fetch_usajobs(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    today = datetime.date.today().isoformat()
+    url, rows, pages = f"{USAJOBS}/api/historicjoa?HiringDepartmentCodes={tok}&StartPositionCloseDate={today}", [], 0
+    while url and pages < 60:
+        polite("usajobs")
+        d = get_json(url, 60)
+        if not isinstance(d, dict) or not isinstance(d.get("data"), list): return name, None      # a failed page: the department stays as it was
+        rows += d["data"]; pages += 1
+        nxt = (d.get("paging") or {}).get("next")
+        url = USAJOBS + nxt if nxt else None
+    out = []
+    for r in rows:
+        if r.get("positionOpeningStatus") != "Accepting applications" or (r.get("positionCloseDate") or "") < today: continue
+        title = gov_title(r.get("positionTitle"))
+        if not title or USAJOBS_JUNK.search(title): continue
+        jid = str(r.get("usajobsControlNumber") or "")
+        if not jid: continue
+        h = fingerprint({k: v for k, v in r.items() if k != "positionOpeningStatus"})
+        rec = reuse(f"usajobs-{slugify(name)}-{jid}", h) if reuse else None
+        if rec is None:
+            locs = [", ".join(x for x in (l.get("positionLocationCity"), l.get("positionLocationState")) if x) or (l.get("positionLocationCountry") or "")
+                    for l in (r.get("positionlocations") or [])]
+            loc = "; ".join(dict.fromkeys(x for x in locs if x))[:300]
+            per = (r.get("salaryType") or "").lower()
+            lo, hi = r.get("minimumSalary"), r.get("maximumSalary")
+            pay = ""
+            if lo and hi and "hour" in per: pay = f"${lo:,.2f} – ${hi:,.2f} an hour"
+            elif lo and hi and "year" in per and lo >= 10000: pay = f"${lo:,.0f} – ${hi:,.0f} a year"
+            agency = (r.get("hiringAgencyName") or "").strip()
+            paths = ", ".join(x.get("hiringPath") for x in (r.get("hiringpaths") or []) if x.get("hiringPath"))
+            if not pay and paths in ("", "Custom announcement"): continue          # internal test and placeholder announcements ("PD Prod Deploy 0426")
+            facts = [f"{agency}, {r.get('hiringDepartmentName') or name}." if agency else "",
+                     f"{r.get('workSchedule') or ''} {(r.get('appointmentType') or '').lower()} position".strip().capitalize() + ".",
+                     f"Pay grade {r.get('payScale')} {r.get('minimumGrade')}" + (f" to {r.get('maximumGrade')}" if r.get('maximumGrade') not in (None, r.get('minimumGrade')) else "") + "." if r.get("payScale") else "",
+                     f"Open to: {paths}." if paths else "",
+                     f"Security clearance: {r.get('securityClearance')}." if r.get("securityClearanceRequired") == "Y" and r.get("securityClearance") else "",
+                     f"Travel: {r.get('travelRequirement')}." if r.get("travelRequirement") else "",
+                     "Telework eligible." if r.get("teleworkEligible") == "Y" else "",
+                     f"Openings: {r.get('totalOpenings')}." if str(r.get("totalOpenings") or "").isdigit() else "",
+                     f"Applications close on {r.get('positionCloseDate')}. The full announcement, duties and how to apply are on USAJOBS, the federal government's hiring site."]
+            text = " ".join(x for x in facts if x)
+            # the agency goes into the text, not the department field: words such as "Revenue" in an agency's name would steer the category
+            rec = parse(name, "usajobs", jid, title, f"https://www.usajobs.gov/job/{jid}", loc, False, "", r.get("positionOpenDate") or "", text, pay,
+                        f"{r.get('workSchedule') or ''} {r.get('appointmentType') or ''}", "<p>" + html.escape(text) + "</p>")
+            if rec is None: continue
+            rec["h"] = h
+        out.append(rec)
+    return name, out
+
+
+_fetch_any = fetch
+
+
+def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS)
+    if src.get("ats") == "usajobs":
+        gate = _gate.get("usajobs")
+        try:
+            if gate: gate.acquire()
+            return fetch_usajobs(src, reuse)
+        except Exception as ex:
+            print(f"feed error for {src.get('name')}: {type(ex).__name__}: {ex}")
+            return src["name"], None
+        finally:
+            if gate: gate.release()
+    return _fetch_any(src, reuse)
+
+
 def direct_and_paid(db, used_slugs, indexed, stats):
     """Jobs employers posted in their account, and paid placements, from our own API ("api_url" in config.json).
     A failed call changes nothing: posted jobs stay as they were and the previous placements file is kept."""
