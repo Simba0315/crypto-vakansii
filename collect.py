@@ -1666,6 +1666,30 @@ def direct_and_paid(db, used_slugs, indexed, stats):
     print(f"placements: {len(seen)} posted jobs, {len(exp.get('boosts') or [])} promoted, {len(exp.get('sponsors') or [])} sponsors, {len(claimed)} company pages, {len(held)} logos")
 
 
+# A whole hiring system that suddenly answers with empty lists (its API changed, or it is down) must not close its jobs. A reader's
+# remark under the vc.ru article on Rekru (read 19 Nov 2026): a parser can "quietly collect zero for two months", and a run that
+# succeeds says nothing about whether the catalogue was updated; watch for a sharp drop per source. One board going empty is normal
+# (the company stopped hiring or moved its board, and its jobs close); many boards of one system at once is not.
+DOWN_MIN, DOWN_SHARE = 5, 0.1
+
+
+def guard_systems(results, sources, open_by_co, late, stats):
+    """Boards with at least 5 open jobs that came back empty, counted per hiring system. When one system has DOWN_MIN or more such
+    boards and they are DOWN_SHARE or more of its boards with open jobs, its empty answers count as "did not answer" this run: the
+    jobs stay open and the status page names the system. Returns the results with those answers replaced by None."""
+    ats_of = {s["name"]: s.get("ats", "") for s in sources}
+    had, went = defaultdict(int), defaultdict(int)
+    for name, jobs in results:
+        if name in late or jobs is None or len(open_by_co.get(name, ())) < 5: continue
+        had[ats_of.get(name, "")] += 1
+        if not jobs: went[ats_of.get(name, "")] += 1
+    down = sorted(a for a, n in went.items() if n >= DOWN_MIN and n >= DOWN_SHARE * had[a])
+    if not down: return results
+    stats["down"] = [f"{a} ({went[a]} of {had[a]} boards empty)" for a in down]
+    print("HIRING SYSTEMS THAT LOOK BROKEN (many boards empty at once; their jobs are kept open):", "; ".join(stats["down"]))
+    return [(name, None if jobs is not None and not jobs and ats_of.get(name) in down else jobs) for name, jobs in results]
+
+
 def main():
     sources = [dict(s, crypto=True) for s in json.loads((ROOT / "sources.json").read_text()) if s["name"] not in EXCLUDE]
     tech_file = ROOT / "sources_tech.json"
@@ -1755,6 +1779,7 @@ def main():
     open_by_co = defaultdict(list)                          # the open jobs of each company, found once instead of once per board
     for jid, old in db.items():
         if old["active"] and not old.get("tg"): open_by_co[old["company"]].append(jid)       # a Telegram job is not closed by the company's own board
+    results = guard_systems(results, sources, open_by_co, late, stats)
     for name, jobs in results:
         if name in late: continue                           # no time for it in this run: it stays as it was
         if jobs is None:
@@ -1808,7 +1833,8 @@ def main():
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
-                                                          "failed": stats["failed"], "emptied": stats["emptied"], "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
+                                                          "failed": stats["failed"], "emptied": stats["emptied"], "down": stats.get("down", []),
+                                                          "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
     print("failed:", ", ".join(stats["failed"]) or "-")
     print("boards that went empty (check whether the company moved its job board):", ", ".join(stats["emptied"]) or "-")
     print("dropped as not crypto:", ", ".join(stats["dropped"]) or "-")

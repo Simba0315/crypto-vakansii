@@ -6952,6 +6952,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     feeds = ([(f'{ST["sources"] - len(ST["failed"]):,} of {ST["sources"]:,}', "employer feeds answered")] if ST else [])
     failed_html = (section("Feeds that did not answer in the last run", "<p>" + ", ".join(e(x) for x in ST["failed"]) + ".</p>"
                            '<p class="note">Their listings are left exactly as they were and are read again in the next run. Nothing is marked closed on a failed read.</p>') if ST.get("failed") else "")
+    failed_html += (section("Hiring systems that looked broken in the last run", "<p>" + "; ".join(e(x) for x in ST["down"]) + ".</p>"
+                            '<p class="note">Many boards of one hiring system came back empty at once. That is a fault on their side or a change in how they publish, '
+                            'not a wave of hiring stops, so the jobs on those boards are left open and read again in the next run.</p>') if ST.get("down") else "")
     failed_html += (section("Job boards that went empty in the last run", "<p>" + ", ".join(e(x) for x in ST["emptied"]) + ".</p>"
                             '<p class="note">Every posting on these boards disappeared at once. That usually means the employer moved to another hiring system; '
                             'their postings are marked closed and left out of the figures on how long jobs stay open until the new board is added.</p>') if ST.get("emptied") else "")
