@@ -6285,10 +6285,11 @@ catch(e){out.innerHTML='<p><b>The query did not run:</b> '+esc(e.message)+'</p>'
         sk_pay = money(median(sk_med)) if len(sk_med) >= 20 else ""
         sk_has = (OUT / "skills" / sk_slug / "index.html").exists()
         n_q = len(q_["qs"]); lv_q = q_.get("levels") or [""] * n_q; tp_q = q_.get("topics") or [""] * n_q
+        lc_ = Counter(x_ for x_ in lv_q if x_); tc_ = Counter(x_ for x_ in tp_q if x_).most_common()
         ihtml = "".join(f'<fieldset class="qz-q"><legend><span>{i + 1}</span>{e(t_)}'
                         + (f' <small class="note" style="font-weight:400">{e(lv_q[i])} · {e(tp_q[i])}</small>' if lv_q[i] else "") + '</legend><div class="qz-o">' + "".join(
             f'<label><input type="radio" name="q{i}" value="{k}"><span>{e(a_)}</span></label>' for k, a_ in enumerate(o_)) + "</div></fieldset>" for i, (t_, o_, _, _) in enumerate(q_["qs"]))
-        idata = json.dumps({"a": [x[2] for x in q_["qs"]], "w": [x[3] for x in q_["qs"]], "t": tp_q, "n": sk_n, "pay": sk_pay, "name": q_["name"],
+        idata = json.dumps({"a": [x[2] for x in q_["qs"]], "w": [x[3] for x in q_["qs"]], "t": tp_q, "l": lv_q, "n": sk_n, "pay": sk_pay, "name": q_["name"],
                             "skill": f"{P}/skills/{sk_slug}/" if sk_has else "", "jobs": f"{P}/jobs/?skill={quote(sk_t)}"}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         ijs = r"""<script>(function(){var D=JSON.parse(document.getElementById('st-data').textContent),f=document.getElementById('st'),out=document.getElementById('st-out');
 var esc=function(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
@@ -6303,13 +6304,17 @@ else{p.innerHTML='<b>Skipped.</b> '+esc(D.w[i]);}
 qs.appendChild(p);});
 var sh=ok/D.a.length,lv=sh>=0.8?'Ready to be asked about it in an interview':sh>=0.5?'A good base, with some gaps to close':'Worth another week of practice before applying';
 var by=Object.keys(tp).map(function(k){return esc(k)+' '+tp[k][0]+'/'+tp[k][1];}).join(' · ');
-out.innerHTML='<h2>You got '+ok+' of '+D.a.length+'</h2><p class="lead">'+lv+'. Below each question you can read why the answer is what it is.</p>'+(by?'<p><b>By topic:</b> '+by+'. Study the topics with the fewest right first.</p>':'')+
+var lvs={};(D.l||[]).forEach(function(l,i){if(!l)return;if(!lvs[l])lvs[l]=[0,0];lvs[l][1]++;var c=f.querySelector('input[name=q'+i+']:checked');if(c&&+c.value===D.a[i])lvs[l][0]++;});
+var byl=['Beginner','Intermediate','Advanced'].filter(function(k){return lvs[k];}).map(function(k){return k+' '+lvs[k][0]+'/'+lvs[k][1];}).join(' · ');
+out.innerHTML='<h2>You got '+ok+' of '+D.a.length+'</h2><p class="lead">'+lv+'. Below each question you can read why the answer is what it is.</p>'+(byl?'<p><b>By level:</b> '+byl+'. A miss on a beginner question matters most: interviewers start there.</p>':'')+(by?'<p><b>By topic:</b> '+by+'. Study the topics with the fewest right first.</p>':'')+
 (D.n?'<p>'+D.n.toLocaleString('en-US')+' open jobs name '+esc(D.name)+' today'+(D.pay?', with a median advertised pay of '+D.pay:'')+'. <a href="'+D.jobs+'">See the jobs</a>'+(D.skill?' · <a href="'+D.skill+'">What employers pair it with</a>':'')+'.</p>':'')+
 '<p class="note">This is a self-check of '+D.a.length+' questions, not a certificate. Nothing is sent anywhere.</p><p><button class="btn ghost" type="button" id="st-again">Try again</button></p>';
 out.hidden=false;out.scrollIntoView({behavior:'smooth',block:'start'});
 document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true;f.querySelectorAll('.st-why').forEach(function(x){x.remove();});f.querySelectorAll('label').forEach(function(l){l.classList.remove('st-ok','st-bad');});window.scrollTo({top:f.offsetTop-80,behavior:'smooth'});};});})();</script>"""
         iqa = [(f"How do I prepare for a {q_['name']} interview?", f"Work through realistic questions, read why each answer is right, then redo the ones you missed. This test has {n_q}, from beginner to advanced, of the kind interviewers commonly ask. Then read the postings: the {sk_n:,} open jobs that name {q_['name']} show what employers expect on top of it." if sk_n else f"Work through realistic questions, read why each answer is right, then redo the ones you missed."),
                (f"Is this {q_['name']} test free?", "Yes. It needs no account and no email, runs in your browser and sends nothing anywhere."),
+               (f"How long does the {q_['name']} test take, and is there a time limit?", f"Most people need 10 to 15 minutes for the {n_q} questions. There is no timer: you can stop, think and come back later in the same tab, and nothing is sent anywhere."),
+               (f"Do I get a certificate for the {q_['name']} test?", "No. It is a practice test for checking yourself before an interview, not an exam, so nobody issues a certificate and nobody sees your score."),
                ("What does my score mean?", "It is a self-check. 80% or more right means the basics are fresh; half to 80% means a good base with gaps; under half means more practice first. "
                 "The result also shows your score by topic, so you know what to study. It is not an official certificate.")] + list(q_.get("qa") or [])
         ild = '<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -6319,6 +6324,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              crumbs(("Skill tests", "skill-tests/"), (q_["name"], "")) + f'<h1>{e(q_["name"])} test: <span class="hl">{n_q} questions to check yourself</span></h1>'
              f'<p class="plain"><b>In plain words:</b> {e(q_["plain"])} Answer {n_q} questions, press the button, and see which you got right, why, and your score by topic.</p>'
              + (f'<p class="lead">{sk_n:,} open jobs name {e(q_["name"])} today' + (f', with a median advertised pay of {sk_pay}' if sk_pay else "") + f". {n_q} questions from beginner to advanced, about 10 to 15 minutes, the kind that come up in interviews.</p>" if sk_n else f'<p class="lead">{n_q} questions of the kind that come up in interviews.</p>')
+             + (nums([(str(lc_.get(k_, 0)), f"{k_.lower()} questions") for k_ in ("Beginner", "Intermediate", "Advanced") if lc_.get(k_)] + [("No timer", "take as long as you like")], src=False)
+                + f'<p class="note"><b>What the {n_q} questions cover:</b> ' + e(", ".join(f"{t_} ({c_})" if c_ > 1 else t_ for t_, c_ in tc_))
+                + ". The number in brackets is how many questions a topic has.</p>" if lc_ else "")
              + f'<form id="st" class="qz">{ihtml}<p><button class="btn primary" type="submit">Check my answers</button></p></form>'
              f'<section class="sec qz-out" id="st-out" aria-live="polite" hidden></section><script type="application/json" id="st-data">{idata}</script>{ijs}'
              + (SQL_TASKS if qs_ == "sql" else "")
