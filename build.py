@@ -3231,9 +3231,13 @@ def main():
     def co_tile(c, js):
         n, w = sum(j["active"] for j in js), fresh_n[c]
         up = f'<span class="up" title="{w:,} posted in the last 7 days">+{w:,}</span>' if w else ""
-        return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}"><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
+        f_ = (Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0]     # the field it hires for most: the directory's field filter
+        return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}" data-f="{f_}"><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
                 f'<span class="n">{e(c)}</span>{up}<span class="c">{n:,}</span></a></li>')
     grid = "".join(co_tile(c, js) for c, js in comp_items)
+    co_field_n = Counter((Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0] for _, js in comp_items)
+    co_field_sel = ('<select id="cfield" aria-label="The field a company hires for most"><option value="">Every field</option>'
+                    + "".join(f'<option value="{k_}">{e(CAT[k_])} ({v_:,})</option>' for k_, v_ in sorted(co_field_n.items(), key=lambda kv: CAT.get(kv[0], "")) if k_ in CAT) + "</select>")
     top_open = [(c, sum(j["active"] for j in js)) for c, js in comp_items[:3]]
     top_new = [(c, n) for c, n in sorted(fresh_n.items(), key=lambda kv: -kv[1])[:3] if n]
     names = lambda xs: " and ".join(filter(None, [", ".join(f"{e(c)} ({n:,})" for c, n in xs[:-1]), f"{e(xs[-1][0])} ({xs[-1][1]:,})"])) if xs else ""
@@ -3422,13 +3426,13 @@ def main():
          + (section("Featured employers", spot_tiles(spot_cos)) if spot_cos else "")
          + section(f"All [[{len(companies):,} employers]], most open roles first", sid="all", label="Directory",
                    sub="The +N mark on a tile is the number of roles that company posted in the last 7 days.",
-                   inner='<div class="cbar"><input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">'
+                   inner='<div class="cbar"><input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">' + co_field_sel +
                    '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
                    '<button class="tab" type="button" data-s="o" aria-pressed="true">Most open roles</button>'
                    '<button class="tab" type="button" data-s="w" aria-pressed="false">Most new this week</button>'
                    '<button class="tab" type="button" data-s="n" aria-pressed="false">A–Z</button></div></div>'
                    + labrow("Hiring in", [f'<a href="{P}/locations/{s_}/companies/">{e(nm_.removeprefix("the "))}</a>' for nm_, s_, _ in sorted(places, key=lambda x: -len(co_in.get(x[1], ()))) if s_ in co_in][:14])
-                   + f'<ul class="tiles" id="clist">{grid}</ul><p class="note" id="cnone" hidden>No company with that name.</p>')
+                   + f'<ul class="tiles" id="clist">{grid}</ul><p class="note" id="cnone" hidden>No company matches.</p>')
          + section("What the marks on company pages mean", '<dl class="qa">' + "".join(f"<div><dt>✓ {e(nm)}</dt><dd>{e(rule)} Today: {k_:,} employers.</dd></div>" for nm, rule, k_ in mk_rows) + "</dl>"
                    '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"), cls="hub")
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}

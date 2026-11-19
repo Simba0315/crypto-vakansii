@@ -2324,6 +2324,7 @@ main.hub:has(#dirfilter:not(:placeholder-shown)) #all,main.hub:has(#dirfilter:no
 .dirb h2 b{font:inherit;color:var(--text)}
 /* the companies directory: filter and order on one line above the grid */
 .cbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin:0 0 16px}
+.cbar #cfield{min-height:48px;max-width:100%;padding:0 16px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--text);font:inherit;font-size:15px}
 .cbar #cfilter{flex:1 1 280px;max-width:440px;padding-top:12px;padding-bottom:12px;box-shadow:none}
 .cbar .csort{margin:0}
 main.hub .csort .tab{border-radius:999px;padding:8px 15px}

@@ -839,15 +839,17 @@
   }
 
   /* ---------- companies page: quick filter ---------- */
-  var cfilter = $('cfilter');
-  if (cfilter) cfilter.addEventListener('input', function () {
-    var q = cfilter.value.trim().toLowerCase(), shown = 0;
+  var cfilter = $('cfilter'), cfield = $('cfield');
+  var cfiltered = function () {                       // by name and by the field a company hires for most
+    var q = cfilter.value.trim().toLowerCase(), f = cfield ? cfield.value : '', shown = 0;
     document.querySelectorAll('#clist li').forEach(function (li) {
-      var hit = !q || li.getAttribute('data-n').indexOf(q) >= 0;
+      var hit = (!q || li.getAttribute('data-n').indexOf(q) >= 0) && (!f || li.getAttribute('data-f') === f);
       li.hidden = !hit; if (hit) shown++;
     });
     var none = $('cnone'); if (none) none.hidden = shown > 0;
-  });
+  };
+  if (cfilter) cfilter.addEventListener('input', cfiltered);
+  if (cfilter && cfield) cfield.addEventListener('change', cfiltered);
   /* companies page: sort by open roles, roles posted in the last 7 days, or name (buttons are hidden until this script runs) */
   var csort = $('csort'), clist = $('clist');
   if (csort && clist) {
