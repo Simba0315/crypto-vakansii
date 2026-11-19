@@ -1465,6 +1465,7 @@ def main():
     # Workday and SmartRecruiters boards (SLOW_ATS) take one share in twice as many (every 8 hours by default). live.py on our server
     # reads every board at least once an hour whatever this rotation does.
     resting = set()
+    core_names = {s["name"] for s in sources}
     rot = max(1, int(os.environ.get("HRN_ROTATE") or 4))
     hour = datetime.datetime.now(datetime.timezone.utc).hour
     for f in ROTATING:
@@ -1478,11 +1479,13 @@ def main():
             else:
                 resting.add(s["name"])
     is_crypto = {s["name"]: s["crypto"] for s in sources}
-    # Each hiring system's boards spread evenly through the list, so the systems with a limit on boards read at once (ATS_LIMIT)
-    # never hold most of the workers waiting.
-    by_ats = defaultdict(list)
-    for s in sources: by_ats[s["ats"]].append(s)
-    sources = [s for _, s in sorted((((i + 0.5) / len(xs), s) for xs in by_ats.values() for i, s in enumerate(xs)), key=lambda t: t[0])]
+    # The boards read every hour stand first; the others in an order that changes every hour, so that the boards a run has no time
+    # for are not always the same ones.
+    import random
+    hourly = {s["name"] for s in sources if s["name"] in core_names}
+    rest = [s for s in sources if s["name"] not in hourly]
+    random.Random(int(time.time() // 3600)).shuffle(rest)
+    sources = [s for s in sources if s["name"] in hourly] + rest
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
     used_slugs = {j["slug"] for j in db.values()}
     stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "parsed": 0}
@@ -1495,19 +1498,35 @@ def main():
         rec = dict(old, _crypto=True)          # only the boards of sources.json are checked for crypto, and those are always parsed
         if (rec.get("posted") or "") < DESC_SINCE: rec["desc"] = ""
         return rec
-    read = lambda s: fetch(s, None if s["crypto"] else reuse)
+    # A run has a budget for reading (18 Nov 2026: with 184 boards filling, reading took 90 to 105 minutes, the run reached its limit while
+    # building, and the site stayed at 287,730 jobs while 338,970 were already collected). After it no new board outside the hourly list is
+    # started: such a board keeps its jobs as they are, like one resting this hour, and has its turn in a later run.
     t0 = time.time()
+    stop_at, late = t0 + float(os.environ.get("HRN_COLLECT_MINUTES") or 40) * 60, set()
+    def read(s):
+        if s["name"] not in hourly and time.time() > stop_at:
+            late.add(s["name"]); return s["name"], None
+        return fetch(s, None if s["crypto"] else reuse)
     # Reading is waiting for answers, 32 boards at a time (20 before 15 Nov 2026); parsing a posting that changed is CPU work, done in
     # one worker process per CPU (parse). Before 15 Nov a run was mostly parsing, on one CPU, with every posting parsed every hour.
     global PARSE
     import multiprocessing
     PARSE = cf.ProcessPoolExecutor(int(os.environ.get("HRN_PARSERS") or os.cpu_count() or 2), mp_context=multiprocessing.get_context("spawn"))
     try:
-        with cf.ThreadPoolExecutor(int(os.environ.get("HRN_WORKERS") or 72)) as ex:
-            results = list(ex.map(read, sources))
+        # Each hiring system with a limit (ATS_LIMIT) gets a pool of exactly that size. In one shared pool the workers stood waiting for the
+        # busiest system's turn while the others had nothing to do. The pools make the gates in fetch() needless here.
+        _gate.clear()
+        groups = defaultdict(list)
+        for s in sources: groups[s["ats"] if s["ats"] in ATS_LIMIT else ""].append(s)
+        def run_group(item):
+            ats, xs = item
+            with cf.ThreadPoolExecutor(ATS_LIMIT.get(ats) or int(os.environ.get("HRN_WORKERS") or 72)) as ex:
+                return list(ex.map(read, xs))
+        with cf.ThreadPoolExecutor(len(groups) or 1) as ex:
+            results = [r for rows in ex.map(run_group, groups.items()) for r in rows]
         # second, gentler pass for feeds that timed out or were rate-limited the first time
         by_name = {s["name"]: s for s in sources}
-        retry = [by_name[name] for name, jobs in results if jobs is None]
+        retry = [by_name[name] for name, jobs in results if jobs is None and name not in late]
         if retry:
             with cf.ThreadPoolExecutor(3) as ex:
                 again = dict(ex.map(read, retry))
@@ -1521,6 +1540,7 @@ def main():
     for jid, old in db.items():
         if old["active"] and not old.get("tg"): open_by_co[old["company"]].append(jid)       # a Telegram job is not closed by the company's own board
     for name, jobs in results:
+        if name in late: continue                           # no time for it in this run: it stays as it was
         if jobs is None:
             stats["failed"].append(name); continue          # keep existing records untouched
         if is_crypto[name] and jobs and sum(j["_crypto"] for j in jobs) / len(jobs) < 0.3:
@@ -1567,7 +1587,7 @@ def main():
             print(f"telegram: skipped this run: {type(ex).__name__}: {ex}")
     DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
     active = sum(j["active"] for j in db.values())
-    print(f"read {len(sources)} boards in {read_s:.0f} s ({len(resting)} resting this hour); {stats['parsed']} postings parsed, the rest unchanged "
+    print(f"read {len(sources) - len(late)} boards in {read_s:.0f} s ({len(resting)} resting this hour, {len(late)} left for a later run); {stats['parsed']} postings parsed, the rest unchanged "
           f"since the last run; {not_en} left out as not in English")
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
     # what this run did, shown on the site's data status page
