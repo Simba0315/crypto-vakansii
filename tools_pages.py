@@ -6,6 +6,7 @@ each tool runs in the visitor's browser, and the only data embedded in a page is
 One tool reads a data file instead: "skills to put on a resume" by job title loads data/role-skills.json, which build.py writes from the day's postings.
 """
 import datetime, json
+import state_tax                        # state income tax on wages: figures, sources and the sum (take-home pay pages)
 from collections import defaultdict
 from html import escape as _e
 
@@ -417,37 +418,56 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
 
     # ------------------------------------------------------------ 3b. take-home pay ("salary calculator": the first intent on Google is pay after tax,
     # SERP_WORK 35b, 15 Nov 2026). US federal tax and FICA for 2026, figures from the IRS and the SSA; state tax is not estimated.
+    ST = state_tax.STATES
+    assert state_tax.FED_STD == {k: v[0] for k, v in FED_2026.items()}
+    st_data = json.dumps({c: {"n": x["name"], "base": x["base"], "s": x["single"], "j": x["joint"], "pay": x["pay"],
+                              **({"exMax": x["ex_max"]} if x.get("ex_max") else {}), **({"pt": 1} if x.get("pretax_taxed") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+
+    def th_form(code=""):
+        """The calculator; on a state's own page that state is chosen when the page opens (tools.js reads data-state)."""
+        html_ = wrap("take-home-pay",
+                     '<div class="card tl-form"><div class="tl-grid">'
+                     + _f("salary", "Yearly salary (US dollars)", "75000")
+                     + _sel("status", "Filing status", [("single", "Single", True), ("joint", "Married filing jointly")])
+                     + _sel("freq", "Paid", [("biweek", "Every two weeks (26)", True), ("semimonth", "Twice a month (24)"), ("month", "Monthly (12)"), ("week", "Weekly (52)")])
+                     + "</div>" + '<div class="tl-grid c2">'
+                     + _sel("state", "State", [("", "Federal only", True)] + [(c, x["name"]) for c, x in ST.items()], hint=f"{len(ST)} states so far.")
+                     + _f("pretax", "Pre-tax contributions a year (optional)", "0", hint="401(k), HSA and similar amounts taken before income tax.") + "</div>"
+                     + '<div class="tl-actions">' + _clear() + "</div></div>"
+                     + _private(" The figures are worked out inside your browser and never sent anywhere.")
+                     + _board("Your take-home pay", "Enter a yearly salary to see what is left after tax.")
+                     + f'<script type="application/json" id="tl-data">{st_data}</script>')
+        return html_.replace('data-tool="take-home-pay"', f'data-tool="take-home-pay" data-state="{code}"', 1) if code else html_
+
+    def st_after(code, sal, status="single"):
+        tx, ss, med, net = take_home_2026(sal, status)
+        r = state_tax.state_tax(code, sal, status)
+        return tx, ss + med, r, net - r["total"] + 1e-6              # half a dollar rounds up, as in the calculator
+    st_row = lambda c: (lambda a: f'<tr><td><a href="{P}/tools/take-home-pay/{ST[c]["slug"]}/">{_e(ST[c]["name"])}</a></td><td>${a[2]["tax"]:,.0f}</td><td>${a[2]["pay_total"]:,.0f}</td><td><strong>${a[3]:,.0f}</strong></td><td>${a[3] / 12:,.0f}</td></tr>')(st_after(c, 75000))
+
     tool("take-home-pay", "seekers", "Take-home pay calculator",
-         "A US salary after federal income tax, Social Security and Medicare for 2026: per paycheck, per month and per year.",
+         "A US salary after federal and state tax for 2026: per paycheck, per month and per year.",
          "Take-Home Pay Calculator 2026: Your Paycheck After Tax",
-         "Paycheck calculator for 2026: your US salary after federal income tax, Social Security and Medicare, per paycheck, month and year. Table of $40,000 to $200,000. Free, no sign-up.",
+         f"Paycheck calculator for 2026: your US salary after federal income tax, Social Security, Medicare and state tax in {len(ST)} states, per paycheck, month and year. Free, no sign-up.",
          "Salary after tax: your take-home pay in 2026",
-         "Enter a yearly salary and how you file. The calculator takes off federal income tax with the 2026 brackets and standard deduction, Social Security and Medicare, "
-         "and shows what lands in each paycheck. State and local income tax are not included: nine states have no income tax on wages, the others add their own.",
-         wrap("take-home-pay",
-              '<div class="card tl-form"><div class="tl-grid">'
-              + _f("salary", "Yearly salary (US dollars)", "75000")
-              + _sel("status", "Filing status", [("single", "Single", True), ("joint", "Married filing jointly")])
-              + _sel("freq", "Paid", [("biweek", "Every two weeks (26)", True), ("semimonth", "Twice a month (24)"), ("month", "Monthly (12)"), ("week", "Weekly (52)")])
-              + "</div>" + '<div class="tl-grid c2">'
-              + _f("pretax", "Pre-tax contributions a year (optional)", "0", hint="401(k), HSA and similar amounts taken before income tax.") + "</div>"
-              + '<div class="tl-actions">' + _clear() + "</div></div>"
-              + _private(" The figures are worked out inside your browser and never sent anywhere.")
-              + _board("Your take-home pay", "Enter a yearly salary to see what is left after federal tax, Social Security and Medicare.")),
+         f"Enter a yearly salary and how you file, and choose your state. The calculator takes off federal income tax with the 2026 brackets and standard deduction, Social Security, Medicare and, in {len(ST)} states so far, "
+         "the state’s income tax and payroll deductions, and shows what lands in each paycheck.",
+         th_form(),
          "How the take-home pay is calculated",
          "<ul><li><strong>Federal income tax</strong> on the salary minus pre-tax contributions minus the 2026 standard deduction ($16,100 single, $32,200 married filing jointly), "
          "with the 2026 brackets: 10%, 12%, 22%, 24%, 32%, 35% and 37% (single: up to $12,400, $50,400, $105,700, $201,775, $256,225, $640,600 and above; "
          "married filing jointly: $24,800, $100,800, $211,400, $403,550, $512,450, $768,700 and above). Source: IRS Revenue Procedure 2025-32.</li>"
          "<li><strong>Social Security</strong>: 6.2% of wages up to $184,500 (the 2026 wage base, Social Security Administration).</li>"
-         "<li><strong>Medicare</strong>: 1.45% of all wages, plus 0.9% above $200,000 single or $250,000 married filing jointly.</li></ul>"
-         "<p>Not included: state and local income tax, credits (child tax credit and others), itemized deductions, bonuses taxed at a flat rate, and benefits taken from pay "
+         "<li><strong>Medicare</strong>: 1.45% of all wages, plus 0.9% above $200,000 single or $250,000 married filing jointly.</li>"
+         f"<li><strong>State income tax</strong>, if you choose a state: its 2026 brackets, standard deduction, exemption and credit, read from the state’s own pages, and the payroll deductions it charges employees. Each state’s page lists its figures and sources. Still to come: {state_tax.WAITING}.</li></ul>"
+         "<p>Not included: city and county taxes, credits (child tax credit and others), itemized deductions, bonuses taxed at a flat rate, and benefits taken from pay "
          "such as health insurance. Your employer’s withholding can differ a little from this year-end figure. This is an estimate, not tax advice.</p>",
          [("How much is $75,000 a year after taxes?", "For a single filer with no pre-tax contributions, $61,593 a year after 2026 federal income tax ($7,670), Social Security ($4,650) "
            "and Medicare ($1,088): about $2,369 every two weeks, before any state tax."),
           ("How much is $100,000 a year after taxes?", "For a single filer with no pre-tax contributions, $79,180 a year after 2026 federal income tax ($13,170), Social Security ($6,200) and Medicare ($1,450), "
            "before state tax: about $3,045 every two weeks."),
-          ("Does this include state tax?", "No. Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming have no state income tax on wages; "
-           "elsewhere, take off your state’s tax as well."),
+          ("Does this include state tax?", f"Yes, for {len(ST)} states so far: choose yours in the form. Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington and Wyoming have no state income tax on wages. "
+           "City and county taxes are not included."),
           ("Why is my paycheck different from this?", "Your employer withholds tax through the year from the W-4 you filled in, and takes off benefits such as health insurance. "
            "This calculator works out the year’s federal tax itself, so the two can differ by a little."),
           ("Do 401(k) contributions lower my taxes?", "Traditional 401(k) contributions lower your income tax, because they are taken off before it; Social Security and Medicare are still due on them. "
@@ -458,12 +478,15 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          ex=("Take-home pay table for 2026: $40,000 to $200,000",
              "<p>A single filer with no pre-tax contributions, after federal income tax, Social Security and Medicare. State income tax is not taken off.</p>"
              '<div class="tablewrap"><table class="rkt"><tr><th>Salary</th><th>Federal income tax</th><th>Social Security and Medicare</th><th>Take-home a year</th><th>A month</th><th>Every two weeks</th><th>Kept</th></tr>'
-             + "".join((lambda t_: f"<tr><td><strong>${sal_:,}</strong></td><td>${t_[0]:,.0f}</td><td>${t_[1] + t_[2]:,.0f}</td><td><strong>${t_[3]:,.0f}</strong></td><td>${t_[3] / 12:,.0f}</td>"
+             + "".join((lambda t_: f"<tr><td><strong>${sal_:,}</strong></td><td>${t_[0]:,.0f}</td><td>${t_[1] + t_[2]:,.0f}</td><td><strong>${t_[3] + 1e-6:,.0f}</strong></td><td>${t_[3] / 12:,.0f}</td>"
                                    f"<td>${t_[3] / 26:,.0f}</td><td>{100 * t_[3] / sal_:.0f}%</td></tr>")(take_home_2026(sal_))
                        for sal_ in (40000, 50000, 60000, 70000, 75000, 80000, 90000, 100000, 120000, 150000, 175000, 200000))
              + "</table></div>"
              '<p class="note">How it is worked out, in order: the salary, minus pre-tax contributions, minus the standard deduction, taxed by the 2026 brackets; then Social Security (6.2% up to $184,500) '
-             "and Medicare (1.45%, plus 0.9% above $200,000). Enter your own figures above for another salary, married filing jointly or pre-tax contributions.</p>"))
+             "and Medicare (1.45%, plus 0.9% above $200,000). Enter your own figures above for another salary, married filing jointly or pre-tax contributions.</p>"
+             f'<h3>$75,000 a year, state by state</h3><p>A single filer with no pre-tax contributions. Each state links to its own paycheck calculator, figures and sources.</p>'
+             '<div class="tablewrap"><table class="rkt"><tr><th>State</th><th>State income tax</th><th>State payroll deductions</th><th>Take-home a year</th><th>A month</th></tr>'
+             + "".join(st_row(c) for c in ST) + f'</table></div><p class="note">Still to come, once every figure is confirmed on the state’s own pages and its special rules are built: {state_tax.WAITING}.</p>'))
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",
@@ -2301,6 +2324,49 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                 + section(f"Questions about the {t['name'][0].lower() + t['name'][1:]}", faq_html)
                 + section("Related tools", cards(related), ("tools/", "All free tools")) + "</div>")
         page(path, t["title"], t["desc"], body, head=assets + app_ld + faq_ld + crumbs_ld([("Tools", "tools/"), (t["name"], "")]))
+
+    # ------------------------------------------------------------ one paycheck calculator per state ("paycheck calculator texas")
+    pc_ = lambda r: f"{r * 100:.3f}".rstrip("0").rstrip(".") + "%"
+    th = by_slug["take-home-pay"]
+    th_rel = [(f"tools/{s_}/", by_slug[s_]["name"], by_slug[s_]["card"]) for s_ in ("salary-converter", "overtime-pay", "raise-calculator") if s_ in by_slug]
+    for code, x in ST.items():
+        name, f_ = x["name"], x["single"]
+        rates = [r for _, r in f_["b"] if r > 0]
+        has_tax = bool(rates)
+        says = ("no state income tax on wages" if not has_tax else f"a flat income tax of {pc_(rates[0])}" if len(set(rates)) == 1 else f"income tax rates from {pc_(min(rates))} to {pc_(max(rates))}")
+        pays = ", ".join(p[0] for p in x["pay"])
+        path = f"tools/take-home-pay/{x['slug']}/"
+        a75, a100 = st_after(code, 75000), st_after(code, 100000)
+        line = lambda sal, a: (f"A single filer earning ${sal:,} in {name} keeps about ${a[3]:,.0f} a year, or ${a[3] / 26:,.0f} every two weeks, after ${a[0]:,.0f} of federal income tax and ${a[1]:,.0f} of Social Security and Medicare"
+                               + (f", ${a[2]['tax']:,.0f} of {name} income tax" if has_tax else "") + (f" and ${a[2]['pay_total']:,.0f} of state payroll deductions" if a[2]["pay"] else "") + ".")
+        qa = [(f"How much is $75,000 a year after taxes in {name}?", line(75000, a75)), (f"How much is $100,000 a year after taxes in {name}?", line(100000, a100)),
+              (f"Does {name} have a state income tax?", f"{name} has {says}." + (f" The standard deduction is ${f_['d']:,} for a single filer." if f_["d"] else "") + (f" {x['note']}" if x["note"] else "")),
+              (f"What comes out of a paycheck in {name}?", "Federal income tax, Social Security and Medicare" + (f", {name} income tax" if has_tax else "") + (f", and {pays}" if pays else "") + "." + (f" {x['local']}" if x["local"] else ""))]
+        faq_html, faq_ld = faq_block(qa)
+        rows = "".join((lambda a: f"<tr><td><strong>${s_:,}</strong></td><td>${a[0]:,.0f}</td><td>${a[1]:,.0f}</td><td>${a[2]['tax']:,.0f}</td><td>${a[2]['pay_total']:,.0f}</td><td><strong>${a[3]:,.0f}</strong></td><td>${a[3] / 12:,.0f}</td><td>${a[3] / 26:,.0f}</td></tr>")(st_after(code, s_))
+                       for s_ in (40000, 50000, 60000, 75000, 90000, 100000, 125000, 150000, 200000))
+        band = lambda b: "".join(f"<tr><td>{'Over $' + format(b[i - 1][0], ',') if hi is None else ('Up to $' + format(hi, ',') if i == 0 else '$' + format(b[i - 1][0], ',') + ' to $' + format(hi, ','))}</td><td>{pc_(r)}</td></tr>" if len(b) > 1 else f"<tr><td>All taxable income</td><td>{pc_(r)}</td></tr>" for i, (hi, r) in enumerate(b))
+        facts = [("Starts from", "Federal taxable income" if x["base"] == "fed" else "Wages")] if has_tax else []
+        for k_, lab in (("d", "Standard deduction"), ("e", "Personal exemption"), ("c", "Credit against the tax")):
+            if f_[k_] or x["joint"][k_]: facts.append((lab, f"${f_[k_]:,} single, ${x['joint'][k_]:,} joint"))
+        facts += [(p[0], pc_(p[1]) + (f" of wages up to ${p[2]:,}" if p[2] else " of wages") + (f", at most ${p[3]:,} a year" if p[3] else "")) for p in x["pay"]]
+        if x["local"]: facts.append(("City and county taxes", x["local"] + " Not included here."))
+        if x["note"]: facts.append(("Good to know", x["note"]))
+        how = (('<div class="st-tabs">' + "".join(f'<div><p class="tl-t">{lab} taxable income</p><div class="tablewrap"><table><tr><th>Taxable income</th><th>Rate</th></tr>{band(x[k_]["b"])}</table></div></div>' for k_, lab in (("single", "Single:"), ("joint", "Married filing jointly:"))) + "</div>") if has_tax else f"<p>{_e(name)} does not tax wages.</p>")
+        how += ('<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{_e(k_)}</th><td>{_e(v_)}</td></tr>" for k_, v_ in facts) + "</table></div>" if facts else "")
+        how += f'<p class="note">Tax year {x["year"]}, read {state_tax.READ}. Sources: ' + " · ".join(f'<a href="{_e(u_)}" rel="noopener">{_e(l_)}</a>' for l_, u_ in x["src"]) + ". An estimate, not tax advice.</p>"
+        others = '<p class="rel">' + "".join(f'<a href="{P}/tools/take-home-pay/{o["slug"]}/">{_e(o["name"])}</a>' for c_, o in ST.items() if c_ != code) + "</p>"
+        lead = (f"{name} has {says}. Enter your salary to see your paycheck after federal income tax, Social Security and Medicare" + (f", {name} income tax" if has_tax else "") + (f" and {pays}" if pays else "")
+                + f". On $75,000 a single filer keeps about ${a75[3]:,.0f} a year.")
+        title = next(t_ for t_ in (f"{name} Paycheck Calculator 2026: Take-Home Pay After Tax", f"{name} Paycheck Calculator 2026: Take-Home Pay", f"{name} Paycheck Calculator 2026") if len(t_) <= 60 or t_.endswith("2026"))
+        body = (crumbs(("Tools", "tools/"), (th["name"], "tools/take-home-pay/"), (name, "")) + f'<h1>{_e(name)} paycheck calculator: take-home pay after tax</h1><p class="lead">{_e(lead)}</p>' + th_form(code)
+                + '<div class="tl-after">' + section(f"Take-home pay in {name}: $40,000 to $200,000", '<p>A single filer in 2026 with no pre-tax contributions.</p><div class="tablewrap"><table class="rkt"><tr><th>Salary</th><th>Federal income tax</th><th>Social Security and Medicare</th><th>State income tax</th><th>State payroll</th><th>Take-home a year</th><th>A month</th><th>Every two weeks</th></tr>' + rows + "</table></div>")
+                + section(f"How {name} taxes wages", f'<div class="tl-how">{how}</div>')
+                + section(f"Questions about paychecks in {name}", faq_html)
+                + section("Paycheck calculators for other states", others, ("tools/take-home-pay/", "All states"))
+                + section("Related tools", cards(th_rel), ("tools/", "All free tools")) + "</div>")
+        page(path, title + brand, f"{name} paycheck calculator for 2026: take-home pay after federal tax, Social Security, Medicare" + (f" and {name} income tax" if has_tax else "") + f". {name} has {says}. Free, no sign-up.",
+             body, head=assets + faq_ld + crumbs_ld([("Tools", "tools/"), (th["name"], "tools/take-home-pay/"), (name, "")]))
 
     # ------------------------------------------------------------ tiles
     # Each tile carries a small screen that shows what the tool gives back. The salary screen uses today's real figures;

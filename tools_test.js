@@ -43,6 +43,24 @@ eq('take-home: empty salary', T.takeHome('', 'single', ''), null);
 
 ok('cover letter: one skill reads as one', /My strongest skill is Python\./.test(T.coverLetter({ title: 'Engineer', company: 'Acme', name: 'Alex', skills: 'Python', tone: 'direct' })));
 
+/* state tax, against sums worked out by hand; the states come from the built page */
+{
+  const page = path.join(path.dirname(process.argv[3] || ''), '..', 'tools', 'take-home-pay', 'index.html');
+  if (process.argv[3] && fs.existsSync(page)) {
+    const D = JSON.parse(/id="tl-data">(.*?)<\/script>/s.exec(fs.readFileSync(page, 'utf8'))[1]);
+    ok('state tax: 29 states on the page', Object.keys(D).length === 29, Object.keys(D).length);
+    [['NC', 75000, 'single', 0, 2483.775, 0], ['GA', 75000, 'single', 0, 2994, 0], ['IL', 75000, 'single', 0, 3567.7125, 0], ['IL', 300000, 'single', 0, 14850, 0], ['PA', 75000, 'single', 5000, 2302.5, 52.5],
+     ['CA', 75000, 'single', 0, 2665.12, 975], ['TX', 75000, 'single', 0, 0, 0], ['IA', 75000, 'single', 0, 2198.2, 0], ['MT', 75000, 'single', 0, 2876.6, 0], ['MS', 75000, 'single', 0, 2268, 0],
+     ['KY', 75000, 'single', 0, 2507.4, 0], ['MA', 75000, 'single', 0, 3530, 345], ['NJ', 75000, 'single', 0, 2596, 505.4], ['WA', 100000, 'single', 0, 0, 1387.2], ['AK', 100000, 'single', 0, 0, 271]].forEach(function (c) {
+      const r = T.stateTax(D[c[0]], c[1], c[2], c[3]);
+      near('state tax ' + c[0] + ' ' + c[1], r.tax, c[4], 0.01); near('state payroll ' + c[0] + ' ' + c[1], r.payTotal, c[5], 0.01);
+    });
+    near('state payroll: Hawaii stops at its yearly maximum', T.stateTax(D.HI, 100000, 'joint', 0).payTotal, 390, 0.01);
+    near('state tax: pre-tax contributions lower it where the state allows', T.stateTax(D.NC, 75000, 'single', 5000).tax, 2284.275, 0.01);
+    eq('state tax: contributions above the salary', T.stateTax(D.NC, 1000, 'single', 2000), null);
+  }
+}
+
 /* can a hiring system read the resume */
 {
   const FILL = ' Built and ran services for paying customers and wrote the tests for them every week of the year.'.repeat(9);

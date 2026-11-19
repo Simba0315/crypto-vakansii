@@ -69,6 +69,7 @@
 .tl-pills .pill{font-size:13px;padding:3px 9px}
 .pill.tl-miss{border:1px dashed var(--amber);color:var(--amber);background:transparent}
 .tl-found{margin:10px 0 0}
+.st-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .tl-found .tl-h{margin:0 0 8px}
 .tl-pills .tl-chip{font-family:inherit;min-height:36px;padding:5px 11px;border:1px solid var(--line2);cursor:pointer}
 .tl-pills .tl-chip.ok{border-color:var(--green)}

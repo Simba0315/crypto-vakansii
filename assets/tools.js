@@ -70,6 +70,19 @@
     return { gross: g, pretax: k, taxable: taxable, fed: fed, ss: ss, med: med, net: net, eff: (fed + ss + med) / g, marg: marg };
   };
 
+  /* ---------- state income tax and state payroll deductions: S is one state from the page's data (state_tax.py) ---------- */
+  T.stateTax = function (S, salary, status, pretax) {
+    var g = num(salary), k = clean(pretax) === '' ? 0 : num(pretax), st = status === 'joint' ? 'joint' : 'single', f = S[st === 'joint' ? 'j' : 's'];
+    if (!(g > 0) || g > 1e8 || !(k >= 0) || k > g) return null;
+    var wages = S.pt ? g : g - k, ex = S.exMax && wages > S.exMax[st] ? 0 : f.e;
+    var taxable = S.base === 'fed' ? Math.max(0, g - k - T.TAX2026.std[st]) : Math.max(0, wages - f.d - ex), tax = 0, lo = 0;
+    f.b.forEach(function (b) { var hi = b[0] == null ? Infinity : b[0]; if (taxable > lo) tax += (Math.min(taxable, hi) - lo) * b[1]; lo = hi; });
+    tax = Math.max(0, tax - f.c);
+    var pay = (S.pay || []).map(function (p) { var a = p[1] * (p[2] == null ? g : Math.min(g, p[2])); return { name: p[0], amount: p[3] == null ? a : Math.min(a, p[3]) }; });
+    var payTotal = pay.reduce(function (t, x) { return t + x.amount; }, 0);
+    return { taxable: taxable, tax: tax, pay: pay, payTotal: payTotal, total: tax + payTotal };
+  };
+
   /* ---------- pay raise ---------- */
   // o.by says which figure the visitor typed last: 'pct', 'amount' or 'next' (the new salary); the other two follow from it.
   T.raise = function (o) {
@@ -2239,19 +2252,24 @@
   };
 
   tools['take-home-pay'] = function () {
-    var out = $('tl-out'), title = 'Your take-home pay';
+    var out = $('tl-out'), title = 'Your take-home pay', D = {};
+    try { D = JSON.parse($('tl-data').textContent); } catch (e) {}
     var per = { week: 52, biweek: 26, semimonth: 24, month: 12 }, perName = { week: 'weekly', biweek: 'every two weeks', semimonth: 'twice a month', month: 'monthly' };
-    form(function (v) {
-      if (!clean(v.salary)) return idle(out, title, 'Enter a yearly salary to see what is left after federal tax, Social Security and Medicare.');
-      var r = T.takeHome(v.salary, v.status, v.pretax), n = per[v.freq] || 26;
+    var F = form(function (v) {
+      if (!clean(v.salary)) return idle(out, title, 'Enter a yearly salary to see what is left after tax.');
+      var r = T.takeHome(v.salary, v.status, v.pretax), n = per[v.freq] || 26, S = D[v.state];
       if (!r) return idle(out, title, 'Check the figures: the salary must be a number above zero, and pre-tax contributions cannot be more than the salary.');
-      board(out, title, 'Tax year 2026',
-        big(money(r.net / n, '$', 2), 'per paycheck, ' + perName[v.freq || 'biweek']) +
-        sub(esc(money(r.net, '$', 0)) + ' a year after federal income tax, Social Security and Medicare; ' + esc(fmt(r.eff * 100, 1)) + '% of the salary goes to them. State and local tax are not included.') +
+      var s = S ? T.stateTax(S, v.salary, v.status, v.pretax) : null, net = r.net - (s ? s.total : 0), gone = r.fed + r.ss + r.med + (s ? s.total : 0);
+      board(out, title, 'Tax year 2026' + (S ? ' · ' + S.n : ''),
+        big(money(net / n, '$', 2), 'per paycheck, ' + perName[v.freq || 'biweek']) +
+        sub(esc(money(net, '$', 0)) + ' a year after ' + (S ? 'federal and ' + esc(S.n) + ' taxes' : 'federal income tax, Social Security and Medicare') + '; ' + esc(fmt(gone / r.gross * 100, 1)) + '% of the salary goes to them. ' + (S ? 'City and county taxes are not included.' : 'Choose a state to take off its tax as well.')) +
         kv([['Salary', money(r.gross, '$', 0)], r.pretax ? ['Pre-tax contributions', '−' + money(r.pretax, '$', 0)] : null,
-            ['Federal income tax', '−' + money(r.fed, '$', 0)], ['Social Security (6.2%)', '−' + money(r.ss, '$', 0)], ['Medicare', '−' + money(r.med, '$', 0)],
-            ['Take-home per year', money(r.net, '$', 0)], ['Take-home per month', money(r.net / 12, '$', 0)], ['Top federal rate on your next dollar', fmt(r.marg * 100, 0) + '%']]));
+            ['Federal income tax', '−' + money(r.fed, '$', 0)], ['Social Security (6.2%)', '−' + money(r.ss, '$', 0)], ['Medicare', '−' + money(r.med, '$', 0)]]
+          .concat(s ? [[S.n + ' income tax', '−' + money(s.tax, '$', 0)]].concat(s.pay.map(function (x) { return [x.name, '−' + money(x.amount, '$', 0)]; })) : [])
+          .concat([['Take-home per year', money(net, '$', 0)], ['Take-home per month', money(net / 12, '$', 0)], ['Top federal rate on your next dollar', fmt(r.marg * 100, 0) + '%']])));
     });
+    var st = root.getAttribute('data-state');
+    if (st) { F.set('state', st); F.draw(); }
   };
 
   /* ---------- pay raise ---------- */
