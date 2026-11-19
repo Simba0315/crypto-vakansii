@@ -2608,3 +2608,5 @@ sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS
 
 - ✅ 18.11 (облачный запуск): строки «In plain words» на трёх страницах, где был жаргон без пояснения: /resume/ (что такое система отбора резюме), /partners/ (виджет, лента, API), /hiring-badge/ (что такое значок). Остальные технические страницы уже имели такую строку.
 - ✅ (19.11, облачный прогон) Глоссарий: ещё 12 терминов (H-1B, OPT, green card, passive candidate, candidate experience, employer brand, pay freeze, zero-hours contract, tech stack, quiet quitting, work-life balance, burnout), теперь 224.
+
+- ✅ (19.11, облачный прогон) Вопросы интервью: два новых блока с готовыми ответами, «Backend and API» (9 вопросов: путь запроса, дубли платежей, кэш, N+1, транзакции, логи и др.) и «Testing and quality» (8 вопросов), всего 29 блоков и 189 вопросов; на страницах backend, software, Python, Java, QA и ещё 20 профессий теперь 72–78 вопросов.
