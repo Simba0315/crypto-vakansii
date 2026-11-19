@@ -91,6 +91,33 @@ SUBJECTS = [
          "Average revenue per period times expected lifetime, less the cost to serve, by segment.",
          "Average monthly margin per customer divided by the monthly churn rate gives a first estimate. I do it by segment, because one average hides that annual-plan customers are worth four times as much, and I say plainly that it rests on past churn."),
     ]),
+    ("SQL and database questions", dict(fams=set(), roles={"data-analyst", "analytics-engineer", "data-engineer", "backend-engineer", "database-administrator", "sql-developer", "bi-developer", "product-analyst", "business-analyst", "data-scientist"},
+                                        tags={"SQL", "PostgreSQL", "MySQL", "Snowflake", "BigQuery"}), [
+        ("What is the difference between an inner join and a left join?", "The most common SQL question, and whether you know what happens to rows with no match.",
+         "Both defined with a small example, and what the left join puts where there is no match.",
+         "An inner join keeps only the rows that have a match in both tables. A left join keeps every row of the first table and fills the columns of the second with empty values where nothing matches, so customers with no orders still appear."),
+        ("What is the difference between WHERE and HAVING?", "Whether you know the order in which a query is worked out.",
+         "WHERE filters rows before grouping, HAVING filters groups after it.",
+         "WHERE removes rows before they are grouped, so it cannot use a total. HAVING runs after GROUP BY and can: for example, keep only the customers whose orders add up to more than 1,000."),
+        ("How do you find duplicate rows in a table?", "A daily task, and how you think about what “the same” means.",
+         "Group by the columns that define a duplicate and keep the groups with more than one row.",
+         "I group by the columns that should be unique, such as email, count the rows in each group and keep the groups where the count is above one. Then I look at a few of them before deleting anything, because two rows can differ in a field that matters."),
+        ("What does a window function do, and when would you use one?", "Whether you can go beyond GROUP BY.",
+         "A calculation across related rows that keeps every row, with an example such as a running total or a rank.",
+         "It calculates across a set of rows related to the current one without collapsing them into one row, as GROUP BY does. I use it for a running total, the latest order of each customer or the rank of each salesperson inside a region."),
+        ("What is an index, and what does it cost?", "Whether you know why a query is slow and what you give up to speed it up.",
+         "Faster reads on the indexed columns, slower writes and more storage.",
+         "An index is a sorted copy of one or more columns that lets the database find rows without reading the whole table. Reads on those columns get faster; every insert and update has to maintain the index as well, so I add one only for a query that is run often and is slow."),
+        ("A query that ran in seconds last month now takes ten minutes. What do you check?", "A calm, ordered way of finding a cause.",
+         "The query plan first, then the data volume, missing indexes and what changed.",
+         "I look at the query plan to see where the time goes, usually a full read of a table that grew. Then I check whether an index is missing or no longer used, whether the data volume jumped, and what was deployed since it last ran well."),
+        ("What is the difference between UNION and UNION ALL?", "A small detail that changes results and speed.",
+         "UNION removes duplicate rows, UNION ALL keeps them and is faster.",
+         "Both stack the results of two queries. UNION also removes duplicate rows, which costs time for the sorting it needs; UNION ALL keeps everything. I use UNION ALL when I know the sets do not overlap or when duplicates are wanted."),
+        ("How do you handle empty (NULL) values in SQL?", "Whether you have been caught by NULL, which everyone has once.",
+         "NULL is not equal to anything, including another NULL; use IS NULL and a default where it fits.",
+         "NULL means unknown, so a comparison such as column = NULL is never true; I write IS NULL instead. Totals skip NULLs, so I decide whether an empty value should count as zero and say so in the query, for example with COALESCE."),
+    ]),
     ("Machine learning questions", dict(fams={"ai-machine-learning"}, roles={"data-scientist", "statistician"}, tags={"Machine Learning", "PyTorch", "TensorFlow", "scikit-learn"}, share=0.25), [
         ("What is overfitting, and how do you prevent it?", "The first thing that goes wrong with a model.",
          "The definition, how you notice it, two or three ways to reduce it.",
@@ -500,7 +527,7 @@ SUBJECTS = [
     ]),
 ]
 
-MAX_ADDED = 26      # questions from this bank on one page, at most
+MAX_ADDED = 34      # questions from this bank on one page, at most
 
 
 def pick(slug, family, tag_share):
@@ -528,7 +555,7 @@ def test():
             assert question[-1] in "?." and why.endswith(".") and good[-1] in ".?" and sample[-1] in ".”", question
             assert 30 <= len(sample) <= 420 and len(good) <= 190 and len(why) <= 120, (question, len(sample), len(good), len(why))
             assert "—" not in "".join(q), "no long dashes: " + question
-    assert len(pick("data-analyst", "data-analytics", {"Tableau": 0.5})) == 3
+    assert len(pick("data-analyst", "data-analytics", {"Tableau": 0.5})) == 4
     assert [h for h, _ in pick("account-executive", "sales", {})] == ["Sales questions"]
     assert pick("solutions-architect", "sales", {}) == []
     assert sum(len(x) for _, x in pick("data-scientist", "data-analytics", {"Machine Learning": 0.5, "Tableau": 0.2})) == MAX_ADDED
