@@ -248,6 +248,13 @@ def main():
                 f.unlink(); known = {k: v for k, v in known.items() if slugify(k) != f.stem}
             print("dropped a shared icon:", ", ".join(f.stem for f in files))
     MAP.write_text(json.dumps(known, ensure_ascii=False, indent=1, sort_keys=True))
+    # the small copy each page shows (build.small_logo, 72 px): made here, where Pillow is, and kept in assets/logos/s/
+    import build
+    (OUTDIR / "s").mkdir(exist_ok=True)
+    for f in OUTDIR.glob("*.png"):
+        if not (OUTDIR / "s" / f.name).exists() or (OUTDIR / "s" / f.name).stat().st_mtime < f.stat().st_mtime: build.small_logo(f, OUTDIR / "s" / f.name)
+    for f in (OUTDIR / "s").glob("*.png"):
+        if not (OUTDIR / f.name).exists(): f.unlink()
     missing = sorted(n for n in seen if n not in known)
     print(f"logos: {len(known)} of {len(seen)} companies; missing {len(missing)}")
     print("missing:", ", ".join(missing)[:1500])

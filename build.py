@@ -725,21 +725,51 @@ LOGO_SITE = {k: v for k, v in LOGO_SITE.items() if not v.startswith("board:")}  
 LOGO_S = 72          # px: the copy of each logo the 28 to 42 px squares show (twice their size for sharp screens)
 
 
+def small_logo(src, dst):
+    """One logo at LOGO_S px with a palette of 128 colours (Pillow), or the original copied where Pillow is missing or the small copy
+    would not be smaller. Used by small_logos() here and by logos.py, which writes assets/logos/s/ with every new logo."""
+    try:
+        from PIL import Image
+        Image.open(src).convert("RGBA").resize((LOGO_S, LOGO_S), Image.LANCZOS).quantize(colors=128, method=Image.Quantize.FASTOCTREE).save(dst, "PNG", optimize=True)
+        if dst.stat().st_size >= src.stat().st_size: shutil.copyfile(src, dst)
+    except Exception:
+        shutil.copyfile(src, dst)
+
+
 def small_logos():
-    """logos/s/<company>.png: each logo at LOGO_S px with a palette of 128 colours, about 1 to 2 KB instead of 5 to 14 KB for the
-    96 px original (PageSpeed, 20 Nov 2026: "the image is 96x96, its box 22x22"; a home page shows about 16 of them). The original
-    stays for the large squares and for the job markup. Where the small copy would not be smaller, the original is copied."""
-    from PIL import Image
+    """logos/s/<company>.png: each logo at LOGO_S px, about 1 to 2 KB instead of 5 to 14 KB for the 96 px original (PageSpeed,
+    20 Nov 2026: "the image is 96x96, its box 22x22"; a home page shows about 16 of them). The small copies are kept in
+    assets/logos/s/ (made by logos.py and by small_logo here), so the hourly build on GitHub, which has no Pillow (its first run with
+    this failed on 20 Nov 2026), only copies them; a logo without one (a company's own upload) gets one now, or its original."""
     src, dst = OUT / "logos", OUT / "logos" / "s"
     if not src.exists(): return
     dst.mkdir(parents=True, exist_ok=True)
     for f_ in src.glob("*.png"):
-        try:
-            im = Image.open(f_).convert("RGBA").resize((LOGO_S, LOGO_S), Image.LANCZOS).quantize(colors=128, method=Image.Quantize.FASTOCTREE)
-            im.save(dst / f_.name, "PNG", optimize=True)
-            if (dst / f_.name).stat().st_size >= f_.stat().st_size: shutil.copyfile(f_, dst / f_.name)
-        except Exception:
-            shutil.copyfile(f_, dst / f_.name)
+        if not (dst / f_.name).exists() or f_.name.startswith("_") or (ROOT / "data" / "logos" / f_.name).exists(): small_logo(f_, dst / f_.name)
+
+
+NP_SELF = re.compile(r"(?:\bwe\s+are|\bwe['’]re|\bis)\s+(?:a|an)\s+(?:[\w-]+\s+){0,4}?(?:501\s?\(c\)\s?\(3\)|non-?profit|not-for-profit)(?!\w)", re.I)
+NP_NAMES = re.compile(r"\b(?:YMCA|YWCA|Boys (?:&|and) Girls Clubs?|Habitat for Humanity|Goodwill|United Way|Salvation Army|Catholic Charities|Big Brothers Big Sisters|"
+                      r"Red Cross|Planned Parenthood|Easterseals|Special Olympics|Food Bank)\b", re.I)
+
+
+def says_nonprofit(company, text):
+    """Does a posting say that its employer is a nonprofit? "We are a nonprofit", or "<name> is a nonprofit..." with the employer's
+    first name word among the first six words of the sentence (20 Nov 2026: "COPE Family Support Center is a nonprofit" in an agency's
+    posting, "The Kinnect Foundation ... is a non-profit" in Kith's, do not count)."""
+    words = [w for w in re.findall(r"[A-Za-z][A-Za-z0-9.+&-]*", company) if w.lower() not in ("the", "a", "an", "of")]
+    first = words[0].lower() if words else ""
+    plain = re.sub(r"<[^>]+>", " ", text[:30000])
+    for m in NP_SELF.finditer(plain):
+        if m.group(0).lower().startswith("we"): return True
+        start = max(plain.rfind(". ", 0, m.start()), plain.rfind("\n", 0, m.start()), plain.rfind(": ", 0, m.start())) + 1
+        if len(first) >= 3 and first in " ".join(plain[start:m.start()].split()[:6]).lower(): return True
+    return False
+
+
+assert says_nonprofit("HealthNet", "<p>HealthNet is a nonprofit 501 (c) (3) organization.</p>") and says_nonprofit("Acme", "We are a 501(c)(3) charity.")
+assert not says_nonprofit("Kith", "The Kinnect Foundation, a non-profit established and operated by Kith, is a non-profit devoted to change.")
+assert not says_nonprofit("Edgility Search", "COPE Family Support Center is a nonprofit organization whose mission is")
 
 
 def ava(name, cls=""):
@@ -3376,6 +3406,38 @@ def main():
                            ("Do government jobs pay less?", "Often less than private companies for the same skills at senior levels, and about the same or more at entry level, "
                             "with steadier hours, pensions and paid leave. The table above gives the median advertised pay of each level of government today.")),
                 links=(("jobs/", "Search every job"), ("companies/", "All companies")), **kw_g)
+    lap('Nonprofit jobs: employers whose own postings say they are a ')
+    # Nonprofit jobs: employers whose own postings say they are a nonprofit, the sentence starting with the employer's name or "we are"
+    # ("<name> is a nonprofit organization", "we are a 501(c)(3)"), and the names that are nonprofits by themselves (YMCA, Goodwill).
+    # LinkedIn has a "Non-profit organizations" collection (checked 20 Nov 2026). "X is a nonprofit" about a client or a foundation of
+    # the employer does not count: the sentence must start with the employer's name (an agency's "our client is a nonprofit", Kith's
+    # foundation). nonprofits.json holds those found in the server's full texts; the record here keeps texts of the last 14 days only.
+    np_file = json.loads((ROOT / "nonprofits.json").read_text()) if (ROOT / "nonprofits.json").exists() else {}
+    np_cos = set(np_file.get("companies") or []) | {c for c in companies if NP_NAMES.search(c)} | {j["company"] for j in active if j.get("desc") and says_nonprofit(j["company"], j["desc"])}
+    np_ = [j for j in active if j["company"] in np_cos]
+    NP_PAGE = len(np_) >= 20
+    if NP_PAGE:
+        row_n, kw_n = list_parts("Nonprofit jobs", np_)
+        fld_n = Counter(j["cat"] for j in np_ if j["cat"] != OTHER[0]).most_common(10)
+        pay_n = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in np_ if j.get("usd"))
+        pay_a = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in active if j.get("usd"))
+        n_html = (section("Nonprofit jobs [[by field]]", '<div class="tablewrap"><table><tr><th>Field</th><th>Open nonprofit jobs</th></tr>'
+                          + "".join(f'<tr><td><a href="{P}/jobs/{c}/">{e(CAT[c])}</a></td><td>{k:,}</td></tr>' for c, k in fld_n) + "</table></div>", sid="fields", label="By field")
+                  + section("The nonprofits [[with most open jobs]]", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in np_).most_common(15) if OPEN.get(c)) + "</ul>",
+                            sid="employers", label="Employers"))
+        kw_n = dict(kw_n); kw_n["after"] = n_html + kw_n.get("after", "")
+        pay_line = (f"The median advertised pay of the {len(pay_n):,} that state a yearly range is {money(pay_n[len(pay_n) // 2])}, against {money(pay_a[len(pay_a) // 2])} for all jobs here that state one. "
+                    if len(pay_n) >= 20 and pay_a else "")
+        listing("nonprofit-jobs/", "Nonprofit jobs", f"Nonprofit Jobs ({len(np_):,} open) at Charities, Foundations and Nonprofit Hospitals | {SITE}",
+                f"{roles(len(np_), 'open nonprofit job')} at charities, foundations, nonprofit hospitals and community groups, read from their own careers pages. Updated hourly.", np_,
+                intro_for(np_, "", " at employers that describe themselves as nonprofits", row=row_n), trail=(("All jobs", "jobs/"),),
+                faq="nonprofit jobs",
+                faq_first=("What counts as a nonprofit job here?", f"A job at an employer whose own posting says it is a nonprofit or a 501(c)(3), with the sentence about the employer itself, "
+                           f"or whose name is one, such as a YMCA or a Goodwill. Today that is {len(np_):,} open jobs at {len({j['company'] for j in np_}):,} employers. Check the employer’s status on its own site if it matters to you."),
+                faq_extra=(("Do nonprofit jobs pay less?", pay_line + "Pay depends far more on the field and the level than on the kind of employer: a nonprofit hospital pays nurses at market rates, a small charity often less."),
+                           ("Does working at a nonprofit help with student loans?", "In the United States, full-time work for a 501(c)(3) nonprofit or a government employer can count toward Public Service Loan Forgiveness. "
+                            "The rules and the forms are on the Federal Student Aid website (studentaid.gov); check your own loans there.")),
+                links=(("jobs/", "Search every job"), ("government-jobs/", "Government jobs") if GOV_PAGE else ("companies/", "All companies")), **kw_n)
     lap('Jobs by level: senior, lead, executive')
     # Jobs by level (hirehi.ru has a page for each level; search check, 18 Nov 2026: "senior level jobs" and "executive jobs" are answered by
     # thin lists of Indeed and ZipRecruiter, and people also ask what counts as senior and what an executive job is). The level comes
@@ -3416,7 +3478,7 @@ def main():
     kinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
         ("remote/", "Remote jobs"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work from anywhere"), ("new/", "New in the last 3 days"), ("entry-level/", "Entry-level jobs"), ("senior-jobs/", "Senior-level jobs"), ("lead-jobs/", "Lead and staff jobs"), ("executive-jobs/", "Executive jobs"), ("internships/", "Internships"),
         ("contract/", "Contract jobs"), ("part-time/", "Part-time jobs"), ("with-salary/", "Jobs that state pay"), ("salary/200k/", "Jobs that pay $200K or more"), ("perks/visa-sponsorship/", "Jobs with visa sponsorship"),
-        ("jobs-near-me/", "Jobs near me")) + tuple((p_, h_) for p_, h_, _, _ in HOURS) + ((("government-jobs/", "Government jobs"),) if GOV_PAGE else ()))
+        ("jobs-near-me/", "Jobs near me")) + tuple((p_, h_) for p_, h_, _, _ in HOURS) + ((("government-jobs/", "Government jobs"),) if GOV_PAGE else ()) + ((("nonprofit-jobs/", "Nonprofit jobs"),) if NP_PAGE else ()))
     dir_tail = (f'<div class="dirb"><h2><a href="{P}/jobs/"><u>By type of work</u></a></h2><p>How and when the work is done.</p><ul>{kinds}</ul></div>'
                 f'<div class="dirb"><h2><a href="{P}/skills/"><u>By skill or tool</u></a><span>{len(skill_counts)}</span></h2><p>Jobs that ask for a language, a program or a method by name.</p><ul>'
                 + "".join(f'<li data-n="{e(t.lower())}"><a href="{P}/skills/{tslug(t)}/">{e(t)} jobs</a><span>{c:,}</span></li>' for t, c in skill_counts.most_common(14))
