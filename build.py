@@ -1292,6 +1292,12 @@ def pager_html(path, n, pages):
 
 CAT_ACCENT = {}                       # sections once had their own colours; the site now keeps one green everywhere
 HUB = {"roles": {}, "week": "", "job_roles": {}}       # role slug -> (name, ids of its jobs); job id -> its role slugs; filled in main()
+# How many templates the resume builder offers, counted from assets/resume.js (TPL_NAMES), so the copy cannot fall behind it again:
+# it said "five" while the builder had six (20 Nov 2026).
+_NUM_WORD = {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
+_rb_m = re.search(r"TPL_NAMES = \{(.*?)\};", (ROOT / "assets" / "resume.js").read_text(), re.S)
+RB_N = len(re.findall(r"(\w+): \[", _rb_m.group(1))) if _rb_m else 0
+RB_TPLS = _NUM_WORD.get(RB_N, "several")
 
 
 LIST_LABEL = {"jobs": "Field", "roles": "Kind of work", "skills": "Skill", "locations": "Place", "remote": "Remote work", "crypto": "Crypto and web3",
@@ -1323,7 +1329,11 @@ def hub_stats(js, lead=False):
     k = len(js)
     if k < 20: return ""
     mids = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js if j.get("usd"))
-    cells = [(f"{k:,}", "open roles"), (f"{sum(1 for j in js if (j['posted'] or '') >= HUB['week']):,}", "posted in the last 7 days"),
+    week = sum(1 for j in js if (j['posted'] or '') >= HUB['week'])
+    # a list that is all from the last week (/new/: the last three days) would read "N open roles, N posted in the last 7 days":
+    # there the second figure is the last 24 hours instead (20 Nov 2026, found on /new/)
+    fresh = (f"{sum(1 for j in js if NOW - (j.get('ts') or 0) <= 86400):,}", "posted in the last 24 hours") if week == k else (f"{week:,}", "posted in the last 7 days")
+    cells = [(f"{k:,}", "open roles"), fresh,
              (f"{100 * sum(j['remote'] for j in js) / k:.0f}%", "remote"), (f"{len({j['company'] for j in js}):,}", "companies hiring")]
     if len(mids) >= 30: cells.append((money(median(mids)), f'<a href="{P}/glossary/median/">median</a> advertised salary'))
     if all(j["remote"] for j in js): cells = [c for c in cells if c[1] != "remote"]       # a list of remote jobs: "100% remote" says nothing
@@ -1420,11 +1430,16 @@ def list_alert(h1, qs, jobs):
     the list; here only category and country pages had one."""
     if not qs or len(jobs) < 5: return ""
     f = dict(kv.split("=", 1) for kv in qs.split("&") if "=" in kv)
-    if not f or set(f) - {"cat", "loc", "remote", "q", "skills"} or ("q" in f and "skills" in f): return ""
+    # "sal" (least yearly pay) is an alert filter as well, and "age" needs none: an alert only ever sends jobs new since the last
+    # letter (20 Nov 2026: /new/ and the /salary/ pages had no alert)
+    f.pop("age", None)
+    if set(f) - {"cat", "loc", "remote", "q", "skills", "sal"} or ("q" in f and "skills" in f): return ""
     words = unquote(f.get("q") or f.get("skills") or "")
     # every word of an alert must be in the job's title, company or skills, so a long descriptive name of a role ("Sales leader and VP of sales") would catch nothing
     if len(words.split()) > 3 or " and " in f" {words.lower()} ": return ""
-    return alert_form("new " + (rlow(h1) if "q" in f else h1 if "skills" in f else h1[0].lower() + h1[1:]), cat=f.get("cat", ""), loc=f.get("loc", ""), q=words, remote=f.get("remote") == "1")
+    what = rlow(h1) if "q" in f else h1 if "skills" in f else h1[0].lower() + h1[1:]
+    return alert_form(what if what.startswith("new ") else "new " + what, cat=f.get("cat", ""), loc=f.get("loc", ""), q=words, remote=f.get("remote") == "1",
+                      sal=int(f.get("sal") or 0))
 
 
 def list_narrow(qs, jobs):
@@ -1452,14 +1467,14 @@ def list_save(h1, qs, feed_path="", links=()):
             '<span>My jobs then shows how many are new each time you come back. No account, no email.</span></p>')
 
 
-def alert_form(what, cat="", loc="", search=False, q="", remote=False):
+def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
     """"Email me new jobs like these": the free job alert sign-up (server/src/alerts.js), small and reusable. Shown only once the API is
     on (config.json api_url): a form that goes nowhere is not shown (rule 7). Without a script the form posts itself and the API answers
     with a page; with one, site.js sends it and writes the answer under it. On the search page (search=True) site.js copies the current
     search (words, category, place, remote, least pay) into the hidden fields when it is sent. The field "website" is for programs only."""
     if not CFG["api_url"]: return ""
-    uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (q or cat or loc or "search").lower()).strip("-")
-    hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc), ("q", q), ("remote", "1" if remote else "")) if v)
+    uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (q or cat or loc or (f"pay-{sal}" if sal else "") or ("remote" if remote else "") or "search").lower()).strip("-")
+    hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc), ("q", q), ("remote", "1" if remote else ""), ("sal", str(sal) if sal else "")) if v)
     if search: hid = "".join(f'<input type="hidden" name="{k}" value="">' for k in ("q", "cat", "loc", "remote", "sal"))
     return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-labelledby="{uid}-h">'
             f'<h2 id="{uid}-h">Free job alerts: {e(what)}</h2>'
@@ -1588,7 +1603,8 @@ def intern_hub(path, h1, yr, ej):
         # sections review, batch 4: the order of every reviewed list (figures, the action, a row of links, the pictures, the jobs). The
         # table of seasons and the chart stand side by side above the list on a wide screen and under it on a phone, where the list
         # used to start on the third screen.
-        if n == 1: body += (hub_stats(ej, True) + list_save(h1, "etype=Internship", path) + links + '<div class="lflow"><div class="lpics">' + seas + glance + pay_note
+        # the same row of filters as the other lists (20 Nov 2026: the internship hub had none; its own builder skipped listing())
+        if n == 1: body += (hub_stats(ej, True) + list_save(h1, "etype=Internship", path) + list_narrow("etype=Internship", ej) + links + '<div class="lflow"><div class="lpics">' + seas + glance + pay_note
                             + '</div><div class="llist"><div class="sec-head lst" id="list"><h2>Newest internships</h2></div>' + the_list + "</div></div>" + tail + own)
         else: body += the_list
         title = f"{h1}{yr} ({k:,} open, {MONTH_YEAR}) | {SITE}"
@@ -2366,7 +2382,7 @@ def main():
             f'<div class="shot-body"><div id="shot-panels">{shot_panels}<p class="shot-more"><a class="btn" id="shot-more" href="{P}/jobs/">See all {n:,} jobs</a></p></div>'
             f'<aside class="shot-side">'
             f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
-            f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>Five templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'
+            f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>{RB_TPLS.capitalize()} templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'
             f'<a class="scard" href="{P}/salaries/"><b>What jobs pay</b><span>{paid_n:,} postings state the pay. See the median for your work.</span><em>Check salaries</em></a>'
             f'<a class="scard" href="{P}/tools/"><b>{len(TOOLS)} free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
             f'</aside></div></div></div>'
@@ -6531,6 +6547,34 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               + ".") if len(ai_js) >= 20 else "Too few AI postings are open today to count."),
              ("Which skills have the most new postings this week?", ("By postings published in the last seven days: " + ", ".join(f"{t} ({k:,} new of {a_:,} open)" for t, k, a_ in grow) + ". A week is a short window; the ranking of new postings by skill is recounted daily.") if grow else None)]
     sk_qa = [x for x in sk_qa if x and x[1]]
+    # Week on week (plan item 1.41, 20 Nov 2026: the guide had no change over time). Postings the employer dated in the last 7 days
+    # against the 7 days before, closed ones included, by the employer's own posting date: the date we first saw a job would make
+    # every newly added hiring system look like a jump in its skills.
+    prev_wk = (datetime.date.fromisoformat(week) - datetime.timedelta(days=7)).isoformat()
+    wk_now, wk_prev, n_now, n_prev = Counter(), Counter(), 0, 0
+    for j in active + archived:
+        p_ = (j.get("posted") or "")[:10]
+        if prev_wk <= p_ <= TODAY:
+            if p_ >= week: n_now += 1
+            else: n_prev += 1
+            for t in set(j.get("tags") or []): (wk_now if p_ >= week else wk_prev)[t] += 1
+    # the change in a skill's share of the week's postings, not in its count: a week with more postings in all (a hiring system newly
+    # read, a holiday the week before) would otherwise move every skill the same way. Shown only when both weeks are about as full.
+    share_ch = lambda t: (wk_now[t] / n_now) / (wk_prev[t] / n_prev) - 1
+    wk_moves = ([(t, wk_now[t], wk_prev[t], share_ch(t)) for t in wk_prev if wk_prev[t] >= 25 and wk_now[t] + wk_prev[t] >= 80]
+                if n_now >= 0.5 * n_prev and n_prev >= 500 else [])
+    wk_rows = lambda rows_: [trow([f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>', f"{b_:,}", f"{a_:,}", f'{"+" if ch_ >= 0 else "−"}{abs(ch_) * 100:.0f}%']) for t, a_, b_, ch_ in rows_]
+    wk_head = ["Skill", "Postings, week before", "Postings, last 7 days", "Change in share"]
+    wk_up = sorted((m for m in wk_moves if m[3] > 0), key=lambda m: -m[3])[:10]
+    wk_down = sorted((m for m in wk_moves if m[3] < 0), key=lambda m: m[3])[:10]
+    wk_html = (("<h2>Rising and falling this week</h2>"
+                f"<p>New postings that name each skill, dated by the employer in the last 7 days ({n_now:,} postings in all) against the 7 days before "
+                f"({fdate(prev_wk)} to {fdate(week)}, {n_prev:,}). The change is in the skill’s share of each week’s postings, so a busier week does not lift every skill. "
+                "Only skills named in at least 80 postings over the two weeks are compared.</p>"
+                + ("<h3>Rising</h3>" + ttable(wk_head, wk_rows(wk_up), "rkt") if len(wk_up) >= 3 else "")
+                + ("<h3>Falling</h3>" + ttable(wk_head, wk_rows(wk_down), "rkt") if len(wk_down) >= 3 else "")
+                + '<p class="note">A week is short: a few large employers posting at once can move a skill by tens of percent. Read it as a weather report, not a trend.</p>')
+               if len(wk_up) + len(wk_down) >= 6 else "")
     sk_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sk_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     guide("skills-in-demand", f"The {len(top_sk)} Most In-Demand Job Skills in {TODAY[:4]} (from {n:,} Jobs)",
@@ -6541,6 +6585,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           + "<h2>Pay, remote share and new postings, skill by skill</h2>"
           + ttable(["Skill", "Open jobs", "Share of all jobs", "Median advertised pay", "Remote", "Posted this week"], sk_tbl, "rkt")
           + '<p class="note">Median advertised pay: the median of the middle of each stated yearly US-dollar range, shown when at least 15 postings that name the skill state one. A posting names several skills, so it counts in several rows.</p>'
+          + wk_html
           + (("<h2>Workplace skills employers name</h2>"
               f"<p>Counted in the text of {full_n:,} open postings (every posting held here in full, or an even sample of them): the share that uses the usual words for each skill.</p>"
               + bars_([(nm, k, f"{pc_(k, full_n)}% of postings", f"jobs/?q={quote(nm.split(' and ')[0].lower())}") for nm, k in soft_rows[:10]])
@@ -7418,7 +7463,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
 
     lap('Resume builder: stays in the browser, prints to PDF')
     # Resume builder: stays in the browser, prints to PDF
-    rb_qa = [("Is there a 100% free resume builder?", f"This one: all five templates, the PDF and the Word download are free, with no account, no trial and no watermark. "
+    rb_qa = [("Is there a 100% free resume builder?", f"This one: all {RB_TPLS} templates, the PDF and the Word download are free, with no account, no trial and no watermark. "
               f"Many builders let you write for free and charge at the download; we read the pricing pages of {len(builders_check.BUILDERS)} of them, and the comparison shows which give a free PDF."),
              ("Can ChatGPT build a resume?", "It can draft and reword lines, but it does not know your results, and it tends to invent numbers and use the same phrases as everyone else. "
               "Use it for wording, check every fact, and put the text into a plain one-column layout that applicant tracking systems read cleanly, such as the templates here."),
@@ -7437,7 +7482,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     rb_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("resume/", f"Free Resume Builder: Free PDF & Word Download, No Sign-Up | {SITE}",
-         "Build an ATS-friendly resume in your browser: five templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
+         f"Build an ATS-friendly resume in your browser: {RB_TPLS} templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
          crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Five plain one-column templates that applicant tracking systems read cleanly '
          '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
          'Fill in the form, watch the page update, download. No account; nothing leaves this browser.</p>'
@@ -8403,7 +8448,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 ("Jobright", "the free plan has 1 instant job alert and 1 saved filter; Turbo lifts the limits", [("jobright", "third-party")]),
                 ("Teal", "tracking jobs is free there too", [("teal3", "third-party")]),
              ], "Free here, not part of Plus"),
-            ("Resume builder", "5 templates, PDF and Word, no limit on downloads", "Free", "no account", [
+            ("Resume builder", f"{RB_N} templates, PDF and Word, no limit on downloads", "Free", "no account", [
                 ("Rezi", "the free plan has 3 PDF downloads; Word files only in Pro, $29 a month", [("rezi", "")]),
                 ("Teal", "the free plan has unlimited resumes and 11 templates, with limited AI", [("teal3", "third-party")]),
              ], "Free here; Word files cost $29 a month at Rezi"),
@@ -8463,7 +8508,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              '<div class="tier"><p class="tn">Free</p><p class="tp">$0</p><p class="td">Everything you need to find a job and apply. No card.</p>'
              f'<a class="btn ghost" href="{P}/for-you/">Start with five questions</a>'
              + tick(["Every job and the link to apply", f"Search, {len(fam_rows)} fields of work, salary data", "Matching by five answers, with reasons", alerts_free, saved_free,
-                     "Resume builder: 5 templates, PDF and Word", "Resume review and resume match by rules", "Letter templates: cover, thank-you, resignation", "Offer check and a letter for negotiating"]) + "</div>"
+                     f"Resume builder: {RB_N} templates, PDF and Word", "Resume review and resume match by rules", "Letter templates: cover, thank-you, resignation", "Offer check and a letter for negotiating"]) + "</div>"
              '<div class="tier best"><p class="tn">Plus</p>'
              + (f'<p class="tp">{e(best_plan["price"])}<small> for {e(best_plan["name"])} · {per_day(best_plan)}</small></p>' if best_plan else '<p class="tp">Plus</p>')
              + '<p class="td">Everything in Free, plus the AI help: a writer for your resume and letters, rewording for each posting, and interview practice. One payment, nothing renews.</p>' + cta
@@ -8477,7 +8522,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         ("Jobs",), ("Every job and the link to apply", True, True), ("Search, filters, categories, salary data", True, True), ("Matching by five answers, with reasons", True, True),
         ("Job alerts by email", "With a free account" if api_on else "~Opening with free accounts", "With a free account" if api_on else "~Opening with free accounts"),
         ("Saved jobs and applications", "On every device, with an account" if api_on else "~In this browser", "On every device, with an account" if api_on else "~In this browser"),
-        ("Resume",), ("Resume builder, 5 templates, PDF and Word", True, True), (f"Resume examples for {len(rex_data)} kinds of work", True, True),
+        ("Resume",), (f"Resume builder, {RB_N} templates, PDF and Word", True, True), (f"Resume examples for {len(rex_data)} kinds of work", True, True),
         ("Resume review and score", "~By rules", "By AI, with rewrites"), ("Keywords for one posting", "~Found and missing", "Bullets reworded for the posting"),
         ("AI writer for bullet points and summary", False, True),
         ("Letters",), ("Cover letter", "~Fill-in template", "AI draft from your resume and the posting"), ("Resignation letter", "~Template", "AI draft"),
@@ -8682,7 +8727,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     seek_trust = trust(["One payment, nothing renews", "No card kept on file", "Paid in crypto or credits", "Jobs, alerts and the resume builder stay free"])
     seek_cards = ('<div class="pgrid">'
                   + pcard("Free", "$0", "forever", "Everything needed to find a job and apply.", f'<a class="btn ghost" href="{P}/for-you/">Start free</a>', "No card.",
-                          ticks=["Every job and the link to apply", f"Search, {len(fam_rows)} fields of work, salary data", alerts_free, saved_free, "Resume builder: 5 templates, PDF and Word",
+                          ticks=["Every job and the link to apply", f"Search, {len(fam_rows)} fields of work, salary data", alerts_free, saved_free, f"Resume builder: {RB_N} templates, PDF and Word",
                                  "Resume examples and letter templates"])
                   + '<div class="pside"><div class="pcards c3">'
                   + "".join(pcard(f"Plus · {pl['name']}", pl["price"], f"for {pl['name']}", " · ".join(x for x in (pl.get("per", ""), per_day(pl)) if x), plus_btn(pl.get("best")),
@@ -8885,6 +8930,27 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             S_ = curve(hz, 30)
             if at(S_, 30) is not None: fld.append((cs, 1 - S_[30], len(by_cat.get(cs, []))))
         fld.sort(key=lambda x: -x[1])
+        # the same by field as a table, with the median age at closing and the share open past 90 days (plan item 1.40, 20 Nov 2026:
+        # "how long do <field> job postings stay open" is asked per field; the page had only the bars of the 30-day share)
+        cl_by_f = defaultdict(list)
+        for j in cl_real:
+            if (d_ := days_between(j["posted"], j["closed"])) is not None: cl_by_f[j["cat"]].append(d_)
+        f30 = {cs: v for cs, v, _ in fld}
+        fld_tbl_rows = []
+        for cs in CAT:
+            ds_, open_ = sorted(cl_by_f.get(cs, [])), by_cat.get(cs, [])
+            if cs == OTHER[0] or len(ds_) < 30 or len(open_) < 30: continue
+            o90_ = sum(1 for j in open_ if age_days(j) > 90) / len(open_)
+            fld_tbl_rows.append((ds_[len(ds_) // 2], cs, len(open_), len(ds_), f30.get(cs), o90_))
+        fld_tbl_rows.sort()
+        fld_tbl = (section("How long postings stay open, [[by field]]",
+                           '<div class="tablewrap"><table><tr><th>Field</th><th>Open now</th><th>Closings measured</th><th>Median days up at closing</th>'
+                           '<th>New postings closed within 30 days</th><th>Open postings older than 90 days</th></tr>'
+                           + "".join(f'<tr><td><a href="{P}/jobs/{cs}/">{e(CAT[cs])}</a></td><td>{n_o:,}</td><td>{n_c:,}</td><td>{md_}</td><td>{pc(v30) if v30 is not None else "–"}</td><td>{pc(o90_)}</td></tr>'
+                                     for md_, cs, n_o, n_c, v30, o90_ in fld_tbl_rows)
+                           + f'</table></div><p class="note">Fields with at least 30 closings since {since_s} and 30 open postings, quickest first. Days are counted from the date the employer '
+                             'posted the job to the day it left the employer’s careers page; the 30-day share is the same estimate as above.</p>', sid="by-field", label="By field")
+                   if len(fld_tbl_rows) >= 5 else "")
         fld_bars = ('<div class="hbars">' + "".join(
             f'<a href="{P}/jobs/{cs}/"><span class="hn">{e(CAT[cs])}</span><span class="hb"><i style="width:{max(2, round(100 * v / fld[0][1]))}%"></i></span><span class="hc">{pc(v)}</span></a>'
             for cs, v, _ in fld) + "</div>") if fld else ""
@@ -9008,6 +9074,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        + vcols(age_pts, hi=next((i for i, (lo, hi, _) in enumerate(AGE_B) if lo > 90), None), aria="Open jobs by days since posting") + "</figure>"
                        + (f'<figure class="pic"><figcaption><b>Closed within 30 days, by field</b>Estimated share of new postings closed within 30 days, in fields with at least 30 closings.</figcaption>{fld_bars}</figure>' if fld_bars else "")
                        + "</div>", ("insights/long-open-roles/", "Employers with long-open roles"), label="Age")
+             + fld_tbl
              + section("[[Entry-level]] jobs", f'<p>{len(ent):,} of the {len(active):,} open postings ({pc(len(ent) / max(1, len(active)))}) are for beginners: {ent_int:,} internships and {len(ent) - ent_int:,} junior roles. '
                        f'{ent_rem:,} can be done from home and {ent_pay:,} state the pay' + (f'; junior roles that state a yearly range in US dollars pay {money(median(ent_mid))} at the median' if len(ent_mid) >= 30 else "") + '. '
                        f'{ent_exp2:,} of them ({pc(ent_exp2 / max(1, len(ent)))}) ask for two years of experience or more.'

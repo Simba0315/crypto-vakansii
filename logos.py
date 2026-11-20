@@ -204,8 +204,20 @@ def work(src):
     return name, None
 
 
+def board_only(src):
+    """For the large lists (sources_more.json and the others): only the icon on the company's own board, never a guessed website.
+    With thousands of small companies a site found from the name is too often another company's; the board is the one we read."""
+    dest = OUTDIR / f"{slugify(src['name'])}.png"
+    return src["name"], (f"board:{src['ats']}/{src['token']}" if board_icon(src, dest) else None)
+
+
 def main():
-    srcs = json.loads((ROOT / "sources.json").read_text()) + json.loads((ROOT / "sources_tech.json").read_text())
+    boards = sys.argv[1:2] == ["--boards"]                 # every sources file, board icons only (20 Nov 2026: 697 of 8,063 had a logo)
+    if boards:
+        srcs = [s for f in sorted(ROOT.glob("sources*.json")) if "candidates" not in f.name for s in json.loads(f.read_text())
+                if s.get("ats") in ("greenhouse", "ashby", "lever") and not s.get("hold")]
+    else:
+        srcs = json.loads((ROOT / "sources.json").read_text()) + json.loads((ROOT / "sources_tech.json").read_text())
     seen, todo = set(), []
     known = json.loads(MAP.read_text()) if MAP.exists() else {}
     for s in srcs:
@@ -213,14 +225,17 @@ def main():
         seen.add(s["name"])
         if known.get(s["name"]) and (OUTDIR / f"{slugify(s['name'])}.png").exists(): continue
         todo.append(s)
-    with cf.ThreadPoolExecutor(10) as ex:
-        for name, d in ex.map(work, todo):
+    if boards: todo = [s for s in todo if not (OUTDIR / f"{slugify(s['name'])}.png").exists()]
+    with cf.ThreadPoolExecutor(6 if boards else 10) as ex:
+        for i, (name, d) in enumerate(ex.map(board_only if boards else work, todo)):
             if d: known[name] = d
+            if boards and i % 200 == 199: print(f"  {i + 1:,} of {len(todo):,} boards, {len(known):,} logos", flush=True)
     # The same picture for two different companies is a website builder's or a host's default icon, not a logo: drop all of them.
     SAME_ICON = {}
     for f in OUTDIR.glob("*.png"): SAME_ICON.setdefault(hashlib.md5(f.read_bytes()).hexdigest(), []).append(f)
     for files in SAME_ICON.values():
-        if len(files) > 1:
+        # two boards of one company ("alphasense", "alphasense-india") share their logo rightly: kept (20 Nov 2026)
+        if len(files) > 1 and len({f.stem.split("-")[0] for f in files}) > 1:
             for f in files:
                 f.unlink(); known = {k: v for k, v in known.items() if slugify(k) != f.stem}
             print("dropped a shared icon:", ", ".join(f.stem for f in files))

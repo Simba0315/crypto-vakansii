@@ -47,8 +47,10 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # requests a second in all; its pages take a second or two to answer, so in practice it is two or three a second.
 # Breezy and BambooHR (19 Nov 2026): one service each as well (every board a subdomain), so the same care as JazzHR.
 # Paylocity (20 Nov 2026): every board on one address (recruiting.paylocity.com), its pages a second or so: the same.
+# BambooHR and Paylocity 8 at a time since 20 Nov 2026: about 4,000 boards each, a read 23 to 32 s of waiting for their answers, so
+# 4 at a time came round to a board every 7 to 9 hours. The gap between two requests (ATS_GAP) still caps the rate at 3 and 2.5 a second.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 4, "paylocity": 4}
+             "breezy": 4, "bamboohr": 8, "paylocity": 8}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
            "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or

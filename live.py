@@ -67,10 +67,12 @@ TEXTS_SLOW, TEXTS_LIST = 15, 500
 collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
 # 36 threads since 19 Nov 2026 (24 before): the reading is waiting on answers, not work, and the slow systems below now keep a third
 # of the threads free for the quick boards.
-WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 36)
+# 48 since 20 Nov 2026, with about 8,000 more boards on BambooHR and Paylocity: the loop no longer reads its store whole for each
+# board (the company index), so more threads go to waiting on answers, not to waiting for the loop.
+WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 48)
 # Boards of these systems read at once here, at most: their reads take long (a request per posting's text), and without a cap they
 # can hold every thread while the quick boards of the other systems wait (the loop keeps WORKERS * 2 reads queued, WORKERS run).
-LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4, "paylocity": 4}
+LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 8, "paylocity": 8}
 # And these systems together at most HEAVY_MAX of the reads queued, so at most that many threads: a third of the threads is always
 # free for the quick boards. (20 Nov 2026: the caps above added up to 40 of 36 threads; the slow boards held every thread, and
 # 1,800 Greenhouse and 1,800 Ashby boards were read seven or eight hours late instead of every hour.)

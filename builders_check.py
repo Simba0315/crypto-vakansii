@@ -127,9 +127,17 @@ BUILDERS = [        # alphabetical; read on 14 Nov 2026
 LEFT_OUT = []            # Canva, Teal and Zety were read on 18 Nov 2026 (their pages had not opened on the 14th)
 
 # This site's builder, from its code (assets/resume.js): the PDF comes from the browser's print window, the Word file is a .doc
-# that Word opens, the resume is kept in the browser (localStorage), one at a time.
+# that Word opens, the resumes are kept in the browser (localStorage), up to twenty. The number of templates is counted from the same
+# file (it said "One resume per browser, 5 templates" on 20 Nov 2026, when the builder kept twenty and had six).
+import re as _re
+from pathlib import Path as _Path
+_RJS = (_Path(__file__).parent / "assets" / "resume.js").read_text()
+_TPL = _re.search(r"TPL_NAMES = \{(.*?)\};", _RJS, _re.S)
+_MAX = _re.search(r"SET\.items\.length >= (\d+)", _RJS)
 OURS = {"pdf": ("yes", "Yes: as many as you like, from the browser’s print window"), "watermark": "No", "docx": "Yes: a Word file (.doc)",
-        "signup": "No: the resume stays in your browser", "limits": "One resume per browser, 5 templates", "paid": "None: the builder is free"}
+        "signup": "No: the resumes stay in your browser",
+        "limits": f"Up to {_MAX.group(1) if _MAX else 'several'} resumes per browser, {len(_re.findall(r'(\w+): \[', _TPL.group(1))) if _TPL else 'several'} templates",
+        "paid": "None: the builder is free"}
 
 KINDS = {"yes", "limited", "no", "trial", "unknown"}
 

@@ -193,7 +193,8 @@
   var redraw = function () { applyTpl(); drawForm(); drawPreview(); drawDemand(); if (chk) drawCheck(); };
   var setJd = function (v) { jd = v || ''; jdTitle = ''; H.set('hrn_rb_target', jd); };
   var addResume = function (start, label, post) {             // the current resume goes into the list; a new one opens
-    if (SET.items.length >= 20) { alert('Twenty resumes is the limit here. Delete one you no longer use first.'); return false; }
+    // said on the page, not in the browser's own alert window (some browsers and the app's pane suppress those)
+    if (SET.items.length >= 20) { H.sure(document.getElementById('rb-new'), 'Twenty resumes is the limit here. Delete one you no longer use first.', 'OK'); return false; }
     stash();
     var id = 'r' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
     SET.items.push({ id: id, label: label || '' }); SET.cur = id;
