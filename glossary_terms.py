@@ -1513,6 +1513,149 @@ MORE = {
             ("What is the WARN Act?", "A US federal law that requires many larger employers to give 60 days’ notice of a mass layoff or plant closing. Some states have their own stricter versions."),
         ],
     ),
+    "Job scam": dict(
+        title="What Is a Job Scam? How to Spot a Fake Job Offer",
+        aliases=["fake-job-offer"],
+        sections=[
+            ("What a job scam is", [
+                "A job scam is a fake offer of work made to take money, personal data or access to your accounts. The posting can look real: it may copy a real company’s name, logo and job description.",
+                "Common forms are a fake recruiter who messages you first, an offer sent without any interview, a check that you are asked to cash and partly send back, and a “training fee” or equipment you must pay for before you start.",
+            ]),
+            ("Signs that an offer is not real", [
+                "You are asked to pay anything: for training, a background check, software or equipment. A real employer pays you, not the other way round.",
+                "The interview happens only by chat, the offer comes within hours, or the pay is far above what the same job pays elsewhere.",
+                "You are asked early for a passport scan, bank details or a social security number. These are needed after you accept an offer, through the employer’s own hiring system, not in a first message.",
+                "The email comes from a free mail address or a domain that differs by a letter from the company’s own, or the recruiter pushes you to move to another messaging app.",
+            ]),
+            ("How to check a posting", [
+                "Open the company’s own careers page by typing its address, and look for the same job there. A real opening is almost always listed on the employer’s site.",
+                "Search for the recruiter’s name and the company together, and call the company’s main number to ask whether the person works there.",
+                "If you already sent money or data, stop all contact, tell your bank, change the passwords you shared and report it to the consumer protection agency of your country.",
+            ]),
+        ],
+        qa=[
+            ("How do I know if a job offer is real?", "Find the same job on the company’s own careers page, check that the recruiter’s email uses the company’s domain, and note whether you were asked for money or sensitive documents. A real offer follows a real interview."),
+            ("Do real employers ask you to pay for training or equipment?", "No. A real employer pays for the tools you need to do the job. A request for a fee, a gift card or a bank transfer before you start is the clearest sign of a scam."),
+            ("What should I do if I gave my details to a fake employer?", "Stop replying, change the passwords you used or shared, tell your bank if you gave account details and report the posting to the site where you found it and to the consumer protection agency in your country."),
+            ("Can a job on a real job board be a scam?", "Yes. Any site can carry a fake posting, which is why checking the employer’s own careers page matters more than where you saw the ad."),
+        ],
+    ),
+    "Pay transparency": dict(
+        title="What Is Pay Transparency? Salary Ranges in Job Postings",
+        sections=[
+            ("What pay transparency means", [
+                "Pay transparency is openness about what jobs pay. It has two parts: employers stating a pay range in a job posting, and employees being allowed to discuss their own pay with each other.",
+                "In the United States, several states and cities, including Colorado, California, Washington and New York City, require many employers to include a pay range in postings. The rules differ in who must follow them and what counts as a range, so check the one where the job is based.",
+            ]),
+            ("Why it matters when you look for work", [
+                "A range shown in the posting lets you decide whether to apply before you spend time on an interview, and it gives you a figure to anchor a negotiation.",
+                "A range in a posting is what the employer expects to pay for the role as written. Where you land in it depends on your experience, location and the level of the offer.",
+                "Postings with no range are common outside the places that require one. Searching only by pay hides those jobs, so a pay filter is best used together with a look at the rest.",
+            ]),
+            ("What to do with a range", [
+                "Compare it with what similar jobs pay in the same place, for example with the salary figures on this site, which are counted from postings that state pay.",
+                "If a posting has no range, ask for it in the first call with the recruiter; in places with a pay transparency law the employer may be required to give it.",
+            ]),
+        ],
+        qa=[
+            ("Which US states require salary ranges in job postings?", "Several do, among them Colorado, California, Washington and New York, and the list grows. Some cities have their own rules. Check the law where the job is based, because employer size and remote roles are treated differently."),
+            ("Is the top of the posted range what I can negotiate for?", "Not always. Many offers start in the lower or middle part of a range. A strong match for the role, a higher level or a competing offer can move it up."),
+            ("Can my employer forbid me from discussing my salary?", "In the US, most private employees are protected by federal law when they discuss pay with coworkers, and many states add their own rules. Managers and some other roles can be treated differently."),
+        ],
+    ),
+    "Behavioral interview": dict(
+        title="What Is a Behavioral Interview? Questions and How to Answer",
+        sections=[
+            ("What a behavioral interview is", [
+                "A behavioral interview asks about things you actually did, on the idea that past behavior is the best guide to future behavior. Questions begin with “Tell me about a time when…” or “Give me an example of…”.",
+                "Common topics are working with a difficult colleague, handling a mistake, meeting a tight deadline, leading without authority and changing your mind after new facts.",
+            ]),
+            ("How to prepare an answer", [
+                "Pick five or six real stories from work or study that show different things: a result you delivered, a conflict, a failure, a time you led and a time you learned something fast.",
+                "Tell each one in four parts: the situation, your task, what you did and the result. This is the STAR method, and it keeps an answer to about two minutes.",
+                "Say “I”, not “we”, for the part you did, and use figures where you have them: time saved, money, people affected.",
+            ]),
+            ("Mistakes to avoid", [
+                "Giving a general answer such as “I always communicate well” instead of one example. The interviewer scores the example.",
+                "Choosing a story where you were not at fault in any way. Interviewers look for a person who can name what went wrong and what changed afterwards.",
+            ]),
+        ],
+        qa=[
+            ("What are examples of behavioral interview questions?", "“Tell me about a time you disagreed with your manager.” “Describe a project that went wrong.” “Give an example of when you had to learn something quickly.” Each asks for a real event, not an opinion."),
+            ("How long should a behavioral answer be?", "About one to two minutes. Spend most of the time on what you did and on the result, and keep the background short."),
+            ("What if I have no work experience for the question?", "Use school, volunteering, a side project or a part-time job. What matters is that the story is real and shows the quality being asked about."),
+        ],
+    ),
+    "Take-home assignment": dict(
+        title="What Is a Take-Home Assignment? How Long It Should Take",
+        sections=[
+            ("What a take-home assignment is", [
+                "A take-home assignment is a task you do on your own time as a stage of the hiring process: code to write, a case to analyze, a design to sketch or a piece to write.",
+                "It replaces or follows a live interview exercise. The employer reads or runs your work and often talks it through with you afterwards.",
+            ]),
+            ("What to ask before you start", [
+                "Ask how long it is meant to take and whether it is paid. Many employers state two to four hours; if a task clearly needs more, you may say so and ask which part matters most.",
+                "Ask what the employer will look at, such as correctness, clarity or the way you explain your choices, and who will read it.",
+                "Ask whether your work could be used in the company’s product. A test that looks like real unpaid work is a reason to be careful.",
+            ]),
+            ("How to do it well", [
+                "Read the brief twice and keep to its scope. A smaller, finished and clear solution scores better than a larger, unfinished one.",
+                "Write a short note with what you did, what you left out and why, and what you would do with more time.",
+                "Keep to the time you were given, and send it before the deadline.",
+            ]),
+        ],
+        qa=[
+            ("How long should a take-home assignment take?", "Most employers aim for a few hours. If the brief would clearly take a day or more, ask which parts to skip, or whether the task is paid."),
+            ("Should a take-home assignment be paid?", "Short tasks usually are not. A long one that resembles real work for the employer is a fair reason to ask for payment or to decline."),
+            ("Can I decline a take-home assignment?", "Yes. You can ask for a shorter task or a live exercise instead. Some employers agree, and the way they answer tells you something about the company."),
+        ],
+    ),
+    "Employment gap": dict(
+        title="What Is an Employment Gap? How to Explain It on a Resume",
+        sections=[
+            ("What an employment gap is", [
+                "An employment gap is a stretch of time between two jobs with no paid work on a resume. Reasons are many: looking for a job, study, caring for family, illness, travel, a layoff or moving country.",
+                "Employers notice gaps because they ask what happened, not because a gap alone rules a person out.",
+            ]),
+            ("How to handle it on a resume", [
+                "A gap under about three months usually needs no comment. Writing years instead of months for each job is a common way to keep short gaps out of sight, and it is honest as long as the years are right.",
+                "For a longer gap, add one line in the place of a job: “Career break, caring for a family member” or “Full-time study, data analysis course”. Do not leave an unexplained hole.",
+                "List what you did in that time that bears on the job: a course, freelance work, volunteering, a project. Do not invent a job.",
+            ]),
+            ("How to explain it in an interview", [
+                "Give a short, true reason, say that it is over, and move to what you can do now. Two sentences are enough.",
+                "Do not apologize and do not give private medical or family details. You choose what to share.",
+            ]),
+        ],
+        qa=[
+            ("How long a gap is a problem on a resume?", "There is no fixed limit. A few months is common and usually passes without a question; a year or more is likely to be asked about, so prepare a short, true answer."),
+            ("Should I put a career break on my resume?", "If the gap is long, yes: one line with the dates and the reason is better than a blank, and it shows you have nothing to hide."),
+            ("Do employers have to ask about my gap?", "No, but many will. You do not have to share health or family details; say what is relevant and return to your skills."),
+        ],
+    ),
+    "Return to office (RTO)": dict(
+        title="What Is Return to Office (RTO)? What It Means for Your Job",
+        sections=[
+            ("What return to office means", [
+                "Return to office, or RTO, is an employer’s rule that brings staff who worked from home back to an office for some or all days of the week.",
+                "Policies vary: some require five days, some set a number of days a week such as three, and some name the days, so a team is in on the same ones.",
+            ]),
+            ("What it means for you", [
+                "If you work in a job that was remote, an RTO notice can change your commute, your costs and where you can live. Ask whether the notice applies to your contract and what happens if you cannot comply.",
+                "For jobseekers, a posting labelled remote, hybrid or on-site states the policy at the time it was written. Ask in the first call whether it is a written rule or a habit that may change.",
+            ]),
+            ("What to ask an employer", [
+                "How many days a week in the office are expected, and is that written in the contract?",
+                "Is the office the only place a person in this role may work, or can a remote person get the same level of pay and promotion?",
+                "Has the policy changed in the last year, and who decides when it changes next?",
+            ]),
+        ],
+        qa=[
+            ("What does RTO mean at work?", "RTO stands for return to office: a rule that staff who worked from home must come back to an office on some or all days."),
+            ("Can my employer make me come back to the office?", "Usually yes, unless your contract or your offer states a remote role. Check what your contract says about the place of work before you reply."),
+            ("What is the difference between hybrid and RTO?", "Hybrid is a pattern with some days in the office and some at home. RTO is the move from fully remote to a pattern that includes the office, whether full-time or hybrid."),
+        ],
+    ),
 }
 
 
