@@ -470,7 +470,7 @@ nav a.nl[aria-current=page]{color:var(--text);box-shadow:inset 0 -3px 0 var(--ac
 .steps li b{color:var(--text);font-weight:650}
 
 /* speed: the footer is laid out only when it comes near the screen */
-footer{content-visibility:auto;contain-intrinsic-size:auto 460px}
+
 
 /* employer account */
 .acc-auth{max-width:460px}
@@ -1090,7 +1090,7 @@ td s.was{font-size:.92em}
 }
 
 /* ===== The look since 13 Nov 2026: light, large, rounded; the product is on show. Everything below overrides the paper look above. ===== */
-:root{--bg:#ffffff;--bg2:#f6f4f1;--card:#ffffff;--text:#121110;--muted:#5c5852;--faint:#77726a;--line:#ebe8e3;--line2:#d6d1c9;
+:root{--bg:#ffffff;--bg2:#f6f4f1;--card:#ffffff;--text:#121110;--muted:#5c5852;--faint:#6b665e;--line:#ebe8e3;--line2:#d6d1c9;
   --hl:#b7eec3;--hl-ink:#06361c;--ac:#15803d;--btn:#121110;--btn-ink:#ffffff;--btn-h:#15803d;--btn-h-ink:#ffffff;--accent-soft:#f3f1ec;
   --display:"Schibsted Grotesk","Public Sans","Public Sans Fallback",system-ui,sans-serif}
 :root{--radius:12px;--shadow:0 1px 2px rgba(16,24,40,.05),0 14px 34px -18px rgba(16,24,40,.22)}

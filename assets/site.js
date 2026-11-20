@@ -17,7 +17,8 @@
   // the letter stays in the markup only as a fallback for styles that are switched off
   function avatar(company, logo, guess) {
     var letter = (String(company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
-    var img = logo ? '<img src="' + P + '/logos/' + logo + '.png" alt="" loading="lazy">' : guess ? '<img src="' + P + '/logos/' + slugOf(company) + '.png" alt="" loading="lazy" onerror="this.remove()">' : '';
+    // the small copy of the logo (build.small_logos: 72 px, 1 to 2 KB) for these 28 to 42 px squares
+    var img = logo ? '<img src="' + P + '/logos/s/' + logo + '.png" alt="" loading="lazy">' : guess ? '<img src="' + P + '/logos/s/' + slugOf(company) + '.png" alt="" loading="lazy" onerror="this.remove()">' : '';
     return '<span class="ava' + (logo || guess ? ' has' : '') + '" style="--h:' + hue(company) + '" aria-hidden="true">' + esc(letter) + img + '</span>';
   }
   function hue(name) { var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360; return h; }
@@ -361,6 +362,10 @@
     var home = ul.getAttribute('data-live') === 'home', since = ul.getAttribute('data-since') || '';
     var cap = home ? ul.children.length : 0;                // the home window keeps its size: a row in, the bottom row out
     var calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    // The jobs the first request brings go in at once, without the slide and the glow: they belong to the page as it opens, and a
+    // window that keeps moving for three seconds after the first paint is what PageSpeed's Speed Index counts as a page still loading
+    // (20 Nov 2026). Only the jobs found while the page stays open slide in.
+    var still = true;
     var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], thisYear = new Date().getFullYear();
     var dayName = function (y, m, d) { return MON[m - 1] + ' ' + d + (y !== thisYear ? ', ' + y : ''); };
     var isoDay = function (iso) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ''); return m ? [+m[1], +m[2], +m[3]] : null; };
@@ -397,7 +402,7 @@
       j[21] = o.logo || ''; j[23] = o.t && Date.now() / 1000 - o.t < 7 * 86400 ? Math.floor(o.t / 60) : 0; j[24] = o.cc || [];
       var box = document.createElement('ul'); box.innerHTML = card(j);
       var li = box.firstChild, ft = foundText(o);
-      li.setAttribute('data-ts', o.ts || 0); li.classList.add('lv');
+      li.setAttribute('data-ts', o.ts || 0); if (!still) li.classList.add('lv');
       if (ft) {
         var s = document.createElement('span'); s.className = 'jf'; s.setAttribute('data-found', o.found_at); s.setAttribute('data-posted', o.posted || '');
         s.setAttribute('data-pts', o.ts || 0); s.textContent = ft;
@@ -411,12 +416,12 @@
     })();
     var queue = [], busy = false;
     var drop = function (li) {
-      if (calm) { li.remove(); return; }
+      if (calm || still) { li.remove(); return; }
       li.classList.add('lv-out'); setTimeout(function () { li.remove(); }, 420);
     };
     var next = function () {
       var it = queue.shift();
-      if (!it) { busy = false; return; }
+      if (!it) { busy = false; still = false; return; }
       busy = true;
       var have = shown();
       if (have.slugs[it.slug] || have.names[it.company + '\n' + it.title] || (home && have.cos[it.company])) return next();
@@ -424,13 +429,13 @@
       for (var i = 0; i < rows.length; i++) { if (rows[i].classList.contains('feat') || rows[i].classList.contains('lv-out')) continue; if (rowTs(rows[i]) < ts) { at = rows[i]; break; } }
       var live = rows.filter(function (r_) { return !r_.classList.contains('lv-out'); }).length;
       if (!at && (!home || live >= cap)) return next();      // older than every row here: it belongs further down (or on a later page)
-      if (!calm) { li.classList.add('lv-in'); li.addEventListener('animationend', function (e) { if (e.target === li) li.classList.remove('lv-in'); }); }
+      if (!calm && !still) { li.classList.add('lv-in'); li.addEventListener('animationend', function (e) { if (e.target === li) li.classList.remove('lv-in'); }); }
       ul.insertBefore(li, at);
       if (home && live + 1 > cap) { var bottom = Array.prototype.filter.call(ul.children, function (r_) { return !r_.classList.contains('lv-out'); }).pop(); if (bottom && bottom !== li) drop(bottom); }
       try { decorate(li); } catch (e) {}
       added++;
       say(added === 1 ? 'A new job was added to the list.' : added + ' new jobs were added to the list.');
-      setTimeout(next, calm ? 0 : 450);
+      if (calm || still) next(); else setTimeout(next, 450);
     };
     var added = 0, last = 0;
     var tick = function () {                                  // the "found" lines age while the page is open

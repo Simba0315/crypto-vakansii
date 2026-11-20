@@ -722,11 +722,32 @@ LOGO_SITE = json.loads((ROOT / "logos.json").read_text()) if (ROOT / "logos.json
 LOGO_SITE = {k: v for k, v in LOGO_SITE.items() if not v.startswith("board:")}      # "board:<ats>/<token>": the logo came from the job board, the site is unknown
 
 
+LOGO_S = 72          # px: the copy of each logo the 28 to 42 px squares show (twice their size for sharp screens)
+
+
+def small_logos():
+    """logos/s/<company>.png: each logo at LOGO_S px with a palette of 128 colours, about 1 to 2 KB instead of 5 to 14 KB for the
+    96 px original (PageSpeed, 20 Nov 2026: "the image is 96x96, its box 22x22"; a home page shows about 16 of them). The original
+    stays for the large squares and for the job markup. Where the small copy would not be smaller, the original is copied."""
+    from PIL import Image
+    src, dst = OUT / "logos", OUT / "logos" / "s"
+    if not src.exists(): return
+    dst.mkdir(parents=True, exist_ok=True)
+    for f_ in src.glob("*.png"):
+        try:
+            im = Image.open(f_).convert("RGBA").resize((LOGO_S, LOGO_S), Image.LANCZOS).quantize(colors=128, method=Image.Quantize.FASTOCTREE)
+            im.save(dst / f_.name, "PNG", optimize=True)
+            if (dst / f_.name).stat().st_size >= f_.stat().st_size: shutil.copyfile(f_, dst / f_.name)
+        except Exception:
+            shutil.copyfile(f_, dst / f_.name)
+
+
 def ava(name, cls=""):
-    """Company avatar: the real logo when we have one, with the coloured initial underneath as a fallback."""
+    """Company avatar: the real logo when we have one, with the coloured initial underneath as a fallback. The small copy of the logo
+    (small_logos) except in the large square."""
     letter = next((c for c in name if c.isalnum()), "?").upper()
     slug = slugify(name)
-    img = f'<img src="{P}/logos/{slug}.png" alt="" loading="lazy">' if slug in LOGOS else ""
+    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="" loading="lazy">' if slug in LOGOS else ""
     return f'<span class="ava{" " + cls if cls else ""}{" has" if img else ""}" aria-hidden="true">{e(letter)}{img}</span>'      # no hue: the logo covers the square, and a square without a logo is hidden
 
 
@@ -2251,7 +2272,7 @@ def main():
         peak = max(range(len(points)), key=lambda i: points[i][1]) if points else None
         grid = "".join(f'<span style="bottom:{100 * t / 2:.0f}%"><em>{fmt_n(top * t // 2)}</em></span>' for t in (1, 2))
         bars = "".join(
-            f'<div class="vc-c{" hi" if i == hi else ""}{" now" if i == now else ""}" tabindex="0" data-tip="{e(tip)}" aria-label="{e(tip)}">'
+            f'<div class="vc-c{" hi" if i == hi else ""}{" now" if i == now else ""}" role="img" tabindex="0" data-tip="{e(tip)}" aria-label="{e(tip)}">'
             f'<i style="height:{max(1.5, 100 * v / top):.1f}%">{f"<b>{fmt_n(v)}</b>" if i in (peak, hi) else ""}</i></div>'
             for i, (_, v, tip) in enumerate(points))
         xs = "".join(f"<span>{e(lb)}</span>" for lb, _, _ in points)
@@ -10139,6 +10160,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     if (ROOT / "assets" / "logos").exists(): shutil.copytree(ROOT / "assets" / "logos", OUT / "logos")
     for f_ in (ROOT / "data" / "logos").glob("*.png"):                  # a company's own upload stands in place of the logo we held for it
         (OUT / "logos").mkdir(exist_ok=True); shutil.copyfile(f_, OUT / "logos" / f_.name)
+    small_logos()
 
     lap('Public JSON feeds (used by the widget and documented on /api')
     # Public JSON feeds (used by the widget and documented on /api/)
