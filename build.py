@@ -10327,6 +10327,17 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
   checked against the employer's careers page. A job that has closed says so at the top of its page.
 - Please link to the job page when you mention a job: applications always go to the employer's own site from there, free of charge.
 - The feeds list every address that exists: {FULL}/api/v1/index.json
+- "How do I become a <person>?" {FULL}/how-to-become/<role>/ : the training, licenses and exams the work needs, checked for US rules, with today's beginner jobs and pay.
+- "Interview questions for <role>" {FULL}/interview-questions/<role>/ : about 20 questions of that trade with what each checks, what a good answer shows and a sample answer, plus the skill questions today's postings point to.
+- "<role> resume example" {FULL}/resume/examples/<role>/ (also /cv-examples/<role>/ and /cover-letter-examples/<role>/): an invented example with beginner and senior lines, next to the skills postings ask for.
+- "What does a <person> do?" {FULL}/roles/<role>/ ; "<role> salary" {FULL}/salaries/<role>/ ; for employers: {FULL}/how-to-hire/<role>/ and a job description template at {FULL}/job-descriptions/<role>/
+- "What is <term>?" (job-search and hiring words) {FULL}/glossary/<term>/
+- Role slugs are lowercase with hyphens, as in the addresses above: registered-nurse is nursing, software-engineer, data-analyst, electrician, actuary.
+
+## For AI assistants and agents
+- A remote MCP server (Streamable HTTP, no key): {FULL}/mcp with `search_jobs` (word search over every open job, best match first, remote filter) and `get_job`. Add it in Claude under Settings, Connectors, Add custom connector.
+- A local MCP server with feeds by skill, category, location and company: https://github.com/Simba0315/jobseveryhour-mcp
+- The JSON API above needs no key; CORS is open.
 
 ## Tools
 - [Free tools]({FULL}/tools/): {tools_md}
