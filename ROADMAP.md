@@ -2676,3 +2676,5 @@ sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS
 - ✅ (19.11, облачный прогон) Глоссарий: ещё 12 терминов (H-1B, OPT, green card, passive candidate, candidate experience, employer brand, pay freeze, zero-hours contract, tech stack, quiet quitting, work-life balance, burnout), теперь 224.
 
 - ✅ (19.11, облачный прогон) Вопросы интервью: два новых блока с готовыми ответами, «Backend and API» (9 вопросов: путь запроса, дубли платежей, кэш, N+1, транзакции, логи и др.) и «Testing and quality» (8 вопросов), всего 29 блоков и 189 вопросов; на страницах backend, software, Python, Java, QA и ещё 20 профессий теперь 72–78 вопросов.
+
+- ✅ (20.11, облачный прогон) Виджет вакансий: в режиме «вакансии своей компании» теперь читает ещё Recruitee (`recruitee:имя`) и SmartRecruiters (`smartrecruiters:Имя`, до 500 свежих вакансий); проверено на живых досках. Конструктор, таблица параметров и страницы /widgets/ называют обе системы; исправлена кнопка «Show more (-19)» под коротким списком. Осталось: Workable и Teamtailor (см. WIDGET_RESEARCH.md).

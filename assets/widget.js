@@ -5,7 +5,7 @@
    <script src="…/widget.js" async></script>
    Layouts: list (default), cards, compact, ticker, careers. data-search="1" adds a search box and "show more".
    A company can also show its own jobs straight from its hiring system, with no account anywhere:
-     data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme"   (the name of the board in that system), data-company="Acme"
+     data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme" | "recruitee:acme" | "smartrecruiters:Acme"   (the name of the board in that system), data-company="Acme"
    The link inside the div stays visible as the footer and works even if scripts are blocked. */
 (function () {
   var S = document.currentScript;
@@ -53,7 +53,7 @@
     '@keyframes hrn{from{transform:translateX(0)}to{transform:translateX(-50%)}}' +
     '.cs{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}' +
     '.cs input,.cs select{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}.cs input{flex:1;min-width:150px}' +
-    '.more{display:block;width:100%;padding:11px;border:0;border-bottom:1px solid var(--line);background:var(--hov);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
+    '.more[hidden]{display:none}.more{display:block;width:100%;padding:11px;border:0;border-bottom:1px solid var(--line);background:var(--hov);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
     '@media(prefers-reduced-motion:reduce){.tick .run{animation:none;flex-wrap:wrap;width:auto;padding:0 14px}}';
   function row(j, logos) {
     var mark = j.logo && logos ? '<img class="lg" src="' + esc(j.logo) + '" alt="" loading="lazy">' : '<span class="lt">' + esc((String(j.company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span>';
@@ -71,6 +71,17 @@
       var c = j.categories || {};
       jobs.push({ title: j.text, url: j.hostedUrl, location: c.location || '', posted: j.createdAt ? day(new Date(j.createdAt).toISOString()) : '', category: c.team || c.department || '' });
     });
+    else if (type === 'recruitee') (raw.offers || []).forEach(function (j) {
+      if (j.status && j.status !== 'published') return;
+      var place = j.location || [j.city, j.country].filter(Boolean).join(', ');
+      jobs.push({ title: j.title, url: j.careers_url, location: place, posted: day(j.published_at || j.created_at), category: j.department || '', remote: !!j.remote });
+    });
+    else if (type === 'smartrecruiters') (raw.content || []).forEach(function (j) {
+      var l = j.location || {};
+      jobs.push({ title: j.name, url: 'https://jobs.smartrecruiters.com/' + encodeURIComponent(raw.slug) + '/' + encodeURIComponent(j.id),
+                  location: l.remote && !l.city ? 'Remote' : [l.city, l.country && String(l.country).toUpperCase()].filter(Boolean).join(', '), posted: day(j.releasedDate),
+                  category: j.department && j.department.label || '', remote: !!l.remote });
+    });
     else (raw.jobs || []).forEach(function (j) {
       if (j.isListed === false) return;
       jobs.push({ title: j.title, url: j.jobUrl, location: j.location || '', posted: day(j.publishedAt), category: j.department || j.team || '' });
@@ -87,16 +98,30 @@
     el.setAttribute('data-hrn-ready', '1');
     var spec = (el.getAttribute('data-hrn-jobs') || 'latest').split(':'), type = spec[0], slug = spec.slice(1).join(':');
     var path = { latest: 'latest', remote: 'remote', skill: 'skills/' + slug, category: 'categories/' + slug, location: 'locations/' + slug, company: 'companies/' + slug }[type] || 'latest';
+    // SmartRecruiters hands out 100 roles a page: read up to five pages, then stop.
+    function sr(slug) {
+      var all = [], u = 'https://api.smartrecruiters.com/v1/companies/' + encodeURIComponent(slug) + '/postings?limit=100&offset=';
+      function page(n) {
+        return fetch(u + n * 100).then(function (r) { return r.json(); }).then(function (d) {
+          all = all.concat(d.content || []);
+          return (d.content || []).length === 100 && n < 4 && all.length < (d.totalFound || 0) ? page(n + 1) : { content: all, slug: slug };
+        });
+      }
+      return page(0);
+    }
     var ats = { greenhouse: 'https://boards-api.greenhouse.io/v1/boards/' + encodeURIComponent(slug) + '/jobs',
                 lever: 'https://api.lever.co/v0/postings/' + encodeURIComponent(slug) + '?mode=json',
-                ashby: 'https://api.ashbyhq.com/posting-api/job-board/' + encodeURIComponent(slug) }[type];
+                ashby: 'https://api.ashbyhq.com/posting-api/job-board/' + encodeURIComponent(slug),
+                recruitee: /^[A-Za-z0-9-]+$/.test(slug) ? 'https://' + slug + '.recruitee.com/api/offers/' : '',
+                smartrecruiters: /^[A-Za-z0-9_-]+$/.test(slug) ? 'sr' : '' }[type];
+    if (!ats && { recruitee: 1, smartrecruiters: 1 }[type]) return;   // a board name with odd characters: leave the plain link
     var limit = Math.max(1, Math.min(20, parseInt(el.getAttribute('data-limit') || '6', 10) || 6));
     var theme = { light: 'light', dark: 'dark' }[el.getAttribute('data-theme')] || 'auto';
     var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
     var accent = /^#[0-9a-fA-F]{3,8}$/.test(el.getAttribute('data-accent') || '') ? el.getAttribute('data-accent') : '';
     var src = el.getAttribute('data-hrn-base') || base;
     var interactive = layout === 'careers' || el.getAttribute('data-search') === '1', step = layout === 'careers' ? 20 : limit;
-    fetch(ats || src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); }).then(function (d) {
+    (ats === 'sr' ? sr(slug) : fetch(ats || src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); })).then(function (d) {
       if (ats) d = own(type, d, el, src);
       var jobs = interactive ? d.jobs : d.jobs.slice(0, limit), body;
       if (!jobs.length) body = '<div class="e">No open roles right now.</div>';
