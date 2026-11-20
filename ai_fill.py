@@ -483,6 +483,10 @@ def audit_rows():
 
 
 def audit(argv):
+    global AUDIT_SECTIONS, AUDIT_OUT, AUDIT_STATE
+    if "--sections" in argv:
+        AUDIT_SECTIONS = argv[argv.index("--sections") + 1].split(",")
+        AUDIT_OUT = ROOT / "data" / "ai_audit2.json"; AUDIT_STATE = ROOT / "data" / "ai_fill_audit2.json"
     rows = audit_rows()
     if "--limit" in argv: rows = rows[:int(argv[argv.index("--limit") + 1])]
     by = {r["id"]: r for r in rows}
@@ -813,6 +817,18 @@ SECTIONS = {
                "requirements (education, license or certification where the work needs one, core abilities), 4 to 18 words each, no full stop; say "
                "\"or equivalent experience\" where employers usually accept it; name a license only when the work requires it, noting state rules.\n- "
                "nice: 2 nice-to-have lines, 4 to 18 words each, no full stop.\nNo years of experience and no software names (the template adds those).\n\n" + STYLE),
+    "hire": dict(
+        pages="how-to-hire", out="hire_more.json", key="look",
+        schema={"type": "object", "additionalProperties": False, "required": ["look", "qa"], "properties": {"look": ITEMS(4, 5), "qa": QA_ITEMS}},
+        system="You write one section of the page \"How to hire a <person>\" for employers on a US job board (jobseveryhour.com). The page already "
+               "shows the competition counted from today's postings (pay, places, how long postings stay up), six general steps, a scorecard and a "
+               "test task; your section is what to look for in a candidate of this exact work.\n\nWrite:\n- look: 4 or 5 items, each a label (2 to 5 "
+               "words, no full stop, such as \"Credentials to verify\", \"Skills to test\", \"Signs of a strong candidate\", \"Red flags\", "
+               "\"Questions that reveal experience\") and a text of 15 to 55 words, ending with a full stop, specific to this work. Name a license or "
+               "certification only when it truly exists in the US and say when it varies by state; never suggest asking about age, family, health, "
+               "religion, national origin or anything else US law protects.\n- qa: 2 questions employers search about hiring this work (\"What should "
+               "I look for when hiring a <person>?\", \"How do I test a <person> before hiring?\"), each ending with ?, each answer 20 to 70 words, "
+               "ending with a full stop.\n\n" + STYLE),
 }
 SECTION_CHECK = ("You check one section written for a US job board page before it is published. Read it as an expert in that work and in US "
                  "employment rules, and look only for things that are wrong: a fact, license, law, rule or practice that is incorrect, outdated or "
@@ -840,7 +856,7 @@ def sec_rows(kind):
 def sec_problems(kind, d):
     bad = []
     words = lambda x: len(x.split())
-    if kind in ("role", "salary"):
+    if kind in ("role", "salary", "hire"):
         items = d.get(SECTIONS[kind]["key"]) or []
         if not 4 <= len(items) <= 5: bad.append("4 or 5 items")
         for x in items:
@@ -864,7 +880,7 @@ def sec_problems(kind, d):
 
 
 def sec_text(kind, d):
-    if kind in ("role", "salary"):
+    if kind in ("role", "salary", "hire"):
         return "\n".join(f"- {x['label']}: {x['text']}" for x in d[SECTIONS[kind]["key"]]) + "\n\nQuestions:\n" + "\n".join(f"Q: {x['q']}\nA: {x['a']}" for x in d["qa"])
     return "Duties:\n" + "\n".join("- " + x for x in d["duties"]) + "\nRequirements:\n" + "\n".join("- " + x for x in d["must"]) + "\nNice to have:\n" + "\n".join("- " + x for x in d["nice"])
 
@@ -925,7 +941,9 @@ JOBS = {"resume": resume, "interview": interview, "glossary": glossary, "become"
         "glossary-retry": lambda a: glossary(a + ["--retry"]), "become-retry": lambda a: become(a + ["--retry"]),
         "role": lambda a: section_job("role", a), "salary": lambda a: section_job("salary", a), "jd": lambda a: section_job("jd", a),
         "role-retry": lambda a: section_job("role", a + ["--retry"]), "salary-retry": lambda a: section_job("salary", a + ["--retry"]),
-        "jd-retry": lambda a: section_job("jd", a + ["--retry"]), "interview-more": lambda a: interview(a + ["--more"])}
+        "jd-retry": lambda a: section_job("jd", a + ["--retry"]), "interview-more": lambda a: interview(a + ["--more"]),
+        "hire": lambda a: section_job("hire", a), "hire-retry": lambda a: section_job("hire", a + ["--retry"]),
+        "audit2": lambda a: audit(a + ["--sections", "skills,resume-words"])}
 
 if __name__ == "__main__":
     names = [a for a in sys.argv[1:] if a in JOBS]

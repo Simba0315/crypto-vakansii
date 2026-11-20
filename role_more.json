@@ -271,6 +271,40 @@
    }
   ]
  },
+ "aerospace": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Aerospace engineers design, analyze and test aircraft, rockets, satellites, missiles and their parts. They study structures, aerodynamics, propulsion, guidance and control. They write requirements and test plans, review drawings, and track down the cause of failures found in testing or in service."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day often mixes computer modeling, design reviews and team meetings. An engineer might run a stress or airflow analysis in the morning, check data from a test in the afternoon, and finish by updating documents. Some roles add time in labs, hangars or launch sites."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "They use computer-aided design software, finite element analysis for stress, and computational fluid dynamics for airflow. Programming and numerical tools help them build models. Physical tools include wind tunnels, engine test stands, vibration tables, thermal vacuum chambers and flight simulators."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work closely with mechanical, electrical and software engineers, technicians, machinists and quality inspectors. Test pilots, mission operators and program managers are part of the team too. Many also deal with customers such as airlines, government agencies or the military."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged in design reviews and tests against requirements for safety, weight, performance, cost and schedule. Civil aircraft and parts must meet FAA airworthiness standards. Military programs follow military airworthiness processes. Defense work often requires US citizenship, a security clearance and care with export control rules."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an aerospace engineer do day to day?",
+    "a": "Most days are spent at a computer building models, running analyses and checking designs against requirements. Engineers attend design reviews, work through problems with teammates, and write reports and test plans. Depending on the role, they may also visit factory floors, watch tests in labs or wind tunnels, or support flight tests and launches."
+   },
+   {
+    "q": "What is the difference between aeronautical and astronautical engineering?",
+    "a": "Aeronautical engineering deals with aircraft that fly within Earth’s atmosphere, such as airplanes, helicopters and drones. Astronautical engineering deals with rockets, satellites and spacecraft that operate in space. Many US degree programs teach both under the name aerospace engineering, and engineers often specialize in one branch through their jobs."
+   }
+  ]
+ },
  "affiliate-marketing": {
   "day": [
    {
@@ -1835,6 +1869,40 @@
    }
   ]
  },
+ "chat-support": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Reply to customer questions in live chat, email tickets and social media messages. Agents look up orders and accounts, explain policies, fix common problems, issue refunds or credits within set limits, and pass harder cases to a specialist or supervisor."
+   },
+   {
+    "label": "A typical day",
+    "text": "Agents log in to a ticket queue and often handle two or three chats at once. Between chats, they work through waiting emails, add notes to each case, and read updates about product changes or known outages. Busy hours bring longer queues."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "A help desk or ticketing system, a live chat window, customer account records, and a knowledge base of saved answers and policy articles. Many teams also use reply templates and internal messaging. Steady typing helps, but clear writing and product knowledge count for more."
+   },
+   {
+    "label": "Where they work",
+    "text": "Many agents work from home on set shifts, using a company computer or a setup that meets security rules. Others work in contact centers. Retailers, software firms, travel, banking and delivery businesses all hire for this work, and some roles cover nights or weekends."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Teams track response time, issues solved on first contact, customer survey scores and quality reviews of written replies. Reviewers check tone, accuracy, spelling, and whether the agent followed company policy and privacy rules."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a chat and email support agent do day to day?",
+    "a": "They read incoming chats, emails and social messages, find the customer’s account or order, and work out the real problem. Then they write a clear reply that fixes it or explains next steps, add notes to the case, and escalate what they can’t solve. Good agents aim to resolve the issue in one reply so the customer doesn’t need to write back."
+   },
+   {
+    "q": "What is the difference between chat support and phone support?",
+    "a": "Chat and email agents work in writing, so they can often handle more than one conversation at a time and check facts before replying. Phone agents usually handle one call at a time and must answer on the spot. Written replies leave a record, so tone, accuracy and grammar get close review. Many companies train agents to do both."
+   }
+  ]
+ },
  "chief-of-staff": {
   "day": [
    {
@@ -1866,6 +1934,40 @@
    {
     "q": "What is the difference between a chief of staff and an executive assistant?",
     "a": "An executive assistant mainly handles scheduling, travel, correspondence and day-to-day logistics. A chief of staff works on strategy and operations: setting priorities, driving projects across teams and advising the executive. Many leaders have both, with the assistant running the calendar and the chief of staff shaping how that time is spent."
+   }
+  ]
+ },
+ "chinese-speaking": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Use Mandarin or Cantonese to serve customers, patients or clients. Common tasks include answering calls, explaining products, bills or forms, translating short documents, and switching between Chinese and English in the same conversation."
+   },
+   {
+    "label": "Where they work",
+    "text": "Banks, insurance and real estate offices, hospitals and clinics, call centers, retail and travel businesses, schools, law offices, and companies that trade with mainland China, Taiwan or Hong Kong. Many roles are in cities with large Chinese communities."
+   },
+   {
+    "label": "Reading and writing Chinese",
+    "text": "Some jobs need speaking only. Others need written Chinese in simplified characters, used in mainland China, or traditional characters, used in Taiwan, Hong Kong and many long-established US communities. Postings usually say which one."
+   },
+   {
+    "label": "How skills are checked",
+    "text": "Employers often test language skills in an interview or a phone or written assessment. Medical interpreters may hold a voluntary national credential. Many state courts certify Mandarin and Cantonese interpreters, and the rules vary by state."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Customers who are more comfortable in Chinese, often older adults or recent immigrants, and English-speaking coworkers who rely on them to bridge the gap. Cultural sense, such as polite forms of address, matters as much as vocabulary."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a Chinese speaking worker do day to day?",
+    "a": "It depends on the main job. A bank teller or sales rep does the usual tasks but handles Chinese-speaking customers. A call center agent takes calls in Mandarin or Cantonese. An interpreter or translator converts meaning between Chinese and English. Most spend the day explaining details clearly, answering questions, and keeping notes or records in English."
+   },
+   {
+    "q": "What is the difference between Mandarin and Cantonese jobs?",
+    "a": "Mandarin is the official language of mainland China and Taiwan and is the more common request. Cantonese is spoken in Guangdong, Hong Kong, Macau and many older US Chinatowns. The spoken forms are not mutually understandable, so employers hire for the one their customers use. Written Chinese is largely shared, though character sets differ."
    }
   ]
  },
@@ -2141,6 +2243,40 @@
    }
   ]
  },
+ "compensation-benefits": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They build and maintain pay grades and salary ranges, price jobs against salary survey data, and run bonus and stock plans. They also manage health, retirement and leave benefits, and they check pay across groups for unexplained gaps."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day might mean reviewing offers and raises and recommending amounts within set guidelines, answering employee questions about benefits, and fixing enrollment problems with a carrier. They also run spreadsheet analyses for budget or annual review cycles."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work closely with recruiters, hiring managers, HR business partners, payroll and finance. Outside the company, they deal with insurance brokers, benefits carriers, retirement plan administrators and salary survey providers. Leaders and finance usually hold final approval on pay decisions."
+   },
+   {
+    "label": "Rules they follow",
+    "text": "They apply federal laws such as the Fair Labor Standards Act for overtime classification, the Equal Pay Act, ERISA for most private employer plans, COBRA and HIPAA privacy rules. Pay transparency and salary history rules vary by state and sometimes by city."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Spreadsheets are the core tool, along with HR information systems, payroll software, benefits administration platforms and compensation survey databases. Many also use equity management software to track stock grants and vesting schedules."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a compensation and benefits specialist do day to day?",
+    "a": "They research market pay, place jobs in salary ranges, and review offers and raises to recommend amounts within guidelines. They help run open enrollment, answer benefits questions, work with carriers and brokers, and prepare reports for leaders who approve budgets. Much of the work is data analysis and checking that pay and plans follow the law."
+   },
+   {
+    "q": "What is the difference between compensation and benefits?",
+    "a": "Compensation is direct pay: base salary or hourly wages, bonuses, commissions and stock awards. Benefits are the other rewards of a job, such as health insurance, retirement plans like a 401(k), paid time off, and life or disability insurance. Smaller employers often have one person handle both, while larger ones usually split them into separate teams."
+   }
+  ]
+ },
  "compliance": {
   "day": [
    {
@@ -2277,6 +2413,40 @@
    }
   ]
  },
+ "construction-manager": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Builds and tracks the project budget and schedule, awards and manages subcontracts, prices and negotiates change orders, coordinates permits and inspections, and leads closeout and handover to the owner. Who pulls permits depends on the contract and local rules."
+   },
+   {
+    "label": "A typical day",
+    "text": "Often starts with a site walk or a call with the superintendent. Then reviews submittals, logs RFIs and routes design questions to the architect or engineer, updates the schedule, checks costs against budget, and runs owner or subcontractor meetings."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Owners and their representatives, architects, engineers, the site superintendent, subcontractors, suppliers, building inspectors, and in-house estimators, schedulers and accountants. Much of the job is keeping all of these groups informed and moving in the same direction."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Scheduling software for critical path schedules, construction project management platforms, spreadsheets, drawings and specifications, cost reports, daily logs, meeting minutes, change order logs and punch lists. A phone and email inbox that rarely go quiet."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Finishing on time and within budget, a strong safety record, quality work that passes inspection, few unresolved disputes, and a clean closeout with warranties, as-built drawings and operation manuals delivered to the owner."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a construction project manager do day to day?",
+    "a": "They keep a building project on track. A day mixes site visits, schedule updates, cost checks and meetings. They review submittals, track RFIs and send design questions to the architect or engineer, price change orders, and follow up with subcontractors. They also coordinate inspections and keep the owner informed about progress and risks."
+   },
+   {
+    "q": "What is the difference between a construction project manager and a superintendent?",
+    "a": "The superintendent runs the field each day: crews, work sequence, site safety and quality. The project manager runs the business side: contracts, budget, schedule, change orders, paperwork and owner communication. The superintendent is usually on site full time. The project manager splits time between the office and the site. They work as a team."
+   }
+  ]
+ },
  "consulting": {
   "day": [
    {
@@ -2410,6 +2580,40 @@
    {
     "q": "What is the difference between a contract manager and a contract attorney?",
     "a": "A contract attorney is a licensed lawyer who can give legal advice. A contract manager usually does not need a law license and focuses on the business side: drafting from templates, negotiating terms and tracking performance. Many contract managers escalate complex legal questions to attorneys. Some contract managers do have law degrees, but it is not required."
+   }
+  ]
+ },
+ "controller": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Oversees the general ledger, the monthly and year-end close, account reconciliations and the financial statements. Designs and tests internal controls, leads the accounting staff and makes sure the books follow generally accepted accounting principles (GAAP)."
+   },
+   {
+    "label": "A typical day",
+    "text": "Early in the month is close season: reviewing journal entries, accruals and reconciliations, then checking the statements before they reach leadership. Later weeks go to variance analysis, budget support, audit requests and fixing weak spots in accounting processes."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Reports to the CFO or owner and leads staff accountants plus payables, receivables and payroll teams. Works with outside auditors, tax advisers and bankers, and with department heads who need budget and spending numbers."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Accounting or ERP software, spreadsheets, reconciliation and close-checklist tools, and reporting dashboards. Written policies for approvals, access rights and segregation of duties are just as important as the software."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Accurate statements delivered on time, audits with few adjustments, and controls that catch errors and prevent fraud. At public companies, the work also supports management’s required assessment of internal control over financial reporting under the Sarbanes-Oxley Act."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a financial controller do day to day?",
+    "a": "A controller reviews and approves journal entries, checks reconciliations, answers questions from the accounting team and keeps the close on schedule. They prepare or review financial statements, explain results to leadership, respond to auditors and improve processes and controls. The first days of each month are usually the busiest, since the close has a firm deadline."
+   },
+   {
+    "q": "What is the difference between a controller and a CFO?",
+    "a": "A controller focuses on the accuracy of the numbers: the books, the close, controls and financial reporting. A CFO looks ahead, handling strategy, financing, cash planning and relationships with investors and lenders. The controller often reports to the CFO. At smaller companies, one person may cover parts of both roles."
    }
   ]
  },
@@ -3229,6 +3433,40 @@
    }
   ]
  },
+ "delivery-driver": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Delivery drivers and couriers load their vehicle, follow a route, and bring parcels, groceries or meals to homes and businesses. They scan each item, take a photo or signature as proof, handle returns, and report damaged or missing items. Food couriers also keep orders hot or cold in insulated bags."
+   },
+   {
+    "label": "A typical day",
+    "text": "Parcel drivers often start early at a warehouse or delivery station, load packages in stop order, and work through dozens of stops before returning the vehicle. App couriers log in when they choose, accept order offers, pick up from restaurants or stores, and may wait between orders during slow hours."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "The job runs on a handheld scanner or smartphone app with GPS routing. Drivers use a van, car, bike or e-bike, plus a hand truck for heavy loads. Many delivery vans have cameras and telematics that record speed, braking and seat belt use, and app couriers are tracked by GPS during each shift."
+   },
+   {
+    "label": "Licenses and requirements",
+    "text": "Most car and van routes require a valid driver’s license and a clean driving record. Some jobs need more: a CDL for heavy trucks or placarded hazardous materials, and a DOT medical card for vehicles of 10,001 pounds or more in interstate commerce. Rules for bike couriers vary by city and state."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Employers and apps track on-time deliveries, completed stops, scan accuracy, and safe driving. Customer ratings and complaints also count, especially for meal and grocery couriers. Lost packages, missed delivery windows, or accidents can affect a driver’s route, hours, or access to the app."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is being a delivery driver a stressful job?",
+    "a": "It can be. Drivers face tight delivery windows, traffic, parking problems, bad weather, and loose dogs. Parcel routes involve lifting, climbing stairs, and many stops per hour. Routes and driving are closely tracked by GPS and often cameras. Many people still like spending most of the day on the road rather than in an office or store."
+   },
+   {
+    "q": "What is the difference between a company delivery driver and an app courier?",
+    "a": "Company drivers are usually employees with a set schedule, an assigned vehicle or route, and a paycheck from the employer. App couriers are usually independent contractors who use their own car or bike, pay for fuel and upkeep, and choose their hours. Worker classification rules and protections vary by state."
+   }
+  ]
+ },
  "demand-generation": {
   "day": [
    {
@@ -3637,6 +3875,40 @@
    }
   ]
  },
+ "education": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They plan lessons, teach live or recorded classes, and grade student work. Many also write course content, build quizzes and practice activities, and turn learning goals into clear, step-by-step materials for online courses or education products."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day might mix teaching a video class, answering student questions on a discussion board, and giving feedback on assignments. Course builders may spend hours drafting a module, scripting a video, or revising lessons after reviewing learner results."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include learning management systems, video meeting software, screen recording and editing programs, slide decks, and course authoring tools. Shared documents, gradebooks, and online quiz builders are used almost every day."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with students and often parents, plus subject matter experts, editors, video producers, and other teachers. In education companies, they may also work with product managers and engineers who build the learning platform."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Success is judged by whether learners actually learn. Employers look at test and quiz results, course completion, student feedback, and how accurate, clear, and engaging the materials are. Meeting content deadlines also matters for course builders."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a teacher and an instructional designer?",
+    "a": "A teacher works directly with students, delivering lessons, answering questions, and grading work. An instructional designer plans and builds the course itself, deciding learning goals, the order of lessons, activities, and assessments. Designers often never meet the learners. Many people in education do both, especially in online courses."
+   },
+   {
+    "q": "Do you need a teaching license to teach online?",
+    "a": "It depends on the job. Many public K-12 schools require a state teaching license, but rules vary by state, some charter schools are exempt, and emergency or alternative permits exist. Tutoring platforms, private education companies, and adult or corporate training usually set their own requirements, often a degree and subject knowledge."
+   }
+  ]
+ },
  "ehs": {
   "day": [
    {
@@ -3668,6 +3940,40 @@
    {
     "q": "Is EHS a stressful job?",
     "a": "It can be. Serious injuries, spills, and surprise agency inspections bring pressure and long days. EHS staff must also push for safety when production schedules are tight, which takes tact. Many find the work rewarding because it protects people, and routine tasks like training and audits balance out the urgent moments."
+   }
+  ]
+ },
+ "electrical-engineer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Electrical engineers design and test electrical systems. They plan power distribution, size wiring and protection, choose batteries and chargers, and lay out circuit boards or radio parts. They write specs, run calculations, review drawings and fix problems found in testing or in the field."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day often mixes desk work and lab or site time. An engineer might run load or circuit calculations, update a schematic, check a prototype with test gear, answer questions from builders or technicians, and join a design review with other engineers."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "They use computer-aided design software for schematics and building drawings, circuit simulation, and circuit board layout tools. In the lab they rely on multimeters, oscilloscopes, power supplies, spectrum analyzers and battery testers. Building work follows the National Electrical Code as adopted by each state or city."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with mechanical and software engineers, drafters, technicians, project managers and electricians. On building and utility projects they deal with architects, contractors and code inspectors. In product work they talk with manufacturing teams, suppliers and test labs."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on safety, code compliance, reliability, cost and schedule. Only a licensed Professional Engineer can seal engineering drawings, and the license comes from each state. Many building and utility jobs need sealed drawings, so those roles often ask for a PE or a path to one."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an electrical engineer do day to day?",
+    "a": "Most days involve design and problem solving. An electrical engineer runs calculations, draws schematics or wiring plans, picks parts like breakers, batteries or radio components, and tests prototypes. They also review others’ work, answer questions from technicians or contractors, and write reports. Some roles add site visits to check installations or troubleshoot equipment."
+   },
+   {
+    "q": "What is the difference between an electrical engineer and an electrician?",
+    "a": "An electrical engineer designs systems and usually holds a bachelor’s degree in electrical engineering. An electrician installs, maintains and repairs wiring and equipment, often following an engineer’s plans. Electricians usually train through apprenticeships and need a license, with rules that vary by state and sometimes by city. Engineers who seal drawings need a state Professional Engineer license."
    }
   ]
  },
@@ -4385,6 +4691,40 @@
    }
   ]
  },
+ "fellowship-residency": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Fellows and residents do real project work inside a host organization, such as a research lab, government office, nonprofit, or university. Tasks can include collecting and analyzing data, drafting reports or policy memos, supporting programs, and presenting findings, while also learning the field through structured training."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day often mixes focused project work with meetings. Fellows check in with a mentor, join team meetings, and attend seminars or skill workshops. Many programs add cohort events, site visits, or guest speakers so participants build a network as well as experience."
+   },
+   {
+    "label": "Who they work with",
+    "text": "The closest working tie is usually a mentor or supervisor who guides the project. Fellows also work with project teams, a program coordinator, and fellow members of their cohort. Depending on the role, they may deal with community members, agency staff, or outside researchers."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Many programs set goals at the start and review progress with the mentor during the term. Completion often depends on a final product, such as a report, presentation, publication, or capstone project. Feedback from supervisors can also shape references for the next job."
+   },
+   {
+    "label": "Terms of the program",
+    "text": "These roles last a fixed term, often a few months to two years, and usually start on a set date with a cohort. Pay may come as a salary or a stipend, and benefits and employee status vary by program."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a fellow do day to day?",
+    "a": "Most of the day goes to an assigned project, such as research, data analysis, program support, or policy writing. Fellows also meet with mentors, join team meetings, attend training sessions, and share progress with their cohort. Near the end of the term, many present a final report or project that sums up what they built or learned."
+   },
+   {
+    "q": "What is the difference between a fellowship and a residency?",
+    "a": "Usage varies by field. In medicine, residency is the graduate training doctors complete after medical school in a chosen specialty, and a fellowship is optional further training in a subspecialty after residency. Outside medicine, a fellowship is often a funded research or public service role, while a residency often places an artist, writer, or professional at a host site for a set time."
+   }
+  ]
+ },
  "field-marketing": {
   "day": [
    {
@@ -4759,6 +5099,40 @@
    }
   ]
  },
+ "founders-office": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Takes on whatever the founder needs most right now, such as running a product launch, filling key hires, preparing fundraising materials, or fixing a broken process. Priorities change whenever the founder’s needs change, not on a set schedule."
+   },
+   {
+    "label": "A typical day",
+    "text": "Often starts with a check-in with the founder on what matters most. The rest of the day moves between meetings, analysis, writing memos, chasing open items across teams, and preparing materials for board or investor meetings."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Works closely with the founder or CEO, plus department heads, finance, and recruiting. Depending on the project, they may also deal with investors, board members, outside advisors, and key customers or partners."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Spreadsheets for financial models and tracking, slide decks for investor and board updates, project management tools, shared documents, and team chat. Clear writing and short, sharp summaries matter as much as any software."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "By whether projects ship and goals are met, how much time the founder gets back, and how well the person earns trust across teams while handling confidential information with discretion."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does someone in a founder’s office role do day to day?",
+    "a": "They work on the founder’s current top priorities. One day might mean building a hiring plan, the next might mean drafting an investor update or coordinating a launch across teams. They run meetings, analyze data, write memos, follow up on decisions, and step in wherever a project is stuck. The mix changes as the company’s needs change."
+   },
+   {
+    "q": "What is the difference between a chief of staff and a founder’s office role?",
+    "a": "Titles overlap and vary by company. A chief of staff is often a more senior role that manages the leadership team’s meetings, goals, and communication, and may lead a small team. Founder’s office roles, common at startups, are often more project based and can suit earlier career people who want broad exposure to how a company is built."
+   }
+  ]
+ },
  "founding-team": {
   "day": [
    {
@@ -4994,6 +5368,40 @@
    {
     "q": "Do you need a degree or license to be a frontend engineer?",
     "a": "No license is required in any state. Many employers list a bachelor’s degree in computer science or a related field, but plenty hire based on skills shown through a portfolio, code samples and technical interviews. Bootcamp graduates and self-taught developers also work in this field."
+   }
+  ]
+ },
+ "full-stack-engineer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Full-stack engineers build features from end to end. They write the screens and forms users touch, the APIs behind them, and the database queries that store and fetch data. They also fix bugs, review code and ship updates."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day often starts with a short team standup. Then comes coding a feature, writing tests, reviewing a teammate’s pull request and checking why a page loads slowly. Some days include a planning meeting or helping fix a problem in production."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include HTML, CSS and JavaScript or TypeScript for the browser, plus a front-end framework. On the server, they use languages such as Python, Java, Go or JavaScript running on Node.js. They also rely on Git, SQL databases, cloud services and a code editor."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work closely with product managers, designers and other engineers. They may also talk with quality testers, data teams and support staff who report bugs from customers. On small teams, they often handle tasks that larger companies split among specialists."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged by whether features ship on time, work correctly and stay reliable. Teams also look at code quality, test coverage, page speed, security and how easily others can read and maintain the code."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a full-stack engineer do day to day?",
+    "a": "A full-stack engineer builds and maintains both the user-facing part of an app and the server and database behind it. Daily work usually mixes writing code, testing it, reviewing others’ code, fixing bugs and joining short team meetings to plan and track progress."
+   },
+   {
+    "q": "What is the difference between a full-stack engineer and a back-end engineer?",
+    "a": "A back-end engineer focuses on servers, APIs, databases and system performance. A full-stack engineer covers that work too, but also builds the front end that users see in the browser or app. Full-stack roles trade some depth in one area for breadth across the whole product."
    }
   ]
  },
@@ -5470,6 +5878,40 @@
    {
     "q": "What is the difference between a graphics engineer and a technical artist?",
     "a": "A graphics engineer builds the rendering engine itself. That means low-level GPU code, graphics APIs, and core shaders. A technical artist bridges art and engineering. They make art tools, material setups, and asset pipelines, and they help artists stay within performance limits. The roles overlap, but engineers usually need deeper programming and math skills."
+   }
+  ]
+ },
+ "grocery-associate": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Grocery store associates stock shelves, coolers and freezers, rotate older products to the front, check dates and pull expired items. They face shelves so labels line up, set out sale tags, help shoppers find products, and may bag orders or run a register when lines get long."
+   },
+   {
+    "label": "A typical day",
+    "text": "Many shifts start early or overnight, unloading the delivery truck and working pallets onto the floor. Later hours bring serving at the deli or bakery counter, weighing and slicing orders, restocking busy aisles and answering questions. Closing shifts include cleaning, recovering messy shelves and returning items left in the wrong place."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Associates use handheld scanners, price guns, box cutters, carts and manual pallet jacks. Counter staff use scales, label printers and slicers. Federal child labor rules bar workers under 18 from operating power-driven meat slicers, so younger associates are kept to other tasks."
+   },
+   {
+    "label": "Food and age rules",
+    "text": "At deli and bakery counters, workers wear hair restraints and avoid bare-hand contact with ready-to-eat food, using gloves, tongs or deli paper, under their state’s food code. Where stores sell beer or wine, associates check ID, and states set their own minimum age for clerks who make alcohol sales."
+   },
+   {
+    "label": "Where they work",
+    "text": "They work in supermarkets, neighborhood grocers, warehouse clubs and natural food stores, often in one department such as produce, dairy, frozen, meat, deli or bakery. The job means hours on their feet, regular lifting, and time inside walk-in coolers and freezers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a grocery store associate do day to day?",
+    "a": "They keep the store full and easy to shop. That means unloading deliveries, stocking and rotating products, checking dates, and tidying shelves. They also help customers find items, serve at deli or bakery counters, bag groceries, and clean their area. Tasks depend on the department and shift, with overnight crews focused on stocking and day crews on customers."
+   },
+   {
+    "q": "What is the difference between a grocery store associate and a cashier?",
+    "a": "A cashier mainly works the register, scanning items, taking payment and bagging orders. A grocery store associate has a wider role across the store, stocking shelves, working counters and helping shoppers on the floor. In many stores the jobs overlap, and associates are trained to cover a register when checkout gets busy."
    }
   ]
  },
@@ -6255,6 +6697,74 @@
    }
   ]
  },
+ "indonesian-speaking": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They use Indonesian or Malay to help customers, translate documents, interpret conversations, or review content. Common roles include customer support, sales, localization, content moderation, and interpreting in hospitals, courts, or community settings."
+   },
+   {
+    "label": "A typical day",
+    "text": "A support agent answers chats, emails, and calls in the customer’s language and logs each case. Indonesia and Malaysia are many hours ahead of the continental US, so many roles involve early morning, evening, or overnight shifts."
+   },
+   {
+    "label": "Language skills that count",
+    "text": "Indonesian and Malay are closely related and largely understood by each other’s speakers. They still differ in vocabulary, some spelling, and everyday phrasing. Employers often ask which one you speak natively and expect strong English as well."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Workers use ticketing and chat systems, call software, shared glossaries, and style guides. Translators often use computer-assisted translation tools. Remote interpreters work over phone or video platforms with a headset and a quiet space."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Accuracy, clear tone, and response time matter most. Support teams track customer satisfaction and quality reviews. Court interpreter credentials are set by each state, and healthcare interpreter requirements vary by state and employer."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an Indonesian and Malay speaking worker do day to day?",
+    "a": "Most spend the day talking with or writing for people who use Indonesian or Malay. That can mean solving customer problems, translating product text, interpreting for patients or clients, or checking content for accuracy. They switch between English and the target language, follow company glossaries, and record their work in shared systems."
+   },
+   {
+    "q": "What is the difference between Indonesian and Malay?",
+    "a": "Both come from the same Malay language. Indonesian is the national language of Indonesia, while Malay is official in Malaysia, Brunei, and Singapore. Speakers usually understand each other, but vocabulary, some spelling, and borrowed words differ. Indonesian has more Dutch loanwords, and Malaysian Malay has more English ones, so employers may want one variety specifically."
+   }
+  ]
+ },
+ "industry-marketing": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They turn a company’s offerings, often several products bundled together, into solutions for one or more target industries or audiences. They write messaging, build use cases, plan campaigns and give sales teams pitch decks and talking points in the buyer’s own language."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day might start with a sales call about a banking prospect, then move to editing a solution brief. Later they might review a webinar script for developers and check how a campaign aimed at startups is performing."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work closely with product marketing, product management, sales, partner teams and content writers. They also talk with customers and industry experts to learn the rules, workflows and terms that matter in each vertical."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include a CRM, marketing automation software, slide and design apps, and analytics dashboards. Many also rely on industry reports, analyst briefings and customer interview notes to keep their messaging accurate and current."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Success is often measured by pipeline and revenue influenced in target segments, win rates, campaign results and how much sales teams use the materials. Strong customer stories and positive analyst coverage also count."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an industry and solutions marketing manager do day to day?",
+    "a": "They study the problems of a target industry or audience, then show how the company’s products solve them. Most days mix writing solution briefs and case studies, coaching sales teams, planning events or webinars, meeting customers and partners, and reviewing campaign results for each segment they cover."
+   },
+   {
+    "q": "What is the difference between product marketing and industry marketing?",
+    "a": "Product marketing starts from a product: its features, positioning and launches for all buyers. Industry or solutions marketing starts from a market segment, such as healthcare or developers, and shows how one or more products solve that segment’s needs. Titles and scope vary by company, and the two roles often overlap."
+   }
+  ]
+ },
  "industry-specialist": {
   "day": [
    {
@@ -6592,6 +7102,40 @@
    {
     "q": "What is the difference between a SOX specialist and an external auditor?",
     "a": "A SOX specialist works for the company or a consulting firm. They help management design, document and test controls for its own assessment under Section 404(a). The external auditor works for an independent firm registered with the PCAOB. For larger public companies, that auditor gives a separate opinion on the controls under Section 404(b) and must stay independent of management."
+   }
+  ]
+ },
+ "inventory-specialist": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Counts stock by hand or with scanners, runs scheduled cycle counts, compares the counts with the inventory system, investigates any gaps, and corrects records once the cause of a discrepancy is found or approved."
+   },
+   {
+    "label": "A typical day",
+    "text": "Starts with a list of bins or aisles to count, scans shelves, checks receiving and shipping paperwork, tracks down mismatched items, and updates the system before the shift ends. Busy days add full physical inventories or audit prep."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Handheld barcode scanners, inventory or warehouse management software, spreadsheets and label printers. Some roles also use forklifts or powered pallet jacks, and OSHA requires employers to train and evaluate anyone who operates that powered equipment."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Receiving and shipping crews, warehouse or store supervisors, purchasing staff and accounting teams. Each group depends on accurate counts to place orders, fill customer requests and keep financial records correct."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "By inventory accuracy, how fast discrepancies get resolved, shrink trends and clean audit results. Bad records lead to stockouts, overordering and wrong numbers in financial reports, so attention to detail matters most."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an inventory specialist do day to day?",
+    "a": "They count stock in assigned locations, compare the counts with what the system says, and look into anything that does not match. That can mean checking receiving logs, finding misplaced items or spotting damage and theft. They then fix records, report problems to supervisors and help prepare for audits or full physical counts."
+   },
+   {
+    "q": "What is the difference between an inventory specialist and a stock clerk?",
+    "a": "A stock clerk mostly moves goods: unloading, unpacking and shelving items. An inventory specialist focuses on the records: counting, reconciling the system with the shelves and explaining discrepancies. Titles vary by employer, and in smaller workplaces one person often does both jobs."
    }
   ]
  },
@@ -7513,6 +8057,40 @@
    }
   ]
  },
+ "maintenance-technician": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Maintenance technicians inspect, lubricate and adjust equipment on a set schedule. They troubleshoot breakdowns and replace worn parts such as belts, bearings, filters and motors. They also fix leaks, lighting, doors and fixtures, and record each job on a work order."
+   },
+   {
+    "label": "A typical day",
+    "text": "The day often starts with a list of work orders and planned preventive maintenance. Technicians walk rounds of the building or production line and check gauges and noises. Urgent calls interrupt the plan. The shift ends with logging parts, time and notes."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "They use hand and power tools, multimeters, pipe wrenches, grease guns, ladders and lifts. Many log work in a computerized maintenance management system on a tablet or phone. Equipment manuals, wiring diagrams and parts catalogs guide repairs."
+   },
+   {
+    "label": "Where they work",
+    "text": "They work in factories, warehouses, apartment complexes, hotels, hospitals, schools and office buildings. The work is physical, with lifting, climbing and kneeling in tight spaces. Many jobs include on-call nights, weekends or holiday shifts."
+   },
+   {
+    "label": "Safety and licensing rules",
+    "text": "In general industry, OSHA requires lockout/tagout before servicing machines that could start up or release energy. Those who service stationary cooling equipment in ways that could release refrigerant need EPA Section 608 certification. Electrical and plumbing license rules vary by state."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a maintenance technician do day to day?",
+    "a": "A maintenance technician works through work orders and scheduled checks. That means oiling and adjusting machines, changing filters, testing electrical parts and fixing leaks. When something breaks, they find the cause, swap or repair the part and get it running again. They keep records so problems can be spotted before the next breakdown."
+   },
+   {
+    "q": "What is the difference between a maintenance technician and a handyman?",
+    "a": "A maintenance technician usually works for one employer, such as a plant or property, and cares for its machines and building systems through planned and emergency repairs. A handyman usually does small repair jobs for many customers, often as a small business. Some states require a contractor license for jobs above a set size, so rules vary by state."
+   }
+  ]
+ },
  "manufacturing": {
   "day": [
    {
@@ -8295,6 +8873,40 @@
    }
   ]
  },
+ "nursing": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Nurses assess patients, give medications and treatments, check vital signs, and record care in the health record. They watch for changes, alert the provider when a patient gets worse, and teach patients and families how to manage care at home."
+   },
+   {
+    "label": "A typical day",
+    "text": "Hospital shifts often run 8 or 12 hours, including nights, weekends and holidays. A shift starts with a handoff report, then moves through patient checks, medication passes, charting, admissions and discharges, and ends with a report to the next nurse."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Nurses work with physicians, nurse practitioners, physician assistants, pharmacists, therapists, case managers and social workers. RNs may delegate tasks to licensed practical nurses and nursing assistants, within limits set by each state’s nurse practice act."
+   },
+   {
+    "label": "Where they work",
+    "text": "Nurses work in hospitals, nursing homes, clinics, schools, home health and telehealth services. Telehealth nurses triage patients by phone or video and generally need a license that is valid in the state where the patient is located."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Daily tools include electronic health records, IV pumps, cardiac monitors, glucose meters, barcode medication scanners and video visit software. Nurses also follow written care plans, facility protocols and provider orders."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a nurse do day to day?",
+    "a": "A nurse checks on assigned patients, gives medications and treatments, tracks symptoms and vital signs, and documents everything in the chart. Nurses coordinate with doctors and other staff, answer patient and family questions, prepare people for discharge, and act fast when a patient’s condition changes. The exact mix depends on the setting and the nurse’s license."
+   },
+   {
+    "q": "What is the difference between an RN and an LPN?",
+    "a": "An LPN, called an LVN in California and Texas, finishes a state-approved practical nursing program and passes the NCLEX-PN. An RN finishes an approved diploma, associate, bachelor’s or direct-entry master’s program and passes the NCLEX-RN. RNs have a broader scope, including care planning and complex assessment. LPN scope varies by state."
+   }
+  ]
+ },
  "observability-engineer": {
   "day": [
    {
@@ -8428,6 +9040,74 @@
    {
     "q": "What is the difference between an operations manager and a general manager?",
     "a": "An operations manager focuses on how the work gets done: processes, staff, suppliers and costs. A general manager usually has wider responsibility, including sales, strategy and overall profit for a business or location. In smaller companies, one person may hold both roles, and titles vary by employer."
+   }
+  ]
+ },
+ "operators": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Operators and drivers run equipment such as forklifts, buses, delivery trucks, production machines, cranes or plant control panels. They start up, watch and shut down equipment, follow safety checks, log readings or trips, and report problems before they turn into breakdowns."
+   },
+   {
+    "label": "A typical day",
+    "text": "A shift often starts with a pre-use inspection of the vehicle or machine and a handoff from the previous crew. Then comes steady running: loading, driving routes, adjusting settings or watching gauges. The shift ends with logs, cleanup and notes for the next person."
+   },
+   {
+    "label": "Where they work",
+    "text": "Warehouses, factories, construction sites, ports, transit agencies, water and power plants, and delivery routes. Many jobs run around the clock, so nights, weekends, rotating shifts and overtime are common. Drivers may spend most of the day alone in a cab."
+   },
+   {
+    "label": "Licenses and training",
+    "text": "Driving a heavy truck or a bus, or hauling placarded hazardous materials, needs a commercial driver’s license issued by a state under federal rules. Forklift operators must be trained and evaluated by their employer under OSHA rules. Most construction crane operators need nationally accredited certification. Water treatment operator licenses are set by each state."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Safety comes first: no crashes, injuries or spills. After that, on-time runs, output, uptime, fuel use and accurate logs matter. Commercial drivers also face federal drug and alcohol testing and hours-of-service limits on how long they can drive."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an operator do day to day?",
+    "a": "An operator checks a machine, vehicle or control system before use, then runs it through the shift. That can mean moving loads, driving a route, feeding a production line or watching plant readings. They follow safety rules, spot warning signs, fix small issues or call maintenance, and record what happened so the next shift can pick up smoothly."
+   },
+   {
+    "q": "Is operator and driver work a stressful job?",
+    "a": "It can be. Stress comes from tight schedules, traffic, long or overnight shifts, and the need to stay alert around heavy equipment where one mistake can hurt someone. Many people like that the work is hands-on and ends when the shift ends. Good training, steady routines and clear safety rules help lower the pressure."
+   }
+  ]
+ },
+ "optics": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Optics and photonics engineers design lens systems, lasers, fiber links and light sensors. They model how light moves through a design, choose glass, coatings and detectors, set tolerances, and test prototypes to confirm they meet targets for sharpness, power and noise."
+   },
+   {
+    "label": "A typical day",
+    "text": "Part of the day often goes to running ray-trace or wave-optics simulations and checking the results. The rest may be spent aligning parts on an optical table, measuring a prototype, writing a test report, or meeting other engineers about fit, heat and cost."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Optical design and simulation software, interferometers, spectrometers, beam profilers, power meters and oscilloscopes. Lab work happens on vibration-isolated optical tables, sometimes in cleanrooms. Laser labs follow strict safety rules, including eyewear rated for the laser’s wavelength and power."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Mechanical engineers who design mounts and housings, electrical engineers who handle detectors and drivers, software teams who process images and signals, technicians who build and align assemblies, and outside suppliers who make lenses and apply coatings."
+   },
+   {
+    "label": "Where they work",
+    "text": "Makers of cameras, phones, medical imaging devices, chipmaking equipment, fiber networks, lidar, satellites and defense systems, plus government and university labs. Some defense roles need a security clearance, which generally requires US citizenship."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does an optics and photonics engineer do day to day?",
+    "a": "They split time between computer and lab. On screen, they simulate how light passes through lenses, fibers or sensors and adjust the design. In the lab, they align optics, measure prototypes and track down problems like blur, stray light or power loss. They also write specs and reports and work closely with mechanical, electrical and software engineers."
+   },
+   {
+    "q": "What is the difference between optics and photonics?",
+    "a": "Optics is the broad study of light and how lenses, mirrors and prisms shape it. Photonics focuses on making, controlling and detecting light in devices such as lasers, optical fiber, LEDs and photodetectors. The two fields overlap heavily, and many job postings use both words for the same role."
    }
   ]
  },
@@ -9825,6 +10505,40 @@
    }
   ]
  },
+ "public-sector-sales": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They find buying opportunities at government agencies, schools, universities and other public bodies. They build relationships with buyers and end users, respond to formal solicitations such as RFPs and RFQs, price offers within the rules, and manage contract renewals and expansions."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day often starts with checking bid portals and agency websites for new solicitations. Then come calls with agency staff, proposal work with internal teams, tracking question deadlines and pre-bid meetings, and updating the sales pipeline in a CRM."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Outside the company, they deal with procurement officers, department heads, IT directors, school administrators and evaluation committees. Inside, they work with proposal writers, contracts and legal staff, pricing teams, and sometimes resellers or channel partners who hold public contracts."
+   },
+   {
+    "label": "Rules they must follow",
+    "text": "Gift and meal rules for public employees are strict. Many solicitations name one contact and limit talks with others while the bid is open. Proposals can become public records. Lobbying registration rules vary by state and city, and federal awards generally require SAM.gov registration."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Success is usually measured by revenue against quota, pipeline size, win rate on bids and contract renewals. Sales cycles are long and tied to budgets, so timing matters. The federal fiscal year starts October 1, while many states start July 1."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a public sector sales rep do day to day?",
+    "a": "They watch for new bids, meet with agency staff to learn their needs, and help write proposals that answer every requirement in a solicitation. They track deadlines, answer buyer questions through the official contact, follow ethics rules, and keep current customers happy so contracts get renewed or expanded."
+   },
+   {
+    "q": "What is the difference between public sector sales and private sector sales?",
+    "a": "Public buyers spend taxpayer money, so they follow written purchasing rules. Larger purchases often need formal competition, with awards based on price or best value. Bids can become public records, and losing vendors may protest. Some agencies use cooperative or schedule contracts, but rules on when they apply vary. Private buyers can usually choose vendors more freely and quickly."
+   }
+  ]
+ },
  "python-developer": {
   "day": [
    {
@@ -10128,6 +10842,40 @@
    {
     "q": "What is the difference between a recruiting coordinator and a recruiter?",
     "a": "A recruiter finds and evaluates candidates. They source applicants, conduct screens, and often negotiate offers. A recruiting coordinator handles the logistics behind that work, such as scheduling, communication, and paperwork. Many recruiters start as coordinators, since the role teaches how hiring works from the inside."
+   }
+  ]
+ },
+ "recruiting-operations": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They set up and maintain the applicant tracking system, keep candidate data clean, build hiring reports, and manage job approval and offer letter workflows. They also run vendor accounts such as background check and assessment providers, and keep job postings accurate for the teams that own employer brand."
+   },
+   {
+    "label": "A typical day",
+    "text": "A morning might start with fixing a broken interview scheduling link, then pulling a weekly pipeline report for hiring managers. Afternoons often go to updating an approval workflow, answering recruiter questions about the system, and testing a new integration before it goes live."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work most closely with recruiters, recruiting coordinators and hiring managers. They also partner with HR and HRIS staff, IT, legal, finance on headcount, outside vendors, and any employer brand or marketing team that owns careers content."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "The core tool is the applicant tracking system, often paired with a candidate relationship management tool, the HR information system, interview scheduling software, e-signature tools, background check portals, spreadsheets and reporting dashboards."
+   },
+   {
+    "label": "Rules built into the process",
+    "text": "They help build hiring steps that follow the law, such as the federal Fair Credit Reporting Act’s written disclosure and consent before a background check. Pay range disclosure in job ads, salary history bans and fair chance rules vary by state and city, so setups differ by location."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a recruiting operations specialist do day to day?",
+    "a": "They keep the hiring machinery running. That means fixing and improving the applicant tracking system, cleaning candidate data, building reports on pipeline and time to fill, updating templates and approval workflows, managing vendors, and training recruiters on tools and process. They rarely interview candidates themselves. Their goal is a hiring process that is fast, consistent and compliant."
+   },
+   {
+    "q": "What is the difference between a recruiting operations specialist and a recruiter?",
+    "a": "A recruiter works directly with candidates and hiring managers to fill open roles: sourcing, screening, interviewing and closing offers. A recruiting operations specialist builds and maintains the systems, data and processes that recruiters use, and usually does not own open roles. At smaller companies, one person may handle parts of both jobs."
    }
   ]
  },
@@ -11831,6 +12579,40 @@
    }
   ]
  },
+ "strategic-sourcing": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Analyze what the company spends in each category, find and vet possible suppliers, run requests for proposal, negotiate multi-year contracts, and then track whether suppliers meet the agreed price, quality and delivery terms."
+   },
+   {
+    "label": "A typical day",
+    "text": "Reviewing spend reports, drafting or scoring a request for proposal, holding a negotiation call with a supplier, meeting internal teams about upcoming needs, and checking which contracts are due for renewal or rebid."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Engineering, operations, quality, finance and legal teams inside the company, plus buyers who place orders and account managers at supplier firms. Senior leaders often sign off on large contract awards."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Spend analysis software, e-sourcing platforms for bids and reverse auctions, contract management systems, the company’s ERP system, spreadsheets for cost models, and supplier scorecards that track performance over time."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "By savings against a baseline, total cost of ownership, supplier on-time delivery and quality, lower supply risk, how much spend runs through approved contracts, and how satisfied internal teams are with suppliers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a strategic sourcing manager do day to day?",
+    "a": "They study company spending, decide which goods and services to put out for bid, and compare supplier offers on cost, quality and risk. They negotiate contract terms, work with legal on contract language, and hold regular reviews with key suppliers to fix problems and find further savings."
+   },
+   {
+    "q": "What is the difference between strategic sourcing and purchasing?",
+    "a": "Strategic sourcing decides which suppliers to use and sets long-term contract terms. Purchasing handles routine buying under those contracts, such as issuing purchase orders and following up on late deliveries. Paying the invoices is usually done separately by accounts payable in finance, which keeps payment apart from ordering as a basic control."
+   }
+  ]
+ },
  "structural-engineer": {
   "day": [
    {
@@ -12409,6 +13191,40 @@
    }
   ]
  },
+ "technical-recruiter": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Technical recruiters fill software, data and other engineering roles. They meet hiring managers to define each role, write job posts, search for candidates, run first-round screening calls and guide people through interviews to an offer."
+   },
+   {
+    "label": "A typical day",
+    "text": "Mornings often go to sourcing on professional networks, code-sharing sites and the company’s applicant database, then sending personal outreach messages. Afternoons bring screening calls, interview scheduling, debriefs with the hiring team and updates to candidates waiting on decisions."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with hiring managers, engineering interviewers who assess technical skills, HR partners who handle pay and onboarding, and candidates. In-house recruiters may also work with sourcers and coordinators. Agency recruiters answer to client companies."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "An applicant tracking system, professional networking sites, Boolean search strings, scheduling tools and video calls. A working vocabulary of job titles, languages, frameworks and seniority levels helps them read a resume and spot a likely fit before passing it to engineers."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Common measures include time to fill a role, how many screened candidates pass the technical interviews, offer acceptance, candidate feedback and how long new hires stay. Agency recruiters are often paid partly on placements."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a technical recruiter do day to day?",
+    "a": "They find and contact engineers, hold short screening calls about experience, goals, location and pay expectations, and set up interviews. Engineers on the hiring team test technical skills. The recruiter keeps the process moving, shares feedback and helps close offers, following hiring laws. Rules on asking about salary history or posting pay ranges vary by state and city."
+   },
+   {
+    "q": "Do technical recruiters need to know how to code?",
+    "a": "No. Most technical recruiters do not code. Many come from general recruiting, sales or HR and learn the basics of common languages, tools and job levels on the job. That knowledge helps them ask better screening questions and earn engineers’ trust, but the technical assessment is done by engineering interviewers."
+   }
+  ]
+ },
  "technical-writer": {
   "day": [
    {
@@ -12440,6 +13256,40 @@
    {
     "q": "What is the difference between a technical writer and a copywriter?",
     "a": "A technical writer explains how a product works so people can install, use or build on it. Accuracy and clarity matter most. A copywriter writes ads, web pages and emails meant to persuade people to buy or act. Technical writers usually work with engineers, while copywriters usually work with marketing teams."
+   }
+  ]
+ },
+ "technician": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Technicians build, install, test, repair and maintain equipment such as machines, heating and cooling systems, vehicles, electronics or medical devices. They find faults, replace worn parts, adjust settings and record what they did, so each unit has a clear service history."
+   },
+   {
+    "label": "A typical day",
+    "text": "Many days start with a list of work orders. A technician inspects equipment, runs diagnostic tests, swaps failed parts and confirms the fix works before signing off. Planned maintenance fills quieter hours, but a sudden breakdown can change the whole schedule."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Hand and power tools, multimeters, pressure gauges, torque wrenches and laptops running diagnostic software. Manuals, wiring diagrams and schematics guide the work. Gloves, eye protection and lockout/tagout devices are part of the daily routine."
+   },
+   {
+    "label": "Where they work",
+    "text": "Shops, factories, hospitals, data centers, homes, vehicle service bays and outdoor field sites. Some stay at one location, while others drive between customer calls. The work can involve standing, kneeling, lifting, tight spaces, ladders and noisy or hot areas."
+   },
+   {
+    "label": "Licenses and certifications",
+    "text": "Rules depend on the specialty and often on the state. Technicians servicing stationary refrigeration or air conditioning need EPA Section 608 certification, while those servicing vehicle air conditioning need Section 609. Electrical work may require a state or local license. Many employers also value voluntary industry certifications."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a technician do day to day?",
+    "a": "A technician works through assigned jobs, such as installing new equipment, doing scheduled maintenance or answering breakdown calls. They inspect the equipment, test it to find the fault, repair or replace parts, check that everything runs safely and write up the work. They also order parts, keep tools in shape and explain repairs to supervisors or customers."
+   },
+   {
+    "q": "What is the difference between a technician and an engineer?",
+    "a": "Engineers mainly design and plan equipment and systems, and they often hold a bachelor’s degree in engineering. Technicians do the hands-on work of building, installing, testing and repairing that equipment. Technicians usually train through a certificate, an associate degree, an apprenticeship or on the job, and they often report field problems back to engineers."
    }
   ]
  },
@@ -12712,6 +13562,40 @@
    {
     "q": "Is being a trader a stressful job?",
     "a": "It often is. Traders make fast decisions with real money, and gains or losses show up right away. Volatile markets, tight risk limits and early starts add pressure. Many people still enjoy the pace, the clear feedback and the focus on numbers, but the job suits those who stay calm under pressure."
+   }
+  ]
+ },
+ "trading-systems-engineer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "They build and tune the software that sends, routes and matches orders. This covers order gateways, matching engines, market data handlers, and pre-trade risk checks. They cut latency, keep systems stable under heavy volume, and fix problems fast when something breaks during market hours."
+   },
+   {
+    "label": "A typical day",
+    "text": "Mornings often start before the market opens with system checks and a review of overnight logs. During trading hours they watch for errors and latency spikes. Later they write and test code, profile performance, and release changes in planned windows when markets are closed."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Most work in C++, Java or Rust on tuned Linux servers. They use the FIX protocol and exchange binary protocols, kernel bypass networking, and precise clock sync. Some firms use FPGAs and colocated servers placed inside exchange data centers to shave off microseconds."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work closely with traders, quantitative researchers, and risk and compliance staff. They also deal with network engineers, site reliability teams, and the technical support desks at exchanges and brokers when connections or certifications need attention."
+   },
+   {
+    "label": "Rules they work under",
+    "text": "Broker-dealers with market access must keep pre-trade risk controls under SEC Rule 15c3-5. At FINRA member firms, people primarily responsible for designing, developing or significantly modifying algorithmic strategies in equity, preferred or convertible debt securities must register as Securities Traders by passing the SIE and Series 57."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a trading systems engineer do day to day?",
+    "a": "They keep trading software fast and reliable. Before the open they check systems and connections. During market hours they monitor latency, errors and risk limits, and respond quickly to incidents. The rest of the day goes to writing and testing code, measuring performance, and preparing releases that go out when markets are closed."
+   },
+   {
+    "q": "What is the difference between a trading systems engineer and a quant developer?",
+    "a": "A trading systems engineer builds the infrastructure that moves orders, such as gateways, matching engines and market data feeds, with a focus on speed and stability. A quant developer works closer to strategy, turning researchers’ models into code, building backtests and pricing tools. Titles overlap a lot, and duties differ from firm to firm."
    }
   ]
  },
@@ -13290,6 +14174,40 @@
    {
     "q": "Do you need a degree or license to be a web developer?",
     "a": "No license is required to work as a web developer in any US state. Many employers prefer a degree in computer science or a related field, but plenty hire based on skills shown in a portfolio of real projects. Self-study, coding bootcamps and community college courses are common paths into the work."
+   }
+  ]
+ },
+ "welder": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Welders read blueprints and weld symbols, then prepare metal by cutting, grinding and cleaning it. They fit and clamp parts in place, set up the welding machine and join the pieces. Afterward they check each weld for size, shape and visible flaws."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common processes include stick (SMAW), MIG (GMAW), TIG (GTAW) and flux-cored welding. Welders also use grinders, torches, clamps, fillet gauges and measuring tapes. Protective gear includes a welding helmet, gloves, a jacket and sometimes a respirator."
+   },
+   {
+    "label": "Where they work",
+    "text": "Welders work in fabrication shops, factories, shipyards, refineries, pipelines and construction sites. Some weld outdoors, at heights or in tight spaces. Aerospace and other high-precision shops often do TIG work in clean, controlled settings."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Welds are checked against the job’s code or drawings, such as AWS D1.1 for structural steel or ASME rules for pressure piping. Inspectors may use visual checks, ultrasonic or X-ray testing. Flawed welds are usually repaired as the code allows, often by grinding out the defect and rewelding."
+   },
+   {
+    "label": "Certification and testing",
+    "text": "Most employers require passing a weld test for each process and position. Many welders hold certifications from the American Welding Society or qualify under ASME Section IX. Some cities and states require extra licensing for structural work, so rules vary by location."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a welder do day to day?",
+    "a": "A welder reviews drawings, preps and fits metal parts, and joins them using processes like MIG, TIG or stick. Through the day they adjust machine settings, clean between passes and inspect their own welds. They follow safety rules for fumes, sparks and hot work, and fix any defects found in inspection."
+   },
+   {
+    "q": "What is the difference between a welder and a fabricator?",
+    "a": "A welder focuses on joining metal with heat and filler metal. A fabricator builds whole parts or structures, which includes cutting, bending, shaping and fitting metal from drawings. Many fabricators also weld, and many welders do some fitting, but the fabricator role usually covers more of the building process."
    }
   ]
  },

@@ -36,6 +36,7 @@ BECOME_MORE = json.loads(_BM.read_text()) if _BM.exists() else {}
 # description template: drafted by Claude and read for wrong facts by a second request (ai_fill.py role, salary, jd)
 _more = lambda n: json.loads(Path(__file__).with_name(n).read_text()) if Path(__file__).with_name(n).exists() else {}
 ROLE_MORE, SALARY_MORE, JD_MORE = _more("role_more.json"), _more("salary_more.json"), _more("jd_more.json")
+HIRE_MORE = _more("hire_more.json")      # what to look for when hiring each kind of work (ai_fill.py hire)
 QUIZ_OF = {v["skill"]: (k, len(v["qs"])) for k, v in quiz_pages.QUIZZES.items()}     # skill -> (its test's slug, number of questions)
 
 ROOT = Path(__file__).parent
@@ -120,6 +121,10 @@ def countries_of(loc):
         # "Tel Aviv - IL", "Munich, DE", "Bengaluru, IN": the two letters are the country's code next to one of its cities, not a US state
         abroad = [(c, nm) for c, nm, _, city in COUNTRIES if abbr and c == abbr.group(1) and city and re.search(city, part, re.I)]
         if abroad: named, us = [x for x in named if x != ("US", "United States")] + [x for x in abroad if x not in named], False
+        # "Tbilisi, Georgia": the state's name is also a country's; a city of that country decides (a Tbilisi job showed the US flag,
+        # fact check of the pages, 21 Nov 2026)
+        if us and not abbr and not re.search(US_NAME, part, re.I) and re.search(r"\bgeorgia\b", part, re.I) and re.search(r"tbilisi|batumi|kutaisi", part, re.I):
+            named, us = [x for x in named if x != ("US", "United States")] + [("GE", "Georgia (country)")], False
         if us: named.append(("US", "United States"))
         if not named:                                           # nothing written out: fall back to cities everyone knows
             named = [(c, nm) for c, nm, _, city in COUNTRIES if city and re.search(city, part, re.I)]
@@ -127,6 +132,9 @@ def countries_of(loc):
         found += [x for x in named if x not in found]
     _geo_cache[loc] = found
     return found
+
+
+assert countries_of("Tbilisi, Georgia") == [("GE", "Georgia (country)")] and countries_of("Atlanta, Georgia") == [("US", "United States")], countries_of("Tbilisi, Georgia")
 
 
 def country_of(loc):
@@ -6498,6 +6506,8 @@ def main():
                   + ". A posting can close before the person starts, so plan for a few weeks more." if age_med is not None else "It depends on the level and the market; plan for several weeks from posting to the first day.")),
                  (f"Where can I find {many}?", f"{len(cos_):,} companies are hiring {many} on this site today. Post your job here free, on your own careers page and in communities where {many} meet; "
                   + ("the table on this page lists the countries named most in today’s postings." if len(ctry_) >= 3 else "name the countries you can hire in."))]      # no country names in plain text: a country is shown with its flag
+        hm_ = HIRE_MORE.get(slug_r)
+        if hm_: hh_qa = hh_qa + [(x["q"], x["a"]) for x in hm_["qa"]]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hh_qa + hh_more]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         facts_ = nums([(f"{len(cos_):,}", "companies hiring now"), (f"{n_:,}", f"open {e(low)} postings")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else [])
@@ -6509,6 +6519,8 @@ def main():
              f'<p class="lead">What you compete with, counted from today’s {n_:,} open {e(low)} postings: who is hiring, where, what they pay and how long postings stay up. Then six steps, each with a free template or tool.</p>'
              + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template")])
              + section(f"Six steps to hire {art(psn)} {psn}", steps)      # the steps are what "how to hire" asks for: first, then the figures behind them
+             + (section(f"What to look for in {art(psn)} {e(psn)}", '<ul class="ticks">' + "".join(f"<li><b>{e(x['label'])}.</b> {e(x['text'])}</li>" for x in hm_["look"]) + "</ul>")
+                if hm_ else "")
              + section("What you compete with", '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{v}</td></tr>" for k, v in rows_) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>')
              + which_
@@ -10513,6 +10525,13 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     if MAIL.get("security"):
         write(".well-known/security.txt", f"Contact: mailto:{MAIL['security']}\nExpires: {(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=180)).strftime('%Y-%m-%dT00:00:00Z')}\n"
               f"Preferred-Languages: en, ru\nCanonical: {FULL}/.well-known/security.txt\n", sitemap=False)
+    # The official MCP Registry checks that this domain is ours before it lists the connector at /mcp under com.jobseveryhour/*: it
+    # reads the public half of our Ed25519 key here, exactly at this address and with no redirect (so not through write(), which
+    # would make a folder of it). The private half stays with the owner, never in the repository.
+    _mra = ROOT / "mcp_registry_auth.txt"
+    if _mra.exists():
+        (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
+        (OUT / ".well-known" / "mcp-registry-auth").write_text(_mra.read_text().strip() + "\n", encoding="utf-8")
     write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
           f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     lap('IndexNow: the key file, and the list of pages that changed f')

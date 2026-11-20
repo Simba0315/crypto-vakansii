@@ -203,6 +203,40 @@
    }
   ]
  },
+ "advertising": {
+  "factors": [
+   {
+    "label": "Experience and seniority",
+    "text": "Pay rises as you move from coordinator or assistant roles to specialist, manager and director. Employers pay more for people who have run large budgets and complex campaigns. Track the results you deliver so you can show them when asking for a raise or a promotion."
+   },
+   {
+    "label": "Specialty and technical skills",
+    "text": "Programmatic buying, ad servers, tag management, data analysis and reporting tools often pay more than general campaign support. Learning SQL, spreadsheet automation or audience data work can open higher paying ad tech and ad operations roles."
+   },
+   {
+    "label": "Platform certifications",
+    "text": "Major ad platforms offer their own certifications. No license is required for this work, but these credentials show hands on skill and can help you land a better role. They also help you show you can manage spend on a given platform."
+   },
+   {
+    "label": "Employer type and industry",
+    "text": "Pay differs between agencies, publishers, ad tech firms and in-house marketing teams. Tech and finance companies often pay more than small agencies or nonprofits. Compare total pay, including bonus and equity, when weighing offers."
+   },
+   {
+    "label": "Location and sales pay",
+    "text": "Large media markets usually pay more, though remote roles can narrow the gap. In ad sales jobs, commission or bonuses tied to revenue can make up a large share of pay, so strong sellers can earn well above base."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can someone in advertising earn more?",
+    "a": "Build skills in programmatic buying, ad tech systems and data analysis. Earn certifications from the platforms you use. Keep a record of budgets managed and results delivered. Moving from an agency to an ad tech or in-house role, or into sales with commission, can also raise pay."
+   },
+   {
+    "q": "Do advertising and ad operations workers get paid overtime?",
+    "a": "It depends on the job. Under federal law, nonexempt employees must get overtime pay for hours worked beyond the federal weekly threshold in a workweek. Many salaried managers and specialists qualify as exempt if they meet salary and duties tests. Some states have stricter rules, such as daily overtime, so check your state’s law."
+   }
+  ]
+ },
  "aerospace": {
   "factors": [
    {
@@ -441,6 +475,40 @@
    }
   ]
  },
+ "aml-kyc": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Entry-level analysts who clear alerts and collect documents earn less than those who handle complex cases, write suspicious activity report narratives, or review others’ work. Building a record of sound decisions and moving into senior, quality control or investigator roles is the usual path to higher pay."
+   },
+   {
+    "label": "Certifications",
+    "text": "No license is required for this work, but a recognized anti-money laundering or fraud certification can help you stand out and qualify for senior roles. Some employers pay for the exam or reward it with a raise, so ask about support before paying yourself."
+   },
+   {
+    "label": "Specialty",
+    "text": "Analysts who focus on sanctions screening, enhanced due diligence on high-risk clients, trade finance, or cryptocurrency often earn more than generalists. Learning a niche, along with data skills used to tune monitoring systems, can open better-paid roles."
+   },
+   {
+    "label": "Industry and employer",
+    "text": "Pay differs between large banks, credit unions, broker-dealers, fintech firms, crypto platforms and consulting firms. Short-term remediation projects through staffing agencies may pay well by the hour but often lack benefits and job security, so compare the full package."
+   },
+   {
+    "label": "Location",
+    "text": "Roles in major financial centers and high-cost metro areas tend to pay more. Remote and hybrid jobs are common in this field, so you may be able to target employers based in higher-paying markets while living elsewhere."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an AML and KYC analyst earn more?",
+    "a": "Gain experience with complex investigations and suspicious activity report writing. Earn a recognized anti-money laundering certification. Specialize in an area like sanctions, enhanced due diligence or crypto. Build data skills for monitoring work. Moving to a larger bank, a fintech firm or a consulting role can also raise pay."
+   },
+   {
+    "q": "Do AML and KYC analysts get paid overtime?",
+    "a": "It depends on how the job is classified. Under federal law, non-exempt employees must get overtime for hours over 40 in a workweek. Many entry-level analysts are non-exempt, but some salaried roles meet the salary and duties tests for an exemption. Some states, such as California, have stricter overtime rules, including daily overtime."
+   }
+  ]
+ },
  "analog-engineer": {
   "factors": [
    {
@@ -574,6 +642,40 @@
    {
     "q": "Are Android developers paid hourly or salary?",
     "a": "Most full-time Android developers are paid a salary and are usually exempt from overtime under federal law’s computer employee rules. Contractors and freelancers are often paid hourly or per project. Some states have stricter overtime and exemption rules, so whether you get overtime depends on your pay setup, duties and state."
+   }
+  ]
+ },
+ "android-developer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as developers move from junior to senior and lead roles. Employers pay more for people who have shipped and maintained apps in production. Building a portfolio of published apps and owning larger features helps you move up faster."
+   },
+   {
+    "label": "Specialty skills",
+    "text": "Strong Kotlin skills plus modern tools like Jetpack Compose, coroutines and clean app architecture are in demand. Niche skills such as performance tuning, mobile security, payments or Bluetooth and hardware work can raise offers. Learning these through real projects makes you harder to replace."
+   },
+   {
+    "label": "Industry",
+    "text": "Pay differs by industry. Tech companies, finance and large consumer apps often pay more than small agencies or nonprofits. Some tech employers add stock or bonuses on top of base pay. Targeting well-funded industries can lift your total pay."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Employers in large tech hubs usually pay more to match higher living costs. Some remote employers adjust pay to where you live, while others pay one national rate. Ask how a company sets remote pay before you accept an offer."
+   },
+   {
+    "label": "Employment type",
+    "text": "Contract roles often pay a higher hourly rate but may lack benefits. Independent 1099 contractors pay their own self-employment tax. Contractors placed by staffing agencies are often W-2 employees with taxes withheld. Compare total pay and benefits, not just the rate."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an Android developer earn more?",
+    "a": "Build deeper skills in Kotlin, Jetpack Compose and app architecture. Take ownership of bigger features and publish apps you can show employers. Learn in-demand areas like security or performance. Moving to a higher-paying industry, negotiating offers, or stepping into a senior or lead role also raises pay."
+   },
+   {
+    "q": "Do Android developers get paid overtime?",
+    "a": "Often not. Under federal law, many qualify for the computer employee exemption if they do qualifying software work and are paid a salary or hourly rate above set minimums. Those paid below the thresholds or doing nonqualifying work are generally owed overtime. Some states, such as California, have stricter rules."
    }
   ]
  },
@@ -713,6 +815,40 @@
    }
   ]
  },
+ "asic-engineer": {
+  "factors": [
+   {
+    "label": "Design specialty",
+    "text": "Pay differs across front-end RTL design, verification, physical design, DFT and analog or mixed-signal work. Skills in tight supply, such as advanced-node timing closure or AI accelerator architecture, tend to draw stronger offers. Adding a second area, like formal verification or low-power design, widens your options."
+   },
+   {
+    "label": "Experience and tape-outs",
+    "text": "Employers weigh how many chips you have helped take to tape-out and what you owned along the way. Leading a block or subsystem through silicon bring-up signals senior-level skill. Ask for ownership of a full block early, and keep a clear record of your results."
+   },
+   {
+    "label": "Education",
+    "text": "Many chip design roles prefer a master’s degree, and research or architecture roles often favor a PhD. No state license is normally required for this work. Graduate coursework in computer architecture, VLSI or verification can raise starting offers and open higher-level roles."
+   },
+   {
+    "label": "Employer and equity",
+    "text": "Large chip makers, cloud and device companies, startups and defense contractors pay in different ways. Public companies often add stock grants, while startups may offer options with more risk. Compare total pay, not just base salary, and review vesting schedules before you accept."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tends to be higher in major semiconductor hubs, where demand and living costs are both high. Some states require pay ranges in job postings, which helps you compare offers. Remote roles exist, but some design jobs need on-site lab work or secure network access."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an ASIC engineer earn more?",
+    "a": "Build depth in a high-demand area such as physical design, verification or AI hardware, and take ownership of blocks through tape-out. Strong scripting skills and deep knowledge of industry EDA tools also help. Many engineers raise pay most by changing employers or negotiating stock grants. A graduate degree or a move into architecture or technical leadership can also lead to higher pay."
+   },
+   {
+    "q": "Do ASIC engineers get paid overtime?",
+    "a": "Most are salaried and treated as exempt under the federal learned professional exemption, so they do not get overtime pay. Engineers paid hourly as W-2 employees, often through staffing firms, generally must receive overtime under federal law. Some states add their own overtime rules. True independent contractors are not covered, but the actual working relationship, not the contract label, decides that status."
+   }
+  ]
+ },
  "audit": {
   "factors": [
    {
@@ -849,6 +985,40 @@
    }
   ]
  },
+ "aws": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from running tasks others designed to owning cloud architecture, cost and reliability for whole systems. Taking the lead on migrations, design reviews and incident response builds the track record that senior and architect roles reward."
+   },
+   {
+    "label": "AWS certifications",
+    "text": "AWS certifications at the associate, professional and specialty levels are voluntary, but many employers screen for them and some tie pay or promotion to them. They expire, so plan to recertify. Pair them with real project work, since hiring managers test hands-on skill."
+   },
+   {
+    "label": "Specialty",
+    "text": "Security, networking, data engineering, machine learning and DevOps automation often pay more than general cloud support work. Learning infrastructure as code, containers and cost optimization, and showing results in those areas, can move you into better paid specialist roles."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Employers in high cost metro areas and tech hubs usually pay more, and some remote roles adjust pay to where you live. Comparing postings across regions and asking how remote pay is set helps you judge an offer."
+   },
+   {
+    "label": "Employment type and on call",
+    "text": "Full time roles often add bonuses, equity and benefits, while contract roles may pay a higher rate with fewer benefits. On call rotations can carry extra pay at some employers. Ask how each part of pay works before you accept."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an AWS engineer earn more?",
+    "a": "Earn advanced or specialty AWS certifications, then back them with real projects you can explain. Move toward security, data or architecture work, and take ownership of large systems or migrations. Learn infrastructure as code and cost control. Compare postings in other regions and industries, and negotiate using your measurable results."
+   },
+   {
+    "q": "Do AWS engineers get paid overtime?",
+    "a": "Many AWS engineers are salaried and exempt from overtime under the federal computer employee or professional exemptions, if they meet the duties and pay tests. Some states set stricter tests. Hourly workers may be owed overtime if they fall outside an exemption. A 1099 label does not settle it, since a worker misclassified as independent can still be owed overtime."
+   }
+  ]
+ },
  "azure": {
   "factors": [
    {
@@ -880,6 +1050,40 @@
    {
     "q": "Do Azure engineers get paid overtime?",
     "a": "Often not. Many salaried cloud engineers, developers and architects fall under the federal computer employee exemption, which removes overtime if pay and duties meet set tests. Help desk and support roles are more often eligible. Some states, such as California, have stricter rules. Independent contractors do not get overtime, so check how your role is classified."
+   }
+  ]
+ },
+ "backend-engineer": {
+  "factors": [
+   {
+    "label": "Experience and level",
+    "text": "Pay rises sharply as engineers move from junior to mid, senior and staff levels. Titles track scope, such as owning services, leading designs and mentoring others. To move up, own a system end to end, write design documents, and ask your manager what the next level requires."
+   },
+   {
+    "label": "Specialty and stack",
+    "text": "Engineers who build distributed systems, high-traffic services, payments, security or data infrastructure often earn more than those building simple internal tools. Depth in cloud platforms, databases and performance tuning is valued. Pick a hard problem area at work and build a record of shipped results in it."
+   },
+   {
+    "label": "Company type and equity",
+    "text": "Large tech firms and well-funded startups often add stock grants and bonuses on top of base salary, so total pay can differ widely from base pay. Early startups may offer more equity and less cash. Compare full offers, and read vesting schedules before you accept."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, trading and other fields where software drives revenue tend to pay backend engineers more than government, education or nonprofits. Regulated fields such as healthcare and banking reward knowledge of compliance and audit needs. Learning one industry’s data and rules can make you harder to replace."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay is usually higher in major tech hubs with high living costs. Many remote employers set pay bands by the worker’s location, while some pay one national rate. Ask how a company sets remote pay. Some states and cities require pay ranges in job postings."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a backend engineer earn more?",
+    "a": "Grow your scope by owning a service, leading design reviews and handling production issues well. Specialize in an area like distributed systems, data or security. Track your results in terms of speed, cost or reliability. Interviewing at other companies is often the fastest path to a bigger raise, and competing offers help when you negotiate."
+   },
+   {
+    "q": "Is backend engineering paid hourly or salary?",
+    "a": "Most backend engineers are full-time employees on a yearly salary, often with bonuses and stock at larger firms. Contract and freelance engineers are usually paid hourly or by project. Independent contractors pay their own self-employment tax and usually get no benefits, so their rate needs to cover those costs."
    }
   ]
  },
@@ -948,6 +1152,40 @@
    {
     "q": "Do battery engineers get paid overtime?",
     "a": "Usually not. Most battery engineers are salaried and classed as exempt professionals under federal law, so long hours do not bring overtime pay. Some employers pay bonuses during product launches instead. Technicians and some entry-level test staff may be hourly and eligible for overtime. Some states have stricter rules, so check your state’s law."
+   }
+  ]
+ },
+ "bi-developer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from building reports others design to owning the data model, the metrics and the whole reporting setup. Taking on harder projects, mentoring others and leading a dashboard rollout are the clearest steps toward senior and lead roles."
+   },
+   {
+    "label": "Technical skills",
+    "text": "Developers who write strong SQL, design data models and build data pipelines are usually paid more than those who only work in the dashboard tool. Learning cloud data platforms, data warehousing and a scripting language such as Python widens the roles you can apply for."
+   },
+   {
+    "label": "Certifications",
+    "text": "No license is required for this work. Vendor certifications for tools like Tableau or Power BI, and for cloud data platforms, can help you pass screening and support a raise request, but proven projects usually matter more to employers."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, tech, consulting and healthcare often pay more for BI work than smaller or nonprofit employers, because their data is larger and their reporting needs are more complex. Learning the metrics of a well paying industry can help you move into it."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay tends to be higher in large metro areas with many tech and finance employers. Some remote employers adjust pay to where you live, while others pay one rate everywhere. Compare offers with the full package in mind, including benefits."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a BI Developer earn more?",
+    "a": "Deepen your SQL and data modeling skills, learn a cloud data platform, and show results such as reports that changed a business decision. Keep a portfolio of sample dashboards. Moving toward data engineering, analytics engineering or a lead role often brings higher pay, and so can switching to a better paying industry."
+   },
+   {
+    "q": "Do BI Developers get paid overtime?",
+    "a": "Often not. Many BI Developers are classified as exempt under federal rules for computer and professional employees, which look at job duties and pay level, not job title. Being paid hourly does not by itself bring overtime, and true independent contractors have no overtime right. Some states have stricter rules, so check your state’s law and your classification."
    }
   ]
  },
@@ -1121,6 +1359,40 @@
    }
   ]
  },
+ "business-systems": {
+  "factors": [
+   {
+    "label": "Platform and module",
+    "text": "Pay depends on which system you run. Large finance, supply chain and HR platforms often pay more than smaller tools, especially with deep module skills like payroll or financials. Learning a second in-demand platform or module widens your options."
+   },
+   {
+    "label": "Vendor certifications",
+    "text": "Software makers offer admin, developer and consultant certifications. No law requires them, but many postings ask for them and they can help you land higher-paying roles. Many programs require upkeep or renewal, so plan to keep yours current."
+   },
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from handling user requests to designing processes, leading upgrades and owning full rollouts. Ask to join implementation projects and take on solution or architect work to build a record that justifies a raise or promotion."
+   },
+   {
+    "label": "Technical skills",
+    "text": "People who can write code, query data, build reports and connect systems through APIs often earn more than those who only configure screens. Adding scripting, SQL and integration skills can move you into developer or engineer roles."
+   },
+   {
+    "label": "Employer type and location",
+    "text": "Consulting firms, large enterprises and high-cost metro areas often pay more than small in-house teams. Remote roles may set pay by your location or theirs. Some states require pay ranges in postings, which helps you compare offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a business systems analyst earn more?",
+    "a": "Go deep on a high-demand platform and earn its vendor certifications. Learn integration, reporting and scripting skills. Volunteer for implementation and upgrade projects so you can show results. Moving into architect, lead or consulting roles usually brings higher pay. Compare posted ranges before you negotiate or switch jobs."
+   },
+   {
+    "q": "Is business systems work paid hourly or salary?",
+    "a": "Most full-time in-house roles are salaried, and many are classified as exempt from overtime. Contract work is often billed hourly, either as a W-2 employee of a staffing firm or as an independent 1099 contractor. Contractors on 1099 are not employees and handle their own taxes and benefits. State rules on pay and overtime can differ."
+   }
+  ]
+ },
  "cfo": {
   "factors": [
    {
@@ -1257,6 +1529,40 @@
    }
   ]
  },
+ "chinese-speaking": {
+  "factors": [
+   {
+    "label": "Language level",
+    "text": "Pay rises with how well you read, write and speak. Roles that need both Simplified and Traditional characters, or both Mandarin and Cantonese, often pay more than speaking-only roles. Take an employer language test seriously and build written skills, not just conversation."
+   },
+   {
+    "label": "Certifications",
+    "text": "Many state courts certify Mandarin and Cantonese interpreters. Federal courts do not certify Chinese interpreters but may list them as professionally qualified. National medical interpreter credentials and translator certification from a professional association can also raise your rates. Requirements vary by state and program."
+   },
+   {
+    "label": "Type of role",
+    "text": "Jobs where Chinese is the core skill, such as interpreting, translation, legal or healthcare work, usually pay more than roles where it is a bonus. Some employers add a bilingual pay differential to customer service, banking or retail roles. Ask whether one is offered."
+   },
+   {
+    "label": "Industry and specialty",
+    "text": "Legal, medical, finance, technology and international trade work tends to pay better than general customer support. Learning the specialized terms of one field in both languages makes you harder to replace. Consider short courses in medical, legal or business terminology."
+   },
+   {
+    "label": "Location and work setup",
+    "text": "Cities with large Chinese-speaking communities or strong trade ties with China, Taiwan or Hong Kong have more openings and often higher pay. Remote phone and video interpreting widens your options. Freelancers set their own rates but give up benefits and steady hours."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Chinese speaker earn more?",
+    "a": "Strengthen your reading and writing, learn both Mandarin and Cantonese if you can, and earn a recognized credential such as state court or medical interpreter certification. Specialize in a field like law, healthcare or finance. Ask employers about a bilingual pay differential, and compare staff roles with freelance work."
+   },
+   {
+    "q": "Do Chinese speaking workers get paid overtime?",
+    "a": "It depends on the job. Under federal law, nonexempt employees earn overtime for hours over forty in a workweek. Many salaried professionals are exempt. Freelance interpreters and translators are usually independent contractors and get no overtime. Some states, such as California, have stricter overtime rules, so check your state’s law."
+   }
+  ]
+ },
  "ci-cd": {
   "factors": [
    {
@@ -1288,6 +1594,74 @@
    {
     "q": "Do CI/CD engineers get paid overtime?",
     "a": "Often not. Many salaried CI/CD engineers fall under the federal computer employee exemption if they meet the duties test and the minimum pay rules. Some states, such as California, set stricter rules and higher thresholds. Hourly W-2 workers who do not qualify for an exemption must get overtime. Independent contractors are not covered by overtime law, so they should price extra hours into their rate."
+   }
+  ]
+ },
+ "clinical-research": {
+  "factors": [
+   {
+    "label": "Role and experience",
+    "text": "Pay climbs as people move from site coordinator to monitor, then to project lead or manager roles. Each step adds responsibility for protocols, budgets and audits. Logging years on studies and asking for monitoring or lead tasks helps you move up."
+   },
+   {
+    "label": "Degrees and certifications",
+    "text": "Medical science liaison roles usually require a doctorate such as a PharmD, PhD or MD, and only some accept advanced-practice credentials like an NP. For study staff, voluntary certifications such as CCRC, CCRA or CCRP, earned after documented work hours, can support raises and promotions."
+   },
+   {
+    "label": "Employer type",
+    "text": "Drug, biotech and device sponsors tend to pay more than academic medical centers and hospital research sites. Contract research organizations often fall in between. Starting at a site to gain experience, then moving to a sponsor or contract research organization, is a common path to higher pay."
+   },
+   {
+    "label": "Therapeutic area",
+    "text": "Complex studies, such as oncology, rare disease or cell and gene therapy, demand more skill and often pay more. Strong knowledge of FDA rules, Good Clinical Practice and specific trial designs makes you harder to replace. Seek out these studies and the training that comes with them."
+   },
+   {
+    "label": "Location and travel",
+    "text": "Pay is often higher near biotech and pharma hubs and in large metro areas. Field monitors and medical science liaisons who travel often earn more, and some roles are fully remote. Being open to travel or relocation widens your options."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a clinical research coordinator earn more?",
+    "a": "Gain experience across several studies, earn a recognized certification, and learn monitoring, regulatory or data management tasks. Many coordinators raise their pay by moving to a monitor role at a sponsor or contract research organization. Specializing in complex areas such as oncology can also help."
+   },
+   {
+    "q": "Do clinical research coordinators get paid overtime?",
+    "a": "It depends on how the job is classified. Under federal law, nonexempt staff earn overtime for hours over 40 in a workweek. Salaried roles that meet federal exemption tests often do not. Some states set stricter overtime rules or higher salary thresholds, so check your state’s law and your job offer."
+   }
+  ]
+ },
+ "cloud-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from support or junior roles to designing whole systems on your own. Employers pay more for people who have run live workloads, handled outages, and owned a cloud bill. Ask for work on production systems early to build that record."
+   },
+   {
+    "label": "Certifications",
+    "text": "Certifications from the major cloud providers are optional, not legal licenses, but many postings list them. Associate and professional level certifications can help you land interviews and stronger offers, especially early in your career. They expire after a set period, so plan to renew them."
+   },
+   {
+    "label": "Specialty skills",
+    "text": "Skills in cloud security, Kubernetes, infrastructure as code, and cost control tend to pay more than basic server setup. Engineers who can show they cut a bill or improved uptime have strong leverage. Pick one area and build visible projects in it."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay is usually higher in large tech hubs and high-cost metro areas. Remote roles are common, but some employers adjust pay to where you live. Some states and cities require pay ranges in job postings, so compare those ranges before you apply."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Government and defense contractor jobs often require a security clearance, and engineers who already hold an active one are in demand. You cannot apply for a clearance on your own; an employer must sponsor it. A sponsored role can open better-paid cleared work later."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do cloud engineers get paid overtime?",
+    "a": "Many cloud engineers are salaried and exempt from overtime under the federal computer employee or other exemptions. If you are non-exempt, federal law requires overtime pay for hours over 40 in a workweek, and some states add stricter rules. For non-exempt workers, on-call time counts as paid work when restrictions keep you engaged to wait rather than free to use the time as your own."
+   },
+   {
+    "q": "Is cloud engineering paid hourly or salary?",
+    "a": "Most full-time cloud engineer jobs are salaried, sometimes with bonuses or stock at larger firms. Contract and consulting roles are often paid hourly. Hourly pay does not by itself mean overtime, since some well-paid hourly computer workers can still be exempt under federal law. Read the posting and ask how overtime and on-call time are handled."
    }
   ]
  },
@@ -1495,6 +1869,40 @@
    }
   ]
  },
+ "compliance-legal": {
+  "factors": [
+   {
+    "label": "Licenses and credentials",
+    "text": "Lawyer roles usually require bar admission, though exam, admission on motion and in-house registration rules vary by state. For compliance roles, a recognized certification in privacy, banking or healthcare compliance can lift offers. Paralegal certification is voluntary in most states, but some set rules for who may use the title."
+   },
+   {
+    "label": "Experience and specialty",
+    "text": "Pay rises as you move from support work to roles where you own decisions, such as leading investigations or advising on regulations. In-demand specialties like data privacy, anti-money laundering, sanctions or healthcare rules often pay more. Building depth in one niche helps."
+   },
+   {
+    "label": "Industry",
+    "text": "Heavily regulated fields such as banking, securities, insurance, healthcare and energy tend to pay compliance and legal staff more, since violations are costly. Government and nonprofit roles often pay less but may offer steadier hours and benefits. Moving into a regulated sector can raise pay."
+   },
+   {
+    "label": "Location",
+    "text": "Large metro areas with many headquarters, financial firms or major courts usually advertise higher pay. Some remote employers set pay by where you live. If you can’t relocate, look for remote roles tied to higher-paying markets, and check that your license or credential lets you do the work there."
+   },
+   {
+    "label": "Employer type and size",
+    "text": "Large law firms and big corporations usually pay more than small firms or local businesses, and some add bonuses tied to billable hours or performance. Smaller employers may give broader duties sooner, which builds experience you can later trade for a higher offer."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a compliance or legal professional earn more?",
+    "a": "Earn a respected credential in your area, build a specialty employers struggle to fill, and take on work you can point to, such as leading an audit or managing a case. Moving into a regulated industry, a larger employer or a higher-paying market also helps. For lawyers, gaining admission where employers need you can widen options."
+   },
+   {
+    "q": "Do paralegals and compliance staff get paid overtime?",
+    "a": "It depends on duties and pay, not job title. Under federal law, paralegals are usually not exempt and get overtime, while licensed lawyers who practice law are exempt. Compliance roles may be exempt if they meet salary and duties tests. Some states, such as California, set stricter rules, so check your state’s law."
+   }
+  ]
+ },
  "compliance-officer": {
   "factors": [
    {
@@ -1526,6 +1934,40 @@
    {
     "q": "Do compliance officers get paid overtime?",
     "a": "Often not. Many are salaried and exempt under the federal Fair Labor Standards Act’s administrative exemption, which requires a minimum salary and duties involving independent judgment. Junior staff doing routine checks may still qualify for overtime. Some states, such as California and New York, set higher salary thresholds or stricter tests, so the rules vary by state."
+   }
+  ]
+ },
+ "computer-vision": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from junior to senior and lead roles. Employers pay most for people who have taken vision models from research into real products. Build a record of shipped projects and share code or demos that show results."
+   },
+   {
+    "label": "Specialty",
+    "text": "Skills in 3D vision, sensor fusion, video tracking, or running models on small edge devices are in high demand and often pay more. Learning to make models fast and reliable on real hardware can set you apart from people who only train models."
+   },
+   {
+    "label": "Industry",
+    "text": "Self-driving cars, robotics, and large tech firms tend to pay well for vision talent. Medical imaging and security cameras can pay well too. Startups may pay less in cash but offer equity, so compare the full offer before you choose."
+   },
+   {
+    "label": "Location",
+    "text": "Jobs in major tech hubs usually pay more to match a higher cost of living. Some remote employers adjust pay based on where you live. Check how an employer sets remote pay before you accept."
+   },
+   {
+    "label": "Education and research",
+    "text": "A master’s degree or PhD is often expected for research and algorithm roles, and these often pay more. Published papers, patents, or strong contest results can help you win senior research jobs and better offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Computer Vision Engineer earn more?",
+    "a": "Gain experience shipping models into real products, not just experiments. Build skills in areas like 3D vision, sensor fusion, or edge deployment. Target well-paying industries such as autonomous vehicles or robotics. Negotiate the whole offer, including bonus and equity. Moving into a lead or principal role also raises pay."
+   },
+   {
+    "q": "Do Computer Vision Engineers get paid overtime?",
+    "a": "Usually not. Most are salaried and exempt under the federal Fair Labor Standards Act as professionals or under the computer employee exemption. That exemption also covers many hourly workers paid above a set hourly rate. Independent contractors are not covered by overtime law at all. Some states set stricter rules, so check your state."
    }
   ]
  },
@@ -1733,6 +2175,36 @@
    }
   ]
  },
+ "controls-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay climbs as you move from writing code under supervision to leading full projects, commissioning lines on your own and mentoring others. Keep a record of systems you designed, started up or fixed, since employers pay for proven results."
+   },
+   {
+    "label": "Industry",
+    "text": "Sites where downtime is costly, such as oil and gas, power, pharmaceuticals and semiconductors, often pay more than general manufacturing or building automation. Regulated plants value validation and safety skills. Moving into a higher-stakes sector can raise pay faster than staying put."
+   },
+   {
+    "label": "Platforms and specialties",
+    "text": "Fluency on more than one major PLC or DCS platform, plus HMI, SCADA, industrial networking and motion control, widens your options. Functional safety, robotics and industrial cybersecurity skills are in demand. Vendor training and recognized automation certifications help prove these skills."
+   },
+   {
+    "label": "Location and travel",
+    "text": "Pay tends to be higher in metro areas and industrial hubs with a high cost of living. Integrator and field service roles that send you to customer sites often add per diem or travel pay. Ask how travel time is paid before you accept."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do controls engineers get paid overtime?",
+    "a": "It depends on classification. Salaried engineers usually fall under the federal professional exemption and get no overtime, though some employers pay extra for startups or long shifts. Hourly employees who are not exempt get overtime for hours over forty in a workweek, and some states such as California add daily overtime. Independent contractors are not covered by overtime law."
+   },
+   {
+    "q": "How can a controls engineer earn more?",
+    "a": "Learn a second major PLC platform, plus SCADA, networking and functional safety. Take on commissioning and project lead work, since startups are where skills show. Consider integrator or field roles with travel pay, or move into higher-paying sectors like energy or pharmaceuticals. Document results such as reduced downtime to support raise requests."
+   }
+  ]
+ },
  "coordinator": {
   "factors": [
    {
@@ -1798,6 +2270,40 @@
    {
     "q": "Do Corporate Trainers get paid overtime?",
     "a": "It depends on the job. Many corporate trainers are salaried and classified as exempt from overtime under federal law, which requires both a minimum salary and duties that meet an exemption test. Trainers who are paid hourly or do not meet those tests must get overtime. Some states, such as California, have stricter rules, so check your state’s law."
+   }
+  ]
+ },
+ "cpp": {
+  "factors": [
+   {
+    "label": "Specialty",
+    "text": "Low-latency systems, game engines, graphics, compilers and embedded firmware each draw different pay. Rare skills such as real-time performance tuning or GPU programming tend to command more. Building depth in one of these areas through projects or open-source work can raise your offers."
+   },
+   {
+    "label": "Industry",
+    "text": "Trading firms and other finance employers often pay C++ developers the most because speed affects profit. Game studios and some hardware makers may pay less. Moving your C++ skills into a higher-paying industry is one of the biggest levers you have."
+   },
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from writing features to owning architecture, performance and code reviews. Strong command of modern C++ standards, memory management, multithreading and debugging tools signals seniority. Taking on design work and mentoring helps you reach senior and lead roles."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Defense and aerospace jobs often require a federal security clearance, and cleared developers are hard to find, which tends to lift pay. You cannot apply for a clearance on your own; an employer sponsors it. Taking a role that sponsors one can raise future earnings."
+   },
+   {
+    "label": "Location",
+    "text": "Large tech and finance hubs usually advertise higher pay but carry higher living costs. Remote roles may adjust pay to where you live. Some states and cities require pay ranges in job ads, which helps you compare offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a C++ developer earn more?",
+    "a": "Deepen skills that are hard to hire for, such as low-latency design, concurrency, or embedded and real-time work. Keep up with modern C++ standards. Target industries that value speed, like finance or defense. Show measurable performance gains in your work, contribute to open-source projects, and compare offers from several employers before you negotiate."
+   },
+   {
+    "q": "Do C++ developers get paid overtime?",
+    "a": "Often not. Federal law lets employers treat most software developers as exempt under the computer-employee exemption when their main duties are design, development or analysis and they earn at least a set salary or hourly minimum. Some states have stricter tests or higher pay floors. Employees who do not meet the tests are generally owed overtime. True independent contractors are not covered by overtime law."
    }
   ]
  },
@@ -2073,6 +2579,40 @@
    }
   ]
  },
+ "data-analyst": {
+  "factors": [
+   {
+    "label": "Technical skills",
+    "text": "Analysts who write strong SQL, use Python or R, and build clean dashboards in common BI tools tend to earn more than those who work mainly in spreadsheets. Adding statistics and experiment design skills can open better-paid roles."
+   },
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from running set reports to owning metrics, framing questions, and advising leaders. Taking on bigger projects, mentoring others, and showing business impact helps you reach senior or lead titles."
+   },
+   {
+    "label": "Industry",
+    "text": "Tech, finance, and consulting often pay analysts more than nonprofits, education, or government. Moving into a higher-paying industry, or building knowledge of one domain such as healthcare or marketing, can raise your offers."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Large metro areas with many tech and finance employers usually pay more, though living costs are higher too. Some remote employers set pay by where you live, so ask how a company handles location before you accept."
+   },
+   {
+    "label": "Certifications and portfolio",
+    "text": "No license is required to work as a data analyst. Vendor or industry certifications can help you get noticed, but a portfolio of real projects and clear results often matters more in pay talks."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a data analyst earn more?",
+    "a": "Deepen your SQL and add Python or R. Learn statistics and A/B testing. Tie your work to revenue or cost savings and say so in reviews. Seek roles with more ownership, or move toward analytics engineering, data science, or management. Changing employers or industries is often the fastest way to a bigger raise."
+   },
+   {
+    "q": "Do data analysts get paid overtime?",
+    "a": "It depends. Many salaried analysts are classified as exempt under federal law and get no overtime, but exemption depends on actual duties and pay level, not the job title. Many hourly analysts are owed overtime for hours over 40 in a workweek, yet some hourly computer employees paid at a high enough rate can be exempt. Several states have stricter rules."
+   }
+  ]
+ },
  "data-center": {
   "factors": [
    {
@@ -2209,6 +2749,74 @@
    }
   ]
  },
+ "data-product-manager": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from supporting one dataset or dashboard to owning a whole data platform or a portfolio of data products. Senior and principal roles that set strategy and lead other product managers pay the most. Ask for broader ownership and document the business results you deliver."
+   },
+   {
+    "label": "Technical skills",
+    "text": "Employers pay more for product managers who understand SQL, data pipelines, cloud data warehouses, APIs and machine learning. You do not need to code daily, but fluency with engineers and data scientists brings higher offers. Courses, side projects and cloud vendor certifications can help show these skills."
+   },
+   {
+    "label": "Industry",
+    "text": "Technology, finance and companies that sell data or analytics as their core product tend to pay more than nonprofits, education or government. Regulated fields like healthcare and banking value knowledge of privacy and compliance rules. Building domain knowledge in a well-paying industry can raise your offers."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Large tech and finance hubs usually advertise higher pay than smaller markets. Some employers adjust remote salaries to where you live, while others pay one national rate. Several states and cities require pay ranges in job postings, which helps you compare offers before you apply."
+   },
+   {
+    "label": "Company stage and equity",
+    "text": "Total pay often includes bonuses and stock. Public companies may grant restricted stock units, while startups offer stock options that carry more risk. Base salary can be lower at early-stage firms. Read the equity terms, vesting schedule and bonus rules before comparing offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a data product manager earn more?",
+    "a": "Build stronger technical depth in SQL, data modeling and machine learning concepts, and show measurable results, such as revenue from a data product or adoption of a platform. Taking on larger scope, like owning a platform or leading other product managers, raises pay. Switching employers, negotiating equity, and targeting higher-paying industries or metro areas also help."
+   },
+   {
+    "q": "Do data product managers get paid overtime?",
+    "a": "Usually not. Most data product managers are salaried employees classified as exempt under federal law, because their pay and duties meet the exemption tests. Some states, such as California, New York and Washington, set stricter rules. Hourly W-2 employees, including agency contractors, can be owed overtime if no exemption fits. Genuine 1099 independent contractors are not covered by overtime law, but misclassified workers may be owed it."
+   }
+  ]
+ },
+ "data-research": {
+  "factors": [
+   {
+    "label": "Education and degree",
+    "text": "Many research scientist and senior data roles ask for a master’s or doctoral degree, and these roles usually pay more than jobs open with a bachelor’s. If you want to move into them, consider graduate study, or target employers that accept strong experience in place of an advanced degree."
+   },
+   {
+    "label": "Technical skills",
+    "text": "Pay rises with skills employers can use right away, such as SQL, Python or R, statistics, experiment design, data visualization and machine learning. Build these through practice projects or courses, and keep a portfolio of real analyses so hiring managers can see your work."
+   },
+   {
+    "label": "Industry and employer type",
+    "text": "Technology, finance and pharmaceutical employers often pay more for data and research work. Universities, nonprofits and government agencies often pay less but may offer stronger benefits, predictable schedules or meaningful missions. Many academic roles are paid from term-limited grants, so ask how a position is funded before you accept."
+   },
+   {
+    "label": "Experience and seniority",
+    "text": "Moving from assistant or junior analyst to senior, lead or manager roles is the most common path to higher pay. Take on projects you own from start to finish, mentor others, and show how your findings changed decisions, then use that record when you ask for a promotion."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Large metro areas with high living costs tend to post higher pay. Remote roles are common in this field, but some employers adjust pay to where you live. Compare offers by location, and ask early whether a remote role’s pay depends on your home address."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a data analyst earn more?",
+    "a": "Deepen your skills in SQL, Python or R, and statistics, and learn tools your target industry uses. Show business impact in a portfolio. Seek roles in higher-paying industries, or move toward data science, analytics engineering or management. An advanced degree or a focused specialty, such as healthcare or finance data, can also help."
+   },
+   {
+    "q": "Are data and research jobs paid hourly or salary?",
+    "a": "Both exist. Research assistants, survey interviewers and some entry-level analysts are often paid hourly and earn overtime. Many analysts and scientists are salaried and may be exempt from overtime under federal law if their duties and pay meet the legal tests. Some states set stricter rules, so check your state’s law."
+   }
+  ]
+ },
  "data-scientist": {
   "factors": [
    {
@@ -2243,6 +2851,40 @@
    }
   ]
  },
+ "databricks": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from writing notebooks and jobs to designing full lakehouse platforms. Senior roles that own architecture, cost control and data governance pay more. Take on pipeline design, performance tuning and mentoring to build that record."
+   },
+   {
+    "label": "Certifications",
+    "text": "Databricks offers its own exams, such as the Data Engineer Associate and Data Engineer Professional. A certification does not guarantee a raise, but it helps you pass screening and supports a stronger offer. Pair it with real project work you can describe in interviews."
+   },
+   {
+    "label": "Related technical skills",
+    "text": "Employers pay more for strong Apache Spark, Python, SQL and streaming skills, plus experience on a major cloud platform. Knowledge of Delta Lake, Unity Catalog and machine learning workflows also adds value. Build depth in the skills your target roles list most often."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, healthcare and technology firms with large data volumes often pay more for Databricks work. Regulated industries value people who handle security and compliance well. Experience in one sector can help you move into a higher paying one."
+   },
+   {
+    "label": "Employment type and location",
+    "text": "Contract roles often pay a higher hourly rate but usually come without benefits. Full-time jobs in large metro areas tend to pay more, though remote roles widen your options. Compare total pay, not just base pay, before you choose."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Databricks engineer earn more?",
+    "a": "Earn a Databricks certification, deepen your Spark and cloud skills, and take ownership of larger projects. Learn to cut compute costs and tune performance, since employers value that. Moving into architecture, leading a team or doing contract work can also raise your pay."
+   },
+   {
+    "q": "Do Databricks engineers get paid overtime?",
+    "a": "Most salaried Databricks roles are exempt from overtime under the federal computer employee exemption. Some hourly roles are also exempt if the hourly rate meets the federal minimum for that exemption. Workers who do not qualify must get overtime under federal law, and some states set stricter rules. Independent contractors are not covered by overtime law."
+   }
+  ]
+ },
  "datadog": {
   "factors": [
    {
@@ -2274,6 +2916,40 @@
    {
     "q": "Do Datadog engineers get paid overtime?",
     "a": "Usually not. Most are salaried and fall under the federal computer professional or other white-collar exemptions, which remove overtime if pay and duties meet the rules. Some states, such as California, set stricter tests. Hourly contractors and some support or junior roles may earn overtime. Check your job classification and your state’s rules."
+   }
+  ]
+ },
+ "dbt": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from writing simple models to designing whole data pipelines, setting testing standards and guiding other analysts. Build a record of projects you owned from start to finish, and document the results so you can show them in interviews."
+   },
+   {
+    "label": "Warehouse and tool skills",
+    "text": "Employers pay more when dbt skill comes with strong SQL, a major cloud data warehouse, version control, orchestration tools and Python. Learn the warehouse your target employers use, and practice CI checks, incremental models and performance tuning."
+   },
+   {
+    "label": "Certifications",
+    "text": "No license is required for dbt work. Vendor certifications for dbt or cloud data platforms are optional, but they can help you stand out, mainly early in your career. Real project work and a public portfolio often count for more."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, tech and other data-heavy companies often pay more than small firms or nonprofits, because their data drives revenue and reporting. Target teams where analytics supports key business decisions, and learn the business metrics that matter there."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Large tech hubs tend to post higher pay, while some remote employers adjust pay to where you live. Compare postings for your area and for remote roles, and ask early how the employer sets pay for remote staff."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a dbt developer earn more?",
+    "a": "Grow from building models to owning data architecture and quality. Deepen your SQL, cloud warehouse and Python skills. Take on mentoring or lead roles, and share clear examples of faster pipelines or better reporting. Moving to a data-heavy industry or into analytics engineering leadership can also raise pay."
+   },
+   {
+    "q": "Do dbt developers get paid overtime?",
+    "a": "It depends on the job. Under federal law, a computer worker is exempt only if pay meets the required level and the main duties fit the exemption, such as systems analysis or programming. Many analytics roles are treated as exempt, but not all. Some states set stricter rules. Independent contractors are not covered by overtime law."
    }
   ]
  },
@@ -2410,6 +3086,40 @@
    {
     "q": "Do detection engineers get paid overtime?",
     "a": "Most do not. Detection engineers are usually salaried and often fall under the federal exemption for computer professionals, which removes overtime rights if pay meets set thresholds. Some states set higher thresholds or stricter rules. Hourly or contract roles may pay overtime, and some employers offer extra pay for on-call duty or incident response."
+   }
+  ]
+ },
+ "devops-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from running pipelines others built to designing the whole release and infrastructure setup. Senior engineers who own reliability across many teams tend to earn the most. Taking on design work, mentoring and incident leadership is the usual path up."
+   },
+   {
+    "label": "Cloud and automation skills",
+    "text": "Deep skill with major cloud platforms, containers, orchestration and infrastructure as code tends to bring higher offers. No license is required, and vendor certifications are optional, but they can help you get past screening. Showing real projects you built often matters more than the certificate."
+   },
+   {
+    "label": "Industry",
+    "text": "Employers whose revenue depends on uptime, such as tech and finance firms, often pay more than smaller shops or public agencies. Roles that add security or compliance duties can also pay more. Targeting these employers is one way to raise your pay."
+   },
+   {
+    "label": "Location",
+    "text": "Pay is usually higher in large tech hubs with high living costs. Remote roles are common. Some employers adjust pay by where you live, while others use one national scale. Comparing both kinds of offers helps you find the best deal."
+   },
+   {
+    "label": "On-call duties",
+    "text": "Many DevOps roles include an on-call rotation for outages. Some employers pay a stipend or give extra time off for it, while others fold it into salary. Ask how on-call works and whether it is paid before you accept an offer."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a DevOps engineer earn more?",
+    "a": "Grow from maintaining pipelines to designing systems, and lead incident response and reliability work. Build strong skills in cloud platforms, containers and infrastructure as code, and add security knowledge. Consider moving toward site reliability or platform engineering. Change employers or industries when your skills outgrow your pay, and ask about on-call pay when you negotiate."
+   },
+   {
+    "q": "Do DevOps engineers get paid overtime?",
+    "a": "Many DevOps engineers are salaried and treated as exempt from overtime. Under federal law, exemption depends on both pay level and duties, such as systems analysis, design or programming. Roles that mostly do routine operations or maintenance may not qualify. Some states set stricter rules. Only employees can be owed overtime. True independent contractors are not covered by overtime law."
    }
   ]
  },
@@ -2617,6 +3327,40 @@
    }
   ]
  },
+ "dynamodb": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from writing simple queries to designing tables, access patterns and indexes for large systems. Senior roles expect you to plan capacity, control costs and fix hot partitions. Take ownership of schema design and production tuning to move up."
+   },
+   {
+    "label": "Cloud certifications",
+    "text": "No law requires a certification for this work, but many employers list cloud provider credentials in postings. An associate or professional level cloud credential can help you pass screening and support a higher offer. Pair it with real project work, since hiring teams test hands-on skill."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay tends to be higher in large tech hubs with high living costs. Remote roles are common, but some employers adjust pay based on where you live. Compare offers by region and ask how a company sets pay for remote staff."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, gaming, retail and software firms that run high-traffic apps often pay more for engineers who keep databases fast and affordable at scale. Startups may offer equity in place of some cash. Target employers whose products depend on low-latency data."
+   },
+   {
+    "label": "Broader stack skills",
+    "text": "DynamoDB is rarely the whole job. Engineers who also know serverless functions, streams, infrastructure as code, and a language such as Python, Java or TypeScript fit more senior roles. Learning data modeling across both SQL and NoSQL systems widens your options."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a DynamoDB developer earn more?",
+    "a": "Build depth in single-table design, indexes, streams and cost control, then show results such as faster queries or lower cloud bills. Add cloud certifications and infrastructure as code skills. Move toward senior, architect or platform roles, and negotiate with proof of the systems you have scaled. Contract work can pay more per hour, but it usually comes without benefits."
+   },
+   {
+    "q": "Do DynamoDB developers get paid overtime?",
+    "a": "It depends. Under federal law, a developer is exempt from overtime only if both a pay test and a duties test are met. The pay must meet set minimums, by salary or a qualifying hourly rate, and the primary duty must be work like systems analysis, programming or software design. Some states, such as California, set stricter rules. Those who fail either test get overtime."
+   }
+  ]
+ },
  "education": {
   "factors": [
    {
@@ -2682,6 +3426,40 @@
    {
     "q": "Do EHS specialists get paid overtime?",
     "a": "It depends on the job’s duties and how it is paid. Many EHS specialists and managers are salaried and classified as exempt under federal law, so they don’t get overtime. Hourly technicians and entry-level coordinators are usually non-exempt and earn overtime for long weeks under the Fair Labor Standards Act. State rules vary, and some, like California, add daily overtime and stricter exemption tests."
+   }
+  ]
+ },
+ "electrical-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as engineers move from entry-level design tasks to leading projects, approving designs and managing teams. Taking ownership of full designs, mentoring junior engineers and building a record of completed products or projects helps you move up faster."
+   },
+   {
+    "label": "Professional Engineer license",
+    "text": "A PE license matters most in power, utility and building systems design, where a licensed engineer must seal drawings for many public projects. Most states require an accredited degree, passing the FE exam, supervised work experience and passing the PE exam, but exact rules vary by state."
+   },
+   {
+    "label": "Specialty",
+    "text": "RF and antenna design, battery and power electronics, and high-voltage power systems are in strong demand and often pay more than general circuit work. Building skills in simulation tools, power system studies or embedded hardware can open better-paid roles."
+   },
+   {
+    "label": "Industry and security clearance",
+    "text": "Defense, aerospace, semiconductor and utility employers pay differently. Many defense jobs require a US security clearance, which the employer sponsors and which generally requires US citizenship. Engineers who already hold an active clearance are often offered more."
+   },
+   {
+    "label": "Location",
+    "text": "Pay follows local cost of living and demand. Areas with tech, defense or energy hubs usually pay more. Fully remote roles are less common in hardware work because labs and sites need people on hand, so relocating can be a strong lever."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do electrical engineers get paid overtime?",
+    "a": "Most salaried electrical engineers are exempt from overtime under the federal professional exemption if their salary meets the federal threshold. Engineers paid by the hour as W-2 employees generally fail the salary-basis test, so overtime is required for hours over 40 in a workweek. Some states add stricter rules. Independent contractors are not covered by these rules."
+   },
+   {
+    "q": "How can an electrical engineer earn more?",
+    "a": "Earn a PE license if you work in power or building systems. Specialize in a high-demand area such as RF, power electronics or batteries. Consider defense work that comes with a security clearance. A master’s degree can help in research-heavy roles. Moving into lead or management positions, or changing employers, often brings the biggest raises."
    }
   ]
  },
@@ -2886,6 +3664,40 @@
    {
     "q": "How can an engineering manager earn more?",
     "a": "Take on a larger scope, such as more teams or a key product area, and aim for senior manager or director roles. Build depth in a high-demand technical field. Track your results in hiring, delivery and retention. When changing jobs, compare posted ranges and negotiate the full package, including bonus and equity, not only base salary."
+   }
+  ]
+ },
+ "enterprise-account-executive": {
+  "factors": [
+   {
+    "label": "Commission and quota",
+    "text": "Most pay comes from a base salary plus commission tied to a quota. Hitting or beating quota, and earning accelerators above it, moves pay the most. Read the plan closely before you sign. Some states, such as California, require commission plans to be in writing."
+   },
+   {
+    "label": "Track record",
+    "text": "Employers pay more for proof that you close large, complex deals with long cycles and many buyers. Keep a clear record of quota attainment, deal sizes and named wins you can share in interviews without breaking confidentiality."
+   },
+   {
+    "label": "Industry and product",
+    "text": "Pay tends to run higher in software, cloud, cybersecurity and other fields with large contract values and recurring revenue. Learning a technical or regulated field well can open roles with bigger deals and richer plans."
+   },
+   {
+    "label": "Territory and accounts",
+    "text": "The accounts you are given shape what you can earn. A territory with large, healthy customers and budget to spend makes quota easier. Ask how territories are assigned and how quotas were set before accepting an offer."
+   },
+   {
+    "label": "Equity and bonuses",
+    "text": "Many technology employers add stock grants, signing bonuses or club trips for top performers. These can change total pay a lot. Ask how equity vests and how bonuses are earned when you compare offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an Enterprise Account Executive earn more?",
+    "a": "Beat quota and earn accelerators above it. Build a record of closing large, multi-stakeholder deals. Move into industries with bigger contract values, like software or cybersecurity. Negotiate territory, quota and equity, not just base salary. Later steps include strategic or global account roles and sales leadership."
+   },
+   {
+    "q": "Do Enterprise Account Executives get paid overtime?",
+    "a": "Most are paid a salary plus commission and treated as exempt from overtime. Exemption depends on actual duties and pay under federal and state law, not the job title, and some states have stricter rules. If a rep is classified as nonexempt, federal law requires overtime pay for hours over forty in a workweek."
    }
   ]
  },
@@ -3331,6 +4143,40 @@
    }
   ]
  },
+ "financial-reporting": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay climbs as you move from preparing schedules to owning complex accounting positions and signing off on filings. Employers pay more for people who have handled full year-end closes, audits and new standards on their own. Ask to lead memos on new deals to build that record."
+   },
+   {
+    "label": "CPA license",
+    "text": "Many employers prefer or require a CPA license for senior technical roles, and it often lifts pay. Licenses are issued by state boards of accountancy, and education, exam and experience rules vary by state. Check your state board’s rules early so your work hours count."
+   },
+   {
+    "label": "Public company reporting",
+    "text": "Roles that prepare SEC filings, such as 10-K and 10-Q reports, tend to pay more than private company work. Experience with SEC rules, auditor reviews and internal controls is in high demand. Seek out public companies or firms preparing to go public."
+   },
+   {
+    "label": "Specialty",
+    "text": "Deep skill in hard areas like revenue recognition, leases, business combinations, derivatives, stock compensation or IFRS can raise your value. Companies facing mergers or unusual deals pay for people who can research the rules and write clear accounting memos."
+   },
+   {
+    "label": "Location",
+    "text": "Pay is usually higher in large metro areas with many public companies and audit firms, where living costs are also higher. Remote roles may set pay by your location or by a national scale, so ask how pay is set before you apply."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a technical accountant earn more?",
+    "a": "Earn a CPA license, gain audit or SEC reporting experience, and build a specialty in complex areas like revenue, leases or mergers. Take the lead on accounting memos and new standard adoptions. Moving to a public company or a firm preparing to go public can also lift pay."
+   },
+   {
+    "q": "Do technical accounting and financial reporting staff get paid overtime?",
+    "a": "Most are salaried and exempt from federal overtime if they meet the salary and duties tests for professionals. Those paid hourly, including W-2 temps placed by staffing agencies, are generally owed overtime for hours over forty in a workweek. Independent contractors are not covered by federal overtime rules. Some states, such as California, have stricter overtime rules."
+   }
+  ]
+ },
  "firmware-engineer": {
   "factors": [
    {
@@ -3637,6 +4483,40 @@
    }
   ]
  },
+ "gcp": {
+  "factors": [
+   {
+    "label": "Certifications",
+    "text": "Associate and professional-level GCP certifications can help you get interviews and support a higher offer, especially in consulting and partner firms. They expire and must be renewed, so keep them current and pair them with real project work you can show."
+   },
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from running existing setups to designing whole environments, leading migrations and owning production systems. Ask for work on architecture, cost control and reliability, and record the results so you can point to them at review time."
+   },
+   {
+    "label": "Specialty",
+    "text": "Skills such as data engineering, machine learning platforms, Kubernetes, security and infrastructure as code are often paid more than general cloud support. Building depth in one of these areas, alongside core GCP skills, can open better paid roles."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Employers in large tech hubs and high-cost cities often pay more, while some remote roles adjust pay to where you live. Compare offers for the same role across locations and ask early how the employer sets remote pay."
+   },
+   {
+    "label": "Employment type",
+    "text": "Contract and consulting roles may pay more per hour but usually come without benefits, paid leave or job security. Full-time roles often add bonuses or stock. Weigh the total package, not just the base rate, before you choose."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a GCP engineer earn more?",
+    "a": "Earn and renew a professional-level GCP certification, then build a specialty such as data, security or Kubernetes. Take on design and migration work, not just support tasks. Keep a record of savings and uptime gains you delivered. Compare offers across employers and locations, and negotiate the full package, including bonus and stock."
+   },
+   {
+    "q": "Do GCP engineers get paid overtime?",
+    "a": "Usually not. Most GCP engineers are salaried and exempt under federal law as computer professionals, and well-paid hourly computer workers are often exempt too. True independent contractors are not covered by overtime law at all. Lower-paid hourly employees, or workers who are misclassified, may be owed overtime. Some states have stricter rules, so check yours."
+   }
+  ]
+ },
  "general-manager": {
   "factors": [
    {
@@ -3739,6 +4619,40 @@
    }
   ]
  },
+ "go": {
+  "factors": [
+   {
+    "label": "Experience and seniority",
+    "text": "Pay rises as Go developers move from junior to senior, staff and lead roles. Employers pay more for people who design systems, review code and mentor others. Taking ownership of services and leading projects is the fastest way to move up a level."
+   },
+   {
+    "label": "Specialty",
+    "text": "Go is common in cloud infrastructure, distributed systems, networking and backend services. Skills in concurrency, performance tuning, containers, Kubernetes and site reliability often command higher offers. Building public projects or open source contributions in these areas can show depth to employers."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, cloud platforms, security and large tech firms tend to pay more for Go work than agencies or small businesses. Startups may offer lower base pay with more equity. Targeting industries that run critical Go systems can lift your offers."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Large tech hubs usually pay more, though living costs are higher too. Some remote employers adjust pay by where you live, while others use one national rate. Ask how a remote role sets pay before you accept."
+   },
+   {
+    "label": "Bonuses and equity",
+    "text": "Total pay often includes bonuses and stock, not just base salary. Equity at public companies can be sold, while startup equity may end up worth little. Compare full packages, vesting schedules and refresh grants when weighing offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Go developer earn more?",
+    "a": "Build deep skills in concurrency, distributed systems and cloud tools. Take on design and leadership work so you can move to senior or staff roles. Aim for industries that rely on Go for core systems. Compare total pay, including bonus and equity, and negotiate using several offers when you can."
+   },
+   {
+    "q": "Do Go developers get paid overtime?",
+    "a": "Usually not. Most are salaried employees who qualify for the federal computer or professional exemption, so they get no overtime. Hourly employees can also be exempt if paid at least a federal minimum hourly rate for computer workers. Non-exempt employees do earn overtime. Some states, such as California, have stricter rules. Independent contractors are not employees and have no overtime rights."
+   }
+  ]
+ },
  "government": {
   "factors": [
    {
@@ -3807,6 +4721,40 @@
    }
   ]
  },
+ "grafana": {
+  "factors": [
+   {
+    "label": "Experience and depth",
+    "text": "Pay rises as you move from building dashboards to designing full observability stacks for metrics, logs and traces. Show work on alerting, data source setup and scaling across many teams. Projects you can explain in interviews help more than years alone."
+   },
+   {
+    "label": "Role and scope",
+    "text": "Grafana is a skill, not a job title. People who use it inside site reliability, platform or DevOps roles usually earn more than those who only make reports. Taking on on-call, incident response or infrastructure duties can open better paid roles."
+   },
+   {
+    "label": "Related technical skills",
+    "text": "Employers pay more when Grafana comes with Kubernetes, cloud platforms, Prometheus style monitoring, infrastructure as code and scripting. No license is required for this work. Cloud or Kubernetes certifications can help show these skills, though hands-on results usually matter most."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay often runs higher in large tech hubs with a high cost of living. Some remote employers adjust pay by where you live, while others use one national range. Compare how each employer sets pay before you accept an offer."
+   },
+   {
+    "label": "Industry",
+    "text": "Companies that run large online services, finance and other fields where downtime is costly often pay more for strong monitoring skills. Smaller firms may pay less but give broader duties. Learning the uptime and compliance needs of a field can make you stand out."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Grafana engineer earn more?",
+    "a": "Build skills beyond dashboards. Learn alerting, logs and traces, Kubernetes, cloud platforms and infrastructure as code. Aim for site reliability or platform roles that own uptime and on-call duties. Keep a portfolio or write-ups of systems you built. Leading monitoring standards across teams also shows senior-level value that employers reward."
+   },
+   {
+    "q": "Do Grafana engineers get paid overtime?",
+    "a": "Many are salaried and exempt from federal overtime under the computer employee or other exemptions, if their duties and pay meet the rules. Being paid hourly does not by itself make someone eligible, since some hourly computer workers are also exempt. Independent contractors are not covered at all. Some states, such as California, set stricter rules, so check your state."
+   }
+  ]
+ },
  "graphic-designer": {
   "factors": [
    {
@@ -3838,6 +4786,40 @@
    {
     "q": "Do graphic designers get paid overtime?",
     "a": "It depends. Under federal law, salaried designers whose work needs real creativity and originality are often exempt from overtime. Designers doing routine production work, or paid hourly, are usually owed overtime past a forty-hour week. Some states, such as California, have stricter rules and higher salary tests, so check your state’s law and your job offer."
+   }
+  ]
+ },
+ "graphics-engineer": {
+  "factors": [
+   {
+    "label": "Experience and track record",
+    "text": "Pay rises as you move from junior to senior, staff and principal roles. Shipped titles, films, products or published research count heavily. Build a portfolio of rendering demos, shaders and engine features, and own larger systems over time to reach higher levels."
+   },
+   {
+    "label": "Specialty and depth",
+    "text": "Deep skills in GPU programming, shader optimization, ray tracing, low-level graphics APIs and performance profiling are scarce and well paid. Strong math and C++ help a lot. Specializing in an in-demand area, such as real-time ray tracing or VR rendering, can raise your offers."
+   },
+   {
+    "label": "Industry",
+    "text": "Pay differs by field. Chip makers, large tech firms and simulation or autonomous vehicle companies often pay more than many game studios or visual effects houses. Moving your graphics skills into a higher-paying industry is one of the fastest ways to earn more."
+   },
+   {
+    "label": "Equity and bonuses",
+    "text": "Total pay often includes stock grants and yearly bonuses, especially at large public tech companies. Some studios pay bonuses tied to a release. Compare full packages, not just base salary, and ask how equity vests before you accept."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Major tech and entertainment hubs usually pay more, though living costs are higher too. Some employers adjust remote pay to where you live. Targeting high-paying markets or employers with location-neutral pay can lift your earnings."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a graphics engineer earn more?",
+    "a": "Grow into senior or staff roles by owning major rendering systems and showing measurable performance gains. Build depth in GPU programming, ray tracing or VR. Consider higher-paying industries like chip design or simulation. Keep a strong portfolio, interview with several employers, and negotiate on base pay, bonus and equity together."
+   },
+   {
+    "q": "Is graphics engineering paid hourly or salary?",
+    "a": "Most full-time graphics engineers are salaried and usually exempt from overtime under federal rules for computer and professional employees. Some contract roles pay hourly, but many hourly computer workers are still exempt, and true independent contractors are not covered by overtime law. Some states, such as California, set stricter rules, so check your state."
    }
   ]
  },
@@ -3940,6 +4922,74 @@
    {
     "q": "Is growth paid hourly or salary?",
     "a": "Most full-time growth roles are salaried and often classified as exempt from overtime, if the job duties and salary meet federal tests. Some states, such as California, New York and Washington, set stricter rules. Freelancers and contractors usually bill by the hour or by project, sometimes with a performance fee."
+   }
+  ]
+ },
+ "growth-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from building features someone else designed to owning growth areas, choosing which experiments to run and mentoring others. Senior and staff roles pay more. Ask for projects where you set the plan, not just write the code."
+   },
+   {
+    "label": "Experimentation and data skills",
+    "text": "Engineers who can design sound A/B tests, read the results correctly and write solid SQL are worth more than those who only ship code. Learning basic statistics and analytics tools helps you lead experiments and earn more."
+   },
+   {
+    "label": "Proven impact on metrics",
+    "text": "Growth work is judged by results like sign-ups, activation and retention. Engineers who can show clear gains they drove have more pull in raises and job offers. Keep a record of your experiments, what changed and why it mattered."
+   },
+   {
+    "label": "Company stage and equity",
+    "text": "Large tech firms tend to pay higher base salaries plus stock. Startups may pay less in cash but offer stock options that could be worth a lot or nothing. Read equity terms closely and compare total pay, not just salary."
+   },
+   {
+    "label": "Location",
+    "text": "Pay is usually higher in major tech hubs where living costs are high. Some remote employers adjust pay by where you live, while others pay one rate everywhere. Ask how a company sets remote pay before you accept an offer."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a growth engineer earn more?",
+    "a": "Build skills beyond coding, such as experiment design, analytics and product sense. Track the gains your work produces and use them in reviews. Seek ownership of a key funnel like onboarding or referrals. Moving to a larger company, a better funded startup or a senior role often brings the biggest jumps in total pay."
+   },
+   {
+    "q": "Do growth engineers get paid overtime?",
+    "a": "Often not, but it depends. Federal law exempts many software workers under the computer employee exemption only if both tests are met: their main duties are programming, systems analysis or similar work, and their pay meets a minimum level. Being salaried alone is not enough. Some states, such as California, set higher pay thresholds or stricter rules, so check your state."
+   }
+  ]
+ },
+ "growth-manager": {
+  "factors": [
+   {
+    "label": "Experience and track record",
+    "text": "Pay rises when you can prove results, such as tests that lifted sign-ups, retention or revenue. Keep a record of each experiment, what you changed and the impact. Employers pay more for people who can point to wins they drove."
+   },
+   {
+    "label": "Company stage and equity",
+    "text": "Startups often pay less cash but add stock options, which may end up worth a lot or nothing. Larger tech firms tend to pay higher base salaries and bonuses. Weigh the full package and ask how equity vests before you accept."
+   },
+   {
+    "label": "Data and technical skills",
+    "text": "Growth managers who can write SQL, design sound A/B tests and read the results correctly usually earn more. Courses and side projects in analytics, experimentation and marketing automation can help you move into better-paid roles."
+   },
+   {
+    "label": "Industry",
+    "text": "Software, fintech and consumer apps tend to pay more for growth work than retail, nonprofits or local services, because fast user growth is worth more to them. Moving into a high-margin digital business is one of the quicker ways to raise pay."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay is often highest in large tech hubs with high living costs. Some remote employers set pay by where you live, while others use one national rate. Ask how a company sets remote pay and target employers whose pay bands fit your goals."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Growth Manager earn more?",
+    "a": "Build a portfolio of experiments with clear results on users or revenue. Deepen data skills like SQL and experiment design. Take ownership of a key metric or lead a team, since lead and director roles pay more. Moving to a better-funded company or a higher-paying industry also helps, as does negotiating bonus and equity, not just base salary."
+   },
+   {
+    "q": "Do Growth Managers get paid overtime?",
+    "a": "Most are paid a salary and treated as exempt from overtime under federal law, usually through the administrative exemption, since they use independent judgment on business operations. That requires being paid on a salary basis above a set minimum and meeting a duties test. Some states set stricter rules or higher salary levels. Junior growth staff who mainly carry out set tasks may be nonexempt and owed overtime."
    }
   ]
  },
@@ -4691,6 +5741,40 @@
    }
   ]
  },
+ "investigations": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from gathering records to leading cases on your own. Employers pay more for people who have run complex cases, interviewed reluctant witnesses and written reports that held up in court or audits. Ask to lead cases early to build that record."
+   },
+   {
+    "label": "Licenses and certifications",
+    "text": "A respected fraud examiner or compliance certification can lift pay, especially in finance and insurance. If you work for outside clients, most states require a private investigator license, and the rules vary by state. In-house corporate investigators often do not need one, but it can widen your options."
+   },
+   {
+    "label": "Industry",
+    "text": "Banks, insurers, health care payers and tech firms tend to pay more than small agencies or nonprofits, because losses from fraud, leaks or compliance failures are costly. Learning one field’s rules, such as anti-money laundering or health care billing, makes you easier to hire there."
+   },
+   {
+    "label": "Specialty and skills",
+    "text": "Skills in digital forensics, data analysis or financial tracing usually pay more than general case work. A government security clearance can also raise pay for federal contractor roles, though an employer must sponsor it. Courses in these areas can lead to better paid cases."
+   },
+   {
+    "label": "Location",
+    "text": "Large metro areas and places with many financial, government or corporate offices usually pay more, but living costs are higher too. Some desk-based investigation work is remote, yet field cases often require living near the people and sites involved."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an Investigations Specialist earn more?",
+    "a": "Build a record of closed cases backed by clear, well-documented reports. Earn a respected fraud or compliance certification. Add skills in data analysis, digital evidence or financial tracing. Consider moving to a high-stakes industry like banking or insurance. Over time, aim for lead investigator or manager roles, where you oversee cases and teams."
+   },
+   {
+    "q": "Do Investigations Specialists get paid overtime?",
+    "a": "It depends on how the job is classified. Under federal law, nonexempt workers must get time and a half for hours over 40 in a workweek. Many salaried investigators are treated as exempt under the administrative exemption if they meet both the salary and duties tests. Some states have stricter rules, such as daily overtime, so check your state and your offer."
+   }
+  ]
+ },
  "investment": {
   "factors": [
    {
@@ -4997,6 +6081,40 @@
    }
   ]
  },
+ "kernel-engineer": {
+  "factors": [
+   {
+    "label": "Experience and track record",
+    "text": "Pay rises with proof of deep systems work. Patches accepted upstream, maintainer roles, and shipped drivers or hypervisor features carry weight with hiring managers. Contributing to open source kernels, fixing real bugs and documenting your work builds a record that supports higher offers."
+   },
+   {
+    "label": "Specialty",
+    "text": "Some areas pay more because few people can do them well. Virtualization, memory management, kernel security, file systems, networking stacks and device drivers for new hardware are often in demand. Learning one niche deeply, along with debugging and performance tools, can move you into better paid roles."
+   },
+   {
+    "label": "Industry",
+    "text": "Cloud providers, chip makers and trading firms that need low latency often pay more than embedded or general IT roles. Automotive, aerospace and medical device work values safety and real-time skills. Targeting employers whose products depend on the operating system layer can raise your pay."
+   },
+   {
+    "label": "Location",
+    "text": "Large tech hubs with high living costs usually advertise higher pay. Some remote roles adjust pay by where you live, while others pay one rate nationwide. Comparing remote offers and asking how location affects pay helps you weigh each role fairly."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Defense and government projects often need a clearance, which can raise pay because fewer engineers hold one. You cannot apply for a clearance on your own; an employer sponsors it. Taking a role that sponsors one can open better paid work later."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a kernel engineer earn more?",
+    "a": "Build a public record of accepted upstream patches and solid driver or hypervisor work. Specialize in a hard area such as virtualization, security or performance. Move toward employers whose products rely on the operating system layer, and consider roles that sponsor a security clearance. Leading projects or becoming a maintainer also supports higher pay and senior titles."
+   },
+   {
+    "q": "Do kernel engineers get paid overtime?",
+    "a": "Most are salaried employees exempt from federal overtime under the computer employee rule, if their duties qualify and pay meets the federal threshold. Hourly employees, including W-2 contract staff, are owed overtime when paid below the separate hourly threshold. True independent contractors are not covered by federal overtime law. Some states, such as California, set higher thresholds or stricter rules."
+   }
+  ]
+ },
  "key-account-manager": {
   "factors": [
    {
@@ -5062,6 +6180,40 @@
    {
     "q": "Do Kotlin developers get paid overtime?",
     "a": "Most salaried Kotlin developers do not. Federal law exempts many computer workers from overtime if they do qualifying technical work and earn above a set salary or hourly level. Some states, such as California, set their own higher thresholds and rules. Workers paid below these levels may be owed overtime, so check your state’s law."
+   }
+  ]
+ },
+ "kubernetes": {
+  "factors": [
+   {
+    "label": "Hands-on production experience",
+    "text": "Pay rises most with proof that you have run real clusters in production. That means upgrades, scaling, incident response and on-call duty. Lab work alone counts for less. Take on ownership of a live cluster at your current job, and write down the outages you fixed and the systems you improved."
+   },
+   {
+    "label": "Certifications",
+    "text": "Vendor-neutral Kubernetes certifications for administrators, developers and security work are hands-on exams that many employers recognize. Cloud provider certifications help too. They rarely replace experience, but they can get you past screening and support a raise. Most expire after a set period, so plan to renew them."
+   },
+   {
+    "label": "Specialty skills",
+    "text": "Engineers who add security, networking, service mesh, GitOps or infrastructure as code tend to earn more than general cluster admins. Writing custom controllers and operators in Go is valued even more. Pick one area your team struggles with and become the person who owns it."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Large tech hubs usually pay the most. Many remote roles adjust pay to where you live, while some pay one national rate. Compare the pay policy before you accept. Applying to employers with a single rate can raise pay if you live in a lower-cost area."
+   },
+   {
+    "label": "Industry and company size",
+    "text": "Finance, large software firms and companies running heavy cloud workloads often pay more, and may add bonuses, stock or on-call pay. Small startups may offer equity instead of cash. Target employers where Kubernetes runs core revenue systems, since uptime there is worth more to them."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Kubernetes engineer earn more?",
+    "a": "Build a track record running production clusters, including upgrades and incident response. Earn a recognized Kubernetes certification and keep it current. Add a high-demand specialty such as security, platform engineering or Go operator development. Then move toward senior or platform lead roles, or apply to industries where cluster uptime drives revenue."
+   },
+   {
+    "q": "Is Kubernetes work paid hourly or salary?",
+    "a": "Most full-time Kubernetes jobs are salaried and exempt from overtime. Contract and consulting work is often paid hourly. True independent contractors are not covered by federal overtime rules. Many hourly computer employees are also exempt if they earn above a federal hourly minimum. Some states set stricter tests, so check your state’s rules."
    }
   ]
  },
@@ -5405,6 +6557,40 @@
    }
   ]
  },
+ "llm": {
+  "factors": [
+   {
+    "label": "Experience and track record",
+    "text": "Pay rises with proof that you have shipped LLM features to real users, not just demos. Employers pay more for people who have handled scale, cost and reliability. Build a portfolio of deployed projects, write up results, and seek roles that own production systems."
+   },
+   {
+    "label": "Specialty",
+    "text": "Skills in pretraining, fine-tuning, reinforcement learning from human feedback, inference optimization and GPU work are scarce. They usually pay more than prompt work or simple API integration. Evaluation and safety skills are also in demand. Going deep on one hard skill can move you into a higher pay band."
+   },
+   {
+    "label": "Employer type and equity",
+    "text": "Large tech firms and well-funded AI labs often add stock grants and bonuses on top of base salary. Startups may offer equity that could be worth a lot or nothing. Compare total compensation, vesting schedules and liquidity, not just base pay."
+   },
+   {
+    "label": "Location",
+    "text": "Major tech hubs tend to pay more, though some remote roles adjust pay by region. More than a dozen states, plus DC and some cities, require employers to share pay ranges, in postings or on request. Rules vary by state, but they make comparing offers easier."
+   },
+   {
+    "label": "Research credentials",
+    "text": "A PhD, published papers or strong open-source work can unlock research scientist roles, which often pay more than applied engineering. They are not required for most product roles. Contributing to open-source projects is a cheaper way to show depth."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do LLM engineers get paid overtime?",
+    "a": "Usually not. Most are salaried and exempt under federal law as professional or computer employees, and the computer exemption can also cover hourly pay above a set rate. Some states, such as California, have stricter tests. Genuine independent contractors are not covered by overtime law, but misclassified workers may be owed overtime."
+   },
+   {
+    "q": "How can an LLM engineer earn more?",
+    "a": "Ship production systems and document their impact on cost, speed or quality. Build scarce skills like fine-tuning, inference optimization or evaluation. Negotiate on total compensation, including equity and bonus. Use pay ranges shared under state transparency laws to benchmark offers. Moving to a larger employer or a well-funded AI lab often brings the biggest jump."
+   }
+  ]
+ },
  "looker": {
   "factors": [
    {
@@ -5470,6 +6656,40 @@
    {
     "q": "Do machine learning engineers get paid overtime?",
     "a": "Most do not. They are usually salaried and treated as exempt under the federal computer employee or professional exemptions, which depend on job duties and a minimum pay level. Some states, such as California, set their own stricter rules. Hourly contractors are often paid for every hour they bill, but overtime rules still depend on their classification."
+   }
+  ]
+ },
+ "machine-learning-engineer": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from junior to senior and staff levels. The biggest jumps come from owning models in production end to end, leading projects, and guiding other engineers. Ask for work that ships to real users and track the results you deliver."
+   },
+   {
+    "label": "Specialty and skills",
+    "text": "Engineers who work on large language models, recommendation systems, computer vision, or ML infrastructure are often paid more. Skills in distributed training, model serving, and GPU performance tuning are in high demand. Build depth in one area and show it through shipped work or open source code."
+   },
+   {
+    "label": "Industry and company type",
+    "text": "Large tech firms, finance, and well funded AI companies tend to pay the most. Startups may offer less cash but more equity, whose value is uncertain. Compare the full package, including base pay, bonus, and stock, before you accept an offer."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Roles in major tech hubs usually pay more to match living costs. Some remote employers adjust pay by where you live. Some states and cities require pay ranges in job postings, so use those ranges to check whether an offer is fair."
+   },
+   {
+    "label": "Education and research record",
+    "text": "A master’s degree or PhD in computer science, statistics, or a related field can raise pay, especially in research heavy roles. Many product roles hire without one. Published papers, strong projects, and proven production results can stand in for extra degrees."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a machine learning engineer earn more?",
+    "a": "Take ownership of models that run in real products and measure their impact. Build skills in high demand areas like large language models or ML infrastructure. Aim for senior or staff scope by leading projects. Compare offers across industries, and weigh base pay, bonus, and equity together. Switching employers often brings a larger raise than staying put."
+   },
+   {
+    "q": "Do machine learning engineers get paid overtime?",
+    "a": "Usually not. Most are salaried and treated as exempt under federal law, often through the computer employee exemption or the learned professional exemption. An employee needs to meet the duties test and pay requirement of just one exemption. Some states, such as California, have stricter rules. Contractors paid by the hour may bill for extra hours worked."
    }
   ]
  },
@@ -5711,6 +6931,108 @@
    }
   ]
  },
+ "matlab": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from writing scripts for others to designing algorithms and owning models. Senior staff who lead projects, review code and mentor others earn more. Keep a record of systems you built and the results they delivered to support your case at review time."
+   },
+   {
+    "label": "Industry",
+    "text": "Aerospace, defense, automotive, medical devices and finance tend to pay more for MATLAB skills than academic or lab support roles. University jobs are often limited by grant budgets. Moving your skills into a higher-paying industry is often the fastest way to a raise."
+   },
+   {
+    "label": "Specialty and tools",
+    "text": "Deep skill in Simulink, control systems, signal or image processing, or code generation for embedded hardware is in demand. Pairing MATLAB with Python, C or C++ widens your options. Vendor certifications can show skill, though employers usually weigh real project work more."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Many defense and aerospace MATLAB jobs require a federal security clearance, and cleared candidates are often paid more. You cannot apply for a clearance on your own. An employer must sponsor it, so a job that sponsors one can raise your future pay."
+   },
+   {
+    "label": "Degree and location",
+    "text": "Many roles ask for an engineering, math or science degree, and a master’s or PhD can raise pay for research and algorithm work. Pay also tends to be higher near engineering and defense hubs. Remote roles may adjust pay based on where you live."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is MATLAB work paid hourly or salary?",
+    "a": "Most full-time MATLAB jobs, such as engineer or algorithm developer roles, are salaried. Contract and consulting work is often paid hourly, either as a W-2 employee through a staffing firm or as a 1099 independent contractor. Independent contractors pay their own self-employment taxes and usually get no benefits, so compare offers on their total value."
+   },
+   {
+    "q": "Do MATLAB engineers get paid overtime?",
+    "a": "Most do not. Salaried MATLAB engineers and developers are usually exempt from federal overtime as professional or computer employees if they meet the duties and pay tests. W-2 employees who fail those tests must get overtime after 40 hours in a workweek. True independent contractors are not covered by federal overtime law. Some states set stricter rules."
+   }
+  ]
+ },
+ "mechanical-design": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from drafting simple parts to owning full assemblies and leading products through prototype and test. Taking on design reviews, supplier work, and mentoring junior engineers can help you reach senior or lead roles."
+   },
+   {
+    "label": "Licenses and certifications",
+    "text": "Most product design jobs do not require a Professional Engineer license, since many states exempt engineers working for manufacturers. A license can raise pay in consulting or roles that seal drawings. CAD and GD&T certifications can also help. Licensing rules vary by state."
+   },
+   {
+    "label": "Industry",
+    "text": "Pay differs by sector. Aerospace, defense, medical devices, and semiconductor equipment often pay more than general manufacturing or consumer goods. Defense roles may require a security clearance, which an employer must sponsor and which can make you more valuable."
+   },
+   {
+    "label": "Technical skills",
+    "text": "Strong skills in tolerance analysis, GD&T, simulation such as finite element analysis, and design for manufacturing tend to lift pay. Learning more than one major CAD platform and gaining hands-on testing experience can widen your job options."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tracks local cost of living and demand. Regions with dense aerospace, automotive, or tech hardware employers often pay more. Remote or hybrid roles exist, but many design jobs need on-site time for prototypes and testing."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Mechanical Design Engineer earn more?",
+    "a": "Build deeper skills in simulation, GD&T, and design for manufacturing. Seek ownership of full products from concept through testing. Moving into higher paying industries like aerospace or medical devices can help. A Professional Engineer license may raise pay in consulting roles. Leading teams or moving into engineering management is another common path."
+   },
+   {
+    "q": "Do Mechanical Design Engineers get paid overtime?",
+    "a": "Most salaried design engineers are exempt from federal overtime under the professional exemption if their salary meets the required minimum. W-2 employees paid hourly, including many agency contract roles, must get overtime for hours over forty in a week. Independent contractors paid on a 1099 are not covered. Some states have stricter rules."
+   }
+  ]
+ },
+ "mechanical-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as engineers move from detailing parts under review to owning full assemblies and leading design teams. Ask for work that takes a product from concept to production, and keep a record of designs that shipped."
+   },
+   {
+    "label": "Professional Engineer license",
+    "text": "A PE license matters most in consulting, HVAC, building systems and public projects, where a PE must seal drawings. Many product design roles do not require it. Licensing rules vary by state, and most paths start with passing the FE exam."
+   },
+   {
+    "label": "Industry",
+    "text": "Aerospace, medical devices, energy and semiconductor equipment often pay more than general consumer products, because tolerances, testing and regulation are tougher. Engineers can move toward these fields by learning their standards and documentation practices."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tracks local cost of living and how many manufacturers and tech firms are nearby. Large engineering hubs usually pay more. Remote roles exist, but many design jobs need hands-on work with prototypes, so where you live matters."
+   },
+   {
+    "label": "Specialty skills",
+    "text": "Skills in thermal management, finite element analysis, mechanism design and design for manufacturing are in demand. Strong CAD and GD&T knowledge also helps. Courses, software vendor certifications and portfolio projects can prove these skills to employers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do mechanical engineers get paid overtime?",
+    "a": "It depends on how they are paid. Salaried engineers doing professional design work and earning at least the federal salary threshold are usually exempt from FLSA overtime. Engineers paid by the hour, including agency contractors on a W-2, are nonexempt and must be paid overtime. Some states set stricter rules. True independent contractors are not covered by FLSA overtime."
+   },
+   {
+    "q": "How can a mechanical engineer earn more?",
+    "a": "Build depth in a valued skill such as thermal analysis, simulation or design for manufacturing. Take the FE exam early and pursue a PE license if your field uses it. Lead projects from concept through production, since ownership drives promotion. Compare offers across industries and regions, and ask for raises with documented results."
+   }
+  ]
+ },
  "merchant-support": {
   "factors": [
    {
@@ -5742,6 +7064,40 @@
    {
     "q": "How can a merchant support agent earn more?",
     "a": "Build strong quality and resolution scores, then aim for escalation, payments or fraud queues. Learn the tools sellers use, such as point of sale systems and payout dashboards. Use a second language if you have one. Take night or weekend shifts with a differential. Over time, move from a vendor contact center to an in-house role or into account management."
+   }
+  ]
+ },
+ "mid-market-account-executive": {
+  "factors": [
+   {
+    "label": "Commission and quota",
+    "text": "Pay is usually split between a base salary and commission, often close to evenly. Hitting or beating quota drives total earnings, and many plans add accelerators above target. Ask how quotas are set, what share of reps hit them, and whether commissions are capped."
+   },
+   {
+    "label": "Experience and track record",
+    "text": "Reps with a proven history of closing mid-sized deals and meeting quota get higher base pay and larger targets. Moving up from small business or SDR roles is common. Keep records of your attainment, deal sizes, and sales cycles to show in interviews."
+   },
+   {
+    "label": "Industry and product",
+    "text": "Software, cloud, and other complex technical products tend to pay more than simpler goods or services. Products with high deal values and recurring revenue usually support richer commission plans. Learning a technical product or vertical can open better-paying roles."
+   },
+   {
+    "label": "Territory and deal size",
+    "text": "A strong territory, a healthy pipeline, and larger average deals make quota easier to reach and raise real earnings. Inbound lead flow matters too. Ask about territory history, lead sources, and ramp time before accepting an offer."
+   },
+   {
+    "label": "Location",
+    "text": "Base pay is often higher in large metro areas with high living costs. Some remote roles set pay by region, while others use one national band. Compare offers on total on-target pay, not base alone."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a mid-market account executive earn more?",
+    "a": "Beat quota consistently so accelerators kick in, and push for larger multi-year or multi-product deals. Build a track record you can document. Move into a higher-paying industry, a stronger territory, or an enterprise role. When changing jobs, negotiate base, target commission, and quota together, and read how the plan handles caps, clawbacks, and split deals."
+   },
+   {
+    "q": "Do mid-market account executives get paid overtime?",
+    "a": "It depends on how the job is classified. Under federal law, reps whose primary duty is sales and who customarily and regularly sell away from the employer’s place of business are exempt as outside sales. Inside reps selling by phone or video, including from home, are often non-exempt unless another exemption applies. State rules vary, so check your state labor office."
    }
   ]
  },
@@ -5779,6 +7135,40 @@
    }
   ]
  },
+ "mlops": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from running existing pipelines to designing platforms others depend on. Senior and staff roles usually go to people who have owned production systems, handled outages and scaled training jobs. Ask to own a service or a migration to build that record."
+   },
+   {
+    "label": "GPU and distributed systems skills",
+    "text": "Skill with GPU clusters, distributed training, model serving and cost tuning is scarcer than general DevOps skill and often pays more. Build it through internal projects or side work, and show measurable results like faster training runs or lower cloud bills."
+   },
+   {
+    "label": "Industry and employer type",
+    "text": "AI labs, large tech firms and well funded startups often pay more than companies where machine learning is a side function. Banks, health systems and retailers may offer steadier work but lower top pay. Target employers whose core product depends on models."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tends to be highest in major tech hubs, where living costs are also high. Remote roles are common, but some employers adjust pay based on where you live. Ask how a company sets remote pay before you accept an offer."
+   },
+   {
+    "label": "Equity and bonuses",
+    "text": "At public tech firms and startups, stock grants and bonuses can make up a large share of total pay. Startup equity may end up worth nothing. Compare total compensation, vesting schedules and refresh grants, not just base salary."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an MLOps engineer earn more?",
+    "a": "Build depth in GPU infrastructure, distributed training and model serving, and show results such as lower costs or faster deployments. Take ownership of production systems to reach senior levels. Moving to an employer whose product is built on AI often raises pay. Negotiate on total compensation, including stock and bonus, and use competing offers when you have them."
+   },
+   {
+    "q": "Is MLOps work paid hourly or salary?",
+    "a": "Most full time MLOps engineers are paid a salary and are usually exempt from overtime under federal rules for computer professionals, if they meet the duties and pay tests. Hourly W-2 workers can also be exempt when paid above a set hourly rate. Independent contractors bill by the hour or project and are not covered by overtime law. Some states, such as California, set stricter rules."
+   }
+  ]
+ },
  "mobile-engineer": {
   "factors": [
    {
@@ -5810,6 +7200,40 @@
    {
     "q": "Do mobile engineers get paid overtime?",
     "a": "Usually not. Most salaried mobile engineers fall under the federal computer employee exemption, so they get no overtime pay. Hourly engineers paid below a set federal rate must get overtime. Some states, like California, have stricter rules and higher thresholds. Independent contractors are not covered by overtime law at all."
+   }
+  ]
+ },
+ "mongodb": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from writing basic queries to designing schemas, tuning performance and running large clusters. Employers pay more for proven work with replication, sharding and production outages. Keep a record of systems you built or scaled, and the results, to support a higher offer."
+   },
+   {
+    "label": "Role and scope",
+    "text": "Developers who use the database inside applications, database administrators and data architects are often paid differently. Roles that own uptime, security and capacity planning for critical systems tend to pay more. Taking on design reviews, on-call duty or team leadership can move you into a higher-paying role."
+   },
+   {
+    "label": "Certifications and related skills",
+    "text": "Vendor certifications for developers and administrators are optional, but they can help you stand out, especially early on. Pairing the database with cloud platforms, containers, a strong programming language and data pipeline tools usually raises your value more than the database skill alone."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Employers in large tech hubs and high-cost cities often pay more, though living costs are higher too. Some remote employers set pay by where you live, while others use one national rate. Ask how pay is set before you accept a remote offer."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, healthcare, large online retail and software companies often pay more because their data is large, sensitive or tied to revenue. Smaller firms and agencies may pay less but offer broader experience. Learning the rules and data needs of a high-paying industry can help you move into it."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do MongoDB developers get paid overtime?",
+    "a": "Often not. Many qualify for the federal computer employee exemption if they meet its pay and duties tests, and others may be exempt under a different exemption. Nonexempt workers must get overtime for hours over 40 in a workweek under federal law. Some states have stricter rules, such as daily overtime, so check your state’s law."
+   },
+   {
+    "q": "Is MongoDB work paid hourly or salary?",
+    "a": "Most full-time, permanent jobs pay a yearly salary, sometimes with a bonus or stock. Contract and consulting work is often paid by the hour. Independent contractors are not covered by overtime law and must handle their own taxes and benefits, so compare total value, not just the rate."
    }
   ]
  },
@@ -5949,6 +7373,40 @@
    }
   ]
  },
+ "nlp": {
+  "factors": [
+   {
+    "label": "Experience and level",
+    "text": "Pay in NLP tracks job level closely. Many tech employers use one leveling system for engineers and research scientists, so moving from junior to senior or staff often matters more than job title. Build a record of shipped models and ask how a role is leveled before you accept."
+   },
+   {
+    "label": "Advanced degrees and research",
+    "text": "A master’s or PhD in computer science, linguistics or a related field can lead to a higher starting level, and many research scientist roles expect a PhD. Published papers and open source work also help. They show your skill when you have fewer years on the job."
+   },
+   {
+    "label": "Specialty",
+    "text": "Skills in large language models, fine-tuning, retrieval, evaluation and running models at scale are in strong demand. Roles centered on data labeling or annotation tend to pay less. Learning to take models from prototype to production widens the roles you qualify for."
+   },
+   {
+    "label": "Location",
+    "text": "Employers in major tech hubs usually post higher pay to match local costs and competition. Some companies adjust remote pay by where you live, while others use one national band. Several states and cities require pay ranges in job postings, which makes comparing offers easier."
+   },
+   {
+    "label": "Employer type and equity",
+    "text": "Large tech firms often add stock grants and bonuses on top of base salary. Startups may offer stock options that could be worth a lot or nothing. Government, nonprofit and university roles usually pay less in cash. Compare total compensation, not just base pay."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an NLP engineer earn more?",
+    "a": "Aim for a higher level, since pay bands follow level. Lead projects that ship models to real users. Build skills in large language models, evaluation and deployment. Publish or share open source work. Negotiate on total compensation, including stock and bonus, and compare offers across employers and locations."
+   },
+   {
+    "q": "Do NLP engineers get paid overtime?",
+    "a": "Most NLP engineers and scientists are salaried and classed as exempt under federal law, often through the computer employee or professional exemption, so they do not get overtime. Annotators, data labelers and some contractors may be hourly and non-exempt. Some states have stricter rules, such as higher salary thresholds. Check how your role is classified."
+   }
+  ]
+ },
  "nodejs": {
   "factors": [
    {
@@ -5983,6 +7441,40 @@
    }
   ]
  },
+ "nursing": {
+  "factors": [
+   {
+    "label": "License level",
+    "text": "Pay rises with each license step, from LPN or LVN to RN to advanced practice roles such as nurse practitioner. Moving up takes more schooling, passing the national licensing exam, and for advanced roles a graduate degree, national certification, and state approval."
+   },
+   {
+    "label": "Specialty and certification",
+    "text": "Units like critical care, emergency, operating room, and labor and delivery often pay more than general floors. Earning a national specialty certification, which requires clinical hours and an exam, can qualify you for a certification differential at some employers."
+   },
+   {
+    "label": "Shift and overtime",
+    "text": "Many employers add a differential for nights, weekends, and holidays, and some pay for on-call time. Picking up those shifts or extra hours raises earnings. Overtime rules depend on federal law, your employer’s pay system, and your state."
+   },
+   {
+    "label": "Location and setting",
+    "text": "Pay varies widely by state and city, and by setting, such as hospitals, clinics, home health, long-term care, or telehealth. For telehealth, you usually need a license valid where the patient is located, so a multistate compact license can widen your options."
+   },
+   {
+    "label": "Travel and per diem work",
+    "text": "Travel contracts and per diem shifts often pay more per hour than staff jobs. Travel roles may add housing and meal stipends. The trade-off is less stability and often fewer benefits, so compare the full package before switching."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a nurse earn more?",
+    "a": "Move up a license level, such as from LPN to RN or RN to nurse practitioner. Earn a specialty certification, work in a high-demand unit, or take night, weekend, and holiday shifts with differentials. Travel contracts and per diem work can also pay more, though often with fewer benefits."
+   },
+   {
+    "q": "Do nurses get paid overtime?",
+    "a": "Hourly nurses are usually entitled to overtime under federal law. Many get it past forty hours in a workweek, but hospitals and residential care facilities may use the 8 and 80 system instead. Salaried RNs and nurse practitioners may be exempt. Some states add daily overtime or limit mandatory overtime, so rules vary by state."
+   }
+  ]
+ },
  "observability-engineer": {
   "factors": [
    {
@@ -6014,6 +7506,40 @@
    {
     "q": "Is an observability engineer paid hourly or salary?",
     "a": "Most full-time observability engineers are paid a salary and are often exempt from overtime under the federal computer employee exemption. Some states, such as California, have their own stricter rules. Contractors and consultants are usually paid hourly or by project. Check whether a role is exempt and how on-call time is handled."
+   }
+  ]
+ },
+ "opentelemetry": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from adding instrumentation to designing observability for whole systems. Senior and staff engineers who set telemetry standards across many teams earn the most. Take ownership of Collector pipelines, sampling choices and rollout plans to build that record."
+   },
+   {
+    "label": "Specialty and depth",
+    "text": "Deep skill with the Collector, custom processors, or instrumentation in several languages is rarer than basic setup. Experience tuning sampling and controlling telemetry costs at scale is also valued. Contributing code or docs to the open source project gives public proof of your skill."
+   },
+   {
+    "label": "Cloud and platform skills",
+    "text": "Most OpenTelemetry work sits inside Kubernetes and cloud platforms. Engineers who also handle infrastructure as code, service meshes and incident response can fill wider site reliability or platform roles, which tend to pay more. Cloud and Kubernetes certifications can help you get noticed, though employers usually weigh hands-on work more."
+   },
+   {
+    "label": "Industry and employer",
+    "text": "Observability vendors, large tech firms and finance companies running high-traffic systems often pay more than smaller shops or agencies. Bonuses and equity can add a lot at larger or fast-growing firms, so compare the full package, not just base pay."
+   },
+   {
+    "label": "Location",
+    "text": "Big tech hubs usually post higher pay for these roles. Many OpenTelemetry jobs are remote, and employers differ on whether remote pay follows one national scale or is adjusted for where you live. Ask how pay is set before you accept an offer."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do OpenTelemetry engineers get paid overtime?",
+    "a": "Usually not. Many qualify for the federal computer professional exemption, which can cover salaried or hourly employees who meet both a pay threshold and a duties test. Employees who fail either test are owed overtime. True independent contractors have no federal overtime rights. Some states, such as California, set stricter rules, so check the law where you work."
+   },
+   {
+    "q": "Is OpenTelemetry work paid hourly or salary?",
+    "a": "Most full-time roles are salaried, often with bonuses and sometimes equity. Contract and consulting work, such as a one-time instrumentation rollout or Collector migration, is more often billed by the hour or by the project. Contractors usually cover their own taxes and benefits, so compare total value, not just the rate."
    }
   ]
  },
@@ -6082,6 +7608,40 @@
    {
     "q": "Do operations analysts get paid overtime?",
     "a": "It depends on the job, not the title. Under federal law, a salaried analyst is exempt from overtime only if pay meets a minimum salary level and the duties involve real independent judgment. Many entry-level associates are nonexempt and earn overtime past forty hours a week. Some states, such as California, set stricter rules."
+   }
+  ]
+ },
+ "operations-manager": {
+  "factors": [
+   {
+    "label": "Industry",
+    "text": "Pay differs by sector. Manufacturing, logistics, technology and healthcare operations roles often pay more than retail or hospitality ones, because the processes are more complex and mistakes cost more. Moving into a higher-paying industry, or building knowledge of its rules and systems, can raise your offers."
+   },
+   {
+    "label": "Scope of responsibility",
+    "text": "Pay tracks what you run. Managing more people, a larger budget, several sites or a full profit and loss usually earns more than running one shift or team. Ask for wider duties, document your results, and use them to argue for a bigger title and salary."
+   },
+   {
+    "label": "Experience and track record",
+    "text": "Employers pay for proven results. Years as a supervisor or team lead help, but measurable wins matter more, such as lower costs, fewer errors or faster delivery. Keep a record of these outcomes with clear before and after comparisons to use in reviews and interviews."
+   },
+   {
+    "label": "Certifications and education",
+    "text": "No license is required, but a degree in business or a related field and certifications in Lean, Six Sigma, project management or supply chain can lift pay. They show you can improve processes, and some employers list them as preferred or required for senior roles."
+   },
+   {
+    "label": "Location and bonuses",
+    "text": "Large metro areas with higher living costs tend to pay more, though remote and hybrid roles are narrowing gaps. Many operations managers also earn annual bonuses tied to company or site goals. Ask how the bonus is earned before accepting an offer."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an operations manager earn more?",
+    "a": "Take on a larger scope, such as more staff, sites or budget. Track the savings and improvements you deliver and bring them to pay talks. Earn a process or supply chain certification, and consider moving to a higher-paying industry or a bigger company. Moving up to director or general manager is the usual path to the largest raises."
+   },
+   {
+    "q": "Do operations managers get paid overtime?",
+    "a": "Most are salaried and treated as exempt under the federal executive exemption. That requires a set minimum salary, a primary duty of management, regularly directing two or more full-time employees, and real input on hiring or firing. Others may fit a different exemption, such as the administrative one. If no exemption applies, overtime is owed. Some states set stricter tests or higher salary floors."
    }
   ]
  },
@@ -6459,6 +8019,40 @@
    }
   ]
  },
+ "performance-marketing": {
+  "factors": [
+   {
+    "label": "Ad spend managed",
+    "text": "Pay tends to rise with the size of the budget you control. Managing large, multi-channel budgets signals trust and skill. Ask for more spend as you prove results, and keep clear records of budgets, returns and growth you delivered."
+   },
+   {
+    "label": "Proven results",
+    "text": "Employers pay for measurable outcomes like lower cost per customer and higher return on ad spend. Track your wins with real numbers from your campaigns and bring them to interviews and raise talks."
+   },
+   {
+    "label": "Channels and technical skills",
+    "text": "Skills beyond basic ad buying often lift pay. These include analytics setup, conversion tracking, testing, attribution and working with data in spreadsheets or SQL. Ad platform certifications can help show baseline knowledge, but hands-on results usually count for more."
+   },
+   {
+    "label": "Industry and employer type",
+    "text": "Pay varies by sector. Fast-growing online businesses, software companies and online retailers often pay more than small local firms. Agency roles can teach a lot quickly, while in-house roles at larger brands may pay more over time."
+   },
+   {
+    "label": "Bonus and performance pay",
+    "text": "Some roles add bonuses tied to revenue, customer growth or cost targets, and some startups offer equity. Read how targets are set and paid before you accept, since these extras can change total pay a lot."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a performance marketing manager earn more?",
+    "a": "Grow the budgets you manage and document the results you drive. Learn tracking, analytics and testing well, and add skills on more than one ad channel. Moving to a larger company, a higher-paying industry or a senior or director role usually raises pay. Some people also earn more by freelancing or consulting."
+   },
+   {
+    "q": "Do performance marketing managers get paid overtime?",
+    "a": "Usually not. Most are paid a salary and classified as exempt from overtime under federal law, since the role tends to meet the duties and salary tests. Some states, such as California, New York and Washington, set higher salary thresholds or stricter rules. Hourly or contract marketers who are not exempt may be owed overtime."
+   }
+  ]
+ },
  "perl": {
   "factors": [
    {
@@ -6592,6 +8186,40 @@
    {
     "q": "Is playwriting paid hourly or salary?",
     "a": "Usually neither. Most playwrights work as freelancers and are paid through commission fees, advances, option payments and royalties. As independent contractors, they do not get overtime and must handle their own self-employment taxes. Some related jobs, such as university teaching or literary staff roles at theaters, do pay a regular salary."
+   }
+  ]
+ },
+ "policy": {
+  "factors": [
+   {
+    "label": "Experience and relationships",
+    "text": "Pay rises with years in the field and the strength of your working ties with lawmakers, staff and agencies. Prior work as a legislative or agency staffer often helps. Note that federal and many state ethics rules limit lobbying by former officials for a set period."
+   },
+   {
+    "label": "Industry",
+    "text": "Companies in heavily regulated fields, such as health care, energy, finance and technology, often pay more for policy work. Nonprofits and advocacy groups often pay less. Building knowledge of one regulated sector can open better paid roles."
+   },
+   {
+    "label": "Location",
+    "text": "Roles in the Washington, DC area often pay more, since much federal policy work and many employers are based there. Pay for state and local roles varies widely by market and often tracks living costs, so compare offers with local costs in mind."
+   },
+   {
+    "label": "Scope of the role",
+    "text": "Covering federal policy, many states or other countries usually pays more than tracking a single state or city. Leading a team, setting strategy or reporting to top executives also lifts pay. Ask for wider coverage to grow into these roles."
+   },
+   {
+    "label": "Education and expertise",
+    "text": "A law degree or deep knowledge of an area such as tax, trade, privacy or energy can raise pay. Lobbying needs no license, but federal law and each state have their own registration and reporting rules, and knowing them well adds value."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is policy and government affairs work paid hourly or salary?",
+    "a": "Most roles are salaried. Many are classed as exempt from overtime under federal law when they meet the salary and duties tests, and some states set stricter rules. Entry level roles, such as coordinators or assistants, are sometimes paid hourly and can earn overtime. Check how your role is classified in the offer."
+   },
+   {
+    "q": "How can a government affairs professional earn more?",
+    "a": "Build deep knowledge of one policy area and steady relationships with officials and staff. Seek roles that cover federal or multistate issues, or move into a heavily regulated industry. Taking on team leadership or strategy work also helps. Some people raise their pay by moving between in-house roles, trade groups and lobbying firms."
    }
   ]
  },
@@ -6765,6 +8393,40 @@
    }
   ]
  },
+ "procurement": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay climbs as buyers move from placing routine orders to running sourcing projects, negotiating large contracts and managing key suppliers. Ask to lead a bid, a renegotiation or a supplier review, and track the savings you deliver so you can show them at review time."
+   },
+   {
+    "label": "Spend category",
+    "text": "Buying technical goods such as electronic components, raw materials, software or medical supplies usually pays more than buying office supplies. Learning the specs, cost drivers and risks of one complex category makes you harder to replace and helps you move into better paid category roles."
+   },
+   {
+    "label": "Certifications",
+    "text": "Certifications are not legally required, but supply management credentials from professional associations can help you get hired and promoted. They show you know sourcing, contracts and cost analysis. Some employers pay for the exam or raise pay once you pass."
+   },
+   {
+    "label": "Industry",
+    "text": "Manufacturing, technology, energy, pharmaceuticals and government contracting often pay more than retail or small offices because the spend is larger and the rules are stricter. Defense work may require a security clearance, which can raise pay but takes time to obtain."
+   },
+   {
+    "label": "Location",
+    "text": "Pay is usually higher in large metro areas and near major manufacturing or tech hubs, where living costs are also higher. Remote or hybrid roles can let you reach better paying employers without moving, so compare offers against your local cost of living."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a procurement buyer earn more?",
+    "a": "Specialize in a complex category, earn a recognized supply management certification and document the savings and risk reductions you achieve. Learn the purchasing and analytics software your employer uses. Moving into senior buyer, category manager or sourcing manager roles, or into a higher paying industry, usually brings the biggest raises."
+   },
+   {
+    "q": "Do procurement buyers get paid overtime?",
+    "a": "It depends on pay and duties. Under federal law, a buyer is exempt only if paid a salary at or above the federal minimum salary level and the main work involves real judgment on significant purchasing decisions. Some states set a higher salary level or stricter rules. Buyers paid below that level, paid hourly, or mainly processing routine orders generally get overtime."
+   }
+  ]
+ },
  "producer": {
   "factors": [
    {
@@ -6864,6 +8526,40 @@
    {
     "q": "Do Product Designers get paid overtime?",
     "a": "Usually not. Most full-time product designers are salaried and classified as exempt under federal law, based on their duties and a minimum salary level. Some states, such as California, set stricter tests. Designers classified as hourly, nonexempt employees do earn overtime. Independent contractors bill their agreed rate but do not get overtime pay."
+   }
+  ]
+ },
+ "product-engineer": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from building assigned tasks to owning whole features, then whole product areas. Senior product engineers help decide what gets built, not just how. Ask to lead a feature end to end and track its results to show you are ready for the next level."
+   },
+   {
+    "label": "Full-stack skills",
+    "text": "Product engineers who can work across front end, back end and data are worth more because one person can ship a feature alone. Strengthening a weak area, such as database design or a modern front-end framework, widens the roles you can apply for."
+   },
+   {
+    "label": "Company stage and equity",
+    "text": "Startups often pair lower base pay with stock options. Larger tech companies tend to offer higher base salary plus stock grants and bonuses. Read the full offer, not just the base, and ask how equity vests and what it may be worth."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay is usually highest in large tech hubs. Some remote employers adjust pay by where you live, while others pay one national rate. Ask how a remote offer is set before you relocate or accept."
+   },
+   {
+    "label": "Industry and product impact",
+    "text": "Engineers on revenue-driving products in fields like finance, health tech or developer tools can often command more. Showing how your features moved user or business metrics strengthens your case at review time and in offer talks."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a product engineer earn more?",
+    "a": "Own features from idea to release and measure their effect on users. Build depth across the stack and in product skills, such as user research and analytics. Negotiate the full package, including equity and bonus. Moving to a company with a larger product or a higher pay band often brings the biggest raise."
+   },
+   {
+    "q": "Do product engineers get paid overtime?",
+    "a": "Usually not. Federal law exempts computer employees from overtime when their main duties are qualifying work, such as systems analysis, programming or software design, and they are paid at least a set salary or hourly minimum. Some states, such as California, set stricter pay tests. True independent contractors are not covered by overtime law at all. Employees who fail these tests may be owed overtime."
    }
   ]
  },
@@ -7102,6 +8798,40 @@
    {
     "q": "Do program managers get paid overtime?",
     "a": "Most salaried program managers are exempt from overtime under federal law if their duties and salary meet the required tests. Some states, such as California, New York and Washington, set stricter rules. Hourly contract managers may earn overtime if they are non-exempt employees. Independent contractors do not get overtime."
+   }
+  ]
+ },
+ "programmer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as a programmer moves from fixing small bugs to owning features, designing systems and guiding others. Building a record of shipped work, and showing it in a portfolio or code samples, helps you move up faster or win a better offer elsewhere."
+   },
+   {
+    "label": "Industry",
+    "text": "The same coding skills pay differently in games, factory automation, banking, insurance and government work. Game studios often draw many applicants, which can hold pay down. Programmers who move into industries with high stakes or strict rules can often earn more."
+   },
+   {
+    "label": "Languages and specialty",
+    "text": "Skills that are scarce tend to pay more. Older companies may still need people who know legacy languages and mainframe systems. Machine tool shops value CNC and controls know-how. Games value engine and graphics skills. Learning a skill local employers struggle to hire for can raise your pay."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tends to be higher in large metro areas with many tech employers and a high cost of living. Remote jobs may set pay by where you live or by one national scale, depending on the employer. Ask how a remote role sets pay before you accept."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Defense and some government contractor jobs require a security clearance, and cleared programmers are often paid more. You cannot apply for a clearance on your own. An employer must sponsor it, so taking a job that sponsors one can open better paid roles later."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do programmers get paid overtime?",
+    "a": "Many do not. Federal law has an exemption for computer employees who meet a set pay level and do qualifying duties such as designing, writing or testing programs. Some may be exempt under other rules instead. Programmers who fit no exemption must get time and a half after forty hours in a workweek. Some states, such as California, have stricter rules."
+   },
+   {
+    "q": "How can a programmer earn more?",
+    "a": "Learn skills that are hard to find, such as legacy systems, embedded code or security. Take on design work and lead small projects. Keep a portfolio of finished work. Compare offers across industries and regions, since pay varies widely. Ask for a raise after shipping clear results, and consider roles that sponsor a security clearance."
    }
   ]
  },
@@ -7513,6 +9243,40 @@
    }
   ]
  },
+ "react-native": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from building screens to owning app architecture, performance, and releases. Senior developers who lead teams or make technical decisions earn more. Ship apps to the stores, keep a portfolio, and take on code review and mentoring to move up."
+   },
+   {
+    "label": "Native platform skills",
+    "text": "React Native developers who can also write Swift or Kotlin and build native modules are often paid more than those who work only in JavaScript. Learning iOS and Android build tools, native bridges, and app store release steps makes you harder to replace."
+   },
+   {
+    "label": "Location",
+    "text": "Employers in large tech hubs and high cost areas tend to pay more. Remote roles may pay one national rate or adjust pay to where you live. Ask how each employer sets remote pay before you accept an offer."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, health tech, and well funded product companies often pay more than agencies or small startups. Some startups add equity, which may or may not end up being worth much. Weigh base pay, bonus, and equity together when you compare offers."
+   },
+   {
+    "label": "Employment type",
+    "text": "Full-time roles usually pay a salary with benefits. Contract roles through staffing agencies often pay hourly, and freelancers may charge hourly or a fixed price per project. Contract pay can look higher but may come without benefits or paid time off, so compare the total value."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do React Native developers get paid overtime?",
+    "a": "Often not. Under federal law, many software developers are exempt as computer employees if their duties qualify and they are paid a salary or hourly rate at or above set minimums. Some states, such as California, set higher thresholds. W-2 developers, including agency contractors, who do not meet an exemption can be owed overtime. True independent contractors are not covered."
+   },
+   {
+    "q": "Is React Native development paid hourly or salary?",
+    "a": "Most full-time React Native jobs pay a yearly salary, often with a bonus, equity, or both. Contract jobs through staffing agencies are usually paid hourly. Freelancers may set an hourly rate, a fixed price per project, or a capped number of hours, so they are not always paid for every hour they work."
+   }
+  ]
+ },
  "recruiter": {
   "factors": [
    {
@@ -7887,6 +9651,40 @@
    }
   ]
  },
+ "rf-engineer": {
+  "factors": [
+   {
+    "label": "Experience and specialty",
+    "text": "Pay rises as you move from bench testing and tuning to owning full RF designs. Skills in high-demand areas such as phased arrays, millimeter wave, RFIC design or satellite links tend to pay more. Build depth in one of these and show finished designs, not just test work."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Defense, radar and space work often requires a federal security clearance, and cleared engineers usually earn more. You cannot apply for a clearance on your own. An employer must sponsor you for a role that needs one, so taking such a job can raise your pay later."
+   },
+   {
+    "label": "Industry",
+    "text": "Pay differs between defense and aerospace, chip makers, phone and device makers, wireless carriers and test labs. Product design roles at device and chip companies often pay more than network field roles. Moving into the sector that values your skill set most is one of the fastest ways to earn more."
+   },
+   {
+    "label": "Education",
+    "text": "Many RF design roles prefer a master’s degree, and advanced antenna, radar or RFIC research jobs often seek a PhD. Graduate study in electromagnetics or microwave engineering can open higher-paying design work. A Professional Engineer license is rarely required in this field."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tracks local living costs and the number of employers nearby. Tech hubs and areas with large defense or aerospace sites usually pay more. Some roles allow remote design work, but lab, test and field jobs need you on site, so being willing to relocate can help."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can an RF engineer earn more?",
+    "a": "Grow from testing into full design ownership. Learn skills in demand, such as phased arrays, millimeter wave or RFIC design, and master simulation tools. Consider a master’s degree. Taking a job that sponsors a security clearance can raise pay in defense work. Moving to a higher-paying industry or region also helps."
+   },
+   {
+    "q": "Do RF engineers get paid overtime?",
+    "a": "Most salaried RF engineers are exempt under federal law and do not get overtime, though some employers pay extra for long projects. Engineers paid hourly as W-2 employees, including some agency contract staff, may be non-exempt and earn overtime. Independent contractors are not covered by overtime law. Some states set stricter rules, so check yours."
+   }
+  ]
+ },
  "risk-manager": {
   "factors": [
    {
@@ -7986,6 +9784,40 @@
    {
     "q": "Are ROS engineers paid hourly or salary?",
     "a": "Most full-time ROS engineers are salaried and classified as exempt from overtime under federal rules for computer professionals. Contract and freelance ROS work is often paid hourly. Some states have stricter rules for who counts as exempt, so check your state’s law and your offer letter."
+   }
+  ]
+ },
+ "ruby": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as developers move from junior to senior and lead roles. Employers pay more for people who can design systems, review code and mentor others. Owning features, sharing on-call duty and making architecture choices builds the record you need for a senior title."
+   },
+   {
+    "label": "Rails and stack depth",
+    "text": "Most Ruby jobs use Ruby on Rails. Offers tend to be higher for developers who also handle databases, background jobs, performance tuning, testing and cloud deployment. Adding front end or DevOps skills widens the range of roles you can apply for."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay often follows the labor market where the employer is based. Some remote employers pay one national rate, while others adjust pay by where you live. Comparing both kinds of offers helps you find the better deal."
+   },
+   {
+    "label": "Industry",
+    "text": "Companies in finance, health tech and growing software products can pay more than agencies or small nonprofits. Bonuses, equity and benefits also vary widely by employer, so compare total pay and not only base salary."
+   },
+   {
+    "label": "Contract or employee",
+    "text": "Independent contractors usually charge a higher hourly rate than employees earn. They also pay their own self-employment tax and health coverage and get no paid time off. Weigh these costs before choosing contract work over a staff job."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Ruby developer earn more?",
+    "a": "Build depth in Rails and the tools around it, such as databases, testing and cloud hosting. Lead larger projects and code reviews to qualify for senior roles. Keep a portfolio or open source work others can see. Compare offers by total pay, and in states that require pay ranges in job ads, use those ranges when you negotiate."
+   },
+   {
+    "q": "Do Ruby developers get paid overtime?",
+    "a": "Often not. Many are exempt under federal law as computer employees, or under another exemption such as administrative or executive, when they meet the pay and duties tests. A developer who is not exempt is owed overtime for hours over 40 in a workweek. Some states, such as California, add stricter rules, including daily overtime and their own pay floor for exempt computer professionals."
    }
   ]
  },
@@ -8159,6 +9991,40 @@
    }
   ]
  },
+ "sales-engineer": {
+  "factors": [
+   {
+    "label": "Commission and variable pay",
+    "text": "Many sales engineers earn a base salary plus variable pay tied to the team’s quota or closed deals. The split between base and variable varies by employer. Before accepting an offer, ask how targets are set and how often the team actually hits them."
+   },
+   {
+    "label": "Technical specialty",
+    "text": "Complex or hard-to-staff products tend to pay more. Examples include cybersecurity, cloud infrastructure, data platforms and industrial automation. Building deep skill in one of these areas and earning respected vendor certifications can lift your offers."
+   },
+   {
+    "label": "Industry and deal size",
+    "text": "Pay usually follows the size and complexity of the deals you support. Enterprise software and complex equipment sold to large buyers tend to pay more than small-business or quick transactional sales. Moving toward larger accounts raises your earning potential."
+   },
+   {
+    "label": "Experience",
+    "text": "Senior and principal sales engineers earn more. They can run discovery, design full solutions and hold their own in executive meetings. A record of deals you helped win, with specific outcomes, is your strongest argument for a raise or a better offer."
+   },
+   {
+    "label": "Location and travel",
+    "text": "Pay tends to be higher in large tech and industrial hubs, though remote roles have widened the options. Field roles with heavy travel may pay more. Some employers adjust pay by location, so ask how they set their pay bands."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a sales engineer earn more?",
+    "a": "Specialize in a high-demand technical area, move to larger enterprise accounts, and track the revenue you helped close. Strong demo and communication skills matter as much as technical depth. Some sales engineers raise their earnings by moving into management, solutions architecture, or a quota-carrying sales role with a bigger commission share."
+   },
+   {
+    "q": "Do sales engineers get paid overtime?",
+    "a": "Most are salaried and classified as exempt under federal law, often under the administrative exemption, so they usually do not get overtime. Exemption depends on actual duties and a minimum salary level, not the job title. Some states, such as California and New York, set stricter tests or higher salary levels, so a few roles may qualify."
+   }
+  ]
+ },
  "sales-manager": {
   "factors": [
    {
@@ -8258,6 +10124,40 @@
    {
     "q": "Do sales representatives get paid overtime?",
     "a": "It depends on the role. Under federal law, outside sales reps who mainly sell away from the employer’s place of business are exempt from overtime. Inside sales reps are often entitled to overtime unless they qualify for an exemption, such as certain retail commission plans. Some states have stricter rules, so check your state’s labor laws."
+   }
+  ]
+ },
+ "salesforce": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from handling user requests and basic fixes to owning the whole system. Employers pay more for people who have led rollouts, data migrations and integrations. Keep a record of projects you delivered and the business results they brought."
+   },
+   {
+    "label": "Salesforce certifications",
+    "text": "Certifications are not legally required, but many employers and consulting firms use them to set pay and screen candidates. Starting with the administrator credential and adding advanced, developer or consultant ones can lift offers. Keep them active by completing the yearly maintenance Salesforce requires."
+   },
+   {
+    "label": "Technical specialty",
+    "text": "Specialists who write code, build complex automation or handle integrations usually earn more than those who only configure screens and reports. Deep knowledge of a specific product area, such as service, marketing or quoting tools, is also valued. Learning one of these skills can open better-paid roles."
+   },
+   {
+    "label": "Industry",
+    "text": "Employers in finance, healthcare, technology and consulting often pay more, especially when they have strict data, security or compliance needs. Experience with regulated data and industry versions of Salesforce makes you easier to hire in these sectors."
+   },
+   {
+    "label": "Contract or full time",
+    "text": "Contractors and freelancers are often paid a higher hourly rate, but they usually pay their own taxes, insurance and time off. Full-time staff trade some pay for benefits and steady work. Compare the total package, not just the rate."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Salesforce Specialist earn more?",
+    "a": "Add certifications beyond the entry admin credential, learn coding or integration work, and build expertise in one product area. Take on larger projects such as rollouts and migrations, and track the results you deliver. Moving into consulting, architect or team lead roles, or targeting higher-paying industries, also tends to raise pay."
+   },
+   {
+    "q": "Do Salesforce Specialists get paid overtime?",
+    "a": "It depends on the job’s duties and how it is paid. Many salaried Salesforce roles are treated as exempt from overtime under federal law, but only if they meet the duties and salary tests. Hourly workers who are not exempt must get overtime. Some states, such as California, have stricter rules, so check your state."
    }
   ]
  },
@@ -8635,6 +10535,40 @@
    }
   ]
  },
+ "simulation-engineer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from running models others set up to building, checking and owning your own. Senior engineers who lead projects, set modeling standards or mentor others earn more. Keep a record of the models you built and how well they matched real test results."
+   },
+   {
+    "label": "Specialty and tools",
+    "text": "Skills in high-demand methods tend to pay more. Examples are finite element analysis, computational fluid dynamics, multibody dynamics and hardware-in-the-loop testing. Strong coding in C++ or Python and experience with widely used commercial solvers widen your options. Vendor training and certificates can help prove your skill."
+   },
+   {
+    "label": "Industry",
+    "text": "Aerospace, defense, automotive, semiconductors and energy often pay more than small manufacturers or academic research labs. The same modeling skills often carry over between fields. Moving your experience into a better paying industry can be one of the faster ways to raise your pay."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Defense and government jobs that require a security clearance often pay more. You cannot apply for a clearance on your own. An employer or agency sponsors it for a specific job. Most clearances require US citizenship, and a clean financial and legal record helps you qualify when an offer comes."
+   },
+   {
+    "label": "Location",
+    "text": "Pay is usually higher near aerospace, auto and tech hubs, where living costs are also higher. Some remote jobs adjust pay to where you live. Compare offers against local costs, not just the headline number."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a simulation engineer earn more?",
+    "a": "Build depth in a high-demand specialty, such as fluid dynamics or structural analysis, and show that your models match real test data. A master’s degree can help for research-heavy roles. Moving into a lead role, switching to a higher paying industry, or taking a job that comes with a sponsored security clearance can also raise your pay."
+   },
+   {
+    "q": "Do simulation engineers get paid overtime?",
+    "a": "Most do not. Salaried simulation engineers usually count as exempt professional or computer employees under federal law, so extra hours are not paid. Hourly workers placed through an agency may get overtime if the job is nonexempt, but many computer roles stay exempt even when paid hourly. Independent contractors are not covered. Some states set stricter rules."
+   }
+  ]
+ },
  "site-reliability-engineer": {
   "factors": [
    {
@@ -8700,6 +10634,40 @@
    {
     "q": "Do SMB Account Executives get paid overtime?",
     "a": "It depends on the role and the state. Many employers treat the job as exempt, but inside sales work does not automatically qualify. The federal outside sales exemption covers reps who sell mainly away from the office. Inside reps may be owed overtime unless another exemption fits. State laws vary, so check your state’s rules and your job classification."
+   }
+  ]
+ },
+ "snowflake": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from writing queries and loading data to designing whole data platforms. Engineers who own data models, cost control and security setup earn more. Ask for projects that put you in charge of design choices, then show those results on your resume."
+   },
+   {
+    "label": "Certifications",
+    "text": "Snowflake offers its own certification exams, from a core level to advanced tracks for architects, engineers and administrators. No law requires them, but many employers and clients look for them. Passing an advanced exam can help you reach senior and consulting roles."
+   },
+   {
+    "label": "Related skills",
+    "text": "Snowflake work rarely stands alone. Strong SQL, Python, data modeling, pipeline tools and at least one major cloud platform make you worth more. Skills in performance tuning and cutting compute costs are especially valued, because they save employers money directly."
+   },
+   {
+    "label": "Role type",
+    "text": "Architects and lead data engineers usually earn more than developers, analysts or administrators who use the platform. Moving toward architecture, or into roles that mix engineering with client consulting, tends to raise pay. A record of migrations or platform builds supports that move."
+   },
+   {
+    "label": "Contract or full time",
+    "text": "Contract roles often pay a higher hourly rate, but may lack benefits, paid leave and job security. Independent contractors also pay their own self-employment taxes. Compare the full package, not just the rate, before choosing between contract and salaried work."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do Snowflake developers get paid overtime?",
+    "a": "It depends on employment status. Many data engineers are exempt under the federal computer employee rule if their duties qualify and their pay meets a set minimum. Hourly employees paid below that level, including W-2 workers placed by staffing firms, are owed overtime. True independent contractors on a 1099 have no overtime right. Some states, such as California, set stricter rules."
+   },
+   {
+    "q": "Is Snowflake work paid hourly or salary?",
+    "a": "Both are common. Full-time jobs are usually salaried, sometimes with bonuses or stock. Contract and consulting work is usually paid by the hour, either as a W-2 employee of a staffing firm or as an independent contractor. Check which one an offer is, since it affects taxes, benefits and overtime."
    }
   ]
  },
@@ -8839,6 +10807,40 @@
    }
   ]
  },
+ "solutions-architect": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from supporting deals to owning large, complex designs on your own. Years spent as an engineer, developer or consultant count. Leading bigger accounts and mentoring others helps you reach senior and principal titles."
+   },
+   {
+    "label": "Cloud and technical certifications",
+    "text": "Professional-level cloud architecture certifications and security or networking credentials can lift offers, mostly because they prove skills employers sell. They are not legally required. Pick the ones tied to the platforms your target employers use, and keep them current, since many expire."
+   },
+   {
+    "label": "Variable pay and commission",
+    "text": "Pre-sales architects often earn a base salary plus variable pay tied to team sales targets. Post-sales roles lean more on base pay and bonus. Ask how the plan is measured, how often targets are met, and whether stock is included."
+   },
+   {
+    "label": "Specialty",
+    "text": "Architects who focus on in-demand areas such as security, data platforms, machine learning or large migrations tend to command more. Building deep skill in one area, while keeping broad design knowledge, can set you apart in hiring."
+   },
+   {
+    "label": "Industry and location",
+    "text": "Software vendors and large cloud providers usually pay more than resellers or internal IT teams. Big tech hubs pay more, though remote roles may adjust pay by where you live. Compare total pay, not just base salary."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a solutions architect earn more?",
+    "a": "Earn respected architecture certifications, build a specialty such as security or data, and take on larger, more complex accounts. Moving to a software vendor with strong variable pay can help. Show clear results, like deals won or projects delivered, and use them when you negotiate or seek a senior title."
+   },
+   {
+    "q": "Do solutions architects get paid overtime?",
+    "a": "Usually not. Most are salaried and treated as exempt under federal law, often through the computer employee or administrative exemption. Both depend on actual duties and meeting a minimum pay level. Some states set stricter tests or higher salary thresholds. Workers who do not meet these tests, including some hourly contractors on a company’s payroll, are owed overtime."
+   }
+  ]
+ },
  "solutions-engineer": {
   "factors": [
    {
@@ -8870,6 +10872,40 @@
    {
     "q": "Do solutions engineers get paid overtime?",
     "a": "Usually not. Most are paid a salary and classified as exempt from overtime under federal law, often under the professional, computer or administrative exemptions. Exemption depends on actual duties and a minimum salary level, and some states, such as California, apply stricter tests. If your employer classifies you as nonexempt, you must be paid overtime under federal and state rules."
+   }
+  ]
+ },
+ "sourcer": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay tends to rise as a sourcer shows a record of finding hard-to-reach people who get hired. Keep notes on your response rates, interviews booked and hires made, and use them when you ask for a raise or a new role."
+   },
+   {
+    "label": "Specialty",
+    "text": "Sourcers who find engineers, data experts, health care staff or executives often earn more than those filling general roles. Learning the language and skills of one hard-to-fill field can make you more valuable to employers in that field."
+   },
+   {
+    "label": "Employer type",
+    "text": "In-house teams, staffing agencies and recruiting firms pay in different ways. Agencies may tie part of pay to hires made, while in-house roles often lean on base pay and benefits. Compare the whole package, not just the base."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay often follows local living costs and demand for talent. Some employers set remote pay by where you live, and others use one national rate. Ask how a remote role is priced before you accept an offer."
+   },
+   {
+    "label": "Bonuses and commission",
+    "text": "Some sourcers earn bonuses for candidates who are hired or for hitting team goals. Agency roles are more likely to include this. Ask how bonuses are earned and paid, and what happens if a hire leaves early."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a sourcer earn more?",
+    "a": "Focus on hard-to-fill roles such as technical or executive searches. Get strong at advanced search methods, outreach writing and recruiting software. Track the hires you help make. Many sourcers raise their pay by moving into full-cycle recruiting, sourcing lead roles or agency work with placement bonuses."
+   },
+   {
+    "q": "Do sourcers get paid overtime?",
+    "a": "It depends. Sourcers who are employees and not exempt under federal and state law are owed overtime. Exempt status depends on actual salary and job duties, not a job title, and some states have stricter rules. True independent contractors are not covered by federal overtime law, but that status depends on the real working relationship."
    }
   ]
  },
@@ -9043,6 +11079,40 @@
    }
   ]
  },
+ "storage-engineer": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as engineers move from running backups and setting up volumes to designing storage architecture, planning capacity, and leading data migrations. Owning disaster recovery plans and design decisions is the usual path to senior and architect titles."
+   },
+   {
+    "label": "Certifications",
+    "text": "No license is required for this work. Vendor certifications on enterprise storage arrays, backup software, and cloud platforms can lift offers, especially at employers that run those products. Some certifications expire unless renewed, so keep the ones that matter current."
+   },
+   {
+    "label": "Cloud and automation skills",
+    "text": "Engineers who manage object storage, cloud backup, and hybrid setups, and who automate work with scripting or infrastructure-as-code tools, tend to earn more than those who only handle on-premises arrays. Building these skills through lab projects can open better-paying roles."
+   },
+   {
+    "label": "Industry and clearance",
+    "text": "Finance, healthcare, and government contractors handle sensitive or regulated data and often pay more. Some federal contract roles require a security clearance, which only an employer can sponsor. Holding an active clearance can raise your value for later jobs."
+   },
+   {
+    "label": "On-call duty and location",
+    "text": "After-hours maintenance windows and on-call rotations are common. Some employers add on-call pay, while many salaried roles do not, so ask before accepting. Pay also tracks local cost of living, and some remote roles adjust pay by where you live."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a storage engineer earn more?",
+    "a": "Move toward design work, such as capacity planning, disaster recovery, and large data migrations. Add cloud storage and scripting skills, and earn certifications for the platforms employers use. Regulated industries and cleared government work often pay more. Changing employers or negotiating on-call pay can also raise earnings."
+   },
+   {
+    "q": "Do storage engineers get paid overtime?",
+    "a": "Usually not. Under federal law, many qualify for the computer professional exemption when their main duties involve systems analysis, design, or similar skilled work and they earn at least a set salary or a set hourly rate. Employees doing mostly routine tasks may be owed overtime. Independent 1099 contractors get no federal overtime. Some states set their own rules."
+   }
+  ]
+ },
  "strategic-sourcing": {
   "factors": [
    {
@@ -9108,6 +11178,40 @@
    {
     "q": "Do Structural Engineers get paid overtime?",
     "a": "Most salaried structural engineers are exempt from federal overtime rules under the professional exemption, so overtime pay is not required. Some employers still pay straight time or bonuses for extra hours, especially in consulting with billable work. Engineers paid hourly, such as some contract or entry-level staff, usually do get overtime. State rules can add protections."
+   }
+  ]
+ },
+ "supplier-quality": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay rises as you move from supporting audits to leading them and owning a supplier base on your own. Engineers who have launched new parts, resolved serious quality escapes, or managed key suppliers alone earn more. Ask to lead a supplier launch or corrective action project early."
+   },
+   {
+    "label": "Certifications and auditor training",
+    "text": "A quality engineering certification from a professional society, Six Sigma belts, or lead auditor training for standards such as ISO 9001, IATF 16949 or AS9100 can raise pay and open senior roles. None is legally required, but many postings ask for them. Some employers pay for the training."
+   },
+   {
+    "label": "Industry",
+    "text": "Pay often varies by industry. Automotive work centers on APQP and PPAP. Aerospace adds AS9100 and first article inspection. Medical device work follows FDA rules. Each needs specific know-how, and roles with tight regulation often pay more. Learning the standards of a higher-paying sector helps you switch."
+   },
+   {
+    "label": "Technical skills",
+    "text": "Strong skills in GD&T, measurement systems, statistical process control, and process failure analysis make you more valuable to suppliers and employers. Engineers who can fix a supplier’s process, not just reject parts, are paid more. Build these skills through hands-on projects and short courses."
+   },
+   {
+    "label": "Travel and location",
+    "text": "Roles with frequent or international travel to supplier plants may pay more, and travel costs are usually covered by the employer. Pay also tracks local living costs and the number of manufacturers nearby. Being open to travel or relocation widens your options."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do supplier quality engineers get paid overtime?",
+    "a": "Most are salaried and classified as exempt under the federal Fair Labor Standards Act, so overtime pay is not required. Exemption depends on actual duties and salary, not job title. Non-exempt workers, such as many hourly contract engineers, must get time and a half for hours over forty in a workweek. Some states add stricter rules, like daily overtime."
+   },
+   {
+    "q": "How can a supplier quality engineer earn more?",
+    "a": "Earn a quality engineering certification or lead auditor training, and learn the standards of a well-paying industry such as aerospace or medical devices. Take on supplier launches and tough corrective actions to show results. Moving into a senior, lead, or supplier development manager role, or accepting more travel, also tends to raise pay."
    }
   ]
  },
@@ -9380,6 +11484,40 @@
    {
     "q": "How can a Systems Software Engineer earn more?",
     "a": "Build depth in a hard specialty such as kernels, compilers or database internals, and show it through shipped work or open source contributions. Seek roles that own larger, more critical systems. Target employers that offer stock and bonuses, and negotiate on total compensation. Changing employers often brings a bigger raise than waiting for an internal one."
+   }
+  ]
+ },
+ "tableau": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as you move from building single dashboards to owning data sources, designing reporting for whole teams, and advising business leaders. Ask for projects that involve gathering requirements and working with stakeholders. Keep a portfolio that shows the decisions your dashboards supported."
+   },
+   {
+    "label": "Related technical skills",
+    "text": "Tableau skills alone rarely bring top pay. Strong SQL, data modeling, and experience with cloud data warehouses or Python widen the roles you can fill. Server or Cloud administration, including security and performance tuning, is a less common skill that employers often pay more for."
+   },
+   {
+    "label": "Certifications",
+    "text": "Tableau offers official certifications for analysts, consultants and server administrators. No law requires them, and most jobs do not either. They can still help you land interviews, win consulting work, or prove skills when you have fewer years on the job. Some expire, so check the renewal rules."
+   },
+   {
+    "label": "Industry",
+    "text": "Finance, health care, tech and consulting employers tend to pay more for data visualization work than nonprofits, schools or small local businesses. Knowing a field’s data, such as insurance claims, sales or supply chain, makes you more valuable to employers in that field."
+   },
+   {
+    "label": "Location and work arrangement",
+    "text": "Pay often tracks local living costs, with higher offers in large metro areas. Remote roles may pay one national rate or adjust by where you live. Independent contract work can pay more per hour, but it usually has no benefits or paid leave, and you pay both shares of payroll tax."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Tableau developer earn more?",
+    "a": "Add skills that sit next to Tableau, such as SQL, data modeling, and server or cloud administration. An official Tableau certification can help with interviews. Take on projects with clear business impact and document the results. Moving into a senior, lead or consulting role, or into a better paying industry, usually brings the biggest raises."
+   },
+   {
+    "q": "Do Tableau developers get paid overtime?",
+    "a": "It depends on duties, pay and employment status. Many Tableau developers are exempt under the federal computer employee exemption. It can cover salaried workers and hourly workers paid at least a set minimum rate if their main work is systems analysis, design or programming. Employees whose duties fit no exemption are owed overtime. Independent contractors are not covered. Some states, such as California, have stricter rules."
    }
   ]
  },
@@ -9757,6 +11895,40 @@
    }
   ]
  },
+ "threat-intelligence": {
+  "factors": [
+   {
+    "label": "Experience",
+    "text": "Pay climbs as analysts move from triaging alerts and feeds to tracking threat groups and writing assessments leaders act on. Building a record of accurate, timely warnings and owning intelligence requirements helps you reach senior and lead roles faster."
+   },
+   {
+    "label": "Security clearance",
+    "text": "Government and defense contractor roles often require a clearance, and cleared analysts usually earn more because few people hold one. You cannot apply for a clearance yourself. An employer must sponsor it, so taking a cleared job early can raise your pay later."
+   },
+   {
+    "label": "Technical specialty",
+    "text": "Analysts who can reverse engineer malware, write detection rules, or script their own collection tools tend to earn more than those who only summarize reports. Knowing a language spoken by major threat actors can also lift pay. Pick one skill and build it with real projects."
+   },
+   {
+    "label": "Industry",
+    "text": "Banks, defense, large tech firms and security vendors often pay more for threat intelligence than smaller companies or public agencies. Firms that sell intelligence as a product value deep expertise. Targeting these sectors can raise your pay for the same skills."
+   },
+   {
+    "label": "Certifications",
+    "text": "Recognized security and threat intelligence certifications can help you pass hiring filters and support a raise, though employers weigh proven skill more. Many employers pay for training and exams, so ask about it before you pay yourself."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a Threat Intelligence Analyst earn more?",
+    "a": "Build hands-on skills like malware analysis, detection writing or scripting, and show results in a portfolio or public research. Earn a respected certification. Consider roles that come with a security clearance, or move to higher paying sectors like finance, defense or security vendors. Taking on lead duties, such as setting intelligence priorities or briefing executives, also helps."
+   },
+   {
+    "q": "Do Threat Intelligence Analysts get paid overtime?",
+    "a": "Often not. Many are salaried and exempt under federal law through the computer employee or administrative exemption, and even some hourly workers in computer roles can be exempt if paid above a set hourly rate. Whether you qualify depends on your actual duties and pay. Some states set stricter rules, so check your state’s law and your offer."
+   }
+  ]
+ },
  "trading-systems-engineer": {
   "factors": [
    {
@@ -10029,6 +12201,40 @@
    }
   ]
  },
+ "video-motion": {
+  "factors": [
+   {
+    "label": "Experience and portfolio",
+    "text": "Pay rises as your reel shows finished, client-ready work. Hiring managers judge skill by what they see, not years alone. Keep a short, current reel with your best pieces, and show results such as campaigns or training programs you helped deliver."
+   },
+   {
+    "label": "Range of skills",
+    "text": "People who can shoot, edit, color grade, mix sound and build motion graphics or 3D animation usually earn more than those who do one task. Adding animation or color skills, and learning new tools as they spread, can lift your rate."
+   },
+   {
+    "label": "Location and remote work",
+    "text": "Pay tends to be higher in large media and tech markets, where costs of living are also higher. Remote roles can open better-paying clients outside your area, but on-site shooting work still depends on where you live."
+   },
+   {
+    "label": "Industry and client type",
+    "text": "Agencies, tech firms, healthcare and large in-house brand teams often pay more than small local businesses or nonprofits. Building a niche, such as product video or medical training content, can help you charge more."
+   },
+   {
+    "label": "Staff or freelance work",
+    "text": "Staff jobs bring steady pay and often benefits. Freelancers set their own day or project rates but cover their own gear, software, taxes and insurance. Some film and TV work falls under union contracts that set minimum rates, while most marketing video does not."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a video and motion artist earn more?",
+    "a": "Build a strong reel, add skills like motion graphics, 3D animation or color grading, and target better-paying industries. Freelancers can raise rates as demand grows and price by project instead of by hour. Staff can ask for senior, lead or producer roles that add planning and client work."
+   },
+   {
+    "q": "Do video and motion artists get paid overtime?",
+    "a": "It depends on how the job is set up. Hourly employees are generally owed overtime after 40 hours in a workweek under federal law, and some states, such as California, add daily overtime. Salaried staff may be exempt if they meet salary and duties tests. Day-rate freelancers paid as employees are often owed overtime. True independent contractors are not, but the label alone does not decide that."
+   }
+  ]
+ },
  "vp-engineering": {
   "factors": [
    {
@@ -10196,6 +12402,40 @@
    {
     "q": "Is Workday work paid hourly or salary?",
     "a": "Most full-time Workday analysts and consultants are paid a salary and are often treated as exempt from overtime under federal rules for computer or administrative work. Contractors are frequently paid hourly. Whether overtime applies depends on your actual duties and pay, and some states have stricter rules than federal law."
+   }
+  ]
+ },
+ "workplace": {
+  "factors": [
+   {
+    "label": "Experience and scope",
+    "text": "Pay rises as the job grows from handling supplies and visitors to running budgets, leases, vendor contracts and office moves. Ask to take on bigger projects, such as a relocation or a new site, and keep a record of results to show in reviews."
+   },
+   {
+    "label": "Facility and safety skills",
+    "text": "People who can handle building systems, emergency plans, workplace safety programs and space planning tend to earn more than those focused only on admin tasks. Training in workplace safety, first aid or facility management can help you qualify for these duties."
+   },
+   {
+    "label": "Location",
+    "text": "Pay often runs higher in large cities and areas with a high cost of living, and lower in small towns. State and local minimum wage and overtime laws also vary, so the same job can pay differently from one state to the next."
+   },
+   {
+    "label": "Industry and company size",
+    "text": "Larger employers, multi-site offices and fields such as finance, law, tech and health care often pay more for workplace roles. Moving to a bigger office or a more complex setting is one way to raise your pay."
+   },
+   {
+    "label": "Team and budget responsibility",
+    "text": "Supervising reception, mailroom or facilities staff, or owning a real budget, usually moves a role into a higher pay band. Showing you can manage people and control costs supports a promotion to a workplace or facilities manager title."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do office managers get paid overtime?",
+    "a": "It depends on how the job is classified. Nonexempt staff must get time-and-a-half for hours over forty in a workweek, and some states, such as California, also require daily overtime. To be exempt under the federal administrative exemption, a person must be paid a salary at or above the federal threshold, do office work tied to running the business, and use discretion and independent judgment on matters of significance."
+   },
+   {
+    "q": "How can an office manager earn more?",
+    "a": "Take on work with clear business impact, such as managing vendor contracts, budgets, office moves or safety programs. Build skills in facility management, space planning and workplace safety through recognized training. Larger employers and multi-site offices often pay more. Moving into a facilities or workplace manager role, or supervising a team, is a common path to higher pay."
    }
   ]
  },
