@@ -873,6 +873,7 @@ td code,dd code,.note code{font-size:12.5px;background:var(--bg2);padding:1px 5p
 .why{margin:-6px 0 0;padding:0 0 12px 58px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 14px;align-items:baseline}
 .why b{font:600 12px var(--mono);color:var(--text)}
 .why .y::before{content:"✓ ";color:var(--green);font-weight:700}
+.why .y.nw{font-weight:600;color:var(--text)}.why .y.nw::before{content:"● ";color:var(--ac)}
 .why .q{color:var(--faint)}
 .why .q::before{content:"? ";color:var(--amber);font-weight:700}
 .fy-out .job .pill:not(.acc){display:none}

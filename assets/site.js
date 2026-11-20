@@ -1245,6 +1245,10 @@
     var place = $('fy-place'), payIn = $('fy-pay-in'), noPay = $('fy-nopay'), list = $('fy-list'), count = $('fy-count'), more = $('fy-more'), jump = $('fy-jump');
     var payNote = $('fy-pay-note'), gap = $('fy-gap');
     var shown = 30, found = [], nFull = 0, extra = new Map(), why = new Map(), asked = 0, fromLink = false;
+    // The personal radar (plan item 14, 20 Nov 2026): the day of the last visit is kept here, and on the next visit the jobs that fit
+    // and were posted after it are counted in the heading and marked in the list. Nothing is sent anywhere.
+    var td0 = new Date(), today8 = td0.getFullYear() * 10000 + (td0.getMonth() + 1) * 100 + td0.getDate(), seen0 = Number(get('hrn_fy_seen', 0)) || 0, fresh = {};
+    var dayOf = function (n) { return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Math.floor(n / 100) % 100 - 1] + ' ' + (n % 100); };
     // answers that arrived in a link are shown, and kept only once the visitor changes something
     try {
       if (location.hash.indexOf('#a=') === 0) {
@@ -1348,6 +1352,7 @@
         var w = why.get(j[0]);
         if (asked && i === nFull && nFull > 0) html += '<li class="fy-div">Fit in part: at least one answer could not be checked</li>';
         var line = w ? '<p class="why"><b>' + w.ok + ' of ' + asked + '</b>' + w.bits.map(function (b) { return '<span class="' + (b[0] ? 'y' : 'q') + '">' + esc(b[1]) + '</span>'; }).join('') + '</p>' : '';
+        if (fresh[j[0]]) line = line ? line.replace('<p class="why">', '<p class="why"><span class="y nw">New since your last visit</span>') : '<p class="why"><span class="y nw">New since your last visit</span></p>';
         html += card(j, extra.get(j[0]) || 0, '').replace(/<\/li>$/, line + '</li>');
       });
       list.innerHTML = html; more.hidden = found.length <= shown; decorate(list);
@@ -1423,6 +1428,10 @@
           if (opts.length) tips = '<p class="flabel">Change one answer and more jobs fit</p><p class="fy-tips">' + opts.slice(0, 3).map(function (o) { return '<button class="chipbtn" type="button" data-drop="' + o[0] + '">' + DROP[o[0]] + ': ' + jobsWord(o[1]) + '</button>'; }).join('') + '</p>';
         }
         var full = profile.cats.length <= 1 && !profile.skills.length ? '<a href="' + P + '/jobs/?' + [profile.cats[0] ? 'cat=' + profile.cats[0] : '', profile.where === 'remote' ? 'remote' : profile.where === 'hybrid' ? 'hybrid=1' : '', A.slug ? 'loc=' + A.slug : '', A.pay ? 'sal=' + A.pay + (A.nopay ? '' : '&nosal') : ''].filter(Boolean).join('&') + '">Open the same in the full search</a>' : '';
+        fresh = {}; var nNew = 0;
+        if (seen0 && seen0 < today8 && !fromLink) found.slice(0, nFull).forEach(function (j) { if ((j[16] || 0) > seen0) { fresh[j[0]] = 1; nNew++; } });
+        if (nNew) head += ' · <b>' + nf(nNew) + ' new</b> since your last visit on ' + dayOf(seen0);
+        if (!fromLink && asked) set('hrn_fy_seen', today8);
         count.innerHTML = '<p class="fy-n">' + head + '</p>' + (sub ? '<p class="note">' + sub + '</p>' : '') + tips + (full ? '<p class="note">' + full + '</p>' : '');
         if (jump) { jump.hidden = false; jump.textContent = (nFull ? jobsWord(nFull) + ' fit' : jobsWord(found.length) + ' fit in part') + ' · show the list'; }
         render();

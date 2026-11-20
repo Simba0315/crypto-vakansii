@@ -783,6 +783,51 @@ assert not says_nonprofit("Kith", "The Kinnect Foundation, a non-profit establis
 assert not says_nonprofit("Edgility Search", "COPE Family Support Center is a nonprofit organization whose mission is")
 
 
+def css_blocks(css):
+    """[(prelude, body)] of the top-level blocks of minified CSS (strings and nested blocks kept whole)."""
+    out, i, n = [], 0, len(css)
+    while i < n:
+        j = css.find("{", i)
+        if j < 0: break
+        depth, k = 1, j + 1
+        while k < n and depth:
+            c = css[k]
+            if c == "{": depth += 1
+            elif c == "}": depth -= 1
+            elif c in "\"'":
+                q = c; k += 1
+                while k < n and css[k] != q: k += 1
+            k += 1
+        out.append((css[i:j].strip(), css[j + 1:k - 1])); i = k
+    return out
+
+
+def css_prune(css, classes, ids):
+    """The rules of `css` that can match a page using these classes and ids: a selector is dropped when it names a class or an id the
+    page does not have (outside :not(), :is(), :where() and :has(), whose contents are not judged). At-rules other than @media,
+    @supports and @layer (fonts, keyframes) are kept whole."""
+    def sels(pre):
+        parts, depth, cur = [], 0, ""
+        for ch in pre:
+            depth += ch == "("; depth -= ch == ")"
+            if ch == "," and depth == 0: parts.append(cur); cur = ""
+            else: cur += ch
+        return [x.strip() for x in parts + [cur] if x.strip()]
+    def ok(sel):
+        s_ = re.sub(r"::?[a-z-]+(?:\([^)]*\))?", "", re.sub(r":(?:not|is|where|has)\([^)]*\)", "", sel))
+        return all(c in classes for c in re.findall(r"\.([A-Za-z_][\w-]*)", s_)) and all(x in ids for x in re.findall(r"#([A-Za-z_][\w-]*)", s_))
+    out = []
+    for pre, body in css_blocks(css):
+        if pre.startswith(("@media", "@supports", "@layer")):
+            inner = css_prune(body, classes, ids)
+            if inner: out.append(f"{pre}{{{inner}}}")
+        elif pre.startswith("@"): out.append(f"{pre}{{{body}}}")
+        else:
+            keep = [x for x in sels(pre) if ok(x)]
+            if keep: out.append(",".join(keep) + "{" + body + "}")
+    return "".join(out)
+
+
 def ava(name, cls=""):
     """Company avatar: the real logo when we have one, with the coloured initial underneath as a fallback. The small copy of the logo
     (small_logos) except in the large square."""
@@ -3312,8 +3357,22 @@ def main():
         ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
         if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
     HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs)) if len(x[3]) >= 20]
+    def hourly_tbl(js_, label):
+        """Hourly pay by job title (plan item 1.9, 20 Nov 2026): as on the part-time and night shift pages, for the other lists people
+        search by hours. The middle of each posting's hourly range, titles with three or more postings that state one."""
+        hr_t = defaultdict(list)
+        for j in js_:
+            if (h_ := usd_hourly(j.get("salary"))): hr_t[re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip()].append((h_[0] + h_[1]) / 2)
+        rows_ = sorted(((t_, sorted(v_)) for t_, v_ in hr_t.items() if len(v_) >= 3 and 3 <= len(t_) <= 60), key=lambda x: -len(x[1]))[:15]
+        if len(rows_) < 3: return ""
+        label = label[:1].upper() + label[1:]
+        return section(f"{label} pay [[by job title]]", '<div class="tablewrap"><table><tr><th>Job title</th><th>Open postings with an hourly rate</th><th>Median hourly pay</th></tr>'
+                       + "".join(f"<tr><td>{e(t_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td></tr>" for t_, v_ in rows_)
+                       + f'</table></div><p class="note">The middle of each posting’s hourly range, for titles with three or more open {e(label.lower())} postings that state one.</p>', sid="pay", label="Pay")
     for p_, h_, w_, js_ in HOURS:
         row_h, kw_h = list_parts(h_, js_)
+        if p_ != "night-shift/" and (ht_ := hourly_tbl(js_, h_.replace(" jobs and internships", "").replace(" jobs", "").replace("Jobs ", ""))):
+            kw_h = dict(kw_h); kw_h["after"] = ht_ + kw_h.get("after", "")
         fq_first, fq_extra = None, ()
         if p_ == "hiring-immediately/":
             fq_first = ("Which jobs are hiring immediately?", f"{len(js_):,} open postings here say so in their own words, such as “immediate start” or “hiring immediately”. They are listed newest first, and each links to the employer’s own page.")
@@ -10306,6 +10365,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "map.js", "explorer.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
+    # The home page carries the styles it uses in the page itself, and the whole file comes after the first paint (PageSpeed, phone,
+    # 20 Nov 2026: Speed Index 4.2 s with the first paint at 1.1 s, the filmstrip blank until the 270 KB stylesheet, written for some
+    # 120 kinds of page, had arrived and been read; about 88 KB of it can match the home page, counting every class site.js may add).
+    full_css = (OUT / "style.css").read_text(encoding="utf-8")
+    js_words = set(re.findall(r"[A-Za-z_][\w-]*", (ROOT / "assets" / "site.js").read_text(encoding="utf-8")))      # every word of the script: it builds markup from long strings
+    for rel_ in ("index.html",):
+        f_ = OUT / rel_
+        h_ = f_.read_text(encoding="utf-8")
+        link_ = f'<link rel="stylesheet" href="{P}/style.css?v={V}">'
+        css_ = css_prune(full_css, {w for cl in re.findall(r'class="([^"]*)"', h_) for w in cl.split()} | js_words, set(re.findall(r'id="([^"]+)"', h_)) | js_words)
+        if link_ in h_ and "</style" not in css_:
+            f_.write_text(h_.replace(link_, f'<style>{css_}</style><link rel="stylesheet" href="{P}/style.css?v={V}" media="print" onload="this.media=\'all\'">'
+                                              f'<noscript>{link_}</noscript>', 1), encoding="utf-8")
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
