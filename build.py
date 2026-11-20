@@ -4720,6 +4720,14 @@ def main():
         if rows_:
             out_ += section("Which visas the postings name", nums([(f"{k:,}", e(nm)) for k, nm in sorted(rows_, reverse=True)], src=False)
                             + f'<p class="note">Counted from the text of the {len(pj):,} open postings that mention visa sponsorship; many name no visa type. Always confirm with the employer.</p>')
+        # by field (plan item 1.11, 20 Nov 2026: the page named the visas, not the kinds of work that sponsor): the postings that mention
+        # sponsorship in each field, and their share of all the field's open postings, so a field that sponsors often stands out
+        all_cat = Counter(j["cat"] for j in active)
+        by_cat = sorted(((k, all_cat[c], c) for c, k in Counter(j["cat"] for j in pj).items() if c != OTHER[0] and k >= 5), key=lambda x: -x[0])[:12]
+        if len(by_cat) >= 3:
+            out_ += section("Visa sponsorship [[by field]]", '<div class="tablewrap"><table><tr><th>Field</th><th>Open jobs that mention sponsorship</th><th>Share of the field’s open jobs</th></tr>'
+                            + "".join(f'<tr><td><a href="{P}/jobs/{c}/">{e(CAT[c])}</a></td><td>{k:,}</td><td>{100 * k / max(1, n_):.1f}%</td></tr>' for k, n_, c in by_cat)
+                            + '</table></div><p class="note">A posting counts when its text mentions visa sponsorship; read it, as some say sponsorship is not available.</p>', sid="fields", label="By field")
         if cos_:
             out_ += section("Companies that mention sponsorship most", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in cos_) + "</ul>")
         out_ += section("How do I find an employer that sponsors a visa?", '<ol class="steps">'
