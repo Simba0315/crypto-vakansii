@@ -50,7 +50,7 @@ Every result on the first page of Google for the two main phrases is kind (b). T
    "greenhouse job board embed", "lever jobs embed", "hiring badge".
 3. A WordPress plugin (shortcode and block) published on wordpress.org: needs the owner's wordpress.org account.
 4. ✅ (partly, 20 Nov 2026) Recruitee (`recruitee:name`) and SmartRecruiters (`smartrecruiters:Name`, up to the newest 500 roles) are read in own-board mode; both feeds answer cross-origin reads (checked). Left: Workable (its public feed answered 429 when checked, test again), Teamtailor (no JSON feed with cross-origin reads found).
-5. Job popup inside the widget; carousel layout; custom CSS hook.
+5. Job popup inside the widget; carousel layout. ✅ (20 Nov 2026) custom look hook: `--hrn-bg`, `--hrn-ink`, `--hrn-muted`, `--hrn-line`, `--hrn-hover`, `--hrn-accent`, `--hrn-font`, `--hrn-radius`.
 6. Click statistics and an email-alert form: need the server.
 7. Revenue share for publishers: needs payments and real traffic first.
 
