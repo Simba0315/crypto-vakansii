@@ -91,6 +91,18 @@ US_ANSWERS = {
 }
 
 
+def refresh_us(jobs, companies, systems):
+    """Our own figures from the build that makes the pages: open jobs, companies, and the hiring systems with open jobs, largest
+    first. Without it the pages kept the counts of 13 Nov 2026 (eight systems, 41,187 jobs) beside a button with today's count."""
+    names = ", ".join(systems[:4]) + (" and others" if len(systems) > 4 else "")
+    US.update(open_jobs=jobs, companies=companies,
+              source=f"the employers' own careers pages, read from {len(systems)} hiring systems ({names})")
+    US_ANSWERS["Where the jobs come from"] = f"The employers' own careers pages, read from {len(systems)} hiring systems ({names})."
+    US_ANSWERS["Kinds of jobs"] = f"The jobs that {companies:,} companies post on their own careers pages ({jobs:,} open jobs). English only."
+    for s in SITES:
+        s["rows"] = [(q, them, US_ANSWERS[q]) for q, them, _ in s["rows"]]
+
+
 def _rows(*pairs):
     """Build (question, them, us) rows; the us side always comes from US_ANSWERS."""
     return [(q, them, US_ANSWERS[q]) for q, them in pairs]
@@ -503,7 +515,7 @@ SITES = [
             ("Payment methods", "Card. Invoice details can be added. Crypto is not offered on the posting form."),
         ),
         them_better=[
-            "More employers: 42,383 jobs at 7,389 projects, against our 41,187 jobs at 732 companies.",
+            "Only blockchain and web3 jobs, in one place: 42,383 jobs at 7,389 web3 projects.",
             "A large crypto audience: its posting page shows 640,903 job post views, 41,000 Twitter followers and 9,000 "
             "Discord members.",
             "Employers get a built-in applicant tracking system (powered by Bondex), and posting is open today. Our "
@@ -595,8 +607,8 @@ def test():
             if date not in (R13, R14):
                 problems.append(f"{p}: bad date {date!r}")
         rows = s["rows"]
-        if len(rows) < 4:
-            problems.append(f"{p}: only {len(rows)} rows (need 4)")
+        if len(rows) < 4:      # build.py gives such a site no page until a fourth fact is sourced
+            print(f"NOTE {p}: only {len(rows)} sourced rows, so no page")
         order = [QUESTIONS.index(q) for q, _, _ in rows if q in QUESTIONS]
         if len(order) != len(rows) or order != sorted(order) or len(set(order)) != len(order):
             problems.append(f"{p}: rows not in QUESTIONS order or unknown question")
@@ -619,6 +631,9 @@ def test():
     for line in problems:
         print("FAIL", line)
     assert not problems, f"{len(problems)} problem(s)"
+    refresh_us(500000, 25000, ["Workday", "Greenhouse", "Ashby", "JazzHR", "Lever"])
+    assert all(u == US_ANSWERS[q] for s in SITES for q, _, u in s["rows"]) and "5 hiring systems" in US_ANSWERS["Where the jobs come from"]
+    assert "25,000 companies" in US_ANSWERS["Kinds of jobs"], US_ANSWERS["Kinds of jobs"]
     rows = sum(len(s["rows"]) for s in SITES)
     srcs = sum(len(s["sources"]) for s in SITES)
     print(f"OK: {len(SITES)} sites, {rows} rows, {srcs} sources; "

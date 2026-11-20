@@ -6707,6 +6707,8 @@ def main():
     lap('"Jobs Every Hour vs <job site>": fair comparisons, every fac')
     # "Jobs Every Hour vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
     # A site with fewer than 4 sourced rows gets no page: a comparison with gaps would not be fair.
+    sys_n_ = Counter(str(j_.get("id", "")).split("-")[0] for j_ in active)
+    compare_sites.refresh_us(len(active), len({j_["company"] for j_ in active}), [SOURCE_NAME[k_] for k_, _ in sys_n_.most_common() if k_ in SOURCE_NAME])
     VS = [x for x in compare_sites.SITES if len(x["rows"]) >= 4]
     def vs_src(x):
         seen_, out_ = set(), []
@@ -7273,7 +7275,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           f" This page describes the check step by step, so you can judge how far to trust what the lists say.",
           '<p class="plain"><b>In plain words:</b> companies publish their open jobs in a hiring system, a program that holds every opening and its application form. '
           "We read what those systems publish, compare it with what we saw the last time and update the lists. Nothing is typed in by hand and nothing is copied from another job site.</p>"
-          "<h2>Step 1: read the employer’s own list</h2><p>" + ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"][min(len(ats_jobs), 10)] + " hiring system" + ("" if len(ats_jobs) == 1 else "s") + " cover" + ("s" if len(ats_jobs) == 1 else "") + " the companies here: " + ", ".join(ats_name[k_] for k_, _ in ats_jobs.most_common()) + ". Each publishes a public list of a company’s open jobs, the same list that feeds the “Careers” page of the company.</p>"
+          "<h2>Step 1: read the employer’s own list</h2><p>" + (["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"][len(ats_jobs)] if len(ats_jobs) <= 10 else f"{len(ats_jobs)}") + " hiring system" + ("" if len(ats_jobs) == 1 else "s") + " cover" + ("s" if len(ats_jobs) == 1 else "") + " the companies here: " + ", ".join(ats_name[k_] for k_, _ in ats_jobs.most_common()) + ". Each publishes a public list of a company’s open jobs, the same list that feeds the “Careers” page of the company.</p>"
           '<div class="tablewrap"><table class="t4"><thead><tr><th>Hiring system</th><th>Companies</th><th>Open jobs</th></tr></thead><tbody>' + ats_tab + "</tbody></table></div>"
           "<h2>Step 2: compare with the last reading</h2><p>A job that is in the list and was not there before is new, and its first-seen time is saved. A job that was in the list and is now missing is closed, and the closing date is saved. "
           f"Closed jobs keep their pages: {n_closed_all:,} closed postings are on file, {closed_today_h:,} of them closed today.</p>"
