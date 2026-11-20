@@ -37,6 +37,9 @@ BECOME_MORE = json.loads(_BM.read_text()) if _BM.exists() else {}
 _more = lambda n: json.loads(Path(__file__).with_name(n).read_text()) if Path(__file__).with_name(n).exists() else {}
 ROLE_MORE, SALARY_MORE, JD_MORE = _more("role_more.json"), _more("salary_more.json"), _more("jd_more.json")
 HIRE_MORE = _more("hire_more.json")      # what to look for when hiring each kind of work (ai_fill.py hire)
+# work that needs a medical or law degree, a residency or a state license first (read from the how-to-become steps)
+LICENSED_RX = re.compile(r"medical school|residency|bar exam|\bNCLEX\b|\bUSMLE\b|\bCOMLEX\b|law school|board certification|state (?:medical|nursing|bar) (?:license|board)|"
+                         r"must (?:hold|have|earn|get|pass) (?:an? )?(?:active |valid )?(?:state |professional )?licen[cs]e|licen[cs]e (?:is )?required in (?:every|all|each) state", re.I)
 QUIZ_OF = {v["skill"]: (k, len(v["qs"])) for k, v in quiz_pages.QUIZZES.items()}     # skill -> (its test's slug, number of questions)
 
 ROOT = Path(__file__).parent
@@ -3020,7 +3023,12 @@ def main():
                                 + f'<p class="note">All of them: <a href="{P}/entry-level/">entry-level jobs</a>.</p>')
             COMBO_AFTER[p_] = blk_
             easy_ = []
+            # "the easiest job that pays $200K" is not one that needs a medical degree, a residency or a license first, whatever the
+            # years a posting asks on top (fact check of the pages, 21 Nov 2026: physician roles came out "easiest"); the licensed
+            # kinds of work are known from their how-to-become section
+            licensed_ = lambda s_: any(LICENSED_RX.search(t_) for _, t_ in BECOME_MORE.get(s_, {}).get("steps", []))
             for c_, s_, nm_, _, h_ in rr_:
+                if licensed_(s_): continue
                 y_ = sorted(j["years"] for j in h_ if j.get("years"))
                 if len(y_) >= 10: easy_.append((y_[len(y_) // 2], -c_, nm_, len(y_)))
             qa_ = []

@@ -1029,7 +1029,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<p>The buzzword list is short and ours: passionate, results-driven, guru, ninja, rockstar, wizard, synergy, thought leader, visionary, team player, self-starter, motivated, innovative, "
          "proven track record, outside the box and a few more. Points marked “Fix” and “Check” are counted as things to fix; “Note” is a smaller suggestion. "
          "The page reads words and patterns. It cannot judge your photo, your experience entries or whether a claim is true, and an unusual job title may not be on its list.</p>",
-         [('Can I upload my resume as a PDF or Word file?', 'Yes: open the file and the page reads its text right here in your browser, then shows it in the box so you can check it. The file itself is never uploaded. A scanned PDF is a picture with no text in it, so copy the text instead.'),
+         [('Can I check the text of my current profile?', 'Yes: copy your headline and the About section from LinkedIn and paste them into the two boxes. The check runs right here in your browser and nothing is sent anywhere.'),
           ("How long can a LinkedIn headline be?",
            "220 characters, including spaces. There is no need to fill them: a job title, a field and two or three skills are enough. The check flags a headline over the limit and notes one under 30 characters."),
           ("What is “the opening” of the About section?",
@@ -1047,7 +1047,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "Job Offer Check: Salary vs Advertised Ranges",
          "Check a salary offer against the advertised ranges of open jobs: where it sits for your category and level, the median and the postings behind it. Free.",
          "Check a salary offer against what open postings advertise",
-         f"When an offer arrives it is hard to tell whether the figure is fair: {100 - sal_pct}% of the {n_jobs:,} open roles on this site do not state a salary. This check uses the {n_paid:,} that do. "
+         f"When an offer arrives it is hard to tell whether the figure is fair: {100 - sal_pct}% of the {n_jobs:,} open roles on this site do not state a salary. This check uses the {n_paid:,} that state a yearly range in US dollars. "
          "Enter the yearly pay you were offered in US dollars and pick the category and level. You see whether the offer is below the lower quarter, in the middle half or above the upper quarter "
          "of advertised ranges, how far it is from the median, and how many postings stand behind the comparison.",
          wrap("offer-check",
