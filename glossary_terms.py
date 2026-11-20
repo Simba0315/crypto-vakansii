@@ -1656,6 +1656,156 @@ MORE = {
             ("What is the difference between hybrid and RTO?", "Hybrid is a pattern with some days in the office and some at home. RTO is the move from fully remote to a pattern that includes the office, whether full-time or hybrid."),
         ],
     ),
+    "Ghosting": dict(
+        title="What Is Ghosting in Hiring? What to Do When No One Replies",
+        aliases=["ghosted-by-employer"],
+        sections=[
+            ("What ghosting means", [
+                "Ghosting is when the other side of a hiring process stops answering and never says why. It happens to candidates, who hear nothing after an application or an interview, and to employers, when a candidate does not show up or stops replying.",
+                "Silence is not always a no. A hiring team can be waiting for a budget decision, for another candidate’s answer or for a person who is on leave.",
+            ]),
+            ("What to do when you hear nothing", [
+                "After an application, expect to wait a couple of weeks. After an interview, ask at the end when you will hear back, and count from that date.",
+                "Follow up once, politely and briefly, with the role name and one sentence of interest. Send it to the person who wrote to you, not to a general address.",
+                "If a second message gets no answer, treat the process as closed and keep applying elsewhere. A job you have not been told about is not a job you can plan around.",
+            ]),
+            ("How to lower the odds", [
+                "Apply to jobs that were posted recently: an old posting is more likely to be left open without anyone reading it. The age of each job is shown on its page.",
+                "Ask at the first call what the steps are and how long they take, so you know when silence is unusual.",
+            ]),
+        ],
+        qa=[
+            ("How long should I wait before following up after an interview?", "Wait until the date the interviewer gave you. If you were told nothing, a week is a reasonable time to send one short follow-up."),
+            ("Does no reply mean I was rejected?", "Often, but not always. Teams also pause a search or wait on a decision. After one follow-up with no answer, plan as if the answer is no."),
+            ("Is it normal for employers to ghost candidates?", "It is common enough that many job seekers describe it as their main complaint. It says more about the employer’s process than about your application."),
+            ("Should I ghost an employer I no longer want to work for?", "No. A short message withdrawing your application takes a minute and keeps the door open if you meet the same people later."),
+        ],
+    ),
+    "Job hopping": dict(
+        title="What Is Job Hopping? Does It Hurt Your Career?",
+        sections=[
+            ("What job hopping means", [
+                "Job hopping is changing employers often, for example every year or two. The term is usually used by employers who read a short stay as a risk that the person will leave again soon.",
+                "What counts as often depends on the field and the country. In some kinds of work, short contracts and project jobs are normal and are read that way.",
+            ]),
+            ("How an employer reads a short stay", [
+                "A recruiter looks at the pattern, not one job. Several moves of a year each, with no growth in the role, raise a question; one short job among long ones rarely does.",
+                "A move that came with more pay, a bigger scope or a new skill reads as progress. A short stay that ended because the company closed or cut jobs is explained by that fact.",
+            ]),
+            ("How to present a short history", [
+                "Give each short job one line of reason and one result, in the resume and out loud. Keep the reason about what you wanted next, not about the people you left.",
+                "Put the dates in years, group short contracts under one heading such as “Contract work”, and keep the most relevant results first.",
+                "If the next job is meant to be long, say what you want from it. A hiring manager is mostly asking whether you will stay long enough to be worth the training.",
+            ]),
+        ],
+        qa=[
+            ("How many jobs in a year is too many?", "There is no fixed number. Employers tend to ask questions when several roles in a row each lasted around a year with no clear step up. Be ready with a reason for each move."),
+            ("Does job hopping affect salary?", "It can go either way. A new employer often pays more than a raise at the old one, but a pattern of short stays can make some employers cautious about senior roles."),
+            ("Should I leave a short job off my resume?", "Leave it off only if it was very short and does not matter to the job you want. Gaps are visible in a profile or a background check, so be ready to explain the dates either way."),
+        ],
+    ),
+    "Salary expectations": dict(
+        title="Salary Expectations: How to Answer and What Number to Give",
+        aliases=["desired-salary"],
+        sections=[
+            ("What the question means", [
+                "“What are your salary expectations?” asks how much you want to be paid for the job. It appears in application forms, in the first call with a recruiter and sometimes in a cover letter.",
+                "Recruiters ask it to check that your wish fits the budget before more people spend time on interviews.",
+            ]),
+            ("How to find your number", [
+                "Look at what postings for the same work advertise in your place and level. The salary pages on this site are counted from postings that state pay.",
+                "Pick a range, not one figure: the bottom is the lowest offer you would accept, and the top is what you would be glad to get. Say the range in yearly or hourly pay, the way the posting does.",
+                "If the posting already states a range, name a figure inside it and say how your experience fits the top part.",
+            ]),
+            ("How to answer", [
+                "If you can, ask first: “What is the range for this role?” In places with pay transparency laws the employer may be required to tell you.",
+                "If you must answer, give your range and add that you are open to talking about the whole package, including benefits and growth.",
+                "In a form with one required field, enter a figure from the middle of your range rather than the lowest.",
+            ]),
+        ],
+        qa=[
+            ("What should I put for desired salary on an application?", "Enter a figure from the middle of the range you researched for the same work in your place, or the range if the form allows text. If the field is optional and the posting shows a range, you can leave it blank."),
+            ("Is it rude to ask for the salary range first?", "No. It is a normal question, and employers are used to it. Ask it in the first call, politely and briefly."),
+            ("Should I say my current salary?", "You do not have to. Name what you want for the new job instead. In some US states and cities employers are not allowed to ask about your pay history."),
+            ("What if my number is higher than their budget?", "Ask what the budget is and whether other parts of the package, such as a signing bonus, more time off or a review in six months, can close the gap."),
+        ],
+    ),
+    "Soft skills": dict(
+        title="What Are Soft Skills? Examples and How to Show Them",
+        aliases=["soft-skills-examples"],
+        sections=[
+            ("What soft skills are", [
+                "Soft skills are the ways you work with people and with tasks: communicating clearly, managing your time, handling disagreement, adapting when plans change. They are set against hard skills, which are tools and methods you can be tested on, such as a programming language or bookkeeping.",
+                "Employers list them in postings as “strong communication”, “team player” or “ownership”. The words are vague, so what they mean in practice is what you do in the role’s daily work.",
+            ]),
+            ("Examples that appear in postings", [
+                "Communication: explaining a problem to someone who does not work in your field, in writing and out loud.",
+                "Ownership: noticing a problem nobody assigned to you and following it until it is solved.",
+                "Prioritising: choosing what to do first when everything is urgent, and telling people what you are leaving for later.",
+                "Working with disagreement: stating your view, listening, and committing to the decision once it is made.",
+            ]),
+            ("How to show them", [
+                "Do not write adjectives about yourself. Show a short story: the situation, what you did and what changed.",
+                "Put one such result under each job in your resume, and prepare two more for interview questions that begin “Tell me about a time when…”.",
+            ]),
+        ],
+        qa=[
+            ("What are the most important soft skills for a job?", "It depends on the work, but communication, reliability and the ability to learn quickly appear in postings for almost every kind of job. Read the posting’s duties to see which ones the role actually uses."),
+            ("Can soft skills be learned?", "Yes. They improve with practice and feedback, such as presenting to a small group, asking for comments on your writing or taking on a task that involves other teams."),
+            ("Should I list soft skills in the skills section of a resume?", "Better to show them through results under each job. A list of adjectives is easy to write and gives the reader nothing to check."),
+        ],
+    ),
+    "Quiet quitting": dict(
+        title="What Is Quiet Quitting? Meaning, Causes and What to Do",
+        sections=[
+            ("What quiet quitting means", [
+                "Quiet quitting is doing the work in the job description and no more: no unpaid extra hours, no extra tasks outside the role, no answers to messages after work. Nobody leaves; the person simply stops going beyond what is paid.",
+                "The phrase became common in 2022. Some read it as a healthy limit and others as a drop in effort, and which is true depends on what the job actually asks for.",
+            ]),
+            ("Why people do it", [
+                "Common reasons are a workload that grew without more pay, no path to a promotion, a manager who does not notice extra effort, or exhaustion from too many hours.",
+                "It often comes before a person starts looking for another job, so it is worth noticing as a signal and not only as a habit.",
+            ]),
+            ("What to do about it", [
+                "Name what changed: pay, workload, a manager, the kind of tasks. Each points to a different next step.",
+                "If the cause can be fixed, tell your manager what you need in one specific request, such as a clearer scope, a review of your pay or one project that you care about.",
+                "If it cannot be fixed, start looking while you still have the energy to interview well. The job pages here show how long each opening has been up and when it was last checked.",
+            ]),
+        ],
+        qa=[
+            ("Is quiet quitting the same as quitting?", "No. The person keeps the job and the pay. The only change is that they stop doing unpaid extra work."),
+            ("Can you be fired for quiet quitting?", "Not for doing the duties in your contract. Performance is judged against what the role requires, so a pattern of missing real expectations can still lead to a warning."),
+            ("Does quiet quitting hurt your career?", "It can slow a promotion where extra effort is what gets noticed. It can also protect your health. Decide what you want from the job first, then how much extra it is worth."),
+        ],
+    ),
+    "Informational interview": dict(
+        title="Informational Interview: What It Is and How to Ask for One",
+        aliases=["informational-interviews"],
+        sections=[
+            ("What an informational interview is", [
+                "An informational interview is a short conversation with someone who does a job or works at a company you are curious about. You ask about the work; you do not ask for a job.",
+                "It is useful when you are changing fields, choosing between roles or looking for a first job and do not yet know what the work is like day to day.",
+            ]),
+            ("How to ask for one", [
+                "Write a short message: who you are in one line, why you chose this person (their role or a post they wrote) and a request for 20 minutes by phone or video.",
+                "Say plainly that you are not asking for a job. Offer two time windows, so the answer can be a simple yes.",
+            ]),
+            ("What to ask", [
+                "What does a normal week look like, and which part do you enjoy least?",
+                "What did you do before this job, and what would you do differently if you started now?",
+                "Which skills do people new to this role most often lack?",
+                "Who else would it be useful for me to talk to?",
+            ]),
+            ("After the conversation", [
+                "Send a thank-you message the same day with one thing you learned. Keep the person updated if you act on their advice; people remember being told it helped.",
+            ]),
+        ],
+        qa=[
+            ("How long should an informational interview last?", "Twenty to thirty minutes. Ask for twenty and stop on time, unless the other person offers to continue."),
+            ("Is it okay to ask for a job in an informational interview?", "Not in the request and not as the aim of the call. If a role is open and the person brings it up, you can say you are interested."),
+            ("What if nobody replies to my request?", "Many people are busy and do not answer. Send one short reminder a week later, then ask someone else. Alumni of your school or people in a shared community often reply more readily."),
+        ],
+    ),
 }
 
 
