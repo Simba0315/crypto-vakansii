@@ -78,6 +78,9 @@ HEAVY = {"workday", "smartrecruiters", "jazzhr", "breezy", "bamboohr", "paylocit
 HEAVY_MAX = WORKERS * 2 // 3
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
+-- one company's rows, asked for four times a board read (skip_known, apply). Without it every one of those read the whole table:
+-- 450 MB once the live rows carried full texts, 500 MB a second, and the loop handed out 60 to 250 boards in five minutes (20 Nov 2026).
+CREATE INDEX IF NOT EXISTS live_company ON live (company, closed);
 CREATE TABLE IF NOT EXISTS moved (slug TEXT PRIMARY KEY, to_slug TEXT);
 CREATE TABLE IF NOT EXISTS boards (key TEXT PRIMARY KEY, next_due REAL, last_change REAL DEFAULT 0, fails INTEGER DEFAULT 0);
 """
@@ -181,8 +184,7 @@ class Live:
         self.alias = target
         # In batches (OpenSearch's _bulk), not one request a job: one by one, 58,000 live jobs took five minutes after every upload, and
         # this loop read no boards meanwhile (19 Nov 2026).
-        rows = self.con.execute("SELECT slug, rec, descr, closed FROM live").fetchall()
-        batch, failed = [], 0
+        batch, failed, n = [], 0, 0
         def flush():
             nonlocal failed
             if not batch: return
@@ -192,12 +194,13 @@ class Live:
             except Exception as ex:
                 log(f"search: a batch of {len(batch)} not put back ({type(ex).__name__}: {ex})"); failed += len(batch)
             batch.clear()
-        for slug, rec, descr, closed in rows:
+        for slug, rec, descr, closed in self.con.execute("SELECT slug, rec, descr, closed FROM live"):    # row by row: the texts are 450 MB
+            n += 1
             if closed: batch.append(json.dumps({"delete": {"_id": slug}}) + "\n")
             else: batch.append(json.dumps({"index": {"_id": slug}}) + "\n" + json.dumps(search_engine.doc(json.loads(rec), descr), ensure_ascii=False) + "\n")
             if len(batch) >= 500: flush()
         flush()
-        if rows: log(f"search index {target}: {len(rows)} live jobs put back" + (f", {failed} failed" if failed else ""))
+        if n: log(f"search index {target}: {n} live jobs put back" + (f", {failed} failed" if failed else ""))
 
     def search_put(self, rec, descr, closed=""):
         if not search_engine.URL or not self.write: return
@@ -221,7 +224,7 @@ class Live:
         known, name = self.known, src["name"]
         live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (name,))}
         need = (self.by_co.get(name, set()) & self.textless) | {jid for (jid,) in self.con.execute(
-            "SELECT id FROM live WHERE company = ? AND closed = '' AND descr = ''", (name,))}
+            f"SELECT id FROM live WHERE company = ? AND closed = '' AND {texts.BYTES}(descr) = 0", (name,))}
         if need: need -= self.texts.have(name)
         budget, asked = TEXTS_SLOW if src.get("ats") in SLOW else TEXTS_LIST, {}
 
