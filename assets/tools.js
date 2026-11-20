@@ -856,6 +856,20 @@
       minutesPerDay: mins * 2, timeValue: hourly > 0 ? hours * hourly : null, total: hourly > 0 ? money + hours * hourly : null, weeks: weeks, daysNow: now, daysNew: next };
   };
 
+  /* ---------- 401(k) employer match ---------- */
+  // The employer adds `rate` percent of every dollar you put in, but only on the first `cap` percent of your pay.
+  // Employer money = salary × min(your %, cap) ÷ 100 × rate ÷ 100. The full match needs you to put in `cap` percent.
+  T.match401k = function (o) {
+    o = o || {};
+    var salary = num(o.salary), mine = num(o.mine), rate = num(o.rate), cap = num(o.cap);
+    if (isNaN(mine)) mine = 0;
+    if (!(salary > 0) || !(mine >= 0 && mine <= 100) || !(rate >= 0 && rate <= 300) || !(cap >= 0 && cap <= 100) || isNaN(rate) || isNaN(cap)) return null;
+    var counted = Math.min(mine, cap), yours = salary * mine / 100, employer = salary * counted / 100 * rate / 100;
+    var fullYours = salary * cap / 100, full = fullYours * rate / 100;
+    return { salary: salary, mine: mine, rate: rate, cap: cap, yours: yours, employer: employer, total: yours + employer, full: full, fullYours: fullYours,
+      missed: full - employer, reachesFull: mine >= cap, short: Math.max(0, cap - mine), perDollar: yours > 0 ? employer / yours : 0, totalPct: (yours + employer) / salary * 100 };
+  };
+
   /* ---------- cost per hire ---------- */
   // Cost per hire = (advertising + agency fees + recruiter hours × hourly cost + interviewer hours × hourly cost + tools + other) ÷ hires.
   T.costPerHire = function (o) {
@@ -2869,6 +2883,26 @@
           [more ? 'Extra lunch and coffee' : 'Lunch and coffee saved', signed(r.food * flip)], r.homeCost ? [more ? 'Saved at home' : 'Extra cost at home', signed(r.homeCost * flip)] : null,
           [gain ? 'Money kept a year' : 'Extra cost a year', money(Math.abs(cashNet), s, 0)], [gain ? 'Money kept a month' : 'Extra cost a month', money(Math.abs(cashNet) / 12, s, 0)],
           r.timeValue != null ? ['Travel time in money', money(Math.abs(r.timeValue), s, 0)] : null]));
+    });
+  };
+
+  /* ---------- 401(k) match ---------- */
+  tools['401k-match'] = function () {
+    var out = $('tl-out'), title = 'Your 401(k) match';
+    form(function (v) {
+      if (!clean(v.salary)) return idle(out, title, 'Enter your yearly salary, the share of it you put in and the match your employer offers.');
+      var r = T.match401k(v), s = v.cur;
+      if (!r) return idle(out, title, 'Check the figures: a salary above zero, your share and the cap from 0 to 100 percent, and a match rate from 0 to 300 percent.');
+      if (!r.full) return board(out, title, 'No match', '<p class="tl-big tl-dim">0</p>' + sub('With a match rate or a cap of zero the employer adds nothing to your contribution.'));
+      var say = function (x) { return esc(money(x, s, 0)); };
+      board(out, title, r.reachesFull ? 'You get the full match' : 'You leave match money unclaimed',
+        big(money(r.employer, s, 0), 'from your employer a year') +
+        sub('Putting in <b>' + esc(fmt(r.mine, 1)) + '%</b> of ' + say(r.salary) + ' is ' + say(r.yours) + ' a year. The employer adds ' + esc(fmt(r.rate, 1)) + '% of it up to ' + esc(fmt(r.cap, 1)) + '% of your pay, which is ' + say(r.employer) + '. ' +
+          (r.reachesFull ? 'That is the largest match on offer.' : 'Raise your share to <b>' + esc(fmt(r.cap, 1)) + '%</b> (' + say(r.fullYours) + ' a year) and the employer adds ' + say(r.full) + ', which is ' + say(r.missed) + ' more than now.') +
+          ' Whether the employer’s part is yours at once or only after some years of service depends on the plan: ask for the vesting schedule.') +
+        kv([['You put in a year', money(r.yours, s, 0)], ['Employer adds a year', money(r.employer, s, 0)], ['Total into the account a year', money(r.total, s, 0)],
+          ['Total as a share of your pay', fmt(r.totalPct, 1) + '%'], ['Largest match on offer', money(r.full, s, 0)],
+          r.reachesFull ? null : ['Left unclaimed a year', money(r.missed, s, 0)], r.perDollar ? ['Employer money per dollar you put in', money(r.perDollar, s, 2)] : null]));
     });
   };
 

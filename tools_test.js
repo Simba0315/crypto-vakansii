@@ -552,6 +552,16 @@ eq('remote: defaults are 5 days, none after, 46 weeks', T.remoteSavings({ minute
 eq('remote: same days, nothing changes', T.remoteSavings({ minutes: '60', daysNow: '3', daysNew: '3' }).hours, 0);
 near('remote: decimal comma in a price', T.remoteSavings({ cost: '12,50' }).travel, 2875);
 near('remote: lunch at home dearer than at work counts against the saving', T.remoteSavings({ lunch: '5', lunchHome: '8', daysNow: '1', weeks: '10' }).money, -30);
+let m4 = T.match401k({ salary: '80000', mine: '4', rate: '50', cap: '6' });
+near('401k: you put in', m4.yours, 3200); near('401k: employer adds 50% of what you put in', m4.employer, 1600); near('401k: total in the account', m4.total, 4800);
+near('401k: largest match is at the cap', m4.full, 2400); near('401k: unclaimed below the cap', m4.missed, 800); eq('401k: below the cap', m4.reachesFull, false);
+m4 = T.match401k({ salary: '80000', mine: '10', rate: '50', cap: '6' });
+near('401k: saving above the cap adds nothing more', m4.employer, 2400); near('401k: nothing unclaimed', m4.missed, 0); eq('401k: reaches the full match', m4.reachesFull, true);
+near('401k: dollar for dollar', T.match401k({ salary: '60000', mine: '3', rate: '100', cap: '3' }).employer, 1800);
+near('401k: 0 saved gives 0 and leaves it all', T.match401k({ salary: '50000', mine: '0', rate: '100', cap: '4' }).missed, 2000);
+near('401k: empty share counts as 0', T.match401k({ salary: '50000', rate: '100', cap: '4' }).employer, 0);
+near('401k: a % sign and commas', T.match401k({ salary: '$80,000', mine: '4%', rate: '50%', cap: '6%' }).employer, 1600);
+eq('401k: nothing typed, or impossible figures', [T.match401k({}), T.match401k({ salary: '0', mine: '4', rate: '50', cap: '6' }), T.match401k({ salary: '80000', mine: '120', rate: '50', cap: '6' }), T.match401k({ salary: '80000', mine: '4', rate: '', cap: '6' }), T.match401k({ salary: '80000', mine: '4', rate: '50', cap: '150' })], [null, null, null, null, null]);
 eq('remote: nothing typed, or impossible figures', [T.remoteSavings({}), T.remoteSavings({ minutes: '45', daysNow: '8' }), T.remoteSavings({ minutes: '45', weeks: '60' }), T.remoteSavings({ minutes: '45', weeks: '0' }), T.remoteSavings({ minutes: '900' })], [null, null, null, null, null]);
 
 /* cost per hire */

@@ -1472,6 +1472,44 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
            "Yes. Enter the smaller number of office days under “now” and the larger one under “after the change”. The result then shows the extra hours and money per year that the change costs you.")],
          ["compare-offers", "time-zone-overlap", "salary-converter"], ["remote/"])
 
+    # ------------------------------------------------------------ 25b. 401(k) match
+    tool("401k-match", "seekers", "401(k) match calculator",
+         "Your salary, the share you put in and your employer's match give the free money a year, and how much you leave unclaimed.",
+         "401(k) Match Calculator: Free Employer Money",
+         "Enter your salary, the share of it you save and the match your employer offers to see the match money a year and what you leave unclaimed. Free.",
+         "See how much your employer adds to your 401(k) each year",
+         "An offer that says “50% match up to 6%” hides a sum of money that depends on how much you save yourself. Enter your yearly salary, the share of it you put into the plan "
+         "and the match as the offer states it. You get the employer’s part in a year, the largest match on offer and what you leave unclaimed. The match is part of what a job pays, "
+         "so it belongs next to the salary when you compare offers.",
+         wrap("401k-match",
+              '<div class="card tl-form"><p class="tl-t">Your pay and your saving</p><div class="tl-grid">'
+              + _f("salary", "Yearly salary before tax", "80,000")
+              + _f("mine", "Share of your pay you put in, %", "4", hint="Per cent of each paycheck that goes into the plan.")
+              + _cur() + '</div><p class="tl-t">The match in the offer</p><div class="tl-grid">'
+              + _f("rate", "Employer adds, % of what you put in", "50", hint="“50% match” means 50 cents for every dollar you put in. “Dollar for dollar” is 100.")
+              + _f("cap", "Up to, % of your pay", "6", hint="“Up to 6% of pay”: you put in more than that and the employer still adds on the first 6% only.")
+              + '</div><div class="tl-actions">' + _clear() + "</div></div>"
+              + _board("The employer’s part", "Enter your salary, the share you put in and the match from the offer.")
+              + '<p class="note tl-priv"><b>Limits</b>The law caps how much a person may put in each year and the cap changes; this page does not know it. Your plan may also count pay, bonus and years of service in its own way: read its summary.</p>'),
+         "How the match is calculated",
+         "<ul><li><code>you put in = salary × your share ÷ 100</code></li>"
+         "<li><code>employer adds = salary × the smaller of your share and the cap ÷ 100 × match rate ÷ 100</code></li>"
+         "<li><code>largest match = salary × cap ÷ 100 × match rate ÷ 100</code>, which you get by putting in at least the cap</li>"
+         "<li><code>left unclaimed = largest match − what the employer adds now</code></li></ul>"
+         "<p>Example: a salary of 80,000, a match of 50% up to 6%, and you put in 4%. You put in 3,200. The employer adds 50% of 3,200, which is 1,600. "
+         "At 6% you would put in 4,800 and the employer would add 2,400, so 800 a year goes unclaimed at 4%.</p>"
+         "<p>Plans differ. Some employers add a fixed share of pay whatever you save, some match in two steps (for example 100% of the first 3% and 50% of the next 2%), and some make the employer’s part yours only after a number of years. "
+         "This page handles the single-step match, the one most offers state; for the others, work out each step by hand with the same formula. It does not know tax rules or yearly limits.</p>",
+         [("What does “50% match up to 6%” mean?",
+           "For every dollar you put in, the employer adds 50 cents, but only on the first 6% of your pay. On a salary of 80,000 the most the employer adds is 2,400 a year, and you get it by putting in 4,800, which is 6% of the salary."),
+          ("Is the employer’s match really free money?",
+           "It is part of your pay that you collect only by saving. The employer’s part may belong to you at once or only after some years in the job, which is called vesting. Ask the employer for the vesting schedule before you count the whole sum."),
+          ("How much should I put in?",
+           "At least the cap, if you can: below it you give up money that is on offer. Whether to save more than that depends on your other costs and goals, which this page cannot know."),
+          ("Does the match count when I compare two job offers?",
+           "Yes. Add the largest match you would collect to each offer’s salary. The job offer comparison tool has a field for it.")],
+         ["compare-offers", "take-home-pay", "salary-converter"], ["salaries/"])
+
     # ------------------------------------------------------------ 26. last working day
     tool("last-working-day", "seekers", "Last working day calculator",
          "The day you give notice and your notice period in weeks, months or working days give your last working day, with weekends skipped.",
@@ -2304,6 +2342,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "salary-converter": "Pay is quoted per hour, per day, per month or per year, and the figures cannot be compared until they are in one unit. This page converts one of them into all the others, using the hours you actually work.",
         "take-home-pay": "Your salary on the offer is the gross figure, before the government takes its share; take-home pay is what reaches your bank account. This page takes off the main US taxes (income tax, Social Security and Medicare) and shows what is left in each paycheck.",
         "job-search-calculator": "Looking for work is a numbers game: only some applications lead to an interview, and only some interviews lead to an offer. Enter your own two rates and this page shows how many applications one offer takes at that pace.",
+        "401k-match": "A 401(k) is a retirement savings plan at work: part of each paycheck goes into it before you see the money. Many employers add money of their own, called a match, but only if you save too. This page shows how much that is.",
         "last-working-day": "The notice period is the time between telling your employer you are leaving and your final day. This page counts it on a calendar, so you can see the date instead of guessing at weekends.",
         "resume-review": "Skimming means looking at the top of the page, the first bullet points and the dates before reading anything closely. This page reads your text in that order and lists the lines a skimmer would pass over, with a fix for each.",
         "remote-work-savings": "Working from home saves the time and money you spend getting to an office, but that cost never shows on a payslip. Enter your own travel and office costs and this page adds them up for a year.",
@@ -2440,6 +2479,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                                       '<span class="ln"><b>6 interviews</b> and <b>1.2 offers</b> expected in 8 weeks</span>',
         "remote-work-savings": ex + '<span class="ln">45 minutes each way · 5 office days a week</span><span class="big">345<small>hours a year</small></span>'
                                     '<span class="ln"><b>$4,370</b> a year kept on travel and lunches</span>',
+        "401k-match": ex + '<span class="ln">$80,000 salary · 4% saved · 50% match up to 6%</span><span class="big">$1,600<small>from your employer a year</small></span>'
+                                '<span class="ln"><b>$800</b> a year left unclaimed below 6%</span>',
         "last-working-day": ex + f'<span class="ln">Notice given Monday, {dshort(monday)} · 2 weeks</span><span class="big">{dshort(leave)}<small>last working day</small></span>'
                                  '<span class="ln"><b>10 working days</b> left · weekends skipped</span>',
         "cost-per-hire": ex + '<span class="big">$6,100<small>per hire</small></span><span class="rw"><span>Agency</span><span class="mt"><i style="width:49%"></i></span><b>49%</b></span>'
@@ -2568,7 +2609,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     HUB = [("Resume and LinkedIn profile", "resume", ["resume-review", "resume-match", "resume-skills", "job-description-keywords", "resume-summary", "resume-bullet-builder", "linkedin-headline", "linkedin-summary", "linkedin-review"]),
            ("Applying and interviews", "applying", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
            ("Networking and introductions", "networking", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
-           ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "contractor-rate"]),
+           ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "401k-match", "contractor-rate"]),
            ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
     named = {s_ for _, _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]
