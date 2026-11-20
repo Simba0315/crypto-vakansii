@@ -28,7 +28,7 @@ GROUP = {"skills": "By skill", "kind": "By kind of work", "roles": "By role", "l
 LEVELS = {"intern", "junior", "senior", "lead", "entry-level", "new"}
 # Hubs whose own body is the list of their narrower pages (the crypto hub's directory of every crypto list, the tiles of the relocation
 # guides): a second copy of the same links under "Narrow down ..." is not added. The narrower pages keep their links up and across.
-OWN_DIR = {"crypto/", "relocate/"}
+OWN_DIR = {"crypto/", "relocate/", "guides/", "insights/", "jobs-for/"}
 
 
 def low(title):
@@ -46,11 +46,18 @@ def parents(u, have):
     elif p[0] == "locations" and len(p) == 3:                              # locations/london/finance/  or  .../remote/
         add(f"locations/{p[1]}/", "remote" if p[2] == "remote" else "kind")
         add("remote/" if p[2] == "remote" else f"jobs/{p[2]}/", "places")
+    elif p[0] == "roles" and len(p) == 3 and p[2] == "entry-level":        # roles/accountant/entry-level/ (20 Nov 2026: one link, from its role)
+        add(f"roles/{p[1]}/", "level"); add("entry-level/", "roles")
     elif p[0] == "roles" and len(p) == 3:                                  # roles/data-analyst/london/  or  .../remote/
         add(f"roles/{p[1]}/", "remote" if p[2] == "remote" else "places")
         add("remote/" if p[2] == "remote" else f"locations/{p[2]}/", "roles")
     elif p[0] == "skills" and len(p) == 3:                                 # skills/sql/entry-level/
         add(f"skills/{p[1]}/", "level")
+        if p[2] == "entry-level": add("entry-level/", "skills")
+    elif p[0] in ("remote", "crypto") and len(p) == 2 and p[1] not in ("skills", "chains", "roles", "in"):     # remote/design/, crypto/design/, remote/contract/
+        field_ = f"jobs/{p[1]}/" in have
+        add(f"{p[0]}/", "kind" if field_ else "pages")
+        if field_: add(f"jobs/{p[1]}/", "remote" if p[0] == "remote" else "pages")
     elif p[0] == "jobs" and len(p) == 3:                                   # jobs/design/senior/
         add(f"jobs/{p[1]}/", "level")
     elif p[0] == "perks" and len(p) == 3:                                  # perks/visa-sponsorship/texas/
@@ -62,6 +69,8 @@ def parents(u, have):
     elif p[0] == "crypto" and len(p) == 3:                                 # crypto/in/chicago/, crypto/roles/backend-engineer/
         add("crypto/", "places" if p[1] == "in" else "roles")
         add(f"locations/{p[2]}/" if p[1] == "in" else f"roles/{p[2]}/", "pages")
+    elif p[0] in ("guides", "insights", "jobs-for") and len(p) == 2:       # guides/years-of-experience/ (20 Nov 2026: one link, from the hub)
+        add(f"{p[0]}/", "pages")
     elif p[0] == "salary" and len(p) == 3:                                 # salary/100k/remote/
         add(f"salary/{p[1]}/", "remote")
     elif p[0] == "salary" and len(p) == 2:
@@ -111,8 +120,17 @@ def run(site, urls):
     for u, ps in up.items():                            # narrow page: up to its broader pages, across to its neighbours
         if not ps: continue
         ups = [p for p, _ in ps]
-        first, group = ps[0]
-        sib = sorted((x for x in down[first][group] if x != u), key=lambda x: -meta(x)[1])[:12]
+        # Neighbours by size in the first group that has any, six above and six below (part 7, linking, 20 Nov 2026): the twelve largest
+        # gave every small page no link from its neighbours, and a page whose first group holds only itself (a role's remote list)
+        # showed none at all. Now each narrow page is linked from the pages next to it.
+        sib = []
+        for parent_, group_ in ps:
+            members = sorted(down[parent_][group_], key=lambda x: (-meta(x)[1], x))
+            if len(members) > 1:
+                k_ = members.index(u)
+                lo_ = max(0, min(k_ - 6, len(members) - 13))
+                sib = [x for x in members[lo_:lo_ + 13] if x != u][:12]
+                break
         body = '<ul class="xl">' + "".join(f"<li>{a(p)}</li>" for p in ups) + "</ul>"
         if sib: body += f'<h3>Next to it</h3><ul class="xl">' + "".join(f"<li>{a(x)}</li>" for x in sib) + "</ul>"
         blocks[u] += f'<section class="sec xlinks"><div class="sec-head"><h2>More like {html.escape(meta(u)[0])}</h2></div>{body}</section>'

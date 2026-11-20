@@ -9446,7 +9446,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         qa_ = x["qa"]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-        others_ = [y for y in RL if y["slug"] != x["slug"]]
+        # the nine letters after this one, round the list (part 7, linking, 20 Nov 2026: the first nine for every page left the letters
+        # at the end of the list with one link, from the hub); a letter for a kind of work names the other kinds of work first
+        i_ = next(k_ for k_, y in enumerate(RL) if y["slug"] == x["slug"])
+        ring_ = [RL[(i_ + k_) % len(RL)] for k_ in range(1, len(RL))]
+        work_ = {"nurse", "teacher", "retail", "restaurant", "software-engineer", "cna", "nanny", "manager"}
+        others_ = ([y for y in ring_ if y["slug"] in work_] + [y for y in ring_ if y["slug"] not in work_]) if x["slug"] in work_ else ring_
         page(f"resignation-letters/{x['slug']}/", f"{tcase(x['name'])}: Free Template, Word & PDF ({rl_year}) | {SITE}",
              f"A {low_} you can copy: {x['when'][0].lower() + x['when'][1:]}",
              crumbs(("Resignation letters", "resignation-letters/"), (x["name"], "")) + f'<h1>{e(x["name"])}: <span class="hl">template and example</span></h1>'
