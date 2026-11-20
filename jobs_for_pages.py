@@ -56,6 +56,17 @@ EXTRA = {
                "note": f"Mention travel: the share of postings held here in full whose text has the word “travel”, whatever it says about it; a dash means fewer than {TEXT_MIN} are held in full."},
 }
 TOKENS = ("{TOP}", "{PAY}", "{REMOTE}", "{ENTRY}", "{EXTRA}", "{N}", "{K}")
+# What the postings of a page ask for (plan item 1.31, 20 Nov 2026: the pages said why each kind of work fits and had no list of the
+# qualities it needs). Not written from memory: the skills employers name most in these postings, and the share of the postings held
+# in full that use the usual words for each workplace quality.
+QUALITIES = (("Clear communication", re.compile(r"communication skills|written and verbal|verbal and written|communicat(?:e|es|ing) (?:clearly|effectively)", re.I)),
+             ("Working in a team", re.compile(r"collaborat|teamwork|team player", re.I)),
+             ("Solving problems", re.compile(r"problem[- ]solv", re.I)),
+             ("Attention to detail", re.compile(r"attention to detail|detail[- ]oriented", re.I)),
+             ("Serving customers", re.compile(r"customer service", re.I)),
+             ("Organising your own time", re.compile(r"time management|prioriti[sz]|self[- ]starter|independently", re.I)),
+             ("Leading others", re.compile(r"leadership", re.I)),
+             ("Coping with pace and change", re.compile(r"fast[- ]paced|adaptab", re.I)))
 
 ENTRIES = []
 
@@ -117,8 +128,15 @@ def figures(a, by_role, money, median, rlow=lambda s: s, ctx=None):
               "{REMOTE}": f"The largest remote share today is {rem['remote']}%, in {rlow(rem['name'])} postings." if rem["remote"] else "",
               "{ENTRY}": f"The most openings with a junior or intern title today are in {rlow(ent['name'])} ({ent['entry']:,})." if ent["entry"] else "",
               "{EXTRA}": " ".join(more)}
+    tags = {}
+    for j in union:
+        for t in j.get("tags") or ():
+            tags[t] = tags.get(t, 0) + 1
+    skills = [(t, k) for t, k in sorted(tags.items(), key=lambda x: (-x[1], x[0]))[:10] if k >= 5]
+    full = [j for j in union if j.get("desc")]
+    quals = sorted(((nm, round(100 * sum(1 for j in full if rx.search(j["desc"])) / len(full))) for nm, rx in QUALITIES), key=lambda x: -x[1]) if len(full) >= TEXT_MIN else []
     return {"rows": rows, "k": len(rows), "n": n, "line": line + ("" if not more else " " + " ".join(more)), "extras": extras, "tokens": tokens,
-            "head": head + ("" if not more else " " + " ".join(more)), "cells": cells}
+            "head": head + ("" if not more else " " + " ".join(more)), "cells": cells, "skills": skills, "quals": [q for q in quals if q[1] >= 5][:6], "full": len(full)}
 
 
 def fill(text, fig):
@@ -166,6 +184,15 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
           'Remote: the share of the postings marked remote. For beginners: postings with a junior or intern title. '
           + "".join(e(EXTRA[k]["note"]) + " " for k in fig["extras"]) + f'Counted {when} from employers’ own careers pages and recounted on every update.</p>')
     h += cuts(a, fig, e, P)
+    if fig.get("skills") or fig.get("quals"):
+        h += '<h2>What these postings ask for</h2>'
+        if fig.get("quals"):
+            h += (f'<p>In the {fig["full"]:,} of these postings held here in full, the share that names each quality in the usual words:</p><ul class="ticks">'
+                  + "".join(f"<li><b>{e(nm)}</b>: {pc}% of postings</li>" for nm, pc in fig["quals"]) + "</ul>")
+        if fig.get("skills"):
+            h += ('<p>The skills named most often across all of them:</p><p class="rel chips">'
+                  + "".join(f'<span>{e(t)} · {k:,}</span>' for t, k in fig["skills"]) + "</p>")
+        h += '<p class="note">Counted from today’s postings for these kinds of work, not from a list of traits: a posting that asks for a quality in other words is not counted.</p>'
     h += '<h2>What to check before you apply</h2><ul class="ticks">' + "".join(f"<li>{e(c)}</li>" for c in a["check"]) + "</ul>"
     h += f'<h2>Questions about {e(a["about"])}</h2><dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(x)}</dd></div>" for q, x in faq(a, fig)) + "</dl>"
     links = [(u, t) for u, t in a["more"] if u in have] + [("jobs-for/", "All lists by situation and by degree")]

@@ -1082,9 +1082,25 @@
         list.innerHTML = got.slice(0, 20).map(function (j) { return card(j); }).join('') ||
           '<li class="job"><span class="js" style="padding:16px">No ' + (et ? esc(et.toLowerCase()) + ' ' : '') + 'jobs in ' + esc(name) + ' today. The lists below cover other places and work from home.</span></li>';
         more.innerHTML = got.length > 20 ? '<a href="' + P + '/jobs/?loc=' + slug + (et ? '&etype=' + encodeURIComponent(et) : '') + '">All ' + num(got.length) + ' in ' + esc(name) + '</a>' : '';
+        // a short summary of the place (plan item 1.13, 20 Nov 2026: the page gave only a count and twenty jobs): counted from the
+        // same rows as the list, in the browser
+        var sum = document.getElementById('nearme-sum');
+        if (!sum) { sum = document.createElement('p'); sum.id = 'nearme-sum'; sum.className = 'note'; head.parentNode.insertBefore(sum, head.nextSibling); }
+        sum.innerHTML = summary(got); sum.hidden = !sum.innerHTML;
         if (how && note) note.textContent = how;
         box.hidden = false; freshen(list);
       }).catch(function () {});
+    }
+    function summary(got) {
+      if (got.length < 10) return '';
+      var d = new Date(Date.now() - 7 * 864e5), cut = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+      var rem = 0, pay = 0, fresh = 0, cos = {};
+      got.forEach(function (j) { if (j[4]) rem++; if (j[8]) pay++; if (j[16] >= cut) fresh++; cos[j[2]] = (cos[j[2]] || 0) + 1; });
+      var top = Object.keys(cos).sort(function (a, b) { return cos[b] - cos[a]; }).slice(0, 3).filter(function (c) { return cos[c] >= 2; });
+      var pc = function (k) { return Math.round(100 * k / got.length) + '%'; };
+      var parts = [rem ? num(rem) + ' can be done from home (' + pc(rem) + ')' : '', pay ? num(pay) + ' state the pay (' + pc(pay) + ')' : '', fresh ? num(fresh) + ' posted in the last 7 days' : '',
+              top.length ? 'most from ' + top.map(function (c) { return esc(c) + ' (' + num(cos[c]) + ')'; }).join(', ') : ''].filter(Boolean);     // a nought says nothing
+      return parts.length ? parts.join(' · ') + '.' : '';
     }
     function km(a, b, c, d) {
       var r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2), h = x * x + Math.cos(a * r) * Math.cos(c * r) * y * y;

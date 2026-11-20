@@ -1370,12 +1370,30 @@ def hub_sections(label, js, skip="", min_k=40, drop_tag=""):
     lv = defaultdict(list)
     for j in js:
         if j.get("usd"): lv[LVL_NAME[j["level"]]].append((j["usd"][0] + j["usd"][1]) / 2)
-    pay = [(nm, median(v), len(v)) for nm, v in lv.items() if len(v) >= 15]
-    if len(pay) >= 2:
+    pay = {nm: (median(v), len(v)) for nm, v in lv.items() if len(v) >= 15}
+    # in the posting's own currency too, where pounds or euros are stated often enough (plan item 1.5, 20 Nov 2026: a London page gave
+    # pay by level in US dollars only, and the pounds only in a question at the foot)
+    sym_ = max(("£", "€"), key=lambda c_: sum(1 for j in js if c_ in (j.get("salary") or "")))
+    lv_l = defaultdict(list)
+    for j in js:
+        if (m_ := local_mid(j.get("salary"), sym_)): lv_l[LVL_NAME[j["level"]]].append(m_)
+    pay_l = {nm: (median(v), len(v)) for nm, v in lv_l.items() if len(v) >= 10}
+    if len(pay_l) < 2: pay_l = {}
+    if len(pay) >= 2 or pay_l:
         order_ = {LVL_NAME[k]: i for i, k in enumerate(("Intern", "Junior", "", "Senior", "Lead"))}
-        out.append(section(f"What jobs in {plc} pay, by level" if plc else f"Pay by level: {label}" if " pay " in f" {label} " else f"What {label} pay, by level", '<div class="tablewrap"><table><tr><th>Level in the title</th><th>Median advertised salary</th><th>Roles counted</th></tr>'
-                           + "".join(f"<tr><td>{e(nm)}</td><td><strong>{money(md)}</strong></td><td>{c:,}</td></tr>" for nm, md, c in sorted(pay, key=lambda x: order_.get(x[0], 9)))
-                           + '</table></div><p class="note">Medians of the midpoints of advertised yearly US-dollar ranges; a level needs at least 15 such roles. Advertised, not verified pay.</p>'))
+        cur_ = "pounds" if sym_ == "£" else "euros"
+        lv_rows = sorted(set(pay) | set(pay_l), key=lambda x: order_.get(x, 9))
+        cell_ = lambda d_, nm, f_: f"<strong>{f_(d_[nm][0])}</strong> <span class=\"note\">({d_[nm][1]:,})</span>" if nm in d_ else "–"
+        loc_money = lambda v: f"{sym_}{round(v / 1000)}K"
+        out.append(section(f"What jobs in {plc} pay, by level" if plc else f"Pay by level: {label}" if " pay " in f" {label} " else f"What {label} pay, by level",
+                           '<div class="tablewrap"><table><tr><th>Level in the title</th>' + ("<th>Median advertised salary, US dollars (roles)</th>" if len(pay) >= 2 else "")
+                           + (f"<th>Median in {cur_} (roles)</th>" if pay_l else "") + "</tr>"
+                           + "".join(f"<tr><td>{e(nm)}</td>" + (f"<td>{cell_(pay, nm, money)}</td>" if len(pay) >= 2 else "") + (f"<td>{cell_(pay_l, nm, loc_money)}</td>" if pay_l else "") + "</tr>" for nm in lv_rows)
+                           + '</table></div><p class="note">Medians of the midpoints of advertised yearly ranges, each in the currency the posting states; a level needs at least 15 roles in US dollars'
+                           + (f" or 10 in {cur_}" if pay_l else "") + '. Advertised, not verified pay.</p>'))
+    ct_ = sum(1 for j in js if j.get("etype") == "Contract")
+    if k >= 40 and ct_:
+        out.append(f'<p class="note">{ct_:,} of these {k:,} roles ({round(100 * ct_ / k)}%) are listed as contract work by the employer; the rest are permanent or do not say.</p>')
     glance = (f'<div class="hubgrid">{"".join(top)}</div><p class="note">Bars show the share of these {k:,} roles; one role can count in several rows.</p>' if top else "")
     return glance, "".join(out)
 
@@ -3141,6 +3159,37 @@ def main():
                          "The posting’s own schedule line is the only one that counts."),
                         ("Are there remote night shift jobs?", (f"{n_rem:,} of the {len(js_):,} night shift postings here are marked remote: mostly customer support, dispatch and monitoring work that has to be covered round the clock." if n_rem else
                                                                 "None of the night shift postings here is marked remote today; such roles are mostly customer support, dispatch and monitoring, and they appear as employers post them.")))
+            # Pay (plan item 1.9, 20 Nov 2026: the page had the differential only in a question): hourly pay by job title, as on the
+            # part-time page, and the differentials the postings name in their own text, in dollars an hour or as a percentage.
+            nt_hr = defaultdict(list)
+            for j in js_:
+                if (hr_ := usd_hourly(j.get("salary"))): nt_hr[re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip()].append((hr_[0] + hr_[1]) / 2)
+            nt_rows = sorted(((t_, sorted(v_)) for t_, v_ in nt_hr.items() if len(v_) >= 3 and 3 <= len(t_) <= 60), key=lambda x: -len(x[1]))[:15]
+            dol_, pct_ = [], []
+            for j in js_:
+                tx_ = (j["excerpt"] or "") + " " + re.sub(r"<[^>]+>", " ", j.get("desc") or "")
+                for m_ in re.finditer(r"\$\s?(\d{1,2}(?:\.\d{1,2})?)\s*(?:/\s*h(?:ou)?r\b|per hour|an hour)?\s*(?:night|shift|overnight|evening)?\s*(?:shift\s*)?(?:differential|premium)"
+                                      r"|(?:differential|premium)\s*(?:of|is|:)?\s*(?:up to\s*)?\$\s?(\d{1,2}(?:\.\d{1,2})?)\s*(?:/\s*h(?:ou)?r\b|per hour|an hour)", tx_, re.I):
+                    v_ = float(m_.group(1) or m_.group(2))
+                    if 0.25 <= v_ <= 10: dol_.append(v_); break
+                for m_ in re.finditer(r"(\d{1,2})\s?%\s*(?:night|shift|overnight|evening)?\s*(?:shift\s*)?(?:differential|premium)|(?:differential|premium)\s*(?:of|is|:)?\s*(?:up to\s*)?(\d{1,2})\s?%", tx_, re.I):
+                    v_ = int(m_.group(1) or m_.group(2))
+                    if 2 <= v_ <= 30: pct_.append(v_); break
+            nt_html = ""
+            if len(nt_rows) >= 3:
+                nt_html += section("Night shift pay [[by job title]]", '<div class="tablewrap"><table><tr><th>Job title</th><th>Open postings with an hourly rate</th><th>Median hourly pay</th></tr>'
+                                   + "".join(f"<tr><td>{e(t_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td></tr>" for t_, v_ in nt_rows)
+                                   + '</table></div><p class="note">The middle of each posting’s hourly range, for titles with three or more open night shift postings that state one.</p>', sid="pay", label="Pay")
+            if len(dol_) + len(pct_) >= 5:
+                dol_.sort(); pct_.sort()
+                cells_ = ([f"<tr><td>Dollars an hour on top</td><td>{len(dol_):,}</td><td>${dol_[len(dol_) // 2]:,.2f}</td><td>${dol_[0]:,.2f} to ${dol_[-1]:,.2f}</td></tr>"] if len(dol_) >= 3 else []) + \
+                         ([f"<tr><td>A share of the base rate</td><td>{len(pct_):,}</td><td>{pct_[len(pct_) // 2]}%</td><td>{pct_[0]}% to {pct_[-1]}%</td></tr>"] if len(pct_) >= 3 else [])
+                if cells_:
+                    nt_html += section("The night differential [[postings name]]", '<div class="tablewrap"><table><tr><th>How it is stated</th><th>Postings</th><th>Median</th><th>Range</th></tr>' + "".join(cells_)
+                                       + f'</table></div><p class="note">Read from the text of the {len(js_):,} open night shift postings: the amount next to “shift differential”, “night differential” or “premium”. '
+                                         'Most postings name none; ask for the night rate before you accept.</p>', sid="differential", label="Differential")
+            if nt_html:
+                kw_h = dict(kw_h); kw_h["after"] = nt_html + kw_h.get("after", "")
         listing(p_, h_, f"{h_} ({len(js_):,} open) | {SITE}", f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
                 intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
                 links=(("jobs/", "Search every job"),), **kw_h)
@@ -4141,8 +4190,16 @@ def main():
     barc = lambda v, mx, label: f'<span class="bar"><i style="width:{max(2, round(100 * v / mx))}%"></i></span>{label}'
     skills_rows = [trow([f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>', f"{len(js):,}", barc(len(js), top_skill, pctf(len(js), n)), pctf(sum(j["remote"] for j in js), len(js)), med(js)])
                    for t, js in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:25]]
+    # week on week for the employers hiring most (plan items 1.17 and 1.19, 20 Nov 2026: only "posted this week" was shown): postings
+    # the employer dated in the last 7 days against the 7 days before, closed ones included, so a posting filled fast still counts
+    prev_wk_t = (datetime.date.fromisoformat(week) - datetime.timedelta(days=7)).isoformat()
+    def wk_cells(js):
+        a_ = sum(1 for j in js if (j["posted"] or "")[:10] >= week)
+        b_ = sum(1 for j in js if prev_wk_t <= (j["posted"] or "")[:10] < week)
+        ch_ = "new" if a_ and not b_ else "–" if not a_ and not b_ else f'{"+" if a_ >= b_ else "−"}{abs(a_ - b_) * 100 / b_:.0f}%'
+        return [f"{a_:,}", f"{b_:,}", ch_]
     comp_rows = [trow([f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a>', f"{sum(j['active'] for j in js):,}",
-                       pctf(sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js)), f"{sum(1 for j in js if j['active'] and (j['posted'] or '') >= week):,}"])
+                       pctf(sum(j["remote"] for j in js if j["active"]), sum(j["active"] for j in js))] + wk_cells(js))
                  for c, js in comp_items[:25]]
     top_cat = max((len(v) for v in by_cat.values()), default=1)
     cat_rows = [trow([f'<a href="{P}/jobs/{cs}/">{e(CAT[cs])}</a>', f"{len(by_cat[cs]):,}", barc(len(by_cat[cs]), top_cat, pctf(len(by_cat[cs]), n)), pctf(sum(j["remote"] for j in by_cat[cs]), len(by_cat[cs])), med(by_cat[cs])])
@@ -4176,7 +4233,9 @@ def main():
                  (med(active), "median advertised salary")])
          + trend_pics
          + section("Most [[in-demand skills]]", tfold(["Skill", "Open roles", "Share of all roles", "Remote", "Median salary"], skills_rows, "skills"), label="Skills")
-         + section("Companies [[hiring the most]]", tfold(["Company", "Open roles", "Remote", "Posted this week"], comp_rows, "companies"), ("companies/", "All companies"), label="Employers")
+         + section("Companies [[hiring the most]]", tfold(["Company", "Open roles", "Remote", "Posted in the last 7 days", "The 7 days before", "Change"], comp_rows, "companies")
+                   + '<p class="note">Postings each employer dated in the last 7 days and in the 7 days before, closed ones included. A week is short: one large batch of postings moves the change a lot.</p>',
+                   ("companies/", "All companies"), label="Employers")
          + section("Roles [[by category]]", tfold(["Category", "Open roles", "Share", "Remote", "Median salary"], cat_rows, "categories"), label="Fields")
          + section("Roles [[by location]]", tfold(["Location", "Open roles", "Share"], place_rows, "places"), ("locations/", "All locations"), label="Places")
          + '<p class="note">Salary figures are medians of advertised US-dollar ranges and are shown only where at least 15 roles publish one. A role that lists several locations is counted in each.</p>'
@@ -5998,6 +6057,35 @@ def main():
     # Relocation guides, one per country (Relocate.me lives on guides like these, the owner asked for them): from today's postings in
     # the country, the employers that mention visa sponsorship or help with the move, the kinds of work, the pay, and the official
     # immigration site. Only official sites that answered when checked on 2026-11-14 are linked; no visa rule is restated here.
+    # Salary thresholds of the main work visas, read on official pages on 20 Nov 2026 (plan item 1.11: the relocation pages pointed to
+    # the official site and gave no threshold). Each row: (route, yearly threshold or the page's own figure, who it applies to,
+    # the threshold as a yearly number in the local currency for comparing postings, or None). Change them only from the source.
+    VISA_PAY = {
+        "DE": {"cur": "€", "src": ("City of Gerlingen, citing the Justice Ministry of Baden-Württemberg, 8 Jan 2026; set by the Federal Interior Ministry’s notice under § 18g AufenthG",
+                                    "https://www.gerlingen.de/-/Dienstleistungen/vbid2059/mid1"),
+               "rows": [("EU Blue Card", "€50,700 a year (2026)", "most skilled jobs with a university degree", 50700),
+                        ("EU Blue Card, lower threshold", "€45,934.20 a year (2026)", "shortage occupations, graduates of the last three years, and IT specialists without a degree who have three years of comparable experience", 45934.2)]},
+        "GB": {"cur": "£", "src": ("GOV.UK: Skilled Worker visa, your job", "https://www.gov.uk/skilled-worker-visa/your-job"),
+               "rows": [("Skilled Worker visa", "£41,700 a year, or the going rate for the job if that is higher", "the general rule; some jobs and people (for example new entrants) have lower thresholds set on GOV.UK", 41700)]},
+        "NL": {"cur": "€", "src": ("IND, the Dutch Immigration and Naturalisation Service: required amounts", "https://ind.nl/en/required-amounts-income-requirements"),
+               "rows": [("Highly skilled migrant, 30 or older", "€5,942 gross a month (2026)", "a recognised sponsor’s job offer", None),
+                        ("Highly skilled migrant, under 30", "€4,357 gross a month (2026)", "a recognised sponsor’s job offer", None),
+                        ("Highly skilled migrant, reduced criterion", "€3,122 gross a month (2026)", "an orientation year, or within 3 years of graduating", None),
+                        ("EU Blue Card", "€5,942 gross a month (2026); €4,754 reduced", "a degree and a job of at least six months", None)]},
+    }
+    def visa_pay_html(c, lm_):
+        v_ = VISA_PAY.get(c)
+        if not v_: return ""
+        cmp_ = ""
+        yearly = [r_ for r_ in v_["rows"] if r_[3]]
+        if yearly and len(lm_) >= 10:
+            t_ = yearly[0][3]
+            cmp_ = (f'<p>Of the {len(lm_):,} open postings here that state a yearly range in {"pounds" if v_["cur"] == "£" else "euros"}, '
+                    f'{sum(1 for m_ in lm_ if m_ >= t_):,} ({round(100 * sum(1 for m_ in lm_ if m_ >= t_) / len(lm_))}%) have a midpoint at or above the {e(yearly[0][0])} threshold.</p>')
+        return section("Salary thresholds for a work visa", '<div class="tablewrap"><table><tr><th>Route</th><th>Minimum pay</th><th>Applies to</th></tr>'
+                       + "".join(f"<tr><td><b>{e(r_[0])}</b></td><td>{e(r_[1])}</td><td>{e(r_[2])}</td></tr>" for r_ in v_["rows"]) + "</table></div>" + cmp_
+                       + f'<p class="note">Source: <a href="{e(v_["src"][1])}" rel="nofollow noopener">{e(v_["src"][0])}</a>, read on Nov 20, 2026. Thresholds change every year; the official page decides.</p>',
+                       sid="visa-pay", label="Visa pay")
     OFFICIAL_VISA = {
         "GB": ("GOV.UK: Skilled Worker visa", "https://www.gov.uk/skilled-worker-visa"),
         "SG": ("Ministry of Manpower: passes and permits", "https://www.mom.gov.sg/passes-and-permits"),
@@ -6081,6 +6169,7 @@ def main():
              + (section("The kinds of work they hire for", '<figure class="pic"><div class="hbars">' + "".join(
                  f'<a href="{P}/roles/{sr}/"><span class="hn">{e(rn)}</span><span class="hb"><i style="width:{max(4, round(100 * k / roles_[0][0]))}%"></i></span><span class="hc">{k} jobs</span></a>' for k, sr, rn in roles_) + "</div></figure>") if roles_ else "")
              + (section(f"Cities in {cname_.get(c, c)} with the most open jobs", city_row) if city_row else "")
+             + visa_pay_html(c, lm_)
              + section(f"Five steps to a job in {cname_.get(c, c)}", steps)
              + section("The newest of these jobs", '<ul class="jobs">' + "".join(card(j) for j in newest) + "</ul>"
                        + ('<p class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in lists_) + "</p>" if lists_ else ""), sid="newest")
@@ -6097,7 +6186,12 @@ def main():
                                                            ("Relocation support", f'mention <a href="{P}/perks/relocation/">relocation support</a>'))
                        for k_ in [next((c_ for n2_, _, c_ in perk_rows if n2_ == nm_), 0)] if k_])
              + '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/relocate/{sl}/"><span class="n">{fl(c)}{e(cname_.get(c, c))}</span><span class="c">{k:,} jobs</span></a></li>' for sl, c, _, k, _ in sorted(rl_rows, key=lambda x: -x[3])) + "</ul>"
-             + f'<p class="rel chips"><a href="{P}/perks/visa-sponsorship/">All jobs with visa sponsorship</a><a href="{P}/perks/relocation/">All jobs with relocation support</a></p>', cls="hub")
+             + f'<p class="rel chips"><a href="{P}/perks/visa-sponsorship/">All jobs with visa sponsorship</a><a href="{P}/perks/relocation/">All jobs with relocation support</a></p>'
+             # the thresholds in one table, each country's from its official page (the Netherlands has no country page yet)
+             + section("Salary thresholds for a work visa, [[side by side]]", '<div class="tablewrap"><table><tr><th>Country</th><th>Route</th><th>Minimum pay</th></tr>'
+                       + "".join(f"<tr><td>{fl(c_)}{e(cname_.get(c_, c_))}</td><td>{e(r_[0])}</td><td>{e(r_[1])}</td></tr>" for c_, v_ in VISA_PAY.items() for r_ in v_["rows"])
+                       + "</table></div><p class=\"note\">Read on the official pages on Nov 20, 2026: " + " · ".join(f'<a href="{e(v_["src"][1])}" rel="nofollow noopener">{e(cname_.get(c_, c_))}</a>' for c_, v_ in VISA_PAY.items())
+                       + ". Thresholds change every year; each country’s official page decides.</p>", sid="visa-pay", label="Visa pay"), cls="hub")
 
     lap('"Jobs Every Hour vs <job site>": fair comparisons, every fac')
     # "Jobs Every Hour vs <job site>": fair comparisons, every fact about the other site sourced and dated (compare_sites.py).
