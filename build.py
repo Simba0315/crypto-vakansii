@@ -562,7 +562,7 @@ CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from close
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
 SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby", "workable": "Workable", "recruitee": "Recruitee", "teamtailor": "Teamtailor",
                "personio": "Personio", "workday": "Workday", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR",
-               "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint"}     # hiring systems the listings are read from (collect.fetch_feed, fetch_jazzhr)
+               "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling"}     # hiring systems the listings are read from (collect.fetch_feed, fetch_jazzhr)
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
@@ -2707,7 +2707,7 @@ def main():
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     group = lambda label, inner, cls="": f'<div class="fgroup{" " + cls if cls else ""}"><span class="flabel">{label}</span>{inner}</div>'
     search = (crumbs(("All jobs", "")) + '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (one page per query, 18 Nov 2026)
-              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
+              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="A title, or a sentence: remote nurse jobs this week" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
@@ -3829,6 +3829,25 @@ def main():
             overview += section(f"Pay by field at {c}", sid="pay", inner='<div class="tablewrap"><table><tr><th>Field</th><th>Postings with pay</th><th>Lowest to highest advertised</th><th>Median</th><th>Spread</th></tr>'
                                 + "".join(pay_row(k, v) for k, v in pay_rows) + "</table></div>"
                                 f'<p class="note">Pay ranges that {e(c)} printed in its open postings, converted to US dollars. A field needs 3 postings with pay to appear and 15 for a median. The line shows where the range sits; the tick marks the median.</p>')
+        # Hiring week by week, as LinkedIn shows a company's growth beside its jobs (20 Nov 2026): the roles it opened each week (by the
+        # employer's date) and closed (by the day its board stopped listing them). Counted only from the week after we first read the
+        # company, when nothing it opened or closed can have passed unseen, and shown once there are 4 such weeks and 8 roles opened:
+        # the record keeps closed roles, so the chart fills in by itself.
+        seen0 = min((j["first_seen"] or "")[:10] for j in js if j.get("first_seen")) if any(j.get("first_seen") for j in js) else ""
+        if seen0:
+            d0_ = datetime.date.fromisoformat(seen0)
+            wk_start = d0_ + datetime.timedelta(days=7 - d0_.weekday())                       # the first whole week after the first read
+            wk_now = datetime.date.today() - datetime.timedelta(days=datetime.date.today().weekday())
+            wks_ = [wk_start + datetime.timedelta(weeks=i) for i in range(max(0, (wk_now - wk_start).days // 7 + 1))][-13:]
+            wk_of = lambda d: (datetime.date.fromisoformat(d[:10]) - datetime.timedelta(days=datetime.date.fromisoformat(d[:10]).weekday())) if d and d[:10] >= wk_start.isoformat() else None
+            op_w, cl_w = Counter(wk_of(j["posted"]) for j in js if j.get("posted")), Counter(wk_of(j.get("closed") or "") for j in js if not j["active"])
+            if len([w for w in wks_ if w < wk_now]) >= 4 and sum(op_w[w] for w in wks_) >= 8:
+                pts_ = [(f"{w.strftime('%b')} {w.day}" if i % 3 == 0 or w == wk_now else "", op_w[w],
+                         f"{'This week so far' if w == wk_now else 'Week of ' + w.strftime('%b ') + str(w.day)} · {op_w[w]:,} opened, {cl_w[w]:,} closed")
+                        for i, w in enumerate(wks_)]
+                overview += section(f"Hiring at {c}, week by week", '<figure class="pic"><figcaption><b>Roles opened each week</b>'
+                                    f'By the date {e(c)} posted them; the tooltip adds the roles that closed that week. The last column is still filling up.</figcaption>'
+                                    f'{vcols(pts_, now=len(pts_) - 1 if wks_[-1] == wk_now else None, aria=f"Roles {c} opened each week")}</figure>', sid="weeks")
         duo = ""          # two short sections, each a heading and one row of links: side by side on wide screens instead of two thin strips
         if stack:
             duo += section(f"Tech stack at {c}", sid="stack", inner='<div class="rel chips">' + "".join(f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>' for t in stack) + "</div>"
@@ -6975,7 +6994,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     lap("How the hourly check works: counted from the build's own dat")
     # How the hourly check works: counted from the build's own data, written as a plain account of the method (ROADMAP: engineering-style post).
     ats_name = {"greenhouse": "Greenhouse", "ashby": "Ashby", "lever": "Lever", "workable": "Workable", "workday": "Workday", "personio": "Personio", "recruitee": "Recruitee",
-                "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint"}       # every system collect.py reads; the table shows those with open jobs today
+                "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling"}       # every system collect.py reads; the table shows those with open jobs today
     ats_jobs, ats_cos = Counter(), defaultdict(set)
     for j_ in active:
         k_ = str(j_.get("id", "")).split("-")[0]

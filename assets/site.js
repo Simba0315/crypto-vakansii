@@ -319,7 +319,20 @@
     if (rest.length >= 80) out.description = rest;
     return out;
   }
-  window.HRN = { readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  // the jobs that fit the For you answers (hrn_profile), newest first: the home window's "For you" tab and the account's "Jobs that fit
+  // you". null when no answer is given.
+  function fitTest(p) {
+    p = p || {};
+    var cats = p.cats || [], skills = p.skills || [], pay = Number(p.pay) || 0;
+    if (!cats.length && !skills.length && !p.where && !pay) return null;
+    return function (j) {
+      if (j[22] || (cats.length && cats.indexOf(j[5]) < 0)) return false;
+      if ((p.where === 'remote' && !j[4]) || (p.where === 'hybrid' && !j[25]) || (p.where === 'office' && j[4])) return false;
+      if (pay && j[13] && j[13] < pay) return false;
+      return !skills.length || j[7].some(function (t) { return skills.indexOf(t) >= 0; });
+    };
+  }
+  window.HRN = { fitTest: fitTest, readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
      the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */
@@ -677,6 +690,21 @@
   (function () {
     var tabs = $('shot-tabs'), box = $('shot-panels'), more = $('shot-more');
     if (!tabs || !box) return;
+    // A visitor who answered For you gets a first tab of the newest jobs that fit the answers, open at once, as LinkedIn's jobs home
+    // opens on "jobs based on your preferences" (checked 20 Nov 2026). Counted here from the jobs index; nothing is sent anywhere.
+    var fits = fitTest(get('hrn_profile', null));
+    if (fits) load().then(function (rows) {
+      var fit = rows.filter(fits).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
+      if (fit.length < 3 || tabs.querySelector('[data-tab="fy"]')) return;
+      var t = document.createElement('a'); t.href = P + '/for-you/'; t.setAttribute('data-tab', 'fy'); t.textContent = 'For you';
+      t.setAttribute('data-more', 'See all ' + fit.length.toLocaleString('en-US') + ' that fit your answers');
+      var ul = document.createElement('ul'); ul.className = 'jobs'; ul.setAttribute('data-panel', 'fy');
+      ul.innerHTML = fit.slice(0, Math.max(5, (box.querySelector('[data-panel="0"]') || { children: [] }).children.length)).map(card).join('');
+      var first = tabs.querySelector('a[data-tab]');
+      tabs.insertBefore(t, first); box.insertBefore(ul, box.firstChild);
+      if (window.HRN.decorate) window.HRN.decorate(ul);
+      t.click();
+    }).catch(function () {});
     tabs.addEventListener('click', function (ev) {
       var a = ev.target.closest ? ev.target.closest('a[data-tab]') : null;
       if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey) return;

@@ -37,7 +37,7 @@ RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
-            "sources_paylocity.json", "sources_pinpoint.json")
+            "sources_paylocity.json", "sources_pinpoint.json", "sources_gem.json", "sources_trakstar.json", "sources_rippling.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -50,10 +50,12 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # BambooHR and Paylocity 8 at a time since 20 Nov 2026: about 4,000 boards each, a read 23 to 32 s of waiting for their answers, so
 # 4 at a time came round to a board every 7 to 9 hours. The gap between two requests (ATS_GAP) still caps the rate at 3 and 2.5 a second.
 # Pinpoint (20 Nov 2026): every board a subdomain of pinpointhq.com, the whole board with its texts in one request: 4 at a time.
+# Gem and Trakstar (20 Nov 2026): one API each for all their boards, the texts in the list: the same. Rippling the same, with one
+# request a posting for its text.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4}
+             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
-           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3}
+           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -67,7 +69,7 @@ LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this 
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
-SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity"}
+SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -1797,9 +1799,151 @@ def fetch_pinpoint(src, reuse=None):
     return name, out
 
 
+def list_board(src, reuse, ats, items):
+    """A board whose list holds every posting's text (Pinpoint, Gem, Trakstar): an unchanged posting keeps its record, the others are
+    parsed from what the list says; nothing more is asked. items: [(id, raw, (title, url, place, remote, dept, posted, text, pay, type,
+    html text, hybrid[, exact time of publishing]))], norm's arguments after the id."""
+    name, out = src["name"], []
+    src["not_english"] = 0
+    for jid, raw, args in items:
+        full_id = f"{ats}-{slugify(name)}-{jid}"
+        if reuse and (rec := reuse(full_id, fingerprint(raw))) is not None:
+            out.append(rec); continue
+        title, text = args[0], args[6]
+        if not text: continue
+        if not english(f"{title}\n{text}"):
+            src["not_english"] += 1; continue
+        rec = parse(name, ats, jid, *args[:11], **({"posted_at": args[11]} if len(args) > 11 and args[11] else {}))
+        rec["h"], rec["rh"] = fingerprint(raw), raw_hash(raw)
+        out.append(rec)
+    return name, out
+
+
+# Gem (https://jobs.gem.com/<board>, sources_gem.json, "token": the board's name in its address). Gem's Job Board API, which it
+# documents for building one's own careers page (api.gem.com/job_board/v0/<board>/job_posts/), lists every published posting with its
+# text, place, kind of workplace (remote, hybrid, in office), department and the time it was first published. api.gem.com answers
+# robots.txt with 403 (20 Nov 2026), which under RFC 9309 leaves nothing out of bounds.
+def fetch_gem(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("gem")
+    d = get_json(f"https://api.gem.com/job_board/v0/{tok}/job_posts/", 60)
+    if not isinstance(d, list): return name, None
+    items = []
+    for p in d:
+        if not isinstance(p, dict) or not p.get("id") or not str(p.get("title") or "").strip() or not p.get("absolute_url"): continue
+        kind = str(p.get("location_type") or "").lower()
+        place = str((p.get("location") or {}).get("name") or "") if isinstance(p.get("location"), dict) else ""
+        dept = ", ".join(str(x.get("name") or "") for x in (p.get("departments") or []) if isinstance(x, dict) and x.get("name"))
+        desc = str(p.get("content") or "")
+        posted = str(p.get("first_published_at") or p.get("created_at") or "")
+        raw = {"title": str(p["title"]).strip(), "url": str(p["absolute_url"]), "place": place, "kind": kind, "dept": dept, "desc": desc,
+               "type": str(p.get("employment_type") or ""), "posted": posted}
+        items.append((str(p["id"]), raw, (raw["title"], raw["url"], place, kind == "remote", dept, posted[:10], strip_html(desc), "",
+                                          raw["type"].replace("_", " "), desc, kind == "hybrid", posted or None)))
+    return list_board(src, reuse, "gem", items)
+
+
+# Trakstar Hire, once Recruiterbox (https://<company>.hire.trakstar.com, sources_trakstar.json, "token": the company's name there).
+# Its self-service openings API (jsapi.recruiterbox.com/v1/openings?client_name=<company>), which Trakstar offers for careers pages
+# of one's own, gives every published opening with its text, address, whether it allows remote work, the type and the team, 10 a
+# request: it breaks off any answer longer than about 350 KB (20 Nov 2026: 50 or 100 openings of 8 KB each broke off, over HTTP/2 and
+# HTTP/1.1 alike). A board whose pages do not all answer is left as it was: a posting missing from a read would be closed. No date of
+# publishing: a posting's date is the day we first read it. robots.txt of the API (19 Nov 2026) allows all but /prepare.
+TRAK_TYPE = {"full_time": "Full-time", "part_time": "Part-time", "contract": "Contract", "internship": "Internship", "temporary": "Temporary"}
+TRAK_PAGE = 10
+
+
+def fetch_trakstar(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    rows, offset, total = [], 0, None
+    while offset < 2000 and (total is None or offset < total):
+        polite("trakstar")
+        d = get_json(f"https://jsapi.recruiterbox.com/v1/openings?client_name={tok}&limit={TRAK_PAGE}&offset={offset}", 60)
+        if not isinstance(d, dict) or not isinstance(d.get("objects"), list): return name, None
+        rows += d["objects"]
+        total = int((d.get("meta") or {}).get("total") or 0)
+        offset += TRAK_PAGE
+        if not d["objects"]: break
+    items = []
+    for p in rows:
+        if not isinstance(p, dict) or not p.get("id") or not str(p.get("title") or "").strip() or not p.get("hosted_url"): continue
+        loc = p.get("location") if isinstance(p.get("location"), dict) else {}
+        place = ", ".join(dict.fromkeys(str(x).strip() for x in (loc.get("city"), loc.get("state"), loc.get("country")) if x and str(x).strip()))
+        desc = str(p.get("description") or "")
+        kind = str(p.get("position_type") or "")
+        raw = {"title": str(p["title"]).strip(), "url": str(p["hosted_url"]), "place": place, "remote": bool(p.get("allows_remote")),
+               "dept": str(p.get("team") or ""), "type": kind, "desc": desc}
+        items.append((str(p["id"]), raw, (raw["title"], raw["url"], place, raw["remote"], raw["dept"], "", strip_html(desc), "",
+                                          TRAK_TYPE.get(kind, kind.replace("_", " ")), desc, False)))
+    return list_board(src, reuse, "trakstar", items)
+
+
+# Rippling (https://ats.rippling.com/<board>/jobs, sources_rippling.json, "token": the board's name). The JSON its careers pages read
+# (api.rippling.com/platform/api/ats/v1/board/<board>/jobs) lists every open job once for each of its places; the job's own entry
+# (.../jobs/<id>) holds the text (the role, then the company), the company's name, the day it was created, the employment type, every
+# place and the pay range where one is given. A job its employer keeps out of search (unlistedFromSearch) is left out.
+# api.rippling.com has no robots.txt (404, 19 Nov 2026) and ats.rippling.com keeps crawlers out of /internal/ only.
+RIPPLING = "https://api.rippling.com/platform/api/ats/v1/board/"
+RIP_TYPE = {"SALARIED_FT": "Full-time", "HOURLY_FT": "Full-time", "SALARIED_PT": "Part-time", "HOURLY_PT": "Part-time",
+            "CONTRACTOR": "Contract", "CONTRACT": "Contract", "INTERN": "Internship", "TEMP": "Temporary", "SEASONAL": "Temporary"}
+RIP_FREQ = {"YEAR": "a year", "MONTH": "a month", "WEEK": "a week", "DAY": "a day", "HOUR": "an hour"}
+# a place given as a US state's two letters alone ("CT"): Rippling's boards are American, so the state
+US_STATE_NAME = dict(zip("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA "
+                         "WA WV WI WY DC".split(),
+                         ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+                          "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+                          "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina",
+                          "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas",
+                          "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming", "District of Columbia"]))
+
+
+def rippling_pay(rows):
+    for r in rows if isinstance(rows, list) else []:
+        if not isinstance(r, dict) or not (r.get("rangeStart") or r.get("rangeEnd")): continue
+        lo, hi, cur = r.get("rangeStart") or r.get("rangeEnd"), r.get("rangeEnd") or r.get("rangeStart"), str(r.get("currency") or "").upper()
+        sign = {"USD": "$", "GBP": "£", "EUR": "€", "CAD": "CA$", "AUD": "A$"}.get(cur, cur + " " if cur else "")
+        fmt = lambda v: f"{int(float(v)):,}" if float(v) >= 1000 else f"{float(v):g}"
+        rng = f"{sign}{fmt(lo)} - {sign}{fmt(hi)}" if float(lo) != float(hi) else f"{sign}{fmt(lo)}"
+        return rng + (" " + RIP_FREQ[str(r.get("frequency") or "").upper()] if str(r.get("frequency") or "").upper() in RIP_FREQ else "")
+    return ""
+
+
+def fetch_rippling(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("rippling")
+    d = get_json(f"{RIPPLING}{tok}/jobs", 60)
+    if not isinstance(d, list): return name, None
+    jobs = {}
+    for p in d:
+        if not isinstance(p, dict) or not p.get("uuid") or not str(p.get("name") or "").strip(): continue
+        wl = p.get("workLocation") if isinstance(p.get("workLocation"), dict) else {}
+        dp = p.get("department") if isinstance(p.get("department"), dict) else {}
+        j = jobs.setdefault(str(p["uuid"]), {"title": str(p["name"]).strip(), "url": str(p.get("url") or f"https://ats.rippling.com/{tok}/jobs/{p['uuid']}"),
+                                              "places": [], "dept": str(dp.get("label") or "")})
+        if wl.get("label") and str(wl["label"]) not in j["places"]: j["places"].append(str(wl["label"]))
+    place_of = lambda ls: "; ".join((f"{US_STATE_NAME[x]}, United States" if x in US_STATE_NAME else x) for x in ls[:6])
+
+    def read(jid, raw):
+        x = get_json(f"{RIPPLING}{tok}/jobs/{jid}", 40)
+        if not isinstance(x, dict) or not isinstance(x.get("description"), dict): return None
+        if x.get("unlistedFromSearch"):
+            _jazz_skip.add(f"rippling-{slugify(name)}-{jid}"); return None          # kept out of search by its employer
+        parts = x["description"]
+        desc = str(parts.get("role") or "") + (f"<h3>About {html.escape(str(x.get('companyName') or name))}</h3>" + str(parts["company"]) if parts.get("company") else "")
+        text = strip_html(desc)
+        if not text: return None
+        if not english(f"{raw['title']}\n{text}"): return "not english"
+        places = [str(l) for l in (x.get("workLocations") or []) if isinstance(l, str) and l.strip()] or raw["places"]
+        et = x.get("employmentType") if isinstance(x.get("employmentType"), dict) else {}
+        made = str(x.get("createdOn") or "")
+        return parse(name, "rippling", jid, raw["title"], raw["url"], place_of(places), False, raw["dept"], made[:10], text,
+                     rippling_pay(x.get("payRangeDetails")), RIP_TYPE.get(str(et.get("label") or ""), ""), desc, False, posted_at=made or None)
+    return detail_board(src, reuse, "rippling", list(jobs.items()), read)
+
+
 _fetch_any = fetch
 READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity,
-           "pinpoint": fetch_pinpoint}      # the systems read outside fetch_feed
+           "pinpoint": fetch_pinpoint, "gem": fetch_gem, "trakstar": fetch_trakstar, "rippling": fetch_rippling}      # the systems read outside fetch_feed
 
 
 def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)

@@ -326,6 +326,7 @@
   var places = Array.prototype.slice.call(loc.options).filter(function (o) { return o.value; }).map(function (o) {
     var t = o.text.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '').toLowerCase(), names = [t];
     t.split(' & ').forEach(function (part) { names.push(part.replace(/^the /, '')); });
+    if (/, [a-z]{2}$/.test(t)) names.push(t.replace(/, [a-z]{2}$/, ''));         // "New York, NY" is typed "new york"
     ({ 'united-states': ['usa', 'united states', 'the us', 'america'], 'united-kingdom': ['uk', 'britain', 'england', 'united kingdom'], 'san-francisco': ['san francisco', 'bay area', 'sf'],
        'new-york': ['nyc', 'new york city'], 'washington-dc': ['washington dc', 'dc'], 'uae': ['dubai', 'uae', 'emirates'] }[o.value] || []).forEach(function (a) { names.push(a); });
     return { v: o.value, names: names.filter(function (x, i, a) { return x.length > 1 && a.indexOf(x) === i; }) };
@@ -337,7 +338,29 @@
     var take = function (rx, fn) { if (rx.test(text)) { text = text.replace(rx, ' '); fn(); took = true; } };
     take(/\b(?:work(?:ing)? from anywhere|anywhere in the world|worldwide)\b/i, function () { fAny.checked = true; fRemote.checked = true; });
     take(/\b(?:fully[- ])?remote(?:ly)?\b/i, function () { fRemote.checked = true; });
-    take(/\b(?:entry[- ]level|new[- ]grad(?:uate)?s?|graduate)\b/i, function () { fEntry.checked = true; });
+    if (fHybrid) take(/\bhybrid\b/i, function () { fHybrid.checked = true; });
+    take(/\b(?:entry[- ]level|new[- ]grad(?:uate)?s?|graduate|no experience(?: needed| required)?)\b/i, function () { fEntry.checked = true; });
+    // LinkedIn's search reads a plain sentence ("entry level design jobs in the US", 20 Nov 2026): the same here for the type of work,
+    // how recent, the perks and "pay listed", each only when its filter is still empty
+    if (!etype.value) {
+      take(/\bpart[- ]?time\b/i, function () { etype.value = 'Part-time'; });
+      take(/\bfull[- ]?time\b/i, function () { etype.value = 'Full-time'; });
+      take(/\b(?:contract|freelance|contractor)(?=\s+(?:jobs?|roles?|work|gigs?|positions?)\b|\s*$)/i, function () { etype.value = 'Contract'; });
+    }
+    if (!age.value) {
+      take(/\b(?:posted\s+)?(?:today|in the (?:last|past) 24 hours|(?:last|past) 24 hours)\b/i, function () { age.value = '1'; });
+      take(/\b(?:posted\s+)?(?:in the )?(?:last|past) (?:3|three) days\b/i, function () { age.value = '3'; });
+      take(/\b(?:posted\s+)?(?:this|in the (?:last|past)|(?:last|past)) week\b|\b(?:posted\s+)?(?:in the )?(?:last|past) 7 days\b/i, function () { age.value = '7'; });
+      take(/\b(?:posted\s+)?(?:this|in the (?:last|past)|(?:last|past)) month\b|\b(?:posted\s+)?(?:in the )?(?:last|past) 30 days\b/i, function () { age.value = '30'; });
+    }
+    if (!perk.value) {
+      take(/\b(?:with |offering )?(?:visa sponsorship|sponsor(?:s|ing)? (?:a |your )?(?:visa|h-?1b)s?|h-?1b sponsorship)\b/i, function () { perk.value = 'Visa sponsorship'; });
+      take(/\b(?:with |offering )?relocation(?: support| assistance| package| help)?\b/i, function () { perk.value = 'Relocation support'; });
+      take(/\b(?:with (?:a )?)?(?:4|four)[- ]day (?:work ?)?weeks?\b/i, function () { perk.value = '4-day week'; });
+      take(/\b(?:with )?unlimited (?:pto|vacation|paid time off)\b/i, function () { perk.value = 'Unlimited PTO'; });
+      take(/\b(?:no (?:college )?degree(?: required| needed)?|without (?:a )?(?:college )?degree)\b/i, function () { perk.value = 'No degree required'; });
+      take(/\b(?:with )?(?:paid )?parental leave\b/i, function () { perk.value = 'Parental leave'; });
+    }
     if (!lvl.value) {
       take(/\b(?:internships?|interns?)\b/i, function () { lvl.value = 'Intern'; });
       take(/\b(?:junior|jr\.?)(?=\s)/i, function () { lvl.value = 'Junior'; });
@@ -351,6 +374,7 @@
         if (best) { sal.value = best; text = text.replace(m[0], ' '); took = true; }
       }
     }
+    take(/\b(?:with|showing|that (?:show|list|state)s?)\s+(?:the\s+)?(?:salary|salaries|pay)(?:\s+(?:listed|stated|shown|included))?\b|\b(?:salary|pay)\s+(?:listed|stated|shown|included)\b/i, function () { if (!sal.value) sal.value = '1'; });
     if (!loc.value) {
       var hit = null;
       places.forEach(function (p) { p.names.forEach(function (nm) {

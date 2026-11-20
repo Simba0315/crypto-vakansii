@@ -1,4 +1,4 @@
-"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR, Paylocity and Pinpoint, and add the ones with English jobs to
+"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR, Paylocity, Pinpoint, Gem, Trakstar and Rippling, and add the ones with English jobs to
 sources_ats.json (15 Nov 2026; the owner: "too few jobs, competitors add far more").
 
     python3 discover_ats.py --cc DIR CRAWL[,CRAWL...]   read Common Crawl's URL index for the systems' addresses into DIR (one file a page;
@@ -42,7 +42,7 @@ CC_FILTER = {"bamboohr": "~url:/careers"}
 # ranges: about 12 requests to find the place in cluster.idx (100 MB, sorted), then one a block. Addresses as SURT keys: "com,bamboohr,".
 CC_FILES = "https://data.commoncrawl.org/cc-index/collections/{crawl}/indexes/"
 CC_SURT = {"bamboohr": "com,bamboohr,", "breezy": "hr,breezy,", "paylocity": "com,paylocity,recruiting)/recruiting/jobs/all/", "pinpoint": "com,pinpointhq,",
-           "gem": "com,gem,jobs)/", "trakstar": "com,trakstar,hire,", "recruiterbox": "com,recruiterbox,"}
+           "gem": "com,gem,jobs)/", "trakstar": "com,trakstar,hire,", "recruiterbox": "com,recruiterbox,", "rippling": "com,rippling,ats)/"}
 # addresses on these hosts that are the system's own pages, not a company's board
 NOT_BOARDS = {"www", "app", "api", "help", "support", "status", "blog", "docs", "developer", "developers", "partner", "partners", "academy",
               "marketplace", "cdn", "assets", "static", "tt", "career-site", "login", "signup", "j", "jobs", "careers-page", "oauth", "_next",
@@ -59,6 +59,7 @@ URL_RX = [
     ("pinpoint", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.pinpointhq\.com(?:[/:?#]|$)", re.I)),
     ("gem", re.compile(r"https?://jobs\.gem\.com/([A-Za-z0-9][A-Za-z0-9_-]{1,60})(?:[/?#]|$)")),
     ("trakstar", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.(?:hire\.trakstar|recruiterbox)\.com(?:[/:?#]|$)", re.I)),
+    ("rippling", re.compile(r"https?://ats\.rippling\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})/jobs(?:[/?#]|$)")),
     ("workday", re.compile(r"https?://([a-z0-9][a-z0-9-]{0,60}\.wd\d{1,3})\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})(?:[/?#]|$)")),
 ]
 # Recruitment agencies and job marketplaces post other companies' jobs, often the same one many times: left out, as in sources_more.json.
@@ -334,7 +335,8 @@ def verify(ats, tok):
     """(entry for sources_ats.json, None) or (None, why not)."""
     if ats == "workday": return verify_workday(tok)
     if ats in ("breezy", "bamboohr", "paylocity"): return verify_detail(ats, tok)
-    if ats == "pinpoint": return verify_pinpoint(tok)
+    if ats in LIST_PAGE: return verify_list(ats, tok)
+    if ats == "rippling": return verify_rippling(tok)
     url, accept = feed(ats, tok)
     collect.polite(ats)
     body = net.get_text(url, 60, accept="application/json" if accept == "json" else accept)
@@ -396,21 +398,64 @@ def verify_detail(ats, tok):
             "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
 
 
-def verify_pinpoint(tok):
-    """Pinpoint: the whole board with its texts in one request (collect.fetch_pinpoint); the company's name from its careers page's
-    title ("Jobs at <company> | <company> Careers"). Kept with 3 or more open jobs, mostly in English as for the feeds."""
-    collect.polite("pinpoint")
-    page = net.get_text(f"https://{tok}.pinpointhq.com/", 30, accept="text/html") or ""
-    m = re.search(r"<title>\s*(?:Jobs at|Careers at)\s+(.{2,80}?)\s*(?:\||</title>)", page, re.I | re.S)
-    name = clean_name(html.unescape(m.group(1)), tok) if m else ""
-    if not name or name.lower() == "pinpoint" and tok != "workwithus": name = pretty(tok)
-    src = {"name": name, "ats": "pinpoint", "token": tok}
-    _, jobs = collect.READERS["pinpoint"](src)
+LIST_PAGE = {"pinpoint": ("https://{tok}.pinpointhq.com/", r"<title>\s*(?:Jobs at|Careers at)\s+(.{2,80}?)\s*(?:\||</title>)"),
+             "gem": ("https://jobs.gem.com/{tok}", r"<title>\s*(.{2,80}?)(?:\s*\((?:ats|ATS|Ats)\))?\s+(?:Jobs|Careers)\s*</title>"),
+             "trakstar": ("https://{tok}.hire.trakstar.com/", r"<title>\s*(.{2,80}?)\s+jobs\s*\|")}
+
+
+CLIENT_RX = re.compile(r"\bour client(?:'s)?,? (?:is|an?|based|located|seeks|has|needs|requires|that)\b|on behalf of (?:our|a|an|the) (?:\w+ )?client|"
+                       r"\bclient of ours\b|\bfor (?:one of )?our clients?,? (?:an?|who|based|located|in)\b|\bour client(?:'s)? (?:\w+ ){0,2}(?:team|business|company|facility)\b", re.I)
+
+
+def for_clients(jobs):
+    """A board whose postings are for its clients (a recruitment agency under its own name, which AGENCY_RX cannot see): a third or
+    more of the texts read say "our client" or "on behalf of a client" (20 Nov 2026: Justsalesjobs, Startmonday, Twonice on Trakstar)."""
+    n = sum(1 for j in jobs if CLIENT_RX.search(j.get("desc") or j.get("excerpt") or ""))
+    return bool(jobs) and n >= max(2, len(jobs) / 3)
+
+
+def verify_list(ats, tok):
+    """Pinpoint, Gem and Trakstar: the whole board with its texts in collect's reader (collect.fetch_pinpoint and the others); the
+    company's name from the title of its careers page ("Jobs at <company> | ...", "<company> Jobs", "<company> jobs | ..."). Kept with
+    3 or more open jobs, mostly in English as for the feeds."""
+    url, rx = LIST_PAGE[ats]
+    collect.polite(ats)
+    page = net.get_text(url.format(tok=tok), 30, accept="text/html") or ""
+    m = re.search(rx, page, re.I | re.S)
+    name = clean_name(html.unescape(re.sub(r"\s+", " ", m.group(1))), tok) if m else ""
+    if not name or name.lower() in ("pinpoint", "gem", "trakstar") and tok not in ("workwithus", "gem"): name = pretty(tok)
+    src = {"name": name, "ats": ats, "token": tok}
+    _, jobs = collect.READERS[ats](src)
     if jobs is None: return None, "feed not readable"
+    if for_clients(jobs): return None, "a recruitment agency (postings for its clients)"
     total = len(jobs) + src.get("not_english", 0)
     if len(jobs) < 3: return None, f"{len(jobs)} English jobs of {total}"
     if len(jobs) < 0.6 * total and len(jobs) < 15: return None, f"mostly not English ({len(jobs)} of {total})"
-    return {"name": name, "ats": "pinpoint", "token": tok, "count": len(jobs), "titles": few_titles(j["title"] for j in jobs),
+    return {"name": name, "ats": ats, "token": tok, "count": len(jobs), "titles": few_titles(j["title"] for j in jobs),
+            "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
+
+
+def verify_rippling(tok):
+    """Rippling: the list in one request, then the text of the first postings (collect.DETAILS, 3 while discovering), as for BambooHR;
+    the company's name from the first posting's entry (companyName). Kept with 3 or more open jobs of which 2 of those read are in English."""
+    collect.polite("rippling")
+    d = net.get_json(f"{collect.RIPPLING}{tok}/jobs", 60)
+    if not isinstance(d, list): return None, "feed not readable"
+    ids = list(dict.fromkeys(str(p.get("uuid")) for p in d if isinstance(p, dict) and p.get("uuid")))
+    if len(ids) < 3: return None, f"{len(ids)} jobs"
+    collect.polite("rippling")
+    first = net.get_json(f"{collect.RIPPLING}{tok}/jobs/{ids[0]}", 40) or {}
+    name = clean_name(str(first.get("companyName") or ""), tok) if isinstance(first, dict) else ""
+    name = name or pretty(tok)
+    src = {"name": name, "ats": "rippling", "token": tok}
+    _, jobs = collect.READERS["rippling"](src)
+    if jobs is None: return None, "feed not readable"
+    if for_clients(jobs): return None, "a recruitment agency (postings for its clients)"
+    read = len(jobs) + src.get("not_english", 0)
+    if not read: return None, "no text readable"
+    if len(jobs) < min(2, read): return None, f"mostly not English ({len(jobs)} of {read} read)"
+    titles = {str(p.get("uuid")): str(p.get("name") or "") for p in d if isinstance(p, dict)}
+    return {"name": name, "ats": "rippling", "token": tok, "count": len(ids), "titles": few_titles(titles.values()),
             "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
 
 
@@ -495,6 +540,7 @@ def main(paths):
             lines += f.read_text(errors="replace").splitlines()
     found = boards_in(lines)
     collect.DETAILS = 3                                 # Breezy, BambooHR: three texts are enough to see the language
+    collect.DESC_SINCE = ""                             # every text kept, whatever its date: for_clients() reads them
     have = [s for f in sorted(ROOT.glob("sources*.json")) if "candidates" not in f.name for s in json.loads(f.read_text())]
     have_keys = {(s["ats"], s["token"].lower()) for s in have}
     have_cos = {dedupe.company_key(s["name"]) for s in have}

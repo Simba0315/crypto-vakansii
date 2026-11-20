@@ -104,11 +104,11 @@ collect.DETAILS = PerRead(NEW_DETAILS + TEXTS_SLOW)
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 48)
 # Boards of these systems read at once here, at most: their reads take long (a request per posting's text), and without a cap they
 # can hold every thread while the quick boards of the other systems wait (the loop keeps WORKERS * 2 reads queued, WORKERS run).
-LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 8, "paylocity": 8}
+LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 8, "paylocity": 8, "rippling": 4}
 # And these systems together at most HEAVY_MAX of the reads queued, so at most that many threads: a third of the threads is always
 # free for the quick boards. (20 Nov 2026: the caps above added up to 40 of 36 threads; the slow boards held every thread, and
 # 1,800 Greenhouse and 1,800 Ashby boards were read seven or eight hours late instead of every hour.)
-HEAVY = {"workday", "smartrecruiters", "jazzhr", "breezy", "bamboohr", "paylocity", "usajobs"}
+HEAVY = {"workday", "smartrecruiters", "jazzhr", "breezy", "bamboohr", "paylocity", "rippling", "usajobs"}
 HEAVY_MAX = WORKERS * 2 // 3
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');

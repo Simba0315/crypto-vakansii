@@ -334,12 +334,7 @@
       box.hidden = false; return;
     }
     H.load().then(function (rows) {
-      var fit = rows.filter(function (j) {
-        if (j[22] || (cats.length && cats.indexOf(j[5]) < 0)) return false;
-        if ((p.where === 'remote' && !j[4]) || (p.where === 'hybrid' && !j[25]) || (p.where === 'office' && j[4])) return false;
-        if (pay && j[13] && j[13] < pay) return false;
-        return !skills.length || j[7].some(function (t) { return skills.indexOf(t) >= 0; });
-      }).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
+      var fit = rows.filter(H.fitTest(p)).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
       box.innerHTML = part('Jobs that fit you', fit.length
         ? '<p class="acc-sub">' + fit.length.toLocaleString('en-US') + ' open jobs fit your answers on For you. The newest:</p><ul class="jobs">' + fit.slice(0, 5).map(function (j) { return H.card(j); }).join('') + '</ul>' +
           '<p><a href="' + esc(D.site) + '/for-you/">See all of them, or change your answers</a></p>'
