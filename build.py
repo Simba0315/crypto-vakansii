@@ -8847,16 +8847,34 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                "not from other job boards, so every job links to the employer’s own page."),
               ("Do I need an API key?", "No. Fetch the JSON address you need; CORS is open, so it works from a web page too. Please fetch each feed at most once an hour: it changes hourly."),
               ("Can I show these jobs on my own site?", "Yes, with a link to the job page or to this site wherever you show them. The ready-made widget does it for you without code.")]
+    # The hosted MCP connector (/mcp, server/README.md) had no page a person or a directory could link to: only llms.txt named it
+    # (21 Nov 2026). Its own section here, at #mcp, with the address, the two tools and how to add it in the clients that take a remote URL.
+    mcp_url = f"{FULL}/mcp"
+    mcp_cursor = json.dumps({"mcpServers": {"jobs": {"url": mcp_url}}}, indent=2)
+    mcp_vscode = json.dumps({"servers": {"jobs": {"type": "http", "url": mcp_url}}}, indent=2)
+    mcp_html = (f'<p>AI assistants can search these jobs themselves through the MCP connector at <code>{mcp_url}</code>: Streamable HTTP, no key and no sign-in. '
+                'It has two tools: <code>search_jobs</code> (a word search over every open job, best match first, with a remote-only filter) and '
+                '<code>get_job</code> (one job in full, with the employer’s own apply link). The assistant then answers with real open jobs and links to them.</p>'
+                + ttable(["Where", "How to add it"], [
+                    trow(["Claude", f"Settings, Connectors, Add custom connector, and paste <code>{mcp_url}</code>"]),
+                    trow(["Claude Code", f"<code>claude mcp add --transport http jobs {mcp_url}</code>"]),
+                    trow(["Cursor", f"In <code>~/.cursor/mcp.json</code>:<pre><code>{e(mcp_cursor)}</code></pre>"]),
+                    trow(["VS Code", f"In <code>.vscode/mcp.json</code>:<pre><code>{e(mcp_vscode)}</code></pre>"])])
+                + '<p class="note">Listed in the official MCP Registry as <code>com.jobseveryhour/jobs</code> and on '
+                  '<a href="https://glama.ai/mcp/connectors/com.jobseveryhour/jobs" rel="nofollow noopener">Glama</a>. A local version that reads this API runs with '
+                  '<code>npx -y github:Simba0315/jobseveryhour-mcp</code>.</p>')
+    api_qa.append(("Can Claude or ChatGPT search these jobs?", f"Yes, through the MCP connector at {mcp_url}: add it as a custom connector, with no key. "
+                   "The assistant can then search every open job and read any one in full, and it gives you the employer’s own apply link."))
     api_faq = section("Questions about [[the jobs API]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in api_qa) + "</dl>", label="Questions")
     api_ld = api_ld + ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in api_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("api/", f"Free Job Listings API: JSON, No Key, From Employers | {SITE}",
-         "A free JSON API of open jobs by skill, category, location and company. No API key, CORS enabled, updated hourly.",
+         "A free JSON API and MCP connector of open jobs by skill, category, location and company. No API key, CORS enabled, updated hourly.",
          # Sections review, batch 5: a framed first screen (what it is, the address that lists every feed as the one action, the
          # page's figures), the plain-words line under it for those who came here by mistake.
          khero(crumbs(("API", "")), "For developers", "Free jobs API",
                'Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every hour.',
-               f'<p class="kact">{go("api/v1/index.json", "Open the list of every feed")}<a href="{P}/api/openapi.json">OpenAPI description</a></p>',
+               f'<p class="kact">{go("api/v1/index.json", "Open the list of every feed")}<a href="{P}/api/openapi.json">OpenAPI description</a><a href="#mcp">MCP connector</a></p>',
                after=nums([(f"{n:,}", "open jobs served as JSON"), (f"{m:,}", "employers whose careers pages they come from"), ("Free", "for personal and commercial projects, with a link back")])
                + f'<p class="plain"><b>In plain words:</b> this page is for programmers. An API is a way for a program to read our list of jobs by itself. To show jobs on a website without programming, use the <a href="{P}/widgets/">job widget</a>. To look for a job, use the <a href="{P}/jobs/">search</a>.</p>')
          + section("Endpoints", ttable(["Feed", "Address"], [
@@ -8864,6 +8882,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              trow(["Remote jobs", f"<code>{FULL}/api/v1/remote.json</code>"]), trow(["By skill", f"<code>{FULL}/api/v1/skills/rust.json</code>"]),
              trow(["By category", f"<code>{FULL}/api/v1/categories/engineering.json</code>"]), trow(["By location", f"<code>{FULL}/api/v1/locations/europe.json</code>"]),
              trow(["By company", f"<code>{FULL}/api/v1/companies/stripe.json</code>"])]), label="Addresses")
+         + section("MCP connector for [[AI assistants]]", mcp_html, sid="mcp", label="For AI assistants")
          + '<div class="sp2 api2">' + section("Response", f'<pre><code>{e(sample)}</code></pre><p class="note">Skill, category, location, latest and remote feeds hold the 30 newest matching jobs and the total count; a company feed holds all of that company’s open jobs. The slugs are the same as in the page addresses.</p>')
          + "<div>" + section("Example", f"<pre><code>{e(js_example)}</code></pre>")
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than once an hour (it changes once an hour).</p>'
@@ -10390,7 +10409,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - Role slugs are lowercase with hyphens, as in the addresses above: registered-nurse is nursing, software-engineer, data-analyst, electrician, actuary.
 
 ## For AI assistants and agents
-- A remote MCP server (Streamable HTTP, no key): {FULL}/mcp with `search_jobs` (word search over every open job, best match first, remote filter) and `get_job`. Add it in Claude under Settings, Connectors, Add custom connector.
+- A remote MCP server (Streamable HTTP, no key): {FULL}/mcp with `search_jobs` (word search over every open job, best match first, remote filter) and `get_job`. Add it in Claude under Settings, Connectors, Add custom connector; the other clients are on {FULL}/api/#mcp.
 - A local MCP server with feeds by skill, category, location and company: https://github.com/Simba0315/jobseveryhour-mcp
 - The JSON API above needs no key; CORS is open.
 
