@@ -230,6 +230,28 @@ def alnum(s):
     return re.sub(r"[^a-z0-9]", "", (s or "").lower().replace("&", "and"))
 
 
+# Words of three letters or fewer in a name written in capitals are taken for abbreviations ("ARC", "NY", "HVAC" is kept by the list),
+# except these ordinary words and the small words of a name.
+PLAIN_SHORT = {"big", "all", "pet", "new", "one", "top", "sun", "sea", "bay", "oak", "art", "car", "air", "bar", "box", "red", "key", "old",
+               "way", "lab", "gym", "spa", "inn", "day", "joy", "hub", "pro", "kid", "dog", "cat", "tea", "ice", "fit", "law", "man", "our", "you", "los", "las", "san", "del", "sol", "mar", "ana"}
+SMALL_NAME = {"of", "and", "the", "for", "in", "at", "by", "on", "to", "a", "an", "&"}
+KEEP_CAPS = {"HVAC", "LLC", "USA", "YMCA", "YWCA", "CPA", "DDS", "MSO", "NYC", "ABA", "IT", "HR"}
+
+
+def unshout(n):
+    """A name written in capitals in ordinary case ("BIG BROTHERS BIG SISTERS OF OHIO" -> "Big Brothers Big Sisters of Ohio"); a name
+    in mixed case, or of one or two capital words ("PCRK", "ANINE BING"), stays as it is. Paylocity's page titles and JazzHR's
+    company fields often come in capitals (71 and 77 boards on 20 Nov 2026)."""
+    if not n.isupper() or len(re.findall(r"[A-Z]{4,}", n)) < 2: return n
+    out = []
+    for i, w in enumerate(n.split(" ")):
+        core = re.sub(r"[\W\d_]", "", w)
+        if i and w.lower() in SMALL_NAME: out.append(w.lower())
+        elif core in KEEP_CAPS or (len(core) <= 3 and core.lower() not in PLAIN_SHORT) or re.search(r"[0-9+&.]", w): out.append(w)
+        else: out.append(re.sub(r"[^\W\d_](?:[^\W\d_]|')*", lambda m: m.group(0)[:1] + m.group(0)[1:].lower(), w))
+    return " ".join(out)
+
+
 def clean_name(n, tenant=""):
     """A company name without legal endings and the codes some systems put around it ("1010 United Rentals, Inc." -> "United
     Rentals"; "USA 3M Company" -> "3M"); a leading code stays when the address starts with it too ("2020 Companies")."""
@@ -238,7 +260,7 @@ def clean_name(n, tenant=""):
         m = n if tenant and alnum(n).startswith(alnum(tenant)) else CODE_LEAD.sub("", n)
         m = PLACE_END.sub("", LEGAL_END.sub("", TAIL.sub("", m))).strip(" ,.-&:;")
         # "db Group" is not "db": a short lower-case rest is not a name (20 Nov 2026, BambooHR)
-        if m == n or not m or (len(m) <= 3 and m.islower()): return n
+        if m == n or not m or (len(m) <= 3 and m.islower()): return unshout(n)
         n = m
 
 
@@ -497,6 +519,7 @@ def write_kept(results, have_cos, why):
     """One board per company into OUT: not one we already read, not an agency, the largest when a company has several."""
     best = {}
     for e in sorted(results, key=lambda e: -e["count"]):
+        e = dict(e, name=unshout(e["name"]))                # names a run kept before unshout() existed
         if AGENCY_RX.search(e["name"]): why[f"{e['ats']}: a recruitment agency"] += 1; continue
         k = dedupe.company_key(e["name"])
         if k in have_cos: why[f"{e['ats']}: already read under another system or name"] += 1; continue
