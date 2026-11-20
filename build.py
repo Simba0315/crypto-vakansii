@@ -5987,7 +5987,10 @@ def main():
          + dir_sec(f"Questions for [[{iq_n} kinds of work]]", iq_html, ("tools/interview-answer-builder/", "Interview answer builder"), "The number next to each name is how many questions its page has."), cls="hub")
 
     ip_html = kind_dir(iq_dir, "interview-questions", ("question", "questions"), by_name=True, frag="#practise")
-    ip_qa = [("How can I practice for an interview?", "Pick your job below: the page reads each likely question aloud, listens to your answer in the browser and checks its length, whether it has a number and whether you said what you did. "
+    ip_qa_more = [("How many times should I practise before an interview?", "Until you can answer the common questions above and the likely ones for your job in your own words, without notes and within a minute or two each. "
+                   "For most people that is two or three full run-throughs, on different days, and one more the day before."),
+                  ("Should I memorise my answers?", "No. Learn the stories and the numbers, not the sentences: a memorised answer sounds read and breaks when the question is worded differently.")]
+    ip_qa = ip_qa_more + [("How can I practice for an interview?", "Pick your job below: the page reads each likely question aloud, listens to your answer in the browser and checks its length, whether it has a number and whether you said what you did. "
               "Practise three real stories out loud for 60 to 90 seconds each, then once more with a friend or a recording."),
              ("What is the STAR method?", "A way to tell a work story: the Situation, the Task you had, the Action you took and the Result, with a number. Keep the action the longest part and say “I”, not “we”."),
              ("What is the 30-60-90 rule in an interview?", "A short plan for your first three months in the job: what you will learn in the first 30 days, what you will start to change by day 60, and what result you will own by day 90. "
@@ -6013,6 +6016,24 @@ def main():
                    "<div><dt>A 30-60-90 day plan, for senior roles</dt><dd>What you will learn by day 30, start to change by day 60 and own by day 90, tied to the goals in the posting.</dd></div></dl>"
                    f'<p class="note">Write the stories first with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>, then practise them here.</p>', sid="top", label="Before you start")
          + dir_sec(f"Practise for [[{iq_n} kinds of work]]", ip_html, ("interview-questions/", "Read the questions first"), "A name opens its questions with the practice card ready to start.")
+         # the questions nearly every interview asks, whatever the job (search check, gap (b): the first results list them with a short
+         # answer; ours had the method and no list). Each: what the interviewer is checking, and how to answer; the guide where we have one.
+         + section("The questions [[almost every interview]] asks", '<dl class="qa">' + "".join(
+               f'<div><dt>{e(q_)}</dt><dd><b>What they check:</b> {e(w_)} <b>How to answer:</b> {e(h_)}' + (f' <a href="{P}/guides/{g_}/">How to answer it, in full</a>' if g_ else "")      # the guides are built later; check.py finds a link that leads nowhere + "</dd></div>"
+               for q_, w_, h_, g_ in (
+                   ("Tell me about yourself.", "Whether you can sum up your work and why you fit, briefly.", "What you do now, one result you are proud of, and why this job is the next step; about a minute.", "tell-me-about-yourself"),
+                   ("Why do you want to work here?", "Whether you read about them and want this job, not any job.", "One thing about the company or the team that you checked, and how it meets what you want to do next.", "why-do-you-want-to-work-here"),
+                   ("Why are you leaving your current job?", "Whether you are moving towards something, and how you talk about an employer.", "Say what you are looking for that this job has. Keep it short and never blame the old employer.", "why-are-you-leaving-your-job"),
+                   ("What are your strengths and weaknesses?", "Self-knowledge, and whether you work on what you are weak at.", "One strength with an example, one real weakness and what you already do about it.", "strengths-and-weaknesses"),
+                   ("Tell me about a time you faced a challenge.", "How you act under pressure, and what you take from it.", "A STAR story: the situation and your task in two sentences, then what you did, and a result with a number.", "star-method"),
+                   ("Tell me about a time you disagreed with someone at work.", "Whether you can disagree and still get the work done.", "A real disagreement about the work, not a person; how you listened, what you proposed, what was decided.", ""),
+                   ("Tell me about a mistake you made.", "Honesty, and whether you learn.", "A real mistake, small enough to own; what you did to fix it and what you changed afterwards.", ""),
+                   ("Where do you see yourself in five years?", "Whether you plan to grow in this kind of work and might stay.", "The skills and the scope you want to reach, in a direction this job leads to.", "where-do-you-see-yourself-in-5-years"),
+                   ("What are your salary expectations?", "Whether you fit the budget.", "A range from current postings for this work, with its source; ask about the full package before you settle.", "salary-expectations"),
+                   ("Why should we hire you?", "Whether you can tie your experience to their needs.", "Two or three things the posting asks for that you have done, each with a result.", ""),
+                   ("Do you have any questions for us?", "Interest, and whether you think about the work itself.", "Two or three questions about the work, the team and how success is measured; never “no”.", "questions-to-ask-in-an-interview"))) + "</dl>"
+               + f'<p class="note">Practise them out loud on the page for your job above, and write the stories first with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>',
+               sid="common", label="Common questions")
          + section("Questions about [[interview practice]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in ip_qa) + "</dl>", label="Questions"), head=ip_ld, cls="hub sp ipp")
 
     lap('"How to hire a <work>" for employers (Indeed and Workable ra')
