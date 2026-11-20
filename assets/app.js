@@ -360,6 +360,8 @@
       take(/\b(?:with )?unlimited (?:pto|vacation|paid time off)\b/i, function () { perk.value = 'Unlimited PTO'; });
       take(/\b(?:no (?:college )?degree(?: required| needed)?|without (?:a )?(?:college )?degree)\b/i, function () { perk.value = 'No degree required'; });
       take(/\b(?:with )?(?:paid )?parental leave\b/i, function () { perk.value = 'Parental leave'; });
+      take(/\b(?:with |offering )?tuition (?:reimbursement|assistance|support|benefits?)\b/i, function () { perk.value = 'Tuition assistance'; });
+      take(/\b(?:with |offering )?student loan (?:repayment|assistance|help|support|benefits?)\b/i, function () { perk.value = 'Student loan help'; });
     }
     if (!lvl.value) {
       take(/\b(?:internships?|interns?)\b/i, function () { lvl.value = 'Intern'; });

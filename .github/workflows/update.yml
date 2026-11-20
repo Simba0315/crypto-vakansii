@@ -32,7 +32,9 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 110       # 75 until the evening of 18 Nov 2026: while 184 released boards fill and every posting is parsed once more after the rules fingerprint changed, a run may take over an hour; a run stopped at the limit builds nothing
+    # 150 since 20 Nov 2026 (110 before): a run took about 100 minutes (collecting 41, building 45) before iCIMS added about 2,000
+    # boards; a run stopped at the limit builds nothing, and runs never overlap, so a longer limit only spaces the uploads out.
+    timeout-minutes: 150       # 75 until the evening of 18 Nov 2026: while 184 released boards fill and every posting is parsed once more after the rules fingerprint changed, a run may take over an hour; a run stopped at the limit builds nothing
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

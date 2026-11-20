@@ -8,6 +8,13 @@ from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
+# Perks read here from the posting text, beside collect.PERKS (whose list is part of the collector's rules, collect.RULES, so a new perk
+# there would make the collector parse every posting again). LinkedIn has collections for both (checked 20 Nov 2026).
+BUILD_PERKS = [("Tuition assistance", "tuition-assistance",
+                r"tuition (reimbursement|assistance|support|benefits?|program|aid)|educational? (reimbursement|assistance program)|(pays?|covers?|reimburses?) (for )?(your )?(college|university) (tuition|courses|degree)"),
+               ("Student loan help", "student-loan-help",
+                r"student loan (repayment|assistance|contributions?|support|benefits?|paydown|reimbursement|relief)|(help|assist)(s|ing)? (you )?(with|to pay (down|off)) (your )?student loans?")]
+PERKS = list(PERKS) + BUILD_PERKS
 import bls_wages                        # US government wage figures beside advertised pay (/salaries/<role>/)
 import tools_pages                      # the free tools section: /tools/ and one page per tool
 import brand                            # the brand: three directions, the logo files, the colours (brand.py, /brand/)
@@ -538,6 +545,10 @@ PERK_SLUG = {name: slug for name, slug, _ in PERKS}
 PERK_OK = set()    # perks with enough jobs to have their own page
 # What each perk means in plain words, and what to ask before counting on it (shown on /perks/ and on each perk's page).
 PERK_INFO = {
+    "Tuition assistance": ("The employer pays part or all of a course or degree you take while you work there, often up to a yearly limit.",
+                           "Ask the yearly amount, which courses count, and whether you must stay a set time afterwards or repay it."),
+    "Student loan help": ("The employer pays money toward your student loans, usually a set amount each month or year.",
+                          "Ask the amount, when it starts, and whether it is taxed as pay; in the US, payments up to a yearly limit can be tax-free under current law, so ask how theirs works."),
     "Visa sponsorship": ("The employer files the papers that let a foreigner work in the country, and usually pays the fees.",
                          "Ask which visa they file, whether they cover the fees, and whether sponsorship is for this role or only for some."),
     "Relocation support": ("The employer pays part or all of the cost of moving to the city where the job is.",
@@ -2201,6 +2212,10 @@ def main():
                                       f'email <a href="mailto:{e(CFG["contact_email"])}">{e(CFG["contact_email"])}</a>' if CFG["contact_email"] else ""] if x)
     places = [(name, slug, js) for name, slug, rx in PLACES if len(js := [j for j in active if slug in j["places"]]) >= 5]
     OPEN.update(Counter(j["company"] for j in active))
+    for j in active:                                  # the perks read here (BUILD_PERKS), from the full text or the opening lines
+        tx_ = (j.get("desc") or "") + " " + (j.get("excerpt") or "")
+        add_ = [nm for nm, _, rx in BUILD_PERKS if nm not in j.get("perks", []) and re.search(rx, tx_, re.I)]
+        if add_: j["perks"] = list(j.get("perks") or []) + add_
     PERK_OK.update(x for x, k in Counter(x for j in active for x in j.get("perks", [])).items() if k >= 8)
     wk = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     for c, js in companies.items():
