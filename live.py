@@ -222,8 +222,9 @@ class Live:
         (details_from), so such a job gets "nothing kept" twice; a third question means its page was not read this time, and the
         stand-in keeps the job open (a job missing from what a read returns is closed)."""
         known, name = self.known, src["name"]
+        if src.get("was") and src["was"] != name: self.rename(src["was"], name)
         live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (name,))}
-        need = (self.by_co.get(name, set()) & self.textless) | {jid for (jid,) in self.con.execute(
+        need = (self.open_ids(src) & self.textless) | {jid for (jid,) in self.con.execute(
             f"SELECT id FROM live WHERE company = ? AND closed = '' AND {texts.BYTES}(descr) = 0", (name,))}
         if need: need -= self.texts.have(name)
         budget, asked = TEXTS_SLOW if src.get("ats") in SLOW else TEXTS_LIST, {}
@@ -236,6 +237,19 @@ class Live:
                     return None
             return {"id": jid, "title": "-", "url": "-"} if jid in known or jid in live_ids else None
         return reuse
+
+    def open_ids(self, src):
+        """The company's open jobs in the hourly record, also under the name it had before it was renamed (src["was"]): the record
+        takes the new name only at its next collecting run."""
+        ids = self.by_co.get(src["name"], set())
+        return ids | self.by_co[src["was"]] if src.get("was") in self.by_co else ids
+
+    def rename(self, old, new):
+        """A company renamed in its sources file ("was": the old name; 20 Nov 2026, names given in capitals): its live rows and kept
+        texts take the new name, so they are found under it. The jobs keep their ids and addresses (both are in lower case)."""
+        n = self.con.execute("UPDATE live SET company = ?, rec = json_set(rec, '$.company', ?) WHERE company = ?", (new, new, old)).rowcount
+        self.texts.con.execute("UPDATE texts SET company = ? WHERE company = ?", (new, old))
+        if n: log(f"{old}: renamed {new}, {n} live jobs")
 
     def slug_for(self, j):
         base = f"{collect.slugify(j['title'])}-{collect.slugify(j['company'])}"
@@ -282,7 +296,7 @@ class Live:
         closed = 0
         # without the ones already closed here: after every new hourly record they are "open" in it again until it catches up, and
         # closing them a second time only repeats the work (one board was "closed" 1,548 jobs at a time, three times, on 17 Nov 2026)
-        was_open = (self.by_co.get(name, set()) | live_ids) - shut
+        was_open = (self.open_ids(src) | live_ids) - shut
         if jobs or len(was_open) < 20:                              # a board that suddenly shows nothing waits for the hourly collector
             for jid in was_open - seen:
                 slug = self.known.get(jid) or (self.con.execute("SELECT slug FROM live WHERE id = ?", (jid,)).fetchone() or [None])[0]
@@ -292,7 +306,7 @@ class Live:
                         self.con.execute("INSERT OR REPLACE INTO live VALUES (?,?,?,?,?,?,?)",
                                          (jid, slug, name, json.dumps({"slug": slug, "id": jid, "company": name, "closed_only": True}), "", now, today))
                 self.search_put({"slug": slug}, "", today)
-                self.by_co.get(name, set()).discard(jid)
+                for nm in (name, src.get("was")): self.by_co.get(nm, set()).discard(jid)
                 closed += 1
         return new, closed, dup
 
@@ -500,6 +514,13 @@ def test():
         t = time.time(); lv.done({"ats": ats, "token": "t"}, True, False)
         got = lv.con.execute("SELECT next_due FROM boards WHERE key = ?", (f"{ats}:t",)).fetchone()[0] - t
         assert abs(got - want) < 2, (ats, got, want)
+    lv.con.execute("INSERT INTO live VALUES ('paylocity-arc-1', 'dsp-arc', 'ARC OF CARROLL COUNTY', ?, '<p>Text.</p>', 0, '')",
+                   (json.dumps({"id": "paylocity-arc-1", "company": "ARC OF CARROLL COUNTY"}),))
+    lv.by_co["ARC OF CARROLL COUNTY"] = {"paylocity-arc-2"}
+    src = {"name": "ARC of Carroll County", "was": "ARC OF CARROLL COUNTY", "ats": "paylocity", "token": "t"}
+    r = lv.skip_known(src)
+    assert r("paylocity-arc-1") is not None and lv.open_ids(src) == {"paylocity-arc-2"}
+    assert lv.con.execute("SELECT company, json_extract(rec, '$.company') FROM live").fetchone() == ("ARC of Carroll County",) * 2
     assert thread_time({"workday": [2, 80.0], "greenhouse": [10, 20.0]}) == "workday 80% (2 reads, 40 s each), greenhouse 20% (10 reads, 2 s each)"
     assert thread_time({}) == "none"
     print(f"live.py: all checks passed (slow reads at once at most {max_heavy[0]} of {WORKERS} threads)")

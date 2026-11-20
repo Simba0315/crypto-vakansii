@@ -1756,6 +1756,22 @@ def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above
     return _fetch_any(src, reuse)
 
 
+def rename_records(db, files=None):
+    """A company renamed in its sources file keeps its old name in "was" (20 Nov 2026: names given in capitals, "ARC OF CARROLL
+    COUNTY" -> "ARC of Carroll County"). Every record of the old name takes the new one before anything is compared, so its jobs keep
+    their ids and addresses (both in lower case) and the postings gone from the board still close. Taken from every sources file, not
+    only the boards read this hour: the records of a board resting this hour would otherwise belong to no company read and be closed.
+    Returns how many were renamed."""
+    to = {}
+    for f in files or sorted(ROOT.glob("sources*.json")):
+        if "candidates" in Path(f).name: continue
+        to.update((s["was"], s["name"]) for s in json.loads(Path(f).read_text()) if s.get("was") and s["was"] != s["name"])
+    n = 0
+    for j in db.values() if to else ():
+        if j.get("company") in to: j["company"] = to[j["company"]]; n += 1
+    return n
+
+
 def direct_and_paid(db, used_slugs, indexed, stats):
     """Jobs employers posted in their account, and paid placements, from our own API ("api_url" in config.json).
     A failed call changes nothing: posted jobs stay as they were and the previous placements file is kept."""
@@ -1886,6 +1902,8 @@ def main():
     random.Random(int(time.time() // 3600)).shuffle(rest)
     sources = [s for s in sources if s["name"] in hourly] + rest
     db = json.loads(DATA.read_text()) if DATA.exists() else {}
+    renamed = rename_records(db)
+    if renamed: print(f"{renamed:,} records took their company's new name")
     used_slugs = {j["slug"] for j in db.values()}
     stats = {"new": 0, "closed": 0, "failed": [], "dropped": [], "emptied": [], "parsed": 0}
 

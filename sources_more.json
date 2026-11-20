@@ -3698,7 +3698,8 @@
 ]
 },
 {
-"name": "SMCP NORTH AMERICA (US, CANADA)",
+"name": "SMCP North America (US, Canada)",
+"was": "SMCP NORTH AMERICA (US, CANADA)",
 "ats": "greenhouse",
 "token": "smcp",
 "count": 49,
@@ -11021,7 +11022,8 @@
 ]
 },
 {
-"name": "ANINE BING",
+"name": "Anine Bing",
+"was": "ANINE BING",
 "ats": "greenhouse",
 "token": "aninebing",
 "count": 16,
@@ -11420,7 +11422,8 @@
 ]
 },
 {
-"name": "MATTE PROJECTS",
+"name": "Matte Projects",
+"was": "MATTE PROJECTS",
 "ats": "greenhouse",
 "token": "matteprojects",
 "count": 16,

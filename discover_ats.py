@@ -233,21 +233,25 @@ def alnum(s):
 # Words of three letters or fewer in a name written in capitals are taken for abbreviations ("ARC", "NY", "HVAC" is kept by the list),
 # except these ordinary words and the small words of a name.
 PLAIN_SHORT = {"big", "all", "pet", "new", "one", "top", "sun", "sea", "bay", "oak", "art", "car", "air", "bar", "box", "red", "key", "old",
-               "way", "lab", "gym", "spa", "inn", "day", "joy", "hub", "pro", "kid", "dog", "cat", "tea", "ice", "fit", "law", "man", "our", "you", "los", "las", "san", "del", "sol", "mar", "ana"}
+               "way", "lab", "gym", "spa", "inn", "day", "joy", "hub", "pro", "kid", "dog", "cat", "tea", "ice", "fit", "law", "man", "our", "you", "los", "las", "san", "del", "sol", "mar", "ana", "two", "eat", "ear", "tri", "ind",
+               "six", "ten", "fox", "owl", "bee", "elk", "ivy", "zen", "max", "ace", "pop", "jet"}
 SMALL_NAME = {"of", "and", "the", "for", "in", "at", "by", "on", "to", "a", "an", "&"}
-KEEP_CAPS = {"HVAC", "LLC", "USA", "YMCA", "YWCA", "CPA", "DDS", "MSO", "NYC", "ABA", "IT", "HR"}
+KEEP_CAPS = {"HVAC", "LLC", "PLLC", "USA", "YMCA", "YWCA", "CPA", "DDS", "MSO", "NYC", "ABA", "IT", "HR", "SEIU", "USWW", "CTAO", "ERIC", "ATSU",
+             "ACAC", "MGMA", "ACMPE", "SMCP", "BGWI", "QUID", "INNTECI", "SGP"}
 
 
 def unshout(n):
     """A name written in capitals in ordinary case ("BIG BROTHERS BIG SISTERS OF OHIO" -> "Big Brothers Big Sisters of Ohio"); a name
     in mixed case, or of one or two capital words ("PCRK", "ANINE BING"), stays as it is. Paylocity's page titles and JazzHR's
     company fields often come in capitals (71 and 77 boards on 20 Nov 2026)."""
-    if not n.isupper() or len(re.findall(r"[A-Z]{4,}", n)) < 2: return n
+    if not n.isupper() or len(re.findall(r"[A-Z]{4,}", n)) < 2 or re.search(r"[^\x00-\u024f]", n): return n     # Latin letters only
     out = []
-    for i, w in enumerate(n.split(" ")):
+    for i, w in enumerate(re.sub(r"\s+", " ", n).split(" ")):
         core = re.sub(r"[\W\d_]", "", w)
-        if i and w.lower() in SMALL_NAME: out.append(w.lower())
-        elif core in KEEP_CAPS or (len(core) <= 3 and core.lower() not in PLAIN_SHORT) or re.search(r"[0-9+&.]", w): out.append(w)
+        if w.lower() in SMALL_NAME: out.append(w.lower() if i else w[:1] + w[1:].lower())
+        elif core == "INC": out.append(w[:1] + w[1:].lower())
+        elif core in KEEP_CAPS or set(re.split(r"[-/]", w)) & KEEP_CAPS or (len(core) <= 3 and core.lower() not in PLAIN_SHORT) \
+                or re.search(r"[0-9+&.]", w): out.append(w)
         else: out.append(re.sub(r"[^\W\d_](?:[^\W\d_]|')*", lambda m: m.group(0)[:1] + m.group(0)[1:].lower(), w))
     return " ".join(out)
 
