@@ -4335,6 +4335,24 @@ def main():
            ("operations-manager", "project-manager"), ("engineering-manager", "tech-lead"), ("staff-engineer", "engineering-manager"), ("mechanical-engineer", "electrical-engineer"),
            ("hardware-engineer", "embedded-engineer"), ("executive-assistant", "chief-of-staff"), ("ux-researcher", "data-analyst")]
     ADV_DEG = re.compile(r"\bmaster(?:’|')?s\b|\bm\.?sc\b|\bmba\b|\bph\.?d\b|\bdoctorate\b|\bgraduate degree\b|\badvanced degree\b", re.I)
+    # The verbs a role's duties open with in its postings (plan item 1.30, 20 Nov 2026: the comparison had one line of what each does).
+    # Read from the list under "Responsibilities", "What you'll do" and the like in the postings held in full; a company counts once
+    # for a verb, so one employer's thirty postings do not decide it. Counted, not written: "own", "define", "partner" for product managers.
+    DUTY_HEAD = re.compile(r"<(?:p|h3|strong)>\s*(?:<strong>)?\s*(?:what you(?:’|')ll do|what you will do|(?:key |main |your )?responsibilities|your role|in this role,? you will|duties)[^<]{0,40}(?:</strong>)?\s*</(?:p|h3|strong)>", re.I)
+    DUTY_SKIP = {"you", "we", "our", "the", "a", "an", "this", "other", "all", "be", "is", "are", "as", "in", "to", "and", "with", "for", "responsible", "ability", "proven", "strong", "experience"}
+    def duty_verbs(rj_):
+        seen_, n_ = set(), 0
+        for j in rj_:
+            d_ = j.get("desc") or ""
+            m_ = DUTY_HEAD.search(d_)
+            ul_ = re.search(r"<ul>(.*?)</ul>", d_[m_.end():m_.end() + 6000], re.S) if m_ else None
+            if not ul_ or ul_.start() > 400: continue
+            n_ += 1
+            for li_ in re.findall(r"<li>(.*?)</li>", ul_.group(1), re.S):
+                w_ = re.findall(r"[a-z]+", re.sub(r"<[^>]+>", "", li_).lower())
+                if w_ and w_[0] not in DUTY_SKIP and len(w_[0]) > 2: seen_.add((j["company"], w_[0]))
+        c_ = Counter(v_ for _, v_ in seen_)
+        return [(v_, k_) for v_, k_ in c_.most_common(6) if k_ >= 3] if n_ >= 10 else []
     def role_facts(r_):
         nm_, rj_ = by_role[r_]
         k_ = len(rj_)
@@ -4346,6 +4364,7 @@ def main():
         yrs_ = sorted(j["years"] for j in rj_ if j.get("years"))
         tg_ = Counter(t for j in rj_ for t in j["tags"])
         return dict(slug=r_, name=nm_, low=rlow(nm_), psn=person(r_, nm_), psns=persons(r_, nm_), n=k_, does=roles_info.INFO.get(r_, ("", ""))[1], med=median(mids_) if len(mids_) >= 15 else None,
+                    verbs=duty_verbs(rj_),
                     q1=mids_[len(mids_) // 4] if len(mids_) >= 15 else None, q3=mids_[3 * len(mids_) // 4] if len(mids_) >= 15 else None,
                     rem=100 * sum(1 for j in rj_ if j["remote"]) / k_, ent=100 * sum(1 for j in rj_ if j["entry"]) / k_,
                     sen=100 * sum(1 for j in rj_ if j["level"] in ("Senior", "Lead")) / k_, yrs=yrs_[len(yrs_) // 2] if len(yrs_) >= 10 else None,
@@ -4372,7 +4391,9 @@ def main():
         gap_ba = sorted(((t, A["pct"][t], B["pct"].get(t, 0)) for t in A["skills"] if A["pct"][t] - B["pct"].get(t, 0) >= 8), key=lambda x: -(x[1] - x[2]))[:6]
         pct_ = lambda v: f"{v:.0f}%"
         comp_ = lambda F: ", ".join(f'<a href="{P}/companies/{slugify(c)}/">{e(c)}</a> ({k:,})' for c, k in F["top"])
+        vb_ = lambda F: ", ".join(f"{v_} ({k_:,})" for v_, k_ in F["verbs"])
         rows_r = [("What they do", e(A["does"]) or "–", e(B["does"]) or "–"),
+                  *([("Their duties most often start with (employers)", vb_(A), vb_(B))] if A["verbs"] and B["verbs"] else []),
                   ("Open jobs today", f"{A['n']:,}", f"{B['n']:,}"), ("Posted in the last 7 days", f"{A['new']:,}", f"{B['new']:,}"),
                   ("Median advertised pay", f"<strong>{money(A['med'])}</strong>" if A["med"] else "too few ranges", f"<strong>{money(B['med'])}</strong>" if B["med"] else "too few ranges"),
                   ("Middle half of advertised pay", f"{money(A['q1'])} to {money(A['q3'])}" if A["q1"] else "–", f"{money(B['q1'])} to {money(B['q3'])}" if B["q1"] else "–"),
