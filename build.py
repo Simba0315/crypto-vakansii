@@ -8137,7 +8137,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div>', label="Three rules")
          + section("What is [[free]] in this resume builder", '<div class="tablewrap"><table class="kv">'
-                   + "".join(f"<tr><th>{k_}</th><td>{v_}</td></tr>" for k_, v_ in (("PDF download", "Free"), ("Word download", "Free"), ("Account", "None needed"), ("Watermark", "None"), ("Templates", "All 6 free"), ("Your resume", "Stays in this browser"), ("Matching it to open jobs", "Free")))
+                   + "".join(f"<tr><th>{k_}</th><td>{v_}</td></tr>" for k_, v_ in (("PDF download", "Free"), ("Word download", "Free"), ("Account", "None needed"), ("Watermark", "None"), ("Templates", f"All {RB_N} free"), ("Your resume", "Stays in this browser"), ("Matching it to open jobs", "Free")))
                    + f'</table></div><p class="note">Many builders are free to write in and ask for payment at the download. <a href="{P}/free-resume-builders/">See what {len(builders_check.BUILDERS)} builders’ own pages say</a>.</p>', label="No catch")
          + section("Questions about [[this resume builder]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rb_qa) + "</dl>", label="Questions") + "</div>"
          + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>', head=rb_ld, cls="sp rbp")
