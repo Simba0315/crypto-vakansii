@@ -37,7 +37,7 @@ RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
-            "sources_paylocity.json")
+            "sources_paylocity.json", "sources_pinpoint.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -49,10 +49,11 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # Paylocity (20 Nov 2026): every board on one address (recruiting.paylocity.com), its pages a second or so: the same.
 # BambooHR and Paylocity 8 at a time since 20 Nov 2026: about 4,000 boards each, a read 23 to 32 s of waiting for their answers, so
 # 4 at a time came round to a board every 7 to 9 hours. The gap between two requests (ATS_GAP) still caps the rate at 3 and 2.5 a second.
+# Pinpoint (20 Nov 2026): every board a subdomain of pinpointhq.com, the whole board with its texts in one request: 4 at a time.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 8, "paylocity": 8}
+             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
-           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4}
+           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -1739,8 +1740,66 @@ def fetch_paylocity(src, reuse=None):
     return detail_board(src, reuse, "paylocity", items, read)
 
 
+# Pinpoint (https://<company>.pinpointhq.com, sources_pinpoint.json, "token": the subdomain; discover_ats.py finds them in Common
+# Crawl's index). /postings.json is the list its careers page reads: every open posting with its whole text (in up to four parts, each
+# with its heading), place, kind of workplace (remote, hybrid, onsite), employment type and, where the employer shows it, the pay.
+# It gives no date of publishing: the record's date is the day we first read the posting. robots.txt of a board (19 Nov 2026) keeps
+# crawlers out of /mydata, /admin and /companies only.
+PINPOINT_PARTS = (("description", ""), ("key_responsibilities", "key_responsibilities_header"),
+                  ("skills_knowledge_expertise", "skills_knowledge_expertise_header"), ("benefits", "benefits_header"))
+PIN_FREQ = {"year": "a year", "annum": "a year", "month": "a month", "week": "a week", "day": "a day", "hour": "an hour"}
+
+
+def pinpoint_place(loc):
+    loc = loc if isinstance(loc, dict) else {}
+    parts = [loc.get("city"), loc.get("province")]
+    name = str(loc.get("name") or "").strip()
+    if not any(parts) and name and not re.fullmatch(r"(?i)remote|hybrid|on-?site|office|anywhere", name): parts = [name]
+    return ", ".join(dict.fromkeys(str(x).strip() for x in parts if x and str(x).strip()))
+
+
+def pinpoint_pay(p):
+    if not p.get("compensation_visible"): return ""
+    lo, hi, cur = p.get("compensation_minimum"), p.get("compensation_maximum"), str(p.get("compensation_currency") or "").upper()
+    if not lo and not hi: return str(p.get("compensation") or "").strip()
+    fmt = lambda v: f"{int(float(v)):,}" if float(v) >= 1000 else f"{float(v):g}"
+    sign = {"USD": "$", "GBP": "£", "EUR": "€", "CAD": "CA$", "AUD": "A$"}.get(cur, cur + " " if cur else "")
+    rng = f"{sign}{fmt(lo)} - {sign}{fmt(hi)}" if lo and hi and float(lo) != float(hi) else f"{sign}{fmt(lo or hi)}"
+    freq = str(p.get("compensation_frequency") or "").lower()
+    return rng + next((" " + v for k, v in PIN_FREQ.items() if k in freq), "")
+
+
+def fetch_pinpoint(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("pinpoint")
+    d = get_json(f"https://{tok}.pinpointhq.com/postings.json", 60)
+    if not isinstance(d, dict) or not isinstance(d.get("data"), list): return name, None
+    out, src["not_english"] = [], 0
+    for p in d["data"]:
+        if not isinstance(p, dict) or not p.get("id") or not str(p.get("title") or "").strip() or not p.get("url"): continue
+        jid, kind = str(p["id"]), str(p.get("workplace_type") or "").lower()
+        job = p.get("job") if isinstance(p.get("job"), dict) else {}
+        dept = str((job.get("department") or {}).get("name") or "") if isinstance(job.get("department"), dict) else ""
+        desc = "".join((f"<h3>{html.escape(str(p.get(h) or '').strip())}</h3>" if h and str(p.get(h) or "").strip() else "") + str(p.get(k) or "")
+                       for k, h in PINPOINT_PARTS if str(p.get(k) or "").strip())
+        raw = {"title": str(p["title"]).strip(), "url": str(p["url"]), "place": pinpoint_place(p.get("location")), "kind": kind,
+               "type": str(p.get("employment_type_text") or ""), "dept": dept, "pay": pinpoint_pay(p), "desc": desc}
+        full_id = f"pinpoint-{slugify(name)}-{jid}"
+        if reuse and (rec := reuse(full_id, fingerprint(raw))) is not None:
+            out.append(rec); continue
+        text = strip_html(desc)
+        if not text or not english(f"{raw['title']}\n{text}"):
+            src["not_english"] += 1 if text else 0
+            continue
+        rec = parse(name, "pinpoint", jid, raw["title"], raw["url"], raw["place"], kind == "remote", dept, "", text, raw["pay"], raw["type"], desc, kind == "hybrid")
+        rec["h"], rec["rh"] = fingerprint(raw), raw_hash(raw)
+        out.append(rec)
+    return name, out
+
+
 _fetch_any = fetch
-READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity}      # the systems read outside fetch_feed
+READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity,
+           "pinpoint": fetch_pinpoint}      # the systems read outside fetch_feed
 
 
 def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)

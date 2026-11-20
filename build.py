@@ -562,7 +562,7 @@ CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from close
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
 SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby", "workable": "Workable", "recruitee": "Recruitee", "teamtailor": "Teamtailor",
                "personio": "Personio", "workday": "Workday", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR",
-               "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity"}     # hiring systems the listings are read from (collect.fetch_feed, fetch_jazzhr)
+               "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint"}     # hiring systems the listings are read from (collect.fetch_feed, fetch_jazzhr)
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
@@ -6975,7 +6975,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     lap("How the hourly check works: counted from the build's own dat")
     # How the hourly check works: counted from the build's own data, written as a plain account of the method (ROADMAP: engineering-style post).
     ats_name = {"greenhouse": "Greenhouse", "ashby": "Ashby", "lever": "Lever", "workable": "Workable", "workday": "Workday", "personio": "Personio", "recruitee": "Recruitee",
-                "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity"}       # every system collect.py reads; the table shows those with open jobs today
+                "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint"}       # every system collect.py reads; the table shows those with open jobs today
     ats_jobs, ats_cos = Counter(), defaultdict(set)
     for j_ in active:
         k_ = str(j_.get("id", "")).split("-")[0]

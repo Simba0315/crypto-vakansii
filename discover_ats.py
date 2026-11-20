@@ -1,4 +1,4 @@
-"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR and Paylocity, and add the ones with English jobs to
+"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR, Paylocity and Pinpoint, and add the ones with English jobs to
 sources_ats.json (15 Nov 2026; the owner: "too few jobs, competitors add far more").
 
     python3 discover_ats.py --cc DIR CRAWL[,CRAWL...]   read Common Crawl's URL index for the systems' addresses into DIR (one file a page;
@@ -41,7 +41,8 @@ CC_FILTER = {"bamboohr": "~url:/careers"}
 # where the block lies in cdx-NNNNN.gz, each block gzipped on its own. So one domain's blocks are read straight from the files by byte
 # ranges: about 12 requests to find the place in cluster.idx (100 MB, sorted), then one a block. Addresses as SURT keys: "com,bamboohr,".
 CC_FILES = "https://data.commoncrawl.org/cc-index/collections/{crawl}/indexes/"
-CC_SURT = {"bamboohr": "com,bamboohr,", "breezy": "hr,breezy,", "paylocity": "com,paylocity,recruiting)/recruiting/jobs/all/"}
+CC_SURT = {"bamboohr": "com,bamboohr,", "breezy": "hr,breezy,", "paylocity": "com,paylocity,recruiting)/recruiting/jobs/all/", "pinpoint": "com,pinpointhq,",
+           "gem": "com,gem,jobs)/", "trakstar": "com,trakstar,hire,", "recruiterbox": "com,recruiterbox,"}
 # addresses on these hosts that are the system's own pages, not a company's board
 NOT_BOARDS = {"www", "app", "api", "help", "support", "status", "blog", "docs", "developer", "developers", "partner", "partners", "academy",
               "marketplace", "cdn", "assets", "static", "tt", "career-site", "login", "signup", "j", "jobs", "careers-page", "oauth", "_next",
@@ -55,6 +56,9 @@ URL_RX = [
     ("breezy", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.breezy\.hr(?:[/:?#]|$)", re.I)),
     ("bamboohr", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.bamboohr\.com/(?:careers|jobs)(?:[/?#]|$)", re.I)),
     ("paylocity", re.compile(r"https?://recruiting\.paylocity\.com/recruiting/jobs/all/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", re.I)),
+    ("pinpoint", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.pinpointhq\.com(?:[/:?#]|$)", re.I)),
+    ("gem", re.compile(r"https?://jobs\.gem\.com/([A-Za-z0-9][A-Za-z0-9_-]{1,60})(?:[/?#]|$)")),
+    ("trakstar", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.(?:hire\.trakstar|recruiterbox)\.com(?:[/:?#]|$)", re.I)),
     ("workday", re.compile(r"https?://([a-z0-9][a-z0-9-]{0,60}\.wd\d{1,3})\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})(?:[/?#]|$)")),
 ]
 # Recruitment agencies and job marketplaces post other companies' jobs, often the same one many times: left out, as in sources_more.json.
@@ -330,6 +334,7 @@ def verify(ats, tok):
     """(entry for sources_ats.json, None) or (None, why not)."""
     if ats == "workday": return verify_workday(tok)
     if ats in ("breezy", "bamboohr", "paylocity"): return verify_detail(ats, tok)
+    if ats == "pinpoint": return verify_pinpoint(tok)
     url, accept = feed(ats, tok)
     collect.polite(ats)
     body = net.get_text(url, 60, accept="application/json" if accept == "json" else accept)
@@ -388,6 +393,24 @@ def verify_detail(ats, tok):
     if len(jobs) < min(2, read): return None, f"mostly not English ({len(jobs)} of {read} read)"
     title = lambda p: (p.get("name") if ats == "breezy" else p.get("jobOpeningName") if ats == "bamboohr" else p.get("JobTitle")) if isinstance(p, dict) else ""
     return {"name": name, "ats": ats, "token": tok, "count": len(posts), "titles": few_titles(title(p) for p in posts),
+            "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
+
+
+def verify_pinpoint(tok):
+    """Pinpoint: the whole board with its texts in one request (collect.fetch_pinpoint); the company's name from its careers page's
+    title ("Jobs at <company> | <company> Careers"). Kept with 3 or more open jobs, mostly in English as for the feeds."""
+    collect.polite("pinpoint")
+    page = net.get_text(f"https://{tok}.pinpointhq.com/", 30, accept="text/html") or ""
+    m = re.search(r"<title>\s*(?:Jobs at|Careers at)\s+(.{2,80}?)\s*(?:\||</title>)", page, re.I | re.S)
+    name = clean_name(html.unescape(m.group(1)), tok) if m else ""
+    if not name or name.lower() == "pinpoint" and tok != "workwithus": name = pretty(tok)
+    src = {"name": name, "ats": "pinpoint", "token": tok}
+    _, jobs = collect.READERS["pinpoint"](src)
+    if jobs is None: return None, "feed not readable"
+    total = len(jobs) + src.get("not_english", 0)
+    if len(jobs) < 3: return None, f"{len(jobs)} English jobs of {total}"
+    if len(jobs) < 0.6 * total and len(jobs) < 15: return None, f"mostly not English ({len(jobs)} of {total})"
+    return {"name": name, "ats": "pinpoint", "token": tok, "count": len(jobs), "titles": few_titles(j["title"] for j in jobs),
             "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
 
 
