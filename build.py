@@ -8400,7 +8400,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             for al_ in GM.get("aliases", ()):     # another address people type: a page that hands over to this one (canonical and an immediate refresh)
                 write(f"glossary/{al_}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(term)}</title><link rel="canonical" href="{FULL}/glossary/{sl}/">'
                       f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/glossary/{sl}/"></head><body><p><a href="{P}/glossary/{sl}/">{e(term)}</a></p></body></html>', sitemap=False)
-        gt_ = GM["title"] if GM else f"{term}: What It Means in a Job Search"
+        if GM: gt_ = GM["title"]
+        else:
+            # 172 short entries all had the title "X: What It Means in a Job Search" (20 Nov 2026): the same tail on every page reads as a
+            # template and says nothing about the word. The title now carries the definition's own first clause, so each one is different
+            # and answers the search ("closed job meaning") in the result itself (never a cut sentence: a clause alone can say the opposite); a long definition falls back to a plain "Meaning" title.
+            lead_ = re.split(r"(?<=[.!?])\s", d)[0].rstrip(".")
+            gt_ = f"{term}: {lead_}" if len(f"{term}: {lead_}") <= 62 and len(lead_.split()) >= 4 else f"{term} Meaning: Plain Definition and What to Do"
         if len(gt_) > 65 and "?" in gt_: gt_ = gt_[:gt_.index("?") + 1]          # "What Is an ATS (Applicant Tracking System)?"
         page(f"glossary/{sl}/", gt_ + (f" | {SITE}" if len(gt_) + len(SITE) + 3 <= 65 else ""),
              f"{term}, explained in plain English: {d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]}",
