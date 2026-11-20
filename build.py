@@ -7477,7 +7477,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     fy_work = "".join(fy_opt(s_, lb, hint, len(by_cat[s_])) for s_, lb, hint in FY_WORK if by_cat[s_])
     fy_exp = (fy_opt(0, "I am starting out", "internships and junior roles") + fy_opt(1, "A few years", "roles with no “senior” in the title")
               + fy_opt(2, "Many years", "senior and staff roles") + fy_opt(3, "I lead people", "lead, manager, director"))
-    fy_where = fy_opt("remote", "From home", "remote roles") + fy_opt("office", "At an office", "on site or hybrid") + fy_opt("", "Either", "")
+    # "Hybrid" as its own answer (plan item 4.24, 20 Nov 2026: the quiz offered only home or office, and hybrid hid inside "office")
+    fy_where = fy_opt("remote", "From home", "remote roles") + fy_opt("hybrid", "Hybrid", "some days at home") + fy_opt("office", "At an office", "on site or hybrid") + fy_opt("", "Either", "")
     code_slug_all = {rule: slug for _, slug, rule in PLACES if isinstance(rule, str) and rule != "region"}
     fy_places = "".join(f'<option value="{c_}" data-s="{code_slug_all.get(c_, "")}" data-r="{region_of.get(c_, "")}">{flag_of(c_)} {e(nm_)}</option>'
                         for c_, nm_ in sorted([("US", "United States")] + [(c_, nm_) for c_, nm_, _, _ in COUNTRIES if c_ != "US"], key=lambda x: x[1]))
@@ -9930,7 +9931,7 @@ e.respondWith(fetch(r).then(function(res){{if(res.ok){{var copy=res.clone();cach
 .catch(function(){{return caches.open(PG).then(function(c){{return c.match(key).then(function(hit){{return hit||(page?c.match(B+'/offline/'):Response.error());}});}});}}));}});
 function fit(){{return caches.open('hrn-profile').then(function(c){{return c.match(B+'/__profile').then(function(r){{return r&&r.json();}}).then(function(st){{if(!st)return;
 return fetch(B+'/data/head.json',{{cache:'no-store'}}).then(function(r){{return r.json();}}).then(function(d){{var A=st.A||{{}},n=0,first='';
-d.r.forEach(function(r){{var t=r[14]||0;if(!t||t*60000<=st.seen)return;if(A.cats&&A.cats.length&&A.cats.indexOf(d.k[r[5]])<0)return;if(A.where==='remote'&&!(r[4]&1))return;if(A.where==='office'&&(r[4]&1))return;
+d.r.forEach(function(r){{var t=r[14]||0;if(!t||t*60000<=st.seen)return;if(A.cats&&A.cats.length&&A.cats.indexOf(d.k[r[5]])<0)return;if(A.where==='remote'&&!(r[4]&1))return;if(A.where==='hybrid'&&!(r[4]&32))return;if(A.where==='office'&&(r[4]&1))return;
 if(A.pay&&!(r[10]>=A.pay))return;if(A.exp==='0'&&r[6]!==1&&r[6]!==2)return;n++;if(!first)first=r[1]+' at '+d.c[r[2]];}});
 if(!n)return;st.seen=Date.now();return c.put(B+'/__profile',new Response(JSON.stringify(st))).then(function(){{
 return self.registration.showNotification(n+(n===1?' new job fits':' new jobs fit')+' your answers',{{body:first+(n>1?' and '+(n-1)+' more':''),tag:'hrn-fit',data:B+'/for-you/'}});}});}});}});}}).catch(function(){{}});}}

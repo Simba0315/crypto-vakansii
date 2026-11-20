@@ -316,11 +316,37 @@
       if (!S.alerts.length) steps.push(['Get new jobs by email', 'Choose the words and how often. One click stops it.', '#alerts']);
       if (!t.saved && !t.applied) steps.push(['Save the jobs you like', 'Press Save on a job: it is here and on your phone too.', esc(D.site) + '/jobs/']);
       if (pub.talent === 'on' && S.talent && !S.talent.profile) steps.push(['Let employers find you', 'Only if you tick the box. Your name and contacts stay hidden until you accept a request.', '#talent']);
+      setTimeout(fillFit, 0);
     }
     return head(emp ? 'Employer account' : 'Job seeker account', emp ? 'Your hiring <b>at a glance</b>' : 'Your job search <b>at a glance</b>', '',
         emp ? '<a class="btn primary" href="#post">Post a job</a>' : '<a class="btn primary" href="' + esc(D.site) + '/jobs/">Search jobs</a>') +
       (ups.length ? '<ul class="acc-ups">' + ups.slice(0, 12).join('') + '</ul>' : '') + row +
-      (steps.length ? part('Next steps', '<ul class="acc-steps">' + steps.map(function (x) { return '<li><a href="' + x[2] + '"><b>' + x[0] + '</b><span>' + x[1] + '</span></a></li>'; }).join('') + '</ul>') : '');
+      (steps.length ? part('Next steps', '<ul class="acc-steps">' + steps.map(function (x) { return '<li><a href="' + x[2] + '"><b>' + x[0] + '</b><span>' + x[1] + '</span></a></li>'; }).join('') + '</ul>') : '') +
+      (emp ? '' : '<div id="acc-fit" hidden></div>');
+  }
+  /* Jobs that fit you, in the job seeker's overview (plan, part 2 item 3, 20 Nov 2026: other sites show matches in the account; ours did
+     not). From the answers given on For you, kept in this browser, matched against today's open jobs here: nothing is sent anywhere. */
+  function fillFit() {
+    var box = document.getElementById('acc-fit'); if (!box) return;
+    var p = H.get('hrn_profile', null) || {}, cats = p.cats || [], skills = p.skills || [], pay = Number(p.pay) || 0;
+    if (!cats.length && !skills.length && !p.where && !pay) {
+      box.innerHTML = part('Jobs that fit you', '<p class="acc-sub">Answer five questions on <a href="' + esc(D.site) + '/for-you/">For you</a>: the newest jobs that fit your answers then show here.</p>');
+      box.hidden = false; return;
+    }
+    H.load().then(function (rows) {
+      var fit = rows.filter(function (j) {
+        if (j[22] || (cats.length && cats.indexOf(j[5]) < 0)) return false;
+        if ((p.where === 'remote' && !j[4]) || (p.where === 'hybrid' && !j[25]) || (p.where === 'office' && j[4])) return false;
+        if (pay && j[13] && j[13] < pay) return false;
+        return !skills.length || j[7].some(function (t) { return skills.indexOf(t) >= 0; });
+      }).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
+      box.innerHTML = part('Jobs that fit you', fit.length
+        ? '<p class="acc-sub">' + fit.length.toLocaleString('en-US') + ' open jobs fit your answers on For you. The newest:</p><ul class="jobs">' + fit.slice(0, 5).map(function (j) { return H.card(j); }).join('') + '</ul>' +
+          '<p><a href="' + esc(D.site) + '/for-you/">See all of them, or change your answers</a></p>'
+        : '<p class="acc-sub">No open job fits all your answers today. <a href="' + esc(D.site) + '/for-you/">Loosen one of them on For you</a>.</p>');
+      box.hidden = false;
+      if (H.decorate) H.decorate(box);
+    }).catch(function () {});
   }
 
   /* ---------- job seeker: saved jobs on every device, resumes, the resume for employers, job alerts ---------- */

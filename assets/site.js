@@ -1270,7 +1270,8 @@
           return pl.length ? null : [0, 'Remote, does not say from which countries'];
         };
         var onSite = function () { return j[4] ? null : !A.slug ? [1, 'On site or hybrid'] : inC ? [1, 'In ' + A.cname] : null; };
-        res = A.where === 'remote' ? fromHome() : A.where === 'office' ? onSite() : onSite() || fromHome();
+        var hybrid = function () { return !j[25] ? null : !A.slug ? [1, 'Hybrid'] : inC ? [1, 'Hybrid, in ' + A.cname] : null; };
+        res = A.where === 'remote' ? fromHome() : A.where === 'hybrid' ? hybrid() : A.where === 'office' ? onSite() : onSite() || fromHome();
         if (!res) return null;
         if (res[0]) ok++; else half++;
         bits.push(res);
@@ -1375,7 +1376,7 @@
           opts.sort(function (a, b) { return b[1] - a[1]; });
           if (opts.length) tips = '<p class="flabel">Change one answer and more jobs fit</p><p class="fy-tips">' + opts.slice(0, 3).map(function (o) { return '<button class="chipbtn" type="button" data-drop="' + o[0] + '">' + DROP[o[0]] + ': ' + jobsWord(o[1]) + '</button>'; }).join('') + '</p>';
         }
-        var full = profile.cats.length <= 1 && !profile.skills.length ? '<a href="' + P + '/jobs/?' + [profile.cats[0] ? 'cat=' + profile.cats[0] : '', profile.where === 'remote' ? 'remote' : '', A.slug ? 'loc=' + A.slug : '', A.pay ? 'sal=' + A.pay + (A.nopay ? '' : '&nosal') : ''].filter(Boolean).join('&') + '">Open the same in the full search</a>' : '';
+        var full = profile.cats.length <= 1 && !profile.skills.length ? '<a href="' + P + '/jobs/?' + [profile.cats[0] ? 'cat=' + profile.cats[0] : '', profile.where === 'remote' ? 'remote' : profile.where === 'hybrid' ? 'hybrid=1' : '', A.slug ? 'loc=' + A.slug : '', A.pay ? 'sal=' + A.pay + (A.nopay ? '' : '&nosal') : ''].filter(Boolean).join('&') + '">Open the same in the full search</a>' : '';
         count.innerHTML = '<p class="fy-n">' + head + '</p>' + (sub ? '<p class="note">' + sub + '</p>' : '') + tips + (full ? '<p class="note">' + full + '</p>' : '');
         if (jump) { jump.hidden = false; jump.textContent = (nFull ? jobsWord(nFull) + ' fit' : jobsWord(found.length) + ' fit in part') + ' · show the list'; }
         render();
@@ -1420,7 +1421,7 @@
         g.font = '800 150px system-ui, sans-serif'; g.fillText(nf(nFull || found.length), 70, 270);
         g.font = '500 36px system-ui, sans-serif'; g.fillText((nFull ? 'open jobs fit all ' + asked + ' of my answers' : 'open jobs fit my answers in part'), 76, 326);
         g.fillStyle = '#55534c'; g.font = '500 28px system-ui, sans-serif';
-        var lines = [profile.cats.length ? 'Work: ' + profile.cats.map(function (c) { return catName[c] || c; }).join(', ') : '', profile.where === 'remote' ? 'From home' : profile.where === 'office' ? 'At an office' : '',
+        var lines = [profile.cats.length ? 'Work: ' + profile.cats.map(function (c) { return catName[c] || c; }).join(', ') : '', profile.where === 'remote' ? 'From home' : profile.where === 'hybrid' ? 'Hybrid' : profile.where === 'office' ? 'At an office' : '',
           profile.pay ? 'Pay from ' + kfmt(profile.pay) + ' a year' : '', profile.skills.length ? 'Skills: ' + profile.skills.slice(0, 5).join(', ') : ''].filter(Boolean);
         lines.forEach(function (ln, i) { g.fillText(ln.slice(0, 70), 76, 392 + i * 40); });
         g.fillStyle = '#121110'; g.font = '600 28px system-ui, sans-serif';
@@ -1855,6 +1856,10 @@
       var LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, lv = LV[j[6]] == null ? 1 : LV[j[6]], d = exp === 0 && lv <= 0 ? 0 : Math.abs(exp - lv);
       n++;
       if (!d) { ok++; bits.push([1, (j[6] || 'Mid') + ' level, like yours']); } else bits.push([0, (j[6] || 'Mid-level') + ' title, ' + (lv > exp ? 'above' : 'below') + ' your level']);
+    }
+    if (p.where === 'hybrid') {
+      n++;
+      if (j[25]) { ok++; bits.push([1, 'Hybrid, as you want']); } else bits.push([0, j[4] ? 'Remote, you chose hybrid' : 'On site, you chose hybrid']);
     }
     if (p.where === 'remote' || p.where === 'office') {
       n++;
