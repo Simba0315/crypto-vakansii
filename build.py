@@ -2246,7 +2246,7 @@ def main():
     n, m = len(active), len({j["company"] for j in active})
     NO_ANON = ("Employers can also post a job themselves; such a posting is published only after its link has been checked automatically, and it is labelled as posted by the employer"
                if CFG["api_url"] else "We do not accept anonymous postings")
-    N_FEEDS = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})     # employer feeds read in each run
+    N_FEEDS = m     # employers read: every company with an open job (the old count of sources.json + sources_tech.json, 783, ignored all other boards)
     lap('How often a careers page is read: the boards in sources.json')
     # How often a careers page is read: the boards in sources.json and sources_tech.json every hour, those in sources_more.json in
     # turn (HRN_ROTATE in collect.py: every four hours). The copy says exactly that, never "every hour" for all of them.
@@ -2637,7 +2637,7 @@ def main():
             f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
             f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>{RB_TPLS.capitalize()} templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'
             f'<a class="scard" href="{P}/salaries/"><b>What jobs pay</b><span>{paid_n:,} postings state the pay. See the median for your work.</span><em>Check salaries</em></a>'
-            f'<a class="scard" href="{P}/tools/"><b>{len(TOOLS)} free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
+            f'<a class="scard" href="{P}/tools/"><b>{len(TOOLS) + len(tools_pages.EXTRA)} free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
             f'</aside></div></div></div>'
             f'<div class="wrap0 hero-logos"><p>Read from the career pages of</p><div class="logorow">'
             + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
@@ -2751,7 +2751,7 @@ def main():
               + '<div class="tabp" id="p-co"><h3 class="tgroup">Companies hiring the most right now</h3><ul class="tiles">' + "".join(
                   f'<li><a class="tile" href="{P}/companies/{slugify(c_)}/">{ava(c_, "sm")}<span class="n">{e(c_)}</span><span class="c">{k_:,}{" · " + format(co_new[c_], ",") + " new" if co_new.get(c_) else ""}</span></a></li>' for c_, k_ in co12)
               + f'</ul><p class="note">Open jobs at each company on {fdate(TODAY)}, and how many were added in the last seven days.</p>'
-              + f'<p class="tabmore"><a href="{P}/companies/">All {len(companies)} companies</a></p></div></div>')
+              + f'<p class="tabmore"><a href="{P}/companies/">All {m:,} companies</a></p></div></div>')
     ghost = ('<div class="ktwo"><ol class="steps">'
              f'<li><b>Only the employer’s own page.</b> Every job is read from the company’s careers page or hiring system, never copied from another job board.</li>'
              f'<li><b>Checked {EVERY}.</b> A job the employer takes down leaves the list at the next check: {closed_today:,} so far today. {new_today:,} new jobs were added today.</li>'
@@ -3764,7 +3764,7 @@ def main():
         f_ = (Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0]     # the field it hires for most: the directory's field filter
         return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}" data-f="{f_}"><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
                 f'<span class="n">{e(c)}</span>{up}<span class="c">{n:,}</span></a></li>')
-    grid = "".join(co_tile(c, js) for c, js in comp_items)
+    grid = "".join(co_tile(c, js) for c, js in comp_items if any(j["active"] for j in js))   # only employers with an open role, so the count above equals the tiles
     co_field_n = Counter((Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0] for _, js in comp_items)
     co_field_sel = ('<select id="cfield" aria-label="The field a company hires for most"><option value="">Every field</option>'
                     + "".join(f'<option value="{k_}">{e(CAT[k_])} ({v_:,})</option>' for k_, v_ in sorted(co_field_n.items(), key=lambda kv: CAT.get(kv[0], "")) if k_ in CAT) + "</select>")
@@ -3945,16 +3945,16 @@ def main():
                                     '<p class="note">Companies from each list that have open jobs here today.</p>') if co_lists else ""),
                                 ("companies/compare/", "Compare two companies"), sid="lists", label="Ready-made lists",
                                 sub="Counted from each company’s own open postings, so a company moves in and out of a list as it hires.")
-    co_lead = f"{len(companies):,} employers have open roles today, each read from its own careers page." + (f" {names(top_open)} have the most." if len(top_open) > 1 else "")
+    co_lead = f"{m:,} employers have open roles today, each read from its own careers page." + (f" {names(top_open)} have the most." if len(top_open) > 1 else "")
     if top_new: co_lead += f" {names(top_new)} posted the most new ones in the last 7 days."
-    page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {len(companies):,} employers | {SITE}",
+    page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {m:,} employers | {SITE}",
          "Companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
          crumbs(("Companies", "")) + f'<h1>Companies <span class="hl">hiring now</span>, {MONTH_YEAR}</h1><p class="lead">{co_lead}</p>'
-         + nums([(f"{len(companies):,}", "employers with open roles"), (f"{n:,}", "open jobs today"),
+         + nums([(f"{m:,}", "employers with open roles"), (f"{n:,}", "open jobs today"),
                  (f"{sum(1 for k_ in fresh_n.values() if k_):,}", "employers posted new roles in the last 7 days"), (f"{WEEKNEW:,}", "roles posted in the last 7 days")])
          + co_types_html
          + (section("Featured employers", spot_tiles(spot_cos)) if spot_cos else "")
-         + section(f"All [[{len(companies):,} employers]], most open roles first", sid="all", label="Directory",
+         + section(f"All [[{m:,} employers]], most open roles first", sid="all", label="Directory",
                    sub="The +N mark on a tile is the number of roles that company posted in the last 7 days.",
                    inner='<div class="cbar"><input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">' + co_field_sel +
                    '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
@@ -6526,7 +6526,7 @@ def main():
          f"Hiring guides for {hh_n} kinds of work: who else is hiring, where, what they pay and offer, how long postings stay up, and six steps with free templates and tools.",
          crumbs(("For employers", "post-a-job/"), ("How to hire…", "")) + f'<h1>How to hire… <span class="hl">{hh_n} roles, with today’s competition</span></h1>'
          '<p class="lead">For employers: pick the work you are hiring for. Each guide counts, from today’s open postings, how many companies want the same people, what they pay and offer and how long postings stay up, then gives six steps with a free template or tool for each.</p>'
-         + nums([(f"{hh_n}", "roles with a hiring guide"), (f"{len(companies):,}", "employers with open jobs today"), (f"{len(active):,}", "open postings counted"), ("Free", "to post a job here")]) +
+         + nums([(f"{hh_n}", "roles with a hiring guide"), (f"{m:,}", "employers with open jobs today"), (f"{len(active):,}", "open postings counted"), ("Free", "to post a job here")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a guide"></p>'
          f'<p class="lead" id="dirnone" hidden>No guide with these words. The <a href="{P}/job-descriptions/">job description templates</a> cover the same roles.</p>'
          + dir_sec(f"Hiring guides for [[{hh_n} roles]]", hh_html, ("post-a-job/", "Post a job free"), "The number next to each role is how many companies are hiring for it today."), cls="hub")
@@ -7594,7 +7594,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + section("How it [[earns]]", '<dl class="qa"><div><dt>Job seekers</dt><dd>Plus: one payment for one, three or twelve months for an AI resume writer, letters, interview preparation and alerts. Jobs and applying stay free.</dd></div>'
                    "<div><dt>Employers</dt><dd>A standard listing is free; featured and pinned listings, a company spotlight and sponsorship of a field are paid, self-serve, and start the moment the payment is confirmed.</dd></div>"
                    "<div><dt>Sites and partners</dt><dd>Widgets, feeds and an API bring the listings to other sites and channels with a link back; unbranded and extended versions are planned as paid.</dd></div></dl>", label="Three sources")
-         + section("Where it [[stands]]", '<dl class="qa"><div><dt>Built</dt><dd>The site, the hourly collection, the directory of fields and roles, ' + str(len(TOOLS)) + ' tools and a resume builder, rankings and charts, the accounts and payments server with fraud checks and its tests.</dd></div>'
+         + section("Where it [[stands]]", '<dl class="qa"><div><dt>Built</dt><dd>The site, the hourly collection, the directory of fields and roles, ' + str(len(TOOLS) + len(tools_pages.EXTRA)) + ' tools and a resume builder, rankings and charts, the accounts and payments server with fraud checks and its tests.</dd></div>'
                    "<div><dt>Not yet</dt><dd>Payments are not switched on, so there is no revenue to report. The site is on a temporary address; its own domain comes next.</dd></div>"
                    "<div><dt>Costs</dt><dd>Hosting and collection run on free tiers; the site is built and maintained by automation, with nobody on the payroll.</dd></div></dl>", label="Today")
          + f'<p class="note">Data and method: <a href="{P}/methodology/">how the numbers are made</a>, <a href="{P}/status/">what the last update did</a>, <a href="{P}/insights/">charts</a>. ' + (f"To talk: {contact}." if contact else "") + "</p>", cls="kp sp investors")
