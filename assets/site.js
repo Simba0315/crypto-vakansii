@@ -2025,3 +2025,26 @@
     draw();
   }).catch(function () { box.innerHTML = '<p class="note">The jobs could not be loaded. Try again in a minute.</p>'; });
 })();
+
+/* A salary in the visitor's own currency (plan item 4.25, 20 Nov 2026): an element with data-usd gets "about €148K a year", from the
+   ECB euro reference rates in /data/fx.json and the country of the device's time zone (/data/geo.json, as "near you" uses). Nothing
+   is shown for a visitor in the United States, or when either file is missing. */
+(function () {
+  var els = document.querySelectorAll('[data-usd]'); if (!els.length || !window.fetch) return;
+  var P = (window.HRN && window.HRN.base) || '';
+  var EUR = 'AT BE HR CY EE FI FR DE GR IE IT LV LT LU MT NL PT SK SI ES BG'.split(' ');
+  var CUR = { GB: 'GBP', CH: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN', CZ: 'CZK', HU: 'HUF', RO: 'RON', IS: 'ISK', TR: 'TRY', AU: 'AUD', CA: 'CAD', NZ: 'NZD', JP: 'JPY',
+              CN: 'CNY', HK: 'HKD', SG: 'SGD', KR: 'KRW', IN: 'INR', ID: 'IDR', MY: 'MYR', PH: 'PHP', TH: 'THB', IL: 'ILS', MX: 'MXN', BR: 'BRL', ZA: 'ZAR' };
+  Promise.all([fetch(P + '/data/fx.json').then(function (r) { return r.ok ? r.json() : null; }), fetch(P + '/data/geo.json').then(function (r) { return r.ok ? r.json() : null; })]).then(function (a) {
+    var fx = a[0], G = a[1]; if (!fx || !G) return;
+    var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    var code = (window.HRN && window.HRN.get('hrn_place', '')) || G.tz[tz] || '', cur = EUR.indexOf(code) >= 0 ? 'EUR' : CUR[code];
+    var rate = cur && fx.per_usd[cur]; if (!rate) return;
+    var fmt = function (v) { try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, notation: 'compact', maximumFractionDigits: 0 }).format(v);      // the page is in English: €197K, not 197 тыс. € } catch (e) { return Math.round(v / 1000) + 'K ' + cur; } };
+    Array.prototype.forEach.call(els, function (el) {
+      var usd = Number(el.getAttribute('data-usd')); if (!usd) return;
+      el.textContent = 'In your currency: about ' + fmt(usd * rate) + ' a year at the median (European Central Bank reference rate of ' + fx.date + '; employers set pay in their own currency, so read it as a guide).';
+      el.hidden = false;
+    });
+  }).catch(function () {});
+})();

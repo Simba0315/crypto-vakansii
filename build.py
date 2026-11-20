@@ -2311,6 +2311,20 @@ def main():
            "r": {r_: [next(nm.removeprefix("the ") for nm, sl, _ in PLACES if sl == r_), place_n.get(r_, 0)] for r_ in REGIONS if r_ in live_slugs},
            "tz": json.loads((ROOT / "tz_countries.json").read_text()) if (ROOT / "tz_countries.json").exists() else {}}
     write("data/geo.json", json.dumps(geo, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    # The euro reference rates of the European Central Bank (its own daily file), as units of each currency per US dollar, so a salary
+    # page can add "about €148K" for a visitor in Europe (plan item 4.25, 20 Nov 2026). No file when the rates cannot be read: the
+    # pages then show US dollars only, as before.
+    try:
+        import subprocess as _sp
+        _x = _sp.run(["curl", "-s", "-4", "--fail", "--max-time", "20", "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"], capture_output=True, timeout=25).stdout.decode()
+        _day = re.search(r"time='(\d{4}-\d{2}-\d{2})'", _x)
+        _r = {c_: float(v_) for c_, v_ in re.findall(r"currency='([A-Z]{3})' rate='([\d.]+)'", _x)}
+        if _day and "USD" in _r:
+            _per = {c_: round(v_ / _r["USD"], 6) for c_, v_ in _r.items() if c_ != "USD"}
+            _per["EUR"] = round(1 / _r["USD"], 6)
+            write("data/fx.json", json.dumps({"date": _day.group(1), "source": "European Central Bank euro reference rates", "per_usd": _per}, separators=(",", ":")), sitemap=False)
+    except Exception:
+        pass
     lap('Survival of a posting (no job site shows it): the daily chan')
     # Survival of a posting (no job site shows it): the daily chance that an open posting of a given age closes, from the closings
     # we have seen since tracking began, per age band and, where there are enough closings, per field. site.js turns it into
@@ -3999,6 +4013,7 @@ def main():
         # the row of figures holds what the first sentence does not say (the sentence keeps the median, the middle half and the count)
         stats = nums([(f"${median(mids) / 2080:,.0f}", "an hour at the median, for 2,080 hours a year"), (f"${median(mids) / 12:,.0f}", "a month before tax, at the median"),
                       (money(mean_), "average advertised salary"), (money(pct(.9)), "or more in the top tenth of postings")])
+        stats += f'<p class="note fx" data-usd="{round(median(mids))}" hidden></p>'      # site.js: the median in the visitor's currency
         pics = f'<div class="pics two">{pay_pic(mids, f"What {label} postings pay")}{level_pic(group)}</div>'
         top_jobs = diverse_pairs(sorted(group, key=lambda x: -x[1][1]), 20)
         # People type "average <job> salary" and writers quote the answer: the page states it in words, as questions, and for search engines.
