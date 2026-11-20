@@ -101,6 +101,10 @@ def countries_of(loc):
         province = bool(CA_PROVINCE.search(part))
         if province and ("CA", "Canada") not in named: named.append(("CA", "Canada"))
         us = bool(re.search(US_NAME, part, re.I) or re.search(US_STATES, part, re.I) or (US_ABBR.search(part) and not province))
+        abbr = US_ABBR.search(part) if us and not (re.search(US_NAME, part, re.I) or re.search(US_STATES, part, re.I)) else None
+        # "Tel Aviv - IL", "Munich, DE", "Bengaluru, IN": the two letters are the country's code next to one of its cities, not a US state
+        abroad = [(c, nm) for c, nm, _, city in COUNTRIES if abbr and c == abbr.group(1) and city and re.search(city, part, re.I)]
+        if abroad: named, us = [x for x in named if x != ("US", "United States")] + [x for x in abroad if x not in named], False
         if us: named.append(("US", "United States"))
         if not named:                                           # nothing written out: fall back to cities everyone knows
             named = [(c, nm) for c, nm, _, city in COUNTRIES if city and re.search(city, part, re.I)]
@@ -574,14 +578,94 @@ CITY_ST = re.compile(r"^\s*([^,]{2,60}?),\s*([A-Z]{2})\s*(?:,\s*(USA|US|United S
 FT_RX, OTHER_TYPE_RX = re.compile(r"\bfull[- ]time\b", re.I), re.compile(r"\bpart[- ]time\b|\bcontract(?:or)?\b|\btemporary\b|\bfreelance\b|\bseasonal\b|\binternship\b", re.I)
 
 
+US_STATE_CODE = dict(zip([x.replace("_", " ") for x in "alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois "
+                           "indiana iowa kansas kentucky louisiana maine maryland massachusetts michigan minnesota mississippi missouri montana nebraska nevada "
+                           "new_hampshire new_jersey new_mexico new_york north_carolina north_dakota ohio oklahoma oregon pennsylvania rhode_island south_carolina "
+                           "south_dakota tennessee texas utah vermont virginia washington west_virginia wisconsin wyoming district_of_columbia puerto_rico".split()],
+                          "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA "
+                          "WV WI WY DC PR".split()))
+CA_PROV_CODE = {"ontario": "ON", "british columbia": "BC", "quebec": "QC", "québec": "QC", "alberta": "AB", "manitoba": "MB", "saskatchewan": "SK",
+                "nova scotia": "NS", "new brunswick": "NB", "newfoundland and labrador": "NL", "newfoundland": "NL", "prince edward island": "PE"}
+# cities postings name without their state; only names that mean one place in practice (no Cambridge, Portland or Springfield)
+CITY_REGION = {"US": {**{c: "CA" for c in ("san francisco", "los angeles", "san diego", "san jose", "palo alto", "mountain view", "sunnyvale", "santa clara",
+                                           "menlo park", "redwood city", "san mateo", "bay area", "sf bay area", "san francisco bay area", "milpitas", "cupertino",
+                                           "oakland", "irvine", "santa monica", "south san francisco", "foster city", "emeryville", "sacramento", "pasadena", "sf")},
+                      **{c: "NY" for c in ("new york city", "new york", "nyc", "brooklyn", "manhattan")},
+                      "boston": "MA", "chicago": "IL", "seattle": "WA", "bellevue": "WA", "redmond": "WA", "austin": "TX", "dallas": "TX", "houston": "TX",
+                      "san antonio": "TX", "denver": "CO", "boulder": "CO", "atlanta": "GA", "miami": "FL", "philadelphia": "PA", "pittsburgh": "PA",
+                      "phoenix": "AZ", "scottsdale": "AZ", "raleigh": "NC", "salt lake city": "UT", "lehi": "UT", "minneapolis": "MN", "detroit": "MI",
+                      "nashville": "TN", "baltimore": "MD", "washington dc": "DC", "washington d.c": "DC", "washington d. c": "DC", "las vegas": "NV",
+                      "waltham": "MA", "somerville": "MA", "jersey city": "NJ", "hoboken": "NJ", "st. louis": "MO", "st louis": "MO", "kansas city": "MO",
+                      "new orleans": "LA", "honolulu": "HI", "anchorage": "AK", "charlotte": "NC", "durham": "NC", "tampa": "FL", "orlando": "FL"},
+               "CA": {"toronto": "ON", "ottawa": "ON", "waterloo": "ON", "mississauga": "ON", "kitchener": "ON", "vancouver": "BC", "victoria": "BC",
+                      "montreal": "QC", "montréal": "QC", "quebec city": "QC", "calgary": "AB", "edmonton": "AB", "winnipeg": "MB", "halifax": "NS"}}
+PLACE_NOISE = re.compile(r"\((?:hq|headquarters|remote|hybrid|on-?site|in[- ]office|office)\)|\b(?:hq|headquarters|office|offices|hybrid|remote[- ]friendly|remote|on-?site|in[- ]office|"
+                         r"metropolitan area|metro area|only|amer|namer|north america)\b", re.I)
+LAND_WORD = {"united states": "US", "united states of america": "US", "usa": "US", "us": "US", "u.s": "US", "u.s.a": "US", "u. s": "US", "canada": "CA", "can": "CA"}
+
+
 def postal(part, here):
-    """The PostalAddress of one place of a posting: locality, region and country where "City, ST" says them, else the place as written."""
-    m = CITY_ST.match(part)
-    if m and (not here or here[0][0] in ("US", "CA")):
-        code, tail = m.group(2), (m.group(3) or "").upper()
-        if code in US_ST and tail not in ("CANADA", "CA"): return {"addressLocality": m.group(1).strip(), "addressRegion": code, "addressCountry": "US"}
-        if code in CA_PROV and tail not in ("USA", "US", "UNITED STATES"): return {"addressLocality": m.group(1).strip(), "addressRegion": code, "addressCountry": "CA"}
-    return {"addressLocality": part, **({"addressCountry": here[0][0]} if len(here) == 1 else {})}
+    """The PostalAddress of one place of a posting. In the United States and Canada: locality, state or province, and country, read from
+    "City, ST", "City, State, Country", "US - City" and from a known city named alone ("San Francisco"); a place that is only a country
+    ("Remote - US", "United States") gets the country alone. Elsewhere the place as written, with its country.
+    (Google's Rich Results Test, 20 Nov 2026: "Reston, VA" was one addressLocality, and the test listed addressRegion as missing.
+    On that day 60% of the US and Canadian places of the open jobs had no region: "Chicago, Illinois, United States", "San Francisco".)"""
+    land = here[0][0] if len(here) == 1 else None
+    if here and land not in ("US", "CA"):
+        return {"addressLocality": part, **({"addressCountry": land} if land else {})}
+    if re.search(r"\s(?:or|and|&)\s", part, re.I): return {"addressLocality": part, **({"addressCountry": land} if land else {})}    # two places in one
+    # a bracket keeps a state or country ("Austin (TX)", "Remote (United States") and loses anything else ("Philadelphia (dbt)")
+    keep_br = lambda m: (", " + m.group(1)) if (m.group(1).strip().lower() in LAND_WORD or m.group(1).strip().lower() in US_STATE_CODE
+                                                or m.group(1).strip().lower() in CA_PROV_CODE or m.group(1).strip() in US_ST or m.group(1).strip() in CA_PROV) else " "
+    bits = [re.sub(r"\s+", " ", x).strip(" .()-–") for x in re.split(r",|:|\s[-–/|]\s|\s[-–]|[-–]\s|[-–]$",
+                                                                       re.sub(r"\(([^()]*)\)?", keep_br, PLACE_NOISE.sub(" ", part)))]
+    city = region = country = None
+    for bit in bits:
+        if not bit: continue
+        low = re.sub(r"\s+", " ", bit.lower())
+        tail = re.search(r"\s(usa|us|united states(?: of america)?|canada)$", low)       # "Sunnyvale, California USA"
+        if tail and low[:tail.start()].strip() and (low[:tail.start()].strip() in US_STATE_CODE or low[:tail.start()].strip() in CA_PROV_CODE or city is None):
+            country = LAND_WORD[tail.group(1)]
+            bit, low = bit[:tail.start()].strip(" ,"), low[:tail.start()].strip(" ,")
+        if low in LAND_WORD and (low != "ca" or region):
+            country = LAND_WORD[low]
+        elif bit == "CA" and city is None and region is None:
+            continue                                                                      # "Remote - CA": California or Canada, nobody can tell
+        elif re.fullmatch(r"[A-Z]{2}", bit) and region is None and city is None and bit in US_ST and land == "US":
+            region, country = bit, "US"                                                   # "Remote - TX": the state alone
+        elif re.fullmatch(r"[A-Z]{2}", bit) and region is None and city is not None:
+            if bit == "CA" and city.lower() in CITY_REGION["CA"]: country = "CA"           # "Toronto, CA": the country, not California
+            elif bit in US_ST: region, country = bit, country or "US"
+            elif bit in CA_PROV: region, country = bit, "CA"
+            else: return {"addressLocality": part, **({"addressCountry": land} if land else {})}
+        elif low in ("dc", "d.c", "d. c") and region is None:
+            region, country = "DC", "US"
+        elif low in CA_PROV_CODE and region is None and city is not None or (low in CA_PROV_CODE and city is None and low not in CITY_REGION["CA"]):
+            region, country = CA_PROV_CODE[low], "CA"
+        elif low in US_STATE_CODE and region is None and (city is not None or low not in CITY_REGION["US"] and low != "washington"):
+            if low == "georgia" and land != "US": continue
+            region, country = US_STATE_CODE[low], "US"
+        elif city is None:
+            city = bit
+        else:
+            return {"addressLocality": part, **({"addressCountry": land} if land else {})}    # more than one place name: leave it as written
+    country = country or land
+    if city and region is None and country in CITY_REGION:
+        region = CITY_REGION[country].get(re.sub(r"\s+", " ", city.lower()))
+    if city and region is None and country is None and land is None:
+        return {"addressLocality": part}
+    out = {}
+    if city: out["addressLocality"] = city
+    if region: out["addressRegion"] = region
+    if country: out["addressCountry"] = country
+    return out or {"addressLocality": part, **({"addressCountry": land} if land else {})}
+for _place, _want in {"Chicago, Illinois, United States": ("Chicago", "IL", "US"), "San Francisco": ("San Francisco", "CA", "US"), "New York, NY (HQ)": ("New York", "NY", "US"),
+                      "Washington, D.C.": ("Washington", "DC", "US"), "Toronto, CA": ("Toronto", "ON", "CA"), "Winston-Salem, NC": ("Winston-Salem", "NC", "US"),
+                      "Remote - US": (None, None, "US"), "Remote - CA": (None, None, "US"), "Munich, DE": ("Munich, DE", None, "DE"),
+                      "Denver, CO or Long Beach, CA": ("Denver, CO or Long Beach, CA", None, "US"), "London": ("London", None, "GB"),
+                      "USA - Philadelphia (dbt)": ("Philadelphia", "PA", "US"), "Austin (TX)": ("Austin", "TX", "US")}.items():
+    _got = postal(_place, countries_of(_place))
+    assert (_got.get("addressLocality"), _got.get("addressRegion"), _got.get("addressCountry")) == _want, (_place, _got)
 # A remote posting that names a part of the world instead of countries ("Remote - EMEA", "North America"): the countries Google needs.
 _EU = ["GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS"]
 REGION_LANDS = [(r"north america|\bnamer\b|\bamer\b|\bnoram\b", ["US", "CA"]), (r"\bamericas\b", ["US", "CA", "MX", "BR", "AR", "CO", "CL"]),
@@ -7564,8 +7648,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             "If you ask for job alerts or open an account, we keep your email address and what you asked for, use them for that and nothing else, and delete them when you ask.</p>" if api_on else
             "<p class=\"lead\">Short version: we do not ask for an account, we do not set tracking cookies, and your saved jobs never leave your browser.</p>")
          + "<h2 class='h2s'>What is stored in your browser</h2><p>Saved jobs, application statuses and notes, saved searches, followed companies, hidden jobs and companies, words you chose to leave out of results, "
-         "recently viewed jobs, your skill profile, the resume you typed into the resume builder, what you entered into the free tools, and the light or dark theme. All of it is kept in your browser's local storage on this device and is not sent to us. "
+         "recently viewed jobs, your skill profile and your answers on For you, the jobs you passed on the swipe page, the place you picked for jobs near you, "
+         "the resume you typed into the resume builder, what you entered into the free tools, and the light or dark theme. All of it is kept in your browser's local storage on this device and is not sent to us. "
          f'You can download or erase it on the <a href="{P}/my-jobs/">My jobs</a> page; each tool has its own Clear button; clearing your browser data removes everything.</p>'
+         "<h2 class='h2s'>Your time zone</h2><p>To show pay in your own currency and the jobs near you before you pick a place, a script on the page reads the time zone your device reports "
+         "(for example Europe/Berlin) and looks up its country in a list this site serves to every visitor alike. This happens in your browser; the time zone is not sent to us or kept. "
+         "Exchange rates come from the European Central Bank's daily reference rates, which the site copies when it is built, so no request goes to the bank from your browser.</p>"
          "<h2 class='h2s'>Practising out loud</h2><p>On the interview questions pages the page can read a question aloud and listen to your answer. "
          "It uses your browser’s own speech service: in Chrome that service is run by Google and in Edge by Microsoft, so your words go to them to be "
          "turned into text, under their terms. This site receives none of it and keeps nothing. Typing the answer instead sends nothing anywhere.</p>"

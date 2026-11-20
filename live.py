@@ -43,6 +43,7 @@ def give_back():
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 import build, collect, dedupe, search_engine, texts     # noqa: E402
+import threading                                        # noqa: E402
 
 JOBS_DB = ROOT / "data" / "jobs.db"
 LIVE_DB = Path(os.environ.get("HRN_LIVE_DB") or ROOT.parent / "live.db")
@@ -64,7 +65,38 @@ collect.DESC_SINCE = ""
 # minutes to read, Workday boards held every thread, and the other boards waited (60 to 70 boards read in five minutes instead of
 # about a thousand). LIVE_CAP keeps such systems to two thirds of the threads.
 TEXTS_SLOW, TEXTS_LIST = 15, 500
-collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
+# A board with a backlog: more than TEXTS_BACKLOG of its open jobs without their text gets TEXTS_BIG of them a read, and at most
+# BIG_AT_ONCE such boards are read at a time, so their longer reads (two minutes, not twenty seconds) hold six threads at most.
+# Since 20 Nov 2026: 105 Workday boards held 31,247 of the 34,799 Workday jobs without text (Wendy's 750, Dutch Bros 688), and at 15
+# a read that was a day or more of hourly reads; the other 309 boards with gaps had a few each and keep the 15.
+TEXTS_BIG, TEXTS_BACKLOG, BIG_AT_ONCE = 45, 100, 6
+
+
+class PerRead:
+    """collect.DETAILS here: how many posting pages one read of a board may ask for. Each thread reads one board at a time, so the
+    number is kept per thread (timed() sets it from what skip_known() decided); collect only compares with it ("asked < DETAILS")."""
+
+    def __init__(self, default):
+        self.default, self.local = default, threading.local()
+
+    def set(self, n):
+        self.local.n = n or self.default
+
+    def n(self):
+        return getattr(self.local, "n", self.default)
+
+    def __gt__(self, other): return self.n() > other
+    def __ge__(self, other): return self.n() >= other
+    def __lt__(self, other): return self.n() < other
+    def __le__(self, other): return self.n() <= other
+    def __eq__(self, other): return self.n() == other
+    def __int__(self): return self.n()
+    __index__ = __int__
+    __hash__ = None
+
+
+NEW_DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15)
+collect.DETAILS = PerRead(NEW_DETAILS + TEXTS_SLOW)
 # 36 threads since 19 Nov 2026 (24 before): the reading is waiting on answers, not work, and the slow systems below now keep a third
 # of the threads free for the quick boards.
 # 48 since 20 Nov 2026, with about 8,000 more boards on BambooHR and Paylocity: the loop no longer reads its store whole for each
@@ -120,6 +152,7 @@ class Live:
         self.known, self.by_co, self.slugs = {}, {}, set()
         self.texts = texts.Keeper(texts.DB if write else ":memory:")
         self.textless, self.pruned = set(), ""                 # open jobs whose text the hourly record lacks; the day texts were last pruned
+        self.big = set()                                         # boards being read now with the larger text budget (TEXTS_BIG)
 
     # --- the hourly record ---------------------------------------------------------------------------------------------------
     def reload(self):
@@ -230,6 +263,8 @@ class Live:
             f"SELECT id FROM live WHERE company = ? AND closed = '' AND {texts.BYTES}(descr) = 0", (name,))}
         if need: need -= self.texts.have(name)
         budget, asked = TEXTS_SLOW if src.get("ats") in SLOW else TEXTS_LIST, {}
+        big = src.get("ats") in SLOW and len(need) > TEXTS_BACKLOG and len(self.big) < BIG_AT_ONCE
+        if big: budget = TEXTS_BIG; self.big.add(name)
 
         def reuse(jid, h=None):
             if jid in need:
@@ -238,6 +273,7 @@ class Live:
                     asked[jid] = n + 1
                     return None
             return {"id": jid, "title": "-", "url": "-"} if jid in known or jid in live_ids else None
+        reuse.details = NEW_DETAILS + TEXTS_BIG if big else None          # read by timed(), in the thread that reads the board
         return reuse
 
     def open_ids(self, src):
@@ -425,6 +461,7 @@ class Live:
                 finished, _ = cf.wait(running, timeout=5, return_when=cf.FIRST_COMPLETED)
                 for fut in finished:
                     s = running.pop(fut)
+                    self.big.discard(s["name"])
                     (_, jobs), secs = fut.result()
                     t = took.setdefault(s["ats"], [0, 0.0]); t[0] += 1; t[1] += secs
                     if jobs is None:
@@ -438,6 +475,7 @@ class Live:
 def timed(src, reuse):
     """collect.fetch, and how many seconds it held its thread."""
     t = time.time()
+    if isinstance(collect.DETAILS, PerRead): collect.DETAILS.set(getattr(reuse, "details", None))
     return collect.fetch(src, reuse), time.time() - t
 
 
@@ -523,6 +561,23 @@ def test():
     r = lv.skip_known(src)
     assert r("paylocity-arc-1") is not None and lv.open_ids(src) == {"paylocity-arc-2"}
     assert lv.con.execute("SELECT company, json_extract(rec, '$.company') FROM live").fetchone() == ("ARC of Carroll County",) * 2
+    d = PerRead(30)
+    assert 29 < d and not 30 < d and d == 30 and int(d) == 30
+    d.set(60); assert 59 < d and not 60 < d
+    seen = []
+    th = threading.Thread(target=lambda: seen.append(29 < d and not 30 < d)); th.start(); th.join()
+    assert seen == [True]                                           # another thread keeps the default
+    d.set(None); assert int(d) == 30
+    lv.textless = {f"workday-big-{i}" for i in range(TEXTS_BACKLOG + 1)} | {"workday-small-1"}
+    lv.by_co.update({"Big": set(lv.textless) - {"workday-small-1"}, "Small": {"workday-small-1"}})
+    lv.known = dict.fromkeys(lv.textless, 1)
+    r = lv.skip_known({"name": "Big", "ats": "workday", "token": "big"})
+    assert r.details == NEW_DETAILS + TEXTS_BIG and lv.big == {"Big"}
+    assert sum(r(f"workday-big-{i}") is None for i in range(TEXTS_BACKLOG + 1)) == TEXTS_BIG
+    r = lv.skip_known({"name": "Small", "ats": "workday", "token": "small"})
+    assert r.details is None and lv.big == {"Big"}
+    lv.big = {f"b{i}" for i in range(BIG_AT_ONCE)}
+    assert lv.skip_known({"name": "Big", "ats": "workday", "token": "big"}).details is None     # six at once at most
     assert thread_time({"workday": [2, 80.0], "greenhouse": [10, 20.0]}) == "workday 80% (2 reads, 40 s each), greenhouse 20% (10 reads, 2 s each)"
     assert thread_time({}) == "none"
     print(f"live.py: all checks passed (slow reads at once at most {max_heavy[0]} of {WORKERS} threads)")
