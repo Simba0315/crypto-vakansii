@@ -3317,6 +3317,44 @@ def main():
                 f"{roles(len(hyb_), 'open job')} that mix days at home with days in the office, straight from employers’ careers pages. Updated hourly.", hyb_,
                 intro_for(hyb_, "", " that mix days at home with days in the office", row=list_parts("Hybrid jobs", hyb_)[0]), trail=(("All jobs", "jobs/"),), more="hybrid=1",
                 faq="hybrid jobs", links=(("remote/", "Remote jobs"),), **list_parts("Hybrid jobs", hyb_)[1])
+    lap('Government jobs: the federal agencies read from USAJOBS, the')
+    # Government jobs: the federal agencies read from USAJOBS, then states, counties, cities, school districts and public authorities
+    # that publish on their own hiring systems, told by the employer's name. LinkedIn has a "Government" collection (checked 20 Nov
+    # 2026) and "government jobs" is among the most searched job queries; on that day the server's record held about 11,600 such jobs.
+    GOV_RX = re.compile(r"^(?:the )?(?:city|county|state|town|village|commonwealth|district|port|borough|township|parish) of\b|\b(?:county|city|state) government\b|"
+                        r"\bdepartment of\b|\bpublic schools?\b|\bschool district\b|\bunified school\b|\b(?:transit|housing|port|water|airport) authority\b|\bcounty\s*$", re.I)
+    SCHOOL_RX = re.compile(r"\bpublic schools?\b|\bschool district\b|\bunified school\b", re.I)
+    gov_ = [j for j in active if j["id"].startswith("usajobs-") or GOV_RX.search(j["company"])]
+    GOV_PAGE = len(gov_) >= 20
+    if GOV_PAGE:
+        fed_ = [j for j in gov_ if j["id"].startswith("usajobs-")]
+        sch_ = [j for j in gov_ if not j["id"].startswith("usajobs-") and SCHOOL_RX.search(j["company"])]
+        loc_ = [j for j in gov_ if not j["id"].startswith("usajobs-") and not SCHOOL_RX.search(j["company"])]
+        row_g, kw_g = list_parts("Government jobs", gov_)
+        lvl_rows = [(nm_, js_) for nm_, js_ in (("Federal agencies (USAJOBS)", fed_), ("States, counties and cities", loc_), ("Public school districts", sch_)) if js_]
+        def gov_tab(js_):
+            pay_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j.get("usd"))
+            return f"<td>{len(js_):,}</td><td>{len({j['company'] for j in js_}):,}</td><td>{money(pay_[len(pay_) // 2]) if len(pay_) >= 10 else '–'}</td><td>{sum(j['remote'] for j in js_):,}</td>"
+        top_g = Counter(j["company"] for j in gov_).most_common(15)
+        g_html = (section("Government jobs [[by level of government]]", '<div class="tablewrap"><table><tr><th>Employer</th><th>Open jobs</th><th>Employers</th><th>Median advertised pay</th><th>Remote</th></tr>'
+                          + "".join(f"<tr><td>{e(nm_)}</td>{gov_tab(js_)}</tr>" for nm_, js_ in lvl_rows) + "</table></div>"
+                          '<p class="note">Federal jobs are read from USAJOBS, the federal government’s own job board; the others from each employer’s own hiring system. '
+                          'The median is of the yearly ranges the postings state.</p>', sid="levels", label="By level")
+                  + section("The public employers [[with most open jobs]]", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in top_g if OPEN.get(c)) + "</ul>", sid="employers", label="Employers"))
+        kw_g = dict(kw_g); kw_g["after"] = g_html + kw_g.get("after", "")
+        listing("government-jobs/", "Government jobs", f"Government Jobs ({len(gov_):,} open): Federal, State and Local | {SITE}",
+                f"{roles(len(gov_), 'open government job')}: federal agencies from USAJOBS, states, counties, cities and school districts, from their own hiring systems. Updated hourly.", gov_,
+                intro_for(gov_, "", " at federal agencies, states, counties, cities and public school districts", row=row_g), trail=(("All jobs", "jobs/"),),
+                faq="government jobs",
+                faq_first=("Where can I find government jobs?", f"Here are {len(gov_):,} open ones: {len(fed_):,} at federal agencies, read from USAJOBS, the federal government’s own job board, "
+                           f"and {len(loc_) + len(sch_):,} at states, counties, cities and public school districts, read from their own hiring systems. Each links to the employer’s page to apply."),
+                faq_extra=(("Do federal jobs require US citizenship?", "Most do: a federal posting says who may apply under “Who may apply” or “Requirements”, and many are open to US citizens only. "
+                            "State and local governments set their own rules; read the posting."),
+                           ("How long does it take to get a government job?", "Longer than in most companies: federal hiring often takes two to four months from the closing date, "
+                            "with a background check for many roles. State and local hiring is usually quicker. Apply before the closing date the posting gives."),
+                           ("Do government jobs pay less?", "Often less than private companies for the same skills at senior levels, and about the same or more at entry level, "
+                            "with steadier hours, pensions and paid leave. The table above gives the median advertised pay of each level of government today.")),
+                links=(("jobs/", "Search every job"), ("companies/", "All companies")), **kw_g)
     lap('Jobs by level: senior, lead, executive')
     # Jobs by level (hirehi.ru has a page for each level; search check, 18 Nov 2026: "senior level jobs" and "executive jobs" are answered by
     # thin lists of Indeed and ZipRecruiter, and people also ask what counts as senior and what an executive job is). The level comes
@@ -3357,7 +3395,7 @@ def main():
     kinds = "".join(f'<li><a href="{P}/{u}">{e(nm)}</a></li>' for u, nm in (
         ("remote/", "Remote jobs"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work from anywhere"), ("new/", "New in the last 3 days"), ("entry-level/", "Entry-level jobs"), ("senior-jobs/", "Senior-level jobs"), ("lead-jobs/", "Lead and staff jobs"), ("executive-jobs/", "Executive jobs"), ("internships/", "Internships"),
         ("contract/", "Contract jobs"), ("part-time/", "Part-time jobs"), ("with-salary/", "Jobs that state pay"), ("salary/200k/", "Jobs that pay $200K or more"), ("perks/visa-sponsorship/", "Jobs with visa sponsorship"),
-        ("jobs-near-me/", "Jobs near me")) + tuple((p_, h_) for p_, h_, _, _ in HOURS))
+        ("jobs-near-me/", "Jobs near me")) + tuple((p_, h_) for p_, h_, _, _ in HOURS) + ((("government-jobs/", "Government jobs"),) if GOV_PAGE else ()))
     dir_tail = (f'<div class="dirb"><h2><a href="{P}/jobs/"><u>By type of work</u></a></h2><p>How and when the work is done.</p><ul>{kinds}</ul></div>'
                 f'<div class="dirb"><h2><a href="{P}/skills/"><u>By skill or tool</u></a><span>{len(skill_counts)}</span></h2><p>Jobs that ask for a language, a program or a method by name.</p><ul>'
                 + "".join(f'<li data-n="{e(t.lower())}"><a href="{P}/skills/{tslug(t)}/">{e(t)} jobs</a><span>{c:,}</span></li>' for t, c in skill_counts.most_common(14))

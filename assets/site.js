@@ -692,12 +692,25 @@
     if (!tabs || !box) return;
     // A visitor who answered For you gets a first tab of the newest jobs that fit the answers, open at once, as LinkedIn's jobs home
     // opens on "jobs based on your preferences" (checked 20 Nov 2026). Counted here from the jobs index; nothing is sent anywhere.
-    var fits = fitTest(get('hrn_profile', null));
-    if (fits) load().then(function (rows) {
+    // Without answers, the jobs saved here say it instead (LinkedIn picks jobs "based on your profile, preferences and activity such
+    // as applies, searches and saves"): the kinds of work most saved, home or office as most of them, the newest jobs not saved yet.
+    var fits = fitTest(get('hrn_profile', null)), mine = get('hrn_jobs', {}), how = 'fit your answers', href = P + '/for-you/';
+    if (fits || Object.keys(mine).length >= 2) load().then(function (rows) {
+      if (!fits) {
+        var by = {}; rows.forEach(function (j) { by[j[0]] = j; });
+        var kept = Object.keys(mine).map(function (k) { return by[k]; }).filter(Boolean);
+        if (kept.length < 2) return;
+        var cats = {}; kept.forEach(function (j) { cats[j[5]] = (cats[j[5]] || 0) + 1; });
+        var top = Object.keys(cats).sort(function (x, y) { return cats[y] - cats[x]; }).filter(function (c) { return cats[c] >= 2 || kept.length < 4; }).slice(0, 2);
+        var rem = kept.filter(function (j) { return j[4]; }).length * 2 > kept.length;
+        if (!top.length) return;
+        fits = function (j) { return !mine[j[0]] && !j[22] && top.indexOf(j[5]) >= 0 && (!rem || j[4]); };
+        how = 'are like the jobs you saved'; href = P + '/jobs/?cat=' + encodeURIComponent(top[0]) + (rem ? '&remote=1' : '');
+      }
       var fit = rows.filter(fits).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
       if (fit.length < 3 || tabs.querySelector('[data-tab="fy"]')) return;
-      var t = document.createElement('a'); t.href = P + '/for-you/'; t.setAttribute('data-tab', 'fy'); t.textContent = 'For you';
-      t.setAttribute('data-more', 'See all ' + fit.length.toLocaleString('en-US') + ' that fit your answers');
+      var t = document.createElement('a'); t.href = href; t.setAttribute('data-tab', 'fy'); t.textContent = 'For you';
+      t.setAttribute('data-more', 'See all ' + fit.length.toLocaleString('en-US') + ' that ' + how);
       var ul = document.createElement('ul'); ul.className = 'jobs'; ul.setAttribute('data-panel', 'fy');
       ul.innerHTML = fit.slice(0, Math.max(5, (box.querySelector('[data-panel="0"]') || { children: [] }).children.length)).map(card).join('');
       var first = tabs.querySelector('a[data-tab]');
