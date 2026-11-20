@@ -3971,3 +3971,10 @@ td,th{font-variant-numeric:tabular-nums}
 }
 /* skills named on a "jobs for" page: pills that are figures, not links (20 Nov 2026) */
 .rel.chips span{display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg2);color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+/* resume example pictures: one page at a glance beside the example, and a gallery on the examples hub (20 Nov 2026) */
+.rexprev{margin:0 0 18px}.rexprev img{display:block;width:100%;max-width:306px;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.rexprev figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+.rexgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
+.rexgal a{display:flex;flex-direction:column;gap:6px;color:var(--text);text-decoration:none;font-size:14px}
+.rexgal img{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
+.rexgal a:hover img{border-color:var(--text)}

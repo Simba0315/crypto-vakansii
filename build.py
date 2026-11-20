@@ -5090,6 +5090,53 @@ def main():
                 + "".join(f'<p class="pp-job"><b>{e(x["role"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p><ul>' + "".join(f"<li>{e(ln)}</li>" for ln in x["text"].split("\n")) + "</ul>" for x in d["exp"])
                 + '<p class="pp-h">Education</p>' + "".join(f'<p class="pp-job"><b>{e(x["what"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p>' for x in d["edu"]) + "</div>")
     rex_lv = {}                 # role -> {"entry": example, "senior": example}: the other levels, shown on the resume page and, in UK form, on the CV page
+    def resume_svg(d):
+        """The example as a picture of one US Letter page (612 x 792), drawn as SVG text from the same fields as the page: for image
+        search and for a look at the whole page at once (plan item 1.20, 20 Nov 2026: no example had a picture). Lines that would run
+        past the page are left off; widths are estimated from the font size, a little short so nothing overflows."""
+        out_, y = [], [60]
+        def wrap(t, size, width=532):
+            n_ = max(20, int(width / (size * 0.52)))
+            words, line, lines = str(t).split(), "", []
+            for w in words:
+                if len(line) + len(w) + 1 > n_ and line: lines.append(line); line = w
+                else: line = (line + " " + w).strip()
+            return lines + ([line] if line else [])
+        def text(t, size, x=40, weight="400", fill="#222", gap=None):
+            if y[0] > 770: return
+            out_.append(f'<text x="{x}" y="{y[0]}" font-size="{size}" font-weight="{weight}" fill="{fill}">{e(t)}</text>')
+            y[0] += gap if gap is not None else round(size * 1.45)
+        def head(t):
+            y[0] += 6
+            text(t.upper(), 12, weight="700", fill="#111", gap=5)
+            out_.append(f'<line x1="40" y1="{y[0]}" x2="572" y2="{y[0]}" stroke="#bbb" stroke-width="0.6"/>'); y[0] += 17
+        text(d["name"], 30, weight="700", fill="#111", gap=26)
+        text(d["title"], 16, fill="#333", gap=20)
+        text(f'{d["place"]} · {d["email"]}', 12, fill="#666", gap=18)
+        head("Summary")
+        for ln in wrap(d["summary"], 12.5)[:5]: text(ln, 12.5)
+        head("Skills")
+        for ln in wrap(d["skills"], 12.5)[:3]: text(ln, 12.5)
+        head("Experience")
+        for x in d["exp"]:
+            if y[0] > 700: break
+            out_.append(f'<text x="572" y="{y[0]}" font-size="11.5" fill="#666" text-anchor="end">{e(x["dates"])}</text>')
+            text(f'{x["role"]}, {x["org"]}', 13, weight="700", fill="#111")
+            for bl in x["text"].split("\n"):
+                for i_, ln in enumerate(wrap(bl, 12.5, 516)[:3]): text(("• " if not i_ else "  ") + ln, 12.5, x=48)
+            y[0] += 3
+        if y[0] < 700:
+            head("Education")
+            for x in d["edu"]: text(f'{x["what"]}, {x["org"]} ({x["dates"]})', 12.5)
+        return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 792" width="612" height="792" font-family="Arial, Helvetica, sans-serif">'
+                f'<title>{e(d["title"])} resume example</title><rect width="612" height="792" fill="#fff"/>' + "".join(out_) + "</svg>")
+    def rex_pic(slug_r, d, rname):
+        """Writes the example's picture beside its page and returns the figure that shows it."""
+        (OUT / "resume" / "examples" / slug_r).mkdir(parents=True, exist_ok=True)
+        (OUT / "resume" / "examples" / slug_r / "preview.svg").write_text(resume_svg(d))
+        return (f'<figure class="rexprev"><a href="{P}/resume/examples/{slug_r}/preview.svg"><img src="{P}/resume/examples/{slug_r}/preview.svg" width="306" height="396" loading="lazy" '
+                f'alt="{e(rname)} resume example: the whole page, one column, with summary, skills, experience and education"></a>'
+                '<figcaption>The whole example on one page.</figcaption></figure>')
     def paper_text(d):
         """The example as plain text, for the "Copy as text" button: the same lines as the paper, a dash before each result."""
         out_ = [d["name"], d["title"], f'{d["place"]} · {d["email"]}', "", "SUMMARY", d["summary"], "", "SKILLS", d["skills"], "", "EXPERIENCE"]
@@ -5193,7 +5240,7 @@ def main():
              + '<div class="rexgrid"><div>' + paper(d) + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
              f'<p><a class="btn primary" href="{P}/resume/?example={slug_r}">Open this example in the builder</a> <button class="btn ghost" style="margin-top:0" type="button" data-clip="rex-text" data-raw>Copy as text</button> '
              f'<a class="btn ghost" style="margin-top:0" href="{P}/tools/resume-review/">Check your own resume</a></p><pre id="rex-text" hidden>{e(paper_text(d))}</pre>' + why_works(d, top_, tech_) + "</div>"
-             '<div class="rexside">' + ask_
+             '<div class="rexside">' + rex_pic(slug_r, d, rname) + ask_
              + ("<h2>Titles employers use</h2><p>" + e("; ".join(titles_)) + ".</p>" if titles_ else "")
              + '<h2>Make it yours</h2><ol class="steps"><li><b>Keep the form, change every fact.</b> A verb first, what changed, one number.</li>'
                f'<li><b>Use the posting’s words.</b> The <a href="{P}/tools/resume-match/">match checker</a> shows which of them your resume lacks.</li>'
@@ -5287,6 +5334,9 @@ def main():
          '<p class="lead">Each example comes with the skills employers name for that work in today’s open postings, counted again at every update. Pick your work, open the example in the builder and replace it line by line.</p>'
          + nums([(f"{len(rex_data)}", "resume examples"), (f"{n_fields(rex_dir)}", "fields of work"), (f"{rex_three}", "pages that also have an entry-level and a senior example"),
                  ("Free", "to open in the resume builder, with no account")]) +
+         (section("The most asked-for examples", '<div class="rexgal">' + "".join(
+               f'<a href="{P}/resume/examples/{sl_}/"><img src="{P}/resume/examples/{sl_}/preview.svg" width="153" height="198" loading="lazy" alt="{e(by_role[sl_][0])} resume example"><span>{e(by_role[sl_][0])}</span></a>'
+               for sl_ in sorted(rex_data, key=lambda s_: -len(by_role[s_][1]))[:12]) + "</div>") if len(rex_data) >= 12 else "") +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
          f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">resume builder</a> works for any job.</p>'
          + dir_sec(f"[[{len(rex_data)} resume examples]] by field of work", rex_html, ("resume/", "Open the resume builder"), "The number next to each name is how many jobs of that kind are open today."), cls="hub")
