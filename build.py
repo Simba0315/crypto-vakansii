@@ -4522,6 +4522,20 @@ def main():
                       + "A company that hires in any country often pays through an employer of record or signs you as a contractor. Ask which, because it decides who pays your tax and whether there is paid leave."),
                      ("Which hours?", "“Anywhere” seldom means any hours. Look for the words “overlap”, “core hours” or a named time zone, and ask in the first call when the team meets.")]
         aw_after = section("What to [[check before]] you apply", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in aw_checks) + "</dl>", sid="check", label="Before you apply")
+        # the kinds of work in groups, as Google's answer gives them (plan item 1.14, 20 Nov 2026: the page had only the bars of the
+        # most common titles): each field with its count and the roles most often open in it, each a link
+        aw_by_f = defaultdict(list)
+        for j in aw: aw_by_f[j["cat"]].append(j)
+        aw_grp, rem_n = [], Counter(j["cat"] for j in remote)       # /remote/<field>/ exists from 5 remote jobs in the field
+        for cs, js_ in sorted(aw_by_f.items(), key=lambda x: -len(x[1])):
+            if cs == OTHER[0] or len(js_) < 3: continue
+            rc_ = Counter(r for j in js_ for r in HUB["job_roles"].get(j["id"], ()) if r in HUB["roles"]).most_common(5)
+            aw_grp.append(f'<div><dt><a href="{P}/{"remote" if rem_n[cs] >= 5 else "jobs"}/{cs}/">{e(CAT[cs])}</a> · {len(js_):,} open</dt><dd>'
+                          + (", ".join(f'<a href="{P}/roles/{r}/">{e(HUB["roles"][r][0])}</a> ({k:,})' for r, k in rc_) if rc_ else "Roles of many kinds, none with three or more postings yet.")
+                          + "</dd></div>")
+        aw_after = (section("Work-from-anywhere jobs [[by field]]", '<dl class="qa">' + "".join(aw_grp) + "</dl>"
+                            + '<p class="note">The roles most often open in each field among these postings, with their count. A posting can count under two roles.</p>', sid="fields", label="By field")
+                    if len(aw_grp) >= 3 else "") + aw_after
         aw_parts = list_parts("Work-from-anywhere jobs", aw)
         listing("work-from-anywhere/", "Work-from-anywhere jobs", f"Work From Anywhere Jobs ({len(aw):,} open) | {SITE}",
                 f"{roles(len(aw), 'remote job')} open to candidates worldwide, with no country restriction in the listing.", aw,
@@ -7526,9 +7540,21 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     bc_free = [b for b in BC.BUILDERS if b["pdf"][0] in ("yes", "limited")]
     bc_paid = [b for b in BC.BUILDERS if b["pdf"][0] in ("no", "trial")]
     bc_list = lambda xs: ", ".join(b["name"] for b in xs[:-1]) + (" and " if len(xs) > 1 else "") + (xs[-1]["name"] if xs else "")
-    BC_COLS = ["PDF on the free plan", "Watermark", "Word file free", "Account needed", "Free plan limits", "Cheapest paid option"]
+    BC_COLS = ["Suits you if you want", "PDF on the free plan", "Watermark", "Word file free", "Account needed", "Free plan limits", "Cheapest paid option"]
+    def bc_suits(b):
+        """Who a builder suits, put together only from the facts in its row (plan item 1.23, 20 Nov 2026: other comparisons give a
+        "best for" line; ours had none). No judgement of our own beyond what the builder's pages state."""
+        yes_ = lambda k_: (b.get(k_) or "").lower().startswith("yes")
+        no_ = lambda k_: (b.get(k_) or "").lower().startswith("no")
+        kind_ = b["pdf"][0]
+        if kind_ in ("no", "trial"): return "To write for free and pay when you download"
+        out_ = ["A free PDF" if kind_ == "yes" else "A PDF within the free plan’s limits"]
+        if yes_("docx"): out_.append("a Word file too")
+        if no_("signup"): out_.append("no account")
+        if no_("watermark"): out_.append("no watermark")
+        return ", ".join(out_)
     def bc_tds(b):          # data-l: the column's name, shown beside each value when a phone lays the rows out as cards
-        cells_ = [bc_cell(b["pdf"][1], b["pdf"][0])] + [bc_cell(b[k_]) for k_ in ("watermark", "docx", "signup", "limits", "paid")]
+        cells_ = [e(bc_suits(b)), bc_cell(b["pdf"][1], b["pdf"][0])] + [bc_cell(b[k_]) for k_ in ("watermark", "docx", "signup", "limits", "paid")]
         return "".join(f'<td data-l="{e(l_)}"><div>{c_}</div></td>' for l_, c_ in zip(BC_COLS, cells_))
     bc_rows = "".join(f'<tr><th><a href="{e(b["url"])}" rel="nofollow noopener">{e(b["name"])}</a></th>{bc_tds(b)}</tr>' for b in BC.BUILDERS)
     bc_rows += f'<tr class="fb-ours"><th>{e(SITE)}<span>this site</span></th>{bc_tds(BC.OURS)}</tr>'
