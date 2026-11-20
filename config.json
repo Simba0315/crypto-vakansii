@@ -3,7 +3,7 @@
   "base_url": "https://jobseveryhour.com",
   "base_path": "",
   "live_collector": true,
-  "contact_telegram": "orderbulkreviews",
+  "contact_telegram": "",
   "contact_email": "support@jobseveryhour.com",
   "emails": {
     "jobs": "jobs@jobseveryhour.com",
