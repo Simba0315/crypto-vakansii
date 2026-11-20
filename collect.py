@@ -65,7 +65,11 @@ DETAILS = int(os.environ.get("HRN_DETAILS") or 120)
 # A board released from hold in the last ten days ("lifted" in the sources file) is read on every run, not only on its turn, until
 # its backlog is in.
 FILL_SINCE = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
-LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this many postings of a board (Workday lists 20 per request)
+# Workday, SmartRecruiters: the newest this many postings of a board (Workday lists 20 per request). 3,000 since 20 Nov 2026 (1,000
+# before): 25 Workday boards stood at the limit (NVIDIA, Micron, Morgan Stanley, Northrop Grumman, the State of Georgia...); Workday
+# gives their later pages too, every posting once (Morgan Stanley: 1,154 of 1,154 distinct), and a board's total (NVIDIA shows 2,000,
+# Micron 2,897) ends the reading as before.
+LIST_MAX = 3000
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
