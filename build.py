@@ -919,6 +919,27 @@ def fit_title(t):
     return t2 if len(t2) <= 70 else t2[:68].rsplit(" ", 1)[0].rstrip(" ,-–—:&(")
 
 
+def cut_words(t, room):
+    """t shortened to at most room characters at a word boundary, with an ellipsis; a bracket is never left open."""
+    if len(t) <= room: return t
+    room = max(room - 1, 1)
+    t = t[:room].rsplit(" ", 1)[0] if " " in t[:room + 1] else t[:room]
+    t = re.sub(r" \([^)]*$", "", t)
+    t = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|&|or|-|–|—|/))+$", "", t.rstrip(" ,-–—:&/("))
+    return t + "…"
+
+
+def job_title(title, company, suffix=""):
+    """The page title of a job, "<title> at <company>": the company must survive. A long title is cut with an ellipsis before the word
+    "at" (20 Nov 2026: about one job page in thirty ended on "at", "and" or "of" because the whole line was cut at 70 characters)."""
+    limit, joint = 70 - len(suffix), " at "
+    if len(title) + len(joint) + len(company) <= limit: return title + joint + company
+    room = limit - len(joint) - len(company)
+    if room >= 28: return cut_words(title, room) + joint + company
+    t = cut_words(title, max(30, limit // 2))
+    return t + joint + cut_words(company, limit - len(joint) - len(t))
+
+
 def fit_desc(d):
     d = " ".join(d.split())
     if len(d) < 125: d = d.rstrip(".") + f". Collected from official company career pages and updated every hour on {SITE}."
@@ -2121,7 +2142,7 @@ def job_page(j, active_by_cat):
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
             + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
-    title = f"{j['title']} at {j['company']}"
+    title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
     if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= 65: title += f" ({place_})"
     if not j["active"]: title += " (closed)"
