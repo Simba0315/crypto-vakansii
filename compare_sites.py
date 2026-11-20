@@ -259,7 +259,7 @@ SITES = [
             "A large startup audience: 27,000+ startups hire there, and 10M+ candidates have opted in to hear from startups.",
             "Employer tools beyond job posts: Reach for sourcing (from $135 per seat a month) and Autopilot, a recruiting "
             "service ($500 a month per role plus a 10% fee on a hire).",
-            "Free job posting is open to employers today. Our free posting is open; our paid boosts are not on sale yet.",
+            "Paid hiring tools are on sale today; our paid boosts are not on sale yet. Free posting is open on both.",
         ],
         us_better=[
             "No account needed to search or apply. Wellfound asks you to sign in with a profile before you apply.",
@@ -359,13 +359,13 @@ SITES = [
             ("Payment methods", "Card through Stripe. A \"Pay later\" option sends a payment link by email."),
         ),
         them_better=[
-            "Much larger: it lists 100,000+ remote jobs from 10,000+ companies and says it reaches 20,100,000+ remote "
+            "Large: it lists 100,000+ remote jobs from 10,000+ companies and says it reaches 20,100,000+ remote "
             "workers a month.",
             "Wide reach for employers: posts are emailed to 2,692,454 remote job seekers and crossposted to 261 job boards.",
             "It has a public jobs API, and employers can post today. Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
-            "No commitment: Plus is one payment that never renews, from $3 for 1 month (not on sale yet). Remote OK Premium "
+            "No commitment: Plus is one payment that never renews, from $9 for 7 days (not on sale yet). Remote OK Premium "
             "is $14.95 a month with a 12-month commitment.",
             "Salary data from posted ranges is a free tool here. Remote OK lists salary data among its paid Premium "
             "features.",
@@ -416,7 +416,7 @@ SITES = [
         ],
         us_better=[
             "Free for job seekers. FlexJobs charges job seekers, starting at $2.95 for a 14-day trial.",
-            "Plus is one payment and never renews: $3 for 1 month, $7 for 3 months, $12 for 12 months (not on sale yet). "
+            "Plus is one payment and never renews: $9 for 7 days, $19 for 30 days, $39 for 90 days (not on sale yet). "
             "FlexJobs plans renew automatically, and the trial renews at $23.95 every 4 weeks.",
         ],
         pick="Use FlexJobs if you are happy to pay for a membership with a 14-day refund window, use Jobs Every Hour if you "

@@ -10,7 +10,14 @@ get it whatever their family), `tags` (skills: the subject is added when a tenth
 A question is (question, what it checks, what a good answer shows, a sample answer). The sample answers are examples of the form, as the
 resume examples are: no employer is named and the figures are invented. Facts stated in them (what a p-value is, what a join does) are
 textbook facts and must stay exact: run `python3 interview_bank.py` after any edit.
+
+OWN (interview_more.json): questions of one kind of work only, shown first on its page. Why (20 Nov 2026): the subjects above are
+shared by a whole field, so the actuary page had accounting questions and none about reserves or pricing. They were drafted by Claude
+in one batch (ai_fill.py interview) under the rules of test(), then each set was read by a second request that looked only for wrong
+or doubtful facts; every question it doubted was left out.
 """
+import json
+from pathlib import Path
 
 SUBJECTS = [
     ("Statistics questions", dict(fams={"data-analytics"}, roles={"growth-product-manager", "data-product-manager", "ux-researcher", "growth-marketing", "clinical-research"},
@@ -829,11 +836,28 @@ SUBJECTS = [
 ]
 
 MAX_ADDED = 34      # questions from this bank on one page, at most
+OWN_FILE = Path(__file__).with_name("interview_more.json")
+OWN = {k: (v["heading"], [tuple(q) for q in v["qs"]]) for k, v in (json.loads(OWN_FILE.read_text()) if OWN_FILE.exists() else {}).items()}
+
+
+def problem(q):
+    """What is wrong with one question (question, what it checks, what a good answer shows, a sample answer), or None."""
+    if len(q) != 4 or not all(isinstance(x, str) and x.strip() for x in q): return "four parts, none empty"
+    question, why, good, sample = q
+    if question[-1] not in "?.": return "the question ends with ? or ."
+    if not why.endswith(".") or len(why) > 120: return "what it checks: one sentence ending with a full stop, at most 120 characters"
+    if good[-1] not in ".?" or len(good) > 190: return "what a good answer shows: at most 190 characters, ending with a full stop"
+    if sample[-1] not in ".”" or not 30 <= len(sample) <= 420: return "the sample answer: 30 to 420 characters, ending with a full stop"
+    if "—" in "".join(q): return "no long dashes (—)"
+    return None
 
 
 def pick(slug, family, tag_share):
     """The subjects for one role: [(heading, [(question, why, good, sample)])]. tag_share: {skill: share of the role's postings that name it}."""
     out, n = [], 0
+    if slug in OWN:
+        heading, qs = OWN[slug]
+        out.append((heading, qs[:MAX_ADDED])); n += len(out[0][1])
     for heading, who, qs in SUBJECTS:
         if slug in who.get("not_roles", ()): continue
         hit = slug in who["roles"] or family in who["fams"] or any(tag_share.get(t, 0) >= who.get("share", 0.10) for t in who["tags"])
@@ -845,21 +869,22 @@ def pick(slug, family, tag_share):
 
 def test():
     seen = set()
-    for heading, who, qs in SUBJECTS:
+    for heading, who, qs in SUBJECTS + [(h, {}, qs) for h, qs in OWN.values()]:
         assert heading.endswith("questions") and qs, heading
         assert set(who) <= {"fams", "roles", "tags", "not_roles", "share"}, heading
         for q in qs:
-            assert len(q) == 4 and all(isinstance(x, str) and x.strip() for x in q), (heading, q[0])
-            question, why, good, sample = q
-            assert question not in seen, "the same question twice: " + question
-            seen.add(question)
-            assert question[-1] in "?." and why.endswith(".") and good[-1] in ".?" and sample[-1] in ".”", question
-            assert 30 <= len(sample) <= 420 and len(good) <= 190 and len(why) <= 120, (question, len(sample), len(good), len(why))
-            assert "—" not in "".join(q), "no long dashes: " + question
+            assert not (why := problem(q)), (heading, q[0], why)
+            assert q[0] not in seen, "the same question twice: " + q[0]
+            seen.add(q[0])
+    own = dict(OWN); OWN.clear()                    # the shared subjects first, as they are chosen without a set of the role's own
     assert len(pick("data-analyst", "data-analytics", {"Tableau": 0.5})) == 4
     assert [h for h, _ in pick("account-executive", "sales", {})] == ["Sales questions"]
     assert pick("solutions-architect", "sales", {}) == []
     assert sum(len(x) for _, x in pick("data-scientist", "data-analytics", {"Machine Learning": 0.5, "Tableau": 0.2})) == MAX_ADDED
+    OWN.update(own)
+    OWN["x-test"] = ("Test questions", [("Q?", "W.", "G.", "A sample answer long enough to pass.")])
+    assert pick("x-test", "sales", {})[0][0] == "Test questions" and [h for h, _ in pick("x-test", "sales", {})][1:] == ["Sales questions"]
+    del OWN["x-test"]
     return len(SUBJECTS), len(seen)
 
 

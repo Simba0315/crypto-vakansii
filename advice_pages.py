@@ -169,10 +169,10 @@ ARTICLES += [
      "more": (("guides/tell-me-about-yourself/", "Tell me about yourself"), ("guides/star-method/", "The STAR method"), ("interview-questions/", "Interview questions by role"))},
 
     {"slug": "questions-to-ask-in-an-interview", "cat": "Interviews",
-     "title": "Questions to ask at the end of an interview: 30 good ones",
-     "desc": "30 questions to ask the interviewer, grouped by what you want to learn: the work, the team, how success is measured, the company and the next steps. Plus what not to ask.",
+     "title": "Questions to ask at the end of an interview: 25 good ones",
+     "desc": "25 questions to ask the interviewer, grouped by what you want to learn: the work, the team, how success is measured, the company and the next steps. Plus what not to ask.",
      "lead": "“Do you have any questions for us?” is not a formality: it is the only part of the interview where you choose the subject. Good questions show you thought about the job, and the answers "
-             "tell you whether you want it. Here are 30, grouped by what they find out, and a few that today’s postings make worth asking.",
+             "tell you whether you want it. Here are 25, grouped by what they find out, and a few that today’s postings make worth asking.",
      "short": "Ask two or three questions the interview has not answered yet: about the work itself, how success is measured, the team, and the next steps. "
               "Do not ask about anything the posting or the website already says.",
      "formula_h": "How to choose",
@@ -194,7 +194,7 @@ ARTICLES += [
                ("Questions our figures make worth asking", ["How long has this role been open? Postings that stay open for months are common; the answer tells you whether the role is urgent, hard to fill or paused.",
                                                             "What is the pay range? A growing share of postings state it, and in several US states the employer must tell you.",
                                                             "Is the role open to people in my country? Remote does not always mean from anywhere."])],
-     "mistakes": ["Asking nothing: it reads as no interest.", "Asking about holidays and pay before you have an offer, in a first interview.",
+     "mistakes": ["Asking nothing: it reads as no interest.", "Opening a first interview with holidays or your own salary number; asking for the role’s pay range is fine.",
                   "Questions answered by the posting or the company’s website.", "Yes-or-no questions that end the conversation.", "Ten questions when there is time for two."],
      "tool": ("tools/thank-you-email/", "Thank-you email", "After the interview: a short note that mentions one thing you talked about. Ready in a minute."),
      "faq": [("How many questions should I ask at the end of an interview?", "Two or three, chosen from eight to ten you prepared, so you still have some after the interview answers the rest."),
@@ -436,7 +436,7 @@ ARTICLES += [
                                                  "R: It arrived by 6 pm, and she left a five-star review naming me."),
                   ("Leading without the title (nurse)", "S: Our ward had frequent handover errors. T: Nobody owned the problem. A: I drafted a one-page handover sheet, tested it on my shifts and asked colleagues for changes. "
                                                          "R: The ward adopted it, and recorded handover errors fell by half in three months.")],
-     "mistakes": ["A long Situation and a short Action.", "“We” all the way through: the interviewer is hiring you.", "No Result, or a result with no number.",
+     "mistakes": ["A long Situation and a short Action.", "“We” all the way through: the interviewer is hiring you.", "No Result, or a vague one: give a number, or at least a clear change.",
                   "A story that answers a different question.", "Inventing a story: follow-up questions expose it."],
      "tool": ("tools/interview-answer-builder/", "Interview answer builder", "Fill in the four parts; it turns them into a two-minute answer and flags a missing result."),
      "faq": [("What is the STAR method?", "A way to answer “Tell me about a time when…” questions: Situation, Task, Action, Result. The action and the result are the parts that matter most."),
@@ -603,7 +603,7 @@ ARTICLES += [
      "faq": [("What is the highest-paying job right now?", "By advertised pay in today’s postings, the work at the top of the list above. It changes as postings open and close, so the page is recounted on every update."),
              ("Which jobs pay over $100,000?", "Most senior roles in software, data, security, product, finance, law and enterprise sales. The site lists every open job whose stated range starts at $100K or more."),
              ("What high-paying jobs need no degree?", "Sales, many software and IT roles, skilled trades and operations management hire on skills and results. Check the posting: some do not ask for a degree."),
-             ("Why do your figures differ from salary surveys?", "Surveys ask people what they earn; these are the ranges employers advertise today. Both are useful: one is what was paid, the other what is on offer.")],
+             ("Why do your figures differ from salary surveys?", "Surveys collect what people were paid, from employers’ payroll records or from workers’ own answers; these are the ranges employers advertise today. Both are useful: one is what was paid, the other what is on offer.")],
      "more": (("salaries/", "Salaries by job title"), ("salary/100k/", "Jobs paying $100K or more"), ("guides/negotiate-salary/", "How to negotiate a salary"))},
 
     {"slug": "accept-or-decline-a-job-offer", "cat": "Pay",

@@ -24,8 +24,15 @@ at most 160 characters):
 The skill tags of the collector are all technical. For work in TECH they say what the employer wants and lead the skills line and
 the chart. For other work a tag mostly describes the employer (a recruiter's posting at a machine learning company), so only the
 office tools in OFFICE are counted there.
+
+Kinds of work written later (MORE, resume_examples_more.json). Why (20 Nov 2026): 248 of the 390 example pages had no entry of their
+own and showed the lines of their field, so the actuary example "ran the yearly budget for 14 departments". Their entries were
+drafted by Claude in one batch (ai_fill.py) under the rules above, each line checked by line_problem() before it was kept, then read
+through. They are added to ROLE, ENTRY, SENIOR, ENTRY_TITLE and TECH below and pass the same test(); an entry written here by hand
+always wins over one in the file.
 """
-import re
+import json, re
+from pathlib import Path
 
 KIND = {
     "lang": ["Python", "Go", "Java", "C++", "TypeScript", "JavaScript", "Rust", "Ruby", "Kotlin", "C#", "Scala", "Swift", "PHP", "Elixir"],
@@ -2022,6 +2029,30 @@ FIELD = {
     "retail-hospitality": ROLE["retail"], "crypto-web3": ROLE["blockchain-engineer"], "internships-entry-level": ROLE["intern"],
 }
 SLOT = re.compile(r"\{(\w+):([^}]*)\}")
+NOT_VERB = {"The", "A", "An", "I", "My", "Our", "We", "Responsible", "In", "On", "At", "With", "For", "As", "During", "While", "Worked", "Helped"}
+
+MORE_FILE = Path(__file__).with_name("resume_examples_more.json")
+MORE = json.loads(MORE_FILE.read_text()) if MORE_FILE.exists() else {}
+for slug_, m_ in MORE.items():
+    if slug_ in ROLE: continue
+    ROLE[slug_] = (m_["title"], m_["plain"], m_["lines"])
+    ENTRY[slug_], SENIOR[slug_] = m_["entry"], m_["senior"]
+    if m_.get("entry_title"): ENTRY_TITLE[slug_] = m_["entry_title"]
+    if m_.get("tech"): TECH.add(slug_)
+
+
+def line_problem(ln):
+    """What is wrong with a resume line under the rules of the module docstring, or None."""
+    tools = {t for ts in KIND.values() for t in ts} | OFFICE
+    if not ln or ln.endswith(".") or not ln[0].isupper(): return "a line starts with a capital and has no full stop at the end"
+    if "'" in ln: return "a straight apostrophe: write ’"
+    if not all(m.group(1) in KIND for m in SLOT.finditer(ln)) or "{" in SLOT.sub("", ln) or "}" in SLOT.sub("", ln):
+        return "a place of a kind not in KIND"
+    longest = SLOT.sub(lambda m: max(KIND[m.group(1)] + [m.group(2)], key=len), ln)       # whatever the postings put in the places
+    if len(ln) > 160 or len(longest) > 160: return f"{len(longest)} characters with the longest tool in each place, 160 at most"
+    bare = sorted(t for t in tools if re.search(r"(?<![\w-])" + re.escape(t) + r"(?![\w-])", SLOT.sub("", ln)))
+    if bare: return f"names {', '.join(bare)} outside a typed place"
+    return None
 
 
 def asked(slug, tags, n):
@@ -2062,15 +2093,9 @@ def example(slug, name, family, rows, field_name):
 
 
 def test():
-    tools = {t for ts in KIND.values() for t in ts} | OFFICE
     def check(where, slug, ln):
         """A line as the module docstring asks for it."""
-        assert not ln.endswith(".") and ln[0].isupper() and "'" not in ln, (where, slug, ln)
-        assert all(m.group(1) in KIND for m in SLOT.finditer(ln)) and "{" not in SLOT.sub("", ln), (where, slug, ln)
-        longest = SLOT.sub(lambda m: max(KIND[m.group(1)] + [m.group(2)], key=len), ln)       # whatever the postings put in the places
-        assert len(ln) <= 160 and len(longest) <= 160, (where, slug, len(longest), ln)
-        bare = [t for t in tools if re.search(r"(?<![\w-])" + re.escape(t) + r"(?![\w-])", SLOT.sub("", ln))]
-        assert not bare, (where, slug, bare, ln)                                                # a tool only through a typed place
+        assert not (why := line_problem(ln)), (where, slug, why, ln)
     for slug, (title, plain, lines) in ROLE.items():
         assert len(lines) == 4 and len(plain.split(",")) >= 3, slug
         assert sum(bool(re.search(r"\d", ln)) for ln in lines) >= 3, slug          # a result without a number is a description

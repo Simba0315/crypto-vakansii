@@ -13,7 +13,13 @@ MORE: {term: dict(title=..., sections=[...], qa=[...], aliases=[...])}, the long
   aliases   optional: other lowercase-hyphen slugs people use for the term (e.g. "ats"); never equal to a TERMS slug.
 No invented statistics: where a number appears it is a rule or a worked example, not a measured figure.
 Run this file to check TERMS and MORE (test() and test_more()).
+
+MORE also takes the long answers in glossary_more.json, for the terms MORE above does not have. Why (20 Nov 2026): 172 of the 224
+terms had only the two-line entry. Those answers were drafted by Claude in one batch (ai_fill.py glossary) under the rules above,
+then each was read by a second request that looked only for wrong or doubtful facts, and an answer it doubted was left out.
 """
+import json
+from pathlib import Path
 
 TERMS = [
     ("Applicant tracking system (ATS)", "The software a company uses to publish jobs and keep track of applications. Greenhouse, Lever, Ashby and Workday are examples.",
@@ -199,12 +205,12 @@ TERMS = [
     # 14 Nov, evening: hiring tools, pay and benefits, interviews
     ("Boolean search", "A search that combines words with AND, OR and NOT, and phrases in quotes, to find exactly the jobs or people you mean.",
      "Start with the job title in quotes, add one must-have skill with AND and leave out what you do not want with NOT.", [("tools/boolean-search/", "Boolean search builder"), ("jobs/", "Search jobs")]),
-    ("Cost per hire", "Everything a company spends to fill one job, divided by the number of hires: ads, agency fees, tools and staff time.",
+    ("Cost per hire", "What a company spends on hiring over a period (ads, agency fees, tools and staff time), divided by the number of people hired in that period.",
      "Count the hours your team spends interviewing too; leaving them out makes hiring look cheaper than it is.", [("tools/cost-per-hire/", "Cost per hire calculator"), ("how-to-hire/", "How to hire…")]),
     ("Interview scorecard", "A form on which every interviewer rates each candidate on the same points, agreed before the interviews start.",
      "Write down what a good answer looks like before the first interview, and score right after each one.", [("tools/interview-scorecard/", "Interview scorecard"), ("how-to-hire/", "How to hire…")]),
     ("JobPosting markup", "Hidden structured data on a job page that lets Google show the job in its job search, with the pay and the place.",
-     "Include the pay range, the countries a remote job is open to and a closing date, or Google may leave the job out.", [("tools/jobposting-schema/", "JobPosting markup generator"), ("post-a-job/", "Post a job")]),
+     "Include the required fields (title, description, date posted, employer and place, and for a remote job the countries it is open to), or Google may leave the job out; a pay range and a closing date are recommended.", [("tools/jobposting-schema/", "JobPosting markup generator"), ("post-a-job/", "Post a job")]),
     ("Thank-you email", "A short email to the people who interviewed you, sent the same day, thanking them and repeating your interest.",
      "Mention one specific thing from the conversation, so it is clear the email was written after this interview.", [("tools/thank-you-email/", "Thank-you email writer"), ("interview-questions/", "Interview questions")]),
     ("Salary expectations", "The pay you name when an employer asks what you want to earn.",
@@ -253,7 +259,7 @@ TERMS = [
      "Thank them, ask when the written offer will arrive and wait for it before you accept or resign.", [("tools/offer-check/", "Offer check"), ("tools/negotiation-email/", "Negotiation email")]),
     ("Clawback", "A rule that you must pay back a bonus, often a sign-on or relocation payment, if you leave within a set time.",
      "Find the period and the amount in the contract, and count it when you compare offers.", [("tools/compare-offers/", "Compare offers")]),
-    ("Salary band", "The pay range a company sets for one level of one job; everyone at that level is paid inside it.",
+    ("Salary band", "The pay range a company sets for one level of one job; pay at that level is meant to fall inside it, though some people sit above or below it.",
      "Ask for the band, not only the offer: it tells you how much room there is to grow without a promotion.", [("salaries/", "Salaries"), ("tools/salary-checker/", "Salary checker")]),
     ("Cost-of-living adjustment (COLA)", "A raise meant to keep pay in step with rising prices, not a reward for performance.",
      "Compare it with the price rise where you live: a smaller adjustment is a pay cut in real terms.", [("tools/raise-calculator/", "Raise calculator")]),
@@ -267,7 +273,7 @@ TERMS = [
      "Apply early, often two or three months before the season starts, and ask whether it can turn into a longer job.", [("temporary/", "Temporary and seasonal jobs"), ("summer/", "Summer jobs")]),
     ("Night shift", "Work that takes place mostly between evening and morning, often paid at a higher rate.",
      "Ask whether the extra pay is written into the contract and how the rota changes from week to week.", [("night-shift/", "Night shift jobs")]),
-    ("Graduate program", "A structured first job for recent graduates, often moving through several teams over one or two years.",
+    ("Graduate program", "A structured first job for recent graduates, often moving through several teams over one or two years. In the US it is usually called a rotational or new-grad program.",
      "Most open a year in advance with fixed deadlines: note them in a calendar when the season starts.", [("entry-level/", "Entry-level jobs"), ("internships/", "Internships")]),
     ("Apprenticeship", "A paid job with training, where you learn a trade or a profession while doing the work.",
      "Check what qualification you finish with and whether the employer usually keeps apprentices afterwards.", [("entry-level/", "Entry-level jobs"), ("how-to-become/", "How to become…")]),
@@ -301,7 +307,7 @@ TERMS = [
      "Take one when the postings you want name it; otherwise put the time into a project you can show.", [("skills/", "Skills in demand")]),
     ("CV", "The word many countries use for a resume; in research and teaching, a longer record of all your work and publications.",
      "Use the word the posting uses, and keep a business CV to two pages at most.", [("resume/", "Resume builder"), ("resume/examples/", "Resume examples")]),
-    ("Job hopping", "Changing jobs often, for example every year or less.",
+    ("Job hopping", "Changing jobs often, for example every year or two.",
      "Give each move one line of reason and one result, so the pattern reads as growth, not restlessness.", [("resume/", "Resume builder")]),
     ("Ghosting", "When an employer or a candidate stops answering without saying why.",
      "Follow up once, a week after the last contact, then move on and keep applying elsewhere.", [("guides/follow-up-after-applying/", "Follow up after applying")]),
@@ -319,7 +325,7 @@ TERMS = [
      "Start looking in the autumn before you graduate, and note each employer’s own dates.", [("entry-level/", "Entry-level jobs"), ("internships/", "Internships")]),
     ("Sourcer", "A recruiter who finds and approaches people for a job before they apply.",
      "Keep your public profile current with your title and skills: that is what sourcers search.", [("tools/boolean-search/", "Boolean search builder"), ("tools/linkedin-headline/", "LinkedIn headline")]),
-    ("401(k) match", "A US retirement plan at work where you save part of your pay before tax and the employer adds money too, usually a share of what you put in up to a limit.",
+    ("401(k) match", "Money your employer adds to your 401(k), a US retirement plan at work where you save part of your pay, usually a share of what you put in up to a limit.",
      "Ask what the match is and whether it vests, meaning you keep it only after some time; put in at least enough to get all of it, because unclaimed match is lost pay.", [("tools/compare-offers/", "Compare two offers"), ("tools/offer-check/", "Offer check")]),
     ("W-2 employee", "A US worker on the employer’s payroll: the employer withholds income tax from each paycheck, pays part of the payroll taxes and usually offers benefits and paid leave.",
      "If an offer calls you a contractor but sets your hours and tools, ask why it is not an employee role, because the two have different taxes and protections.", [("tools/contractor-rate/", "Contractor rate calculator"), ("contract/", "Contract jobs")]),
@@ -361,7 +367,7 @@ TERMS = [
      "Ask in writing for the end date, pay for unused leave, severance and how long your health cover lasts.", [("resignation-letters/", "Resignation letters"), ("tools/last-working-day/", "Last working day calculator")]),
     ("Rolling basis", "A way of hiring where applications are read as they arrive and the job closes when someone is chosen, not on a fixed date.",
      "Apply in the first days: late applications may never be read once the place is filled.", [("jobs/", "All open jobs")]),
-    ("Talent acquisition", "The employer’s hiring department. The word covers finding people, running interviews and making offers, and it often replaces the older name “human resources” for this part of the work.",
+    ("Talent acquisition", "The employer’s hiring department. The word covers finding people, running interviews and making offers, and it often replaces the older names “recruiting” and “staffing”; the team usually sits within or beside human resources.",
      "Write to the talent acquisition contact named in the posting for questions about the process, and to the hiring manager only about the work.", [("interview-questions/", "Interview questions")]),
     ("Bar raiser", "An interviewer from outside the hiring team whose job is to keep the standard of new hires high. At some large companies this person can stop an offer.",
      "Expect broad questions about how you work and decide; prepare stories that do not depend on one team’s tools.", [("tools/interview-answer-builder/", "Interview answer builder")]),
@@ -371,7 +377,7 @@ TERMS = [
      "Ask how often you are on call, what it pays and whether you get time off after a night call.", [("tools/offer-check/", "Offer check")]),
     ("Open enrollment", "The short yearly period in which you may choose or change your health insurance and other benefits. Outside it, you can change only after a life event such as a new job.",
      "Note the deadline in your first week, because a missed one can leave you without cover until the next period.", [("tools/compare-offers/", "Compare two offers")]),
-    ("Furlough", "A period of unpaid time off that an employer orders, usually to save money, with the promise that the job is still there afterwards. It is not a layoff, but it carries no guarantee either.",
+    ("Furlough", "A period of unpaid time off that an employer orders, usually to save money, with the expectation, but not a guarantee, that the employee returns to the job afterwards. It is not a layoff, though it can turn into one.",
      "Ask in writing how long it lasts, whether benefits continue and whether you may take other work meanwhile.", [("salaries/", "What jobs pay")]),
     ("Retention bonus", "Extra money an employer promises if you stay until a set date, often during a sale of the company or a big project.",
      "Get the date and the amount in a signed letter, and ask what happens to it if the company lets you go before that date.", [("tools/offer-check/", "Offer check")]),
@@ -397,11 +403,11 @@ TERMS = [
      "Check how many days you get, whether unused days carry over and whether public holidays are counted inside that number.", [("tools/compare-offers/", "Compare two offers")]),
     ("Employee stock purchase plan (ESPP)", "A company scheme that lets staff buy its shares through payroll deductions, usually at a discount of up to 15% on the market price. It is offered mostly by listed companies.",
      "Find out the discount, how often you can buy and whether you may sell at once; selling right away turns the discount into plain extra pay.", [("tools/equity-calculator/", "Equity calculator"), ("tools/compare-offers/", "Compare two offers")]),
-    ("Profit sharing", "A payment from a company's profit to its staff, usually once a year. The amount depends on how the company did, so it is not part of your fixed pay.",
+    ("Profit sharing", "A share of a company's profit given to its staff, usually once a year, as cash or as a contribution to a retirement plan such as a 401(k). The amount depends on how the company did.",
      "Ask what was paid out in each of the last three years and how it is split; count it as a bonus, not as salary, when you compare offers.", [("tools/offer-check/", "Offer check"), ("tools/compare-offers/", "Compare two offers")]),
     ("Tuition reimbursement", "A benefit where the employer pays for part or all of your courses or degree. Many employers ask you to stay for a set time afterwards or pay the money back.",
      "Ask for the yearly limit, what courses count and how long you must stay; the repayment rule is the part that matters when you plan to leave.", [("perks/", "Jobs by perk"), ("tools/compare-offers/", "Compare two offers")]),
-    ("Working interview", "A paid or unpaid trial in which you do the real work of the job for a few hours or days before an offer. Some employers use it instead of a take-home assignment.",
+    ("Working interview", "A trial in which you do the real work of the job for a few hours or days before an offer. In the US, productive work for a business generally has to be paid.",
      "Ask in advance whether it is paid, how long it lasts and what you will work on; unpaid work that a company then uses is a reason to walk away.", [("safety/", "Job safety checks"), ("interview-questions/", "Interview questions")]),
     ("Skip-level meeting", "A conversation with your manager's manager. Employers hold them to hear how a team really works, and candidates sometimes meet one as the last step of an interview.",
      "When you are invited to one, prepare a question about how the team's goals are set; it shows you think about the whole organisation, not only your own tasks.", [("interview-questions/", "Interview questions")]),
@@ -421,19 +427,19 @@ TERMS = [
      "Ask how the next team is chosen and whether you have a say; a rotation that you can steer is a way to learn, one that you cannot is just a series of moves.", [("jobs-for/", "Jobs for you"), ("entry-level/", "Entry-level jobs")]),
     ("Competitive salary", "A phrase in a posting that promises pay in line with the market without saying a figure. It tells you nothing you can compare, because the employer decides what “competitive” means.",
      "Ask for the range in your first call; if the posting also lists no range, check what similar jobs state on this site before you name your own number.", [("salaries/", "Salaries by role"), ("tools/salary-checker/", "Salary checker")]),
-    ("Pay equity", "The idea that people doing the same work, at the same level and with the same results, are paid the same, whatever their gender, race or when they joined.",
+    ("Pay equity", "The idea that people doing the same work, at the same level and with the same results, are paid the same, whatever their gender or race; differences for seniority or merit can be lawful.",
      "Ask how the employer sets pay inside a level, and compare the range for your title with the offer; a clear band makes unequal pay easier to spot.", [("tools/offer-check/", "Offer check"), ("salaries/", "Salaries by role")]),
     ("Blind hiring", "A way of screening applications with names, photos and sometimes schools or ages hidden, so the first decision rests on skills and work samples.",
      "If the employer asks for a work sample before an interview, put your best relevant example first; it is the part that will be read.", [("tools/resume-match/", "Resume match checker"), ("resume/", "Resume builder")]),
-    ("Employment contract", "The written agreement between you and an employer that states your pay, hours, duties, notice period and what happens if either side ends the job.",
+    ("Employment contract", "An agreement between you and an employer that sets your pay, hours, duties and sometimes notice terms. Most US jobs are at-will and have only an offer letter, not a formal contract.",
      "Read it before you sign, not after the first day, and ask in writing for anything the offer promised that the contract leaves out.", [("tools/offer-check/", "Offer check"), ("tools/last-working-day/", "Last working day calculator")]),
     ("Non-solicitation clause", "A contract term that stops you, for a set time after leaving, from taking clients or colleagues with you to a new employer. It is narrower than a non-compete.",
      "Check how long it lasts and exactly who it covers; a clause that names only clients you worked with is far easier to live with than one that names everyone.", [("tools/offer-check/", "Offer check")]),
     ("Offboarding", "The steps when someone leaves a company: handing over work, returning equipment, closing accounts, and settling pay, leave and benefits.",
      "Ask for a written list of what is still owed, such as unused leave and any bonus, and keep copies of your own pay records before your access ends.", [("tools/last-working-day/", "Last working day calculator"), ("resignation-letters/", "Resignation letters")]),
-    ("Applicant pool", "All the people who applied for one opening. The recruiter reads a small part of it closely and the rest only by keyword.",
+    ("Applicant pool", "All the people who applied for one opening. In a large pool, recruiters often skim most applications and read only some closely.",
      "Apply early and use the posting’s own words for the skills it asks for; a short, exact resume beats a long one in a large pool.", [("tools/resume-match/", "Resume match checker"), ("jobs/", "Latest jobs")]),
-    ("Time off in lieu (TOIL)", "Paid time off given instead of extra pay for hours worked beyond your normal week. It is common in the UK and Ireland, and in some jobs elsewhere.",
+    ("Time off in lieu (TOIL)", "Paid time off given instead of extra pay for hours worked beyond your normal week. It is common in the UK and Ireland; in the US only public employers may give it instead of overtime pay.",
      "Ask whether time off in lieu has to be taken within a set period and who approves it, or it can expire unused.", [("tools/compare-offers/", "Compare two offers"), ("perks/", "Perks")]),
     ("Interview feedback", "What the employer tells you about how an interview went. Many send none, and the reasons given are often short and general.",
      "Ask once, in a polite two-line email within a few days, what you could improve; a reply is a bonus, and the message keeps you in mind.", [("interview-questions/", "Interview questions"), ("tools/interview-answer-builder/", "Interview answer builder")]),
@@ -442,7 +448,7 @@ TERMS = [
     ("WARN notice", "In the US, the advance warning, usually 60 days, that larger employers must give before a mass layoff or a plant closing, under a federal law of that name.",
      "If you get one, note the date the job ends, ask what pay and benefits continue until then and update your resume while you are still paid.", [("tools/last-working-day/", "Last working day calculator"), ("resume/", "Resume builder")]),
     ("H-1B visa", "A US work visa for jobs that need a degree or the equivalent skill. The employer applies for it on the worker’s behalf, and the number granted each year is capped, with a lottery when more are asked for.",
-     "Ask early whether the company files H-1B applications and pays the legal fees; a posting that is silent on sponsorship usually means it does not.", [("perks/visa-sponsorship/", "Jobs with visa sponsorship"), ("relocate/", "Relocation guides by country")]),
+     "Ask early whether the company sponsors H-1B visas (the employer must pay the main filing and legal costs); a posting that is silent on sponsorship usually means it does not.", [("perks/visa-sponsorship/", "Jobs with visa sponsorship"), ("relocate/", "Relocation guides by country")]),
     ("OPT (Optional Practical Training)", "A US rule that lets international students work in their field of study for a limited time during or after their degree. Some degrees in science and technology qualify for a longer extension.",
      "Say in the application that you are on OPT and when it ends; employers read that date to decide whether they can hire you or must sponsor a visa.", [("perks/visa-sponsorship/", "Jobs with visa sponsorship"), ("internships/", "Internships")]),
     ("Green card", "The common name for US permanent residence. A holder can live and work in the US for any employer without a work visa.",
@@ -577,7 +583,7 @@ MORE = {
         qa=[
             ("What shows up on a background check for a job?", "Whatever the employer orders: usually identity, employment history and education, and often criminal records. Credit reports, driving records and drug tests are added for jobs that handle money, involve driving or are safety-sensitive."),
             ("How long does a background check take?", "Usually a few business days. It takes longer when records are held in several places, when a past employer or school is slow to answer, or when the check covers other countries."),
-            ("Can a job offer be withdrawn after a background check?", "Yes, most offers are conditional on the check. In the US the employer must give you a copy of the report and a chance to respond before the decision is final."),
+            ("Can a job offer be withdrawn after a background check?", "Yes, most offers are conditional on the check. In the US, when the employer used a screening company, it must give you a copy of the report and a chance to respond before the decision is final."),
             ("Do background checks show your past salary?", "Usually not. Many US states and cities bar employers from asking about pay history, and employment verification normally confirms only titles and dates."),
         ],
     ),
@@ -841,7 +847,7 @@ MORE = {
         sections=[
             ("What hybrid work means", [
                 "A hybrid job splits the week between the office and home. The split varies: a fixed number of office days, set days for the whole team, or office time only for meetings and events.",
-                "Hybrid means you must live within commuting distance of an office, which is the main difference from a remote job.",
+                "Hybrid usually means you need to live close enough to reach an office on the required days, which is the main difference from a remote job.",
             ]),
             ("Common hybrid models", [
                 "Fixed days: everyone is in on the same days, such as Tuesday to Thursday.",
@@ -935,7 +941,7 @@ MORE = {
         ],
         qa=[
             ("Can I leave before my notice period ends?", "Only if your employer agrees, unless you are in an at-will US job. Leaving early without agreement can breach your contract and may cost you pay, a payout for unused leave or a good reference."),
-            ("Do I get paid during my notice period?", "Yes, you are still employed and paid as normal, including while on garden leave."),
+            ("Do I get paid during my notice period?", "Usually yes: while you are still employed you are paid as normal, including on garden leave. In at-will US jobs, though, the employer can end the job at once and need not pay the rest unless a contract or policy says so."),
             ("Does the notice period include weekends?", "Usually yes: notice runs in calendar days, weeks or months from the day you give it, unless your contract says working days."),
             ("Can I take holiday during my notice period?", "Often yes, with your employer’s agreement; some employers ask you to use remaining leave, others pay it out at the end."),
         ],
@@ -1443,7 +1449,7 @@ MORE = {
             ]),
             ("What it should include", [
                 "At least the basic pay for the notice period. Depending on your contract and local law, it may also have to cover benefits, pension contributions, commission or bonus you would have earned in that time.",
-                "Holiday you have earned but not taken is usually paid separately, on top.",
+                "Holiday you have earned but not taken may be paid separately, on top, depending on your state’s law and your employer’s policy.",
                 "It is usually taxed as employment income, like salary.",
             ]),
             ("PILON vs garden leave", [
@@ -1456,7 +1462,7 @@ MORE = {
             ("Is pay in lieu of notice taxable?", "Usually yes, as employment income. Check your local rules, since other parts of a termination payment can be treated differently."),
             ("Can my employer pay me in lieu of notice without my agreement?", "If your contract has a PILON clause, generally yes. Without one, ending your job early can still happen but may be a breach of contract; rules differ by country."),
             ("Does pay in lieu of notice include holiday pay?", "Holiday you have already earned is normally paid in addition. Whether you keep earning holiday during the notice depends on whether you are paid in lieu or kept on garden leave."),
-            ("Can I start a new job straight away after pay in lieu of notice?", "Usually yes, because your employment has ended. Any non-compete or non-solicit clause in your contract still applies."),
+            ("Can I start a new job straight away after pay in lieu of notice?", "Usually yes, because your employment has ended. A non-compete or non-solicit clause in your contract may still apply, as far as your state’s law lets it be enforced."),
         ],
     ),
     "CV": dict(
@@ -1652,7 +1658,7 @@ MORE = {
         ],
         qa=[
             ("What does RTO mean at work?", "RTO stands for return to office: a rule that staff who worked from home must come back to an office on some or all days."),
-            ("Can my employer make me come back to the office?", "Usually yes, unless your contract or your offer states a remote role. Check what your contract says about the place of work before you reply."),
+            ("Can my employer make me come back to the office?", "Usually yes: most US jobs are at-will, and an offer that says remote is rarely a guarantee. A written contract or union agreement that sets the place of work, or remote work granted as a disability accommodation, can change that."),
             ("What is the difference between hybrid and RTO?", "Hybrid is a pattern with some days in the office and some at home. RTO is the move from fully remote to a pattern that includes the office, whether full-time or hybrid."),
         ],
     ),
@@ -1667,7 +1673,7 @@ MORE = {
             ("What to do when you hear nothing", [
                 "After an application, expect to wait a couple of weeks. After an interview, ask at the end when you will hear back, and count from that date.",
                 "Follow up once, politely and briefly, with the role name and one sentence of interest. Send it to the person who wrote to you, not to a general address.",
-                "If a second message gets no answer, treat the process as closed and keep applying elsewhere. A job you have not been told about is not a job you can plan around.",
+                "If your follow-up gets no answer, treat the process as closed and keep applying elsewhere. A job you have not been offered is not a job you can plan around.",
             ]),
             ("How to lower the odds", [
                 "Apply to jobs that were posted recently: an old posting is more likely to be left open without anyone reading it. The age of each job is shown on its page.",
@@ -1714,7 +1720,7 @@ MORE = {
             ]),
             ("How to find your number", [
                 "Look at what postings for the same work advertise in your place and level. The salary pages on this site are counted from postings that state pay.",
-                "Pick a range, not one figure: the bottom is the lowest offer you would accept, and the top is what you would be glad to get. Say the range in yearly or hourly pay, the way the posting does.",
+                "Pick a range, not one figure: the bottom is a figure you would be satisfied with, above your walk-away minimum, and the top is what you would be glad to get. Say the range in yearly or hourly pay, the way the posting does.",
                 "If the posting already states a range, name a figure inside it and say how your experience fits the top part.",
             ]),
             ("How to answer", [
@@ -1774,7 +1780,7 @@ MORE = {
         ],
         qa=[
             ("Is quiet quitting the same as quitting?", "No. The person keeps the job and the pay. The only change is that they stop doing unpaid extra work."),
-            ("Can you be fired for quiet quitting?", "Not for doing the duties in your contract. Performance is judged against what the role requires, so a pattern of missing real expectations can still lead to a warning."),
+            ("Can you be fired for quiet quitting?", "It can happen. Most US jobs are at-will, so an employer can let someone go for doing only the minimum, as long as the reason is not an illegal one such as discrimination or retaliation. In practice, missing real expectations usually leads to a warning or a performance plan first."),
             ("Does quiet quitting hurt your career?", "It can slow a promotion where extra effort is what gets noticed. It can also protect your health. Decide what you want from the job first, then how much extra it is worth."),
         ],
     ),
@@ -1807,6 +1813,12 @@ MORE = {
         ],
     ),
 }
+
+_MORE_FILE = Path(__file__).with_name("glossary_more.json")
+for _t, _m in (json.loads(_MORE_FILE.read_text()) if _MORE_FILE.exists() else {}).items():
+    if _t in MORE: continue
+    MORE[_t] = dict(title=_m["title"], sections=[(h, list(xs)) for h, xs in _m["sections"]], qa=[(q, a) for q, a in _m["qa"]],
+                    **({"aliases": _m["aliases"]} if _m.get("aliases") else {}))
 
 
 def test():

@@ -795,7 +795,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
           ("How many billable days are there in a year?",
            "Start from 260 weekdays, subtract public holidays, vacation and sick days, then multiply by the share of time you can bill. 260 minus 35 days off is 225 working days; if 80% of them are billable, that is 180 days."),
           ("What extra costs does a contractor pay?",
-           "Whatever an employer paid on top of your salary: its share of social security or payroll taxes, health insurance, pension contributions, paid leave, equipment and software. The amounts differ by country, so the calculator asks for your own percentage instead of assuming one."),
+           "Whatever an employer paid on top of your salary: its share of social security or payroll taxes, health insurance and pension contributions (paid leave is counted in the days off, equipment and software in the business costs). The amounts differ by country, so the calculator asks for your own percentage instead of assuming one."),
           ("Is the result before or after tax?",
            "Before tax. It is the amount to invoice. Income tax and any sales tax or VAT depend on where you live and how your business is set up.")],
          ["salary-converter", "salary-checker", "negotiation-email"], [contract_path])
@@ -1162,7 +1162,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "Write a short resignation letter that states the facts",
          "A resignation letter has one job: to put on record that you are leaving and on which day. Anything more, such as reasons or complaints, stays in your file after you have gone. "
          "Enter your last working day and a few details, choose whether to add thanks and a handover offer, and copy or print the letter. "
-         "Check your contract for the notice period you owe before you set the date.",
+         "If a contract or company policy sets a notice period, check it before you set the date; in most US jobs two weeks is the custom, not a legal duty.",
          wrap("resignation-letter",
               '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
               + _f("name", "Your name", "Alex Morgan", mode="", auto="name")
@@ -1189,7 +1189,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          [("What should a resignation letter include?",
            "That you are resigning, the job you are leaving and your last working day. A line of thanks and an offer to hand over your work are optional. Keep it to a few sentences: it is a record, not an explanation."),
           ("How much notice do I have to give?",
-           "The notice period written in your employment contract, or the legal minimum where you work if the contract says nothing. This page does not know either, so check the contract before you set your last day. The last working day calculator on this site counts the date from the day you give notice."),
+           "The notice period in your employment contract or company policy. In the US most jobs are at-will and no law sets a notice period for resigning, so two weeks is the custom; elsewhere the law often sets a minimum. This page does not know yours, so check the contract before you set your last day. The last working day calculator on this site counts the date from the day you give notice."),
           ("Do I have to give a reason for resigning?",
            "This template leaves the reason out: it states the fact and the date. If your contract or your employer’s process asks for more, follow that, and say the rest in person."),
           ("Should I send the resignation by email or on paper?",
@@ -1529,7 +1529,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
               + _board("Your last working day", "Enter the length of your notice period.")
               + '<p class="note tl-priv"><b>Holidays</b>Public holidays are not known to this page, because they differ by country, region and employer. Check a calendar for the period shown. This is date arithmetic, not legal advice.</p>'),
          "How the date is counted",
-         "<ul><li><strong>Weeks and calendar days:</strong> the notice ends that many days after it starts. Two weeks from a Monday, starting the next day, end on the Monday two weeks later.</li>"
+         "<ul><li><strong>Weeks and calendar days:</strong> the notice runs for that many days, counting the day it starts as the first. Two weeks given on a Monday, starting the next day, end on the Monday two weeks later.</li>"
          "<li><strong>Months:</strong> the notice ends on the same day of the month, that many months later. If that month is shorter, it ends on its last day: one month from January 31 ends on the last day of February.</li>"
          "<li><strong>Working days:</strong> Mondays to Fridays are counted one by one from the start of the period; Saturdays and Sundays are skipped.</li>"
          "<li><strong>Last working day:</strong> the day the notice ends, or the last Monday-to-Friday before it when it ends on a weekend.</li></ul>"
@@ -1709,7 +1709,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "Follow-Up Email After Applying or an Interview",
          "Write a follow-up email after applying, after an interview with no reply or after a verbal offer. Five situations, two tones, and when to send each. Free.",
          "Write a follow-up email after applying or after an interview",
-         "Follow up once, in three or four sentences: say which job and when you were last in touch, that you are still interested, and ask one clear question. "
+         "Follow up once, twice at most, in three or four sentences: say which job and when you were last in touch, that you are still interested, and ask one clear question. "
          "Silence after an application or an interview leaves people either waiting for weeks or writing every few days, and both hurt. "
          "Pick your situation, fill in the names and the dates, and the email is ready to copy, with the day to send it. It is a fill-in template, not AI: each sentence is built from what you type.",
          wrap("follow-up-email",
@@ -1858,7 +1858,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
 
     # ------------------------------------------------------------ 33. LinkedIn connection note
     tool("linkedin-connection-message", "seekers", "LinkedIn connection message",
-         "A note for a connection request that fits LinkedIn’s 300 characters, counted as you type, for five kinds of people.",
+         "A note for a connection request that fits LinkedIn’s limit (200 characters on a free account, 300 with Premium), counted as you type, for five kinds of people.",
          "LinkedIn Connection Request Message Generator",
          "Write a LinkedIn connection request note inside the 300-character limit: to a recruiter, a hiring manager, an alumnus or someone you met. Counted as you type.",
          "Write a LinkedIn connection message that fits in 300 characters",
@@ -1892,7 +1892,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "A note is cut short only when a single field is itself too long, and then at the end of a sentence where it can.</p>"
          "<p>Nothing is sent to LinkedIn or anywhere else: copy the note and paste it into the box that opens when you choose “Add a note”.</p>",
          [("How long can a LinkedIn connection message be?",
-           "300 characters, spaces included. Some free accounts are limited to 200 characters. This page counts every character and keeps both notes inside the limit you choose."),
+           "300 characters with Premium, spaces included; free accounts are limited to 200 characters and a few personalized notes a month. This page counts every character and keeps both notes inside the limit you choose."),
           ("What should I write in a LinkedIn connection request?",
            "Who you are, why you are writing to this person and not to someone else, and one small request. Leave your career story for later: the note only has to get the request accepted."),
           ("Should I send a connection request with a note or without one?",
@@ -2334,7 +2334,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "interview-answer-builder": "STAR is a way to answer “tell me about a time when…”: say the situation, the task, what you did and the result, in that order. This page puts your four parts together and tells you how long the answer takes to say.",
         "interview-scorecard": "A scorecard is one list of what you are looking for, with a weight for each item, that every interviewer fills in for every candidate. This page builds that sheet and adds up the ratings into one score per candidate.",
         "cost-of-vacancy": "A vacancy is a job with nobody in it yet, and the work still has to be done by someone. This page puts a price on each day the job stays empty.",
-        "cost-per-hire": "Cost per hire is everything spent to fill one job, divided by the number of people hired. This page adds the invoices and the time of your own staff, so that the figure is the full one.",
+        "cost-per-hire": "Cost per hire is everything spent on hiring in a period, divided by the number of people hired in that period. This page adds the invoices and the time of your own staff, so that the figure is the full one.",
         "job-description-checker": "A job description is the text of the posting that candidates read before they apply. This page reads yours for the things that make people skip a posting, such as a missing salary or too many requirements, and lists what to change.",
         "compare-offers": "An offer is more than the base salary: bonus, shares, days off and the commute change what you take home. This page puts two or three offers on one scale, so you can see which one is worth more per year.",
         "offer-check": "“Below the lower quarter” means lower than three of every four salaries posted for that work. This page places your offer among the salaries that open postings state, and says how many postings that is.",

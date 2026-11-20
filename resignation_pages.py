@@ -14,8 +14,8 @@ HUB_QA is a list of (q, a) for the questions people ask about resignation letter
 SIGN = "\n\nSincerely,\n[Your name]"
 
 
-def L(*paras, close="Sincerely,"):
-    return "Dear [Manager’s name],\n\n" + "\n\n".join(paras) + f"\n\n{close}\n[Your name]"
+def L(*paras, close="Sincerely,", to="[Manager’s name]"):
+    return f"Dear {to},\n\n" + "\n\n".join(paras) + f"\n\n{close}\n[Your name]"
 
 
 LETTERS = [
@@ -36,7 +36,7 @@ LETTERS = [
                   "I will return [laptop, badge, keys] by [date] and I am happy to answer questions about my open work by email until [date]. Thank you for the time I have spent here."),
          include=["“Effective immediately” and today’s date as your last day.", "An apology for the short notice; a reason only if you choose to give one.",
                   "How and when you will return company property.", "How the team can reach you with handover questions, and for how long."],
-         qa=[("Can I resign without notice?", "Often yes, but it can cost you: some contracts withhold pay or bonuses when notice is not given, and some countries require notice by law. Read your contract or ask an employment adviser first."),
+         qa=[("Can I resign without notice?", "Often yes, but it can cost you: some employer policies forfeit the payout of unused time off or a bonus not yet earned when notice is not given (wages already earned must still be paid), and some countries require notice by law. Read your contract or ask an employment adviser first."),
              ("Do I need to explain why?", "No. A short reason helps the relationship, but you can resign without one. Keep it to one sentence."),
              ("Will I still get my final pay?", "In most places you are owed pay for the days you worked and, depending on the law and the contract, unused paid leave. Ask HR in writing when it will be paid.")]),
     dict(slug="one-week-notice", name="One week notice resignation letter", short="A shorter notice",
@@ -45,9 +45,9 @@ LETTERS = [
                   "I know a week is short, and I am grateful for the understanding. [If your contract sets one week, say so: This is the notice period in my contract.]",
                   "Before I leave I will [finish or hand over the main open task] and leave notes on [where the work stands]. Thank you for the experience I have gained here."),
          include=["Your last day as a date one week out.", "Whether one week is what your contract asks for, or a request.", "The one or two things you will hand over in that week."],
-         qa=[("Is one week of notice enough?", "It is if your contract or probation terms say so. Otherwise it is a request, and your employer can ask you to stay longer or end your employment earlier."),
+         qa=[("Is one week of notice enough?", "In most US jobs, yes: employment is at-will and no law sets a notice period, so two weeks is only a custom. A contract can set more; and your employer can ask you to stay longer or end your employment earlier."),
              ("What if my manager asks me to stay longer?", "You can agree, offer part-time help or remote handover, or keep your date. Answer in writing so both sides know the last day."),
-             ("Can I use this during probation?", "Yes. Many contracts allow a short notice, often one week, during probation. Quote the clause in the letter.")]),
+             ("Can I use this during probation?", "Yes. If your contract or offer letter sets a shorter notice during probation, quote that clause; most US at-will jobs have no required notice at all.")]),
     dict(slug="one-month-notice", name="One month notice resignation letter", short="30 days of notice",
          when="For contracts that ask for a month of notice, which is common outside the United States and in senior roles.",
          letter=L("I am writing to give formal notice of my resignation from my position as [job title] at [company], in line with the one-month notice period in my contract. My last working day will be [date].",
@@ -86,7 +86,7 @@ LETTERS = [
     dict(slug="relocation", name="Resignation letter due to relocation", short="You are moving",
          when="When you are moving to another city or country and cannot keep the job. If remote work is possible, ask about it before you resign.",
          letter=L("I am writing to give notice that I am resigning from my position as [job title] at [company] because I am relocating to [city or country]. My last working day will be [date].",
-                  "[If you want to keep working remotely, say so: Before I finalise this, I would be glad to discuss whether I could continue in this role remotely.]",
+                  "[If you want to keep working remotely, ask your manager before you send this letter: once you give notice, the employer can treat it as final.]",
                   "Thank you for [what you valued here]. I will hand over [work] to [colleague] before I leave."),
          include=["That you are moving, and where if you are comfortable saying it.", "Whether you would stay on remotely, if that is a real option for you.", "Your last day and the handover."],
          qa=[("Should I ask about remote work first?", "Yes, if you would like to stay. Ask before the letter: once you resign, the decision is harder to reverse."),
@@ -107,7 +107,7 @@ LETTERS = [
                   "I have enjoyed working here, and I am grateful for [the support of the team or a specific person].",
                   "I will do what I can to hand over my work before I leave: [main tasks]. Thank you for your understanding."),
          include=["“Health reasons” is enough; medical details are private.", "Your last day, or that you need to leave sooner.", "A handover, as far as your health allows."],
-         qa=[("Should I resign or take leave?", "Ask first. Many employers offer sick leave, unpaid leave or reduced hours, and some laws protect your job while you are ill."),
+         qa=[("Should I resign or take leave?", "Ask first. Many employers offer sick leave, unpaid leave or reduced hours. In the US the Family and Medical Leave Act gives eligible employees up to 12 weeks of unpaid, job-protected leave for a serious health condition, and some states add more."),
              ("Do I have to give medical details?", "No. If a benefit needs proof, give it to HR separately, not in the letter."),
              ("What happens to my health insurance?", "Ask HR when your cover ends and what options you have to continue it.")]),
     dict(slug="family-reasons", name="Resignation letter for family reasons", short="Caring for family",
@@ -161,7 +161,7 @@ LETTERS = [
                   "I will deliver [remaining work] by [date] and send the final invoice for work done until then.",
                   "Thank you for the work together. I am happy to help with the handover to [the person or team who takes over]."),
          include=["The contract date and the clause that allows ending it.", "Your last day and what you will still deliver.", "When you will send the final invoice."],
-         qa=[("How much notice do I give as a contractor?", "What the contract says. Without a clause, give reasonable notice and confirm the end date in writing."),
+         qa=[("How much notice do I give as a contractor?", "What the contract says. A fixed-term contract with no early-exit clause usually needs the client’s written agreement to end early; for work with no end date, give reasonable notice and confirm the end date in writing."),
              ("Can the client refuse?", "If you follow the termination clause, the contract ends on the date it allows. A dispute is about fees or deliverables, not about whether you can leave."),
              ("What about work in progress?", "Agree in writing what you will deliver and what will be paid for partly finished work.")]),
     dict(slug="simple", name="Simple resignation letter", short="The shortest version",
@@ -179,7 +179,7 @@ LETTERS = [
                   "I will hand over [the tasks I have started] before I leave."),
          include=["“Not the right fit”: neutral and enough.", "Thanks for the training and the welcome.", "What you will hand over, even if it is little."],
          qa=[("Will a short job look bad on my resume?", "One short job rarely matters. You can leave it out of a resume, or explain it in one line if asked."),
-             ("Do I have to give the full notice period?", "Yes, unless you are still on probation with a shorter notice, or your employer agrees to less."),
+             ("Do I have to give the full notice period?", "In most US jobs the law does not require it: employment is usually at-will, and two weeks is a custom. Give the notice your contract or company policy sets, since some tie benefits such as payout of unused time off to it, unless your employer agrees to less."),
              ("Should I give the real reason?", "A neutral sentence in the letter. If there was a real problem, raise it in the exit interview or with HR.")]),
     dict(slug="decline-counteroffer", name="Resignation letter after declining a counteroffer", short="You turned down the offer to stay",
          when="When your employer offered more pay or a new title to keep you, and you have decided to leave anyway. The letter confirms the decision and the last day.",
@@ -223,7 +223,7 @@ LETTERS = [
          include=["That you will not be returning, and the date your employment ends.", "A thank-you for the support during leave.", "A request for written information about leave pay and benefits.", "Whether you are available for short questions."],
          qa=[("Do I have to repay my leave pay if I do not come back?", "Some employers ask for part of company-paid leave back when you do not return. Read your leave agreement and ask HR in writing before you send the letter."),
              ("When should I tell my employer?", "As early as you are sure, and within the notice period your contract sets. Telling your manager first and writing after keeps the relationship good."),
-             ("Do I still get my notice period?", "Usually yes: the notice in your contract applies, and in some countries it runs alongside your leave. Ask HR how your dates are counted.")]),
+             ("Do I still get my notice period?", "If you have a contract or union agreement, its notice applies, and in some countries notice can run alongside your leave. Most US jobs are at-will with no set notice; two weeks is the custom. Ask HR how your dates are counted.")]),
     dict(slug="better-pay", name="Resignation letter for a higher salary", short="You are leaving for better pay",
          when="When another employer offers you more money and you are leaving. Keep the letter neutral: it stays in your file and may be read by future employers.",
          letter=L("Please accept this letter as my notice of resignation from my position as [job title] at [company]. My last working day will be [date].",
@@ -296,7 +296,7 @@ LETTERS = [
          when="For nannies and private childcare workers: time for the family to find care, the last day you will work, and how you will say goodbye to the children.",
          letter=L("I am writing to let you know that I will be leaving my position as [your children’s] nanny. My last day will be [date], which I hope gives you time to find the right person.",
                   "I will keep to our usual schedule until then. If it helps, I can share the children’s routines, meals and activities with the next nanny, and help them through the change.",
-                  "Thank you for trusting me with [children’s names]. Caring for them has meant a great deal to me.", close="Warmly,"),
+                  "Thank you for trusting me with [children’s names]. Caring for them has meant a great deal to me.", close="Warmly,", to="[Parents’ names]"),
          include=["Your last day, with as much notice as you can give.", "That you will keep to the schedule until then.", "An offer to share routines with the next caregiver.",
                   "A warm thank you to the family."],
          qa=[("How much notice should a nanny give?", "Two to four weeks is common, and more helps a family a great deal. If you signed a nanny agreement, it may set the notice for both sides."),
