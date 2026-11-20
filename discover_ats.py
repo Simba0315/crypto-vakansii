@@ -9,6 +9,7 @@ sources_ats.json (15 Nov 2026; the owner: "too few jobs, competitors add far mor
                                                        sitemaps, lists), verify the boards and add the good ones to sources_ats.json
                                                        (HRN_DISCOVER_LOG=FILE keeps what was checked, so a second run skips it)
     python3 discover_ats.py --names                    name the Workday and Personio boards in sources_ats.json again, drop duplicates
+    python3 discover_ats.py --from-log LOG              the boards a run still going has kept so far (its HRN_DISCOVER_LOG) into the file
 
 A board is kept when its feed answers through collect.fetch_feed (the same code the hourly run uses), has 3 or more open jobs in
 English, either 15 or more of them or at least 60% of all its jobs (collect.english: collect.py leaves the others out, cheaply, as
@@ -232,11 +233,12 @@ def alnum(s):
 def clean_name(n, tenant=""):
     """A company name without legal endings and the codes some systems put around it ("1010 United Rentals, Inc." -> "United
     Rentals"; "USA 3M Company" -> "3M"); a leading code stays when the address starts with it too ("2020 Companies")."""
-    n = html.unescape(n or "").strip(" ,.-&")
+    n = html.unescape(n or "").strip(" ,.-&:;")
     while True:
         m = n if tenant and alnum(n).startswith(alnum(tenant)) else CODE_LEAD.sub("", n)
-        m = PLACE_END.sub("", LEGAL_END.sub("", TAIL.sub("", m))).strip(" ,.-&")
-        if m == n or not m: return n
+        m = PLACE_END.sub("", LEGAL_END.sub("", TAIL.sub("", m))).strip(" ,.-&:;")
+        # "db Group" is not "db": a short lower-case rest is not a name (20 Nov 2026, BambooHR)
+        if m == n or not m or (len(m) <= 3 and m.islower()): return n
         n = m
 
 
@@ -342,13 +344,13 @@ def verify_detail(ats, tok):
     if len(posts) < 3: return None, f"{len(posts)} jobs"
     if ats == "paylocity":                                # the page's title: "<company> - Job Opportunities"
         m = re.search(r"<title>\s*(.*?)\s*-\s*Job Opportunities\s*</title>", body, re.S | re.I)
-        name = clean_name(html.unescape(m.group(1))) if m else ""
+        name = clean_name(html.unescape(m.group(1)), tok) if m else ""
     elif ats == "breezy":
-        name = clean_name(collect._nm((posts[0] if isinstance(posts[0], dict) else {}).get("company")))
+        name = clean_name(collect._nm((posts[0] if isinstance(posts[0], dict) else {}).get("company")), tok)
     else:
         collect.polite(ats)
         info = net.get_json(f"https://{tok}.bamboohr.com/careers/company-info", 30) or {}
-        name = clean_name(str((info.get("result") or {}).get("name") or "")) if isinstance(info, dict) else ""
+        name = clean_name(str((info.get("result") or {}).get("name") or ""), tok) if isinstance(info, dict) else ""
     name = name or pretty(tok)
     _cache[list_url] = body
     src = {"name": name, "ats": ats, "token": tok}
@@ -358,7 +360,21 @@ def verify_detail(ats, tok):
     read = len(jobs) + src.get("not_english", 0)
     if not read: return None, "no text readable"
     if len(jobs) < min(2, read): return None, f"mostly not English ({len(jobs)} of {read} read)"
-    return {"name": name, "ats": ats, "token": tok, "count": len(posts), "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
+    title = lambda p: (p.get("name") if ats == "breezy" else p.get("jobOpeningName") if ats == "bamboohr" else p.get("JobTitle")) if isinstance(p, dict) else ""
+    return {"name": name, "ats": ats, "token": tok, "count": len(posts), "titles": few_titles(title(p) for p in posts),
+            "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
+
+
+def few_titles(titles):
+    """How many different jobs a board lists: titles without what follows a dash, bracket or bar, in lower case."""
+    return len({re.sub(r"\s*[-–(|].*$", "", str(t or "")).strip().lower() for t in titles})
+
+
+# A board of 150 jobs or more that is a handful of jobs posted in every place (Taco Bell's franchisee: 2,233 postings, 5 titles,
+# 81 towns) is held like the franchise boards of JazzHR and Breezy: thousands of pages that say the same thing, for search engines
+# thin copies of one another. Held, not dropped: "hold" with the reason, released by hand when it is worth it.
+def same_jobs_everywhere(e):
+    return e.get("count", 0) >= 150 and e.get("titles") is not None and e["titles"] <= max(25, e["count"] // 12)
 
 
 def verify_workday(tok):
@@ -474,20 +490,36 @@ def main(paths):
             list(ex.map(run, todo))
     finally:
         collect.PARSE.shutdown(); collect.PARSE = None
-    # one board per company: not one we already read, and the largest when a company has several
+    write_kept(results, have_cos, why)
+
+
+def write_kept(results, have_cos, why):
+    """One board per company into OUT: not one we already read, not an agency, the largest when a company has several."""
     best = {}
     for e in sorted(results, key=lambda e: -e["count"]):
         if AGENCY_RX.search(e["name"]): why[f"{e['ats']}: a recruitment agency"] += 1; continue
         k = dedupe.company_key(e["name"])
         if k in have_cos: why[f"{e['ats']}: already read under another system or name"] += 1; continue
         if k in best: why[f"{e['ats']}: a second board of the same company"] += 1; continue
+        if same_jobs_everywhere(e):
+            e = dict(e, hold=True, why=f"the same {e['titles']} jobs posted in many places"); why[f"{e['ats']}: held, the same few jobs in many places"] += 1
         best[k] = e
     old = json.loads(OUT.read_text()) if OUT.exists() else []
     merged = old + sorted(best.values(), key=lambda e: (-e["count"], e["name"].lower()))
-    OUT.write_text(json.dumps(merged, ensure_ascii=False, indent=0) + "\n")
+    OUT.write_text("[\n" + ",\n".join(json.dumps(e, ensure_ascii=False) for e in merged) + "\n]\n")
     print(f"kept {len(best):,} boards with {sum(e['count'] for e in best.values()):,} open jobs: " +
           ", ".join(f"{a} {n:,}" for a, n in collections.Counter(e["ats"] for e in best.values()).most_common()))
     for k, n in sorted(why.items()): print(f"  not kept, {k}: {n:,}")
+
+
+def from_log(path):
+    """The boards an unfinished run has kept so far (its HRN_DISCOVER_LOG) into OUT, so they are read while it goes on. A later run
+    with the same log skips them: they are in a sources file by then."""
+    have = [s for f in sorted(ROOT.glob("sources*.json")) if "candidates" not in f.name for s in json.loads(f.read_text())]
+    have_keys = {(s["ats"], s["token"].lower()) for s in have}
+    rows = [json.loads(l) for l in Path(path).read_text().splitlines() if l.strip()]
+    results = [r["entry"] for r in rows if r.get("entry") and (r["entry"]["ats"], r["entry"]["token"].lower()) not in have_keys]
+    write_kept(results, {dedupe.company_key(s["name"]) for s in have}, collections.Counter())
 
 
 def names():
@@ -525,6 +557,7 @@ def names():
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--cc"]: read_cc(sys.argv[2], sys.argv[3].split(","))
     elif sys.argv[1:2] == ["--cc-files"]: read_cc_files(sys.argv[2], sys.argv[3].split(","))
+    elif sys.argv[1:2] == ["--from-log"]: from_log(sys.argv[2])
     elif sys.argv[1:2] == ["--names"]: names()
     elif sys.argv[1:]: main(sys.argv[1:])
     else: print(__doc__)
