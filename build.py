@@ -566,6 +566,22 @@ POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (applica
                      r"always (hiring|looking)|spontaneous application|unsolicited application|open call", re.I)     # titles that are a standing invitation, not one specific opening
 REGION_WORDS = [("Europe", r"europe|\bemea\b|\beu\b"), ("Asia-Pacific", r"\bapac\b|asia"), ("Latin America", r"latam|latin america"), ("the Americas", r"americas"), ("North America", r"north america")]
 ETYPE_LD = {"Full-time": "FULL_TIME", "Part-time": "PART_TIME", "Contract": "CONTRACTOR", "Internship": "INTERN"}
+# "City, ST" in a posting's place: the state or province goes in addressRegion and the country with it (Google's Rich Results Test,
+# 20 Nov 2026: "Reston, VA" was one addressLocality, and the test listed addressRegion as missing)
+US_ST = set("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC PR".split())
+CA_PROV = set("AB BC MB NB NL NS NT NU ON PE QC SK YT".split())
+CITY_ST = re.compile(r"^\s*([^,]{2,60}?),\s*([A-Z]{2})\s*(?:,\s*(USA|US|United States|Canada|CA))?\s*$")
+FT_RX, OTHER_TYPE_RX = re.compile(r"\bfull[- ]time\b", re.I), re.compile(r"\bpart[- ]time\b|\bcontract(?:or)?\b|\btemporary\b|\bfreelance\b|\bseasonal\b|\binternship\b", re.I)
+
+
+def postal(part, here):
+    """The PostalAddress of one place of a posting: locality, region and country where "City, ST" says them, else the place as written."""
+    m = CITY_ST.match(part)
+    if m and (not here or here[0][0] in ("US", "CA")):
+        code, tail = m.group(2), (m.group(3) or "").upper()
+        if code in US_ST and tail not in ("CANADA", "CA"): return {"addressLocality": m.group(1).strip(), "addressRegion": code, "addressCountry": "US"}
+        if code in CA_PROV and tail not in ("USA", "US", "UNITED STATES"): return {"addressLocality": m.group(1).strip(), "addressRegion": code, "addressCountry": "CA"}
+    return {"addressLocality": part, **({"addressCountry": here[0][0]} if len(here) == 1 else {})}
 # A remote posting that names a part of the world instead of countries ("Remote - EMEA", "North America"): the countries Google needs.
 _EU = ["GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS"]
 REGION_LANDS = [(r"north america|\bnamer\b|\bamer\b|\bnoram\b", ["US", "CA"]), (r"\bamericas\b", ["US", "CA", "MX", "BR", "AR", "CO", "CL"]),
@@ -1799,7 +1815,7 @@ def job_page(j, active_by_cat):
             for part in [x.strip(" ,-–") for x in re.split(r";|\||•", j["location"]) if x.strip(" ,-–")][:6]:
                 here = countries_of(part)
                 if not here and NOT_A_PLACE.match(part): continue       # "Remote", "EMEA": not an address
-                spots.append({"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": part, **({"addressCountry": here[0][0]} if len(here) == 1 else {})}})
+                spots.append({"@type": "Place", "address": {"@type": "PostalAddress", **postal(part, here)}})
             if spots: ld["jobLocation"] = spots[0] if len(spots) == 1 else spots
         if j["remote"]:
             ld["jobLocationType"] = "TELECOMMUTE"
@@ -1807,6 +1823,8 @@ def job_page(j, active_by_cat):
             if lands: ld["applicantLocationRequirements"] = [{"@type": "Country", "name": nm} for _, nm in lands][:32] if len(lands) > 1 else {"@type": "Country", "name": lands[0][1]}
         if j.get("etype") in ETYPE_LD:
             ld["employmentType"] = ETYPE_LD[j["etype"]]
+        elif full and FT_RX.search(full[:4000]) and not OTHER_TYPE_RX.search(j["title"] + " " + full[:4000]):
+            ld["employmentType"] = "FULL_TIME"           # the posting says full-time and names no other kind of work
         ld["validThrough"] = VALID_TO
         # Google reads a remote posting only with the countries it is open to. A remote job that names none ("Remote", "Global")
         # gets no markup at all rather than a guessed country; its page is still found by ordinary search.
