@@ -3048,6 +3048,17 @@ def main():
     tag_of_slug = {}
     for t in by_tag: tag_of_slug.setdefault(tslug(t), t)       # the first skill with that address, as the search through by_tag found it
     COMBO_PATHS = {c_[0] for c_ in combos}      # the combination pages that exist today: a link to one is written only when it is here
+    # "work from home <work> jobs" is how many people search for the remote lists of a kind of work: each one answers it in words
+    # (21 Nov 2026), with today's counts, in its questions and their FAQ markup
+    for path_wfh, _h, js_wfh, *_r in combos:
+        sg_wfh = path_wfh.strip("/").split("/")
+        if len(sg_wfh) == 3 and sg_wfh[0] == "roles" and sg_wfh[2] == "remote" and sg_wfh[1] in by_role:
+            rn_wfh, rj_wfh = by_role[sg_wfh[1]]
+            ps_wfh = person(sg_wfh[1], rn_wfh)
+            COMBO_QA[path_wfh] = list(COMBO_QA.get(path_wfh, ())) + [(
+                f"Can {art(ps_wfh)} {ps_wfh} work from home?",
+                f"Often, yes: {len(js_wfh):,} of today’s {len(rj_wfh):,} open {rlow(rn_wfh)} postings on {SITE} are remote, so the work is done from home. "
+                "Read each posting for the countries or states it is open to and whether it asks for some days in an office.")]
     for path, h1, js, trail, qs, pre, post in combos:
         # these lists had the list and nothing else (SERP_WORK rows 10, 11, 13, 14, 17: "only 1 H2"); the views the big pages have
         seg_ = path.strip("/").split("/")
