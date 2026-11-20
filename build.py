@@ -7607,6 +7607,26 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     failed_html += (section("Job boards that went empty in the last run", "<p>" + ", ".join(e(x) for x in ST["emptied"]) + ".</p>"
                             '<p class="note">Every posting on these boards disappeared at once. That usually means the employer moved to another hiring system; '
                             'their postings are marked closed and left out of the figures on how long jobs stay open until the new board is added.</p>') if ST.get("emptied") else "")
+    # The open journal (plan item 11, 20 Nov 2026): day by day, the jobs employers posted (their own date), the jobs that closed, and
+    # how many were open at the end of the day, counted from the record, which keeps every closed job with the day it closed. Only
+    # days after the record began (its first day is when every board was first read, not a day of hiring).
+    all_j = list(active) + list(archived)
+    rec0 = min((j.get("first_seen") or "9999")[:10] for j in all_j) if all_j else TODAY
+    jdays = [(datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=k)).isoformat() for k in range(13, -1, -1)]
+    jdays = [d for d in jdays if d > rec0]
+    posted_d = Counter((j.get("posted") or "")[:10] for j in all_j)
+    closed_d = Counter((j.get("closed") or "")[:10] for j in archived)
+    seen_d = Counter((j.get("first_seen") or "")[:10] for j in all_j)
+    def open_at(d):
+        return sum(1 for j in all_j if (j.get("first_seen") or "9999")[:10] <= d and (j["active"] or (j.get("closed") or "9999")[:10] > d))
+    journal_html = ""
+    if len(jdays) >= 3:
+        rows_j = [(d, posted_d.get(d, 0), closed_d.get(d, 0), seen_d.get(d, 0), open_at(d)) for d in jdays]
+        journal_html = section("The open journal, [[day by day]]", ttable(["Day", "Posted that day (employer’s date)", "Closed that day", "First read by us", "Open at the end of the day"],
+                                                                      [trow([fdate(d) + (" (so far)" if d == TODAY else ""), f"{p_:,}", f"{c_:,}", f"{s_:,}", f"{o_:,}"]) for d, p_, c_, s_, o_ in reversed(rows_j)])
+                               + '<p class="note">Counted from our record of every job, open and closed. “First read by us” includes the whole board on the day a new '
+                                 'employer or hiring system was added, so it is not the same as hiring; “Posted” is the date the employer gives. A job counts as open '
+                                 'at the end of a day when we had read it by then and it had not closed.</p>', label="Journal", sid="journal")
     page("status/", f"Data Status — how fresh the job listings are today | {SITE}",
          f"The employers’ career pages are read every hour. What the latest update of {SITE} did: feeds read, roles re-checked, new and closed jobs today.",
          # Sections review, batch 5: the day's figures stand right under the opening lines (they were under a paragraph of ten
@@ -7621,7 +7641,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          'in the last day every 10 minutes: a new job is on the site within minutes and a closed one is marked closed. The lists and the counts on the other pages are '
          'rebuilt from the full record several times a day: a rebuild is started at 17 and 47 minutes past each hour (UTC) and takes about 40 minutes; GitHub, which runs it, '
          'skips or delays many of the starts, so the time of the last rebuild above shows when it really happened.</p>'
-         + failed_html
+         + failed_html + journal_html
          + section("How old the [[open listings]] are", ttable(["Measure", "Value"], [
              trow(["Open roles", f"{n:,}"]), trow(["Posted in the last 7 days", f"{sum(a <= 7 for a in ages):,} ({pctf(sum(a <= 7 for a in ages), n)})"]),
              trow(["Posted in the last 30 days", f"{sum(a <= 30 for a in ages):,} ({pctf(sum(a <= 30 for a in ages), n)})"]),
