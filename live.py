@@ -70,7 +70,12 @@ collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 36)
 # Boards of these systems read at once here, at most: their reads take long (a request per posting's text), and without a cap they
 # can hold every thread while the quick boards of the other systems wait (the loop keeps WORKERS * 2 reads queued, WORKERS run).
-LIVE_CAP = {"workday": WORKERS * 2 // 3, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4}
+LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4}
+# And these systems together at most HEAVY_MAX of the reads queued, so at most that many threads: a third of the threads is always
+# free for the quick boards. (20 Nov 2026: the caps above added up to 40 of 36 threads; the slow boards held every thread, and
+# 1,800 Greenhouse and 1,800 Ashby boards were read seven or eight hours late instead of every hour.)
+HEAVY = {"workday", "smartrecruiters", "jazzhr", "breezy", "bamboohr", "usajobs"}
+HEAVY_MAX = WORKERS * 2 // 3
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
 CREATE TABLE IF NOT EXISTS moved (slug TEXT PRIMARY KEY, to_slug TEXT);
@@ -335,8 +340,10 @@ class Live:
                 nd = now + int(hashlib.md5(k.encode()).hexdigest(), 16) % HOUR
                 self.con.execute("INSERT OR IGNORE INTO boards (key, next_due) VALUES (?, ?)", (k, nd))
                 rows[k] = (nd, 0, 0)
-            if rows[k][0] <= now: out.append(s)
-        return out
+            if rows[k][0] <= now: out.append((rows[k][0], s))
+        self.late = sum(1 for nd, _ in out if nd < now - HOUR)
+        # the longest overdue first: in the order of the sources file, the boards at its end waited whenever the threads were short
+        return [s for _, s in sorted(out, key=lambda x: x[0])]
 
     def done(self, src, ok, changed):
         k, now = f"{src['ats']}:{src['token']}", time.time()
@@ -350,13 +357,15 @@ class Live:
         srcs, srcs_at = sources(), time.time()
         log(f"live: {len(srcs):,} boards, {WORKERS} at a time; store {LIVE_DB}")
         tally, tally_at = [0, 0, 0, 0, 0], time.time()          # boards read, failed, new jobs, closed, duplicates skipped
+        took = {}                                               # system: [reads, seconds], for the five-minute line
         direct_at, direct_seen = 0, set()                       # jobs posted on the site itself: read every DIRECT_EVERY seconds
         with cf.ThreadPoolExecutor(WORKERS) as ex:
             running = {}
             while True:
                 if time.time() - tally_at >= 300:
-                    log(f"last 5 min: {tally[0]} boards read, {tally[1]} did not answer, +{tally[2]} new, {tally[3]} closed, {tally[4]} duplicates skipped")
-                    tally, tally_at = [0, 0, 0, 0, 0], time.time()
+                    log(f"last 5 min: {tally[0]} boards read, {tally[1]} did not answer, +{tally[2]} new, {tally[3]} closed, {tally[4]} duplicates skipped;"
+                        f" {getattr(self, 'late', 0):,} boards more than an hour late; thread time: {thread_time(took)}")
+                    tally, tally_at, took = [0, 0, 0, 0, 0], time.time(), {}
                     give_back()
                 if self.reload(): srcs = sources()
                 if time.time() - srcs_at > 600: srcs, srcs_at = sources(), time.time()
@@ -374,25 +383,43 @@ class Live:
                 busy = {f"{s['ats']}:{s['token']}" for s in running.values()}
                 per_ats = {}
                 for s in running.values(): per_ats[s["ats"]] = per_ats.get(s["ats"], 0) + 1
+                heavy = sum(n for a, n in per_ats.items() if a in HEAVY)
                 for s in self.due(srcs):
                     if len(running) >= WORKERS * 2: break
                     if f"{s['ats']}:{s['token']}" in busy: continue
                     # no more boards of one system than it allows at once: the others would only hold workers while they wait
                     if per_ats.get(s["ats"], 0) >= min(collect.ATS_LIMIT.get(s["ats"], WORKERS * 2), LIVE_CAP.get(s["ats"], WORKERS * 2)): continue
+                    if s["ats"] in HEAVY:
+                        if heavy >= HEAVY_MAX: continue
+                        heavy += 1
                     per_ats[s["ats"]] = per_ats.get(s["ats"], 0) + 1
-                    running[ex.submit(collect.fetch, s, self.skip_known(s))] = s
+                    running[ex.submit(timed, s, self.skip_known(s))] = s
                 if not running:
                     time.sleep(2); continue
                 finished, _ = cf.wait(running, timeout=5, return_when=cf.FIRST_COMPLETED)
                 for fut in finished:
                     s = running.pop(fut)
-                    _, jobs = fut.result()
+                    (_, jobs), secs = fut.result()
+                    t = took.setdefault(s["ats"], [0, 0.0]); t[0] += 1; t[1] += secs
                     if jobs is None:
                         self.done(s, False, False); tally[1] += 1; continue
                     new, closed, dup = self.apply(s, jobs)
                     tally = [tally[0] + 1, tally[1], tally[2] + new, tally[3] + closed, tally[4] + dup]
                     self.done(s, True, bool(new or closed))
                     if new or closed: log(f"{s['name']}: +{new} new, {closed} closed" + (f", {dup} duplicates skipped" if dup else ""))
+
+
+def timed(src, reuse):
+    """collect.fetch, and how many seconds it held its thread."""
+    t = time.time()
+    return collect.fetch(src, reuse), time.time() - t
+
+
+def thread_time(took):
+    """The systems that held the threads longest in the last five minutes: "workday 61% (80 reads, 41 s each), ..."."""
+    total = sum(sec for _, sec in took.values()) or 1
+    top = sorted(took.items(), key=lambda x: -x[1][1])[:5]
+    return ", ".join(f"{a} {round(100 * sec / total)}% ({n} reads, {sec / n:.0f} s each)" for a, (n, sec) in top) or "none"
 
 
 def once(n):
