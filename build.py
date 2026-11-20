@@ -3980,6 +3980,17 @@ def main():
             for ps in j["places"]: by_loc[PLACE_NAME[ps]].append((j, r))
         cut = level_section(f"{label} salary by level", group) + \
               (section(f"{label} salary by location", table(by_loc, lambda k: f"locations/{PLACE_SLUG[k]}/", 15, 20)) if sum(len(v) >= 15 for v in by_loc.values()) >= 2 else "")
+        # Pay stated by the hour (plan item 4.9, 20 Nov 2026): the figures above count yearly ranges only, so postings that give an
+        # hourly rate (nursing, retail, warehouse, care work) were left out of a job's pay altogether. Shown where 15 postings give one.
+        if role and slug in by_role:
+            hr_m = sorted((h_[0] + h_[1]) / 2 for j in by_role[slug][1] if (h_ := usd_hourly(j.get("salary"))))
+            if len(hr_m) >= 15:
+                q_ = lambda f_: hr_m[min(len(hr_m) - 1, int(len(hr_m) * f_))]
+                cut += section(f"{label} pay [[by the hour]]",
+                               f'<p>{len(hr_m):,} open {e(rlow(label))} postings state an hourly rate instead of a yearly range: the median is <strong>${q_(.5):,.2f} an hour</strong>, '
+                               f'and the middle half pay ${q_(.25):,.2f} to ${q_(.75):,.2f}. At 40 hours a week for 52 weeks, ${q_(.5):,.2f} an hour is about {money(q_(.5) * 2080)} a year before tax.</p>'
+                               f'<p class="note">The middle of each posting’s hourly range, in US dollars. These postings are not in the yearly figures above. <a href="{P}/jobs-that-pay/">Jobs by hourly pay</a>.</p>',
+                               sid="hourly", label="By the hour")
         mids = sorted((lo + hi) / 2 for _, (lo, hi) in group)
         mean_ = sum(mids) / len(mids)
         pct = lambda q: mids[min(len(mids) - 1, int(len(mids) * q))]
@@ -4465,8 +4476,19 @@ def main():
 
     lap("My jobs: tracker kept in the visitor's browser, no account n")
     # My jobs: tracker kept in the visitor's browser, no account needed
+    # One job at a time (plan item 4.30, 20 Nov 2026: "a page to swipe through jobs with a match score"): save or pass, newest first,
+    # the visitor's own field first when For you has their answers. Everything stays in the browser. A tool, not a page for search.
+    page("swipe/", f"Swipe Through Jobs: One at a Time, Save or Pass | {SITE}",
+         "Go through the newest jobs one at a time: save the ones you like to My jobs, pass on the rest. With your answers on For you, each card shows how well it fits.",
+         crumbs(("My jobs", "my-jobs/"), ("Swipe through jobs", "")) + '<h1>Swipe through <span class="hl">the newest jobs</span></h1>'
+         '<p class="lead">One job at a time, newest first. Save it to My jobs or pass: on a phone swipe right or left, on a computer press → or ←. '
+         f'With your answers on <a href="{P}/for-you/">For you</a>, jobs in your field come first and each card says how many of your answers fit. Nothing leaves this browser.</p>'
+         '<div id="swipe" class="swipe" aria-live="polite"><p class="note">Loading the newest jobs…</p></div>'
+         f'<p class="note swipe-foot"><a href="{P}/my-jobs/">My jobs</a> holds what you saved. <button class="linkbtn" type="button" id="swipe-reset">Show the jobs I passed on again</button></p>',
+         '<meta name="robots" content="noindex">', sitemap=False)
     page("my-jobs/", f"Job Application Tracker — free, no sign-up, no spreadsheet | {SITE}", "A free job application tracker in your browser: save jobs, mark where you applied, add notes, export to CSV. No account and no spreadsheet to maintain.",
          crumbs(("My jobs", "")) + '<h1>My jobs: your application tracker</h1><p class="lead">Saved jobs, applications, notes and searches in one place, so you know what you applied to and who answered. It is all kept in this browser; nothing is uploaded.</p>'
+         f'<p class="note">Want more to save? <a href="{P}/swipe/">Swipe through the newest jobs</a> one at a time.</p>'
          '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-view" type="button" aria-pressed="false">Board view</button><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
          '<div class="mj-board" id="mj-board" hidden></div>'
          '<p class="note" id="mj-nudge" hidden></p>'
@@ -7591,6 +7613,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          f'<p class="lead">Reading {n:,} postings to find the twenty worth applying to takes days. Say what work you want, how much experience you have, where you live and what you need to earn. '
          'Every open job is checked against your answers, and next to each one you see what fits and what does not.</p>'
          '<p class="plain"><b>In plain words:</b> this page is a short form. Nothing you answer leaves your browser, there is no account, and you can skip any question.</p>'
+         f'<p class="note">Rather go through them one at a time? <a href="{P}/swipe/">Swipe through the newest jobs</a>: save or pass, with your answers counted on each card.</p>'
          '<div id="fy-root" class="fy"><div class="fy-form">'
          + ask(1, "What kind of work do you want?", "Pick one or several. Leave it empty to see every kind.", f'<div class="opts" id="fy-work">{fy_work}</div>' + fy_roles_html)
          + ask(2, "How much experience do you have?", "", f'<div class="opts one" id="fy-exp">{fy_exp}</div>')

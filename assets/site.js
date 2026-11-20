@@ -1970,3 +1970,58 @@
   window.addEventListener('storage', function (ev) { if (!ev.key || ev.key === 'hrn_token' || ev.key === 'hrn_role' || ev.key === 'hrn_me_email') paint(); });
   paint();
 })();
+
+/* Swipe through jobs (/swipe/, plan item 4.30, 20 Nov 2026): one card at a time, newest first; the visitor's field first when For you
+   has their answers, with how many of them fit. Save puts the job in My jobs (hrn_jobs), Pass keeps it out of this page (hrn_swiped).
+   Touch: drag the card right or left; keys: → and ←. Nothing is sent anywhere. */
+(function () {
+  var H = window.HRN, box = document.getElementById('swipe');
+  if (!H || !box) return;
+  var P = H.base, esc = H.esc, prof = H.get('hrn_profile', null) || {}, cats = prof.cats || [], skills = prof.skills || [], pay = Number(prof.pay) || 0;
+  var exp = prof.exp === '' || prof.exp == null ? null : Number(prof.exp), LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 };
+  var queue = [], i = 0, done = 0;
+  function fit(j) {
+    var n = 0, ok = 0;
+    if (cats.length) { n++; if (cats.indexOf(j[5]) >= 0) ok++; }
+    if (exp !== null) { n++; var lv = LV[j[6]] == null ? 1 : LV[j[6]]; if (Math.abs(exp - lv) <= (exp === 0 && lv <= 0 ? 1 : 0)) ok++; }
+    if (prof.where === 'remote' || prof.where === 'hybrid' || prof.where === 'office') { n++; if (prof.where === 'remote' ? j[4] : prof.where === 'hybrid' ? j[25] : !j[4]) ok++; }
+    if (pay) { n++; if (j[13] && j[13] >= pay) ok++; }
+    if (skills.length) { n++; if (j[7].some(function (t) { return skills.indexOf(t) >= 0; })) ok++; }
+    return [ok, n];
+  }
+  function draw() {
+    var j = queue[i];
+    if (!j) { box.innerHTML = '<div class="swcard end"><p><b>That is all for now.</b> ' + done + ' looked at. New jobs arrive every hour.</p><p><a class="btn primary" href="' + P + '/my-jobs/">Open My jobs</a></p></div>'; return; }
+    var f = fit(j), pills = (j[4] ? '<span class="pill ok">Remote</span>' : j[25] ? '<span class="pill">Hybrid</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6]) + '</span>' : '');
+    box.innerHTML = '<div class="swcard" id="swcard" tabindex="0">' +
+      (f[1] ? '<p class="swfit"><b>' + f[0] + ' of ' + f[1] + '</b> of your answers fit</p>' : '') +
+      '<h2><a href="' + P + '/job/' + j[0] + '/">' + esc(j[1]) + '</a></h2><p class="swco">' + esc(j[2]) + (j[3] ? ' · ' + esc(j[3]) : '') + '</p>' +
+      '<p class="swpay">' + (j[8] ? esc(j[8]) : 'Pay not stated') + '</p><p class="pills">' + pills + '</p>' +
+      (j[7].length ? '<p class="swtags">' + j[7].slice(0, 8).map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</p>' : '') +
+      '<p class="swact"><button class="btn ghost" type="button" data-sw="pass">← Pass</button><a class="btn ghost" href="' + P + '/job/' + j[0] + '/">Open</a><button class="btn primary" type="button" data-sw="save">Save →</button></p>' +
+      '<p class="note">' + (queue.length - i - 1).toLocaleString('en-US') + ' more after this one.</p></div>';
+    var card = document.getElementById('swcard'), x0 = null, dx = 0;
+    card.addEventListener('pointerdown', function (ev) { if (ev.target.closest('a,button')) return; x0 = ev.clientX; dx = 0; card.setPointerCapture(ev.pointerId); });
+    card.addEventListener('pointermove', function (ev) { if (x0 === null) return; dx = ev.clientX - x0; card.style.transform = 'translateX(' + dx + 'px) rotate(' + dx / 30 + 'deg)'; });
+    card.addEventListener('pointerup', function () { if (x0 === null) return; x0 = null; if (Math.abs(dx) > 90) act(dx > 0 ? 'save' : 'pass'); else card.style.transform = ''; });
+  }
+  function act(what) {
+    var j = queue[i]; if (!j) return;
+    if (what === 'save') { var mine = H.get('hrn_jobs', {}) || {}; if (!mine[j[0]]) mine[j[0]] = { t: j[1], c: j[2], st: 'saved', at: Date.now(), note: '' }; H.set('hrn_jobs', mine); }
+    var sw = H.get('hrn_swiped', {}) || {}; sw[j[0]] = 1; var ks = Object.keys(sw); if (ks.length > 5000) ks.slice(0, ks.length - 5000).forEach(function (k) { delete sw[k]; }); H.set('hrn_swiped', sw);
+    i++; done++; draw();
+  }
+  box.addEventListener('click', function (ev) { var b = ev.target.closest('[data-sw]'); if (b) act(b.getAttribute('data-sw')); });
+  document.addEventListener('keydown', function (ev) { if (ev.target.closest && ev.target.closest('input,textarea,select')) return; if (ev.key === 'ArrowRight') act('save'); else if (ev.key === 'ArrowLeft') act('pass'); });
+  var reset = document.getElementById('swipe-reset');
+  if (reset) reset.addEventListener('click', function () { H.set('hrn_swiped', {}); location.reload(); });
+  H.load().then(function (rows) {
+    var mine = H.get('hrn_jobs', {}) || {}, sw = H.get('hrn_swiped', {}) || {}, hid = H.get('hrn_hidden', {}) || {};
+    var once = {};          // one card for a role a company posts in many places, as the lists show it
+    queue = rows.filter(function (j) { var k = (j[1] + '|' + j[2]).toLowerCase(); if (once[k]) return false; once[k] = 1; return !j[22] && !mine[j[0]] && !sw[j[0]] && !hid[j[0]]; })
+      .map(function (j) { var f = fit(j); return [j, f[1] ? f[0] / f[1] : 0]; })
+      .sort(function (a, b) { return (b[1] >= 0.6) - (a[1] >= 0.6) || (b[0][16] || 0) - (a[0][16] || 0); })
+      .map(function (x) { return x[0]; }).slice(0, 500);
+    draw();
+  }).catch(function () { box.innerHTML = '<p class="note">The jobs could not be loaded. Try again in a minute.</p>'; });
+})();

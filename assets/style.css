@@ -3978,3 +3978,16 @@ td,th{font-variant-numeric:tabular-nums}
 .rexgal a{display:flex;flex-direction:column;gap:6px;color:var(--text);text-decoration:none;font-size:14px}
 .rexgal img{width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
 .rexgal a:hover img{border-color:var(--text)}
+/* resume builder: a skill suggestion with its "skip" button, and the third way to start (20 Nov 2026) */
+.rb-chip{display:inline-flex;align-items:center;gap:0;margin:0 6px 6px 0}.rb-chip .chipbtn{margin:0;border-top-right-radius:0;border-bottom-right-radius:0}
+.rb-skip{min-height:34px;padding:0 9px;border:1px solid var(--line2);border-left:0;border-radius:0 999px 999px 0;background:var(--card);color:var(--muted);cursor:pointer;font-size:15px;line-height:1}
+.rb-skip:hover{color:var(--text)}
+.rb-start{flex-wrap:wrap;gap:8px;align-items:center}.rb-start input{min-width:200px;flex:1}
+/* swipe through jobs (/swipe/, 20 Nov 2026) */
+.swipe{max-width:560px;margin:18px 0}
+.swcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 14px;box-shadow:0 2px 10px rgba(0,0,0,.05);touch-action:pan-y;user-select:none;transition:transform .15s}
+.swcard h2{margin:6px 0 4px;font-size:22px;line-height:1.25}.swcard h2 a{color:var(--text);text-decoration:none}
+.swco{color:var(--muted);margin:0 0 10px}.swpay{font-weight:600;margin:0 0 8px}.swfit{margin:0;color:var(--green);font-size:14px}
+.swtags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.swtags span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;color:var(--muted)}
+.swact{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 6px}.swact .btn{flex:1;justify-content:center;margin:0}
+.swcard.end{text-align:center}

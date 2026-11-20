@@ -92,7 +92,10 @@
         '<button class="linkbtn" type="button" id="rb-paste">or paste the text</button></p>' +
         '<div id="rb-pastebox" hidden><textarea id="rb-pastetext" rows="7" placeholder="Paste the whole resume as text: name, contacts, experience, education, skills"></textarea>' +
         '<p><button class="btn sm" type="button" id="rb-pasteread">Read it</button></p></div>' +
-        (impMsg ? '<p class="note rb-impmsg" role="status">' + impMsg + '</p>' : '') + '</div>' +
+        (impMsg ? '<p class="note rb-impmsg" role="status">' + impMsg + '</p>' : '') +
+        // a third way to start, while the builder is empty (plan item 4.7, 20 Nov 2026): one of the 390 examples for your work
+        (hasContent(data) ? '' : '<p class="rb-imp-a rb-start"><label for="rb-expick">Or start from an example for your work:</label> <input id="rb-expick" list="rb-exlist" placeholder="Type a job, for example nurse" autocomplete="off"><datalist id="rb-exlist"></datalist> <button class="btn ghost sm" type="button" id="rb-exgo">Open it</button></p>') +
+        '</div>' +
         '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline: the job you want', 'title', 'text', 'Senior Backend Engineer') +
         '<div class="rrow">' + field('Email', 'email', 'text', 'you@example.com') + field('Phone', 'phone', 'text', '+1 555 010 0199') + '</div>' +
         '<div class="rrow">' + field('Location', 'place', 'text', 'Berlin, Germany · open to remote') + field('Links', 'links', 'text', 'github.com/you, linkedin.com/in/you') + '</div>') +
@@ -410,6 +413,15 @@
     else if (t.id === 'rb-doc2') wordFile();
     else if (t.id === 'rb-doc') wordFile();
     else if (t.id === 'rb-json') jsonFile();
+    else if (t.id === 'rb-exgo') {
+      var pick = ($('rb-expick').value || '').trim().toLowerCase();
+      exList().then(function (all) {
+        var slug_ = Object.keys(all).filter(function (k) { return (all[k].title || '').toLowerCase() === pick || k === pick; })[0] ||
+                    Object.keys(all).filter(function (k) { return (all[k].title || '').toLowerCase().indexOf(pick) >= 0; })[0];
+        if (slug_) location.href = location.pathname + '?example=' + slug_;
+        else { $('rb-expick').setCustomValidity('No example with these words: try another job.'); $('rb-expick').reportValidity(); setTimeout(function () { $('rb-expick').setCustomValidity(''); }, 2500); }
+      });
+    }
     else if (t.id === 'rb-paste') { var pb = $('rb-pastebox'); pb.hidden = !pb.hidden; if (!pb.hidden) $('rb-pastetext').focus(); }
     else if (t.id === 'rb-pasteread') { var txt = $('rb-pastetext').value; if (txt.trim()) useImport(window.HRNT.parseResume(txt), 'the pasted text'); }
     else if (t.id === 'rb-clear') { H.sure(t, 'Erase this resume from this browser?', 'Erase').then(function (ok) { if (ok) { data = fill({ tpl: data.tpl }); save(); drawForm(); drawPreview(); } }); }
@@ -475,7 +487,7 @@
     else if (m.error) html += '<p class="rbc-h"><b>Target job</b></p><p class="note">' + (m.error === 'resume' ? 'Write at least 30 words of resume to compare.' : m.error === 'jd' ? 'Paste the whole posting: at least 30 words.' : 'The posting names too few skills or repeated terms to compare.') + '</p>';
     else {
       html += '<p class="rbc-h"><b>' + m.score + '%</b> ' + esc(m.label) + (jdTitle ? ' · ' + esc(jdTitle) : '') + '</p>'
-        + (m.missing.length ? '<p class="note">Skills the posting names and this resume does not. Add only the ones you have:</p><p class="rbc-add">' + m.missing.slice(0, 12).map(function (s) { return '<button class="chipbtn" type="button" data-addskill="' + esc(s) + '">+ ' + esc(s) + '</button>'; }).join('') + '</p>'
+        + (m.missing.length ? '<p class="note">Skills the posting names and this resume does not. Add only the ones you have:</p><p class="rbc-add">' + chips(m.missing.slice(0, 12)) + '</p>'
           : '<p class="note">Every skill the posting names is in this resume.</p>')
         + (m.terms.filter(function (t) { return !t.found; }).length ? '<p class="note">Its repeated words you do not use yet: ' + m.terms.filter(function (t) { return !t.found; }).slice(0, 6).map(function (t) { return '“' + esc(t.term) + '”'; }).join(', ') + '.</p>' : '');
     }
@@ -521,6 +533,20 @@
      Nothing is sent until the visitor clicks, and the request says plainly not to invent anything. */
   /* Skills for the job title, as hh.ru suggests them after the profession is chosen: here from the example of the closest kind of
      work, whose skills come from today's postings. Each is one button away from the skills line. */
+  var exAll = null;
+  function exList() { return exAll ? Promise.resolve(exAll) : fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (d) { exAll = d; return d; }); }
+  root.addEventListener('focusin', function (ev) {
+    if (ev.target.id !== 'rb-expick' || $('rb-exlist').options.length) return;
+    exList().then(function (all) { $('rb-exlist').innerHTML = Object.keys(all).map(function (k) { return '<option value="' + esc(all[k].title || k) + '">'; }).join(''); }).catch(function () {});
+  });
+  // skills the visitor said no to are not offered again (plan item 4.7: the suggestions had "+" and no way to set one aside)
+  function skipped() { return H.get('hrn_rb_skip', []) || []; }
+  function chips(list) {
+    var no = skipped().map(function (x) { return String(x).toLowerCase(); });
+    return list.filter(function (x) { return no.indexOf(String(x).toLowerCase()) < 0; }).map(function (x) {
+      return '<span class="rb-chip"><button class="chipbtn" type="button" data-addskill="' + esc(x) + '">+ ' + esc(x) + '</button><button class="rb-skip" type="button" data-skipskill="' + esc(x) + '" aria-label="Skip ' + esc(x) + '" title="Not mine: do not suggest it again">×</button></span>';
+    }).join('');
+  }
   var roleEx = null, roleAsked = false;
   var titleSkills = function () {
     var t = String(data.title || '').toLowerCase();
@@ -540,7 +566,7 @@
     var miss = String(roleEx[best].skills || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x && !have[x.toLowerCase()]; }).slice(0, 10);
     if (!miss.length) return '';
     return '<div class="rbc-sk"><p class="rbc-h"><b>Skills</b> employers ask for in ' + esc(roleEx[best].title) + ' jobs today</p><p class="note">Add the ones you have:</p><p class="rbc-add">'
-      + miss.map(function (x) { return '<button class="chipbtn" type="button" data-addskill="' + esc(x) + '">+ ' + esc(x) + '</button>'; }).join('') + '</p></div>';
+      + chips(miss) + '</p></div>';
   };
   var aiAsks = [];
   var aiLine = function (text) {
@@ -585,6 +611,8 @@
         copyText(aiAsks[+ai][1], function () { if (done) done.hidden = false; });
         return;
       }
+      var skip = ev.target.getAttribute && ev.target.getAttribute('data-skipskill');
+      if (skip) { var sk = skipped(); if (sk.indexOf(skip) < 0) sk.push(skip); H.set('hrn_rb_skip', sk.slice(-200)); drawCheck(); return; }
       var add = ev.target.getAttribute && ev.target.getAttribute('data-addskill');
       if (add) {
         var list = String(data.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
