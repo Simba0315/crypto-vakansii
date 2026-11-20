@@ -2870,7 +2870,9 @@ def main():
     cmp_links = lambda t: labrow("Compare with", [f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t], ("compare/", "Any two skills")) if t in CMP else ""
     LEVELS = [("Intern", "intern", "Internship"), ("Junior", "junior", "Junior"), ("Senior", "senior", "Senior"), ("Lead", "lead", "Lead and above")]
     combos, REL = [], defaultdict(list)
-    big_places = [x for x in places if len(x[2]) >= 150]      # combination pages only where a place has enough jobs to fill them
+    # combination pages only where a place has enough jobs to fill them: 60 since 20 Nov 2026 (150 before; plan item 10, the smaller
+    # countries), each page still needing 8 jobs of its own (add())
+    big_places = [x for x in places if len(x[2]) >= int(os.environ.get("HRN_COMBO_PLACE_MIN") or 60)]
     big_slugs = {slug for _, slug, _ in big_places}
     def by_place(js):
         """{place: the jobs of js in it}, for the big places, each list in the order of js. One pass over the jobs instead of one
