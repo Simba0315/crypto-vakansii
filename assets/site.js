@@ -2040,7 +2040,8 @@
     var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
     var code = (window.HRN && window.HRN.get('hrn_place', '')) || G.tz[tz] || '', cur = EUR.indexOf(code) >= 0 ? 'EUR' : CUR[code];
     var rate = cur && fx.per_usd[cur]; if (!rate) return;
-    var fmt = function (v) { try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, notation: 'compact', maximumFractionDigits: 0 }).format(v);      // the page is in English: €197K, not 197 тыс. € } catch (e) { return Math.round(v / 1000) + 'K ' + cur; } };
+    // the page is in English: €197K, not 197 тыс. €
+    var fmt = function (v) { try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, notation: 'compact', maximumFractionDigits: 0 }).format(v); } catch (e) { return Math.round(v / 1000) + 'K ' + cur; } };
     Array.prototype.forEach.call(els, function (el) {
       var usd = Number(el.getAttribute('data-usd')); if (!usd) return;
       el.textContent = 'In your currency: about ' + fmt(usd * rate) + ' a year at the median (European Central Bank reference rate of ' + fx.date + '; employers set pay in their own currency, so read it as a guide).';

@@ -72,6 +72,12 @@ for rel in sample:
     for href in set(re.findall(r'href="(/[^"]*)"', h)):
         if not exists(href):
             fails[t]["broken internal link"] += 1; broken[href] += 1
+# every script the pages load must parse (20 Nov 2026: a stray "//" in assets/site.js left every script of the live site dead)
+import shutil, subprocess                     # noqa: E402
+if shutil.which("node"):
+    for js in sorted(SITE.glob("*.js")):
+        counts["scripts"] += 1
+        if subprocess.run(["node", "--check", str(js)], capture_output=True).returncode: fails["scripts"][f"{js.name} does not parse"] += 1
 print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]

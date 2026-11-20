@@ -141,6 +141,11 @@ jobs:
       - name: Check pages against the page standard
         continue-on-error: true
         run: python3 check.py
+      # Every script the pages load must parse. On 20 Nov 2026 a "//" comment that swallowed the rest of its line (the catch of a
+      # try) in assets/site.js left every script of the live site dead from one upload to the next, and check.py does not read
+      # scripts. A script that does not parse stops the upload here, so the site keeps the scripts of the last good upload.
+      - name: Scripts must parse
+        run: for f in site/*.js; do node --check "$f" || exit 1; done
       # The upload to our own server: the files (without the 42,000 job pages, which the server builds from the records), the records
       # and the page code. HRN_DEPLOY_KEY is a key made for this only; on the server it can do nothing but rsync into /srv/hrn/app.
       # --delay-updates puts every new file in place at the end, so no visitor sees half an upload.
