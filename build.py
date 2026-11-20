@@ -2809,12 +2809,29 @@ def main():
     lap('the remote hub also answers "remote jobs in my field", "remo')
     # the remote hub also answers "remote jobs in my field", "remote and part-time", "remote and well paid": one link each
     rfams = "".join(tile(f"categories/{fs}/remote/", fn, c) for fs, fn, _, _, js_ in fam_rows if (c := sum(j["remote"] for j in js_)) >= 20)
+    # Remote jobs that name the hours: a time zone in the location line, the title or the opening of the text. "Remote" alone says
+    # nothing about when the team works; these postings do. Counted from the postings, no zone is guessed (ROADMAP section 6).
+    TZ_ZONES = (("US Eastern", "Eastern", r"\b(?:EST|EDT)\b|\(ET\)|\bET\b(?= time| hours| overlap)|eastern time|eastern time ?zone"),
+                ("US Central", "Central", r"\b(?:CST|CDT)\b|\(CT\)|\bCT\b(?= time| hours| overlap)|central time|central time ?zone"),
+                ("US Mountain", "Mountain", r"\bMST\b|\(MT\)|\bMT\b(?= time| hours| overlap)|mountain time"),
+                ("US Pacific", "Pacific", r"\b(?:PST|PDT)\b|\(PT\)|\bPT\b(?= time| hours| overlap)|pacific time|pacific time ?zone"),
+                ("Europe", "Europe", r"\b(?:CET|CEST|GMT|BST|EET)\b|european time|emea (?:time ?)?zones?|emea/apac time ?zones?"),
+                ("UTC offset", "UTC", r"\bUTC\s?[+-]\s?\d|\bGMT\s?[+-]\s?\d|[+-]\d{1,2}\s?(?:hours? )?(?:UTC|GMT)\b"))
+    tz_rx = [(k_, nm_, re.compile(rx_, re.I if k_ != "x" else 0)) for nm_, k_, rx_ in TZ_ZONES]
+    tz_any = re.compile(r"time ?zones?|\bUTC\b|overlap (?:with|of)|core hours", re.I)
+    tz_jobs, tz_by = [], {}
+    for j in remote:
+        txt_ = " | ".join((j.get("location") or "", j.get("title") or "", (j.get("excerpt") or "")[:400]))
+        hit_ = [nm_ for nm_, k_, rx_ in tz_rx if rx_.search(txt_)]
+        if hit_ or tz_any.search(" | ".join((j.get("location") or "", j.get("title") or ""))):
+            tz_jobs.append(j)
+            for nm_ in hit_: tz_by.setdefault(nm_, []).append(j)
     rem_et = {f"remote/{s_}/" for et_, s_ in (("Contract", "contract"), ("Part-time", "part-time"), ("Full-time", "full-time")) if sum(1 for j in remote if j.get("etype") == et_) >= 20}
     rkinds = [f'<a href="{P}/{u}">{e(nm)}</a>' for u, nm in (
-        ("work-from-anywhere/", "Open to any country"), ("remote/new/", "Posted in the last 3 days"), ("remote/entry-level/", "Entry-level"), ("remote/full-time/", "Full-time"),
+        ("work-from-anywhere/", "Open to any country"), ("remote/time-zones/", "By time zone"), ("remote/new/", "Posted in the last 3 days"), ("remote/entry-level/", "Entry-level"), ("remote/full-time/", "Full-time"),
         ("remote/part-time/", "Part-time"), ("remote/contract/", "Contract"), ("salary/100k/remote/", "Paying $100K or more"), ("salary/200k/remote/", "Paying $200K or more"),
         ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles"))
-        if not u.startswith("remote/") or u in rem_et or u in {c_[0] for c_ in combos}]      # a remote list with too few jobs today has no page: no link to it
+        if not u.startswith("remote/") or (u == "remote/time-zones/" and len(tz_jobs) >= 30) or u in rem_et or u in {c_[0] for c_ in combos}]      # a remote list with too few jobs today has no page: no link to it
     remote_more = (section("Remote jobs by field", f'<ul class="tiles">{rfams}</ul>', ("categories/", "All categories")) if rfams else "")
     rr_rm = role_rows(remote, 30)
     best_rm = sorted((r_ for r_ in rr_rm if r_[3]), key=lambda r_: -r_[3])[:5]
@@ -4502,6 +4519,21 @@ def main():
                            ("What is the difference between a remote job and a work-from-anywhere job?",
                             f"A remote job is done from home, but most are limited to one country or a few. A work-from-anywhere job names no country. Of the {len(remote):,} remote jobs here today, {len(aw):,} are open to any country.")),
                 **aw_parts[1])
+
+    if len(tz_jobs) >= 30:
+        tz_parts = list_parts("Remote jobs that name a time zone", tz_jobs)
+        tz_cells = [(f"{len(v_):,}", e(k_)) for k_, v_ in sorted(tz_by.items(), key=lambda kv: -len(kv[1]))]
+        tz_qa = [("What does a time zone in a remote job mean?", "The team works at certain hours and expects you to be at your desk for part of them. A posting that says “EST” asks for hours that suit US East Coast time, wherever you live."),
+                 ("Can I live in another country?", "Often yes, if the hours overlap. Read the location line: some postings name a time zone and still limit hiring to the countries where the company can employ people."),
+                 ("Which abbreviation is which?", "EST and ET are US Eastern time, CST and CT US Central, MST and MT Mountain, PST and PT Pacific, CET Central Europe and GMT London in winter. UTC is the world time that the others are counted from.")]
+        listing("remote/time-zones/", "Remote jobs by time zone", f"Remote Jobs by Time Zone ({len(tz_jobs):,} open) | {SITE}",
+                f"{roles(len(tz_jobs), 'remote job')} that name the hours they expect: US Eastern, Central, Pacific, Europe or a UTC offset.", tz_jobs,
+                "<strong>Remote jobs by time zone</strong>: remote work that names the hours the team keeps. " + intro_for(tz_jobs, "remote ", " that name a time zone", row=tz_parts[0])
+                + " In plain words: a time zone is the clock a team follows, and a remote job that names one expects you to be working while that clock is in office hours.",
+                trail=(("Remote", "remote/"),), links=(("remote/", "All remote jobs"), ("work-from-anywhere/", "Open to any country")), faq="remote jobs by time zone",
+                after=section("Time zones [[named in the postings]]", nums(tz_cells, src=False) + '<p class="note">A posting is counted in every zone it names, so the figures can add up to more than the list. Only postings that write the zone are counted; the rest say nothing about hours.</p>', sid="zones", label="Time zones")
+                + section("What the zones [[mean]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in tz_qa) + "</dl>", sid="meaning", label="In plain words"),
+                faq_first=tz_qa[0], faq_extra=tuple(tz_qa[1:]), **tz_parts[1])
 
     lap('Insights: ranked lists recalculated from live data every day')
     # Insights: ranked lists recalculated from live data every day
