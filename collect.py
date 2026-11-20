@@ -36,7 +36,8 @@ def _rules_text():
 RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
-ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json")
+ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
+            "sources_paylocity.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -45,10 +46,11 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # JazzHR (19 Nov 2026): every customer's board is a subdomain of applytojob.com, one service, so 4 boards at a time and at most four
 # requests a second in all; its pages take a second or two to answer, so in practice it is two or three a second.
 # Breezy and BambooHR (19 Nov 2026): one service each as well (every board a subdomain), so the same care as JazzHR.
+# Paylocity (20 Nov 2026): every board on one address (recruiting.paylocity.com), its pages a second or so: the same.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 4}
+             "breezy": 4, "bamboohr": 4, "paylocity": 4}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
-           "breezy": 0.3, "bamboohr": 0.3}
+           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -62,7 +64,7 @@ LIST_MAX = 1000                     # Workday, SmartRecruiters: the newest this 
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
-SLOW_ATS |= {"jazzhr", "breezy", "bamboohr"}
+SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -1691,8 +1693,52 @@ def fetch_bamboohr(src, reuse=None):
     return detail_board(src, reuse, "bamboohr", items, read)
 
 
+# Paylocity (https://recruiting.paylocity.com/recruiting/jobs/All/<company id>/<name>, sources_paylocity.json, "token": the company
+# id, a GUID; discover_ats.py finds them in Common Crawl's index). The board's page carries its list in window.pageData: every open
+# posting with its place, remote flag, department and date; internal postings (for the company's own staff) are left out. The text
+# is on the posting's page (/Recruiting/Jobs/Details/<id>), in the JobPosting data it publishes for search engines.
+# recruiting.paylocity.com has no robots.txt (20 Nov 2026: 404), so nothing is asked to stay out. IndeedRemoteType is 2 on nearly
+# every posting, on site or not (a sample of 187 on 20 Nov 2026), so only IsRemote says remote.
+PAYLOCITY = "https://recruiting.paylocity.com/recruiting/jobs/All/"
+PL_DATA = re.compile(r"window\.pageData\s*=\s*(\{.*?\});\s*</script>", re.S)
+
+
+def paylocity_list(page):
+    """The postings in a Paylocity board's page, or None when the page is not one."""
+    m = PL_DATA.search(page or "")
+    if not m: return None
+    try: d = json.loads(m.group(1))
+    except ValueError: return None
+    return d.get("Jobs") if isinstance(d, dict) and isinstance(d.get("Jobs"), list) else None
+
+
+def fetch_paylocity(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("paylocity")
+    jobs = paylocity_list(get_text(f"{PAYLOCITY}{tok}/jobs", 60, accept="text/html"))
+    if jobs is None: return name, None
+    items = []
+    for p in jobs:
+        if not isinstance(p, dict) or not p.get("JobId") or not str(p.get("JobTitle") or "").strip() or p.get("IsInternal"): continue
+        loc = p.get("JobLocation") if isinstance(p.get("JobLocation"), dict) else {}
+        place = ", ".join(dict.fromkeys(str(x).strip() for x in (loc.get("City"), loc.get("State"), loc.get("Country")) if x and str(x).strip()))
+        items.append((str(p["JobId"]), {"title": str(p["JobTitle"]).strip(), "place": place, "remote": p.get("IsRemote") is True,
+                                        "dept": str(p.get("HiringDepartment") or ""), "posted": str(p.get("PublishedDate") or "")}))
+
+    def read(jid, raw):
+        url = f"https://recruiting.paylocity.com/Recruiting/Jobs/Details/{jid}"
+        d = jazz_page(_net.get_text(url, 40, accept="text/html", compressed=True))
+        desc = str(d.get("description") or "")
+        if not desc: return None
+        text = strip_html(desc)
+        if not english(f"{raw['title']}\n{text}"): return "not english"
+        return parse(name, "paylocity", jid, raw["title"], url, raw["place"], raw["remote"], raw["dept"], str(d.get("datePosted") or raw["posted"])[:10],
+                     text, jazz_pay(d), str(d.get("employmentType") or ""), desc, False, posted_at=raw["posted"] or None)
+    return detail_board(src, reuse, "paylocity", items, read)
+
+
 _fetch_any = fetch
-READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr}      # the systems read outside fetch_feed
+READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity}      # the systems read outside fetch_feed
 
 
 def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)

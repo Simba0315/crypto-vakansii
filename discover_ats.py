@@ -1,8 +1,10 @@
-"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy and BambooHR, and add the ones with English jobs to
+"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR and Paylocity, and add the ones with English jobs to
 sources_ats.json (15 Nov 2026; the owner: "too few jobs, competitors add far more").
 
     python3 discover_ats.py --cc DIR CRAWL[,CRAWL...]   read Common Crawl's URL index for the systems' addresses into DIR (one file a page;
                                                        HRN_CC_HOSTS=breezy,bamboohr reads only those systems)
+    python3 discover_ats.py --cc-files DIR CRAWL[,...]  the same for the systems in CC_SURT, read from the index's files instead of its
+                                                       server (for hosts on which the server answers 502 or 504)
     python3 discover_ats.py FILE_OR_DIR [...]          take every board address in these files (URLs, one a line: Common Crawl's index,
                                                        sitemaps, lists), verify the boards and add the good ones to sources_ats.json
                                                        (HRN_DISCOVER_LOG=FILE keeps what was checked, so a second run skips it)
@@ -19,7 +21,7 @@ A board marked "hold": true in sources_ats.json is verified but not read yet (co
 Polite: the gaps between requests and the boards read at once per system come from collect.ATS_GAP and collect.ATS_LIMIT, with the
 user agent of net.py. Common Crawl's index is asked one page at a time, 2 seconds apart.
 """
-import collections, concurrent.futures as cf, datetime, html, json, os, re, sys, threading, time, urllib.parse, urllib.robotparser
+import collections, concurrent.futures as cf, datetime, html, json, os, re, subprocess, sys, threading, time, urllib.parse, urllib.robotparser, zlib
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -33,6 +35,12 @@ CC_HOSTS = {"workable": "apply.workable.com/*", "recruitee": "*.recruitee.com", 
             "breezy": "*.breezy.hr", "bamboohr": "*.bamboohr.com"}
 # BambooHR's subdomains are every customer's whole account (sign-in, staff pages): only addresses of its careers pages are asked for
 CC_FILTER = {"bamboohr": "~url:/careers"}
+# Common Crawl's index server answered 502 or 504 on BambooHR at every page (19 and 20 Nov 2026), although its part of the index is
+# four blocks. The same index is published as files: cluster.idx holds the first address of every block of about 3,000 addresses and
+# where the block lies in cdx-NNNNN.gz, each block gzipped on its own. So one domain's blocks are read straight from the files by byte
+# ranges: about 12 requests to find the place in cluster.idx (100 MB, sorted), then one a block. Addresses as SURT keys: "com,bamboohr,".
+CC_FILES = "https://data.commoncrawl.org/cc-index/collections/{crawl}/indexes/"
+CC_SURT = {"bamboohr": "com,bamboohr,", "breezy": "hr,breezy,", "paylocity": "com,paylocity,recruiting)/recruiting/jobs/all/"}
 # addresses on these hosts that are the system's own pages, not a company's board
 NOT_BOARDS = {"www", "app", "api", "help", "support", "status", "blog", "docs", "developer", "developers", "partner", "partners", "academy",
               "marketplace", "cdn", "assets", "static", "tt", "career-site", "login", "signup", "j", "jobs", "careers-page", "oauth", "_next",
@@ -45,6 +53,7 @@ URL_RX = [
     ("personio", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60}\.jobs\.personio\.(?:de|com))(?:[/:?#]|$)", re.I)),
     ("breezy", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.breezy\.hr(?:[/:?#]|$)", re.I)),
     ("bamboohr", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.bamboohr\.com/(?:careers|jobs)(?:[/?#]|$)", re.I)),
+    ("paylocity", re.compile(r"https?://recruiting\.paylocity\.com/recruiting/jobs/all/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", re.I)),
     ("workday", re.compile(r"https?://([a-z0-9][a-z0-9-]{0,60}\.wd\d{1,3})\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})(?:[/?#]|$)")),
 ]
 # Recruitment agencies and job marketplaces post other companies' jobs, often the same one many times: left out, as in sources_more.json.
@@ -86,6 +95,80 @@ def read_cc(out_dir, crawls):
                     except ValueError: pass                 # a line cut short when the index answered in part
                 f.write_text("\n".join(urls))
                 print(f"{crawl} {name} page {p + 1}/{pages}: {len(urls)} addresses", flush=True)
+
+
+def _range(url, a, b, timeout=90):
+    """Bytes a to b of a file, or None."""
+    for i in range(3):
+        try:
+            r = subprocess.run(["curl", "-s", "-4", "--fail", "--max-time", str(timeout), "-r", f"{a}-{b}", "-A", net.UA, url], capture_output=True, timeout=timeout + 5)
+            if r.returncode == 0 and r.stdout: return r.stdout
+        except Exception: pass
+        time.sleep(5 * (i + 1))
+    return None
+
+
+def cc_files(crawl, prefix):
+    """The addresses under one SURT prefix in one crawl, read from the index's files (see CC_FILES). None when a request failed."""
+    base = CC_FILES.format(crawl=crawl)
+    head = subprocess_head(base + "cluster.idx")
+    if not head: return None
+
+    def first_key(pos):
+        raw = _range(base + "cluster.idx", pos, pos + 8191)
+        if raw is None: raise IOError("cluster.idx")
+        lines = raw.decode("utf-8", "replace").split("\n")[1 if pos else 0:]
+        return lines[0].split(" ")[0] if lines and lines[0] else None
+    try:
+        lo, hi = 0, head
+        while hi - lo > 65536:                                  # the last place whose line sorts before the prefix
+            mid = (lo + hi) // 2
+            k = first_key(mid)
+            if k is None or k >= prefix: hi = mid
+            else: lo = mid
+    except IOError:
+        return None
+    raw = _range(base + "cluster.idx", lo, lo + 262143)
+    if raw is None: return None
+    rows = [l.split("\t") for l in raw.decode("utf-8", "replace").split("\n")[1 if lo else 0:] if l.count("\t") >= 4]
+    urls = []
+    for i, r in enumerate(rows):
+        start, nxt = r[0].split(" ")[0], (rows[i + 1][0].split(" ")[0] if i + 1 < len(rows) else "~")
+        if nxt < prefix: continue
+        if start > prefix + "~": break
+        data = _range(base + r[1], int(r[2]), int(r[2]) + int(r[3]) - 1)
+        if data is None: return None
+        for line in zlib.decompress(data, 16 + zlib.MAX_WBITS).decode("utf-8", "replace").splitlines():
+            surt, _, rest = line.partition(" ")
+            if not surt.startswith(prefix): continue
+            m = re.search(r'"url": "([^"]+)"', rest)
+            if m: urls.append(m.group(1))
+        time.sleep(1)
+    return urls
+
+
+def subprocess_head(url):
+    """The size of a file from its headers, or None."""
+    try:
+        out = subprocess.run(["curl", "-sI", "-4", "--max-time", "30", "-A", net.UA, url], capture_output=True, text=True, timeout=35).stdout
+        return int(next(l.split(":", 1)[1] for l in out.lower().splitlines() if l.startswith("content-length")))
+    except Exception:
+        return None
+
+
+def read_cc_files(out_dir, crawls):
+    """read_cc for the systems in CC_SURT, from the index's files: one file a crawl and system."""
+    out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
+    for crawl in crawls:
+        for name, prefix in CC_SURT.items():
+            if os.environ.get("HRN_CC_HOSTS") and name not in os.environ["HRN_CC_HOSTS"].split(","): continue
+            f = out_dir / f"{crawl}__{name}__files.txt"
+            if f.exists() and f.stat().st_size: continue
+            urls = cc_files(crawl, prefix)
+            if urls is None: print(f"{crawl} {name}: the index files did not answer", flush=True); continue
+            if name in CC_FILTER: urls = [u for u in urls if "/careers" in u or "/jobs" in u]
+            f.write_text("\n".join(urls))
+            print(f"{crawl} {name}: {len(urls)} addresses", flush=True)
 
 
 def boards_in(lines):
@@ -218,7 +301,7 @@ def lands_of(locations):
 def verify(ats, tok):
     """(entry for sources_ats.json, None) or (None, why not)."""
     if ats == "workday": return verify_workday(tok)
-    if ats in ("breezy", "bamboohr"): return verify_detail(ats, tok)
+    if ats in ("breezy", "bamboohr", "paylocity"): return verify_detail(ats, tok)
     url, accept = feed(ats, tok)
     collect.polite(ats)
     body = net.get_text(url, 60, accept="application/json" if accept == "json" else accept)
@@ -241,18 +324,26 @@ def verify(ats, tok):
 
 
 def verify_detail(ats, tok):
-    """Breezy and BambooHR: the list in one request, then the text of the first postings (collect.DETAILS, 3 while discovering):
-    kept with 3 or more open jobs of which 2 of those read are in English."""
-    list_url = f"https://{tok}.breezy.hr/json" if ats == "breezy" else f"https://{tok}.bamboohr.com/careers/list"
+    """Breezy, BambooHR and Paylocity: the list in one request, then the text of the first postings (collect.DETAILS, 3 while
+    discovering): kept with 3 or more open jobs of which 2 of those read are in English."""
+    list_url = {"breezy": f"https://{tok}.breezy.hr/json", "bamboohr": f"https://{tok}.bamboohr.com/careers/list",
+                "paylocity": f"{collect.PAYLOCITY}{tok}/jobs"}[ats]
     collect.polite(ats)
-    body = net.get_text(list_url, 60, accept="application/json")
+    body = net.get_text(list_url, 60, accept="text/html" if ats == "paylocity" else "application/json")
     if not body: return None, "no answer"
-    try: d = json.loads(body)
-    except ValueError: return None, "feed not readable"
-    posts = d if ats == "breezy" else (d.get("result") if isinstance(d, dict) else None)
+    if ats == "paylocity":
+        posts = [p for p in collect.paylocity_list(body) or [] if isinstance(p, dict) and not p.get("IsInternal")]
+        if collect.paylocity_list(body) is None: return None, "feed not readable"
+    else:
+        try: d = json.loads(body)
+        except ValueError: return None, "feed not readable"
+        posts = d if ats == "breezy" else (d.get("result") if isinstance(d, dict) else None)
     if not isinstance(posts, list): return None, "feed not readable"
     if len(posts) < 3: return None, f"{len(posts)} jobs"
-    if ats == "breezy":
+    if ats == "paylocity":                                # the page's title: "<company> - Job Opportunities"
+        m = re.search(r"<title>\s*(.*?)\s*-\s*Job Opportunities\s*</title>", body, re.S | re.I)
+        name = clean_name(html.unescape(m.group(1))) if m else ""
+    elif ats == "breezy":
         name = clean_name(collect._nm((posts[0] if isinstance(posts[0], dict) else {}).get("company")))
     else:
         collect.polite(ats)
@@ -372,10 +463,14 @@ def main(paths):
             if entry: results.append(entry)
             else: why[f"{ats}: {re.sub(r'[0-9]+', 'N', no)}"] += 1
             if done[0] % 200 == 0: print(f"  {done[0]:,} of {len(todo):,} checked, {len(results):,} kept", flush=True)
+    # HRN_DISCOVER_AT_ONCE=8: boards checked at once on each system (collect.ATS_LIMIT otherwise). The gap between two requests to a
+    # system stays collect.ATS_GAP, so this only helps where its answers are slow (BambooHR: two or three seconds a posting's page).
+    if os.environ.get("HRN_DISCOVER_AT_ONCE"):
+        collect._gate.update({a: threading.Semaphore(int(os.environ["HRN_DISCOVER_AT_ONCE"])) for a in collect._gate})
     import multiprocessing
     collect.PARSE = cf.ProcessPoolExecutor(os.cpu_count() or 2, mp_context=multiprocessing.get_context("spawn"))     # parsing, as in collect.main
     try:
-        with cf.ThreadPoolExecutor(sum(collect.ATS_LIMIT.values())) as ex:
+        with cf.ThreadPoolExecutor(sum(collect._gate[a]._value for a in collect._gate)) as ex:
             list(ex.map(run, todo))
     finally:
         collect.PARSE.shutdown(); collect.PARSE = None
@@ -429,6 +524,7 @@ def names():
 
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--cc"]: read_cc(sys.argv[2], sys.argv[3].split(","))
+    elif sys.argv[1:2] == ["--cc-files"]: read_cc_files(sys.argv[2], sys.argv[3].split(","))
     elif sys.argv[1:2] == ["--names"]: names()
     elif sys.argv[1:]: main(sys.argv[1:])
     else: print(__doc__)

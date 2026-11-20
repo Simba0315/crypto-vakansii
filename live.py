@@ -23,7 +23,7 @@ collect.ATS_LIMIT allows.
     python3 live.py --once 50       read 50 boards once and print what would change, writing nothing (a dry run)
 """
 import concurrent.futures as cf
-import ctypes, datetime, gc, hashlib, json, os, sqlite3, sys, time
+import collections, ctypes, datetime, gc, hashlib, json, os, sqlite3, sys, time
 from pathlib import Path
 
 # Memory (18 Nov 2026: this program held 1.9 GB of its 3 GB at 275,000 jobs, and the boards on hold wait for room). Two malloc arenas instead
@@ -70,11 +70,11 @@ collect.DETAILS = int(os.environ.get("HRN_LIVE_DETAILS") or 15) + TEXTS_SLOW
 WORKERS = int(os.environ.get("HRN_LIVE_WORKERS") or 36)
 # Boards of these systems read at once here, at most: their reads take long (a request per posting's text), and without a cap they
 # can hold every thread while the quick boards of the other systems wait (the loop keeps WORKERS * 2 reads queued, WORKERS run).
-LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4}
+LIVE_CAP = {"workday": WORKERS // 2, "smartrecruiters": 2, "jazzhr": 4, "breezy": 4, "bamboohr": 4, "paylocity": 4}
 # And these systems together at most HEAVY_MAX of the reads queued, so at most that many threads: a third of the threads is always
 # free for the quick boards. (20 Nov 2026: the caps above added up to 40 of 36 threads; the slow boards held every thread, and
 # 1,800 Greenhouse and 1,800 Ashby boards were read seven or eight hours late instead of every hour.)
-HEAVY = {"workday", "smartrecruiters", "jazzhr", "breezy", "bamboohr", "usajobs"}
+HEAVY = {"workday", "smartrecruiters", "jazzhr", "breezy", "bamboohr", "paylocity", "usajobs"}
 HEAVY_MAX = WORKERS * 2 // 3
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company TEXT, rec TEXT, descr TEXT, seen_at REAL, closed TEXT DEFAULT '');
@@ -351,10 +351,16 @@ class Live:
         last_change = now if changed else row[0]
         fails = 0 if ok else row[1] + 1
         wait = min(HOUR * 2 ** fails, 6 * HOUR) if not ok else (BUSY if now - last_change < 86400 and src["ats"] not in SLOW else HOUR)
+        # Where every board of a system is on one service (JazzHR, Breezy, BambooHR, Paylocity: one request every collect.ATS_GAP
+        # seconds in all), its boards are read no more often than lets their lists take half of those requests; the other half is
+        # for the texts of new postings. (20 Nov 2026: 8,000 Paylocity boards read hourly would have taken nine requests in ten.)
+        if ok and src["ats"] != "workday":
+            wait = max(wait, getattr(self, "per_system", {}).get(src["ats"], 0) * collect.ATS_GAP.get(src["ats"], 0) * 2)
         self.con.execute("UPDATE boards SET next_due = ?, last_change = ?, fails = ? WHERE key = ?", (now + wait, last_change, fails, k))
 
     def run(self):
         srcs, srcs_at = sources(), time.time()
+        self.per_system = collections.Counter(s["ats"] for s in srcs)
         log(f"live: {len(srcs):,} boards, {WORKERS} at a time; store {LIVE_DB}")
         tally, tally_at = [0, 0, 0, 0, 0], time.time()          # boards read, failed, new jobs, closed, duplicates skipped
         took = {}                                               # system: [reads, seconds], for the five-minute line
@@ -369,6 +375,7 @@ class Live:
                     give_back()
                 if self.reload(): srcs = sources()
                 if time.time() - srcs_at > 600: srcs, srcs_at = sources(), time.time()
+                self.per_system = collections.Counter(s["ats"] for s in srcs)
                 self.resync_search()
                 if time.time() - direct_at >= DIRECT_EVERY:
                     direct_at = time.time()
@@ -448,8 +455,58 @@ def watch(seen):
             log("the code changed: restarting"); os._exit(3)
 
 
+def test():
+    """The scheduler, with boards that answer at once and nothing written: the slow systems together never hold more than HEAVY_MAX
+    threads, the quick boards are all read while the slow ones are busy, and the longest overdue board goes first."""
+    global sources
+    import threading
+    srcs = [{"name": f"{a}{i}", "ats": a, "token": f"{a}{i}"} for a, n in (("workday", 60), ("jazzhr", 20), ("breezy", 20), ("paylocity", 20), ("greenhouse", 80))
+            for i in range(n)]
+    lock, now_heavy, max_heavy, order = threading.Lock(), [0], [0], []
+
+    def fake(src, reuse=None):
+        heavy = src["ats"] in HEAVY
+        with lock:
+            order.append(src["name"])
+            if heavy: now_heavy[0] += 1; max_heavy[0] = max(max_heavy[0], now_heavy[0])
+        time.sleep(3 if heavy else 0.02)
+        with lock:
+            if heavy: now_heavy[0] -= 1
+        return src["name"], []
+    sources, collect.fetch = (lambda: srcs), fake           # for the rest of this process: the loop below never stops
+
+    def go():
+        lv = Live(write=False)                                  # sqlite3 objects stay in the thread that made them
+        lv.reload = lambda: False; lv.resync_search = lambda: None; lv.direct = lambda idx: None
+        lv.apply = lambda s, jobs: (0, 0, 0); lv.skip_known = lambda s: None
+        t = time.time()
+        for i, s in enumerate(srcs):                            # all overdue; the Greenhouse boards, last in the file, the longest
+            late = 7200 + i * 10 if s["ats"] == "greenhouse" else 600 + i
+            lv.con.execute("INSERT INTO boards (key, next_due) VALUES (?, ?)", (f"{s['ats']}:{s['token']}", t - late))
+        lv.run()
+    threading.Thread(target=go, daemon=True).start()
+    time.sleep(2.5)
+    gh = [n for n in order if n.startswith("greenhouse")]
+    assert 0 < max_heavy[0] <= HEAVY_MAX, max_heavy
+    assert len(gh) == 80, len(gh)
+    assert order[0] == "greenhouse79", order[:3]
+    lv = Live(write=False)
+    lv.per_system = {"paylocity": 8000, "greenhouse": 8000, "workday": 8000}
+    for ats, want in (("paylocity", 8000 * collect.ATS_GAP["paylocity"] * 2), ("greenhouse", BUSY), ("workday", HOUR)):
+        lv.con.execute("INSERT INTO boards (key, next_due, last_change) VALUES (?, 0, ?)", (f"{ats}:t", time.time() - 3600 * (1 if ats == "greenhouse" else 48)))
+        t = time.time(); lv.done({"ats": ats, "token": "t"}, True, False)
+        got = lv.con.execute("SELECT next_due FROM boards WHERE key = ?", (f"{ats}:t",)).fetchone()[0] - t
+        assert abs(got - want) < 2, (ats, got, want)
+    assert thread_time({"workday": [2, 80.0], "greenhouse": [10, 20.0]}) == "workday 80% (2 reads, 40 s each), greenhouse 20% (10 reads, 2 s each)"
+    assert thread_time({}) == "none"
+    print(f"live.py: all checks passed (slow reads at once at most {max_heavy[0]} of {WORKERS} threads)")
+
+
 if __name__ == "__main__":
-    if sys.argv[1:2] == ["--once"]:
+    if sys.argv[1:2] == ["--test"]:
+        test()
+        sys.stdout.flush(); os._exit(0)                         # the test's loop never ends: leave without waiting for its threads
+    elif sys.argv[1:2] == ["--once"]:
         once(int(sys.argv[2]) if len(sys.argv) > 2 else 30)
     else:
         import threading
