@@ -2,7 +2,7 @@
 
 A company without a verified site is shown without any picture (the owner asked for no letter squares): a wrong logo is worse than no logo.
 """
-import hashlib, json, re, subprocess, sys, concurrent.futures as cf
+import hashlib, json, os, re, subprocess, sys, concurrent.futures as cf
 from pathlib import Path
 from collect import slugify
 
@@ -170,6 +170,13 @@ def board_icon(src, dest):
     elif ats == "lever":
         html = curl(f"https://jobs.lever.co/{tok}")
         urls = re.findall(r'<img alt="[^"]*logo" src="(https://lever-client-logos[^"]+)"', html)
+    elif ats == "rippling":                     # the picture the company uploaded for its board, in each posting's entry (20 Nov 2026)
+        lst = curl(f"https://api.rippling.com/platform/api/ats/v1/board/{tok}/jobs")
+        m = re.search(r'"uuid"\s*:\s*"([0-9a-f-]{36})"', lst)
+        one = curl(f"https://api.rippling.com/platform/api/ats/v1/board/{tok}/jobs/{m.group(1)}") if m else ""
+        try: urls = [((json.loads(one).get("board") or {}).get("logo") or {}).get("url")] if one else []
+        except ValueError: urls = []
+        urls = [u for u in urls if u]
     else:
         return False
     if not urls: return False
@@ -215,7 +222,8 @@ def main():
     boards = sys.argv[1:2] == ["--boards"]                 # every sources file, board icons only (20 Nov 2026: 697 of 8,063 had a logo)
     if boards:
         srcs = [s for f in sorted(ROOT.glob("sources*.json")) if "candidates" not in f.name for s in json.loads(f.read_text())
-                if s.get("ats") in ("greenhouse", "ashby", "lever") and not s.get("hold")]
+                if s.get("ats") in (os.environ.get("HRN_LOGO_ATS", "").split(",") if os.environ.get("HRN_LOGO_ATS") else ("greenhouse", "ashby", "lever", "rippling"))
+                and not s.get("hold")]
     else:
         srcs = json.loads((ROOT / "sources.json").read_text()) + json.loads((ROOT / "sources_tech.json").read_text())
     seen, todo = set(), []
