@@ -568,6 +568,15 @@ nav a.nl[aria-current=page]{color:var(--text);box-shadow:inset 0 -3px 0 var(--ac
 #rb-preview.tpl-modern h2.pv-name{font-size:30px;letter-spacing:-.03em}
 #rb-preview.tpl-modern h3{border-bottom:0;border-left:3px solid #111;padding:0 0 0 8px;letter-spacing:.06em}
 #rb-preview.tpl-compact{font:12.5px/1.4 "Inter",system-ui,sans-serif;padding:26px 30px}
+#rb-preview.tpl-minimal{font:13.5px/1.6 "Inter",system-ui,sans-serif;padding:42px 46px}
+#rb-preview.tpl-minimal h2.pv-name{font-weight:600;font-size:27px;letter-spacing:-.02em}
+#rb-preview.tpl-minimal .pv-title{font-weight:400;color:#555}
+#rb-preview.tpl-minimal h3{font-weight:500;color:#555;letter-spacing:.14em;border-bottom:1px solid #d9d9d9;margin:26px 0 10px;padding-bottom:6px}
+#rb-preview.tpl-accent{font:14px/1.5 "Inter",system-ui,sans-serif}
+#rb-preview.tpl-accent h2.pv-name{color:#1f3a68;font-size:29px;letter-spacing:-.02em}
+#rb-preview.tpl-accent .pv-title{color:#1f3a68}
+#rb-preview.tpl-accent h3{color:#1f3a68;border-bottom:2px solid #1f3a68}
+#rb-preview.tpl-accent .pv-top strong{color:#1f3a68}
 #rb-preview.tpl-compact h2.pv-name{font-size:21px}
 #rb-preview.tpl-compact h3{margin:13px 0 5px;font-size:10.5px}
 #rb-preview.tpl-compact .pv-item{margin-bottom:6px}
@@ -1525,6 +1534,8 @@ header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1f
 .tplmini.tpl-developer,.tplmini.tpl-developer b{font-family:ui-monospace,Menlo,monospace}.tplmini.tpl-developer u{background:none;border-top:1px dashed #111}
 .tplmini.tpl-executive b{text-align:center}.tplmini.tpl-executive u{margin-left:auto;margin-right:auto}
 .tplmini.tpl-timeline i{margin-left:34%}.tplmini.tpl-timeline u{width:28%}
+.tplmini.tpl-minimal{font-family:Inter,system-ui,sans-serif;padding:12px 13px}.tplmini.tpl-minimal u{height:1px;background:#cfcfcf;width:100%}
+.tplmini.tpl-accent{font-family:Inter,system-ui,sans-serif}.tplmini.tpl-accent b{color:#1f3a68}.tplmini.tpl-accent u{background:#1f3a68;height:2px;width:100%}
 .tpln b{display:block;font-size:14px}.tpln span{display:block;font-size:12.5px;color:var(--muted)}
 .fmtrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:14px}
 .fmtrow .btn{margin-top:0;padding:4px 10px}

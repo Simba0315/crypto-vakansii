@@ -1,4 +1,4 @@
-"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR, Paylocity, Pinpoint, Gem, Trakstar and Rippling, and add the ones with English jobs to
+"""Find and verify company job boards on Workable, Recruitee, Teamtailor, Personio, Workday, Breezy, BambooHR, Paylocity, Pinpoint, Gem, Trakstar, Rippling and iCIMS, and add the ones with English jobs to
 sources_ats.json (15 Nov 2026; the owner: "too few jobs, competitors add far more").
 
     python3 discover_ats.py --cc DIR CRAWL[,CRAWL...]   read Common Crawl's URL index for the systems' addresses into DIR (one file a page;
@@ -42,7 +42,8 @@ CC_FILTER = {"bamboohr": "~url:/careers"}
 # ranges: about 12 requests to find the place in cluster.idx (100 MB, sorted), then one a block. Addresses as SURT keys: "com,bamboohr,".
 CC_FILES = "https://data.commoncrawl.org/cc-index/collections/{crawl}/indexes/"
 CC_SURT = {"bamboohr": "com,bamboohr,", "breezy": "hr,breezy,", "paylocity": "com,paylocity,recruiting)/recruiting/jobs/all/", "pinpoint": "com,pinpointhq,",
-           "gem": "com,gem,jobs)/", "trakstar": "com,trakstar,hire,", "recruiterbox": "com,recruiterbox,", "rippling": "com,rippling,ats)/"}
+           "gem": "com,gem,jobs)/", "trakstar": "com,trakstar,hire,", "recruiterbox": "com,recruiterbox,", "rippling": "com,rippling,ats)/",
+           "icims": "com,icims,"}
 # addresses on these hosts that are the system's own pages, not a company's board
 NOT_BOARDS = {"www", "app", "api", "help", "support", "status", "blog", "docs", "developer", "developers", "partner", "partners", "academy",
               "marketplace", "cdn", "assets", "static", "tt", "career-site", "login", "signup", "j", "jobs", "careers-page", "oauth", "_next",
@@ -60,6 +61,7 @@ URL_RX = [
     ("gem", re.compile(r"https?://jobs\.gem\.com/([A-Za-z0-9][A-Za-z0-9_-]{1,60})(?:[/?#]|$)")),
     ("trakstar", re.compile(r"https?://([a-z0-9][a-z0-9-]{1,60})\.(?:hire\.trakstar|recruiterbox)\.com(?:[/:?#]|$)", re.I)),
     ("rippling", re.compile(r"https?://ats\.rippling\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})/jobs(?:[/?#]|$)")),
+    ("icims", re.compile(r"https?://((?:careers|jobs|uscareers|careers-us|external)-[a-z0-9][a-z0-9-]{1,60}|[a-z0-9][a-z0-9-]{1,60}-(?:careers|jobs))\.icims\.com/jobs", re.I)),
     ("workday", re.compile(r"https?://([a-z0-9][a-z0-9-]{0,60}\.wd\d{1,3})\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([A-Za-z0-9][A-Za-z0-9_-]{1,80})(?:[/?#]|$)")),
 ]
 # Recruitment agencies and job marketplaces post other companies' jobs, often the same one many times: left out, as in sources_more.json.
@@ -337,6 +339,7 @@ def verify(ats, tok):
     if ats in ("breezy", "bamboohr", "paylocity"): return verify_detail(ats, tok)
     if ats in LIST_PAGE: return verify_list(ats, tok)
     if ats == "rippling": return verify_rippling(tok)
+    if ats == "icims": return verify_icims(tok)
     url, accept = feed(ats, tok)
     collect.polite(ats)
     body = net.get_text(url, 60, accept="application/json" if accept == "json" else accept)
@@ -456,6 +459,37 @@ def verify_rippling(tok):
     if len(jobs) < min(2, read): return None, f"mostly not English ({len(jobs)} of {read} read)"
     titles = {str(p.get("uuid")): str(p.get("name") or "") for p in d if isinstance(p, dict)}
     return {"name": name, "ats": "rippling", "token": tok, "count": len(ids), "titles": few_titles(titles.values()),
+            "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
+
+
+def verify_icims(tok):
+    """iCIMS: the sitemap of open postings, then the text of the first postings (collect.DETAILS, 3 while discovering). The company's
+    name from the JobPosting data of its first posting (hiringOrganization), else the careers page's title ("Job Listings at <company>").
+    Kept with 3 or more open jobs of which 2 of those read are in English; the titles are counted from the posting addresses."""
+    collect.polite("icims")
+    xml = net.get_text(f"https://{tok}.icims.com/sitemap.xml", 60, accept="application/xml") or ""
+    found = collect.ICIMS_JOB.findall(xml)
+    if len(found) < 3: return None, f"{len(found)} jobs"
+    collect.polite("icims")
+    d = collect.jazz_page(net.get_text(found[0][0] + "?in_iframe=1", 40, accept="text/html") or "")
+    org = d.get("hiringOrganization")
+    name = str((org.get("name") if isinstance(org, dict) else org) or "").strip()
+    if not name or name.upper() in ("UNAVAILABLE", "N/A", "CONFIDENTIAL"):
+        collect.polite("icims")
+        page = net.get_text(f"https://{tok}.icims.com/jobs/search?in_iframe=1", 30, accept="text/html") or ""
+        m = re.search(r"<title>[^<]*?Job Listings at\s+([^<|]{2,80}?)\s*</title>", page, re.I)
+        name = html.unescape(m.group(1)) if m else ""
+    name = re.sub(r",?\s+(?:Inc\.?|LLC|L\.L\.C\.|Ltd\.?|Corp\.?|Corporation|Management LLC)$", "", name).strip()
+    name = clean_name(name, tok) if name else pretty(re.sub(r"^(?:careers|jobs|uscareers|careers-us|external)-|-(?:careers|jobs)$", "", tok))
+    src = {"name": name, "ats": "icims", "token": tok}
+    _, jobs = collect.READERS["icims"](src)
+    if jobs is None: return None, "feed not readable"
+    if for_clients(jobs): return None, "a recruitment agency (postings for its clients)"
+    read = len(jobs) + src.get("not_english", 0)
+    if not read: return None, "no text readable"
+    if len(jobs) < min(2, read): return None, f"mostly not English ({len(jobs)} of {read} read)"
+    titles = [u.split("/jobs/", 1)[1].split("/", 1)[1].rsplit("/", 1)[0].replace("-", " ") for u, _, _ in found]
+    return {"name": name, "ats": "icims", "token": tok, "count": len(found), "titles": few_titles(titles),
             "lands": lands_of(j["location"] for j in jobs), "added": TODAY}, None
 
 

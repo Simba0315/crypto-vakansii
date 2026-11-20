@@ -5,7 +5,7 @@
   var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }],
     proj: [], cert: [], lang: [] };
   var copy = function (x) { return JSON.parse(JSON.stringify(x)); };
-  var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive', 'timeline'];
+  var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive', 'timeline', 'minimal', 'accent'];
   var fill = function (d) {                                                         // a damaged, old or foreign value must not break the builder
     if (!d || typeof d !== 'object' || Array.isArray(d)) d = {};
     Object.keys(blank).forEach(function (k) {
@@ -262,7 +262,8 @@
   /* Finish up: the template gallery with small pictures, and the format (size and spacing), saved with the resume. */
   var TPL_NAMES = { classic: ['Classic', 'Serif, calm, for any field'], modern: ['Modern', 'Clean sans-serif, a bar on each heading'], compact: ['Compact', 'Fits more on one page'],
     developer: ['Developer', 'Monospace headings, for engineers'], executive: ['Executive', 'Centred name, for senior roles'],
-    timeline: ['Timeline', 'Dates and time in each job on the left, as on hh.ru'] };
+    timeline: ['Timeline', 'Dates and time in each job on the left, as on hh.ru'], minimal: ['Minimal', 'Light lines and space, for design and product'],
+    accent: ['Accent', 'One navy colour on the headings, for sales and business'] };
   var finishUp = function () {
     return '<span class="flabel">Template</span><div class="tplgal">' + TPLS.map(function (t) {
         return '<button type="button" class="tplcard' + (data.tpl === t ? ' on' : '') + '" data-pick="' + t + '"><span class="tplmini tpl-' + t + '"><b>Alex Example</b><i></i><i class="s"></i><u></u><i></i><i class="s"></i></span>'
@@ -346,7 +347,8 @@
   };
   var wordFile = function () {
     var css = 'body{font-family:' + (data.tpl === 'classic' ? 'Georgia,serif' : data.tpl === 'developer' ? 'Consolas,monospace' : 'Arial,sans-serif') + ';font-size:11pt;line-height:1.4;color:#111}' +
-      'h2{font-size:20pt;margin:0}h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;border-bottom:1px solid #111;margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}';
+      'h2{font-size:20pt;margin:0}h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;border-bottom:1px solid #111;margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}' +
+      (data.tpl === 'accent' ? 'h2,h3{color:#1f3a68}h3{border-bottom-color:#1f3a68}' : data.tpl === 'minimal' ? 'h3{border-bottom:1px solid #ccc;color:#444;font-weight:normal}' : '');
     var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Resume</title><style>' + css + '</style></head><body>' +
       $('rb-preview').innerHTML.replace(/<div class="pv-top"><strong>(.*?)<\/strong><span>(.*?)<\/span><\/div>/g, '<p><strong>$1</strong> &nbsp; <span>$2</span></p>')
         .replace(/<div class="pv-item pv-tl"><div class="pv-when">(.*?)<\/div><div class="pv-what">(.*?)<\/div><\/div>/g,

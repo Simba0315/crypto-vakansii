@@ -37,7 +37,8 @@ RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # >>> not rules (how the boards are read, not what a record says)
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
-            "sources_paylocity.json", "sources_pinpoint.json", "sources_gem.json", "sources_trakstar.json", "sources_rippling.json")
+            "sources_paylocity.json", "sources_pinpoint.json", "sources_gem.json", "sources_trakstar.json", "sources_rippling.json",
+            "sources_icims.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -53,9 +54,9 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # Gem and Trakstar (20 Nov 2026): one API each for all their boards, the texts in the list: the same. Rippling the same, with one
 # request a posting for its text.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4}
+             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4, "icims": 4}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
-           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3}
+           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3, "icims": 0.5}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -73,7 +74,7 @@ LIST_MAX = 3000
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
-SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling"}
+SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling", "icims"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -1945,9 +1946,52 @@ def fetch_rippling(src, reuse=None):
     return detail_board(src, reuse, "rippling", list(jobs.items()), read)
 
 
+# iCIMS (https://<site>.icims.com, sources_icims.json, "token": the site's subdomain, such as careers-usu). Each careers site
+# publishes a sitemap of its open postings (/sitemap.xml, named in its robots.txt), every one with the time it last changed; a
+# posting's page, in the form the careers site frames (?in_iframe=1), carries its JobPosting data for search engines: the whole
+# text, the date, the type and the full address. robots.txt (19 and 20 Nov 2026) keeps crawlers out of referral, login, candidate
+# and "connect" pages only. A posting's text is one request, so iCIMS is read with the slow systems.
+ICIMS_JOB = re.compile(r"<loc>(https://[a-z0-9-]+\.icims\.com/jobs/(\d+)/[^<]*?/job)</loc>\s*(?:<lastmod>([^<]*)</lastmod>)?", re.I)
+ICIMS_TYPE = {"FULL_TIME": "Full-time", "PART_TIME": "Part-time", "CONTRACTOR": "Contract", "TEMPORARY": "Temporary", "INTERN": "Internship"}
+
+
+def icims_place(d):
+    locs = d.get("jobLocation") if isinstance(d.get("jobLocation"), list) else [d.get("jobLocation")]
+    out = []
+    for l in locs[:4]:
+        a = (l or {}).get("address") if isinstance(l, dict) else None
+        if not isinstance(a, dict): continue
+        cc = a.get("addressCountry")
+        cc = cc.get("name") if isinstance(cc, dict) else cc
+        out.append(", ".join(dict.fromkeys(str(x).strip() for x in (a.get("addressLocality"), a.get("addressRegion"), cc) if x and str(x).strip())))
+    return "; ".join(dict.fromkeys(x for x in out if x))
+
+
+def fetch_icims(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    polite("icims")
+    xml = get_text(f"https://{tok}.icims.com/sitemap.xml", 60, accept="application/xml")
+    if not xml or "<urlset" not in xml: return name, None
+    items = [(jid, {"url": url, "mod": mod or ""}) for url, jid, mod in ICIMS_JOB.findall(xml)]
+
+    def read(jid, raw):
+        d = jazz_page(_net.get_text(raw["url"] + "?in_iframe=1", 40, accept="text/html", compressed=True))
+        desc, title = str(d.get("description") or ""), str(d.get("title") or "").strip()
+        if not desc or not title: return None
+        text = strip_html(desc)
+        if not english(f"{title}\n{text}"): return "not english"
+        et = d.get("employmentType")
+        et = (et[0] if isinstance(et, list) and et else et) or ""
+        remote = str(d.get("jobLocationType") or "").upper() == "TELECOMMUTE"
+        posted = str(d.get("datePosted") or "")
+        return parse(name, "icims", jid, title, raw["url"], icims_place(d), remote, "", posted[:10], text, jazz_pay(d),
+                     ICIMS_TYPE.get(str(et).upper(), ""), desc, False, posted_at=posted or None)
+    return detail_board(src, reuse, "icims", items, read)
+
+
 _fetch_any = fetch
 READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity,
-           "pinpoint": fetch_pinpoint, "gem": fetch_gem, "trakstar": fetch_trakstar, "rippling": fetch_rippling}      # the systems read outside fetch_feed
+           "pinpoint": fetch_pinpoint, "gem": fetch_gem, "trakstar": fetch_trakstar, "rippling": fetch_rippling, "icims": fetch_icims}      # the systems read outside fetch_feed
 
 
 def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)
