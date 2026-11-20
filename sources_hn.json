@@ -1,0 +1,20 @@
+[
+{"name": "Tether", "ats": "recruitee", "token": "tether", "count": 206, "lands": ["AR", "GB", "CO"], "added": "2026-11-20", "via": "hn"},
+{"name": "Cerity Partners", "ats": "workday", "token": "ceritypartners.wd12/ceritypartnerscareers", "count": 78, "lands": ["US"], "added": "2026-11-20", "via": "hn"},
+{"name": "ONSITE", "ats": "workday", "token": "workwear.wd503/Careers", "count": 43, "lands": ["US", "CA", "MX"], "added": "2026-11-20", "via": "hn"},
+{"name": "WME", "ats": "workday", "token": "wmeimg.wd1/WMEGRP", "count": 41, "lands": ["US", "GB", "AU"], "added": "2026-11-20", "via": "hn"},
+{"name": "Prolific", "ats": "greenhouse", "token": "prolific", "count": 37, "lands": ["US", "GB", "MX"], "added": "2026-11-20", "via": "hn"},
+{"name": "Modash", "ats": "workable", "token": "modash", "count": 33, "lands": ["EE", "LT", "PL"], "added": "2026-11-20", "via": "hn"},
+{"name": "Seeq", "ats": "workable", "token": "seeq", "count": 31, "lands": ["US", "AU", "GB"], "added": "2026-11-20", "via": "hn"},
+{"name": "DigiKey", "ats": "workday", "token": "digikey.wd5/Digi-Key", "count": 20, "lands": ["US"], "added": "2026-11-20", "via": "hn"},
+{"name": "Mentimeter", "ats": "greenhouse", "token": "mentimeter", "count": 14, "lands": ["SE", "CA", "DE"], "added": "2026-11-20", "via": "hn"},
+{"name": "Aurelius Systems", "ats": "ashby", "token": "aureliussystems", "count": 13, "lands": ["US"], "added": "2026-11-20", "via": "hn"},
+{"name": "FINN App", "ats": "greenhouse", "token": "finnapp", "count": 8, "lands": ["BR", "GB", "TH"], "added": "2026-11-20", "via": "hn"},
+{"name": "PortSwigger", "ats": "workable", "token": "portswigger", "count": 7, "lands": ["GB"], "added": "2026-11-20", "via": "hn"},
+{"name": "Longshot Systems", "ats": "workable", "token": "longshot-systems-ltd", "count": 6, "lands": ["GB"], "added": "2026-11-20", "via": "hn"},
+{"name": "Axmed", "ats": "teamtailor", "token": "axmed", "count": 6, "lands": ["ES", "KE", "NG"], "added": "2026-11-20", "via": "hn"},
+{"name": "ProphetX", "ats": "pinpoint", "token": "prophetexchange", "count": 5, "lands": ["US"], "added": "2026-11-20", "via": "hn"},
+{"name": "FlyOver", "ats": "rippling", "token": "flyover-las-vegas", "count": 3, "lands": ["US"], "added": "2026-11-20", "via": "hn"},
+{"name": "Findigs", "ats": "lever", "token": "findigs", "count": 3, "lands": ["US"], "added": "2026-11-20", "via": "hn"},
+{"name": "SalesJack", "ats": "ashby", "token": "salesjack", "count": 3, "lands": ["CA"], "added": "2026-11-20", "via": "hn"}
+]

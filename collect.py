@@ -38,7 +38,7 @@ RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
             "sources_paylocity.json", "sources_pinpoint.json", "sources_gem.json", "sources_trakstar.json", "sources_rippling.json",
-            "sources_icims.json")
+            "sources_icims.json", "sources_hn.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
