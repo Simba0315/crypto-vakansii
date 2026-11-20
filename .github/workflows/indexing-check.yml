@@ -1,0 +1,20 @@
+name: Check the Google indexing key
+# Started by hand (gh workflow run indexing-check.yml): is the secret GOOGLE_INDEXING_KEY a working key whose account owns the site in
+# Search Console? It sends nothing and uses no publishing quota (indexing.py --check).
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the key
+        env:
+          GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+        run: python3 indexing.py --check

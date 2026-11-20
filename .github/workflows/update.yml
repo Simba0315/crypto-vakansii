@@ -83,6 +83,11 @@ jobs:
       # A push is a change of the site's code or design: it is built from the jobs the last hourly run saved, without reading every
       # careers page again, so a change reaches the site in minutes instead of waiting a whole collection (owner, 15 Nov 2026).
       # The exception (17 Nov 2026): saved jobs older than three hours, see STALE in "Restore jobs database".
+      # The ids of the jobs open before this run's collecting: indexing.py tells Google only about the ones that are new after it.
+      - name: Note the open jobs before collecting
+        if: github.event_name != 'push' || env.STALE == 'true'
+        continue-on-error: true
+        run: python3 indexing.py --snapshot
       - name: Collect jobs (closed ones move to the archive)
         if: github.event_name != 'push' || env.STALE == 'true'
         run: python3 collect.py
@@ -193,6 +198,15 @@ jobs:
             curl -s -o /dev/null -w "IndexNow answered %{http_code}\n" -X POST "https://api.indexnow.org/indexnow" \
               -H "Content-Type: application/json; charset=utf-8" --data-binary @data/indexnow.json
           fi
+      # Google's Indexing API, the fast way it offers for job pages: the best 20 jobs new in this run (indexing.py), after the upload so
+      # that each address opens. Google allows 200 a day by default; at "quota exceeded" the script stops. The owner keeps the service
+      # account's key as the secret GOOGLE_INDEXING_KEY (added 20 Nov 2026 on); without it the step sends nothing.
+      - name: Tell Google about new jobs
+        if: steps.deploy.outcome == 'success' && (github.event_name != 'push' || env.STALE == 'true')
+        continue-on-error: true
+        env:
+          GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+        run: python3 indexing.py
       # The owner's own channels (Telegram, X): post.py sends the jobs first seen today. It runs only when channels.json lists a
       # channel, after the deploy, so that the link in a post opens. A channel whose secret is missing is skipped; a failed post
       # never fails the run. The owner adds the secrets himself in the repository settings (see CHANNELS.md).
