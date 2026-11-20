@@ -8616,6 +8616,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<code>data-search</code>", "<code>1</code> adds a search box, a team filter where teams exist, and “Show more”", "off"],
              ["<code>data-title</code>", "Your own heading for the widget", "the name of the list"],
              ["<code>data-company</code>", "Your company name, shown in the heading of your own board", "none"]])), label="Reference")
+         + section("Match the widget to [[your own site]]",
+                   '<p>The widget keeps its look apart from your page, so your site’s styles cannot break it. To change the look on purpose, set one or more of these in your own stylesheet on the element that carries <code>data-hrn-jobs</code>. '
+                   'Each one wins over the light and dark themes. Colours take any CSS colour, not only hex.</p>'
+                   + wt(["Setting", "What it changes", "Default (light)"], [
+                       ["<code>--hrn-bg</code>", "The background of the widget", "<code>#fff</code>"],
+                       ["<code>--hrn-ink</code>", "Job titles and other main text", "<code>#0e0e0c</code>"],
+                       ["<code>--hrn-muted</code>", "Company, place and other lighter text", "<code>#5d5b54</code>"],
+                       ["<code>--hrn-line</code>", "The thin lines between rows and around the widget", "<code>#e2dfd5</code>"],
+                       ["<code>--hrn-hover</code>", "The row under the pointer", "<code>#f8f5f2</code>"],
+                       ["<code>--hrn-accent</code>", "The hover bar and the link underline (the same as <code>data-accent</code>, which wins if both are set)", "<code>#15803d</code>"],
+                       ["<code>--hrn-font</code>", "The typeface, for example your site’s own font stack", "the visitor’s system font"],
+                       ["<code>--hrn-radius</code>", "The corner roundness of the frame", "<code>8px</code>"]])
+                   + '<p>For example, square corners and a serif typeface:</p><pre><code>[data-hrn-jobs] { --hrn-font: Georgia, serif; --hrn-radius: 0; --hrn-accent: #b45309; }</code></pre>', label="Your look")
          + section("How it differs from [[other job widgets]]", wt(["", "This widget", "Widget builders", "Hiring-system embeds"], [
              ["Where the jobs come from", f"Our index of {n:,} open jobs, or your own board", "You type each job in by hand", "Your own board only"],
              ["Jobs from other companies, by skill or city", "Yes", "No", "No"],
