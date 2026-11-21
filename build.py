@@ -2233,12 +2233,20 @@ def lap(name):
     LAPS.append((now - LAP_NOW[0], LAP_NOW[1])); LAP_NOW[0], LAP_NOW[1] = now, name
 
 
+DOUBLE_ESC = re.compile(r"&amp;(amp|lt|gt|quot|apos|nbsp|#\d{2,5}|#x[0-9a-fA-F]{2,4});")
+
+ENTITY_TEXT = re.compile(r"&(?:amp|lt|gt|quot|apos|nbsp|#\d{2,5}|#x[0-9a-fA-F]{2,4});")
+
+
 def main():
     LAP_NOW[0] = time.time()
     if OUT.exists(): shutil.rmtree(OUT)
     OUT.mkdir()
     db = json.loads((ROOT / "data" / "jobs.json").read_text())
     jobs = list(db.values())
+    for j_ in jobs:                              # a feed that escaped its text twice ("Health &amp;amp; Safety") showed a literal "&amp;" on the page
+        if "&amp;" in (j_.get("desc") or ""): j_["desc"] = DOUBLE_ESC.sub(r"&\1;", j_["desc"])
+        if ENTITY_TEXT.search(j_.get("excerpt") or ""): j_["excerpt"] = html.unescape(j_["excerpt"])      # plain text: an entity in it is the same slip
     paid_file = ROOT / "paid.json"  # employer-submitted listings, kept in the main branch
     for p in (json.loads(paid_file.read_text()) if paid_file.exists() else []):
         base = f"{slugify(p['title'])}-{slugify(p['company'])}"
@@ -6177,7 +6185,7 @@ def main():
              f'<p class="lead">Five steps for people changing careers, with the figures from today’s {n_:,} open {e(low)} postings: what employers ask for first, how much experience, and what beginners are paid.</p>'
              + facts_ + act_row(f"roles/{slug_r}/", f"See the {n_:,} open {low} jobs", [(f"resume/examples/{slug_r}/", "Resume example")])
              + section(f"Five steps to your first {low} job", steps, label="The way in")
-             + (section(f"What it takes to become {art(psn)} {e(psn)}", '<ul class="ticks">' + "".join(f"<li><b>{e(l_)}.</b> {e(t_)}</li>" for l_, t_ in bm_["steps"]) + "</ul>"
+             + (section(f"What it takes to become {art(psn)} {psn}", '<ul class="ticks">' + "".join(f"<li><b>{e(l_)}.</b> {e(t_)}</li>" for l_, t_ in bm_["steps"]) + "</ul>"
                         + '<p class="note">Rules differ by state and change over time: check with your state’s licensing board or the body that sets the exam before you plan around them.</p>') if bm_ else "")
              + extra_hb
              + section(f"Questions about becoming {art(psn)} {psn}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in hb_qa) + "</dl>")
@@ -6620,7 +6628,7 @@ def main():
              f'<p class="lead">What you compete with, counted from today’s {n_:,} open {e(low)} postings: who is hiring, where, what they pay and how long postings stay up. Then six steps, each with a free template or tool.</p>'
              + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template"), ("job-posting-sites/", "Where else to post it: sites compared")])
              + section(f"Six steps to hire {art(psn)} {psn}", steps)      # the steps are what "how to hire" asks for: first, then the figures behind them
-             + (section(f"What to look for in {art(psn)} {e(psn)}", '<ul class="ticks">' + "".join(f"<li><b>{e(x['label'])}.</b> {e(x['text'])}</li>" for x in hm_["look"]) + "</ul>")
+             + (section(f"What to look for in {art(psn)} {psn}", '<ul class="ticks">' + "".join(f"<li><b>{e(x['label'])}.</b> {e(x['text'])}</li>" for x in hm_["look"]) + "</ul>")
                 if hm_ else "")
              + section("What you compete with", '<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{e(k)}</th><td>{v}</td></tr>" for k, v in rows_) + "</table></div>"
                        f'<p class="note">Counted from the {n_:,} open postings for this work on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>')
