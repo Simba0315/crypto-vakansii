@@ -514,7 +514,7 @@ ARTICLES += [
                ("One page or two?", ["One page for under ten years of experience. Two when you have more and every line earns its place. Nobody is rejected for one page; many are skimmed past on three."])],
      "mistakes": ["Duties instead of results.", "One resume sent to every job: change the summary and skills for each.", "Columns, icons and skill bars that screening software reads as noise.",
                   "Typos, and an email address from school days.", "“References available on request”: it is assumed."],
-     "tool": ("resume/", "Free resume builder", "Fill in the form and watch the page take shape; five plain templates, PDF and Word, no account and no charge."),
+     "tool": ("resume/", "Free resume builder", "Fill in the form and watch the page take shape; plain templates that screening software reads, PDF and Word, no account and no charge."),
      "faq": [("How long should a resume be?", "One page for most people. Two pages if you have more than ten years of relevant experience. Recruiters read the top third first, so put the strongest things there."),
              ("What is the best resume format?", "Reverse-chronological: newest job first, in one column with standard headings. It is what recruiters expect and what screening software reads best."),
              ("Should I put a photo on my resume?", "Not in the US, UK, Canada, Australia or Ireland, where employers avoid them. In much of continental Europe and Asia a photo is common; follow local custom."),

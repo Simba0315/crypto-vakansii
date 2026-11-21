@@ -8201,7 +8201,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("resume/", f"Free Resume Builder: Free PDF & Word Download, No Sign-Up | {SITE}",
          f"Build an ATS-friendly resume in your browser: {RB_TPLS} templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
-         crumbs(("Resume builder", "")) + '<h1>Free resume builder that screening software can read</h1><p class="lead">Five plain one-column templates that applicant tracking systems read cleanly '
+         crumbs(("Resume builder", "")) + f'<h1>Free resume builder that screening software can read</h1><p class="lead">{RB_TPLS.capitalize()} plain templates that applicant tracking systems read cleanly '
          '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
          'Fill in the form, watch the page update, download. No account; nothing leaves this browser.</p>'
          '<p class="plain"><b>In plain words:</b> many employers first run every resume through a program, called an applicant tracking system, that reads the text and sorts the applications. Fancy layouts with columns and icons can turn into jumbled text for that program, so these templates keep one plain column that both the program and a person can read.</p>'
