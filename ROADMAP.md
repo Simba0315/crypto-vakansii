@@ -2748,3 +2748,5 @@ sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS
 
 - ✅ (21.11, облачный прогон) Виджет вакансий: теперь читает и Teamtailor (`teamtailor:имя`); проверено на живой доске в браузере. Осталось: Workable (его лента отвечала 429, нужна проверка с другого адреса).
 - ✅ (21.11, облачный прогон) Виджет вакансий: новый вид «карусель» (`data-layout="carousel"`) — ряд карточек, который листается стрелками и свайпом; есть в конструкторе на /widgets/, в таблице параметров и в ответах. Осталось по виджету: всплывающее окно вакансии, Workable.
+
+- ✅ (21.11, облачный прогон) Глоссарий: ещё 12 терминов (salaried employee, permanent role, merit increase, holiday pay, direct report, matrix organization, pre-employment drug test, dress code, piece rate, job grade, unconscious bias, peer interview), теперь 236.
