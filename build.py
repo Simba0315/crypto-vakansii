@@ -10736,7 +10736,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             ("lists/tech-internships", "Tech internships", "internships/", [j for j in active if j["id"] in tech_ids_ and is_intern_(j) and intern_word_.search(j["title"])]),
             ("lists/new-grad-software-engineer", "Entry-level and new grad software engineer jobs", "categories/software-development/entry-level/",
              [j for j in sw_ if j["entry"] and not is_intern_(j)]),
-            ("lists/remote-software-engineer", "Remote software engineer jobs", "categories/software-development/remote/", [j for j in sw_ if j["remote"]])):
+            ("lists/remote-software-engineer", "Remote software engineer jobs", "categories/software-development/remote/", [j for j in sw_ if j["remote"]]),
+            # two more daily GitHub lists (22 Nov 2026), each also served as a GitHub Pages site whose links are followed
+            ("lists/visa-sponsorship", "Jobs with visa sponsorship", "perks/visa-sponsorship/", [j for j in active if "Visa sponsorship" in j.get("perks", [])]),
+            ("lists/remote-entry-level", "Remote entry-level jobs", "remote/entry-level/", [j for j in active if j["remote"] and j["entry"] and not is_intern_(j)])):
         api(path_l, name_l, page_l, js_l, cap=300)
     write("api/v1/index.json", json.dumps({"site": SITE, "updated": TODAY, "feeds": api_index}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     feed_ref = {"200": {"description": "A list of open jobs, newest first", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Feed"}}}}, "404": {"description": "No such feed"}}
