@@ -6842,7 +6842,7 @@ def main():
                '<div><h2>Where ' + e(ours) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["us_better"]) + "</ul></div></div>"
              + section(f"Questions about {x['name']} and {ours}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in vs_qa) + "</dl>")
              + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>')
-             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
+             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
     lap('"<site> vs <site>" and "<site> alternatives": the owner aske')
     # "<site> vs <site>" and "<site> alternatives": the owner asked for compare pages "with all websites" (as Indeed's compare pages),
     # and people search these between the big names. Only the facts compare_sites.py holds with a source, side by side; no verdict.
@@ -6904,10 +6904,78 @@ def main():
              + section(f"Other alternatives to {x['name']}", '<div class="feats">' + alt_ + "</div>")
              + section("Sources", '<p class="note">Every fact on this page comes from the comparison pages linked above, where each one is listed with its source and the date it was read.</p>'))
 
+    lap('Best job search sites: one page for the search "best job sea')
+    # Best job search sites: one page for the search "best job search sites" / "best job sites" (the owner's Semrush file of Reddit
+    # threads, 21 Nov 2026: about 450K and 110K searches a month). Built only from the sourced facts in compare_sites.py (each listed with
+    # its source and date on the /vs/ pages); we rank no one: each site is matched to the search it suits from its own description, and
+    # this site is one of the rows, with where the others are better.
+    def fact_(x, q, miss="Not stated on the pages we read"):
+        return next((t_ for q_, t_, _ in x["rows"] if q_ == q), miss)
+    def names_(xs):
+        n_ = [x["name"] for x in xs]
+        return n_[0] if len(n_) == 1 else ", ".join(n_[:-1]) + " and " + n_[-1] if n_ else ""
+    us_ = compare_sites.OUR_NAME
+    bs_rem = sum(1 for j in active if j["remote"])
+    bs_cos = len({j["company"] for j in active})
+    bs_paid = [x for x in VS if fact_(x, "Who pays").startswith("Job seekers")]
+    bs_opt = [x for x in VS if re.search(r"Job seekers can buy", fact_(x, "Who pays"))]
+    bs_acc = [x for x in VS if re.search(r"^Yes|sign in", fact_(x, "Account needed to apply", ""), re.I)]
+    bs_remote = [x for x in VS if fact_(x, "Kinds of jobs", "").startswith("Remote")]
+    bs_qa = [
+        ("What is the best job search site?",
+         "It depends on the search. By their own figures, Indeed and LinkedIn are the largest general job sites; Wellfound is built for startup jobs; "
+         + (names_(bs_remote) + " list remote work; " if bs_remote else "") + "CryptoJobsList and Web3.career list crypto and web3 jobs. "
+         f"{us_} reads {len(active):,} open jobs from {bs_cos:,} companies’ own careers pages every hour, free and with no account. "
+         "The table shows who pays and whether you need an account on each."),
+        ("Which job search sites are free for job seekers?",
+         "Most of these sites are paid for by employers. "
+         + (f"{names_(bs_paid)} {'is' if len(bs_paid) == 1 else 'are'} paid for by job seekers through a membership. " if bs_paid else "")
+         + (f"{names_(bs_opt)} sell optional plans to job seekers. " if bs_opt else "")
+         + f"{us_} is free for job seekers, with no account needed."),
+        ("Do I need an account to apply for jobs?",
+         (f"On {names_(bs_acc)}, yes, by their own help pages. " if bs_acc else "")
+         + f"On {us_}, no: every Apply button goes to the employer’s own application page."),
+        ("Which job site is best for remote jobs?",
+         (f"{names_(bs_remote)} are built for remote work; each one’s own pages are linked from its comparison. " if bs_remote else "")
+         + f"{us_} has {bs_rem:,} open remote jobs today, read from employers’ own careers pages and checked every hour."),
+        ("How do I avoid ghost jobs on job sites?",
+         "Some listings stay up after the job is filled. A site that reads the employer’s own careers page every hour, as this one does, drops a job at the next reading "
+         "after the employer takes it down. On any other site, check that the job is still on the employer’s own careers page before you spend time on it."),
+    ]
+    bs_qh, bs_ld = qa_sec("Questions", bs_qa, label="Questions", sid="questions")
+    bs_rows = [(f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])}</a>', fact_(x, "Who pays"), fact_(x, "Account needed to apply"), fact_(x, "Where you apply"), fact_(x, "Kinds of jobs")) for x in VS]
+    bs_rows.append((f'<a href="{P}/jobs/">{e(us_)}</a>', compare_sites.US_ANSWERS["Who pays"], compare_sites.US_ANSWERS["Account needed to apply"],
+                    compare_sites.US_ANSWERS["Where you apply"], compare_sites.US_ANSWERS["Kinds of jobs"]))
+    bs_table = ('<div class="tablewrap"><table class="vs-t"><tr><th>Site</th><th>Who pays</th><th>Account needed to apply</th><th>Where you apply</th><th>Kinds of jobs</th></tr>'
+                + "".join(f'<tr><th>{n_}</th><td data-l="Who pays">{e(a1)}</td><td data-l="Account">{e(a2)}</td><td data-l="Where you apply">{e(a3)}</td><td data-l="Kinds of jobs">{e(a4)}</td></tr>' for n_, a1, a2, a3, a4 in bs_rows)
+                + '</table></div><p class="note">“Not stated on the pages we read” means the site’s own pages did not say; each name opens its full comparison, where every fact is listed with its source and the date it was read.</p>')
+    bs_pick = ('<div class="feats">' + "".join(
+        f'<div class="feat"><h3>{e(x["name"])}</h3><p>Good if {e(re.sub(r"^Use .*? if ", "", x["pick"].split(", use ")[0]))}.</p>'
+        f'<p class="note">{e(x["them_better"][0])}</p><p><a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(us_)}</a> · <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a></p></div>' for x in VS)
+        + f'<div class="feat"><h3>{e(us_)}</h3><p>Good if you want jobs read {EVERY} from the employers’ own careers pages, a job gone at the next reading once the employer takes it down, '
+          f'and to apply on the employer’s own page, free and without an account.</p><p class="note">{len(active):,} open jobs from {bs_cos:,} companies today. '
+          f'Smaller than the largest boards, and launched in November 2026.</p><p><a href="{P}/jobs/">Search every job</a> · <a href="{P}/job-search-engines/">Other engines that read career pages</a></p></div></div>')
+    page("best-job-search-sites/", f"Best Job Search Sites ({TODAY[:4]}): {len(VS) + 1} Compared, With Sources | {SITE}",
+         f"The best job search site depends on the search: {', '.join(x['name'] for x in VS[:5])} and more side by side, with who pays, whether you need an account and where you apply. Every fact sourced.",
+         crumbs(("Compared with other job sites", "vs/"), ("Best job search sites", "")) + f'<h1>Best job search sites: <span class="hl">{len(VS) + 1} compared by what you need</span></h1>'
+         f'<p class="lead">There is no single best job site: the right one depends on the work you want and on whether you will pay or make an account. Below, {len(VS) + 1} sites side by side. '
+         f'Every fact about another site comes from its own pages and is dated on its comparison page. Nothing here is a ranking, and this site is one of the rows.</p>'
+         + nums([(f"{len(VS) + 1}", "job sites side by side"), (f"{sum(len(x['rows']) for x in VS)}", "facts about them, each with its source"),
+                 (f"{len(active):,}", "open jobs here, read from employers’ own pages")], src=False)
+         + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
+         + section("Which site for [[which search]]", bs_pick, sid="which", label="By what you need",
+                   sub="Each site in a line, from its own description, with the main thing it does better than this one.")
+         + section("Who pays, accounts and [[where you apply]]", bs_table, sid="table", label="Side by side")
+         + bs_qh
+         + section("Sources", '<p class="note">Every fact about another site on this page is listed with its source and the date it was read on that site’s comparison page: '
+                   + " · ".join(f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])}</a>' for x in VS) + f'. All comparisons: <a href="{P}/vs/">compared with other job sites</a>.</p>'),
+         head=bs_ld)
+
     page("vs/", f"{SITE} Compared with Other Job Sites: {len(VS)} Fair Comparisons | {SITE}",
          f"{SITE} side by side with {', '.join(x['name'] for x in VS[:-1])} and {VS[-1]['name']}: who pays, prices, where jobs come from and where you apply. Every fact sourced and dated.",
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
-         '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now.</p>'
+         '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now, '
+         f'or see the <a href="{P}/best-job-search-sites/">best job search sites by what you need</a>.</p>'
          + nums([(f"{len(VS)}", "job sites compared with this one"), (f"{len(site_pairs)}", "pairs of job sites, side by side"),
                  (f"{sum(len(x['rows']) for x in VS)}", "facts about them, each with its source"), (f"{len({u_ for x in VS for _, u_, _ in x['sources']})}", "pages of theirs read for it")], src=False)
          + section("Choose [[a site]]", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>", sid="sites", label="With this site",

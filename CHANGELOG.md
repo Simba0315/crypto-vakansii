@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-21 ~16:13 UTC — New page /best-job-search-sites/ for "best job search sites" / "best job sites" (about 450K and 110K searches a month in the owner's Reddit keyword file): the compared sites plus this one, matched to the search each suits from its own description, a table of who pays, accounts and where you apply, and questions; built only from the sourced facts of compare_sites.py; linked from /vs/ and every /vs/<site>/ page.
 - 2026-11-21 ~11:50 UTC — Job pages served from the records (records.py) now carry the "Of N roles <company> has closed here, half stayed open …" line too: the employer figures (CO_CLOSE) are saved with the records, so the hourly pages match the full build again (records_test had 11,346 different).
 - 2026-11-21 ~11:43 UTC — New list /fair-chance-jobs/ ("felon friendly jobs", about 15K searches a month in the owner's Reddit keyword file): postings that name a fair chance law or say the employer considers applicants with arrest or conviction records, with questions on what fair chance means and that it promises no hire; linked from the footer row of job types.
 - 2026-11-21 ~11:43 UTC — /vs/flexjobs/ now builds: FlexJobs facts read in a browser from its own FAQ and About pages (paid subscription needed to see employers or apply, hand-screened listings, 244,908 listings from 16,036 companies), seven sourced rows instead of three.
