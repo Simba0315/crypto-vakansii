@@ -761,4 +761,46 @@ ARTICLES += [
              ("Can I use notes in a video interview?", "Yes: a few key points beside the camera. Do not read full answers; glance and then look back at the lens."),
              ("What do I do if my internet drops during an interview?", "Rejoin at once; if that fails, phone or email the interviewer and suggest continuing by phone. It is rarely held against you.")],
      "more": (("guides/job-interview-tips/", "Job interview tips"), ("guides/questions-to-ask-in-an-interview/", "Questions to ask"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},
+    # "how to find a job fast", "how to find a job in 2026", "how to find a job near me" (about 6 suggestion lines of its own in keywords.json, 21 Nov 2026).
+    {"slug": "how-to-find-a-job", "cat": "Applying",
+     "title": "How to find a job fast: a plain week-by-week plan",
+     "desc": "How to find a job quickly: decide what you want, fix your resume, search the employers' own listings, apply early, follow up and track every application, with a plan for each week.",
+     "lead": "Looking for work is a long list of small tasks with no clear order, and most people start by sending the same resume to everything. "
+             "A better order is to decide first, search in a few reliable places, apply while a posting is fresh and keep a record of what you sent.",
+     "short": "Pick one kind of work and one place, update your resume to match, search employers' own listings and apply within the first days after a posting appears. "
+              "Send a short follow-up after a week, and write down every application so you know what to chase.",
+     "formula_h": "The order that saves time",
+     "formula": [("Decide what you are looking for.", "One or two job titles, a place or remote, and a lowest pay you would accept. A search for everything finds nothing in particular."),
+                 ("Fix the resume once.", "One page, the job title you want at the top, results with numbers, and the words the postings use. A free builder on this site makes a plain one that software can read."),
+                 ("Search where the listing comes from the employer.", "Company career pages and sites that read them. Copies on other sites can be weeks old by the time you see them."),
+                 ("Apply early.", "Early applications tend to get read before the pile grows. A posting from the last few days is worth more of your time than one that has been open for months."),
+                 ("Tailor the first lines.", "Change the top of the resume and a short note so they repeat what this posting asks for. Do not rewrite everything."),
+                 ("Follow up after a week.", "Two sentences to the recruiter or the hiring manager: you applied, you are interested, you can answer any question."),
+                 ("Keep a record.", "Company, job, date, where you applied, what happened, when to follow up. A plain table is enough.")],
+     "data": "open",
+     "after": [("A plan for the first four weeks", [
+                    "Week 1: decide the target, write the resume, make a list of 20 employers you would like to work for.",
+                    "Week 2: apply to the freshest postings of those employers and to a handful of others; set one hour a day for it.",
+                    "Week 3: follow up on week 1 and 2 applications, ask two people you know about their companies, practise the interview questions.",
+                    "Week 4: look at what happened: if there are no replies, change the resume or the target; if there are interviews, spend the time on them."]),
+               ("Where to look", ["Company career pages are the source of every listing. This site reads them every hour, shows each posting’s age and links to the employer’s own application page. "
+                                  "Add people you know: a short message to someone who works at a company you like often leads to a name to write to."]),
+               ("How many applications is enough?", ["There is no number that works for everyone. Judge by replies: if ten applications bring no reply, the problem is usually the resume or the target, not the count. "
+                                                     "Change one thing and watch the next ten."]),
+               ("If you are looking while you have a job", ["Search outside work hours and on your own device, and keep your current employer out of your references until there is an offer. "
+                                                           "Tell only people who will not repeat it."])],
+     "links_h": "Tools for each step",
+     "links": [("resume/", "Resume builder", "(free, one clean page that software can read)"),
+               ("for-you/", "For you: jobs that match your answers", "(five questions, nothing leaves your browser)"),
+               ("jobs/", "Search all open jobs", "(each one shows its age)"),
+               ("guides/follow-up-after-applying/", "How to follow up after applying", "")],
+     "mistakes": ["Sending one resume to every posting without changing a line.", "Applying only to listings that have been open for months.", "Not writing down where you applied, then forgetting to follow up.",
+                  "Waiting for a perfect job before applying to a good one.", "Paying anyone for a job: a real employer never charges to hire you."],
+     "tool": ("resume/", "Resume builder", "A clean one-page resume in ten minutes. Free, with a free PDF; it stays in your browser."),
+     "faq": [("How do I find a job fast?", "Choose one target, make a matching resume and apply within the first days after postings appear. Early applications tend to get read before the pile grows."),
+             ("Where is the best place to find a job?", "On the employer’s own career page, because that is where the listing starts. Job sites that read those pages show the same jobs in one place."),
+             ("How many jobs should I apply to a day?", "A few well-matched applications beat many careless ones. Five or so a day, each with a changed top of the resume, is a pace most people can keep."),
+             ("How long does a job search take?", "Often two to six months of steady applying, and longer in a slow market or for senior roles. A clear target and fresh postings shorten it."),
+             ("Is it worth following up after applying?", "Yes. One short message after about a week costs little, and it reminds a busy recruiter that you are interested.")],
+     "more": (("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/how-to-get-a-job-with-no-experience/", "Jobs with no experience"), ("guides/job-interview-tips/", "Job interview tips"))},
 ]
