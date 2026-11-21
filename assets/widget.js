@@ -3,7 +3,7 @@
      <a href="…">Python jobs on Jobs Every Hour</a>
    </div>
    <script src="…/widget.js" async></script>
-   Layouts: list (default), cards, compact, ticker, careers. data-search="1" adds a search box and "show more".
+   Layouts: list (default), cards, compact, ticker, carousel, careers. data-search="1" adds a search box and "show more".
    A company can also show its own jobs straight from its hiring system, with no account anywhere:
      data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme" | "recruitee:acme" | "smartrecruiters:Acme" | "teamtailor:acme"   (the name of the board in that system), data-company="Acme"
    Look: set --hrn-bg, --hrn-ink, --hrn-muted, --hrn-line, --hrn-hover, --hrn-accent, --hrn-font or --hrn-radius in your own stylesheet on the element
@@ -48,6 +48,13 @@
     '.cards .r:hover{background:var(--hov)}.cards .t{white-space:normal}.cards .m{text-align:left}' +
     /* compact */
     '.compact .r{grid-template-columns:minmax(0,1fr) auto;padding:8px 14px}.compact .lg,.compact .lt,.compact .c{display:none}.compact .t{grid-column:1;font-size:14px}.compact .m{grid-column:2;grid-row:1}.compact .m b{display:none}' +
+    /* carousel: one row of cards that slides sideways, with two buttons */
+    '.car{position:relative;border-bottom:1px solid var(--line)}' +
+    '.car .trk{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:14px 16px 58px;scrollbar-width:none}.car .trk::-webkit-scrollbar{display:none}' +
+    '.car .r{flex:0 0 min(240px,78%);scroll-snap-align:start;display:flex;flex-direction:column;align-items:flex-start;gap:6px;border:1px solid var(--line);border-radius:var(--hrn-radius,8px);padding:14px 16px;background:var(--bg)}' +
+    '.car .r:hover::before{display:none}.car .r:hover{background:var(--hov);border-color:var(--acc)}.car .t{white-space:normal}.car .m{text-align:left}' +
+    '.car .nav{z-index:1;position:absolute;bottom:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:700 18px/1 system-ui,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}' +
+    '.car .nav:hover{border-color:var(--acc)}.car .nav[disabled]{opacity:.35;cursor:default}.car .prev{right:58px}.car .next{right:16px}' +
     /* ticker */
     '.tick{overflow:hidden;border-bottom:1px solid var(--line);padding:10px 0}' +
     '.tick .run{display:flex;gap:28px;width:max-content;animation:hrn 60s linear infinite}.tick:hover .run{animation-play-state:paused}' +
@@ -136,7 +143,7 @@
     if (!ats && { recruitee: 1, smartrecruiters: 1, teamtailor: 1 }[type]) return;   // a board name with odd characters: leave the plain link
     var limit = Math.max(1, Math.min(20, parseInt(el.getAttribute('data-limit') || '6', 10) || 6));
     var theme = { light: 'light', dark: 'dark' }[el.getAttribute('data-theme')] || 'auto';
-    var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
+    var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', carousel: 'carousel', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
     var accent = /^#[0-9a-fA-F]{3,8}$/.test(el.getAttribute('data-accent') || '') ? el.getAttribute('data-accent') : '';
     var src = el.getAttribute('data-hrn-base') || base;
     var interactive = layout === 'careers' || el.getAttribute('data-search') === '1', step = layout === 'careers' ? 20 : limit;
@@ -147,6 +154,9 @@
       else if (layout === 'ticker') {
         var items = jobs.map(function (j) { return '<a href="' + esc(j.url) + '" target="_blank" rel="noopener"><b>' + esc(j.title) + '</b><span>' + esc(j.company) + '</span></a>'; }).join('');
         body = '<div class="tick"><div class="run">' + items + items + '</div></div>';
+      } else if (layout === 'carousel' && !interactive) {
+        body = '<div class="car"><button class="nav prev" type="button" aria-label="Previous roles">&#8249;</button><div class="trk">' + jobs.map(function (j) { return row(j, false); }).join('') +
+          '</div><button class="nav next" type="button" aria-label="Next roles">&#8250;</button></div>';
       } else if (interactive) {
         body = '<div class="cs"><input type="search" placeholder="Search ' + jobs.length + ' open roles" aria-label="Search roles"><select aria-label="Team"><option value="">All teams</option></select></div>' +
           '<div class="rows' + (layout === 'compact' ? ' compact' : '') + (d.own ? ' own' : '') + '"></div><button class="more" type="button" hidden>Show more</button>';
@@ -157,6 +167,13 @@
         '<div class="f">' + (root ? '<slot><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a></slot>' :
           '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a>') + '<span class="by">' + (d.own ? 'Live from the hiring system' : 'Updated hourly') + '</span></div></div>';
       if (root) root.innerHTML = html; else el.innerHTML = html;
+      if (layout === 'carousel' && !interactive && jobs.length) {
+        var cs = root || el, trk = cs.querySelector('.trk'), pv = cs.querySelector('.prev'), nx = cs.querySelector('.next');
+        var sync = function () { pv.disabled = trk.scrollLeft < 4; nx.disabled = trk.scrollLeft + trk.clientWidth >= trk.scrollWidth - 4; pv.hidden = nx.hidden = trk.scrollWidth <= trk.clientWidth + 4; };
+        pv.addEventListener('click', function () { trk.scrollBy({ left: -trk.clientWidth * 0.8 }); });
+        nx.addEventListener('click', function () { trk.scrollBy({ left: trk.clientWidth * 0.8 }); });
+        trk.addEventListener('scroll', sync); window.addEventListener('resize', sync); sync();
+      }
       if (interactive && jobs.length && layout !== 'ticker') {     // search by text and team, a page of rows at a time
         var scope = root || el, box = scope.querySelector('.cs input'), team = scope.querySelector('.cs select'), rowsEl = scope.querySelector('.rows'), moreBtn = scope.querySelector('.more'), shown = step;
         var logos = layout === 'list' && !d.own;

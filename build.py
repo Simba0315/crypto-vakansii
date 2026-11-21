@@ -8624,7 +8624,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ("Does it work with WordPress, Webflow, Wix, Squarespace, Shopify and Framer?", "Yes. Anything that lets you paste HTML works with the script version. Builders that strip scripts, such as Notion, take the iframe version. The table on this page says where to paste the code on each platform."),
              ("Will the widget slow my page down?", f"The script is about {wsize} KB, loads asynchronously and draws inside its own container, so it does not block your page and your styles do not leak into it or out of it."),
              ("Where does a click on a job lead?", "To the job’s page on this site, which shows the salary, the remote rules and the date of the last check, and from there to the employer’s own application page. For your own board the click goes straight to your application page."),
-             ("Can I change how it looks?", "Yes: five layouts (list, cards, compact, ticker and a full careers page), a light, dark or automatic theme, your own accent colour, your own heading and an optional search box.")]
+             ("Can I change how it looks?", "Yes: six layouts (list, cards, compact, ticker, a sliding row of cards and a full careers page), a light, dark or automatic theme, your own accent colour, your own heading and an optional search box.")]
     w_faq_html = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in w_faq) + "</dl>"
     w_ld = ('<script type="application/ld+json">' + json.dumps([
         {"@context": "https://schema.org", "@type": "WebApplication", "name": f"{SITE} job widget", "url": f"{FULL}/widgets/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any",
@@ -8652,7 +8652,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<label class="wl" id="wb-board-l" hidden>Your board’s name<input type="text" id="wb-board" placeholder="acme" autocomplete="off" spellcheck="false"></label>'
          '<label class="wl" id="wb-co-l" hidden>Company name<input type="text" id="wb-co" placeholder="Acme" autocomplete="off"></label>'
          '<label class="wl">How many jobs<select id="wb-limit"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>15</option></select></label>'
-         '<label class="wl">How it looks<select id="wb-layout"><option value="list">List</option><option value="cards">Cards</option><option value="compact">Compact (sidebar)</option><option value="ticker">Ticker</option><option value="careers">Careers page (all jobs, with search)</option></select></label>'
+         '<label class="wl">How it looks<select id="wb-layout"><option value="list">List</option><option value="cards">Cards</option><option value="compact">Compact (sidebar)</option><option value="ticker">Ticker</option><option value="carousel">Sliding cards (carousel)</option><option value="careers">Careers page (all jobs, with search)</option></select></label>'
          '<label class="wl">Light or dark<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label>'
          '<label class="wl">Colour<input type="color" id="wb-accent" value="#15803d" aria-label="Accent colour"></label>'
          '<label class="wl">Kind of code<select id="wb-mode"><option value="script">Standard (works on most sites)</option><option value="iframe">For Notion and builders that block scripts</option></select></label>'
@@ -8691,7 +8691,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<code>data-hrn-jobs</code>", "What to show: <code>latest</code>, <code>remote</code>, <code>skill:python</code>, <code>category:engineering</code>, <code>location:london</code>, <code>company:stripe</code>, "
                                            "or your own board: <code>greenhouse:acme</code>, <code>lever:acme</code>, <code>ashby:acme</code>, <code>recruitee:acme</code>, <code>smartrecruiters:Acme</code>, <code>teamtailor:acme</code>", "<code>latest</code>"],
              ["<code>data-limit</code>", "Rows to show, 1 to 20. With the search box on, rows per page", "6"],
-             ["<code>data-layout</code>", "<code>list</code>, <code>cards</code>, <code>compact</code>, <code>ticker</code> or <code>careers</code>", "<code>list</code>"],
+             ["<code>data-layout</code>", "<code>list</code>, <code>cards</code>, <code>compact</code>, <code>ticker</code>, <code>carousel</code> (a row of cards with two arrow buttons) or <code>careers</code>", "<code>list</code>"],
              ["<code>data-theme</code>", "<code>auto</code> follows the visitor’s system, or force <code>light</code> or <code>dark</code>", "<code>auto</code>"],
              ["<code>data-accent</code>", "Any hex colour for the hover bar and the link underline", "<code>#15803d</code>"],
              ["<code>data-search</code>", "<code>1</code> adds a search box, a team filter where teams exist, and “Show more”", "off"],
@@ -8835,7 +8835,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          "Two ways to put a live list of jobs on a page you control: a short script, or a frame. Choose what to list, copy the code and paste it.",
          "In plain words: to embed means to place a live box from another site inside your own page. This box shows open jobs. You copy a few lines of code and paste them where the jobs should appear.",
          "What you can list", ["The newest jobs, or only remote jobs.", "One skill, one category, one city or one company.", "Your own company’s jobs, read from Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor.",
-                               "In a list, cards, a compact list, a moving ticker or a full careers page, in light, dark or automatic colours."],
+                               "In a list, cards, a compact list, a moving ticker, a sliding row of cards or a full careers page, in light, dark or automatic colours."],
          [("What is the difference between the script and the frame?", "The script draws the list inside your page and takes your colours. The frame (an iframe) shows a small separate page inside a box of a fixed size. Use the frame where a site removes scripts, such as Notion or the cheapest Squarespace plan."),
           ("Does the list copy jobs onto my site?", "No. The jobs stay on this site and in the employer’s hiring system; your page only shows a live view of them, and each click opens the job’s own page."),
           ("Does it cost anything?", "No. It is free, with no account. The code keeps a small link back to this site.")]),
