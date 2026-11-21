@@ -1553,7 +1553,7 @@ LIST_LABEL = {"jobs": "Field", "roles": "Kind of work", "skills": "Skill", "loca
               "internships": "Internships", "part-time": "Part-time", "contract": "Contract", "hybrid": "Hybrid", "tech": "Tech",
               "senior-jobs": "Level", "lead-jobs": "Level", "executive-jobs": "Level", "night-shift": "Shifts", "weekend": "Shifts",
               "summer": "Season", "temporary": "Season", "with-salary": "Pay stated", "work-from-anywhere": "Remote work",
-              "hiring-immediately": "Hiring now", "no-experience-jobs": "First jobs", "categories": "Field"}
+              "hiring-immediately": "Hiring now", "no-experience-jobs": "First jobs", "fair-chance-jobs": "Fair chance", "categories": "Field"}
 
 
 def list_label(path):
@@ -1882,6 +1882,12 @@ def intern_hub(path, h1, yr, ej):
 # What a posting itself says about how soon it hires and what it asks for ("hiring immediately", "no experience jobs"). Recruiters' own
 # postings talk about "immediate hiring needs" and are about other people's jobs, so they are left out.
 IMMEDIATE_RX = re.compile(r"\b(?:start(?:ing)? immediately|immediate start|hiring immediately|immediate hiring(?! needs?)|immediate openings?|urgently hiring|immediately hiring)\b", re.I)
+# Fair chance (owner's Reddit keyword list, 21 Nov 2026: "felon friendly jobs" ~15K searches a month): postings that say the employer
+# considers applicants with arrest or conviction records, mostly because a fair chance law (San Francisco, Los Angeles, California, New
+# York City and others) makes it say so. The page says plainly what that means and that it promises no hire.
+FAIR_CHANCE_RX = re.compile(r"\barrest (?:and|or) conviction records?\b|\bfair chance (?:ordinance|initiative|act|laws?|hiring|employer)\b|"
+                            r"\bsecond[- ]chance (?:employer|hiring)\b|\bjustice[- ]involved\b|\bformerly incarcerated\b|"
+                            r"\bconsider(?:s|ed)? (?:qualified )?(?:applicants|candidates) with (?:criminal|conviction|arrest)", re.I)
 NO_EXPERIENCE_RX = re.compile(r"\b(?:no (?:prior |previous |relevant |work )?experience (?:is |are )?(?:required|necessary|needed)|experience (?:is )?not required)\b", re.I)
 # The steps of hiring a posting names in its own text, in the order they usually come (company pages: "How hiring works at …")
 HIRE_STEPS = [("A call with a recruiter", re.compile(r"recruiter (?:screen|call|phone)|phone screen|initial (?:call|screen|conversation)|intro(?:ductory)? call", re.I)),
@@ -2353,14 +2359,15 @@ def main():
     # The kinds of work by hours and by employer (moved here 21 Nov 2026 from their own sections below, which still build the pages): known
     # before the first page is written, so that the footer of every page links each list that exists. Until then /government-jobs/ had no
     # link from any other page but its own, /nonprofit-jobs/ and /job-posting-sites/ one, /temporary/ and /no-experience-jobs/ two.
-    imm_jobs, noexp_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX)
+    imm_jobs, noexp_jobs, fair_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX), says_so(active, FAIR_CHANCE_RX)
     HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
         ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
         ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
         ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
         ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
         if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
-    HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs)) if len(x[3]) >= 20]
+    HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs),
+                                 ("fair-chance-jobs/", "Fair chance jobs", "a fair chance law or says it considers applicants with arrest or conviction records", fair_jobs)) if len(x[3]) >= 20]
     GOV_RX = re.compile(r"^(?:the )?(?:city|county|state|town|village|commonwealth|district|port|borough|township|parish) of\b|\b(?:county|city|state) government\b|"
                         r"\bdepartment of\b|\bpublic schools?\b|\bschool district\b|\bunified school\b|\b(?:transit|housing|port|water|airport) authority\b|\bcounty\s*$", re.I)
     SCHOOL_RX = re.compile(r"\bpublic schools?\b|\bschool district\b|\bunified school\b", re.I)
@@ -2371,7 +2378,7 @@ def main():
     np_ = [j for j in active if j["company"] in np_cos]
     NP_PAGE = len(np_) >= 20
     TYPE_NAMES = {"night-shift/": "Night shift jobs", "weekend/": "Weekend jobs", "summer/": "Summer jobs", "temporary/": "Temporary jobs",
-                  "hiring-immediately/": "Jobs hiring immediately", "no-experience-jobs/": "No experience jobs"}
+                  "hiring-immediately/": "Jobs hiring immediately", "no-experience-jobs/": "No experience jobs", "fair-chance-jobs/": "Fair chance jobs"}
     FOOT["types"] = ('<p class="pop"><span>Jobs by type:</span>' + "".join(f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in (
         [("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
         + [(p_, TYPE_NAMES.get(p_, h_)) for p_, h_, _, _ in HOURS] + ([("government-jobs/", "Government jobs")] if GOV_PAGE else []) + ([("nonprofit-jobs/", "Nonprofit jobs")] if NP_PAGE else []))) + "</p>")
@@ -3489,6 +3496,15 @@ def main():
             fq_first = ("Which jobs need no experience?", f"{len(js_):,} open postings here state in their own words that no experience is required. They are listed newest first, and each links to the employer’s own page.")
             fq_extra = (("How do I get a job with no experience?", "Lead your resume with what you can already do: studies, projects, volunteering and part-time work, each with a result. Apply to postings that say no experience is required and to entry-level roles."),
                         ("Is no experience the same as entry level?", "Not quite. An entry-level job is meant for beginners but may still ask for a degree or an internship. These postings say outright that no experience is needed."))
+        if p_ == "fair-chance-jobs/":
+            fq_first = ("Which jobs are felon-friendly?", f"{len(js_):,} open postings here say in their own words that the employer considers applicants with arrest or "
+                        "conviction records, most of them under a fair chance law. They are listed newest first, and each links to the employer’s own page.")
+            fq_extra = (("What is a fair chance law?", "A law that stops many employers from asking about convictions before a conditional job offer, and makes them weigh the "
+                         "record against the job before turning someone down for it. California, New York City and many other states and cities have one, which is why "
+                         "so many postings name it."),
+                        ("Does fair chance mean I will be hired?", "No. It means a record is looked at later and case by case, not used to screen you out at the start. "
+                         "Apply as for any job. If an offer is withdrawn because of a record, these laws usually require the employer to tell you why in writing and "
+                         "give you time to answer."))
         if p_ == "night-shift/":
             # Search check, 18 Nov 2026 ("night shift jobs"): Google's answer lists the kinds of night work in groups and opens with the
             # night pay premium; "What's a good night shift job?" is the first question people also ask.
@@ -3538,7 +3554,8 @@ def main():
                                          'Most postings name none; ask for the night rate before you accept.</p>', sid="differential", label="Differential")
             if nt_html:
                 kw_h = dict(kw_h); kw_h["after"] = nt_html + kw_h.get("after", "")
-        listing(p_, h_, f"{h_} ({len(js_):,} open) | {SITE}", f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
+        title_h = f"Felon-Friendly Jobs ({len(js_):,} Fair Chance Jobs) | {SITE}" if p_ == "fair-chance-jobs/" else f"{h_} ({len(js_):,} open) | {SITE}"
+        listing(p_, h_, title_h, f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
                 intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
                 links=(("jobs/", "Search every job"),), **kw_h)
     lap('Hybrid: some days at home, some in the office (FlexJobs show')

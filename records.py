@@ -65,7 +65,7 @@ def save(path, jobs, b):
         "sim_cat": {c: [x["slug"] for x in xs] for c, xs in b.SIM["cat"].items()},
         "sim_comp": {key(k): [x["slug"] for x in xs] for k, xs in b.SIM["comp"].items()},
         "open": dict(b.OPEN), "fact": b.FACT, "tb": b.TB, "catmed": b.CATMED, "est": {key(k): v for k, v in b.EST.items()},
-        "close_days": b.CLOSE_DAYS, "repost": {key(k): v for k, v in b.REPOST.items()}, "perk_ok": sorted(b.PERK_OK),
+        "close_days": b.CLOSE_DAYS, "co_close": b.CO_CLOSE, "repost": {key(k): v for k, v in b.REPOST.items()}, "perk_ok": sorted(b.PERK_OK),
     }
     con.executemany("INSERT INTO ctx VALUES (?, ?)", ((k, dumps(v)) for k, v in ctx.items()))
     con.commit()
@@ -142,6 +142,7 @@ class Store:
                  "comp": Cards(self, {tup(k): xs for k, xs in ctx.pop("sim_comp").items()})}
         b.OPEN = collections.Counter(ctx["open"])
         b.FACT, b.CATMED, b.CLOSE_DAYS = ctx["fact"], ctx["catmed"], ctx["close_days"]
+        b.CO_CLOSE = {c: tuple(v) for c, v in ctx.get("co_close", {}).items()}   # how long each employer's closed roles stayed open (absent before 21 Nov)
         b.TB = ctx.get("tb", {})                  # the employers' trust marks (absent in a store built before 15 Nov)
         b.EST = {tup(k): v for k, v in ctx["est"].items()}
         b.REPOST = {tup(k): v for k, v in ctx["repost"].items()}

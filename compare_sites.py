@@ -32,6 +32,7 @@ OUR_NAME = "Jobs Every Hour"
 
 R13 = "2026-11-13"  # read by the research files
 R14 = "2026-11-14"  # read from the site's own page for this module
+R21 = "2026-11-21"  # read from the site's own page in a real browser (FlexJobs timed out for the reader on 14 Nov)
 
 QUESTIONS = [
     "Who pays",
@@ -420,16 +421,27 @@ SITES = [
             ("Who pays", "Job seekers, through a membership."),
             ("Price for job seekers", "$2.95 for 14 days, then $23.95 every 4 weeks. Or $29.85 every 3 months, or $71.40 a "
                                       "year. All plans renew automatically. Full refund on request within 14 days."),
+            ("Where the jobs come from", "A FlexJobs research team hand-screens each job and company and lists only jobs that "
+                                         "offer some kind of work flexibility."),
+            ("Where you apply", "Some jobs let you apply through FlexJobs, others send you to a page on the employer's "
+                                "website."),
+            ("Account needed to apply", "Yes, and a paid one: a subscription is needed to see employers, read full job "
+                                        "details or apply."),
+            ("Kinds of jobs", "Remote, hybrid, part-time, freelance and flexible-schedule jobs: 244,908 listings from 16,036 "
+                              "companies, by its About page."),
             ("Payment methods", "Credit card and other methods, depending on the buyer's country."),
         ),
         them_better=[
             "A money-back promise: a full refund on request within 14 days of creating the account.",
             "You can buy it and use it today, by card or other local methods. Our Plus plan is not on sale yet.",
+            "A person checks every job and company before it is listed, and remote or flexible work is its whole focus.",
         ],
         us_better=[
             "Free for job seekers. FlexJobs charges job seekers, starting at $2.95 for a 14-day trial.",
             "Plus is one payment and never renews: $9 for 7 days, $19 for 30 days, $39 for 90 days (not on sale yet). "
             "FlexJobs plans renew automatically, and the trial renews at $23.95 every 4 weeks.",
+            "You see the employer and apply without paying or making an account. FlexJobs needs a paid subscription to see "
+            "employers, read full job details or apply.",
         ],
         pick="Use FlexJobs if you are happy to pay for a membership with a 14-day refund window, use Jobs Every Hour if you "
              "want to search and apply for free.",
@@ -444,6 +456,16 @@ SITES = [
             ("[Payment methods|them_better 2] Credit card and other methods \"depending on what country you are located\". "
              "Subscription renews by itself. Sold by BOLD LLC, or Auxiliant S.à.r.l as merchant of record.",
              "https://www.flexjobs.com/termsofuse.aspx", R13),
+            ("[Where the jobs come from|Where you apply|Account needed to apply|them_better 3|us_better 3] FAQ: \"you need "
+             "to have a paid subscription to FlexJobs to see employers, view full job details, or apply for any job.\" "
+             "\"Employers may set up the job post to allow you to apply directly through FlexJobs, or they may require you "
+             "to apply directly from a page on their website.\" \"Our amazing job research team hand-screens job and "
+             "company information\" ... \"offer at least some kind of work flexibility.\"",
+             "https://www.flexjobs.com/faq", R21),
+            ("[Kinds of jobs|them_better 3] About: \"244,908 Verified Remote and Flexible Jobs\", \"16,036 Companies "
+             "currently hiring\"; \"full-time, part-time, freelance, or flexible schedule opportunities\"; home page tabs "
+             "Fully Remote, Entry-Level, Part-Time, Hybrid.",
+             "https://www.flexjobs.com/about", R21),
         ],
     ),
     # ------------------------------------------------------------------ CryptoJobsList
@@ -557,9 +579,8 @@ NOT_SOURCED = {
     "we-work-remotely": ["Price for job seekers", "Where you apply", "Account needed to apply",
                          "weworkremotely.com home, about-us and terms returned 403 or a bot check"],
     "remote-ok": ["Account needed to apply"],
-    "flexjobs": ["Price to post one job", "Where the jobs come from", "Where you apply", "Account needed to apply",
-                 "How fresh the listings are", "Kinds of jobs",
-                 "flexjobs.com pages timed out on every try on 14 Nov 2026"],
+    "flexjobs": ["Price to post one job", "How fresh the listings are",
+                 "flexjobs.com pages timed out on every try on 14 Nov 2026; FAQ and About read in a browser on 21 Nov 2026"],
     "cryptojobslist": ["Price for job seekers", "Where you apply", "Account needed to apply", "Kinds of jobs",
                        "cryptojobslist.com home, /about and /hire returned 403 on 14 Nov 2026"],
     "web3-career": ["Price for job seekers", "Account needed to apply", "How fresh the listings are"],
@@ -604,7 +625,7 @@ def test():
             keys.update(source_keys(fact))
             if not url.startswith("https://"):
                 problems.append(f"{p}: bad url {url!r}")
-            if date not in (R13, R14):
+            if date not in (R13, R14, R21):
                 problems.append(f"{p}: bad date {date!r}")
         rows = s["rows"]
         if len(rows) < 4:      # build.py gives such a site no page until a fourth fact is sourced
