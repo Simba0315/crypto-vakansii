@@ -1089,7 +1089,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
     head = LD_RX.sub(ld_small, head)
     if path == "":      # search-engine ownership tags (config.json "verify"): the owner pastes the code each webmaster tool gives him
         vf = CFG.get("verify") or {}
-        head += "".join(f'<meta name="{n_}" content="{e(vf[k_])}">' for k_, n_ in (("google", "google-site-verification"), ("bing", "msvalidate.01"), ("yandex", "yandex-verification")) if vf.get(k_))
+        head += "".join(f'<meta name="{n_}" content="{e(vf[k_])}">' for k_, n_ in (("google", "google-site-verification"), ("bing", "msvalidate.01")) if vf.get(k_))
     if path.split("/", 1)[0] in SAME_QUERY_ORDER and 'content="noindex' not in head and not re.search(r"/\d+/$", path): SAME_QUERY[query_key(title)].append(path)
     write(path, f"""<!doctype html>
 <html lang="en" data-base="{P}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -10667,11 +10667,16 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     # The official MCP Registry checks that this domain is ours before it lists the connector at /mcp under com.jobseveryhour/*: it
     # reads the public half of our Ed25519 key here, exactly at this address and with no redirect (so not through write(), which
     # would make a folder of it). The private half stays with the owner, never in the repository.
-    # Yandex Webmaster's ownership file (21 Nov 2026): yandex_<code>.html at the root, with the code from config.json "verify"; the same
-    # code is also the yandex-verification meta tag on the home page, so either way Yandex offers works.
+    # Yandex Webmaster's ownership file (21 Nov 2026): yandex_<code>.html at the root, with the code from config.json "verify". The owner
+    # wants nothing added to the home page for this, so there is no meta tag: the file is the whole proof.
     if re.fullmatch(r"[0-9a-f]{8,32}", (_ya := (CFG.get("verify") or {}).get("yandex", ""))):
         (OUT / f"yandex_{_ya}.html").write_text('<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n'
                                                  f'    <body>Verification: {_ya}</body>\n</html>\n', encoding="utf-8")
+    # Pinterest's website claim (21 Nov 2026), the same way: pinterest-<first 5 characters of the code>.html at the root with its
+    # p:domain_verify tag. Pinterest's own download adds its tracking scripts; only the tag is needed, so only the tag is served.
+    if re.fullmatch(r"[0-9a-f]{32}", (_pi := (CFG.get("verify") or {}).get("pinterest", ""))):
+        (OUT / f"pinterest-{_pi[:5]}.html").write_text(f'<!DOCTYPE html>\n<html><head><meta charset="utf-8"><meta name="p:domain_verify" content="{_pi}"/>'
+                                                        '<title>Pinterest verification</title></head><body>Pinterest verification</body></html>\n', encoding="utf-8")
     _mra = ROOT / "mcp_registry_auth.txt"
     if _mra.exists():
         (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
