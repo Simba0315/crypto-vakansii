@@ -1130,7 +1130,7 @@ def FULL_FOOT():
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
 <div><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></div>
 <div><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/job-search-engines/">Job search engines compared</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></div>
-</div>{FOOT.get("pop", "")}{ask_ai_row()}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
+</div>{FOOT.get("pop", "")}{FOOT.get("types", "")}{ask_ai_row()}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>"""
 
 
 def age(iso):
@@ -2328,6 +2328,31 @@ def main():
     pop_sk = [t for t, _ in Counter(t for j in active for t in j["tags"]).most_common(10)]
     FOOT["pop"] = ('<p class="pop"><span>Popular searches:</span>' + "".join(f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} jobs</a>' for t in pop_sk)
                    + "".join(f'<a href="{P}/locations/{slug}/">{pfl(slug)}Jobs in {e(name.removeprefix("the "))}</a>' for name, slug, _ in sorted(places, key=lambda x: -len(x[2]))[:6]) + "</p>")
+    # The kinds of work by hours and by employer (moved here 21 Nov 2026 from their own sections below, which still build the pages): known
+    # before the first page is written, so that the footer of every page links each list that exists. Until then /government-jobs/ had no
+    # link from any other page but its own, /nonprofit-jobs/ and /job-posting-sites/ one, /temporary/ and /no-experience-jobs/ two.
+    imm_jobs, noexp_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX)
+    HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
+        ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
+        ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
+        ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
+        ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
+        if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
+    HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs)) if len(x[3]) >= 20]
+    GOV_RX = re.compile(r"^(?:the )?(?:city|county|state|town|village|commonwealth|district|port|borough|township|parish) of\b|\b(?:county|city|state) government\b|"
+                        r"\bdepartment of\b|\bpublic schools?\b|\bschool district\b|\bunified school\b|\b(?:transit|housing|port|water|airport) authority\b|\bcounty\s*$", re.I)
+    SCHOOL_RX = re.compile(r"\bpublic schools?\b|\bschool district\b|\bunified school\b", re.I)
+    gov_ = [j for j in active if j["id"].startswith("usajobs-") or GOV_RX.search(j["company"])]
+    GOV_PAGE = len(gov_) >= 20
+    np_file = json.loads((ROOT / "nonprofits.json").read_text()) if (ROOT / "nonprofits.json").exists() else {}
+    np_cos = set(np_file.get("companies") or []) | {c for c in companies if NP_NAMES.search(c)} | {j["company"] for j in active if j.get("desc") and says_nonprofit(j["company"], j["desc"])}
+    np_ = [j for j in active if j["company"] in np_cos]
+    NP_PAGE = len(np_) >= 20
+    TYPE_NAMES = {"night-shift/": "Night shift jobs", "weekend/": "Weekend jobs", "summer/": "Summer jobs", "temporary/": "Temporary jobs",
+                  "hiring-immediately/": "Jobs hiring immediately", "no-experience-jobs/": "No experience jobs"}
+    FOOT["types"] = ('<p class="pop"><span>Jobs by type:</span>' + "".join(f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in (
+        [("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
+        + [(p_, TYPE_NAMES.get(p_, h_)) for p_, h_, _, _ in HOURS] + ([("government-jobs/", "Government jobs")] if GOV_PAGE else []) + ([("nonprofit-jobs/", "Nonprofit jobs")] if NP_PAGE else []))) + "</p>")
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
     SPONSORS = [sp for sp in CFG.get("sponsors", []) + PAID.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
     spot_cos = [sp["company"] for sp in SPONSORS if sp.get("slot") in ("home", "spotlight", "companies")]
@@ -2647,7 +2672,6 @@ def main():
     shot_panels = "".join(f'<ul class="jobs" data-panel="{i_}"{" data-live=home" if i_ == 0 else " hidden"}>{r_}</ul>' for i_, (_, _, r_) in enumerate(shot_tabs))   # "Latest jobs" takes new jobs live (site.js)
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
-    imm_jobs, noexp_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX)
     say_chips = (f'<a href="{P}/hiring-immediately/">Hiring immediately</a>' if len(imm_jobs) >= 20 else "") + (f'<a href="{P}/no-experience-jobs/">No experience</a>' if len(noexp_jobs) >= 20 else "")
     hero = (f'<section class="hero v2"><div class="wrap">'
             f'<p class="stamp"><i></i>Jobs hiring now · <b>{n:,}</b> open, checked {fdate(TODAY, False)} <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
@@ -3311,7 +3335,10 @@ def main():
             "Internships and junior roles at companies: a way into the industry without years of experience.", jr,
             intro_for(jr, "entry-level ", row=True), stats="rest",
             extra=labrow("Narrow by", [f'<a href="{P}/internships/">Internships</a>', f'<a href="{P}/remote/entry-level/">Remote entry-level jobs</a>',
-                                       f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>']),
+                                       f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>'])
+                  # by field (21 Nov 2026): these 22 lists had two links each, from their field and from one guide
+                  + labrow("By field", [f'<a href="{P}/categories/{fs_}/entry-level/">Entry-level {e(rlow(fn_))} jobs ({n_:,})</a>'
+                                        for fs_, fn_, _, _, js_f in fam_rows if (n_ := sum(1 for j in js_f if j["entry"])) >= 20]),
             pics=gl_e, list_title="Newest entry-level jobs and internships", hub=ent_top + tl_e, after=ent_after, faq="entry-level jobs", faq_extra=ent_qa)
     def skill_more(t, js):
         """"What jobs can I get with SQL?" (People also ask): the kinds of work that ask for it, with counts and pay; and the skills asked with it."""
@@ -3415,13 +3442,6 @@ def main():
 
     lap('Lists by when the work is done. People search these by the h')
     # Lists by when the work is done. People search these by the hours, not by the profession: "night shift jobs", "weekend jobs", "summer jobs".
-    HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
-        ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
-        ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
-        ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
-        ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
-        if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
-    HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs)) if len(x[3]) >= 20]
     def hourly_tbl(js_, label):
         """Hourly pay by job title (plan item 1.9, 20 Nov 2026): as on the part-time and night shift pages, for the other lists people
         search by hours. The middle of each posting's hourly range, titles with three or more postings that state one."""
@@ -3511,11 +3531,6 @@ def main():
     # Government jobs: the federal agencies read from USAJOBS, then states, counties, cities, school districts and public authorities
     # that publish on their own hiring systems, told by the employer's name. LinkedIn has a "Government" collection (checked 20 Nov
     # 2026) and "government jobs" is among the most searched job queries; on that day the server's record held about 11,600 such jobs.
-    GOV_RX = re.compile(r"^(?:the )?(?:city|county|state|town|village|commonwealth|district|port|borough|township|parish) of\b|\b(?:county|city|state) government\b|"
-                        r"\bdepartment of\b|\bpublic schools?\b|\bschool district\b|\bunified school\b|\b(?:transit|housing|port|water|airport) authority\b|\bcounty\s*$", re.I)
-    SCHOOL_RX = re.compile(r"\bpublic schools?\b|\bschool district\b|\bunified school\b", re.I)
-    gov_ = [j for j in active if j["id"].startswith("usajobs-") or GOV_RX.search(j["company"])]
-    GOV_PAGE = len(gov_) >= 20
     if GOV_PAGE:
         fed_ = [j for j in gov_ if j["id"].startswith("usajobs-")]
         sch_ = [j for j in gov_ if not j["id"].startswith("usajobs-") and SCHOOL_RX.search(j["company"])]
@@ -3551,10 +3566,6 @@ def main():
     # LinkedIn has a "Non-profit organizations" collection (checked 20 Nov 2026). "X is a nonprofit" about a client or a foundation of
     # the employer does not count: the sentence must start with the employer's name (an agency's "our client is a nonprofit", Kith's
     # foundation). nonprofits.json holds those found in the server's full texts; the record here keeps texts of the last 14 days only.
-    np_file = json.loads((ROOT / "nonprofits.json").read_text()) if (ROOT / "nonprofits.json").exists() else {}
-    np_cos = set(np_file.get("companies") or []) | {c for c in companies if NP_NAMES.search(c)} | {j["company"] for j in active if j.get("desc") and says_nonprofit(j["company"], j["desc"])}
-    np_ = [j for j in active if j["company"] in np_cos]
-    NP_PAGE = len(np_) >= 20
     if NP_PAGE:
         row_n, kw_n = list_parts("Nonprofit jobs", np_)
         fld_n = Counter(j["cat"] for j in np_ if j["cat"] != OTHER[0]).most_common(10)
@@ -4347,6 +4358,14 @@ def main():
     sal_all = (f'<p class="showall"><input type="checkbox" id="salall" class="sr-only"><label class="btn ghost sm" for="salall"><span>Show all {len(sal_t)} job titles</span>'
                f'<span>Show the first {SAL_FIRST} only</span></label></p>' if len(sal_t) > SAL_FIRST else "")
     sal_q = lambda q: all_m[min(len(all_m) - 1, int(len(all_m) * q))]
+    # Every /salaries/<slug>/ page this build writes (slug -> name), known before the hub and the first salary page are written: the hub
+    # lists them all and each salary page links its neighbours (21 Nov 2026). Same rules and order as the loops that write them below.
+    sal_taken = {cat_slug[name] for name, group in g_cat.items() if len(group) >= 30 and name != OTHER[1]} | \
+                {slug_r for slug_r, (_, rj) in by_role.items() if sum(1 for j in rj if j["usd"]) >= 20}
+    SAL_ALL = {}
+    SAL_ALL.update({TAG_SLUG.get(t, slugify(t)): t for t, group in g_tag.items() if len(group) >= 30 and TAG_SLUG.get(t, slugify(t)) not in sal_taken})
+    SAL_ALL.update({cat_slug[name]: name for name, group in g_cat.items() if len(group) >= 30 and name != OTHER[1]})
+    SAL_ALL.update({slug_r: tcase(rname) for slug_r, (rname, rj) in by_role.items() if sum(1 for j in rj if j["usd"]) >= 20})
     page("salaries/", f"Salary by Job Title: {len(sal_t)} Jobs From Live Postings | {SITE}",
          f"Median salary by job title for {len(sal_t)} jobs, plus by category, level, skill and company, from the pay ranges in {len(paid):,} open job postings. Updated daily.",
          crumbs(("Salaries", "")) + '<h1>Salaries from <span class="hl">live job postings</span></h1>'
@@ -4366,12 +4385,23 @@ def main():
          + (lambda t_: section("Salaries [[by level]], intern to lead", t_, label="By level") if t_ else "")(level_table(paid))
          + '<div class="duo">' + section("Salary [[by skill]]", table(g_tag, lambda k: f"salaries/{TAG_SLUG.get(k, slugify(k))}/" if len(g_tag[k]) >= 30 else f"skills/{TAG_SLUG.get(k, slugify(k))}/"), label="By skill")
          + section("Salary [[by company]]", table(g_comp, lambda k: f"companies/{slugify(k)}/", 8), label="By company") + "</div>"
+         + section(f"Every salary page, [[A to Z]]", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/salaries/{s_}/">{e(n_)} salary</a>'
+                   for s_, n_ in sorted(SAL_ALL.items(), key=lambda kv: kv[1].lower())) + "</p>", label="A to Z", sub=f"All {len(SAL_ALL)} pages: kinds of work, fields and skills.")
          + section("Highest-paying [[open roles]]", f'<ul class="jobs">{"".join(card(j) for j, _ in diverse_pairs(best, 30))}</ul>', ("with-salary/", "All jobs with salary"), label="Open now",
                    sub="The open roles with the highest advertised pay, at most two from one employer.")
          + cite("salaries/", "Salaries from live job postings",
                 f"Job postings that state pay advertise a median of {money(median([(lo + hi) / 2 for _, (lo, hi) in paid]))} a year; {100 - SALPCT}% of open postings state no pay at all. "
                 f"Counted from {len(paid):,} open postings, {MONTH_YEAR}.")
          + section("Questions about salaries", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>"), head=sal_ld, cls="hub sal")
+
+    def sal_related(slug, group, k=10):
+        """Salary pages next to this one (21 Nov 2026: the 383 salary pages linked to none of each other): the kinds of work these postings
+        belong to, the skills asked with it, and its field; each only if it has a salary page."""
+        js_ = [j for j, _ in group]
+        out_ = [s_ for s_, _ in sorted(by_kind(js_).items(), key=lambda kv: -len(kv[1]))[:12]]
+        out_ += [TAG_SLUG.get(t_, slugify(t_)) for t_, _ in Counter(t_ for j in js_ for t_ in j["tags"]).most_common(16)]
+        out_ += [c_ for c_, _ in Counter(j["cat"] for j in js_).most_common(2)]
+        return [s_ for s_ in dict.fromkeys(out_) if s_ != slug and s_ in SAL_ALL][:k]
 
     def salary_page(slug, label, group, back, role=False, psn=None):
         by_loc = defaultdict(list)
@@ -4491,6 +4521,8 @@ def main():
                                 + "</table></div>") if prem else "")
              + section("Top-paying companies", table(comp, lambda k: f"companies/{slugify(k)}/", 3, 25))
              + section(f"Highest-paying open {label} roles", f'<ul class="jobs">{"".join(card(j) for j, _ in top_jobs)}</ul>', back)
+             + (section("Related salaries", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/salaries/{s_}/">{e(SAL_ALL[s_])} salary</a>' for s_ in rel_s) + "</p>",
+                        ("salaries/", "All salaries")) if (rel_s := sal_related(slug, group)) else "")
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
              + cite(f"salaries/{slug}/", f"{label} salaries",
                     f"The median advertised salary for {label} roles at companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
@@ -4498,8 +4530,6 @@ def main():
     lap('a skill that shares its address with a field or a kind of wo')
     # a skill that shares its address with a field or a kind of work ("Payroll", "Procurement") leaves /salaries/<slug>/ to that page,
     # which used to be written over it anyway; the skill page's "salaries" link then leads there
-    sal_taken = {cat_slug[name] for name, group in g_cat.items() if len(group) >= 30 and name != OTHER[1]} | \
-                {slug_r for slug_r, (_, rj) in by_role.items() if sum(1 for j in rj if j["usd"]) >= 20}
     for t, group in g_tag.items():
         if len(group) >= 30 and TAG_SLUG.get(t, slugify(t)) not in sal_taken:
             salary_page(TAG_SLUG.get(t, slugify(t)), t, group, (f"skills/{TAG_SLUG.get(t, slugify(t))}/", f"All {t} jobs"))
@@ -5982,7 +6012,7 @@ def main():
              crumbs(("For employers", "post-a-job/"), ("Job descriptions", "job-descriptions/"), (rname, "")) + f'<h1>{e(rname)} job description: <span class="hl">template and real figures</span></h1>'
              + (f'<p class="lead"><strong>{e(art(psn).capitalize())} {e(psn)} {e(does)}.</strong> ' if does else '<p class="lead">')
              + f'A template for hiring {art(psn)} {e(psn)}, with what employers in today’s {n_:,} open postings for this work ask for and offer. Copy it, fill in the brackets, then post the job free.</p>'
-             + facts_ + act_row("", "Copy the template", [("post-a-job/", "Post this job free")], clip="letter")
+             + facts_ + act_row("", "Copy the template", [("post-a-job/", "Post this job free"), ("job-posting-sites/", "Job posting sites compared")], clip="letter")
              + '<div class="rexgrid wide"><div>'
              + f'<div class="rl-paper"><pre id="letter">{e(tpl)}</pre><p class="rl-act"><button class="btn primary sm" type="button" data-clip="letter" data-raw="1" style="margin-top:0">Copy the template</button> <button class="btn ghost sm" type="button" data-doc="letter" data-name="{slug_r}-job-description" style="margin-top:0">Word</button> <button class="btn ghost sm" type="button" data-pdf="letter" data-name="{slug_r}-job-description" style="margin-top:0">PDF</button> '
                f'<a class="btn ghost sm" href="{P}/tools/job-description-checker/" style="margin-top:0">Check your description</a> <a class="btn ghost sm" href="{P}/post-a-job/" style="margin-top:0">Post the job free</a></p></div></div>'
@@ -6566,7 +6596,7 @@ def main():
              f"How to hire {art(psn)} {psn}: {len(cos_):,} companies are hiring this work today. What they pay and offer, where, how long postings stay up, and six steps with free templates and tools.",
              crumbs(("For employers", "post-a-job/"), ("How to hire…", "how-to-hire/"), (rname, "")) + f'<h1>How to hire {art(psn)} {e(psn)}: <span class="hl">{len(cos_):,} companies are hiring now</span></h1>'
              f'<p class="lead">What you compete with, counted from today’s {n_:,} open {e(low)} postings: who is hiring, where, what they pay and how long postings stay up. Then six steps, each with a free template or tool.</p>'
-             + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template")])
+             + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template"), ("job-posting-sites/", "Where else to post it: sites compared")])
              + section(f"Six steps to hire {art(psn)} {psn}", steps)      # the steps are what "how to hire" asks for: first, then the figures behind them
              + (section(f"What to look for in {art(psn)} {e(psn)}", '<ul class="ticks">' + "".join(f"<li><b>{e(x['label'])}.</b> {e(x['text'])}</li>" for x in hm_["look"]) + "</ul>")
                 if hm_ else "")
@@ -10008,6 +10038,20 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         close = sorted((y for y in RW if y is not x), key=lambda y: -(8 * (y["word"] in mine) + len(mine & rw_set[y["slug"]])))[:k - 6]
         return close + [y for y in (RW[(i + d) % len(RW)] for d in range(1, len(RW))) if y not in close][:6]
 
+    # A word and its phrases ("responsible" and "responsible for", "worked", "worked on" and "worked with", 21 Nov 2026) have titles that
+    # differ by one small word: each says at the top which one it is and where the others are, so the two meanings do not compete.
+    rw_by = {y["slug"]: y for y in RW}
+    RW_PREPS = ("for", "with", "on", "in", "to", "of", "by", "as")
+
+    def rw_sib_note(x):
+        s_ = x["slug"]
+        root_ = next((b_ for b_ in rw_by if s_.startswith(b_ + "-") and s_[len(b_) + 1:] in RW_PREPS), s_)
+        fam_ = [rw_by[root_]] + [y for y in RW if y["slug"].startswith(root_ + "-") and y["slug"][len(root_) + 1:] in RW_PREPS]
+        sib_ = [y for y in fam_ if y is not x]
+        if not sib_: return ""
+        return (f'<p class="note">This page is about “{e(x["word"])}”. ' + " ".join(
+            f'For “{e(y["word"])}”, see <a href="{P}/resume-words/{y["slug"]}/">{sum(len(g[1]) for g in y["groups"])} words instead of “{e(y["word"])}”</a>.' for y in sib_) + "</p>")
+
     for x in RW:
         n_ = sum(len(g[1]) for g in x["groups"])
         qa_ = x["qa"]
@@ -10022,6 +10066,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f"{n_} stronger words to use instead of “{x['word']}” on a resume, grouped by {'what you want to say' if x.get('kind') == 'trait' else 'what you actually did'}, each group with an example line that shows a result.",
              crumbs(("Resume words", "resume-words/"), (f"Instead of “{x['word']}”", "")) + f'<h1>Another word for “{e(x["word"])}” on a resume: <span class="hl">{n_} synonyms</span></h1>'
              f'<p class="lead">{e(x["why"])} The words below are grouped by {by_}; each group has an example line with a number, the way a recruiter wants to read it.</p>'
+             + rw_sib_note(x)
              + act_row("tools/resume-bullet-builder/", "Build your own resume line", [("resume/", "Free resume builder"), ("resume-words/", f"All {len(RW)} words")])
              + f'<section class="sec"><div class="sec-head"><h2>Words to use instead of “{e(x["word"])}”, by {by_}</h2></div><div class="rw-grid">{groups_}</div></section>'
              + (section(f"Which word to use instead of “{x['word']}”", '<div class="tablewrap"><table><tr><th>If you…</th><th>Use</th></tr>'
