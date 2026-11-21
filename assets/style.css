@@ -4069,3 +4069,9 @@ main.srch #fwrap #perk,main.srch #fwrap #etype{width:100%}
 main.srch #fwrap #f-rc-w,main.srch #fwrap .fgroup>.filters{margin-top:0!important}
 main.srch #fwrap .filters:has(>label[hidden]:only-child){display:none}
 main.srch #fwrap>.fgroup{display:flex;align-items:center;gap:8px}
+/* one company's badge, opened from a letter (/hiring-badge/?company=<slug>) */
+.hbco{margin:0 0 22px;padding:20px 22px;border:1px solid var(--ac);border-radius:18px;background:var(--card)}
+.hbco h2{margin:0 0 10px;font-size:20px}
+.hbco textarea{width:100%;font:13px/1.45 ui-monospace,Menlo,monospace;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--bg);color:var(--text);margin:4px 0 10px;resize:vertical}
+.hbco .flabel{display:block;margin:12px 0 2px;font-weight:650}
+.hbco .adv-list li{margin:4px 0}

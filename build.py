@@ -10515,6 +10515,33 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
               ("Where can I use a hiring badge?", "In a GitHub README, a site footer, a blog post, an email signature or a community page: anywhere an image with a link works."),
               ("Is there a badge for my company?", f"If your company is among the {m:,} whose career pages we read, yes: its badge shows its current number of open roles. Pick it in the widget builder."),
               ("Is it free?", "Yes. Copy the code and use it; the badge links back to the list it counts.")]
+    # One company's badge, opened from a letter as /hiring-badge/?company=<slug> (owner, 22 Nov 2026: "a page where everything is clear
+    # to them how to place it"): the badge, its code with copy buttons and where to paste it on the common site builders. Filled in the
+    # browser from the company's own page here, so no extra page per company is built; an unknown slug leaves the panel hidden.
+    hb_co = ('<section class="feat hbco" id="hb-co" hidden aria-live="polite"><h2 id="hb-co-h">Your company’s hiring badge</h2>'
+             '<p class="hbc-pic"><a id="hb-co-a" href="#"><img id="hb-co-img" alt="" height="28"></a></p>'
+             '<p class="note">It shows how many of your roles are open today and links to your company page here, where every Apply button goes to your own application page.</p>'
+             '<span class="flabel">1. Copy the code</span><textarea id="hb-co-html" rows="3" readonly aria-label="HTML for your company badge"></textarea>'
+             '<span class="flabel">Markdown, for a GitHub README or docs</span><textarea id="hb-co-md" rows="2" readonly aria-label="Markdown for your company badge"></textarea>'
+             '<p class="hbc-a"><button class="btn primary sm" type="button" data-clip="hb-co-html" data-raw="1">Copy HTML</button>'
+             '<button class="btn ghost sm" type="button" data-clip="hb-co-md" data-raw="1">Copy Markdown</button></p>'
+             '<span class="flabel">2. Paste it where the badge should appear</span><ul class="adv-list">'
+             '<li><b>Any website:</b> paste the HTML into your careers page or footer template.</li>'
+             '<li><b>WordPress:</b> add a “Custom HTML” block, or a Custom HTML widget in the footer, and paste the HTML.</li>'
+             '<li><b>Webflow:</b> drag an “Embed” element onto the page and paste the HTML.</li>'
+             '<li><b>Wix:</b> Add, then Embed code, then Embed HTML; paste the HTML and size the box to the badge.</li>'
+             '<li><b>Squarespace:</b> add a “Code” block and paste the HTML.</li>'
+             '<li><b>GitHub README or docs:</b> paste the Markdown.</li></ul>'
+             '<p class="note">The number updates by itself every day. Nothing to install, no account and no fee; to take it down, delete the code.</p></section>'
+             '<script>(function(){var s=(new URLSearchParams(location.search).get("company")||"").toLowerCase();if(!/^[a-z0-9][a-z0-9-]{0,80}$/.test(s))return;'
+             f'var B="{FULL}",img=B+"/badge/companies/"+s+".svg",pg=B+"/companies/"+s+"/",box=document.getElementById("hb-co");'
+             'fetch("/companies/"+s+"/").then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){'
+             'var m=/<h1[^>]*>[\\s\\S]*?<span class="hl">([\\s\\S]*?)<\\/span>/.exec(t),d=document.createElement("textarea");d.innerHTML=m?m[1]:s;var n=d.value.trim()||s;'
+             'document.getElementById("hb-co-h").textContent=n+"’s hiring badge";document.getElementById("hb-co-a").href=pg;'
+             'var i=document.getElementById("hb-co-img");i.src=img;i.alt=n+" jobs on Jobs Every Hour";var q=n.replace(/["<>]/g,"");'
+             'document.getElementById("hb-co-html").value="<a href=\\""+pg+"\\"><img src=\\""+img+"\\" alt=\\""+q+" jobs on Jobs Every Hour\\" height=\\"28\\"></a>";'
+             'document.getElementById("hb-co-md").value="[!["+q+" jobs on Jobs Every Hour]("+img+")]("+pg+")";box.hidden=false;box.scrollIntoView({block:"start"})})'
+             '.catch(function(){})})();</script>')
     page("hiring-badge/", f"Free Hiring Badge with a Live Count of Open Roles | {SITE}",
          "Free hiring badges for a README, a footer or a post: a small live image with today’s number of open roles for jobs, a skill, a city or your company. Copy and paste.",
          crumbs(("Job widget", "widgets/"), ("Hiring badge", "")) + '<h1>Free hiring badge with a live count</h1>'
@@ -10522,6 +10549,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'Copy one below, or <a href="{P}/widgets/">pick any skill, city, category or company in the builder</a>.</p>'
          '<p class="plain"><b>In plain words:</b> a badge is a small picture that shows a number, here the number of jobs that are open right now. You paste one line of code where the picture should appear, such as the footer of your website or the front page of a project, and the number changes by itself.</p>'
          + act_row("widgets/#wb-badge-sec", "Make a badge for your company", [("widgets/", "The job widget")], note="Free, no account.")
+         + hb_co
          + f'<div class="feats hbgrid">{badge_rows}</div>'
          + section("Questions about [[the hiring badge]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hb_faq) + "</dl>", label="Questions"),
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
