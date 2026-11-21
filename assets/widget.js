@@ -5,7 +5,7 @@
    <script src="…/widget.js" async></script>
    Layouts: list (default), cards, compact, ticker, careers. data-search="1" adds a search box and "show more".
    A company can also show its own jobs straight from its hiring system, with no account anywhere:
-     data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme" | "recruitee:acme" | "smartrecruiters:Acme"   (the name of the board in that system), data-company="Acme"
+     data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme" | "recruitee:acme" | "smartrecruiters:Acme" | "teamtailor:acme"   (the name of the board in that system), data-company="Acme"
    Look: set --hrn-bg, --hrn-ink, --hrn-muted, --hrn-line, --hrn-hover, --hrn-accent, --hrn-font or --hrn-radius in your own stylesheet on the element
    (e.g. [data-hrn-jobs]{--hrn-font:Georgia,serif;--hrn-radius:0}); they cross into the widget and win over the theme.
    The link inside the div stays visible as the footer and works even if scripts are blocked. */
@@ -84,6 +84,7 @@
                   location: l.remote && !l.city ? 'Remote' : [l.city, l.country && String(l.country).toUpperCase()].filter(Boolean).join(', '), posted: day(j.releasedDate),
                   category: j.department && j.department.label || '', remote: !!l.remote });
     });
+    else if (type === 'teamtailor') (raw.items || []).forEach(function (j) { jobs.push(j); });
     else (raw.jobs || []).forEach(function (j) {
       if (j.isListed === false) return;
       jobs.push({ title: j.title, url: j.jobUrl, location: j.location || '', posted: day(j.publishedAt), category: j.department || j.team || '' });
@@ -111,19 +112,35 @@
       }
       return page(0);
     }
+    // Teamtailor publishes its jobs as an RSS file: read the text, take title, link, date, place and team from each item.
+    function tt(slug) {
+      return fetch('https://' + slug + '.teamtailor.com/jobs.rss').then(function (r) { return r.text(); }).then(function (t) {
+        var doc = new DOMParser().parseFromString(t, 'application/xml'), items = [];
+        var one = function (n, tag) { var e = n.getElementsByTagName(tag)[0]; return e ? (e.textContent || '').trim() : ''; };
+        Array.prototype.forEach.call(doc.getElementsByTagName('item'), function (n) {
+          var cities = [], l = n.getElementsByTagName('tt:location')[0], when = new Date(one(n, 'pubDate'));
+          if (l) cities = [one(l, 'tt:city') || one(l, 'tt:name'), one(l, 'tt:country')].filter(Boolean);
+          var remote = one(n, 'remoteStatus');
+          items.push({ title: one(n, 'title'), url: one(n, 'link'), location: cities.join(', ') || (remote === 'fully' ? 'Remote' : ''),
+                       posted: isNaN(when) ? '' : when.toISOString().slice(0, 10), category: one(n, 'tt:department'), remote: remote === 'fully' });
+        });
+        return { items: items };
+      });
+    }
     var ats = { greenhouse: 'https://boards-api.greenhouse.io/v1/boards/' + encodeURIComponent(slug) + '/jobs',
                 lever: 'https://api.lever.co/v0/postings/' + encodeURIComponent(slug) + '?mode=json',
                 ashby: 'https://api.ashbyhq.com/posting-api/job-board/' + encodeURIComponent(slug),
                 recruitee: /^[A-Za-z0-9-]+$/.test(slug) ? 'https://' + slug + '.recruitee.com/api/offers/' : '',
-                smartrecruiters: /^[A-Za-z0-9_-]+$/.test(slug) ? 'sr' : '' }[type];
-    if (!ats && { recruitee: 1, smartrecruiters: 1 }[type]) return;   // a board name with odd characters: leave the plain link
+                smartrecruiters: /^[A-Za-z0-9_-]+$/.test(slug) ? 'sr' : '',
+                teamtailor: /^[A-Za-z0-9-]+$/.test(slug) ? 'tt' : '' }[type];
+    if (!ats && { recruitee: 1, smartrecruiters: 1, teamtailor: 1 }[type]) return;   // a board name with odd characters: leave the plain link
     var limit = Math.max(1, Math.min(20, parseInt(el.getAttribute('data-limit') || '6', 10) || 6));
     var theme = { light: 'light', dark: 'dark' }[el.getAttribute('data-theme')] || 'auto';
     var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
     var accent = /^#[0-9a-fA-F]{3,8}$/.test(el.getAttribute('data-accent') || '') ? el.getAttribute('data-accent') : '';
     var src = el.getAttribute('data-hrn-base') || base;
     var interactive = layout === 'careers' || el.getAttribute('data-search') === '1', step = layout === 'careers' ? 20 : limit;
-    (ats === 'sr' ? sr(slug) : fetch(ats || src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); })).then(function (d) {
+    (ats === 'sr' ? sr(slug) : ats === 'tt' ? tt(slug) : fetch(ats || src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); })).then(function (d) {
       if (ats) d = own(type, d, el, src);
       var jobs = interactive ? d.jobs : d.jobs.slice(0, limit), body;
       if (!jobs.length) body = '<div class="e">No open roles right now.</div>';

@@ -49,7 +49,7 @@ Every result on the first page of Google for the two main phrases is kind (b). T
 2. ✅ (done 17 Nov 2026: `/widgets/remote-jobs/`, `/widgets/careers-page/`, `/widgets/embed-job-listings/`) Pages for the neighbouring searches: "remote jobs widget", "careers page widget", "embed job listings on website",
    "greenhouse job board embed", "lever jobs embed", "hiring badge".
 3. A WordPress plugin (shortcode and block) published on wordpress.org: needs the owner's wordpress.org account.
-4. ✅ (partly, 20 Nov 2026) Recruitee (`recruitee:name`) and SmartRecruiters (`smartrecruiters:Name`, up to the newest 500 roles) are read in own-board mode; both feeds answer cross-origin reads (checked). Left: Workable (its public feed answered 429 when checked, test again), Teamtailor (no JSON feed with cross-origin reads found).
+4. ✅ (partly, 20 Nov 2026) Recruitee (`recruitee:name`) and SmartRecruiters (`smartrecruiters:Name`, up to the newest 500 roles) are read in own-board mode; both feeds answer cross-origin reads (checked). ✅ (21 Nov 2026) Teamtailor (`teamtailor:name`, reads the public jobs.rss, which answers cross-origin reads). Left: Workable (its public feed answered 429 from the cloud runner, test again from another address).
 5. Job popup inside the widget; carousel layout. ✅ (20 Nov 2026) custom look hook: `--hrn-bg`, `--hrn-ink`, `--hrn-muted`, `--hrn-line`, `--hrn-hover`, `--hrn-accent`, `--hrn-font`, `--hrn-radius`.
 6. Click statistics and an email-alert form: need the server.
 7. Revenue share for publishers: needs payments and real traffic first.
