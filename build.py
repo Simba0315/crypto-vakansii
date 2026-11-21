@@ -8581,7 +8581,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     w_faq = [("Is the job widget free?", "Yes. There is no plan, no account and no limit on page views. The snippet keeps a small link back to this site, which is how the widget stays free."),
              ("Do I need to sign up or get a key?", "No. Choose what to show in the builder on this page, copy the code and paste it into your site."),
              ("How often do the jobs update?", f"Lists from our index are rebuilt every hour from the career pages of {m:,} companies, each read {EVERY}, so closed roles drop out by themselves. A list of your own company’s jobs is read live from your hiring system every time the page opens."),
-             ("Can I show only my own company’s jobs?", "Yes. If you post jobs through Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters, pick that system in the builder and type the name of your board. The widget reads your public board directly, with no account and nothing to keep in sync by hand."),
+             ("Can I show only my own company’s jobs?", "Yes. If you post jobs through Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor, pick that system in the builder and type the name of your board. The widget reads your public board directly, with no account and nothing to keep in sync by hand."),
              ("Does it work with WordPress, Webflow, Wix, Squarespace, Shopify and Framer?", "Yes. Anything that lets you paste HTML works with the script version. Builders that strip scripts, such as Notion, take the iframe version. The table on this page says where to paste the code on each platform."),
              ("Will the widget slow my page down?", f"The script is about {wsize} KB, loads asynchronously and draws inside its own container, so it does not block your page and your styles do not leak into it or out of it."),
              ("Where does a click on a job lead?", "To the job’s page on this site, which shows the salary, the remote rules and the date of the last check, and from there to the employer’s own application page. For your own board the click goes straight to your application page."),
@@ -8601,14 +8601,14 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          # it); the builder and its live preview follow; the table of attributes opens on a click; two short notes stand side by side.
          khero(crumbs(("Job widget", "")), "For websites", "Free job widget for your website",
                'It is free and needs no account. The list can show jobs from our index, by skill, city, category or company, '
-               'or your own company’s jobs, read straight from the hiring software you already use (Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters), so nobody has to type them in.',
+               'or your own company’s jobs, read straight from the hiring software you already use (Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor), so nobody has to type them in.',
                f'<p class="kact">{go("#wb", "Build your widget")}<a href="#platforms">Where to paste it, by platform</a></p>',
                after='<p class="plain"><b>In plain words:</b> a widget is a small box with a list of jobs that sits on your own website or blog. You choose what it shows, copy a short piece of code from this page and paste it into your site. '
                      f'After that the list keeps itself up to date. Looking for a job yourself? You do not need this page: <a href="{P}/jobs/">go to the job search</a>.</p>')
          + f'<div id="wb" data-full="{FULL}" data-base="{P}"><p class="sec-label">The builder</p><div class="card"><div class="fbar" style="margin:0">'
          '<label class="wl">What to show<select id="wb-type"><optgroup label="Jobs from our index"><option value="skill">Jobs by skill</option><option value="category">Jobs by category</option><option value="location">Jobs by location</option>'
          '<option value="company">Jobs at a company we list</option><option value="remote">Remote jobs</option><option value="latest">Latest jobs</option></optgroup>'
-         '<optgroup label="Your own company’s jobs"><option value="greenhouse">From Greenhouse</option><option value="lever">From Lever</option><option value="ashby">From Ashby</option><option value="recruitee">From Recruitee</option><option value="smartrecruiters">From SmartRecruiters</option></optgroup></select></label>'
+         '<optgroup label="Your own company’s jobs"><option value="greenhouse">From Greenhouse</option><option value="lever">From Lever</option><option value="ashby">From Ashby</option><option value="recruitee">From Recruitee</option><option value="smartrecruiters">From SmartRecruiters</option><option value="teamtailor">From Teamtailor</option></optgroup></select></label>'
          '<label class="wl">Which one<select id="wb-val"></select></label>'
          '<label class="wl" id="wb-board-l" hidden>Your board’s name<input type="text" id="wb-board" placeholder="acme" autocomplete="off" spellcheck="false"></label>'
          '<label class="wl" id="wb-co-l" hidden>Company name<input type="text" id="wb-co" placeholder="Acme" autocomplete="off"></label>'
@@ -8618,7 +8618,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<label class="wl">Colour<input type="color" id="wb-accent" value="#15803d" aria-label="Accent colour"></label>'
          '<label class="wl">Kind of code<select id="wb-mode"><option value="script">Standard (works on most sites)</option><option value="iframe">For Notion and builders that block scripts</option></select></label>'
          '<label class="check"><input type="checkbox" id="wb-search"> Search box and “Show more”</label></div>'
-         '<p class="note" id="wb-hint" hidden style="margin:12px 0 0">The board name is the last part of your careers page address: boards.greenhouse.io/<b>acme</b>, jobs.lever.co/<b>acme</b> or jobs.ashbyhq.com/<b>acme</b>, acme.recruitee.com or jobs.smartrecruiters.com/<b>Acme</b>.</p></div>'
+         '<p class="note" id="wb-hint" hidden style="margin:12px 0 0">The board name is the last part of your careers page address: boards.greenhouse.io/<b>acme</b>, jobs.lever.co/<b>acme</b> or jobs.ashbyhq.com/<b>acme</b>, acme.recruitee.com, jobs.smartrecruiters.com/<b>Acme</b> or <b>acme</b>.teamtailor.com.</p></div>'
          + section("This is how it [[will look]]", '<div id="wb-preview" style="margin-bottom:16px"></div><textarea id="wb-code" rows="4" readonly aria-label="Widget code"></textarea>'
                    '<p><button class="btn sm" type="button" data-copy="wb-code">Copy the code</button> <span class="note">Above is the real widget, working on this page. Below it is the code to copy and paste into your site.</span></p>', label="Live preview")
          + '<section class="sec" id="wb-badge-sec"><div class="sec-head"><h2>Live badge</h2></div><p><img id="wb-badge" alt="Live badge preview" height="28"></p><p class="note">The number on the badge is recalculated every day. Good for a README, a footer or a blog post.</p>'
@@ -8641,16 +8641,16 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<strong>Plain HTML</strong>", "Paste the script version anywhere inside <code>&lt;body&gt;</code>."]]), sid="platforms", label="Platforms")
          + section("Or start from [[what you want to do]]", '<div class="feats">'
                    f'<a class="feat" href="{P}/widgets/remote-jobs/"><h3>Remote jobs widget</h3><p>A box of remote jobs for a blog, newsletter or community page.</p></a>'
-                   f'<a class="feat" href="{P}/widgets/careers-page/"><h3>Careers page widget</h3><p>Your own company’s jobs, with search, read from Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters.</p></a>'
+                   f'<a class="feat" href="{P}/widgets/careers-page/"><h3>Careers page widget</h3><p>Your own company’s jobs, with search, read from Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor.</p></a>'
                    f'<a class="feat" href="{P}/widgets/embed-job-listings/"><h3>Embed job listings</h3><p>The script and the frame version, and what each can list.</p></a></div>', label="By purpose")
          + section("Your own company’s jobs, [[straight from your hiring system]]",
-                   '<p>If your company posts jobs through Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters, the widget can read your public job board directly in the visitor’s browser. '
+                   '<p>If your company posts jobs through Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor, the widget can read your public job board directly in the visitor’s browser. '
                    'Pick your system in the builder and type the name of your board. New roles appear and closed ones disappear by themselves, and a click on a job opens your own application page.</p>'
                    '<p>Nothing passes through our servers in this mode, so there is no account, no limit on the number of jobs and nothing to pay. '
                    'A very large board, with thousands of roles, takes a moment longer to load. Add the search box for boards with more than a dozen roles.</p>', label="Your own board")
          + section("Options", kmore("The attributes of the snippet, with their defaults", wt(["Attribute", "What it does", "Default"], [
              ["<code>data-hrn-jobs</code>", "What to show: <code>latest</code>, <code>remote</code>, <code>skill:python</code>, <code>category:engineering</code>, <code>location:london</code>, <code>company:stripe</code>, "
-                                           "or your own board: <code>greenhouse:acme</code>, <code>lever:acme</code>, <code>ashby:acme</code>, <code>recruitee:acme</code>, <code>smartrecruiters:Acme</code>", "<code>latest</code>"],
+                                           "or your own board: <code>greenhouse:acme</code>, <code>lever:acme</code>, <code>ashby:acme</code>, <code>recruitee:acme</code>, <code>smartrecruiters:Acme</code>, <code>teamtailor:acme</code>", "<code>latest</code>"],
              ["<code>data-limit</code>", "Rows to show, 1 to 20. With the search box on, rows per page", "6"],
              ["<code>data-layout</code>", "<code>list</code>, <code>cards</code>, <code>compact</code>, <code>ticker</code> or <code>careers</code>", "<code>list</code>"],
              ["<code>data-theme</code>", "<code>auto</code> follows the visitor’s system, or force <code>light</code> or <code>dark</code>", "<code>auto</code>"],
@@ -8726,7 +8726,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
           "Paste the code below and save."],
          "A careers page on a store works well with the careers layout: pick your own board in the builder to show only your company’s roles.",
          [("Where do I paste the widget in Shopify?", "In the theme editor, in a Custom Liquid section or block. Themes without it accept the same code in a Custom HTML section."),
-          ("Can I show only my store’s own vacancies?", "Yes, if you post them through Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters: pick that system in the builder and type the name of your board.")]),
+          ("Can I show only my store’s own vacancies?", "Yes, if you post them through Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor: pick that system in the builder and type the name of your board.")]),
         ("framer", "Framer", "script",
          ["Open Insert, find <b>Embed</b> and place it on the canvas.", "Set its type to HTML and paste the code below.", "Resize the embed to fit the rows and publish."],
          "The preview in Framer runs the widget, so you see the list before you publish.",
@@ -8783,19 +8783,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
           ("Can it show only remote jobs for one skill?", "Not in one box today. A box shows remote jobs, or one skill, or one category, or one city. To show remote jobs in one field, use the category list on the builder page and add the word remote to the title."),
           ("Are the jobs open to people in any country?", "Not all. Many remote jobs name the countries or time zones they accept; each job’s page says which. The box shows a plain list, and the visitor learns the rule on the job’s page.")]),
         ("careers-page", "Careers page widget", "Careers page widget for your company", "careers", snip_careers, None,
-         "A full careers page for a company that already posts jobs through Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters: a list with a search box and a filter by team, read live from your own board.",
+         "A full careers page for a company that already posts jobs through Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor: a list with a search box and a filter by team, read live from your own board.",
          "In plain words: if your company already keeps its jobs in a hiring system such as Greenhouse, this one box shows them on your own website, with a search box. Nothing to retype, and no account here.",
-         "How to set it up", ["Find the name of your board. For Greenhouse it is the last part of your job board address (boards.greenhouse.io/<b>name</b>); for Lever, Ashby and SmartRecruiters it is the same part of your jobs link; for Recruitee it is the start of your careers address (<b>name</b>.recruitee.com).",
-                              "Write it into the code as <code>greenhouse:name</code>, <code>lever:name</code>, <code>ashby:name</code>, <code>recruitee:name</code> or <code>smartrecruiters:Name</code>, and your company name into <code>data-company</code>.",
+         "How to set it up", ["Find the name of your board. For Greenhouse it is the last part of your job board address (boards.greenhouse.io/<b>name</b>); for Lever, Ashby and SmartRecruiters it is the same part of your jobs link; for Recruitee and Teamtailor it is the start of your careers address (<b>name</b>.recruitee.com, <b>name</b>.teamtailor.com).",
+                              "Write it into the code as <code>greenhouse:name</code>, <code>lever:name</code>, <code>ashby:name</code>, <code>recruitee:name</code>, <code>smartrecruiters:Name</code> or <code>teamtailor:name</code>, and your company name into <code>data-company</code>.",
                               "Paste the code into a block of your careers page that accepts HTML. Jobs you open or close in your hiring system change on your page at once."],
-         [("Which hiring systems does it read?", "Greenhouse, Lever, Ashby, Recruitee and SmartRecruiters. A board in another system cannot be shown in this box yet. SmartRecruiters boards show up to their newest 500 roles."),
+         [("Which hiring systems does it read?", "Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters and Teamtailor. A board in another system cannot be shown in this box yet. SmartRecruiters boards show up to their newest 500 roles."),
           ("Do you store my company’s jobs?", "No. In this mode the visitor’s browser reads your public job board directly. Nothing passes through our servers and we keep no copy."),
           ("What does the preview show?", "The layout only: it fills the careers layout with the newest jobs on this site, because we cannot read your board before you name it. With your board name in the code, the same layout shows your roles."),
           ("Will Google show these jobs in its job search?", f"Not from the box: it is drawn by a script after the page loads. To appear in Google’s job search, mark up each job page on your site; the free <a href=\"{P}/tools/jobposting-schema/\">JobPosting generator</a> writes that code.")]),
         ("embed-job-listings", "Embed job listings on a website", "Embed job listings on any website", "cards", snip_cards, snip_script,
          "Two ways to put a live list of jobs on a page you control: a short script, or a frame. Choose what to list, copy the code and paste it.",
          "In plain words: to embed means to place a live box from another site inside your own page. This box shows open jobs. You copy a few lines of code and paste them where the jobs should appear.",
-         "What you can list", ["The newest jobs, or only remote jobs.", "One skill, one category, one city or one company.", "Your own company’s jobs, read from Greenhouse, Lever, Ashby, Recruitee or SmartRecruiters.",
+         "What you can list", ["The newest jobs, or only remote jobs.", "One skill, one category, one city or one company.", "Your own company’s jobs, read from Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor.",
                                "In a list, cards, a compact list, a moving ticker or a full careers page, in light, dark or automatic colours."],
          [("What is the difference between the script and the frame?", "The script draws the list inside your page and takes your colours. The frame (an iframe) shows a small separate page inside a box of a fixed size. Use the frame where a site removes scripts, such as Notion or the cheapest Squarespace plan."),
           ("Does the list copy jobs onto my site?", "No. The jobs stay on this site and in the employer’s hiring system; your page only shows a live view of them, and each click opens the job’s own page."),

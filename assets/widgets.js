@@ -4,7 +4,7 @@
   var D = JSON.parse(document.getElementById('wb-data').textContent), FULL = root.getAttribute('data-full');
   var $ = function (id) { return document.getElementById(id); };
   var type = $('wb-type'), val = $('wb-val'), limit = $('wb-limit'), theme = $('wb-theme'), layout = $('wb-layout'), accent = $('wb-accent'), mode = $('wb-mode');
-  var board = $('wb-board'), co = $('wb-co'), search = $('wb-search'), ATS = { greenhouse: 1, lever: 1, ashby: 1, recruitee: 1, smartrecruiters: 1 };
+  var board = $('wb-board'), co = $('wb-co'), search = $('wb-search'), ATS = { greenhouse: 1, lever: 1, ashby: 1, recruitee: 1, smartrecruiters: 1, teamtailor: 1 };
   var fill = function () {
     var list = { skill: D.skills, category: D.categories, location: D.locations, company: D.companies }[type.value], own = !!ATS[type.value];
     val.innerHTML = list ? list.map(function (x) { return '<option value="' + x[0] + '">' + x[1].replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>'; }).join('') : '';
