@@ -1074,6 +1074,9 @@ def sec_labels(path, body):
 
 
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls=""):
+    # <!--email_off--> around the body (22 Nov 2026): Cloudflare rewrote every address (abuse@ in "Report a problem with this listing",
+    # partners@, press@) into /cdn-cgi/l/email-protection links whose decoding script our pages never load, so a click opened its
+    # "Email Protection" page instead of the mail program. The comments tell Cloudflare to leave the addresses alone.
     """cls: a class on <main> ("lp" on list pages, "hub" on directory pages): the styles of the sections review are scoped by it,
     so job pages, built by the same function, keep their look."""
     url = f"{FULL}/{path}"
@@ -1107,8 +1110,8 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
 <a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Career help</a><a class="nl" href="{P}/post-a-job/">For employers</a>{NAV_PLUS}<a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl only-m" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button>{ACCT_HEAD}<a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
-{hero}<main class="wrap{" " + cls if cls else ""}" id="main">{body}</main>
-{MINI_FOOT if compact else FULL_FOOT()}
+<!--email_off-->{hero}<main class="wrap{" " + cls if cls else ""}" id="main">{body}</main>
+{MINI_FOOT if compact else FULL_FOOT()}<!--/email_off-->
 </body></html>""", sitemap)
 
 
@@ -2927,7 +2930,7 @@ def main():
                                 '<div class="filters" style="margin-top:8px"><label hidden><input type="checkbox" id="f-nosal"> Also show jobs that do not state pay</label></div>')
               + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-hybrid"> Hybrid</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>', "f-work")
-              + '<details class="morefilters"><summary>More filters</summary><div class="mf">'
+              + '<details class="morefilters"><summary data-n="">All filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
               + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'
                                    '<div class="filters"><label><input type="checkbox" id="f-ha"> Jobs I already applied to</label></div>'
@@ -2937,7 +2940,7 @@ def main():
               + group("Perk", '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + "</select>")
               + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
               + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
-              + '</div></details><div class="fgroup fclear"><button class="linkbtn" id="fclear" type="button">Clear all filters</button></div></aside>'
+              + '</div></details><div class="fgroup fclear"><button class="linkbtn" id="fclear" type="button">Clear all</button></div></aside>'
               '<div><p class="note srch-promise">Every job opens on the employer’s own page · no account, no phone number · closed jobs leave the list within the hour · '
               f'<a href="{P}/promise/">what we never do</a></p>'
               '<div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
@@ -6975,7 +6978,7 @@ def main():
          f"{SITE} side by side with {', '.join(x['name'] for x in VS[:-1])} and {VS[-1]['name']}: who pays, prices, where jobs come from and where you apply. Every fact sourced and dated.",
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
          '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now, '
-         f'or see the <a href="{P}/best-job-search-sites/">best job search sites by what you need</a>.</p>'
+         f'or see the <a href="{P}/best-job-search-sites/">best job search sites by what you need</a> and <a href="{P}/vs/jobscan/">Jobscan compared with the free resume check here</a>.</p>'
          + nums([(f"{len(VS)}", "job sites compared with this one"), (f"{len(site_pairs)}", "pairs of job sites, side by side"),
                  (f"{sum(len(x['rows']) for x in VS)}", "facts about them, each with its source"), (f"{len({u_ for x in VS for _, u_, _ in x['sources']})}", "pages of theirs read for it")], src=False)
          + section("Choose [[a site]]", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>", sid="sites", label="With this site",
@@ -8419,6 +8422,49 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 go("resume/", "Open the resume builder") + f'<a href="{P}/resume/examples/">See resume examples</a>')
          + section("Sources", bc_src + f'<p class="note">Read on {bc_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
          head=bc_ld, cls="hub sp frb")
+
+    lap('Jobscan compared with the free resume match checker here (the ')
+    # Jobscan compared with the free resume match checker here (the owner's Reddit keyword file, 21 Nov 2026: "jobscan" about 27K
+    # searches a month). Jobscan scans a resume against a posting; its plan page was read in a browser on 22 Nov 2026, its builder,
+    # account and renewal facts come from builders_check.py (read for /free-resume-builders/). Only those facts are used.
+    js_b = next((b for b in BC.BUILDERS if b["name"] == "Jobscan"), None)
+    if js_b:
+        js_read = "Nov 22, 2026"
+        js_rows = [
+            ("Price", "Free plan; Premium $49.95 a month, or $89.95 every 3 months after a 7-day free trial", "Free"),
+            ("Resume scans against a posting", "5 a month on the free plan, unlimited on Premium", "No limit: paste any posting, or press “Check my resume for this job” on a job page"),
+            ("Account needed", js_b["signup"], "No"),
+            ("Where your resume goes", "Into your Jobscan account", "Nowhere: the text is read inside your browser"),
+            ("Resume builder", js_b["pdf"][1] + " (" + js_b["limits"] + ")", "Free PDF and Word download, no account"),
+            ("Renewal", js_b["paid"], "Nothing to renew"),
+            ("Other tools", "AI optimizations, AI cover letter and bullet point generators, a LinkedIn optimizer, a job tracker and a Chrome extension (most on Premium)",
+             f"Free cover letter builder, resume review, interview questions by kind of work, and {len(active):,} open jobs to check against"),
+        ]
+        js_table = ('<div class="tablewrap"><table class="vs-t"><tr><th></th><th>Jobscan</th><th>' + e(SITE) + "</th></tr>"
+                    + "".join(f'<tr><th>{e(q_)}</th><td data-l="Jobscan">{e(a_)}</td><td data-l="{e(SITE)}">{e(b_)}</td></tr>' for q_, a_, b_ in js_rows) + "</table></div>")
+        js_qa = [
+            ("Is Jobscan free?", "Partly. Its free plan includes 5 resume scans a month; unlimited scans need Premium at $49.95 a month, or $89.95 every 3 months after a "
+             f"7-day free trial, by its own plan page on {js_read}. Its plans keep billing until cancelled."),
+            ("Is there a free alternative to Jobscan?", "Yes. The resume match checker here shows which words of a job posting your resume is missing, with no limit, no account "
+             "and nothing uploaded. It does not rewrite your resume with AI, which Jobscan’s Premium does."),
+            ("Where is Jobscan better?", "It has more tools: AI rewriting, a LinkedIn optimizer, a job tracker and a Chrome extension that works on other job sites."),
+            ("Where is Jobs Every Hour better?", f"The check is free and unlimited, needs no account, and every one of the {len(active):,} open jobs here has a button that checks your resume against it."),
+        ]
+        js_qh, js_ld = qa_sec("Questions", js_qa, label="Questions", sid="questions")
+        page("vs/jobscan/", f"Jobscan vs {SITE}: Free Resume Scans Compared ({TODAY[:4]}) | {SITE}",
+             f"Jobscan gives 5 free resume scans a month, then $49.95 a month. The resume match checker here is free with no limit and no account. Both side by side, every fact sourced.",
+             crumbs(("Compared with other job sites", "vs/"), ("Jobscan", "")) + f'<h1>Jobscan vs {e(SITE)}: <span class="hl">a free resume match check</span></h1>'
+             '<p class="lead">Jobscan compares your resume with a job posting and shows what is missing. Its free plan gives 5 resume scans a month; unlimited scans cost '
+             f'$49.95 a month, or $89.95 every 3 months after a 7-day trial (its own plan page, {js_read}). The resume match checker here does the core check, which words of the '
+             'posting your resume lacks, free, with no account and no limit, inside your browser.</p>'
+             + act_row("tools/resume-match/", "Check my resume against a posting", note="Free, no account, nothing uploaded.")
+             + section("Side by [[side]]", js_table, sid="table", label="Compared")
+             + js_qh
+             + section("Sources", '<ul class="vs-src"><li><a href="https://app.jobscan.co/plan" rel="nofollow noopener">app.jobscan.co/plan</a>, read ' + js_read + "</li>"
+                       + "".join(f'<li><a href="{e(u_)}" rel="nofollow noopener">{e(re.sub(r"^https?://(www\\.)?", "", u_))}</a>, {e(w_)}</li>' for u_, w_ in js_b["sources"]) + "</ul>"
+                       + f'<p class="note">More: <a href="{P}/free-resume-builders/">free resume builders compared</a> · <a href="{P}/resume/">free resume builder</a> · '
+                         f'<a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>'),
+             head=js_ld)
 
     lap('Job posting sites for employers, compared from their own pri')
     # Job posting sites for employers, compared from their own pricing pages (job_sites.py; the notes are PRICING_RESEARCH.md, 13 Nov
@@ -10809,6 +10855,12 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     if _mra.exists():
         (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
         (OUT / ".well-known" / "mcp-registry-auth").write_text(_mra.read_text().strip() + "\n", encoding="utf-8")
+    # Glama's claim of our MCP connector (22 Nov 2026; owner: "I do not see our API on Glama"): the public claim token from
+    # glama_claim.txt, served at /.well-known/glama.json, proves the domain so the listing can be edited (its name was only "jobs").
+    _gc = ROOT / "glama_claim.txt"
+    if _gc.exists() and re.fullmatch(r"glama_claim_[\w-]+", (_gct := _gc.read_text().strip())):
+        (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
+        (OUT / ".well-known" / "glama.json").write_text(json.dumps({"$schema": "https://glama.ai/mcp/schemas/connector.json", "claim": _gct}, indent=2) + "\n", encoding="utf-8")
     write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
           f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     lap('IndexNow: the key file, and the list of pages that changed f')

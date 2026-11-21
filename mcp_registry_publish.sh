@@ -29,6 +29,8 @@ curl -sS -X POST "$REG/v0/publish" -H "Authorization: Bearer $token" -H 'Content
 {
   "\$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.jobseveryhour/jobs",
+  "title": "Jobs Every Hour",
+  "websiteUrl": "https://jobseveryhour.com/api/",
   "description": "Search open jobs read every hour from employers' own career pages; closed jobs removed",
   "version": "$VERSION",
   "remotes": [{"type": "streamable-http", "url": "https://jobseveryhour.com/mcp"}]

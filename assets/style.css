@@ -3345,15 +3345,8 @@ main.srch #results[aria-busy=true]:empty{height:504px;border:1px solid var(--lin
   linear-gradient(to bottom,transparent 83px,var(--line) 83px) 0 0/100% 84px repeat-y,var(--card)}
 main.srch .pane{border-radius:18px}
 main.srch .pane-empty{padding:80px 16px;font-size:15px}
-/* a phone: the filters open as one sheet; the kinds of work in two columns; the open button is ink */
+/* a phone: the search box (the filters are one sideways row of pills since 21 Nov 2026, at the end of this file) */
 @media(max-width:860px){
-  main.srch #ftoggle{min-height:40px;margin:0 0 14px;padding:0 18px}
-  main.srch #ftoggle[aria-expanded=true]{border-color:var(--text);background:var(--text);color:var(--bg)}
-  main.srch #fwrap{margin-bottom:18px;padding:16px 16px 8px;border-radius:18px}
-  main.srch #fwrap .fgroup select,main.srch #fwrap .fgroup #city{min-height:46px;border-radius:12px}
-  main.srch #fwrap .f-work .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  main.srch #fwrap .f-work .filters label{min-height:44px}
-  main.srch #fwrap .fclear{padding:6px 0 10px}
   main.srch .searchbar.wide{padding-left:16px}
   main.srch .searchbar.wide .btn{padding:12px 18px}
 }
@@ -4003,3 +3996,76 @@ td,th{font-variant-numeric:tabular-nums}
 .swtags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.swtags span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;color:var(--muted)}
 .swact{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 6px}.swact .btn{flex:1;justify-content:center;margin:0}
 .swcard.end{text-align:center}
+
+/* ---- the search filters as one row of pills (owner, 21 Nov 2026: "the filter is not convenient, make it nicer"). The LinkedIn and
+   Peerlist pattern: every filter is a pill in one row under the box, a chosen one is filled green, the rarer filters wait behind
+   "All filters" with a count of the chosen ones it hides, and "Clear all" shows only when something is chosen. On a phone the row
+   scrolls sideways instead of hiding behind a button. The controls and their ids are the same; app.js marks the chosen ones (.on). ---- */
+main.srch #ftoggle{display:none}
+main.srch #fwrap{position:static;display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-height:none;overflow:visible;margin:0 0 18px;padding:0 0 16px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none}
+main.srch #fwrap>.fgroup{padding:0;border:0;min-width:0;max-width:none}
+main.srch #fwrap>.fgroup>.flabel{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+main.srch #fwrap .floc,main.srch #fwrap .f-loc{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+main.srch #fwrap select,main.srch #fwrap #city{width:auto;max-width:230px;height:40px;min-height:40px;margin:0;padding:0 34px 0 15px;border:1px solid var(--line2);border-radius:999px;font-size:14px;font-weight:550;color:var(--text);cursor:pointer;-webkit-appearance:none;appearance:none;
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23807b70' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center/11px auto;text-overflow:ellipsis}
+main.srch #fwrap #city{width:150px;padding:0 15px;background-image:none;font-weight:500;cursor:text}
+main.srch #fwrap select:hover,main.srch #fwrap #city:hover{border-color:var(--text)}
+main.srch #fwrap select:focus,main.srch #fwrap #city:focus{outline:0;border-color:var(--text);box-shadow:0 0 0 3px var(--hl)}
+main.srch #fwrap select.on,main.srch #fwrap #city.on{background-color:var(--hl);border-color:var(--ac);color:var(--hl-ink)}
+/* on/off filters: the checkbox stays for keyboards and screen readers, the pill is what one sees */
+main.srch #fwrap .filters{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;min-height:0;margin:0}
+main.srch #fwrap .filters label,main.srch #fwrap #f-rc-w{position:relative;display:inline-flex;align-items:center;gap:6px;height:40px;min-height:40px;margin:0;padding:0 15px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:14px;font-weight:550;color:var(--text);white-space:nowrap;cursor:pointer}
+main.srch #fwrap .filters label[hidden],main.srch #fwrap #f-rc-w[hidden]{display:none}
+main.srch #fwrap .filters label input,main.srch #fwrap #f-rc-w input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+main.srch #fwrap .filters label:hover,main.srch #fwrap #f-rc-w:hover{border-color:var(--text)}
+main.srch #fwrap .filters label:has(input:focus-visible),main.srch #fwrap #f-rc-w:has(input:focus-visible){box-shadow:0 0 0 3px var(--hl);border-color:var(--text)}
+main.srch #fwrap .filters label:has(input:checked),main.srch #fwrap #f-rc-w:has(input:checked){background:var(--hl);border-color:var(--ac);color:var(--hl-ink);box-shadow:none}
+main.srch #fwrap .filters label:has(input:checked)::before,main.srch #fwrap #f-rc-w:has(input:checked)::before{content:"✓";font-weight:700;font-size:13px}
+/* "All filters": a pill with a sliders mark and the number of chosen filters it hides; it opens a card under the row */
+main.srch #fwrap>.morefilters{order:8;flex-basis:auto}
+main.srch #fwrap>.morefilters[open]{flex-basis:100%}
+main.srch #fwrap .morefilters summary{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font-size:14px;font-weight:600;list-style:none;cursor:pointer;white-space:nowrap}
+main.srch #fwrap .morefilters summary::-webkit-details-marker{display:none}
+main.srch #fwrap .morefilters summary::before{content:"";width:16px;height:16px;border:0;border-radius:0;transform:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 4h7M13 4h1M2 12h2M8 12h6' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='11' cy='4' r='2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Ccircle cx='6' cy='12' r='2' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 4h7M13 4h1M2 12h2M8 12h6' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='11' cy='4' r='2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Ccircle cx='6' cy='12' r='2' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center/contain no-repeat}
+main.srch #fwrap .morefilters[open] summary::before{transform:none}
+main.srch #fwrap .morefilters summary:hover{border-color:var(--text)}
+main.srch #fwrap .morefilters[open] summary{background:var(--text);border-color:var(--text);color:var(--bg)}
+main.srch #fwrap .morefilters summary:not([data-n=""])::after{content:attr(data-n);display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--ac);color:var(--ac-ink);font-size:12px;font-weight:700}
+main.srch #fwrap .morefilters .mf{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px 28px;margin:12px 0 0;padding:20px 22px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow)}
+main.srch #fwrap .morefilters .fgroup{max-width:none;padding:0;border:0}
+main.srch #fwrap .morefilters .flabel{position:static;width:auto;height:auto;clip:auto;overflow:visible;margin:0 0 8px;font-size:12.5px;font-weight:650;letter-spacing:.02em;text-transform:uppercase;color:var(--faint)}
+main.srch #fwrap .morefilters select{width:100%;max-width:none}
+main.srch #fwrap .morefilters .xin{height:40px;margin-top:10px;border-radius:999px;padding:0 15px}
+main.srch #fwrap .morefilters .fgroup:has(#skills){grid-column:1/-1}
+main.srch #fwrap .morefilters .chipbtn{min-height:34px;padding:0 13px;border-radius:999px}
+/* "Clear all" only once a filter is chosen */
+main.srch #fwrap>.fclear{order:9;margin-left:auto;padding:0;align-self:center}
+main.srch #fwrap:not(.has-on)>.fclear{display:none}
+main.srch #fwrap .fclear .linkbtn{font-size:14px;font-weight:600}
+/* a phone: the row scrolls sideways, full bleed, as in the LinkedIn app; "All filters" opens under it */
+@media(max-width:860px){
+  main.srch #fwrap{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px 14px;padding:2px 16px 14px}
+  main.srch #fwrap::-webkit-scrollbar{display:none}
+  main.srch #fwrap>*,main.srch #fwrap .floc,main.srch #fwrap .f-loc,main.srch #fwrap .filters{flex-shrink:0;flex-wrap:nowrap}
+  main.srch #fwrap>.morefilters{order:-1}
+  main.srch #fwrap:has(.morefilters[open]){flex-wrap:wrap;overflow:visible}
+  main.srch #fwrap:has(.morefilters[open])>.morefilters{order:9}
+  main.srch #fwrap .morefilters .mf{grid-template-columns:1fr;padding:16px}
+  main.srch #fwrap>.fclear{order:10;margin-left:0}
+  main.srch #fwrap select{max-width:200px}
+  main.srch #fwrap #city{width:130px}
+  main.srch #fwrap select,main.srch #fwrap #city,main.srch #fwrap .filters label,main.srch #fwrap #f-rc-w,main.srch #fwrap .morefilters summary{height:44px;min-height:44px}   /* a finger-sized pill */
+}
+/* the pills keep to the width of what they show: a select is as wide as its longest option otherwise, which broke the row into three */
+main.srch #fwrap #age{width:132px}
+main.srch #fwrap #cat{width:178px}
+main.srch #fwrap #lvl{width:132px}
+main.srch #fwrap #loc{width:152px}
+main.srch #fwrap #sal{width:142px}
+main.srch #fwrap #perk,main.srch #fwrap #etype{width:100%}
+@supports (field-sizing:content){main.srch #fwrap>.fgroup select{field-sizing:content;width:auto;min-width:0;max-width:230px}}
+main.srch #fwrap #f-rc-w,main.srch #fwrap .fgroup>.filters{margin-top:0!important}
+main.srch #fwrap .filters:has(>label[hidden]:only-child){display:none}
+main.srch #fwrap>.fgroup{display:flex;align-items:center;gap:8px}

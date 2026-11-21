@@ -129,6 +129,13 @@
     total = full ? rows.length : Math.max(allTotal, rows.length); extra = new Map(); found = H.collapse(rows, extra);
     var active = [cat, lvl, loc, city, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
+    if (fwrap) {                                  // the filter bar: a chosen filter is a filled pill, "Clear all" shows only when one is chosen,
+      fwrap.classList.toggle('has-on', active > 0);  // and "All filters" counts the chosen ones it hides
+      [cat, lvl, loc, city, sal, age, perk, etype].forEach(function (el) { el.classList.toggle('on', !!el.value); });
+      var mfs = fwrap.querySelector('.morefilters summary');
+      var hid = [perk, etype].filter(function (el) { return el.value; }).length + [fReal, fTi].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
+      if (mfs) mfs.setAttribute('data-n', hid ? String(hid) : '');
+    }
     if (!keepShown) shown = 50;
     render();
     if (pane && wide.matches) {                      // show the first result next to the list
@@ -431,7 +438,7 @@
     var cc0 = H.get('hrn_place', '') || G.tz[tz] || '', c = G.c[cc0];
     if (fRc && cc0 && G.c[cc0]) {        // "hide remote jobs closed to my country": the label names the country
       if (!rcCC) rcCC = cc0;
-      $('f-rc-l').textContent = 'Hide remote jobs closed to ' + (G.c[rcCC] || G.c[cc0])[0];
+      $('f-rc-l').textContent = 'Remote open to ' + (G.c[rcCC] || G.c[cc0])[0]; $('f-rc-w').title = 'Hide remote jobs that are closed to this country';
       $('f-rc-w').hidden = false;
       fRc.addEventListener('change', run);
     }
