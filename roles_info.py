@@ -191,6 +191,9 @@ MORE_ROLES = [
      "operations managers", "keeps a business running day to day: people, processes, suppliers and costs"),
     ("Administrative and executive assistant", "executive-assistant", r"executive (assistant|business partner|administrator)|administrative|personal assistant|admin assistant|team assistant|secretary|office administrator",
      "executive and administrative assistants", "organises an executive’s or a team’s work: calendars, travel, meetings and paperwork"),
+    # "data entry jobs" (owner's Reddit keyword file, 21 Nov 2026): the live site had thousands of Data Entry titles and no page for them
+    ("Data entry specialist", "data-entry", r"data[- ]entry|data input|typist|keypunch|\bdata (clerk|processor)\b",
+     "data entry specialists", "types information from forms, files and recordings into a company’s systems and checks it for mistakes", "nt"),
     ("Office and workplace", "workplace", r"workplace|office (manager|coordinator|administrator|assistant|operations)|facilities|receptionist|front desk|real estate|mailroom|janitor|custodian",
      "office and workplace staff", "runs the office: the space, supplies, visitors, safety and moves"),
     ("Supply chain and logistics", "supply-chain", r"supply chain|logistics|warehouse|fulfil?ment|inventory|materials? (manager|planner|handler|specialist|coordinator)|demand plann|shipping|distribution cent(er|re)|(production|material|supply|demand|logistics) planner|fleet|trade compliance|\bimport\b|\bexport\b|global supply",
