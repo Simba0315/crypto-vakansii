@@ -10667,6 +10667,11 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     # The official MCP Registry checks that this domain is ours before it lists the connector at /mcp under com.jobseveryhour/*: it
     # reads the public half of our Ed25519 key here, exactly at this address and with no redirect (so not through write(), which
     # would make a folder of it). The private half stays with the owner, never in the repository.
+    # Yandex Webmaster's ownership file (21 Nov 2026): yandex_<code>.html at the root, with the code from config.json "verify"; the same
+    # code is also the yandex-verification meta tag on the home page, so either way Yandex offers works.
+    if re.fullmatch(r"[0-9a-f]{8,32}", (_ya := (CFG.get("verify") or {}).get("yandex", ""))):
+        (OUT / f"yandex_{_ya}.html").write_text('<html>\n    <head>\n        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n    </head>\n'
+                                                 f'    <body>Verification: {_ya}</body>\n</html>\n', encoding="utf-8")
     _mra = ROOT / "mcp_registry_auth.txt"
     if _mra.exists():
         (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
