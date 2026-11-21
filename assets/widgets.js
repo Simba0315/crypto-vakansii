@@ -34,7 +34,7 @@
     var acc = accent.value && accent.value.toLowerCase() !== '#15803d' ? accent.value : '';
     var attrs = ' data-limit="' + limit.value + '"' + (layout.value !== 'list' ? ' data-layout="' + layout.value + '"' : '') + (theme.value !== 'auto' ? ' data-theme="' + theme.value + '"' : '') + (acc ? ' data-accent="' + acc + '"' : '') + extra;
     var q = 'jobs=' + encodeURIComponent(spec) + '&limit=' + limit.value + (layout.value !== 'list' ? '&layout=' + layout.value : '') + (theme.value !== 'auto' ? '&theme=' + theme.value : '') + (acc ? '&accent=' + encodeURIComponent(acc) : '') + (search.checked ? '&search=1' : '') + (own && company ? '&company=' + encodeURIComponent(company) : '');
-    var rowsH = layout.value === 'careers' ? 1300 : layout.value === 'ticker' ? 150 : layout.value === 'cards' ? 150 + Math.ceil(limit.value / 3) * 120 : 120 + limit.value * (layout.value === 'compact' ? 38 : 58);
+    var rowsH = layout.value === 'careers' ? 1300 : layout.value === 'ticker' ? 150 : layout.value === 'carousel' ? 330 : layout.value === 'cards' ? 150 + Math.ceil(limit.value / 3) * 120 : 120 + limit.value * (layout.value === 'compact' ? 38 : 58);
     var code = mode.value === 'iframe'
       ? '<iframe src="' + FULL + '/embed/?' + q + '" title="' + label.replace(/"/g, '') + '" loading="lazy" style="width:100%;max-width:720px;height:' + rowsH + 'px;border:0"></iframe>\n<p>' + link + '</p>'
       : '<div data-hrn-jobs="' + spec + '"' + attrs + '>' + link + '</div>\n<script src="' + FULL + '/widget.js" async><\/script>';
