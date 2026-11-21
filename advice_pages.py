@@ -583,7 +583,7 @@ ARTICLES += [
              ("How do I write a resume with no experience?", "Lead with skills and education, then describe projects, volunteering and part-time work as you would a job: what you did and what came of it."),
              ("Is it worth applying if I don’t meet every requirement?", "Yes, if you meet about half and can do the core of the job. Requirements describe an ideal person who rarely applies."),
              ("How long does it take to get a first job?", "Often two to six months of steady applying. Fresher postings answer faster, which is why this site shows each posting’s age.")],
-     "more": (("entry-level/", "Entry-level jobs"), ("internships/", "Internships"), ("guides/how-to-write-a-resume/", "How to write a resume"))},
+     "more": (("entry-level/", "Entry-level jobs"), ("guides/jobs-for-teens/", "Jobs for teens, by age"), ("guides/how-to-write-a-resume/", "How to write a resume"))},
 
     {"slug": "highest-paying-jobs", "cat": "Pay",
      "title": "Highest-paying jobs right now, from live postings",
@@ -691,6 +691,49 @@ ARTICLES += [
              ("How do I talk about my flaws in an interview?", "Name a real weakness that does not block the job, and say what you do about it. There are 20 examples in the guide to strengths and weaknesses."),
              ("What should I do after a job interview?", "Send a short thank-you email the same day, write down what you were asked, and follow up once if you have heard nothing by the date they gave.")],
      "more": (("guides/phone-and-video-interview-tips/", "Phone and video interview tips"), ("guides/star-method/", "The STAR method"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},
+    # "jobs for 14 year olds" (27K a month), "jobs that hire at 15", "jobs for 17 year olds", "what jobs can you get at 14" and others, about 100K a month
+    # together (owner's Semrush list of Reddit threads, 21 Nov 2026). The rules are the federal ones, read from 29 CFR 570.2, 570.34 and 570.35 on eCFR.
+    {"slug": "jobs-for-teens", "cat": "Applying",
+     "title": "Jobs for teens: what you can do at 14, 15, 16 and 17",
+     "desc": "Which jobs teenagers can legally do in the US at 14, 15, 16 and 17, the hours 14- and 15-year-olds may work, work permits, where teens get hired and how to spot fake online jobs.",
+     "lead": "In the US you can start most kinds of paid work at 14, with limits on hours and tasks until 16, and limits on dangerous work until 18. "
+             "Here are the federal rules by age, the jobs teens usually get, and how to apply when you have no experience yet.",
+     "short": "At 14 and 15 you can work in shops, cafés and offices outside school hours: up to 3 hours on a school day and 18 hours in a school week. "
+              "At 16 and 17 there is no federal limit on hours, but you cannot do jobs the Labor Department lists as hazardous. Many states also ask for a work permit and set stricter rules.",
+     "formula_h": "What you can do at each age (US federal rules)",
+     "formula": [("Under 14:", "babysitting, pet sitting, yard work with hand tools, delivering newspapers, acting, and work in a business your parents own (not in mining or manufacturing)."),
+                 ("At 14 and 15:", "cashier, bagging and carrying out groceries, stocking shelves, price tagging, office work, tutoring, cleaning, and kitchen work that does not involve open flames, most fryers or slicers."),
+                 ("At 15:", "lifeguard at a pool or water park, once certified by the Red Cross or a similar body."),
+                 ("At 16 and 17:", "almost any job and any hours under federal law, except jobs declared hazardous: for example power-driven meat slicers, bakery mixers and forklifts, roofing, demolition, and driving as part of the job (not allowed at 16, limited at 17)."),
+                 ("At 18:", "no federal child labor limits.")],
+     "after": [("Hours 14- and 15-year-olds may work", [
+                    "Only outside school hours.", "Up to 3 hours on a school day, Fridays included.", "Up to 18 hours in a week when school is in session.",
+                    "Up to 8 hours on a day without school, and up to 40 hours in a week without school.",
+                    "Between 7 a.m. and 7 p.m.; from June 1 to Labor Day, until 9 p.m."]),
+               ("Where teens usually get hired", [
+                    "Grocery stores and pharmacies: bagger, cashier, stocking.", "Fast food, cafés, ice cream and snack shops.", "Movie theaters, bowling alleys, amusement and water parks.",
+                    "Pools and summer camps: lifeguard from 15 with certification, junior counselor.", "Shops at the mall, especially before the holidays and in summer.",
+                    "Tutoring younger students, babysitting, pet sitting, dog walking and yard work for neighbours.", "Farms and garden centres (farm work has its own, looser rules)."]),
+               ("Work permits and state rules", ["Many states ask workers under 16, and some under 18, for a work permit, sometimes called working papers, from the school or the state labor office. "
+                                                 "States can also set lower hour limits or a later starting age. When the state rule and the federal rule differ, the stricter one applies, so check your state’s labor department page before you start."]),
+               ("Online jobs for teens", ["Most online work platforms require you to be 18. Real options under 18 are tutoring younger students, selling crafts or designs through a parent’s account, and paid help for people you know. "
+                                         "An online “job” that asks a teenager to pay a fee, share bank details or cash a check is a scam."]),
+               ("Source", ["The ages, hours and tasks above are the federal rules in 29 CFR 570.2, 570.34 and 570.35 (US Department of Labor), read on 21 November 2026. They are a summary, not legal advice."])],
+     "links_h": "Next steps",
+     "links": [("resume/", "Make a first resume", "(free, works with no work experience: list school, volunteering and skills)"),
+               ("guides/how-to-get-a-job-with-no-experience/", "How to get a job with no experience", ""),
+               ("summer/", "Summer jobs", "(most are for adults; teens should check the minimum age in each posting)"),
+               ("guides/job-interview-tips/", "Job interview tips", "")],
+     "mistakes": ["Saying you are older than you are: the employer has to check, and it can cost them a fine.", "Paying any fee to get a job.",
+                  "Agreeing to hours past the legal limit because a manager asks.", "Using power mowers, slicers or fryers before the age the rules allow."],
+     "tool": ("resume/", "Resume builder", "A first resume in ten minutes: school, volunteering, clubs and skills count. The PDF is free."),
+     "faq": [("What jobs can you get at 14?", "Cashier, bagger, shelf stocker, office helper, tutor, and kitchen helper in shops, cafés and offices, outside school hours. Babysitting, pet sitting and yard work are open even younger."),
+             ("How many hours can a 15-year-old work?", "Up to 3 hours on a school day and 18 hours in a school week; up to 8 hours a day and 40 hours a week when school is out, between 7 a.m. and 7 p.m. (9 p.m. in summer)."),
+             ("What jobs hire at 15?", "The same as at 14, plus lifeguarding once certified. Grocery stores, fast food places, movie theaters, pools and amusement parks hire the most 15-year-olds."),
+             ("Can a 16-year-old work full time?", "Under federal law yes: there is no hour limit at 16 and 17. Some states limit hours on school nights, and hazardous jobs stay off limits until 18."),
+             ("Do teenagers need a work permit?", "In many states, yes, usually under 16 and sometimes under 18. The school or the state labor department issues it."),
+             ("What jobs can a 17-year-old get?", "Almost any job that is not on the hazardous list: retail, restaurants, offices, warehouses (without forklifts), camps, and some driving with limits.")],
+     "more": (("jobs-for/college-students/", "Jobs for college students"), ("part-time/", "Part-time jobs"), ("guides/how-to-get-a-job-with-no-experience/", "Jobs with no experience"))},
     {"slug": "phone-and-video-interview-tips", "cat": "Interviews",
      "title": "Phone and video interview tips: a checklist",
      "desc": "How to prepare for a phone screen and a video interview: what the recruiter checks, the set-up, notes you can keep in front of you, and what to do when the technology fails.",
