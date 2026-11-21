@@ -3342,6 +3342,10 @@ def main():
     # a name (SEO, SAP, Workday…), "<name> jobs" belongs to the kind of work, or to the company of that name; the skill's page is the
     # list of jobs that ask for the skill, says so in its title, and points to the other page.
     SKILL_ROLE = {t: tslug(t) for t in by_tag if tslug(t) in by_role}
+    # The same for a skill and a company with one name (Datadog, Docker, MongoDB, Redis, Figma…, 21 Nov 2026): the company's page is
+    # "<name> Careers", the skill's "<name> Jobs"; each says in one line where the other one is, so a reader who meant the other finds it.
+    CO_OF_SLUG = {slugify(c_): (c_, n_) for c_, n_ in OPEN.items() if n_}
+    SKILL_CO = {t: CO_OF_SLUG[tslug(t)] for t in by_tag if tslug(t) in CO_OF_SLUG and t not in SKILL_ROLE}
     for t, js in by_tag.items():
         sr_ = SKILL_ROLE.get(t)
         listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {t} ({len(js):,} open) | {SITE}" if sr_ else f"{t} Jobs ({len(js):,} open) | {SITE}",
@@ -3349,6 +3353,7 @@ def main():
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, stats=True,
                 extra=(f'<p class="note">Looking for jobs whose work is {e(t)} itself? See <a href="{P}/roles/{sr_}/">{len(by_role[sr_][1]):,} {e(rlow(by_role[sr_][0]))} jobs</a>.</p>' if sr_ else "")
+                      + (f'<p class="note">Looking for jobs at {e(SKILL_CO[t][0])} itself? See <a href="{P}/companies/{tslug(t)}/">{roles(SKILL_CO[t][1], "open job")} at {e(SKILL_CO[t][0])}</a>.</p>' if t in SKILL_CO else "")
                       + sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t), pics=hub_sections(f"{t} roles", js, "skills,who")[0], hub=hub_sections(f"{t} roles", js, "skills,who")[1], list_title=f"Newest {t} jobs",
                 faq=f"jobs that ask for {t}" if sr_ else f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
                 after=skill_more(t, js) + section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
@@ -4017,6 +4022,7 @@ def main():
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
     PLACE_LIVE = {slug for _, slug, _ in places}
     PLACE_SLUG = {v: k for k, v in PLACE_NAME.items()}
+    SKILL_OF_SLUG = {tslug(t_): t_ for t_ in by_tag if tslug(t_) not in by_role}      # a skill with a company's name (see SKILL_CO)
     for c, js in companies.items():
         slug = slugify(c)
         act, arc = order([j for j in js if j["active"]]), order([j for j in js if not j["active"]])
@@ -4177,6 +4183,9 @@ def main():
                               + f". The {len(act):,} roles listed here were read from there, and “Apply on company site” on each job opens that posting. {SITE} lists the jobs and takes no applications itself."))
                 co_qa.append((f"How do I know a job offer from {c} is real?", f"Check that the role is on {src_q[0]}, where {c} publishes its openings, and apply only there. "
                               "A recruiter who writes from an unrelated address, moves the talk to a messenger at once or asks for money or documents before a contract is a warning sign; the job offer safety page lists the checks."))
+        if act and (sk_ := SKILL_OF_SLUG.get(slug)):
+            head_html += (f'<p class="note">Looking for jobs at other companies that ask for {e(sk_)} skills? See '
+                          f'<a href="{P}/skills/{slug}/">{roles(len(by_tag[sk_]), "open job")} that ask for {e(sk_)}</a>.</p>')
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'Open Job')}, Pay & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + f", {new7_:,} added this week. Pay by field, locations and remote roles, from its own careers page.",
                 act, head_html=head_html, after=overview + (alert_form(f"new jobs at {c}", q=c) if act else ""), tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa)
