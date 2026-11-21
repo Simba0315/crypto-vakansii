@@ -2306,6 +2306,8 @@
     });
     var st = root.getAttribute('data-state');
     if (st) { F.set('state', st); F.draw(); }
+    var qs = (location.search.match(/[?&]salary=(\d{4,7})(?!\d)/) || [])[1];            // ?salary=<yearly figure>: a link from a job page that states pay
+    if (qs) { F.set('salary', qs); F.draw(); }
   };
 
   /* ---------- pay raise ---------- */

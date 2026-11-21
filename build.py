@@ -2136,6 +2136,13 @@ def job_page(j, active_by_cat):
         paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
                   f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%"></i><u style="left:{pos_(med_):.1f}%"></u></div>'
                   f'<p class="pb-s">The middle of this range is {verdict} the median for {e(CAT[j["cat"]])} roles, {money(med_)} (the mark on the line).</p></div>')
+    # What the range leaves after US federal tax, Social Security and Medicare, for postings in the United States only (the rules are the ones the take-home pay tool uses)
+    thline = ""
+    if j["active"] and j.get("usd") and j["usd"][1] >= j["usd"][0] > 0 and j["location"] and [c_ for c_, _ in countries_of(j["location"])] == ["US"]:
+        lo_n, hi_n = (tools_pages.take_home_2026(v_)[3] / 12 for v_ in j["usd"])
+        rng_ = f"${lo_n:,.0f}" if round(lo_n, -1) == round(hi_n, -1) else f"${lo_n:,.0f} to ${hi_n:,.0f}"
+        thline = (f'<p class="pb-th">After federal tax, Social Security and Medicare, a single filer keeps about <b>{rng_} a month</b> of this pay. '
+                  f'Your state’s tax comes off as well. <a href="{P}/tools/take-home-pay/?salary={int(j["usd"][0])}">Work it out for your state and filing status</a>.</p>')
     data = f'data-slug="{j["slug"]}" data-title="{e(j["title"])}" data-company="{e(j["company"])}"'
     more_roles = OPEN[j["company"]] - (1 if j["active"] else 0)
     glance = (f'<p class="note"><a href="{comp_url}">{roles(more_roles, "more open role")} at {e(j["company"])}</a></p>' if more_roles > 0 else "")
@@ -2153,7 +2160,7 @@ def job_page(j, active_by_cat):
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
             + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}"></p>' if j.get("cover") and j["active"] else "")
-            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
+            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{thline}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
             + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
