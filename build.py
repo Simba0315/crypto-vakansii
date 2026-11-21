@@ -6394,12 +6394,20 @@ def main():
     iq_n = sum(len(v) for v in iq_dir.values())
     iq_html = kind_dir(iq_dir, "interview-questions", ("question", "questions"), by_name=True)
     iq_q = sum(k for v in iq_dir.values() for _, _, k in v)
-    page("interview-questions/", f"Interview Questions for {iq_n} Jobs, with What a Good Answer Shows | {SITE}",
-         f"Interview questions for {iq_n} kinds of work. Each says why it is likely to come up, from today’s open postings, and what a good answer shows. Free, no sign-up.",
-         crumbs(("Interview questions", "")) + f'<h1>Interview questions for <span class="hl">{iq_n} jobs</span></h1>'
+    # The searches are "job interview questions and answers" and "job interview questions" (Semrush, 21 Nov 2026: 135K and 74K a month, a Reddit
+    # thread ranks for them); the questions every interview asks have their own guides, linked here.
+    iq_common = [("guides/tell-me-about-yourself/", "Tell me about yourself"), ("guides/why-do-you-want-to-work-here/", "Why do you want to work here?"),
+                 ("guides/strengths-and-weaknesses/", "What are your strengths and weaknesses?"), ("guides/why-are-you-leaving-your-job/", "Why are you leaving your job?"),
+                 ("guides/where-do-you-see-yourself-in-5-years/", "Where do you see yourself in five years?"), ("guides/salary-expectations/", "What are your salary expectations?"),
+                 ("guides/star-method/", "Tell me about a time when… (the STAR method)"), ("guides/questions-to-ask-in-an-interview/", "Do you have any questions for us?")]
+    page("interview-questions/", f"Job Interview Questions and Answers for {iq_n} Jobs ({TODAY[:4]}) | {SITE}",
+         f"Job interview questions and answers for {iq_n} kinds of work, plus the questions every interview asks. Each says why it is likely to come up, from today’s open postings, and what a good answer shows. Free.",
+         crumbs(("Interview questions", "")) + f'<h1>Job interview questions and answers for <span class="hl">{iq_n} jobs</span></h1>'
          '<p class="lead">Pick your work. Each page lists the questions to prepare for, why each is likely to come up, from the skills and situations today’s open postings name, and what a good answer shows.</p>'
          + nums([(f"{iq_n}", "kinds of work"), (f"{iq_q:,}", "questions, each with what a good answer shows"), (f"{len(all_desc):,}", "postings read in full for them"), ("Free", "no sign-up")])
-         + act_row("interview-practice/", "Practise out loud", [("skill-tests/", "Skill tests on SQL, Excel, Python and more")], note="The page reads the questions aloud and times your answers.") +
+         + act_row("interview-practice/", "Practise out loud", [("skill-tests/", "Skill tests on SQL, Excel, Python and more")], note="The page reads the questions aloud and times your answers.")
+         + section("The questions almost every interview asks", '<ul class="adv-list">' + "".join(f'<li><a href="{P}/{u_}">{e(q_)}</a></li>' for u_, q_ in iq_common) + "</ul>",
+                   ("guides/job-interview-tips/", "Job interview tips: prepare, wear, bring")) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a job"></p>'
          f'<p class="lead" id="dirnone" hidden>No page with these words. The <a href="{P}/tools/interview-answer-builder/">interview answer builder</a> works for any job.</p>'
          + dir_sec(f"Questions for [[{iq_n} kinds of work]]", iq_html, ("tools/interview-answer-builder/", "Interview answer builder"), "The number next to each name is how many questions its page has."), cls="hub")

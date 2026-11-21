@@ -21,6 +21,8 @@ def render(a, ctx, e, P):
         h += f"<h2>{e(h2)}</h2>" + "".join(f"<p>{e(p_)}</p>" for p_ in paras)
     if a.get("data") and a["data"] in DATA:
         h += DATA[a["data"]](ctx, e, P)
+    if a.get("links"):
+        h += f'<h2>{e(a["links_h"])}</h2><ul class="adv-list">' + "".join(f'<li><a href="{P}/{u}">{e(t)}</a>{" " + e(x) if x else ""}</li>' for u, t, x in a["links"]) + "</ul>"
     if a.get("examples"):
         h += f'<h2>{e(a.get("examples_h", "Examples"))}</h2><div class="adv-ex">' + "".join(
             f'<figure><figcaption>{e(who)}</figcaption><blockquote>{e(txt)}</blockquote></figure>' for who, txt in a["examples"]) + "</div>"
@@ -326,7 +328,7 @@ ARTICLES += [
      "more": (("how-to-become/", "How to become…"), ("guides/job-levels-explained/", "What the level in a title means"), ("guides/tell-me-about-yourself/", "Tell me about yourself"))},
 
     {"slug": "why-are-you-leaving-your-job", "cat": "Interviews",
-     "title": "How to answer “Why are you leaving your job?”",
+     "title": "Reasons for leaving a job: how to answer “Why are you leaving?”",
      "desc": "Keep it short, true and about what you are moving towards. Answers for 12 situations: growth, pay, layoffs, a bad manager, being fired, relocating and more.",
      "lead": "Every reason for leaving can be told well, including being let go. The rule is the same in every case: true, short, and pointed at what you want next, not at what went wrong.",
      "short": "Give a short, true reason that points forward (“I want to lead projects, and my current role has no room for that”), then talk about why this job fits. "
@@ -637,6 +639,58 @@ ARTICLES += [
              ("Is a verbal job offer binding?", "It depends on the country, and it is hard to prove. Wait for the written offer or contract before you resign from your current job.")],
      "more": (("guides/negotiate-salary/", "How to negotiate a salary"), ("tools/compare-offers/", "Compare two offers"), ("resignation-letters/", "Resignation letters"))},
 
+    {"slug": "job-interview-tips", "cat": "Interviews",
+     "title": "Job interview tips: how to prepare, what to wear, what to bring",
+     "desc": "How to prepare for a job interview: read the posting, five stories, the common questions, what to wear for each kind of workplace, what to bring, and what to do after.",
+     "lead": "Most interviews are decided by the hour of preparation before them. Here is that hour, step by step, with what to wear and what to bring to an interview in person. "
+             "Phone and video calls have their own checklist.",
+     "short": "Read the posting again and match three of your results to what it asks; prepare short answers to the questions every interview asks; dress a step smarter than the team "
+              "dresses day to day; bring copies of your resume, your questions and a pen; arrive ten minutes early; send a thank-you email the same day.",
+     "formula_h": "How to prepare, step by step",
+     "formula": [("Read the posting twice.", "Mark the skills and duties it names: the questions will test those. Use its words in your answers."),
+                 ("Learn the company in twenty minutes.", "What it sells and to whom, one recent piece of news, and the profile of the person you will meet."),
+                 ("Prepare five short stories.", "A success, a problem you solved, a disagreement, a mistake you learned from, and a time you helped or led others. Tell each with the STAR method in under two minutes."),
+                 ("Prepare the common questions.", "About you, why this job, strengths and weaknesses, why you are leaving, and your pay range. They are linked below, each with examples."),
+                 ("Write three questions to ask.", "About the work itself, the team, and what a good first three months look like."),
+                 ("Plan the day.", "Route and travel time, clothes ready the night before, the interviewer’s name and a phone number on your phone.")],
+     "data": "skills",
+     "links_h": "The questions almost every interview asks",
+     "links": [("guides/tell-me-about-yourself/", "Tell me about yourself", "(how to open in under two minutes)"),
+               ("guides/why-do-you-want-to-work-here/", "Why do you want to work here?", ""),
+               ("guides/strengths-and-weaknesses/", "What are your strengths and weaknesses?", "(including how to talk about flaws)"),
+               ("guides/why-are-you-leaving-your-job/", "Why are you leaving your job?", "(good reasons for leaving, said well)"),
+               ("guides/where-do-you-see-yourself-in-5-years/", "Where do you see yourself in five years?", ""),
+               ("guides/salary-expectations/", "What are your salary expectations?", ""),
+               ("guides/questions-to-ask-in-an-interview/", "Do you have any questions for us?", "(25 good ones)"),
+               ("interview-questions/", "Questions for your own job", "(390 kinds of work, from today’s postings)")],
+     "after": [("What to wear to a job interview", [
+                    "One step smarter than what the team wears on a normal day. If you are unsure, ask the recruiter what people wear at the office: it is an ordinary question.",
+                    "Offices, banks, law and sales: a suit or a blazer with trousers or a skirt, a plain shirt or blouse, polished shoes.",
+                    "Tech companies and start-ups: smart casual, such as clean chinos or dark jeans with a plain shirt, polo or sweater.",
+                    "Shops, cafés and restaurants: neat clothes close to the shop’s own style, and comfortable closed shoes.",
+                    "Warehouses, trades and sites: clean work trousers, a collared shirt and safe closed shoes.",
+                    "For every job: clean, ironed and fitting; little perfume; nothing you need to keep adjusting."]),
+               ("What to bring", [
+                    "Two or three printed copies of your resume.", "The posting, your notes and your questions, in a folder.", "A pen and a notebook.",
+                    "ID, and anything the employer asked for: portfolio, certificates, the names of references.",
+                    "The address, the interviewer’s name and a phone number to call if you are running late.", "A charged phone, on silent."]),
+               ("During the interview", [
+                    "Arrive about ten minutes early; if you are earlier, wait nearby.", "Greet everyone politely, the person at the front desk too: they are often asked what they thought.",
+                    "Take a second before you answer; a short pause reads as thought, not doubt.", "Answer, then stop: most answers fit in one to two minutes.",
+                    "Use numbers where you can: how many, how much, how fast.", "If you do not know something, say so and say how you would find out.",
+                    "At the end, ask your questions, then ask what the next step is and when you will hear."])],
+     "mistakes": ["Not reading the posting again: most questions come from it.", "Speaking badly of a past employer or manager.", "Answers that run past three minutes.",
+                  "Having no questions at the end: it reads as no interest.", "Arriving late without calling ahead.", "Looking at your phone during the interview."],
+     "tool": ("interview-practice/", "Interview practice", "The page reads common questions aloud and times your answer; nothing is recorded or sent."),
+     "faq": [("How do I prepare for a job interview in one day?", "Read the posting and match three of your results to it, prepare answers to the common questions, learn the basics about the company, "
+                                                                 "choose your clothes and plan the route. Two focused hours are enough."),
+             ("What should I wear to a job interview?", "A step smarter than the team wears day to day: a suit or blazer for an office, smart casual for most tech companies, neat clothes close to "
+                                                        "the shop’s style for retail. If you are unsure, ask the recruiter."),
+             ("What should I bring to a job interview?", "Printed copies of your resume, the posting, your questions, a pen and notebook, ID, and anything the employer asked for."),
+             ("How early should I arrive for a job interview?", "About ten minutes early. If you are much earlier, wait nearby: thirty minutes early can be awkward for the interviewer."),
+             ("How do I talk about my flaws in an interview?", "Name a real weakness that does not block the job, and say what you do about it. There are 20 examples in the guide to strengths and weaknesses."),
+             ("What should I do after a job interview?", "Send a short thank-you email the same day, write down what you were asked, and follow up once if you have heard nothing by the date they gave.")],
+     "more": (("guides/phone-and-video-interview-tips/", "Phone and video interview tips"), ("guides/star-method/", "The STAR method"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},
     {"slug": "phone-and-video-interview-tips", "cat": "Interviews",
      "title": "Phone and video interview tips: a checklist",
      "desc": "How to prepare for a phone screen and a video interview: what the recruiter checks, the set-up, notes you can keep in front of you, and what to do when the technology fails.",
@@ -663,5 +717,5 @@ ARTICLES += [
              ("What should I wear for a video interview?", "What you would wear to the office for that job, top to bottom in case you need to stand. Plain colours work best on camera."),
              ("Can I use notes in a video interview?", "Yes: a few key points beside the camera. Do not read full answers; glance and then look back at the lens."),
              ("What do I do if my internet drops during an interview?", "Rejoin at once; if that fails, phone or email the interviewer and suggest continuing by phone. It is rarely held against you.")],
-     "more": (("guides/tell-me-about-yourself/", "Tell me about yourself"), ("guides/questions-to-ask-in-an-interview/", "Questions to ask"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},
+     "more": (("guides/job-interview-tips/", "Job interview tips"), ("guides/questions-to-ask-in-an-interview/", "Questions to ask"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},
 ]
