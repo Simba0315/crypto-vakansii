@@ -589,6 +589,7 @@ PERK_INFO = {
 }
 PULSE = {}         # company -> (opened in 7 days, closed in 7 days, label)
 CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from closed roles)
+CO_CLOSE = {}      # company -> (closed roles counted, median days they stayed open); only with 5 or more closed roles
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
 SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby", "workable": "Workable", "recruitee": "Recruitee", "teamtailor": "Teamtailor",
                "personio": "Personio", "workday": "Workday", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR",
@@ -2002,6 +2003,10 @@ def job_page(j, active_by_cat):
         try:
             days_open = max(0, (datetime.date.today() - datetime.date.fromisoformat(j["posted"][:10])).days)
             hint = (f'<br><span class="note">Similar {e(CAT[j["cat"]])} roles stayed open for a median of {CLOSE_DAYS[j["cat"]]} days</span>' if j["cat"] in CLOSE_DAYS else "")
+            if j["company"] in CO_CLOSE:
+                n_c, d_c = CO_CLOSE[j["company"]]
+                hint += (f'<br><span class="note">Of {n_c:,} roles {e(j["company"])} has closed here, half stayed open {d_c} day{"s" if d_c != 1 else ""} or less'
+                         + (" (this one is past that)" if days_open > d_c else "") + "</span>")
             if days_open >= LONG_OPEN:
                 hint = ('<br><span class="note">Open much longer than most roles. Some employers keep a posting up all year to collect applications: '
                         "it is fair to ask the recruiter whether this seat is being filled now.</span>")
@@ -2317,6 +2322,15 @@ def main():
         if 0 <= d <= 400: spans[j["cat"]].append(d)
     for cs, ds in spans.items():
         if len(ds) >= 20: CLOSE_DAYS[cs] = int(median(ds))
+    co_spans = defaultdict(list)
+    for j in archived:
+        try:
+            d = (datetime.date.fromisoformat(j["closed"][:10]) - datetime.date.fromisoformat(j["posted"][:10])).days
+        except Exception:
+            continue
+        if 0 <= d <= 400: co_spans[j["company"]].append(d)
+    for c_, ds in co_spans.items():
+        if len(ds) >= 5: CO_CLOSE[c_] = (len(ds), int(median(ds)))
     for cs in CAT:
         mids = [(lo + hi) / 2 for j in by_cat[cs] if j["usd"] for lo, hi in [j["usd"]]]
         if len(mids) >= 15: CATMED[cs] = median(mids)
