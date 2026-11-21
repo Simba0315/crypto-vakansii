@@ -10536,6 +10536,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         act = [j for j in js if j["active"]]
         api(f"companies/{slugify(c)}", f"Jobs at {c}", f"companies/{slugify(c)}/", act, cap=1500)
         write(f"badge/companies/{slugify(c)}.svg", badge_svg(f"{c} is hiring", roles(len(act), "role")), sitemap=False)
+    # Longer lists for the daily job-list repositories on GitHub (21 Nov 2026, after Jobright's 37 such repositories): each repository
+    # reads one of these once a day and rewrites its table, every row a link to the job's page here. Up to 300 newest jobs each.
+    fam_js_ = {f_[0]: f_[4] for f_ in fam_rows}
+    tech_ids_ = {j["id"] for fs_ in TECH_FAMS if fs_ in fam_js_ for j in fam_js_[fs_]}
+    sw_ = [j for j in fam_js_.get("software-development", []) if j["active"]]
+    is_intern_ = lambda j: j.get("etype") == "Internship" or j["level"] == "Intern"
+    intern_word_ = re.compile(r"\b(intern|interns|internship|co-?op)\b", re.I)     # an apprentice electrician is not a tech internship
+    for path_l, name_l, page_l, js_l in (
+            ("lists/tech-internships", "Tech internships", "internships/", [j for j in active if j["id"] in tech_ids_ and is_intern_(j) and intern_word_.search(j["title"])]),
+            ("lists/new-grad-software-engineer", "Entry-level and new grad software engineer jobs", "categories/software-development/entry-level/",
+             [j for j in sw_ if j["entry"] and not is_intern_(j)]),
+            ("lists/remote-software-engineer", "Remote software engineer jobs", "categories/software-development/remote/", [j for j in sw_ if j["remote"]])):
+        api(path_l, name_l, page_l, js_l, cap=300)
     write("api/v1/index.json", json.dumps({"site": SITE, "updated": TODAY, "feeds": api_index}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     feed_ref = {"200": {"description": "A list of open jobs, newest first", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Feed"}}}}, "404": {"description": "No such feed"}}
     slug_param = lambda what: [{"name": "slug", "in": "path", "required": True, "schema": {"type": "string"}, "description": f"Lowercase {what} slug as listed in /api/v1/index.json, for example {'python' if what == 'skill' else 'stripe' if what == 'company' else 'engineering' if what == 'category' else 'europe'}"}]
