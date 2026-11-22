@@ -70,7 +70,7 @@ MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 # written in the part decides; only when neither is written do well-known city names count. That keeps "Vancouver, Washington"
 # in the United States, "Porto Alegre, Brazil" out of Portugal and "Dublin, CA" out of Ireland.
 COUNTRIES = [   # (ISO code, name, the country written out, well-known cities)
-    ("GB", "United Kingdom", r"united kingdom|\buk\b|\bu\.k\.|(?<!new )england|scotland|\bwales\b|great britain", r"\blondon\b(?!, on\b)|manchester|edinburgh|\bbristol\b|cambridge, uk|\bleeds\b|glasgow|belfast"),
+    ("GB", "United Kingdom", r"united kingdom|\buk\b|\bu\.k\.|(?<!new )england|scotland|(?<!south )\bwales\b|great britain", r"\blondon\b(?!, on\b)|manchester|edinburgh|\bbristol\b|cambridge, uk|\bleeds\b|glasgow|belfast"),
     ("CA", "Canada", r"\bcanada\b|\bontario\b|british columbia|\bquebec\b|\balberta\b", r"toronto|vancouver|montr[eé]al|ottawa|calgary|waterloo"),
     ("DE", "Germany", r"\bgermany\b|deutschland", r"\bberlin\b|munich|münchen|frankfurt|hamburg|cologne|stuttgart|düsseldorf"),
     ("FR", "France", r"\bfrance\b", r"\bparis\b|\blyon\b"), ("IE", "Ireland", r"(?<!northern )\bireland\b", r"\bdublin\b|\bcork\b"),
@@ -606,7 +606,58 @@ ETYPE_LD = {"Full-time": "FULL_TIME", "Part-time": "PART_TIME", "Contract": "CON
 US_ST = set("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC PR".split())
 CA_PROV = set("AB BC MB NB NL NS NT NU ON PE QC SK YT".split())
 CITY_ST = re.compile(r"^\s*([^,]{2,60}?),\s*([A-Z]{2})\s*(?:,\s*(USA|US|United States|Canada|CA))?\s*$")
-FT_RX, OTHER_TYPE_RX = re.compile(r"\bfull[- ]time\b", re.I), re.compile(r"\bpart[- ]time\b|\bcontract(?:or)?\b|\btemporary\b|\bfreelance\b|\bseasonal\b|\binternship\b", re.I)
+# "contract" counts as a kind of work only in phrases that say so: "smart contracts" and "contract negotiation" in a full-time posting
+# kept its employmentType out (Search Console, 22 Nov 2026, listed employmentType as missing)
+FT_RX, OTHER_TYPE_RX = re.compile(r"\bfull[- ]time\b", re.I), re.compile(r"\bpart[- ]time\b|\bcontract (?:role|position|basis|assignment|job|work)\b|\bcontract[- ]to[- ]hire\b|"
+                                                                 r"\bcontractors?\b|\bfixed[- ]term\b|\btemporary\b|\bfreelance\b|\bseasonal\b|\binternships?\b", re.I)
+# "Employment type: Part-time", "Job Type: Contract", Workday's "Time Type: Full time" in the text of the posting
+ET_LABEL = re.compile(r"\b(?:employment|job|position|work|role|worker|time|contract|engagement)[ _-]?type\s*[:–-]?\s*(full[- ]?time|part[- ]?time|contractor|contract|"
+                      r"temporary|fixed[- ]term|freelance|seasonal|internship|intern)\b", re.I)
+ET_LABEL_LD = (("full", "FULL_TIME"), ("part", "PART_TIME"), ("contract", "CONTRACTOR"), ("freelance", "CONTRACTOR"), ("temporary", "TEMPORARY"),
+               ("fixed", "TEMPORARY"), ("seasonal", "TEMPORARY"), ("intern", "INTERN"))
+
+
+def etype_ld(j, full):
+    """employmentType of a JobPosting, only from what the posting says: the feed's own field or the title (collect.etype), a label in the
+    text ("Employment type: Part-time"), or "full-time" in the first part of a text that names no other kind of work. None when it says nothing."""
+    if j.get("etype") in ETYPE_LD: return ETYPE_LD[j["etype"]]
+    if not full: return None
+    m = ET_LABEL.search(re.sub(r"<[^>]+>", " ", full))
+    if m: return next(v for k, v in ET_LABEL_LD if m.group(1).lower().startswith(k))
+    if FT_RX.search(full[:4000]) and not OTHER_TYPE_RX.search(j["title"] + " " + full[:4000]): return "FULL_TIME"
+    return None
+
+
+# baseSalary only from pay the posting states (never an estimate), as collect.tidy_pay writes it
+PAY_CUR = {"$": "USD", "US$": "USD", "CA$": "CAD", "A$": "AUD", "£": "GBP", "€": "EUR"}
+PAY_UNIT = {"an hour": "HOUR", "a day": "DAY", "a week": "WEEK", "a month": "MONTH"}
+_PC = r"US\$|CA\$|A\$|\$|£|€|[A-Z]{3} "
+PAY_LD_RX = re.compile(rf"^({_PC})(\d[\d,]*(?:\.\d+)?)(K?)(?: ?[-–] ?(?:{_PC})?(\d[\d,]*(?:\.\d+)?)(K?))?(?: (an hour|a day|a week|a month))?$")
+DOLLAR_LANDS = {"CA", "AU", "NZ", "SG", "HK", "MX", "AR", "CL", "CO", "TW"}       # a bare "$" there may be the local dollar or peso
+
+
+def pay_ld(j):
+    """baseSalary (MonetaryAmount) from the pay a posting states: "$152K - $239K" a year, "£45K - £55K", "$38 - $55 an hour",
+    "€3,000 - €4,000 a month", "SGD 100K - SGD 120K"; None for anything else. Before 22 Nov 2026 only yearly US-dollar ranges were
+    marked up, and Search Console listed baseSalary as missing on pages that showed pounds, euros or an hourly rate."""
+    m = PAY_LD_RX.match((j.get("salary") or "").strip())
+    if not m: return None
+    if m.group(1) == "$":
+        lands = {c for c, _ in countries_of(j.get("location") or "")}
+        if lands and lands <= DOLLAR_LANDS: return None
+    num = lambda v, k: float(v.replace(",", "")) * (1000 if k else 1)
+    lo = num(m.group(2), m.group(3))
+    hi = num(m.group(4), m.group(5)) if m.group(4) else lo
+    unit = PAY_UNIT.get(m.group(6) or "", "YEAR")
+    if not 0 < lo <= hi or (unit == "YEAR" and lo < 10000): return None
+    n = lambda v: int(v) if v == int(v) else round(v, 2)
+    val = {"@type": "QuantitativeValue", **({"value": n(lo)} if hi == lo else {"minValue": n(lo), "maxValue": n(hi)}), "unitText": unit}
+    return {"@type": "MonetaryAmount", "currency": PAY_CUR.get(m.group(1)) or m.group(1).strip(), "value": val}
+for _pay, _want in {"$152K - $239K": ("USD", 152000, 239000, "YEAR"), "£45K - £55K": ("GBP", 45000, 55000, "YEAR"), "$38 - $55 an hour": ("USD", 38, 55, "HOUR"),
+                    "€3,000 - €4,000 a month": ("EUR", 3000, 4000, "MONTH"), "SGD 100K - SGD 120K": ("SGD", 100000, 120000, "YEAR"), "CA$90K - CA$110K": ("CAD", 90000, 110000, "YEAR")}.items():
+    _v = pay_ld({"salary": _pay, "location": "London"})["value"]
+    assert (pay_ld({"salary": _pay})["currency"], _v["minValue"], _v["maxValue"], _v["unitText"]) == _want, (_pay, _v)
+assert pay_ld({"salary": "$0 - $125 an hour"}) is None and pay_ld({"salary": "$150K - $180K", "location": "Toronto, ON"}) is None and pay_ld({"salary": "$50 - $60"}) is None
 
 
 US_STATE_CODE = dict(zip([x.replace("_", " ") for x in "alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois "
@@ -624,7 +675,7 @@ CITY_REGION = {"US": {**{c: "CA" for c in ("san francisco", "los angeles", "san 
                       **{c: "NY" for c in ("new york city", "new york", "nyc", "brooklyn", "manhattan")},
                       "boston": "MA", "chicago": "IL", "seattle": "WA", "bellevue": "WA", "redmond": "WA", "austin": "TX", "dallas": "TX", "houston": "TX",
                       "san antonio": "TX", "denver": "CO", "boulder": "CO", "atlanta": "GA", "miami": "FL", "philadelphia": "PA", "pittsburgh": "PA",
-                      "phoenix": "AZ", "scottsdale": "AZ", "raleigh": "NC", "salt lake city": "UT", "lehi": "UT", "minneapolis": "MN", "detroit": "MI",
+                      "phoenix": "AZ", "scottsdale": "AZ", "raleigh": "NC", "salt lake city": "UT", "lehi": "UT", "minneapolis": "MN", "oklahoma city": "OK", "little rock": "AR", "detroit": "MI",
                       "nashville": "TN", "baltimore": "MD", "washington dc": "DC", "washington d.c": "DC", "washington d. c": "DC", "las vegas": "NV",
                       "waltham": "MA", "somerville": "MA", "jersey city": "NJ", "hoboken": "NJ", "st. louis": "MO", "st louis": "MO", "kansas city": "MO",
                       "new orleans": "LA", "honolulu": "HI", "anchorage": "AK", "charlotte": "NC", "durham": "NC", "tampa": "FL", "orlando": "FL"},
@@ -635,6 +686,50 @@ PLACE_NOISE = re.compile(r"\((?:hq|headquarters|remote|hybrid|on-?site|in[- ]off
 LAND_WORD = {"united states": "US", "united states of america": "US", "usa": "US", "us": "US", "u.s": "US", "u.s.a": "US", "u. s": "US", "canada": "CA", "can": "CA"}
 
 
+def abroad_addr(part, land):
+    """A place outside the United States and Canada. Written plainly as "City, Region, Country" or "City, Country", it is split: the city in
+    addressLocality, the region (only when the posting writes one) in addressRegion, the country as its code. Anything less plain stays as
+    written. (Search Console, 22 Nov 2026: "Bengaluru, Karnataka, India" was one addressLocality and addressRegion was listed as missing.)"""
+    out = {"addressLocality": part, **({"addressCountry": land} if land else {})}
+    bits = [x.strip() for x in part.split(",")]
+    if not land or not 2 <= len(bits) <= 3 or any(not b or re.search(r"[()/|\d&]|\s[-–]|[-–]\s|^(remote|hybrid|on-?site)\b|\b(or|and)\b", b, re.I) for b in bits):
+        return out
+    rx = next((r for c, _, r, _ in COUNTRIES if c == land), None)
+    if not (bits[-1].upper() == land or (rx and re.fullmatch(f"(?:{rx})", bits[-1], re.I))): return out
+    if any(c != land for b in bits[:-1] for c, _ in countries_of(b)): return out
+    return {"addressLocality": bits[0], **({"addressRegion": bits[1]} if len(bits) == 3 else {}), "addressCountry": land}
+
+
+# A full US address that some employers write in the place itself ("777 Bannock Street, Denver, CO 80204", "Minneapolis, MN, 55401"):
+# the only source of streetAddress and postalCode, since no hiring system's feed gives them (Search Console, 22 Nov 2026, listed both as missing)
+ZIP_TOK = re.compile(r"^(?:([A-Z]{2})\s+)?(\d{5})(?:-\d{4})?$")
+STREET_TOK = re.compile(r"^\d{1,6}[A-Z]?\s+(?:[NSEW]\.?\s+)?(?:[A-Za-z0-9.'-]+\s+){0,4}(?:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|lane|ln|way|parkway|pkwy|"
+                        r"court|ct|place|pl|highway|hwy|circle|cir|square|sq|terrace|trail|pike)\.?$", re.I)
+CITY_TOK, NOT_CITY = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,30}$"), re.compile(r"campus|hospital|cent(?:er|re)|office|building|site|plaza|tower|\bhq\b|headquarters|clinic|"
+                                                                            r"universit|college|school|\bpark\b|\bmain\b|floor|suite|remote|county|area", re.I)
+
+
+def us_street_addr(part):
+    """streetAddress, addressLocality, addressRegion and postalCode of a US place that is written as an address with a ZIP code, or None."""
+    toks = [t.strip() for t in re.split(r",|\s[-–]\s", part) if t.strip()]
+    zi = next((i for i, t in enumerate(toks) if ZIP_TOK.match(t)), None)
+    if zi is None: return None
+    st, zip_ = ZIP_TOK.match(toks[zi]).groups()
+    k = zi - 1
+    if not st and k >= 0 and toks[k] in US_ST: st, k = toks[k], k - 1
+    if k < 0: return None
+    city = toks[k]
+    if not st and (m := re.fullmatch(r"(.+?)\s+([A-Z]{2})", city)) and m.group(2) in US_ST: city, st = m.group(1), m.group(2)
+    if st not in US_ST or not CITY_TOK.match(city) or NOT_CITY.search(city): return None
+    street = next((t for t in toks[:zi] if STREET_TOK.match(t)), None) or next((t for t in toks[zi + 1:] if STREET_TOK.match(t)), None)
+    return {**({"streetAddress": street} if street else {}), "addressLocality": city, "addressRegion": st, "postalCode": zip_, "addressCountry": "US"}
+for _place, _want in {"Main Campus - Pavilion A - 777 Bannock Street, Denver, CO 80204": ("777 Bannock Street", "Denver", "CO", "80204"),
+                      "Minneapolis, MN, 55401": (None, "Minneapolis", "MN", "55401"), "Pittsburgh PA, 15212, 320 E N Ave.": ("320 E N Ave.", "Pittsburgh", "PA", "15212"),
+                      "43 New Scotland Avenue Albany, NY 12208": None, "Atlanta_30360": None, "Denver, CO": None}.items():
+    _got = us_street_addr(_place)
+    assert (_got and (_got.get("streetAddress"), _got["addressLocality"], _got["addressRegion"], _got["postalCode"])) == _want or (_got is None and _want is None), (_place, _got)
+
+
 def postal(part, here):
     """The PostalAddress of one place of a posting. In the United States and Canada: locality, state or province, and country, read from
     "City, ST", "City, State, Country", "US - City" and from a known city named alone ("San Francisco"); a place that is only a country
@@ -643,8 +738,9 @@ def postal(part, here):
     On that day 60% of the US and Canadian places of the open jobs had no region: "Chicago, Illinois, United States", "San Francisco".)"""
     land = here[0][0] if len(here) == 1 else None
     if here and land not in ("US", "CA"):
-        return {"addressLocality": part, **({"addressCountry": land} if land else {})}
+        return abroad_addr(part, land)
     if re.search(r"\s(?:or|and|&)\s", part, re.I): return {"addressLocality": part, **({"addressCountry": land} if land else {})}    # two places in one
+    if land == "US" and (full_ := us_street_addr(part)): return full_
     # a bracket keeps a state or country ("Austin (TX)", "Remote (United States") and loses anything else ("Philadelphia (dbt)")
     keep_br = lambda m: (", " + m.group(1)) if (m.group(1).strip().lower() in LAND_WORD or m.group(1).strip().lower() in US_STATE_CODE
                                                 or m.group(1).strip().lower() in CA_PROV_CODE or m.group(1).strip() in US_ST or m.group(1).strip() in CA_PROV) else " "
@@ -684,6 +780,9 @@ def postal(part, here):
     if city and region is None and country in CITY_REGION:
         region = CITY_REGION[country].get(re.sub(r"\s+", " ", city.lower()))
     if city and region is None and country is None and land is None:
+        low_ = re.sub(r"\s+", " ", city.lower())                                   # "Sacramento" alone: a city of one state everywhere
+        if low_ in CITY_REGION["US"] and low_ not in CITY_REGION["CA"] and low_ not in ("sf", "bay area"):
+            return {"addressLocality": city, "addressRegion": CITY_REGION["US"][low_], "addressCountry": "US"}
         return {"addressLocality": part}
     out = {}
     if city: out["addressLocality"] = city
@@ -692,7 +791,9 @@ def postal(part, here):
     return out or {"addressLocality": part, **({"addressCountry": land} if land else {})}
 for _place, _want in {"Chicago, Illinois, United States": ("Chicago", "IL", "US"), "San Francisco": ("San Francisco", "CA", "US"), "New York, NY (HQ)": ("New York", "NY", "US"),
                       "Washington, D.C.": ("Washington", "DC", "US"), "Toronto, CA": ("Toronto", "ON", "CA"), "Winston-Salem, NC": ("Winston-Salem", "NC", "US"),
-                      "Remote - US": (None, None, "US"), "Remote - CA": (None, None, "US"), "Munich, DE": ("Munich, DE", None, "DE"),
+                      "Remote - US": (None, None, "US"), "Remote - CA": (None, None, "US"), "Munich, DE": ("Munich", None, "DE"),
+                      "Bengaluru, Karnataka, India": ("Bengaluru", "Karnataka", "IN"), "London, United Kingdom": ("London", None, "GB"), "Berlin": ("Berlin", None, "DE"),
+                      "London, England, United Kingdom": ("London", "England", "GB"), "Hybrid - Paris, France": ("Hybrid - Paris, France", None, "FR"),
                       "Denver, CO or Long Beach, CA": ("Denver, CO or Long Beach, CA", None, "US"), "London": ("London", None, "GB"),
                       "USA - Philadelphia (dbt)": ("Philadelphia", "PA", "US"), "Austin (TX)": ("Austin", "TX", "US")}.items():
     _got = postal(_place, countries_of(_place))
@@ -2052,9 +2153,8 @@ def job_page(j, active_by_cat):
         ld = {"@context": "https://schema.org", "@type": "JobPosting", "title": j["title"], "description": j["excerpt"] or j["title"],
               "datePosted": j["posted"] or j["first_seen"], "hiringOrganization": org, "identifier": {"@type": "PropertyValue", "name": j["company"], "value": j["id"]},
               "directApply": False, "url": canonical}
-        if j.get("usd"):
-            ld["baseSalary"] = {"@type": "MonetaryAmount", "currency": "USD",
-                                "value": {"@type": "QuantitativeValue", "minValue": int(j["usd"][0]), "maxValue": int(j["usd"][1]), "unitText": "YEAR"}}
+        pay_ = pay_ld(j)
+        if pay_: ld["baseSalary"] = pay_
         if j["location"]:
             spots = []                                        # one Place per location the posting lists, each with its own country
             for part in [x.strip(" ,-–") for x in re.split(r";|\||•", j["location"]) if x.strip(" ,-–")][:6]:
@@ -2066,10 +2166,8 @@ def job_page(j, active_by_cat):
             ld["jobLocationType"] = "TELECOMMUTE"
             lands = (countries_of(j["location"]) or region_lands(j["location"])) if j["location"] else []
             if lands: ld["applicantLocationRequirements"] = [{"@type": "Country", "name": nm} for _, nm in lands][:32] if len(lands) > 1 else {"@type": "Country", "name": lands[0][1]}
-        if j.get("etype") in ETYPE_LD:
-            ld["employmentType"] = ETYPE_LD[j["etype"]]
-        elif full and FT_RX.search(full[:4000]) and not OTHER_TYPE_RX.search(j["title"] + " " + full[:4000]):
-            ld["employmentType"] = "FULL_TIME"           # the posting says full-time and names no other kind of work
+        kind_ld = etype_ld(j, full)
+        if kind_ld: ld["employmentType"] = kind_ld
         ld["validThrough"] = VALID_TO
         # Google reads a remote posting only with the countries it is open to. A remote job that names none ("Remote", "Global")
         # gets no markup at all rather than a guessed country; its page is still found by ordinary search.

@@ -390,6 +390,10 @@ left out as companies already read under another board or name).
   `REGION_LANDS` ("EMEA", "Europe", "North America", "APAC", "LATAM"). A remote job that names no country and no region
   ("Remote", "Global", "Worldwide") gets NO markup at all (`mark_ok`): never guess a country. Its page is still indexed.
 - Location parts like "Remote" or "EMEA" are not written as a Place address (`NOT_A_PLACE`).
+- Search Console's JobPosting warnings (22 Nov 2026: postalCode, streetAddress, addressRegion, baseSalary, employmentType) are answered only with
+  what the posting states: `pay_ld()` (any stated pay, its currency and unit; never `EST`), `etype_ld()` (the feed, the title, a label in the text,
+  or "full-time" with no other kind of work named), `abroad_addr()` ("City, Region, Country"), `us_street_addr()` (a US place written with a ZIP).
+  No hiring system's feed gives a street or ZIP, so those two warnings stay on most pages; never fill them from a map or a company's head office.
 - No section heading is just "Questions": write what the questions are about (the owner's standard: every H2 carries a key or a
   real question).
 
