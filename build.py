@@ -1027,7 +1027,7 @@ def cut_words(t, room):
     room = max(room - 1, 1)
     t = t[:room].rsplit(" ", 1)[0] if " " in t[:room + 1] else t[:room]
     t = re.sub(r" \([^)]*$", "", t)
-    t = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|&|or|-|–|—|/))+$", "", t.rstrip(" ,-–—:&/("))
+    t = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|&|or|-|–|—|/))+$", "", t.rstrip(" ,-–—:&/(|["))
     return t + "…"
 
 
@@ -1037,7 +1037,16 @@ def job_title(title, company, suffix=""):
     limit, joint = 70 - len(suffix), " at "
     if len(title) + len(joint) + len(company) <= limit: return title + joint + company
     room = limit - len(joint) - len(company)
-    if room >= 28: return cut_words(title, room) + joint + company
+    if room >= 14:
+        # 22 Nov 2026: one job page in six ended its title on an ellipsis cut inside the name ("Nanofabrication Process… at …",
+        # "Behavior Technician (BT) |… at …"). Cut where the title itself pauses (" - ", " | ", a comma, a bracket) and the part
+        # kept is a whole name of the job; the full title stays in the H1. Only when no pause leaves 14 characters is a word cut.
+        for m_ in reversed(list(re.finditer(r"\s+[-–—|:/]\s+|\s*[,(\[]\s*|\s+\(", title))):
+            head_ = title[:m_.start()].rstrip(" ,-–—|:/([")
+            if 14 <= len(head_) <= room and head_.count("(") == head_.count(")") and head_.count("[") == head_.count("]"):
+                if not re.search(r"(?:\b(?:and|at|in|of|for|the|with|to|a|an|&|or|senior|junior|lead|sr|jr)|\d)$", head_, re.I):
+                    return head_ + joint + company
+        if room >= 28: return cut_words(title, room) + joint + company
     t = cut_words(title, max(30, limit // 2))
     return t + joint + cut_words(company, limit - len(joint) - len(t))
 
