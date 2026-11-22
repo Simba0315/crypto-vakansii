@@ -1061,10 +1061,23 @@ def job_title(title, company, suffix=""):
 
 
 def fit_desc(d):
+    """A meta description of at most 160 characters that ends on a whole sentence. 22 Nov 2026: 35,000 of 58,800 job pages ended on a
+    cut word ("... Collected from official company…", "... Apply on the…") because the closing sentence was added first and the line
+    cut afterwards. Now the longest closing sentence that fits is added, and a line that is still too long loses whole sentences
+    (never going below 80 characters) before a word is cut."""
     d = " ".join(d.split())
-    if len(d) < 125: d = d.rstrip(".") + f". Collected from official company career pages and updated every hour on {SITE}."
-    if len(d) > 160: d = d[:157].rsplit(" ", 1)[0].rstrip(",.;:–—") + "…"
-    return d
+    if len(d) < 125:
+        base = d.rstrip(".")
+        for tail in (f". Collected from official company career pages and updated every hour on {SITE}.",
+                     f". From the employer's own career page, updated every hour on {SITE}.",
+                     f". Updated every hour on {SITE}."):
+            if len(base + tail) <= 160:
+                return base + tail
+        d = base + "."
+    if len(d) <= 160: return d
+    k = max(d.rfind(m_, 0, 161) for m_ in (". ", "! ", "? "))
+    if k >= 79: return d[:k + 1]
+    return d[:157].rsplit(" ", 1)[0].rstrip(",.;:–—") + "…"
 
 
 NAV_PLUS = f'<a class="nl" href="{P}/plus/">Plus</a>' if CFG.get("plus", {}).get("live") else f'<a class="nl only-m" href="{P}/plus/">Plus</a>'      # in the top menu only once it can be bought
