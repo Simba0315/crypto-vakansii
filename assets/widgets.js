@@ -5,6 +5,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var type = $('wb-type'), val = $('wb-val'), limit = $('wb-limit'), theme = $('wb-theme'), layout = $('wb-layout'), accent = $('wb-accent'), mode = $('wb-mode');
   var board = $('wb-board'), co = $('wb-co'), search = $('wb-search'), ATS = { greenhouse: 1, lever: 1, ashby: 1, recruitee: 1, smartrecruiters: 1, teamtailor: 1 };
+  /* the page carries only the first twelve of each list, so the drop-down is never empty; the full lists for the drop-down (skills, categories, places, companies) are a file read after the page has loaded */
   var fill = function () {
     var list = { skill: D.skills, category: D.categories, location: D.locations, company: D.companies }[type.value], own = !!ATS[type.value];
     val.innerHTML = list ? list.map(function (x) { return '<option value="' + x[0] + '">' + x[1].replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>'; }).join('') : '';
@@ -60,4 +61,8 @@
     var b = ev.target.closest('[data-copy]'); if (b) copy(b, $(b.getAttribute('data-copy')).value);
   });
   fill(); run();
+  fetch(root.getAttribute('data-base') + '/data/widget-builder.json').then(function (r) { return r.json(); }).then(function (x) {
+    ['skills', 'categories', 'locations', 'companies'].forEach(function (k) { D[k] = x[k]; });
+    if (!ATS[type.value]) { var keep = val.value; fill(); if (keep) val.value = keep; run(); }
+  }).catch(function () {});
 })();

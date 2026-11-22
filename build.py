@@ -9016,6 +9016,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # Widgets, badges, API: ways for other sites to show our jobs and link back
     wb_data = {"site": SITE, "skills": [[tslug(t), t] for t, _ in skill_counts.most_common()], "categories": [[cs, CAT[cs]] for cs in CAT if by_cat[cs]],
                "locations": [[slug, name.removeprefix("the ")] for name, slug, _ in places], "companies": [[slugify(c), c] for c, _ in comp_items if OPEN[c]]}
+    # the lists of the builder's drop-down (about 900 KB) are a file the builder asks for, not part of the page: the page stays about 30 KB
+    write("data/widget-builder.json", json.dumps(wb_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     wsize = round(len((ROOT / "assets" / "widget.js").read_bytes()) / 1024)
     w_faq = [("Is the job widget free?", "Yes. There is no plan, no account and no limit on page views. The snippet keeps a small link back to this site, which is how the widget stays free."),
              ("Do I need to sign up or get a key?", "No. Choose what to show in the builder on this page, copy the code and paste it into your site."),
@@ -9129,7 +9131,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<a class="feat" href="{P}/api/"><h3>Free jobs API</h3><p>JSON feeds for every skill, category, city and company. No key, no sign-up.</p></a>'
                    f'<a class="feat" href="{P}/trends/"><h3>Hiring data to quote</h3><p>Live numbers on skills, salaries and companies, with ready-made citations and CSV downloads.</p></a>'
                    f'<a class="feat" href="{P}/feed.xml"><h3>RSS feeds</h3><p>Plug any category or skill feed into Slack, Discord or a reader.</p></a></div>', label="Also free")
-         + '<script type="application/json" id="wb-data">' + json.dumps(wb_data, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>',
+         + '<script type="application/json" id="wb-data">' + json.dumps({k_: (v_ if k_ == "site" else v_[:12]) for k_, v_ in wb_data.items()}, ensure_ascii=False).replace("</", "<\\/") + f'</script><script src="{P}/widget.js?v={V}" defer></script><script src="{P}/widgets.js?v={V}" defer></script>',
          head=w_ld, cls="kp sp widgets")
     lap('One page per site builder: the same widget, with the steps a')
     # One page per site builder: the same widget, with the steps and the catches of that platform
