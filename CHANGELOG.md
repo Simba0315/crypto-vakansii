@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-22 ~02:58 UTC — /resume/ for Google and AI answers (owner: "show up in AI too"): WebApplication schema (free, $0, feature list, no rating claimed), a four-step "how to make a resume here" list, a table of which builders give the PDF free (us, Canva, Zety, Resume.io, MyPerfectResume, Resume Now, Indeed, Teal, FlowCV, read from their own pages on Nov 14 and 18), a "what is the catch" question, and "100% free" in the title (the People-also-ask wording).
 - 2026-11-21 ~17:52 UTC — Two more list feeds for the daily GitHub job lists: /api/v1/lists/visa-sponsorship.json and /api/v1/lists/remote-entry-level.json (300 newest each), linked to /perks/visa-sponsorship/ and /remote/entry-level/.
 - 2026-11-21 ~17:43 UTC — /hiring-badge/?company=<slug> opens that company's own badge: the live picture, its HTML and Markdown with copy buttons, and where to paste it (any site, WordPress, Webflow, Wix, Squarespace, GitHub), so a letter to a company carries one link instead of code (owner: "a page where everything is clear to them").
 - 2026-11-21 ~17:28 UTC — Email links work again: every page body is wrapped in <!--email_off-->, because Cloudflare turned abuse@ ("Report a problem with this listing"), partners@ and the other addresses into /cdn-cgi/l/email-protection links whose decoding script our pages never load (the owner got Cloudflare's "Email Protection" page).

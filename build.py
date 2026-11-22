@@ -8307,9 +8307,35 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              ("What is the 7-second rule for a resume?", "The idea that a recruiter’s first look lasts only a few seconds; it comes from an eye-tracking study by Ladders (2018), which measured about 7.4 seconds. "
               "So the top third of the page has to carry your job title, your years of experience and your strongest result."),
              ("Can I make a resume on my phone?", "Yes. The form and the preview work on a phone, and “Save as PDF” uses the phone’s own print window. The draft stays in that browser, so finish it on the device you started on.")]
+    rb_qa.insert(1, ("What is the catch? How is this resume builder free?", "There is none at the download. Job seekers pay nothing here: the paid plans are for employers who boost a job post, "
+              "and Plus, an optional AI helper. The builder, the PDF and the Word file are free and stay free."))
     rb_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in rb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("resume/", f"Free Resume Builder: Free PDF & Word Download, No Sign-Up | {SITE}",
+    # 22 Nov (owner: "show up in Google and in AI answers too"): the page is a tool, so it says so in schema.org terms; no rating is claimed
+    rb_ld += ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebApplication", "name": f"{SITE} resume builder",
+        "url": f"{FULL}/resume/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any, in a web browser", "isAccessibleForFree": True,
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+        "featureList": [f"{RB_N} one-column templates that applicant tracking systems read", "Free PDF download", "Free Word download", "No account", "No watermark",
+                        "The resume stays in your browser", "Match the resume to open jobs"],
+        "publisher": {"@type": "Organization", "name": SITE, "url": f"{FULL}/"}}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    # The download question every AI answer leads with ("which builders give the PDF free"), as a short table read from the builders' own pages
+    _rb_by = {b_["name"]: b_ for b_ in builders_check.BUILDERS}
+    _rb_lbl = {"yes": "Free", "limited": "Free, with limits", "trial": "Paid, after a trial", "no": "Paid", "unknown": "Not stated"}
+    _rb_day = lambda d_: datetime.date.fromisoformat(d_).strftime("%b %-d, %Y")
+    def _rb_row(n_, kind_, pdf_, sign_):
+        rest_ = pdf_.partition(": ")[2]
+        return f'<tr><th>{e(n_)}</th><td><b>{_rb_lbl.get(kind_, "Not stated")}</b>{": " + e(rest_) if rest_ else ""}</td><td>{e(sign_ or "Not stated on its pages")}</td></tr>'
+    rb_cmp = ('<div class="tablewrap"><table><thead><tr><th>Builder</th><th>PDF download</th><th>Account needed</th></tr></thead><tbody>'
+              + _rb_row("This builder", *builders_check.OURS["pdf"], builders_check.OURS["signup"])
+              + "".join(_rb_row(n_, *_rb_by[n_]["pdf"], _rb_by[n_]["signup"]) for n_ in ("Canva", "Zety", "Resume.io", "MyPerfectResume", "Resume Now", "Indeed", "Teal", "FlowCV") if n_ in _rb_by)
+              + f'</tbody></table></div><p class="note">Read on each builder’s own pricing and help pages on {_rb_day(builders_check.CHECKED)} and {_rb_day(builders_check.CHECKED_MORE)}. '
+              f'<a href="{P}/free-resume-builders/">All {len(builders_check.BUILDERS)} builders, with the sources</a>.</p>')
+    rb_steps = ('<ol class="steps">'
+                f'<li><b>Pick a template.</b> All {RB_N} are one column with standard headings, so screening software reads them. You can switch at any time; the text stays.</li>'
+                '<li><b>Fill in the form.</b> Contact line, a two-line summary, your jobs with results, skills and education. The preview updates as you type.</li>'
+                '<li><b>Read the score.</b> The panel beside the preview gives a score and suggestions while you write.</li>'
+                '<li><b>Download.</b> “Save as PDF” through your browser’s print window, or “Download for Word”. Free, with no watermark and no account.</li></ol>')
+    page("resume/", f"100% Free Resume Builder: PDF & Word Download, No Sign-Up | {SITE}",
          f"Build an ATS-friendly resume in your browser: {RB_TPLS} templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
          crumbs(("Resume builder", "")) + f'<h1>Free resume builder that screening software can read</h1><p class="lead">{RB_TPLS.capitalize()} plain templates that applicant tracking systems read cleanly '
          '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
@@ -8331,13 +8357,15 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
          f'<div class="rb-notes no-print"><p class="note">Not sure how to start? <a href="{P}/resume/examples/">Open a resume example for your kind of work</a> and replace it line by line.</p>'
          f'<p class="note">Which builders charge for the download? <a href="{P}/free-resume-builders/">We read the pricing pages of {len(builders_check.BUILDERS)} of them</a>.</p></div></div>'
-         + '<div class="no-print">' + section("What makes a resume [[get read]]", '<div class="feats">'
+         + '<div class="no-print">' + section("How to make a resume here, [[in four steps]]", rb_steps, label="Four steps")
+         + section("What makes a resume [[get read]]", '<div class="feats">'
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div>', label="Three rules")
          + section("What is [[free]] in this resume builder", '<div class="tablewrap"><table class="kv">'
                    + "".join(f"<tr><th>{k_}</th><td>{v_}</td></tr>" for k_, v_ in (("PDF download", "Free"), ("Word download", "Free"), ("Account", "None needed"), ("Watermark", "None"), ("Templates", f"All {RB_N} free"), ("Your resume", "Stays in this browser"), ("Matching it to open jobs", "Free")))
-                   + f'</table></div><p class="note">Many builders are free to write in and ask for payment at the download. <a href="{P}/free-resume-builders/">See what {len(builders_check.BUILDERS)} builders’ own pages say</a>.</p>', label="No catch")
+                   + '</table></div>', label="No catch")
+         + section("Free PDF download: [[this builder and others]]", '<p>Many builders are free to write in and ask for payment at the download, often through a low-priced trial. This is what their own pages said.</p>' + rb_cmp, label="Compared")
          + section("Questions about [[this resume builder]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rb_qa) + "</dl>", label="Questions") + "</div>"
          + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>', head=rb_ld, cls="sp rbp")
 
