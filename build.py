@@ -3414,13 +3414,19 @@ def main():
     # "<name> Careers", the skill's "<name> Jobs"; each says in one line where the other one is, so a reader who meant the other finds it.
     CO_OF_SLUG = {slugify(c_): (c_, n_) for c_, n_ in OPEN.items() if n_}
     SKILL_CO = {t: CO_OF_SLUG[tslug(t)] for t in by_tag if tslug(t) in CO_OF_SLUG and t not in SKILL_ROLE}
+    NEW_MIN = 15      # jobs a "new in the last 3 days" list needs to be worth a page (/new/skills/<skill>/)
+    _c3 = (datetime.date.today() - datetime.timedelta(days=2)).isoformat()      # the same three days as /new/
+    new_sk = sorted(((t, [j for j in js if (j["posted"] or "") >= _c3]) for t, js in by_tag.items()), key=lambda x: -len(x[1]))
+    new_sk = [(t, fj) for t, fj in new_sk if len(fj) >= NEW_MIN][:120]
+    NEWSK_N = {t: len(fj) for t, fj in new_sk}
     for t, js in by_tag.items():
         sr_ = SKILL_ROLE.get(t)
         listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {t} ({len(js):,} open) | {SITE}" if sr_ else f"{t} Jobs ({len(js):,} open) | {SITE}",
                 f"{roles(len(js))} at companies that ask for {t}.", js,
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, stats=True,
-                extra=(f'<p class="note">Looking for jobs whose work is {e(t)} itself? See <a href="{P}/roles/{sr_}/">{len(by_role[sr_][1]):,} {e(rlow(by_role[sr_][0]))} jobs</a>.</p>' if sr_ else "")
+                extra=(f'<p class="note">{NEWSK_N[t]:,} of these were posted in the last three days: <a href="{P}/new/skills/{tslug(t)}/">new {e(t)} jobs</a>.</p>' if t in NEWSK_N else "")
+                      + (f'<p class="note">Looking for jobs whose work is {e(t)} itself? See <a href="{P}/roles/{sr_}/">{len(by_role[sr_][1]):,} {e(rlow(by_role[sr_][0]))} jobs</a>.</p>' if sr_ else "")
                       + (f'<p class="note">Looking for jobs at {e(SKILL_CO[t][0])} itself? See <a href="{P}/companies/{tslug(t)}/">{roles(SKILL_CO[t][1], "open job")} at {e(SKILL_CO[t][0])}</a>.</p>' if t in SKILL_CO else "")
                       + sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t), pics=hub_sections(f"{t} roles", js, "skills,who")[0], hub=hub_sections(f"{t} roles", js, "skills,who")[1], list_title=f"Newest {t} jobs",
                 faq=f"jobs that ask for {t}" if sr_ else f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
@@ -4297,6 +4303,33 @@ def main():
     # New jobs
     cutoff = (datetime.date.today() - datetime.timedelta(days=2)).isoformat()      # today and the two days before: "the last 3 days", as on the home page
     fresh = [j for j in active if (j["posted"] or "") >= cutoff]
+    lap('New jobs by skill and by kind of work')
+    # "python jobs in the last 3 days", "new data analyst jobs": the same three days as /new/, narrowed to one skill or one kind of
+    # work, for the 15 jobs it takes to make a list worth opening (22 Nov 2026; ROADMAP "pages for the last 3 days by skill").
+    fresh_ids = {id(j) for j in fresh}
+    new_ro = sorted(((s_, nm_, [j for j in js_ if id(j) in fresh_ids]) for s_, (nm_, js_) in by_role.items() if s_ not in BROAD and not s_.endswith("-speaking")), key=lambda x: -len(x[2]))
+    new_ro = [(s_, nm_, fj) for s_, nm_, fj in new_ro if len(fj) >= NEW_MIN][:120]
+    for t, fj in new_sk:
+        n_co = len({j["company"] for j in fj})
+        listing(f"new/skills/{tslug(t)}/", f"New {t} jobs", f"New {t} Jobs: {len(fj):,} Posted in the Last 3 Days | {SITE}",
+                f"{len(fj):,} {t} jobs posted in the last three days at {n_co:,} companies, read from employers’ own careers pages and rebuilt every hour.",
+                fj, (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "")
+                + f"{roles(len(fj), 'new role')} asking for {e(t)} {'was' if len(fj) == 1 else 'were'} posted on the employers’ own careers pages in the last three days, as of {fdate(TODAY)}.",
+                trail=(("New jobs", "new/"),), feed=False, more=f"age=3&skills={quote(t)}", stats=True,
+                extra=f'<p class="note">The last three days only. All {len(by_tag[t]):,} open jobs that ask for {e(t)} are on <a href="{P}/skills/{tslug(t)}/">the {e(t)} page</a>; '
+                      f'everything posted in these days, whatever the skill, is on <a href="{P}/new/">New jobs</a>.</p>',
+                list_title=f"New {t} jobs, newest first")
+    for s_, nm_, fj in new_ro:
+        low_ = rlow(nm_)
+        listing(f"new/roles/{s_}/", f"New {nm_} jobs", f"New {tcase(nm_)} Jobs: {len(fj):,} Posted in the Last 3 Days | {SITE}",
+                f"{len(fj):,} new {low_} jobs posted in the last three days at {len({j['company'] for j in fj}):,} companies, read from employers’ own careers pages and rebuilt every hour.",
+                fj, (f"<strong>{e(nm_)}</strong>: a person in this job {e(roles_info.INFO[s_][1])}. " if s_ in roles_info.INFO and roles_info.INFO[s_][1] else "")
+                + f"{roles(len(fj), 'new role')} for {e(low_)} {'was' if len(fj) == 1 else 'were'} posted on the employers’ own careers pages in the last three days, as of {fdate(TODAY)}.",
+                trail=(("New jobs", "new/"),), feed=False, more=f"age=3&q={quote(nm_)}", stats=True,
+                extra=f'<p class="note">The last three days only. All {len(by_role[s_][1]):,} open {e(low_)} jobs are on <a href="{P}/roles/{s_}/">the {e(low_)} page</a>; '
+                      f'everything posted in these days, whatever the work, is on <a href="{P}/new/">New jobs</a>.</p>',
+                list_title=f"New {low_} jobs, newest first")
+
     day_ = [j for j in fresh if NOW - (j.get("ts") or 0) <= 86400]
     upd_ = datetime.datetime.fromtimestamp(NOW, datetime.timezone.utc).strftime("%H:%M UTC")
     wk_cut = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
@@ -4311,6 +4344,8 @@ def main():
     by_c = Counter(nm for j in day_ for _, nm in countries_of(j["location"] or "")[:1]).most_common(8)
     new_top = (f'<p class="note">Updated {upd_}, {fdate(TODAY)}. {len(day_):,} posted in the last 24 hours, about {per_day_:,.0f} a day over the last week.</p>'
                + (labrow("Last 24 hours by field", [f'<a href="{P}/jobs/?age=1&amp;cat={c_}">{e(CAT[c_])} · {k_:,}</a>' for c_, k_ in by_f]) if len(by_f) >= 3 else "")
+               + (labrow("By skill, last 3 days", [f'<a href="{P}/new/skills/{tslug(t)}/">{e(t)} · {len(fj):,}</a>' for t, fj in new_sk[:12]]) if len(new_sk) >= 3 else "")
+               + (labrow("By kind of work, last 3 days", [f'<a href="{P}/new/roles/{s_}/">{e(nm_)} · {len(fj):,}</a>' for s_, nm_, fj in new_ro[:12]]) if len(new_ro) >= 3 else "")
                + (labrow("Last 24 hours by country", [f'<a href="{P}/jobs/?age=1&amp;where={quote(nm)}">{e(nm)} · {k_:,}</a>' for nm, k_ in by_c]) if len(by_c) >= 3 else ""))
     new_qa = [("Where can I find jobs posted today?", f"Here: {len(day_):,} jobs were posted in the last 24 hours and {len(fresh):,} in the last three days, newest first. The list is rebuilt every hour, "
                "and new jobs found between rebuilds are added at the top of this page as they come in."),
