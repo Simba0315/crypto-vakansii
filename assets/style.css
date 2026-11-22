@@ -4047,11 +4047,12 @@ main.srch #fwrap:not(.has-on)>.fclear{display:none}
 main.srch #fwrap .fclear .linkbtn{font-size:14px;font-weight:600}
 /* a phone: the row scrolls sideways, full bleed, as in the LinkedIn app; "All filters" opens under it */
 @media(max-width:860px){
-  main.srch #fwrap{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px 14px;padding:2px 16px 14px}
+  main.srch #fwrap{position:relative;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -16px 14px;padding:2px 16px 14px}
   main.srch #fwrap::-webkit-scrollbar{display:none}
   main.srch #fwrap>*,main.srch #fwrap .floc,main.srch #fwrap .f-loc,main.srch #fwrap .filters{flex-shrink:0;flex-wrap:nowrap}
   main.srch #fwrap>.morefilters{order:-1}
   main.srch #fwrap:has(.morefilters[open]){flex-wrap:wrap;overflow:visible}
+  main.srch #fwrap:has(.morefilters[open])>*,main.srch #fwrap:has(.morefilters[open]) .floc,main.srch #fwrap:has(.morefilters[open]) .f-loc,main.srch #fwrap:has(.morefilters[open]) .filters{flex-shrink:1;flex-wrap:wrap;min-width:0}   /* open panel: wrap inside the screen, never wider than it */
   main.srch #fwrap:has(.morefilters[open])>.morefilters{order:9}
   main.srch #fwrap .morefilters .mf{grid-template-columns:1fr;padding:16px}
   main.srch #fwrap>.fclear{order:10;margin-left:0}
