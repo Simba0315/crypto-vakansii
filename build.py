@@ -1021,6 +1021,15 @@ def fit_title(t):
     return t2 if len(t2) <= 70 else t2[:68].rsplit(" ", 1)[0].rstrip(" ,-–—:&(")
 
 
+def iq_title(n, name):
+    """Title of an interview-questions page. The words "Interview Questions" are what people search for, so they are the last thing to
+    go: first the year and "and Answers" give way, then the count, and only then the name is shortened (never "... Interview")."""
+    for t in (f"{n} {name} Interview Questions and Answers ({TODAY[:4]})", f"{n} {name} Interview Questions and Answers",
+              f"{n} {name} Interview Questions", f"{name} Interview Questions"):
+        if len(t) <= 65: return t
+    return cut_words(name, 65 - len(" Interview Questions")) + " Interview Questions"
+
+
 def cut_words(t, room):
     """t shortened to at most room characters at a word boundary, with an ellipsis; a bracket is never left open."""
     if len(t) <= room: return t
@@ -6564,7 +6573,7 @@ def main():
         facts_ = nums([(f"{n_q}", "questions to prepare"), (f"{n_:,}", f"open {e(low)} jobs today")] + ([(f"{len(descs_):,}", "postings read in full")] if own_text else [])
                       + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else []))
         iq_dir[fs].append((slug_r, rname, n_q))
-        page(f"interview-questions/{slug_r}/", f"{n_q} {tcase(rname)} Interview Questions and Answers ({TODAY[:4]}) | {SITE}",
+        page(f"interview-questions/{slug_r}/", iq_title(n_q, tcase(rname)) + f" | {SITE}",
              f"{n_q} {low} interview questions to prepare for, each with why it is likely to come up (from today’s {n_:,} open {low} postings) and what a good answer shows.",
              crumbs(("Interview questions", "interview-questions/"), (rname, "")) + f'<h1>{e(rname)} interview questions: <span class="hl">{n_q} to prepare for</span></h1>'
              f'<p class="lead">Each question says why it is likely to come up, from what today’s {n_:,} open {e(low)} postings ask for, and what a good answer shows. '
