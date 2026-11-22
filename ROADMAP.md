@@ -111,7 +111,7 @@
 | «free resume builder no sign up», «ats resume checker» | конструктор резюме, проверка резюме под вакансию | ✅ |
 | «salary to hourly calculator», «stock options calculator», «cover letter generator», «boolean search» | бесплатные инструменты | ✅ |
 | «job application tracker», «job tracker spreadsheet» | трекер «My jobs» (переименован под запрос) | ✅ |
-| «python jobs in the last 3 days», «since yesterday» | страницы «за 3 дня / за сутки» по навыкам и профессиям | 📋 |
+| «python jobs in the last 3 days», «since yesterday» | страницы «за 3 дня» по навыкам и профессиям (`/new/skills/…`, `/new/roles/…`, 22.11) | ✅ |
 | «free job posting sites for employers», «post a job for free» | бесплатная публикация в кабинете | 🟡 ждёт запуска сервера |
 | «free job alert», «job alerts» | уведомления на почту | 📋 нужен почтовый сервис |
 | «job sites other than indeed», «job sites that actually work» | честная страница «чем мы отличаемся» | ✅ `/vs/`, `/promise/`, «<сайт> alternatives» |
