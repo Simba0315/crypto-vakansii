@@ -2752,3 +2752,4 @@ sudo bash /opt/hrn-api/server/hosting/api-secret.sh SMTP_PASS
 - ✅ (21.11, облачный прогон) Виджет вакансий: новый вид «карусель» (`data-layout="carousel"`) — ряд карточек, который листается стрелками и свайпом; есть в конструкторе на /widgets/, в таблице параметров и в ответах. Осталось по виджету: всплывающее окно вакансии, Workable.
 
 - ✅ (21.11, облачный прогон) Глоссарий: ещё 12 терминов (salaried employee, permanent role, merit increase, holiday pay, direct report, matrix organization, pre-employment drug test, dress code, piece rate, job grade, unconscious bias, peer interview), теперь 236.
+- ✅ (22.11, облачный прогон) Подсказки в полях поиска больше не обрываются на телефоне на полуслове (16 страниц списков и главная): скрипт подбирает самый длинный вариант текста, который помещается. Налог ещё четырёх штатов (Arkansas, Connecticut, Maine, Vermont) не добавлен: их сайты не открываются автоматически, цифры без первоисточника не вносим.

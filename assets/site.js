@@ -2104,3 +2104,41 @@
     });
   }).catch(function () {});
 })();
+
+/* Placeholders that do not fit a narrow field ("Type a word, for example vesting or…") are cut by the browser mid-word.
+   Where the text is wider than the field, use the longest shorter wording that fits: "…, e.g. vesting", then the part before the example,
+   then the list cut at a comma. The full text comes back on a wide screen. */
+(function () {
+  var cv = document.createElement('canvas').getContext('2d');
+  function variants(t) {
+    var out = [t], m = t.match(/^(.*?)[,:]?\s+(?:for example|e\.g\.)\s+(.+)$/i);
+    if (m) {
+      var first = m[2].split(/\s+or\s+|,\s*/)[0];
+      out.push(m[1] + ', e.g. ' + first, m[1]);
+    }
+    var parts = t.replace(/…$/, '').split(', ');
+    for (var i = parts.length - 1; i >= 1; i--) out.push(parts.slice(0, i).join(', ') + '…');
+    var w = parts[0].split(' ');
+    for (var k = w.length - 1; k >= 2; k--) out.push(w.slice(0, k).join(' ') + '…');
+    return out;
+  }
+  function fit() {
+    Array.prototype.forEach.call(document.querySelectorAll('input[placeholder],input[data-ph]'), function (inp) {
+      if (!inp.offsetParent) return;
+      var full = inp.getAttribute('data-ph') || inp.getAttribute('placeholder');
+      if (!inp.getAttribute('data-ph')) inp.setAttribute('data-ph', full);
+      var cs = getComputedStyle(inp); cv.font = cs.font;
+      var room = inp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      if (room < 60) return;
+      var v = variants(full), pick = v[v.length - 1];
+      for (var i = 0; i < v.length; i++) if (cv.measureText(v[i]).width <= room) { pick = v[i]; break; }
+      if (inp.getAttribute('placeholder') !== pick) inp.setAttribute('placeholder', pick);
+    });
+  }
+  var t;
+  function soon() { clearTimeout(t); t = setTimeout(fit, 120); }
+  window.addEventListener('resize', soon);
+  window.addEventListener('load', soon);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon);
+  document.addEventListener('DOMContentLoaded', soon);
+})();
