@@ -531,6 +531,9 @@ plain HTML, so the page is readable without the map.
   board lists it again (`reopen`), does not close closed jobs again after a new record, and reads 15 texts a board on each pass
   (Workday, SmartRecruiters). It restarts by itself when the upload brings new code.
 - **The workflow**: a push builds from the saved jobs unless they are more than three hours old (`STALE`), then it collects too.
+- **Memory of the run** (22 Nov 2026): GitHub's runner has 16 GB. When it runs out, the step ends with exit 143 or "The operation was
+  canceled" and no message. At 1.95 GB of `data/jobs.json` the old one-string save in `collect.py` did that every run; `save_db` streams it.
+  Never build the whole database as one string or one list of pieces (`json.dumps(db)`) in `collect.py` or `build.py`.
   GitHub starts scheduled runs 4 or 5 times a day whatever the cron lines say. A lasting fix needs a GitHub token on the server
   to start runs from there, and that is a secret only the owner can create and type in.
 - **`views.py`** (on the server: `sudo python3 /srv/hrn/app/views.py 14`): how many times people, not robots, opened each

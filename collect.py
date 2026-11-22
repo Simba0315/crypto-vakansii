@@ -2118,6 +2118,20 @@ def guard_systems(results, sources, open_by_co, late, stats):
     return [(name, None if jobs is not None and not jobs and ats_of.get(name) in down else jobs) for name, jobs in results]
 
 
+def save_db(db):
+    """Writes data/jobs.json one record at a time, byte for byte what json.dumps(db, ensure_ascii=False, indent=0) wrote before.
+    The whole file in one string took several times its size in memory (a list of every small piece, then the joined text, then its
+    bytes); at 1.95 GB (645,000 open jobs, 22 Nov 2026) the runner ran out of memory and every run died at the end of "Collect jobs",
+    two or three minutes after the 40 minutes of reading. A temporary file and a rename: a run that dies here leaves the old file whole."""
+    tmp = DATA.with_name(DATA.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write("{")
+        for i, (k, v) in enumerate(db.items()):
+            f.write(("," if i else "") + "\n" + json.dumps(k, ensure_ascii=False) + ": " + json.dumps(v, ensure_ascii=False, indent=0))
+        f.write("\n}" if db else "}")
+    os.replace(tmp, DATA)
+
+
 def main():
     sources = [dict(s, crypto=True) for s in json.loads((ROOT / "sources.json").read_text()) if s["name"] not in EXCLUDE]
     tech_file = ROOT / "sources_tech.json"
@@ -2256,7 +2270,7 @@ def main():
                                   norm, slugify, excerpt, classify, level, etype, TODAY, utc_now())
         except Exception as ex:                                     # the channels never stop the hourly update
             print(f"telegram: skipped this run: {type(ex).__name__}: {ex}")
-    DATA.write_text(json.dumps(db, ensure_ascii=False, indent=0))
+    save_db(db)
     active = sum(j["active"] for j in db.values())
     print(f"read {len(sources) - len(late)} boards in {read_s:.0f} s ({len(resting)} resting this hour, {len(late)} left for a later run); {stats['parsed']} postings parsed, the rest unchanged "
           f"since the last run; {not_en} left out as not in English")
