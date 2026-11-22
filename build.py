@@ -3373,7 +3373,9 @@ def main():
         ent_qa.append(("How much do entry-level jobs pay an hour?", f"The median advertised yearly range midpoint is {money(median(mids_e))}, about ${median(mids_e) / 2080:,.0f} an hour at 40 hours a week. "
                        "Internships are often paid by the hour or month; the hourly pay pages list jobs by the rate they state."))
     listing("entry-level/", "Entry-level jobs & internships", f"Entry-Level Jobs & Internships: {len(jr):,} Open, Updated Hourly | {SITE}",
-            "Internships and junior roles at companies: a way into the industry without years of experience.", jr,
+            # 22 Nov: position 5.7 for "entry level jobs" with 0 clicks; the old line said nothing a searcher could act on
+            (f"{len(jr):,} entry-level jobs and internships open now at " + (lambda t_: ", ".join(t_[:-1]) + " and " + t_[-1] if len(t_) > 1 else "".join(t_))([c_ for c_, _ in Counter(j["company"] for j in jr).most_common(3)])
+             + ". Many need no experience. From company career pages, updated hourly."), jr,
             intro_for(jr, "entry-level ", row=True), stats="rest",
             extra=labrow("Narrow by", [f'<a href="{P}/internships/">Internships</a>', f'<a href="{P}/remote/entry-level/">Remote entry-level jobs</a>',
                                        f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>'])
@@ -8334,10 +8336,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     def _rb_row(n_, kind_, pdf_, sign_):
         rest_ = pdf_.partition(": ")[2]
         return f'<tr><th>{e(n_)}</th><td><b>{_rb_lbl.get(kind_, "Not stated")}</b>{": " + e(rest_) if rest_ else ""}</td><td>{e(sign_ or "Not stated on its pages")}</td></tr>'
+    _rb_shown = [n_ for n_ in ("OpenResume", "Canva", "Zety", "Resume.io", "MyPerfectResume", "Resume Now", "Indeed", "Teal", "FlowCV") if n_ in _rb_by]
+    _rb_days = sorted({_rb_by[n_].get("read") or builders_check.CHECKED for n_ in _rb_shown})
     rb_cmp = ('<div class="tablewrap"><table><thead><tr><th>Builder</th><th>PDF download</th><th>Account needed</th></tr></thead><tbody>'
               + _rb_row("This builder", *builders_check.OURS["pdf"], builders_check.OURS["signup"])
-              + "".join(_rb_row(n_, *_rb_by[n_]["pdf"], _rb_by[n_]["signup"]) for n_ in ("Canva", "Zety", "Resume.io", "MyPerfectResume", "Resume Now", "Indeed", "Teal", "FlowCV") if n_ in _rb_by)
-              + f'</tbody></table></div><p class="note">Read on each builder’s own pricing and help pages on {_rb_day(builders_check.CHECKED)} and {_rb_day(builders_check.CHECKED_MORE)}. '
+              + "".join(_rb_row(n_, *_rb_by[n_]["pdf"], _rb_by[n_]["signup"]) for n_ in _rb_shown)
+              + f'</tbody></table></div><p class="note">Read on each builder’s own pricing and help pages on {", ".join(_rb_day(d_) for d_ in _rb_days[:-1])} and {_rb_day(_rb_days[-1])}. '
               f'<a href="{P}/free-resume-builders/">All {len(builders_check.BUILDERS)} builders, with the sources</a>.</p>')
     rb_steps = ('<ol class="steps">'
                 f'<li><b>Pick a template.</b> All {RB_N} are one column with standard headings, so screening software reads them. You can switch at any time; the text stays.</li>'
@@ -8413,8 +8417,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 + '</tr></thead><tbody>' + bc_rows + "</tbody></table></div>")
     bc_first = fdate(BC.CHECKED)
     bc_later = [b["name"] for b in BC.BUILDERS if b.get("read")]             # builders read on a later day than the rest
-    bc_when = bc_first + (f" and {fdate(BC.CHECKED_MORE)}" if bc_later else "")
-    bc_later_s = (f" {bc_list([{'name': n_} for n_ in bc_later])} were read on {fdate(BC.CHECKED_MORE)}, the others on {bc_first}." if bc_later else "")
+    bc_days = [BC.CHECKED] + sorted({b["read"] for b in BC.BUILDERS if b.get("read")})
+    bc_when = ", ".join(fdate(d_) for d_ in bc_days[:-1]) + (" and " if len(bc_days) > 1 else "") + fdate(bc_days[-1])
+    bc_later_s = ("".join(f" {bc_list([{'name': b['name']} for b in BC.BUILDERS if b.get('read') == d_])} {'was' if sum(b.get('read') == d_ for b in BC.BUILDERS) == 1 else 'were'} read on {fdate(d_)}."
+                          for d_ in bc_days[1:]) + f" The others were read on {bc_first}." if bc_later else "")
     bc_qa = [
         ("Which resume builders let you download a PDF for free?",
          f"On {bc_when}, the free plans of {bc_list(bc_free)} let you download a PDF without paying"
@@ -8452,7 +8458,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in bc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     bc_ld += ('<script type="application/ld+json">' + json.dumps([
         {"@context": "https://schema.org", "@type": "Article", "headline": "Which free resume builders let you download the PDF?",
-         "datePublished": BC.CHECKED, "dateModified": BC.CHECKED_MORE, "mainEntityOfPage": f"{FULL}/free-resume-builders/",
+         "datePublished": BC.CHECKED, "dateModified": bc_days[-1], "mainEntityOfPage": f"{FULL}/free-resume-builders/",
          "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"},
          "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/", "logo": {"@type": "ImageObject", "url": FULL + "/brand/icon-512.png"}}},
         {"@context": "https://schema.org", "@type": "ItemList", "name": "Resume builders compared by what the free plan gives",
@@ -8728,8 +8734,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             lead_ = re.split(r"(?<=[.!?])\s", d)[0].rstrip(".")
             gt_ = f"{term}: {lead_}" if len(f"{term}: {lead_}") <= 62 and len(lead_.split()) >= 4 else f"{term} Meaning: Plain Definition and What to Do"
         if len(gt_) > 65 and "?" in gt_: gt_ = gt_[:gt_.index("?") + 1]          # "What Is an ATS (Applicant Tracking System)?"
+        d_lc_ = d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]
         page(f"glossary/{sl}/", gt_ + (f" | {SITE}" if len(gt_) + len(SITE) + 3 <= 65 else ""),
-             f"{term}, explained in plain English: {d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]}",
+             # 22 Nov: a long definition lost its end to the 160-character cut ("...not on a…" for rolling basis, position 6.5);
+             # without the prefix the whole definition fits
+             (f"{term}, explained in plain English: {d_lc_}" if len(f"{term}, explained in plain English: {d_lc_}") <= 160 or len(f"{term}: {d_lc_}") > 160 else f"{term}: {d_lc_}"),
              crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(GM["title"] if GM else term)}</h1>'
              f'<div class="gl-top"><div class="gl-card"><span class="gl-k">Definition</span>'
              f'<p class="gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'

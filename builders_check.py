@@ -13,6 +13,7 @@ Run `python3 builders_check.py` to check the data.
 
 CHECKED = "2026-11-14"
 CHECKED_MORE = "2026-11-18"        # the entries with "read": six builders added after the search check (the ones Google and Bing name)
+CHECKED_LAST = "2026-11-22"        # OpenResume, the first pick of Perplexity for "free PDF, no sign up", read on this day
 
 BUILDERS = [        # alphabetical; read on 14 Nov 2026
     {"name": 'Adobe Express', "url": 'https://www.adobe.com/express/', "read": "2026-11-18",
@@ -74,6 +75,12 @@ BUILDERS = [        # alphabetical; read on 14 Nov 2026
      "sources": [("https://novoresume.com/pricing", "free plan, branding, prices"),
                  ("https://intercom.help/novoresume/en/articles/5562888-membership-questions-basic-premium-refund", "free access period (help centre)"),
                  ("https://intercom.help/novoresume/en/articles/13053894-download-my-resume-cv-2-0", "one-page free download (help centre)")]},
+    {"name": "OpenResume", "url": "https://www.open-resume.com/", "read": "2026-11-22",
+     "pdf": ("yes", "Yes: free forever; the builder makes the resume as a PDF to download"), "watermark": "", "docx": "",
+     "signup": "No: no sign up; the data stays in your browser", "limits": "One U.S.-style single-column design",
+     "paid": "None: free and open source",
+     "sources": [("https://www.open-resume.com/", "free forever, no sign up, data kept in the browser, ATS-friendly design"),
+                 ("https://github.com/xitanggg/open-resume", "its own source code repository: the builder downloads a PDF")]},
     {"name": "Reactive Resume", "url": "https://rxresu.me/",
      "pdf": ("yes", "Yes: every feature is free"), "watermark": "", "docx": "Yes: also Markdown and JSON",
      "signup": "Yes: a free account to save", "limits": "None: 18 templates; AI needs your own provider key",
@@ -153,7 +160,8 @@ def check():
         for u, what in b["sources"]:
             assert u.startswith("https://") and what, (b["name"], u)
             host = lambda x: x.split("/")[2].removeprefix("www.").split(".")[-2]
-            assert host(u) == host(b["url"]) or "help" in u or "support" in u, f"{b['name']}: a source off the builder's own site: {u}"
+            # the builder's own source repository counts as its own page (OpenResume links to it from its site)
+            assert host(u) == host(b["url"]) or "help" in u or "support" in u or u.startswith("https://github.com/"), f"{b['name']}: a source off the builder's own site: {u}"
     return len(BUILDERS)
 
 
