@@ -1086,7 +1086,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
         m_ = CRUMB_RX.search(body)
         if m_:
             parts = []
-            for bit in m_.group(1).split(" / ")[1:]:
+            for bit in re.split(r"(?<=</a>) / | / (?=<a )", m_.group(1))[1:]:     # a name can hold " / " itself ("zkSync / Matter Labs")
                 a_ = CRUMB_A.fullmatch(bit.strip())
                 parts.append((html.unescape(a_.group(2)), a_.group(1)[len(P) + 1:]) if a_ else (html.unescape(bit.strip()), ""))
             if parts: head += crumbs_ld(parts)
@@ -2748,7 +2748,9 @@ def main():
             f'<p class="kact">{go("post-a-job/", "Post a job — free")}<a href="{P}/pricing/#employers">See every price</a></p></div>'
             '<ul class="kgets"><li><b>30 days</b> in the list and in search</li><li><b>Its own page</b>, readable by Google’s job box</li>'
             '<li><b>A link</b> straight to your application page</li><li><b>Checked</b> before it goes live</li></ul></section>')
-    ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/brand/icon-512.png"}) + "</script>")
+    ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/brand/icon-512.png",
+        "description": "A job search that reads open jobs every hour from employers’ own career pages, with a free resume builder.",
+        "sameAs": ["https://www.linkedin.com/company/jobseveryhour/"]}, ensure_ascii=False) + "</script>")
     wk_ = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     co_top = Counter(j["company"] for j in active).most_common(10)
     co_new = Counter(j["company"] for j in active if (j.get("first_seen") or "") >= wk_)
@@ -7215,7 +7217,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     PUBLISHED = "2026-11-13"
     def guide(slug, title, desc, cat, lead, body, prev, more=(), extra_head=""):
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
-               "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
+               "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/", "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
                "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": FULL + "/og.jpg"}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         # sections review, batch 3. What to read next is a row of links that look like links (it was one grey line). The short answer
         # of an advice article stands first, right under the question in the heading, and the paragraph that sets the scene after it.
@@ -8434,8 +8436,36 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "Reviews and lists by others were not used as a source. Prices are those the pages showed us that day, in US dollars; several builders say prices differ by country. "
          + (f"{bc_list([{'name': n_} for n_ in BC.LEFT_OUT])} are not in the table: their pages did not open for our reader that day." if BC.LEFT_OUT else bc_later_s.strip())),
     ]
+    # 22 Nov (owner: "show up in AI answers too"): "is Zety free", "is Canva free" are what people ask Google and the chat assistants;
+    # each answer is put together only from that builder's row, with the day its pages were read
+    _bc_open = {"yes": "Yes, the PDF download is free", "limited": "Partly: the free plan gives a PDF, with limits", "trial": "Not the PDF: it comes with a paid trial",
+                "no": "Not the PDF: it needs a paid plan", "unknown": "Its own pages do not say whether a free user can download a PDF"}
+    def _bc_is_free(b):
+        rest_ = b["pdf"][1].partition(": ")[2]
+        out_ = f"By {b['name']}’s own pages on {fdate(b.get('read') or BC.CHECKED)}: {_bc_open.get(b['pdf'][0], _bc_open['unknown'])}" + (f" ({rest_})" if rest_ else "") + "."
+        if b.get("signup"): out_ += f" Account: {b['signup']}."
+        if b.get("limits"): out_ += f" Free plan limits: {b['limits']}."
+        if b.get("paid"): out_ += f" Cheapest paid option: {b['paid']}."
+        return out_
+    bc_qa[-1:-1] = [(f"Is {b['name']} free?", _bc_is_free(b)) for n_ in ("Canva", "Zety", "Resume.io", "MyPerfectResume", "Teal", "FlowCV") for b in BC.BUILDERS if b["name"] == n_]
     bc_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in bc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    bc_ld += ('<script type="application/ld+json">' + json.dumps([
+        {"@context": "https://schema.org", "@type": "Article", "headline": "Which free resume builders let you download the PDF?",
+         "datePublished": BC.CHECKED, "dateModified": BC.CHECKED_MORE, "mainEntityOfPage": f"{FULL}/free-resume-builders/",
+         "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"},
+         "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/", "logo": {"@type": "ImageObject", "url": FULL + "/brand/icon-512.png"}}},
+        {"@context": "https://schema.org", "@type": "ItemList", "name": "Resume builders compared by what the free plan gives",
+         "itemListElement": [{"@type": "ListItem", "position": i_ + 1, "name": b["name"], "url": b["url"]} for i_, b in enumerate(BC.BUILDERS)]}],
+        ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    # The short answer by what the reader needs, the way AI answers group them ("best for ...")
+    _bc_groups = [("A free PDF, no account", [b["name"] for b in BC.BUILDERS if b["pdf"][0] == "yes" and (b.get("signup") or "").lower().startswith("no")] + [f"{SITE} (this site)"]),
+                  ("A free PDF with a free account", [b["name"] for b in BC.BUILDERS if b["pdf"][0] == "yes" and not (b.get("signup") or "").lower().startswith("no")]),
+                  ("A PDF within the free plan’s limits", [b["name"] for b in BC.BUILDERS if b["pdf"][0] == "limited"]),
+                  ("The PDF only after a paid plan or trial", [b["name"] for b in BC.BUILDERS if b["pdf"][0] in ("no", "trial")]),
+                  ("Not stated on their own pages", [b["name"] for b in BC.BUILDERS if b["pdf"][0] == "unknown"])]
+    bc_short = ('<dl class="qa">' + "".join(f"<div><dt>{e(g_)}</dt><dd>{e(', '.join(ns_))}</dd></div>" for g_, ns_ in _bc_groups if ns_) + "</dl>"
+                + '<p class="note">Grouped from the table below; the limits and prices are in its rows.</p>')
     bc_src = '<ul class="vs-src">' + "".join(f'<li><b>{e(b["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in b["sources"]) + "</li>" for b in BC.BUILDERS) + "</ul>"
     page("free-resume-builders/", f"Free Resume Builders Compared ({TODAY[:4]}): Which Give the PDF Free | {SITE}",
          f"We read the pricing pages of {len(BC.BUILDERS)} resume builders on {bc_when}: which give a free PDF, which add a watermark, which ask for a paid trial first.",
@@ -8449,10 +8479,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          # Sections review, batch 5: the one action under the opening lines (the page had none above its last screen); the
          # builder of this site as a closing panel; the questions after the table they are about.
          + act_row("resume/", "Open the free resume builder", [("#table", "The table"), ("#sources", "Every page we read")], note="No account, no watermark.")
+         + section("The short answer, [[by what you need]]", bc_short, label="Short answer")
          + section(f"Free plans [[side by side]], {bc_when}", bc_table + '<p class="note">' + (f'Not in the table: {e(bc_list([{"name": n_} for n_ in BC.LEFT_OUT]))}, whose pages did not open for our reader on {bc_when}. ' if BC.LEFT_OUT else e(bc_later_s.strip()) + " ")
                    + '“Not stated” means the builder’s own pages do not say.</p>', sid="table", label="The table")
          + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in bc_qa) + "</dl>", label="Questions")
-         + kcta("This site’s builder", "Make yours here, [[free]]", 'Five one-column templates that screening software can read, a score with fixes as you type, your old resume imported from Word or PDF, '
+         + kcta("This site’s builder", "Make yours here, [[free]]", f'{RB_TPLS.capitalize()} one-column templates that screening software can read, a score with fixes as you type, your old resume imported from Word or PDF, '
                 'and a PDF or Word download at the end. Everything stays in your browser.',
                 go("resume/", "Open the resume builder") + f'<a href="{P}/resume/examples/">See resume examples</a>')
          + section("Sources", bc_src + f'<p class="note">Read on {bc_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
