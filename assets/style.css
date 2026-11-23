@@ -235,7 +235,7 @@ select{width:auto;max-width:44vw}
 .jhead .pills{justify-content:flex-start;margin-top:12px}
 .cols{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:36px;align-items:start}
 .side{position:sticky;top:80px}
-@media(max-width:860px){.cols{grid-template-columns:1fr}.side{position:static;order:-1}}
+@media(max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}.side{position:static;order:-1}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
 dl.meta{display:grid;grid-template-columns:max-content 1fr;gap:9px 18px;margin:0 0 18px;font-size:14.5px}
 dl.meta dt{font-size:13.5px;color:var(--faint);padding-top:1px}
@@ -539,6 +539,10 @@ nav a.nl[aria-current=page]{color:var(--text);box-shadow:inset 0 -3px 0 var(--ac
 .prose.desc ul,.prose.desc ol{margin:8px 0 12px;padding-left:22px}
 .prose.desc li{font-size:16px;line-height:1.65;margin:4px 0}
 .prose.desc li::marker{color:var(--faint)}
+/* an employer's text can hold a long address, email or a line of underscores with no space in it: break it inside the column
+   instead of widening the page on a phone (23 Nov 2026: up to 2,477 px wide at 390) */
+.prose.desc{overflow-wrap:anywhere}
+.prose.desc hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 
 /* tap targets: nothing a finger must hit is smaller than 40px */
 .icon{width:40px;height:40px}

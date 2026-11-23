@@ -596,6 +596,10 @@ SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby", "
                "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling", "icims": "iCIMS"}     # hiring systems the listings are read from (collect.fetch_feed, fetch_jazzhr)
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
+# a paragraph that is only a drawn line ("_____", "-----", "=====", "─────"): shown as a thin rule, because a run of 60 underscores
+# has no place to break and widened job pages on phones (23 Nov 2026)
+DESC_RULE = re.compile(r"<p>(?:\s|</?(?:strong|em)>)*[-_=*~.:•·─━—–]{5,}(?:[-_=*~.:•·─━—–\s]|</?(?:strong|em)>)*</p>")
+DESC_RUN = re.compile(r"[-_=*~─━—]{12,}")      # the same kind of line run into a sentence ("...below._______"): dropped
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
                      r"open application|speculative application|evergreen|don.?t see (a|your|the) (role|fit|position|job)|register your interest|join our talent|(^|\W)pipeline( role| req|:| -| –)|"
                      r"always (hiring|looking)|spontaneous application|unsolicited application|open call", re.I)     # titles that are a standing invitation, not one specific opening
@@ -2109,6 +2113,7 @@ def job_page(j, active_by_cat):
     # a US-dollar estimate only makes sense for US roles, and intern pay is not comparable with salaried roles
     est_ok = j["level"] != "Intern" and j["cat"] != OTHER[0] and (not j["location"] or any(c == "US" for c, _ in countries_of(j["location"])))
     if full and ("<" in DESC_TAGS.sub("", full) or not j["active"]): full = ""
+    if full: full = DESC_RUN.sub(" ", DESC_RULE.sub("<hr>", full))
     comp_url = f'{P}/companies/{slugify(j["company"])}/'
     rows = [("Company", f'<a href="{comp_url}">{e(j["company"])}</a>')]
     if j["location"]: rows.append(("Location", loc_flags(j["location"], 6) + e(j["location"])))
