@@ -122,6 +122,18 @@ jobs:
           if [ "$HRN_SERVER_ON" = "true" ] && [ -n "$switched" ]; then echo "HRN_RECORDS=1" >> "$GITHUB_ENV"; echo "SWITCHED=1" >> "$GITHUB_ENV"
           elif [ "$HRN_SERVER_ON" = "true" ]; then echo "HRN_RECORDS=both" >> "$GITHUB_ENV"
           fi
+      # Since 23 Nov 2026 01:47 UTC (about 645,000 open jobs) the build outgrew the runner's 16 GB of memory: the runner was
+      # killed during "Build site" ("The hosted runner lost communication with the server") and nothing was uploaded.
+      # 24 GB of swap on the runner's spare disk (/mnt) lets the build finish; it is slower only while it pages.
+      - name: More swap for the build
+        run: |
+          sudo swapoff -a || true
+          sudo rm -f /mnt/swapfile
+          sudo fallocate -l 24G /mnt/hrn.swap
+          sudo chmod 600 /mnt/hrn.swap
+          sudo mkswap /mnt/hrn.swap > /dev/null
+          sudo swapon /mnt/hrn.swap
+          free -g
       - name: Build site
         run: python3 build.py
       # The build adds this month's figures to data/reports.json; past months in it must never be lost, so it is saved again.
