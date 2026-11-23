@@ -8870,6 +8870,25 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         "Base salary": (f"The middle half of today’s postings that state pay offer {money(paid_[len(paid_) // 4])} to {money(paid_[3 * len(paid_) // 4])} a year." if len(paid_) >= 50 else ""),
     }
     built_ = set(URLS)
+    # "Related terms": the alphabet puts "Vesting" next to "Visa sponsorship", which says nothing. A term is related to another when its
+    # name is used in that term's own text (definition, tip, full answer): the words a reader meets while reading are the next ones to look up.
+    def gl_text_(t_, d_, tip_):
+        m_ = glossary_terms.MORE.get(t_)
+        return " ".join([d_, tip_] + ([x_ for _, xs_ in m_["sections"] for x_ in xs_] + [a_ for _, a_ in m_["qa"]] if m_ else []))
+    gl_names_ = {t_: re.compile(r"(?<![\w-])" + re.escape(t_.lower()) + r"s?(?![\w-])") for t_, _, _, _ in GT if len(t_) >= 5}
+    gl_low_ = {t_: gl_text_(t_, d_, tip_).lower() for t_, d_, tip_, _ in GT}
+    gl_rel_ = {t_: [] for t_, _, _, _ in GT}
+    for t_ in gl_rel_:
+        for o_, rx_ in gl_names_.items():
+            if o_ != t_ and rx_.search(gl_low_[t_]) and not (t_.lower() in o_.lower() or o_.lower() in t_.lower()):
+                gl_rel_[t_].append((o_, 2))
+            elif o_ != t_ and gl_names_.get(t_) and gl_names_[t_].search(gl_low_[o_]) and not (t_.lower() in o_.lower() or o_.lower() in t_.lower()):
+                gl_rel_[t_].append((o_, 1))
+    for t_ in gl_rel_:      # the terms this one names come first, then the terms that name it; the same term once; at most six
+        seen_, out_ = set(), []
+        for o_, _w in sorted(gl_rel_[t_], key=lambda x_: -x_[1]):
+            if o_ not in seen_: seen_.add(o_); out_.append(o_)
+        gl_rel_[t_] = out_[:6]
     for i, (term, d, tip, links) in enumerate(GT):
         # a link to a list that depends on today's jobs (a perk, a skill, a role, a place) is shown only when that list has a page today
         links = [(u_, l_) for u_, l_ in links if not u_.startswith(("perks/", "skills/", "roles/", "salaries/", "locations/", "categories/", "remote/")) or u_ in built_]
@@ -8910,6 +8929,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              + f'</div><div class="gl-card gl-tip"><h2 class="gl-k">What to do about it</h2><p>{e(tip)}</p>'
              + ('<div class="gl-next">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>" if links else "") + "</div></div>"
              + g_more
+             + (section("Related terms", '<p class="rel chips">' + "".join(f'<a href="{P}/glossary/{gslug(o_)}/">{e(o_)}</a>' for o_ in gl_rel_[term]) + "</p>") if gl_rel_[term] else "")
              + f'<div class="gl-pager"><a href="{P}/glossary/{gslug(prev_[0])}/"><small>← Previous term</small>{e(prev_[0])}</a>'
                f'<a href="{P}/glossary/"><small>Glossary</small>All {len(GT)} terms</a>'
                f'<a href="{P}/glossary/{gslug(next_[0])}/"><small>Next term →</small>{e(next_[0])}</a></div>', head=ld_)
