@@ -885,7 +885,40 @@
   }
 
   /* ---------- companies page: quick filter ---------- */
-  var cfilter = $('cfilter'), cfield = $('cfield');
+  var cfilter = $('cfilter'), cfield = $('cfield'), clist = $('clist'), cmore = $('cmore'), cmorebtn = $('cmorebtn');
+  /* The page carries the employers with the most open roles; the rest are data/company-directory.json, added to the list the first time
+     a visitor types, picks a field, sorts or presses the button. rows: [name, slug, open roles, posted in 7 days, field, has a logo]. */
+  var cstate = cmore ? 'idle' : 'done', cwaiting = [];
+  var cload = function (then) {
+    if (cstate === 'done') { if (then) then(); return; }
+    if (then) cwaiting.push(then);
+    if (cstate === 'busy') return;
+    cstate = 'busy';
+    if (cmorebtn) { cmorebtn.disabled = true; cmorebtn.textContent = 'Loading the other employers…'; }
+    fetch(P + '/data/company-directory.json').then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (rows) {
+      var frag = document.createDocumentFragment();
+      rows.forEach(function (r) {
+        var li = document.createElement('li'), a = document.createElement('a'), av = document.createElement('span'), nm = document.createElement('span'), c = document.createElement('span');
+        li.setAttribute('data-n', r[0].toLowerCase()); li.setAttribute('data-o', r[2]); li.setAttribute('data-w', r[3]); li.setAttribute('data-f', r[4]);
+        a.className = 'tile'; a.href = P + '/companies/' + r[1] + '/';
+        av.className = 'ava sm' + (r[5] ? ' has' : ''); av.setAttribute('aria-hidden', 'true');
+        av.appendChild(document.createTextNode((r[0].match(/[A-Za-z0-9\u00C0-\uFFFF]/) || ['?'])[0].toUpperCase()));
+        if (r[5]) { var im = document.createElement('img'); im.src = P + '/logos/s/' + r[1] + '.png'; im.alt = ''; im.loading = 'lazy'; av.appendChild(im); }
+        nm.className = 'n'; nm.textContent = r[0];
+        a.appendChild(av); a.appendChild(nm);
+        if (r[3]) { var up = document.createElement('span'); up.className = 'up'; up.title = r[3] + ' posted in the last 7 days'; up.textContent = '+' + r[3]; a.appendChild(up); }
+        c.className = 'c'; c.textContent = r[2].toLocaleString('en-US'); a.appendChild(c);
+        li.appendChild(a); frag.appendChild(li);
+      });
+      clist.appendChild(frag);
+      cstate = 'done'; if (cmore) cmore.hidden = true;
+      var q = cwaiting; cwaiting = []; q.forEach(function (f) { f(); });
+    }).catch(function () {
+      cstate = 'idle'; cwaiting = [];
+      if (cmorebtn) { cmorebtn.disabled = false; cmorebtn.textContent = 'Could not load the other employers. Try again'; }
+    });
+  };
+  if (cmorebtn) { cmorebtn.hidden = false; cmorebtn.addEventListener('click', function () { cload(); }); }
   var cfiltered = function () {                       // by name and by the field a company hires for most
     var q = cfilter.value.trim().toLowerCase(), f = cfield ? cfield.value : '', shown = 0;
     document.querySelectorAll('#clist li').forEach(function (li) {
@@ -894,21 +927,26 @@
     });
     var none = $('cnone'); if (none) none.hidden = shown > 0;
   };
-  if (cfilter) cfilter.addEventListener('input', cfiltered);
-  if (cfilter && cfield) cfield.addEventListener('change', cfiltered);
+  var cfilterNow = function () { cfiltered(); if (cstate !== 'done' && (cfilter.value.trim() || (cfield && cfield.value))) cload(cfiltered); };
+  if (cfilter) cfilter.addEventListener('input', cfilterNow);
+  if (cfilter && cfield) cfield.addEventListener('change', cfilterNow);
   /* companies page: sort by open roles, roles posted in the last 7 days, or name (buttons are hidden until this script runs) */
-  var csort = $('csort'), clist = $('clist');
+  var csort = $('csort');
   if (csort && clist) {
     csort.hidden = false;
     csort.addEventListener('click', function (ev) {
       var b = ev.target.closest('button'); if (!b) return;
-      var k = b.getAttribute('data-s'), items = Array.prototype.slice.call(clist.children);
-      items.sort(function (a, z) {
-        if (k === 'n') return a.getAttribute('data-n').localeCompare(z.getAttribute('data-n'));
-        return (+z.getAttribute('data-' + k) - +a.getAttribute('data-' + k)) || (+z.getAttribute('data-o') - +a.getAttribute('data-o'));
-      });
-      var frag = document.createDocumentFragment(); items.forEach(function (li) { frag.appendChild(li); }); clist.appendChild(frag);
+      var k = b.getAttribute('data-s');
       csort.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      cload(function () {
+        if (csort.querySelector('[aria-pressed="true"]') !== b) return;      // another button was pressed while the list loaded
+        var items = Array.prototype.slice.call(clist.children);
+        items.sort(function (a, z) {
+          if (k === 'n') return a.getAttribute('data-n').localeCompare(z.getAttribute('data-n'));
+          return (+z.getAttribute('data-' + k) - +a.getAttribute('data-' + k)) || (+z.getAttribute('data-o') - +a.getAttribute('data-o'));
+        });
+        var frag = document.createDocumentFragment(); items.forEach(function (li) { frag.appendChild(li); }); clist.appendChild(frag);
+      });
     });
   }
 

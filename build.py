@@ -4011,13 +4011,24 @@ def main():
     week_ago = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     fresh_n = {c: sum(1 for j in js if j["active"] and (j.get("posted") or "") >= week_ago) for c, js in comp_items}
 
-    def co_tile(c, js):
+    def co_parts(c, js):
         n, w = sum(j["active"] for j in js), fresh_n[c]
-        up = f'<span class="up" title="{w:,} posted in the last 7 days">+{w:,}</span>' if w else ""
         f_ = (Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0]     # the field it hires for most: the directory's field filter
+        return n, w, f_
+    def co_tile(c, js):
+        n, w, f_ = co_parts(c, js)
+        up = f'<span class="up" title="{w:,} posted in the last 7 days">+{w:,}</span>' if w else ""
         return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}" data-f="{f_}"><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
                 f'<span class="n">{e(c)}</span>{up}<span class="c">{n:,}</span></a></li>')
-    grid = "".join(co_tile(c, js) for c, js in comp_items if any(j["active"] for j in js))   # only employers with an open role, so the count above equals the tiles
+    # The directory holds every employer with an open role (the count above equals the tiles). The page itself carries the CO_FIRST with the most
+    # open roles; the others are the file data/company-directory.json, which assets/site.js adds to the list when a visitor types, sorts,
+    # picks a field or presses the button. Before, all 14,000 tiles sat in the page (3.7 MB on a one-in-sixteen sample), so a phone
+    # had to read them all before the first screen could be used.
+    CO_FIRST = 500
+    co_rows = [(c, js) for c, js in comp_items if any(j["active"] for j in js)]
+    grid = "".join(co_tile(c, js) for c, js in co_rows[:CO_FIRST])
+    co_rest = [[c, slugify(c), *co_parts(c, js)[:2], co_parts(c, js)[2], 1 if slugify(c) in LOGOS else 0] for c, js in co_rows[CO_FIRST:]]
+    write("data/company-directory.json", json.dumps(co_rest, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     co_field_n = Counter((Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0] for _, js in comp_items)
     co_field_sel = ('<select id="cfield" aria-label="The field a company hires for most"><option value="">Every field</option>'
                     + "".join(f'<option value="{k_}">{e(CAT[k_])} ({v_:,})</option>' for k_, v_ in sorted(co_field_n.items(), key=lambda kv: CAT.get(kv[0], "")) if k_ in CAT) + "</select>")
@@ -4215,7 +4226,9 @@ def main():
                    '<button class="tab" type="button" data-s="w" aria-pressed="false">Most new this week</button>'
                    '<button class="tab" type="button" data-s="n" aria-pressed="false">A–Z</button></div></div>'
                    + labrow("Hiring in", [f'<a href="{P}/locations/{s_}/companies/">{e(nm_.removeprefix("the "))}</a>' for nm_, s_, _ in sorted(places, key=lambda x: -len(co_in.get(x[1], ()))) if s_ in co_in][:14])
-                   + f'<ul class="tiles" id="clist">{grid}</ul><p class="note" id="cnone" hidden>No company matches.</p>')
+                   + f'<ul class="tiles" id="clist">{grid}</ul><p class="note" id="cnone" hidden>No company matches.</p>'
+                   + (f'<p class="cmore" id="cmore" data-n="{len(co_rest):,}"><button class="tab" type="button" id="cmorebtn" hidden>Show the other {len(co_rest):,} employers</button>'
+                      f'<noscript>The list shows the {CO_FIRST} employers with the most open roles. Turn on JavaScript to see the other {len(co_rest):,}, or look a company up in the <a href="{P}/jobs/">job search</a>.</noscript></p>' if co_rest else ""))
          + section("What the marks on company pages mean", '<dl class="qa">' + "".join(f"<div><dt>✓ {e(nm)}</dt><dd>{e(rule)} Today: {k_:,} employers.</dd></div>" for nm, rule, k_ in mk_rows) + "</dl>"
                    '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"), cls="hub")
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
