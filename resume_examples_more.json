@@ -5344,5 +5344,819 @@
   ],
   "entry_title": "HRIS Coordinator",
   "tech": true
+ },
+ "engineering-intern": {
+  "title": "Engineering Intern",
+  "plain": "technical drawings, data collection, test reports, lab and site work",
+  "lines": [
+   "Tested 45 sample parts against the drawing and wrote up the 6 that fell outside tolerance, which led to one tooling change",
+   "Built a spreadsheet that logged daily line output; the team used it to find a recurring 25-minute stoppage",
+   "Redrew 30 outdated part drawings to the current standard, so the shop floor stopped working from old copies",
+   "Presented a summer project to 12 engineers; its fixture design was approved for a trial run"
+  ],
+  "entry": [
+   "Designed and built a small bridge model for a university course, tested to 8 times its own weight",
+   "Wrote the test report for a 4-person class project, graded in the top quarter of the course",
+   "Helped run a campus robotics club of 15 members as its treasurer and builder"
+  ],
+  "senior": [
+   "Supervised 6 summer interns across 3 projects; 5 of them received a return offer",
+   "Owned the intern program plan with the engineering manager, from 12 project ideas to 5 final presentations",
+   "Cut the time a new intern needs to start useful work from 3 weeks to 1 with a written first-week plan"
+  ],
+  "entry_title": "Engineering Intern",
+  "tech": false
+ },
+ "project-coordinator": {
+  "title": "Project Coordinator",
+  "plain": "schedules, meeting notes, budget tracking, vendor follow-up, status reports",
+  "lines": [
+   "Kept the schedule of 14 projects current and sent a one-page status report every Friday to 9 managers",
+   "Tracked a $420K budget by hand every week and flagged 3 overruns before they were paid",
+   "Booked and ran 25 project meetings a month; action items closed on time rose from 55% to 85%",
+   "Chased 30 vendors for delivery dates; late deliveries fell from 18 to 7 a quarter"
+  ],
+  "entry": [
+   "Coordinated a 6-person class project from plan to final presentation, delivered on the date set at the start",
+   "Took notes and tracked tasks for a 20-person club event; all 40 tasks were finished before the day",
+   "Scheduled shifts for 25 volunteers at a local charity run as a part-time helper"
+  ],
+  "senior": [
+   "Led a team of 5 coordinators supporting 40 projects across 3 offices",
+   "Owned the project tracking method; reports that arrived late fell from 30% to under 5%",
+   "Trained 12 new coordinators and wrote the 10-page guide they still use"
+  ],
+  "entry_title": "",
+  "tech": false
+ },
+ "process-improvement": {
+  "title": "Process Improvement Analyst",
+  "plain": "process mapping, root-cause analysis, time studies, Lean methods, change rollout",
+  "lines": [
+   "Mapped the 22 steps of order handling and removed 7 of them, cutting the time from order to dispatch from 5 days to 3",
+   "Ran a root-cause study on 600 rework cases; fixing the top cause removed 38% of them",
+   "Timed 4 work stations over 2 weeks and moved tasks between them, raising daily output by 16%",
+   "Trained 60 staff on a new checklist; errors on the form fell from 9% to 2%"
+  ],
+  "entry": [
+   "Mapped the 6 steps of a campus cafe queue for a course project and proposed a change that cut waiting time by about a third",
+   "Timed 40 customer visits during an internship and showed that 2 of 7 steps caused most of the wait",
+   "Wrote a 2-page guide for a student society that shortened its yearly sign-up from 3 days to 1"
+  ],
+  "senior": [
+   "Led a team of 6 analysts who delivered 15 improvement projects a year",
+   "Owned the improvement program across 4 sites; yearly savings reached $1.2M",
+   "Coached 25 supervisors to run their own improvement meetings every week"
+  ],
+  "entry_title": "Junior Process Analyst",
+  "tech": false
+ },
+ "real-estate-agent": {
+  "title": "Real Estate Agent",
+  "plain": "listings, buyer tours, price opinions, contract paperwork, negotiation",
+  "lines": [
+   "Closed 28 home sales in a year worth $9.4M, 22 of them from earlier clients and referrals",
+   "Priced listings from 15 recent nearby sales; homes sold at 98% of the asking price on average",
+   "Cut the average time on the market from 52 days to 31 with better photos and a clear open-house plan",
+   "Guided 40 first-time buyers through offers and inspections; 36 of them closed"
+  ],
+  "entry": [
+   "Passed the state real estate license exam after a 75-hour course",
+   "Helped an agent prepare 12 listings and 20 viewings as an assistant during a part-time job",
+   "Showed rooms at the open houses of a local property group for 3 months as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 8 agents who sold 190 homes worth $71M in a year",
+   "Owned the sales plan of a 3-office brokerage; its share of local sales rose from 6% to 11%",
+   "Trained 14 new agents and set the checklist that cut contract errors by half"
+  ],
+  "entry_title": "Real Estate Salesperson",
+  "tech": false
+ },
+ "automotive-sales": {
+  "title": "Automotive Sales Consultant",
+  "plain": "test drives, trade-in valuation, financing options, customer follow-up, delivery",
+  "lines": [
+   "Sold 14 cars a month for a year, 4 above the dealership average",
+   "Valued 300 trade-ins a year with the used-car manager; the dealership kept its margin on 9 of 10",
+   "Called 60 past customers a month, which brought in 90 repeat and referral sales a year",
+   "Explained loan and lease options to 500 buyers; the share who signed on the first visit rose from 20% to 31%"
+  ],
+  "entry": [
+   "Completed a 40-hour retail sales course with a mock deal presentation",
+   "Sold 8 cars in the first 3 months of an entry-level job at a dealership",
+   "Washed and prepared cars for delivery in a part-time job and learned the features of 12 models"
+  ],
+  "senior": [
+   "Led a team of 15 salespeople who sold 260 cars a month",
+   "Owned the used-car sales plan; days to sell a used car fell from 48 to 30",
+   "Hired and trained 20 salespeople; 16 were still selling 2 years later"
+  ],
+  "entry_title": "Sales Associate",
+  "tech": false
+ },
+ "claims-adjuster": {
+  "title": "Claims Adjuster",
+  "plain": "damage estimates, policy review, claim interviews, fraud checks, settlement offers",
+  "lines": [
+   "Handled 120 open auto and home claims at a time and closed 85% within 30 days",
+   "Inspected 25 damaged homes a month and wrote estimates that the repair shops accepted without dispute in 9 of 10 cases",
+   "Spotted 14 claims with inflated repair bills and saved the company $210K in a year",
+   "Cut customer complaints by 30% by calling each claimant within 24 hours"
+  ],
+  "entry": [
+   "Passed the state adjuster licensing exam after a 40-hour course",
+   "Reviewed 60 sample claim files and wrote estimates for each during an insurance internship",
+   "Helped about 15 neighbors fill in storm damage forms as a volunteer after a local flood"
+  ],
+  "senior": [
+   "Led a team of 12 adjusters closing 1,800 claims a quarter",
+   "Owned the storm response plan; first contact with every claimant came within 2 days",
+   "Trained 20 new adjusters and cut the claims that were reopened by a quarter"
+  ],
+  "entry_title": "Claims Trainee",
+  "tech": false
+ },
+ "wealth-management": {
+  "title": "Wealth Management Advisor",
+  "plain": "financial plans, retirement planning, portfolio reviews, client meetings, compliance records",
+  "lines": [
+   "Managed the plans of 85 client families holding $64M in assets with a 97% yearly retention",
+   "Wrote 30 new retirement plans a year, each tested against 3 market scenarios",
+   "Moved 40 clients to lower-fee funds, saving them about $180K in yearly costs together",
+   "Held 250 review meetings a year and kept every client record complete for the yearly audit"
+  ],
+  "entry": [
+   "Passed the Series 65 exam and finished a personal finance certificate course",
+   "Prepared client meeting folders for 20 families as an assistant during a bank internship",
+   "Taught a budgeting class to 30 students as a part-time volunteer"
+  ],
+  "senior": [
+   "Led a team of 6 advisors serving 600 families and $410M in assets",
+   "Owned the client service model of the office; new referrals rose by 35%",
+   "Mentored 8 junior advisors and set the 3-step review that cut planning errors"
+  ],
+  "entry_title": "Client Associate",
+  "tech": false
+ },
+ "mortgage-loan-officer": {
+  "title": "Mortgage Loan Officer",
+  "plain": "loan applications, credit review, rate quotes, closing paperwork, borrower guidance",
+  "lines": [
+   "Closed 45 home loans worth $16M in a year, 60% of them from real estate agent referrals",
+   "Checked 120 applications a quarter for missing income documents; files sent back by the underwriter fell by 40%",
+   "Quoted rates the same day to 95% of callers, cutting the lost-lead rate from 30% to 18%",
+   "Walked 30 first-time buyers through costs and closing steps; none missed their closing date"
+  ],
+  "entry": [
+   "Passed the national mortgage loan originator exam after a 20-hour course",
+   "Collected and checked documents for 35 loan files as a processor during an internship",
+   "Answered rate and payment questions from about 20 callers a day in a part-time bank job"
+  ],
+  "senior": [
+   "Led a team of 9 loan officers who closed $140M in loans a year",
+   "Owned the referral program with 40 real estate offices; its loan volume grew by 25%",
+   "Trained 10 new officers and cut file errors found at closing by half"
+  ],
+  "entry_title": "Loan Officer Assistant",
+  "tech": false
+ },
+ "public-administration": {
+  "title": "Public Administrator",
+  "plain": "public budgets, policy writing, council reports, permits, resident services",
+  "lines": [
+   "Prepared the $12M yearly budget of 4 city departments and presented it to the council without a returned section",
+   "Wrote 18 policy briefs a year that the council used for its votes",
+   "Cut the wait for a business permit from 28 days to 12 by moving the form online",
+   "Answered 1,500 resident requests a year; 92% were closed within the promised 10 days"
+  ],
+  "entry": [
+   "Finished a 4-year public administration degree with a capstone study of a town budget",
+   "Researched 3 policy questions for a city office during a 10-week internship",
+   "Helped about 10 residents a week fill in forms at a library help desk as a volunteer"
+  ],
+  "senior": [
+   "Led a department of 25 staff with a $9M budget",
+   "Owned the move of 30 services to the web; in-person visits fell by 40%",
+   "Trained 15 new staff on public records and meeting rules"
+  ],
+  "entry_title": "Administrative Analyst",
+  "tech": false
+ },
+ "receptionist": {
+  "title": "Receptionist",
+  "plain": "front desk, phone and visitor handling, scheduling, mail, office supplies",
+  "lines": [
+   "Greeted about 80 visitors and answered 120 calls a day, passing each to the right person within a minute",
+   "Booked 6 meeting rooms and 40 appointments a week with no double bookings in a year",
+   "Cut the office supply bill by 14% by moving to one supplier and a monthly order",
+   "Sorted and logged about 60 parcels a day; lost deliveries fell to zero in the last 6 months"
+  ],
+  "entry": [
+   "Finished a 6-week office skills course covering phones, scheduling and business writing",
+   "Covered the front desk 2 days a week for a dental office during a placement",
+   "Welcomed about 50 guests at school events as a student volunteer"
+  ],
+  "senior": [
+   "Led a front desk team of 6 across 2 floors with no gaps in cover",
+   "Owned the visitor sign-in process; wait at the desk fell from 4 minutes to 1",
+   "Trained 10 new staff and wrote the 3-page desk guide that replaced a verbal handover"
+  ],
+  "entry_title": "Front Desk Assistant",
+  "tech": false
+ },
+ "administrative-assistant": {
+  "title": "Administrative Assistant",
+  "plain": "calendar management, travel booking, document preparation, expense reports, meeting notes",
+  "lines": [
+   "Managed the calendar of 3 executives and rebooked about 15 changed meetings a week without a clash",
+   "Booked 90 trips a year and kept the travel cost 12% under the budget",
+   "Prepared 40 expense reports a month; payment queries from the finance team fell by 60%",
+   "Wrote and circulated notes for 30 meetings a month within 24 hours of each one"
+  ],
+  "entry": [
+   "Finished an office administration certificate with a 60 words a minute typing result",
+   "Filed and scanned 500 records and answered calls during a 3-month placement at a law office",
+   "Kept the schedule and records of a student society with 80 members as its secretary"
+  ],
+  "senior": [
+   "Led a pool of 8 assistants serving 5 departments",
+   "Owned the move from paper to shared online files; time to find a document fell from 10 minutes to 1",
+   "Trained 12 new assistants and set the checklist for the first month"
+  ],
+  "entry_title": "Office Assistant",
+  "tech": false
+ },
+ "property-manager": {
+  "title": "Property Manager",
+  "plain": "tenant relations, lease renewals, rent collection, maintenance orders, building inspections",
+  "lines": [
+   "Managed 220 apartments at 96% occupancy, 4 points above the market",
+   "Collected 98% of rent on time by sending reminders 5 days ahead and offering online payment",
+   "Closed 85% of repair requests within 3 days by agreeing fixed prices with 6 contractors",
+   "Renewed 70% of leases, saving about $60K in turnover costs a year"
+  ],
+  "entry": [
+   "Finished a 60-hour property management course covering leases, fair housing rules and repairs",
+   "Showed apartments and took tenant calls at a 120-unit building during a summer internship",
+   "Handled move-in checklists for 25 units as a part-time leasing assistant"
+  ],
+  "senior": [
+   "Led a team of 12 across 8 buildings with 1,400 apartments",
+   "Owned the yearly budget of $6M; spending came within 2% of plan",
+   "Trained 9 new managers and reduced late repair orders by a third"
+  ],
+  "entry_title": "Leasing Agent",
+  "tech": false
+ },
+ "program-coordinator": {
+  "title": "Program Coordinator",
+  "plain": "program schedules, participant enrollment, partner coordination, grant reports, events",
+  "lines": [
+   "Ran a youth program with 220 participants a year, keeping attendance above 85%",
+   "Coordinated 12 partner organizations and kept every session scheduled a month ahead",
+   "Collected and wrote the figures for 4 grant reports; all were accepted on the first submission",
+   "Organized 18 events a year for up to 150 people within a $40K budget"
+  ],
+  "entry": [
+   "Finished a nonprofit management course and planned a mock 20-person program",
+   "Registered 90 participants and set up 10 sessions during a 3-month internship at a community center",
+   "Led weekend activities for 30 children as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 7 running 5 programs for 1,200 participants",
+   "Owned the program budget of $850K; it finished 1% under plan",
+   "Trained 25 volunteers every season and kept 80% of them for the next one"
+  ],
+  "entry_title": "Program Assistant",
+  "tech": false
+ },
+ "fundraising-grants": {
+  "title": "Grants and Fundraising Manager",
+  "plain": "grant writing, donor records, funding reports, campaign planning, donor thanks",
+  "lines": [
+   "Wrote 24 grant applications in a year; 11 were funded for a total of $780K",
+   "Raised $210K in an autumn campaign from 1,400 donors, 18% above the goal",
+   "Cleaned the donor records of 9,000 names, which cut returned mail by 30%",
+   "Thanked every gift within 3 days and moved 15% of first-time donors to a second gift"
+  ],
+  "entry": [
+   "Finished a 6-week grant writing course and wrote a full mock application for a local charity",
+   "Entered 600 gifts into the donor records and drafted 40 thank-you letters during an internship",
+   "Helped run a school fundraiser that raised $6K as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 6 raising $4.5M a year",
+   "Owned the major donor program; gifts above $10K rose from 20 to 35 a year",
+   "Trained 10 board members to ask for gifts and set the yearly fundraising plan"
+  ],
+  "entry_title": "Development Assistant",
+  "tech": false
+ },
+ "estimator": {
+  "title": "Construction Estimator",
+  "plain": "quantity takeoffs, material pricing, subcontractor bids, bid documents, cost reports",
+  "lines": [
+   "Priced 60 bids a year from the drawings, winning 14 worth $22M",
+   "Checked quantities from 3 subcontractor bids against my own takeoff and found $90K of missing items before a bid went out",
+   "Kept job cost within 3% of the estimate on 9 of 10 finished projects",
+   "Cut the time to produce a bid from 6 days to 4 with a standard cost sheet"
+  ],
+  "entry": [
+   "Finished a 2-year construction management course with a full takeoff of a small house",
+   "Counted materials from drawings for 12 small jobs during a summer internship",
+   "Worked on site crews for 2 summers and learned what each trade needs"
+  ],
+  "senior": [
+   "Led a team of 8 estimators pricing $300M of work a year",
+   "Owned the bid review method; bids with a missing item fell from 1 in 8 to 1 in 40",
+   "Trained 6 junior estimators and set the checklist used for every bid"
+  ],
+  "entry_title": "Assistant Estimator",
+  "tech": false
+ },
+ "fire-protection": {
+  "title": "Fire Protection Technician",
+  "plain": "sprinkler inspection, alarm testing, extinguisher checks, code reports, system repair",
+  "lines": [
+   "Inspected and tested sprinkler and alarm systems in 150 buildings a year to the national code",
+   "Found and repaired 90 faults on inspection visits, so none failed at a later check",
+   "Wrote an inspection report for every visit and filed it within 2 days; the fire marshal returned none",
+   "Cut repeat visits by 20% by carrying the 25 most used parts on every truck"
+  ],
+  "entry": [
+   "Finished a fire protection certificate course with 60 hours of hands-on testing",
+   "Helped test 80 alarms and 40 extinguishers during an apprenticeship",
+   "Trained as a volunteer firefighter and checked 60 hydrants for a town"
+  ],
+  "senior": [
+   "Led a crew of 10 technicians covering 900 buildings",
+   "Owned the yearly inspection calendar; overdue inspections fell from 12% to under 2%",
+   "Trained 8 apprentices and 6 of them passed their license exams"
+  ],
+  "entry_title": "Fire Protection Apprentice",
+  "tech": false
+ },
+ "janitor-cleaner": {
+  "title": "Cleaner",
+  "plain": "floor care, restroom sanitizing, waste removal, cleaning equipment, supply restocking",
+  "lines": [
+   "Cleaned 12 offices and 6 restrooms a night to the checklist, with no missed item in the manager’s weekly check",
+   "Stripped and waxed 8,000 square feet of floor every month",
+   "Tracked supplies on a simple sheet and cut the cleaning supply cost by 10%",
+   "Reported 25 safety problems such as wet floors and broken lights, all fixed within a week"
+  ],
+  "entry": [
+   "Finished a 4-hour course on safe use of cleaning chemicals",
+   "Cleaned 4 classrooms a day in a part-time school job",
+   "Helped clean a community hall after 20 weekend events as a volunteer"
+  ],
+  "senior": [
+   "Led a night crew of 8 across 3 buildings",
+   "Owned the cleaning schedule and supplies for 3 buildings; client complaints fell by half",
+   "Trained 12 new cleaners in safe chemical use and equipment handling"
+  ],
+  "entry_title": "Cleaning Assistant",
+  "tech": false
+ },
+ "plumber-pipefitter": {
+  "title": "Plumber",
+  "plain": "pipe fitting, leak repair, drain clearing, fixture installation, blueprint reading",
+  "lines": [
+   "Completed 8 service calls a day, fixing 90% of leaks and blockages on the first visit",
+   "Installed the pipes and fixtures for 40 bathrooms and kitchens in new homes to the local code",
+   "Read plans and laid out the pipes for 12 new buildings with no failed inspection",
+   "Cut callbacks by 25% by pressure testing every job before leaving"
+  ],
+  "entry": [
+   "Finished a 2-year plumbing course with 400 hours of shop practice",
+   "Assisted a journeyman on 60 service calls during the first year of an apprenticeship",
+   "Fitted pipes in 3 house renovations with a family contractor as a part-time helper"
+  ],
+  "senior": [
+   "Led a crew of 6 plumbers on commercial jobs worth $2M a year",
+   "Owned the job planning for 3 sites; jobs finished late fell from 25% to 8%",
+   "Trained 5 apprentices and 4 of them passed the license exam"
+  ],
+  "entry_title": "Plumber Apprentice",
+  "tech": false
+ },
+ "construction-laborer": {
+  "title": "Construction Laborer",
+  "plain": "site cleanup, material handling, digging and concrete work, hand tools, safety rules",
+  "lines": [
+   "Moved and set out about 3 tons of material a day for 5 trades on a 40-unit building site",
+   "Poured and finished concrete for 20 foundations with a crew of 6",
+   "Kept the site clear and reported 30 hazards, so the site had no lost-time injury in a year",
+   "Learned to run a small loader and a compactor and took over 2 shifts a week"
+  ],
+  "entry": [
+   "Finished a 10-hour site safety course and got the safety card",
+   "Worked as a laborer on a house renovation crew of 5 for a summer",
+   "Helped build a community garden shed with a team of 8 volunteers"
+  ],
+  "senior": [
+   "Led a crew of 10 laborers on a $15M job",
+   "Owned the daily work plan and site cleanup; there were no stop-work notices in 18 months",
+   "Trained 12 new workers in lifting and site safety"
+  ],
+  "entry_title": "Site Helper",
+  "tech": false
+ },
+ "physician-assistant": {
+  "title": "Physician Assistant",
+  "plain": "patient exams, treatment plans, prescriptions, charting, procedure assistance",
+  "lines": [
+   "Saw 22 patients a day in a primary care clinic and wrote treatment plans reviewed by the supervising physician",
+   "Performed 15 minor procedures a week, including stitches and joint injections, with no complications reported",
+   "Charted every visit before the day ended, so notes were never more than 24 hours late",
+   "Ran a diabetes check program for 180 patients; the share with a controlled sugar level rose from 48% to 63%"
+  ],
+  "entry": [
+   "Finished a master of physician assistant studies with 2,000 hours of clinical rotations",
+   "Passed the 300-question national certifying exam on the first try",
+   "Cared for patients on a hospital ward during a 6-week rotation"
+  ],
+  "senior": [
+   "Led a team of 7 assistants in an urgent care group",
+   "Owned the clinic protocols for common conditions; visits that needed a repeat fell by 15%",
+   "Trained 10 students on rotation and 4 later joined the practice"
+  ],
+  "entry_title": "Physician Assistant",
+  "tech": false
+ },
+ "pharmacist": {
+  "title": "Pharmacist",
+  "plain": "prescription checking, drug interactions, patient counseling, vaccinations, insurance claims",
+  "lines": [
+   "Checked about 300 prescriptions a day and caught 12 drug interaction risks a week before they reached the patient",
+   "Counseled 40 patients a day on doses, side effects and timing",
+   "Gave 600 flu and other vaccinations in a season",
+   "Resolved 90% of rejected insurance claims on the first call, cutting patient waiting"
+  ],
+  "entry": [
+   "Finished a doctor of pharmacy degree with 1,800 hours of practice rotations",
+   "Passed the state pharmacist licensing exam on the first try, with 2 other exams",
+   "Counted and labeled about 100 prescriptions under supervision during a 6-week hospital rotation"
+  ],
+  "senior": [
+   "Led a pharmacy team of 12 filling 900 prescriptions a day",
+   "Owned the safety checks; dispensing errors fell by 40% in a year",
+   "Trained 15 pharmacy students and 5 technicians into new roles"
+  ],
+  "entry_title": "Staff Pharmacist",
+  "tech": false
+ },
+ "pharmacy-technician": {
+  "title": "Pharmacy Technician",
+  "plain": "filling prescriptions, insurance billing, inventory counts, patient service, drug labeling",
+  "lines": [
+   "Filled about 150 prescriptions a day with no error found at the pharmacist check in the last 6 months",
+   "Billed insurers for 200 claims a day and fixed 90% of rejections the same day",
+   "Counted stock every week and cut expired drugs by 35%",
+   "Answered patient phone calls and questions at the counter, about 60 a day"
+  ],
+  "entry": [
+   "Finished a 6-month pharmacy technician course and passed the national certification exam",
+   "Filled and labeled 400 prescriptions under supervision during a 160-hour externship",
+   "Stocked shelves and helped about 40 customers a shift in a drug store part time"
+  ],
+  "senior": [
+   "Led a team of 8 technicians filling 1,200 prescriptions a day",
+   "Owned the ordering and stock counts for a $2M yearly drug budget",
+   "Trained 12 new technicians and cut their time to work alone from 8 to 5 weeks"
+  ],
+  "entry_title": "Pharmacy Technician Trainee",
+  "tech": false
+ },
+ "rehab-therapist": {
+  "title": "Rehabilitation Therapist",
+  "plain": "exercise programs, mobility training, progress notes, patient goals, family teaching",
+  "lines": [
+   "Treated 10 patients a day and wrote an exercise plan for each one’s own goals",
+   "Helped 70% of hip-replacement patients walk without an aid within 8 weeks",
+   "Wrote progress notes the same day for all 50 visits a week and had none returned by insurers",
+   "Taught family members to help with exercises, which cut missed home sessions by 30%"
+  ],
+  "entry": [
+   "Finished a doctor of physical therapy or similar degree with 30 weeks of clinical placements",
+   "Treated 8 patients a day under supervision during a clinical placement",
+   "Led a weekly gentle exercise class for 15 older adults as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 12 therapists and assistants in an outpatient clinic",
+   "Owned the treatment protocols for 5 common injuries; average treatment visits fell from 12 to 9",
+   "Mentored 8 new therapists and 6 earned an extra certification"
+  ],
+  "entry_title": "Rehabilitation Aide",
+  "tech": false
+ },
+ "mental-health-counselor": {
+  "title": "Mental Health Counselor",
+  "plain": "intake interviews, therapy sessions, treatment plans, crisis response, session notes",
+  "lines": [
+   "Held 25 counseling sessions a week with adults and teenagers, keeping 80% of clients through their full plan",
+   "Wrote a treatment plan for each of 60 clients and reviewed it every 90 days",
+   "Responded to 15 crisis calls and referred each person to the right service within the hour",
+   "Wrote session notes within 24 hours, so every record passed the yearly agency audit"
+  ],
+  "entry": [
+   "Finished a master of counseling degree with 700 supervised practicum hours",
+   "Held 120 supervised sessions with 12 clients during a practicum",
+   "Answered a crisis phone line for 100 hours as a trained volunteer"
+  ],
+  "senior": [
+   "Led a clinic team of 9 counselors serving 450 clients",
+   "Owned the intake process; the wait for a first session fell from 5 weeks to 2",
+   "Supervised 6 trainee counselors working toward their license"
+  ],
+  "entry_title": "Counseling Intern",
+  "tech": false
+ },
+ "health-coach": {
+  "title": "Health Coach",
+  "plain": "goal setting, habit coaching, food and exercise logs, motivational interviewing, progress reviews",
+  "lines": [
+   "Coached 60 clients at a time over 12-week programs; 72% reached their first goal",
+   "Held 30 sessions a week and followed up by message within a day of each one",
+   "Built a simple weekly check-in that raised program completion from 55% to 78%",
+   "Ran 10 workshops on sleep and stress for 25 employees each"
+  ],
+  "entry": [
+   "Finished a health coach certificate course with 50 practice sessions",
+   "Coached 8 friends and family members for 12 weeks as a practice group",
+   "Led a weekly walking group of 20 neighbors as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 8 coaches serving 500 members",
+   "Owned the coaching program design; yearly member renewals rose from 60% to 75%",
+   "Trained 10 new coaches and set the review form used in every session"
+  ],
+  "entry_title": "Wellness Coach",
+  "tech": false
+ },
+ "medical-coder": {
+  "title": "Medical Coder",
+  "plain": "diagnosis and procedure codes, chart review, billing rules, claim edits, audit preparation",
+  "lines": [
+   "Coded about 90 patient charts a day with 97% accuracy in the monthly audit",
+   "Queried doctors on 15 unclear notes a day, which cut claim denials by 20%",
+   "Fixed 300 claim edit errors a month before the claims were sent",
+   "Updated the team code sheets for the yearly code change within 2 weeks, with no gap in billing"
+  ],
+  "entry": [
+   "Finished a 9-month medical coding course and passed the certified coder exam",
+   "Coded 300 practice charts at 95% accuracy during a 120-hour externship",
+   "Entered about 40 patient visit records a day at a clinic front desk in a part-time job"
+  ],
+  "senior": [
+   "Led a team of 14 coders handling 1,500 charts a day",
+   "Owned the audit program; team accuracy rose from 92% to 97%",
+   "Trained 10 new coders and cut their time to full speed from 4 months to 3"
+  ],
+  "entry_title": "Medical Coding Trainee",
+  "tech": false
+ },
+ "clinical-informatics": {
+  "title": "Clinical Informatics Analyst",
+  "plain": "health record setup, nurse and doctor workflows, order sets, staff training, system testing",
+  "lines": [
+   "Built 40 order sets in the hospital record system with 6 doctor groups, used in 12,000 orders a month",
+   "Tested every system update on 25 workflows before release; urgent fixes after release fell by half",
+   "Trained 300 nurses and doctors on new screens and cut related help calls by 35%",
+   "Studied alert logs and removed 8 alerts that were ignored 95% of the time"
+  ],
+  "entry": [
+   "Finished a 2-year health informatics degree with a project on a mock record system",
+   "Mapped the steps of a nurse shift and listed 10 time-wasting screens during a hospital internship",
+   "Worked as a nurse for 2 years before moving to informatics"
+  ],
+  "senior": [
+   "Led a team of 9 analysts supporting 4 hospitals",
+   "Owned the plan to move 3 hospitals to one record system with no lost orders",
+   "Mentored 6 analysts and set the testing method the team uses"
+  ],
+  "entry_title": "Clinical Informatics Associate",
+  "tech": false
+ },
+ "chemist": {
+  "title": "Chemist",
+  "plain": "sample analysis, method development, lab notebooks, instrument calibration, quality reports",
+  "lines": [
+   "Ran about 40 samples a week on the lab instruments and reported results within 2 days",
+   "Developed a new test method that cut analysis time from 90 to 35 minutes with the same accuracy",
+   "Calibrated 6 instruments on schedule, so none failed the yearly audit",
+   "Kept lab notebooks that passed every quality review and helped solve 3 customer complaints"
+  ],
+  "entry": [
+   "Finished a bachelor of chemistry degree with 300 hours of lab work",
+   "Prepared and tested 60 samples under supervision during a summer lab internship",
+   "Ran a research project on 30 water samples for a senior thesis"
+  ],
+  "senior": [
+   "Led a lab of 10 chemists analyzing 2,000 samples a month",
+   "Owned the lab quality system; repeat tests fell from 8% to 3%",
+   "Trained 12 new chemists and set the safety training for the whole lab"
+  ],
+  "entry_title": "Laboratory Technician",
+  "tech": false
+ },
+ "phd": {
+  "title": "Research Scientist",
+  "plain": "experiment design, data analysis, scientific writing, grant proposals, peer review",
+  "lines": [
+   "Designed and ran 30 experiments over 4 years, leading to 5 published papers",
+   "Analyzed data from 1,200 samples and showed an effect that 3 other labs later confirmed",
+   "Wrote 3 grant proposals; one was funded for $350K",
+   "Presented results at 6 conferences to audiences of up to 300"
+  ],
+  "entry": [
+   "Finished a doctoral program with a thesis and 2 published papers",
+   "Taught 3 lab sections of 20 students each as a graduate assistant",
+   "Reviewed 4 papers for a journal at an editor’s request"
+  ],
+  "senior": [
+   "Led a research group of 8 people and 4 funded projects",
+   "Owned a $1.4M grant program, delivered to plan and on budget",
+   "Supervised 10 doctoral students and 6 of them graduated"
+  ],
+  "entry_title": "Postdoctoral Researcher",
+  "tech": false
+ },
+ "professor": {
+  "title": "Professor",
+  "plain": "lecturing, course design, student advising, research supervision, academic writing",
+  "lines": [
+   "Taught 4 courses a year to about 300 students, with a student rating of 4.5 out of 5",
+   "Designed a new course on data methods that 120 students now take each year",
+   "Advised 25 students at a time and supervised 6 theses",
+   "Published 12 papers in 5 years and presented at 8 conferences"
+  ],
+  "entry": [
+   "Finished a doctoral degree and taught 2 sections of an introductory course as a graduate assistant",
+   "Graded and held office hours for 60 students in a part-time teaching assistant job",
+   "Gave 3 guest lectures to classes of 80 students"
+  ],
+  "senior": [
+   "Led a department of 20 faculty and 600 students",
+   "Owned the degree program review; applications rose by 30% after the update",
+   "Mentored 8 junior faculty and 6 earned tenure"
+  ],
+  "entry_title": "Assistant Professor",
+  "tech": false
+ },
+ "chef-cook": {
+  "title": "Chef",
+  "plain": "menu planning, food costing, kitchen staff scheduling, food safety, ordering",
+  "lines": [
+   "Cooked about 250 covers a night in a kitchen of 8 and kept ticket times under 15 minutes",
+   "Cut food cost from 34% to 29% of sales by costing each dish and trimming waste",
+   "Wrote 4 seasonal menus a year; two new dishes became top sellers",
+   "Passed 3 health inspections in a row with no violation"
+  ],
+  "entry": [
+   "Finished a 2-year culinary program with 400 hours in a working kitchen",
+   "Prepped vegetables and sauces for 120 covers a night at a restaurant as a line cook",
+   "Cooked a weekly meal for 60 people at a community kitchen as a volunteer"
+  ],
+  "senior": [
+   "Led a kitchen team of 25 across 2 restaurants",
+   "Owned the food budget of $1.1M; cost came within 1% of plan",
+   "Trained 10 cooks to sous chef level and set the prep sheets used by all shifts"
+  ],
+  "entry_title": "Line Cook",
+  "tech": false
+ },
+ "food-service-worker": {
+  "title": "Food Service Worker",
+  "plain": "order taking, food prep, cash handling, cleaning, kitchen safety",
+  "lines": [
+   "Served about 150 customers a shift and kept the average wait under 4 minutes",
+   "Handled the cash register and closed out with the till within $2 on 95% of shifts",
+   "Prepared and plated food to the recipe card and cut waste on prep by 15%",
+   "Followed the 20-point cleaning and food safety checklist on every shift and passed all health checks"
+  ],
+  "entry": [
+   "Earned a food handler card after a 2-hour course",
+   "Worked 2 weekend shifts a week at a cafe as a part-time server and register worker",
+   "Served meals at school events for up to 200 people as a volunteer"
+  ],
+  "senior": [
+   "Led a shift of 12 workers serving 900 customers a day",
+   "Owned the opening and closing routine; shifts ending late fell from 6 a month to 2",
+   "Trained 20 new workers and cut their first-month turnover from 40% to 20%"
+  ],
+  "entry_title": "Food Service Associate",
+  "tech": false
+ },
+ "hotel-guest-services": {
+  "title": "Guest Services Agent",
+  "plain": "check-in, reservations, guest requests, billing, complaint handling",
+  "lines": [
+   "Checked in about 90 guests a day, with a wait of under 3 minutes at the desk",
+   "Handled 40 reservations and changes a day and kept room records free of double bookings",
+   "Resolved 9 of 10 guest complaints on the spot, raising the review score from 4.1 to 4.5",
+   "Sold 15 room upgrades a week by offering them at check-in"
+  ],
+  "entry": [
+   "Finished a 3-month hospitality course with a mock front desk shift",
+   "Greeted guests and carried bags 3 days a week during a summer hotel job",
+   "Welcomed about 30 visitors a day at a tourist center as a volunteer"
+  ],
+  "senior": [
+   "Led a front office team of 14 in a 300-room hotel",
+   "Owned the guest satisfaction plan; complaints fell by 30% in a year",
+   "Trained 18 new agents and cut check-in errors by half"
+  ],
+  "entry_title": "Front Desk Agent",
+  "tech": false
+ },
+ "visual-merchandiser": {
+  "title": "Visual Merchandiser",
+  "plain": "window displays, store layout, product placement, seasonal setups, sales tracking",
+  "lines": [
+   "Changed the window and floor displays of 12 stores every 6 weeks on a plan set a quarter ahead",
+   "Moved the best-selling products to eye level, lifting the sales of that range by 14%",
+   "Set up seasonal displays in 8 stores within a weekend, with no sales hours lost",
+   "Checked 20 stores a month against the layout guide and fixed gaps within a week"
+  ],
+  "entry": [
+   "Finished a 10-week visual merchandising course with a full store window project",
+   "Dressed 10 mannequins and rearranged shelves during a retail internship",
+   "Designed 2 window displays for a local craft shop as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 9 merchandisers serving 60 stores",
+   "Owned the yearly display calendar; sales in the displayed ranges rose by 10%",
+   "Trained 14 store managers to keep the layout and wrote the 12-page guide"
+  ],
+  "entry_title": "Visual Merchandising Assistant",
+  "tech": false
+ },
+ "summer-intern": {
+  "title": "Summer Intern",
+  "plain": "research and data entry, meeting support, small projects, presentations, teamwork",
+  "lines": [
+   "Cleaned and entered about 2,000 records in a spreadsheet, fixing 150 errors the team had missed",
+   "Researched 25 companies for the team and wrote a 1-page summary of each",
+   "Took notes in 20 meetings and sent a clear summary within a day of each",
+   "Presented a 10-week project to 15 staff and the team used 2 of its 3 ideas"
+  ],
+  "entry": [
+   "Finished the second year of a 4-year university degree with a top-quarter grade average",
+   "Led a 4-person class project from plan to final presentation",
+   "Ran the social media of a student club with 300 members as a volunteer"
+  ],
+  "senior": [
+   "Supervised 8 summer interns across 3 teams",
+   "Owned the intern program plan; 6 of 8 interns received a return offer",
+   "Trained 10 managers to set a clear project and weekly check-in for interns"
+  ],
+  "entry_title": "Summer Intern",
+  "tech": false
+ },
+ "apprentice": {
+  "title": "Apprentice",
+  "plain": "on-the-job training, hand and power tools, safety rules, reading plans, daily logs",
+  "lines": [
+   "Worked 40 hours a week beside a journeyman and completed 1,800 hours of the 8,000 hour program",
+   "Learned to read plans and measured and cut parts to within 2 mm on 90% of jobs",
+   "Passed 4 yearly exams on safety and trade knowledge with a score above 85%",
+   "Kept a daily log of tasks and tools used, signed each week by the trainer for 52 weeks"
+  ],
+  "entry": [
+   "Finished a trade course in school with 200 hours of shop work",
+   "Helped a relative’s repair business on 40 weekends in a year as a part-time helper",
+   "Passed a 10-hour basic safety card course before starting work"
+  ],
+  "senior": [
+   "Led a crew of 8 including 3 apprentices on a $4M project",
+   "Owned the training plan for 6 apprentices; all passed their final exam",
+   "Taught 6 new apprentices safe tool use and the daily log"
+  ],
+  "entry_title": "Apprentice",
+  "tech": false
+ },
+ "fellowship-residency": {
+  "title": "Fellow",
+  "plain": "research or clinical training, supervised projects, presentations, mentoring, written reports",
+  "lines": [
+   "Completed a 12-month supervised project and presented the results to 40 colleagues",
+   "Wrote a 30-page report on the project that the host organization now uses in training",
+   "Took part in 20 weekly seminars and led 5 of them",
+   "Mentored 3 junior staff through their first projects"
+  ],
+  "entry": [
+   "Finished a 3-year degree with a top-quarter result and a final project",
+   "Worked 6 months as an assistant on a research or clinical project",
+   "Volunteered for 100 hours with a community organization"
+  ],
+  "senior": [
+   "Led a team of 6 fellows across 2 programs",
+   "Owned the program curriculum; fellow ratings rose from 3.9 to 4.5",
+   "Mentored 8 fellows and 7 moved on to full-time posts"
+  ],
+  "entry_title": "Fellow",
+  "tech": false
  }
 }
