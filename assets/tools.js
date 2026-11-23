@@ -2710,11 +2710,12 @@
 
   /* ---------- salary checker ---------- */
   tools['salary-checker'] = function () {
-    var out = $('tl-out'), D;
-    try { D = JSON.parse($('tl-data').textContent); } catch (e) { D = null; }
+    var out = $('tl-out'), D = null, failed = false;       // the figures are a data file (data/salary-groups.json), not part of the page: a phone reads the page first
     var text = function (k) { var el = root.querySelector('[data-k="' + k + '"]'), o = el && el.options[el.selectedIndex]; return o ? o.text : ''; };
     var K = function (x) { return '$' + fmt(x / 1000, 0) + 'K'; };
-    form(function (v) {
+    var F = form(function (v) {
+      if (failed) return idle(out, 'Advertised salaries', 'Today’s figures could not be loaded. Check your connection and reload the page. The table further down shows the median for each category and level.');
+      if (!D) return idle(out, 'Advertised salaries', 'Loading today’s figures…');
       var what = (v.lvl && v.lvl !== 'none' ? text('lvl') + ' ' : '') + (v.cat ? text('cat') : 'tech') + ' roles' + (v.lvl === 'none' ? ' with no level in the title' : '') + (v.skill ? ' that mention ' + v.skill : '');
       var g = T.salaryGroup(D, v.cat, v.lvl, v.skill), pay = num(v.pay);
       if (!g) return idle(out, 'Advertised salaries', 'Fewer than ' + (D ? D.min : 20) + ' open postings with a published salary match ' + what + ', so no figure is shown. Remove the skill or pick “Any level” for a larger sample.');
@@ -2733,6 +2734,9 @@
         sub(you + 'Sample: ' + esc(fmt(g.n)) + ' open ' + esc(what) + ', each with a published yearly US-dollar range, as of ' + esc(D.date) + '. The typical posting advertises ' + esc(K(g.low)) + ' to ' + esc(K(g.high)) + '.' + (pay > 0 ? '' : ' Enter your salary to see where it sits.')) +
         kv([['Lowest tenth, below', K(g.p10)], ['Middle half', K(g.p25) + ' – ' + K(g.p75)], ['Median', K(g.median)], ['Top tenth, above', K(g.p90)], ['Postings counted', fmt(g.n)]]));
     });
+    fetch(H.base + '/data/salary-groups.json').then(function (res) { if (!res.ok) throw new Error('salary-groups'); return res.json(); })
+      .then(function (data) { D = data; F.draw(); })
+      .catch(function () { failed = true; F.draw(); });
   };
 
   /* ================================================================ pages added 2026-11-13 ================================================================ */

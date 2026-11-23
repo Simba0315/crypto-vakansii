@@ -2693,6 +2693,7 @@ def main():
                                                "slugs": {t: TAG_SLUG.get(t, slugify(t)) for t in sorted({t for _, _, _, top_ in ROLE_SKILLS for t, _ in top_})}},
                                               ensure_ascii=False, separators=(",", ":")), sitemap=False)
     TOOLS = tools_pages.build_tools(page, section, crumbs, e, P, FULL, SITE, V, active, CAT, role_skills=ROLE_SKILLS, skill_slug=lambda t: TAG_SLUG.get(t, slugify(t)))       # [(path, name, one line)]
+    for dpath_, dtext_ in tools_pages.DATA_FILES.items(): write(dpath_, dtext_, sitemap=False)      # figures a tool fetches (the salary checker's groups)
     cats = "".join(f'<li><a href="{P}/jobs/{s}/"><b><u>{e(CAT[s])}</u></b><span class="c">{len(by_cat[s]):,} jobs</span><span class="d">{e(skills_info.plain_cat(s))}</span></a></li>'
                    for s in sorted((s for s in CAT if by_cat[s]), key=lambda s: (s == OTHER[0], -len(by_cat[s]))))
     place_html = "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in places)

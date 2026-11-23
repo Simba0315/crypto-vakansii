@@ -3,7 +3,7 @@
 build.py calls build_tools() and passes its own page helpers. The behaviour of every tool lives in assets/tools.js
 (pure functions tested under Node + page wiring) and the extra styles in assets/tools.css. Nothing here needs a server:
 each tool runs in the visitor's browser, and the only data embedded in a page is a small set of salary aggregates.
-One tool reads a data file instead: "skills to put on a resume" by job title loads data/role-skills.json, which build.py writes from the day's postings.
+Two tools read a data file instead: the salary checker loads data/salary-groups.json (1.1 MB of figures); "skills to put on a resume" by job title loads data/role-skills.json, which build.py writes from the day's postings.
 """
 import datetime, json
 import state_tax                        # state income tax on wages: figures, sources and the sum (take-home pay pages)
@@ -12,6 +12,7 @@ from html import escape as _e
 
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 EXTRA = ["resume/", "for-you/", "my-jobs/"]                             # the three big tools that live on their own pages: shown first, on the hub and on the home page
+DATA_FILES = {}                                                        # data file path -> text, filled by build_tools() and written by build.py
 TILES = {}                                                             # page path -> ready tile, filled by build_tools() so the home page can show the same tiles
 MIN_SAMPLE = 20                                                       # no salary figure is shown for fewer postings than this
 QS = [0, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100]      # percentile points embedded for the salary checker
@@ -324,6 +325,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     cats = [(s, n) for s, n in CAT.items() if s != "other" and f"{s}||" in groups]
     skills = sorted((k.split("|")[2] for k in groups if k.startswith("||") and k != "||"), key=str.lower)
     sal_data = {"q": QS, "min": MIN_SAMPLE, "date": DATE, "g": groups}
+    DATA_FILES["data/salary-groups.json"] = json.dumps(sal_data, ensure_ascii=False, separators=(",", ":"))     # about 1.1 MB: a file the tool fetches, not part of the page
     money = lambda k: f"${k:,}K"
     cols = [lv for lv in ("", "Junior", "none", "Senior", "Lead")]
     def cell(cat, lv):
@@ -350,7 +352,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
               + '<div class="tl-actions">' + _clear() + "</div></div>"
               + _board("Advertised salaries", "Loading the figures…")
               + '<p class="note tl-priv"><b>Private</b>Your salary is compared inside your browser and is never sent anywhere. Figures are advertised ranges, not verified pay; bonus and equity are not included.</p>'
-              + '<script type="application/json" id="tl-data">' + json.dumps(sal_data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + "</script>"),
+              ),
          "Where the figures come from",
          f"<p>Every figure is calculated from job postings collected from employers’ own careers pages and re-read every one to four hours. On {DATE} there were {n_jobs:,} open roles; "
          f"{n_paid:,} of them publish a yearly salary range in US dollars. Ranges in other currencies and hourly rates are left out so that all figures can be compared.</p>"
