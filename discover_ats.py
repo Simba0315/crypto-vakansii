@@ -228,8 +228,11 @@ def pretty(tok):
 LEGAL_END = re.compile(r"[,\s]+(inc|incorporated|llc|l\.l\.c|ltd|limited|corp|corporation|company|co|n\.a|national association|plc|gmbh|"
                        r"gmbh & co\. kg|kg|ag|s\.a|s\.p\.a|se|b\.v|bv|lp|l\.p|llp|pty|pte|holdings?|group)\.?$", re.I)
 # codes in front of an employing entity on Workday: "1010", "94-1687665", "USA", "R551US", "LE102", "HC1327", "CO_AFRINVSAR"
-CODE_LEAD = re.compile(r"^(?:\d[\d-]*|(?i:usa|us|uk)|[A-Z]{1,3}\d+[A-Za-z]{0,3}|[A-Z]{2,}_[A-Z_]+)\s+")
-PLACE_END = re.compile(r"\s+(?:usa|us|uk|canada|india|ireland|germany|mexico|brasil|brazil)$", re.I)
+# 24 Nov 2026: also "1US0", "253B", "3II" (a digit, then capitals or digits) and "United States 7": "United States 7  Zipcar",
+# "1US0 PerkinElmer U.S" and "253B AllianceBernstein" stood as company names, and Google showed "United States 7 Zipcar Careers" for
+# "zipcar careers" (21 searches at 15th place)
+CODE_LEAD = re.compile(r"^(?:\d[\d-]*|\d[\dA-Z]{1,5}|(?i:usa|us|uk|united states(?:\s+\d+)?)|[A-Z]{1,3}\d+[A-Za-z]{0,3}|[A-Z]{2,}_[A-Z_]+)\s+")
+PLACE_END = re.compile(r"\s+(?:usa|us|uk|u\.s\.?|canada|india|ireland|germany|mexico|brasil|brazil|\d{1,2})$", re.I)
 TAIL = re.compile(r"\s*(?:\([^)]*\)|/.*|\b(?:careers?|jobs)\b)$", re.I)      # "(Enterprise)", " / Ashe DC", " Careers"
 
 
@@ -268,7 +271,9 @@ def clean_name(n, tenant=""):
     Rentals"; "USA 3M Company" -> "3M"); a leading code stays when the address starts with it too ("2020 Companies")."""
     n = html.unescape(n or "").strip(" ,.-&:;")
     while True:
-        m = n if tenant and alnum(n).startswith(alnum(tenant)) else CODE_LEAD.sub("", n)
+        # the code stays only when it is how the address starts ("2020 Companies" at 2020companies), not when the address is a short
+        # prefix of a code ("ICH0102 InnovaCare" at ich)
+        m = n if tenant and alnum(tenant).startswith(alnum(n.split()[0])) else CODE_LEAD.sub("", n)
         m = PLACE_END.sub("", LEGAL_END.sub("", TAIL.sub("", m))).strip(" ,.-&:;")
         # "db Group" is not "db": a short lower-case rest is not a name (20 Nov 2026, BambooHR)
         if m == n or not m or (len(m) <= 3 and m.islower()): return unshout(n)

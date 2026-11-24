@@ -4088,7 +4088,7 @@
 "lifted": "2026-11-19"
 },
 {
-"name": "1US0 PerkinElmer U.S",
+"name": "PerkinElmer",
 "ats": "workday",
 "token": "newperkinelmer.wd1/external",
 "count": 227,
@@ -7360,7 +7360,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "253B AllianceBernstein",
+"name": "AllianceBernstein",
 "ats": "workday",
 "token": "abglobal.wd1/alliancebernsteincareers",
 "count": 89,
@@ -9540,7 +9540,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "3II MPM Innovation",
+"name": "MPM Innovation",
 "ats": "workday",
 "token": "mainsailhotels.wd5/Mainsail_Property_Management",
 "count": 52,
@@ -14929,7 +14929,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "ICH0102 InnovaCare Management Services",
+"name": "InnovaCare Management Services",
 "ats": "workday",
 "token": "ich.wd1/ICS_Clinical_Profesionals",
 "count": 17,
@@ -17410,7 +17410,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "United States 7  Zipcar",
+"name": "Zipcar",
 "ats": "workday",
 "token": "avisbudget.wd1/Zipcar_Careers",
 "count": 11,
@@ -23537,7 +23537,7 @@
 "added": "2026-11-15"
 },
 {
-"name": "Arktura BV 1",
+"name": "Arktura",
 "ats": "personio",
 "token": "arktura-bv-1.jobs.personio.com",
 "count": 3,

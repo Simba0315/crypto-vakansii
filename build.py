@@ -1951,6 +1951,20 @@ def tidy_list_desc(desc, jobs):
     return re.sub(r"\s*Updated hourly\.", "", desc).replace(", updated hourly.", ".").strip()
 
 
+# Company names that were a Workday employing entity's code plus the name (24 Nov 2026): Google showed "United States 7 Zipcar Careers" at
+# 15th for "zipcar careers". discover_ats.clean_name now strips these codes for new boards; jobs already read keep the old name in
+# data/jobs.json, so the name is mended here and the old company address hands over to the new one (write_renamed_companies).
+CO_RENAME = {"United States 7  Zipcar": "Zipcar", "1US0 PerkinElmer U.S": "PerkinElmer", "253B AllianceBernstein": "AllianceBernstein",
+             "ICH0102 InnovaCare Management Services": "InnovaCare Management Services", "3II MPM Innovation": "MPM Innovation", "Arktura BV 1": "Arktura"}
+
+
+def focus_list(x):
+    """"site scheduling, subcontractor coordination, jobsite safety, quality control, reading plans" -> "... quality control and reading
+    plans": the skills of a resume example read as a sentence in a cover letter (24 Nov 2026: every letter listed four or five
+    skills with no "and" before the last)."""
+    return resume_examples.and_list((x or "").split(","), 4) or x
+
+
 def place_desc(name, js, rr):
     """The search line of a country, region or city page (24 Nov 2026). It read "21 jobs in Lithuania. Startups and established companies
     hiring now.": the same words on every place, nothing a searcher could not guess. Now it names the employers and the work hiring most,
@@ -2486,6 +2500,8 @@ def main():
     for j_ in jobs:                              # a feed that escaped its text twice ("Health &amp;amp; Safety") showed a literal "&amp;" on the page
         if "&amp;" in (j_.get("desc") or ""): j_["desc"] = DOUBLE_ESC.sub(r"&\1;", j_["desc"])
         if ENTITY_TEXT.search(j_.get("excerpt") or ""): j_["excerpt"] = html.unescape(j_["excerpt"])      # plain text: an entity in it is the same slip
+    for j_ in jobs:                              # Workday entity codes read as names (CO_RENAME); the old address hands over below
+        j_["company"] = CO_RENAME.get(j_.get("company"), j_.get("company"))
     paid_file = ROOT / "paid.json"  # employer-submitted listings, kept in the main branch
     for p in (json.loads(paid_file.read_text()) if paid_file.exists() else []):
         base = f"{slugify(p['title'])}-{slugify(p['company'])}"
@@ -6024,18 +6040,28 @@ def main():
         rex_lv[slug_r] = {}
         if len(ent_l) >= 3:
             et_ = getattr(resume_examples, "ENTRY_TITLE", {}).get(slug_r) or f"Junior {d['title']}"
-            d_e = dict(d, title=et_, summary=f"{et_} starting out, with project and internship experience in {', '.join(skills_[:3])}.",
+            pl_ = getattr(resume_examples, "PLACE", {}).get(slug_r)       # a doctor's CV: hospital posts and a medical degree (resume_examples.PLACE)
+            d_e = dict(d, title=et_, summary=f"{et_} starting out, with project and internship experience in {resume_examples.and_list(skills_)}.",
                        exp=[{"role": f"{d['title']} Intern", "org": "Example Company", "dates": "Summer 2026", "text": ent_l[0]},
                             {"role": "Projects", "org": "Course and personal projects", "dates": "2025 – 2026", "text": "\n".join(ent_l[1:3])}],
                        edu=[{"what": "Bachelor’s degree", "org": "Example University", "dates": "2022 – 2026"}])
+            if pl_:
+                d_e = dict(d_e, summary=f"{et_} looking for a first post, with clinical placements and research in {resume_examples.and_list(skills_)}.",
+                           exp=[{"role": pl_["intern"], "org": pl_["org"], "dates": "2026 – now", "text": ent_l[0]},
+                                {"role": pl_["proj"][0], "org": pl_["proj"][1], "dates": "2020 – 2026", "text": "\n".join(ent_l[1:3])}],
+                           edu=[{"what": pl_["edu"], "org": pl_["school"], "dates": "2020 – 2026"}])
             rex_lv[slug_r]["entry"] = d_e
             levels_ += section(f"Entry-level {low} resume example (no experience)", paper(d_e) + '<p class="note">With no job of this kind yet, lead with projects, an internship or part-time work, each with a number.</p>')
         if len(sen_l) >= 3 and slug_r != "intern":
             # "Senior" goes in front only where it reads right: not "Senior Senior Accountant", "Senior Chief of Staff" or "Senior Tech Lead"
             st_ = d["title"] if re.match(r"(?i)(senior|lead|head|chief|principal|director|vp|vice)\b", d["title"]) or slug_r in ("engineering-manager", "tech-lead", "software-architect", "chief-of-staff", "staff-engineer") else f"Senior {d['title']}"
-            d_s = dict(d, title=st_, summary=f"{st_} with ten years of experience, leading teams and programs. Strongest in {', '.join(skills_[:3])}.",
+            d_s = dict(d, title=st_, summary=f"{st_} with ten years of experience, leading teams and programs. Strongest in {resume_examples.and_list(skills_)}.",
                        exp=[{"role": st_, "org": "Example Company", "dates": "2021 – now", "text": "\n".join(sen_l)},
                             {"role": d["title"], "org": "Another Example Ltd", "dates": "2016 – 2021", "text": d["exp"][0]["text"].split("\n")[0] if d["exp"] else ""}])
+            pl_ = getattr(resume_examples, "PLACE", {}).get(slug_r)
+            if pl_:
+                d_s = dict(d_s, summary=f"{st_} with ten years in hospital medicine and research, leading junior doctors and audit. Strongest in {resume_examples.and_list(skills_)}.",
+                           exp=[dict(d_s["exp"][0], org=pl_["org"]), dict(d_s["exp"][1], org=pl_["org2"])])
             rex_lv[slug_r]["senior"] = d_s
             levels_ += section(f"Experienced {low} resume example" if st_ == d["title"] else f"Senior {low} resume example", paper(d_s) + '<p class="note">At this level the lines are about people led, budgets owned and results across teams.</p>')
         n_ex = 1 + (len(ent_l) >= 3) + (len(sen_l) >= 3 and slug_r != "intern")
@@ -6188,13 +6214,13 @@ def main():
         cl_head = "[Your name]\n[Phone] · [Email] · [LinkedIn or portfolio link]\n\n[Date]\n\n[Hiring manager’s name]\n[Company]\n[Company address]\n\n"
         letter_ = (cl_head + "Dear Hiring Manager,\n\n"
                    f"I am applying for the {d['title']} position at [Company]. I have [number] years of experience as {art(psn)} {psn}, most recently at [Current company], "
-                   f"where my focus is {d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1]}.\n\n"
+                   f"where my focus is {focus_list(d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1])}.\n\n"
                    + ("Two results from that work:\n" + "\n".join(f"- {ln}" for ln in lines_) + "\n\n" if lines_ else "")
                    + "[One or two sentences on why this company: a product you use, a goal from the posting, a problem you can help with.] "
                    + (f"I would bring the same focus on measurable results, and hands-on experience with {', '.join(top_[:-1]) + ' and ' + top_[-1] if len(top_) > 1 else top_[0]}, which the posting asks for.\n\n" if tech_ and top_
                       else "I would bring the same focus on measurable results to your team.\n\n")
                    + "I would welcome the chance to talk about how I can help. Thank you for your time.\n\nSincerely,\n[Your name]")
-        focus_ = d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1]
+        focus_ = focus_list(d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1])
         skl_ = (", ".join(top_[:-1]) + " and " + top_[-1]) if len(top_) > 1 else (top_[0] if top_ else "")
         entry_letter = (cl_head + "Dear Hiring Manager,\n\n"
                         f"I am applying for the {d['title']} position at [Company]. I [recently finished / am finishing] [degree, course or certificate], where I focused on {focus_}.\n\n"
@@ -9268,9 +9294,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         # lists, added to any line under 125 characters), which says nothing about a word. Now: the definition, then today's figure and
         # the tip where they fit, so the line is about the term and needs no tail; a "desc" in glossary_more.json wins.
         gd_ = (GM or {}).get("desc") or f"{term}: {d_lc_}"
-        if len(gd_) > 158:      # a long definition ended on a cut word and "…": end it at its last clause that fits instead
+        if len(gd_) > 158:      # a long definition ended on a cut word and "…": end it at its last whole sentence, else its last clause that fits
+            stop_ = gd_.rfind(". ", 0, 158)       # "…keep track of applications." before "Greenhouse, Lever." (an examples list cut in two, 24 Nov 2026)
             cut_ = max(gd_.rfind(m_, 0, 150) for m_ in (": ", "; ", ", "))
-            if cut_ > 60: gd_ = gd_[:cut_].rstrip(" ,;:") + "."
+            if stop_ > 60: gd_ = gd_[:stop_ + 1]
+            elif cut_ > 60: gd_ = gd_[:cut_].rstrip(" ,;:") + "."
         for add_ in (gfig.get(term, ""), tip):
             if add_ and add_ not in gd_ and len(gd_) + 1 + len(add_) <= 160: gd_ = gd_.rstrip() + " " + add_
         if len(gd_) < 125:
@@ -11299,6 +11327,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [What is free and what we will never do]({FULL}/promise/) · [Job offer safety checklist]({FULL}/safety/)
 - [About]({FULL}/about/) · [Privacy]({FULL}/privacy/) · [Terms]({FULL}/terms/)
 """, sitemap=False)
+    for old_, new_ in CO_RENAME.items():          # the old company address: canonical and an immediate refresh to the mended one
+        if slugify(old_) != slugify(new_) and not (OUT / "companies" / slugify(old_) / "index.html").exists() and (OUT / "companies" / slugify(new_) / "index.html").exists():
+            write(f"companies/{slugify(old_)}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(new_)} careers</title><link rel="canonical" href="{FULL}/companies/{slugify(new_)}/">'
+                  f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/companies/{slugify(new_)}/"></head><body><p><a href="{P}/companies/{slugify(new_)}/">{e(new_)} careers</a></p></body></html>', sitemap=False)
     page("404.html", f"Page not found | {SITE}", "This page does not exist: the address may have changed or the job may have been renamed. Search open jobs by title, skill or company instead.",
          f'<div class="nf"><p class="sec-label">404</p><h1>Page not found</h1><p class="lead">The address may have changed, or the job may have been renamed. Search for it here:</p>'
          f'<form class="searchbar wide" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs"><button class="btn primary">Search</button></form>'

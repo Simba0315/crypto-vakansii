@@ -6138,25 +6138,1345 @@
   "tech": false
  },
  "fellowship-residency": {
-  "title": "Fellow",
-  "plain": "research or clinical training, supervised projects, presentations, mentoring, written reports",
+  "title": "Clinical Research Fellow",
+  "plain": "clinical audit, research, teaching, case presentations, ward rotations",
   "lines": [
-   "Completed a 12-month supervised project and presented the results to 40 colleagues",
-   "Wrote a 30-page report on the project that the host organization now uses in training",
-   "Took part in 20 weekly seminars and led 5 of them",
-   "Mentored 3 junior staff through their first projects"
+   "Completed 4-month rotations in general medicine, emergency medicine and surgery, caring for about 12 inpatients a day under supervision",
+   "Led an audit of antibiotic timing in sepsis; doses given within one hour rose from 62% to 85% at re-audit",
+   "First author of 1 peer-reviewed paper and 2 conference posters from a 12-month research project",
+   "Taught 3 weekly bedside sessions to final-year medical students"
   ],
   "entry": [
-   "Finished a 3-year degree with a top-quarter result and a final project",
-   "Worked 6 months as an assistant on a research or clinical project",
-   "Volunteered for 100 hours with a community organization"
+   "Graduated in medicine with a distinction in clinical practice and a 1-year intercalated research degree",
+   "Presented a poster on a 200-patient study of hospital readmissions at a national conference",
+   "Completed a 6-week elective in emergency medicine and 120 hours of hospice volunteering"
   ],
   "senior": [
-   "Led a team of 6 fellows across 2 programs",
-   "Owned the program curriculum; fellow ratings rose from 3.9 to 4.5",
-   "Mentored 8 fellows and 7 moved on to full-time posts"
+   "Led a team of 4 junior doctors on a 30-bed medical ward as chief resident",
+   "Ran a quality-improvement project that cut average discharge delays from 9 to 5 hours",
+   "Supervised 5 trainee research projects; 3 were published in peer-reviewed journals"
   ],
-  "entry_title": "Fellow",
+  "entry_title": "Medical Graduate",
+  "tech": false
+ },
+ "bookkeeper": {
+  "title": "Bookkeeper",
+  "plain": "accounts payable and receivable, bank reconciliations, month-end close, payroll, sales tax returns",
+  "lines": [
+   "Kept the books for 3 companies with about 900 transactions a month, closing each month within 5 working days",
+   "Reconciled 6 bank and card accounts every week; unexplained differences fell from about $4K to under $200",
+   "Chased overdue invoices with a weekly statement run, cutting average days to pay from 52 to 34",
+   "Ran fortnightly payroll for 45 staff with no corrections needed in 2 years"
+  ],
+  "entry": [
+   "Completed a 10-week bookkeeping course and kept the books of a practice company through a full year end",
+   "Entered and matched about 300 supplier invoices a month as an accounts assistant intern",
+   "Kept the accounts of a 40-member sports club as volunteer treasurer for 2 seasons"
+  ],
+  "senior": [
+   "Led a team of 3 bookkeepers serving 25 small-business clients",
+   "Moved 25 clients from paper receipts to cloud bookkeeping in 6 months, saving about 10 hours of entry a week",
+   "Trained 4 new bookkeepers; each handled clients alone within 3 months"
+  ],
+  "entry_title": "Accounts Assistant",
+  "tech": false
+ },
+ "cost-accountant": {
+  "title": "Cost Accountant",
+  "plain": "product costing, inventory valuation, variance analysis, standard costs, month-end close",
+  "lines": [
+   "Built standard costs for 450 products and explained a 6% margin gap between plants to the finance director",
+   "Reconciled inventory across 3 warehouses each month; year-end write-offs fell from $310K to $95K",
+   "Found $1.2M a year of overhead charged to the wrong product line and corrected the allocation",
+   "Prepared the monthly cost variance report for 12 production managers within 4 days of month end"
+  ],
+  "entry": [
+   "Finished a management accounting module with a costing project on a 3-product bakery",
+   "Counted and valued stock at 2 sites as a finance intern during the year-end inventory count",
+   "Helped a family workshop price 20 products from their material and labour cost in a part-time job"
+  ],
+  "senior": [
+   "Led a team of 4 cost accountants across 3 plants",
+   "Owned the move to activity-based costing for 2,000 products, approved by the board in 9 months",
+   "Worked with procurement on 15 supplier price reviews that saved $800K a year"
+  ],
+  "entry_title": "Assistant Cost Accountant",
+  "tech": false
+ },
+ "fund-accountant": {
+  "title": "Fund Accountant",
+  "plain": "NAV calculation, reconciliations, investor reporting, fund audits, accruals",
+  "lines": [
+   "Calculated daily NAVs for 6 funds with $2.4B in assets, with no restated NAV in 3 years",
+   "Reconciled cash and positions with 4 custodians every day, clearing breaks within 48 hours",
+   "Prepared year-end financial statements for 8 funds and answered 120 auditor queries on time",
+   "Booked capital calls and distributions for about 300 investors each quarter"
+  ],
+  "entry": [
+   "Completed an investment accounting course and a 2-month project valuing a model portfolio",
+   "Matched about 200 trades a day against custodian records as a fund administration intern",
+   "Kept the accounts of a student investment club with 60 members for 1 year"
+  ],
+  "senior": [
+   "Led a team of 5 fund accountants covering 14 private equity and credit funds",
+   "Owned the switch to a new fund accounting system for 20 funds, finished 1 month early",
+   "Mentored 6 analysts; 4 were promoted to fund accountant within 2 years"
+  ],
+  "entry_title": "Fund Administrator",
+  "tech": false
+ },
+ "statistician": {
+  "title": "Statistician",
+  "plain": "study design, regression and survival models, sample size calculation, reporting results, R",
+  "lines": [
+   "Designed the analysis plan and sample size for 4 clinical studies of 200 to 1,500 patients",
+   "Fitted regression models that explained 70% of the variation in hospital stays for a 12,000-patient audit",
+   "Wrote reproducible analysis code in R and cut report production for each study from 2 weeks to 3 days",
+   "Reviewed the statistics of 25 papers a year before submission and caught 2 major errors before publication"
+  ],
+  "entry": [
+   "Completed an MSc dissertation modelling 10 years of regional air-quality data",
+   "Cleaned and analysed survey data from 3,000 households during a 3-month research placement",
+   "Ran the statistics for 2 student research projects as a volunteer tutor"
+  ],
+  "senior": [
+   "Led a team of 4 statisticians supporting 30 studies a year",
+   "Owned the statistical standards for a research unit of 120 people, used in every new protocol",
+   "Mentored 5 junior statisticians and co-authored 12 papers with clinical teams"
+  ],
+  "entry_title": "Graduate Statistician",
+  "tech": false
+ },
+ "reporting-analyst": {
+  "title": "Reporting Analyst",
+  "plain": "recurring reports, data validation, dashboards, KPI definitions, stakeholder requests",
+  "lines": [
+   "Built 15 weekly and monthly reports in {bi:Tableau} for sales, finance and operations, replacing 30 hand-made spreadsheets",
+   "Added validation checks in {sheet:SQL} that caught 9 data errors before reports went out in one quarter",
+   "Cut the monthly board pack from 3 days of work to half a day by automating 20 tables",
+   "Agreed one definition for each of 12 company KPIs with 5 department heads"
+  ],
+  "entry": [
+   "Built a dashboard of 5 years of public transport data in a 12-week data course",
+   "Refreshed 6 weekly reports for a finance team during a summer internship",
+   "Tracked donations and volunteer hours for a charity in a monthly report for 1 year"
+  ],
+  "senior": [
+   "Led a team of 3 reporting analysts serving 200 report users",
+   "Owned the company reporting roadmap and retired 40 unused reports in a year",
+   "Worked with data engineering to cut report refresh failures from 10 a month to 1"
+  ],
+  "entry_title": "Reporting Assistant",
+  "tech": false
+ },
+ "economist": {
+  "title": "Economist",
+  "plain": "econometric modelling, forecasting, policy analysis, research writing, data analysis",
+  "lines": [
+   "Built a quarterly forecast model of 8 regional economies that stayed within 0.4 points of actual growth",
+   "Wrote 12 research notes a year, 3 of them quoted in the national press",
+   "Estimated the effect of a minimum-wage rise on 50,000 small firms for a government review",
+   "Presented the forecasts to the executive committee 4 times a year"
+  ],
+  "entry": [
+   "Wrote a master’s thesis estimating the housing price effects of 3 new rail lines",
+   "Cleaned and analysed trade data for 40 countries as a research assistant for 6 months",
+   "Tutored 30 first-year students in introductory economics for 2 terms"
+  ],
+  "senior": [
+   "Led a team of 5 economists covering macro forecasts and sector research",
+   "Owned the house view on inflation and rates, updated monthly for 300 clients",
+   "Advised 2 government consultations with evidence from a 10-year panel study"
+  ],
+  "entry_title": "Research Assistant (Economics)",
+  "tech": false
+ },
+ "insurance-agent": {
+  "title": "Insurance Agent",
+  "plain": "needs assessment, policy sales, renewals, claims support, client relationships",
+  "lines": [
+   "Sold about 25 new home, auto and life policies a month, 120% of target for 2 years running",
+   "Kept 92% of clients at renewal by reviewing each policy with the client 60 days ahead",
+   "Built a referral program that brought 80 new clients in a year",
+   "Helped 40 clients a year through claims, with an average payout time of 12 days"
+  ],
+  "entry": [
+   "Passed the state property and casualty licence exam on the first attempt after a 6-week course",
+   "Answered about 50 customer calls a day as a call centre agent for an insurer",
+   "Handled payments and bookings for about 100 customers a week in a part-time job"
+  ],
+  "senior": [
+   "Led a team of 6 agents that wrote $3M in yearly premium",
+   "Opened a second office and grew the book of business by 35% in 3 years",
+   "Trained 10 new agents; 8 passed their licence exam and stayed past the first year"
+  ],
+  "entry_title": "Insurance Customer Service Representative",
+  "tech": false
+ },
+ "investor-relations": {
+  "title": "Investor Relations Manager",
+  "plain": "earnings preparation, investor meetings, shareholder communications, market analysis, disclosure",
+  "lines": [
+   "Prepared 8 quarterly earnings releases and scripts with no restatement or disclosure correction",
+   "Arranged about 150 investor meetings a year for the CEO and CFO across 6 cities",
+   "Raised the share of institutional holders who met management from 40% to 65% in 2 years",
+   "Built a quarterly peer comparison of 10 listed competitors for the board"
+  ],
+  "entry": [
+   "Completed a corporate finance course with a valuation of a listed company of 5,000 employees",
+   "Updated the shareholder register and 3 investor presentations as an investor relations intern",
+   "Ran the newsletter of a student investment society for 400 members"
+  ],
+  "senior": [
+   "Led an investor relations team of 3 through an IPO that raised $400M",
+   "Owned the equity story and investor targeting for a company valued at $5B",
+   "Worked with legal and finance on 12 disclosures a year with no regulatory query"
+  ],
+  "entry_title": "Investor Relations Analyst",
+  "tech": false
+ },
+ "portfolio-manager": {
+  "title": "Portfolio Manager",
+  "plain": "asset allocation, security selection, risk management, client reporting, performance attribution",
+  "lines": [
+   "Managed $600M across 3 multi-asset portfolios, beating the benchmark in 4 of 5 years after fees",
+   "Kept portfolio volatility under the 8% limit through 2 market drawdowns",
+   "Wrote quarterly letters and met 20 institutional clients a year to explain results",
+   "Cut portfolio turnover by 30% and saved about $1.5M a year in costs"
+  ],
+  "entry": [
+   "Ran a model portfolio for 12 months in a university investment fund, finishing 2 points above its index",
+   "Built performance reports for 15 portfolios as an investment analyst intern",
+   "Wrote 6 stock research notes for a student investment club"
+  ],
+  "senior": [
+   "Led a team of 4 portfolio managers and 3 analysts responsible for $3B",
+   "Owned the house asset-allocation view for 40 portfolios",
+   "Worked with risk and compliance to launch 2 funds that raised $250M in their first year"
+  ],
+  "entry_title": "Investment Analyst",
+  "tech": false
+ },
+ "banking-operations": {
+  "title": "Banking Operations Specialist",
+  "plain": "payments processing, account servicing, reconciliations, KYC checks, exception handling",
+  "lines": [
+   "Processed about 400 domestic and international payments a day at 99.9% accuracy",
+   "Cleared a backlog of 1,800 account maintenance requests in 6 weeks",
+   "Reconciled 30 nostro accounts daily and resolved breaks within 2 days",
+   "Wrote 12 procedure guides that cut new-starter errors by half"
+  ],
+  "entry": [
+   "Completed a banking operations certificate covering payments, accounts and compliance in 8 weeks",
+   "Checked about 60 account-opening files a day as an operations intern",
+   "Handled cash and card payments for about 150 customers a day in a part-time retail job"
+  ],
+  "senior": [
+   "Led a team of 8 operations staff covering payments and account servicing",
+   "Owned the move of 3 payment types to straight-through processing, ending 70% of manual steps",
+   "Worked with compliance to cut the KYC review backlog from 900 files to 50"
+  ],
+  "entry_title": "Operations Assistant (Banking)",
+  "tech": false
+ },
+ "spend-analyst": {
+  "title": "Spend Analyst",
+  "plain": "spend analysis, supplier data, savings tracking, category reports, contract compliance",
+  "lines": [
+   "Classified $450M of yearly spend across 9,000 suppliers into 40 categories",
+   "Found $3.2M of savings from duplicate suppliers and off-contract buying in one year",
+   "Built a monthly savings tracker in {sheet:Excel} for 6 category managers",
+   "Cut the supplier list by 20% by merging duplicates and inactive records"
+  ],
+  "entry": [
+   "Analysed 2 years of purchase data for a small manufacturer in a 10-week course project",
+   "Cleaned 5,000 supplier records as a procurement intern",
+   "Compared prices from 15 suppliers for a student society event budget"
+  ],
+  "senior": [
+   "Led a team of 3 analysts supporting procurement in 5 countries",
+   "Owned the spend data model behind every sourcing decision over $1M",
+   "Worked with finance to report $12M of audited savings to the board"
+  ],
+  "entry_title": "Procurement Analyst",
+  "tech": false
+ },
+ "policy-analyst": {
+  "title": "Policy Analyst",
+  "plain": "policy research, impact analysis, briefings, stakeholder consultation, legislative tracking",
+  "lines": [
+   "Wrote 20 briefing notes a year for senior officials, 6 of them used in ministerial decisions",
+   "Estimated the cost of 3 policy options for 120,000 households from national survey data",
+   "Ran a consultation with 45 organisations and summarised 600 responses in 5 weeks",
+   "Tracked 30 bills through the legislature and flagged changes within 24 hours"
+  ],
+  "entry": [
+   "Wrote a 15,000-word dissertation comparing the childcare policies of 4 countries",
+   "Summarised 200 consultation responses during a 3-month internship at a think tank",
+   "Researched housing issues for a local council member as a volunteer for 1 year"
+  ],
+  "senior": [
+   "Led a team of 4 analysts covering health and social policy",
+   "Owned the evidence review behind a $200M program approved by parliament",
+   "Worked with 3 government departments on a joint strategy published in 2026"
+  ],
+  "entry_title": "Policy Assistant",
+  "tech": false
+ },
+ "medical-writer": {
+  "title": "Medical Writer",
+  "plain": "clinical study reports, regulatory documents, publications, literature review, scientific accuracy",
+  "lines": [
+   "Wrote 14 clinical study reports and 6 protocols for phase 2 and 3 trials",
+   "Delivered the clinical sections of 2 regulatory submissions on schedule",
+   "Drafted 9 journal manuscripts with physician authors; 8 were accepted at first or second submission",
+   "Cut review rounds per document from 4 to 2 with a shared style guide"
+  ],
+  "entry": [
+   "Completed a medical writing course and a PhD thesis built on 3 published papers",
+   "Wrote patient information leaflets for 5 studies during a 6-month internship",
+   "Edited the science section of a student magazine for 2 years"
+  ],
+  "senior": [
+   "Led a team of 5 medical writers supporting 20 studies",
+   "Owned the writing plan for a drug submission of 40 documents",
+   "Mentored 4 writers until each wrote documents without supervision within a year"
+  ],
+  "entry_title": "Associate Medical Writer",
+  "tech": false
+ },
+ "clinical-research-coordinator": {
+  "title": "Clinical Research Coordinator",
+  "plain": "patient recruitment, informed consent, study visits, case report forms, regulatory files",
+  "lines": [
+   "Coordinated 6 clinical trials at one site and enrolled 140 patients, 115% of target",
+   "Ran about 25 study visits a week, with no major finding in 3 sponsor audits",
+   "Kept query response time on case report forms under 3 days",
+   "Prepared 4 ethics submissions and amendments, each approved at first review"
+  ],
+  "entry": [
+   "Completed a good clinical practice course and a 3-month research placement in a hospital lab",
+   "Screened about 80 patient records a week as a research assistant intern",
+   "Volunteered 150 hours on a hospital ward helping patients and staff"
+  ],
+  "senior": [
+   "Led a team of 4 coordinators running 15 studies",
+   "Owned recruitment for a 500-patient multi-site trial, filled 2 months early",
+   "Trained 10 new coordinators on consent and data entry"
+  ],
+  "entry_title": "Clinical Research Assistant",
+  "tech": false
+ },
+ "public-health": {
+  "title": "Public Health Specialist",
+  "plain": "epidemiology, program evaluation, health promotion, surveillance data, community partnerships",
+  "lines": [
+   "Evaluated a smoking cessation program for 3,000 people; 6-month quit rates rose from 14% to 22%",
+   "Analysed weekly surveillance data for 12 notifiable diseases and flagged 3 outbreaks early",
+   "Ran vaccination outreach with 20 community groups that raised uptake by 9 points",
+   "Wrote 4 health needs reports used to plan local services"
+  ],
+  "entry": [
+   "Completed a master’s project on obesity rates in 30 neighbourhoods",
+   "Entered and checked data for a 2,000-person health survey during a summer placement",
+   "Volunteered 100 hours at a community health fair"
+  ],
+  "senior": [
+   "Led a team of 6 running prevention programs for a city of 400,000 people",
+   "Owned the health strategy of a regional program with a $5M budget",
+   "Worked with 8 partner agencies to cut teenage pregnancy rates by a fifth in 5 years"
+  ],
+  "entry_title": "Public Health Assistant",
+  "tech": false
+ },
+ "healthcare-administrator": {
+  "title": "Healthcare Administrator",
+  "plain": "operations, budgets, staffing, regulatory compliance, patient experience",
+  "lines": [
+   "Ran day-to-day operations of a 60-bed unit with 140 staff and a $12M budget",
+   "Cut average outpatient waiting time from 41 to 18 days in a year",
+   "Passed 2 regulatory inspections with no major findings",
+   "Raised patient satisfaction scores from 78% to 89% in 18 months"
+  ],
+  "entry": [
+   "Completed a healthcare management degree with a project on scheduling at a 6-doctor clinic",
+   "Booked about 120 patient appointments a day as a medical receptionist",
+   "Volunteered 80 hours a year at a hospital information desk"
+  ],
+  "senior": [
+   "Led 5 department managers across a 300-bed hospital",
+   "Owned a $40M budget and delivered 2 years within 1% of plan",
+   "Worked with clinical leaders to open a day-surgery unit in 10 months"
+  ],
+  "entry_title": "Healthcare Administrative Assistant",
+  "tech": false
+ },
+ "medical-science-liaison": {
+  "title": "Medical Science Liaison",
+  "plain": "scientific exchange, key opinion leaders, medical education, clinical data, field insights",
+  "lines": [
+   "Built relationships with 60 key opinion leaders in oncology across 4 states",
+   "Gave 40 scientific presentations a year on trial data to physicians and pharmacists",
+   "Fed 120 field insights a year to the medical team, 3 of which changed study design",
+   "Supported 8 investigator-initiated studies from proposal to approval"
+  ],
+  "entry": [
+   "Completed a PharmD with a 6-month rotation in a hospital oncology unit",
+   "Answered about 30 medical information requests a week as a pharmaceutical intern",
+   "Presented 2 posters at national pharmacy conferences"
+  ],
+  "senior": [
+   "Led a team of 6 liaisons covering the western United States",
+   "Owned the medical plan for a product launch in 12 countries",
+   "Coached 5 new liaisons through their first year in the field"
+  ],
+  "entry_title": "Medical Information Associate",
+  "tech": false
+ },
+ "hr-coordinator": {
+  "title": "HR Coordinator",
+  "plain": "onboarding, HR records, benefits enrolment, interview scheduling, HR systems",
+  "lines": [
+   "Onboarded about 25 new hires a month, with every contract and check done before day one",
+   "Scheduled 400 interviews a quarter across 10 hiring managers",
+   "Cleaned 1,200 employee records in the HR system before an audit",
+   "Answered about 60 employee questions a week, most within a day"
+  ],
+  "entry": [
+   "Completed an HR certificate course with a project on onboarding at a 50-person firm",
+   "Filed and updated records for 300 employees as an HR intern",
+   "Organised volunteer schedules for 40 people at a local charity"
+  ],
+  "senior": [
+   "Led a team of 3 coordinators supporting 1,500 employees",
+   "Owned the move to a new HR system for 2,000 records, live in 4 months",
+   "Worked with payroll to end late first payments for new hires within 3 months"
+  ],
+  "entry_title": "HR Assistant",
+  "tech": false
+ },
+ "employee-relations": {
+  "title": "Employee Relations Specialist",
+  "plain": "investigations, disciplinary and grievance cases, policy advice, employment law, manager coaching",
+  "lines": [
+   "Investigated about 45 grievance and conduct cases a year, closing most within 30 days",
+   "Advised 80 managers on discipline, absence and performance cases",
+   "Rewrote 6 policies; related tribunal claims fell from 5 to 1 a year",
+   "Trained 150 managers on fair process in 10 workshops"
+  ],
+  "entry": [
+   "Completed an employment law module and a 3,000-word paper on workplace investigations",
+   "Took notes in 30 disciplinary and grievance meetings as an HR intern",
+   "Mediated disputes in a student residence of 200 people for 1 year"
+  ],
+  "senior": [
+   "Led a team of 4 employee relations advisers covering 8,000 staff",
+   "Owned the case management process, cutting average case time from 60 to 35 days",
+   "Worked with legal and unions to agree 3 new collective policies"
+  ],
+  "entry_title": "Employee Relations Assistant",
+  "tech": false
+ },
+ "benefits-specialist": {
+  "title": "Benefits Specialist",
+  "plain": "benefits administration, open enrolment, vendor management, leave of absence, benefits communication",
+  "lines": [
+   "Ran open enrolment for 2,400 employees with 97% of elections completed on time",
+   "Renegotiated 2 benefit contracts and saved $380K a year at the same coverage",
+   "Managed about 30 leave of absence cases a month",
+   "Answered 500 benefits questions a quarter and cut repeat questions by a third with a guide"
+  ],
+  "entry": [
+   "Completed a benefits certificate and compared 3 health plans in a course project",
+   "Processed 200 enrolment changes as an HR intern",
+   "Helped 25 older neighbours choose health plans as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 3 benefits specialists for 10,000 employees in 4 countries",
+   "Owned the benefits strategy and a $45M yearly budget",
+   "Worked with finance and brokers to keep cost growth under 4% a year for 3 years"
+  ],
+  "entry_title": "Benefits Assistant",
+  "tech": false
+ },
+ "workforce-management": {
+  "title": "Workforce Management Analyst",
+  "plain": "forecasting, scheduling, real-time adherence, capacity planning, service levels",
+  "lines": [
+   "Forecast call volume for a 300-agent contact centre within 3% of actual",
+   "Built weekly schedules that raised the service level from 72% to 85% at the same headcount",
+   "Monitored real-time adherence and cut unplanned overtime by 20%",
+   "Planned staffing for 4 seasonal peaks of up to 40% extra volume"
+  ],
+  "entry": [
+   "Built a call-volume forecast from 2 years of public data in a statistics course",
+   "Updated daily schedules for 60 agents as a workforce planning intern",
+   "Planned shifts for 25 volunteers at a food bank for 1 year"
+  ],
+  "senior": [
+   "Led a team of 5 workforce analysts covering 3 contact centres",
+   "Owned capacity planning for 1,200 agents and a $60M staffing budget",
+   "Worked with operations to move 30% of contacts to self-service"
+  ],
+  "entry_title": "Scheduling Coordinator",
+  "tech": false
+ },
+ "organizational-development": {
+  "title": "Organisational Development Manager",
+  "plain": "change management, leadership development, engagement surveys, team design, facilitation",
+  "lines": [
+   "Ran a leadership program for 90 managers; engagement in their teams rose 6 points in a year",
+   "Redesigned 4 teams after the merger of 2 companies of 600 people",
+   "Ran the yearly engagement survey for 3,000 staff with a 78% response rate",
+   "Facilitated 30 team workshops a year on goals and ways of working"
+  ],
+  "entry": [
+   "Completed a master’s project on change in 3 public-sector teams",
+   "Analysed 1,500 survey comments as a people analytics intern",
+   "Ran a 6-session mentoring program for 20 students"
+  ],
+  "senior": [
+   "Led an organisational development team of 4 serving 12,000 employees",
+   "Owned the culture and change plan for a restructure of 2,000 roles",
+   "Coached 15 senior leaders over 2 years"
+  ],
+  "entry_title": "Organisational Development Coordinator",
+  "tech": false
+ },
+ "business-continuity": {
+  "title": "Business Continuity Manager",
+  "plain": "business impact analysis, continuity plans, crisis exercises, risk assessment, incident response",
+  "lines": [
+   "Wrote and tested continuity plans for 35 critical processes",
+   "Ran 6 crisis exercises a year with the executive team",
+   "Cut recovery time for the payments service from 8 hours to 2 after a site outage test",
+   "Completed business impact analysis for 18 departments in 4 months"
+  ],
+  "entry": [
+   "Completed a business continuity certificate with a plan for a 50-person firm",
+   "Updated contact trees and plans for 10 teams as a risk intern",
+   "Coordinated volunteers during a 3-day flood response in my town"
+  ],
+  "senior": [
+   "Led a team of 3 resilience managers across 5 countries",
+   "Owned the operational resilience program for 40 important business services",
+   "Worked with IT to bring 12 critical systems inside their recovery targets"
+  ],
+  "entry_title": "Business Continuity Analyst",
+  "tech": false
+ },
+ "travel-coordinator": {
+  "title": "Travel Coordinator",
+  "plain": "travel booking, itineraries, travel policy, vendor relations, expense reconciliation",
+  "lines": [
+   "Booked about 120 trips a month for 300 employees in 15 countries",
+   "Cut average airfare by 12% through advance booking and 3 airline agreements",
+   "Rebooked 40 travellers within 6 hours during a major airline strike",
+   "Reconciled monthly travel spend of $250K with no unexplained items"
+  ],
+  "entry": [
+   "Completed a travel and tourism course with a 10-day group trip plan",
+   "Handled 50 bookings a week as a travel agency intern",
+   "Organised travel for a 30-person student society trip abroad"
+  ],
+  "senior": [
+   "Led a travel team of 4 for a company of 5,000 people",
+   "Owned the travel policy and a $15M yearly travel budget",
+   "Worked with finance to move every trip into one booking tool within 6 months"
+  ],
+  "entry_title": "Travel Assistant",
+  "tech": false
+ },
+ "data-entry": {
+  "title": "Data Entry Clerk",
+  "plain": "fast accurate typing, data checking, records management, spreadsheets, confidentiality",
+  "lines": [
+   "Entered about 600 records a day at 99.8% accuracy",
+   "Cleared a backlog of 9,000 paper forms in 5 weeks",
+   "Found and fixed 1,200 duplicate customer records",
+   "Kept typing speed above 70 words a minute in monthly checks"
+  ],
+  "entry": [
+   "Completed a 4-week typing and {sheet:Excel} course, reaching 60 words a minute",
+   "Entered 2,000 survey responses as a temporary office assistant",
+   "Kept the membership list of a 150-member club for 2 years"
+  ],
+  "senior": [
+   "Led a team of 6 data entry clerks processing 25,000 records a week",
+   "Owned the quality checks that cut error rates from 1.5% to 0.3%",
+   "Trained 12 new clerks on the records system"
+  ],
+  "entry_title": "Data Entry Assistant",
+  "tech": false
+ },
+ "coordinator": {
+  "title": "Coordinator",
+  "plain": "scheduling, logistics, stakeholder communication, tracking, reporting",
+  "lines": [
+   "Coordinated schedules, rooms and travel for 25 events a year of up to 300 people",
+   "Tracked 40 open actions across 6 teams in a weekly status report",
+   "Cut the time to set up a new project from 2 weeks to 4 days with a checklist",
+   "Answered about 80 internal requests a week, most the same day"
+  ],
+  "entry": [
+   "Organised a 2-day student conference for 150 guests",
+   "Booked meetings and travel for 4 managers as an office intern",
+   "Coordinated 30 volunteers for a weekly community lunch"
+  ],
+  "senior": [
+   "Led a team of 3 coordinators supporting a 200-person division",
+   "Owned the planning calendar for 12 company-wide programs",
+   "Worked with finance to keep events within budget for 3 years running"
+  ],
+  "entry_title": "Assistant Coordinator",
+  "tech": false
+ },
+ "coo": {
+  "title": "Chief Operating Officer",
+  "plain": "operations strategy, P&L ownership, scaling teams, process improvement, executive leadership",
+  "lines": [
+   "Ran operations for a company of 800 people in 5 countries while revenue grew from $60M to $140M",
+   "Cut cost to serve by 18% in 2 years while customer satisfaction rose",
+   "Built the operating plan and quarterly reviews for 9 departments",
+   "Opened 3 new markets, each profitable within 18 months"
+  ],
+  "entry": [
+   "Completed an MBA project on scaling operations at a 200-person startup",
+   "Built 10 process maps as an operations intern at a growing company",
+   "Ran logistics for a 500-person charity run as a volunteer"
+  ],
+  "senior": [
+   "Led 6 vice presidents and 1,500 employees as COO",
+   "Owned a $90M operating budget and a 3-year transformation program",
+   "Worked with the CEO and board on 2 acquisitions and their integration"
+  ],
+  "entry_title": "Operations Associate",
+  "tech": false
+ },
+ "intelligence-analyst": {
+  "title": "Intelligence Analyst",
+  "plain": "threat intelligence, open-source research, analytic writing, briefings, link analysis",
+  "lines": [
+   "Wrote 60 intelligence reports a year on threats to 30 company sites",
+   "Tracked 15 threat groups and briefed security leaders every week",
+   "Found 4 fraud networks through open-source research, stopping about $2M in losses",
+   "Cut the time to answer an urgent request from 2 days to 6 hours with a source library"
+  ],
+  "entry": [
+   "Completed an intelligence analysis course with a 20-page assessment of a regional conflict",
+   "Monitored news and social media in 2 languages as an analyst intern",
+   "Researched 50 sources for a university security studies project"
+  ],
+  "senior": [
+   "Led a team of 5 analysts covering Europe and the Middle East",
+   "Owned the intelligence requirements of 4 business units",
+   "Worked with legal and security to set up a 24-hour monitoring desk"
+  ],
+  "entry_title": "Research Analyst (Intelligence)",
+  "tech": false
+ },
+ "ciso": {
+  "title": "Chief Information Security Officer",
+  "plain": "security strategy, risk management, compliance programs, incident response, board reporting",
+  "lines": [
+   "Ran security for a company of 3,000 people and brought it to ISO 27001 and SOC 2 in 18 months",
+   "Cut critical vulnerabilities open longer than 30 days from 120 to 8",
+   "Reported cyber risk to the board 4 times a year",
+   "Led the response to 3 serious incidents, each contained within 24 hours"
+  ],
+  "entry": [
+   "Completed a security certificate and built a home lab of 5 monitored machines",
+   "Triaged about 40 alerts a day as a security operations intern",
+   "Ran phishing awareness sessions for 100 students as a volunteer"
+  ],
+  "senior": [
+   "Led a security organisation of 25 people in 4 teams",
+   "Owned a $12M security budget and a 3-year risk reduction plan",
+   "Worked with legal and product to pass 30 customer security audits a year"
+  ],
+  "entry_title": "Security Analyst",
+  "tech": false
+ },
+ "vulnerability-management": {
+  "title": "Vulnerability Management Analyst",
+  "plain": "vulnerability scanning, risk prioritisation, patch tracking, remediation reporting, asset inventory",
+  "lines": [
+   "Scanned 9,000 servers and laptops every week and ranked findings by real exposure",
+   "Cut the median age of critical vulnerabilities from 45 to 12 days",
+   "Brought asset inventory coverage from 70% to 98% with the IT team",
+   "Sent a monthly remediation report to 20 system owners"
+  ],
+  "entry": [
+   "Scanned and patched a 6-machine home lab in a 10-week security course",
+   "Tracked 300 open findings as a security intern",
+   "Kept the computers of a 15-person charity patched as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 4 vulnerability analysts",
+   "Owned the vulnerability program and its targets for 40,000 assets",
+   "Worked with engineering to fix 95% of critical findings within 14 days"
+  ],
+  "entry_title": "Security Operations Analyst",
+  "tech": false
+ },
+ "product-owner": {
+  "title": "Product Owner",
+  "plain": "backlog management, user stories, sprint planning, acceptance testing, stakeholder priorities",
+  "lines": [
+   "Owned the backlog of a 7-person team and wrote about 30 user stories a sprint",
+   "Cut the time from idea to release from 10 weeks to 4",
+   "Ran acceptance testing for 24 releases with 2 rollbacks in a year",
+   "Ranked 200 requests from 5 departments into one roadmap"
+  ],
+  "entry": [
+   "Completed a product course with a 6-week app project",
+   "Wrote 40 user stories as a business analyst intern",
+   "Ran the website backlog of a student society for 1 year"
+  ],
+  "senior": [
+   "Led 3 product owners across 4 teams",
+   "Owned the roadmap of a product with 200,000 users",
+   "Worked with sales and support to cut the top complaints by half in 9 months"
+  ],
+  "entry_title": "Associate Product Owner",
+  "tech": false
+ },
+ "bioinformatics": {
+  "title": "Bioinformatician",
+  "plain": "sequencing pipelines, genomic data analysis, statistics, reproducible workflows",
+  "lines": [
+   "Built a variant-calling pipeline in {lang:Python} that processes 500 genomes a week",
+   "Cut analysis time per sequencing run from 3 days to 8 hours",
+   "Analysed RNA data from 1,200 samples for 4 research groups",
+   "Co-authored 6 papers with laboratory scientists"
+  ],
+  "entry": [
+   "Analysed a public dataset of 300 genomes for a master’s project",
+   "Ran quality checks on 50 sequencing runs as a lab intern",
+   "Taught 2 coding workshops for 30 biology students"
+  ],
+  "senior": [
+   "Led a team of 5 bioinformaticians",
+   "Owned the genomics data platform for 200 scientists",
+   "Worked with clinicians to bring 2 genetic tests into hospital use"
+  ],
+  "entry_title": "Research Assistant (Bioinformatics)",
+  "tech": false
+ },
+ "process-development": {
+  "title": "Process Development Scientist",
+  "plain": "process optimisation, scale-up, design of experiments, technology transfer, documentation",
+  "lines": [
+   "Raised cell culture yield from 2.1 to 3.4 grams per litre in 18 months",
+   "Scaled a purification process from 2 to 2,000 litres",
+   "Ran 40 designed experiments a year and wrote a report for each",
+   "Transferred 3 processes to manufacturing with no failed batch"
+  ],
+  "entry": [
+   "Completed a lab project optimising 1 enzyme reaction across 24 conditions",
+   "Ran about 30 small-scale runs as a process development intern",
+   "Assisted in 2 university teaching labs for 60 students"
+  ],
+  "senior": [
+   "Led a team of 6 scientists in upstream development",
+   "Owned the process of a product moving into phase 3 trials",
+   "Worked with quality and manufacturing on 5 technology transfers"
+  ],
+  "entry_title": "Research Associate",
+  "tech": false
+ },
+ "research-program-manager": {
+  "title": "Research Program Manager",
+  "plain": "program planning, milestones, budgets, research partnerships, reporting",
+  "lines": [
+   "Ran 5 research programs with 40 scientists and a $9M budget",
+   "Delivered 90% of milestones on time across 3 years",
+   "Wrote 12 grant reports and 3 renewals, all funded",
+   "Set up 4 partnerships with universities"
+  ],
+  "entry": [
+   "Coordinated a 3-lab student research project of 12 people",
+   "Tracked budgets for 6 grants as a research office intern",
+   "Organised a 100-person seminar series for 1 year"
+  ],
+  "senior": [
+   "Led 4 program managers across 20 research projects",
+   "Owned a research portfolio of $40M",
+   "Worked with legal on 15 collaboration agreements a year"
+  ],
+  "entry_title": "Research Coordinator",
+  "tech": false
+ },
+ "education-program-manager": {
+  "title": "Education Program Manager",
+  "plain": "curriculum planning, learner outcomes, partnerships, budgets, program evaluation",
+  "lines": [
+   "Ran 3 training programs for 1,200 learners a year with 88% completion",
+   "Raised job placement after the program from 61% to 79% in 2 years",
+   "Built partnerships with 25 employers for placements",
+   "Kept a $2M budget within 2% for 3 years"
+  ],
+  "entry": [
+   "Planned a 6-week coding club for 40 secondary school pupils",
+   "Scheduled 200 sessions a term as an education intern",
+   "Tutored 15 adults in reading as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 8 program staff in 3 cities",
+   "Owned the learning strategy for 5,000 learners a year",
+   "Worked with funders to grow program income by 40%"
+  ],
+  "entry_title": "Education Program Coordinator",
+  "tech": false
+ },
+ "telecom-engineer": {
+  "title": "Telecommunications Engineer",
+  "plain": "radio network planning, core network, fiber and microwave links, network performance, field testing",
+  "lines": [
+   "Planned coverage for 120 new cell sites; dropped calls in the region fell from 1.8% to 0.9%",
+   "Upgraded 40 microwave links to fiber and raised backhaul capacity fivefold",
+   "Cut mean time to repair for core network faults from 5 hours to 90 minutes",
+   "Ran drive tests on 600 km of roads to check coverage after each rollout"
+  ],
+  "entry": [
+   "Built a small radio link of 2 antennas and measured its signal in a university lab project",
+   "Logged and checked readings from 30 cell sites as a network engineering intern",
+   "Set up the network of a 20-room community centre as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 7 radio and transmission engineers",
+   "Owned the rollout plan for 900 sites and a $60M budget",
+   "Worked with operations to keep network availability above 99.95% for 2 years"
+  ],
+  "entry_title": "Graduate Network Engineer",
+  "tech": false
+ },
+ "itsm": {
+  "title": "IT Service Management Lead",
+  "plain": "incident and problem management, change control, service catalogue, ticket workflows, service levels",
+  "lines": [
+   "Ran incident management for 6,000 users; 92% of tickets met their service level",
+   "Cut repeat incidents by 35% through 40 problem reviews a year",
+   "Brought 120 request types into one service catalogue with automated routing",
+   "Ran the weekly change board that approved about 60 changes with a 2% failure rate"
+  ],
+  "entry": [
+   "Completed an IT service management foundation course with a 20-page case study",
+   "Sorted and routed about 150 tickets a day as a service desk intern",
+   "Ran the help desk of a school computer room for 1 year"
+  ],
+  "senior": [
+   "Led a team of 8 service managers across 3 regions",
+   "Owned the move to a new ticket platform for 15,000 users in 5 months",
+   "Worked with 10 IT teams to agree service levels for 70 services"
+  ],
+  "entry_title": "Service Desk Analyst",
+  "tech": false
+ },
+ "enterprise-architect": {
+  "title": "Enterprise Architect",
+  "plain": "architecture roadmaps, system integration, technology standards, capability mapping, solution review",
+  "lines": [
+   "Mapped 350 applications to 60 business capabilities and found 45 to retire",
+   "Wrote the 3-year architecture roadmap that cut yearly licence costs by $4M",
+   "Reviewed about 40 project designs a year against company standards",
+   "Set integration standards that cut new interfaces from 12 weeks to 5"
+  ],
+  "entry": [
+   "Mapped the systems of a 100-person company for a master’s project",
+   "Documented 25 applications as an architecture intern",
+   "Designed the system plan of a student club website used by 500 members"
+  ],
+  "senior": [
+   "Led a team of 5 architects across finance, sales and operations",
+   "Owned the target architecture for a merger of 2 companies with 600 systems",
+   "Worked with the CIO and 8 business leaders to rank $50M of technology spending"
+  ],
+  "entry_title": "Solution Analyst",
+  "tech": false
+ },
+ "cryptographer": {
+  "title": "Cryptographer",
+  "plain": "protocol design, cryptographic proofs, implementation review, side-channel analysis, standards work",
+  "lines": [
+   "Designed a key exchange protocol now used in 3 products with 20M users",
+   "Found 4 serious flaws in cryptographic code before release in security reviews",
+   "Wrote 2 security proofs reviewed and published at a peer-reviewed conference",
+   "Cut signature verification time by 40% with a new batch method"
+  ],
+  "entry": [
+   "Wrote a master’s thesis on 2 attacks against lightweight ciphers",
+   "Implemented and tested 3 signature schemes during a research internship",
+   "Solved 20 challenges in a public cryptography competition"
+  ],
+  "senior": [
+   "Led a team of 4 cryptographers and security engineers",
+   "Owned the move of 5 products to post-quantum algorithms",
+   "Worked with standards bodies on 2 published specifications"
+  ],
+  "entry_title": "Cryptography Research Intern",
+  "tech": false
+ },
+ "industrial-security": {
+  "title": "Industrial Security Specialist",
+  "plain": "security clearances, classified information handling, visitor control, security training, compliance audits",
+  "lines": [
+   "Processed about 150 security clearance requests a year with no rejected file",
+   "Kept a facility of 900 cleared staff free of reportable incidents for 3 years",
+   "Ran yearly security training for 900 employees with 100% completion",
+   "Prepared for 4 government security reviews, each rated superior or satisfactory"
+  ],
+  "entry": [
+   "Completed a 12-week security fundamentals course with a facility security plan project",
+   "Logged about 40 visitors a day and checked badges as a security office intern",
+   "Ran sign-in and access for a 300-person community event"
+  ],
+  "senior": [
+   "Led a team of 4 security specialists across 3 cleared sites",
+   "Owned the security program of a contractor with 2,000 cleared employees",
+   "Worked with program managers to open 2 new classified areas on schedule"
+  ],
+  "entry_title": "Security Assistant",
+  "tech": false
+ },
+ "ot-security": {
+  "title": "OT Security Engineer",
+  "plain": "industrial control systems, network segmentation, risk assessment, device hardening, incident response",
+  "lines": [
+   "Segmented the networks of 12 plants, cutting paths from office systems to control systems by 90%",
+   "Assessed 1,400 industrial devices and ranked fixes by safety impact",
+   "Set up monitoring for 30 control networks and caught 2 intrusions early",
+   "Wrote hardening guides for 8 device types used across the company"
+  ],
+  "entry": [
+   "Built a test bench of 3 controllers and found 5 weaknesses in a university project",
+   "Inventoried 300 plant devices as a security intern",
+   "Competed in 2 industrial security capture-the-flag events"
+  ],
+  "senior": [
+   "Led a team of 5 OT security engineers",
+   "Owned the security program for 40 power and water sites",
+   "Worked with plant managers to patch 80% of critical devices within planned shutdowns"
+  ],
+  "entry_title": "OT Security Analyst",
+  "tech": false
+ },
+ "law-enforcement": {
+  "title": "Law Enforcement Liaison",
+  "plain": "legal process handling, evidence requests, investigations support, policy compliance, emergency response",
+  "lines": [
+   "Handled about 1,200 police and court requests a year, each checked against law and policy",
+   "Answered emergency requests within 30 minutes, 24 hours a day",
+   "Cut the backlog of open legal requests from 400 to 60 in 3 months",
+   "Trained 30 support staff on how to escalate threats to life"
+  ],
+  "entry": [
+   "Completed a criminal justice degree with a 10,000-word paper on digital evidence",
+   "Prepared about 20 case files a week as an intern at a district attorney’s office",
+   "Volunteered 100 hours with a victim support service"
+  ],
+  "senior": [
+   "Led a team of 6 liaison specialists in 3 time zones",
+   "Owned the global policy for answering requests from 40 countries",
+   "Worked with legal and engineering to publish a transparency report covering 40 countries"
+  ],
+  "entry_title": "Legal Process Specialist",
+  "tech": false
+ },
+ "industrial-designer": {
+  "title": "Industrial Designer",
+  "plain": "concept sketching, CAD modelling, materials and finishes, prototyping, user research",
+  "lines": [
+   "Designed 6 consumer products from sketch to production, 2 of which won design awards",
+   "Cut the part count of a kitchen appliance from 38 to 24 with the engineering team",
+   "Built 60 prototypes a year to test grip, size and feel with users",
+   "Chose materials and finishes that cut unit cost by 9% at the same look"
+  ],
+  "entry": [
+   "Designed a portable speaker from sketch to working prototype in a 12-week studio course",
+   "Made 30 foam and 3D-printed models as a design intern",
+   "Built furniture for 2 community spaces as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 5 designers on a range of 20 products",
+   "Owned the design language for a brand sold in 30 countries",
+   "Worked with marketing and engineering to launch 4 products a year on schedule"
+  ],
+  "entry_title": "Design Assistant",
+  "tech": false
+ },
+ "customer-advocacy": {
+  "title": "Customer Marketing Manager",
+  "plain": "case studies, customer references, advocacy programs, community, customer events",
+  "lines": [
+   "Published 24 customer case studies a year that sales used in 300 deals",
+   "Built a reference program of 120 customers that answered 95% of sales requests",
+   "Grew the customer community from 2,000 to 9,000 members in 18 months",
+   "Ran a customer conference for 800 people with a 4.6 out of 5 rating"
+  ],
+  "entry": [
+   "Wrote 3 customer stories for a student marketing project",
+   "Interviewed 15 customers as a marketing intern",
+   "Ran the social media of a local charity for 1 year"
+  ],
+  "senior": [
+   "Led a customer marketing team of 4",
+   "Owned the advocacy strategy and a $1.5M program budget",
+   "Worked with sales and success to lift renewal rates of referenced accounts by 6 points"
+  ],
+  "entry_title": "Customer Marketing Coordinator",
+  "tech": false
+ },
+ "sponsorships": {
+  "title": "Sponsorships Manager",
+  "plain": "partner sales, activation, contract negotiation, ROI reporting, event delivery",
+  "lines": [
+   "Sold $4M of sponsorships a year across 3 events and a sports team",
+   "Renewed 85% of partners by reporting results to each 3 times a season",
+   "Negotiated 20 contracts a year with rights, fees and deliverables agreed in writing",
+   "Delivered 150 partner activations at events with no missed commitment"
+  ],
+  "entry": [
+   "Wrote a sponsorship proposal for a student festival that raised $15K",
+   "Tracked 40 partner deliverables as a sponsorship intern",
+   "Found 8 local sponsors for a youth football club"
+  ],
+  "senior": [
+   "Led a partnerships team of 5",
+   "Owned the commercial plan for a property with $12M in sponsorship revenue",
+   "Worked with marketing to add 2 new partner categories worth $2M a year"
+  ],
+  "entry_title": "Sponsorship Coordinator",
+  "tech": false
+ },
+ "corporate-governance": {
+  "title": "Corporate Secretary",
+  "plain": "board meetings, minutes, statutory filings, entity management, governance policies",
+  "lines": [
+   "Ran 40 board and committee meetings a year, with papers out 7 days ahead",
+   "Kept 85 legal entities in 20 countries up to date with every filing on time",
+   "Wrote the minutes of every board meeting, approved without change 90% of the time",
+   "Closed 30 dormant subsidiaries and saved about $400K a year"
+  ],
+  "entry": [
+   "Completed a governance qualification module with a 5,000-word paper on board practice",
+   "Prepared filings for 25 companies as a company secretarial intern",
+   "Took the minutes of a charity board for 2 years"
+  ],
+  "senior": [
+   "Led a governance team of 4 for a listed company",
+   "Owned the governance framework through an IPO with 3 new board committees",
+   "Worked with the chair to run a board review that led to 2 new directors"
+  ],
+  "entry_title": "Assistant Company Secretary",
+  "tech": false
+ },
+ "government-contracts": {
+  "title": "Government Contracts Manager",
+  "plain": "federal contract compliance, proposals and pricing, contract modifications, subcontracts, audits",
+  "lines": [
+   "Managed 35 government contracts worth $220M with no compliance finding",
+   "Negotiated 60 modifications a year, each closed within 30 days",
+   "Prepared pricing for 12 proposals, 7 of which were won",
+   "Passed 3 government audits of billing and costs with no questioned costs"
+  ],
+  "entry": [
+   "Completed a 10-week government contracting course with a mock proposal",
+   "Filed and tracked 200 contract documents as a contracts intern",
+   "Helped 3 small businesses register to bid on public contracts as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 6 contract managers",
+   "Owned the contracts process for a $1B government business",
+   "Worked with finance to set up a compliant cost system for 3 new programs"
+  ],
+  "entry_title": "Contracts Administrator",
+  "tech": false
+ },
+ "packaging-engineer": {
+  "title": "Packaging Engineer",
+  "plain": "package design, materials testing, drop and transit testing, sustainability, supplier qualification",
+  "lines": [
+   "Redesigned shipping boxes for 120 products and cut damage claims by 45%",
+   "Moved 30 packages from plastic to paper, removing 180 tonnes of plastic a year",
+   "Ran 400 drop and vibration tests a year to transit standards",
+   "Qualified 5 new suppliers and cut packaging cost by 11%"
+  ],
+  "entry": [
+   "Designed and drop-tested a protective box for 1 glass product in a university project",
+   "Ran 80 compression tests as a packaging lab intern",
+   "Packed and labelled 1,000 donation boxes for a food bank"
+  ],
+  "senior": [
+   "Led a team of 4 packaging engineers",
+   "Owned the packaging strategy for 2,000 products in 3 regions",
+   "Worked with logistics to fit 20% more product on each pallet"
+  ],
+  "entry_title": "Packaging Technician",
+  "tech": false
+ },
+ "additive-manufacturing": {
+  "title": "Additive Manufacturing Engineer",
+  "plain": "metal and polymer 3D printing, build preparation, process parameters, post-processing, part qualification",
+  "lines": [
+   "Qualified 25 flight parts made by metal 3D printing, each passing inspection first time",
+   "Cut build failures from 12% to 3% by tuning laser parameters",
+   "Replaced a 14-part assembly with 1 printed part, saving 2 kg",
+   "Ran 6 printers producing about 300 parts a month"
+  ],
+  "entry": [
+   "Printed and tested 10 lattice parts for a university design project",
+   "Prepared 40 print jobs as an additive manufacturing intern",
+   "Ran the 3D printers of a school makerspace for 1 year"
+  ],
+  "senior": [
+   "Led a team of 5 engineers and technicians",
+   "Owned the printing program for 1,000 production parts a year",
+   "Worked with design teams to move 30 parts from machining to printing"
+  ],
+  "entry_title": "Additive Manufacturing Technician",
+  "tech": false
+ },
+ "composites": {
+  "title": "Composites Technician",
+  "plain": "carbon fiber layup, vacuum bagging, autoclave curing, trimming and bonding, inspection",
+  "lines": [
+   "Laid up about 40 carbon fiber parts a week to drawing tolerances",
+   "Cut scrap from 9% to 3% by changing the vacuum bagging sequence",
+   "Ran 3 autoclave cures a day with full cure records",
+   "Repaired 25 damaged parts a year to the repair manual"
+  ],
+  "entry": [
+   "Completed a 10-week composites course and built 5 test panels",
+   "Trimmed and sanded about 60 parts a week as a shop intern",
+   "Built 2 carbon fiber parts for a student racing car team"
+  ],
+  "senior": [
+   "Led a shift of 6 composites technicians",
+   "Owned the layup process for 3 new aircraft parts from first article to production",
+   "Trained 10 new technicians to certified level within 4 months"
+  ],
+  "entry_title": "Composites Trainee",
+  "tech": false
+ },
+ "av-operator": {
+  "title": "Autonomous Vehicle Operator",
+  "plain": "vehicle monitoring, safe takeover, test route logging, incident reporting, vehicle checks",
+  "lines": [
+   "Monitored self-driving tests for 1,200 hours with no at-fault incident",
+   "Logged about 30 driving events a shift with clear notes for engineers",
+   "Took over safely in 45 edge cases and reported each within 2 hours",
+   "Ran pre-drive checks on 4 vehicles a day"
+  ],
+  "entry": [
+   "Held a clean driving record for 5 years and completed a 2-week defensive driving course",
+   "Drove 2,000 miles a month as a delivery driver",
+   "Volunteered as a driver for 60 hospital patient trips"
+  ],
+  "senior": [
+   "Led a team of 8 operators on night test shifts",
+   "Owned the test schedule for 20 vehicles in 2 cities",
+   "Worked with safety engineers to write 12 new takeover procedures"
+  ],
+  "entry_title": "Test Driver",
+  "tech": false
+ },
+ "drone": {
+  "title": "Drone Engineer",
+  "plain": "flight testing, airframe design, flight controller tuning, payload integration, aviation rules",
+  "lines": [
+   "Flew 600 test flights to tune a flight controller, cutting hover drift by 60%",
+   "Designed a folding airframe that cut weight by 18% at the same payload",
+   "Integrated 4 camera and sensor payloads into one aircraft",
+   "Wrote test plans for 3 aircraft certified under national aviation rules"
+  ],
+  "entry": [
+   "Built and flew a quadcopter from parts in a 10-week university project",
+   "Logged data from 80 test flights as an engineering intern",
+   "Flew survey flights over 3 farms as a volunteer pilot"
+  ],
+  "senior": [
+   "Led a team of 6 engineers on a new aircraft",
+   "Owned flight testing for a fleet of 50 drones",
+   "Worked with regulators to approve 2 flights beyond visual line of sight"
+  ],
+  "entry_title": "Drone Pilot",
+  "tech": false
+ },
+ "defense-systems": {
+  "title": "Defense Systems Engineer",
+  "plain": "systems requirements, test and evaluation, modelling and simulation, integration, safety analysis",
+  "lines": [
+   "Wrote 300 system requirements and traced each to a test",
+   "Ran 25 live test events with 98% of data captured",
+   "Built a simulation that cut test range time by 30%",
+   "Integrated 4 subsystems from 3 suppliers on schedule"
+  ],
+  "entry": [
+   "Built a flight simulation of 1 small rocket for a capstone project",
+   "Reviewed 50 test reports as a systems engineering intern",
+   "Led the electronics of a student rocketry team for 1 year"
+  ],
+  "senior": [
+   "Led a team of 8 systems engineers",
+   "Owned the test program for a $150M development",
+   "Worked with the customer to pass 3 major design reviews"
+  ],
+  "entry_title": "Associate Systems Engineer",
+  "tech": false
+ },
+ "oil-gas": {
+  "title": "Petroleum Engineer",
+  "plain": "well planning, reservoir analysis, production optimisation, field operations, safety",
+  "lines": [
+   "Raised production from 40 wells by 12% through artificial lift changes",
+   "Planned 15 new wells, each drilled within 5% of cost",
+   "Cut unplanned shutdowns at a gas plant from 9 to 3 a year",
+   "Ran safety reviews for 20 field operations with no lost-time injury"
+  ],
+  "entry": [
+   "Modelled a small reservoir of 10 wells in a final-year project",
+   "Collected production data from 30 wells during a summer field placement",
+   "Led safety checks for a student engineering society trip of 25 people"
+  ],
+  "senior": [
+   "Led a team of 6 engineers in a field of 200 wells",
+   "Owned a $90M yearly development budget",
+   "Worked with geologists to add 15M barrels of reserves"
+  ],
+  "entry_title": "Graduate Petroleum Engineer",
+  "tech": false
+ },
+ "ev-charging": {
+  "title": "EV Charging Specialist",
+  "plain": "charger installation, site surveys, electrical design, network operations, uptime",
+  "lines": [
+   "Surveyed and planned 80 charging sites with 400 chargers",
+   "Raised charger uptime from 92% to 98.5% across the network",
+   "Commissioned about 15 fast chargers a month",
+   "Cut the time from contract to live charger from 9 months to 5"
+  ],
+  "entry": [
+   "Completed an electric vehicle charging course and wired 1 test charger",
+   "Logged faults on 200 chargers as an operations intern",
+   "Mapped 50 public chargers for a local cycling and EV club"
+  ],
+  "senior": [
+   "Led a team of 6 field and network engineers",
+   "Owned the rollout of 1,000 chargers in 3 states",
+   "Worked with utilities to cut grid connection times by 40%"
+  ],
+  "entry_title": "Charging Technician",
+  "tech": false
+ },
+ "geologist-mining": {
+  "title": "Geologist",
+  "plain": "field mapping, drilling programs, core logging, resource modelling, environmental studies",
+  "lines": [
+   "Mapped 120 km² of ground and planned 30 drill holes",
+   "Logged 8,000 metres of drill core with no data rework",
+   "Built a resource model that added 2M tonnes of ore",
+   "Ran groundwater studies at 4 sites for permits"
+  ],
+  "entry": [
+   "Mapped a 10 km² field area for a final-year geology thesis",
+   "Logged 1,500 metres of core during a summer placement at a mine",
+   "Collected 200 rock samples for a university research project"
+  ],
+  "senior": [
+   "Led a team of 5 geologists on an exploration project",
+   "Owned the exploration budget of $8M a year",
+   "Worked with mining engineers to plan 10 years of mine development"
+  ],
+  "entry_title": "Graduate Geologist",
+  "tech": false
+ },
+ "fiber-technician": {
+  "title": "Fiber Technician",
+  "plain": "fiber splicing, OTDR testing, cable installation, troubleshooting, safety",
+  "lines": [
+   "Spliced about 400 fibers a week with loss under 0.05 dB per splice",
+   "Tested 300 links a month with an OTDR and fixed every fault found",
+   "Installed fiber to 1,200 homes in 6 months",
+   "Cut repeat repair visits by 30% with better fault notes"
+  ],
+  "entry": [
+   "Completed a 6-week fiber optic installer course and passed the practical test",
+   "Pulled cable for 50 homes as an apprentice",
+   "Wired the network of a 10-room community centre as a volunteer"
+  ],
+  "senior": [
+   "Led a crew of 6 technicians",
+   "Owned the build of a 50 km fiber ring",
+   "Trained 12 new technicians to splice to standard"
+  ],
+  "entry_title": "Fiber Installer",
+  "tech": false
+ },
+ "aviation-operations": {
+  "title": "Aviation Operations Specialist",
+  "plain": "flight scheduling, dispatch, ramp operations, airspace and safety rules, delay management",
+  "lines": [
+   "Dispatched about 60 flights a day with 98% on-time departures",
+   "Cut aircraft turn time from 45 to 35 minutes with a new ramp plan",
+   "Handled 30 disruptions a month, rebooking crews and aircraft within an hour",
+   "Passed 2 aviation authority audits with no findings"
+  ],
+  "entry": [
+   "Completed an aviation operations certificate with a 12-week scheduling project",
+   "Tracked 100 flights a day as an operations control intern",
+   "Marshalled aircraft at 3 air shows as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 10 dispatchers and ramp leads",
+   "Owned the operations plan of an airline base with 40 daily flights",
+   "Worked with safety and crew planning to cut fatigue reports by 30% in a year"
+  ],
+  "entry_title": "Operations Agent",
+  "tech": false
+ },
+ "casino": {
+  "title": "Casino Operations Manager",
+  "plain": "table games, gaming rules, guest service, cash handling, regulatory compliance",
+  "lines": [
+   "Ran a gaming floor of 60 tables and 300 staff per shift",
+   "Raised table revenue by 8% by changing the game mix on 15 tables",
+   "Passed 4 gaming regulator inspections with no findings",
+   "Cut guest complaints by 25% with a new service standard"
+  ],
+  "entry": [
+   "Completed a 6-week dealer school and dealt 3 table games",
+   "Dealt about 80 hands an hour as a trainee dealer",
+   "Handled cash for a 1,000-person charity gala"
+  ],
+  "senior": [
+   "Led a team of 12 shift managers",
+   "Owned the table games budget of $40M",
+   "Worked with compliance to roll out responsible gambling checks for 50,000 players"
+  ],
+  "entry_title": "Dealer",
+  "tech": false
+ },
+ "exchange-operations": {
+  "title": "Exchange Operations Specialist",
+  "plain": "token listings, deposits and withdrawals, trade surveillance, incident handling, reconciliations",
+  "lines": [
+   "Listed 40 new tokens with no deposit or withdrawal incident",
+   "Reconciled about $200M of daily customer balances across 12 blockchains",
+   "Flagged 150 suspicious trading patterns a quarter for review",
+   "Cut stuck withdrawals from 300 a week to 20"
+  ],
+  "entry": [
+   "Ran a test node for 1 blockchain and tracked its transactions for a course project",
+   "Checked 100 deposit tickets a day as an operations intern",
+   "Moderated a crypto community of 5,000 members for 1 year"
+  ],
+  "senior": [
+   "Led an operations team of 6 across 3 time zones",
+   "Owned the listing process for 200 assets",
+   "Worked with compliance to meet licence rules in 4 countries"
+  ],
+  "entry_title": "Operations Associate (Crypto Exchange)",
   "tech": false
  }
 }

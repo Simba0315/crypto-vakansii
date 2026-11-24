@@ -2061,6 +2061,26 @@ def asked(slug, tags, n):
     return [(t, k) for t, k in tags if t in OFFICE and k >= max(3, n * 0.06)][:8]
 
 
+# Where the example works and studied, when "Example Company" and a bachelor's degree would read wrong (24 Nov 2026). Search Console:
+# "cv for residency example" 22 times at 23rd for /cv-examples/fellowship-residency/, whose example was a "Fellow" at "Example Company"
+# with "five years' experience in internships and first jobs". A residency CV is a doctor's: hospital posts, rotations, audit,
+# research, teaching, a medical degree.
+PLACE = {"fellowship-residency": {"org": "Example University Hospital", "org2": "Example General Hospital", "edu": "Medical degree (MBBS or MD)",
+                                  "school": "Example Medical School", "intern": "Foundation Doctor", "proj": ("Research, electives and volunteering", "Example Medical School"),
+                                  "summary": "{title} with five years of clinical and research experience since medical school. Strongest in {three}."}}
+
+
+def and_list(items, n=3):
+    """Up to n skills as a phrase: "month-end close, reconciliations and US GAAP". Skills without an "and" of their own come first, and a
+    comma goes before the last "and" when one still has it, so "Strongest in month-end close, reconciliations and accounts payable and
+    receivable" (69 examples read like that, 24 Nov 2026) cannot happen."""
+    items = [x.strip() for x in items if x and x.strip()]
+    pick = sorted(items, key=lambda x: " and " in x)[:n]
+    pick = [x for x in items if x in pick][:n]
+    if len(pick) < 2: return pick[0] if pick else ""
+    return ", ".join(pick[:-1]) + (", and " if any(" and " in x for x in pick) else " and ") + pick[-1]
+
+
 def example(slug, name, family, rows, field_name):
     """The example as the resume builder stores it (see `blank` in assets/resume.js). `rows` is what asked() returned."""
     own = slug in ROLE
@@ -2078,11 +2098,16 @@ def example(slug, name, family, rows, field_name):
     skills = out[:9]
     first = skills[:3] if slug in TECH else plain[:3]
     d = {"name": "Alex Example", "title": title, "email": "alex@example.com", "phone": "", "place": "City, Country", "links": "",
-         "summary": f"{title} with five years of experience in {field_name}. Strongest in {first[0]}, {first[1]} and {first[2]}.",
+         "summary": f"{title} with five years of experience in {field_name}. Strongest in {and_list(skills if slug in TECH else plain)}.",
          "skills": ", ".join(skills),
          "exp": [{"role": title, "org": "Example Company", "dates": "2022 – now", "text": "\n".join(bullets[:3])},
                  {"role": title, "org": "Another Example Ltd", "dates": "2020 – 2022", "text": bullets[3]}],
          "edu": [{"what": "Bachelor’s degree", "org": "Example University", "dates": "2016 – 2020"}], "tpl": "classic"}
+    if slug in PLACE:
+        pl_ = PLACE[slug]
+        d["summary"] = pl_["summary"].format(title=title, three=and_list(plain))
+        d["exp"][0]["org"], d["exp"][1]["org"] = pl_["org"], pl_["org2"]
+        d["edu"] = [{"what": pl_["edu"], "org": pl_["school"], "dates": "2014 – 2020"}]
     if slug == "intern":
         d["summary"] = f"Final-year computer science student looking for a first engineering job. Strongest in {first[0]}, {first[1]} and {first[2]}."
         d["exp"] = [{"role": "Software Engineering Intern", "org": "Example Company", "dates": "Summer 2026", "text": bullets[0]},
