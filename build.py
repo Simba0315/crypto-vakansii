@@ -1957,7 +1957,8 @@ def tidy_list_desc(desc, jobs):
     m_ = re.match(r"^([\d,]+) open roles?: (.+?) at (.+?)\.(.*)$", desc)
     if m_:
         desc = f"{m_.group(2)}: {m_.group(1)} open now at {m_.group(3)}.{m_.group(4)}"
-    return re.sub(r"\s*Updated hourly\.", "", desc).replace(", updated hourly.", ".").strip()
+    desc = re.sub(r"\s*Updated hourly\.", "", desc).replace(", updated hourly.", ".").strip()
+    return desc[:1].upper() + desc[1:]          # "part-time jobs: 587 open now" began in lower case (24 Nov 2026)
 
 
 # Company names that were a Workday employing entity's code plus the name (24 Nov 2026): Google showed "United States 7 Zipcar Careers" at
@@ -3673,7 +3674,8 @@ def main():
     for t, js in by_tag.items():
         sr_ = SKILL_ROLE.get(t)
         listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {t} ({len(js):,} open) | {SITE}" if sr_ else f"{t} Jobs ({len(js):,} open) | {SITE}",
-                f"{roles(len(js))} at companies that ask for {t}.", js,
+                (f"Jobs that ask for {t}: {len(js):,} open now at companies." if sr_ else f"{t} jobs: {len(js):,} open now at companies.")
+                + ((lambda pl_: f" {t}: {pl_[:1].lower() + pl_[1:] if not pl_[:2].isupper() else pl_}")(skills_info.plain(t)) if t in skills_info.INFO else ""), js,       # the searched words first, then what the skill is (24 Nov 2026)
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, stats=True,
                 extra=(f'<p class="note">{NEWSK_N[t]:,} of these were posted in the last three days: <a href="{P}/new/skills/{tslug(t)}/">new {e(t)} jobs</a>.</p>' if t in NEWSK_N else "")
