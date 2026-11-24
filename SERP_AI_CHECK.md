@@ -912,3 +912,26 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
 - Done: `tidy_list_desc` in build.py, used by every list page: it names the top three employers of the list and leads with what was searched
   ("Entry-level jobs in Dublin: 83 open now at Designer Group, Stripe and Google."), the hourly sentence once. Check the CTR of these pages again on 1 Dec.
 
+### Glossary terms with impressions: hybrid, independent contractor, CV, salary range, equity options, reference (24 Nov 2026, later)
+- Search Console 19–22 Nov: "hybrid work" 55 at 36.5; "independent contractor" 33 at 21.9; "what is a cv" 23 + "cv meaning" 22 at ~73; "salary range" 21 at 55;
+  "equity options" 22 at 73; "job references" 19 at 58, "reference title meaning" at 8.
+- Google (gl=us) "hybrid work": no AI Overview that day ("Can't generate"); Reddit/LinkedIn posts, then Webex, Microsoft, Envoy, Gallup; People also ask:
+  what hybrid work means, hybrid vs remote, what hybrid means in a job ad, how many days. Claude's search (helper): Cisco, Microsoft Research,
+  Webex, Zoom, Workday. "equity options" is about traded calls and puts (IG, Wikipedia, FINRA, Nasdaq). Bing could not be read by the helpers
+  (fetch returned unrelated pages); to do from the browser.
+- Done (glossary_terms.py, _ADD_24NOV): hybrid: pros and cons (Workday; Gallup, 8,090 US workers, June 2022), "flexible hybrid", "what does hybrid
+  mean in a job ad"; independent contractor: a full entry from the IRS definition (control test, self-employment tax, Form 1099-NEC) and Cornell LII;
+  CV: who needs a full CV and how long it runs (Enhancv), what a CV includes; reference: kinds of references, career changers, "Reference: 48213"
+  in a posting is the job's code (answers "reference title meaning"); salary range: midpoint and salary bands; equity: options at work vs
+  options on the stock market (FINRA, 100 shares a contract). Descriptions of all 246 terms now say what the term is (definition, today's figure,
+  the tip) instead of ending on the job-list sentence "From the employer's own career page, updated every hour".
+
+### /how-to-hire/ — "hire android developers", "hire web developers", "hire rust developers", "hire node js developer" (24 Nov 2026, later)
+- Search Console: 50 + 37 at 79–88 (Android), 42 + 26 at 43–67 (web), 33 at 83 (Rust), 25 at 90 (Node.js).
+- Claude's search (helper): agencies and marketplaces (Toptal, Upwork, BairesDev, lemon.io, Arc, Proxify); for web developers also Indeed, Dice,
+  ZipRecruiter and DreamHost guides. None shows pay counted from open postings.
+- Done: the title of all 391 pages now starts with the searched words and carries our data ("Hire Android Developers: Pay, Skills, 963 Open
+  Roles (2026)"); the description leads with the median advertised pay and open roles and ends on a whole sentence (it ended on "…" before).
+- Open: Node.js page lists "Agile, SQL, Jira" as top skills and has no pay (too few postings with a range); Android page: one employer holds about half
+  of the postings. Role-specific sections the helper found (native vs cross-platform, project prices for web, Rust tooling) need sourced text.
+

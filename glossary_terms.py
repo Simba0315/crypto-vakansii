@@ -1887,7 +1887,9 @@ def test_more():
         t = m["title"]
         assert isinstance(t, str) and 20 <= len(t) <= 75 and "Jobs Every Hour" not in t, (term, len(t))
         secs = m["sections"]
-        assert isinstance(secs, list) and 2 <= len(secs) <= 4, term
+        # up to 8 sections and 10 questions (24 Nov 2026): the terms people reach from Google (rolling basis, new grad) answer every
+        # point of the first page and the AI answers, so they run longer than the 4 and 5 first set for all terms
+        assert isinstance(secs, list) and 2 <= len(secs) <= 8, term
         for sec in secs:
             assert isinstance(sec, tuple) and len(sec) == 2, (term, sec)
             head, paras = sec
@@ -1896,7 +1898,7 @@ def test_more():
             for p in paras:
                 assert isinstance(p, str) and 4 <= len(p.split()) <= 70 and p[-1] in ".?”", (term, p)
         qa = m["qa"]
-        assert isinstance(qa, list) and 3 <= len(qa) <= 5, term
+        assert isinstance(qa, list) and 3 <= len(qa) <= 10, term
         for pair in qa:
             assert isinstance(pair, tuple) and len(pair) == 2, (term, pair)
             q, a = pair
@@ -1913,3 +1915,86 @@ def test_more():
 if __name__ == "__main__":
     test()
     test_more()
+
+
+# ---- 24 Nov 2026: what the pages people reach from Google still lacked (Search Console queries, Google's first page and AI answer, Claude's
+# search; the record is SERP_AI_CHECK.md). Facts come only from pages read that day: IRS "Independent contractor defined", Cornell LII,
+# Workday "What is hybrid work", Gallup "Hybrid work" (8,090 remote-capable US employees, June 2022), Enhancv "What is a CV", FINRA "Options",
+# Indeed UK "Reference check". The extra sections and questions are added after the ones each term already has.
+_ADD_24NOV = {          # "sections" are added after the term's own (at most 4 in all), "qa" likewise (at most 5), "extend" adds paragraphs to a section
+    "Hybrid": dict(
+        extend={"Common hybrid models": [
+            "Flexible hybrid: you choose your office days, usually with a few fixed days for team meetings. It sits between a set schedule and a remote-first job, and it is the version most worth asking about before you accept.",
+        ]},
+        sections=[
+            ("Pros and cons of hybrid work", [
+                "For the worker, hybrid means fewer commutes and more control over the week, which is why people name work-life balance first. Workday lists flexibility, less commuting and better balance among the benefits.",
+                "The costs are quieter: being seen less by the people who decide promotions, and gaps in communication when half the team is at home. Gallup’s survey of 8,090 remote-capable US employees in June 2022 found the same pattern: better balance, efficient use of time and more control over hours and place, against weaker access to tools, culture and collaboration.",
+            ]),
+        ],
+        qa=[
+            ("What does hybrid mean in a job ad?", "That the job is not fully remote: you are expected in an office some of the week. Look for the number of days (\"hybrid, 3 days in office\") and the office location; if the ad gives neither, ask before applying."),
+        ]),
+    "CV": dict(
+        sections=[
+            ("Who needs a full CV, and how long it runs", [
+                "A full curriculum vitae is what academia, research and some medical and legal posts ask for. It lists everything: publications, grants, talks, teaching and committees, and it can run past ten pages.",
+                "For most jobs in the UK and much of Europe a CV means the same as a US resume and is about two pages; a US resume is usually one page.",
+            ]),
+        ],
+        qa=[
+            ("What should a CV include?", "Contact details, a short profile, work experience with results, education and skills. An academic CV adds publications, grants, conference talks, teaching and service."),
+        ]),
+    "Reference": dict(
+        sections=[
+            ("Kinds of references", [
+                "Professional references are managers, colleagues or clients who saw your work. Personal or character references know you outside work and speak to your reliability. Academic references are teachers or supervisors, common for students and new graduates.",
+                "Changing careers? Add someone who can speak to the skills the new job needs, such as a mentor, a course tutor or a practitioner in the new field, next to a former manager. Keep one more name ready than the employer asks for, and ask your referees to tell you when they are called.",
+            ]),
+        ],
+        qa=[
+            ("What does \"Reference\" mean in a job posting?", "A line such as \"Reference: 48213\" or \"Job ref\" is the employer’s code for the opening, not a person. Quote it in your application or email so it reaches the right hiring team."),
+        ]),
+    "Salary range": dict(
+        sections=[
+            ("The midpoint and salary bands", [
+                "The midpoint is the figure halfway between the lowest and the highest pay: add the two and divide by two, so $80K to $100K has a midpoint of $90K.",
+                "A salary range is the pay for one job. A salary band is a wider bracket an employer uses for several jobs at the same level, so one band can hold several ranges.",
+            ]),
+        ]),
+    "Equity and stock options": dict(
+        sections=[
+            ("Equity options at work vs options on the stock market", [
+                "Search for \"equity options\" and most results are about trading. Those are listed contracts to buy (a call) or sell (a put) a stock at a set price before a date; FINRA notes that a standard contract covers 100 shares and the buyer pays a premium for it.",
+                "Stock options in a job offer are different: your employer grants them, they cannot be traded, and you earn the right to use them over time through vesting.",
+            ]),
+        ]),
+}
+for _t, _a in _ADD_24NOV.items():
+    if _t in MORE:
+        _secs = [(h_, list(ps_) + _a.get("extend", {}).get(h_, [])) for h_, ps_ in MORE[_t]["sections"]]
+        MORE[_t] = dict(MORE[_t], sections=_secs + _a.get("sections", []), qa=list(MORE[_t]["qa"]) + _a.get("qa", []))
+
+# a term that had only its one-line definition (independent contractor, position 22 for its own name)
+MORE.setdefault("Independent contractor (1099)", dict(
+    title="Independent Contractor (1099): Meaning, Taxes and Status",
+    aliases=["1099-contractor"],          # its own address is /glossary/independent-contractor/ (gslug drops "(1099)"): never an alias
+    sections=[
+        ("What an independent contractor is", [
+            "An independent contractor is self-employed: a business hires them for a result, not to work under its direction. The IRS puts the test this way: the payer has the right to control or direct only the result of the work, not what will be done and how it will be done.",
+            "Contractors usually bring a specialised skill and work for several clients rather than one.",
+        ]),
+        ("Contractor or employee", [
+            "The label in a contract does not settle it. What counts is who controls the details of the work: when, where and how it is done. An employee gets a W-2, and the employer withholds income tax and pays its share of Social Security and Medicare.",
+            "A contractor gets no withholding. They pay self-employment tax, which covers Social Security and Medicare, and estimate their own income tax during the year. The business reports what it paid them on Form 1099-NEC.",
+        ]),
+        ("What it means for a job offer", [
+            "To compare a contract rate with a salary, count what the client does not pay: both halves of Social Security and Medicare, paid leave, a health plan and a retirement match. A contract rate that looks high often comes out close to a salary once those are added.",
+        ]),
+    ],
+    qa=[
+        ("Does a contract that says \"independent contractor\" make me one?", "No. Under IRS rules what matters is whether the business has the right to control the details of how you work, not the title in the contract."),
+        ("Which tax form does an independent contractor get?", "Form 1099-NEC from each business that paid them, instead of the W-2 an employee gets."),
+        ("Who pays Social Security and Medicare for a contractor?", "The contractor, as self-employment tax on their net earnings."),
+        ("Do independent contractors work for only one client?", "Usually not: most work for several clients, which is one of the signs that they run their own business."),
+    ]))

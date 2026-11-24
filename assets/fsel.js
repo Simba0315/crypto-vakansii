@@ -72,6 +72,7 @@
     sel.dataset.fx = '1'; sel.classList.add('fx-n');
     var btn = document.createElement('button'), name = sel.getAttribute('aria-label') || '';
     btn.type = 'button'; btn.className = 'fx'; btn.setAttribute('aria-haspopup', 'dialog'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span class="fx-k">' + esc(name) + '</span><span class="fx-v"></span>';
     sel.parentNode.insertBefore(btn, sel);
     var pop = makePop(btn, name);
     pop.hidden = true;
@@ -88,7 +89,7 @@
     function sync() {
       var o = sel.options[sel.selectedIndex], on = !!sel.value;
       var t = o ? o.textContent.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '') : name;
-      if (btn.textContent !== t) btn.textContent = t;
+      var v = btn.querySelector('.fx-v'); if (v.textContent !== t) v.textContent = t;
       btn.classList.toggle('on', on);
     }
     sync();
@@ -104,6 +105,7 @@
     if (city && city.list) [].forEach.call(city.list.options, function (o) { if (o.value) cities.push(o.value); });
     var btn = document.createElement('button');
     btn.type = 'button'; btn.className = 'fx fx-loc'; btn.setAttribute('aria-haspopup', 'dialog'); btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span class="fx-k">Location</span><span class="fx-v"></span>';
     loc.parentNode.insertBefore(btn, loc);
     var pop = makePop(btn, 'Location');
     pop.hidden = true; pop.classList.add('fx-wide');
@@ -143,7 +145,7 @@
     function sync() {
       var c = city ? city.value.trim() : '', o = loc.options[loc.selectedIndex];
       var t = c || (loc.value && o ? o.textContent.replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, '') : 'Anywhere');
-      if (btn.textContent !== t) btn.textContent = t;
+      var v = btn.querySelector('.fx-v'); if (v.textContent !== t) v.textContent = t;
       btn.classList.toggle('on', !!(c || loc.value));
     }
     sync();
@@ -152,5 +154,19 @@
 
   var syncs = [placeMenu(), menu(document.getElementById('age')), menu(document.getElementById('cat'), true), menu(document.getElementById('lvl')),
     menu(document.getElementById('sal'))].filter(Boolean);
+  // one bar for the five menus (owner, 24 Nov 2026: the row of separate pills still looked cheap): Location, Category, Level, Salary,
+  // Posted, each a label over its value, divided by thin lines; the groups are moved, the controls and their ids stay the same
+  var bar = document.createElement('div'); bar.className = 'fx-bar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Filters');
+  ['loc', 'cat', 'lvl', 'sal', 'age'].forEach(function (id) {
+    var c = document.getElementById(id), g = c && c.closest('.fgroup');
+    if (g && g.parentNode === wrap) bar.appendChild(g);
+  });
+  if (bar.children.length) wrap.insertBefore(bar, wrap.firstChild);
+  // the on/off chips ("Remote open to <country>", Remote, Hybrid …) in one row under the bar: it wraps on a computer and scrolls sideways on a phone
+  var chips = document.createElement('div'), rc = document.getElementById('f-rc-w'), work = wrap.querySelector(':scope > .f-work');
+  chips.className = 'fx-chips';
+  if (rc) chips.appendChild(rc);
+  if (work) chips.appendChild(work);
+  if (chips.children.length) wrap.insertBefore(chips, bar.nextSibling);
   setInterval(function () { syncs.forEach(function (f) { f(); }); }, 500);
 })();

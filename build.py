@@ -1272,7 +1272,7 @@ def ask_ai_row():
 
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
-<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO_DARK}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
+<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
 <div><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/senior-jobs/">Senior-level</a></li><li><a href="{P}/executive-jobs/">Executive</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></div>
 <div><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></div>
 <div><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></div>
@@ -1898,6 +1898,21 @@ def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
             '<p class="alertf-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>'
             f'{hid}<p class="note" role="status" aria-live="polite" data-alert-out></p>'
             f'<p class="note">We keep your address and this search until you unsubscribe, and a note of each letter for 30 days. <a href="{P}/privacy/#alerts">How alerts handle your address</a></p></form>')
+
+
+def plural_role(noun):
+    """The plural of a job title for a title or a sentence: "Android developer" -> "Android developers", "secretary" -> "secretaries",
+    "coach" -> "coaches", "chief of staff" -> "chiefs of staff". Only the head noun changes."""
+    m_ = re.match(r"^(.*?)(\b\w+)((?: (?:of|for|in|to) .+?)?(?: \([^)]*\))?)$", noun.strip())     # "registered nurse (RN)" -> "registered nurses (RN)"
+    head_, w_, tail_ = (m_.group(1), m_.group(2), m_.group(3) or "") if m_ else ("", noun, "")
+    lw_ = w_.lower()
+    if lw_ in ("staff", "personnel", "crew", "police", "people"): pw_ = w_
+    elif lw_.endswith("person"): pw_ = w_[:-6] + ("People" if w_[-6].isupper() else "people")
+    elif lw_.endswith("man") and lw_ not in ("human", "german"): pw_ = w_[:-3] + w_[-3:].replace("man", "men")
+    elif re.search(r"[^aeiou]y$", lw_): pw_ = w_[:-1] + "ies"
+    elif re.search(r"(s|sh|ch|x|z)$", lw_): pw_ = w_ + "es"
+    else: pw_ = w_ + "s"
+    return head_ + pw_ + tail_
 
 
 def tidy_list_desc(desc, jobs):
@@ -6919,8 +6934,16 @@ def main():
         facts_ = nums([(f"{len(cos_):,}", "companies hiring now"), (f"{n_:,}", f"open {e(low)} postings")] + ([(money(median(mids_)), MED_PAY)] if len(mids_) >= 20 else [])
                       + [(f"{rem_pct}%", "remote")] + ([(f"{age_med} days", "half of the postings have been up longer")] if age_med is not None else []))
         hh_dir[fs].append((slug_r, rname, len(cos_)))
-        page(f"how-to-hire/{slug_r}/", f"How to Hire {art(psn)} {tcase(psn)} ({TODAY[:4]}): Pay, Competition and Six Steps | {SITE}",
-             f"How to hire {art(psn)} {psn}: {len(cos_):,} companies are hiring this work today. What they pay and offer, where, how long postings stay up, and six steps with free templates and tools.",
+        # 24 Nov 2026: people search "hire android developers", "hire web developers" (Search Console, positions 40 to 90), and the first page
+        # is agencies with no data. The title now starts with those words and carries what only this site has: pay and open roles counted
+        # from today's postings; the description leads with the median pay. The H1 keeps "How to hire …".
+        pl_ = plural_role(psn)
+        ht_ = next(t_ for t_ in (f"Hire {tcase(pl_)}: Pay, Skills, {n_:,} Open Roles ({TODAY[:4]})", f"Hire {tcase(pl_)}: Pay, Skills and Six Steps",
+                                f"How to Hire {art(psn)} {tcase(psn)} ({TODAY[:4]})", f"Hire {tcase(pl_)}") if len(t_) <= 62)
+        hd_ = (f"Hire {pl_}: the median advertised pay is {money(median(mids_))} across {n_:,} open roles at {len(cos_):,} companies. "
+               "Skills they ask for, six steps, a free template." if len(mids_) >= 20 else
+               f"Hire {pl_}: {n_:,} open roles at {len(cos_):,} companies today. Where they are, how long postings stay up, the skills they ask for and six hiring steps with free templates.")
+        page(f"how-to-hire/{slug_r}/", ht_, hd_,
              crumbs(("For employers", "post-a-job/"), ("How to hire…", "how-to-hire/"), (rname, "")) + f'<h1>How to hire {art(psn)} {e(psn)}: <span class="hl">{len(cos_):,} companies are hiring now</span></h1>'
              f'<p class="lead">What you compete with, counted from today’s {n_:,} open {e(low)} postings: who is hiring, where, what they pay and how long postings stay up. Then six steps, each with a free template or tool.</p>'
              + facts_ + act_row("post-a-job/", "Post this job free", [(f"job-descriptions/{slug_r}/", "Job description template"), ("job-posting-sites/", "Where else to post it: sites compared")])
@@ -9191,6 +9214,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         # lists, added to any line under 125 characters), which says nothing about a word. Now: the definition, then today's figure and
         # the tip where they fit, so the line is about the term and needs no tail; a "desc" in glossary_more.json wins.
         gd_ = (GM or {}).get("desc") or f"{term}: {d_lc_}"
+        if len(gd_) > 158:      # a long definition ended on a cut word and "…": end it at its last clause that fits instead
+            cut_ = max(gd_.rfind(m_, 0, 150) for m_ in (": ", "; ", ", "))
+            if cut_ > 60: gd_ = gd_[:cut_].rstrip(" ,;:") + "."
         for add_ in (gfig.get(term, ""), tip):
             if add_ and add_ not in gd_ and len(gd_) + 1 + len(add_) <= 160: gd_ = gd_.rstrip() + " " + add_
         if len(gd_) < 125:
