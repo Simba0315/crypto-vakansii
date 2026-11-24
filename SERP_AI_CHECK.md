@@ -846,3 +846,23 @@ Next candidates in this order: /glossary/new-grad/ (position 8.7), /entry-level/
   dates for grants), Sweep&Go (rolling billing), Law Insider, AccountingTools (rolling budget). Neither cites us yet.
 - Done after them: section "Other meanings of rolling basis" (grants, contracts and subscriptions, rolling 12 months and rolling
   budgets, rolling reserve). Check again in two weeks: position, whether the AI answers start to cite the page.
+
+## Bing, all of the owner's sites (24 Nov 2026)
+
+Owner, 24 Nov: "bing очень плохо по всем доменам растет почему?? сам зайди проверь все домены даже хайпесткей". Bing Webmaster Tools
+has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
+- jobseveryhour.com (added 20 Nov): 0 impressions; Site Explorer 1 page indexed (/jobs/), 2 excluded; the sitemap was submitted as
+  http://jobseveryhour.com/sitemap.xml, read once on 20 Nov (28 child sitemaps, no pages crawled from them). IndexNow sent only
+  new and closed jobs once a day, and from 23 Nov 12:50 UTC the hourly run failed (memory), so nothing was sent. Done: https sitemap
+  added, 91 main pages through URL Submission (quota 100 a day), 702 core pages through IndexNow, and build.py now adds the core
+  pages to the Monday IndexNow list.
+- cryptobubbles.org: 0 impressions since at least 26 Oct; site:cryptobubbles.org shows nothing; URL Inspection of the home page:
+  "Discovered but not crawled", discovered 29 May 2019 (the domain had an earlier life); the live test says it can be indexed and
+  finds no SEO issues, so the block is Bing's crawl priority and trust, not a technical fault. Sitemap read once, 7 Nov. Done:
+  home page "Request indexing" + 9 main pages through URL Submission (quota 10 a day for this site). Next: IndexNow from its own
+  build (its project), links from trusted sites, and checking whether the old 2019 content of the domain left a penalty.
+- hypestkey.com: Bing works — last 3 months 4.5K clicks, 161.6K impressions, CTR 2.8%, sitemap_index.xml read 20 Nov (414 URLs).
+  Its weak spot is CTR on big queries at positions 5–9 ("software center" 9.2K impressions, 0 clicks; "office deployment tool 2026"
+  7.1K, 20 clicks): titles and descriptions for those pages, in that project.
+- Why Bing is slow for new sites in general: it crawls few pages of a new, little-linked domain and waits for links and IndexNow
+  signals; a site with hundreds of thousands of generated pages gets the most cautious treatment. Check again on 1 Dec 2026.

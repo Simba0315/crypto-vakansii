@@ -11193,7 +11193,12 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     if CFG.get("indexnow_key"):
         write(f'{CFG["indexnow_key"]}.txt', CFG["indexnow_key"], sitemap=False)
         YDAY = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
-        changed = ["", "jobs/", "new/", "remote/", "trends/", "salaries/", "companies/"] + [f"job/{j['slug']}/" for j in jobs if j.get("first_seen") in (YDAY, TODAY) or j.get("closed") in (YDAY, TODAY)]
+        changed = ["", "jobs/", "new/", "remote/", "trends/", "salaries/", "companies/"]
+        # Mondays also the main pages of sitemaps/core.xml (about 700). Why (24 Nov 2026): Bing had indexed 1 page of the site in four days;
+        # it crawls a new site from what IndexNow tells it, and the daily list named only jobs. Their counts and lists change every day.
+        if datetime.date.today().weekday() == 0:
+            changed += [u for u in core_urls if u not in changed]
+        changed += [f"job/{j['slug']}/" for j in jobs if j.get("first_seen") in (YDAY, TODAY) or j.get("closed") in (YDAY, TODAY)]
         (ROOT / "data" / "indexnow.json").write_text(json.dumps({"host": BASE.split("//", 1)[-1], "key": CFG["indexnow_key"], "keyLocation": f'{FULL}/{CFG["indexnow_key"]}.txt',
                                                                  "urlList": [f"{FULL}/{u}" for u in changed[:10000]]}))
     lap("end")
