@@ -432,7 +432,7 @@ MORE_ROLES = [
     ("Investigations specialist", "investigations", r"insider (risk|threat)|(?<!research )\binvestigat(or|ions?|ive)\b|forensic|\bdfir\b",
      "investigators", "looks into fraud, abuse, leaks and misconduct, collects the evidence and writes up what happened", "nt"),
     ("Cryptographer", "cryptographer", r"cryptograph|\bpqc\b|post[- ]quantum|\bmpc\b|\bhsm\b|\bpki\b|key management|\bfhe\b|homomorphic",
-     "cryptographers", "designs and checks the maths and code that keep data secret and prove who sent it"),
+     "cryptographers", "designs and checks the math and code that keep data secret and prove who sent it"),
     ("Industrial security and clearance specialist", "industrial-security", r"facility security officer|\bfso\b|industrial security|personnel security|security clearance|special security (officer|representative)|\bdcsa\b|classified (programs?|information|systems)|\bnispom\b|program security",
      "industrial security specialists", "handles security clearances and protects classified information at defense and government contractors"),
     ("OT and product security engineer", "ot-security", r"\bot (security|cyber)|operational technology|\bics\b|industrial (control|cyber)|scada|product cybersecurity|vehicle (security|cybersecurity)|automotive (security|cybersecurity)|embedded security|hardware security",
