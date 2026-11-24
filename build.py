@@ -3806,8 +3806,20 @@ def main():
         extra_ = [(f"How much do {low_} pay?", f"The middle advertised salary of these jobs is {p_} a year, counted from the postings that state pay on {fdate(TODAY)}. Pay is before tax.")] if p_ else []
         if y_: extra_.append((f"How much experience do {low_} ask for?", f"The postings that name a number ask for {y_} years in the middle case."))
         extra_.append(("Which titles are most common at this level?", f"Today: {lv_titles(js)}."))
+        rem_ = [j for j in js if j["remote"]]
+        if len(rem_) >= 20: links = tuple(links) + ((path + "remote/", f"Remote {low_}"),)
         listing(path, h1, f"{tcase(h1).replace('Senior-level', 'Senior Level')} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open job')} {what}, read from employers’ own careers pages and checked hourly. See who hires, where, and what the level pays.", js,
                 intro_for(js, "", f" {what}", row=row_), trail=(("All jobs", "jobs/"),), more=more, faq=low_, faq_first=first, faq_extra=extra_, after=alert, links=links, **kw_)
+        if len(rem_) >= 20:      # the same level done from home: "remote senior jobs" is its own search
+            rh_ = "Remote " + low_
+            rrow_, rkw_ = list_parts(rh_, rem_)
+            rp_ = lv_pay(rem_)
+            rextra_ = [(f"How much do {rh_.lower()} pay?", f"The middle advertised salary of these remote jobs is {rp_} a year, counted from the postings that state pay on {fdate(TODAY)}. Pay is before tax.")] if rp_ else []
+            rextra_.append(("Which titles are most common?", f"Today: {lv_titles(rem_)}."))
+            listing(path + "remote/", rh_, f"{tcase(rh_).replace('Senior-level', 'Senior Level')} ({len(rem_):,} open) | {SITE}",
+                    f"{roles(len(rem_), 'open remote job')} {what}, done from home, read from employers’ own careers pages and checked hourly.", rem_,
+                    intro_for(rem_, "remote ", f" {what}", row=rrow_), trail=((h1, path), ("Remote", "remote/")), more=("remote=1&" + more) if more else "remote=1",
+                    faq=rh_[0].lower() + rh_[1:], faq_first=first, faq_extra=rextra_, links=((path, h1), ("remote/", "All remote jobs")), **rkw_)
     lv_page("senior-jobs/", "Senior-level jobs", lv_sen, "with “senior” or an equal level in the title",
             ("What is considered a senior-level job?", "A role for someone who does the work without supervision, decides how it is done and helps others do it. Employers usually mark it in the title with “Senior” or “Sr.”, and most ask for about five years or more. It sits above mid-level and below lead, staff and principal."),
             "lvl=Senior", alert_form("new senior-level jobs", q="senior"), (("lead-jobs/", "Lead and staff jobs"), ("executive-jobs/", "Executive jobs"), ("guides/job-levels-explained/", "What the level in a title means")))
