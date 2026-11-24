@@ -4262,3 +4262,15 @@ main.srch #fwrap .fx-chips .flabel{position:absolute;width:1px;height:1px;margin
 /* 24 Nov 2026, Lighthouse "Links rely on color to be distinguishable": the "Ask ChatGPT / Claude / Perplexity" links sit inside a
    sentence in the footer, so they keep a thin underline, not only a colour */
 footer .fask a{text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:currentColor;text-underline-offset:3px}
+/* ---------- 24 Nov 2026: the footer wordmark's shimmer without repainting. Lighthouse on the home page counted 15.8 s of "Rendering" in a
+   25 s trace: the old shimmer animated background-position, which repaints the whole masked block every frame on every page. Now the
+   dots are a still layer (::after) and the band of light (::before) moves with transform, which the compositor does on its own. Same
+   look, same 12 s sweep; still for people who ask for reduced motion. */
+.fbig{position:relative;overflow:hidden;background-image:none;animation:none}
+.fbig::before{content:"";position:absolute;top:0;bottom:0;left:0;width:250%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 0%,transparent 34%,color-mix(in srgb,var(--ac) 30%,transparent) 46%,color-mix(in srgb,var(--pop) 70%,transparent) 50%,color-mix(in srgb,var(--ac) 30%,transparent) 54%,transparent 66%,transparent 100%);
+  transform:translateX(-72%);animation:fbig2 12s linear infinite;will-change:transform}
+.fbig::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,var(--ac) 0 1.15px,transparent 1.5px) 0 0/7px 7px}
+@keyframes fbig2{from{transform:translateX(-72%)}to{transform:translateX(72%)}}
+@media (max-width:560px){.fbig::after{background-size:5px 5px}}
+@media (prefers-reduced-motion:reduce){.fbig::before{animation:none;transform:translateX(-30%)}}
