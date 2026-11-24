@@ -2441,6 +2441,7 @@ def job_page(j, active_by_cat):
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
+    place_ = re.sub(r"\s*\([^)]*\)", "", place_).strip(" ,-–")       # "… at LiveKit (United Kingdom (Remote))" had a bracket in a bracket
     if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= 65: title += f" ({place_})"
     if not j["active"]: title += " (closed)"
     # the search line of a job: what a searcher compares first, the pay, then the place of work and the skills (24 Nov 2026: it read
@@ -2524,6 +2525,7 @@ def calm_title(t):
         return w[0] + w[1:].lower()
     return re.sub(r"[A-Za-z]+(?:'[A-Za-z]+)?", fix, t)
 
+ASSOC_SENIOR = re.compile(r"(?i)associate (?:rvp|avp|svp|evp|regional vice president|area vice president|managing director|general manager|head|dean|chief)\b")
 REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
             re.compile(r"\s*[\(\[]\s*\d{5,}\s*[\)\]]"),                                                    # "(123456)", never a year
             re.compile(r"\s*[,–-]?\s*#\d{3,}\s*$"),                                                         # ", #1463"
@@ -2591,6 +2593,10 @@ def main():
         j["cover"] = (j.get("cover") or (bought.get("premium") or {}).get("cover", "")) if j["premium"] else ""
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
         j["title"] = tidy_job_title(calm_title(j["title"]))
+        # "Associate RVP, Provider Sales" was a junior role in the lists and on its page (24 Nov 2026): collect.level() knows
+        # "Associate VP" and "Associate Director" but not the regional and managing variants. Mended here, not in collect.py, whose
+        # rules hash decides when every record is read again.
+        if j["level"] == "Junior" and ASSOC_SENIOR.match(j["title"]): j["level"] = "Lead"
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["pool"] = bool(POOL_RX.search(j["title"]))
         j["usd"] = usd_range(j["salary"])
