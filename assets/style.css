@@ -4157,3 +4157,7 @@ main.srch #fwrap .fx-n{display:none}
 /* the filter row on a phone sat 76px below its place, over the first lines of the list: the desktop rule (sticky, top:76px) left its
    "top" behind when the phone rule made the row position:relative */
 @media(max-width:860px){main.srch #fwrap{top:auto}}
+/* the home page's questions: the title sticks in the left column while the list scrolls; the "More: …" line under the list was placed
+   in the left column too, so the sticking title slid over it (owner's screenshot, 24 Nov 2026). Everything after the title now sits in
+   the right column. */
+@media(min-width:901px){main.home #faq>:not(.sec-head){grid-column:2}main.home #faq>.sec-head{grid-row:1/span 3}}
