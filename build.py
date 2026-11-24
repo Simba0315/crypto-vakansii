@@ -15,6 +15,7 @@ BUILD_PERKS = [("Tuition assistance", "tuition-assistance",
                 r"tuition (reimbursement|assistance|support|benefits?|program|aid)|educational? (reimbursement|assistance program)|(pays?|covers?|reimburses?) (for )?(your )?(college|university) (tuition|courses|degree)"),
                ("Student loan help", "student-loan-help",
                 r"student loan (repayment|assistance|contributions?|support|benefits?|paydown|reimbursement|relief)|(help|assist)(s|ing)? (you )?(with|to pay (down|off)) (your )?student loans?")]
+BUILD_PERK_KEYS = {"Tuition assistance": ("tuition", "education", "college", "university"), "Student loan help": ("student loan",)}   # a word each pattern cannot match without
 PERKS = list(PERKS) + BUILD_PERKS
 import bls_wages                        # US government wage figures beside advertised pay (/salaries/<role>/)
 import tools_pages                      # the free tools section: /tools/ and one page per tool
@@ -2647,11 +2648,18 @@ def main():
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
     contact = " or ".join(x for x in [f'Telegram <a href="https://t.me/{e(CFG["contact_telegram"])}">@{e(CFG["contact_telegram"])}</a>' if CFG["contact_telegram"] else "",
                                       f'email <a href="mailto:{e(CFG["contact_email"])}">{e(CFG["contact_email"])}</a>' if CFG["contact_email"] else ""] if x)
-    places = [(name, slug, js) for name, slug, rx in PLACES if len(js := [j for j in active if slug in j["places"]]) >= 5]
+    by_place_ = defaultdict(list)                     # one pass over the jobs instead of one per place (100 places x every job)
+    for j in active:
+        for s_ in set(j["places"]): by_place_[s_].append(j)
+    places = [(name, slug, by_place_[slug]) for name, slug, rx in PLACES if len(by_place_.get(slug, ())) >= 5]
     OPEN.update(Counter(j["company"] for j in active))
-    for j in active:                                  # the perks read here (BUILD_PERKS), from the full text or the opening lines
+    # the perks read here (BUILD_PERKS), from the full text or the opening lines. Each pattern needs one of its words (BUILD_PERK_KEYS),
+    # so a plain test on the lower-cased text comes first: 7.8 s -> 1.7 s on the local sample, the same perks (24 Nov 2026)
+    bp_rx = [(nm, re.compile(rx, re.I)) for nm, _, rx in BUILD_PERKS]
+    for j in active:
         tx_ = (j.get("desc") or "") + " " + (j.get("excerpt") or "")
-        add_ = [nm for nm, _, rx in BUILD_PERKS if nm not in j.get("perks", []) and re.search(rx, tx_, re.I)]
+        low_ = tx_.lower()
+        add_ = [nm for nm, rx in bp_rx if nm not in j.get("perks", []) and any(k_ in low_ for k_ in BUILD_PERK_KEYS[nm]) and rx.search(tx_)]
         if add_: j["perks"] = list(j.get("perks") or []) + add_
     PERK_OK.update(x for x, k in Counter(x for j in active for x in j.get("perks", [])).items() if k >= 8)
     wk = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
