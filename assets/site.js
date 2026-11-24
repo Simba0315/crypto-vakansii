@@ -631,7 +631,7 @@
         ['/relocate/', 'Relocation guides', 'Jobs abroad with visa or relocation help, by country.'],
         ['/guides/', 'Guides', 'The job market explained with today’s numbers.'],
         ['/glossary/', 'Glossary', 'Hiring words in plain English.'],
-        ['/ahead/', 'From the future', 'Things no other job site does yet, working today.'],
+        ['/ahead/', 'Helpers in your browser', 'Chance a job is still open, skill GPS, interview practice out loud and more.'],
         ['/tools/', 'All free tools', 'Offer check, raise calculator, letters and more.']]],
       '/post-a-job/': ['For employers', [
         ['/account/?as=employer', 'Employer sign in', 'Your jobs, their views and clicks, promotion and billing.'],

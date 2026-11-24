@@ -2953,7 +2953,7 @@ def main():
     gps_top = gps_gain.most_common(2)
     gps_rows = "".join(f'<span class="rw"><span>{e(t)}</span><span class="mt"><i style="width:{max(8, round(100 * k / gps_top[0][1]))}%"></i></span><b>+{k:,}</b></span>' for t, k in gps_top)
     FUTURE = [
-        ("Will it still be open next week?", "Every job page estimates the chance the posting is still open in 7 days, from the closings we see every hour. No job site shows this.", "jobs/",
+        ("Will it still be open next week?", "Every job page estimates the chance the posting is still open in 7 days, from the closings we see every hour, shown as a percentage.", "jobs/",
          (f'<span class="big">{still7}%<small>still open in 7 days</small></span><span class="ln">A posting 8 to 30 days old, from the closings we see every hour</span>' if still7
           else '<span class="ln"><b>Still open in 7 days?</b></span><span class="ln">Counted from the closings we see every hour</span>')),
         ("Skill GPS: the one skill to learn next", "The resume builder counts, across every open job, which single skill would bring the most jobs within your reach, and what they pay.", "resume/",
@@ -5772,10 +5772,12 @@ def main():
         ("A resume that knows what is in demand", "While you type in the resume builder, it shows how many open jobs ask for each skill you mention and how many jobs fit the resume as it stands.", "resume/",
          ex_ + '<span class="rw"><span>Python</span><span class="mt"><i style="width:100%"></i></span><b>8,341</b></span><span class="rw"><span>SQL</span><span class="mt"><i style="width:52%"></i></span><b>4,254</b></span><span class="ln">1,240 jobs ask for three of your skills</span>'),
     ]
-    page("ahead/", f"{len(ahead_cards)} Things Other Job Sites Do Not Do Yet | {SITE}",
-         "The chance a job is still open next week, a skill GPS, interview practice out loud, an AI assistant briefed with your resume, and more things job sites do not do yet.",
-         crumbs(("From the future", "")) + f'<h1>From the future: <span class="hl">{len(ahead_cards)} things job sites do not do yet</span></h1>'
+    page("ahead/", f"{len(ahead_cards)} Job-Search Helpers in Your Browser | {SITE}",
+         f"{len(ahead_cards)} free helpers that run in your browser: the chance a job is still open next week, a skill GPS, interview practice out loud, a resume for one job, and more.",
+         crumbs(("Browser helpers", "")) + f'<h1>{len(ahead_cards)} job-search helpers <span class="hl">that run in your browser</span></h1>'
          '<p class="lead">Each of them works in your browser, with no account and nothing sent to us. Open any of them and try.</p>'
+         '<p class="plain"><b>In plain words:</b> each card below is a small helper built into this site. It does its work on your own computer or phone, so what you type or say stays with you. '
+         'Click a card to open the helper; the picture on the card shows what it does, and cards marked “example” show made-up figures.</p>'
          '<div class="tgrid">' + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{GO.get(u, "Open it")}</u></i></span></a>' for t_, d_, u, scr in ahead_cards) + "</div>"
          f'<p class="note">Some of these depend on what your browser can do: speech recognition and background checks are not in every browser. Where one is missing, its button does not appear.</p>', cls="sp ahead")
 
@@ -10859,7 +10861,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              'var m=/<h1[^>]*>[\\s\\S]*?<span class="hl">([\\s\\S]*?)<\\/span>/.exec(t),d=document.createElement("textarea");d.innerHTML=m?m[1]:s;var n=d.value.trim()||s;'
              'document.getElementById("hb-co-h").textContent=n+"’s hiring badge";document.getElementById("hb-co-a").href=pg;'
              'var i=document.getElementById("hb-co-img");i.src=img;i.alt=n+" jobs on Jobs Every Hour";var q=n.replace(/["<>]/g,"");'
-             'document.getElementById("hb-co-html").value="<a href=\\""+pg+"\\"><img src=\\""+img+"\\" alt=\\""+q+" jobs on Jobs Every Hour\\" height=\\"28\\"></a>";'
+             'document.getElementById("hb-co-html").value="<a href=\\""+pg+"\\"><img src=\\""+img+"\\" alt=\\""+q+" jobs on Jobs Every Hour\\" title=\\""+q+" jobs on Jobs Every Hour\\" height=\\"28\\"></a>";'
              'document.getElementById("hb-co-md").value="[!["+q+" jobs on Jobs Every Hour]("+img+")]("+pg+")";box.hidden=false;box.scrollIntoView({block:"start"})})'
              '.catch(function(){})})();</script>')
     page("hiring-badge/", f"Free Hiring Badge with a Live Count of Open Roles | {SITE}",
