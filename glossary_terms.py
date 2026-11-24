@@ -1816,7 +1816,7 @@ MORE = {
                 "Common reasons are a workload that grew without more pay, no path to a promotion, a manager who does not notice extra effort, or exhaustion from too many hours.",
                 "It often comes before a person starts looking for another job, so it is worth noticing as a signal and not only as a habit.",
             ]),
-            ("What to do about it", [
+            ("How to respond if you are quiet quitting", [
                 "Name what changed: pay, workload, a manager, the kind of tasks. Each points to a different next step.",
                 "If the cause can be fixed, tell your manager what you need in one specific request, such as a clearer scope, a review of your pay or one project that you care about.",
                 "If it cannot be fixed, start looking while you still have the energy to interview well. The job pages here show how long each opening has been up and when it was last checked.",

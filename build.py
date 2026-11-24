@@ -6742,11 +6742,13 @@ def main():
                 take = (12, 8, 6)[tech_k]; tech_k += 1
                 qs_all = qv["qs"]
                 idx_ = sorted({round(i_ * (len(qs_all) - 1) / (take - 1)) for i_ in range(take)}) if len(qs_all) > take else range(len(qs_all))
-                for i_ in idx_:
+                for n_q, i_ in enumerate(idx_):
                     q_, opts, right, why = qs_all[i_]
-                    tech_items.append((q_, f'A {e(t)} question ({pc_(k, n_)}% of today’s postings name {e(t)}). More in the <a href="{P}/skill-tests/{qk}/">{e(t)} skill test</a>.',
+                    # the share and the link once per skill: the same sentence under all twelve questions read as filler (24 Nov 2026)
+                    tech_items.append((q_, (f'{art(t).capitalize()} {e(t)} question ({pc_(k, n_)}% of today’s postings name {e(t)}). More in the <a href="{P}/skill-tests/{qk}/">{e(t)} skill test</a>.'
+                                            if n_q == 0 else f'{art(t).capitalize()} {e(t)} question.'),
                                        "", f"{opts[right]}. {why}"))
-        du_items = [(DU_Q[i][0].format(x=x), f"One of the core duties of {e(low)} work.", DU_Q[i][1]) for i, x in enumerate(focus)]
+        du_items = [(DU_Q[i][0].format(x=x), f"One of the core duties of {e(low)} work." if i == 0 else "Another core duty.", DU_Q[i][1]) for i, x in enumerate(focus)]
         whose = f"today’s {len(pool_):,} open {e(low)} postings with a full description" if own_text else f"all {len(pool_):,} open postings with a full description"
         th_items = [(b, f"{pc_(k, len(pool_))}% of {whose} {e(a)}.", c) for k, a, b, c, _ in th_]
         th_note = "" if own_text else f'<p class="note">Too few {e(low)} postings have a full description to count on their own, so these shares are from all {len(pool_):,} postings with one.</p>'
@@ -9222,7 +9224,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    "<div><dt>What happens when a job closes</dt><dd>A job that only disappears leaves you guessing. Here the page of a closed job stays at its address and says it is closed, so a saved link never leads to nothing.</dd></div>"
                    "<div><dt>What you can check yourself</dt><dd>Every job here names the hiring system it was read from and links to the company’s own posting; the hourly check is described step by step, with today’s figures.</dd></div>"
                    + "".join(f'<div><dt>{e(x["name"])} also has</dt><dd>{e(x["also"])}</dd></div>' for x in CE.ENGINES if x["also"]) + "</dl>", sid="apart", label="Differences")
-         + section("Questions", ce_qh, label="Questions")
+         + ce_qh
          + section("Sources", '<ul class="vs-src">' + "".join(f'<li><b>{e(x["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in x["sources"]) + "</li>" for x in CE.ENGINES)
                    + f'</ul><p class="note">Read on {ce_when}. Sites change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
          head=ce_ld, cls="hub sp frb")
