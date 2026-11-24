@@ -70,6 +70,7 @@
 | Удалёнка по областям `/remote/<область>/` | Вместо неправды «Work from anywhere» — сколько вакансий открыто для любой страны («40 are open to any country; the rest name where you must live») | Локальная сборка |
 | «Без опыта» `/no-experience-jobs/` | Там стояли директор по персоналу, руководитель разработки и senior-инженеры (фраза «Automotive experience is not required» считалась за «опыт не нужен»). Правило сужено, senior/lead и «2+ года» исключены | Просмотр совпадений в данных |
 | Для начинающих `/entry-level/` | Без непроверенного «Many need no experience»; описание как у других списков | Локальная сборка |
+| «Hiring immediately», «Fair chance», «Weekend» | «Срочный найм» больше не ловит «immediate hiring outcomes» и «the next crew can start immediately»; fair chance и выходные проверены по текстам — верно | Просмотр совпадений в данных |
 | Списки part-time, contract | Описание с заглавной буквы | Аудит |
 | Руководства, словарь: заголовки | Заголовок больше не обрывается на «… field by» и «… Plain Definition and» (3 страницы) | Проход по всем заголовкам |
 | Переезд `/relocate/…` (13) | Описание без «0 open jobs mention visa sponsorship» | Локальная сборка: Бразилия |

@@ -2157,7 +2157,10 @@ def intern_hub(path, h1, yr, ej):
 
 # What a posting itself says about how soon it hires and what it asks for ("hiring immediately", "no experience jobs"). Recruiters' own
 # postings talk about "immediate hiring needs" and are about other people's jobs, so they are left out.
-IMMEDIATE_RX = re.compile(r"\b(?:start(?:ing)? immediately|immediate start|hiring immediately|immediate hiring(?! needs?)|immediate openings?|urgently hiring|immediately hiring)\b", re.I)
+# 24 Nov 2026: "will drive immediate hiring outcomes" (a Director of Recruiting) and "so the next crew can start immediately" (a boilermaker's
+# duties) counted as an immediate start. "Start immediately" now needs someone who can or is ready to; "immediate hiring" must end the phrase.
+IMMEDIATE_RX = re.compile(r"\b(?:(?:you can|who can|that can|able to|available to|ready to|willing to|looking to) start immediately|start date:? immediate(?:ly)?|starting immediately|"
+                          r"immediate start|hiring immediately|immediate hiring(?=\s*[.,;:!)\n]|\s*$| for\b| in\b| at\b)|immediate openings?|urgently hiring|immediately hiring)\b", re.I)
 # Fair chance (owner's Reddit keyword list, 21 Nov 2026: "felon friendly jobs" ~15K searches a month): postings that say the employer
 # considers applicants with arrest or conviction records, mostly because a fair chance law (San Francisco, Los Angeles, California, New
 # York City and others) makes it say so. The page says plainly what that means and that it promises no hire.
