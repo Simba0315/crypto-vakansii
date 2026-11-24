@@ -1641,6 +1641,34 @@ def mix_note(tech_tail, other_tail):
     return f"The jobs here are the ones employers publish on their own careers pages ({100 * MIX_[0]:.0f}% of them in technology work), so {other_tail}"
 
 
+CTR_W = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "nine": 9, "twelve": 12, "eighteen": 18}
+CTR_LEN = re.compile(r"\b(\d{1,2}|one|two|three|four|five|six|nine|twelve|eighteen)(?:\s*(?:-|to|–)\s*(\d{1,2}))?[\s-]*(months?|weeks?|years?)\b"
+                     r"(?:\s+(?:fixed[- ]term|temporary|initial|full[- ]time|w2|hourly))?\s+(?:contract|assignment|engagement|position|role|project|term)"
+                     r"|\b(?:contract|assignment|engagement)\s+(?:length|duration|term)?\s*(?:of|:|for|is)?\s*(?:an?\s+)?(?:initial\s+)?"
+                     r"(\d{1,2}|six|twelve|three|nine)(?:\s*(?:-|to|–)\s*(\d{1,2}))?[\s-]*(months?|weeks?|years?)\b", re.I)
+
+
+def ctr_len_note(jobs):
+    """How long today's contract postings say they run ("12-month contract", "6 month fixed-term contract", "contract length: 3 months"),
+    for the glossary's contract figure: Google's "How long do contract jobs usually last?" (People also ask, 24 Nov 2026), answered
+    from the postings' own words. Lengths over three years are left out (a pension term, not a contract's length)."""
+    mo_ = []
+    for j in jobs:
+        if j.get("etype") != "Contract": continue
+        m = CTR_LEN.search((j.get("title") or "") + " . " + (j.get("desc") or ""))
+        if not m: continue
+        a, b, u = (m.group(1), m.group(2), m.group(3)) if m.group(1) else (m.group(4), m.group(5), m.group(6))
+        a = int(a) if a.isdigit() else CTR_W[a.lower()]
+        v = (a + int(b)) / 2 if b else a
+        v = v if u.lower().startswith("month") else v * 12 if u.lower().startswith("year") else v / 4.33
+        if 0 < v <= 36: mo_.append(v)
+    if len(mo_) < 20: return ""
+    top_ = [k for k, _ in Counter(round(x) for x in mo_).most_common(2)]
+    say_ = lambda k: f"{k} month{'s' if k != 1 else ''}"
+    return (f" {len(mo_):,} of them state how long the contract runs: the median is {say_(round(median(mo_)))}, and the lengths named most are "
+            f"{say_(top_[0])}" + (f" and {say_(top_[1])}." if len(top_) > 1 else "."))
+
+
 def faq_for(label, jobs, first=None, extra=()):
     """Questions people actually ask about a set of jobs, answered from today's data. Returns (html, json-ld)."""
     if len(jobs) < 5: return "", ""
@@ -1675,7 +1703,8 @@ def faq_for(label, jobs, first=None, extra=()):
         if len(lm_) >= 10:
             qa.append((f"What do {label} pay in {word_}?", f"{len(lm_):,} of the open postings state a yearly range in {word_}: the median midpoint is {sym_}{median(lm_):,.0f}, and the middle half "
                        f"advertise {sym_}{lm_[len(lm_) // 4]:,.0f} to {sym_}{lm_[3 * len(lm_) // 4]:,.0f}. These are advertised ranges as each employer wrote them, not verified pay."))
-    if len(mids) >= 15:
+    # a company page answers its own "Does <company> pay well?" (extra): the generic pay question under it repeated the same figures (25 Nov 2026)
+    if len(mids) >= 15 and not any("pay" in q_.lower() for q_, _ in extra):
         qa.append((f"What is the median salary of {label}?" if " pay " in f" {label} " else f"What do {label} pay?",
                    f"The median advertised salary is {money(median(mids))}, based on {len(mids):,} open roles that publish a yearly US-dollar range. The middle half of those roles advertise between "
                    f"{money(mids[len(mids) // 4])} and {money(mids[min(len(mids) - 1, 3 * len(mids) // 4)])}. These are advertised ranges, not verified pay. "
@@ -1709,7 +1738,7 @@ def faq_for(label, jobs, first=None, extra=()):
     if n_ >= 20 and len(ti_) >= 3:
         qa.append((f"Which job titles come up most in {label}?",
                    ", ".join(f"{t} ({k})" for t, k in ti_) + f": the most common titles among the {n_:,} open roles, without the level and place notes in brackets."))
-    if n_ >= 20 and ALL_OPEN[0]:
+    if n_ >= 20 and ALL_OPEN[0] and n_co > 1:        # one company's jobs: "in demand ... at 1 company" said nothing (25 Nov 2026)
         qa.append((f"Are {label} in demand in {TODAY[:4]}?",
                    f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, {100 * n_ / ALL_OPEN[0]:.1f}% of all {ALL_OPEN[0]:,} open jobs here; "
                    + (f"{new7:,} were posted in the last seven days." if new7 else "") + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
@@ -3760,7 +3789,7 @@ def main():
     NEWSK_N = {t: len(fj) for t, fj in new_sk}
     for t, js in by_tag.items():
         sr_ = SKILL_ROLE.get(t)
-        listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {t} ({len(js):,} open) | {SITE}" if sr_ else f"{t} Jobs ({len(js):,} open) | {SITE}",
+        listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {tcase(t)} ({len(js):,} open) | {SITE}" if sr_ else f"{tcase(t)} Jobs ({len(js):,} open) | {SITE}",
                 (f"Jobs that ask for {t}: {len(js):,} open now at companies." if sr_ else f"{t} jobs: {len(js):,} open now at companies.")
                 + ((lambda pl_: f" {t}: {pl_ if len(pl_.split()[0]) > 1 and pl_.split()[0].isupper() else pl_[:1].lower() + pl_[1:]}")(skills_info.plain(t)) if t in skills_info.INFO else ""), js,       # the searched words first, then what the skill is (24 Nov 2026)
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
@@ -3815,7 +3844,7 @@ def main():
         pay_r = f", {money(mids_r[len(mids_r) // 4])}–{money(mids_r[3 * len(mids_r) // 4])}" if len(mids_r) >= 15 else ""     # the pay range in the title, as the top results show it
         # a kind of work named after a skill that is not also a company (SEO, computer vision, DeFi, AML/KYC) takes "<skill> jobs"
         sk_q = next((t for t, s_ in SKILL_ROLE.items() if s_ == slug_r and t not in OPEN and t not in ("SAP", "Salesforce", "Workday", "Oracle", "HubSpot", "Zendesk", "Snowflake", "Databricks")), None)
-        r_title = (lambda t1, t2: t1 if len(t1) <= 65 else t2)(f"{sk_q} Jobs ({len(rj):,} open{pay_r}): {tcase(rname)}", f"{sk_q} Jobs ({len(rj):,} open{pay_r})") if sk_q else f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r})"
+        r_title = (lambda t1, t2: t1 if len(t1) <= 65 else t2)(f"{tcase(sk_q)} Jobs ({len(rj):,} open{pay_r}): {tcase(rname)}", f"{tcase(sk_q)} Jobs ({len(rj):,} open{pay_r})") if sk_q else f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r})"
         listing(f"roles/{slug_r}/", f"{sk_q} jobs" if sk_q else f"{rname} jobs", f"{r_title} | {SITE}",
                 role_desc(sk_q or rname, rj, mids_r, w_),
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
@@ -4453,6 +4482,8 @@ def main():
                    '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"), cls="hub")
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
+    PLACE_NAME_THE = {slug: name for name, slug, _ in PLACES}          # "the United States" inside a sentence
+    PLACE_RULE = {slug: rule for _, slug, rule in PLACES}
     PLACE_LIVE = {slug for _, slug, _ in places}
     PLACE_SLUG = {v: k for k, v in PLACE_NAME.items()}
     SKILL_OF_SLUG = {tslug(t_): t_ for t_ in by_tag if tslug(t_) not in by_role}      # a skill with a company's name (see SKILL_CO)
@@ -4608,7 +4639,15 @@ def main():
                 co_qa.append((f"Does {c} pay well?", f"{len(pay_c):,} of its {len(act):,} open postings state a yearly US-dollar range, with a median of {money(median(pay_c))}; "
                               f"the middle half advertise {money(pay_c[len(pay_c) // 4])} to {money(pay_c[3 * len(pay_c) // 4])}." + (" Pay by field is in the table above." if pay_rows else "")))
             if where:
-                co_qa.append((f"Where are {c}'s jobs located?", ", ".join(f"{PLACE_NAME[p_]} ({k})" for p_, k in where) + f"; {sum(1 for j in act if j['remote']):,} of its open roles are remote."))
+                # one country holding nearly all the jobs is said once, then its states and cities ("United States (2851), Texas (1143)" read as a mixed list)
+                ctry_ = [(p_, k) for p_, k in where if isinstance(PLACE_RULE.get(p_), str) and PLACE_RULE[p_] != "region"]
+                rest_ = [(p_, k) for p_, k in where if p_ not in dict(ctry_) and PLACE_RULE.get(p_) != "region"]
+                if ctry_ and ctry_[0][1] >= 0.9 * len(act) and len(rest_) >= 2:
+                    w_txt = (f"Almost all are in {PLACE_NAME_THE[ctry_[0][0]]} ({ctry_[0][1]:,} of {len(act):,}), most of them in "
+                             + ", ".join(f"{PLACE_NAME[p_]} ({k:,})" for p_, k in rest_[:-1]) + f" and {PLACE_NAME[rest_[-1][0]]} ({rest_[-1][1]:,})")
+                else:
+                    w_txt = ", ".join(f"{PLACE_NAME[p_]} ({k:,})" for p_, k in where)
+                co_qa.append((f"Where are {c}'s jobs located?", w_txt + f"; {sum(1 for j in act if j['remote']):,} of its open roles are remote."))
             if interns_:
                 co_qa.append((f"Does {c} have internships?", f"Yes: {interns_:,} open internship{'s' if interns_ > 1 else ''} as of {fdate(TODAY)}."))
             if (src_q := official_source(act)):
@@ -6323,15 +6362,24 @@ def main():
                    + "I would welcome the chance to talk about how I can help. Thank you for your time.\n\nSincerely,\n[Your name]")
         focus_ = focus_list(d.get('focus') or resume_examples.ROLE.get(slug_r, (None, 'the core of the role'))[1])
         skl_ = (", ".join(top_[:-1]) + " and " + top_[-1]) if len(top_) > 1 else (top_[0] if top_ else "")
+        # 25 Nov 2026: the entry and senior letters carry that level's own lines from the resume page (rex_lv), not the mid-level ones
+        # again ("Two results I led" repeated the lines of the letter above it on all 457 pages), and the entry letter names the
+        # entry title where the work has one ("Assistant Superintendent", not "Construction Superintendent" with no experience)
+        lv_ = rex_lv.get(slug_r, {})
+        ent_ln = [ln.strip() for x_ in (lv_["entry"]["exp"] if lv_.get("entry") else []) for ln in x_["text"].split("\n") if ln.strip()][:2]
+        sen_ln = [ln.strip() for ln in (lv_["senior"]["exp"][0]["text"].split("\n") if lv_.get("senior") else []) if ln.strip()][:2] or lines_
+        ent_t = getattr(resume_examples, "ENTRY_TITLE", {}).get(slug_r) or d['title']
         entry_letter = (cl_head + "Dear Hiring Manager,\n\n"
-                        f"I am applying for the {d['title']} position at [Company]. I [recently finished / am finishing] [degree, course or certificate], where I focused on {focus_}.\n\n"
-                        "In [a course, bootcamp or personal project] I [what you built, analysed or ran], which [one result with a number]. "
-                        + (f"I used {skl_}, which the posting asks for.\n\n" if tech_ and skl_ else "\n\n")
+                        f"I am applying for the {ent_t} position at [Company]. I [recently finished / am finishing] [degree, course or certificate], where I focused on {focus_}.\n\n"
+                        + (("What I have done so far:\n" + "\n".join(f"- {ln}" for ln in ent_ln) + "\n\n" + (f"I used {skl_}, which the posting asks for. " if tech_ and skl_ else ""))
+                           if len(ent_ln) == 2 else
+                           "In [a course, bootcamp or personal project] I [what you built, analysed or ran], which [one result with a number]. "
+                           + (f"I used {skl_}, which the posting asks for.\n\n" if tech_ and skl_ else "\n\n"))
                         + "[One or two sentences on why this company: a product you use, a goal from the posting.] I learn quickly and would welcome the chance to show it.\n\n"
                         "Thank you for your time.\n\nSincerely,\n[Your name]")
         senior_letter = (cl_head + "Dear Hiring Manager,\n\n"
-                         f"I am applying for the [Senior / Lead] {d['title']} position at [Company]. I have [number] years of experience as {art(psn)} {psn}, the last [number] leading [a team of N / the main programme] at [Current company].\n\n"
-                         + ("Two results I led:\n" + "\n".join(f"- {ln}" for ln in lines_) + "\n\n" if lines_ else "")
+                         f"I am applying for the {lv_['senior']['title'] if lv_.get('senior') else '[Senior / Lead] ' + d['title']} position at [Company]. I have [number] years of experience as {art(psn)} {psn}, the last [number] leading [a team of N / the main programme] at [Current company].\n\n"
+                         + ("Two results I led:\n" + "\n".join(f"- {ln}" for ln in sen_ln) + "\n\n" if sen_ln else "")
                          + "[One sentence on the problem in the posting you would take on first, and how.] I would bring the same focus on results, and on growing the people around me.\n\n"
                          "I would welcome a conversation. Thank you for your time.\n\nSincerely,\n[Your name]")
         sk_pct = [(t, 100 * cnt_[t] / max(1, len(rj))) for t in top_]
@@ -6562,8 +6610,12 @@ def main():
                   else "Most postings for this work do not name a number of years. Read the duties: they tell you more about the level than the title does.")),
                  (f"Do I need a degree to become {art(psn)} {psn}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
                   + " Many others accept equivalent experience: read the requirements of each posting."),
-                 (f"How much does a beginner {psn} earn?", (f"Junior and intern postings for this work that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
-                  else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure."))),
+                 # the postings counted here are junior, intern or ask two years or less (`begin`), and where the work has a government
+                 # occupation (bls_wages.ROLE) its May 2025 figures stand beside them: Google's "Does a translator make good money?" (24 Nov 2026)
+                 (f"How much does a beginner {psn} earn?", (f"Postings for this work open to beginners (junior or intern roles, or two years of experience or less) that state pay advertise a median of {money(median(jr_pay))} a year ({len(jr_pay)} postings)." if len(jr_pay) >= 8
+                  else (f"Few beginner postings state pay. Across all levels, the median advertised pay is {money(median(all_pay))} a year." if len(all_pay) >= 20 else "Too few postings state pay for a reliable figure."))
+                  + ((lambda o_: f" In the US government's figures for {o_[0].lower()} ({bls_wages.PERIOD}), the lowest-paid 10% earn under ${o_[2]:,} a year and the median is ${o_[3]:,}." + (f" {bls_wages.NOTE[slug_r]}" if slug_r in bls_wages.NOTE else ""))(bls_wages.OCC[bls_wages.ROLE[slug_r]])
+                     if slug_r in bls_wages.ROLE else "")),
                  (f"What qualifications do you need to become {art(psn)} {psn}?",
                   "Employers name skills first: " + (", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:3]) + " of today’s postings. " if top_ else "the duties in the posting. ")
                   + (f"The median posting asks for {y_med} years of experience. " if y_med is not None else "")
@@ -7966,10 +8018,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # Added from our own postings: a table with pay, remote share and new postings per skill; the workplace skills, counted in the full
     # texts; the skills AI jobs ask for; answered questions. The first sentence now names the first five.
     sk_tbl = []
+    # a short tag can read as something else in a table of skills ("BLS" is also the Bureau of Labor Statistics quoted on this site)
+    TAG_LONG = {"BLS": "BLS (Basic Life Support)", "EHR": "EHR (electronic health records)", "CRM": "CRM (customer relationship management)",
+                "CPR": "CPR (cardiopulmonary resuscitation)", "CI/CD": "CI/CD (continuous integration and delivery)"}
     for t, k in skill_counts.most_common(25):
         js_t = by_tag.get(t, [])
         mids_t = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_t if j.get("usd")]
-        sk_tbl.append(trow([f'<a href="{P}/skills/{tslug(t)}/">{e(t)}</a>', f"<strong>{k:,}</strong>", f"{pc_(k, n)}%", money(median(mids_t)) if len(mids_t) >= 15 else "–",
+        sk_tbl.append(trow([f'<a href="{P}/skills/{tslug(t)}/">{e(TAG_LONG.get(t, t))}</a>', f"<strong>{k:,}</strong>", f"{pc_(k, n)}%", money(median(mids_t)) if len(mids_t) >= 15 else "–",
                             f"{pc_(sum(1 for j in js_t if j['remote']), len(js_t))}%", f"{sum(1 for j in js_t if (j['posted'] or '') >= week):,}"]))
     SOFT = (("Communication", r"communication skills|written and verbal|verbal and written|communicat(?:e|es|ing) (?:clearly|effectively)"), ("Collaboration and teamwork", r"collaborat|teamwork|team player"),
             ("Leadership", r"leadership"), ("Problem solving", r"problem[- ]solv"), ("Attention to detail", r"attention to detail|detail[- ]oriented"),
@@ -7989,8 +8044,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     ai_sk = Counter(t for j in ai_js for t in j["tags"]).most_common(8)
     best_pay = sal_by_tag[:3]
     grow = [(t, k, a_) for t, k, a_ in week_tag[:5] if k]
-    sk_qa = [(f"What skills are most in demand in {TODAY[:4]}?", "By the number of open postings that name them today: " + ", ".join(f"{t} ({k:,})" for t, k in top_sk[:8])
+    # Google US "most in demand skills" (Search Console 14 at 67), 24 Nov 2026 night: People also ask "What are the top 10 most demand skills?"
+    # and "What is the most demanding skill right now?": ten, as asked (it listed eight), and the first one on its own
+    sk_qa = [(f"What are the top 10 most in-demand skills in {TODAY[:4]}?", "By the number of open postings that name them today: " + ", ".join(f"{t} ({k:,})" for t, k in top_sk[:10])
               + f". Counted on {fdate(TODAY)} from {n:,} open jobs read from employers’ own careers pages. " + mix_note("tools of that trade lead the list.", "the list mixes the tools of many trades.")),
+             ("What is the most in-demand skill right now?", f"{top_sk[0][0]}: {top_sk[0][1]:,} of the {n:,} open postings here name it today ({pc_(top_sk[0][1], n)}%). "
+              f"Next come {top_sk[1][0]} ({top_sk[1][1]:,}) and {top_sk[2][0]} ({top_sk[2][1]:,}).") if len(top_sk) >= 3 else None,
              ("Which skill pays the most?", ("By median advertised pay among skills with at least 30 postings that state a yearly US-dollar range: " + ", ".join(f"{t} ({money(m_)})" for t, m_, _ in best_pay)
               + ". These are advertised ranges, and the roles that ask for a skill differ, so this compares postings, not people.") if best_pay else "Too few postings state pay today to rank skills by it."),
              ("Which soft skills do employers want most?", ("In the " + f"{full_n:,} postings read for this, the workplace skills named most often are " + ", ".join(f"{nm.lower()} ({pc_(k, full_n)}%)" for nm, k in soft_rows[:5])
@@ -8027,6 +8086,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 + ("<h3>Falling</h3>" + ttable(wk_head, wk_rows(wk_down), "rkt") if len(wk_down) >= 3 else "")
                 + '<p class="note">A week is short: a few large employers posting at once can move a skill by tens of percent. Read it as a weather report, not a trend.</p>')
                if len(wk_up) + len(wk_down) >= 6 else "")
+    sk_qa = [x for x in sk_qa if x]
     sk_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sk_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     guide("skills-in-demand", f"The {len(top_sk)} Most In-Demand Job Skills in {TODAY[:4]} (from {n:,} Jobs)",
@@ -9336,7 +9396,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     gfig = {   # a figure counted from today's postings, where the term has one
         "Remote": f"{sum(1 for j in active if j['remote']):,} of the {n_act:,} open jobs here are remote ({pc_(sum(1 for j in active if j['remote']), n_act)}%).",
         "Hybrid": f"{sum(1 for j in active if j.get('hybrid')):,} of the {n_act:,} open jobs here are hybrid.",
-        "Contract": f"{et_n.get('Contract', 0):,} of today’s open jobs are marked as contract work.",
+        "Contract": f"{et_n.get('Contract', 0):,} of today’s open jobs are marked as contract work." + ctr_len_note(active),
         "Internship": f"{et_n.get('Internship', 0):,} internships are open today.",
         "Full-time and part-time": f"{et_n.get('Full-time', 0):,} open jobs are marked full-time and {et_n.get('Part-time', 0):,} part-time; the rest do not say.",
         "Visa sponsorship": f"{perk_n.get('Visa sponsorship', 0):,} of today’s open jobs mention visa sponsorship.",

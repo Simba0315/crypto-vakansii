@@ -986,3 +986,52 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   to lay out the reference list (name, title, company, phone, email, how you worked together).
 - "graduate programme": UNDP, Deutsche Bank, JPMorganChase, Novo Nordisk, GSK, Mastercard; People also ask "Is 28 too old for a grad scheme?" — added
   "Is there an age limit for graduate programs?" (the graduation window is the limit, not age).
+
+### Near page 1 in Search Console: construction superintendent letter and resume, SpaceX careers (24 Nov 2026, night)
+- Search Console (7 days to 22 Nov): "construction superintendent cover letter" 10 at 14.9, "construction superintendent resume" 9 at 23.3,
+  "careers in spacex" 24 at 55, "careers spacex" 20 at 52, "jobs in spacex" 9 at 62.
+- Google US "construction superintendent cover letter": Indeed, Enhancv, VelvetJobs, LiveCareer, Monster, Himalayas, WahResume, Careerkit; we are not on
+  page 1. Each shows a full letter per level. Ours had a flaw on all 457 letter pages: the senior letter repeated the mid-level letter's two results,
+  and the entry letter had only placeholders. Now the entry letter carries the entry lines and the entry title ("Assistant Superintendent"), the
+  senior letter the senior lines and title.
+- Google US "careers spacex": spacex.com, Indeed (1,934 jobs), LinkedIn, Space Crew, Glassdoor, hiringtempo.com ("Is SpaceX hiring? Yes: 2850 open jobs
+  as of Nov 24, 2026"). People also ask: how hard to get hired, how much SpaceX pays, is SpaceX hiring a lot, how to get hired. Our page answers all four
+  with today's figures (2,863 open). Fixed on every company page: the generic pay question that repeated "Does <company> pay well?", "in demand …
+  at 1 company", and the location answer ("Almost all are in the United States (2,851 of 2,863), most of them in Texas …" instead of a mixed list).
+- "stock options vs equity" (13 at 65): AI overview (Carta, Amplify Partners, J.P. Morgan, Kliebert Law, Reddit) — options are one form of equity.
+  People also ask: "Which is better, equity or options?" (answered by "Are stock options worth it?"), "What is the $100,000 rule for stock options?"
+  (added from 26 U.S.C. § 422(d) on Cornell LII: ISOs first exercisable in a calendar year above $100,000 at grant-date value count as non-qualified),
+  "What are the downsides of stock options?" (added).
+- "hiring system" (25 at 46): the results are software vendors (Greenhouse, Workable, iCIMS, LinkedIn, Forbes' ATS list, ads from Zoho). Buyer intent
+  for software; not a job seeker's page. Left as it is.
+- "what is contract work" (12 at 62; with "how does contract work work" and "contract work meaning" 30 impressions): AI overview (Indeed, U.S. Chamber
+  of Commerce, Quora, Reddit), organic Indeed, The Planet Group, Upwork, BDC. People also ask: "How long do contract jobs usually last?", "Can I quit a
+  contract job?" (both added), "Do contract jobs pay a lot?" (already answered). The page's figure now counts the lengths today's contract postings
+  state ("12-month contract", "6 month fixed-term contract"): local sample 84 of 415 state one, median 12 months, then 6.
+- "severance pay meaning" (11 at 85): AI overview (Rippling, Fidelity, Texas guidebook, DOL, LII), organic DOL, Fidelity, Nolo, Wikipedia, Commerce.
+  Added "Do you get severance when you are fired?". The "1 to 2 weeks per year" figure was not added: Fidelity's article did not load for the reader.
+- "sourcer meaning" (9 at 57): People also ask — what a sourcer does, sourcer vs recruiter, what sourcing means, talent sourcer: all four already answered on /glossary/sourcer/ (aliases talent-sourcer, sourcing-specialist). Nothing added.
+- "most in demand skills" (14 at 67, /guides/skills-in-demand/): AI overview (Coursera, CityU of Seattle, Forbes, LinkedIn, Reddit) lists AI, data,
+  cloud, critical thinking; organic Coursera, Reddit, CityU, LinkedIn "Skills on the rise", BLS fastest-growing occupations. None counts postings.
+  People also ask "What are the top 10 most demand skills?" and "What is the most demanding skill right now?": the guide's question now lists ten
+  (it listed eight) and a new one names the first skill with its share of today's postings.
+- "etl developer taiwan job application" (42 at 3.0, /locations/taiwan/skills/etl/, 0 clicks): the live snippet still read "20 open roles: ETL jobs in
+  Taiwan at companies. Updated hourly…"; the fix (top employers in the description) is in the deploy running now.
+- "construction superintendent resume" (9 at 23): Indeed, Enhancv, Reddit r/ConstructionManagers; the AI answer asks for project size in dollars and
+  square feet and tools such as Procore or Primavera P6. People also ask: what makes a good superintendent, the "7 second rule", the job description,
+  a summary for a construction resume. The example's first lines now carry 110,000 sq ft and Procore (they feed the resume, CV and letter pages).
+- "account executive interview questions" (13 at 71): the AI answer groups questions as pipeline and prospecting, discovery and deal management,
+  quota and forecasting, process and frameworks (MEDDIC, SPIN); Indeed's 37 questions, Gusto. Our 20 covered deals and negotiation; added quota
+  attainment with deal size and cycle, self-sourced pipeline, and the sales process with MEDDIC.
+- "price job" (20 at 28) lands on /how-to-hire/pricing/; "tax compliance switzerland" (11 at 26) on /locations/switzerland/skills/tax-compliance/,
+  whose description gets the employers' names with the deploy now running. Nothing else changed.
+- "remote jobs" (18 at 26, /remote/): remotejobs.com, Remote.co, Robert Half, Indeed. People also ask: best remote job, $2000 a month from home, working for Amazon from home, easiest remote job. /remote/ already answers the best-paid remote work, $2,000 a week, no-experience roles; Amazon is not among the employers read (no /companies/amazon/), so that one is left.
+- "working in language localization" / "working in localization" / "localization work" (51 impressions at 35-67, /how-to-become/localization/ and
+  /how-to-hire/localization/): Reddit r/localization, Kent State, better-i18n, TranslaStars, Middlebury, Raise Me. People also ask: "Is localization a
+  good career?", "Does a translator make good money?", "Is AI replacing translator jobs?" (answered: 19% of postings ask for AI skills), "What is
+  localization as a job?" (answered in step 1). Added the BLS figures for interpreters and translators (May 2025, read from api.bls.gov tonight:
+  52,060 employed, 10th percentile $37,070, median $60,170, 90th $103,660) to the salary, how-to-hire and how-to-become pages of this work; every
+  how-to-become page with a government occupation now gives its 10th percentile and median beside the advertised beginner pay.
+- "hire ux designers" (14 at 63, /how-to-hire/…): freelance marketplaces (Upwork $25-39 an hour, Behance, Toptal, Fiverr, Insight Global), Reddit r/UXDesign. People also ask: cost to hire, the 80/20 rule, AI replacing UX, "Does JP Morgan hire UX designers?". The page states salary from postings; marketplace hourly rates are not ours to quote. Left.
+- "trainer interview questions" (9 at 51): the AI answer splits personal/fitness and corporate trainers; Indeed (Canada) 35 questions. Our /interview-questions/training/ and /corporate-trainer/ have 19 and 20 specific questions (needs analysis, virtual sessions, measuring impact); no fitness-trainer page because no such postings are read. Left.
+- "salary bands" (9 at 45, /glossary/salary-band/, already a full entry): SHRM, BambooHR, Lattice, Indeed, iMercer, CalHR, South Carolina pay bands, Harvard. People also ask: band level, "band 7 salary", "pay band 4" — added "What does a band number such as Band 7 mean?" (NHS Agenda for Change in the UK; public bands such as South Carolina's).

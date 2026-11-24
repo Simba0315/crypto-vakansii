@@ -53,6 +53,7 @@ OCC = {
     "23-2011": ("Paralegals and Legal Assistants", 392880, 44740, 62890, 101500),
     "27-1024": ("Graphic Designers", 197830, 39520, 62960, 104910),
     "27-3043": ("Writers and Authors", 47940, 44310, 76910, 139870),
+    "27-3091": ("Interpreters and Translators", 52060, 37070, 60170, 103660),       # read 24 Nov 2026 (Google: "Does a translator make good money?")
     "41-3091": ("Sales Representatives of Services", 1256010, 37980, 69990, 148840),
     "41-9031": ("Sales Engineers", 51790, 73870, 124900, 195270),
     "43-3031": ("Bookkeeping, Accounting, and Auditing Clerks", 1373680, 36000, 50670, 74550),
@@ -128,6 +129,7 @@ ROLE = {
     "paralegal": "23-2011",
     "graphic-designer": "27-1024",
     "content-writer": "27-3043",
+    "localization": "27-3091",
     "account-executive": "41-3091",
     "sales-representative": "41-3091",
     "sales-engineer": "41-9031",
@@ -161,6 +163,7 @@ NOTE = {
     "sql-developer": "The government counts database developers with database architects.",
     "ciso": "Chief information security officers are counted among computer and information systems managers.",
     "coo": "Chief operating officers are counted among general and operations managers; chief executives are a separate category.",
+    "localization": "The government counts translators and interpreters together; localization engineers and managers at software companies fall in other categories, so the advertised pay on this page also covers them.",
 }
 
 

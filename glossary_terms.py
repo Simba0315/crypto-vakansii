@@ -1999,6 +1999,17 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             # Search Console 24 Nov 2026: "reference title meaning", 10 impressions at 8.1
             ("What does \"reference title\" mean on an application form?", "It asks for the job title of the person you list as a reference, such as \"Engineering Manager\" or \"Head of Sales\", as it was when they worked with you. Forms usually ask next for the company and how you know them (\"Relationship\": your manager, colleague or client). It is not your own title and not the title of the job you are applying for."),
         ]),
+    # Google US "salary bands" (Search Console 9 at 45), 24 Nov 2026 night: People also ask "What is a salary band level?", "What is band 7
+    # salary?", "How much is pay band 4?"; South Carolina's classified pay bands (admin.sc.gov) list a minimum, midpoint and maximum per band
+    "Salary band": dict(
+        qa=[
+            ("What does a band number such as Band 7 mean?", "It is the level of the job in that employer's pay scale: a higher number usually means more senior work and more pay, but every employer numbers its own bands. In the UK, Band 1 to Band 9 usually refer to the NHS Agenda for Change pay system, whose pay for each band NHS Employers publishes every year. US public employers publish theirs too; South Carolina, for example, lists a minimum, midpoint and maximum for each of its bands."),
+        ]),
+    # Google US "severance pay meaning" (Search Console 11 at 85), 24 Nov 2026 night: People also ask "Do you get severance when you are fired?"
+    "Severance": dict(
+        qa=[
+            ("Do you get severance when you are fired?", "Not usually when you are fired for cause, such as misconduct: severance is mostly paid in layoffs and restructurings. A contract, a company policy or a negotiated exit can still provide it, so ask what the policy says before you sign anything."),
+        ]),
     # Google US "graduate programme", 24 Nov 2026 evening: People also ask "Is 28 too old for a grad scheme?"
     "Graduate program": dict(
         qa=[
@@ -2021,6 +2032,12 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
                 "Search for \"equity options\" and most results are about trading. Those are listed contracts to buy (a call) or sell (a put) a stock at a set price before a date; FINRA notes that a standard contract covers 100 shares and the buyer pays a premium for it.",
                 "Stock options in a job offer are different: your employer grants them, they cannot be traded, and you earn the right to use them over time through vesting.",
             ]),
+        ],
+        # Google US "stock options vs equity" (Search Console 13 impressions at 65), 24 Nov 2026 night: People also ask "What is the $100,000
+        # rule for stock options?" (26 U.S.C. § 422(d), read on Cornell LII that night) and "What are the downsides of stock options?"
+        qa=[
+            ("What is the $100,000 rule for stock options?", "It applies to incentive stock options (ISOs) in the US. If the shares under your ISOs that become exercisable for the first time in one calendar year are worth more than $100,000, valued at the grant date, the options above that amount are treated as non-qualified options and taxed as such. All plans of your employer and its parent and subsidiary companies count together (26 U.S.C. § 422(d))."),
+            ("What are the downsides of stock options?", "You pay the strike price to exercise them and may owe tax when you do. Shares of a private company usually cannot be sold until it is sold or goes public. And options are worth nothing if the share price stays below the strike price, or if you leave and do not exercise them within the window."),
         ]),
     # second pass the same day (Search Console: gross and net pay 136 impressions at 56, contract 80 at 54, RSU 88 at 80): Rippling
     # "Gross vs net pay" and Paycor's glossary entry (worked example, formulas), AIHR "Contract employee" (contract employee vs contractor)
@@ -2041,6 +2058,13 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
                 "A contract employee is employed by the company, or by an agency, for a fixed term: on payroll, with tax withheld, working the way the employer directs. An independent contractor is self-employed and decides how, when and where the work is done.",
                 "The difference matters for tax, benefits and how easily the work can end, so check which one an ad means: \"12-month contract, W-2\" is the first; \"1099\" or \"freelance\" is the second.",
             ]),
+        ],
+        # Google US "what is contract work" (Search Console: "what is contract work" 12, "how does contract work work" 9, "contract work meaning" 9,
+        # all at 60-72), 24 Nov 2026 night: People also ask "How long do contract jobs usually last?" and "Can I quit a contract job?". The
+        # page's figure line counts the lengths today's contract postings state (build.ctr_len_note).
+        qa=[
+            ("How long do contract jobs usually last?", "Most run for a set number of months, and six and twelve months are the lengths postings name most often; “Today’s figure” on this page counts them in the contract postings open now. Many are extended while the project lasts, and contract-to-hire roles can turn permanent."),
+            ("Can I quit a contract job?", "Usually, yes. Read the clause on ending the contract early: most set a notice period, and some charge a fee or hold back pay if you leave without giving it. If you work through an agency, give notice to the agency, not only to the client."),
         ]),
     # Google, 24 Nov 2026: this page stood 2nd for "rolling basis meaning" in the US; "What is a rolling basis interview?" was a question
     # people also ask that the page did not answer
