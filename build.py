@@ -984,7 +984,7 @@ def finish_html(content):
     if "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
         content = IMG_NO_TITLE.sub(lambda m: m.group(0)[:-1].rstrip("/").rstrip() + f' title="{m.group(1)}">', content)
-    if "1 " in content:
+    if any(k_ in content for k_ in ONE_KEYS):         # plain substring tests first: the pattern runs only on the few pages that need it
         # "median 1 years", "asks for 1 years" (job description pages, 24 Nov 2026): twenty phrases put a count before "years"; one place
         # makes "1" singular instead of a condition in each of them
         content = ONE_PLURAL.sub(lambda m: "1 " + ONE_WORD[m.group(1)], content)
@@ -1003,6 +1003,7 @@ def write(path, content, sitemap=True):
 ONE_WORD = {"years": "year", "days": "day", "weeks": "week", "months": "month", "companies": "company", "employers": "employer", "roles": "role",
             "jobs": "job", "postings": "posting", "countries": "country", "cities": "city", "openings": "opening"}
 ONE_PLURAL = re.compile(r"(?<![\d.,/$£€-])\b1 (" + "|".join(ONE_WORD) + r")\b")      # "54 open roles at 1 companies" too (24 Nov 2026)
+ONE_KEYS = tuple("1 " + w_ for w_ in ONE_WORD)
 
 
 def mincss(s):
