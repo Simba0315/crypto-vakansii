@@ -4053,7 +4053,7 @@ def main():
                     stats=True, list_title=f"Newest {vname.lower()} {low_f} jobs", faq=f"{vname.lower()} {low_f} jobs")
         vers_line = labrow("Narrower lists", vers)
         listing(f"categories/{fs}/", f"{fn} jobs", f"{tcase(fn)} Jobs ({len(js_):,} open) | {SITE}",
-                f"{len(js_):,} open jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked hourly.",
+                f"{low_f[:1].upper() + low_f[1:]} jobs: {len(js_):,} open now at companies. The work: {', '.join(rlow(x) for x in names_[:4])} and more.",      # like places and kinds of work (24 Nov 2026)
                 js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
                 stats=True, extra=vers_line + pics_first(mini_pics(js_), section(f"Kinds of work in {low_f}", role_list)), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
                 faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
