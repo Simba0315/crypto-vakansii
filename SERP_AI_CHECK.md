@@ -876,3 +876,28 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   Claude: the same, plus anecdotes (Blind, climbtheladder) that some count up to two years; check the posting's window.
 - Done: section "How employers write the graduation window" (date-range phrasings, nursing, the federal Pathways rule) and the
   question "Is a new grad role the same as an internship?". ChatGPT not asked for this one.
+
+### /vs/ — "ziprecruiter alternatives", "indeed vs ziprecruiter", "glassdoor vs indeed", comparing several sites (24 Nov 2026)
+- Google (gl=us), "ziprecruiter alternatives": AI Overview names Indeed, LinkedIn, Glassdoor, Monster, SimplyHired, CareerBuilder,
+  then groups by kind: tech and startups (Dice, Wellfound, Built In, Levels.fyi), remote (FlexJobs, We Work Remotely, Remote.co,
+  Working Nomads), students (Handshake), hourly (Snagajob, Craigslist). Top results: Reddit r/recruiting, StaffedUp, Capterra, G2
+  (mostly employer software). People also ask: "What is better than ZipRecruiter?", "Do people still use ZipRecruiter?",
+  "Which is more reliable, Indeed or ZipRecruiter?".
+- "indeed vs ziprecruiter": AI Overview: Indeed a marketplace with free and pay-per-click posts, ZipRecruiter a distribution network
+  (100+ boards), both free for job seekers. PAA: "Is it better to apply for a job on Indeed or ZipRecruiter?", "Do employers
+  actually use ZipRecruiter?". Related searches: "Indeed vs ZipRecruiter vs Glassdoor", "Indeed vs ZipRecruiter vs LinkedIn".
+- "glassdoor vs indeed": AI Overview: Glassdoor for reviews and salaries, Indeed for volume; both under Indeed, Inc. since July 2026;
+  one shared login. PAA: "Is Glassdoor merging with Indeed?", "Does anyone still use Glassdoor?".
+- "compare job sites indeed linkedin ziprecruiter glassdoor": AI Overview gives one line per site and the Reddit advice to find a job
+  on a board, then apply on the employer's own careers page. Bing (three sites): ZipRecruiter's own comparison page, SourceForge's
+  multi-site chart, TechnologyAdvice; no Copilot answer.
+- ChatGPT ("best alternatives to ZipRecruiter and Indeed for job seekers in the US"): LinkedIn, Glassdoor, Monster, SimplyHired,
+  CareerBuilder, Google for Jobs; a table of FlexJobs, Dice, Wellfound, Built In, Ladders, Handshake, Snagajob, Idealist, We Work
+  Remotely, Upwork; USAJOBS for government; a "Job seekers pay?" column; tips "apply directly through the employer's career website"
+  and "check whether the vacancy is still open". This site was in none of the answers.
+- Done: 16 more sites with sourced facts (ZipRecruiter, Glassdoor, SimplyHired, Jooble, Talent.com, Welcome to the Jungle, Dice,
+  Built In, Himalayas, Remotive, Remote.co, Working Nomads, Handshake, Snagajob, USAJOBS, Idealist); 115 site-vs-site pages (87 new)
+  with "free for job seekers?" and "account to apply?" questions; alternatives pages grouped by kind like the AI answers, with a
+  "who pays / account / where you apply" table; /vs/compare/ to put up to five sites and this one in one table, shareable by address.
+  Not compared: Monster and CareerBuilder ("waf blocked"), Adzuna (human check), Hired (part of LHH since June 2024).
+- Largest gap still open: Google for Jobs, Ladders, Craigslist and Levels.fyi, which the answers also name, have no page yet.

@@ -468,6 +468,7 @@ def one_page_per_query():
     return moved
 ORG_LD = [""]
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js", "fsel.js"))).hexdigest()[:8]   # cache-busting version
+VC = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("compare.js", "compare.css"))).hexdigest()[:8]     # the comparison table's own files (/vs/compare/)
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
              f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a> · '
              f'<a href="{P}/methodology/">How it works</a> · <a href="{P}/privacy/">Privacy</a> · <a href="{P}/terms/">Terms</a></p></div></footer>')
@@ -7035,6 +7036,8 @@ def main():
     sys_n_ = Counter(str(j_.get("id", "")).split("-")[0] for j_ in active)
     compare_sites.refresh_us(len(active), len({j_["company"] for j_ in active}), [SOURCE_NAME[k_] for k_, _ in sys_n_.most_common() if k_ in SOURCE_NAME])
     VS = [x for x in compare_sites.SITES if len(x["rows"]) >= 4]
+    VS_BY = {x["slug"]: x for x in VS}
+    CMP_US = "jobseveryhour"            # this site's key in the comparison tool's address (/vs/compare/?sites=indeed,ziprecruiter,jobseveryhour)
     def vs_src(x):
         seen_, out_ = set(), []
         for fact, url, date in x["sources"]:
@@ -7060,7 +7063,7 @@ def main():
                '<div><h2>Where ' + e(ours) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["us_better"]) + "</ul></div></div>"
              + section(f"Questions about {x['name']} and {ours}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in vs_qa) + "</dl>")
              + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>')
-             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
+             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/vs/compare/?sites={x["slug"]},{CMP_US}">compare {e(x["name"])} with more sites in one table</a> · <a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
     lap('"<site> vs <site>" and "<site> alternatives": the owner aske')
     # "<site> vs <site>" and "<site> alternatives": the owner asked for compare pages "with all websites" (as Indeed's compare pages),
     # and people search these between the big names. Only the facts compare_sites.py holds with a source, side by side; no verdict.
@@ -7070,57 +7073,130 @@ def main():
         # beside LinkedIn, "Remote OK is much larger" was false (fact check of the pages, 20 Nov 2026)
         return [t for t in (" ".join(y for y in re.split(r"(?<=\.)\s+", t0) if not re.search(r"\b(our|we|us)\b", y, re.I)) for t0 in x["them_better"]
                             if not re.match(r"(Much|Far|More)\b", t0)) if t]
-    for i_, a_ in enumerate(VS):
-        for b_ in VS[i_ + 1:]:
-            ra = {q_: t_ for q_, t_, _ in a_["rows"]}; rb = {q_: t_ for q_, t_, _ in b_["rows"]}; ru = {q_: u_ for q_, _, u_ in a_["rows"] + b_["rows"]}
-            common = [q_ for q_, _, _ in a_["rows"] if q_ in rb]
-            if len(common) < 3: continue
-            sl = f"{a_['slug']}-vs-{b_['slug']}"
-            site_pairs.append((sl, a_, b_))
-            table_ = ('<div class="tablewrap"><table class="vs-t four"><tr><th></th><th>' + e(a_["name"]) + "</th><th>" + e(b_["name"]) + "</th><th>" + e(compare_sites.OUR_NAME) + "</th></tr>"
-                      + "".join(f'<tr><th>{e(q_)}</th><td data-l="{e(a_["name"])}">{e(ra[q_])}</td><td data-l="{e(b_["name"])}">{e(rb[q_])}</td><td data-l="{e(compare_sites.OUR_NAME)}">{e(ru[q_])}</td></tr>' for q_ in common) + "</table></div>")
-            pq = [(f"What is the difference between {a_['name']} and {b_['name']}?", a_["what"] + " " + b_["what"])]
-            if "Who pays" in common: pq.append((f"Who pays on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Who pays']} {b_['name']}: {rb['Who pays']}"))
-            if "Where you apply" in common: pq.append((f"Where do you apply on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Where you apply']} {b_['name']}: {rb['Where you apply']}"))
-            sa_, sb_ = strong_(a_), strong_(b_)
-            if sa_ and sb_:
-                pq.insert(1, (f"Which is better, {a_['name']} or {b_['name']}?", f"It depends on what you need; this page ranks neither. Where {a_['name']} is strong: {sa_[0]} "
-                              f"Where {b_['name']} is strong: {sb_[0]} The table above puts the sourced facts side by side."))
-            short_ = lambda x_: slugify(re.sub(r"\s+jobs$", "", x_["name"], flags=re.I))
-            for al_ in {f"{short_(a_)}-vs-{short_(b_)}", f"{short_(b_)}-vs-{short_(a_)}", f"{b_['slug']}-vs-{a_['slug']}"} - {sl}:
-                write(f"vs/{al_}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(a_["name"])} vs {e(b_["name"])}</title><link rel="canonical" href="{FULL}/vs/{sl}/">'
-                      f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/vs/{sl}/"></head><body><p><a href="{P}/vs/{sl}/">{e(a_["name"])} vs {e(b_["name"])}</a></p></body></html>', sitemap=False)
-            ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-                {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in pq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-            src_ = dict(a_); src_["sources"] = a_["sources"] + b_["sources"]
-            page(f"vs/{sl}/", f"{a_['name']} vs {b_['name']}: Who Pays, Where You Apply ({fdate(TODAY, False)}) | {SITE}",
-                 f"{a_['name']} and {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:4]) + ". Every fact comes with its source and the date it was read.",
-                 crumbs(("Compared with other job sites", "vs/"), (f"{a_['name']} vs {b_['name']}", "")) + f'<h1>{e(a_["name"])} vs {e(b_["name"])}: <span class="hl">the facts side by side</span></h1>'
-                 f'<p class="lead">{e(a_["what"])} {e(b_["what"])} Below, what each one says about itself, with the source of every fact. The third column shows how {e(compare_sites.OUR_NAME)} works, for reference.</p>'
-                 + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
-                 + section(f"{a_['name']} and {b_['name']}, side by side", table_)
-                 + '<div class="vs-two"><div><h2>Where ' + e(a_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(a_)) + "</ul></div>"
-                   '<div><h2>Where ' + e(b_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(b_)) + "</ul></div></div>"
-                 + section(f"Questions about {a_['name']} and {b_['name']}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in pq) + "</dl>")
-                 + section("Sources", vs_src(src_) + '<p class="note">A fact that is wrong or out of date can be reported from the <a href="' + P + '/about/">About page</a>; it is corrected or removed.</p>')
-                 + f'<p class="note cmpl">More: <a href="{P}/vs/{a_["slug"]}/">{e(a_["name"])} vs {e(compare_sites.OUR_NAME)}</a> · <a href="{P}/vs/{b_["slug"]}/">{e(b_["name"])} vs {e(compare_sites.OUR_NAME)}</a> · '
-                   f'<a href="{P}/vs/{a_["slug"]}/alternatives/">{e(a_["name"])} alternatives</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
-    for x in VS:
-        others = [y for y in VS if y is not x]
-        alt_ = "".join(
-            f'<div class="feat"><h3>{e(y["name"])}</h3><p>{e(y["what"])}</p>'
-            + "".join(f'<p class="note"><b>{e(q_)}:</b> {e(t_)}</p>' for q_, t_, _ in y["rows"] if q_ in ("Who pays", "Where you apply"))
-            + "<p>" + " · ".join(f'<a href="{P}/vs/{sl}/">{e(a_["name"])} vs {e(b_["name"])}</a>' for sl, a_, b_ in site_pairs if {a_["slug"], b_["slug"]} == {x["slug"], y["slug"]})
-            + f' · <a href="{P}/vs/{y["slug"]}/">{e(y["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>' for y in others)
-        page(f"vs/{x['slug']}/alternatives/", f"{x['name']} Alternatives: {len(others) + 1} Job Sites Compared, with Sources | {SITE}",
-             f"Alternatives to {x['name']}: {', '.join(y['name'] for y in others[:4])} and more, each with who pays and where you apply, from their own pages. Every fact sourced and dated.",
-             crumbs(("Compared with other job sites", "vs/"), (f"{x['name']} alternatives", "")) + f'<h1>{e(x["name"])} alternatives: <span class="hl">{len(others) + 1} job sites, with sources</span></h1>'
-             f'<p class="lead">Other places to look for work than {e(x["name"])}, each described from its own pages, with who pays and where you apply. Open a pair to see every fact side by side.</p>'
+    for a_, b_ in compare_sites.pairs(VS):        # the pairs people search, not every pair (compare_sites.pairs)
+        ra = {q_: t_ for q_, t_, _ in a_["rows"]}; rb = {q_: t_ for q_, t_, _ in b_["rows"]}; ru = {q_: u_ for q_, _, u_ in a_["rows"] + b_["rows"]}
+        common = [q_ for q_, _, _ in a_["rows"] if q_ in rb]
+        if len(common) < 3: continue
+        sl = f"{a_['slug']}-vs-{b_['slug']}"
+        site_pairs.append((sl, a_, b_))
+        table_ = ('<div class="tablewrap"><table class="vs-t four"><tr><th></th><th>' + e(a_["name"]) + "</th><th>" + e(b_["name"]) + "</th><th>" + e(compare_sites.OUR_NAME) + "</th></tr>"
+                  + "".join(f'<tr><th>{e(q_)}</th><td data-l="{e(a_["name"])}">{e(ra[q_])}</td><td data-l="{e(b_["name"])}">{e(rb[q_])}</td><td data-l="{e(compare_sites.OUR_NAME)}">{e(ru[q_])}</td></tr>' for q_ in common) + "</table></div>")
+        pq = [(f"What is the difference between {a_['name']} and {b_['name']}?", a_["what"] + " " + b_["what"])]
+        if "Who pays" in common: pq.append((f"Who pays on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Who pays']} {b_['name']}: {rb['Who pays']}"))
+        if "Where you apply" in common: pq.append((f"Where do you apply on {a_['name']} and on {b_['name']}?", f"{a_['name']}: {ra['Where you apply']} {b_['name']}: {rb['Where you apply']}"))
+        # "Is ZipRecruiter free?", "Do I need an account?" (Google's questions for "indeed vs ziprecruiter", 24 Nov 2026)
+        if "Price for job seekers" in common: pq.append((f"Is {a_['name']} or {b_['name']} free for job seekers?", f"{a_['name']}: {ra['Price for job seekers']} {b_['name']}: {rb['Price for job seekers']}"))
+        if "Account needed to apply" in common: pq.append((f"Do you need an account to apply on {a_['name']} or {b_['name']}?", f"{a_['name']}: {ra['Account needed to apply']} {b_['name']}: {rb['Account needed to apply']}"))
+        sa_, sb_ = strong_(a_), strong_(b_)
+        if sa_ and sb_:
+            pq.insert(1, (f"Which is better, {a_['name']} or {b_['name']}?", f"It depends on what you need; this page ranks neither. Where {a_['name']} is strong: {sa_[0]} "
+                          f"Where {b_['name']} is strong: {sb_[0]} The table above puts the sourced facts side by side."))
+        short_ = lambda x_: slugify(re.sub(r"\s+jobs$", "", x_["name"], flags=re.I))
+        for al_ in {f"{short_(a_)}-vs-{short_(b_)}", f"{short_(b_)}-vs-{short_(a_)}", f"{b_['slug']}-vs-{a_['slug']}"} - {sl}:
+            write(f"vs/{al_}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(a_["name"])} vs {e(b_["name"])}</title><link rel="canonical" href="{FULL}/vs/{sl}/">'
+                  f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/vs/{sl}/"></head><body><p><a href="{P}/vs/{sl}/">{e(a_["name"])} vs {e(b_["name"])}</a></p></body></html>', sitemap=False)
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in pq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        src_ = dict(a_); src_["sources"] = a_["sources"] + b_["sources"]
+        page(f"vs/{sl}/", f"{a_['name']} vs {b_['name']}: Who Pays, Where You Apply ({fdate(TODAY, False)}) | {SITE}",
+             f"{a_['name']} and {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:4]) + ". Every fact comes with its source and the date it was read.",
+             crumbs(("Compared with other job sites", "vs/"), (f"{a_['name']} vs {b_['name']}", "")) + f'<h1>{e(a_["name"])} vs {e(b_["name"])}: <span class="hl">the facts side by side</span></h1>'
+             f'<p class="lead">{e(a_["what"])} {e(b_["what"])} Below, what each one says about itself, with the source of every fact. The third column shows how {e(compare_sites.OUR_NAME)} works, for reference.</p>'
              + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
-             + section(f"{compare_sites.OUR_NAME}", f'<div class="feat"><p>Jobs read {EVERY} from the employers’ own careers pages; you apply on the employer’s site; free for job seekers, no account needed. '
-                       f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(compare_sites.OUR_NAME)}</a></p></div>')
-             + section(f"Other alternatives to {x['name']}", '<div class="feats">' + alt_ + "</div>")
-             + section("Sources", '<p class="note">Every fact on this page comes from the comparison pages linked above, where each one is listed with its source and the date it was read.</p>'))
+             + section(f"{a_['name']} and {b_['name']}, side by side", table_)
+             + '<div class="vs-two"><div><h2>Where ' + e(a_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(a_)) + "</ul></div>"
+               '<div><h2>Where ' + e(b_["name"]) + ' is strong</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in strong_(b_)) + "</ul></div></div>"
+             + section(f"Questions about {a_['name']} and {b_['name']}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in pq) + "</dl>")
+             + section("Sources", vs_src(src_) + '<p class="note">A fact that is wrong or out of date can be reported from the <a href="' + P + '/about/">About page</a>; it is corrected or removed.</p>')
+             + f'<p class="note cmpl">More: <a href="{P}/vs/{a_["slug"]}/">{e(a_["name"])} vs {e(compare_sites.OUR_NAME)}</a> · <a href="{P}/vs/{b_["slug"]}/">{e(b_["name"])} vs {e(compare_sites.OUR_NAME)}</a> · '
+               f'<a href="{P}/vs/{a_["slug"]}/alternatives/">{e(a_["name"])} alternatives</a> · <a href="{P}/vs/compare/?sites={a_["slug"]},{b_["slug"]},{CMP_US}">{e(a_["name"])}, {e(b_["name"])} and more in one table</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
+    # "<site> alternatives" (24 Nov 2026, the owner: "many alternatives pages, so several sites can be compared and ours added"). Google's
+    # answer for "ziprecruiter alternatives" groups the sites by kind (general, tech and startups, remote, students, hourly) and ChatGPT's
+    # adds government and nonprofit boards and a "do job seekers pay?" column: so the sites most like this one come first, then the
+    # general ones, then each kind, and a table answers who pays, accounts and where you apply. This site is one of the rows, in its own
+    # kind (job search engines), never placed first for being ours.
+    cs_ = compare_sites
+    US_SITE = {"slug": CMP_US, "name": cs_.OUR_NAME, "kind": cs_.OUR_KIND, "rows": [(q_, cs_.US_ANSWERS[q_], cs_.US_ANSWERS[q_]) for q_ in cs_.QUESTIONS],
+               "what": f"{cs_.OUR_NAME} reads open jobs from employers’ own careers pages {EVERY} and drops a job at the next reading once the employer takes it down. "
+                       f"Free for job seekers, no account needed; launched in November 2026."}
+    K_ORDER = list(cs_.KINDS)
+    def first_(t_):
+        """The first sentences of a fact, at least 60 characters ("Some jobs let you apply on Indeed." alone hides the other half)."""
+        out_ = ""
+        for bit_ in re.split(r"(?<=[.!?])\s+(?=[A-Z])", t_ or ""):
+            out_ = (out_ + " " + bit_).strip()
+            if len(out_) >= 60: break
+        return out_
+    def alt_list(x):
+        """Every other site and this one, most like x first: same kind, then the general sites, then the other kinds in KINDS order."""
+        return sorted([y for y in VS if y is not x] + [US_SITE],
+                      key=lambda y: (0 if y["kind"] == x["kind"] else 1 if y["kind"] == "general" else 2, K_ORDER.index(y["kind"]),
+                                     VS.index(y) if y in VS else len(VS)))
+    def vs_href(y):
+        return f"{P}/jobs/" if y is US_SITE else f"{P}/vs/{y['slug']}/"
+    pair_of = {frozenset((a_["slug"], b_["slug"])): sl for sl, a_, b_ in site_pairs}
+    for x in VS:
+        alts = alt_list(x)
+        groups_ = []
+        for y in alts:
+            lab_ = f"Most like {x['name']}: {cs_.KINDS[x['kind']].lower()}" if y["kind"] == x["kind"] else cs_.KINDS[y["kind"]]
+            if not groups_ or groups_[-1][0] != lab_: groups_.append((lab_, []))
+            groups_[-1][1].append(y)
+        def alt_card(y):
+            links_ = []
+            sl_ = pair_of.get(frozenset((x["slug"], y["slug"])))
+            if sl_: links_.append(f'<a href="{P}/vs/{sl_}/">{e(x["name"])} vs {e(y["name"])}</a>')
+            if y is US_SITE:
+                links_ += [f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(y["name"])}</a>', f'<a href="{P}/jobs/">Search {len(active):,} open jobs</a>']
+                good_ = f"you want jobs read {EVERY} from employers’ own careers pages, and to apply on the employer’s page, free and without an account"
+            else:
+                links_ += [f'<a href="{P}/vs/{y["slug"]}/">{e(y["name"])} vs {e(cs_.OUR_NAME)}</a>', f'<a href="{P}/vs/{y["slug"]}/alternatives/">{e(y["name"])} alternatives</a>']
+                good_ = re.sub(r"^Use .*? if ", "", y["pick"].split(", use ")[0])
+            facts_ = "".join(f'<p class="note"><b>{e(q_)}:</b> {e(first_(t_))}</p>' for q_, t_, _ in y["rows"] if q_ in ("Price for job seekers", "Account needed to apply", "Where you apply"))
+            return (f'<div class="feat"><h3>{e(y["name"])}{" (this site)" if y is US_SITE else ""}</h3><p>{e(y["what"])}</p><p><b>Good if</b> {e(good_)}.</p>{facts_}'
+                    f'<p>{" · ".join(links_)}</p></div>')
+        alt_ = "".join(section(lab_, '<div class="feats">' + "".join(alt_card(y) for y in ys) + "</div>") for lab_, ys in groups_)
+        fx_ = lambda y, q: next((t_ for q_, t_, _ in y["rows"] if q_ == q), "")
+        glance_ = ('<div class="tablewrap"><table class="vs-t"><tr><th>Site</th><th>Kind</th><th>Price for job seekers</th><th>Account needed to apply</th><th>Where you apply</th></tr>'
+                   + "".join(f'<tr><th><a href="{vs_href(y)}">{e(y["name"])}</a></th><td data-l="Kind">{e(cs_.KINDS[y["kind"]])}</td>'
+                             f'<td data-l="Price for job seekers">{e(first_(fx_(y, "Price for job seekers")) or "Not stated on the pages we read")}</td>'
+                             f'<td data-l="Account needed to apply">{e(first_(fx_(y, "Account needed to apply")) or "Not stated on the pages we read")}</td>'
+                             f'<td data-l="Where you apply">{e(first_(fx_(y, "Where you apply")) or "Not stated on the pages we read")}</td></tr>' for y in [x] + alts)
+                   + '</table></div><p class="note">The first sentence of each fact; each name opens the full comparison, where every fact is listed with its source and the date it was read.</p>')
+        same_ = [y for y in alts if y["kind"] == x["kind"] and y is not US_SITE]
+        free_ = [y["name"] for y in alts if y is not US_SITE and re.match(r"(A )?[Ff]ree", fx_(y, "Price for job seekers"))]
+        noacc_ = [y["name"] for y in alts if y is not US_SITE and re.match(r"No\b|Not\b", fx_(y, "Account needed to apply"))]
+        and_ = lambda n_: n_[0] if len(n_) == 1 else ", ".join(n_[:-1]) + " and " + n_[-1]
+        big_ = [y["name"] for y in VS if y["slug"] in cs_.BIG and y is not x]
+        alt_qa = [
+            (f"What is the best alternative to {x['name']}?",
+             f"It depends on what you use {x['name']} for. " + (f"Closest to it: {and_([y['name'] for y in same_[:4]])}. " if same_ else "")
+             + (f"The largest general job sites: {and_(big_)}. " if big_ and x["kind"] != "general" else "")
+             + f"{cs_.OUR_NAME} reads {len(active):,} open jobs from employers’ own careers pages {EVERY}, free and with no account."),
+            (f"Is {x['name']} free for job seekers?", f"By its own pages: {fx_(x, 'Price for job seekers')}") if fx_(x, "Price for job seekers") else
+            ((f"Who pays on {x['name']}?", f"By its own pages: {fx_(x, 'Who pays')}") if fx_(x, "Who pays") else None),
+            (f"Do you need an account to apply on {x['name']}?", f"By its own pages: {fx_(x, 'Account needed to apply')} On {cs_.OUR_NAME}, no: every Apply button goes to the employer’s own page.")
+            if fx_(x, "Account needed to apply") else None,
+            (f"Which {x['name']} alternatives are free for job seekers?", (f"By their own pages, {and_(free_)} {'is' if len(free_) == 1 else 'are'} free for job seekers. " if free_ else "")
+             + f"{cs_.OUR_NAME} is free too, with no account. The table above shows the rest."),
+            (f"Which {x['name']} alternatives let you apply without an account?", (f"By their own pages: {and_(noacc_)}. " if noacc_ else "")
+             + f"On {cs_.OUR_NAME} every Apply button goes to the employer’s own page, with no account here."),
+        ]
+        aq_h, aq_ld = qa_sec(f"Questions about {x['name']} alternatives", alt_qa, label="Questions", sid="questions")
+        pre_ = ",".join([x["slug"]] + [y["slug"] for y in (same_ or [y for y in VS if y["slug"] in cs_.BIG and y is not x])[:3]] + [CMP_US])
+        page(f"vs/{x['slug']}/alternatives/", f"{x['name']} Alternatives ({TODAY[:4]}): {len(alts)} Job Sites | {SITE}",
+             f"Alternatives to {x['name']}: {', '.join(y['name'] for y in alts[:4])} and {len(alts) - 4} more, grouped by kind, with who pays, accounts and where you apply. Every fact sourced.",
+             crumbs(("Compared with other job sites", "vs/"), (f"{x['name']} alternatives", "")) + f'<h1>{e(x["name"])} alternatives: <span class="hl">{len(alts)} job sites, with sources</span></h1>'
+             f'<p class="lead">The best alternative to {e(x["name"])} depends on what you use it for. Below, {len(alts)} other places to look for work, the ones most like {e(x["name"])} first, '
+             f'each described from its own pages with who pays, whether you need an account and where you apply. {e(cs_.OUR_NAME)} is one of them, in its own group.</p>'
+             + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
+             + section(f"{x['name']} alternatives at a glance", glance_, sid="glance", label="Side by side",
+                       sub=f"{x['name']} first, then the others in the order below.")
+             + f'<p class="vs-pick"><b>Compare several at once:</b> <a href="{P}/vs/compare/?sites={pre_}">{e(x["name"])} and {len(pre_.split(",")) - 1} alternatives in one table</a>, or pick your own.</p>'
+             + alt_ + aq_h
+             + section("Sources", f'<p class="note">Every fact about a site on this page comes from its comparison page, where each one is listed with its source and the date it was read. '
+                       f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])} vs {e(cs_.OUR_NAME)}</a> lists the sources about {e(x["name"])}.</p>'), head=aq_ld)
+
 
     lap('Best job search sites: one page for the search "best job sea')
     # Best job search sites: one page for the search "best job search sites" / "best job sites" (the owner's Semrush file of Reddit
@@ -7189,19 +7265,104 @@ def main():
                    + " · ".join(f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])}</a>' for x in VS) + f'. All comparisons: <a href="{P}/vs/">compared with other job sites</a>.</p>'),
          head=bs_ld)
 
+    # /vs/compare/: pick two to five job sites, add this one, see the same sourced rows side by side (owner, 24 Nov 2026: "so several can be
+    # compared and ours added"). People search three at once ("indeed vs ziprecruiter vs glassdoor", Google's related searches that day);
+    # SourceForge and G2 answer with such a chart. The choice lives in the address (?sites=indeed,ziprecruiter,jobseveryhour) so it can
+    # be shared; the page itself holds a default table for readers without scripts and for search engines; compare.js redraws it.
+    CMP_MAX = 5
+    CMP_DEFAULT = [y for y in ("indeed", "linkedin-jobs", "ziprecruiter", "glassdoor") if any(x["slug"] == y for x in VS)] + [CMP_US]
+    def cmp_src(y):
+        seen_, out_ = set(), []
+        for _, url_, date_ in y.get("sources", []):
+            if url_ in seen_: continue
+            seen_.add(url_); out_.append([url_, fdate(date_), re.sub(r"^https?://(www\.)?", "", url_).split("/")[0]])
+        return out_
+    cmp_sites = [{"s": y["slug"], "n": y["name"], "k": y["kind"], "w": y["what"], "r": {q_: t_ for q_, t_, _ in y["rows"]}, "src": cmp_src(y),
+                  "u": f"{P}/vs/{y['slug']}/"} for y in VS]
+    cmp_sites.append({"s": CMP_US, "n": cs_.OUR_NAME, "k": cs_.OUR_KIND, "w": US_SITE["what"], "r": dict(cs_.US_ANSWERS), "src": [], "u": f"{P}/about/", "us": 1})
+    CMP_ROWS = ["What it is"] + cs_.QUESTIONS + ["Sources"]
+    def site_cmp_table(slugs):
+        """The table compare.js draws, drawn here for the default choice: one column a site, one row a question."""
+        by_ = {c_["s"]: c_ for c_ in cmp_sites}
+        cols = [by_[s_] for s_ in slugs if s_ in by_]
+        def cell(c_, row):
+            if row == "What it is": return e(c_["w"])
+            if row == "Sources":
+                if c_.get("us"): return f'This site, {e(fdate(TODAY))}. <a href="{c_["u"]}">About it</a>'
+                return " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(h_)}</a>' for u_, _, h_ in c_["src"]) + f'<br><span class="src">Read {e(c_["src"][0][1]) if c_["src"] else ""}</span> · <a href="{c_["u"]}">Full comparison</a>'
+            t_ = c_["r"].get(row)
+            return e(t_) if t_ else '<span class="miss">Not stated on the pages we read</span>'
+        return ('<table class="vs-t cmp-t"><tr><th scope="col"><span class="sr-only">Question</span></th>'
+                + "".join(f'<th scope="col"{" class=us" if c_.get("us") else ""}>{e(c_["n"])}</th>' for c_ in cols) + "</tr>"
+                + "".join(f'<tr><th scope="row">{e(row)}</th>' + "".join(f'<td data-l="{e(c_["n"])}"{" class=us" if c_.get("us") else ""}>{cell(c_, row)}</td>' for c_ in cols) + "</tr>" for row in CMP_ROWS)
+                + "</table>")
+    cmp_chips = ('<div class="cmp-pick" id="cmp-pick"><fieldset class="cmp-us"><legend>This site</legend><div class="cmp-chips">'
+                 f'<label class="cmp-chip us"><input type="checkbox" name="site" value="{CMP_US}" checked><span>{e(cs_.OUR_NAME)}</span></label></div></fieldset>'
+                 + "".join(f'<fieldset><legend>{e(cs_.KINDS[k_])}</legend><div class="cmp-chips">'
+                           + "".join(f'<label class="cmp-chip"><input type="checkbox" name="site" value="{y["slug"]}"{" checked" if y["slug"] in CMP_DEFAULT else ""}><span>{e(y["name"])}</span></label>' for y in VS if y["kind"] == k_)
+                           + "</div></fieldset>" for k_ in cs_.KINDS if any(y["kind"] == k_ for y in VS))
+                 + f'<div class="cmp-bar"><p class="cmp-msg" id="cmp-msg" aria-live="polite">Pick up to {CMP_MAX} job sites; {e(cs_.OUR_NAME)} can be added or taken out.</p>'
+                 '<button class="btn ghost" type="button" id="cmp-copy">Copy link to this table</button><button class="btn ghost" type="button" id="cmp-clear">Clear</button></div></div>')
+    cmp_presets = [("Indeed vs ZipRecruiter vs Glassdoor", "indeed,ziprecruiter,glassdoor"), ("Indeed vs LinkedIn vs ZipRecruiter", "indeed,linkedin-jobs,ziprecruiter"),
+                   ("Remote job sites", "we-work-remotely,remote-ok,flexjobs,remotive,himalayas"), ("Tech and startup jobs", "dice,built-in,wellfound,linkedin-jobs"),
+                   ("Job search engines", "simplyhired,jooble,talent-com"), ("Students, hourly and government jobs", "handshake,snagajob,usajobs,idealist")]
+    cmp_presets = [(n_, ",".join(s_ for s_ in v_.split(",") if any(x["slug"] == s_ for x in VS))) for n_, v_ in cmp_presets]
+    cmp_data = json.dumps({"sites": cmp_sites, "rows": CMP_ROWS, "max": CMP_MAX, "us": CMP_US, "def": CMP_DEFAULT, "miss": "Not stated on the pages we read",
+                           "today": fdate(TODAY)}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    n_free = [y["name"] for y in VS if re.match(r"(A )?[Ff]ree", next((t_ for q_, t_, _ in y["rows"] if q_ == "Price for job seekers"), ""))]
+    n_noacc = [y["name"] for y in VS if re.match(r"No\b|Not\b", next((t_ for q_, t_, _ in y["rows"] if q_ == "Account needed to apply"), ""))]
+    cq_h, cq_ld = qa_sec("Questions about comparing job sites", [
+        ("How do I compare job sites?",
+         f"Pick up to {CMP_MAX} sites above and the table shows the same facts for each: who pays, prices, where the jobs come from, where you apply, whether you need an account and how fresh the listings are. "
+         "Every fact about a site comes from its own pages, read on the date shown under its column."),
+        ("Which job sites are free for job seekers?",
+         f"By their own pages: {', '.join(n_free)}, and {cs_.OUR_NAME}. Some of them sell optional plans; FlexJobs and Remotive charge job seekers for full access." if n_free else
+         f"{cs_.OUR_NAME} is free for job seekers; the table shows the others."),
+        ("Which job sites let you apply without an account?",
+         (f"By their own pages: {', '.join(n_noacc)}. " if n_noacc else "") + f"On {cs_.OUR_NAME} every Apply button goes to the employer’s own page, with no account here."),
+        ("Can I share a comparison?", "Yes. The address of this page changes with your choice, for example /vs/compare/?sites=indeed,ziprecruiter,jobseveryhour; copy it with the button above and anyone who opens it sees the same table."),
+        ("Why are some cells empty?", "A cell says “Not stated on the pages we read” when the site’s own pages did not answer that question on the day we read them. We do not fill a gap with a guess."),
+    ], label="Questions", sid="questions")
+    page("vs/compare/", f"Compare Job Sites Side by Side ({len(VS) + 1} Sites) | {SITE}",
+         f"Compare job sites side by side: pick Indeed, ZipRecruiter, Glassdoor, LinkedIn and up to {CMP_MAX} of {len(VS)} sites, add {SITE}, and see who pays and where you apply.",
+         crumbs(("Compared with other job sites", "vs/"), ("Compare job sites side by side", "")) + '<h1>Compare job sites <span class="hl">side by side</span></h1>'
+         f'<p class="lead">Pick up to {CMP_MAX} job sites and see the same facts in one table: who pays, prices, where the jobs come from, where you apply and whether you need an account. '
+         f'Every fact about another site comes from its own pages, with the date it was read; {e(cs_.OUR_NAME)} is in the table too, and you can take it out. The address keeps your choice, so the table can be shared.</p>'
+         + cmp_chips
+         + f'<div class="tablewrap cmp-wrap" id="cmp-out">{site_cmp_table(CMP_DEFAULT)}</div>'
+         + '<p class="note">On a phone each row lists the sites under each other. “Full comparison” opens a site’s own page here, with every source.</p>'
+         + section("Comparisons people [[search for]]", '<ul class="tiles wide">' + "".join(f'<li><a class="tile" href="{P}/vs/compare/?sites={v_},{CMP_US}"><span class="n">{e(n_)}</span><span class="c">{len(v_.split(","))} sites and this one</span></a></li>' for n_, v_ in cmp_presets if v_) + "</ul>",
+                   sid="presets", label="Ready-made")
+         + cq_h
+         + section("Sources", '<p class="note">Each column lists the pages the facts were read from and the date. A fact that is wrong or out of date can be reported from the '
+                   f'<a href="{P}/about/">About page</a>; it is corrected or removed. All pair pages: <a href="{P}/vs/">compared with other job sites</a>.</p>'),
+         head=cq_ld + f'<link rel="stylesheet" href="{P}/compare.css?v={VC}"><script id="cmp-data" type="application/json">{cmp_data}</script><script src="{P}/compare.js?v={VC}" defer></script>', cls="hub")
+
+    pairs_by = {}
+    for sl, a_, b_ in site_pairs: pairs_by.setdefault(a_["slug"], []).append((sl, a_, b_))
     page("vs/", f"{SITE} Compared with Other Job Sites: {len(VS)} Fair Comparisons | {SITE}",
-         f"{SITE} side by side with {', '.join(x['name'] for x in VS[:-1])} and {VS[-1]['name']}: who pays, prices, where jobs come from and where you apply. Every fact sourced and dated.",
+         f"{SITE} side by side with {', '.join(x['name'] for x in VS[:4])} and {len(VS) - 4} more job sites, plus {len(site_pairs)} site-vs-site pages and a table to compare several at once. Every fact sourced.",
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
          '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now, '
-         f'or see the <a href="{P}/best-job-search-sites/">best job search sites by what you need</a> and <a href="{P}/vs/jobscan/">Jobscan compared with the free resume check here</a>.</p>'
+         f'<a href="{P}/vs/compare/">compare several at once</a>, or see the <a href="{P}/best-job-search-sites/">best job search sites by what you need</a> and <a href="{P}/vs/jobscan/">Jobscan compared with the free resume check here</a>.</p>'
          + nums([(f"{len(VS)}", "job sites compared with this one"), (f"{len(site_pairs)}", "pairs of job sites, side by side"),
                  (f"{sum(len(x['rows']) for x in VS)}", "facts about them, each with its source"), (f"{len({u_ for x in VS for _, u_, _ in x['sources']})}", "pages of theirs read for it")], src=False)
-         + section("Choose [[a site]]", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS) + "</ul>", sid="sites", label="With this site",
+         + section("Compare [[several sites]] at once", f'<p>Pick up to {CMP_MAX} job sites, add or leave out {e(SITE)}, and get one table of the same sourced facts, with an address you can share.</p>'
+                   + '<ul class="tiles wide">' + "".join(f'<li><a class="tile" href="{P}/vs/compare/?sites={v_},{CMP_US}"><span class="n">{e(n_)}</span></a></li>' for n_, v_ in cmp_presets[:4] if v_) + "</ul>",
+                   link=("vs/compare/", "Open the comparison table"), sid="compare", label="Side by side")
+         + section("Choose [[a site]]", "".join(f'<h3 class="vs-k">{e(cs_.KINDS[k_])}</h3><ul class="tiles">' + "".join(
+                       f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} vs {e(SITE)}</span><span class="c">{len(x["rows"])} facts</span></a></li>' for x in VS if x["kind"] == k_) + "</ul>"
+                       for k_ in cs_.KINDS if any(x["kind"] == k_ for x in VS)), sid="sites", label="With this site",
                    sub="Each page says where the other site is better and where this one is, with the source of every fact about the other site.")
-         + section("Job sites compared with [[each other]]", '<ul class="tiles wide">' + "".join(f'<li><a class="tile" href="{P}/vs/{sl}/"><span class="n">{e(a_["name"])} vs {e(b_["name"])}</span></a></li>' for sl, a_, b_ in site_pairs) + "</ul>", sid="pairs", label="Site against site",
-                   sub="What each site says about itself, side by side. These pages rank neither.")
+         + section("Job sites compared with [[each other]]", "".join(f'<h3 class="vs-k">{e(VS_BY[a_s]["name"])} compared with</h3><ul class="tiles wide">' + "".join(
+                       f'<li><a class="tile" href="{P}/vs/{sl}/"><span class="n">{e(a_["name"])} vs {e(b_["name"])}</span></a></li>' for sl, a_, b_ in ps_) + "</ul>" for a_s, ps_ in pairs_by.items()),
+                   sid="pairs", label="Site against site", sub="What each site says about itself, side by side. These pages rank neither.")
          + section("[[Alternatives]] to each site", '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/alternatives/"><span class="n">{e(x["name"])} alternatives</span></a></li>' for x in VS) + "</ul>", sid="alternatives", label="Other places to look",
-                   sub="For each site, the others described from their own pages."), cls="hub")
+                   sub="For each site, the others grouped by kind, the most similar first.")
+         + section("Not compared yet", '<ul class="ticks">' + "".join(f'<li><b>{e(n_)}:</b> {e(why_)} <a href="{e(u_)}" rel="nofollow noopener">Source</a></li>' for n_, why_, u_ in cs_.SKIPPED) + "</ul>"
+                   + '<p class="note">A site gets a page only when its own pages answer at least four of the questions; a comparison with gaps would not be fair.</p>', sid="not-yet"),
+         head=f'<link rel="stylesheet" href="{P}/compare.css?v={VC}">', cls="hub")
+
 
     lap('Career quiz: "which kind of work fits me?" (the Careerist st')
     # Career quiz: "which kind of work fits me?" (the Careerist study: its lead magnet, but theirs asks for a phone number). Seven plain
@@ -10953,6 +11114,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Methodology]({FULL}/methodology/): how listings are collected and how figures are calculated
 
 - [Skill comparisons]({FULL}/compare/): two skills head to head on open roles, pay and remote share
+- [Job sites compared]({FULL}/vs/): this site beside Indeed, LinkedIn, ZipRecruiter, Glassdoor and other job sites, site-vs-site pages and alternatives, every fact about another site with its source and date; [compare up to five in one table]({FULL}/vs/compare/)
 - Open data as CSV: {FULL}/data/open/skills.csv, {FULL}/data/open/companies.csv, {FULL}/data/open/categories.csv, {FULL}/data/open/locations.csv
 - API description for agents (OpenAPI): {FULL}/api/openapi.json
 
@@ -11096,7 +11258,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "stats.js", "fsel.js", "map.js", "explorer.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "stats.js", "fsel.js", "map.js", "explorer.js", "compare.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
     # The home page carries the styles it uses in the page itself, and the whole file comes after the first paint (PageSpeed, phone,
@@ -11113,6 +11275,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             f_.write_text(h_.replace(link_, f'<style>{css_}</style><link rel="stylesheet" href="{P}/style.css?v={V}" media="print" onload="this.media=\'all\'">'
                                               f'<noscript>{link_}</noscript>', 1), encoding="utf-8")
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
+    (OUT / "compare.css").write_text(mincss((ROOT / "assets" / "compare.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
     if (ROOT / "assets" / "paid").exists(): shutil.copytree(ROOT / "assets" / "paid", OUT / "paid")      # pictures of the paid products, cut from real pages (account.js: SHOTS)

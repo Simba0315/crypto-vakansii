@@ -1,0 +1,37 @@
+/* /vs/compare/ only: the chips that pick the job sites and the table of facts. Colours are the site's variables, so light and dark
+   themes follow style.css. The phone layout of the table (one row a question, each site's answer under its name) is .vs-t's own. */
+.cmp-pick{margin:18px 0 22px;padding:16px 18px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.cmp-pick fieldset{margin:0 0 12px;padding:0;border:0;min-width:0}
+.cmp-pick legend{margin:0 0 6px;padding:0;font-size:12.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+.cmp-chips{display:flex;flex-wrap:wrap;gap:8px}
+.cmp-chip{position:relative;display:inline-flex}
+.cmp-chip input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.cmp-chip span{display:inline-flex;align-items:center;min-height:40px;padding:0 15px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.2;transition:border-color .12s,background .12s}
+.cmp-chip:hover span{border-color:var(--text)}
+.cmp-chip input:checked+span{background:var(--hl);border-color:var(--ac);color:var(--hl-ink);font-weight:600}
+.cmp-chip input:checked+span::before{content:"✓";margin-right:6px;font-weight:700}
+.cmp-chip input:focus-visible+span{outline:2px solid var(--ac);outline-offset:2px}
+.cmp-chip input:disabled{cursor:not-allowed}
+.cmp-chip input:disabled+span{opacity:.45}
+.cmp-chip.us span{border-style:dashed}
+.cmp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:4px}
+.cmp-bar .btn.ghost{margin-top:0}
+.cmp-msg{flex:1 1 260px;margin:0;font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.cmp-wrap{margin-bottom:10px}
+.cmp-t{table-layout:fixed;min-width:640px}
+.cmp-t th[scope=row]{width:150px;vertical-align:top;font-size:14px}
+.vs-t.cmp-t td{width:auto;vertical-align:top;font-size:14px;line-height:1.45}
+.cmp-t th[scope=col]{font-size:15px}
+.cmp-t .us{background:var(--accent-soft)}
+.cmp-t .miss{color:var(--faint);font-style:italic}
+.cmp-t .src{font-size:12.5px;color:var(--muted)}
+.cmp-t a{overflow-wrap:anywhere}
+.cmp-empty{margin:0;padding:22px 0;color:var(--muted)}
+.vs-k{margin:22px 0 10px;font-size:15px;font-weight:650}
+@media(max-width:700px){
+  .cmp-pick{padding:14px 14px 12px}
+  .cmp-t{min-width:0;table-layout:auto}
+  .cmp-t th[scope=row]{width:auto}
+  .cmp-t .us{background:none}
+  .cmp-t td.us::before{color:var(--ac)}
+}

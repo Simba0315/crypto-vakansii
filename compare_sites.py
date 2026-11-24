@@ -33,6 +33,7 @@ OUR_NAME = "Jobs Every Hour"
 R13 = "2026-11-13"  # read by the research files
 R14 = "2026-11-14"  # read from the site's own page for this module
 R21 = "2026-11-21"  # read from the site's own page in a real browser (FlexJobs timed out for the reader on 14 Nov)
+R24 = "2026-11-24"  # the 16 sites added that day, read on their own pages (some in a real browser) or, for ZipRecruiter, its annual report
 
 QUESTIONS = [
     "Who pays",
@@ -570,6 +571,785 @@ SITES = [
     ),
 ]
 
+# 24 Nov 2026: the big US job sites people compare (the owner asked for many more "alternatives" and "X vs Y" pages). Read that day
+# on each site's own pages: help centres, pricing, FAQ, terms; ZipRecruiter's main site showed a human check, so its facts come from
+# its help centre and its annual report to the SEC (its own words). A site whose pages refused the reader is in SKIPPED, not here.
+ZIP_10K = "https://www.sec.gov/Archives/edgar/data/1617553/000161755326000016/zip-20251231.htm"
+SITES += [
+    # ------------------------------------------------------------------ ZipRecruiter
+    dict(
+        slug="ziprecruiter",
+        name="ZipRecruiter",
+        url="https://www.ziprecruiter.com/",
+        what="ZipRecruiter is a US job marketplace, listed on the New York Stock Exchange, where employers pay for job posting plans and "
+             "job seekers search for free. It reported 71,572 paying employers in the last quarter of 2025.",
+        rows=_rows(
+            ("Who pays", "Employers, through job posting plans or campaigns paid by clicks or applications. Its annual report says the "
+                         "marketplace is free to job seekers."),
+            ("Price for job seekers", "Free. You create a free job seeker profile to search and apply."),
+            ("Price to post one job", "No public price. The plans are Standard, Premium and Pro, priced by a custom quote over the phone. "
+                                      "Plans are billed in advance for one to twelve months; daily plans are billed by the days used."),
+            ("Where the jobs come from", "Employers post jobs, and its annual report says job seekers get \"access to millions of jobs from "
+                                         "all over the internet\". Employers' jobs are also sent out to partner job boards and search engines."),
+            ("Where you apply", "On ZipRecruiter with 1-Click Apply, which sends the resume saved in your account, or on the employer's "
+                                "own site when the button reads Apply Now."),
+            ("Account needed to apply", "For 1-Click Apply, yes: you apply while logged in to your job seeker account. A new user is "
+                                        "asked for a name, email address, phone number and resume."),
+            ("How fresh the listings are", "When an employer closes a job, it is removed from all partner job boards within 24 hours."),
+            ("Kinds of jobs", "Jobs in all industries and at all levels of seniority, \"millions of jobs\" by its annual report."),
+        ),
+        them_better=[
+            "Far larger: 71,572 employers paid for it in the last quarter of 2025, and it says job seekers can search millions of jobs.",
+            "1-Click Apply with a saved resume, a mobile app, and a career advisor called Phil that invites job seekers to apply.",
+            "Employers' jobs go out to partner job boards, search engines and social networks at no extra fee for paid subscribers "
+            "(the Veteran boards cost extra).",
+        ],
+        us_better=[
+            "No account needed to apply: every Apply button goes to the employer's own page. ZipRecruiter's 1-Click Apply works only "
+            "while you are logged in.",
+            "A job is gone from this site at the next hourly reading once the employer takes it down. ZipRecruiter removes a closed job "
+            "from partner boards within 24 hours.",
+            "Our employer prices are public: a standard listing is free for 30 days, boosts are $99 and $249. ZipRecruiter gives its "
+            "prices only as a custom quote.",
+        ],
+        pick="Use ZipRecruiter if you want one profile and 1-Click Apply across millions of jobs, use Jobs Every Hour if you want jobs "
+             "read every hour from employers' own careers pages and to apply there without an account.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Where the jobs come from|Kinds of jobs|them_better 1|them_better 2|pick] Annual report "
+             "for 2025 (Form 10-K, filed 25 Feb 2026): \"Our marketplace is free to job seekers.\" \"ZipRecruiter provides job seekers "
+             "with access to millions of jobs from all over the internet.\" \"For job seekers across all industries and levels of "
+             "seniority\". Quarterly Paid Employers: 71,572 in the fourth quarter of 2025. Search \"on our website or in our mobile app\"; "
+             "\"Phil\", an AI-powered career advisor, invites candidates to apply. Class A common stock listed on the New York Stock "
+             "Exchange (ZIP).", ZIP_10K, R24),
+            ("[Who pays|Price to post one job|them_better 3] 10-K: \"Job posting plans are billed in advance of the subscription period, "
+             "which typically ranges from one to twelve months, except for daily subscription plans, which are billed in arrears\"; "
+             "performance-based customers pay per click or per application; employers' jobs are \"distributed to sites managed by our "
+             "Job Distribution Partners\" (job boards, search engines, social networks).", ZIP_10K, R24),
+            ("[Price to post one job|us_better 3] \"We offer a range of plans—including Standard, Premium, and Pro\"; \"If you would like "
+             "to compare our plans or receive a custom quote\", call (877) 252-1062.",
+             "https://support.ziprecruiter.com/s/article/Which-ZipRecruiter-hiring-plan-is-right-for-my-business", R24),
+            ("[them_better 3] \"There are no additional fees to post to your job boards when you are a paid subscriber, with the "
+             "exception of our Veteran Job Boards.\"",
+             "https://support.ziprecruiter.com/s/article/Do-I-have-to-pay-extra-fees-for-each-job-board", R24),
+            ("[Where you apply|Account needed to apply|us_better 1|pick] \"If the ad has a “1-Click” apply option, it means you can apply "
+             "directly within our site while logged into your Job Seeker account.\" An \"Apply Now\" button means \"the application is "
+             "housed externally on another site.\" A new user is prompted for name, email address and phone number, then a resume.",
+             "https://support.ziprecruiter.com/candidate/s/article/I-found-a-job-I-like-How-do-I-apply", R24),
+            ("[Price for job seekers] \"As a Job Seeker you can create a free Job Seeker profile, upload your resume and search for/apply "
+             "to jobs in your field\".",
+             "https://support.ziprecruiter.com/candidate/s/article/Can-ZipRecruiter-find-me-a-job", R24),
+            ("[How fresh the listings are|us_better 2] \"When you close a job, the job is removed from all partner job boards within 24 "
+             "hours.\"",
+             "https://support.ziprecruiter.com/s/article/What-happens-when-I-close-a-job", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Glassdoor
+    dict(
+        slug="glassdoor",
+        name="Glassdoor",
+        url="https://www.glassdoor.com/",
+        what="Glassdoor is a site of company reviews, salaries and job listings owned by Indeed, Inc. Since November 18, 2025 every new "
+             "Glassdoor account is synced with Indeed.",
+        rows=_rows(
+            ("Who pays", "Employers, for sponsored jobs, which they buy on Indeed. Job seekers use a free account."),
+            ("Price for job seekers", "A free account. Company, salary, interview and benefits insights open after you contribute "
+                                      "something yourself (its \"Give-to-Get\" policy)."),
+            ("Price to post one job", "Jobs are posted on Indeed. Unsponsored jobs show on Glassdoor at no cost; sponsored jobs use a "
+                                      "flexible budget, with no fixed price stated."),
+            ("Where the jobs come from", "Jobs posted on Indeed appear on Glassdoor automatically. A Glassdoor post-a-job request is "
+                                         "routed to Indeed."),
+            ("Where you apply", "With Easy Apply on Glassdoor, through a profile synced with Indeed."),
+            ("Account needed to apply", "For Easy Apply, yes: a Glassdoor account synced with Indeed. Every new account since November 18, "
+                                        "2025 is synced, and an Indeed account is created for you if you have none."),
+        ),
+        them_better=[
+            "Company reviews, salaries, interview reports and benefits details shared by employees, which this site does not have.",
+            "One login with Indeed: a synced profile gives you Easy Apply and makes you easier for hiring employers to find.",
+            "Employers can post today: unsponsored jobs show at no cost, and a new US Indeed account gets a $75 credit to sponsor a "
+            "first job.",
+        ],
+        us_better=[
+            "No account needed to search or apply. Glassdoor's desktop job search steps start with \"Login to Glassdoor\", and Easy Apply "
+            "needs an account synced with Indeed.",
+            "Every job here is read from the employer's own careers page and checked every hour. Glassdoor shows the jobs posted on Indeed.",
+        ],
+        pick="Use Glassdoor if you want company reviews and salaries next to the jobs, use Jobs Every Hour if you want jobs read every "
+             "hour from employers' own careers pages and to apply without an account.",
+        sources=[
+            ("[what|Price for job seekers|Account needed to apply|them_better 1] \"Create a free Glassdoor account to access job "
+             "listings, community discussions, salary insights, company reviews, benefits details, and interview tips.\" \"As of "
+             "November 18, 2025, all new Glassdoor accounts must be synced with Indeed. If you don’t have an Indeed account, one will be "
+             "created automatically during sign-up.\" \"Unlocking Company, Salary, Interview, and Benefits insights requires a "
+             "contribution under our \"Give-to-Get\" policy.\"",
+             "https://help.glassdoor.com/s/article/Create-a-Glassdoor-user-account?language=en_US", R24),
+            ("[what] Help centre footer: \"Copyright © 2008-2026, Indeed, Inc. “Glassdoor,” “Worklife Pro,” “Bowls,” and logo are "
+             "proprietary trademarks of Indeed, Inc.\"",
+             "https://help.glassdoor.com/s/?language=en_US", R24),
+            ("[Where you apply|Account needed to apply|them_better 2|us_better 1] A synced profile gives \"Faster, more seamless job "
+             "applications with access to Easy Apply\" and \"Increased discoverability to hiring employers\"; without an Indeed account "
+             "\"One will automatically be created for you during the sign-in process. This will allow you to access features like Easy "
+             "Apply\".",
+             "https://help.glassdoor.com/s/article/one-login-glassdoor-indeed?language=en_US", R24),
+            ("[Where you apply|us_better 1] How to search for a job (Desktop): \"Login to Glassdoor. Select the Jobs tab.\" Applied jobs "
+             "list \"any Easy Apply applications submitted\".",
+             "https://help.glassdoor.com/s/article/How-to-Find-Save-and-Manage-Jobs-on-Glassdoor-Desktop-App?language=en_US", R24),
+            ("[Who pays|Price to post one job|Where the jobs come from|them_better 3|us_better 2|pick] Indeed's page for employers: "
+             "\"Jobs posted on Indeed automatically appear on Glassdoor.\" \"If you want to post a job on Glassdoor, you will be routed "
+             "to Indeed to complete the posting.\" Unsponsored jobs \"are listed on Glassdoor at no cost\"; sponsor jobs \"using a "
+             "flexible budget\"; new US accounts get \"a $75 credit to sponsor your first job\".",
+             "https://www.indeed.com/hire/resources/howtohub/how-employers-use-glassdoor-and-indeed", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ SimplyHired
+    dict(
+        slug="simplyhired",
+        name="SimplyHired",
+        url="https://www.simplyhired.com/",
+        what="SimplyHired is a job search engine owned by Recruit Holdings, the same parent company as Indeed. It runs job search engines "
+             "in 23 countries.",
+        rows=_rows(
+            ("Who pays", "Employers, to sponsor jobs, paid by the click. Job seekers pay nothing."),
+            ("Price for job seekers", "Free: \"There are no subscription fees or charges for candidates.\""),
+            ("Price to post one job", "Three free jobs a month, each shown for up to 30 days, posted through a free Indeed employer "
+                                      "account. Sponsoring a job is paid by the click."),
+            ("Where the jobs come from", "It gathers listings from company career pages, job boards and recruitment agencies, plus jobs "
+                                         "posted on it directly. Jobs posted through an Indeed employer account appear on SimplyHired too."),
+            ("Account needed to apply", "Yes. You can browse without an account, but you need a free account to apply."),
+            ("How fresh the listings are", "Because listings come from outside sources, it says some postings \"may not update in real "
+                                           "time once a role is filled or paused\"."),
+            ("Kinds of jobs", "A wide range of industries and experience levels, from entry-level and skilled-trade roles up."),
+        ),
+        them_better=[
+            "Part of the same group as Indeed, it runs job search engines in 23 countries and 12 languages.",
+            "It also lists jobs from job boards and recruitment agencies, so one search can show openings that are not on an employer's "
+            "own careers page.",
+            "Employers can post three jobs a month free today and sponsor more, with placement on both SimplyHired and Indeed.",
+        ],
+        us_better=[
+            "No account needed to apply. SimplyHired asks for a free account before you apply.",
+            "Every job here is read again from the employer's careers page every hour and dropped when it closes. SimplyHired says some "
+            "postings may not update in real time once a role is filled.",
+        ],
+        pick="Use SimplyHired if you want one search that also covers job boards and agencies, use Jobs Every Hour if you want jobs read "
+             "every hour from employers' own careers pages and to apply without an account.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Price to post one job|Where the jobs come from|Account needed to apply|"
+             "How fresh the listings are|Kinds of jobs|them_better 1|them_better 2|them_better 3|us_better 1|us_better 2|pick] "
+             "\"SimplyHired is an online job search engine that aggregates listings from company career pages, job boards, and "
+             "recruitment agencies across the web.\" \"owned by Recruit Holdings Co., Ltd., the same parent company as Indeed\"; "
+             "\"operates job search engines in 23 countries and 12 languages\". \"There are no subscription fees or charges for "
+             "candidates\"; \"Job seekers can browse without an account but need to create a free account to apply\". \"Employers can "
+             "post three free jobs a month*, each visible for up to 30 days\", through \"a free Indeed employer account\"; \"Sponsorship "
+             "works on a pay-per-click basis\"; sponsored jobs \"get enhanced placement on both SimplyHired and Indeed\". \"some "
+             "postings may not update in real time once a role is filled or paused\". Roles \"across a wide range of industries and "
+             "experience levels, from entry-level and skilled-trade roles\".",
+             "https://www.simplyhired.com/brand-facts", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Jooble
+    dict(
+        slug="jooble",
+        name="Jooble",
+        url="https://jooble.org/",
+        what="Jooble is a job search engine founded in 2006 that works in 66 countries; its US page showed 2,583,000+ current vacancies "
+             "from 5,840 websites.",
+        rows=_rows(
+            ("Who pays", "Employers and job publishers, to promote jobs by clicks or by applications. Job seekers do not pay."),
+            ("Price for job seekers", "Free: \"All Jooble services for our job seekers are completely free of charge.\""),
+            ("Price to post one job", "No free option is listed. Promotion is paid per click or per application, with 50% off the "
+                                      "first campaign."),
+            ("Where the jobs come from", "Gathered from many public sources; employers can also connect their jobs through a hiring "
+                                         "system, an XML feed or their careers site."),
+            ("Where you apply", "On the employer's website: you \"choose what jobs to apply for via employers' website\"."),
+            ("Kinds of jobs", "Jobs of every kind in 66 countries; the US page showed 2,583,000+ current vacancies from 5,840 websites."),
+        ),
+        them_better=[
+            "Far larger: it says it reads 140,000+ sources and adds 300,000 new jobs a day, in 66 countries.",
+            "Running since 2006, in many countries, not only the US.",
+            "It also takes jobs from other job sites, so one search can show roles that are not on employers' own careers pages.",
+        ],
+        us_better=[
+            "A standard listing is free for 30 days, posted in the employer account. Jooble charges per click or per application and "
+            "lists no free option.",
+            "Every job here is read from the employer's own careers page every hour. Jooble gathers its listings from thousands of other "
+            "websites.",
+        ],
+        pick="Use Jooble if you want the widest search across many countries and websites, use Jobs Every Hour if you want jobs read every "
+             "hour from employers' own careers pages.",
+        sources=[
+            ("[what|Kinds of jobs|them_better 1] \"Jooble — 2.583.000+ current vacancies — Jobs in USA\"; \"More than 2582800 vacancies "
+             "across 5840 websites\"; \"66 countries\".", "https://jooble.org/", R24),
+            ("[what|them_better 1|them_better 2] Founded in 2006; \"140 000+\" sources; \"300 000\" new jobs every day; 66 countries.",
+             "https://jooble.org/info/about", R24),
+            ("[Who pays|Price to post one job|us_better 1|pick] \"Pay per received clicks on your job ads\"; \"Promote unlimited jobs and "
+             "pay only for the applications you get\"; \"50% off for first campaign\"; \"Connect your jobs via ATS, XML feed, or directly "
+             "from your career site\".", "https://jooble.org/partner/advertise", R24),
+            ("[Who pays|Price for job seekers|Where the jobs come from|Where you apply|them_better 3|us_better 2] \"As a job aggregator, "
+             "Jooble helps people search for jobs from various public sources in one place.\" \"All Jooble services for our job seekers "
+             "are completely free of charge.\" \"choose what jobs to apply for via employers' website\".",
+             "https://jooble.org/how-jooble-works", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Talent.com
+    dict(
+        slug="talent-com",
+        name="Talent.com",
+        url="https://www.talent.com/",
+        what="Talent.com is a job search engine that says it brings together more than 30 million jobs from over a million companies in "
+             "77 countries.",
+        rows=_rows(
+            ("Who pays", "Employers, for sponsored jobs and campaigns; search results mix sponsored, organic and gathered jobs, and bids "
+                         "count. Job seekers pay nothing."),
+            ("Price for job seekers", "Free: it says it is \"completely free for job seekers, and always has been\"."),
+            ("Price to post one job", "No price is shown. Employers fill in a get-started form, and an account manager runs campaigns to "
+                                      "the employer's budget."),
+            ("Where the jobs come from", "Gathered from postings across the web, \"much like a search engine for jobs\", always naming "
+                                         "the source, plus employers' own campaigns."),
+            ("Where you apply", "Quick Apply on Talent.com, or Apply sends you to the site that posted the job, which it says is often a "
+                                "third-party platform rather than the employer."),
+            ("How fresh the listings are", "No refresh time is stated. The help centre asks you to report a job that shows as expired or "
+                                           "out of date."),
+            ("Kinds of jobs", "Jobs of every kind: more than 30 million from over a million companies in 77 countries."),
+        ),
+        them_better=[
+            "Far larger: more than 30 million jobs from over a million companies in 77 countries, by its own count.",
+            "Quick Apply sends your resume without leaving the site, and it has free salary and after-tax pay tools.",
+        ],
+        us_better=[
+            "Every Apply button here goes to the employer's own careers page. On Talent.com, Apply often leads to a third-party platform "
+            "or publisher rather than the employer.",
+            "Every job is read again from the employer's careers page every hour and dropped when it closes. Talent.com states no refresh "
+            "time and asks users to report expired jobs.",
+        ],
+        pick="Use Talent.com if you want the widest search across many countries, use Jobs Every Hour if you want jobs read every hour from "
+             "employers' own careers pages and to apply there.",
+        sources=[
+            ("[what|Where the jobs come from|Where you apply|Kinds of jobs|them_better 1|them_better 2] \"We bring together more than 30 "
+             "million jobs from over a million companies across 77 countries\"; \"much like a search engine for jobs, we gather openings "
+             "published across the web and always credit the source\"; \"compare salaries, and estimate your after-tax pay, all free "
+             "for job seekers\".", "https://helpcenter.talent.com/hc/en-ca/articles/49967447310996-What-is-Talent-com", R24),
+            ("[Price for job seekers|Who pays] \"Yes, Talent.com is completely free for job seekers, and always has been.\"",
+             "https://helpcenter.talent.com/hc/en-ca/articles/49966854548372-Is-Talent-com-free", R24),
+            ("[Where you apply|us_better 1|pick] When you click Apply, \"we sometimes let you apply directly on Talent.com and other times "
+             "send you to the site that posted the job, which is often a third-party platform or publisher rather than the employer "
+             "directly.\"", "https://helpcenter.talent.com/hc/en-ca/articles/50233488336916-Why-does-Apply-take-me-to-another-website", R24),
+            ("[Where you apply|them_better 2] \"Quick Apply\": \"upload your resume, add your email, and answer any employer questions, "
+             "all in one place.\" \"Apply\": \"we send you to the employer's site\".",
+             "https://helpcenter.talent.com/hc/en-ca/articles/49968041668116-How-do-I-apply-for-a-job", R24),
+            ("[Who pays] \"Search results are a rotating mix of sponsored, organic, and aggregated jobs. Bids matter\".",
+             "https://helpcenter.talent.com/hc/en-ca/articles/49968189074196-Why-isn-t-my-job-showing-first-in-search-results", R24),
+            ("[Price to post one job|Who pays] \"a dedicated account manager and analyst team optimize your campaigns to your budget\"; "
+             "\"fill out the get started form\".",
+             "https://helpcenter.talent.com/hc/en-ca/articles/49968619222420-What-solutions-does-Talent-com-offer-employers", R24),
+            ("[How fresh the listings are|us_better 2] \"If a job is showing as expired or out of date, let us know with the job link\".",
+             "https://helpcenter.talent.com/hc/en-ca/articles/49968605743124-How-do-I-report-an-expired-job", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Welcome to the Jungle (Otta)
+    dict(
+        slug="welcome-to-the-jungle",
+        name="Welcome to the Jungle",
+        url="https://www.welcometothejungle.com/",
+        what="Welcome to the Jungle is a job site with company profiles that bought the UK job site Otta in 2024; its UK site, formerly "
+             "Otta, says it has over 3,500 top companies and 70,000+ live jobs.",
+        rows=_rows(
+            ("Who pays", "Employers, through a subscription plus job packages sized by how many active jobs they want to fill."),
+            ("Price to post one job", "No price is published: \"pricing depends on how much you're hiring\", so employers ask for a quote."),
+            ("Where you apply", "Most companies take applications through a form on Welcome to the Jungle; others send you to their own "
+                                "recruitment site."),
+            ("Account needed to apply", "Yes, for its own form: \"you must be logged into your account\". You can browse jobs without "
+                                        "logging in."),
+            ("Kinds of jobs", "Jobs at the companies that recruit on it: \"over 3,500 top companies and 70,000+ live jobs\" on its UK site."),
+        ),
+        them_better=[
+            "Company profiles that show what each company is like, plus articles about work, which this site does not have.",
+            "Employers get employer branding, sourcing and an applicant tracking system in one subscription.",
+        ],
+        us_better=[
+            "No account needed to apply: every Apply button goes to the employer's own page. Welcome to the Jungle's own form needs you "
+            "to log in.",
+            "Our employer prices are public, and a standard listing is free for 30 days. Welcome to the Jungle publishes no price.",
+        ],
+        pick="Use Welcome to the Jungle if you want to learn about companies from their profiles before you apply, use Jobs Every Hour if "
+             "you want jobs read every hour from careers pages and to apply without an account.",
+        sources=[
+            ("[what|Kinds of jobs] Page title \"Welcome To The Jungle UK (formerly Otta)\"; \"over 3,500 top companies and 70,000+ live "
+             "jobs\".", "https://uk.welcometothejungle.com/", R24),
+            ("[what] Welcome to the Jungle \"has announced the acquisition of London-based Otta, the candidate-first job search "
+             "platform\".", "https://press.welcometothejungle.com/news/uk-recruitment-platform-otta-acquired-by-welcome-to-the-jungle", R24),
+            ("[Who pays|Price to post one job|them_better 2|us_better 2] Pricing is a base subscription (Employer Brand, Job Matching, "
+             "Sourcing, ATS) and job packages by number of active jobs; \"Because pricing depends on how much you're hiring\"; no prices "
+             "shown.", "https://solutions.welcometothejungle.com/en/pricing", R24),
+            ("[Where you apply|Account needed to apply|us_better 1|pick] \"Most companies on Welcome to the Jungle allow you to send your "
+             "application directly from our website.\" \"If you are not logged in, you will be asked to do so, or to create an account\". "
+             "\"Some companies on Welcome to the Jungle use an external recruitment platform\".",
+             "https://help.welcometothejungle.com/en/send-an-application-via-the-form", R24),
+            ("[Account needed to apply|them_better 1|pick] \"You can browse thousands of jobs on Welcome to the Jungle, even when you're "
+             "not logged into your account.\" To apply \"you must be logged into your account.\" \"more that 3,000 companies recruiting\"; "
+             "\"we've also created a media dedicated to employment\"; company pages.",
+             "https://help.welcometothejungle.com/en/why-should-you-create-an-account-on-welcome-to-the-jungle", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Dice
+    dict(
+        slug="dice",
+        name="Dice",
+        url="https://www.dice.com/",
+        what="Dice is a job site where employers buy job slots and plans that include TalentSearch, a search of candidate profiles.",
+        rows=_rows(
+            ("Who pays", "Employers, for job slots and plans. The pricing page lists no charge for job seekers."),
+            ("Price to post one job", "$399 for a single job slot, active for 30 days. Starter: $649 a month month to month (3 active "
+                                      "jobs) or $549 a month billed yearly. Standard: $899 or $749 a month (5 active jobs). Prices for "
+                                      "new customers."),
+            ("Where you apply", "Through Dice Easy Apply, or on the company's own career site."),
+            ("Account needed to apply", "Yes. Its help page says to register and set up your profile."),
+            ("How fresh the listings are", "A new posting is live and searchable in 30 minutes or less; a single job slot runs 30 days."),
+        ),
+        them_better=[
+            "Employers get TalentSearch, a search of candidate profiles, and a built-in applicant tracking system.",
+            "Easy Apply lets you apply without leaving Dice.",
+        ],
+        us_better=[
+            "A standard listing is free for 30 days, posted in the employer account. Dice charges $399 for one job slot for 30 days.",
+            "No account needed to search or apply, and every Apply button goes to the employer's own page. Dice asks you to register and "
+            "set up a profile.",
+        ],
+        pick="Use Dice if you want Easy Apply with a Dice profile or an employer needs candidate search, use Jobs Every Hour if you want "
+             "to search and apply with no account or post one job free.",
+        sources=[
+            ("[what|Who pays|Price to post one job|them_better 1|us_better 1|pick] \"Single Job Slot: $399\", \"Job slot active for 30 "
+             "days\"; Starter \"$649/month\" \"Billed month-to-month (no annual contract)\" or \"$549/month\" billed annually; Standard "
+             "\"$899/month\" or \"$749/month\"; TalentSearch profile views in Starter and Standard; \"Pricing is subject to change and is "
+             "valid for new customers only.\"", "https://www.dice.com/hiring/pricing", R24),
+            ("[Where you apply|Account needed to apply|them_better 2|us_better 2|pick] \"apply immediately through Dice Easy Apply\" or on "
+             "the company's career site; register at dice.com/register and \"ensure your profile is set-up\".",
+             "https://www.dice.com/support/candidate-experience/most-frequently-asked-questions.html", R24),
+            ("[How fresh the listings are|them_better 1] \"Post will be live and searchable in 30 minutes or less.\" Applications arrive in "
+             "Dice's \"built-in applicant tracking system\".",
+             "https://www.dice.com/support/employer/jobs/jobs---how-to-post-a-new-job-and-best-practices.html", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Built In
+    dict(
+        slug="built-in",
+        name="Built In",
+        url="https://builtin.com/",
+        what="Built In is a job site and employer branding service that shows 500K+ jobs and 100K+ companies on its home page.",
+        rows=_rows(
+            ("Who pays", "Employers, for job slots and memberships. Job seekers can make a free account."),
+            ("Price for job seekers", "Free: the site offers \"Create Free Account\"."),
+            ("Price to post one job", "Not published on its employer pages, which ask you to book a demo."),
+            ("Kinds of jobs", "Jobs in many fields, from engineering and product to banking, consulting and sales; the home page states "
+                              "500K+ jobs."),
+        ),
+        them_better=[
+            "Large: it states 500K+ jobs and 100K+ companies on its home page.",
+            "Company pages and employer branding, plus a job tracker and job alerts for job seekers.",
+        ],
+        us_better=[
+            "Our employer prices are public, and a standard listing is free for 30 days. Built In publishes no price and asks for a demo.",
+            "No account needed for anything here. Built In's job alerts and tracker need an account.",
+        ],
+        pick="Use Built In if you want company profiles next to a large list of jobs, use Jobs Every Hour if you want to search and apply "
+             "with no account and post a job free.",
+        sources=[
+            ("[what|them_better 1] \"500K+ Jobs\"; \"Explore 100K+ Companies\".", "https://builtin.com/", R24),
+            ("[what|Who pays|Price to post one job|us_better 1|pick] \"Post Job\" leads to employer membership and job slot pages; "
+             "\"Book Demo\"; no prices shown.", "https://employers.builtin.com/membership/", R24),
+            ("[Who pays|Price for job seekers|Kinds of jobs|them_better 2|us_better 2|pick] \"Create Free Account\" or \"Log In\"; \"Save "
+             "Job Alert\"; the Tracker leads to a login; listings in engineering, product management, consulting, banking, real estate "
+             "sales and quantitative research.", "https://builtin.com/jobs", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Himalayas
+    dict(
+        slug="himalayas",
+        name="Himalayas",
+        url="https://himalayas.app/",
+        what="Himalayas is a remote job site run by an Australian company founded in 2020, with 100,000+ remote listings from 70,000+ "
+             "companies.",
+        rows=_rows(
+            ("Who pays", "Employers, only for an optional pinned post. Job seekers can use a free plan or pay for Plus or Max."),
+            ("Price for job seekers", "Free plan at $0. Plus is $9 a month and Max $29 a month. ID verification is a one-time $5 on the "
+                                      "free plan."),
+            ("Price to post one job", "Posting is free and a listing stays up 30 days. A pinned job post costs $299."),
+            ("Where the jobs come from", "Companies post roles themselves, or listings are gathered from careers pages and hiring "
+                                         "systems; listings are checked for spam and scams."),
+            ("Where you apply", "On the company's own application page or a form on Himalayas."),
+            ("Account needed to apply", "Yes: you create a free account and build your profile."),
+            ("How fresh the listings are", "A listing is active for 30 days from the day it is published, then removed automatically."),
+            ("Kinds of jobs", "Remote jobs only. Software development is the largest field, then sales, customer service, operations "
+                              "and marketing."),
+        ),
+        them_better=[
+            "A large remote-only list: 100,000+ listings from 70,000+ companies, and 600,000+ public talent profiles for employers.",
+            "A job application tracker and resume, cover letter and interview practice tools on its free plan.",
+            "Employers can post free for 30 days today and pay for a pinned post.",
+        ],
+        us_better=[
+            "No account needed to search or apply. Himalayas asks you to create an account and build a profile.",
+            "Every job is read again from the employer's careers page every hour. A Himalayas listing stays up 30 days from publication.",
+            "A boost to stand out costs $99 for 30 days here (not on sale yet). A pinned post on Himalayas is $299.",
+        ],
+        pick="Use Himalayas if you want remote jobs only and its profile and application tools, use Jobs Every Hour if you want to search "
+             "and apply with no account, on-site and hybrid jobs included.",
+        sources=[
+            ("[what|Where the jobs come from|Where you apply|Account needed to apply|Kinds of jobs|them_better 1|us_better 1|pick] \"A "
+             "remote jobs platform with 100,000+ listings from 70,000+ companies.\" Himalayas Remote Jobs Pty Ltd, \"an Australian company "
+             "founded in 2020\"; \"600,000+ talent profiles\"; apply goes to \"the company's own application page (or an in-platform "
+             "application form)\"; \"create a free account and build your profile\"; software development the largest field.",
+             "https://himalayas.app/docs/what-is-himalayas", R24),
+            ("[Who pays|Price for job seekers|Price to post one job|them_better 2|them_better 3|us_better 3] Free plan $0; Plus $9 "
+             "monthly; Max $29 monthly; ID verification $5 one time; company profile free with unlimited job posts, each live 30 days; "
+             "Pinned Job Post $299 per job.", "https://himalayas.app/pricing", R24),
+            ("[Price to post one job|How fresh the listings are|us_better 2] \"Posting a job on Himalayas is free.\" \"Your listing stays "
+             "active for 30 days from the publication date.\"", "https://himalayas.app/docs/posting-a-remote-job", R24),
+            ("[How fresh the listings are|them_better 2] Listings \"are active for 30 days\"; tools for resumes, cover letters, interview "
+             "practice and a Job Application Tracker.", "https://himalayas.app/docs", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Remotive
+    dict(
+        slug="remotive",
+        name="Remotive",
+        url="https://remotive.com/",
+        what="Remotive is a remote job site run by Remotive SARL, a French company; its home page offers 140,000+ fully remote jobs and "
+             "shows a small preview to people without a membership.",
+        rows=_rows(
+            ("Who pays", "Both. Employers pay to post, from $299 for 30 days. Job seekers pay for a membership that opens the full list."),
+            ("Price for job seekers", "Membership: €21 a month or €89 a year. It renews automatically unless cancelled; new subscribers "
+                                      "can ask for a full refund within 14 days."),
+            ("Price to post one job", "$299 to feature a job for 30 days. Higher levels cost $358, $398 and $448; bundles save up to 40%."),
+            ("Where the jobs come from", "It lists jobs \"from vetted companies\", and employers can post through its hire page."),
+            ("Where you apply", "On the company's side: \"You'll be redirected to the company's careers page or application link.\""),
+            ("Kinds of jobs", "Fully remote jobs; without a membership, the home page says \"You're seeing 0.4% of available roles\"."),
+            ("Payment methods", "Job seekers are charged through Stripe; the methods are not listed."),
+        ),
+        them_better=[
+            "Only fully remote jobs, 140,000+ by its count, with search filters for location and salary for members.",
+            "Members see jobs 24 hours early and get email digests by location or category.",
+            "Employers get a 30-day feature with a promise of 200+ Apply clicks or a free repost, and reach through its Slack, daily email "
+            "and social posts.",
+        ],
+        us_better=[
+            "Free to search, with no account. Remotive shows 0.4% of its jobs until you pay €21 a month or €89 a year.",
+            "A standard listing is free for 30 days, posted in the employer account. Remotive charges from $299 for 30 days.",
+            "Plus here is one payment that never renews (not on sale yet). Remotive's membership renews automatically.",
+        ],
+        pick="Use Remotive if you only want fully remote work and will pay for the full list, use Jobs Every Hour if you want to search "
+             "free, read every hour from employers' careers pages.",
+        sources=[
+            ("[what|Who pays|Where the jobs come from|Kinds of jobs|them_better 1|them_better 2|us_better 1] \"Browse 140,000+ fully remote "
+             "jobs from vetted companies\"; \"You're seeing 0.4% of available roles\"; \"See jobs 24 hours early\"; \"Advanced search "
+             "filters (location & salary)\".", "https://remotive.com/", R24),
+            ("[what|Price for job seekers|Payment methods|us_better 1|us_better 3|pick] \"Monthly plan: €21/month. Annual plan: "
+             "€89/year.\"; renews automatically unless you cancel; full refund within 14 days for new subscribers; \"Charged to your "
+             "chosen payment method via Stripe\"; operated by Remotive SARL.",
+             "https://support.remotive.com/en/article/terms-of-service-u4kbkf/", R24),
+            ("[Who pays|Price to post one job|us_better 2] \"Our base price to post a job is $299 to feature your job for 30 days.\"; "
+             "$358, $398, $448; \"save up to 40% with job bundles\".",
+             "https://support.remotive.com/en/article/for-recruiters-how-much-does-it-cost-1cdq0y7/", R24),
+            ("[Where the jobs come from|them_better 3] \"200+ 'Apply' clicks, or we'll repost it for another month, free of charge\"; "
+             "Remotive's Slack, daily email update and social media shares.", "https://remotive.com/hire", R24),
+            ("[Where you apply|them_better 2] \"You'll be redirected to the company's careers page or application link.\" \"We're not "
+             "involved in the application process.\" Email digests by location or category need premium access.",
+             "https://support.remotive.com/en/article/frequently-asked-questions-180nrek/", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Remote.co
+    dict(
+        slug="remote-co",
+        name="Remote.co",
+        url="https://remote.co/",
+        what="Remote.co is a remote job site run by BOLD LLC; its home page says it lists 100k+ jobs in 100+ categories, with 2K+ new "
+             "jobs posted every day.",
+        rows=_rows(
+            ("Where the jobs come from", "Employers submit postings, and its team researches listings to add; every job is reviewed "
+                                         "against its quality criteria."),
+            ("Where you apply", "On the employer's own page: the job page we opened showed the full description and an Apply link to the "
+                                "employer's careers site."),
+            ("Account needed to apply", "Not on the job page we opened: its Apply link worked without signing in."),
+            ("Kinds of jobs", "Remote and hybrid jobs \"from entry-level to executive positions\", in 100+ categories."),
+        ),
+        them_better=[
+            "Remote and hybrid work only, with every job reviewed against quality criteria before it is listed.",
+            "Career articles and question-and-answer pages from 108 remote companies about how they work.",
+        ],
+        us_better=[
+            "Every job here is read from the employer's own careers page every hour and dropped when it closes. On Remote.co, employers "
+            "submit postings and its team adds listings it researches.",
+            "Every open job a company posts on its careers page is here, on-site ones too. Remote.co lists remote and hybrid jobs.",
+        ],
+        pick="Use Remote.co if you want remote and hybrid jobs reviewed by a team, use Jobs Every Hour if you want every job read every hour "
+             "from employers' own careers pages.",
+        sources=[
+            ("[what|Kinds of jobs|us_better 2] \"Remote.co is a trusted resource for finding remote jobs\"; \"connect job seekers with "
+             "companies offering flexible and remote opportunities, from entry-level to executive positions\"; address: Bold LLC.",
+             "https://remote.co/about-us", R24),
+            ("[what|Kinds of jobs|them_better 2|pick] \"2K+ NEW JOBS POSTED EVERY DAY\"; \"Browse thousands of remote and hybrid jobs\"; "
+             "\"Explore more than 100k+ jobs in 100+ Categories\"; \"108 leading remote companies answer your questions\".",
+             "https://remote.co/", R24),
+            ("[Where the jobs come from|them_better 1|us_better 1|pick] Terms of Use (last updated November 12, 2026), between \"BOLD "
+             "LLC\" and users: \"Employers submit job postings to Remote.co for consideration in its job database, and Remote.co’s team "
+             "research job listings for consideration to be added to its job database. In either case, every job will be reviewed to "
+             "ensure it meets the quality and relevancy criteria.\"", "https://remote.co/tos", R24),
+            ("[Where you apply|Account needed to apply] Job page read without signing in: full description, \"Apply\" linking to "
+             "miamioh.wd5.myworkdayjobs.com (the employer's own careers site).",
+             "https://remote.co/job-details/assistant-director-design-74b0e5d5-9e50-4734-b5b7-ad7e6c793115", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Working Nomads
+    dict(
+        slug="working-nomads",
+        name="Working Nomads",
+        url="https://www.workingnomads.com/",
+        what="Working Nomads is a remote job board that says it \"curates remote digital jobs from around the web\".",
+        rows=_rows(
+            ("Who pays", "Employers pay to post. Job seekers can pay for Premium."),
+            ("Price for job seekers", "Browsing and applying are free. Premium is paid, with monthly, quarterly or yearly plans; the price "
+                                      "is not shown on the pages we read."),
+            ("Price to post one job", "$199 for one job for 30 days. A bundle of 10 jobs costs $1,690 ($169 a job)."),
+            ("Where the jobs come from", "It curates remote jobs from around the web."),
+            ("Where you apply", "You follow the employer's application instructions: its own site, a hiring system or email."),
+            ("Account needed to apply", "No: \"you don’t need an account to browse or apply for jobs.\""),
+            ("Kinds of jobs", "Remote jobs in development, marketing, management, design, healthcare, sales and more."),
+            ("Payment methods", "Credit card through PayPal. Bank transfer and purchase orders for larger bundles."),
+        ),
+        them_better=[
+            "Remote jobs only, chosen by hand from around the web.",
+            "Employers can buy a 10-job bundle with credits valid for 2 years, and pay by bank transfer or purchase order.",
+        ],
+        us_better=[
+            "A standard listing is free for 30 days, posted in the employer account. Working Nomads charges $199 for one 30-day post.",
+            "Every job here is read from the employer's own careers page every hour. Working Nomads curates jobs from around the web.",
+        ],
+        pick="Use Working Nomads if you want a hand-picked remote-only board, use Jobs Every Hour if you want jobs read every hour from "
+             "employers' own careers pages and to post a job free.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Where the jobs come from|Where you apply|Account needed to apply|Kinds of jobs|"
+             "Payment methods|them_better 1|us_better 2|pick] \"curates remote digital jobs from around the web\"; \"No, you don’t need "
+             "an account to browse or apply for jobs.\"; Premium \"a paid service\" with \"monthly, quarterly, or annual plans\"; "
+             "\"follow the employer’s application instructions\"; industries include development, marketing, management, design, "
+             "healthcare, sales; \"Pay using credit card via PayPal payment gate\".", "https://www.workingnomads.com/faq", R24),
+            ("[Who pays|Price to post one job|Payment methods|them_better 2|us_better 1|pick] Single Job $199; Job Bundle $169 per job, 10 "
+             "jobs for $1,690; each post live 30 days; bundle credits valid 2 years; bank transfer and purchase orders \"for larger "
+             "bundles\".", "https://workingnomads.com/post-job-options", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Handshake
+    dict(
+        slug="handshake",
+        name="Handshake",
+        url="https://joinhandshake.com/",
+        what="Handshake is a job network for students and graduates that links job seekers, schools and employers; it states 1,600+ "
+             "schools and 1 million employers.",
+        rows=_rows(
+            ("Who pays", "Employers, for the Pro and Enterprise plans and for promoted jobs. The Basic employer plan is free."),
+            ("Price to post one job", "Free on Basic, with 10 messages a month. Pro is $450 a month; Enterprise is priced on request. "
+                                      "Promoted jobs start at $34 a day on Basic."),
+            ("Account needed to apply", "Yes: its students page asks you to sign up to use it."),
+            ("Kinds of jobs", "Jobs and internships for students and graduates, plus career events."),
+        ),
+        them_better=[
+            "Tied to 1,600+ schools and their career centres, with internships and first jobs as its focus.",
+            "Mobile apps on the App Store and Google Play.",
+        ],
+        us_better=[
+            "No account needed to search or apply. Handshake asks you to sign up.",
+            "A standard listing is free for 30 days with no message limit. Handshake's free employer plan allows 10 messages a month.",
+        ],
+        pick="Use Handshake if you are a student or new graduate looking for internships through your school, use Jobs Every Hour if you "
+             "want to search jobs with no account.",
+        sources=[
+            ("[what|them_better 1] \"the only three-sided job marketplace\"; \"1,600+ educational institutions\"; \"1 million employers\".",
+             "https://joinhandshake.com/about/", R24),
+            ("[Who pays|Price to post one job|us_better 2|pick] Basic free (free job posting, 10 messages a month); Pro $450 a month; "
+             "Enterprise \"Contact for pricing\"; promoted jobs from $34/day on Basic.", "https://joinhandshake.com/employers/pricing/", R24),
+            ("[Account needed to apply|Kinds of jobs|them_better 1|them_better 2|us_better 1|pick] \"Sign up for Handshake and never miss "
+             "a connection, opportunity, or event.\"; \"Find jobs and internships\"; apps on the App Store and Google Play.",
+             "https://joinhandshake.com/students/", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Snagajob
+    dict(
+        slug="snagajob",
+        name="Snagajob",
+        url="https://www.snagajob.com/",
+        what="Snagajob is a job site for hourly and local jobs, run by Snagajob.com, Inc.",
+        rows=_rows(
+            ("Who pays", "Employers pay to post jobs. \"Snagajob is free for job seekers.\""),
+            ("Price for job seekers", "Free, and so is the profile."),
+            ("Where the jobs come from", "Employers list their openings with Snagajob, some of them all year round."),
+            ("Where you apply", "On Snagajob with Apply Now; some employers ask you to finish on their own website."),
+            ("Account needed to apply", "Yes: \"You must have an account to apply to jobs on Snagajob.\" You must also live in the US."),
+            ("How fresh the listings are", "No listing length is stated; new jobs are added daily and some employers list all year."),
+            ("Kinds of jobs", "Hourly jobs: full-time, part-time or shifts."),
+        ),
+        them_better=[
+            "Built for hourly and shift work, with filters for part-time and shifts.",
+            "Employers search profiles and invite people to interview, and your profile works as your application.",
+            "Phone support Monday to Friday, 8:30 AM to 8:30 PM Eastern.",
+        ],
+        us_better=[
+            "No account needed to search or apply. Snagajob says \"You must have an account to apply\".",
+            "Every Apply button here goes straight to the employer's own page. On Snagajob, some employers ask you to finish on their "
+            "website after applying on Snagajob.",
+        ],
+        pick="Use Snagajob if you want hourly, part-time or shift work and are happy to keep a profile, use Jobs Every Hour if you want to "
+             "search and apply with no account on the employer's own page.",
+        sources=[
+            ("[what|Kinds of jobs|them_better 1] Page title \"Job Search for Hourly & Local Jobs Hiring Now\"; \"© 2026 Snagajob.com, "
+             "Inc.\"; \"Your profile is your application. Apply to jobs instantly.\"", "https://www.snagajob.com/", R24),
+            ("[Who pays|Price for job seekers|Where the jobs come from|Where you apply|Account needed to apply|How fresh the listings are|"
+             "them_better 3|us_better 1|us_better 2|pick] \"Snagajob is free for job seekers.\" \"You must have an account to apply to "
+             "jobs on Snagajob.\" Applicants must be US residents. \"Some employers require you to finish on their own website.\" "
+             "Employers \"list their job openings with Snagajob year-round\"; new jobs are added daily. Support Monday through Friday, "
+             "8:30 AM to 8:30 PM EST.", "https://www.snagajob.com/faq", R24),
+            ("[Price for job seekers|Kinds of jobs|them_better 1|them_better 2] \"Full-time, part-time or Shifts\"; \"Employers search for "
+             "candidates and can invite you to interview.\"; \"your free member profile\".", "https://www.snagajob.com/workers", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ USAJOBS
+    dict(
+        slug="usajobs",
+        name="USAJOBS",
+        url="https://www.usajobs.gov/",
+        what="USAJOBS is the US federal government's official employment site, run by the Office of Personnel Management; it says over 16 "
+             "million job seekers have created accounts.",
+        rows=_rows(
+            ("Where the jobs come from", "Federal agencies. Job announcements come from each agency's own hiring system."),
+            ("Where you apply", "You prepare the application on USAJOBS, then move to the hiring agency's application system."),
+            ("Account needed to apply", "Yes: a USAJOBS profile, with sign-in through login.gov."),
+            ("Kinds of jobs", "Federal jobs only, in hundreds of agencies and organizations."),
+        ),
+        them_better=[
+            "The official place for US federal jobs, run by the government itself.",
+            "A saved profile keeps your resumes and documents, with saved jobs and saved searches.",
+            "A five-step guide prepares each federal application.",
+        ],
+        us_better=[
+            "No account or login.gov sign-in needed to search or apply here.",
+            "Jobs from thousands of companies' own careers pages. USAJOBS lists federal jobs only.",
+        ],
+        pick="Use USAJOBS if you want a federal government job, use Jobs Every Hour if you want jobs at companies, searched with no account.",
+        sources=[
+            ("[what|Account needed to apply|them_better 1|them_better 2|us_better 1] \"USAJOBS is a United States Office of Personnel "
+             "Management website.\" \"The Federal Government's official employment site\"; \"over 16 million job seekers to create "
+             "accounts to date\"; \"create and complete your profile to apply for any job on USAJOBS\"; save jobs, automated searches, "
+             "resumes.", "https://www.usajobs.gov/", R24),
+            ("[Where the jobs come from|Kinds of jobs|them_better 1|us_better 2|pick] The \"central location to find jobs in hundreds of "
+             "federal agencies and organizations\"; jobs flow \"from the agency's Talent Acquisition System (TAS)\".",
+             "https://www.opm.gov/agency-services/talent-systems/usajobs/", R24),
+            ("[Where you apply|Account needed to apply|them_better 3|us_better 1] \"We will guide you through a five-step process to "
+             "prepare your application\"; then you are transferred to the agency's application system. \"USAJOBS is now using login.gov "
+             "for our sign-in process.\"", "https://www.usajobs.gov/getstarted", R24),
+        ],
+    ),
+    # ------------------------------------------------------------------ Idealist
+    dict(
+        slug="idealist",
+        name="Idealist",
+        url="https://www.idealist.org/",
+        what="Idealist is a New York nonprofit that runs a board of social-impact jobs, internships and volunteer roles; it says more "
+             "than 1.2 million jobs have been posted on it.",
+        rows=_rows(
+            ("Who pays", "Organizations, to post jobs and internships; volunteer listings and events are free. Job seekers pay nothing."),
+            ("Price for job seekers", "Free: \"Signing up is free.\""),
+            ("Price to post one job", "30 days per listing: $145 a job for nonprofits and government agencies ($25 an internship), $175 "
+                                      "for consultants and recruiters, $195 for businesses. Packs cost less a job."),
+            ("Where the jobs come from", "Organizations post their own listings."),
+            ("Where you apply", "On Idealist, or on the organization's site or by email, as each listing chooses."),
+            ("Account needed to apply", "Not required: \"You don't need to, but we definitely suggest signing up\". Applying through "
+                                        "Idealist is quickest when logged in."),
+            ("How fresh the listings are", "\"Job listings last for 30 days\"; the organization can hide one sooner."),
+            ("Kinds of jobs", "Social-impact work: jobs, internships, volunteer roles and events."),
+            ("Payment methods", "US nonprofits and government agencies pay by check or credit card; everyone else by credit card."),
+        ),
+        them_better=[
+            "Built for nonprofit and social-impact work, with volunteer roles and internships that a general job site does not carry.",
+            "Running since 1995 and a nonprofit itself, with 200,000+ organizations in 180 countries.",
+            "You can apply and keep track on the site itself, with a saved resume.",
+        ],
+        us_better=[
+            "A standard listing is free for 30 days, posted in the employer account. Idealist charges $145 to $195 a job for 30 days.",
+            "Every Apply button goes to the employer's own page, with no sign-up suggested. Idealist suggests signing up and is quickest "
+            "when you are logged in.",
+        ],
+        pick="Use Idealist if you want nonprofit, volunteer or social-impact work, use Jobs Every Hour if you want jobs read every hour "
+             "from employers' careers pages with no account.",
+        sources=[
+            ("[what|Kinds of jobs|them_better 1|them_better 2] \"Idealist is a 501(c)(3) organization based in New York.\"; \"more than "
+             "1.2 million jobs and 200,000 internships posted so far\"; \"more than 200,000 organizations in 180 countries\"; began in "
+             "1995.", "https://www.idealist.org/en/about", R24),
+            ("[Who pays|Price to post one job|Payment methods|How fresh the listings are|us_better 1|pick] \"$145 per job and $25 per "
+             "internship\"; consultants and recruiters \"$175 per job\"; businesses \"$195 per Job listing per location\"; \"Listings are "
+             "priced for a full 30 days\"; US nonprofits \"can pay by check or credit card\", others \"credit card only\"; volunteer "
+             "opportunities and events free.", "https://www.idealist.org/help/how-much-does-it-cost-to-post-listings-on-your-site", R24),
+            ("[Price to post one job] \"3 job credits for $375 (save $60)\" for US nonprofits.",
+             "https://www.idealist.org/en/help/what-are-job-and-internship-packs-and-how-much-do-they-cost", R24),
+            ("[Who pays|Price for job seekers|Account needed to apply|us_better 2] \"Signing up is free.\" \"You don't need to, but we "
+             "definitely suggest signing up to get the most out of our site!\"",
+             "https://www.idealist.org/en/help/do-i-have-to-sign-up-to-use-idealist", R24),
+            ("[Where you apply|Account needed to apply|them_better 3|us_better 2] \"The quickest way to apply to these listings is to Log "
+             "in\"; upload a resume, answer questions, \"Submit Application\"; or \"Go to Website\", \"Send Email\".",
+             "https://www.idealist.org/en/help/how-do-i-apply-for-opportunities-on-idealist", R24),
+            ("[Where the jobs come from|How fresh the listings are] Organizations use \"Post a Listing\"; \"Job listings last for 30 "
+             "days\".", "https://www.idealist.org/en/help/how-do-i-post-a-job-listing", R24),
+        ],
+    ),
+]
+
+# The kind of each site, for the "alternatives" pages (similar sites first) and the chips of the comparison tool. Our own label, not a
+# fact about the site: each one is backed by the site's "Kinds of jobs" or "what" above, or its own name (Remote OK, We Work Remotely).
+KINDS = {"general": "General job sites", "engine": "Job search engines", "tech": "Tech and startup jobs", "remote": "Remote jobs",
+         "students": "Students and new graduates", "hourly": "Hourly and shift jobs", "government": "Government jobs",
+         "nonprofit": "Nonprofit jobs", "crypto": "Crypto and web3 jobs"}
+KIND = {"indeed": "general", "linkedin-jobs": "general", "ziprecruiter": "general", "glassdoor": "general", "welcome-to-the-jungle": "general",
+        "simplyhired": "engine", "jooble": "engine", "talent-com": "engine",
+        "dice": "tech", "built-in": "tech", "wellfound": "tech",
+        "we-work-remotely": "remote", "remote-ok": "remote", "flexjobs": "remote", "remotive": "remote", "himalayas": "remote",
+        "remote-co": "remote", "working-nomads": "remote",
+        "handshake": "students", "snagajob": "hourly", "usajobs": "government", "idealist": "nonprofit",
+        "cryptojobslist": "crypto", "web3-career": "crypto"}
+OUR_KIND = "engine"          # we read employers' careers pages and drop closed jobs: a job search engine, shown with the others of that kind
+# The sites people compare most; a pair with one of them is built for every other site (see pairs()).
+BIG = ("indeed", "linkedin-jobs", "ziprecruiter", "glassdoor")
+# The first eight sites, compared pairwise since 14 Nov 2026: their pair pages stay, whatever pairs() decides for the rest.
+FIRST8 = ("indeed", "linkedin-jobs", "wellfound", "we-work-remotely", "remote-ok", "flexjobs", "cryptojobslist", "web3-career")
+_ORDER = list(KIND)          # keeps the first eight in their old order, so the addresses of their pair pages do not change
+SITES.sort(key=lambda s: _ORDER.index(s["slug"]))
+for _s in SITES:
+    _s["kind"] = KIND[_s["slug"]]
+
+
+def pairs(sites):
+    """Pairs of sites worth a page of their own: the ones people search ("indeed vs ziprecruiter", "glassdoor vs indeed",
+    "remotive vs we work remotely"). Two sites of the same kind, any site with one of the four big ones, and the first eight with each
+    other (their pages are live since 14 Nov). Crypto boards are paired only with each other and with the first eight. Order follows
+    SITES, so a pair's address is stable."""
+    out = []
+    for i, a in enumerate(sites):
+        for b in sites[i + 1:]:
+            same = a["kind"] == b["kind"]
+            big = (a["slug"] in BIG or b["slug"] in BIG) and "crypto" not in (a["kind"], b["kind"])
+            first = a["slug"] in FIRST8 and b["slug"] in FIRST8
+            if same or big or first:
+                out.append((a, b))
+    return out
+
+
+# Job sites asked for on 24 Nov 2026 that have no page, and why. Shown on /vs/ so a visitor knows they were not left out by choice.
+SKIPPED = [
+    ("Monster", "its pages refused our reader (\"waf blocked\") on 24 Nov 2026, so no fact could be checked. Its job board business and "
+                "CareerBuilder's were bought by BOLD in 2025 after a Chapter 11 sale.",
+     "https://www.prweb.com/releases/bold-completes-acquisition-of-careerbuilder--monster-job-boards-302519807.html"),
+    ("CareerBuilder", "the same block as Monster on 24 Nov 2026; its hiring site now sends visitors to Monster's.",
+     "https://www.prweb.com/releases/bold-completes-acquisition-of-careerbuilder--monster-job-boards-302519807.html"),
+    ("Adzuna", "every page asked us to prove we are human on 24 Nov 2026, so no fact could be checked.", "https://www.adzuna.com/"),
+    ("Hired", "no longer a job site of its own: it was folded into LHH Recruitment Solutions in June 2024, and hired.com now sends "
+              "visitors to lhh.com.", "https://www.staffingindustry.com/news/global-daily-news/adecco-incorporating-hired-lhh-business"),
+]
+
 # What could not be sourced, per site (pages blocked or not answering on 13-14 Nov 2026; nothing was worked around).
 NOT_SOURCED = {
     "indeed": ["Price for job seekers (Indeed Pro price not seen)", "Kinds of jobs"],
@@ -584,6 +1364,24 @@ NOT_SOURCED = {
     "cryptojobslist": ["Price for job seekers", "Where you apply", "Account needed to apply", "Kinds of jobs",
                        "cryptojobslist.com home, /about and /hire returned 403 on 14 Nov 2026"],
     "web3-career": ["Price for job seekers", "Account needed to apply", "How fresh the listings are"],
+    # read on 24 Nov 2026
+    "ziprecruiter": ["Payment methods", "www.ziprecruiter.com showed a human check; read its help centre and its 10-K instead"],
+    "glassdoor": ["How fresh the listings are", "Kinds of jobs", "Payment methods"],
+    "simplyhired": ["Where you apply", "Payment methods"],
+    "jooble": ["Account needed to apply", "How fresh the listings are", "Payment methods"],
+    "talent-com": ["Account needed to apply", "Payment methods"],
+    "welcome-to-the-jungle": ["Price for job seekers", "Where the jobs come from", "How fresh the listings are", "Payment methods"],
+    "dice": ["Price for job seekers", "Where the jobs come from", "Kinds of jobs", "Payment methods"],
+    "built-in": ["Where the jobs come from", "Where you apply", "Account needed to apply", "How fresh the listings are", "Payment methods"],
+    "himalayas": ["Payment methods"],
+    "remotive": ["Account needed to apply", "How fresh the listings are"],
+    "remote-co": ["Who pays", "Price for job seekers", "Price to post one job", "How fresh the listings are", "Payment methods",
+                  "remote.co/pricing was a 404"],
+    "working-nomads": ["How fresh the listings are"],
+    "handshake": ["Price for job seekers", "Where the jobs come from", "Where you apply", "How fresh the listings are", "Payment methods"],
+    "snagajob": ["Price to post one job", "Payment methods"],
+    "usajobs": ["Who pays", "Price for job seekers", "Price to post one job", "How fresh the listings are", "Payment methods"],
+    "idealist": [],
 }
 
 _TAG = re.compile(r"^\[([^\]]+)\]\s*")
@@ -607,8 +1405,8 @@ def site(slug):
 def test():
     problems = []
     slugs = [s["slug"] for s in SITES]
-    if len(SITES) != 8 or len(set(slugs)) != len(slugs):
-        problems.append(f"expected 8 unique sites, got {slugs}")
+    if len(SITES) < 24 or len(set(slugs)) != len(slugs) or set(slugs) != set(KIND):
+        problems.append(f"expected 24+ unique sites, each with a kind, got {slugs}")
     for s in SITES:
         p = s["slug"]
         for field in ("slug", "name", "url", "what", "rows", "them_better", "us_better", "pick", "sources"):
@@ -625,7 +1423,7 @@ def test():
             keys.update(source_keys(fact))
             if not url.startswith("https://"):
                 problems.append(f"{p}: bad url {url!r}")
-            if date not in (R13, R14, R21):
+            if date not in (R13, R14, R21, R24):
                 problems.append(f"{p}: bad date {date!r}")
         rows = s["rows"]
         if len(rows) < 4:      # build.py gives such a site no page until a fourth fact is sourced
@@ -647,6 +1445,8 @@ def test():
                     problems.append(f"{p}: no source for {field} {i}")
         if "what" not in keys:
             problems.append(f"{p}: no source for 'what'")
+        if s["kind"] not in KINDS:
+            problems.append(f"{p}: unknown kind {s['kind']!r}")
         if not (s["pick"].startswith(f"Use {s['name']} if") and f"use {OUR_NAME} if" in s["pick"]):
             problems.append(f"{p}: pick does not follow 'Use X if..., use {OUR_NAME} if...'")
     for line in problems:
@@ -655,9 +1455,11 @@ def test():
     refresh_us(500000, 25000, ["Workday", "Greenhouse", "Ashby", "JazzHR", "Lever"])
     assert all(u == US_ANSWERS[q] for s in SITES for q, _, u in s["rows"]) and "5 hiring systems" in US_ANSWERS["Where the jobs come from"]
     assert "25,000 companies" in US_ANSWERS["Kinds of jobs"], US_ANSWERS["Kinds of jobs"]
+    pp = pairs([s for s in SITES if len(s["rows"]) >= 4])
+    assert any({a["slug"], b["slug"]} == {"indeed", "ziprecruiter"} for a, b in pp) and all(a["slug"] != b["slug"] for a, b in pp)
     rows = sum(len(s["rows"]) for s in SITES)
     srcs = sum(len(s["sources"]) for s in SITES)
-    print(f"OK: {len(SITES)} sites, {rows} rows, {srcs} sources; "
+    print(f"OK: {len(SITES)} sites, {len(pp)} pairs, {rows} rows, {srcs} sources; "
           + ", ".join(f"{s['slug']} {len(s['rows'])}" for s in SITES))
 
 
