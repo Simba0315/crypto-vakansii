@@ -840,4 +840,9 @@ Next candidates in this order: /glossary/new-grad/ (position 8.7), /entry-level/
 - Gaps on our page: nothing on rolling admission / rolling deadline / priority deadline, no example sentences, no "first come,
   first served" answer. Done: title now starts with the query ("Rolling Basis Meaning: How Rolling Applications Work"); new sections
   "Rolling basis, rolling admission and rolling deadline" and "Example sentences and what they mean" (four real posting phrasings);
-  three new questions (first come first served, same as rolling admission, priority deadline). Perplexity and Claude not read yet.
+  three new questions (first come first served, same as rolling admission, priority deadline).
+- Perplexity: cites Yale SOM, sprintlaw, Law Insider, Stripe; adds the other meanings (rolling monthly contract, rolling 12-month
+  basis, rolling reserve). Claude (web search): cites Princeton Review, Niche, IvyWise, NIH Extramural Nexus (rolling submission
+  dates for grants), Sweep&Go (rolling billing), Law Insider, AccountingTools (rolling budget). Neither cites us yet.
+- Done after them: section "Other meanings of rolling basis" (grants, contracts and subscriptions, rolling 12 months and rolling
+  budgets, rolling reserve). Check again in two weeks: position, whether the AI answers start to cite the page.
