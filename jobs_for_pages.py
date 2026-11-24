@@ -64,7 +64,7 @@ QUALITIES = (("Clear communication", re.compile(r"communication skills|written a
              ("Solving problems", re.compile(r"problem[- ]solv", re.I)),
              ("Attention to detail", re.compile(r"attention to detail|detail[- ]oriented", re.I)),
              ("Serving customers", re.compile(r"customer service", re.I)),
-             ("Organising your own time", re.compile(r"time management|prioriti[sz]|self[- ]starter|independently", re.I)),
+             ("Organizing your own time", re.compile(r"time management|prioriti[sz]|self[- ]starter|independently", re.I)),
              ("Leading others", re.compile(r"leadership", re.I)),
              ("Coping with pace and change", re.compile(r"fast[- ]paced|adaptab", re.I)))
 

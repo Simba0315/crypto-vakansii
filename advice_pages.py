@@ -120,7 +120,7 @@ ARTICLES += [
                                                "business before I pitch. Your product serves the same buyers, and I’d like to sell something I can see them use every day."),
                   ("Career changer, teacher to instructional designer", "For eight years I taught science, and for the last three I also built the online lessons for my school, used by 40 teachers. "
                                                                          "I took a course in instructional design to do it properly. Now I want to do it full time, and your role, building training for new hires, is that work."),
-                  ("New graduate", "I just finished a degree in economics. In my last year I analysed delivery data for a local bakery chain as a class project, and they now use my model to plan stock. "
+                  ("New graduate", "I just finished a degree in economics. In my last year I analyzed delivery data for a local bakery chain as a class project, and they now use my model to plan stock. "
                                    "I’m applying for the analyst program because I want to keep doing that: finding the number that changes a decision."),
                   ("Customer support", "I’ve worked in support for three years, the last two on the chat team of an online bank. I keep a satisfaction score above 95% and I write the help articles "
                                        "that answer the questions we get most. I’d like to bring that to a smaller team where one person can still change how support works."),
@@ -136,7 +136,7 @@ ARTICLES += [
                                         "Use their words: if the posting says “stakeholders”, say stakeholders, not “people in other teams”."])],
      "mistakes": ["Starting with where you were born or what you studied fifteen years ago.", "Reading your resume aloud line by line.",
                   "Talking for five minutes: stop at about ninety seconds and let them ask.", "Saying anything bad about your current or last employer.",
-                  "A memorised speech that sounds memorised: learn the three parts, not the words."],
+                  "A memorized speech that sounds memorized: learn the three parts, not the words."],
      "tool": ("tools/elevator-pitch/", "Elevator pitch generator", "Pick “to open an interview”, type what you do, one result and why this role: it builds the now-proof-next answer in its short form and times it."),
      "faq": [("How long should my answer to “Tell me about yourself” be?", "About 60 to 90 seconds, which is roughly 150 to 200 words spoken. Long enough for three parts, short enough that the interviewer asks a follow-up."),
              ("Should I talk about my personal life?", "Only a sentence, if it explains something the interviewer needs to know, such as a move to their city. Hobbies, family and childhood can wait."),
@@ -161,7 +161,7 @@ ARTICLES += [
      "examples": [("Communication", "I explain technical things to people who are not technical. At my last job I wrote the one-page summaries the board read before each release."),
                   ("Reliability", "I do what I say by the date I say. In two years I missed one deadline, and I told my manager a week before, with a new date I then met."),
                   ("Problem solving", "When orders started failing at checkout, I traced it to a rounding rule in one currency and fixed it the same day."),
-                  ("Organisation", "I ran the move of our 60-person office to a new building over a weekend; on Monday everyone had a desk, a working laptop and a parking pass."),
+                  ("Organization", "I ran the move of our 60-person office to a new building over a weekend; on Monday everyone had a desk, a working laptop and a parking pass."),
                   ("Learning fast", "I was moved to a team that used Python, which I had never written. Within two months I was reviewing other people’s code."),
                   ("Working with others", "Sales and support used to blame each other for lost customers. I set up a weekly 20-minute call between them, and complaints about handovers stopped."),
                   ("Attention to detail", "I found a contract clause that would have doubled our fees after the first year, two days before signing."),
@@ -301,11 +301,11 @@ ARTICLES += [
      "examples_h": "Examples",
      "examples": [("Fintech, backend engineer", "I use your app to split bills, and I noticed how fast the transfers are. The role is on the team behind those payments, which is what I’ve worked on for four years. "
                                                   "I’d like to work on a product people use without thinking about it, and I know how to keep a payment system boring in the best way."),
-                  ("Hospital, nurse", "Your hospital is known in the area for its stroke unit, and this role is on it. I spent two years on a neurology ward, and I want to specialise. "
+                  ("Hospital, nurse", "Your hospital is known in the area for its stroke unit, and this role is on it. I spent two years on a neurology ward, and I want to specialize. "
                                       "I also like that you train new nurses on the unit rather than in a classroom."),
                   ("Retail, store manager", "Your stores are the busiest in the mall, and you’re opening two more this year. I’ve run a store through an opening before, from hiring the team to the first Christmas."),
                   ("Non-profit, program coordinator", "I’ve followed your literacy program since a friend volunteered with you, and I read your annual report. "
-                                                       "The coordinator role is about organising volunteers, which is what I did for the food bank for three years."),
+                                                       "The coordinator role is about organizing volunteers, which is what I did for the food bank for three years."),
                   ("Startup, first marketing hire", "You’ve grown without any marketing, which tells me the product is good. Being the first marketer means building everything, "
                                                     "and that’s what I did at my last startup, where we went from no site to 40,000 visitors a month in a year.")],
      "mistakes": ["Pay, benefits or the office as the main reason.", "Praise that fits any company: “a great place to work”, “an industry leader”.",
@@ -433,9 +433,9 @@ ARTICLES += [
 
     {"slug": "star-method", "cat": "Interviews",
      "title": "The STAR method for interview answers, with examples",
-     "desc": "Situation, Task, Action, Result: how to answer behavioural questions (“Tell me about a time when…”) in two minutes, with eight examples and the questions to prepare for.",
+     "desc": "Situation, Task, Action, Result: how to answer behavioral questions (“Tell me about a time when…”) in two minutes, with eight examples and the questions to prepare for.",
      "lead": "Questions that start with “Tell me about a time when…” are asking for a story. STAR gives the story a shape, so you do not ramble and do not forget the part that matters most: the result.",
-     "short": "Answer behavioural questions in four parts: the Situation and your Task in two sentences, the Actions you took (most of the answer, in “I”, not “we”), "
+     "short": "Answer behavioral questions in four parts: the Situation and your Task in two sentences, the Actions you took (most of the answer, in “I”, not “we”), "
               "and the Result, with a number if possible. About two minutes in all.",
      "formula_h": "Four parts",
      "formula": [("Situation:", "where and when, in one sentence."), ("Task:", "what you had to do, in one sentence."),
@@ -452,7 +452,7 @@ ARTICLES += [
                                             "R: The correction got a higher click rate than the original, and we have not sent a broken link since."),
                   ("Too much work (support)", "S: Two colleagues left in the same month. T: I had to keep response times under four hours. A: I sorted tickets by urgency, wrote saved replies for the ten most common, and asked the product team to fix the top bug. "
                                               "R: We kept under four hours, and the bug fix cut tickets by 15%."),
-                  ("An angry customer (retail)", "S: A customer’s order arrived broken the day before a party. T: I had to fix it that day. A: I listened, apologised, found the same item in another store and arranged a courier. "
+                  ("An angry customer (retail)", "S: A customer’s order arrived broken the day before a party. T: I had to fix it that day. A: I listened, apologized, found the same item in another store and arranged a courier. "
                                                  "R: It arrived by 6 pm, and she left a five-star review naming me."),
                   ("Leading without the title (nurse)", "S: Our ward had frequent handover errors. T: Nobody owned the problem. A: I drafted a one-page handover sheet, tested it on my shifts and asked colleagues for changes. "
                                                          "R: The ward adopted it, and recorded handover errors fell by half in three months.")],
@@ -553,7 +553,7 @@ ARTICLES += [
                  ("Close:", "thanks, and a line asking for a conversation. Then your name.")],
      "examples_h": "Examples",
      "examples": [("Marketing coordinator", "Dear Ms Alvarez, I’m applying for the Marketing Coordinator role. I’ve followed your campaigns since the “Open Late” launch, and I’d like to help run the next one. "
-                                              "At my current job I manage our email programme: 40,000 subscribers, an open rate up from 18% to 27% in a year. I also coordinate two freelancers and our weekly content calendar. "
+                                              "At my current job I manage our email program: 40,000 subscribers, an open rate up from 18% to 27% in a year. I also coordinate two freelancers and our weekly content calendar. "
                                               "In your team I’d take the calendar and reporting off the manager’s desk from the first week. I’d welcome a conversation. Thank you for your time. Sam Lee"),
                   ("Career changer", "Dear Hiring Manager, I’m applying for the Junior Data Analyst role. After six years as a store manager I have spent the last year learning SQL and Tableau, because the part of my job I liked most was finding out why sales moved. "
                                      "I built the weekly sales dashboard my region now uses, and it cut reporting time from a day to an hour. I would bring the same habit to your team: start from the question the business is asking. "
@@ -731,7 +731,7 @@ ARTICLES += [
                ("Where teens usually get hired", [
                     "Grocery stores and pharmacies: bagger, cashier, stocking.", "Fast food, cafés, ice cream and snack shops.", "Movie theaters, bowling alleys, amusement and water parks.",
                     "Pools and summer camps: lifeguard from 15 with certification, junior counselor.", "Shops at the mall, especially before the holidays and in summer.",
-                    "Tutoring younger students, babysitting, pet sitting, dog walking and yard work for neighbours.", "Farms and garden centres (farm work has its own, looser rules)."]),
+                    "Tutoring younger students, babysitting, pet sitting, dog walking and yard work for neighbors.", "Farms and garden centers (farm work has its own, looser rules)."]),
                ("Work permits and state rules", ["Many states ask workers under 16, and some under 18, for a work permit, sometimes called working papers, from the school or the state labor office. "
                                                  "States can also set lower hour limits or a later starting age. When the state rule and the federal rule differ, the stricter one applies, so check your state’s labor department page before you start."]),
                ("Online jobs for teens", ["Most online work platforms require you to be 18. Real options under 18 are tutoring younger students, selling crafts or designs through a parent’s account, and paid help for people you know. "
@@ -775,7 +775,7 @@ ARTICLES += [
                   "Notifications sounding during the call.", "Not knowing your pay range when the recruiter asks."],
      "tool": ("interview-practice/", "Interview practice", "The page reads each question aloud, listens to your answer and times it; nothing is recorded or sent."),
      "faq": [("How long does a phone interview last?", "Usually fifteen to thirty minutes with a recruiter. A call with the hiring manager can run forty-five."),
-             ("What should I wear for a video interview?", "What you would wear to the office for that job, top to bottom in case you need to stand. Plain colours work best on camera."),
+             ("What should I wear for a video interview?", "What you would wear to the office for that job, top to bottom in case you need to stand. Plain colors work best on camera."),
              ("Can I use notes in a video interview?", "Yes: a few key points beside the camera. Do not read full answers; glance and then look back at the lens."),
              ("What do I do if my internet drops during an interview?", "Rejoin at once; if that fails, phone or email the interviewer and suggest continuing by phone. It is rarely held against you.")],
      "more": (("guides/job-interview-tips/", "Job interview tips"), ("guides/questions-to-ask-in-an-interview/", "Questions to ask"), ("guides/thank-you-email-after-interview/", "Thank-you email"))},

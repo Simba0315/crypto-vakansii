@@ -1182,10 +1182,10 @@
     "Our terms ban bidding on our brand and its misspellings, so first I take dated screenshots of the ad and its link. I contact the partner and ask them to stop and add our brand as a negative keyword. Commissions from those ads can be reversed under our terms, and a repeat means removal. I tell the search team too, since we were paying twice for one click."
    ],
    [
-    "How do you handle returns and cancelled orders in affiliate payouts?",
+    "How do you handle returns and canceled orders in affiliate payouts?",
     "Your grasp of the validation period and commission reversals.",
     "A validation period that covers the return window, reversals before payout, and the rules written into the program terms.",
-    "I set a validation period that covers our return window, so commissions stay pending until then. Returned or cancelled orders get reversed before payout, and that rule is written in the program terms. I watch each partner's reversal rate; one far above average is worth a call, because it can mean poor-fit traffic or fraud."
+    "I set a validation period that covers our return window, so commissions stay pending until then. Returned or canceled orders get reversed before payout, and that rule is written in the program terms. I watch each partner's reversal rate; one far above average is worth a call, because it can mean poor-fit traffic or fraud."
    ],
    [
     "A large creator asks for a flat placement fee on top of commission. How do you decide?",
@@ -2083,8 +2083,8 @@
    [
     "Where should the definition of a metric like net revenue live, and why?",
     "How you keep one business definition from splitting into several versions.",
-    "In one governed place in code, a modelled column or a semantic layer, with a named owner and written rules, not inside each dashboard.",
-    "In one place in the code, either a column in a modelled table or a metric in a semantic layer, with a named business owner. If each dashboard computes it, someone forgets to remove refunds or tax and we get three numbers. The docs state the rule in plain words: what is in, what is out, and which date the revenue counts on."
+    "In one governed place in code, a modeled column or a semantic layer, with a named owner and written rules, not inside each dashboard.",
+    "In one place in the code, either a column in a modeled table or a metric in a semantic layer, with a named business owner. If each dashboard computes it, someone forgets to remove refunds or tax and we get three numbers. The docs state the rule in plain words: what is in, what is out, and which date the revenue counts on."
    ],
    [
     "Your revenue model is 3% lower than the number finance reports for last month. How do you reconcile them?",
@@ -2136,8 +2136,8 @@
    [
     "Where do you launch a network call for a screen, and what happens to it when the user leaves?",
     "Whether you use coroutines with the right scope and the right thread.",
-    "Launch in viewModelScope so the work is cancelled with the screen, keep blocking work off the main thread, and avoid GlobalScope.",
-    "I launch it from the ViewModel in viewModelScope. When the ViewModel is cleared because the user left the screen for good, the coroutine is cancelled and no result goes to a dead screen. The repository switches to Dispatchers.IO for blocking work, so callers can stay on the main thread. I avoid GlobalScope, since nothing would ever cancel that work."
+    "Launch in viewModelScope so the work is canceled with the screen, keep blocking work off the main thread, and avoid GlobalScope.",
+    "I launch it from the ViewModel in viewModelScope. When the ViewModel is cleared because the user left the screen for good, the coroutine is canceled and no result goes to a dead screen. The repository switches to Dispatchers.IO for blocking work, so callers can stay on the main thread. I avoid GlobalScope, since nothing would ever cancel that work."
    ],
    [
     "How do you ask for location permission so that users actually grant it?",
@@ -2197,7 +2197,7 @@
     "A teammate wraps a suspend call in runCatching and the screen keeps loading after the user leaves. What is wrong?",
     "Your grasp of how coroutine cancellation works.",
     "Knowing that catching CancellationException breaks cancellation, and how to rethrow it.",
-    "runCatching catches every Throwable, including CancellationException. When the ViewModel scope is cancelled, that exception is swallowed, so the code carries on as if nothing happened. I catch the specific exceptions I expect, like IOException, or rethrow CancellationException before handling the rest, so cancellation still travels up."
+    "runCatching catches every Throwable, including CancellationException. When the ViewModel scope is canceled, that exception is swallowed, so the code carries on as if nothing happened. I catch the specific exceptions I expect, like IOException, or rethrow CancellationException before handling the rest, so cancellation still travels up."
    ],
    [
     "How do you unit test a ViewModel that launches coroutines?",
@@ -7386,7 +7386,7 @@
     "What are the most common scams in a crypto Discord, and how do you set up a server to resist them?",
     "Whether you know how members actually lose funds in community spaces.",
     "Names fake support DMs, impersonators and fake links, and pairs each with a concrete server setting or rule.",
-    "The big ones are fake support DMs, admins impersonated by copied names, and fake mint or airdrop links. I pin a rule that staff never DM first and never ask for a seed phrase, use a verification gate, block links in busy channels, and give staff a distinct role colour so fakes stand out."
+    "The big ones are fake support DMs, admins impersonated by copied names, and fake mint or airdrop links. I pin a rule that staff never DM first and never ask for a seed phrase, use a verification gate, block links in busy channels, and give staff a distinct role color so fakes stand out."
    ],
    [
     "A member asks in general chat when the token will be listed and whether the price will go up. How do you answer?",
@@ -7396,7 +7396,7 @@
    ],
    [
     "How do you set up roles and permissions for a moderation team?",
-    "Your grasp of access control as a security issue, not just an organisation issue.",
+    "Your grasp of access control as a security issue, not just an organization issue.",
     "Least privilege, two-factor required for moderator actions, few admins, tight control of bots, webhooks and mass mentions.",
     "Each role gets only what it needs. Mods can time out, delete and ban, but not edit roles or webhooks. Only two or three people hold admin. I turn on the setting that requires two-factor for moderator actions, limit who can ping everyone, and review bot permissions, since a hacked bot or webhook is a common way servers get drained."
    ],
@@ -7413,8 +7413,8 @@
     "I would look at how many people post weekly, how many come back the next month, and whether questions get answered. Then I check the source of the joins. A jump right after a quest campaign with almost no new posters usually means farmers or bots. If active members rose 10% while joins tripled, that 10% is the real growth."
    ],
    [
-    "Your quest programme is being flooded by airdrop farmers using many wallets. What do you change?",
-    "How you design member programmes that reward real people, not sybil accounts.",
+    "Your quest program is being flooded by airdrop farmers using many wallets. What do you change?",
+    "How you design member programs that reward real people, not sybil accounts.",
     "Rewards tied to effort that is hard to fake, sybil checks before payout, and no promised rewards that invite gaming.",
     "I would stop rewarding cheap actions like follows and reposts, and reward things that take real effort: good bug reports, guides, helping newcomers. Before any payout I'd check for wallets funded from the same source or acting in lockstep. I'd also stop announcing exact reward amounts in advance, since a fixed price per action is what draws the farms."
    ],
@@ -7500,7 +7500,7 @@
     "Tell me about a community decision you got wrong and what you changed after.",
     "Whether you own mistakes and turn them into better process.",
     "A real mistake, owned publicly, a fair fix for members, and a lasting change in how the work is done.",
-    "I let us announce a points programme before the rules were final. When we changed the formula, early members felt cheated and said so loudly. I apologised publicly and honoured the old points for that month. Since then nothing launches until rules, dates and anti-abuse checks are written and reviewed."
+    "I let us announce a points program before the rules were final. When we changed the formula, early members felt cheated and said so loudly. I apologized publicly and honoured the old points for that month. Since then nothing launches until rules, dates and anti-abuse checks are written and reviewed."
    ]
   ]
  },
@@ -7725,8 +7725,8 @@
    [
     "A foreign exchange wants to open an institutional account and run its users' flows through us. What due diligence do you do?",
     "How you assess a nested exchange whose end customers you cannot see.",
-    "Checks licence, AML program, owners, Travel Rule ability and US exposure, then sets limits and monitoring because the end users are hidden.",
-    "Their users are hidden from us, so this is high risk. I check their home licence, AML and sanctions program, owners, Travel Rule capability and adverse media, and whether FinCEN has named them a primary money laundering concern. If they do real business with US customers, they may have to register with FinCEN themselves. Then I set limits and watch the flows closely."
+    "Checks license, AML program, owners, Travel Rule ability and US exposure, then sets limits and monitoring because the end users are hidden.",
+    "Their users are hidden from us, so this is high risk. I check their home license, AML and sanctions program, owners, Travel Rule capability and adverse media, and whether FinCEN has named them a primary money laundering concern. If they do real business with US customers, they may have to register with FinCEN themselves. Then I set limits and watch the flows closely."
    ],
    [
     "You join and find 6,000 alerts older than 60 days, with a regulatory exam in two months. What do you do?",
@@ -8354,7 +8354,7 @@
   "qs": [
    [
     "What is search intent, and how does it change the article you write?",
-    "Whether you understand what search optimisation is really for.",
+    "Whether you understand what search optimization is really for.",
     "Intent is the need behind the query. The format and depth of the piece follow from it, not from the keyword alone.",
     "Search intent is what the person typing the query actually wants: to learn, to compare, to buy or to find a page. Someone searching “how to descale a kettle” wants steps, fast, so I lead with a numbered list. Someone searching “best electric kettles” wants a comparison, so I build a table and explain how we chose. I check the top results to see what format readers expect."
    ],
@@ -10192,7 +10192,7 @@
     "It happens when an app builds a query by pasting user input into the SQL text, so input like a quote followed by OR 1=1 changes what the query does. The real fix is parameterized queries, where the database treats input only as data. Input checks and a low-privilege database account limit damage, but hand-escaping characters is not a fix I trust."
    ],
    [
-    "Walk me through threat modelling a new feature that lets customers upload files.",
+    "Walk me through threat modeling a new feature that lets customers upload files.",
     "How you think like an attacker before the code ships.",
     "A structured method: map the data flow, list what can go wrong at each step, for example with STRIDE, and tie each threat to a control.",
     "I draw where the file goes: browser, upload service, storage, and whatever opens it later. Then I ask what can go wrong at each step. Someone uploads malware or a script disguised as an image, a huge file fills the disk, or a crafted filename writes outside the folder. My controls: check type by content, cap size, rename files, store them outside the web root and scan them."
@@ -10610,7 +10610,7 @@
    ],
    [
     "What is the grain of a fact table, and what goes wrong when you mix grains?",
-    "Whether you understand modelling well enough to prevent double counting.",
+    "Whether you understand modeling well enough to prevent double counting.",
     "A clear definition of grain and a concrete case of a number repeating across finer rows, with a fix.",
     "Grain is what one row stands for, for example one row per order line. Trouble starts when a number at a coarser grain sits on finer rows. If I join order-level shipping fees onto order lines, an order with three lines shows its fee three times and the total is triple. I either keep shipping in an order-level fact table or split the fee across lines with a stated rule."
    ],
@@ -10666,7 +10666,7 @@
     "Tell me about a change you made that broke something downstream. What did you change in how you work?",
     "How you own a mistake and turn it into a lasting safeguard.",
     "An honest story with the real impact, and specific process changes such as lineage checks, notice, and before-and-after tests.",
-    "I added a filter to drop cancelled orders from a sales table. It was right for finance, but a churn model read the same table and its scores shifted for a week before anyone noticed. Since then I check lineage to see who reads a table, announce changes in advance, and compare row counts and totals against production before I merge."
+    "I added a filter to drop canceled orders from a sales table. It was right for finance, but a churn model read the same table and its scores shifted for a week before anyone noticed. Since then I check lineage to see who reads a table, announce changes in advance, and compare row counts and totals against production before I merge."
    ]
   ]
  },
@@ -11969,7 +11969,7 @@
     "In SystemVerilog assertions, what is the difference between |-> and |=>, and why do you add disable iff?",
     "Whether you know assertion timing well enough to avoid off-by-one-cycle checks.",
     "Overlapping versus next-cycle implication, explained clearly, and disable iff used so the assertion does not fire during reset.",
-    "With |-> the consequent is checked in the same clock cycle that the antecedent matches. With |=> it starts one cycle later, so a |=> b means the same as a |-> ##1 b. I add disable iff on reset so the check does not fire on junk values while the design is held in reset, and any attempt already in progress is cancelled when reset asserts."
+    "With |-> the consequent is checked in the same clock cycle that the antecedent matches. With |=> it starts one cycle later, so a |=> b means the same as a |-> ##1 b. I add disable iff on reset so the check does not fire on junk values while the design is held in reset, and any attempt already in progress is canceled when reset asserts."
    ],
    [
     "In a UVM register model, when do you use frontdoor access and when backdoor access?",
@@ -13368,7 +13368,7 @@
     "Why does a harness drawing call for some wires to be twisted together?",
     "Whether you understand the reason behind a harness spec, not just the steps.",
     "Twisting keeps the loop small so picked-up noise largely cancels and the pair radiates less. Follow the twist rate and keep untwisted ends short.",
-    "Twisting a signal wire with its return keeps the two close, so the loop between them is small. Noise picked up by one twist is mostly cancelled by the next, and the pair gives off less noise too. I follow the twist rate on the drawing and keep the untwisted length at each connector as short as the spec allows, because that is where noise gets in."
+    "Twisting a signal wire with its return keeps the two close, so the loop between them is small. Noise picked up by one twist is mostly canceled by the next, and the pair gives off less noise too. I follow the twist rate on the drawing and keep the untwisted length at each connector as short as the spec allows, because that is where noise gets in."
    ],
    [
     "Walk me through removing a 40-pin through-hole connector without damaging the board.",
@@ -14265,7 +14265,7 @@
    [
     "What do you use one-on-ones for?",
     "Whether you treat one-on-ones as the engineer's time, not a status meeting.",
-    "The agenda belongs to the engineer: growth, blockers, feedback both ways. Status updates go elsewhere, and the meeting is rarely cancelled.",
+    "The agenda belongs to the engineer: growth, blockers, feedback both ways. Status updates go elsewhere, and the meeting is rarely canceled.",
     "They are the engineer's meeting, not mine. We keep a shared doc, and they add topics first: blockers, career goals, things that frustrate them. I add feedback and context they would not see otherwise. Project status goes in standup or the tracker. If I have to move a one-on-one, I reschedule it the same week rather than drop it."
    ],
    [
@@ -14993,7 +14993,7 @@
     "The venue's final bill is $18,000 over what you expected. How do you handle it?",
     "How you reconcile a master bill and dispute charges with evidence.",
     "A line-by-line check against the contract, signed BEOs and daily bills, disputing in writing only what you can document, and paying the rest on time.",
-    "I ask for the itemized master account and go line by line against the contract, the signed BEOs and the daily bills I reviewed on site. Once, $11,000 was a coffee break charged twice and an AV package we had cancelled in writing. I sent a written list with copies, paid the undisputed part on time, and the rest was credited within two weeks."
+    "I ask for the itemized master account and go line by line against the contract, the signed BEOs and the daily bills I reviewed on site. Once, $11,000 was a coffee break charged twice and an AV package we had canceled in writing. I sent a written list with copies, paid the undisputed part on time, and the rest was credited within two weeks."
    ],
    [
     "How do you show leadership that a conference was worth what it cost?",
@@ -16270,7 +16270,7 @@
    ],
    [
     "How do you set up a financial model so someone else can use and audit it?",
-    "Your modelling discipline: structure, clarity and built-in checks.",
+    "Your modeling discipline: structure, clarity and built-in checks.",
     "Separate inputs, calculations and outputs, no hard-coded numbers in formulas, a consistent layout, and check cells that flag errors.",
     "I keep inputs on one tab, color-coded, and every assumption has a source note. Calculations use the same columns on every sheet, and I never type a number into a formula. Outputs pull only from the calculations. I add check cells, like the balance sheet balancing and totals tying, so a broken link shows up at once, not in the board deck."
    ],
@@ -17022,7 +17022,7 @@
     "The founder hands you a project called 'fix churn' and nothing else. What do you do in the first two weeks?",
     "How you turn a vague mandate into a clear plan.",
     "You define the problem with data and with people, agree on a measurable goal and owners, and bring back a plan before doing big work.",
-    "In week one I pull the numbers: who leaves, when, and from which plan. I also call ten customers who cancelled and talk to support and sales. In week two I bring the founder a one-page brief: the two biggest causes, a target we agree on, who owns each fix, and what I need from the founder."
+    "In week one I pull the numbers: who leaves, when, and from which plan. I also call ten customers who canceled and talk to support and sales. In week two I bring the founder a one-page brief: the two biggest causes, a target we agree on, who owns each fix, and what I need from the founder."
    ],
    [
     "You are asked to run the search for the company's first head of sales. How do you run it?",
@@ -18914,7 +18914,7 @@
    [
     "When do you reach for generics in Go, and when do you stay with interfaces?",
     "Your judgement about type parameters in real code.",
-    "Generics for code that works the same over many types, like containers and slice helpers. Interfaces when behaviour differs by type.",
+    "Generics for code that works the same over many types, like containers and slice helpers. Interfaces when behavior differs by type.",
     "I use generics when the code is identical for every type and only the type changes: a set, a cache keyed by any comparable type, a filter over slices. When each type does something different, an interface with methods is clearer. I also avoid generics that make a call site harder to read just to save a few lines of duplication."
    ],
    [
@@ -18927,7 +18927,7 @@
     "You must fetch 500 items from another service in parallel, at most 20 at a time, and stop at the first error. How do you write it?",
     "How you bound concurrency and handle errors across goroutines.",
     "A bounded pattern such as errgroup with a limit, where the first error cancels the shared context and results are stored without races.",
-    "I'd use errgroup.WithContext and SetLimit(20). Each item runs in g.Go, and the call uses the group's context, so when one fails the context is cancelled and the rest give up early. Results go into a pre-sized slice by index, so no mutex is needed. g.Wait returns the first error. 500 unbounded goroutines would hammer the other service."
+    "I'd use errgroup.WithContext and SetLimit(20). Each item runs in g.Go, and the call uses the group's context, so when one fails the context is canceled and the rest give up early. Results go into a pre-sized slice by index, so no mutex is needed. g.Wait returns the first error. 500 unbounded goroutines would hammer the other service."
    ],
    [
     "A panic in a goroutine started by an HTTP handler crashed the whole service, but a panic inside a handler did not. Why?",
@@ -18936,7 +18936,7 @@
     "The net/http server recovers panics in the goroutine running the handler, logs them and closes that connection. A goroutine I start myself has no such protection, and an unrecovered panic in any goroutine ends the program. Recover only works in a deferred function in the same goroutine. So background goroutines need their own defer with recover and logging, or code that returns errors instead."
    ],
    [
-    "You optimised a function and the benchmark says it is 30% faster. How do you know that is real?",
+    "You optimized a function and the benchmark says it is 30% faster. How do you know that is real?",
     "Whether you measure performance with the rigour it needs.",
     "Repeated runs compared statistically, work the compiler cannot remove, allocation counts, realistic input, and proof the function matters in production.",
     "I run both versions with -count=10 and compare them with benchstat, which shows whether the change is beyond the noise. I make sure the result is used so the compiler cannot drop the work, and add -benchmem to see allocations. Inputs should look like production data. Then a CPU profile of the real service tells me whether this function mattered at all."
@@ -21532,7 +21532,7 @@
    ],
    [
     "A director wants to add a manager layer because he has 14 direct reports. How do you decide whether that is the right fix?",
-    "How you approach organisation design beyond headcount.",
+    "How you approach organization design beyond headcount.",
     "Looks at the work, not a fixed ratio: how similar the roles are, how much coaching people need, and what a new layer costs in speed and money.",
     "Fourteen is not too many by itself. If the roles are similar and the people experienced, one manager can handle it. I would ask where the strain shows: slow decisions, missed one-on-ones, new hires without coaching. Sometimes a team lead or better tools fixes it. If we add a layer, I make sure the new manager has a real team, not two reports, and that decision rights are clear."
    ],
@@ -24057,7 +24057,7 @@
     "A user leaves a screen while its network request is still loading. What should happen, and how do you make sure it does?",
     "How you use Swift concurrency and cancellation.",
     "Cancelling the work tied to the screen, knowing cancellation is cooperative, and never updating a screen that is gone.",
-    "The request should be cancelled so we don't waste data or update a screen that's gone. In SwiftUI I start it in the .task modifier, which cancels the task when the view disappears. In UIKit I keep the Task and cancel it when the screen goes away. Cancellation is cooperative, so long loops check Task.isCancelled, and I don't show an error alert for a cancel."
+    "The request should be canceled so we don't waste data or update a screen that's gone. In SwiftUI I start it in the .task modifier, which cancels the task when the view disappears. In UIKit I keep the Task and cancel it when the screen goes away. Cancellation is cooperative, so long loops check Task.isCancelled, and I don't show an error alert for a cancel."
    ],
    [
     "A release you shipped crashes on launch for some users. What do you do in the first hours?",
@@ -24128,13 +24128,13 @@
     "What does a good laptop lifecycle look like, from purchase to disposal?",
     "Whether you know the full life of an asset, not just the help desk part.",
     "Standard models tracked in an inventory, encrypted from day one, refreshed on a plan, and wiped with proof before disposal.",
-    "We buy a few standard models, log each one by serial number and owner, and ship it with disk encryption and device management already on. We plan a refresh every three to four years so costs are predictable. At the end I wipe it, keep the wipe record or the recycler's certificate, and remove it from the inventory and the licences."
+    "We buy a few standard models, log each one by serial number and owner, and ship it with disk encryption and device management already on. We plan a refresh every three to four years so costs are predictable. At the end I wipe it, keep the wipe record or the recycler's certificate, and remove it from the inventory and the licenses."
    ],
    [
     "Walk me through what happens when an employee leaves the company.",
     "How you close access quickly and keep the company's data.",
-    "One checklist, run on time: accounts, sessions, MFA, shared passwords, devices, licences, and data handed to the manager.",
-    "HR tells us the date ahead, and on the last day we disable the account in the identity system, which cuts most apps at once. We sign out active sessions, remove MFA devices and change any shared passwords they knew. Mailbox and files go to the manager, the laptop comes back and is wiped, and the licences are freed. A checklist means nothing depends on memory."
+    "One checklist, run on time: accounts, sessions, MFA, shared passwords, devices, licenses, and data handed to the manager.",
+    "HR tells us the date ahead, and on the last day we disable the account in the identity system, which cuts most apps at once. We sign out active sessions, remove MFA devices and change any shared passwords they knew. Mailbox and files go to the manager, the laptop comes back and is wiped, and the licenses are freed. A checklist means nothing depends on memory."
    ],
    [
     "What is the 3-2-1 backup rule, and is it enough?",
@@ -24149,8 +24149,8 @@
     "RPO, recovery point objective, is how much data we can afford to lose, measured in time: nightly backups mean up to a day. RTO, recovery time objective, is how long a system can be down before it really hurts. I don't pick them alone. I ask each department head, show what each target costs, and they choose."
    ],
    [
-    "How do you keep software licence costs under control?",
-    "Whether you manage licences as spending, not just as tickets.",
+    "How do you keep software license costs under control?",
+    "Whether you manage licenses as spending, not just as tickets.",
     "One inventory, regular usage reviews, seats reclaimed at offboarding, and renewal dates tracked well before notice periods.",
     "I keep one list of every subscription with its owner, seat count and renewal date. Every quarter I compare seats to actual logins and reclaim the unused ones. Renewals go on a calendar months ahead, because many contracts auto-renew if you miss the notice window. Card spending on software gets reviewed so tools bought outside IT come to light."
    ],
@@ -24224,10 +24224,10 @@
     "How do you decide whether to keep a server room or move those workloads to the cloud?",
     "Whether you compare the true total cost and risk, not just the monthly bill.",
     "Full cost of ownership both ways, including power, cooling, refresh and staff time, plus egress fees, latency and skills.",
-    "I compare total cost over five years. On premises that means hardware refresh, power, cooling, licences, support contracts and the hours my team spends patching. In the cloud it means compute, storage, backup and data egress fees. Then the non-money items: latency for local apps, compliance needs and our cloud skills. Often the answer is mixed, workload by workload."
+    "I compare total cost over five years. On premises that means hardware refresh, power, cooling, licenses, support contracts and the hours my team spends patching. In the cloud it means compute, storage, backup and data egress fees. Then the non-money items: latency for local apps, compliance needs and our cloud skills. Often the answer is mixed, workload by workload."
    ],
    [
-    "A software vendor sends notice of a licence audit. Walk me through your response.",
+    "A software vendor sends notice of a license audit. Walk me through your response.",
     "How you protect the company during a vendor audit.",
     "Reads the audit clause, involves legal and procurement, runs its own count first, and controls what data is shared.",
     "I do not reply right away. I bring in legal and procurement, read the audit clause in our contract, and agree on scope, timing and confidentiality in writing. Meanwhile my team counts our installs against our entitlements, so we find gaps first. One person handles all contact, and we review any script the vendor wants to run before it touches our systems."
@@ -27120,7 +27120,7 @@
    ],
    [
     "Walk me through planning a customer event for 50 people, six weeks out.",
-    "How you organise an event from start to finish.",
+    "How you organize an event from start to finish.",
     "Budget and goal first, then venue, invitations, RSVPs, vendors and a run of show, with a timeline backwards from the date.",
     "I confirm the goal and budget, then book the venue and catering in week one, since those fill up. Invitations go out about four weeks ahead with an RSVP date. I keep one sheet with vendors, costs and contacts. The week before, I write a run of show: who does what, minute by minute. Afterward, I send a thank-you email and report attendance against the goal."
    ],
@@ -28751,7 +28751,7 @@
    ],
    [
     "Why does the cost of serving a large language model depend so much on context length?",
-    "Whether you understand the memory behaviour of LLM inference.",
+    "Whether you understand the memory behavior of LLM inference.",
     "Explains the KV cache growing with tokens and concurrent requests, decode being limited by memory bandwidth, and techniques like paged KV cache and continuous batching.",
     "For every token in context, each layer stores its keys and values, the KV cache, so memory grows with context length times the number of requests in flight. That caps how many users fit on one GPU. Decoding makes one token per step and is limited by memory bandwidth, not compute. Paged KV cache and continuous batching help pack more requests into the same memory."
    ],
@@ -35040,7 +35040,7 @@
     "Most combination bugs come from one setting alone or from two settings interacting, so I would use pairwise testing: a set where every value of each option meets every value of every other option at least once. For this screen that is around a dozen cases instead of 243. Then I add the specific combinations that support tickets or developers flag as risky."
    ],
    [
-    "How do you test an order that moves through states like created, paid, shipped, delivered and cancelled?",
+    "How do you test an order that moves through states like created, paid, shipped, delivered and canceled?",
     "Your use of state transition testing.",
     "A map of states and allowed moves, with tests for every valid transition and, just as important, for the transitions that must be refused.",
     "I draw the states and allowed moves first and confirm them with the product owner. Then I test each valid move, like paid to shipped, and the forbidden ones, like delivered back to paid. For each move I check the side effects, such as a refund email on cancel, and that the same event arriving twice does not move the order twice."
@@ -36019,7 +36019,7 @@
     "Finance and the head of talent each pulled time to fill from the same ATS and got 38 days and 52 days. How do you sort it out?",
     "How you handle metric definitions and trust in recruiting data.",
     "Finds the definition gap first, agrees on one written definition, then fixes the reporting so it cannot drift again.",
-    "I rebuild both numbers side by side. The gap is usually a definition: one starts at approval and one at posting, one ends at accepted offer and one at start date, or one leaves out cancelled reqs. I agree on one definition with both of them, write it in a metrics glossary, and make a single saved report the source everyone uses."
+    "I rebuild both numbers side by side. The gap is usually a definition: one starts at approval and one at posting, one ends at accepted offer and one at start date, or one leaves out canceled reqs. I agree on one definition with both of them, write it in a metrics glossary, and make a single saved report the source everyone uses."
    ],
    [
     "How would you tell whether our employer brand work is actually working?",
@@ -38291,7 +38291,7 @@
    [
     "Walk me through how you coach a rep after listening to one of their recorded calls.",
     "Your coaching method, as opposed to just giving opinions.",
-    "The rep reviews the call first, the manager picks one or two behaviours, and they practise the change before the next call.",
+    "The rep reviews the call first, the manager picks one or two behaviors, and they practise the change before the next call.",
     "I ask the rep to listen first and tell me what went well and what they would change. Then I pick one thing, say, they pitched before asking about the buyer's problem. We role-play that part twice, and I listen to their next call to see if it stuck. One fix at a time works better than ten notes."
    ],
    [
@@ -38510,7 +38510,7 @@
     "Commissions paid only because a contract was signed are a cost of getting it. Under ASC 340-40, part of the ASC 606 change, they are recorded as an asset and expensed over the period the contract benefits, which can include expected renewals. If that period is a year or less, a company may expense them at once. I keep payouts tied to each deal so finance can do this."
    ],
    [
-    "A rep was paid commission on a deal that cancelled three months later. How should clawbacks work?",
+    "A rep was paid commission on a deal that canceled three months later. How should clawbacks work?",
     "How you design plan rules that are fair and hold up.",
     "Written terms on what triggers a clawback and for how long, applied the same way to everyone, with legal or HR checking state wage rules.",
     "The plan should say in advance what triggers a clawback, like cancellation or nonpayment within a set window, and how it is recovered, usually against future commissions. Some states, California among them, require commission plans in writing with a signed copy given to the rep, and wage deductions have limits, so legal reviews it. Then we apply it the same way to every rep."
@@ -39822,7 +39822,7 @@
     "On the last day of close, a manager asks you to reverse a $50,000 accrual to hit the forecast, with no support. What do you do?",
     "Your integrity and how you handle pressure on journal entries.",
     "No entry without a documented basis; ask for the reason, explain the risk calmly, and escalate if pushed.",
-    "I ask what changed, because if the obligation really went away there should be support, like a credit memo or a cancelled order. If there is, I document it and post. If there is not, I explain that I cannot book it and why, since an unsupported entry is a control failure. If the pressure continues, I take it to the controller or CFO, or the ethics line."
+    "I ask what changed, because if the obligation really went away there should be support, like a credit memo or a canceled order. If there is, I document it and post. If there is not, I explain that I cannot book it and why, since an unsupported entry is a control failure. If the pressure continues, I take it to the controller or CFO, or the ethics line."
    ],
    [
     "What is a reversing entry, and when would you set an accrual to auto-reverse?",
@@ -43706,7 +43706,7 @@
    ],
    [
     "One engineer's pull requests keep coming back with the same problems. How do you handle it?",
-    "How you turn repeated review comments into feedback that changes behaviour.",
+    "How you turn repeated review comments into feedback that changes behavior.",
     "Names the pattern privately with examples, finds the cause, agrees on a concrete fix, follows up, and escalates early if nothing changes.",
     "I stop fixing it comment by comment. In a one-on-one I name the pattern with two or three examples, like missing error handling, and ask what is going on. Sometimes they do not know the standard; sometimes they are rushing. We agree on something concrete, like a checklist or pairing on the next task, and I check back in two weeks. If nothing changes, I involve my manager early."
    ],
@@ -45404,7 +45404,7 @@
     "What is the difference between an IOC, a fill-or-kill and a post-only order?",
     "Your grasp of the order types traders rely on every day.",
     "IOC fills what it can and cancels the rest; FOK fills fully or not at all; post-only is rejected or repriced if it would take liquidity.",
-    "Immediate-or-cancel takes whatever is available right now and cancels the remainder. Fill-or-kill must fill the whole size at once or it is cancelled entirely. Post-only must rest on the book as a maker. If it would cross the spread and trade, the venue rejects it or, on some venues, reprices it. Market makers use it so they never pay taker fees by accident."
+    "Immediate-or-cancel takes whatever is available right now and cancels the remainder. Fill-or-kill must fill the whole size at once or it is canceled entirely. Post-only must rest on the book as a maker. If it would cross the spread and trade, the venue rejects it or, on some venues, reprices it. Market makers use it so they never pay taker fees by accident."
    ],
    [
     "Why would you avoid floating-point numbers for prices and quantities?",
@@ -47129,7 +47129,7 @@
    [
     "How would you design a comp plan for account executives?",
     "Whether you know how pay drives sales behavior.",
-    "Few simple measures tied to company goals, accelerators that reward over-performance, clear written rules, and the cost modelled with finance.",
+    "Few simple measures tied to company goals, accelerators that reward over-performance, clear written rules, and the cost modeled with finance.",
     "I keep it to one or two measures a rep can recite from memory, paid on what the company values most, like new annual revenue. Accelerators above 100% keep top reps selling, and I avoid caps. Rules on clawbacks for early cancellation are written in the plan each rep signs. Finance models the total cost before we launch, so there are no surprises."
    ],
    [

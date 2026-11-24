@@ -156,7 +156,7 @@ ROLE = {
         "Put the model behind an API that answers 900 requests a second in 60 ms"]),
     "ai-engineer": ("AI Engineer", "prompt design, retrieval, evaluation, cost control", [
         "Built a support assistant on a large language model that resolves 41% of questions without a person",
-        "Raised answer accuracy from 72% to 91% on 1,500 real questions by adding retrieval from the help centre",
+        "Raised answer accuracy from 72% to 91% on 1,500 real questions by adding retrieval from the help center",
         "Cut the cost of a conversation by 60% by routing simple questions to a smaller model",
         "Wrote automatic checks that score every release on 600 cases before it reaches customers"]),
     "forward-deployed-engineer": ("Forward Deployed Engineer", "customer discovery, data integration, rapid prototyping", [
@@ -169,7 +169,7 @@ ROLE = {
         "Built an agent that drafts replies to 70% of support tickets; agents send 58% of drafts unchanged",
         "Measured each workflow before and after; 2 that showed no gain were switched off",
         "Trained 180 colleagues to write prompts; weekly active use rose from 22% to 74%"]),
-    "computer-vision": ("Computer Vision Engineer", "image models, data labelling, model optimisation", [
+    "computer-vision": ("Computer Vision Engineer", "image models, data labelling, model optimization", [
         "Trained a detection model that finds defects on a production line with 98.4% recall, up from 91%",
         "Cut inference time from 80 ms to 22 ms so the model runs on the camera itself",
         "Set up labelling that produced 120,000 images in 3 months at 97% agreement between labellers",
@@ -190,7 +190,7 @@ ROLE = {
         "Found 14 recurring model errors and wrote test cases for each",
         "Checked 500 model answers a week against their sources"]),
     # data
-    "data-engineer": ("Data Engineer", "data modelling, pipelines, data quality", [
+    "data-engineer": ("Data Engineer", "data modeling, pipelines, data quality", [
         "Built pipelines in {airflow:Airflow} that load 2 billion rows a day; data is ready by 6 am instead of noon",
         "Moved the warehouse to {wh:Snowflake}; query cost fell 34% and the slowest dashboard loads in 4 s instead of 50",
         "Added 180 data quality checks; wrong numbers reaching reports fell from 9 a month to 1",
@@ -205,7 +205,7 @@ ROLE = {
         "Found a pricing error with a check in {sheet:SQL} that had cost about $18K a month; it was fixed within the week",
         "Read 12 A/B tests; 5 shipped and lifted trial-to-paid conversion from 6.1% to 7.4%",
         "Answered about 15 questions a week from sales and product, most within a day"]),
-    "analytics-engineer": ("Analytics Engineer", "data modelling, testing, documentation", [
+    "analytics-engineer": ("Analytics Engineer", "data modeling, testing, documentation", [
         "Rebuilt 140 reporting models in {dbt:dbt} with tests on every one; conflicting numbers between dashboards fell to zero",
         "Defined 25 company metrics in one place; finance and product now report the same revenue figure",
         "Cut the daily build from 3 hours to 35 minutes",
@@ -220,7 +220,7 @@ ROLE = {
         "Built a backtesting tool in {lang:Python} that tests an idea on 10 years of data in 6 minutes instead of 2 hours",
         "Cut trading costs by 18% with a better model of market impact",
         "Rejected 40 ideas that failed out-of-sample tests before any capital was put behind them"]),
-    "pricing": ("Pricing Analyst", "price testing, elasticity analysis, financial modelling, competitor research", [
+    "pricing": ("Pricing Analyst", "price testing, elasticity analysis, financial modeling, competitor research", [
         "Ran 6 price tests; a new plan structure raised revenue per customer by 11% with no rise in cancellations",
         "Built a model of price sensitivity for 40 products from 2 years of sales",
         "Cut the average discount given by sales from 22% to 14% with a clear approval table",
@@ -230,8 +230,8 @@ ROLE = {
         "Sized a new market at $400M from public filings and 30 interviews; the company entered it the next year",
         "Built a database of 500 competitors, updated each quarter",
         "Briefed the leadership team each month in 5 pages"]),
-    "data-governance": ("Data Governance Analyst", "data catalogues, data quality rules, access policies", [
-        "Catalogued 1,200 tables with an owner and a description for each; finding the right table takes minutes instead of hours",
+    "data-governance": ("Data Governance Analyst", "data catalogs, data quality rules, access policies", [
+        "Cataloged 1,200 tables with an owner and a description for each; finding the right table takes minutes instead of hours",
         "Wrote quality rules for the 50 most used tables; failed checks fell from 14% to 2%",
         "Removed access to personal data from 300 accounts that did not need it",
         "Took the data platform through a privacy audit with no findings"]),
@@ -255,11 +255,11 @@ ROLE = {
         "Automated account creation across 30 applications; onboarding takes 15 minutes instead of 3 hours",
         "Moved 500 employees to single sign-on with no lost working day",
         "Wrote {lang:Python} scripts that patch 800 laptops; devices behind on updates fell from 26% to 3%",
-        "Cut software licence costs by $210K by removing unused seats"]),
+        "Cut software license costs by $210K by removing unused seats"]),
     "cloud-engineer": ("Cloud Engineer", "networking, infrastructure as code, cost control", [
         "Built the {cloud:AWS} foundation for 60 services: networks, accounts and access rules, all in {iac:Terraform}",
         "Cut the cloud bill by 27% with reserved capacity and by switching off idle resources",
-        "Moved 25 services out of a data centre with under 10 minutes of downtime each",
+        "Moved 25 services out of a data center with under 10 minutes of downtime each",
         "Set up a second region; the platform now survives the loss of one"]),
     "network-engineer": ("Network Engineer", "routing and switching, firewalls, wireless networks, network monitoring", [
         "Redesigned the network for 12 offices; outages fell from 14 a year to 2",
@@ -287,7 +287,7 @@ ROLE = {
         "Moved email and files for 600 employees to a cloud service over one weekend",
         "Reviewed access every quarter and removed 400 unused accounts"]),
     # security
-    "cybersecurity": ("Security Engineer", "threat modelling, vulnerability management, incident response", [
+    "cybersecurity": ("Security Engineer", "threat modeling, vulnerability management, incident response", [
         "Found and fixed 130 vulnerabilities in a year; the median time to fix a critical one fell from 21 days to 4",
         "Added security checks to the release pipeline; 90% of problems are now caught before release",
         "Led the response to 6 incidents with no customer data lost",
@@ -333,13 +333,13 @@ ROLE = {
         "Ran 35 impact assessments; 8 products changed before launch",
         "Trained 600 employees; every reported incident was handled within 72 hours"]),
     # product and project
-    "product-manager": ("Product Manager", "roadmaps, customer interviews, prioritisation, A/B tests, writing specifications", [
+    "product-manager": ("Product Manager", "roadmaps, customer interviews, prioritization, A/B tests, writing specifications", [
         "Led the launch of saved searches; weekly active users rose 18% in two months",
         "Ran 25 customer interviews and cut the sign-up form from 11 fields to 4; completion went from 52% to 71%",
         "Retired 3 features used by under 1% of customers, which freed a third of the support queue",
         "Set the yearly plan for a team of 8 and delivered 5 of its 6 goals"]),
     "program-manager": ("Program Manager", "planning, risk tracking, stakeholder updates, budgeting", [
-        "Ran a programme of 7 teams and 60 people that launched in 4 countries on the planned date",
+        "Ran a program of 7 teams and 60 people that launched in 4 countries on the planned date",
         "Kept a risk list reviewed weekly; 9 of 11 serious risks were closed before they caused delay",
         "Cut status meetings from 6 hours a week to 2 with one written update",
         "Managed a budget of $4M and finished 3% under it"]),
@@ -357,13 +357,13 @@ ROLE = {
         "Ran the launch process for 40 releases a year; support was briefed before every one",
         "Sorted 6,000 pieces of customer feedback a quarter into 20 themes used in planning",
         "Cut the time from a customer report to a product decision from 5 weeks to 9 days",
-        "Built the beta programme: 300 customers, 12 betas a year"]),
+        "Built the beta program: 300 customers, 12 betas a year"]),
     "scrum-master": ("Scrum Master", "sprint planning, retrospectives, backlog refinement, removing blockers", [
         "Coached 3 teams; the share of sprint commitments delivered rose from 61% to 88%",
         "Cut the average time a task waits on another team from 6 days to 2",
         "Ran 70 retrospectives; 45 agreed actions were completed",
         "Shortened the release cycle from monthly to fortnightly"]),
-    "business-operations": ("Business Operations Manager", "financial modelling, process design, planning cycles, reporting", [
+    "business-operations": ("Business Operations Manager", "financial modeling, process design, planning cycles, reporting", [
         "Built the operating review the leadership team reads weekly: 30 metrics on one page",
         "Led a pricing and packaging project that raised average contract value by 14%",
         "Found $1.3M of yearly savings in supplier and software spending",
@@ -419,8 +419,8 @@ ROLE = {
         "Managed paid campaigns of $150K a month and cut the cost of a new customer from $84 to $57",
         "Ran 60 landing page tests; conversion rose from 2.8% to 4.1%",
         "Built a series of 14 lifecycle emails that brought back 9% of lapsed users",
-        "Grew the referral programme to 22% of new sign-ups"]),
-    "content-writer": ("Content Writer", "long-form articles, editing, search optimisation, interviews", [
+        "Grew the referral program to 22% of new sign-ups"]),
+    "content-writer": ("Content Writer", "long-form articles, editing, search optimization, interviews", [
         "Wrote 90 articles in a year that bring 120,000 visits a month from search",
         "Edited about 40,000 words a month to one style guide",
         "Wrote 12 customer stories used by the sales team",
@@ -440,10 +440,10 @@ ROLE = {
         "Published 25 posts a week; the average post reached 3 times as many people as the year before",
         "Made a video series that was watched 2 million times",
         "Answered about 60 customer messages a day within an hour"]),
-    "community-manager": ("Community Manager", "moderation, events, member programmes, feedback reports", [
+    "community-manager": ("Community Manager", "moderation, events, member programs, feedback reports", [
         "Grew the community from 5,000 to 28,000 members with 35% active each month",
         "Ran 40 online events a year with an average of 300 people",
-        "Built an ambassador programme of 60 members who answer 45% of questions",
+        "Built an ambassador program of 60 members who answer 45% of questions",
         "Sent a monthly feedback report to the product team; 18 requests were built"]),
     "communications": ("Communications Manager", "press relations, writing, internal communications, crisis response", [
         "Earned 60 pieces of press coverage in a year, 9 of them in national outlets",
@@ -511,11 +511,11 @@ ROLE = {
         "Ran 150 demonstrations, each on the buyer’s own data",
         "Built a demonstration environment the whole team uses; preparing a demo fell from 4 hours to 30 minutes",
         "Wrote answers to the 100 most common technical questions"]),
-    "retail": ("Sales Associate", "customer service, till handling, stock control, visual merchandising", [
+    "retail": ("Sales Associate", "customer service, POS and cash handling, stock control, visual merchandising", [
         "Served about 120 customers a shift and kept the store’s satisfaction score above 90%",
-        "Sold 15% above the store average over a year",
-        "Counted the till and banked the takings with no discrepancy in 14 months",
-        "Trained 5 new team members on the till and on returns"]),
+        "Sold 15% above the store average over a year and signed up about 40 shoppers a month for the loyalty card",
+        "Took cash and card payments at the POS with no cash discrepancy in 14 months",
+        "Trained 5 new team members on the POS and on returns"]),
     # customer service
     "customer-success-manager": ("Customer Success Manager", "onboarding, business reviews, renewals, product adoption", [
         "Managed 60 accounts worth $4.8M a year, with 97% of revenue renewed",
@@ -543,10 +543,10 @@ ROLE = {
         "Found $210K of duplicate supplier payments in a review of accounts payable; all of it was recovered",
         "Prepared the company for its first audit, which required no adjustments",
         "Processed about 600 invoices a month with an error rate under 0.5%"]),
-    "financial-analyst": ("Financial Analyst", "forecasting, budgeting, financial modelling, variance analysis", [
+    "financial-analyst": ("Financial Analyst", "forecasting, budgeting, financial modeling, variance analysis", [
         "Built a forecast that stayed within 3% of actual revenue for six quarters",
         "Ran the yearly budget for 14 departments, finished 2 weeks earlier than the year before",
-        "Modelled 3 pricing options for the board; the one chosen added $2M in yearly revenue",
+        "Modeled 3 pricing options for the board; the one chosen added $2M in yearly revenue",
         "Cut the monthly reporting pack from 60 pages to 12"]),
     "tax": ("Tax Manager", "corporate income tax, indirect tax, transfer pricing, tax provision", [
         "Filed returns in 14 countries on time for 3 years with no penalty",
@@ -568,7 +568,7 @@ ROLE = {
         "Tested 140 financial controls for SOX with no material weakness",
         "Found a gap in payment approvals that exposed $3M a year; it was closed within a month",
         "Tested every transaction instead of a sample in 5 audits by using data analysis"]),
-    "investment": ("Corporate Development Associate", "valuation, financial modelling, due diligence, deal execution", [
+    "investment": ("Corporate Development Associate", "valuation, financial modeling, due diligence, deal execution", [
         "Worked on 6 acquisitions worth $240M in total, from first model to close",
         "Screened 300 companies and took 25 to management meetings",
         "Built the valuation model for the largest deal; first-year results came within 8% of it",
@@ -605,7 +605,7 @@ ROLE = {
         "Drafted about 50 confidentiality agreements a month from templates, each within a day",
         "Reviewed 20,000 documents for one case"]),
     "compliance": ("Compliance Analyst", "anti-money-laundering, customer due diligence, policy writing, regulatory reporting", [
-        "Took the anti-money-laundering programme through a regulator’s inspection with no findings",
+        "Took the anti-money-laundering program through a regulator’s inspection with no findings",
         "Reviewed about 70 customer files a week with 99% accuracy at audit",
         "Filed 120 suspicious activity reports a year, every one inside the deadline",
         "Rewrote 15 policies and trained 400 employees on them"]),
@@ -625,7 +625,7 @@ ROLE = {
         "Wrote first messages that 32% of engineers answered, against a team average of 14%",
         "Cut the interview process from 6 stages to 4; time to offer fell from 41 days to 26",
         "Trained 20 engineers to interview"]),
-    "human-resources": ("HR Business Partner", "employee relations, performance management, organisation design, employment law", [
+    "human-resources": ("HR Business Partner", "employee relations, performance management, organization design, employment law", [
         "Was the HR partner for 300 employees in 3 departments",
         "Cut yearly turnover in one department from 24% to 13% through exit interviews and manager coaching",
         "Handled 40 employee relations cases a year; none went to a tribunal",
@@ -639,7 +639,7 @@ ROLE = {
         "Rebuilt sales onboarding; new hires reached a first deal in 6 weeks instead of 10",
         "Designed 25 courses taken by 2,000 employees with a completion rate of 88%",
         "Ran 40 live workshops with an average rating of 4.7 out of 5",
-        "Built a programme for new managers; 120 finished it in a year"]),
+        "Built a program for new managers; 120 finished it in a year"]),
     # operations and administration
     "operations-manager": ("Operations Manager", "process improvement, team leadership, supplier management, reporting", [
         "Led a team of 22 handling 9,000 orders a month",
@@ -650,7 +650,7 @@ ROLE = {
         "Managed calendars, travel and expenses for 3 executives across 4 time zones",
         "Planned 45 trips a year with no missed connection or meeting",
         "Prepared the papers for the weekly leadership meeting, sent a day ahead every week",
-        "Organised 2 company off-sites for 150 people within budget"]),
+        "Organized 2 company off-sites for 150 people within budget"]),
     "workplace": ("Workplace Manager", "facilities, supplier management, health and safety, office moves", [
         "Ran 3 offices for 500 people with a satisfaction score of 4.5 out of 5",
         "Planned an office move for 120 people, finished on time and 8% under budget",
@@ -676,7 +676,7 @@ ROLE = {
         "Designed a housing that cut assembly time from 14 minutes to 9",
         "Reduced the weight of a bracket by 22% while passing the same load tests",
         "Took 6 parts from concept to production tooling in 5 months",
-        "Analysed returned units and fixed the 3 commonest causes of failure; returns fell by 40%"]),
+        "Analyzed returned units and fixed the 3 commonest causes of failure; returns fell by 40%"]),
     "electrical-engineer": ("Electrical Engineer", "circuit design, power electronics, circuit board layout, lab testing", [
         "Designed a power supply board that is 94% efficient, up from 88%",
         "Passed electromagnetic compatibility testing at the first attempt on 3 products",
@@ -685,7 +685,7 @@ ROLE = {
     "optics": ("Optical Engineer", "optical design, alignment, laser systems, optical testing", [
         "Designed a lens assembly that raised coupling efficiency from 61% to 78%",
         "Built an alignment process that cut assembly time for each unit from 3 hours to 40 minutes",
-        "Characterised 12 laser designs and chose the one now in production",
+        "Characterized 12 laser designs and chose the one now in production",
         "Raised production yield from 70% to 91%"]),
     "materials-engineer": ("Materials Engineer", "metallurgy, failure analysis, process development, materials testing", [
         "Developed a heat treatment that raised the fatigue life of a part by 30%",
@@ -749,13 +749,13 @@ ROLE = {
         "Managed 150 patients with long-term conditions; hospital readmissions fell by 22%",
         "Trained 9 new nurses on documentation; audit findings fell to zero",
         "Triaged about 40 calls a shift"]),
-    "mental-health": ("Licensed Therapist", "assessment, treatment planning, cognitive behavioural therapy, clinical documentation", [
+    "mental-health": ("Licensed Therapist", "assessment, treatment planning, cognitive behavioral therapy, clinical documentation", [
         "Saw about 25 clients a week by video; 78% completed their treatment plan",
         "Measured outcomes with standard questionnaires; 64% of clients showed reliable improvement",
         "Completed clinical notes within 24 hours of every session",
         "Supervised 3 trainee therapists"]),
     "clinical-research": ("Clinical Research Associate", "study protocols, site monitoring, good clinical practice, regulatory submissions", [
-        "Monitored 12 study sites across 3 trials; all met their enrolment targets",
+        "Monitored 12 study sites across 3 trials; all met their enrollment targets",
         "Ran 3 studies from protocol to report",
         "Prepared 2 regulatory submissions, both accepted without a major question",
         "Closed 95% of data queries within 5 days"]),
@@ -773,14 +773,14 @@ ROLE = {
     "intern": ("Computer Science Student", "teamwork, writing, learning fast", [
         "Finished a 12-week internship; my change to the search page shipped to all users",
         "Built a course project in {lang:Python} that 60 classmates used to book study rooms",
-        "Organised a student event for 200 people on a budget of $1,500",
+        "Organized a student event for 200 people on a budget of $1,500",
         "Worked 15 hours a week during studies, handling about 30 customer requests a shift"]),
     "blockchain-engineer": ("Blockchain Engineer", "consensus, cryptography, node operation, security review", [
         "Built a wallet service in {lang:Go} that signs 2 million transactions a month with no loss of funds",
         "Cut the time for a node to sync from 9 hours to 50 minutes",
         "Added support for 6 chains, each in under 3 weeks",
         "Fixed 11 findings from two outside audits before launch"]),
-    "smart-contract-engineer": ("Smart Contract Engineer", "testing, gas optimisation, security audits", [
+    "smart-contract-engineer": ("Smart Contract Engineer", "testing, gas optimization, security audits", [
         "Wrote and shipped 6 smart contracts that hold $40M, with no incident",
         "Cut the gas used by the main contract by 27%",
         "Wrote 400 tests, fuzz tests among them, that cover every line",
@@ -1775,7 +1775,7 @@ SENIOR = {
         "Set up a weekly product review with engineering; 15 gaps that blocked deals were closed in a year"],
     "retail": [
         "Led a shift team of 8 associates in a store with $3M in yearly sales",
-        "Owned the store’s visual merchandising plan; sales of featured items rose 20%",
+        "Owned the store’s visual merchandising plan and planogram checks; sales of featured items rose 20%",
         "Trained 12 new associates and ran stock counts with the warehouse team"],
     # customer service
     "customer-success-manager": [
@@ -2041,6 +2041,48 @@ for slug_, m_ in MORE.items():
     if m_.get("tech"): TECH.add(slug_)
 
 
+# Spelling (25 Nov 2026): the lines are written in American English, because the resume and cover letter pages are for the US; the
+# UK CV pages turn them into British spelling with uk(). 78 lines had British forms ("optimisation", "modelling", "call centre") that
+# showed on the US pages next to American ones. test() fails on a British form in a line. "program" and "license" are left alone by uk():
+# a software program and the verb to license are spelled the same in Britain.
+UK2US = {"optimisation": "optimization", "optimisations": "optimizations", "optimise": "optimize", "optimised": "optimized", "optimising": "optimizing",
+ "modelling": "modeling", "modelled": "modeled", "analyse": "analyze", "analysed": "analyzed", "analysing": "analyzing",
+ "centre": "center", "centres": "centers", "programme": "program", "programmes": "programs", "organise": "organize", "organised": "organized",
+ "organising": "organizing", "organisation": "organization", "organisations": "organizations", "organisational": "organizational",
+ "licence": "license", "licences": "licenses", "enrolment": "enrollment", "enrolments": "enrollments", "prioritise": "prioritize", "prioritised": "prioritized",
+ "prioritisation": "prioritization", "summarise": "summarize", "summarised": "summarized", "catalogue": "catalog", "catalogued": "cataloged",
+ "catalogues": "catalogs", "behaviour": "behavior", "behavioural": "behavioral", "labour": "labor", "colour": "color", "colours": "colors",
+ "favour": "favor", "utilisation": "utilization", "utilised": "utilized", "standardised": "standardized", "standardise": "standardize",
+ "recognised": "recognized", "minimised": "minimized", "maximised": "maximized", "customised": "customized", "authorised": "authorized",
+ "authorisation": "authorization", "authorisations": "authorizations", "finalised": "finalized", "digitised": "digitized", "travelled": "traveled",
+ "cancelled": "canceled", "defence": "defense", "fulfilment": "fulfillment", "specialised": "specialized", "specialise": "specialize",
+ "visualisation": "visualization", "visualisations": "visualizations", "harmonised": "harmonized", "centralised": "centralized", "localised": "localized",
+ "normalised": "normalized", "categorised": "categorized", "emphasised": "emphasized", "apologised": "apologized", "mobilised": "mobilized",
+ "synchronised": "synchronized", "modernised": "modernized", "characterised": "characterized", "stabilised": "stabilized", "neutralised": "neutralized",
+ "sanitised": "sanitized", "anonymised": "anonymized", "tokenised": "tokenized", "containerised": "containerized", "virtualised": "virtualized",
+ "parallelised": "parallelized", "monetised": "monetized", "incentivised": "incentivized", "itemised": "itemized", "memorised": "memorized",
+ "reorganised": "reorganized", "systematised": "systematized", "visualised": "visualized", "optimised": "optimized", "organising": "organizing",
+ "specialise": "specialize", "apologised": "apologized", "colouring": "coloring", "favourite": "favorite", "neighbours": "neighbors", "neighbour": "neighbor",
+ "memorise": "memorize", "summarising": "summarizing", "summarises": "summarizes", "behaviours": "behaviors", "modernise": "modernize"}
+_UK_RX = re.compile(r"\b(" + "|".join(sorted(UK2US, key=len, reverse=True)) + r")\b", re.I)
+US2UK = {us_: uk_ for uk_, us_ in UK2US.items() if us_ not in ("program", "programs", "license", "licenses")}
+_US_RX = re.compile(r"\b(" + "|".join(sorted(US2UK, key=len, reverse=True)) + r")\b", re.I)
+
+
+def _same_case(old, new):
+    return new[:1].upper() + new[1:] if old[:1].isupper() else new
+
+
+def us(s):
+    """British spelling to American, word by word: "Analysed … call centre" -> "Analyzed … call center"."""
+    return _UK_RX.sub(lambda m: _same_case(m.group(1), UK2US[m.group(1).lower()]), s)
+
+
+def uk(s):
+    """American spelling to British for the UK CV pages: "optimization" -> "optimisation", "center" -> "centre"."""
+    return _US_RX.sub(lambda m: _same_case(m.group(1), US2UK[m.group(1).lower()]), s)
+
+
 def line_problem(ln):
     """What is wrong with a resume line under the rules of the module docstring, or None."""
     tools = {t for ts in KIND.values() for t in ts} | OFFICE
@@ -2118,6 +2160,10 @@ def example(slug, name, family, rows, field_name):
 
 
 def test():
+    for d_ in (ROLE, ENTRY, SENIOR):
+        for k_, v_ in d_.items():
+            for ln_ in (list(v_[2]) + [v_[1]] if d_ is ROLE else list(v_)):
+                assert us(ln_) == ln_, f"{k_}: British spelling in an example line ({ln_!r}); write it the American way, uk() makes the CV page British"
     def check(where, slug, ln):
         """A line as the module docstring asks for it."""
         assert not (why := line_problem(ln)), (where, slug, why, ln)

@@ -1999,6 +1999,13 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             # Search Console 24 Nov 2026: "reference title meaning", 10 impressions at 8.1
             ("What does \"reference title\" mean on an application form?", "It asks for the job title of the person you list as a reference, such as \"Engineering Manager\" or \"Head of Sales\", as it was when they worked with you. Forms usually ask next for the company and how you know them (\"Relationship\": your manager, colleague or client). It is not your own title and not the title of the job you are applying for."),
         ]),
+    # Google US "what does relocate mean in a job" (Search Console 4 at 10.5), 24 Nov 2026 night: People also ask "Should I answer yes to 'Are
+    # you willing to relocate'?" and "How long will a job give you to relocate?" (WayUp: the question means the listed location, not anywhere)
+    "Relocation": dict(
+        qa=[
+            ("Should I say yes when an application asks if I am willing to relocate?", "Only if you would really move to the job's location: the question usually means that place, not anywhere. If you would move only with help, or only to certain cities, say so. Saying yes and then asking to work remotely tends to end the process."),
+            ("How long do employers give you to relocate?", "It is agreed in the offer, through the start date. Ask for the date you need before you accept, and ask whether the employer pays for temporary housing while you look for a home; get both in writing."),
+        ]),
     # Google US "salary bands" (Search Console 9 at 45), 24 Nov 2026 night: People also ask "What is a salary band level?", "What is band 7
     # salary?", "How much is pay band 4?"; South Carolina's classified pay bands (admin.sc.gov) list a minimum, midpoint and maximum per band
     "Salary band": dict(

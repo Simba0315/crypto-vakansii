@@ -1702,7 +1702,7 @@
  "design-systems": {
   "duties": [
    "Design and maintain reusable components such as buttons, inputs, cards and navigation patterns in a shared library",
-   "Define design tokens for colour, type, spacing, elevation and motion so every screen stays consistent",
+   "Define design tokens for color, type, spacing, elevation and motion so every screen stays consistent",
    "Write clear usage guidelines and documentation showing when and how to use each component and pattern",
    "Partner with front-end engineers to keep designed components and coded components in sync across platforms",
    "Review product designs for consistency and help teams adopt the system instead of building one-off elements",
@@ -1711,7 +1711,7 @@
   "must": [
    "Bachelor’s degree in design, human-computer interaction or a related field, or equivalent experience",
    "Portfolio showing component libraries, pattern work or other systematic interface design",
-   "Strong grasp of visual design, typography, colour, layout and interaction states",
+   "Strong grasp of visual design, typography, color, layout and interaction states",
    "Working knowledge of accessibility guidelines and how they apply to interface components"
   ],
   "nice": [

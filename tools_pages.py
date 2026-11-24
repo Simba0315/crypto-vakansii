@@ -1,6 +1,6 @@
 """Free tools section: the /tools/ hub and one page per tool.
 
-build.py calls build_tools() and passes its own page helpers. The behaviour of every tool lives in assets/tools.js
+build.py calls build_tools() and passes its own page helpers. The behavior of every tool lives in assets/tools.js
 (pure functions tested under Node + page wiring) and the extra styles in assets/tools.css. Nothing here needs a server:
 each tool runs in the visitor's browser, and the only data embedded in a page is a small set of salary aggregates.
 Two tools read a data file instead: the salary checker loads data/salary-groups.json (1.1 MB of figures); "skills to put on a resume" by job title loads data/role-skills.json, which build.py writes from the day's postings.
@@ -616,7 +616,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<li><code>vested = options × months served ÷ months of vesting</code>, rounded down, and zero before the cliff</li>"
          "<li><code>share kept after dilution = (1 − dilution per round) ^ rounds</code></li>"
          "<li><code>exit price per share = today’s price × exit multiple × share kept</code>, and your options are then worth <code>options × (exit price − strike)</code></li></ul>"
-         "<p>The exit multiples are scenarios you choose, not forecasts. Tax is not included. Liquidation preferences, which pay investors back first, are not modelled; they matter most when a company sells for little more than it raised.</p>",
+         "<p>The exit multiples are scenarios you choose, not forecasts. Tax is not included. Liquidation preferences, which pay investors back first, are not modeled; they matter most when a company sells for little more than it raised.</p>",
          [("How do I work out what my stock options are worth?",
            "Multiply the number of options by the difference between the share price and your strike price. 10,000 options with a $1 strike and a $5 share price are worth 10,000 × ($5 − $1) = $40,000 on paper, before tax and before any future dilution."),
           ("What is a strike price?",
@@ -1708,7 +1708,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
           ("How many criteria should a scorecard have?",
            "Four to six is what this builder is made for: enough to cover skills, the way of working and motivation, few enough that an interviewer can rate each one with evidence. If a criterion is not something you would turn a candidate down for, leave it out."),
           ("How do I choose the weights?",
-           "Give the most weight to what the person will do most of the time, and make the weights add up to 100 so each reads as a percent. Set them before you meet the first candidate; changing them afterwards to fit a favourite defeats the purpose."),
+           "Give the most weight to what the person will do most of the time, and make the weights add up to 100 so each reads as a percent. Set them before you meet the first candidate; changing them afterwards to fit a favorite defeats the purpose."),
           ("How is the weighted score calculated?",
            "Multiply each rating by the weight of its criterion, add the results and divide by the sum of the weights. Ratings of 4, 5, 3, 4 and 4 with weights of 30, 25, 20, 15 and 10 give 4.05 out of 5.")],
          ["cost-per-hire", "job-description-checker", "boolean-search"], ["post-a-job/"])
@@ -1832,7 +1832,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "Ask for a job referral without making it awkward: wording for a close colleague, a distant contact or a stranger, as an email or a short LinkedIn message.",
          "Ask for a job referral, and make it easy to say yes or no",
          "Name the job, say in one line why you fit, offer to do the work of the referral yourself, and make it easy to say no. "
-         "Asking a favour of someone you have not spoken to for years, or have never met, is the part people put off until the posting has closed. "
+         "Asking a favor of someone you have not spoken to for years, or have never met, is the part people put off until the posting has closed. "
          "Choose how well you know the person and where you are writing, and the message is ready to copy. It is a fill-in template, not AI.",
          wrap("referral-request",
               '<div class="tl-split"><div class="card tl-form"><div class="tl-grid">'
@@ -1868,7 +1868,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
           ("What if they do not answer?",
            "Wait a week and send one short reminder. If there is still no answer, apply without the referral before the posting closes. Silence usually means a full inbox, not a judgment of you."),
           ("Do employees get paid for referring someone?",
-           "Many companies pay a bonus to an employee whose referral is hired, so your request is not only a favour. Whether your contact gets one depends on their employer’s rules."),
+           "Many companies pay a bonus to an employee whose referral is hired, so your request is not only a favor. Whether your contact gets one depends on their employer’s rules."),
           no_ai("message")],
          ["linkedin-connection-message", "application-email", "reference-request-email"], ["jobs/"],
          ex=("Referral request example: an email to a close colleague", "<p>The form filled in with its sample details gives this email:</p>" + sample(EXAMPLE["referral-request"])))
@@ -2072,7 +2072,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<li><strong>At a networking event</strong> it is looser, says what you are curious about and hands the conversation back with a question.</li></ul>"
          "<p><strong>Speaking time</strong> = words ÷ 150 × 60 seconds. 150 words a minute is an ordinary speaking pace, so 30 seconds is about 75 words. 25 to 35 seconds passes; "
          "20 to 24 and 36 to 45 seconds are marked to check; under 20 or over 45 seconds is marked to fix, and the page names your longest part. The result is also checked for a number.</p>"
-         "<p>The pace and the thresholds are this page’s rules of thumb. Say the pitch aloud once with a timer, then change the words until it sounds like you. A pitch that sounds memorised works against you.</p>",
+         "<p>The pace and the thresholds are this page’s rules of thumb. Say the pitch aloud once with a timer, then change the words until it sounds like you. A pitch that sounds memorized works against you.</p>",
          [("What is an elevator pitch?",
            "A short spoken introduction, about 30 seconds long, that says who you are, what you are good at and what you are looking for. The name comes from the idea of explaining yourself during a ride in a lift."),
           ("How long should an elevator pitch be?",

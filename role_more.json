@@ -3505,11 +3505,11 @@
   "day": [
    {
     "label": "Main duties",
-    "text": "Design systems designers build and maintain a shared library of components, such as buttons, forms and menus. They define colour, type and spacing tokens, write usage guidelines, and update parts as product needs change."
+    "text": "Design systems designers build and maintain a shared library of components, such as buttons, forms and menus. They define color, type and spacing tokens, write usage guidelines, and update parts as product needs change."
    },
    {
     "label": "A typical day",
-    "text": "A day might start with reviewing a request for a new component. Then comes drafting variants in a design tool, checking colour contrast, pairing with an engineer on the coded version, and answering questions from product designers."
+    "text": "A day might start with reviewing a request for a new component. Then comes drafting variants in a design tool, checking color contrast, pairing with an engineer on the coded version, and answering questions from product designers."
    },
    {
     "label": "Who they work with",
@@ -3527,7 +3527,7 @@
   "qa": [
    {
     "q": "What does a design systems designer do day to day?",
-    "a": "They design and refine reusable components, set rules for colour, type and spacing, and document how each piece should be used. They review requests from product teams, test for accessibility, and work with engineers so the coded library matches the designs. Much of the day goes to communication and keeping everything consistent."
+    "a": "They design and refine reusable components, set rules for color, type and spacing, and document how each piece should be used. They review requests from product teams, test for accessibility, and work with engineers so the coded library matches the designs. Much of the day goes to communication and keeping everything consistent."
    },
    {
     "q": "What is the difference between a design systems designer and a product designer?",
