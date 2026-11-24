@@ -139,6 +139,46 @@
    "Enrolled Actuary status for pension work, granted by the federal Joint Board"
   ]
  },
+ "additive-manufacturing": {
+  "duties": [
+   "Prepare build files by orienting parts, adding supports and setting process parameters for each printer",
+   "Run and monitor industrial metal and polymer 3D printers, and respond to faults during builds",
+   "Redesign parts for additive manufacturing to cut weight, part count and post-processing work",
+   "Develop and qualify print processes, materials and parameters through test builds and documented trials",
+   "Oversee post-processing such as powder removal, heat treatment, support removal, machining and surface finishing",
+   "Inspect printed parts with dimensional checks, CT scans and mechanical tests, and resolve defects"
+  ],
+  "must": [
+   "Bachelor’s degree in mechanical, materials, manufacturing or aerospace engineering, or a related field",
+   "Understanding of powder bed fusion, directed energy deposition, material extrusion or other additive processes",
+   "Knowledge of metallurgy or polymer behavior and of design for additive manufacturing",
+   "Safe handling of metal powders, lasers and inert gases"
+  ],
+  "nice": [
+   "Experience qualifying parts for aerospace, defense or medical device customers",
+   "Familiarity with export control rules such as ITAR for controlled technical data"
+  ]
+ },
+ "administrative-assistant": {
+  "duties": [
+   "Manage calendars, schedule meetings and arrange rooms, calls and agendas for managers and teams",
+   "Book travel, prepare itineraries and process expense reports and receipts",
+   "Prepare documents, presentations, spreadsheets and correspondence with accurate formatting",
+   "Order office supplies, track inventory and work with vendors on deliveries and services",
+   "Maintain organized paper and digital files and keep records confidential",
+   "Handle phone calls and emails, route requests and follow up on open items"
+  ],
+  "must": [
+   "High school diploma or equivalent; associate degree or office administration coursework preferred",
+   "Strong organization, time management and attention to detail",
+   "Proficiency with common office software, email and video calls",
+   "Clear written and spoken communication and discretion with confidential information"
+  ],
+  "nice": [
+   "Certified Administrative Professional or a similar office certification",
+   "Experience supporting executives or several managers at once"
+  ]
+ },
  "advertising": {
   "duties": [
    "Plan media mixes and budgets across digital, social, search, TV and print channels to reach campaign goals",
@@ -177,6 +217,26 @@
   "nice": [
    "Professional Engineer license or a passed Fundamentals of Engineering exam; rules vary by state",
    "Master’s degree in aerospace engineering or hands-on work with flight hardware"
+  ]
+ },
+ "affiliate-marketing": {
+  "duties": [
+   "Recruit publishers, creators, review sites and partners who fit the brand and target customers",
+   "Negotiate commission rates, bonuses and terms, and onboard new affiliates with tracking links and creative",
+   "Monitor traffic and conversions for fraud, cookie stuffing, brand bidding and policy breaches",
+   "Check that affiliates disclose paid relationships as FTC endorsement rules require",
+   "Approve commissions, reconcile reports and manage monthly payouts with finance",
+   "Analyze partner performance and program profitability, and shift budget toward the best sources"
+  ],
+  "must": [
+   "Bachelor’s degree in marketing, business, communications or a related field, or equivalent experience",
+   "Understanding of affiliate tracking, attribution and commission models",
+   "Strong negotiation and relationship management skills",
+   "Working knowledge of FTC disclosure rules for endorsements and advertising"
+  ],
+  "nice": [
+   "Existing network of publishers or creators in the company’s market",
+   "Experience running programs on major affiliate networks"
   ]
  },
  "ai-engineer": {
@@ -299,6 +359,26 @@
    "Experience taking designs through tape-out in advanced CMOS or BiCMOS processes"
   ]
  },
+ "analytics-engineer": {
+  "duties": [
+   "Build and maintain tested data models that turn raw source data into trusted, well-named tables",
+   "Document every table and field with clear definitions, owners and update schedules",
+   "Define shared business metrics with analysts and stakeholders so numbers match across reports",
+   "Add data tests, freshness checks and alerts that catch broken or late data early",
+   "Apply version control, code review and automated deployment to analytics code",
+   "Tune queries and table design to keep the data warehouse fast and its costs under control"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, statistics, economics or a related field, or equivalent experience",
+   "Advanced skill writing and optimizing database queries for analytics",
+   "Strong understanding of dimensional modeling and data warehouse design",
+   "Ability to work with analysts and business teams to define metrics clearly"
+  ],
+  "nice": [
+   "Experience building dashboards or semantic layers for business users",
+   "Scripting skills for data pipelines and workflow automation"
+  ]
+ },
  "android-developer": {
   "duties": [
    "Build and maintain Android app features from design mockups and product requirements",
@@ -317,6 +397,26 @@
   "nice": [
    "Published Android apps you can show to the hiring team",
    "Experience with accessibility standards, automated UI testing or continuous integration"
+  ]
+ },
+ "angular-vue-developer": {
+  "duties": [
+   "Build single-page applications with components, routing, forms and services in the chosen framework",
+   "Manage application state and reactive data flows so screens update correctly and quickly",
+   "Connect interfaces to back-end APIs, handling validation, errors, loading states and authentication",
+   "Turn design files into responsive, accessible layouts that work across browsers and screen sizes",
+   "Write unit and end-to-end tests and fix interface bugs found in testing or production",
+   "Upgrade framework versions and refactor legacy screens to current patterns without breaking features"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of a component-based front-end framework, its templates, routing and state management",
+   "Solid HTML, CSS, typed web code and accessibility skills",
+   "Ability to work with designers and back-end developers on shared requirements"
+  ],
+  "nice": [
+   "Experience with server-side rendering and front-end performance tuning",
+   "Background in large enterprise or dashboard-heavy applications"
   ]
  },
  "api-developer": {
@@ -419,6 +519,26 @@
    "Experience with AI accelerator, GPU, CPU or high-speed interface designs taken through tape-out"
   ]
  },
+ "associate-product-manager": {
+  "duties": [
+   "Own a small feature or area of the product under the guidance of a senior product manager",
+   "Talk with customers and review support tickets to understand problems worth solving",
+   "Write clear requirements and user stories with designers and engineers for upcoming work",
+   "Analyze product usage data and experiment results to measure the impact of releases",
+   "Coordinate launches with marketing, sales and support so customers learn about new features",
+   "Rotate across product teams where a rotational program applies, sharing what you learn at each stage"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, engineering, economics, business or a related field, or equivalent experience",
+   "Strong analytical and problem-solving skills",
+   "Clear written and spoken communication with technical and business colleagues",
+   "Curiosity about users and how technology products are built"
+  ],
+  "nice": [
+   "Internship in product management, software engineering, design or a startup",
+   "Side projects, apps or technical coursework that show building skills"
+  ]
+ },
  "audio": {
   "duties": [
    "Record dialogue, Foley, instruments and ambiences in studio and field sessions, managing microphones, levels and signal flow",
@@ -459,6 +579,26 @@
    "Experience using data analytics to test full populations of transactions"
   ]
  },
+ "automation-engineer": {
+  "duties": [
+   "Connect business applications through APIs, webhooks and middleware so data moves reliably between systems",
+   "Map business processes with teams and identify manual work that can be automated",
+   "Build automated workflows, scripts and bots that replace repetitive manual tasks",
+   "Monitor integrations, handle errors and retries, and fix failed data syncs quickly",
+   "Secure connections with proper authentication, access controls and careful handling of sensitive data",
+   "Document integration designs, data mappings and runbooks for support teams"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, information systems or a related field, or equivalent experience",
+   "Working knowledge of APIs, common data formats, authentication methods and webhooks",
+   "Scripting or programming skills for building and maintaining automations",
+   "Ability to translate business needs into reliable technical solutions"
+  ],
+  "nice": [
+   "Experience with integration platforms or robotic process automation",
+   "Background in the business area served, such as finance, sales or human resources"
+  ]
+ },
  "automotive-engineer": {
   "duties": [
    "Design vehicle systems such as body structures, chassis, powertrain and electrical components using CAD models and engineering calculations",
@@ -477,6 +617,66 @@
   "nice": [
    "Master’s degree in engineering or hands-on work with electric or hybrid powertrains",
    "Familiarity with functional safety practices such as ISO 26262 and design failure mode analysis"
+  ]
+ },
+ "automotive-sales": {
+  "duties": [
+   "Greet showroom visitors and online shoppers and learn their needs, budget and timeline",
+   "Explain vehicle features, trims, options and pricing, and compare models clearly",
+   "Arrange and accompany test drives after checking each driver’s license",
+   "Gather trade-in details for appraisal and present offers worked out with sales managers",
+   "Prepare deal paperwork and introduce buyers to the finance and insurance office",
+   "Deliver vehicles by walking buyers through features and handing over the keys, then follow up for referrals"
+  ],
+  "must": [
+   "High school diploma or equivalent",
+   "Valid driver’s license and a clean driving record",
+   "State vehicle salesperson license where required; rules vary by state",
+   "Persistent sales and negotiation skills and comfort with evening and weekend shifts"
+  ],
+  "nice": [
+   "Manufacturer product training or sales certification",
+   "Bilingual skills to serve more customers in the local market"
+  ]
+ },
+ "av-operator": {
+  "duties": [
+   "Monitor self-driving vehicles from the driver’s seat or a remote station during scheduled test routes",
+   "Take manual control at once when the system behaves unsafely, unexpectedly or outside its operating limits",
+   "Complete pre-trip inspections of the vehicle, sensors and cameras, and report damage or faults before driving",
+   "Log disengagements, near misses and unusual events with clear notes for engineering teams",
+   "Follow test plans, traffic laws and safety procedures on public roads and closed test tracks",
+   "Give feedback on vehicle behavior, ride comfort and new software releases after each shift"
+  ],
+  "must": [
+   "Valid driver’s license and a safe driving record that meets company insurance standards",
+   "Commercial driver’s license and current DOT medical card for truck testing roles",
+   "Sustained focus and fast reactions over long monitoring shifts",
+   "Clear written reporting and strict adherence to safety protocols"
+  ],
+  "nice": [
+   "Experience as a professional driver, test driver or fleet operator",
+   "Basic understanding of vehicle sensors such as lidar, radar and cameras"
+  ]
+ },
+ "aviation-operations": {
+  "duties": [
+   "Plan and release flights, checking weather, fuel, weight and balance, routes and NOTAMs",
+   "Monitor flights in progress and coordinate changes for weather, maintenance issues or air traffic delays",
+   "Coordinate ramp work such as fueling, loading, deicing and aircraft turnarounds safely and on schedule",
+   "Build and adjust crew and aircraft schedules within duty time and rest rules",
+   "Apply FAA regulations, airport rules and company procedures, and report safety events",
+   "Communicate with pilots, air traffic control, maintenance and station staff during irregular operations"
+  ],
+  "must": [
+   "Associate’s or bachelor’s degree in aviation or a related field, or equivalent experience",
+   "FAA Aircraft Dispatcher certificate for flight dispatch roles",
+   "Strong knowledge of aviation weather, airspace and FAA operating rules",
+   "Calm decision-making under time pressure and clear radio and phone communication"
+  ],
+  "nice": [
+   "Private pilot certificate or other flight training",
+   "Ramp safety, hazardous materials or deicing training"
   ]
  },
  "avionics": {
@@ -519,6 +719,26 @@
    "Familiarity with message queues, caching and distributed or event-driven system design"
   ]
  },
+ "banking-operations": {
+  "duties": [
+   "Manage day-to-day relationships with partner banks, including regular meetings, escalations and service reviews",
+   "Open and maintain bank accounts, authorized signers and account structures for the company and its entities",
+   "Monitor deposits, ACH transfers, wires and settlement files, and resolve exceptions, returns and breaks",
+   "Reconcile account balances and money movement between internal records and bank statements every day",
+   "Work with compliance on partner bank audits, anti-money laundering reviews and regulatory requests",
+   "Document procedures and controls, and improve processes for account onboarding, funding and payments"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, business or a related field, or equivalent experience",
+   "Working knowledge of US payment systems such as ACH, wires and card settlement",
+   "Understanding of bank regulations, including anti-money laundering and consumer protection rules",
+   "Strong attention to detail and the ability to resolve operational issues quickly"
+  ],
+  "nice": [
+   "Experience at a bank, credit union or financial technology company",
+   "Familiarity with ACH network rules and sponsor bank program oversight"
+  ]
+ },
  "barista": {
   "duties": [
    "Prepare espresso drinks, brewed coffee, teas and blended beverages to recipe and customer requests",
@@ -557,6 +777,26 @@
   "nice": [
    "Master’s or doctoral degree with research in electrochemistry or energy storage",
    "Experience with battery management systems, cell balancing and state-of-charge estimation"
+  ]
+ },
+ "benefits-specialist": {
+  "duties": [
+   "Administer health, dental, vision, life, disability and retirement plans for employees and their dependents",
+   "Run open enrollment and process new hire enrollments, qualifying life events and plan changes",
+   "Answer employee questions about coverage, eligibility and claims, and resolve issues with carriers",
+   "Reconcile carrier invoices with payroll deductions, and correct enrollment or billing errors",
+   "Coordinate COBRA notices, benefits during leave and required plan disclosures with vendors",
+   "Support compliance with ERISA, the Affordable Care Act and other federal and state benefits laws"
+  ],
+  "must": [
+   "Bachelor’s degree in human resources, business or a related field, or equivalent experience",
+   "Working knowledge of ERISA, COBRA, the Affordable Care Act and family and medical leave rules",
+   "Strong attention to detail with enrollment data, invoices and deductions",
+   "Clear, patient communication about sensitive health and financial topics"
+  ],
+  "nice": [
+   "Certified Employee Benefit Specialist or a similar benefits certification",
+   "Experience with self-funded plans, leave administration or benefits in several states"
   ]
  },
  "bi-developer": {
@@ -639,6 +879,25 @@
    "Familiarity with securities, tax and anti-money-laundering rules that may apply to digital assets"
   ]
  },
+ "bookkeeper": {
+  "duties": [
+   "Record sales, purchases, payments and receipts in the general ledger with the correct accounts and support",
+   "Reconcile bank, credit card and balance sheet accounts each month and resolve any differences",
+   "Process vendor bills and customer invoices, and follow up on overdue payments and collections",
+   "Post journal entries for accruals, prepaid expenses, depreciation and other month-end adjustments",
+   "Produce trial balances and basic financial reports for the monthly close and management review",
+   "Organize records and schedules for tax preparers, year-end vendor tax forms and outside auditors"
+  ],
+  "must": [
+   "Associate degree in accounting or bookkeeping, or equivalent experience",
+   "Solid understanding of double-entry bookkeeping and the full accounting cycle",
+   "Strong accuracy and organization, with discretion about financial information"
+  ],
+  "nice": [
+   "Certified Bookkeeper or a similar professional bookkeeping credential",
+   "Experience with payroll, sales tax filings or books for several entities"
+  ]
+ },
  "brand-ambassador": {
   "duties": [
    "Engage shoppers, event guests and students, explain product features and invite them to try samples or demos",
@@ -719,6 +978,46 @@
    "Background in fuzzing, GPU graphics, accessibility APIs or media playback"
   ]
  },
+ "business-analyst": {
+  "duties": [
+   "Map current business processes and identify gaps, delays, errors and avoidable costs",
+   "Gather and document requirements from stakeholders through interviews, workshops and observation",
+   "Analyze operational and financial data to find trends, root causes and improvement opportunities",
+   "Build reports, dashboards and models that support business decisions",
+   "Recommend process, system or policy changes with clear estimates of cost and benefit",
+   "Support testing, rollout and training when new processes or systems are introduced"
+  ],
+  "must": [
+   "Bachelor’s degree in business, economics, information systems or a related field, or equivalent experience",
+   "Strong analytical skills with spreadsheets, data queries and reporting",
+   "Clear writing for requirements, process maps and recommendations",
+   "Ability to work with stakeholders at all levels and manage competing requests"
+  ],
+  "nice": [
+   "Professional certification in business analysis or process improvement",
+   "Experience in the company’s industry or with its core business systems"
+  ]
+ },
+ "business-continuity": {
+  "duties": [
+   "Run business impact analyses to identify critical processes, dependencies and acceptable downtime",
+   "Write and maintain business continuity, crisis management and disaster recovery plans for each business unit",
+   "Plan and run tabletop exercises, drills and recovery tests, and track lessons learned",
+   "Coordinate response during incidents, outages and emergencies, including staff communications and leadership briefings",
+   "Assess risks from vendors, facilities, natural hazards and technology failures, and recommend mitigations",
+   "Train employees and plan owners on their roles, and keep contact lists and call trees current"
+  ],
+  "must": [
+   "Bachelor’s degree in emergency management, business, risk management or a related field, or equivalent experience",
+   "Knowledge of recognized continuity standards and the Incident Command System",
+   "Calm decision making and clear communication during crises",
+   "Ability to work with leaders across departments and hold plan owners to deadlines"
+  ],
+  "nice": [
+   "Business continuity or emergency management certification, such as CBCP or CEM",
+   "Experience in regulated industries such as banking, health care or utilities"
+  ]
+ },
  "business-development": {
   "duties": [
    "Identify and qualify potential partners such as resellers, technology integrators and co-marketing allies",
@@ -757,6 +1056,26 @@
   "nice": [
    "MBA or graduate degree in a quantitative or business field",
    "Background in management consulting, investment banking or corporate finance"
+  ]
+ },
+ "business-systems": {
+  "duties": [
+   "Configure and maintain the company’s CRM, ERP, HR and finance systems to fit business processes",
+   "Gather requirements from business teams and turn them into system changes and automated workflows",
+   "Manage user access, roles, security settings and data integrity across business applications",
+   "Test and release vendor upgrades, new features and configuration changes with minimal disruption",
+   "Build reports and dashboards that give teams accurate views of their data",
+   "Train users, write documentation and resolve support requests for business applications"
+  ],
+  "must": [
+   "Bachelor’s degree in information systems, business or a related field, or equivalent experience",
+   "Hands-on administration of a major CRM, ERP or HR platform",
+   "Strong grasp of the business processes behind sales, finance or HR operations",
+   "Ability to explain technical changes clearly to nontechnical users"
+  ],
+  "nice": [
+   "Administrator or consultant certification from a major business software vendor",
+   "Experience with integrations, data migrations or scripting on business platforms"
   ]
  },
  "buyer": {
@@ -939,6 +1258,26 @@
    "Background in strategy, operations or consulting supporting senior leaders"
   ]
  },
+ "ciso": {
+  "duties": [
+   "Set the company’s security strategy and multi-year roadmap based on business goals and risk",
+   "Lead security engineering, operations, governance, risk and compliance teams and hire their managers",
+   "Report security risk, incidents and program progress to the CEO, executive team and board of directors",
+   "Direct incident response and work with legal on breach notices and SEC disclosure duties for public companies",
+   "Own the security budget, vendor contracts and third-party risk reviews of key suppliers",
+   "Align controls with frameworks such as NIST CSF and with the laws and audits that apply to the business"
+  ],
+  "must": [
+   "Bachelor’s degree in cybersecurity, computer science, IT or a related field, or equivalent experience",
+   "Proven record leading security teams, budgets and programs across a whole organization",
+   "Deep knowledge of security architecture, operations, risk management and incident response",
+   "Ability to explain technical risk in business terms to executives and the board"
+  ],
+  "nice": [
+   "Senior security certification such as CISSP or CISM",
+   "Master’s degree in cybersecurity, information systems or business administration"
+  ]
+ },
  "civil-engineer": {
   "duties": [
    "Design road alignments, grading, pavement sections and intersections to meet local and state standards",
@@ -957,6 +1296,26 @@
   "nice": [
    "Engineer in Training (EI or EIT) certification after passing the FE exam",
    "Knowledge of construction stormwater and erosion control permits under the Clean Water Act"
+  ]
+ },
+ "claims-adjuster": {
+  "duties": [
+   "Investigate insurance claims by reviewing policies, interviewing claimants and witnesses, and inspecting damaged property",
+   "Determine coverage under policy terms, exclusions and limits, and document the basis for each decision",
+   "Estimate repair costs and losses from photos, contractor bids, medical records and expert reports",
+   "Negotiate settlements with claimants, attorneys and public adjusters within assigned authority",
+   "Identify signs of fraud and refer suspicious claims to the special investigations unit",
+   "Keep detailed claim files and meet state deadlines for acknowledging, investigating and paying claims"
+  ],
+  "must": [
+   "Adjuster license in the states the role covers; rules and reciprocity vary by state",
+   "Bachelor’s degree in business, finance or a related field, or equivalent experience",
+   "Strong investigation, negotiation and written documentation skills",
+   "Ability to manage a large caseload and travel to loss sites when needed"
+  ],
+  "nice": [
+   "Professional designation such as Associate in Claims or Chartered Property Casualty Underwriter",
+   "Experience with catastrophe, auto, property, liability or workers’ compensation claims"
   ]
  },
  "client-services": {
@@ -1119,6 +1478,26 @@
    "Experience with pay transparency laws in several states and with stock plan administration"
   ]
  },
+ "compiler-engineer": {
+  "duties": [
+   "Design and implement compiler passes that analyze and transform intermediate representations of programs",
+   "Write code generation for target processors, accelerators or AI chips, including instruction selection and scheduling",
+   "Optimize register allocation, memory layout, loops and vectorization to speed up generated code",
+   "Build front-end parsing, type checking and error messages for the source language",
+   "Test correctness with conformance suites, fuzzing and differential testing against other compilers",
+   "Benchmark generated code on real workloads and track down performance regressions"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or computer engineering, or equivalent experience; many roles prefer graduate study",
+   "Strong knowledge of compiler theory, including parsing, intermediate representations, data flow analysis and optimization",
+   "Solid grasp of computer architecture, instruction sets and memory hierarchies",
+   "Ability to write and debug large, performance-critical systems code"
+  ],
+  "nice": [
+   "Experience compiling machine learning models for accelerators or graphics processors",
+   "Contributions to an open-source compiler or language runtime"
+  ]
+ },
  "compliance": {
   "duties": [
    "Monitor changes in federal and state laws and regulations that apply to the company’s products and operations",
@@ -1159,6 +1538,26 @@
    "Background in a regulated field such as banking, healthcare, insurance or securities"
   ]
  },
+ "composites": {
+  "duties": [
+   "Cut prepreg and dry fabric plies to pattern and lay them up on molds in the specified orientation",
+   "Vacuum bag layups and cure parts in ovens or autoclaves following the specified cure cycle",
+   "Mix resins and run wet layup, resin infusion or other molding processes as each part requires",
+   "Trim, drill, sand and bond cured parts, and repair defects within drawing and specification limits",
+   "Inspect parts for voids, wrinkles and delamination, and record work on travelers and quality forms",
+   "Handle resins, solvents and fibers safely with protective equipment, and track out time of prepreg materials"
+  ],
+  "must": [
+   "High school diploma or equivalent, plus composites training from a technical school or equivalent experience",
+   "Ability to read blueprints, ply tables and work instructions",
+   "Good hand skills, attention to detail and patience for precise, repetitive work",
+   "Ability to stand for long periods, lift moderate loads and wear respirators when required"
+  ],
+  "nice": [
+   "Experience in aerospace work under strict quality and traceability requirements",
+   "Nondestructive testing training such as ultrasonic inspection"
+  ]
+ },
  "computer-vision": {
   "duties": [
    "Design and train deep learning models for image classification, object detection and segmentation tasks",
@@ -1197,6 +1596,26 @@
   "nice": [
    "OSHA 30-Hour Construction training card",
    "Experience on large builds such as data centers, industrial plants or launch facilities"
+  ]
+ },
+ "construction-laborer": {
+  "duties": [
+   "Prepare sites by clearing debris, setting up barricades and digging trenches and footings",
+   "Mix, pour, spread and finish concrete, and set and strip forms",
+   "Operate excavators, loaders, skid steers or other heavy equipment when trained and authorized",
+   "Rig and signal loads for cranes and hoists following safe lifting practices",
+   "Install roofing, framing, scaffolding or other building materials as directed by supervisors",
+   "Follow site safety rules, wear protective equipment and keep work areas clean and organized"
+  ],
+  "must": [
+   "Willingness to learn through on-the-job training or an apprenticeship program",
+   "Physical stamina to lift heavy materials and work outdoors in all weather",
+   "Ability to follow instructions, read basic plans and work safely as part of a crew",
+   "Reliable transportation to job sites that change over time"
+  ],
+  "nice": [
+   "OSHA construction safety training card",
+   "Rigger, signal person or crane operator certification"
   ]
  },
  "construction-manager": {
@@ -1319,6 +1738,26 @@
    "Experience with SCADA, DCS or building automation systems and industrial network security practices"
   ]
  },
+ "corporate-governance": {
+  "duties": [
+   "Plan board and committee meetings, prepare agendas and materials, and send them to directors on time",
+   "Draft minutes, resolutions and written consents that accurately record board and shareholder decisions",
+   "Maintain minute books, bylaws, stock ledgers and officer and director records for every legal entity",
+   "File annual reports, registered agent changes and foreign qualifications with state authorities on time",
+   "Track entity formations, mergers and dissolutions, and keep the chart of all subsidiaries current",
+   "Support proxy statements, annual meetings and governance disclosures with legal and finance teams"
+  ],
+  "must": [
+   "Bachelor’s degree in business, law, finance or a related field, or equivalent experience",
+   "Knowledge of corporate law basics, entity management and board procedures",
+   "Excellent writing, organization and attention to detail",
+   "Discretion with confidential board and executive information"
+  ],
+  "nice": [
+   "Paralegal certificate, law degree or governance professional certification",
+   "Experience with public company proxy filings and stock exchange governance rules"
+  ]
+ },
  "corporate-trainer": {
   "duties": [
    "Assess skill gaps with managers and department leads to plan training that supports business goals",
@@ -1337,6 +1776,46 @@
   "nice": [
    "Recognized professional certification in talent development, training or instructional design",
    "Knowledge of adult learning principles and experience building accessible online courses"
+  ]
+ },
+ "cost-accountant": {
+  "duties": [
+   "Build and update standard costs for products, materials, labor and overhead",
+   "Analyze variances between standard and actual costs and explain the causes to operations leaders",
+   "Allocate shared costs such as cloud services, facilities and support to products, teams or customers",
+   "Value inventory and cost of goods sold under GAAP during the month-end close",
+   "Run physical inventory counts and reconcile results with the general ledger",
+   "Find waste and savings opportunities and model the cost of pricing, sourcing or production changes"
+  ],
+  "must": [
+   "Bachelor’s degree in accounting, finance or a related field",
+   "Strong knowledge of cost accounting methods, inventory valuation and GAAP",
+   "Advanced spreadsheet and data analysis skills",
+   "Ability to explain cost findings clearly to managers outside finance"
+  ],
+  "nice": [
+   "CPA license or CMA certification",
+   "Experience with manufacturing, supply chain or cloud cost management"
+  ]
+ },
+ "cpp-developer": {
+  "duties": [
+   "Write high-performance code using modern language standards, templates and the standard library",
+   "Manage memory and object lifetimes safely with smart pointers and resource-owning types",
+   "Profile CPU, memory and cache behavior, then optimize hot paths for speed and predictable latency",
+   "Build multithreaded components with correct locking, atomics and lock-free structures where needed",
+   "Debug crashes, leaks and undefined behavior with debuggers, sanitizers and core dumps",
+   "Maintain build scripts, unit tests and cross-platform compilation for the target hardware and operating systems"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, computer engineering or a related field, or equivalent experience",
+   "Deep knowledge of the language, including templates, move semantics, memory management and undefined behavior",
+   "Solid understanding of data structures, algorithms, concurrency and computer architecture",
+   "Ability to write clear, tested code and review it with other engineers"
+  ],
+  "nice": [
+   "Experience in games, browsers, financial markets, robotics or embedded devices",
+   "Knowledge of graphics, networking or real-time systems programming"
   ]
  },
  "creative-director": {
@@ -1379,6 +1858,46 @@
    "Experience with a specific lending area such as commercial real estate, small business or consumer loans"
   ]
  },
+ "cross-platform-mobile": {
+  "duties": [
+   "Build one mobile app from a shared codebase that runs on both major phone platforms",
+   "Write native platform code when shared code cannot reach a device feature such as camera or payments",
+   "Connect screens to back-end APIs with offline storage, caching and push notifications",
+   "Test on real devices and emulators, and fix layout and behavior differences between platforms",
+   "Prepare builds, signing certificates and store listings, and handle app store review feedback",
+   "Monitor crash reports, app size and startup time, and fix performance issues after release"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of a cross-platform mobile framework and the language it uses",
+   "Understanding of each platform’s design guidelines, permissions and app store review rules",
+   "Published apps or code samples that show finished mobile work"
+  ],
+  "nice": [
+   "Native development experience on either major mobile platform",
+   "Experience with in-app purchases, deep links or mobile analytics"
+  ]
+ },
+ "cryptographer": {
+  "duties": [
+   "Design cryptographic protocols for encryption, key exchange, signatures and authentication to meet defined security goals",
+   "Write security proofs and threat models that state each protocol’s assumptions and limits",
+   "Review cryptographic code for timing leaks, side channels, nonce reuse and misuse of primitives",
+   "Implement and test primitives and protocols in constant-time code checked against reference test vectors",
+   "Plan the move to post-quantum algorithms such as ML-KEM and ML-DSA across company products",
+   "Advise engineering teams on key management, random number generation and safe library choices"
+  ],
+  "must": [
+   "Master’s degree or PhD in mathematics, computer science or cryptography, or equivalent research experience",
+   "Strong grounding in number theory, algebra, probability and provable security",
+   "Ability to write and review secure, constant-time code in a systems programming language",
+   "Clear technical writing for specifications, design reviews and audit reports"
+  ],
+  "nice": [
+   "Published research or recognized work in applied cryptography or cryptanalysis",
+   "Experience with zero-knowledge proofs, multiparty computation or threshold signatures"
+  ]
+ },
  "custody-wallets": {
   "duties": [
    "Design and maintain hot, warm and cold wallet systems that hold client crypto assets",
@@ -1397,6 +1916,26 @@
   "nice": [
    "Familiarity with custody rules like money transmitter licenses and trust charters, which vary by state",
    "Security certification such as CISSP or experience supporting SOC 2 audits"
+  ]
+ },
+ "customer-advocacy": {
+  "duties": [
+   "Find satisfied customers through account teams, reviews and usage data and invite them into advocacy programs",
+   "Produce case studies, testimonials and videos with customers and secure their written approval",
+   "Run the reference program, matching customers with prospects at the right stage of a deal",
+   "Recruit customer speakers for events, webinars and panels, and prepare them to present",
+   "Plan marketing campaigns to existing customers that drive adoption, renewals and upgrades",
+   "Run customer advisory boards and review programs, and share feedback with product and sales teams"
+  ],
+  "must": [
+   "Bachelor’s degree in marketing, communications, business or a related field, or equivalent experience",
+   "Strong writing and storytelling skills for customer stories",
+   "Ability to build trust with customers and work closely with account teams",
+   "Organization to manage many advocates, requests and approvals at once"
+  ],
+  "nice": [
+   "Background in customer success, account management or community building",
+   "Experience running online review or loyalty programs"
   ]
  },
  "customer-education": {
@@ -1599,6 +2138,46 @@
    "Familiarity with data privacy laws such as HIPAA or state consumer privacy laws"
   ]
  },
+ "data-entry": {
+  "duties": [
+   "Enter data from paper forms, scanned files, emails and recordings into company systems",
+   "Check entries against source documents and correct errors, gaps and duplicates",
+   "Update customer, order or account records as new information arrives",
+   "Organize, file and archive physical and digital records so they are easy to find",
+   "Flag unclear, missing or suspicious information to a supervisor for follow-up",
+   "Keep confidential and personal information secure under company policy and privacy laws"
+  ],
+  "must": [
+   "High school diploma or equivalent",
+   "Fast, accurate typing and strong attention to detail",
+   "Comfort with spreadsheets, databases and basic office software",
+   "Ability to work steadily through repetitive tasks and meet daily targets"
+  ],
+  "nice": [
+   "Experience with medical, legal or financial records and their privacy rules",
+   "Transcription experience or familiarity with industry terminology"
+  ]
+ },
+ "data-governance": {
+  "duties": [
+   "Define data standards, ownership roles and policies for how company data is collected and used",
+   "Maintain a data catalog and business glossary with clear definitions for key fields and metrics",
+   "Monitor data quality, investigate errors and work with data owners to fix root causes",
+   "Trace data lineage from source systems to reports so teams know where numbers come from",
+   "Support compliance with privacy and records laws through data classification, retention and access rules",
+   "Train data owners and stewards on governance policies and quality practices"
+  ],
+  "must": [
+   "Bachelor’s degree in information systems, data management, business or a related field, or equivalent experience",
+   "Strong knowledge of data management, metadata and data quality methods",
+   "Understanding of the privacy and data protection rules that apply to the business",
+   "Ability to work across business and technical teams to resolve data issues"
+  ],
+  "nice": [
+   "Professional certification in data management or data governance",
+   "Experience with data catalog, data quality or master data management platforms"
+  ]
+ },
  "data-leader": {
   "duties": [
    "Set the data and analytics strategy and roadmap in line with company goals and leadership priorities",
@@ -1617,6 +2196,26 @@
   "nice": [
    "Master’s degree in data science, statistics, business or a related field",
    "Experience with data privacy rules such as state consumer privacy laws or HIPAA"
+  ]
+ },
+ "data-product-manager": {
+  "duties": [
+   "Define the vision, roadmap and success metrics for datasets, analytics tools, data platforms and feeds",
+   "Interview analysts, data scientists, engineers and customers to learn how they find and use data",
+   "Write requirements covering schemas, freshness, quality checks, access rules and service levels",
+   "Prioritize work with data engineering, analytics and platform teams and accept finished releases",
+   "Set data contracts, ownership and governance rules with privacy, legal and security teams",
+   "Track adoption, data quality and cost, and retire datasets and tools that no longer earn their keep"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, statistics, economics, business or a related field, or equivalent experience",
+   "Understanding of data modeling, pipelines, warehouses and how analytics products are built",
+   "Ability to query and analyze data on your own to test ideas",
+   "Clear communication with technical and business audiences"
+  ],
+  "nice": [
+   "Prior work as a data analyst, data engineer or data scientist",
+   "Experience pricing or licensing external data products and feeds"
   ]
  },
  "data-scientist": {
@@ -1639,6 +2238,26 @@
    "Experience deploying models to production and monitoring them over time"
   ]
  },
+ "database-administrator": {
+  "duties": [
+   "Install, configure and upgrade database servers and apply security patches on schedule",
+   "Monitor performance and tune queries, indexes and settings to keep databases fast",
+   "Run and test backups, restores and disaster recovery plans to protect company data",
+   "Manage user accounts, roles and permissions so people reach only the data they need",
+   "Plan capacity, storage growth and replication to keep databases highly available",
+   "Support developers with schema changes, data migrations and query reviews"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, information systems or a related field, or equivalent experience",
+   "Deep knowledge of relational database design, indexing, query tuning and transactions",
+   "Hands-on skill with backup, recovery, replication and high availability setups",
+   "Understanding of data security, encryption and access control practices"
+  ],
+  "nice": [
+   "Vendor certification for a major database platform",
+   "Experience with managed cloud databases or non-relational data stores"
+  ]
+ },
  "defense": {
   "duties": [
    "Build, test or support systems and equipment to military specifications and contract requirements",
@@ -1657,6 +2276,26 @@
   "nice": [
    "Active security clearance at the level the role requires",
    "Familiarity with Federal Acquisition Regulation and DFARS contract clauses"
+  ]
+ },
+ "defense-systems": {
+  "duties": [
+   "Define requirements and architectures for missiles, interceptors, sensors or electronic warfare systems",
+   "Model and simulate guidance, propulsion, signatures or engagement scenarios to predict system performance",
+   "Design and analyze subsystems such as seekers, fuzes, launchers, radars or jammers",
+   "Plan and run lab, ground, flight and live-fire tests, and analyze results against requirements",
+   "Prepare design reviews, test reports and documentation required by government customers and program milestones",
+   "Protect classified and export-controlled information under government security rules and ITAR"
+  ],
+  "must": [
+   "Bachelor’s degree in aerospace, electrical, mechanical or systems engineering, physics or a related field",
+   "U.S. citizenship and ability to obtain and keep a government security clearance",
+   "Strong grounding in math, physics and engineering analysis",
+   "Ability to work under strict quality, safety and configuration control processes"
+  ],
+  "nice": [
+   "Active Secret or Top Secret security clearance",
+   "Master’s degree in a relevant engineering or science field"
   ]
  },
  "delivery-driver": {
@@ -1737,6 +2376,26 @@
   "nice": [
    "Master’s degree in electrical or computer engineering",
    "Experience with formal verification, emulation or verification of standard interface protocols"
+  ]
+ },
+ "desktop-developer": {
+  "duties": [
+   "Build installable desktop applications with native or cross-platform interface frameworks",
+   "Design responsive windows, menus, dialogs and keyboard shortcuts that follow each operating system’s conventions",
+   "Package installers, sign and notarize builds, and deliver automatic updates to users",
+   "Integrate with local files, printers, hardware devices and operating system services",
+   "Debug crashes, memory leaks and threading issues using logs, crash reports and profilers",
+   "Test across operating system versions, screen resolutions and accessibility settings before each release"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of at least one desktop interface framework and its programming language",
+   "Solid grasp of threading, file systems, memory management and event-driven programming",
+   "Ability to support released software, including diagnosing problems on user machines"
+  ],
+  "nice": [
+   "Experience building apps for both major desktop operating systems",
+   "Knowledge of enterprise deployment, software licensing or plug-in architectures"
   ]
  },
  "detection-engineer": {
@@ -1839,6 +2498,26 @@
    "Familiarity with formal methods or model checking for verifying distributed protocols"
   ]
  },
+ "dotnet-developer": {
+  "duties": [
+   "Build web applications, APIs and background services for business processes such as orders, billing and reporting",
+   "Design data models and write database access code with object-relational mapping and stored procedures",
+   "Write unit and integration tests and fix defects found in testing and production",
+   "Integrate applications with identity providers, payment gateways and third-party services through secure APIs",
+   "Upgrade legacy applications to current framework versions and move them to cloud hosting",
+   "Deploy builds through automated pipelines and monitor logs, errors and performance after each release"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, information systems or a related field, or equivalent experience",
+   "Strong knowledge of the platform’s main language, object-oriented design and web API development",
+   "Working knowledge of relational databases, query tuning and data modeling",
+   "Ability to gather requirements from business users and turn them into working features"
+  ],
+  "nice": [
+   "Experience with cloud hosting, containers and message queues",
+   "Background in front-end development for internal business applications"
+  ]
+ },
  "driver-chauffeur": {
   "duties": [
    "Drive passengers or goods to scheduled destinations safely, on time and by the most efficient route",
@@ -1859,6 +2538,26 @@
    "Strong knowledge of local roads, airports, hotels and venues in the service area"
   ]
  },
+ "drone": {
+  "duties": [
+   "Design airframes, propulsion, power and avionics systems for multirotor and fixed-wing uncrewed aircraft",
+   "Integrate flight controllers, sensors, radios and payloads, and tune flight control parameters",
+   "Plan and fly missions under FAA small drone rules, airspace authorizations and site safety checks",
+   "Run ground and flight tests, analyze flight logs and fix problems found in testing",
+   "Inspect, maintain and repair aircraft, batteries and ground equipment, and keep maintenance records",
+   "Collect and process aerial imagery, mapping and inspection data for customers or engineering teams"
+  ],
+  "must": [
+   "Bachelor’s degree in aerospace, mechanical or electrical engineering for design roles, or equivalent experience",
+   "FAA Remote Pilot Certificate for roles that fly drones commercially",
+   "Understanding of flight dynamics, airspace rules and aircraft safety practices",
+   "Hands-on skill with electronics, soldering and mechanical assembly"
+  ],
+  "nice": [
+   "Experience with beyond visual line of sight operations or FAA waivers",
+   "Knowledge of export control rules for defense or dual-use drone work"
+  ]
+ },
  "ecommerce": {
   "duties": [
    "Create and update product listings with accurate titles, descriptions, images and specifications across the online store and marketplaces",
@@ -1877,6 +2576,26 @@
   "nice": [
    "Experience with search optimization for product pages and marketplace search ranking",
    "Familiarity with product photography standards, A/B testing or paid marketplace advertising"
+  ]
+ },
+ "economist": {
+  "duties": [
+   "Study markets, prices, policies and economic trends using data, models and research literature",
+   "Build econometric and forecasting models to estimate the effects of policy, pricing or market changes",
+   "Collect and clean data from government statistics, surveys and company records",
+   "Forecast demand, costs, wages or economic conditions for planning and budgeting",
+   "Write reports, briefs and testimony that explain findings and their limits to decision makers",
+   "Advise executives, agencies or clients on the likely impact of proposed changes"
+  ],
+  "must": [
+   "Master’s degree or doctorate in economics or a related field; some roles accept a bachelor’s",
+   "Strong knowledge of microeconomics, macroeconomics, econometrics and causal inference",
+   "Programming skills in a statistical language for data analysis and modeling",
+   "Clear writing for both technical and general audiences"
+  ],
+  "nice": [
+   "Published research or working papers in applied economics",
+   "Experience in antitrust, labor, energy, health or public finance work"
   ]
  },
  "education": {
@@ -2019,6 +2738,26 @@
    "Experience supporting remote, hybrid or multi-site workforces"
   ]
  },
+ "employee-relations": {
+  "duties": [
+   "Investigate complaints of harassment, discrimination, retaliation and misconduct through interviews and document review",
+   "Write investigation reports with findings, evidence and recommended actions for leadership and legal teams",
+   "Advise managers on discipline, performance plans and terminations so decisions stay consistent and lawful",
+   "Track employee relations cases and trends, and report on root causes and risks",
+   "Interpret policies and handbook rules, and recommend updates when laws or practices change",
+   "Support legal counsel in responding to agency charges and employment claims"
+  ],
+  "must": [
+   "Bachelor’s degree in human resources, business, psychology or a related field, or equivalent experience",
+   "Strong knowledge of US employment laws on discrimination, harassment, leave, wages and accommodation",
+   "Skill in running fair, thorough workplace investigations and writing clear reports",
+   "Sound judgment, neutrality and discretion with sensitive information"
+  ],
+  "nice": [
+   "Professional HR certification or formal workplace investigations training",
+   "Experience in unionized workplaces or with collective bargaining agreements"
+  ]
+ },
  "employment-counsel": {
   "duties": [
    "Advise managers and HR on hiring, discipline, leave, accommodation and termination decisions under federal, state and local law",
@@ -2059,6 +2798,26 @@
    "Scripting skills to automate device configuration, reporting and remediation tasks"
   ]
  },
+ "engagement-manager": {
+  "duties": [
+   "Define scope, deliverables and pricing with clients and prepare statements of work and change orders",
+   "Staff each engagement with the right consultants and plan their work across the project timeline",
+   "Track budget, hours and margin, and flag overruns to clients and firm leadership early",
+   "Lead regular status meetings and steering committees as the client’s main point of contact",
+   "Review deliverables for quality and fit with the agreed scope before they reach the client",
+   "Spot follow-on work and support account leaders in extending or renewing engagements"
+  ],
+  "must": [
+   "Bachelor’s degree in business, engineering, economics or a related field, or equivalent experience",
+   "Experience leading client-facing projects at a consultancy, agency or services firm",
+   "Sound grasp of project finances, including budgets, billing and margin",
+   "Strong communication, negotiation and conflict resolution skills"
+  ],
+  "nice": [
+   "MBA or other advanced degree",
+   "Deep knowledge of the industry or service the firm sells"
+  ]
+ },
  "engineering-intern": {
   "duties": [
    "Complete an assigned engineering project from scoping to final results under a mentor’s guidance",
@@ -2077,6 +2836,26 @@
   "nice": [
    "Prior internship, co-op, research or engineering student team project",
    "Plans to take the Fundamentals of Engineering (FE) exam toward a future license"
+  ]
+ },
+ "engineering-manager": {
+  "duties": [
+   "Hire engineers by writing role profiles, running interviews and making final hiring decisions",
+   "Plan team work with product and design partners, balancing new features, quality and technical debt",
+   "Hold regular one-on-ones and give clear, timely feedback on work and behavior",
+   "Write performance reviews and build growth plans that prepare engineers for their next level",
+   "Guide technical decisions and design reviews while leaving day-to-day code ownership with the team",
+   "Track delivery, remove blockers and report progress, risks and staffing needs to leadership"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, engineering or a related field, or equivalent experience",
+   "Hands-on background as a software engineer, deep enough to guide design and code decisions",
+   "Experience managing engineers, including hiring, coaching and handling performance problems",
+   "Strong communication and judgment in balancing delivery, quality and team health"
+  ],
+  "nice": [
+   "Experience growing a team through a period of fast hiring",
+   "Background managing managers or teams spread across time zones"
   ]
  },
  "enterprise-account-executive": {
@@ -2099,6 +2878,26 @@
    "Background selling into the industry or vertical the company serves"
   ]
  },
+ "enterprise-architect": {
+  "duties": [
+   "Map the company’s applications, data flows, integrations and business capabilities in a current-state architecture",
+   "Define target architecture and multiyear roadmaps that align technology investments with business strategy",
+   "Set architecture standards, principles and reference patterns for teams building new systems",
+   "Review major project designs and vendor choices for fit, risk, cost and long-term support",
+   "Identify redundant or aging systems and recommend consolidation, replacement or retirement plans",
+   "Present trade-offs and recommendations to executives, architecture boards and delivery teams"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, information systems or a related field, or equivalent experience",
+   "Broad knowledge of application, data, integration, infrastructure and security architecture",
+   "Ability to explain technical trade-offs to executives and nontechnical stakeholders",
+   "Background in software engineering, solution architecture or infrastructure roles"
+  ],
+  "nice": [
+   "Certification in a recognized enterprise architecture framework",
+   "Experience leading cloud migration or system consolidation programs"
+  ]
+ },
  "environmental-engineer": {
   "duties": [
    "Prepare air, water and stormwater permit applications and track compliance with federal, state and local rules",
@@ -2119,6 +2918,26 @@
    "Experience with Phase I and Phase II environmental site assessments and NEPA reviews"
   ]
  },
+ "erp-specialist": {
+  "duties": [
+   "Configure modules for general ledger, order management, inventory and purchasing to match company processes",
+   "Manage user roles and permissions, keeping segregation of duties and access reviews ready for audit",
+   "Build reports, saved searches, dashboards and approval workflows for finance, sales and operations teams",
+   "Maintain integrations and data imports linking the ERP with billing, ecommerce, payroll and banking systems",
+   "Test upgrades, new releases and configuration changes in a sandbox before moving them to production",
+   "Troubleshoot user issues, document procedures and train staff on new features and month-end close tasks"
+  ],
+  "must": [
+   "Bachelor’s degree in accounting, information systems, business or a related field, or equivalent experience",
+   "Working knowledge of accounting, order-to-cash, procure-to-pay and inventory processes",
+   "Hands-on experience administering and configuring a cloud or on-premises ERP system",
+   "Strong analytical, troubleshooting and documentation skills with close attention to data accuracy"
+  ],
+  "nice": [
+   "Administrator or consultant certification for the company’s ERP platform",
+   "Scripting or query skills for custom fields, automations and data fixes"
+  ]
+ },
  "escalations": {
   "duties": [
    "Take ownership of escalated customer cases and formal complaints passed on by frontline teams",
@@ -2137,6 +2956,46 @@
   "nice": [
    "Knowledge of complaint handling rules in regulated fields such as banking, insurance, utilities or healthcare",
    "Formal training in de-escalation, conflict resolution or customer complaint handling"
+  ]
+ },
+ "estimator": {
+  "duties": [
+   "Review drawings, specifications and scopes of work to prepare quantity takeoffs and cost estimates",
+   "Price labor, materials, equipment and subcontractor work, and request and compare supplier bids",
+   "Build project budgets and baseline schedules, and set up cost codes for tracking",
+   "Track actual costs, commitments and progress against budget, and forecast cost at completion",
+   "Analyze change orders and schedule delays, and report cost and schedule risks to project managers",
+   "Maintain cost databases and historical records to improve the accuracy of future estimates"
+  ],
+  "must": [
+   "Bachelor’s degree in construction management, engineering or a related field, or equivalent experience",
+   "Ability to read construction drawings and specifications accurately",
+   "Strong math, analytical and spreadsheet skills",
+   "Understanding of earned value management and critical path scheduling"
+  ],
+  "nice": [
+   "Certified Cost Professional or Certified Estimating Professional credential",
+   "Experience on public projects with prevailing wage and federal reporting rules"
+  ]
+ },
+ "ev-charging": {
+  "duties": [
+   "Plan charging sites, assessing electrical capacity, parking layout, accessibility and utility service upgrades",
+   "Design charger layouts, circuits and load management to meet the National Electrical Code and local rules",
+   "Install, wire and commission chargers, and test their communication with the charging network",
+   "Diagnose and repair charger faults remotely and on site to keep stations available",
+   "Coordinate permits, utility applications and inspections with contractors and local officials",
+   "Monitor station uptime, usage and customer issues, and schedule preventive maintenance"
+  ],
+  "must": [
+   "Electrical, engineering or trade training suited to the role, or equivalent experience",
+   "Knowledge of electrical codes, arc flash safety and lockout/tagout procedures",
+   "Electrician license for installation work where required; state rules vary",
+   "Valid driver’s license and willingness to travel between charging sites"
+  ],
+  "nice": [
+   "EVITP certification, required for many federally funded charging projects",
+   "Experience with utility interconnection, energy storage or solar paired with charging"
   ]
  },
  "events": {
@@ -2219,6 +3078,26 @@
    "Experience with Bayesian testing, sequential testing or multi-armed bandit methods"
   ]
  },
+ "fabrication-technician": {
+  "duties": [
+   "Read blueprints and drawings to plan cuts, bends, welds and assembly order for each job",
+   "Cut metal and other materials by shearing, sawing, plasma, laser or waterjet methods",
+   "Form parts by bending, rolling and pressing to specified angles and dimensions",
+   "Join parts by welding, brazing, riveting or fastening, and fit up assemblies on jigs and fixtures",
+   "Grind, deburr, sand and finish parts, and prepare surfaces for paint, coating or plating",
+   "Check finished work against drawings and tolerances with precision measuring instruments and record results"
+  ],
+  "must": [
+   "High school diploma or equivalent, plus vocational training in welding or fabrication, or equivalent experience",
+   "Ability to read blueprints, welding symbols and measurements accurately",
+   "Safe operation of cutting, forming and welding equipment under shop safety rules",
+   "Physical stamina to stand, bend and lift materials throughout a shift"
+  ],
+  "nice": [
+   "Welding certification to a recognized structural or pressure piping code",
+   "Experience setting up and programming CNC cutting and forming machines"
+  ]
+ },
  "facilities-manager": {
   "duties": [
    "Plan and schedule preventive maintenance for building systems, including HVAC, electrical, plumbing and fire safety equipment",
@@ -2257,6 +3136,26 @@
   "nice": [
    "Prior internship, volunteer or project work in the program’s focus area",
    "Experience presenting findings to nontechnical audiences or community groups"
+  ]
+ },
+ "fiber-technician": {
+  "duties": [
+   "Pull, place and secure fiber and copper cable in conduit, on aerial strand, in trays and inside buildings",
+   "Splice and terminate fiber by fusion or mechanical methods, and connect copper pairs",
+   "Test fiber and copper circuits for loss and faults, and record results for each link",
+   "Install racks, patch panels, antennas and equipment in central offices, data centers and towers",
+   "Locate and repair cable cuts and outages, restoring service quickly and safely",
+   "Follow safety rules for working at heights, near power lines, in trenches and in traffic"
+  ],
+  "must": [
+   "High school diploma or equivalent, with technical training or equivalent experience",
+   "Fiber splicing and testing skills, steady hands and normal color vision",
+   "Valid driver’s license and willingness to travel and work outdoors",
+   "Ability to climb poles or towers and lift equipment, with fall protection training"
+  ],
+  "nice": [
+   "Fiber optic technician certification from a recognized industry body",
+   "Commercial driver’s license for operating large bucket or line trucks"
   ]
  },
  "field-marketing": {
@@ -2377,6 +3276,26 @@
   "nice": [
    "Active CPA license; licensing requirements vary by state",
    "Background in public accounting audit, SEC reporting or SOX internal controls"
+  ]
+ },
+ "fire-protection": {
+  "duties": [
+   "Inspect, test and maintain fire alarms, sprinklers, extinguishers and suppression systems to NFPA standards",
+   "Respond to fires, medical calls, hazardous material releases and alarms on site",
+   "Provide first aid, CPR and AED care until outside emergency services arrive",
+   "Conduct fire safety inspections, find hazards and track corrective actions to completion",
+   "Issue hot work permits and monitor welding, cutting and other ignition sources",
+   "Train employees on evacuation, fire extinguisher use and emergency plans, and run regular drills"
+  ],
+  "must": [
+   "High school diploma or equivalent, with fire science training or equivalent experience",
+   "Firefighter and EMT certifications where the role requires them; state rules vary",
+   "Current CPR and first aid certification",
+   "Physical fitness to wear protective gear and breathing apparatus in hazardous conditions"
+  ],
+  "nice": [
+   "NICET certification in fire alarm or sprinkler inspection and testing",
+   "Hazardous materials technician training and incident command system experience"
   ]
  },
  "firmware-engineer": {
@@ -2599,6 +3518,46 @@
    "Familiarity with web accessibility guidelines (WCAG) and secure coding practices"
   ]
  },
+ "fund-accountant": {
+  "duties": [
+   "Calculate net asset value for each fund and share class on a daily, monthly or quarterly schedule",
+   "Record trades, income, expenses and capital activity, and reconcile cash and positions with custodians and brokers",
+   "Process subscriptions, redemptions, capital calls and distributions, and update each investor’s capital account",
+   "Allocate income, gains, losses, management fees and performance fees according to the fund’s governing documents",
+   "Prepare financial statements and footnotes for annual audits and answer auditor requests",
+   "Provide schedules and data for regulatory filings, tax returns and investor reports on deadline"
+  ],
+  "must": [
+   "Bachelor’s degree in accounting, finance or a related field",
+   "Working knowledge of US GAAP and investment company accounting",
+   "Understanding of securities, derivatives or private fund structures and how they are valued",
+   "Strong attention to detail and the ability to meet month-end reporting deadlines"
+  ],
+  "nice": [
+   "CPA license or progress toward one, noting state requirements vary",
+   "Background with hedge, private equity, real estate or mutual fund administration"
+  ]
+ },
+ "fundraising-grants": {
+  "duties": [
+   "Research foundations, corporations and government agencies whose priorities match the organization’s mission and programs",
+   "Write grant proposals, letters of inquiry and project budgets that follow each funder’s guidelines and deadlines",
+   "Cultivate, solicit and steward individual and major donors through meetings, calls and personal updates",
+   "Plan annual appeals, campaigns and fundraising events, and track results against revenue goals",
+   "Keep accurate donor records and send timely gift acknowledgments that meet IRS substantiation rules",
+   "Prepare grant reports on outcomes and spending, working with program and finance staff"
+  ],
+  "must": [
+   "Bachelor’s degree in communications, English, nonprofit management or a related field, or equivalent experience",
+   "Excellent persuasive writing, editing and storytelling skills",
+   "Comfort asking for gifts and building lasting relationships with donors and funders",
+   "Knowledge of ethical fundraising practices and donor privacy expectations"
+  ],
+  "nice": [
+   "Certified Fund Raising Executive (CFRE) credential",
+   "Experience with federal grant applications and post-award compliance requirements"
+  ]
+ },
  "game-artist": {
   "duties": [
    "Sketch and paint concept art for characters, creatures, environments and props from creative briefs",
@@ -2659,6 +3618,26 @@
    "Experience with multiplayer networking, shaders or 3D math for graphics"
   ]
  },
+ "game-programmer": {
+  "duties": [
+   "Implement gameplay systems such as player controls, combat, cameras, inventory and game rules",
+   "Extend and optimize the game engine for rendering, physics, audio, animation and memory use",
+   "Build editor tools and content pipelines that help designers and artists work faster",
+   "Program online features such as matchmaking, multiplayer networking, saves and player accounts",
+   "Profile frame rate, load times and memory on target consoles, computers and phones",
+   "Fix bugs reported by quality assurance testers and players, and support certification for console releases"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, game programming or a related field, or equivalent experience",
+   "Strong programming skills in a performance-focused language and a major game engine",
+   "Solid math for games, including linear algebra, vectors, matrices and basic physics",
+   "Portfolio of shipped games, game jam entries or playable demos"
+  ],
+  "nice": [
+   "Experience shipping a title on consoles or mobile devices",
+   "Knowledge of graphics programming, shaders or network replication"
+  ]
+ },
  "general-counsel": {
   "duties": [
    "Advise the CEO, executive team and board of directors on legal risks, corporate governance and fiduciary duties",
@@ -2699,6 +3678,26 @@
    "Experience leading multi-site operations, turnarounds or growth into new markets"
   ]
  },
+ "geologist-mining": {
+  "duties": [
+   "Map rock units, structures and soils in the field, and log drill core and cuttings",
+   "Design drilling and sampling programs to find mineral deposits, groundwater or stable foundations",
+   "Build geologic models and estimate resources from drilling, assay and geophysical data",
+   "Plan mine layouts, open pit or underground designs, and extraction schedules",
+   "Assess slope stability, ground support and geologic hazards to keep workers and structures safe",
+   "Prepare technical reports, permit applications and environmental studies for regulators and management"
+  ],
+  "must": [
+   "Bachelor’s degree in geology, geological engineering, mining engineering or a related field",
+   "Strong field skills, including mapping, sampling and core logging",
+   "Understanding of mine safety rules and willingness to complete MSHA training",
+   "Ability to work outdoors in remote locations and varied weather"
+  ],
+  "nice": [
+   "Professional Geologist or Professional Engineer license; state rules vary",
+   "Knowledge of mineral resource reporting standards used for public disclosure"
+  ]
+ },
  "gis": {
   "duties": [
    "Collect, clean and validate location data from GPS traces, aerial imagery, lidar and field surveys",
@@ -2737,6 +3736,46 @@
   "nice": [
    "Master’s or doctoral degree focused on controls, estimation or dynamics",
    "Active security clearance or eligibility to obtain one"
+  ]
+ },
+ "go-developer": {
+  "duties": [
+   "Build fast, concurrent backend services and APIs for networked systems",
+   "Write command-line tools, infrastructure tools and cloud automation for engineering teams",
+   "Design services around clear interfaces, small packages and explicit error handling",
+   "Profile and tune memory use, latency and concurrency in production services",
+   "Write tests and benchmarks and review code for clarity and correctness",
+   "Instrument services with metrics, logs and tracing and help resolve production incidents"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, software engineering or a related field, or equivalent experience",
+   "Strong command of the language, including concurrency with goroutines and channels",
+   "Experience building distributed services, APIs and network protocols",
+   "Understanding of containers, cloud infrastructure and service deployment"
+  ],
+  "nice": [
+   "Open source contributions written in the language",
+   "Background in systems programming in another compiled language"
+  ]
+ },
+ "government-contracts": {
+  "duties": [
+   "Review solicitations and contract terms for risks, required clauses and compliance obligations before bidding",
+   "Prepare proposals, pricing and representations and certifications with capture, finance and technical teams",
+   "Negotiate contract terms, modifications and options with contracting officers and prime contractors",
+   "Administer awarded contracts by tracking deliverables, funding, deadlines and changes through closeout",
+   "Manage subcontracts and flow down required federal clauses to suppliers and teaming partners",
+   "Keep contracts compliant with the Federal Acquisition Regulation, agency supplements and cost accounting rules"
+  ],
+  "must": [
+   "Bachelor’s degree in business, contract management, law or a related field, or equivalent experience",
+   "Working knowledge of federal procurement rules, contract types and pricing requirements",
+   "Strong negotiation, writing and organizational skills",
+   "Ability to obtain a security clearance, which requires US citizenship, where contracts call for one"
+  ],
+  "nice": [
+   "Certified Federal Contracts Manager or similar contract management certification",
+   "Experience with state and local government contracts or federal grants"
   ]
  },
  "gpu-performance-engineer": {
@@ -3019,6 +4058,26 @@
    "Background in the company’s industry or with its type of customers"
   ]
  },
+ "health-coach": {
+  "duties": [
+   "Assess clients’ eating, activity, sleep and health history to set realistic goals",
+   "Provide medical nutrition therapy for conditions such as diabetes or kidney disease where licensed to do so",
+   "Coach clients in regular sessions using motivational interviewing and behavior change methods",
+   "Track progress on weight, lab results and habits, and adjust plans with clients",
+   "Teach group classes and create educational materials on nutrition, exercise and healthy routines",
+   "Coordinate with physicians and care teams, and refer clients for care beyond the coach’s scope"
+  ],
+  "must": [
+   "Bachelor’s degree in nutrition, health science or a related field for coaching roles, or equivalent experience",
+   "Registered Dietitian Nutritionist credential and state license for dietitian roles; state rules vary",
+   "Strong listening, motivational and teaching skills with clients of many backgrounds",
+   "Understanding of scope of practice limits between coaching and medical nutrition advice"
+  ],
+  "nice": [
+   "National board certification as a health and wellness coach",
+   "Certified Diabetes Care and Education Specialist credential"
+  ]
+ },
  "healthcare": {
   "duties": [
    "Assess patients through virtual or in-person visits and document findings accurately in the electronic health record",
@@ -3099,6 +4158,26 @@
    "Experience supporting reorganizations, layoffs or mergers, including state-specific notice rules"
   ]
  },
+ "hr-coordinator": {
+  "duties": [
+   "Prepare offer letters, employment agreements and new hire paperwork, and track signatures",
+   "Schedule interviews, orientations and onboarding sessions, and send candidates and new hires clear instructions",
+   "Complete employment eligibility verification forms and background check requests within required timelines",
+   "Keep employee files and HR system records accurate, complete and confidential",
+   "Process employee changes such as transfers, pay updates and departures, and notify payroll",
+   "Answer routine employee questions and route complex issues to the right HR specialist"
+  ],
+  "must": [
+   "Associate or bachelor’s degree in human resources, business or a related field, or equivalent experience",
+   "Strong organization and attention to detail with paperwork and data entry",
+   "Discretion with confidential employee information",
+   "Friendly, clear communication in writing, by phone and in person"
+  ],
+  "nice": [
+   "Entry-level HR certification or coursework in human resources",
+   "Experience in an office, recruiting or customer service role"
+  ]
+ },
  "hr-director": {
   "duties": [
    "Lead the HR team and set priorities for hiring, pay, benefits, employee relations and training",
@@ -3117,6 +4196,26 @@
   "nice": [
    "Professional HR certification, such as SHRM-CP, SHRM-SCP, PHR or SPHR",
    "Master’s degree in human resources, business administration or labor relations"
+  ]
+ },
+ "hr-generalist": {
+  "duties": [
+   "Handle offer letters, background checks, new hire paperwork and employment eligibility verification",
+   "Answer employee and manager questions on policies, pay, benefits and time off",
+   "Administer family and medical leave and workplace accommodations in line with federal and state law",
+   "Maintain accurate employee records and HR system data, and prepare reports for leadership",
+   "Look into routine workplace concerns and help managers address performance and conduct issues fairly",
+   "Update the employee handbook and policies as federal, state and local employment laws change"
+  ],
+  "must": [
+   "Bachelor’s degree in human resources, business or a related field, or equivalent experience",
+   "Working knowledge of US employment laws on wages, leave, discrimination and benefits",
+   "Discretion with confidential employee information and sound judgment",
+   "Clear communication and the ability to handle many requests at once"
+  ],
+  "nice": [
+   "Professional human resources certification or progress toward one",
+   "Experience supporting employees in several states with different wage and leave laws"
   ]
  },
  "hris": {
@@ -3199,6 +4298,26 @@
    "Experience with privileged access management or scripting to automate account tasks"
   ]
  },
+ "implementation": {
+  "duties": [
+   "Lead new customers through setup, from kickoff meeting to launch",
+   "Gather customer requirements and configure the product to fit their workflows",
+   "Connect the product to customer systems through integrations, APIs and single sign-on",
+   "Plan and run data migrations, mapping, cleaning and checking imported records",
+   "Train customer administrators and users through live sessions and written guides",
+   "Track implementation plans, timelines and risks, and hand accounts to support or success teams"
+  ],
+  "must": [
+   "Bachelor’s degree in business, information systems or a related field, or equivalent experience",
+   "Strong project management skills for running several customer setups at once",
+   "Technical comfort with APIs, data imports and system configuration",
+   "Clear, patient communication with customers of varied technical skill"
+  ],
+  "nice": [
+   "Background in the industry the product serves",
+   "Scripting or data skills for cleaning and moving customer records"
+  ]
+ },
  "indirect-tax": {
   "duties": [
    "Prepare and file sales, use and VAT returns across states and countries, meeting each jurisdiction’s deadlines",
@@ -3217,6 +4336,46 @@
   "nice": [
    "CPA license, with requirements set by each state board, or a master’s degree in taxation",
    "Experience with VAT or GST compliance and country-by-country reporting for multinational groups"
+  ]
+ },
+ "industrial-designer": {
+  "duties": [
+   "Sketch concepts and explore form, proportion and function for new physical products",
+   "Build 3D CAD models and renderings that show the design intent to teams and clients",
+   "Make foam, printed and appearance models to test ergonomics, scale and user interaction",
+   "Select colors, materials and finishes that fit the brand, budget and manufacturing process",
+   "Work with mechanical engineers and factories to keep designs manufacturable at target cost",
+   "Present design options and revise them based on user research, testing and stakeholder feedback"
+  ],
+  "must": [
+   "Bachelor’s degree in industrial design or a related field, or equivalent experience",
+   "Portfolio showing physical products from sketch to finished model",
+   "Strong sketching, 3D modeling and rendering skills",
+   "Understanding of manufacturing methods such as injection molding, sheet metal and machining"
+  ],
+  "nice": [
+   "Experience in color, material and finish design",
+   "Knowledge of user research, interaction design or human factors"
+  ]
+ },
+ "industrial-security": {
+  "duties": [
+   "Initiate clearance investigations and track continuous vetting for cleared employees and new hires",
+   "Brief employees on security duties at hire and every year, and debrief them when access ends",
+   "Report adverse information, changes in employee status and other required events to government security offices",
+   "Control receipt, marking, storage, transmission and destruction of classified material under the NISPOM",
+   "Prepare the facility for government security reviews and correct any findings within agreed timelines",
+   "Run the insider threat program, security education and visit requests for classified meetings"
+  ],
+  "must": [
+   "US citizenship and ability to obtain and keep a government security clearance",
+   "Working knowledge of the NISPOM, clearance processing and classified material handling rules",
+   "Bachelor’s degree in security management, criminal justice, business or a related field, or equivalent experience",
+   "Discretion, attention to detail and accurate recordkeeping"
+  ],
+  "nice": [
+   "Professional industrial security certification or completed facility security officer training",
+   "Experience supporting special access programs or sensitive compartmented information facilities"
   ]
  },
  "industry-marketing": {
@@ -3379,6 +4538,66 @@
    "Background in property, casualty, auto or workers’ compensation lines"
   ]
  },
+ "insurance-agent": {
+  "duties": [
+   "Prospect for new clients through referrals, calls, events and inbound leads",
+   "Review each client’s risks, assets and goals to recommend suitable coverage and limits",
+   "Quote policies and explain coverage, exclusions, deductibles and premiums in plain language",
+   "Complete applications, submit them to underwriting and bind coverage within the authority the carrier grants",
+   "Review existing policies at renewal and adjust coverage as clients’ needs change",
+   "Help clients report claims and follow up with adjusters until claims are resolved"
+  ],
+  "must": [
+   "State insurance producer license for each line of authority sold; rules vary by state",
+   "High school diploma or equivalent; many employers prefer a bachelor’s degree",
+   "Strong sales, listening and relationship-building skills",
+   "Ability to keep licenses current through state continuing education"
+  ],
+  "nice": [
+   "Securities registration for selling variable life insurance and variable annuities",
+   "Professional insurance designation in property and casualty or life and health"
+  ]
+ },
+ "intellectual-property": {
+  "duties": [
+   "Prepare and file patent and trademark applications and office action responses with attorneys and inventors",
+   "Docket and track deadlines for filings, renewals, maintenance fees and oppositions across the portfolio",
+   "Run trademark clearance and prior art searches, and summarize results for attorneys and business teams",
+   "Work with engineers and inventors to capture invention disclosures and judge what can be protected",
+   "Monitor marketplaces and websites for copies and counterfeits, and prepare takedown notices and demand letters",
+   "Coordinate international filings with foreign counsel and keep portfolio records accurate and current"
+  ],
+  "must": [
+   "Bachelor’s degree, with a science or engineering degree preferred for patent work",
+   "Knowledge of US patent, trademark and copyright procedures and filing deadlines",
+   "Strict attention to detail and reliable deadline management",
+   "Registration with the US Patent and Trademark Office where the role prosecutes patents"
+  ],
+  "nice": [
+   "Paralegal certificate or work history in an intellectual property law practice",
+   "Experience with international filings under the Patent Cooperation Treaty or Madrid Protocol"
+  ]
+ },
+ "intelligence-analyst": {
+  "duties": [
+   "Collect information from open sources, internal data, partners and classified channels where cleared",
+   "Analyze threats, actors, events and trends using structured analytic techniques that test competing explanations",
+   "Write clear assessments that state key judgments, confidence levels and gaps in the available information",
+   "Brief leaders and teams on emerging threats and answer their questions on short deadlines",
+   "Track threat actors, regions or topics over time and keep reference files current",
+   "Maintain collection requirements with stakeholders and adjust sources as priorities change"
+  ],
+  "must": [
+   "Bachelor’s degree in international relations, security studies, political science or a related field, or equivalent experience",
+   "Strong critical thinking and concise analytical writing under deadline pressure",
+   "US citizenship and ability to obtain a security clearance where government work requires it",
+   "Sound judgment on source reliability, bias and confidentiality"
+  ],
+  "nice": [
+   "Professional working proficiency in a foreign language relevant to the mission",
+   "Training in open-source intelligence methods or data analysis"
+  ]
+ },
  "intern": {
   "duties": [
    "Support team members with daily tasks, research and project work under close supervision",
@@ -3519,6 +4738,26 @@
    "Knowledge of a specific industry sector, such as healthcare, technology or energy"
   ]
  },
+ "investor-relations": {
+  "duties": [
+   "Prepare earnings releases, call scripts, investor presentations and question-and-answer documents with finance and legal teams",
+   "Organize earnings calls, investor days, conferences and roadshows, and brief executives before each meeting",
+   "Answer questions from shareholders and buy-side and sell-side analysts with consistent, accurate messages",
+   "Track analyst estimates, shareholder ownership and market sentiment, and report findings to senior leadership",
+   "Keep the investor website current and coordinate public disclosures in line with Regulation FD",
+   "Build relationships with current and prospective institutional investors to support a well-informed shareholder base"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, accounting, economics, business or communications",
+   "Solid understanding of financial statements, valuation and capital markets",
+   "Knowledge of public company disclosure rules, including Regulation FD",
+   "Excellent writing and presentation skills, with sound judgment under pressure"
+  ],
+  "nice": [
+   "MBA, CFA charter or a similar advanced finance credential",
+   "Background as a buy-side or sell-side analyst or in corporate finance"
+  ]
+ },
  "ios-developer": {
   "duties": [
    "Build and maintain native iPhone and iPad apps from product specs and design mockups",
@@ -3559,6 +4798,26 @@
    "Experience with data backup, disaster recovery planning and data privacy rules that apply to the company"
   ]
  },
+ "it-project-manager": {
+  "duties": [
+   "Define project scope, schedule, budget and resources for system launches, migrations and software rollouts",
+   "Coordinate developers, infrastructure, security, vendors and business teams across each project phase",
+   "Run status meetings and steering committees, reporting progress, risks and budget to sponsors",
+   "Manage risks, issues and change requests, escalating decisions that affect scope, cost or timeline",
+   "Plan testing, data migration, cutover and rollback steps for a controlled go-live",
+   "Organize user training and post-launch support so the business adopts the new system"
+  ],
+  "must": [
+   "Bachelor’s degree in information technology, computer science, business or a related field, or equivalent experience",
+   "Proven record managing technology projects from planning through go-live",
+   "Understanding of the software development lifecycle, infrastructure and system integration",
+   "Strong communication, negotiation and stakeholder management skills"
+  ],
+  "nice": [
+   "Project management certification such as PMP",
+   "Experience with ERP, cloud migration or security projects"
+  ]
+ },
  "it-support": {
   "duties": [
    "Set up, configure and image new laptops, desktops and peripherals for incoming employees",
@@ -3577,6 +4836,86 @@
   "nice": [
    "Associate or bachelor’s degree in information technology or a related field",
    "Experience with mobile device management, multifactor authentication and basic cybersecurity practices"
+  ]
+ },
+ "itsm": {
+  "duties": [
+   "Manage incident, problem, change and request processes so tickets are handled within agreed service levels",
+   "Configure ticket categories, assignment rules, workflows and service catalog items in the service management platform",
+   "Run change advisory board meetings and review risk, timing and rollback plans for proposed changes",
+   "Track service level metrics and report on backlog, response times and recurring incidents",
+   "Lead major incident calls, coordinate teams and write post-incident reviews with follow-up actions",
+   "Maintain the configuration management database and knowledge base so records stay accurate and current"
+  ],
+  "must": [
+   "Bachelor’s degree in information technology, business or a related field, or equivalent experience",
+   "Working knowledge of incident, problem, change, request and service level management practices",
+   "Ability to run meetings and write clear processes for technical and business teams",
+   "Strong analytical skills for spotting trends in ticket and service data"
+  ],
+  "nice": [
+   "Certification in a recognized IT service management framework",
+   "Experience scripting or administering an enterprise ticketing platform"
+  ]
+ },
+ "janitor-cleaner": {
+  "duties": [
+   "Clean and sanitize offices, restrooms, kitchens, guest rooms or production areas on a set schedule",
+   "Sweep, mop, vacuum, scrub and polish floors, and operate floor care machines safely",
+   "Empty trash and recycling, and remove waste following site rules for sorting and disposal",
+   "Restock soap, paper products and other supplies, and report low inventory to supervisors",
+   "Use cleaning chemicals safely by following product labels and safety data sheets",
+   "Report repairs, spills, hazards and security concerns, and lock or secure areas after cleaning"
+  ],
+  "must": [
+   "Ability to follow cleaning schedules, checklists and safety instructions",
+   "Ability to stand, bend, climb ladders and lift supplies throughout a shift",
+   "Reliability, attention to detail and respect for privacy in occupied spaces",
+   "Basic understanding of safe chemical handling and hazard communication"
+  ],
+  "nice": [
+   "Experience with hospital, cleanroom or food plant cleaning standards",
+   "Ability to operate floor scrubbers, buffers and carpet extractors"
+  ]
+ },
+ "java-developer": {
+  "duties": [
+   "Design, build and maintain server-side applications, services and APIs for business systems",
+   "Write clean, tested object-oriented code with unit and integration tests",
+   "Connect services to relational databases and message queues and tune data access",
+   "Profile and tune memory use, garbage collection and thread performance in production",
+   "Review code, fix defects and support production releases with operations teams",
+   "Modernize legacy applications by refactoring large monoliths into smaller, well-defined services"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, software engineering or a related field, or equivalent experience",
+   "Strong command of the core language, concurrency and object-oriented design principles",
+   "Experience building web services and working with relational databases",
+   "Solid grasp of testing, version control and code review practices"
+  ],
+  "nice": [
+   "Knowledge of other languages that run on the same virtual machine",
+   "Experience in banking, insurance or other regulated industries"
+  ]
+ },
+ "javascript-developer": {
+  "duties": [
+   "Write clean, typed code for browser interfaces and server-side services",
+   "Build interactive features that handle user input, network requests and state across pages",
+   "Write asynchronous code with promises and events that stays correct under slow or failed requests",
+   "Define shared types and interfaces so front-end and back-end code agree on data shapes",
+   "Write unit and end-to-end tests and debug issues in browser tools and server logs",
+   "Manage packages, build tooling and bundling, and keep dependencies patched against known vulnerabilities"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Deep knowledge of the language, including closures, prototypes, the event loop and static typing",
+   "Solid grasp of HTML, CSS, browser APIs, HTTP and web security basics",
+   "Ability to read and refactor large shared codebases and review others’ code"
+  ],
+  "nice": [
+   "Experience with a major front-end framework and a server runtime",
+   "Contributions to open-source packages or developer tools"
   ]
  },
  "junior-software-engineer": {
@@ -3599,6 +4938,26 @@
    "Familiarity with cloud platforms, databases or automated build and deployment pipelines"
   ]
  },
+ "kernel-engineer": {
+  "duties": [
+   "Write and maintain operating system kernel code for scheduling, memory management, file systems and networking",
+   "Develop device drivers that let the kernel control storage, network, graphics and custom hardware",
+   "Build and tune hypervisor and virtual machine components for isolation and performance",
+   "Debug kernel crashes, deadlocks and race conditions using crash dumps, tracing and hardware debuggers",
+   "Measure latency, throughput and power use, then optimize kernel paths for target workloads",
+   "Prepare patches for code review, including upstream submission to open-source kernel projects"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, computer engineering or electrical engineering, or equivalent experience",
+   "Strong low-level programming skills in systems languages, including memory management and concurrency",
+   "Deep understanding of operating system internals, computer architecture and hardware interfaces",
+   "Ability to read hardware specifications and datasheets and debug at the register level"
+  ],
+  "nice": [
+   "Accepted patches in an open-source kernel, hypervisor or driver project",
+   "Experience with security hardening, real-time systems or embedded boards"
+  ]
+ },
  "key-account-manager": {
   "duties": [
    "Manage relationships with a small portfolio of the company’s largest and most strategic customers",
@@ -3617,6 +4976,46 @@
   "nice": [
    "Experience selling into the same industry as the company’s key customers",
    "Professional sales or key account management training or certification"
+  ]
+ },
+ "kotlin-developer": {
+  "duties": [
+   "Build mobile app features with modern declarative interface code, view models and local storage",
+   "Develop server-side services and APIs and integrate them with existing code on the same runtime",
+   "Use coroutines and flows to handle background work, network calls and concurrency safely",
+   "Write unit, integration and interface tests, and fix crashes reported from production",
+   "Migrate older code to the language gradually, keeping interoperability and behavior intact",
+   "Profile memory use, startup time and battery impact, and fix performance problems on real devices"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of the language, including null safety, coroutines, generics and functional features",
+   "Solid grasp of object-oriented design, concurrency and REST API integration",
+   "Ability to ship and support apps or services used by real customers"
+  ],
+  "nice": [
+   "Experience publishing apps to a major app store and handling release reviews",
+   "Knowledge of multiplatform code sharing between mobile, web and server"
+  ]
+ },
+ "kubernetes-engineer": {
+  "duties": [
+   "Build, upgrade and maintain container clusters across cloud and on-premises environments",
+   "Package applications into container images and write deployment manifests and charts for each service",
+   "Configure autoscaling, resource limits, networking, ingress and storage for workloads running in clusters",
+   "Secure clusters with role-based access, network policies, image scanning and secrets management",
+   "Automate deployments with continuous delivery and declarative, version-controlled configuration",
+   "Troubleshoot failing pods, nodes and networking issues, and lead fixes during production incidents"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of containers, cluster architecture, scheduling and workload networking",
+   "Solid grasp of operating system administration, cloud infrastructure and infrastructure as code",
+   "Ability to write scripts and automation for deployments and cluster operations"
+  ],
+  "nice": [
+   "Certification as a container orchestration administrator, developer or security specialist",
+   "Experience with service meshes, cluster operators or multicluster management"
   ]
  },
  "lab-technician": {
@@ -3659,6 +5058,26 @@
    "Experience handling explosive ordnance, pyrotechnic devices or marine recovery operations at sea"
   ]
  },
+ "law-enforcement": {
+  "duties": [
+   "Review subpoenas, search warrants, court orders and preservation requests from police and government agencies",
+   "Handle emergency requests involving danger of death or serious physical injury on an urgent basis",
+   "Gather and produce records, account data and transaction histories in line with law and company policy",
+   "Coordinate account freezes, asset seizures and fund returns with investigators and legal counsel",
+   "Train police, prosecutors and investigators on the company’s products, data and request process",
+   "Testify in court or sign records declarations as a custodian of records when required"
+  ],
+  "must": [
+   "Bachelor’s degree in criminal justice, law, public policy or a related field, or equivalent experience",
+   "Background in policing, investigations, prosecution or legal process work",
+   "Working knowledge of privacy and stored communications laws that govern disclosure of user data",
+   "Ability to pass a thorough background check and handle sensitive information with discretion"
+  ],
+  "nice": [
+   "Prior service as a sworn officer, investigator or prosecutor",
+   "Experience with financial crime, fraud or blockchain investigations"
+  ]
+ },
  "legal-counsel": {
   "duties": [
    "Draft, review and negotiate commercial contracts, including vendor, customer, licensing and nondisclosure agreements",
@@ -3677,6 +5096,26 @@
   "nice": [
    "Experience at both a law firm and an in-house legal department",
    "Background in a regulated industry such as health care, finance or consumer products"
+  ]
+ },
+ "legal-intern": {
+  "duties": [
+   "Research case law, statutes and regulations, and summarize findings in clear memos for supervising attorneys",
+   "Draft contracts, motions, letters and other legal documents for attorney review",
+   "Review and organize documents for due diligence, discovery and transaction closings",
+   "Attend client meetings, depositions, hearings or negotiations to observe and take notes",
+   "Proofread and cite-check briefs, filings and agreements for accuracy and correct citation format",
+   "Track deadlines and keep case and matter files in order under attorney supervision"
+  ],
+  "must": [
+   "Current enrollment in an accredited law school, or a recent law degree",
+   "Strong legal research, writing and analytical skills",
+   "Ability to keep client information confidential and follow professional conduct rules",
+   "Bar admission or eligibility to sit for the bar for new attorney roles; state rules vary"
+  ],
+  "nice": [
+   "Law review, journal or moot court experience",
+   "Coursework or clinic work in the team’s practice area"
   ]
  },
  "lending": {
@@ -3717,6 +5156,26 @@
   "nice": [
    "Master’s degree or PhD in a relevant field for research-focused roles",
    "Experience working under Good Laboratory Practice (GLP) or Good Manufacturing Practice (GMP) quality systems"
+  ]
+ },
+ "lifecycle-marketing": {
+  "duties": [
+   "Map the customer journey and plan messages for onboarding, activation, retention, upsell and win-back",
+   "Build triggered and scheduled email, push, SMS and in-app campaigns from customer behavior and segments",
+   "Run A/B tests on timing, subject lines, content and offers, and roll out the winners",
+   "Track opens, clicks, conversions, retention and revenue by cohort and report results to leadership",
+   "Keep sends compliant with CAN-SPAM, TCPA consent rules and unsubscribe requests",
+   "Protect deliverability by cleaning lists, watching bounce and complaint rates and managing sender reputation"
+  ],
+  "must": [
+   "Bachelor’s degree in marketing, communications, business or a related field, or equivalent experience",
+   "Hands-on experience building campaigns in email and marketing automation platforms",
+   "Ability to analyze cohort, retention and campaign data to guide decisions",
+   "Knowledge of email and text message consent rules such as CAN-SPAM and TCPA"
+  ],
+  "nice": [
+   "Basic HTML and CSS for email templates",
+   "Experience with push and in-app messaging for mobile apps"
   ]
  },
  "litigation": {
@@ -3959,6 +5418,26 @@
    "Background managing a team or agency relationships within a set budget"
   ]
  },
+ "marketing-operations": {
+  "duties": [
+   "Administer the email and marketing automation platform, including forms, templates, user access and data fields",
+   "Build lead scoring and routing rules with sales so qualified leads reach the right rep quickly",
+   "Keep marketing and CRM data synced, clean and deduplicated across connected systems",
+   "Set up campaign tracking, tagging and attribution so every channel’s results can be measured",
+   "Build dashboards and reports on pipeline, conversion and campaign return for marketing leadership",
+   "Manage consent, opt-out and data privacy settings in line with company policy and the law"
+  ],
+  "must": [
+   "Bachelor’s degree in marketing, business, information systems or a related field, or equivalent experience",
+   "Hands-on administration of marketing automation and CRM systems",
+   "Strong data skills for cleaning lists, building reports and checking attribution",
+   "Understanding of funnel stages, lead lifecycle and sales handoff"
+  ],
+  "nice": [
+   "Administrator certification for the company’s marketing automation platform",
+   "Ability to write basic queries or scripts for data work"
+  ]
+ },
  "materials-engineer": {
   "duties": [
    "Select metals, polymers, ceramics and composites that meet product strength, weight, cost and environmental requirements",
@@ -4019,6 +5498,26 @@
    "Passed the FE exam or hold a PE license; licensing rules vary by state"
   ]
  },
+ "mechanical-engineer": {
+  "duties": [
+   "Design housings, mechanisms, brackets and cooling systems as solid models and production drawings",
+   "Apply geometric dimensioning and tolerancing and run tolerance analyses on assemblies",
+   "Run stress, thermal and vibration analyses to confirm designs meet their requirements",
+   "Select materials and manufacturing processes such as molding, machining and sheet metal forming",
+   "Build and test prototypes, analyze failures and refine designs before release",
+   "Work with suppliers and manufacturing teams to resolve production issues and reduce cost"
+  ],
+  "must": [
+   "Bachelor’s degree in mechanical engineering or a closely related engineering field",
+   "Strong grasp of mechanics, materials, heat transfer and design for manufacturing",
+   "Skill creating solid models and detailed engineering drawings in professional CAD software",
+   "Clear documentation and communication with cross-functional teams"
+  ],
+  "nice": [
+   "Engineer in Training certification or Professional Engineer license; state rules vary",
+   "Experience with product safety, reliability or regulatory compliance testing"
+  ]
+ },
  "mechanical-technician": {
   "duties": [
    "Assemble mechanical components and subassemblies such as engines, valves and structures from engineering drawings",
@@ -4057,6 +5556,46 @@
   "nice": [
    "Experience with FDA submissions, clinical trials or drug safety reporting at a biotech company",
    "Graduate degree in business or public health, such as an MBA or MPH"
+  ]
+ },
+ "mental-health": {
+  "duties": [
+   "Assess new clients through intake interviews and screenings and diagnose conditions within license scope",
+   "Provide individual, couples or group therapy using evidence-based approaches such as cognitive behavioral therapy",
+   "Develop and update treatment plans with measurable goals and track each client’s progress",
+   "Deliver secure telehealth sessions and build safety plans with clients at risk of crisis",
+   "Keep timely clinical records and follow HIPAA, informed consent and mandated reporting rules",
+   "Coordinate care with physicians, psychiatrists and other providers, and refer clients when needed"
+  ],
+  "must": [
+   "Master’s or doctoral degree in counseling, social work, psychology or marriage and family therapy",
+   "Active, unrestricted state license for independent practice, such as LPC, LCSW, LMFT or psychologist; state rules vary",
+   "License valid in each state where clients are located during sessions",
+   "Sound clinical judgment in risk assessment, crisis response and ethical practice"
+  ],
+  "nice": [
+   "Licenses in several states or practice privileges through an interstate licensure compact",
+   "Training in a specialty such as trauma, substance use or child and adolescent therapy"
+  ]
+ },
+ "mental-health-counselor": {
+  "duties": [
+   "Conduct intake assessments and screen clients for mental health, substance use and safety risks",
+   "Provide individual and group counseling using evidence-based approaches",
+   "Respond to crises, de-escalate situations and follow suicide prevention and safety protocols",
+   "Monitor patients on inpatient units, take vital signs and report changes to nurses",
+   "Write treatment plans and progress notes that meet clinical and insurance documentation standards",
+   "Connect clients with housing, medical care, support groups and other community services"
+  ],
+  "must": [
+   "Bachelor’s degree in psychology or a related field for technician roles, master’s degree for counselors",
+   "Counselor or addiction counselor license or certification where the role requires it; state rules vary",
+   "Knowledge of crisis intervention, de-escalation and confidentiality rules, including HIPAA",
+   "Current CPR and first aid certification"
+  ],
+  "nice": [
+   "Fluency in a language spoken by the communities the program serves",
+   "Training in trauma-informed care or motivational interviewing"
   ]
  },
  "merchant-support": {
@@ -4159,6 +5698,26 @@
    "Knowledge of mobile accessibility, security and user privacy practices"
   ]
  },
+ "mortgage-loan-officer": {
+  "duties": [
+   "Meet with home buyers and homeowners to explain loan options for purchases and refinances",
+   "Review income, assets, credit and debts to find the loan programs and amounts a borrower qualifies for",
+   "Take loan applications and collect pay stubs, tax returns, bank statements and other required documents",
+   "Explain loan estimates, interest rates, points and closing costs in clear, plain language",
+   "Work with processors, underwriters, appraisers, real estate agents and title companies to move loans to closing",
+   "Build referral relationships with real estate agents, builders and past clients to bring in new business"
+  ],
+  "must": [
+   "Mortgage loan originator license, or federal registration for bank and credit union employees; state rules vary",
+   "Bachelor’s degree in finance, business or a related field, or equivalent experience",
+   "Knowledge of conventional, government-backed and jumbo loan programs and their underwriting guidelines",
+   "Strong sales, communication and follow-up skills, with care for borrower privacy"
+  ],
+  "nice": [
+   "Bilingual skills to serve buyers in their preferred language",
+   "Established referral network among local real estate agents and builders"
+  ]
+ },
  "motion-designer": {
   "duties": [
    "Design and animate motion graphics, titles and transitions for videos, ads and social media content",
@@ -4219,6 +5778,26 @@
    "Experience with multilingual systems, audio signal processing or speech synthesis"
   ]
  },
+ "nodejs-developer": {
+  "duties": [
+   "Build server-side applications and APIs that power web and mobile apps",
+   "Write non-blocking, asynchronous code that handles many concurrent requests without stalling the event loop",
+   "Design database schemas and data access layers for relational and document databases",
+   "Implement authentication, authorization, input validation and rate limiting to protect services and user data",
+   "Write unit and integration tests, and debug memory leaks and slow endpoints in production",
+   "Manage package dependencies, patch known vulnerabilities and deploy services through automated pipelines"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of asynchronous programming, promises, streams and the server runtime’s event loop",
+   "Solid understanding of HTTP, REST API design, caching and web security",
+   "Ability to work with front-end developers on API contracts and data formats"
+  ],
+  "nice": [
+   "Experience with message queues, serverless functions or real-time features over websockets",
+   "Front-end development experience across the same language stack"
+  ]
+ },
  "nurse-practitioner": {
   "duties": [
    "Examine patients, take health histories and order lab work, imaging and other diagnostic tests",
@@ -4259,6 +5838,26 @@
    "Telehealth experience or fluency in a second language, such as Spanish"
   ]
  },
+ "observability-engineer": {
+  "duties": [
+   "Build the logging, metrics and tracing pipelines that collect telemetry from every service",
+   "Design dashboards that show service health, latency, errors and traffic for each team",
+   "Define alerts and service level objectives that page on real customer impact, not noise",
+   "Instrument applications with shared libraries and standards so telemetry stays consistent across services",
+   "Control data volume, retention and cost of monitoring platforms as systems grow",
+   "Help teams investigate incidents and run post-incident reviews using logs, metrics and traces"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of logs, metrics, distributed tracing and alert design",
+   "Solid grasp of cloud infrastructure, containers, networking and distributed systems",
+   "Ability to write code and scripts for instrumentation, automation and data pipelines"
+  ],
+  "nice": [
+   "Experience with on-call rotations and site reliability engineering practices",
+   "Knowledge of vendor-neutral telemetry standards and time-series databases"
+  ]
+ },
  "office-manager": {
   "duties": [
    "Oversee daily office operations so staff have a clean, safe and working space",
@@ -4277,6 +5876,46 @@
   "nice": [
    "Experience managing an office budget, vendor invoices or petty cash",
    "Familiarity with workplace safety practices, emergency plans and basic HR paperwork"
+  ]
+ },
+ "oil-gas": {
+  "duties": [
+   "Plan and oversee drilling, completion or production operations to recover oil and gas safely and economically",
+   "Analyze reservoir, well and production data to recommend improvements and forecast output",
+   "Design or maintain pipelines, compressors and processing equipment that move and treat hydrocarbons",
+   "Monitor refinery or plant units and solve process problems to improve yield and reliability",
+   "Keep operations within environmental, safety and pipeline regulations, and support incident investigations",
+   "Coordinate contractors, field crews and vendors on rigs, well sites and plant turnarounds"
+  ],
+  "must": [
+   "Bachelor’s degree in petroleum, chemical, mechanical or civil engineering, or a related field",
+   "Knowledge of process safety management and well control principles relevant to the role",
+   "Strong analytical and problem-solving skills with field and production data",
+   "Willingness to work at remote sites, offshore or on rotational schedules as required"
+  ],
+  "nice": [
+   "Professional Engineer license; state rules vary",
+   "Well control certification or offshore safety and survival training"
+  ]
+ },
+ "operations-analyst": {
+  "duties": [
+   "Monitor daily operating processes and metrics, and flag delays, errors and backlogs as they appear",
+   "Analyze operational data to find root causes of problems and chances to cut cost or time",
+   "Build reports and dashboards that track volumes, turnaround times, quality and cost",
+   "Map current processes and design simpler workflows with clear owners and handoffs",
+   "Identify manual tasks that can be automated and work with engineering or systems teams to deliver them",
+   "Document procedures and train team members on new processes and systems"
+  ],
+  "must": [
+   "Bachelor’s degree in business, economics, engineering, mathematics or a related field, or equivalent experience",
+   "Strong spreadsheet and data analysis skills, with comfort querying databases",
+   "Structured problem solving and clear communication of findings",
+   "Ability to manage several projects and follow through on details"
+  ],
+  "nice": [
+   "Training in process improvement methods such as Lean or Six Sigma",
+   "Experience in the company’s industry or a similar operations team"
   ]
  },
  "operations-manager": {
@@ -4317,6 +5956,66 @@
   "nice": [
    "Master’s degree or PhD in optics, photonics or applied physics",
    "Familiarity with US export control rules and space qualification testing for satellite optics"
+  ]
+ },
+ "organizational-development": {
+  "duties": [
+   "Design leadership development, coaching and training programs that build skills for current and future roles",
+   "Run performance review and goal setting cycles, and coach managers on giving useful feedback",
+   "Build career paths, competency models and succession plans for key roles",
+   "Advise leaders on team structure, reorganizations and change management during growth or restructuring",
+   "Analyze engagement survey results and turnover data, and recommend actions to improve retention",
+   "Facilitate workshops, team sessions and leadership offsites that improve collaboration and decision making"
+  ],
+  "must": [
+   "Bachelor’s degree in organizational psychology, human resources, business or a related field, or equivalent experience",
+   "Strong facilitation, coaching and presentation skills",
+   "Knowledge of change management, adult learning and performance management practices",
+   "Ability to use survey and workforce data to guide decisions"
+  ],
+  "nice": [
+   "Master’s degree in organizational development, industrial-organizational psychology or a related field",
+   "Coaching certification or certification in an assessment or change management method"
+  ]
+ },
+ "ot-security": {
+  "duties": [
+   "Assess control systems, plant networks, vehicles and connected devices for vulnerabilities and unsafe design choices",
+   "Design network segmentation and remote access controls that separate plant systems from business networks",
+   "Run threat modeling and security reviews during product design, from hardware to firmware and cloud services",
+   "Build secure boot, firmware signing and secure update features with embedded and hardware engineers",
+   "Handle reported product vulnerabilities, coordinate fixes and publish advisories and software bills of materials",
+   "Plan incident response for plant and device incidents with safety, operations and engineering teams"
+  ],
+  "must": [
+   "Bachelor’s degree in electrical, computer or software engineering, computer science or a related field, or equivalent experience",
+   "Knowledge of industrial control systems, embedded devices and industrial network protocols",
+   "Understanding of how safety, uptime and long equipment lifespans shape security choices",
+   "Ability to test hardware and firmware with standard security testing methods"
+  ],
+  "nice": [
+   "Industrial control system security certification or formal training",
+   "Familiarity with sector rules such as NERC CIP or FDA medical device cybersecurity requirements"
+  ]
+ },
+ "packaging-engineer": {
+  "duties": [
+   "Design primary, secondary and shipping packaging, choosing materials that protect the product at the lowest workable cost",
+   "Develop chip packages, substrates and interconnects that protect semiconductor dies and carry away heat",
+   "Test packaging through drop, vibration, compression and climate trials to recognized industry and customer standards",
+   "Build prototypes and drawings, and work with suppliers to qualify materials and launch new packages",
+   "Reduce packaging waste and material use while meeting labeling, recycling and shipping regulations",
+   "Investigate damage claims and production defects, and update designs and specifications to prevent repeats"
+  ],
+  "must": [
+   "Bachelor’s degree in packaging, mechanical, materials or electrical engineering, or a related field",
+   "Knowledge of packaging materials, structural design and distribution testing methods",
+   "Ability to read and create engineering drawings and technical specifications",
+   "Strong problem-solving skills and clear communication with suppliers and cross-functional teams"
+  ],
+  "nice": [
+   "Certified Packaging Professional (CPP) credential",
+   "Experience with advanced semiconductor packaging such as flip chip or chiplet designs"
   ]
  },
  "paralegal": {
@@ -4499,6 +6198,46 @@
    "Experience with incrementality testing, media mix modeling or multi-touch attribution"
   ]
  },
+ "pharmacist": {
+  "duties": [
+   "Review prescriptions for accuracy, dosing, allergies and drug interactions before dispensing",
+   "Verify filled prescriptions and sterile or compounded products for quality and safety",
+   "Counsel patients on correct use, side effects and storage of their medications",
+   "Advise physicians and nurses on drug selection, dosing and therapy changes",
+   "Administer vaccines and provide other clinical services where state law allows",
+   "Supervise pharmacy technicians, manage inventory and keep controlled substance records that meet DEA and state rules"
+  ],
+  "must": [
+   "Doctor of Pharmacy (PharmD) degree from an accredited program",
+   "Active pharmacist license in the state of practice; state rules vary",
+   "Strong knowledge of pharmacology, drug interactions and pharmacy law",
+   "Careful attention to detail and clear communication with patients and providers"
+  ],
+  "nice": [
+   "Completion of a pharmacy residency or board certification in a specialty",
+   "Immunization training and experience with sterile compounding"
+  ]
+ },
+ "pharmacy-technician": {
+  "duties": [
+   "Receive prescriptions, enter patient and insurance information and process refill requests",
+   "Count, measure and label medications for pharmacist verification",
+   "Prepare sterile or nonsterile compounded products to pharmacy standards where trained",
+   "Manage inventory, order stock, check expiration dates and store medications properly",
+   "Resolve insurance claim rejections and prior authorization questions with patients and providers",
+   "Answer patient questions at the counter and by phone, referring clinical questions to the pharmacist"
+  ],
+  "must": [
+   "High school diploma or equivalent, plus a pharmacy technician training program or equivalent experience",
+   "Pharmacy technician registration, license or certification as the state requires; state rules vary",
+   "Accuracy with math, measurements and medication names",
+   "Ability to protect patient privacy under HIPAA"
+  ],
+  "nice": [
+   "National pharmacy technician certification such as CPhT",
+   "Experience in hospital, sterile compounding or specialty pharmacy settings"
+  ]
+ },
  "phd": {
   "duties": [
    "Design and run original research studies that answer open questions in AI, science or engineering",
@@ -4559,6 +6298,66 @@
    "Licenses in more than one state, such as through the Interstate Medical Licensure Compact"
   ]
  },
+ "physician-assistant": {
+  "duties": [
+   "Take medical histories and perform physical examinations of patients",
+   "Order and interpret lab tests, imaging and other diagnostic studies",
+   "Diagnose illnesses and injuries and develop treatment plans with the supervising or collaborating physician",
+   "Prescribe medications and therapies within state law and the practice agreement",
+   "Perform procedures such as suturing, splinting and injections, and assist in surgery where trained",
+   "Document visits in the electronic health record and teach patients and families about their care plans"
+  ],
+  "must": [
+   "Master’s degree from an accredited physician assistant program",
+   "Current PA-C national certification and state physician assistant license; state rules vary",
+   "DEA registration where the role prescribes controlled substances",
+   "Current Basic Life Support certification"
+  ],
+  "nice": [
+   "Clinical experience or rotations in the practice’s specialty",
+   "Advanced Cardiac Life Support or Pediatric Advanced Life Support certification"
+  ]
+ },
+ "platform-engineer": {
+  "duties": [
+   "Build and run the internal developer platform teams use to create, deploy and operate services",
+   "Define infrastructure as code and reusable templates so teams get consistent, secure environments",
+   "Maintain build and deployment pipelines that let engineers ship changes safely and quickly",
+   "Provide self-service tools for databases, secrets, networking and access so teams avoid manual tickets",
+   "Set up monitoring, alerting and on-call practices for shared infrastructure and respond to incidents",
+   "Gather feedback from engineering teams and improve documentation, defaults and developer experience"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of cloud infrastructure, containers, networking and infrastructure as code",
+   "Ability to write production code and scripts for automation and internal tools",
+   "Experience supporting production systems, including on-call duty and incident response"
+  ],
+  "nice": [
+   "Cloud provider or container orchestration certification",
+   "Background in software development before moving into infrastructure work"
+  ]
+ },
+ "plumber-pipefitter": {
+  "duties": [
+   "Read blueprints and plumbing plans to lay out pipe runs, fixtures and equipment",
+   "Cut, thread, bend and join pipe by soldering, brazing, welding, crimping or solvent cementing",
+   "Install and repair water supply, drainage, gas, steam and process piping systems",
+   "Install fixtures, water heaters, valves, pumps and backflow preventers to code",
+   "Pressure test piping systems, find leaks and restore service with minimal disruption",
+   "Follow plumbing and mechanical codes, permits and inspections, and keep job sites clean and safe"
+  ],
+  "must": [
+   "Completion of an apprenticeship or vocational training program, or equivalent experience",
+   "Journeyman plumber or pipefitter license where required; state rules vary",
+   "Ability to read blueprints and apply plumbing and mechanical codes",
+   "Physical ability to work in tight spaces and on ladders, and lift heavy materials"
+  ],
+  "nice": [
+   "Medical gas installer or backflow prevention tester certification",
+   "Welding certification for steam or process piping"
+  ]
+ },
  "policy": {
   "duties": [
    "Track proposed bills, regulations and agency guidance that affect the company at federal, state and local levels",
@@ -4577,6 +6376,46 @@
   "nice": [
    "Law degree or past work as a legislative staffer or agency employee",
    "Experience running grassroots advocacy campaigns or political action committee programs"
+  ]
+ },
+ "policy-analyst": {
+  "duties": [
+   "Track proposed bills, regulations and agency guidance that affect the company and its industry",
+   "Analyze how proposed rules would change costs, operations and customers, and summarize impacts for leaders",
+   "Draft comment letters, position papers, testimony and briefing memos for regulators and lawmakers",
+   "Build arguments backed by data, research and real examples to inform policy discussions",
+   "Work with legal, government affairs and business teams to agree on the company’s positions",
+   "Prepare executives for meetings with regulators, legislative staff and industry associations"
+  ],
+  "must": [
+   "Bachelor’s degree in public policy, political science, economics, law or a related field",
+   "Understanding of federal and state legislative and rulemaking processes",
+   "Clear, persuasive writing and the ability to explain complex rules simply",
+   "Strong research and analytical skills, including work with data"
+  ],
+  "nice": [
+   "Master’s degree in public policy, law degree or similar advanced study",
+   "Experience in a government office, regulatory agency or trade association"
+  ]
+ },
+ "portfolio-manager": {
+  "duties": [
+   "Set investment strategy and asset allocation for each portfolio within its mandate, guidelines and risk limits",
+   "Research companies, sectors, markets and economic trends with analysts to build investment cases",
+   "Decide which securities and other assets to buy, sell or hold, and size each position",
+   "Monitor performance, risk exposures and liquidity against benchmarks, and adjust holdings as conditions change",
+   "Keep portfolios in line with client guidelines, fund documents and securities regulations",
+   "Explain performance, strategy and outlook to investors, consultants and investment committees in meetings and reports"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, economics, accounting or a related field",
+   "Deep knowledge of valuation, portfolio construction and risk management",
+   "Record of sound investment decisions with clear reasoning behind them",
+   "Any securities licenses the firm and role require, noting state rules vary"
+  ],
+  "nice": [
+   "CFA charter or progress toward one",
+   "Advanced degree in finance, economics or a quantitative field"
   ]
  },
  "power-electronics": {
@@ -4679,6 +6518,26 @@
    "Familiarity with the EU GDPR and other international data protection laws"
   ]
  },
+ "process-improvement": {
+  "duties": [
+   "Map current processes with value stream maps and flowcharts to find waste, delays and rework",
+   "Measure cycle time, defects, cost and capacity, and analyze the data with statistical methods",
+   "Lead improvement projects through define, measure, analyze, improve and control phases",
+   "Run kaizen events and workshops that bring frontline staff into redesigning their own work",
+   "Find root causes of problems and test solutions with pilots before full rollout",
+   "Build control plans, standard work and dashboards, and report verified savings to leadership"
+  ],
+  "must": [
+   "Bachelor’s degree in industrial engineering, operations, business or a related field, or equivalent experience",
+   "Lean Six Sigma Green Belt or higher, or equivalent improvement project experience",
+   "Working knowledge of statistical analysis, process mapping and root cause methods",
+   "Strong facilitation and change management skills with teams at every level"
+  ],
+  "nice": [
+   "Lean Six Sigma Black Belt certification",
+   "Project management or change management certification"
+  ]
+ },
  "procurement": {
   "duties": [
    "Source and qualify suppliers for goods and services, from office equipment to production components",
@@ -4717,6 +6576,46 @@
   "nice": [
    "Professional procurement or supply management certification",
    "Experience supporting procurement system setup, upgrades or process improvement projects"
+  ]
+ },
+ "producer": {
+  "duties": [
+   "Build and maintain production schedules, milestones and budgets for games, videos, podcasts or shows",
+   "Run production meetings and track daily progress, dependencies and blockers across the team",
+   "Hire and manage freelancers, vendors and outsourcing partners, and keep their work on schedule",
+   "Handle contracts, releases, permits and rights clearances with legal and business affairs teams",
+   "Manage tradeoffs between scope, quality and time, and escalate decisions to leadership when needed",
+   "Coordinate reviews, platform submissions and delivery of final assets to publishers, networks or channels"
+  ],
+  "must": [
+   "Bachelor’s degree in film, media, game design, business or a related field, or equivalent experience",
+   "Strong scheduling, budgeting and organization skills",
+   "Understanding of the production pipeline for games or media from concept to release",
+   "Calm communication and conflict resolution with creative and technical teams"
+  ],
+  "nice": [
+   "Credits on a shipped game, series, film or podcast",
+   "Experience with music licensing, talent contracts or union productions"
+  ]
+ },
+ "product-analyst": {
+  "duties": [
+   "Analyze how people use the app or website, from signup through retention and churn",
+   "Build funnels, cohorts and dashboards that show product health and the effect of releases",
+   "Design and evaluate A/B tests, checking sample sizes, significance and side effects",
+   "Define event tracking plans with engineers so product data is complete and accurate",
+   "Investigate sudden changes in key metrics and explain their causes to product teams",
+   "Recommend product changes based on data and present findings to managers and designers"
+  ],
+  "must": [
+   "Bachelor’s degree in statistics, economics, computer science or a related field, or equivalent experience",
+   "Strong query writing and data analysis skills with product event data",
+   "Solid grasp of experiment design, statistical significance and common product metrics",
+   "Clear storytelling with data for nontechnical audiences"
+  ],
+  "nice": [
+   "Experience in consumer apps, marketplaces or subscription businesses",
+   "Scripting skills for statistical analysis and automation"
   ]
  },
  "product-designer": {
@@ -4759,6 +6658,26 @@
    "Background in product analytics, A/B testing or user research methods"
   ]
  },
+ "product-manager": {
+  "duties": [
+   "Research user needs through interviews, support feedback, usage data and market analysis",
+   "Define the product vision and roadmap and explain the reasoning behind each priority",
+   "Write clear requirements and user stories with acceptance criteria for engineering and design",
+   "Prioritize the backlog by weighing customer value, business impact, effort and risk",
+   "Work daily with engineers and designers to make scope decisions and keep releases on track",
+   "Measure results after launch with product metrics and experiments, and adjust plans based on what is learned"
+  ],
+  "must": [
+   "Bachelor’s degree in business, computer science, engineering or a related field, or equivalent experience",
+   "Ability to turn user research and data into clear priorities and requirements",
+   "Strong written and verbal communication with engineers, designers, executives and customers",
+   "Comfort analyzing product metrics and designing simple experiments"
+  ],
+  "nice": [
+   "Technical background in software engineering, design or data analysis",
+   "Experience in the company’s market or with its type of customer"
+  ]
+ },
  "product-marketing": {
   "duties": [
    "Define product positioning and messaging that explain who the product serves and why it beats alternatives",
@@ -4777,6 +6696,66 @@
   "nice": [
    "Background in sales, sales engineering or product management",
    "Experience with pricing and packaging decisions or go-to-market planning"
+  ]
+ },
+ "product-operations": {
+  "duties": [
+   "Coordinate product launches across product, marketing, sales and support teams",
+   "Collect, organize and route customer and support feedback to the right product teams",
+   "Manage product team tools, templates and processes for roadmaps and release notes",
+   "Track product metrics and prepare regular reports for product leaders",
+   "Run planning cycles and keep roadmaps, documentation and release calendars up to date",
+   "Train customer-facing teams on new features and changes before release"
+  ],
+  "must": [
+   "Bachelor’s degree in business, communications or a related field, or equivalent experience",
+   "Strong organization and project coordination skills across several teams",
+   "Comfort analyzing product data and customer feedback to spot trends",
+   "Clear written communication for launch plans, updates and internal guides"
+  ],
+  "nice": [
+   "Background in product management, customer support or customer success",
+   "Experience setting up feedback or roadmap processes for a growing company"
+  ]
+ },
+ "product-owner": {
+  "duties": [
+   "Write user stories with clear acceptance criteria that the development team can estimate and build",
+   "Order the product backlog by value, risk and dependencies, and keep it refined for upcoming sprints",
+   "Explain priorities and answer team questions during sprint planning and backlog refinement sessions",
+   "Review completed work against acceptance criteria and accept it or send it back with notes",
+   "Gather needs from customers, stakeholders and support teams and turn them into backlog items",
+   "Present finished increments at sprint reviews and adjust the roadmap based on stakeholder feedback"
+  ],
+  "must": [
+   "Bachelor’s degree in business, computer science, information systems or a related field, or equivalent experience",
+   "Working knowledge of Scrum, Kanban or similar iterative development practices",
+   "Ability to make firm priority decisions and say no to lower-value work",
+   "Strong writing skills for user stories, acceptance criteria and release notes"
+  ],
+  "nice": [
+   "Product owner certification from a recognized Scrum training body",
+   "Background in the product’s business domain or in software development"
+  ]
+ },
+ "production-planner": {
+  "duties": [
+   "Build and maintain the master production schedule from sales forecasts, customer orders and plant capacity",
+   "Run material requirements planning to release purchase requests and work orders on time",
+   "Monitor inventory of raw materials, components and finished goods to prevent shortages and excess stock",
+   "Balance workloads across lines, shifts and machines, adjusting plans for breakdowns, rush orders and absences",
+   "Coordinate with purchasing, production, quality and shipping teams to meet promised delivery dates",
+   "Report on schedule adherence, capacity use and late orders, and recommend fixes for recurring problems"
+  ],
+  "must": [
+   "Bachelor’s degree in supply chain, industrial engineering, business or a related field, or equivalent experience",
+   "Solid understanding of production planning, inventory control and material requirements planning",
+   "Strong analytical skills and comfort working with large data sets and spreadsheets",
+   "Ability to reprioritize quickly and explain schedule changes clearly to the shop floor"
+  ],
+  "nice": [
+   "Certified in Planning and Inventory Management (CPIM) credential",
+   "Knowledge of lean manufacturing and just-in-time production methods"
   ]
  },
  "production-supervisor": {
@@ -4839,6 +6818,46 @@
    "Project management certification such as PMP or CAPM"
   ]
  },
+ "program-coordinator": {
+  "duties": [
+   "Schedule program activities, meetings, trainings and events, and keep shared calendars and participant lists current",
+   "Track program budgets, purchases and invoices, and flag spending that runs ahead of plan",
+   "Maintain participant records, attendance, intake forms and files in line with privacy and funder rules",
+   "Collect program data and draft progress reports for managers, funders and partner organizations",
+   "Coordinate staff, volunteers, vendors and partners so rooms, supplies and speakers are ready on time",
+   "Answer questions from participants and the public, and route issues to the right team member"
+  ],
+  "must": [
+   "Bachelor’s degree in public administration, social sciences, education or a related field, or equivalent experience",
+   "Strong organization skills and attention to detail across many deadlines and tasks",
+   "Clear written and verbal communication with participants, staff and outside partners",
+   "Ability to handle confidential information with discretion"
+  ],
+  "nice": [
+   "Experience with grant-funded programs and funder reporting requirements",
+   "Fluency in a second language spoken by the communities the program serves"
+  ]
+ },
+ "program-manager": {
+  "duties": [
+   "Plan programs that span several teams, defining scope, milestones, dependencies and owners",
+   "Build and maintain integrated schedules that show how each team’s work fits together",
+   "Track risks, issues and cross-team dependencies and drive decisions to keep work on schedule",
+   "Run status meetings and publish regular program updates for leaders and stakeholders",
+   "Coordinate launch readiness across engineering, product, operations, legal and support teams",
+   "Lead retrospectives and improve planning and delivery processes across the organization"
+  ],
+  "must": [
+   "Bachelor’s degree in business, engineering or a related field, or equivalent experience",
+   "Proven ability to lead work across several teams without direct authority",
+   "Strong skills in scheduling, risk management and dependency tracking",
+   "Clear written communication and confident stakeholder management at all levels"
+  ],
+  "nice": [
+   "Project Management Professional certification or a similar credential",
+   "Technical background in the field the programs serve, such as software or hardware"
+  ]
+ },
  "programmer": {
   "duties": [
    "Write, test and debug code that meets specifications from designers, engineers or business analysts",
@@ -4857,6 +6876,66 @@
   "nice": [
    "Portfolio of shipped games, production part programs or released business software",
    "Familiarity with game engines, CNC machining practice or legacy mainframe systems, depending on the role"
+  ]
+ },
+ "project-coordinator": {
+  "duties": [
+   "Track tasks, owners and due dates in the project plan and follow up on late items",
+   "Schedule meetings, prepare agendas and send notes with decisions and action items afterward",
+   "Update project schedules, status reports and dashboards for project managers and stakeholders",
+   "Maintain project documents, contracts, change requests and risk and issue logs in shared folders",
+   "Process purchase orders, vendor invoices and timesheets, and track spending against the project budget",
+   "Coordinate resources, travel, equipment and logistics so teams have what they need on time"
+  ],
+  "must": [
+   "Associate’s or bachelor’s degree in business, communications or a related field, or equivalent experience",
+   "Strong organization, follow-through and attention to detail",
+   "Clear written and spoken communication with people at all levels",
+   "Comfort with project management, spreadsheet and office software"
+  ],
+  "nice": [
+   "Entry-level project management certification such as CAPM",
+   "Background in the industry the projects serve, such as construction, IT or healthcare"
+  ]
+ },
+ "project-manager": {
+  "duties": [
+   "Define project scope, goals, deliverables and success criteria with sponsors and stakeholders",
+   "Build detailed schedules, budgets and resource plans and keep them current",
+   "Track progress, spending and risks and report project status to sponsors and leaders",
+   "Manage changes to scope, schedule and budget through a clear approval process",
+   "Coordinate internal teams, vendors and contractors so work is delivered on time",
+   "Close projects with handoffs, final documentation and lessons learned for future work"
+  ],
+  "must": [
+   "Bachelor’s degree in business, engineering or a related field, or equivalent experience",
+   "Strong planning, budgeting and risk management skills",
+   "Clear written and verbal communication with teams, sponsors and vendors",
+   "Ability to manage several priorities and keep work moving under deadlines"
+  ],
+  "nice": [
+   "Project Management Professional certification or a similar credential",
+   "Experience in the company’s industry, such as construction, software or healthcare"
+  ]
+ },
+ "property-manager": {
+  "duties": [
+   "Market vacant units, screen applicants and prepare leases in line with fair housing laws",
+   "Collect rent, follow up on late payments and handle notices and evictions under state and local law",
+   "Schedule maintenance, repairs and inspections, and oversee vendors and on-site staff",
+   "Prepare annual budgets and monthly reports on occupancy, income and expenses for owners",
+   "Respond to tenant requests and complaints promptly and keep good resident relationships",
+   "Keep properties in line with building codes, safety rules and lease terms through regular inspections"
+  ],
+  "must": [
+   "Real estate or property management license where the state requires one; rules vary by state",
+   "Bachelor’s degree in business, real estate or a related field, or equivalent experience",
+   "Knowledge of fair housing, landlord-tenant and security deposit laws",
+   "Strong budgeting, negotiation and customer service skills"
+  ],
+  "nice": [
+   "Professional designation such as Certified Property Manager or Certified Apartment Manager",
+   "Experience with commercial, multifamily or affordable housing compliance programs"
   ]
  },
  "proposal-manager": {
@@ -4899,6 +6978,26 @@
    "Active security clearance or ability to obtain one for defense programs"
   ]
  },
+ "public-administration": {
+  "duties": [
+   "Run daily operations of public programs and services, from intake and eligibility to delivery",
+   "Prepare and monitor program budgets, grants and spending in line with public funding rules",
+   "Draft policies, reports and briefings for elected officials, department heads and oversight bodies",
+   "Coordinate with other agencies, community groups and contractors to deliver services to residents",
+   "Collect and analyze program data to measure results and recommend improvements",
+   "Respond to public inquiries, records requests and complaints in line with open government laws"
+  ],
+  "must": [
+   "Bachelor’s degree in public administration, political science, business or a related field, or equivalent experience",
+   "Understanding of public budgeting, procurement and administrative procedures",
+   "Clear writing and communication with officials, staff and the public",
+   "Eligibility under the agency’s civil service rules, which may require citizenship or residency"
+  ],
+  "nice": [
+   "Master of Public Administration or a related graduate degree",
+   "Experience managing grants, contracts or community programs"
+  ]
+ },
  "public-relations": {
   "duties": [
    "Write press releases, media pitches and statements that announce company news to journalists and outlets",
@@ -4937,6 +7036,26 @@
   "nice": [
    "Familiarity with federal acquisition rules or GSA Schedule contracts",
    "Prior work in government, K-12 or higher education purchasing"
+  ]
+ },
+ "python-developer": {
+  "duties": [
+   "Build and maintain web backends and APIs that serve data to applications and users",
+   "Write data pipelines that collect, clean and load data on a reliable schedule",
+   "Automate repetitive tasks with scripts that run reliably and log errors clearly",
+   "Integrate machine learning models and AI services into products and internal tools",
+   "Write unit and integration tests and review teammates’ code for quality",
+   "Package, deploy and monitor applications and keep their dependencies secure and current"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, software engineering or a related field, or equivalent experience",
+   "Strong command of the language, its standard library and common data structures",
+   "Experience building APIs and working with relational databases",
+   "Good habits in testing, version control and readable code"
+  ],
+  "nice": [
+   "Experience with data science or machine learning libraries",
+   "Knowledge of asynchronous programming and performance profiling"
   ]
  },
  "qa-engineer": {
@@ -4999,6 +7118,26 @@
    "Working knowledge of GD&T, statistical process control and ISO 9001 quality systems"
   ]
  },
+ "quant": {
+  "duties": [
+   "Research and develop quantitative strategies or pricing models using statistical and mathematical methods",
+   "Clean and analyze large market and alternative datasets to find predictive signals",
+   "Backtest ideas on historical data while controlling for overfitting, look-ahead bias and transaction costs",
+   "Build and validate models that price derivatives and measure portfolio risk",
+   "Write research code and work with developers to move models into production",
+   "Present findings and model limitations to traders, portfolio managers and risk teams"
+  ],
+  "must": [
+   "Master’s degree or PhD in mathematics, statistics, physics, computer science or another quantitative field",
+   "Strong knowledge of probability, statistics, time series analysis and optimization",
+   "Solid programming skills for data analysis, simulation and model building",
+   "Ability to explain complex models clearly to nontechnical colleagues"
+  ],
+  "nice": [
+   "Published research or strong results in machine learning or statistics competitions",
+   "Knowledge of market microstructure, derivatives or portfolio construction"
+  ]
+ },
  "quantum": {
   "duties": [
    "Design and simulate quantum circuits and algorithms for optimization, chemistry, materials or cryptography problems",
@@ -5019,6 +7158,26 @@
    "Published research or conference talks in quantum information science"
   ]
  },
+ "react-developer": {
+  "duties": [
+   "Build reusable interface components and pages from design files, matching layouts, states and interactions",
+   "Manage application state and data fetching so screens stay fast and consistent",
+   "Connect interfaces to back-end APIs, handling loading, errors, caching and authentication",
+   "Make pages accessible to keyboard and screen reader users, following current web accessibility guidelines",
+   "Write component and end-to-end tests, and fix rendering bugs across browsers and screen sizes",
+   "Measure and improve load time, bundle size and responsiveness on desktop and mobile devices"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, design or a related field, or equivalent experience",
+   "Strong knowledge of component-based interfaces, hooks, state management and the web’s core language",
+   "Solid HTML, CSS, responsive layout and accessibility skills",
+   "Portfolio or code samples showing finished, production web interfaces"
+  ],
+  "nice": [
+   "Experience with server-side rendering or building a shared design system",
+   "Experience building mobile apps from a shared codebase"
+  ]
+ },
  "real-estate": {
   "duties": [
    "Identify and evaluate sites for offices, plants, warehouses and data centers against business, cost and workforce needs",
@@ -5037,6 +7196,46 @@
   "nice": [
    "Professional designation such as CCIM, SIOR or a corporate real estate credential",
    "Experience with industrial or data center sites, including power, zoning and economic incentive negotiations"
+  ]
+ },
+ "real-estate-agent": {
+  "duties": [
+   "Meet buyers, sellers and renters to learn their needs, budget, timeline and preferred locations",
+   "Prepare comparative market analyses to recommend listing prices, offer amounts or rents",
+   "List properties, arrange photos and marketing, and show homes or offices to qualified clients",
+   "Write offers and lease applications, negotiate terms and present counteroffers to clients",
+   "Coordinate inspections, appraisals, financing and title work through closing or lease signing",
+   "Follow fair housing laws, disclosure rules and the policies of the supervising broker"
+  ],
+  "must": [
+   "State real estate license where required; licensing rules for leasing agents vary by state",
+   "High school diploma or equivalent, plus completion of state pre-licensing education",
+   "Strong negotiation, communication and customer service skills",
+   "Valid driver’s license and reliable transportation for showings"
+  ],
+  "nice": [
+   "Bachelor’s degree in business, finance or a related field",
+   "Professional designation in residential, commercial or property management"
+  ]
+ },
+ "receptionist": {
+  "duties": [
+   "Greet visitors, patients or guests, check them in and direct them to the right person or area",
+   "Answer and route phone calls, take messages and respond to general questions",
+   "Schedule appointments, meetings and room bookings, and keep calendars up to date",
+   "Sort mail and deliveries, sign for packages and distribute them to staff",
+   "Keep the front desk and waiting area clean, organized and stocked",
+   "Follow security and privacy procedures, including visitor badges and confidential patient or client information"
+  ],
+  "must": [
+   "High school diploma or equivalent",
+   "Friendly, professional manner in person and on the phone",
+   "Basic computer skills and accurate data entry",
+   "Ability to handle several tasks at once and stay calm during busy periods"
+  ],
+  "nice": [
+   "Bilingual skills in English and a language common among visitors",
+   "Experience at a medical office, hotel or corporate front desk"
   ]
  },
  "recruiter": {
@@ -5139,6 +7338,26 @@
    "Experience with submissions or product registrations in markets outside the US"
   ]
  },
+ "rehab-therapist": {
+  "duties": [
+   "Evaluate patients’ strength, range of motion, function and daily living skills after injury, illness or surgery",
+   "Set treatment goals and write care plans with patients, families and the care team",
+   "Lead therapeutic exercise, manual therapy and functional training to restore movement",
+   "Teach patients to perform daily tasks and recommend adaptive equipment and home modifications",
+   "Document evaluations, progress and billing codes accurately and on time",
+   "Supervise therapy assistants and aides within state practice rules"
+  ],
+  "must": [
+   "Doctor of Physical Therapy, or master’s or doctoral degree in occupational therapy from an accredited program",
+   "Active state license as a physical or occupational therapist; state rules vary",
+   "Current Basic Life Support certification",
+   "Strong communication, empathy and physical stamina for hands-on patient care"
+  ],
+  "nice": [
+   "Board specialist certification in orthopedics, neurology, pediatrics or another area",
+   "Experience in the role’s setting, such as hospital, outpatient clinic or home health"
+  ]
+ },
  "reinforcement-learning": {
   "duties": [
    "Design reward models and reward signals that capture what makes a model’s answers helpful, honest and safe",
@@ -5177,6 +7396,26 @@
   "nice": [
    "Experience managing renewals for subscription or software products",
    "Background in building renewal processes, playbooks or forecasting models"
+  ]
+ },
+ "reporting-analyst": {
+  "duties": [
+   "Prepare recurring daily, weekly, monthly and quarterly reports for managers, clients or regulators",
+   "Reconcile report figures to source systems and the general ledger before release",
+   "Build and maintain automated reports and dashboards that replace manual spreadsheet work",
+   "Prepare regulatory filings and returns on schedule, following agency instructions and definitions",
+   "Investigate data errors and variances, document causes and work with owners to fix them",
+   "Maintain report definitions, controls and audit trails so every figure can be traced"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, accounting, business, statistics or a related field, or equivalent experience",
+   "Strong spreadsheet and database query skills",
+   "Close attention to detail and a habit of checking figures against sources",
+   "Ability to meet fixed deadlines and explain variances to managers"
+  ],
+  "nice": [
+   "Knowledge of regulatory reporting in banking, insurance, healthcare or public companies",
+   "Experience with financial close, internal controls or audit support"
   ]
  },
  "research-analyst": {
@@ -5359,6 +7598,46 @@
    "Experience with functional safety standards for industrial robots or autonomous vehicles"
   ]
  },
+ "ruby-developer": {
+  "duties": [
+   "Build web application features end to end, from database migrations and models to controllers and views",
+   "Design and maintain JSON APIs that serve web front ends, mobile apps and partner integrations",
+   "Write automated model, request and system tests, and keep the test suite fast and reliable",
+   "Move slow or heavy work into background jobs and tune database queries to cut response times",
+   "Upgrade framework and library versions and patch security vulnerabilities in dependencies",
+   "Work with product managers and designers to scope, ship and refine features in short release cycles"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science or a related field, or equivalent experience",
+   "Strong knowledge of the language and its web framework conventions, including model-view-controller design",
+   "Solid grasp of relational databases, HTTP, caching and web application security",
+   "Ability to write clean, tested code and give and take review feedback"
+  ],
+  "nice": [
+   "Experience at an early-stage startup or on a small product team",
+   "Front-end skills for building interactive pages within server-rendered applications"
+  ]
+ },
+ "rust-developer": {
+  "duties": [
+   "Write fast, memory-safe services, libraries and command-line tools using the language’s ownership and borrowing model",
+   "Design concurrent and asynchronous code that stays free of data races under heavy load",
+   "Profile and benchmark hot code paths, then cut allocations, copies and latency where it matters",
+   "Wrap unsafe code and foreign function calls in safe, documented interfaces with clear invariants",
+   "Write unit, integration and property-based tests, and fuzz parsers and network inputs for edge cases",
+   "Review pull requests, manage crate dependencies and keep builds, linting and releases running in continuous integration"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, software engineering or a related field, or equivalent experience",
+   "Strong command of the language’s ownership, lifetimes, traits, error handling and async model",
+   "Solid grasp of memory, concurrency, networking and data structures at the systems level",
+   "Ability to read and review low-level code and explain performance trade-offs clearly"
+  ],
+  "nice": [
+   "Contributions to open-source libraries or tools in the language’s ecosystem",
+   "Background in blockchain clients, low-latency financial systems, embedded devices or databases"
+  ]
+ },
  "sales-coordinator": {
   "duties": [
    "Prepare and send customer quotes using approved pricing, product configurations and discount guidelines",
@@ -5499,6 +7778,26 @@
    "Valid driver’s license and reliable transportation for field sales territories"
   ]
  },
+ "salesforce": {
+  "duties": [
+   "Configure objects, fields, page layouts, record types and validation rules to match sales processes",
+   "Build automated flows and approval processes that cut manual data entry for sales and service teams",
+   "Manage users, profiles, permission sets and sharing rules to control who sees which records",
+   "Build reports and dashboards that show pipeline, forecasts and team activity to managers",
+   "Import, deduplicate and clean customer data, and maintain integrations with marketing and finance systems",
+   "Test and deploy changes through sandboxes, document configurations and train users on new features"
+  ],
+  "must": [
+   "Bachelor’s degree in business, information systems or a related field, or equivalent experience",
+   "Hands-on experience administering the CRM platform, including security, automation and reporting",
+   "Ability to turn sales and service team requests into clear requirements and working solutions",
+   "Clear communication and training skills for nontechnical users"
+  ],
+  "nice": [
+   "Administrator, platform app builder or developer certification from the CRM vendor",
+   "Experience writing custom code or integrations on the CRM platform"
+  ]
+ },
  "sap": {
   "duties": [
    "Gather business requirements from finance, purchasing and production teams and map them to SAP processes",
@@ -5517,6 +7816,26 @@
   "nice": [
    "SAP certification in a relevant module or solution area",
    "Experience on a full implementation, upgrade or system migration project"
+  ]
+ },
+ "scrum-master": {
+  "duties": [
+   "Facilitate sprint planning, daily standups, sprint reviews and retrospectives for the team",
+   "Remove blockers by working with other teams, managers and stakeholders",
+   "Coach the team and product owner on Scrum practices, estimation and backlog refinement",
+   "Track sprint progress and release readiness and share clear status with stakeholders",
+   "Coordinate release plans and cross-team dependencies so finished work ships on schedule",
+   "Help the team improve its process through retrospective action items and working agreements"
+  ],
+  "must": [
+   "Bachelor’s degree in business, computer science or a related field, or equivalent experience",
+   "Strong knowledge of Scrum, Kanban and iterative delivery practices",
+   "Facilitation, coaching and conflict resolution skills",
+   "Ability to track progress, risks and dependencies across a team’s work"
+  ],
+  "nice": [
+   "Scrum master certification or a similar professional credential",
+   "Technical background in software development or testing"
   ]
  },
  "search-engineer": {
@@ -5679,6 +7998,26 @@
    "Background with cloud infrastructure, containers and continuous integration and delivery pipelines"
   ]
  },
+ "seo": {
+  "duties": [
+   "Research the search terms customers use and map them to new and existing pages",
+   "Audit sites for crawling, indexing, speed and structured data problems and track fixes",
+   "Improve page titles, content and internal links together with writers and developers",
+   "Build and manage paid search campaigns, keywords, ads and bids within budget",
+   "Track rankings, traffic, conversions and ad spend and report results to stakeholders",
+   "Test landing pages and ad copy to raise conversion rates and return on ad spend"
+  ],
+  "must": [
+   "Bachelor’s degree in marketing, communications or a related field, or equivalent experience",
+   "Strong knowledge of how search engines crawl, index and rank web pages",
+   "Hands-on skill managing paid search budgets, bids and campaign performance",
+   "Ability to read web analytics data and explain results clearly"
+  ],
+  "nice": [
+   "Certification from a major search advertising platform",
+   "Basic knowledge of web markup and site code for technical fixes"
+  ]
+ },
  "simulation-engineer": {
   "duties": [
    "Build computer models of parts, machines, vehicles or virtual worlds to predict how designs perform before prototypes exist",
@@ -5697,6 +8036,26 @@
   "nice": [
    "Master’s degree with research or coursework in modeling, simulation or computational mechanics",
    "Experience with hardware-in-the-loop or real-time simulation for testing control systems"
+  ]
+ },
+ "site-reliability-engineer": {
+  "duties": [
+   "Define service level objectives and indicators with product teams and track error budgets against them",
+   "Build monitoring, alerting, logging and tracing so problems are found before users notice them",
+   "Join an on-call rotation to respond to incidents, restore service and keep stakeholders informed",
+   "Lead blameless postmortems and follow through on fixes that stop the same failure from recurring",
+   "Automate deployments, scaling, failover and routine operations to reduce manual toil",
+   "Plan capacity, run load tests and tune systems to keep the service fast as traffic grows"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, engineering or a related field, or equivalent experience",
+   "Strong knowledge of server operating systems, networking, distributed systems and cloud infrastructure",
+   "Ability to write production-quality code and scripts for automation and internal tooling",
+   "Calm, clear communication during incidents and willingness to take part in on-call duty"
+  ],
+  "nice": [
+   "Experience running disaster recovery drills or controlled failure experiments",
+   "Background in performance tuning or large-scale database operations"
   ]
  },
  "smart-contract-engineer": {
@@ -5819,6 +8178,26 @@
    "Familiarity with secure coding practices and common application vulnerabilities"
   ]
  },
+ "solar": {
+  "duties": [
+   "Assess sites for sun exposure, shading, roof or ground conditions and grid connection options",
+   "Design solar arrays, including panel layout, inverters, wiring and racking, to meet electrical codes",
+   "Install and wire panels, racking, inverters and batteries safely on roofs and ground-mount sites",
+   "Commission and test systems, and troubleshoot faults in modules, inverters and monitoring equipment",
+   "Prepare permit and utility interconnection documents and support local inspections",
+   "Track system output and perform maintenance to keep panels and plants producing as designed"
+  ],
+  "must": [
+   "Engineering degree for design roles or trade training for installation roles, or equivalent experience",
+   "Working knowledge of the National Electrical Code and solar safety practices",
+   "Electrician license for electrical work where required; state rules vary",
+   "Ability to work at heights, lift equipment and work outdoors in varied weather"
+  ],
+  "nice": [
+   "NABCEP solar installation or design certification",
+   "Experience with battery storage systems or utility-scale solar projects"
+  ]
+ },
  "solutions-architect": {
   "duties": [
    "Lead technical discovery sessions to map customer requirements, existing systems and integration constraints",
@@ -5879,6 +8258,66 @@
    "Professional sourcing or recruiting certification from a recognized industry group"
   ]
  },
+ "spend-analyst": {
+  "duties": [
+   "Collect and clean spend data from purchase orders, invoices and payment records across business units",
+   "Classify spending by category, supplier and department to show where the company’s money goes",
+   "Identify savings through supplier consolidation, volume pricing, contract compliance and lower demand",
+   "Build reports and dashboards that track spend, savings, off-contract buying and supplier performance",
+   "Support sourcing events and negotiations with price benchmarks, cost models and bid comparisons",
+   "Check invoices against contract prices, discounts and rebates, and flag charges that do not match"
+  ],
+  "must": [
+   "Bachelor’s degree in supply chain, business, finance, economics or a related field",
+   "Strong spreadsheet, data cleaning and analysis skills",
+   "Understanding of procurement processes, purchasing categories and supplier contracts",
+   "Ability to explain findings clearly to buyers, finance teams and managers"
+  ],
+  "nice": [
+   "Procurement certification such as Certified Professional in Supply Management",
+   "Experience with direct or indirect spend categories in a large organization"
+  ]
+ },
+ "sponsorships": {
+  "duties": [
+   "Identify and evaluate events, teams, leagues and athletes that fit the brand, audience and budget",
+   "Negotiate rights packages, fees and contracts, including exclusivity, naming rights and termination terms",
+   "Plan activation such as signage, hospitality, content and promotions with marketing and agency partners",
+   "Track delivery of every promised benefit and resolve shortfalls with the other party",
+   "Measure exposure, leads and return on each deal and report results to leadership",
+   "Manage sponsorship budgets, invoices and renewals, and recommend which deals to keep or drop"
+  ],
+  "must": [
+   "Bachelor’s degree in sports management, marketing, business or a related field, or equivalent experience",
+   "Strong negotiation and contract skills",
+   "Ability to build lasting relationships with rights holders, agencies and brand partners",
+   "Willingness to travel and work evenings and weekends at events"
+  ],
+  "nice": [
+   "Network of contacts in sports, esports, music or live events",
+   "Knowledge of advertising rules for regulated products such as alcohol, gambling or financial services"
+  ]
+ },
+ "sql-developer": {
+  "duties": [
+   "Write and tune database queries, views and stored procedures that answer business questions accurately",
+   "Design tables, keys and indexes that keep data consistent and queries fast",
+   "Build scheduled reports and data extracts for finance, operations and management teams",
+   "Read query execution plans and rewrite slow queries or add indexes to cut run times",
+   "Load, transform and validate data moving between source systems and the data warehouse",
+   "Document data definitions and control access to sensitive tables and records"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, information systems or a related field, or equivalent experience",
+   "Expert query writing, including joins, window functions, common table expressions and transactions",
+   "Solid grasp of relational design, normalization, indexing and query optimization",
+   "Attention to detail and ability to explain results to nontechnical colleagues"
+  ],
+  "nice": [
+   "Experience with data warehouse modeling and extract, transform, load processes",
+   "Database administrator or developer certification from a major database vendor"
+  ]
+ },
  "stablecoins-tokenization": {
   "duties": [
    "Design token structures for bonds, fund shares and other real-world assets issued on blockchain networks",
@@ -5897,6 +8336,46 @@
   "nice": [
    "Background in fund administration, custody, treasury operations or capital markets settlement",
    "Familiarity with the federal framework for payment stablecoins and its implementing rules"
+  ]
+ },
+ "staff-engineer": {
+  "duties": [
+   "Set technical direction and architecture for systems that span several teams",
+   "Lead design reviews and write technical proposals that weigh tradeoffs, risks and costs",
+   "Solve the hardest technical problems, from scaling bottlenecks to complex production incidents",
+   "Mentor senior and mid-level engineers through pairing, code review and design feedback",
+   "Identify technical debt and drive long-term plans to improve reliability and developer productivity",
+   "Partner with engineering managers and product leaders on roadmaps and technical priorities"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, engineering or a related field, or equivalent experience",
+   "Deep expertise in system design, distributed systems and software architecture at scale",
+   "Track record of leading major technical projects across teams without managing people",
+   "Strong written communication for design documents and technical strategy"
+  ],
+  "nice": [
+   "Open source contributions, published papers or conference talks",
+   "Experience in the company’s technical domain, such as payments, data or infrastructure"
+  ]
+ },
+ "statistician": {
+  "duties": [
+   "Design experiments, surveys and sampling plans with enough statistical power to answer the research question",
+   "Clean and check data for errors, missing values and bias before analysis",
+   "Choose and apply statistical models, tests and estimation methods suited to the data and question",
+   "Write statistical analysis plans and document assumptions so results can be reproduced",
+   "Explain findings, uncertainty and limits clearly to researchers, managers and regulators",
+   "Review others’ studies and reports for sound methods and claims the data cannot support"
+  ],
+  "must": [
+   "Master’s degree in statistics, biostatistics or a related field; some roles accept a bachelor’s",
+   "Strong knowledge of probability, inference, regression, experimental design and sampling",
+   "Programming skills in a statistical language for analysis and simulation",
+   "Clear writing and the ability to explain statistical results to nonstatisticians"
+  ],
+  "nice": [
+   "Doctorate in statistics or biostatistics for research or methods roles",
+   "Experience with clinical trials, official surveys or regulatory submissions"
   ]
  },
  "storage-engineer": {
@@ -6139,6 +8618,26 @@
    "Familiarity with customer data privacy rules and secure handling of account information"
   ]
  },
+ "system-administrator": {
+  "duties": [
+   "Install, configure and patch servers, operating systems and core network services",
+   "Manage user accounts, groups and access rights based on least privilege and job role",
+   "Set up, secure and support laptops, phones and other employee devices",
+   "Monitor systems, backups and storage, and respond to outages and alerts",
+   "Handle onboarding and offboarding so access is granted and removed on time",
+   "Automate routine administration tasks with scripts and configuration management"
+  ],
+  "must": [
+   "Bachelor’s degree in information technology, computer science or a related field, or equivalent experience",
+   "Strong knowledge of server operating systems, directory services and networking basics",
+   "Understanding of identity and access management and endpoint security practices",
+   "Scripting skills to automate routine administration work"
+  ],
+  "nice": [
+   "Industry certifications in systems administration, networking or security",
+   "Experience with cloud infrastructure and device management platforms"
+  ]
+ },
  "systems-engineer": {
   "duties": [
    "Gather stakeholder needs and turn them into clear, testable system requirements",
@@ -6197,6 +8696,26 @@
   "nice": [
    "CPA license (requirements vary by state) or IRS Enrolled Agent credential",
    "Master’s degree in taxation or past work in a multinational company’s tax team"
+  ]
+ },
+ "tech-lead": {
+  "duties": [
+   "Plan sprint work with the team, breaking features into clear, well-sized tasks",
+   "Write production code alongside the team on core features, fixes and technical improvements",
+   "Review pull requests for correctness, design, readability and test coverage",
+   "Make technical design decisions for the team and document them for future reference",
+   "Unblock engineers by answering questions, clearing dependencies and escalating risks early",
+   "Coordinate with product managers, designers and other teams on scope and delivery dates"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, engineering or a related field, or equivalent experience",
+   "Strong hands-on coding skills in the team’s main language and stack",
+   "Ability to guide a small team through planning, code review and delivery",
+   "Clear communication with engineers, product managers and stakeholders"
+  ],
+  "nice": [
+   "Experience mentoring junior engineers or running technical interviews",
+   "Background in the team’s product area or business domain"
   ]
  },
  "technical-account-manager": {
@@ -6339,6 +8858,26 @@
    "Familiarity with data privacy and security rules that apply to client industries"
   ]
  },
+ "telecom-engineer": {
+  "duties": [
+   "Design radio access and backhaul links, including antenna placement, frequency planning and link budgets",
+   "Plan and configure core network switches, routers and signaling systems for voice and mobile data",
+   "Analyze drive tests and network performance data to find coverage gaps, congestion and dropped calls",
+   "Prepare site designs and documentation for tower installs, zoning reviews and regulatory filings",
+   "Check designs against federal radio frequency exposure limits and spectrum license conditions",
+   "Troubleshoot outages with field technicians and vendors, and lead root cause analysis"
+  ],
+  "must": [
+   "Bachelor’s degree in electrical engineering, telecommunications or a related field, or equivalent experience",
+   "Solid knowledge of radio frequency principles, IP networking and mobile network architecture",
+   "Ability to read site drawings and work with field crews, with travel to sites as needed",
+   "Clear documentation and communication with vendors, contractors and operations teams"
+  ],
+  "nice": [
+   "Professional Engineer license where the role seals designs; state rules vary",
+   "Commercial radio operator license or tower climbing safety training"
+  ]
+ },
  "territory-sales": {
   "duties": [
    "Prospect and qualify new accounts across the assigned territory through cold calls, referrals and field visits",
@@ -6439,6 +8978,46 @@
    "Familiarity with PPAP, scientific molding or statistical process control methods"
   ]
  },
+ "trader": {
+  "duties": [
+   "Execute buy and sell orders for the firm or its clients at the best available price",
+   "Monitor market prices, news and order flow to spot opportunities and risks",
+   "Manage positions within assigned risk limits, adjusting exposure as markets move",
+   "Price and quote securities or other instruments for clients and counterparties",
+   "Record trades accurately and reconcile positions and profit and loss with operations teams",
+   "Follow securities rules and firm policies on best execution, position limits and trade reporting"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, economics, mathematics or a related field",
+   "FINRA or NFA registration where the role requires it, or ability to pass the required exams after hire",
+   "Quick, accurate decisions under pressure and strong numerical skills",
+   "Solid understanding of market structure, order types and risk management"
+  ],
+  "nice": [
+   "Experience with algorithmic or electronic order execution",
+   "Chartered Financial Analyst designation or progress toward it"
+  ]
+ },
+ "trading-systems-engineer": {
+  "duties": [
+   "Build order management, execution and matching engine software for exchanges and market participants",
+   "Process real-time market data feeds and normalize quotes and trades with minimal latency",
+   "Optimize code paths, memory layout and network handling to cut latency to microseconds",
+   "Implement pre-order risk checks, position limits and kill switches required for market access",
+   "Connect systems to exchanges, brokers and clearing firms through standard financial messaging protocols",
+   "Monitor production during market hours, investigate failed orders and fix issues under time pressure"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, engineering, mathematics or a related field, or equivalent experience",
+   "Strong low-level programming skills for low-latency, high-throughput systems",
+   "Solid grasp of networking, concurrency, operating system internals and performance profiling",
+   "Understanding of order types, market structure and the risk of software errors in live markets"
+  ],
+  "nice": [
+   "Knowledge of market access rules and broker-dealer compliance controls",
+   "Experience with kernel bypass networking or hardware acceleration on programmable chips"
+  ]
+ },
  "training": {
   "duties": [
    "Design and build training courses, guides and e-learning modules for employees or customers",
@@ -6457,6 +9036,26 @@
   "nice": [
    "Training in instructional design methods such as ADDIE or adult learning principles",
    "Experience recording and editing short training videos or screen walkthroughs"
+  ]
+ },
+ "travel-coordinator": {
+  "duties": [
+   "Book flights, hotels, rental cars and ground transportation within company travel policy and budget",
+   "Prepare itineraries and share confirmations, addresses and contact details with travelers before departure",
+   "Help travelers obtain visas and entry documents for international trips, and check passport validity",
+   "Rebook travel quickly when flights are canceled or delayed or plans change",
+   "Track travel spending, unused tickets and loyalty programs, and reconcile bookings with expense reports",
+   "Coordinate group travel for meetings, events and offsites, including hotel room blocks and transfers"
+  ],
+  "must": [
+   "High school diploma or equivalent; bachelor’s degree or travel coursework preferred",
+   "Strong organization and attention to detail with dates, names and documents",
+   "Calm, quick problem solving when travel plans change suddenly",
+   "Clear communication with travelers, suppliers and managers in different time zones"
+  ],
+  "nice": [
+   "Experience with corporate travel booking or a travel management company",
+   "Knowledge of duty of care practices and international entry rules"
   ]
  },
  "treasury": {
@@ -6659,6 +9258,26 @@
    "Knowledge of 3D animation, sound design or live streaming"
   ]
  },
+ "vip-relationship": {
+  "duties": [
+   "Serve as main contact for funds, firms, market makers and high-volume clients of an exchange or bank",
+   "Guide new institutional clients through onboarding, due diligence and account setup with compliance teams",
+   "Resolve issues with deposits, withdrawals, settlement, fees and API connections quickly and accurately",
+   "Explain products, fee tiers, custody options and market structure in regular client reviews",
+   "Monitor client activity and volume to spot risks, signs of churn and growth opportunities",
+   "Share client feedback with product, operations and risk teams and track requests to resolution"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, economics, business or a related field, or equivalent experience",
+   "Strong knowledge of markets, order types, custody and settlement",
+   "Excellent relationship management, communication and problem-solving skills",
+   "Understanding of KYC, anti-money laundering and sanctions rules for institutional clients"
+  ],
+  "nice": [
+   "Securities licenses where the role covers registered products; requirements depend on the firm",
+   "Existing network among funds, market makers or institutional desks"
+  ]
+ },
  "vp-engineering": {
   "duties": [
    "Lead and coach engineering managers who run several product and platform teams across the organization",
@@ -6699,6 +9318,26 @@
    "Experience scaling a sales organization through rapid growth or entry into new markets"
   ]
  },
+ "vulnerability-management": {
+  "duties": [
+   "Run authenticated scans across servers, endpoints, cloud accounts, containers and network devices on a set schedule",
+   "Prioritize findings by severity, known exploitation, internet exposure and the business importance of each asset",
+   "Assign remediation tickets to system owners and follow up until fixes land within agreed deadlines",
+   "Verify fixes through rescans and track exceptions, compensating controls and formal risk acceptances",
+   "Monitor vendor advisories and government alerts for newly disclosed flaws affecting the company’s technology",
+   "Report remediation progress, overdue items and risk trends to IT leaders and security management"
+  ],
+  "must": [
+   "Bachelor’s degree in cybersecurity, computer science, IT or a related field, or equivalent experience",
+   "Solid knowledge of operating systems, networking, patching and common vulnerability scoring methods",
+   "Ability to read technical advisories and judge real risk in the company’s environment",
+   "Clear communication to push remediation with teams outside the security group"
+  ],
+  "nice": [
+   "Industry certification in vulnerability assessment, penetration testing or security operations",
+   "Scripting skills to automate scanning, ticketing and reporting work"
+  ]
+ },
  "warehouse-associate": {
   "duties": [
    "Unload incoming trucks and check shipments against packing slips and purchase orders for count and damage",
@@ -6717,6 +9356,46 @@
   "nice": [
    "Forklift or reach truck experience, with OSHA-required operator training and evaluation from an employer",
    "Experience using RF scanners in a fast-paced warehouse or distribution center"
+  ]
+ },
+ "wealth-management": {
+  "duties": [
+   "Meet with clients to learn their goals, risk tolerance, cash needs, tax situation and family circumstances",
+   "Build financial plans covering investments, retirement, education funding, insurance and charitable giving",
+   "Recommend and monitor investment portfolios that fit each client’s objectives and risk tolerance",
+   "Coordinate with attorneys and accountants on estate plans, trusts, gifting and tax strategies",
+   "Review accounts regularly and rebalance portfolios or update plans as markets and client lives change",
+   "Document advice and client communications in line with fiduciary duty and securities regulations"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, economics, accounting or a related field",
+   "Securities or investment adviser licenses the role requires, noting state rules vary",
+   "Sound knowledge of investments, tax planning, retirement accounts and estate planning basics",
+   "Strong listening and communication skills, with discretion about private family matters"
+  ],
+  "nice": [
+   "CFP certification, CFA charter or a similar planning credential",
+   "Experience serving high net worth families, business owners or trusts"
+  ]
+ },
+ "web-developer": {
+  "duties": [
+   "Build responsive web pages and interfaces from design mockups that work across browsers and devices",
+   "Write and maintain server-side code, APIs and database queries that power site features",
+   "Improve page speed, accessibility and search visibility through clean markup and performance tuning",
+   "Integrate content management systems, payment services, analytics and third-party APIs",
+   "Test, debug and fix issues reported by users, designers and quality assurance teams",
+   "Deploy updates, review code and keep dependencies and security patches current"
+  ],
+  "must": [
+   "Bachelor’s degree in computer science, web development or a related field, or equivalent experience",
+   "Strong command of web markup, styling and scripting languages and responsive design",
+   "Understanding of web security basics, browser behavior and how web servers handle requests",
+   "Portfolio or code samples showing live websites or web applications"
+  ],
+  "nice": [
+   "Knowledge of web accessibility guidelines and testing with assistive technology",
+   "Experience with search-friendly site structure and web performance tuning"
   ]
  },
  "welder": {
@@ -6757,6 +9436,26 @@
   "nice": [
    "Workday certification in a relevant area, such as HCM, payroll or financials",
    "Experience with a full Workday implementation, from design and data conversion to go-live"
+  ]
+ },
+ "workforce-management": {
+  "duties": [
+   "Forecast contact volume, handle time and staffing needs by interval from historical data and business drivers",
+   "Build agent schedules, shift patterns and break plans that meet service level targets",
+   "Monitor real-time queues and schedule adherence, and adjust staffing during the day as volume changes",
+   "Plan for time off, training, overtime and seasonal hiring with operations leaders",
+   "Report on forecast accuracy, service levels, occupancy and shrinkage, and explain variances",
+   "Model staffing scenarios for new channels, launches and process changes to support headcount decisions"
+  ],
+  "must": [
+   "Bachelor’s degree in business, mathematics, statistics or a related field, or equivalent experience",
+   "Strong spreadsheet and data analysis skills",
+   "Understanding of contact center metrics and queuing concepts such as Erlang staffing models",
+   "Ability to make quick staffing decisions and explain them to operations teams"
+  ],
+  "nice": [
+   "Experience with support across phone, chat, email and social channels",
+   "Workforce management certification or coursework in forecasting"
   ]
  },
  "workplace": {
