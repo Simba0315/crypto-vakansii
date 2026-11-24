@@ -7762,5 +7762,115 @@
   ],
   "entry_title": "Open Source Contributor",
   "tech": true
+ },
+ "staff-engineer": {
+  "title": "Staff Software Engineer",
+  "plain": "technical direction, system design, cross-team projects, mentoring, reliability",
+  "lines": [
+   "Led the move of 40 services from a shared database to their own stores over 9 months, with no customer-facing outage",
+   "Wrote the design for a new event pipeline that 6 teams adopted; message loss fell from about 1 in 10,000 to none measured",
+   "Cut cloud spend by $1.2M a year by finding and fixing the 5 most wasteful jobs across teams",
+   "Mentored 7 engineers through design reviews; 3 were promoted to senior within 18 months"
+  ],
+  "entry": [
+   "Built a key-value store that kept 3 copies of every record in a distributed systems course project",
+   "Fixed 12 bugs in an open-source web framework during a summer internship",
+   "Wrote the deployment scripts for a student hackathon team’s app that served 2,000 users"
+  ],
+  "senior": [
+   "Set the technical direction for a platform group of 5 teams and 40 engineers",
+   "Owned the plan to retire a 15-year-old monolith; 70% of traffic moved to new services in 2 years",
+   "Ran the company’s architecture review; average time to an approved design fell from 6 weeks to 2"
+  ],
+  "entry_title": "Software Engineer",
+  "tech": true
+ },
+ "legal-intern": {
+  "title": "Legal Intern",
+  "plain": "legal research, memo writing, document review, citation checking, case files",
+  "lines": [
+   "Researched 30 state statutes on non-compete limits and wrote a 12-page memo the partner used with a client",
+   "Reviewed about 4,000 documents for privilege in a commercial dispute, flagging 260 for attorney review",
+   "Drafted 3 motions and cite-checked 2 appellate briefs with no citation errors found at filing",
+   "Kept the case file and deadlines for 15 matters during a summer, with no missed date"
+  ],
+  "entry": [
+   "Wrote a 25-page seminar paper on data privacy law that the school published in its student journal",
+   "Placed in the top 4 of 40 teams in a moot court competition",
+   "Helped 60 tenants complete housing court forms at a law school clinic"
+  ],
+  "senior": [
+   "Supervised 4 summer interns on research and document review for a litigation team",
+   "Drafted the first version of 10 commercial contracts that partners finalized with few changes",
+   "Built a research bank of 150 memos that cut repeat research time across the practice group"
+  ],
+  "entry_title": "Law Clerk",
+  "tech": false
+ },
+ "hr-generalist": {
+  "title": "HR Generalist",
+  "plain": "employee relations, onboarding, leave administration, HR policies, compliance",
+  "lines": [
+   "Handled about 40 employee questions a week on pay, leave and policy for a 600-person site",
+   "Ran onboarding for 120 hires a year and cut first-day paperwork errors from 15% to under 3%",
+   "Managed 35 leave cases a year under federal and state rules, with no missed notice deadlines",
+   "Rewrote 8 HR policies after a legal review; employee questions about them fell by half"
+  ],
+  "entry": [
+   "Organized onboarding files for 50 new hires during an HR internship",
+   "Built a spreadsheet that tracked 200 training completions for a student organization",
+   "Answered front-desk HR questions for about 30 employees a day in a part-time role"
+  ],
+  "senior": [
+   "Led HR for a 1,200-person region with a team of 3 generalists",
+   "Owned the investigation process; average time to close a complaint fell from 45 to 20 days",
+   "Set up a leave tracking system with payroll that removed $90K a year in overpayments"
+  ],
+  "entry_title": "HR Assistant",
+  "tech": false
+ },
+ "prediction-markets": {
+  "title": "Prediction Markets Analyst",
+  "plain": "market rules, resolution, trading surveillance, liquidity, compliance",
+  "lines": [
+   "Wrote the rules and resolution sources for 300 event markets with no disputed outcome",
+   "Built surveillance checks that flagged 25 accounts for possible wash trading in one quarter",
+   "Grew traded volume on new markets by 40% by working with liquidity providers on spreads",
+   "Resolved 1,200 markets on time and answered 400 user questions about outcomes"
+  ],
+  "entry": [
+   "Built a model of election odds from 120 public polls in an econometrics course project",
+   "Tracked 50 sports betting lines against results for a student finance club",
+   "Analyzed 2 years of trading data from a public prediction market for a senior thesis"
+  ],
+  "senior": [
+   "Led a team of 5 that listed and resolved all markets on the exchange",
+   "Owned the market rules policy, reviewed 2 times a year with regulators and outside counsel",
+   "Set up the review of disputed outcomes; appeals fell from 30 to 8 a quarter"
+  ],
+  "entry_title": "Markets Associate",
+  "tech": false
+ },
+ "market-maker": {
+  "title": "Market Making Trader",
+  "plain": "quoting, inventory risk, hedging, risk limits, trading systems",
+  "lines": [
+   "Quoted 40 crypto pairs across 6 exchanges, keeping spreads inside the exchange’s required range 98% of the time",
+   "Cut inventory losses by 30% by adding faster hedging when positions passed set limits",
+   "Built a dashboard of fills and adverse selection that 8 traders used to tune quotes daily",
+   "Kept trading within risk limits through 3 volatility spikes, with kill switches tested every week"
+  ],
+  "entry": [
+   "Built a market-making simulator in a course project and tested it on 6 months of order books",
+   "Placed in the top 10% of a university trading competition",
+   "Analyzed bid-ask spreads on 100 stocks for a finance club report"
+  ],
+  "senior": [
+   "Led a desk of 6 traders making markets in 150 instruments",
+   "Owned the desk’s risk limits and the daily profit and loss review across 150 instruments",
+   "Set up a new venue launch; the desk was quoting on it within 3 weeks of approval"
+  ],
+  "entry_title": "Junior Trader",
+  "tech": false
  }
 }
