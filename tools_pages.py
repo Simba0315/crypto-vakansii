@@ -339,9 +339,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                  f'<a href="{P}/salaries/">Salaries by skill and company</a></p>')
     tool("salary-checker", "seekers", "Salary checker",
          "See the median and range of advertised salaries for your category, level and skill, and where your pay sits.",
-         "Salary Checker — Is Your Pay Fair?",
+         "Salary Checker: Compare Your Pay With Posted Salaries",
          f"Compare your salary with what open job postings advertise: median and range by category, level and skill, from {n_paid:,} postings with a published range.",
-         "Is your salary in line with what companies advertise?",
+         "Compare your salary with what companies advertise",
          f"{100 - sal_pct}% of the {n_jobs:,} open roles here do not state a salary, so it is hard to tell whether your salary or an offer is fair. "
          f"This checker uses the {n_paid:,} postings that do publish a yearly US-dollar range. Pick a category and a level, add a skill if you like, enter your number, and see the median, the typical range and where you sit.",
          wrap("salary-checker",
