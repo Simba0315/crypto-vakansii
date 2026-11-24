@@ -963,3 +963,11 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   Now hospital posts, rotations, a sepsis audit, a first-author paper, teaching, a medical degree.
 - /how-to-hire/nodejs-developer/ ("hire node js developer" 25 at 90 and variants): skills read "Agile, SQL, Jira" because the work was not counted as technical.
 
+### Google US, 24 Nov 2026 evening: rolling basis, new grad, exit interview, hybrid
+- "rolling basis meaning": /glossary/rolling-basis/ is 2nd organic (Yale SOM 1st); the AI overview cites Yale, Pioneer Academics, X and YouTube, not us.
+  People also ask: "What is a rolling basis interview?" (added), "Does rolling basis mean first come first serve" (already answered).
+- "new grad meaning": not on page 1 in the US (Search Console's 6.0 comes from other countries). AI overview: OPM's Recent Graduates Program, nursing's
+  first year (both already on the page). Added the form question "Are you a student or new grad?".
+- "what is an exit interview": Coursera, Indeed, SHRM-type pages; we are not on page 1. Added "Can an exit interview be used against you?".
+- "hybrid work meaning": Webex, Microsoft, Workday, Cambridge; not on page 1. Added "What is an example of hybrid work?".
+

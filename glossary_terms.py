@@ -1876,6 +1876,11 @@ def test():
 
 def test_more():
     import re
+    # a term written twice in _ADD_24NOV: the second dict silently replaces the first (24 Nov 2026, "Hybrid" lost a question that way)
+    src_ = open(__file__, encoding="utf-8").read()
+    add_ = src_[src_.index("_ADD_24NOV = {"):src_.index("\n}\n", src_.index("_ADD_24NOV = {"))]
+    keys_ = re.findall(r'^    "([^"]+)": dict\(', add_, re.M)
+    assert len(keys_) == len(set(keys_)), [k for k in keys_ if keys_.count(k) > 1]
     slug = lambda t: re.sub(r"[^a-z0-9]+", "-", re.sub(r"\(.*?\)", "", t.lower())).strip("-")   # same rule as gslug in build.py
     names = {t[0] for t in TERMS}
     slugs = {slug(n) for n in names}
@@ -1934,6 +1939,7 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
         ],
         qa=[
             ("What does hybrid mean in a job ad?", "That the job is not fully remote: you are expected in an office some of the week. Look for the number of days (\"hybrid, 3 days in office\") and the office location; if the ad gives neither, ask before applying."),
+            ("What is an example of hybrid work?", "A posting that says \"hybrid, three days a week in our London office\": you work Tuesday to Thursday at the office and Monday and Friday from home, with the team in the office on the same days for meetings. Another common form is one fixed office week a month and the rest at home."),
         ]),
     "CV": dict(
         sections=[
@@ -1990,6 +1996,21 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
                 "A contract employee is employed by the company, or by an agency, for a fixed term: on payroll, with tax withheld, working the way the employer directs. An independent contractor is self-employed and decides how, when and where the work is done.",
                 "The difference matters for tax, benefits and how easily the work can end, so check which one an ad means: \"12-month contract, W-2\" is the first; \"1099\" or \"freelance\" is the second.",
             ]),
+        ]),
+    # Google, 24 Nov 2026: this page stood 2nd for "rolling basis meaning" in the US; "What is a rolling basis interview?" was a question
+    # people also ask that the page did not answer
+    # Google, 24 Nov 2026, "what is an exit interview": people also ask "Can exit interviews be used against you?"
+    "Exit interview": dict(
+        qa=[
+            ("Can an exit interview be used against you?", "It can follow you: notes are usually kept in your HR file and may be shared with managers, and they can be read if you apply to the company again or if it is asked for a reference. Keep to facts about the job and save complaints about a person for a written grievance, where a formal process protects you."),
+        ]),
+    "New grad": dict(
+        qa=[
+            ("What does \"Are you a student or new grad?\" mean on an application?", "The form is sorting applicants: choose \"student\" if you are still enrolled and \"new grad\" if you have finished your degree within the employer’s window, usually the last 12 months. Students are usually shown internships, new grads full-time first jobs; give your graduation date exactly as the form asks."),
+        ]),
+    "Rolling basis": dict(
+        qa=[
+            ("What is a rolling basis interview?", "It means interviews are held as applications are read, not after the posting closes: the first suitable applicants can be invited within days, while the job is still open to others, and the job can be filled before later applicants are seen. If you are invited, take the earliest time you can prepare for."),
         ]),
     "RSU (restricted stock units)": dict(
         # figures read on IRS Publication 15 (2026), "What's New" and Section 7, 24 Nov 2026; stock is not named there, hence "many employers"

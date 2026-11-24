@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-24 18:38 UTC — Glossary answers from Google's "People also ask" (US results read today): "What is a rolling basis interview?" (the page stands 2nd for "rolling basis meaning", after Yale), "What does 'Are you a student or new grad?' mean on an application?", "Can an exit interview be used against you?", "What is an example of hybrid work?". glossary_terms.test_more() now fails when a term is written twice in the additions (a second "Hybrid" had silently replaced the first).
 - 2026-11-24 18:30 UTC — Job pages on phones: the sticky "Apply on company site" bar shows only once the page's own Apply button has scrolled away (both showed on the first screen since the button moved to the top); a dash glued to the word before it in a job title is spaced ("Provider Sales - West").
 - 2026-11-24 18:24 UTC — Search page on phones: the filter bar and the row of chips, which scroll sideways, fade at the right edge while there is more to the right ("Any le…" was a hard cut that did not say the row goes on); the fade goes away at the end of the row.
 - 2026-11-24 18:18 UTC — Job locations read as written by a person: "Remote- USA" -> "Remote - USA", and a hiring system's placeholder "UNAVAILABLE" ("Dublin-Dublin, UNAVAILABLE, IE") is dropped.
