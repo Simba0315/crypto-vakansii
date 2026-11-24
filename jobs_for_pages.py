@@ -76,6 +76,20 @@ def _and(xs):
     return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
 
 
+_BIT = {}
+
+
+def _hit(rx, j):
+    """Does a posting's full text match rx? Remembered on the posting as two bit masks (checked, matched), one bit per pattern: the 53
+    pages share kinds of work, so the same pattern ran over the same long texts again and again ("Jobs for" was the slowest stage of
+    the build, 32 s of the local sample; 24 Nov 2026)."""
+    b = _BIT.setdefault(rx.pattern, 1 << len(_BIT))
+    if not j.get("_rxc", 0) & b:
+        j["_rxc"] = j.get("_rxc", 0) | b
+        if rx.search(j["desc"]): j["_rxh"] = j.get("_rxh", 0) | b
+    return bool(j.get("_rxh", 0) & b)
+
+
 def figures(a, by_role, money, median, rlow=lambda s: s, ctx=None):
     """Today's numbers for one entry, or None when fewer than MIN_ROLES of its kinds of work have a role page today.
     by_role: {role slug: (name, [open jobs])} from build.py; ctx: {"night": ids of the jobs on the night-shift list}."""
@@ -86,7 +100,7 @@ def figures(a, by_role, money, median, rlow=lambda s: s, ctx=None):
         x = EXTRA[k]
         if "rx" in x:
             full = [j for j in js if j.get("desc")]
-            return sum(1 for j in full if x["rx"].search(j["desc"])), len(full)
+            return sum(1 for j in full if _hit(x["rx"], j)), len(full)
         return sum(1 for j in js if x["test"](j, ctx)), len(js)
     cell = lambda k, hit, of: (f"{round(100 * hit / of)}%" if of >= TEXT_MIN else "–") if "rx" in EXTRA[k] else f"{hit:,}"
     rows, seen, union = [], set(), []
@@ -134,7 +148,7 @@ def figures(a, by_role, money, median, rlow=lambda s: s, ctx=None):
             tags[t] = tags.get(t, 0) + 1
     skills = [(t, k) for t, k in sorted(tags.items(), key=lambda x: (-x[1], x[0]))[:10] if k >= 5]
     full = [j for j in union if j.get("desc")]
-    quals = sorted(((nm, round(100 * sum(1 for j in full if rx.search(j["desc"])) / len(full))) for nm, rx in QUALITIES), key=lambda x: -x[1]) if len(full) >= TEXT_MIN else []
+    quals = sorted(((nm, round(100 * sum(1 for j in full if _hit(rx, j)) / len(full))) for nm, rx in QUALITIES), key=lambda x: -x[1]) if len(full) >= TEXT_MIN else []
     return {"rows": rows, "k": len(rows), "n": n, "line": line + ("" if not more else " " + " ".join(more)), "extras": extras, "tokens": tokens,
             "head": head + ("" if not more else " " + " ".join(more)), "cells": cells, "skills": skills, "quals": [q for q in quals if q[1] >= 5][:6], "full": len(full)}
 
