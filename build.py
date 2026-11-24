@@ -2443,8 +2443,15 @@ def job_page(j, active_by_cat):
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
     if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= 65: title += f" ({place_})"
     if not j["active"]: title += " (closed)"
-    desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + f". {CAT[j['cat']]} role"
-            + (", remote" if j["remote"] else "") + (". This job is closed." if not j["active"] else ". Apply through the Telegram post." if j.get("tg") else ". Apply on the company site."))
+    # the search line of a job: what a searcher compares first, the pay, then the place of work and the skills (24 Nov 2026: it read
+    # "… — London. Engineering role. Apply on the company site." on every job); fit_desc drops whole sentences from the end when it is long
+    tg3_ = [t_ for t_ in j["tags"][:3]]
+    desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + "."
+            + ((f" Pay: {pay_shown(j['salary'])}." if j["salary"] else "")
+               + (" Remote." if j["remote"] and "remote" not in where.lower() else " Hybrid." if j.get("hybrid") and "hybrid" not in where.lower() else "")
+               + (" Skills: " + (tg3_[0] if len(tg3_) == 1 else ", ".join(tg3_[:-1]) + " and " + tg3_[-1]) + "." if tg3_ else "")
+               + (" Apply through the Telegram post." if j.get("tg") else " Apply on the company site.")
+               if j["active"] else " This job is closed."))
     # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
     ok_ = job_indexable(j)
     page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=ok_, compact=True)
