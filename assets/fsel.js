@@ -168,5 +168,12 @@
   if (rc) chips.appendChild(rc);
   if (work) chips.appendChild(work);
   if (chips.children.length) wrap.insertBefore(chips, bar.nextSibling);
+  // a row that scrolls sideways on a phone fades at its right edge while there is more to the right (style.css); at the end, no fade
+  [bar, chips].forEach(function (row) {
+    function edge() { row.classList.toggle('at-end', row.scrollLeft + row.clientWidth >= row.scrollWidth - 4); }
+    row.addEventListener('scroll', edge, { passive: true });
+    window.addEventListener('resize', edge);
+    edge();
+  });
   setInterval(function () { syncs.forEach(function (f) { f(); }); }, 500);
 })();

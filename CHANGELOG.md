@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-24 18:24 UTC — Search page on phones: the filter bar and the row of chips, which scroll sideways, fade at the right edge while there is more to the right ("Any le…" was a hard cut that did not say the row goes on); the fade goes away at the end of the row.
 - 2026-11-24 18:18 UTC — Job locations read as written by a person: "Remote- USA" -> "Remote - USA", and a hiring system's placeholder "UNAVAILABLE" ("Dublin-Dublin, UNAVAILABLE, IE") is dropped.
 - 2026-11-24 18:02 UTC — Salary pages write the work's name in lower case inside sentences ("The average data analyst salary is …", "What changes the pay of software engineer work", "the US government's median for software developers"); titles and headings that start with it keep their capitals, and skills such as Python keep theirs.
 - 2026-11-24 17:57 UTC — Faster build, same pages: the tuition and student-loan perks test a plain word on the lower-cased text before their patterns (7.8 s -> 1.7 s on the local sample, the same perks), and the place lists come from one pass over the jobs instead of one pass per place. That stage: 25 s -> 18 s locally; location, perk and skill pages compared byte for byte (feeds differ only in their timestamps).

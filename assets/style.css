@@ -4274,3 +4274,9 @@ footer .fask a{text-decoration:underline;text-decoration-thickness:1px;text-deco
 @keyframes fbig2{from{transform:translateX(-72%)}to{transform:translateX(72%)}}
 @media (max-width:560px){.fbig::after{background-size:5px 5px}}
 @media (prefers-reduced-motion:reduce){.fbig::before{animation:none;transform:translateX(-30%)}}
+/* 24 Nov 2026: on phones the filter bar and the chips scroll sideways; their right edge was a hard cut ("Any le…") that did not say
+   there was more. A soft fade on the side that still has content says so; it goes away at the end of the row (fsel.js sets .at-end). */
+@media (max-width:860px){
+  main.srch .fx-bar,main.srch .fx-chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+  main.srch .fx-bar.at-end,main.srch .fx-chips.at-end{-webkit-mask-image:none;mask-image:none}
+}
