@@ -2294,6 +2294,11 @@ def job_page(j, active_by_cat):
                                 else f"{e(j['company'])}’s own posting")))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
     pills = []
+    # where the posting comes from, written into the page: site.js added this pill after load and the row below it jumped 28 px
+    # (Lighthouse CLS 0.116 on a job page on a phone, 24 Nov 2026); site.js now finds it and adds nothing
+    if j["active"]:
+        pills.append('<span class="pill src" title="Read from the public page of a Telegram job channel; not checked with the employer">From a Telegram channel</span>' if j.get("tg") else
+                     f'<span class="pill ok src" title="Read from {e(SOURCE_NAME[ats]) + ", the hiring system the employer itself uses" if ats in SOURCE_NAME else "the employer’s own careers site"}, and re-checked every hour">✓ Employer’s own posting</span>')
     if j.get("urgent"): pills.append('<span class="pill urg">Urgently hiring</span>')
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
     if j["remote"]: pills.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')

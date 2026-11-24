@@ -4259,3 +4259,6 @@ main.srch #fwrap .fx-chips .flabel{position:absolute;width:1px;height:1px;margin
   .xl a:hover{text-decoration-color:var(--ac)}
   .steps a,.khero dt a,.lhero dt a{padding:4px 0}
 }
+/* 24 Nov 2026, Lighthouse "Links rely on color to be distinguishable": the "Ask ChatGPT / Claude / Perplexity" links sit inside a
+   sentence in the footer, so they keep a thin underline, not only a colour */
+footer .fask a{text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:currentColor;text-underline-offset:3px}
