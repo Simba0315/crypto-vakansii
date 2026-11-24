@@ -6299,6 +6299,7 @@ def main():
     # the same advice for every work; what makes each page useful is counted from today's postings: how many are open to beginners,
     # how many years employers ask, the skills they name first, whether a degree is required, what juniors are paid.
     hb_dir, hb_begin = defaultdict(list), set()
+    cc_rows, cc_ids = [], set()        # for /career-change/: per kind of work, the postings that name career changers
     PROOF_AT = {"engineering": "Put the code on GitHub with a short read-me: what it does, how to run it, one number that shows it works.",
                 "data-research": "Use a public dataset (Kaggle, a government open-data portal), publish the queries or notebook on GitHub and a one-page write-up of what you found.",
                 "design": "Show three case studies on Behance, Dribbble or your own site: the problem, the sketches, the result and what changed.",
@@ -6386,6 +6387,8 @@ def main():
             dg_k = [j for j in txt_ if "No degree required" not in j.get("perks", []) and DEGREE_RX.search(tx_(j))]
             sw_k = [j for j in txt_ if SWITCH_RX.search(tx_(j))]
             tn_ = len(txt_)
+            cc_rows.append((slug_r, rname, len(sw_k), tn_, len(begin), (median(jr_pay) if len(jr_pay) >= 8 else None), nodeg, n_))
+            cc_ids.update(j["id"] for j in sw_k)
             rows_ = [("With a degree", len(dg_k), "name a degree among their requirements and do not accept experience instead",
                       "Check the wording: “or equivalent experience” is a different posting."),
                      ("Without a degree", len(nd_k), "say a degree is not needed, or accept equivalent experience",
@@ -6429,10 +6432,50 @@ def main():
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. Beginner jobs: junior and intern titles, and postings that ask for two years of experience or less.</p>', head=ld_, cls="kw")
     hb_n = sum(len(v) for v in hb_dir.values())
     hb_html = kind_dir(hb_dir, "how-to-become", ("for beginners", "for beginners"))
+    # /career-change/ (ROADMAP 6, "смена профессии"): the page for a person who wants to leave one kind of work for another. Every figure is
+    # counted from the postings that carry their text: how many name career changers, transferable skills, bootcamps or self-taught people.
+    cc_top = sorted((r for r in cc_rows if r[2] >= 5), key=lambda r: (-r[2], r[1]))[:15]
+    cc_beg = sorted((r for r in cc_rows if r[4] >= 20), key=lambda r: (-r[4], r[1]))[:12]
+    if len(cc_top) >= 8:
+        cc_qa = [("Can I change careers without a new degree?",
+                  "Often yes, and each kind of work has its own answer: its page counts how many of today’s postings say a degree is not needed. Many others accept equivalent experience, so read the requirements of each posting."),
+                 ("How do I know a posting welcomes career changers?",
+                  "Look for the words “career change”, “transferable skills”, “bootcamp” or “self-taught” in the text, or for a junior or intern title. The first table on this page counts the postings that use them."),
+                 ("Which of my skills carry over?",
+                  "Skills that appear in postings of both kinds of work: writing, working with data, customer contact, project work, a tool such as Excel or SQL. Compare your resume with a posting in the resume match checker and the gaps show up."),
+                 ("How long does the switch take?",
+                  "The postings cannot say, because it depends on the person and the work. What they do show is what employers ask for: the median years of experience is on each career’s page.")]
+        ld_cc = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in cc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        cc_tbl = ('<div class="tablewrap"><table class="t4"><tr><th>Kind of work</th><th>Postings that name career changers</th><th>Open to beginners</th><th>Beginner pay, median</th></tr>'
+                  + "".join(f'<tr><td><a href="{P}/how-to-become/{r[0]}/">{e(r[1])}</a></td><td><strong>{r[2]:,}</strong> of {r[3]:,}</td><td>{r[4]:,}</td><td>{money(r[5]) if r[5] else "too few state pay"}</td></tr>' for r in cc_top)
+                  + '</table></div><p class="note">Counted in the postings that carry their full text. A posting names career changers when it mentions a career change, transferable skills, a bootcamp or self-taught people. “Open to beginners” means junior and intern titles and postings that ask for two years of experience or less.</p>')
+        cc_beg_tbl = ('<div class="tablewrap"><table class="t4"><tr><th>Kind of work</th><th>Open to beginners</th><th>All open jobs</th><th>Say no degree is needed</th></tr>'
+                      + "".join(f'<tr><td><a href="{P}/how-to-become/{r[0]}/">{e(r[1])}</a></td><td><strong>{r[4]:,}</strong></td><td>{r[7]:,}</td><td>{r[6]}%</td></tr>' for r in cc_beg)
+                      + "</table></div>")
+        cc_steps = ('<ol class="steps">'
+                    f'<li><b>Write down what you already do.</b> List the tasks of your last two jobs and the result of each, with a number where you have one. <a href="{P}/career-quiz/">The career quiz</a> turns your answers into kinds of work that fit.</li>'
+                    '<li><b>Pick one kind of work from the tables above.</b> Open its page: it names the skills employers ask for first, the years they expect and what beginners are paid.</li>'
+                    f'<li><b>Close the gaps with something you can show.</b> One finished project or result is worth more than a list of courses. Check a real posting with the <a href="{P}/tools/resume-match/">resume match checker</a> to see which skills are missing.</li>'
+                    f'<li><b>Write the resume around the new work.</b> Start from the <a href="{P}/resume/examples/">resume example</a> for it and move the duties that match to the top.</li>'
+                    f'<li><b>Apply to jobs that take beginners.</b> The <a href="{P}/entry-level/">entry-level jobs</a> list holds every open job for beginners, and each posting links to the employer’s own site to apply.</li></ol>')
+        page("career-change/", f"Career Change Jobs: {len(cc_ids):,} Postings for Switchers | {SITE}",
+             f"Changing careers: {len(cc_ids):,} open postings name career changers or transferable skills and {len(hb_begin):,} jobs take beginners. Where to start, what beginners earn, five steps.",
+             khero(crumbs(("Career change", "")), "Changing to another kind of work",
+                   f'Career change jobs: <span class="hl">{len(cc_ids):,} postings that name switchers</span>',
+                   f'People who want different work often cannot tell which employers will look at someone without that job on the resume. Some postings say it outright: {len(cc_ids):,} of today’s open jobs mention career changers, transferable skills, bootcamps or self-taught people, and {len(hb_begin):,} take beginners.',
+                   go("how-to-become/", "Pick a kind of work", "primary") + go("career-quiz/", "Take the career quiz", "ghost"),
+                   after='<p class="plain"><b>In plain words:</b> a career change is a move to a different kind of work. “Transferable skills” are things you can already do, such as writing, handling numbers or dealing with customers, that the new work needs too.</p>')
+             + nums([(f"{len(cc_ids):,}", "postings that name career changers"), (f"{len(hb_begin):,}", "jobs open to beginners"), (f"{len(cc_rows)}", "kinds of work counted"), (f"{len(active):,}", "open postings in all")])
+             + section("Where postings [[name career changers]]", cc_tbl, label="The kinds of work", sub="The 15 with the most postings that say so.")
+             + section("Where the most [[beginner jobs]] are", cc_beg_tbl, label="Open to beginners", sub="Every name opens a page with the skills, the pay and five steps.")
+             + section("Five steps to [[a new line of work]]", cc_steps, label="What to do")
+             + section("Questions about [[changing careers]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in cc_qa) + "</dl>", label="Questions")
+             + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update.</p>', head=ld_cc, cls="hub")
     page("how-to-become/", f"How to Become…: {hb_n} Careers with Skills, Pay and Beginner Jobs | {SITE}",
          f"How to become one of {hb_n} kinds of professional, from today’s open postings: the jobs open to beginners, the skills employers name first, the experience they ask for and what juniors earn.",
          crumbs(("How to become…", "")) + f'<h1>How to become… <span class="hl">{hb_n} careers, with today’s figures</span></h1>'
-         '<p class="lead">For people changing careers: pick the work you want. Each page counts, from today’s open postings, how many jobs take beginners, which skills employers name first and what juniors are paid, then gives five steps to the first job.</p>'
+         '<p class="lead">For people changing careers: pick the work you want, or start from the <a href="' + P + '/career-change/">postings that welcome career changers</a>. Each page counts, from today’s open postings, how many jobs take beginners, which skills employers name first and what juniors are paid, then gives five steps to the first job.</p>'
          + nums([(f"{hb_n}", "careers"), (f"{len(hb_begin):,}", "jobs open to beginners in them today"), (f"{n_fields(hb_dir)}", "fields of work"), (f"{len(active):,}", "open postings counted")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, analyst or designer" aria-label="Find a career"></p>'
          f'<p class="lead" id="dirnone" hidden>No career with these words. <a href="{P}/entry-level/">Entry-level jobs</a> lists every job open to beginners.</p>'
