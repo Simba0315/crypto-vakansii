@@ -2517,6 +2517,22 @@ def calm_title(t):
         return w[0] + w[1:].lower()
     return re.sub(r"[A-Za-z]+(?:'[A-Za-z]+)?", fix, t)
 
+REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
+            re.compile(r"\s*[\(\[]\s*\d{5,}\s*[\)\]]"),                                                    # "(123456)", never a year
+            re.compile(r"\s*[,–-]?\s*#\d{3,}\s*$"),                                                         # ", #1463"
+            re.compile(r"\s*[-–]\s*(?:R|JR|REQ)[-_]?\d{4,}\s*$")]                                         # " - R12345"
+
+
+def tidy_job_title(t):
+    """A job title as a reader wants it (24 Nov 2026). Google's job posting guidelines ask for no codes in the title, and 1.7% of a
+    3,000-page sample carried one ("Staff Engineer, Electromechanical (R6043)", "Process Lead, Philadelphia, #1463"). A "|" between
+    parts ("… Grafana Frontend | Canada | Remote") also read as the end of the title, so the page title lost the company."""
+    t2 = t
+    for rx in REQ_CODE: t2 = rx.sub("", t2)
+    t2 = re.sub(r"\s*\|\s*", ", ", t2).strip(" ,-–")
+    return t2 if len(t2) >= 3 else t
+
+
 LAPS, LAP_NOW = [], [time.time(), "start: reading the record"]
 def lap(name):
     """Build timing: ends the stage that was running and starts the next one. The slowest stages are printed when the build ends,
@@ -2567,7 +2583,7 @@ def main():
         j["bump"] = bump_stamp(j.get("bumped") or (bought.get("bump") or {}).get("at", "")) if j["active"] else 0
         j["cover"] = (j.get("cover") or (bought.get("premium") or {}).get("cover", "")) if j["premium"] else ""
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
-        j["title"] = calm_title(j["title"])
+        j["title"] = tidy_job_title(calm_title(j["title"]))
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["pool"] = bool(POOL_RX.search(j["title"]))
         j["usd"] = usd_range(j["salary"])
