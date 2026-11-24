@@ -645,6 +645,40 @@
    }
   ]
  },
+ "angular-vue-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Angular and Vue developers build the interactive parts of web apps with one of these two frameworks. They create components and forms, manage app data and routing, connect screens to APIs, and keep the interface fast, accessible and consistent across browsers."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes a standup, then building or fixing components against design files. Developers write unit tests, review teammates’ code and debug in the browser. In Angular teams some time often goes to framework upgrades, since large business apps must stay on supported versions."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with UX designers, backend developers who supply the APIs, QA testers and product owners. Angular roles often sit in big enterprise teams with strict code standards. Vue roles are often at smaller companies, where the developer may also handle some backend work."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Angular work uses TypeScript, the Angular CLI, RxJS and Angular Material. Vue work uses Vite, Pinia for app state and often Nuxt for full sites. Both rely on VS Code, npm, Git, ESLint and testing tools like Jest, Vitest, Cypress or Playwright."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on screens that match the design, load quickly and work in all supported browsers. Reviewers look for clear components, tested code and correct handling of forms and errors. Keeping the app on current framework versions without breaking features also counts."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between Angular and Vue?",
+    "a": "Angular is a full framework with built-in tools for routing, forms and testing, and it uses TypeScript by default. Vue is lighter and easier to start with, and teams add only the pieces they need. Angular is common in big enterprise apps, while Vue is popular with smaller teams and in many PHP projects."
+   },
+   {
+    "q": "Is AngularJS the same as Angular?",
+    "a": "No. AngularJS is the original framework, and its official support ended at the end of 2021. Modern Angular is a full rewrite in TypeScript and works very differently. Some companies still hire developers to keep old AngularJS apps running or to move them to modern Angular or another framework."
+   }
+  ]
+ },
  "api-developer": {
   "day": [
    {
@@ -1971,6 +2005,40 @@
    }
   ]
  },
+ "ciso": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "A CISO owns a company’s whole security program. They set the strategy and budget, hire and lead security teams, approve policies, manage risk from vendors and new projects, oversee incident response and report on cyber risk to executives and the board."
+   },
+   {
+    "label": "A typical day",
+    "text": "A CISO’s day is mostly meetings: briefings on threats and incidents, budget and hiring decisions, project reviews and talks with business leaders. They also prepare board updates, answer customer and auditor questions and make the final calls during serious incidents."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with the CEO, CIO, general counsel, chief risk officer and the board or its audit committee. They lead security managers and engineers and deal with regulators, auditors, insurers, outside lawyers and incident response firms."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "CISOs work less with hands-on tools and more with frameworks like the NIST Cybersecurity Framework, ISO 27001 and SOC 2. They use risk registers, GRC platforms such as ServiceNow or Archer, security dashboards fed by SIEM tools, and board slide decks."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "A CISO is judged on whether the company avoids major breaches and recovers fast when one happens. Boards also look at risk reduction, audit and compliance results, budget use, team retention and how clearly the CISO explains risk in business terms."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Who does a CISO report to?",
+    "a": "It varies by company. Many CISOs report to the CIO, while others report to the CEO, the general counsel or the chief risk officer. Most also brief the board or a board committee on a regular schedule. Public companies must describe in their annual reports how the board oversees cybersecurity risk, under SEC rules."
+   },
+   {
+    "q": "What legal duties does a CISO have after a breach?",
+    "a": "Most legal duties fall on the company, but the CISO usually leads the response. Every state has its own data breach notification law, and deadlines and rules vary by state. Public companies must also disclose material cyber incidents under SEC rules, and fields like health care and banking have extra federal notice rules."
+   }
+  ]
+ },
  "civil-engineer": {
   "day": [
    {
@@ -2274,6 +2342,40 @@
    {
     "q": "What is the difference between compensation and benefits?",
     "a": "Compensation is direct pay: base salary or hourly wages, bonuses, commissions and stock awards. Benefits are the other rewards of a job, such as health insurance, retirement plans like a 401(k), paid time off, and life or disability insurance. Smaller employers often have one person handle both, while larger ones usually split them into separate teams."
+   }
+  ]
+ },
+ "compiler-engineer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Compiler engineers build the programs that turn source code or AI models into instructions a processor can run. They design intermediate representations and optimization passes, generate machine code for CPUs, GPUs or AI accelerators, and fix bugs where compiled code runs wrong or slow."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day involves reading generated assembly or intermediate code, writing and testing an optimization, and running benchmark suites to see if programs got faster. Engineers also sort through compiler crashes, review patches and discuss new chip features with hardware teams."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with hardware architects designing new chips, runtime and library engineers, and performance engineers who profile real workloads. At AI chip companies they also work with machine learning researchers. Many review code and discuss designs with open-source compiler communities."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "The core tools are C++, LLVM and its MLIR framework, and sometimes GCC. AI compiler work adds Python, PyTorch, Triton and XLA. Engineers use debuggers like GDB and LLDB, profilers, chip simulators, fuzzers that generate random test programs, and large automated test suites."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on correctness first: compiled programs must behave exactly as the source says. Then come the speed of the generated code, compile time, memory use and support for new chip features. Clean patches that pass review in large shared codebases also count."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do you need a PhD to be a compiler engineer?",
+    "a": "No, but many compiler engineers have a master’s degree or PhD in computer science or computer engineering. Employers mainly want deep knowledge of data structures, computer architecture and compiler theory. Accepted contributions to open-source compilers such as LLVM or GCC are a strong signal and can make up for fewer formal credentials."
+   },
+   {
+    "q": "What does an AI compiler engineer do?",
+    "a": "An AI compiler engineer builds the software that takes a trained model, written in a framework like PyTorch, and maps it onto a GPU or custom AI chip. They fuse operations, plan memory, split work across many cores and generate fast kernels. Their work decides how much of the chip’s raw speed real models actually use."
    }
   ]
  },
@@ -2821,6 +2923,74 @@
    }
   ]
  },
+ "cross-platform-mobile": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Cross-platform mobile developers build one app from a shared codebase that runs on both iPhone and Android. They use React Native or Flutter to build screens, connect to APIs, handle logins and push notifications, and prepare builds for release in both app stores."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day usually mixes building screens, testing them on simulators and real phones, and fixing crash reports. Developers review code, update packages and sometimes write small pieces of native Swift or Kotlin code when a feature needs it. Release days add store submissions and reviewer questions."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with product managers, designers, backend developers who build the APIs, and QA testers who check both platforms. On small teams they may also handle store listings, analytics and release schedules. They sometimes ask native iOS or Android specialists for help."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "React Native developers use JavaScript or TypeScript, often with Expo. Flutter developers write Dart. Both need Xcode for iPhone builds, Android Studio for Android, and real test devices. Common extras include Firebase, Git, Fastlane for automated releases, and crash reporting tools like Sentry or Crashlytics."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on apps that feel native on both platforms, run smoothly and rarely crash. Teams track crash rates, store ratings, startup time and how much code is truly shared. Passing app store review without delays and shipping on schedule also matter."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between React Native and Flutter?",
+    "a": "React Native uses JavaScript or TypeScript and shows each phone’s own native interface parts, so it suits teams that already know React. Flutter uses the Dart language and draws its own interface, which gives the same look on every device. Both build apps for iPhone and Android from one codebase."
+   },
+   {
+    "q": "Do you need a Mac to build iPhone apps with React Native or Flutter?",
+    "a": "In practice, yes, or access to one. Building, signing and submitting iPhone apps requires Xcode, which runs only on macOS. You can write most cross-platform code on Windows or Linux, and cloud build services can produce iPhone builds, but most developers keep a Mac for testing on the iOS simulator."
+   }
+  ]
+ },
+ "cryptographer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Cryptographers design and check the math and code that keep data secret and prove who sent it. They design or review encryption schemes, digital signatures and key exchange protocols, look for weaknesses, write security proofs and help engineers implement algorithms safely."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day may include reading new research papers, working through proofs, reviewing a colleague’s protocol design or auditing code for timing leaks and weak random numbers. Many also spend time planning moves to post-quantum algorithms and answering engineers’ questions."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with security engineers, software developers who implement their designs, hardware engineers on secure chips and product managers. Many collaborate with academic researchers and take part in standards work. In government and defense roles they work with cleared analysts and engineers."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Cryptographers use math software like SageMath and Magma and program in Python, C, C++ and Rust. Libraries such as OpenSSL and libsodium, proof assistants, formal verification tools, fuzzers and side-channel test equipment are common. LaTeX is the standard for papers and specifications."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on whether designs hold up to outside expert review and attack. Clear security proofs, safe and fast implementations and correct use of standards such as those from NIST count most. In research roles, published papers and peer recognition also matter."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do you need a PhD to be a cryptographer?",
+    "a": "Research cryptographers who design new schemes usually have a PhD in mathematics or computer science. Applied roles that implement or review cryptography in products often accept a bachelor’s or master’s degree with strong math and security experience. Government cryptography jobs usually also require US citizenship and a security clearance."
+   },
+   {
+    "q": "What is post-quantum cryptography?",
+    "a": "Post-quantum cryptography means algorithms built to stay secure even against large quantum computers, which could break today’s widely used RSA and elliptic curve methods. NIST published its first post-quantum standards in 2024, including ML-KEM for key exchange and ML-DSA for digital signatures. Many companies and agencies are now planning their move to these algorithms."
+   }
+  ]
+ },
  "custody-wallets": {
   "day": [
    {
@@ -3192,6 +3362,40 @@
    {
     "q": "Is data engineering a stressful job?",
     "a": "It can be. Broken pipelines can delay reports that leaders rely on, and some teams have on-call duty for overnight failures. Stress is lower on teams with good monitoring, automated tests and clear ownership. Much of the work is steady, focused building rather than constant emergencies."
+   }
+  ]
+ },
+ "data-entry": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "A data entry specialist types information from paper forms, scanned files, emails and recordings into databases, spreadsheets and company software. They check entries against source documents, fix errors and duplicates, keep records current and flag missing or unclear information."
+   },
+   {
+    "label": "A typical day",
+    "text": "The day usually starts with a queue of batches to process, such as invoices, orders, claims or customer records. Most hours go to steady keying and checking. Some time goes to sorting out unclear entries and running simple error reports."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with supervisors who assign batches and check quality, and with staff in billing, sales, human resources or medical records who send them source documents. Remote specialists usually coordinate by email and chat rather than in person."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include Excel or Google Sheets, a company’s CRM or ERP system, and web forms for medical, insurance or order records. Many use a ten-key number pad, scanners and OCR software that reads text from images, then correct what the software gets wrong."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on accuracy first and speed second. Supervisors often measure keystrokes per hour, errors found in spot checks and how many records get done before deadlines. Handling private data carefully, such as health or financial details, also counts."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do you need a degree to be a data entry specialist?",
+    "a": "Most data entry jobs ask for a high school diploma or equivalent, not a college degree. Employers care more about fast, accurate typing, comfort with spreadsheets and attention to detail. Many give a typing or ten-key test during hiring. Medical or legal data entry may also ask for knowledge of specific terms or forms."
+   },
+   {
+    "q": "Can data entry be done from home?",
+    "a": "Yes, many data entry roles are remote or hybrid, especially for digital records. Real employers do not charge you to start, make you buy equipment from them or send you checks to deposit, which are common signs of a scam. Jobs that handle health or financial data may require a secure home setup and a background check."
    }
   ]
  },
@@ -3569,6 +3773,40 @@
    }
   ]
  },
+ "desktop-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Desktop application developers build programs that people install and run on Windows or Mac computers. They design windows and menus, handle files and printing, connect to databases and online services, build installers and updates, and keep apps working on new operating system versions."
+   },
+   {
+    "label": "A typical day",
+    "text": "Most days mix writing features, fixing bugs reported by users and testing on different operating system versions and screen settings. Developers review code, study crash reports and sometimes recreate a problem on a customer’s exact setup. Release work includes signing and packaging installers."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with product managers, designers, QA testers and support staff who pass on customer problems. In factories, labs or finance firms they may build internal tools for one department and talk directly with the people who use them."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Windows developers often use C# with WPF, WinForms or WinUI in Visual Studio. Mac developers use Swift with SwiftUI or AppKit in Xcode. Cross-platform apps use Electron, Qt with C++, .NET MAUI or Avalonia. Installer builders, code signing tools and crash reporting are part of every release."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on apps that install cleanly, start fast, stay stable and feel at home on each operating system. Teams track crash reports, support tickets and update success. Signed installers that pass the operating system’s security checks also matter."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is desktop development still a good career?",
+    "a": "Desktop software is a smaller field than web or mobile work, but it has not gone away. Many businesses rely on desktop apps for trading, engineering, design, medical imaging, factory control and office work. Much of the job is maintaining and modernizing existing apps, and skills in C#, C++ or Swift carry over to other kinds of development."
+   },
+   {
+    "q": "What is Electron?",
+    "a": "Electron is a framework for building desktop apps with web technologies: HTML, CSS and JavaScript. It bundles a browser engine and Node.js into the app, so one codebase runs on Windows, Mac and Linux. Many popular chat apps and code editors use it. The trade-off is that Electron apps often use more memory than native apps."
+   }
+  ]
+ },
  "detection-engineer": {
   "day": [
    {
@@ -3773,6 +4011,40 @@
    }
   ]
  },
+ "dotnet-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": ".NET developers write business software in C# on the .NET platform. They build web APIs and websites with ASP.NET Core, background services and internal tools. They connect these to databases, write automated tests, fix bugs and keep older applications running on supported versions of .NET."
+   },
+   {
+    "label": "A typical day",
+    "text": "Most days start with a team standup and a look at the ticket board. Then come focused hours writing C# code, reviewing pull requests from teammates and debugging issues. Some time goes to deployments, database changes and questions from testers or business users."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with other developers, QA testers, product owners and business analysts who explain what the software must do. They also coordinate with database administrators and DevOps or cloud engineers who run the servers. In consulting roles they may talk to client staff directly."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "The core kit is C#, Visual Studio or Rider, and ASP.NET Core for web work. Entity Framework Core handles database access, usually against SQL Server or PostgreSQL. Common extras are Git, NuGet packages, xUnit or NUnit for tests, Docker and Azure cloud services."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on whether features ship working and on time, and on code that other developers can read and change. Reviewers look at tests, performance, security issues like injection flaws, and how well the code fits the team’s architecture."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between .NET Framework and modern .NET?",
+    "a": ".NET Framework is the older version that runs only on Windows and is now kept up mainly for existing applications. Modern .NET, which grew out of .NET Core, is open source and runs on Windows, Linux and macOS. New projects usually use modern .NET, while many company jobs still involve maintaining or migrating .NET Framework code."
+   },
+   {
+    "q": "Is C# only used for Windows software?",
+    "a": "No. C# started out closely tied to Windows, but modern .NET runs on Linux and macOS too. Today C# is widely used for web APIs and cloud services, many running on Linux servers and containers. It also powers desktop apps, mobile apps through .NET MAUI, and games built in the Unity engine."
+   }
+  ]
+ },
  "driver-chauffeur": {
   "day": [
    {
@@ -3872,6 +4144,40 @@
    {
     "q": "What is the difference between an e-commerce merchandiser and a buyer?",
     "a": "A buyer chooses which products to purchase from suppliers, negotiates terms and orders stock. An e-commerce merchandiser takes that stock and makes it sell online by deciding how it is listed, priced, grouped and promoted on the site. In small companies one person often does both jobs."
+   }
+  ]
+ },
+ "economist": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Economists study how markets, prices, wages and policies work. They gather and clean data, build statistical and economic models, forecast trends, estimate what a tax, rule or business decision will change, and write reports and briefs that explain their findings to decision makers."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes cleaning data, running regressions or forecasting models and checking results against economic theory. Economists read new research and official data releases, write memos or papers, and present findings to policymakers, managers or clients."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with policymakers, lawyers, business leaders, statisticians and data scientists. In government they brief officials and legislators. In consulting they support legal cases such as antitrust or damages. In companies they advise pricing, strategy and finance teams."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Economists mainly use Stata, R and Python, plus Excel for quick work. Some use MATLAB or EViews for forecasting and macro models, and SQL for large datasets. They rely on public data from federal statistical agencies and often write papers in LaTeX."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on sound methods, correct data and clear reasoning that survives review by other economists. Forecast accuracy matters in some roles. Explaining results simply to non-economists, and on deadline, counts as much as technical skill."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do you need a PhD to be an economist?",
+    "a": "Many economist jobs ask for at least a master’s degree, and most research, academic and senior government roles require a PhD. A bachelor’s degree in economics can lead to research assistant or analyst roles. Some federal economist jobs accept a bachelor’s degree that includes enough economics and statistics coursework."
+   },
+   {
+    "q": "What is the difference between an economist and a financial analyst?",
+    "a": "An economist studies how whole markets, industries or economies behave and what policies or events will do to them. A financial analyst studies specific companies, investments or budgets to guide buying, selling or spending decisions. Economists lean on economic theory and statistical models, while financial analysts lean on accounting and valuation."
    }
   ]
  },
@@ -4348,6 +4654,40 @@
    {
     "q": "What is the difference between an enterprise account executive and a mid-market account executive?",
     "a": "Enterprise reps sell to the largest companies, so deals are bigger, sales cycles often run many months, and many more people weigh in. Mid-market reps handle more accounts with faster cycles and fewer approvers. Enterprise roles usually expect prior closing experience and stronger skills in negotiation and managing complex buying committees."
+   }
+  ]
+ },
+ "enterprise-architect": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Enterprise architects map a company’s business processes, applications, data and technology, then decide how they should fit together over the coming years. They set standards, review major projects, plan which systems to retire or replace and turn business strategy into a technology roadmap."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day mixes meetings with business and IT leaders, reviews of solution designs from project teams and updates to architecture models. Enterprise architects also run or attend an architecture review board, write standards and principles and assess new vendors or cloud services."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with the CIO and other executives, business unit leaders, solution and security architects, project managers and finance teams. They also deal with vendors, and sometimes with auditors or regulators who ask how key systems and data are managed."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include EA platforms like LeanIX, Ardoq or Sparx Enterprise Architect, plus diagram tools like Visio and Lucidchart. Many use frameworks and notations such as TOGAF, ArchiMate and BPMN. Spreadsheets and slide decks remain key for roadmaps and executive briefings."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on whether the company’s systems become simpler, cheaper to run and better at supporting strategy. Leaders look for fewer duplicate applications, projects that follow the roadmap and lower risk from outdated technology. Influence counts, since architects rarely control budgets directly."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between an enterprise architect and a solution architect?",
+    "a": "A solution architect designs the technology for one project or product, deciding how its parts work together. An enterprise architect looks across the whole company, setting standards and long-term plans that every project should follow. Many enterprise architects started as solution or software architects and moved up as their scope widened."
+   },
+   {
+    "q": "Do enterprise architects need TOGAF certification?",
+    "a": "No license is required, and TOGAF certification is optional, though many job postings list it as preferred. Employers care more about long hands-on experience in software, infrastructure or business analysis, plus the ability to talk with executives. Cloud architecture certifications are also common in this field."
    }
   ]
  },
@@ -6731,6 +7071,40 @@
    }
   ]
  },
+ "industrial-security": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Industrial security specialists protect classified information and manage security clearances at defense and government contractors. They process clearance requests, brief and debrief cleared staff, control classified documents and areas, report required events to the government and prepare for government security reviews."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes starting clearance paperwork for new hires, handling visit requests, reviewing reports of foreign travel or other reportable events and giving security briefings. Specialists also check secure areas, update records in government systems and keep staff training current."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with the Facility Security Officer, program managers, human resources, IT staff who protect classified systems, and cleared employees. Outside the company they work with Defense Counterintelligence and Security Agency representatives, contracting officers and background investigators."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Daily work runs on the government’s online systems for clearance records and investigation forms such as the SF-86. Specialists follow 32 CFR Part 117, known as the NISPOM rule, and the DD Form 254 security requirements on each contract. Visitor logs, approved safes and alarm systems are part of the job."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on clean government security reviews, accurate clearance records and prompt reporting of required events. Preventing security violations and data spills, and handling any that happen correctly, matters most. Fast clearance processing that keeps programs staffed also counts."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What does a Facility Security Officer do?",
+    "a": "A Facility Security Officer, or FSO, is the employee a cleared contractor must appoint to run its security program under federal rules. The FSO must be a US citizen, hold a clearance at the facility’s level and complete required training. They oversee clearances, classified material, reporting and self-inspections, and are the main contact with the government."
+   },
+   {
+    "q": "Do you need a security clearance to work in industrial security?",
+    "a": "Usually yes. Most industrial security roles at cleared contractors require an active clearance or the ability to get one, which requires US citizenship. Clearances are sponsored by an employer or agency, so individuals cannot apply for one on their own. Experience with clearance processing, the NISPOM rule and government security reviews counts most in hiring."
+   }
+  ]
+ },
  "industry-marketing": {
   "day": [
    {
@@ -7000,6 +7374,40 @@
    {
     "q": "Is insurance claims work a stressful job?",
     "a": "It can be. Adjusters often talk with people who are upset after an accident, fire or storm, and they juggle many open files with deadlines. After big disasters, workloads and travel can spike. Underwriting is usually calmer, though it has volume targets and pressure to price risk correctly."
+   }
+  ]
+ },
+ "intelligence-analyst": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Intelligence analysts collect and study information about threats, groups, people and events, then write assessments that help leaders decide what to do. They check sources for reliability, connect pieces of evidence, judge what is likely to happen next and brief their findings clearly and on time."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day starts with reading overnight reporting and open-source news on assigned topics. Analysts then update databases, map links between people or events, draft short assessments and brief supervisors or customers. Many also respond to urgent requests when a situation changes."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with collectors, investigators, other analysts, military or law enforcement officers and the policymakers who use their products. In companies they support security, fraud, legal and executive teams. Many share information with partner agencies under strict rules."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include link analysis software like i2 Analyst’s Notebook, mapping tools like ArcGIS, and secure databases and message systems. Analysts use structured analytic techniques, open-source research tools and Excel. Private sector threat intelligence teams also use threat intelligence platforms and SIEM data."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on accuracy, timeliness and how useful assessments are to decision makers. Good analysts state confidence clearly, separate facts from judgments and cite sources. In the US intelligence community, written products are checked against formal analytic standards."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do intelligence analysts need a security clearance?",
+    "a": "Government and defense contractor intelligence analysts almost always need a clearance, often Top Secret with access to sensitive compartmented information. Some agencies also require a polygraph. Clearances require US citizenship and a background investigation. Private sector analysts who work on fraud, brand or cyber threats usually do not need one."
+   },
+   {
+    "q": "What degree do you need to be an intelligence analyst?",
+    "a": "Most roles ask for a bachelor’s degree, often in international relations, political science, criminal justice, a foreign language, regional studies or computer science. Military intelligence experience is a common path in. Language skills and regional knowledge are highly valued, and some agencies accept relevant work experience in place of a degree."
    }
   ]
  },
@@ -7411,6 +7819,40 @@
    }
   ]
  },
+ "itsm": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "IT service management staff run the system and rules that handle IT requests, incidents and changes. They configure the ticketing platform, set up workflows and service level targets, manage the service catalog, run change approval meetings and report on how well IT serves the business."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes reviewing open incidents and overdue tickets, running a change advisory board meeting and fixing workflow problems in the platform. ITSM staff also build reports on response times, update knowledge articles and gather requirements for new request forms."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with service desk agents, IT support and infrastructure teams, application owners and security staff. They also meet business managers who request new services, and auditors who check that changes and access follow policy."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "ServiceNow is the best-known platform, with Jira Service Management, BMC Helix and Freshservice also widely used. Many teams follow the ITIL framework. Daily work includes building forms and workflows, scripting in JavaScript inside ServiceNow, and creating dashboards and reports."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on whether tickets are resolved within service level targets, how few changes cause outages and how satisfied users are. Managers also look at repeat incidents, knowledge base use, audit findings and how smoothly new workflows roll out."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is ITIL and do I need it for an ITSM job?",
+    "a": "ITIL is a widely used framework of good practices for running IT services, covering areas such as incident, problem, change and request management. It is not a law or a license. Many ITSM job postings ask for an ITIL Foundation certificate, and it is a common first step into the field."
+   },
+   {
+    "q": "What is the difference between ITSM and the IT help desk?",
+    "a": "The help desk, or service desk, is the team that answers users and works tickets. ITSM is the wider practice that designs how all IT work is requested, tracked, approved and measured, including the ticket system itself. ITSM roles focus on processes, platform setup and reporting rather than fixing individual user problems."
+   }
+  ]
+ },
  "japanese-speaking": {
   "day": [
    {
@@ -7476,6 +7918,40 @@
    {
     "q": "What is the difference between a Java developer and a JavaScript developer?",
     "a": "Java and JavaScript are separate languages despite the similar names. Java developers mostly build server software that runs business logic, handles data and talks to databases. JavaScript developers often build what runs in the web browser, though JavaScript can also run on servers. The syntax, tools and typical job duties are different."
+   }
+  ]
+ },
+ "javascript-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "JavaScript and TypeScript developers write code for the browser and the server. On the frontend they build interactive pages, and on the backend they write APIs with Node.js. Many work full stack, adding features end to end, writing tests and fixing bugs on both sides."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day starts with a standup and a look at assigned tickets. Then comes writing and reviewing code, often moving between frontend components and backend endpoints. Debugging in browser developer tools, updating packages and checking test results in the build pipeline fill much of the rest."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with designers, product managers, QA testers and other developers. On smaller teams they may cover frontend, backend and some deployment work themselves. On larger teams they coordinate with specialists in mobile, data, security and DevOps."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include VS Code, TypeScript, Node.js and npm, plus a frontend framework like React, Angular or Vue. Build tools like Vite or webpack, testing tools like Jest or Playwright, linters like ESLint, and Git are part of daily work."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on features that work in every supported browser, code others can read and strong tests. Teams also watch page speed, error rates in monitoring tools and how often old bugs come back. Catching type errors early with TypeScript is valued."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between JavaScript and TypeScript?",
+    "a": "TypeScript is JavaScript with added type labels for variables and functions. A tool checks those types before the code runs, then turns TypeScript into plain JavaScript that browsers and Node.js can run. Any JavaScript developer can learn TypeScript, and many US job postings now ask for both."
+   },
+   {
+    "q": "Is JavaScript the same as Java?",
+    "a": "No. Despite the similar names, they are different languages with different uses. JavaScript runs in every web browser and on servers through Node.js. Java is a separate language widely used for large business systems and Android apps. A JavaScript job and a Java job call for different skills."
    }
   ]
  },
@@ -7615,6 +8091,40 @@
    }
   ]
  },
+ "kotlin-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Kotlin developers write software in Kotlin, a modern language that runs on the Java platform. Most build Android apps, from screens and navigation to offline storage and network calls. Others write backend services with frameworks like Spring Boot or Ktor, often alongside older Java code."
+   },
+   {
+    "label": "A typical day",
+    "text": "Android developers spend much of the day building screens, testing on emulators and real phones, and fixing crash reports. Backend Kotlin developers write APIs and tests and review pull requests. Both attend standups and planning meetings and keep libraries and Gradle builds up to date."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with designers, product managers, QA testers and other developers. Android developers coordinate with iOS developers so both apps behave alike, and with backend engineers on the APIs the app uses. Backend developers also work with DevOps and database staff."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Android work centers on Android Studio, Jetpack Compose for screens, Gradle for builds and coroutines for background work. Backend developers often use IntelliJ IDEA with Spring Boot or Ktor. Common extras include Git, JUnit, Firebase services and Google Play Console for releasing apps."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Android work is judged on stable apps with low crash rates, smooth screens, good battery use and store ratings. Backend Kotlin is judged like other services, on reliable APIs, tests and readable code. Clean use of Kotlin features like null safety also counts."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is Kotlin only for Android?",
+    "a": "No. Kotlin is best known as the main language for modern Android apps, but it also runs on servers through the Java platform. Many companies write backend services in Kotlin with Spring Boot or Ktor. Kotlin Multiplatform also lets teams share code across Android, iPhone, desktop and web apps."
+   },
+   {
+    "q": "Should I learn Kotlin or Java?",
+    "a": "For new Android work, Kotlin is the better choice, since Android’s official guides and newer tools such as Jetpack Compose are built around it. Java is still common in large backend systems and older apps. The two languages work together in the same project, so many developers end up learning both."
+   }
+  ]
+ },
  "kubernetes-engineer": {
   "day": [
    {
@@ -7714,6 +8224,40 @@
    {
     "q": "Is launch and test operations a stressful job?",
     "a": "It can be. Crews handle high pressure systems and hazardous propellants, and schedules move with weather and technical problems, so long or odd hours are common. The stress is managed through strict procedures, clear roles and the right to call a stop when something looks wrong. People who like structure and teamwork tend to do well."
+   }
+  ]
+ },
+ "law-enforcement": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "People in law enforcement and public safety enforce laws, respond to emergencies, investigate crimes and keep communities safe. Corporate law enforcement response staff handle subpoenas, warrants and emergency requests for user data, and serve as the company’s contact for police, prosecutors and courts."
+   },
+   {
+    "label": "A typical day",
+    "text": "Patrol officers work set shifts answering calls, making traffic stops and writing reports. Detectives interview people, gather evidence and work with prosecutors. Corporate response staff review legal requests, check that each one is valid, pull the requested records and track deadlines."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Officers work with dispatchers, other agencies, prosecutors, courts, social workers and the public. Corporate response teams work with in-house lawyers, trust and safety staff, engineers who pull data, and investigators at local, state and federal agencies."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Public safety staff use computer-aided dispatch, records management systems, radios, body-worn cameras and in-car computers. Investigators use digital forensics and case management tools. Corporate teams use legal request portals, ticket systems and search tools built for answering lawful requests."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Officers are judged on response times, report quality, lawful conduct, community trust and case outcomes. Corporate response teams are judged on accurate and timely responses, protecting user privacy by pushing back on invalid requests, and handling life-threatening emergencies quickly."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How do you become a police officer in the US?",
+    "a": "Rules are set by each state, usually through a Peace Officer Standards and Training board, and by each agency, so they vary by state. Most require a high school diploma or more, a minimum age, a background check, physical and written tests, and graduation from a police academy. Many agencies require US citizenship, and some require college credits."
+   },
+   {
+    "q": "What does a law enforcement response team at a tech company do?",
+    "a": "These teams receive legal requests from police and courts, such as subpoenas, court orders and search warrants. They check that each request is valid and follows federal laws like the Stored Communications Act, then provide only the records the law requires. They also handle emergency requests when someone’s life may be at risk."
    }
   ]
  },
@@ -8805,6 +9349,40 @@
    }
   ]
  },
+ "nodejs-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Node.js developers write the server side of web and mobile apps in JavaScript or TypeScript. They build REST or GraphQL APIs, connect to databases and outside services, handle logins and permissions, write background workers, and keep services fast and stable in production."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day mixes writing API endpoints, reviewing teammates’ code and writing tests. Developers trace bugs through logs, fix slow database queries and update npm packages with security warnings. Standups, planning and talks with frontend developers about API shapes fill the rest."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work closely with frontend and mobile developers who call their APIs, and with product managers who set priorities. They also coordinate with DevOps or platform engineers on deployments, and with security staff when a package or endpoint has a known flaw."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Core tools are Node.js, npm or pnpm, TypeScript and frameworks like Express, NestJS or Fastify. Data usually lives in PostgreSQL, MongoDB or Redis. Common extras include Jest or Vitest for tests, Docker, Git, and cloud services such as AWS Lambda for serverless code."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on reliable APIs that return correct data quickly and handle errors well. Teams look at uptime, response times, tests and clean code reviews. Keeping packages patched and avoiding blocking code that stalls the server also matter."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is a Node.js developer a backend developer?",
+    "a": "Mostly, yes. Node.js runs JavaScript outside the browser, so a Node.js developer usually builds servers, APIs and background jobs. Many also know a frontend framework like React and work as full-stack developers. Node.js also runs build tools and command-line programs, so frontend developers use it every day too."
+   },
+   {
+    "q": "Do Node.js developers need to know TypeScript?",
+    "a": "It is not strictly required, but many job postings now ask for it. TypeScript adds types to JavaScript, which catches many mistakes before code runs and makes large codebases easier to change. A developer who knows JavaScript well can usually pick up TypeScript on the job."
+   }
+  ]
+ },
  "nordic-speaking": {
   "day": [
    {
@@ -9108,6 +9686,40 @@
    {
     "q": "What is the difference between optics and photonics?",
     "a": "Optics is the broad study of light and how lenses, mirrors and prisms shape it. Photonics focuses on making, controlling and detecting light in devices such as lasers, optical fiber, LEDs and photodetectors. The two fields overlap heavily, and many job postings use both words for the same role."
+   }
+  ]
+ },
+ "ot-security": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "OT and product security engineers protect industrial control systems, power and water systems, vehicles and connected devices from hacking. They map assets, segment networks, assess risks, test devices for weaknesses, build security into products and respond when attacks or flaws are found."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day may include reviewing alerts from passive network monitoring at a plant, threat modeling a new product feature or testing firmware for flaws. Engineers also plan patches around production schedules, write security requirements and work through findings with plant or engineering teams."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with control engineers, plant operators, maintenance staff and IT security teams. In product roles they work with embedded developers, hardware engineers and product managers. They also deal with regulators, customers and outside researchers who report flaws."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include passive OT monitoring platforms, Wireshark with industrial protocol support, firewalls and data diodes. Product security uses firmware analysis tools, fuzzers, JTAG debuggers and threat modeling tools. Engineers rely on standards like IEC 62443, NIST SP 800-82 and, at power utilities, NERC CIP."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on keeping operations safe and running while cutting risk. Plants and utilities look at asset visibility, network segmentation, patch progress and audit results. Product teams look at flaws caught before release, response time to reported issues and passing customer and regulator security reviews."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between OT security and IT security?",
+    "a": "IT security protects office systems and data, where keeping information confidential often comes first. OT security protects machines that control physical processes, such as pumps, turbines and assembly lines, where safety and uptime come first. OT systems may run for decades, patching can need a shutdown, and even a careless scan can disrupt production."
+   },
+   {
+    "q": "What rules apply to OT and product security in the US?",
+    "a": "It depends on the industry. Owners of the bulk power system must follow mandatory NERC CIP standards. Makers of connected medical devices must meet FDA cybersecurity requirements before selling new devices. Pipelines and drinking water systems have their own federal requirements, while many factories follow voluntary standards such as IEC 62443."
    }
   ]
  },
@@ -10165,6 +10777,40 @@
    }
   ]
  },
+ "product-owner": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Product owners decide what an agile development team builds next. They write and refine backlog items with clear acceptance criteria, order the backlog by value, answer the team’s questions during the sprint and accept or reject finished work against those criteria."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes the team’s daily standup, refining upcoming stories, answering developer questions and reviewing work that is ready for acceptance. Product owners also meet stakeholders to gather requests, check usage data and plan the next sprint or release."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work daily with developers, testers, UX designers and the Scrum Master. They also gather needs from product managers, business stakeholders, customer support and sometimes customers directly, and explain trade-offs when not everything fits."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include Jira, Azure DevOps and Confluence for backlogs and documentation. Product owners use Miro or Mural for story mapping, Figma to review designs and product analytics tools to see how features are used. Spreadsheets help with ranking work and release plans."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on whether the team delivers features that users and the business actually value. Stakeholders look for clear stories, a well-ordered backlog, few surprises at sprint reviews and steady delivery. Good product owners are easy to reach and decide quickly."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a product owner and a product manager?",
+    "a": "A product owner is a Scrum role focused on the development team: writing and ordering backlog items and accepting finished work. A product manager looks wider, owning product strategy, market research, pricing and the long-term roadmap. In many companies one person does both, while larger companies often split the jobs."
+   },
+   {
+    "q": "Do you need a certification to be a product owner?",
+    "a": "No certification is required by law or by Scrum itself. Many employers still list one as a plus, most often the Certified Scrum Product Owner or the Professional Scrum Product Owner. Experience in business analysis, project work or a field like finance or health care often matters more than a certificate."
+   }
+  ]
+ },
  "production-planner": {
   "day": [
    {
@@ -10366,6 +11012,40 @@
    {
     "q": "Do you need a degree to become a programmer?",
     "a": "Not always. Many employers prefer a bachelor’s degree in computer science or a related field, but some hire people who prove their skill through a portfolio, coding tests, a bootcamp or past work. CNC programmers often come up from machining, with community college or apprenticeship training. Game studios usually want to see finished projects."
+   }
+  ]
+ },
+ "project-coordinator": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Project coordinators support project managers by keeping plans, tasks and paperwork up to date. They schedule meetings, take notes, track deadlines and action items, update status reports, order supplies or services, and follow up with team members when work is running late."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes updating the project schedule, sending meeting invites, writing up minutes and chasing open action items by email or chat. Coordinators also file documents, track invoices against the budget, prepare status reports and help plan the next phase."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work most closely with the project manager and the project team. They also deal with stakeholders, vendors and subcontractors, finance and purchasing staff, and sometimes clients. In construction they coordinate with site supervisors and permit offices."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include Microsoft Project, Smartsheet, Asana or Jira for tracking work, plus Excel, Outlook, Teams or Slack, and SharePoint or Google Drive for files. Construction coordinators often use Procore. Many also build simple Gantt charts and status dashboards."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on whether schedules and records stay accurate and current, and whether nothing slips through the cracks. Project managers value clear meeting notes, prompt follow-ups, organized files and early warnings about risks or missed deadlines."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a project coordinator and a project manager?",
+    "a": "A project manager owns the project: the scope, budget, schedule, risks and final results, and makes the key decisions. A project coordinator supports the manager by handling scheduling, tracking, documents and communication. Coordinator is often an entry-level role, and many coordinators move up to project manager after gaining experience."
+   },
+   {
+    "q": "Do project coordinators need a certification?",
+    "a": "No certification is required. Some coordinators earn the Certified Associate in Project Management, or CAPM, which needs project management coursework but no work experience. The Project Management Professional certification, or PMP, requires several years of project experience, so it usually comes later in a career."
    }
   ]
  },
@@ -10743,6 +11423,40 @@
    }
   ]
  },
+ "react-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "React developers build the screens people see and click in a web app. They turn design mockups into reusable components, manage the data those screens show, connect them to APIs, and make sure pages load fast, work on phones and can be used with a keyboard or screen reader."
+   },
+   {
+    "label": "A typical day",
+    "text": "Most days start with a standup, then focused time building or fixing components. Developers compare their work against designs, write tests, review teammates’ pull requests and check pages in several browsers and screen sizes. Some time goes to talks with designers and backend developers."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work most closely with UI and UX designers, backend developers who build the APIs, and product managers who set priorities. QA testers report bugs to them. On larger teams they also share a design system with other frontend developers."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "The daily kit is React, TypeScript or JavaScript, and a framework like Next.js or a build tool like Vite. Data and state libraries such as Redux or TanStack Query are common. Testing uses Jest or Vitest with React Testing Library. Many teams also use Figma, Storybook and Tailwind CSS."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on how closely screens match the design, how fast pages load and respond, and how few bugs reach users. Reviewers look for clean reusable components, solid tests and accessibility, so people using keyboards or screen readers can still use the app."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a React developer and a frontend developer?",
+    "a": "A frontend developer builds the visible part of websites and web apps with any tools. A React developer is a frontend developer who specializes in React. Many frontend jobs use React, so the two titles often overlap. React developers may also build mobile apps with React Native, which uses the same ideas."
+   },
+   {
+    "q": "Do you need a degree to be a React developer?",
+    "a": "No. Many React developers are self-taught or came from coding bootcamps. Employers mostly want proof you can build real interfaces, such as a portfolio, public code samples or projects you can explain in an interview. Some larger employers still list a computer science degree as preferred."
+   }
+  ]
+ },
  "real-estate": {
   "day": [
    {
@@ -11012,6 +11726,40 @@
    {
     "q": "What is the difference between a renewals manager and a customer success manager?",
     "a": "A customer success manager helps customers get value from a product through training, check-ins and problem solving. A renewals manager handles the commercial side: quotes, pricing talks and signed contracts at renewal time. At some companies one person does both jobs, while larger teams split them."
+   }
+  ]
+ },
+ "reporting-analyst": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Reporting analysts prepare the regular reports a business or regulator relies on, such as weekly sales, monthly financials or required filings. They pull data from source systems, build and update reports and dashboards, reconcile figures against other records and explain any numbers that look wrong."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes refreshing recurring reports, checking totals against source systems and looking into gaps. Analysts answer one-off data requests, fix broken queries after system changes and document how each figure is calculated. Deadlines cluster around month-end and quarter-end."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with finance, operations and sales managers who use the reports, IT and data engineering teams who manage the source systems, and compliance or audit staff. In banking, insurance and health care they also support filings sent to regulators."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools are Excel, SQL and BI platforms like Power BI, Tableau or Looker. Many also use Python or VBA to automate steps, plus reporting tools tied to ERP or accounting systems. Data dictionaries and shared report logic help keep definitions consistent."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged first on accuracy: figures must tie out to source systems and earlier reports. On-time delivery matters, especially for regulatory deadlines. Managers also value clear documentation, automation that cuts manual steps and the ability to explain changes in the numbers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a reporting analyst and a data analyst?",
+    "a": "A reporting analyst mainly builds and maintains recurring reports and makes sure the figures are right and on time. A data analyst more often digs into open questions, testing ideas and finding causes behind trends. The roles overlap heavily, and many reporting analysts move into data analyst or BI developer jobs."
+   },
+   {
+    "q": "What skills does a reporting analyst need?",
+    "a": "The key skills are strong Excel, working SQL and a BI tool like Power BI or Tableau. Just as important are attention to detail, an understanding of how the business makes money and the habit of checking every total. In regulated fields, knowing the rules behind the reports, such as accounting or insurance standards, is a plus."
    }
   ]
  },
@@ -11318,6 +12066,40 @@
    {
     "q": "What is the difference between robotics and autonomy?",
     "a": "Robotics covers the whole machine, including its mechanics, electronics and motion control. Autonomy is the software that lets the machine make decisions without a person, such as seeing obstacles, knowing where it is and planning a path. A factory arm repeating a fixed motion is robotic but not very autonomous, while a self-driving car depends heavily on autonomy."
+   }
+  ]
+ },
+ "ruby-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Ruby on Rails developers build and maintain web applications with the Ruby language and the Rails framework. They design database tables, write models, controllers and views, build APIs, add background jobs, and upgrade older apps to newer versions of Ruby and Rails."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day often starts with a standup and a review of open pull requests. Most hours go to building features, writing tests alongside the code and fixing bugs reported by users. Some time goes to slow queries, failed background jobs and gem updates."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with product managers, designers and other engineers, often on small teams where one developer touches the whole stack. At startups they may talk directly with founders and customers. They also help support staff and whoever runs hosting and deployments."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Daily tools include Ruby, Rails, Bundler and gems, Git, and an editor like VS Code or RubyMine. Most apps run on PostgreSQL or MySQL with Redis. Testing usually uses RSpec or Minitest, Sidekiq is common for background jobs, and many teams use Hotwire for interactive pages."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on features that ship working, clear code that follows Rails conventions and solid tests. Teams also watch page speed, database query counts and security fixes, and how safely a developer can upgrade gems and Rails versions."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is Ruby on Rails still used?",
+    "a": "Yes. Many companies still run large products on Rails, and new versions of the framework keep coming out. Much of the hiring is for maintaining and growing apps that started on Rails, though some teams still choose it for new projects because a small team can build a full web product quickly with it."
+   },
+   {
+    "q": "What is the difference between Ruby and Rails?",
+    "a": "Ruby is a general-purpose programming language. Rails is a framework written in Ruby for building web applications, with ready-made parts for databases, routing, pages, email and background jobs. You can write Ruby without Rails, for scripts or other tools, but most Ruby job postings in the US ask for Rails experience."
    }
   ]
  },
@@ -12443,6 +13225,40 @@
    }
   ]
  },
+ "sql-developer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "SQL developers write the queries, views and stored procedures that pull answers out of company databases. They build reports and data feeds, load data from other systems, tune slow queries and make sure the numbers in reports match the source records."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes report requests from business teams, writing and testing queries, and checking results against known totals. Some hours go to fixing failed overnight data loads, reading query plans to speed up slow reports and documenting changes before they go live."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with business analysts and managers who need reports, database administrators who run the servers, and BI developers who build dashboards. They also coordinate with application developers whose software writes to the same database."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include SQL Server Management Studio, Oracle SQL Developer and DBeaver. Many write T-SQL or PL/SQL and build data loads in SSIS or similar ETL tools. Reports often go out through SSRS, Power BI, Tableau or Excel, and code is kept in Git."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on correct results first: report totals must match the source data. Next come query speed, how little load the code puts on shared databases, and clear, documented code. Meeting reporting deadlines, such as month-end close, also matters."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a SQL developer and a database administrator?",
+    "a": "A SQL developer writes the code that uses the database: queries, stored procedures, views and reports. A database administrator keeps the database itself running, handling installs, backups, security, user access and server performance. The jobs overlap on query tuning, and in small companies one person may do both."
+   },
+   {
+    "q": "Do you need a degree to become a SQL developer?",
+    "a": "Many postings ask for a bachelor’s degree in computer science, information systems or a related field, but strong SQL skills often matter more. Some people move into the role from reporting, analyst or help desk jobs. Database certifications and sample projects can help show skill without a degree."
+   }
+  ]
+ },
  "stablecoins-tokenization": {
   "day": [
    {
@@ -12508,6 +13324,40 @@
    {
     "q": "What is the difference between a staff engineer and an engineering manager?",
     "a": "A staff engineer leads through technical expertise and does not manage people. An engineering manager handles hiring, performance reviews, and team health. Both are senior roles, and many companies treat them as parallel career tracks. Staff engineers focus on architecture and technical decisions, while managers focus on the people and processes that deliver the work."
+   }
+  ]
+ },
+ "statistician": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Statisticians design studies, surveys and experiments, then analyze the data to answer specific questions. They choose sample sizes and methods, build statistical models, check assumptions and explain what the results can and cannot prove, including how much uncertainty remains."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day mixes writing and checking analysis code, meeting researchers about study plans and reviewing data for errors or missing values. Statisticians also write analysis plans, prepare tables and charts, and draft methods sections for reports or journal papers."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with scientists, doctors, engineers, economists and managers who need answers from data. In clinical trials they work with physicians, data managers and regulatory staff, and in government with survey teams. They often explain results to people with no statistics training."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Statisticians mainly use R, SAS, Python and Stata, and sometimes SPSS. Clinical trial work often relies on SAS and CDISC data standards. Many also use SQL to pull data, Git for version control, and Quarto or R Markdown to write reproducible reports."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on sound design and correct methods that hold up to peer or regulatory review. Clear explanations of uncertainty and limits matter as much as the results. Reproducible code, careful documentation and meeting study deadlines also count."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do you need a master’s degree to be a statistician?",
+    "a": "Most statistician jobs ask for a master’s degree in statistics, mathematics or a related field, and research or academic roles often require a PhD. Some entry-level analyst jobs accept a bachelor’s degree. There is no state license for statisticians, though professional groups offer voluntary accreditation."
+   },
+   {
+    "q": "What is the difference between a statistician and a data scientist?",
+    "a": "A statistician focuses on study design, probability and inference: deciding what data to collect and how sure anyone can be about a conclusion. A data scientist usually works with large existing datasets and builds prediction models and data products, with more programming and engineering. The fields overlap heavily, and many people move between them."
    }
   ]
  },
@@ -13327,6 +14177,40 @@
    }
   ]
  },
+ "telecom-engineer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Telecommunications engineers design, build and run the networks that carry phone calls and mobile data. They plan cell sites and radio coverage, design fiber and microwave links, configure core network equipment, troubleshoot outages and roll out new technology such as 5G."
+   },
+   {
+    "label": "A typical day",
+    "text": "A day might include reviewing coverage maps and drive test results, planning capacity for busy areas or configuring network equipment. Engineers also work tickets on dropped calls or slow data, join overnight maintenance windows and sometimes visit tower sites or equipment rooms."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with field technicians and tower crews, network operations center staff, equipment vendors, and site acquisition and permitting teams. They also coordinate with project managers, IT and security teams, and sometimes with landowners or local officials about new sites."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common tools include RF planning software such as Atoll or Planet, drive test kits, spectrum analyzers and fiber testers like OTDRs. Core and transport work uses vendor management systems, Wireshark for protocol traces and Python scripts. Field visits need a laptop and console cables."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on network uptime, call and data quality, coverage and capacity in busy areas, and fast fixes during outages. Projects must meet deadlines and follow FCC rules on spectrum use and radio frequency exposure. Safety on towers and field sites is never optional."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Do telecommunications engineers need a license?",
+    "a": "Most telecom engineers do not need a personal license. A Professional Engineer license, issued by each state, is needed only in some roles, such as sealing certain designs, and rules vary by state. Spectrum licenses from the FCC belong to the carrier, not the engineer. Anyone who climbs towers must be trained in fall protection under OSHA rules."
+   },
+   {
+    "q": "What is the difference between a telecommunications engineer and a network engineer?",
+    "a": "A network engineer usually runs data networks inside companies, such as routers, switches, firewalls and Wi-Fi. A telecommunications engineer works on carrier networks that serve the public, including radio access, fiber transport and the mobile core. The fields overlap in IP routing, and many telecom engineers also hold networking certifications."
+   }
+  ]
+ },
  "territory-sales": {
   "day": [
    {
@@ -14106,6 +14990,40 @@
    {
     "q": "What is the difference between a sales manager and a VP of sales?",
     "a": "A sales manager runs one team of reps and focuses on their daily activity and deals. A VP of sales leads the whole sales organization or a region, manages the managers, sets strategy, quotas, and compensation plans, and is personally accountable for the company’s or region’s overall revenue target."
+   }
+  ]
+ },
+ "vulnerability-management": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Vulnerability management specialists find known security weaknesses across a company’s servers, laptops, cloud services and applications. They run scans, rank findings by real risk, assign fixes to system owners, track deadlines, confirm patches worked and report remaining exposure to security leaders."
+   },
+   {
+    "label": "A typical day",
+    "text": "A typical day includes reviewing new scan results, checking fresh advisories for flaws being exploited in the wild and deciding what gets fixed first. Specialists chase owners about overdue patches, handle exception requests and rescan systems to confirm fixes."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with system administrators, cloud and network engineers and application developers who apply the fixes. They also work with security operations, risk and compliance staff, auditors, and IT managers who approve maintenance windows."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Common scanners include Tenable Nessus, Qualys and Rapid7 InsightVM, plus cloud security tools and code scanners for applications. Specialists use CVSS scores, CVE records and CISA’s Known Exploited Vulnerabilities catalog to set priorities, and track work in Jira or ServiceNow."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Work is judged on how fast serious flaws get fixed, how much of the company is scanned and how few known exploited flaws stay open past deadline. Audits check the program against frameworks like PCI DSS or the NIST Cybersecurity Framework. Good relationships with fix owners matter too."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between vulnerability management and penetration testing?",
+    "a": "Vulnerability management is an ongoing program that regularly scans everything for known flaws and makes sure they get fixed. Penetration testing is a time-limited exercise in which testers try to break in like a real attacker, often chaining weaknesses together. Pen test findings usually feed into the vulnerability management process for tracking and fixes."
+   },
+   {
+    "q": "Do vulnerability management jobs require certifications?",
+    "a": "No certification is required by law, but many postings ask for one, such as CompTIA Security+, CySA+ or a GIAC certification. Defense and federal contractor roles often must meet Department of Defense cyber workforce rules, commonly through an approved certification, and may need a security clearance. Hands-on scanning and patching experience usually matters most."
    }
   ]
  },
