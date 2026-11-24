@@ -1999,6 +1999,13 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             # Search Console 24 Nov 2026: "reference title meaning", 10 impressions at 8.1
             ("What does \"reference title\" mean on an application form?", "It asks for the job title of the person you list as a reference, such as \"Engineering Manager\" or \"Head of Sales\", as it was when they worked with you. Forms usually ask next for the company and how you know them (\"Relationship\": your manager, colleague or client). It is not your own title and not the title of the job you are applying for."),
         ]),
+    # Google US "what is an elevator pitch" (Search Console 8 at 26.5), 24 Nov 2026 night: Princeton's career center, University of Phoenix,
+    # Deloitte; People also ask "What is an example of an elevator pitch?" and "What not to say in an elevator pitch?"
+    "Elevator pitch": dict(
+        qa=[
+            ("What is an example of an elevator pitch?", "“I’m a payroll specialist at a 300-person logistics company. Last year I moved our payroll to a new system with no missed paychecks and cut processing from three days to one. I’m looking for a payroll lead role at a company that is growing. Do you know who runs payroll hiring at yours?” Four sentences: who you are, one result with a number, what you want, and a question."),
+            ("What should you not say in an elevator pitch?", "Your whole work history, your salary expectations, complaints about an employer, jargon the listener may not know, or a direct request for a job to someone you have just met. Each one turns a short introduction into a burden for the listener."),
+        ]),
     # Google US "what does relocate mean in a job" (Search Console 4 at 10.5), 24 Nov 2026 night: People also ask "Should I answer yes to 'Are
     # you willing to relocate'?" and "How long will a job give you to relocate?" (WayUp: the question means the listed location, not anywhere)
     "Relocation": dict(

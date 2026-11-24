@@ -6628,7 +6628,11 @@ def main():
                  + f'<li><b>Write the resume and the letter.</b> Start from the <a href="{P}/resume/examples/{slug_r}/">{e(low)} resume example</a> and the <a href="{P}/cover-letter-examples/{slug_r}/">cover letter example</a>, and replace every line with your own.</li>'
                  + f'<li><b>Apply where beginners are hired.</b> {len(begin):,} of today’s {n_:,} open {e(low)} jobs are junior or intern roles or ask for two years of experience or less. '
                  + f'<a href="{P}/roles/{slug_r}/">See the open jobs</a> and check each one with the <a href="{P}/tools/resume-match/">resume match checker</a> before you apply.</li></ol>')
-        hb_qa = [(f"How much experience do {low} jobs ask for?", (f"The median in today’s postings is {y_med} years; {low_yrs}% of the postings that name a number ask for two years or less." if y_med is not None
+        # "What does a growth marketer do?" (Google, 24 Nov 2026: the guide stood 23rd for it and did not ask it): the guide's own
+        # one-line description, then what today's postings name most
+        what_qa = [(f"What does {art(psn)} {psn} do?", f"{art(psn).capitalize()} {psn} {does}."
+                    + (" Today’s postings for this work name " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:3]) + " most often." if top_ else ""))] if does else []
+        hb_qa = what_qa + [(f"How much experience do {low} jobs ask for?", (f"The median in today’s postings is {y_med} years; {low_yrs}% of the postings that name a number ask for two years or less." if y_med is not None
                   else "Most postings for this work do not name a number of years. Read the duties: they tell you more about the level than the title does.")),
                  (f"Do I need a degree to become {art(psn)} {psn}?", (f"{nodeg}% of today’s {n_:,} postings say no degree is required." if nodeg else f"None of today’s {n_:,} postings say outright that no degree is required.")
                   + " Many others accept equivalent experience: read the requirements of each posting."),
@@ -6647,7 +6651,18 @@ def main():
                   f"Not in today’s postings: {n_:,} {low} jobs are open on {SITE} as of {fdate(TODAY)}, and {pc_(k_ai, n_)}% of them ask for AI or machine-learning skills"
                   + (", alongside " + ", ".join(f"{t} ({pc_(k, n_)}%)" for t, k in top_[:2]) + "." if top_ else "."))]
         bm_ = BECOME_MORE.get(slug_r)
-        if bm_: hb_qa = hb_qa[:3] + [tuple(x) for x in bm_["qa"]] + hb_qa[3:]
+        if bm_:
+            bm_qa = [tuple(x) for x in bm_["qa"]]
+            # the written "Do you need a degree to become …?" stood next to the counted "Do I need a degree to become …?" on 58 of 373
+            # guides (25 Nov 2026): one question, the written answer first and today's count after it
+            dq_ = next((i_ for i_, (q_, _) in enumerate(bm_qa) if re.match(r"(?i)do you need a (?:college |four-year |bachelor’s |bachelor's )?degree\b", q_)), None)
+            o_ = len(what_qa)
+            if dq_ is not None and hb_qa[o_ + 1][0].startswith("Do I need a degree"):
+                bm_qa[dq_] = (bm_qa[dq_][0], bm_qa[dq_][1].rstrip() + " " + hb_qa[o_ + 1][1])
+                hb_qa = hb_qa[:o_ + 1] + hb_qa[o_ + 2:]
+                hb_qa = hb_qa[:o_ + 2] + bm_qa + hb_qa[o_ + 2:]
+            else:
+                hb_qa = hb_qa[:o_ + 3] + bm_qa + hb_qa[o_ + 3:]
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in hb_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         facts_ = nums([(f"{n_:,}", f"open {e(low)} jobs today"), (f"{len(begin):,}", "open to beginners")] + ([(f"{y_med} years", "experience asked, median")] if y_med is not None else [])
