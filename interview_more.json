@@ -50423,5 +50423,1429 @@
     "Our team kept mistyping product codes because the paper order form had the code and the item name in different columns. I suggested putting the code right next to the name. My supervisor tried it at one branch first. Over the next month, code errors from that branch dropped by about half, and the new form went out to all branches."
    ]
   ]
+ },
+ "cost-accountant": {
+  "heading": "Cost accountant questions",
+  "qs": [
+   [
+    "How do you split a material cost variance into price and usage, and what does each one tell you?",
+    "Whether you understand standard costing and use variances to find causes.",
+    "Price variance points to purchasing, usage variance to the floor. The number is a starting point; the cause comes from talking to buyers and supervisors.",
+    "Price variance is the difference between actual and standard price, times the actual quantity. Usage variance is the difference between actual and standard quantity, times the standard price. Last year we had a $40,000 unfavorable usage variance on resin. It was not waste on the line. A new mold made heavier parts, so we fixed the mold and updated the standard."
+   ],
+   [
+    "When would you show management a variable costing report instead of an absorption costing one?",
+    "Whether you know the difference and when each view helps a decision.",
+    "Absorption for external reports; variable for internal decisions like a special order, because it shows contribution margin and keeps fixed cost out of inventory.",
+    "Our GAAP statements use absorption costing, so fixed factory overhead sits in inventory. For decisions I use variable costing. When sales asked about a one-time order at a low price, I showed the contribution margin per unit, since fixed overhead would not change. I also explain that building inventory under absorption can make a month look more profitable than it was."
+   ],
+   [
+    "How do you choose an allocation base for factory overhead?",
+    "Whether you link overhead to what actually drives it.",
+    "A base that moves with the cost, such as machine hours in a machine-heavy plant, and activity drivers where one plantwide rate hides real differences between products.",
+    "I look for what actually drives the cost. In a plant where machines do most of the work, machine hours explain overhead far better than labor hours. At my last job one labor-based rate made our high-volume parts carry setup cost that really came from small custom runs. Moving setups to a cost per setup changed the margin ranking of about 20 products."
+   ],
+   [
+    "How would you explain the effect of FIFO versus weighted average on cost of goods sold when prices are rising?",
+    "Whether you understand inventory valuation methods in general terms.",
+    "With rising prices, FIFO puts older, cheaper costs in cost of goods sold and newer costs in inventory; weighted average sits in between. The method should be applied consistently.",
+    "Under FIFO the oldest costs leave first, so when prices rise, cost of goods sold is lower and ending inventory is closer to current cost. Weighted average blends old and new, so results are smoother. When our steel cost went up about 10% in a quarter, I showed managers both views, so they saw that part of the margin change came from the method, not from operations."
+   ],
+   [
+    "A product manager says the standard cost for their best seller is wrong and makes it look unprofitable. What do you do?",
+    "How you handle a challenge to your numbers with evidence instead of defensiveness.",
+    "Rebuilds the cost with the manager, checks the bill of materials, routing and overhead rate, fixes real errors and explains what stays.",
+    "I sit down with them and rebuild the cost line by line: bill of materials, routing times and the overhead rate. Once I found the routing still had a 12-minute setup that engineering had cut to 4 minutes. We fixed it and the margin rose 3 points. The overhead part stayed, and I showed why, so we ended with numbers we both trusted."
+   ],
+   [
+    "Month-end shows a $60,000 unfavorable labor efficiency variance in one department. How do you investigate?",
+    "Whether you trace a variance to a real cause before you report it.",
+    "Checks the data first (time coding, standards, good unit counts), then talks to the supervisor, and reports the cause and the fix, not just the number.",
+    "First I check the data: were hours coded to the right jobs, and were good units counted correctly? Then I walk the floor and ask the supervisor. In one case a new crew was learning a line. In another, scrap was being reworked without being recorded. I report the cause, whether it will repeat, and who owns the fix."
+   ],
+   [
+    "Leadership wants to close a production line because it shows a loss after overhead. What analysis do you give them?",
+    "Whether you separate avoidable costs from allocated ones in a closing decision.",
+    "Shows which costs go away and which just move to other lines, the contribution margin lost, one-time closing costs, and clear assumptions.",
+    "I split the line's costs into those that would disappear and those that would move to other lines, like plant management and building depreciation. In one review the line showed a $300,000 loss, but $450,000 of its overhead would stay. Closing it would have cut profit. I also listed closing costs and the capacity freed for other products, then let leadership decide."
+   ],
+   [
+    "Floor counts for an expensive part are well below the system quantity. What do you do?",
+    "How you handle an inventory gap calmly and with controls in mind.",
+    "Recounts, checks unposted transactions and cutoff, looks for the process gap, books adjustments with approval, and raises theft concerns through the right channel.",
+    "I ask for a recount by someone independent. Then I check for unposted transactions, like issues to production or receipts in transit. If the gap holds, I trace when it started. Once it was scrap thrown out without a transaction. I book the adjustment with approval and document it. If anything suggests theft, I take it to my controller instead of guessing."
+   ],
+   [
+    "Purchasing switched to a cheaper supplier and the price variance looks great, but scrap went up. How do you report it?",
+    "Whether you look at the total cost of a decision, not one variance alone.",
+    "Puts the price savings next to higher scrap, rework and downtime so management sees the net effect, without blaming purchasing.",
+    "I put the favorable price variance next to the unfavorable usage, scrap and rework costs for the same material. In one quarter we saved $25,000 on price and lost about $38,000 in scrap and line stops. I showed it as one net number with the details, and met purchasing and quality together, so the next supplier decision looked at total cost."
+   ],
+   [
+    "Sales needs a cost by tomorrow for a custom product you have never made. How do you estimate it?",
+    "How you build a reasonable estimate fast and show its limits.",
+    "Uses similar products, engineering input on materials and time, current prices, a range rather than one figure, and clearly stated assumptions.",
+    "I ask engineering for a rough bill of materials and routing, and I find the closest product we already make to compare. I price materials at current quotes, not old standards. I give sales a range, for example $42 to $48 a unit, and list the assumptions, like setup time. After the first run I compare actual cost with the estimate and share the result."
+   ],
+   [
+    "Tell me about a time your cost analysis changed a business decision.",
+    "Whether your work has real impact and you can explain it plainly.",
+    "A specific decision, what the analysis showed, how it was presented, and the result, with credit shared with the people involved.",
+    "We were about to outsource a machined part because the quote was below our standard cost. I showed that most of the overhead in that standard would stay even if we stopped making it, so the real saving was small and we would lose control of lead times. We kept it in house and worked on setup time instead, which cut the cost about 8%."
+   ],
+   [
+    "How do you explain a cost report to plant supervisors who do not like accounting?",
+    "Whether you can make numbers useful for operations people.",
+    "Uses their units and language, few numbers, time on the floor, and a link to what they actually control.",
+    "I talk in their units: scrap pounds, minutes per part, overtime hours, not dollars per cost center. I bring one page with the three numbers they control and walk the line with them first. When one supervisor saw scrap per shift instead of a variance code, he started tracking it himself, and scrap fell over the next two months."
+   ],
+   [
+    "Describe a time you found an error in a cost you had already reported.",
+    "Your honesty and how you fix your own mistakes.",
+    "Owns it quickly, measures the impact, corrects it, tells the people who used it, and changes the process so it does not happen again.",
+    "I once loaded last year's overhead rate, so two product lines were understated by about 4% for a month. I told my controller the same day with the impact, sent corrected reports to the managers who used them, and added a check that compares new rates with the prior year before posting. It is an awkward email, but better than pricing on wrong numbers."
+   ],
+   [
+    "Which do you prefer, time on the plant floor or time building cost models, and why?",
+    "Whether your working style fits a role that mixes analysis with time in operations.",
+    "An honest preference, plus evidence of doing both, because cost numbers are only right when you know how the work really happens.",
+    "I enjoy building models, but I learned they are right only after time on the floor. At my last plant I spent every Tuesday morning on the lines. That is how I found a machine running at half speed on one product, which the routing did not show. So I prefer a mix, about a third of my week near operations."
+   ]
+  ]
+ },
+ "wealth-management": {
+  "heading": "Wealth management questions",
+  "qs": [
+   [
+    "What does acting in a client's best interest mean in your day-to-day work?",
+    "Whether you understand fiduciary and suitability duties in practical terms.",
+    "Knows the client's full picture, recommends what fits their goals and risk, discloses fees and conflicts, documents the reasoning, and asks compliance when unsure.",
+    "It means I know the client's goals, time horizon, taxes and risk tolerance before I suggest anything, and the advice fits them, not my production. I explain fees and any conflict in plain words. I write down why I made each recommendation. When I am unsure whether something fits our standards, I ask compliance before acting, not after."
+   ],
+   [
+    "How do you decide when to rebalance a client portfolio?",
+    "Whether you understand rebalancing and what it costs the client.",
+    "A clear policy (calendar, drift bands or both) agreed with the client, with attention to taxes, trading costs and cash needs.",
+    "I agree a target mix and drift bands with the client in their investment policy, and I review on a set schedule. If an asset class drifts past its band, I rebalance. Before trading I check taxes, so I use new cash, dividends or tax-advantaged accounts first. For one family, directing their monthly contributions brought them back to target without selling anything."
+   ],
+   [
+    "How do you explain investment risk to a client who only asks about returns?",
+    "Whether you can make risk real for a client without jargon.",
+    "Uses dollar amounts and realistic bad-year scenarios, ties risk to the client's goals and timeline, checks understanding, and documents it.",
+    "I turn percentages into dollars. On a $2 million portfolio, I ask: a bad year could mean a paper loss of several hundred thousand dollars. Would you sell then? Then I connect it to their goals, like tuition due in three years. If they could not sit through that drop, the portfolio should hold less risk, and I document the conversation."
+   ],
+   [
+    "What is your role in a client's estate plan, and where does it stop?",
+    "Whether you know estate planning basics and the limits of your role.",
+    "Gathers goals, checks beneficiaries and account titling, coordinates with the attorney and CPA, and never drafts documents or gives legal advice.",
+    "I help the client think through goals, like who should inherit and when, and I check that beneficiaries and account titles match the plan. I do not draft wills or trusts or give legal advice; that is the attorney's job. Once a client's new trust existed on paper, but the brokerage accounts were never retitled into it. I flagged it and worked with the attorney to fix it."
+   ],
+   [
+    "A long-time client wants to put half their portfolio into one stock a friend recommended. What do you do?",
+    "How you handle a risky wish while respecting that it is the client's money.",
+    "Listens, explains concentration risk in dollars, suggests a smaller amount, documents the advice, and follows firm policy if the client insists.",
+    "I ask what draws them to it and listen. Then I show what happens to their retirement plan if that stock falls sharply, in dollars. Often we agree on a much smaller amount they can afford to lose. If they still want more, it is their money, so I document my advice, mark the trade as unsolicited if firm policy requires it, and check with compliance."
+   ],
+   [
+    "An elderly client asks you to wire a large sum to a new friend they met online. How do you respond?",
+    "Whether you recognize possible elder financial exploitation and follow procedure.",
+    "Slows down, asks questions, escalates to compliance, contacts the trusted contact if allowed, and follows firm policy on holds and reporting.",
+    "I would not just process it. I call the client, ask how they know the person and what the money is for, and listen for pressure or secrecy. If it sounds wrong, I escalate to compliance the same day and, where our policy and the client's paperwork allow, reach out to their trusted contact. The firm's procedures decide on any hold or report, and I document every step."
+   ],
+   [
+    "Markets fall sharply and a nervous client calls wanting to sell everything. How do you handle the call?",
+    "How you keep a client focused on their plan during a downturn.",
+    "Listens first, revisits goals and cash needs, shows how the plan allowed for this, offers options, and respects the final decision.",
+    "I let them talk first, because fear needs space. Then we look at their plan together. Their cash needs for the next two years are already in cash and short-term bonds, so nothing has to be sold today. I explain what selling now would lock in. If they still want less risk, we lower it step by step, and I document the conversation and the decision."
+   ],
+   [
+    "Two adult children of a client call you asking about their parent's accounts. What do you share?",
+    "Whether you protect client confidentiality with family members.",
+    "Shares nothing without the client's authorization, verifies any power of attorney with compliance, and lets the client decide what family can know.",
+    "Nothing about the accounts until I know I am allowed. I check the file for an authorization or power of attorney and confirm with compliance that it is valid for us. I tell the children kindly that I cannot discuss it, and then I call the client. Often the client wants a family meeting, which I am glad to set up with their permission."
+   ],
+   [
+    "Rebalancing a client's portfolio now would create a large taxable gain. How do you approach it?",
+    "How you weigh portfolio risk against taxes, working with the client's CPA.",
+    "Looks at options such as gradual changes, new cash or using losses, works with the CPA, and explains the tradeoff to the client.",
+    "I do not just place the trades. I estimate the gain, then talk with the client's CPA about their tax year. We might spread sales over two years, use losses elsewhere, or direct new cash to the underweight assets. With one client this cut the gain realized that year by about half. I explain the tradeoff: waiting keeps more risk for a while."
+   ],
+   [
+    "You notice an error in a client's account that cost them money. What do you do?",
+    "Your honesty and process when a mistake affects a client.",
+    "Reports it to the supervisor and compliance right away, follows the firm's correction process, tells the client clearly, and fixes the cause.",
+    "I tell my supervisor and compliance right away; I do not try to fix it quietly. Once a standing instruction was missed and a client's cash sat uninvested for three weeks. We followed the firm's process to correct it, I called the client to explain what happened, and we added a second check for standing instructions."
+   ],
+   [
+    "How do you build trust with a new client whose last advisor let them down?",
+    "Whether you build relationships through listening and follow-through.",
+    "Listens to what went wrong, sets clear expectations on contact and fees, keeps small promises, and stays in regular touch.",
+    "I ask what went wrong and listen without criticizing the other advisor. Usually it was silence: nobody called when markets fell. So we agree how often we will talk, I explain every fee on one page, and I keep small promises, like a meeting summary within 24 hours. With one couple, trust came after a year of quarterly calls that always happened on time."
+   ],
+   [
+    "As a client associate, how do you organize the service work for 150 households?",
+    "Whether you can manage service volume accurately and on time.",
+    "A CRM with tasks and due dates, checklists for recurring work, priorities by deadline and risk, and clear handoffs with the advisor.",
+    "Everything goes into the CRM with a due date: required minimum distributions, account openings, transfer paperwork, review meetings. I keep checklists for recurring work, like year-end distributions, so nothing depends on memory. Each morning I sort by deadline and money at risk. The advisor and I meet for 15 minutes on Mondays to agree on priorities."
+   ],
+   [
+    "Tell me about a time you disagreed with a senior advisor about a client recommendation.",
+    "Whether you speak up respectfully when you think a client is not well served.",
+    "Raises it privately with facts, keeps the focus on the client, accepts the decision, and goes to compliance only for a real conduct concern.",
+    "A senior advisor wanted to move a retired client into a product with a long surrender period. I showed him privately that she needed the money for a home repair within two years. He looked again and we chose a simpler option. If he had not, and I believed it was unsuitable for her, I would have raised it with compliance."
+   ],
+   [
+    "Why do you want to work in wealth management rather than another part of finance?",
+    "Whether your motivation fits a long-term, client-facing role.",
+    "Interest in people and planning more than trading, comfort with long relationships, and an honest example of what drew them to the work.",
+    "I like that the work is about one family's whole life, not just a fund's return. I started in a bank branch, and the conversations I enjoyed most were about retirement and caring for aging parents. In wealth management you see a plan work over years. I am patient, and I like being the person a family calls when something changes."
+   ]
+  ]
+ },
+ "banking-operations": {
+  "heading": "Banking operations questions",
+  "qs": [
+   [
+    "For a company payment, how do you choose between a wire and ACH?",
+    "Whether you understand the general difference between ACH and wire transfers.",
+    "Wires for urgent, large or one-off payments that must arrive fast and are hard to recall; ACH for lower-cost, batched, recurring payments.",
+    "I use ACH for payroll, vendor runs and customer debits, because it is batched and cheaper, and it usually settles within a day or two. I use a wire when money must arrive the same day, like a $2 million closing payment. Wires are very hard to reverse, so we confirm beneficiary details by calling a known number before sending."
+   ],
+   [
+    "Walk me through how you run the daily cash reconciliation.",
+    "Whether you have a reliable process to match bank activity with internal records.",
+    "Pulls bank reports every morning, matches them to the ledger and payment systems, works breaks by age and size, and documents and escalates open items.",
+    "Each morning I pull prior-day statements from every partner bank and match them to our ledger and payment platform. Most items match automatically. For the rest I check timing, amount and reference. Every break gets an owner and a date. Anything over our threshold, $10,000 for us, or older than three days goes to my manager, so open items never surprise anyone."
+   ],
+   [
+    "A customer's ACH debit comes back returned. What happens next?",
+    "Whether you know how to handle a returned payment from start to finish.",
+    "Reads the return reason code, reverses the credit in the ledger, contacts the customer, follows recovery policy, and watches for patterns that suggest fraud.",
+    "First I read the return reason code, because insufficient funds is handled differently from a closed account or an unauthorized claim. We reverse the funds in our ledger, and if the customer already used the money, we follow our recovery policy. Support contacts the customer. If I see several unauthorized returns from one source, I raise it with risk the same day."
+   ],
+   [
+    "What part do KYC and AML checks play in your work with partner banks?",
+    "Whether you understand KYC and AML basics and your own part in them.",
+    "Knows the company and its banks share the duty, follows onboarding and monitoring procedures, escalates unusual activity to compliance, and does not tip off customers.",
+    "Our partner banks expect us to know our customers and watch for suspicious activity under the program we agreed with them. In operations I make sure onboarding files are complete before accounts open, and I flag activity that does not fit a customer's profile, like sudden large transfers. I escalate to compliance and never discuss the concern with the customer."
+   ],
+   [
+    "At 3 p.m. you learn that the bank never received a large payroll file. What do you do?",
+    "How you act under a hard deadline with real money at stake.",
+    "Confirms the facts fast, calls the bank's operations contact, knows the cutoffs, has a backup plan, and keeps leaders and the client informed.",
+    "I check our sending logs to see whether the file left us, then call our bank operations contact directly, not just email. If it can still make today's cutoff, we resend with the bank on the line. If not, I bring options to my manager, such as wiring funds for the most urgent part. I update the client every hour until it is solved."
+   ],
+   [
+    "Your reconciliation is off by $4,312.17 and the cause is not obvious. How do you find it?",
+    "Whether you have a method for tracing a break instead of guessing.",
+    "Checks timing, duplicates and fees first, then narrows by date and account, and documents the cause and the fix.",
+    "I start with the usual causes: items in transit, a duplicate posting, a bank fee or a reversal. Then I split the break by day and by account to narrow it. Once a gap like this was two transactions from different days that the bank netted into one entry. I fixed the matching rule so it would not happen again, and I wrote up the cause."
+   ],
+   [
+    "A partner bank says it will lower your company's daily ACH limit next week. How do you respond?",
+    "How you manage a partner bank constraint without hurting customers.",
+    "Asks why, models the impact on daily volume, discusses options with the bank, plans routing or timing changes, and tells internal teams early.",
+    "I ask the bank what is driving it, often a risk review, and what they need from us to keep the limit. Then I model our daily volume against the new limit to see which days break it. We might spread files across days, move some flows to a second bank, or give the bank more information. I tell finance and support before customers feel it."
+   ],
+   [
+    "An email from a vendor asks you to change their bank account details before Friday's payment. What do you do?",
+    "Whether you recognize payment fraud and follow verification steps.",
+    "Never changes details from an email, verifies by calling a known number on file, uses the change process with approvals, and reports suspected fraud.",
+    "I do not change anything from the email. I call the vendor using the number already in our system, not the one in the message. At a past job the request was fake; the real vendor had not changed banks. We reported it to security and warned accounts payable. If a change is real, it goes through our normal process with a second approver."
+   ],
+   [
+    "A customer says money they sent two days ago never arrived. How do you trace it?",
+    "How you investigate a missing payment calmly and clearly.",
+    "Gets the payment details, checks internal records and bank reports, asks the bank to trace it if needed, and gives the customer clear next steps.",
+    "I ask for the amount, date, sending bank and any reference or trace number. Then I check our records and the bank's incoming reports. Often the payment arrived but could not be matched because the reference was wrong. If I cannot find it, I give the bank the details and ask them to trace it. I tell the customer what I am doing and when they will hear from me."
+   ],
+   [
+    "A partner bank review finds gaps in your operations documentation. How do you handle it?",
+    "Whether you take partner bank findings seriously and fix them properly.",
+    "Reviews each finding, agrees on owners and dates, fixes the root cause, keeps evidence, and reports progress to the bank on time.",
+    "I go through each finding with my manager. For each one we set an owner, a fix and a date. When a bank found our wire approvals were not always documented, we changed the system so no wire could be released without a recorded second approver. I kept the evidence in one folder and sent the bank an update every two weeks until they closed it."
+   ],
+   [
+    "How do you build a good working relationship with the operations team at a partner bank?",
+    "Whether you manage partner banks as working relationships, not ticket queues.",
+    "Learns their process and cutoffs, sends complete requests, holds regular check-ins, and owns their own company's mistakes.",
+    "I learn their process first: cutoffs, escalation paths and what makes their job hard. I send complete requests, so they do not have to ask twice. We hold a short weekly call on open items. When we cause a problem, I say so first. After a year of that, our contact would call me early when something looked off, which saved us more than once."
+   ],
+   [
+    "Tell me about a manual payment or reconciliation task you improved.",
+    "Whether you look for ways to reduce errors and manual work.",
+    "A specific task, the problem it caused, the change made with others, controls kept in place, and a measured result.",
+    "We matched bank fees by hand every day, which took about an hour. I worked with our engineer to set matching rules for each bank's fee codes, and we kept a weekly review of anything the rules missed. Manual matching dropped to about ten minutes a day, and I used the time to work older breaks properly."
+   ],
+   [
+    "Describe a time you made an error in a payment process. What happened next?",
+    "Your honesty and how you fix process errors.",
+    "Reports it quickly, limits the impact, works to recover funds if needed, and fixes the control that failed.",
+    "I once approved a vendor batch that held a duplicate payment of $18,000. I caught it in the next morning's reconciliation, told my manager right away, and contacted the vendor, who returned the money within a week. Then I added a duplicate check on amount, vendor and invoice number before batches reach approval."
+   ],
+   [
+    "How do you stay accurate on a day with many urgent payment issues at once?",
+    "Whether you can prioritize under pressure without losing control.",
+    "Triage by deadline and money at risk, clear updates to people waiting, checklists kept even when rushed, and asking for help early.",
+    "I list every issue with its deadline and amount, then work first on what has a bank cutoff. I tell people when they will hear back, so they stop chasing me. I still use the wire checklist when rushed, because skipping a control is how a bad day becomes a loss. If the list is too long, I tell my manager early and ask for help."
+   ]
+  ]
+ },
+ "portfolio-manager": {
+  "heading": "Portfolio manager questions",
+  "qs": [
+   [
+    "How do you decide how big a position should be?",
+    "Whether you size positions using conviction, risk and liquidity.",
+    "Weighs conviction against downside, overlap with other holdings, liquidity and mandate limits; size reflects what can go wrong, not only the upside.",
+    "I start from how much the fund could lose if the thesis is wrong, not how much it could make. A strong idea with a wide range of outcomes may still be a 2% position. I check how it moves with what we already own, how many days it would take to exit, and the fund's limits. Then I size it so one mistake cannot hurt the whole portfolio."
+   ],
+   [
+    "What is your sell discipline?",
+    "Whether you have clear, written rules for exiting positions.",
+    "Sells when the thesis breaks, the price reaches fair value, a better use of capital appears, or risk limits are hit, based on a written review, not gut feel.",
+    "When I buy, I write down the thesis and what would prove it wrong. I sell when that happens, when the price reaches my estimate of value, or when a better idea needs the capital. I review each position against its thesis every quarter. Once I sold a retailer after two quarters of margin decline my thesis said would not happen, before the stock had fallen."
+   ],
+   [
+    "How would you explain tracking error to a board member who is not an investor?",
+    "Whether you understand benchmarks and tracking error and can explain them simply.",
+    "Tracking error shows how much a fund's returns tend to differ from its benchmark. It reflects how active the fund is and should match the mandate.",
+    "I say the benchmark is the index we are measured against, and tracking error tells you how far our returns tend to move away from it. A low number means we behave much like the index. A higher number means we take bigger active bets. Neither is good or bad on its own; it should match what investors signed up for."
+   ],
+   [
+    "How do you manage liquidity risk in a fund?",
+    "Whether you understand liquidity risk and plan for redemptions.",
+    "Knows how long each position takes to sell, matches holdings to redemption terms, tests heavy outflows, and keeps a buffer.",
+    "I estimate how many days it would take to sell each position without moving the price much, based on a share of normal trading volume. I compare that with how fast investors can redeem. We test a case where several large investors leave at once. If too much of the fund is in hard-to-sell names, I trim them or limit new buys, even if I like the ideas."
+   ],
+   [
+    "Your largest holding falls 25% in one day on news you did not expect. What do you do?",
+    "How you respond to a shock with process instead of emotion.",
+    "Gets the facts, tests the news against the thesis, checks size and risk limits, decides to hold, add or cut with a written reason, and informs stakeholders.",
+    "I do not trade in the first hour. I read the release, call investor relations, and talk with our analyst. Then I ask one question: does this break the thesis or just hurt the price? Once it was a one-time charge, and we held. Another time it showed a weaker core business, and we cut the position by half the next day. Either way, I write down why."
+   ],
+   [
+    "Your fund has trailed its benchmark for three years. An investor asks why they should stay. What do you say?",
+    "How honestly you answer to investors about underperformance.",
+    "Explains the specific reasons, separates bad luck from bad decisions, says what has changed, and accepts that the investor may leave.",
+    "I show where the gap came from: which positions and which decisions. I say plainly which were mistakes, like holding two energy names too long, and what we changed, such as tighter review points. I explain why the current portfolio fits our process. I do not promise a recovery. If the strategy no longer fits their needs, I respect that."
+   ],
+   [
+    "An analyst brings you a strong idea, but buying it would break the fund's sector limit. What do you do?",
+    "Whether you respect mandate limits and compliance rules.",
+    "Never breaks the limit; may replace a weaker holding in the same sector, and raises the limit itself only through proper governance.",
+    "The limit stays. If the idea is better than something we already own in that sector, I can swap them, so the total stays within the limit. If I think the limit no longer fits the strategy, I raise it with the investment committee and compliance, and nothing changes until it is approved and investors are told where required."
+   ],
+   [
+    "A large investor gives notice of a big redemption during a volatile market. How do you meet it?",
+    "How you handle outflows without harming the investors who remain.",
+    "Uses cash first, plans sales with trading so remaining investors are not left with only illiquid names, and follows the fund's documents.",
+    "I check the fund's terms and our cash first. Then I plan sales with trading so we do not sell only the easiest names and leave remaining investors with the hard-to-sell ones. Where the terms allow, we spread larger orders over several days. I keep compliance and operations informed and write down how we decided, because fairness to everyone still in the fund matters."
+   ],
+   [
+    "Your risk team flags a hidden concentration in one factor across the portfolio. How do you respond?",
+    "Whether you work with risk teams and act on exposures you did not intend.",
+    "Takes the flag seriously, checks whether the exposure is intended, reduces unintended bets, and agrees on monitoring with the risk team.",
+    "I sit with the risk team and look at which holdings create it. Once we found that eight stocks I had bought for different reasons all depended on low interest rates. That was not a bet I meant to make. I trimmed three of them, and we added that exposure to the weekly risk report, so I see it before it builds again."
+   ],
+   [
+    "You realize a trade was placed in the wrong account. What do you do?",
+    "Your integrity and process when an operational error happens.",
+    "Reports it at once to compliance and operations, follows the firm's trade error policy, makes sure the client is not harmed, and fixes the cause.",
+    "I tell compliance and operations right away, before trying to fix it myself. The firm's trade error policy decides how it is corrected, and the principle is that the client must not be harmed by our mistake. Then we look at why it happened. In one case two accounts had similar names in the order system, so we added a confirmation step for them."
+   ],
+   [
+    "Tell me about an investment you got wrong and what you changed afterward.",
+    "Whether you learn from mistakes rather than explain them away.",
+    "Owns a real mistake, explains the flawed reasoning, and describes a specific process change that followed.",
+    "I held a software company too long because I had met management and liked them. Growth had slowed for three quarters, and I explained each one away. We lost about 30% on the position before I sold. Since then I write down in advance which numbers would make me sell, and a colleague reviews them with me each quarter."
+   ],
+   [
+    "How do you work with analysts who disagree with your decisions?",
+    "Whether you lead an investment team with open debate.",
+    "Welcomes challenge, asks for evidence, makes a clear decision and explains it, and judges ideas on their merits, not on who brought them.",
+    "I want analysts who disagree with me, because that is how we find weak spots. When they do, I ask for their evidence and what would change their mind. Then I decide and explain why. Once a junior analyst argued against adding to a bank stock, and her point on loan quality was right. I said so in front of the team."
+   ],
+   [
+    "How do you keep your own biases from driving portfolio decisions?",
+    "Whether you know your biases and have habits that keep them in check.",
+    "Names specific biases such as anchoring or loss aversion, and uses written theses, checklists and colleagues who argue the other side.",
+    "I know I tend to anchor on the price I paid. So I review positions without looking at cost, only current price against my estimate of value. Before big decisions I go through a short checklist, and a colleague argues the other side. It slows me down a little, and that is the point."
+   ],
+   [
+    "How do you explain your decisions in a quarterly letter to investors?",
+    "Whether you communicate clearly and honestly with the people whose money you manage.",
+    "Plain language, what worked and what did not, current positioning and risks, and no promises about future returns.",
+    "I write for a smart reader who is not in markets every day. I cover what helped and what hurt, by name, and what we changed. I explain our largest positions and the main risks I see. I make no return promises or dated predictions. Compliance reviews each letter before it goes out, and I would rather it be short and honest than long and polished."
+   ]
+  ]
+ },
+ "statistician": {
+  "heading": "Statistician questions",
+  "qs": [
+   [
+    "A product manager says a p-value of 0.03 means there is a 97% chance the new design works. How do you respond?",
+    "Whether you understand what a p-value means and how it is often misread.",
+    "The p-value is the chance of data this extreme if there were no real effect, not the chance the effect is real. Effect size and its interval matter more.",
+    "I say that is a common reading, but not what it means. A p-value of 0.03 says that if the design had no effect, we would see a difference this large about 3% of the time. It does not give the chance the design works. Then I show the effect size with its confidence interval, because a tiny lift can be significant and still not worth shipping."
+   ],
+   [
+    "How do you decide how many people a survey or study needs?",
+    "Whether you plan sample size from power, effect size and precision rather than habit.",
+    "Starts from the smallest effect or margin of error that matters, sets power and significance level, allows for nonresponse and subgroups, and checks the budget.",
+    "I start with the smallest difference that would change a decision. For one study the team cared about a 5 point change in satisfaction. With 80% power and a 5% significance level, the calculation gave about 400 per group. I added 25% for expected nonresponse and checked the subgroups they wanted. Two of them were too small, so we dropped them from the plan."
+   ],
+   [
+    "Data show that people who take a daily vitamin have fewer heart problems. What would you check before saying the vitamin helps?",
+    "Whether you recognize confounding and know practical ways to deal with it.",
+    "Names likely confounders such as income, diet and exercise, explains adjustment or matching, and says only a randomized trial settles the question fully.",
+    "I would ask who takes vitamins. Often they also exercise more, eat better and see doctors more often, and any of those can lower heart risk. I would adjust for the confounders we measured, or match on them, and see how much the effect shrinks. I would still call it an association. Unmeasured differences can remain, and only a randomized trial would settle it."
+   ],
+   [
+    "About 20% of respondents skipped the income question. How do you handle it?",
+    "Whether you know the kinds of missing data and the risk of simply dropping cases.",
+    "Checks who is missing and why, avoids silent deletion, uses multiple imputation or weighting when suited, and reports a sensitivity analysis.",
+    "First I compare people who answered with those who skipped. In one survey the skippers were older and more often self-employed, so dropping them would bias the results. I used multiple imputation with age, job type and region as predictors. I reported results both ways, and I noted that if people skip because of their income itself, no method fully fixes it."
+   ],
+   [
+    "A manager wants to report that a program worked based on before-and-after numbers with no comparison group. What do you say?",
+    "Whether you can explain why a comparison group matters without blocking the work.",
+    "Explains underlying trends and regression to the mean, suggests a feasible comparison, and offers honest wording for what can be claimed now.",
+    "I say the numbers moved the right way, but we cannot yet tell how much is due to the program. Rates were already falling before it began, and sites chosen for poor results often improve anyway. I suggest comparing with similar sites that have not joined yet. Until then I would word it as outcomes improving after the program started, not as proof that it worked."
+   ],
+   [
+    "Halfway through a trial, the sponsor asks you to look at the results early to see if it is working. How do you handle it?",
+    "Whether you protect the integrity of a study under pressure.",
+    "Explains the raised false-positive risk of unplanned looks, points to a prespecified interim plan or monitoring committee, and stays polite but firm.",
+    "I explain that peeking without a plan raises the chance of a false positive, and it can change how people run the rest of the trial. If the protocol has a planned interim analysis, it happens on schedule with the agreed stopping rules and goes to the monitoring committee. If it does not, I offer blinded checks on recruitment and data quality, which are useful and safe."
+   ],
+   [
+    "You find an error in an analysis that has already been sent to a client. What do you do?",
+    "Whether you own mistakes quickly and fix them in a way people can trust.",
+    "Checks the size of the error fast, tells the lead and the client promptly, sends a corrected version with a clear note, and adds a check to prevent a repeat.",
+    "Once I found that a filter had dropped one region from a report already sent. I reran it the same morning. The overall estimate moved from 41% to 39%, and the conclusions held. I told my lead, then sent the client a corrected copy with a short note on what changed and why. After that I added a row count check to the script."
+   ],
+   [
+    "A customer survey came back with a 12% response rate. Can the results still be used?",
+    "Whether you judge nonresponse bias rather than the response rate alone.",
+    "Says a low rate does not automatically mean bias, compares respondents with the sample frame on known traits, weights, and states the limits clearly.",
+    "Maybe. A low rate is a warning, not a verdict. I compare respondents with the full sample frame on what we know, like age, region and account type. In one case younger customers were badly underrepresented, so I weighted by age and region and reported weighted and unweighted results. I also wrote that people who answer may feel more strongly than those who do not."
+   ],
+   [
+    "A researcher ran 40 comparisons and wants to publish only the three that were significant. How do you respond?",
+    "Whether you understand multiple comparisons and honest reporting.",
+    "Points out that about two significant results are expected by chance alone, suggests a correction or false discovery rate control, and asks to report all tests run.",
+    "I point out that with 40 tests at the 5% level, we would expect about two significant results even if nothing were going on. So three is not much. I suggest we report all 40, apply a correction such as false discovery rate control, and present the three as leads for a new study. If one main hypothesis was written down in advance, that one can stand on its own."
+   ],
+   [
+    "A stakeholder asks for one number, but your estimate has a wide confidence interval. How do you present it?",
+    "Whether you can communicate uncertainty to people who want a simple answer.",
+    "Gives the best estimate with the range in plain words, ties the range to the decision at hand, and explains what would narrow it.",
+    "I give the number and the range together. For example: our best estimate is 8% growth, and it could reasonably be anywhere from 2% to 14%. Then I say what that means for their decision. Even the low end clears their 1% target, so the call is safe. If the range crossed their threshold, I would say so and explain how much more data would narrow it."
+   ],
+   [
+    "Tell me about a time a client wanted a result your analysis did not support.",
+    "How you hold your ground on findings while keeping the working relationship.",
+    "A real example where the person kept to the data, explained it clearly, looked for what the client could fairly say, and stayed respectful.",
+    "A client hoped a training program had raised sales. My analysis showed no clear difference from the comparison group. I walked them through it, and we checked whether a different time window or region changed things. It did not. We wrote that the program had no detectable effect on sales but did improve staff ratings, which the data supported. They used it to redesign the program."
+   ],
+   [
+    "Describe a time you explained a statistical method to people without a statistics background.",
+    "Whether you can make methods clear to non-specialists without losing accuracy.",
+    "A concrete audience and method, a simple example or picture that made it click, and no loss of accuracy along the way.",
+    "For a hospital board I had to explain why we adjusted readmission rates for patient age and illness. I used one example: a hospital that treats sicker patients will look worse if we do not adjust. I showed raw and adjusted rankings side by side on one slide. Two hospitals moved by more than five places, and the board saw the point at once."
+   ],
+   [
+    "How do you make sure your analysis can be checked and rerun by someone else?",
+    "Whether you work in a reproducible, documented way.",
+    "Scripts instead of manual steps, version control, fixed random seeds, documented data sources, a short readme, and a colleague rerun before results go out.",
+    "Everything runs from scripts in version control, from raw data to final tables. I set random seeds, record data versions and keep a short readme on how to rerun it. Before results go out, a colleague reruns the code on their machine. Last year that caught a package version difference that changed one estimate in the third decimal place. Small, but worth knowing."
+   ],
+   [
+    "Tell me about a time you pushed back on a study design before data collection started.",
+    "Whether you get involved early, when design choices matter most.",
+    "A specific case where the person spotted a design flaw early, proposed a practical fix, and showed how it improved what the study could conclude.",
+    "A team planned to survey only customers who had contacted support about a new feature. I pointed out that this would tell us about unhappy users, not all users. We switched to a random sample of about 2,000 active accounts and kept the support group as a separate segment. The main finding was far more positive than the support data alone suggested."
+   ]
+  ]
+ },
+ "economist": {
+  "heading": "Economist questions",
+  "qs": [
+   [
+    "What is price elasticity of demand, and how would you use it to advise on a price increase?",
+    "Whether you understand elasticity and can turn it into a pricing recommendation.",
+    "Defines it as the percent change in quantity for a 1% change in price, links it to revenue, and notes that it differs by segment and over time.",
+    "It is the percent change in quantity demanded for a 1% change in price. If demand is inelastic, below 1 in absolute value, a price increase raises revenue. For one product we estimated about -0.4, so a 5% increase would lose roughly 2% of volume and still raise revenue. I also warned that long-run elasticity is usually larger, as customers find substitutes."
+   ],
+   [
+    "How would you estimate the effect of a policy that started in some states but not in others?",
+    "Whether you understand causal identification, such as difference-in-differences, and its key assumption.",
+    "Compares changes in treated and untreated groups, checks for parallel trends before the policy, and names threats such as other changes at the same time.",
+    "I would compare how the outcome changed in states with the policy with how it changed in states without it, over the same period. That is difference-in-differences. The key assumption is that both groups would have moved in parallel without the policy, so I check the trends in the years before. I also look for other changes that hit the same states at the same time."
+   ],
+   [
+    "How do you explain the limits of an economic model to people who are not economists?",
+    "Whether you can be honest about what a model can and cannot tell decision makers.",
+    "Plain words about the key assumptions, what the model leaves out, which results are robust, and when its answer should not be relied on.",
+    "I start with what it is: a simplified picture built on a few assumptions. Then I name the two or three that matter most, for example that firms do not change their behavior after the policy. I show which results hold under different assumptions and which flip. I end with one line on when not to use it, such as for changes far bigger than anything in the data."
+   ],
+   [
+    "How do you present a forecast so that people understand how uncertain it is?",
+    "Whether you communicate forecast uncertainty honestly instead of giving one falsely precise number.",
+    "Ranges or fan charts, scenarios tied to named assumptions, a record of past forecast errors, and clear signals that would change the forecast.",
+    "I never give just one number. I show a central forecast with a range, and two or three scenarios tied to clear assumptions, like a slower path for interest rates. I also show how far off our past forecasts were, which makes the range feel real. For one revenue forecast our past errors averaged about 3%, so I set the range on that basis."
+   ],
+   [
+    "A client wants you to estimate how many jobs their new factory will create in the region. How do you approach it?",
+    "Whether you can do impact analysis carefully and avoid inflated claims.",
+    "Separates direct, indirect and induced jobs, asks what would happen without the factory, accounts for displacement, and gives a range.",
+    "I start with direct jobs from their hiring plan, then estimate supplier and spending effects with a regional input-output model. The harder question is what happens without the factory, since some workers would just move from other local jobs. In one study the gross figure was 900 jobs, but after displacement the net estimate was closer to 500. I reported both and explained the gap."
+   ],
+   [
+    "Your estimate shows that a policy your organization supports had almost no effect. What do you do?",
+    "Whether you report findings honestly when they are unwelcome.",
+    "Checks the analysis as carefully as for a welcome result, presents it plainly with its limits, avoids hunting for a better specification, and suggests next steps.",
+    "First I check the data, the code and the model, the same way I would for a result I liked. If it holds, I tell my manager early and in plain words. I do not go looking for a specification that gives a nicer answer. I include what the estimate can rule out, for example effects larger than 2%, and what the policy might still do that we did not measure."
+   ],
+   [
+    "A reporter asks you for a yes or no answer on a contested economic question. How do you handle it?",
+    "Whether you can speak to the press accurately without overstating or dodging.",
+    "Gives a clear short answer where evidence allows, says what depends on details, stays within their expertise, and follows the organization's media rules.",
+    "I check our media policy and whether I am the right person to speak. If I am, I give the clearest honest answer I can, for example: it depends on the size of the change, and studies differ. Then I give one concrete point they can quote. I avoid forecasting a number I have not estimated, and I offer to send the sources I mentioned."
+   ],
+   [
+    "A senior colleague's model has an error that changes the sign of a key result. How do you raise it?",
+    "Whether you can raise a serious problem with a senior person directly and respectfully.",
+    "Double-checks first, raises it privately with evidence, focuses on the result rather than the person, and makes sure it is fixed before release.",
+    "I would rerun it twice to be sure. Then I would ask for a short private meeting and show exactly where it happens, with the corrected output. I would frame it as something I found while checking, not a judgment. Once a merge step had duplicated some records, and the fix turned a small positive effect negative. My colleague thanked me, and we delayed the release by two days."
+   ],
+   [
+    "You have to estimate demand for a new product that has no sales history. What do you do?",
+    "Whether you can build a reasoned estimate when direct data does not exist.",
+    "Uses similar products, surveys or choice experiments, bottom-up market sizing, and gives a range with assumptions people can challenge.",
+    "I look for close analogs, products with similar prices and buyers, and how they sold in their first year. I build a bottom-up estimate: how many potential buyers, what share might try it, and how often they would buy. If time allows, a small survey with a choice experiment helps with price. I present a low, middle and high case and say which assumption moves the result most."
+   ],
+   [
+    "A manager asks why your forecast missed last quarter's result by a wide margin. How do you respond?",
+    "Whether you review forecast errors openly and learn from them.",
+    "Explains the cause with evidence, separates surprises from model problems, owns any mistake, and states what will change.",
+    "I break the miss into parts. We forecast 4% growth and got 1%. About two thirds of the gap came from a price drop no one expected, and the rest from a model that leaned too much on the prior year. I say both plainly. Then I show the fix: we now update the model monthly, and I added a falling-price scenario so the range covers that case."
+   ],
+   [
+    "Tell me about a time you changed your view because of new evidence.",
+    "Whether you update your conclusions when the data call for it.",
+    "A clear starting view, the evidence that challenged it, how they checked it, and how they told others the conclusion had changed.",
+    "I expected a fee cut to bring in many new customers. Early data showed sign-ups barely moved, while existing customers used the service more. I checked whether it was a timing issue, and the pattern held for three months. I told the team my original estimate was wrong and why, and we refocused the program on retention, where it was working."
+   ],
+   [
+    "How do you work with engineers or data teams to get the data you need?",
+    "Whether you collaborate well on data access and data quality.",
+    "Clear requests with the purpose explained, respect for their priorities, shared written definitions, and sharing results back with them.",
+    "I write a short request with the question, the fields I need, the period and why it matters. I ask what is easy and what is costly for them, since a simpler pull often works. On one project we agreed in writing on what counts as an active customer before any data moved, which saved weeks of rework. I also share the results, so they see how the data was used."
+   ],
+   [
+    "Tell me about an analysis you did that changed a decision.",
+    "Whether your work has had real influence and you can explain it simply.",
+    "A specific decision, the analysis behind it, the number that mattered, and the person's own role stated honestly.",
+    "A city agency planned to extend a transit discount to all riders. I estimated who would use it and found most of the cost would go to riders who already paid full fare. A version targeted at low-income riders reached about the same number of new riders at roughly 40% of the cost. The agency chose the targeted version, and I helped design how they would measure it."
+   ],
+   [
+    "How do you keep up with new methods in economics, and how have you used one recently?",
+    "Whether you keep learning and apply new methods with care.",
+    "Concrete sources, a recent method they learned, how they tested it before using it, and awareness of its limits.",
+    "I read a few working paper series and follow methods discussions in my field. Recently I learned newer difference-in-differences estimators for policies that start at different times. Before using them for a client, I ran them on an old dataset where I knew the answer. On the client data the new estimate differed from the standard one by about 15%, so I explained why."
+   ]
+  ]
+ },
+ "policy-analyst": {
+  "heading": "Policy analyst questions",
+  "qs": [
+   [
+    "A federal agency has published a proposed rule that affects your organization. How do you read it and prepare to comment?",
+    "Whether you understand how a proposed rule and its comment period work in general terms.",
+    "Reads the summary, rule text and cost analysis, notes the deadline and the questions the agency asks, gathers evidence, and plans specific changes.",
+    "I start with the summary and the questions the agency asks, then the rule text and its cost analysis. I note the comment deadline and work backward from it. I map each section to how it affects us and flag what needs data from our teams. Comments that cite evidence and propose exact wording tend to carry more weight than general support or opposition, so that is what I draft."
+   ],
+   [
+    "How would you assess the costs and benefits of a proposed regulation?",
+    "Whether you understand the basics of cost-benefit analysis and its limits.",
+    "Defines a baseline, counts costs and benefits for each group over time, discounts them, tests key assumptions, and names effects that cannot be priced.",
+    "I start with a baseline: what happens without the rule. Then I list who bears costs and who gets benefits, and estimate them year by year, discounted to today. I test the assumptions that drive the result, like compliance rates. Some effects, such as fairness, are hard to price, so I describe them separately rather than leave them out. I also show who gains and who pays, not just the total."
+   ],
+   [
+    "What makes a good one-page policy brief?",
+    "Whether you can write short, decision-ready documents for busy readers.",
+    "The ask and the bottom line up front, a few key facts with sources, options with tradeoffs, a clear recommendation, and plain language.",
+    "The first two lines say what the issue is and what we want the reader to do. Then three or four key points, each with one fact and a source. If there are options, I give each one's main tradeoff in a sentence. I end with the recommendation and a contact. I cut anything that does not help the reader decide, and I ask someone outside the team to read it cold."
+   ],
+   [
+    "How do you map the stakeholders on a policy issue?",
+    "Whether you can identify who matters on an issue and plan engagement around them.",
+    "Lists groups by interest and influence, notes each one's likely position and why, finds possible allies, and updates the map as the issue moves.",
+    "I list everyone affected or able to affect the outcome: agencies, legislative offices, industry groups, advocates and researchers. For each I note their position, their influence and what they care about, then sort them into a simple grid. On one issue that showed a consumer group shared our concern on data privacy, though we disagreed on most things, and we filed a joint comment."
+   ],
+   [
+    "Leadership wants a strong public position, but the evidence for it is weak. What do you do?",
+    "Whether you protect your organization's credibility while still serving its goals.",
+    "Sets out what the evidence supports, offers wording that is firm but accurate, and explains how overclaiming can hurt credibility with regulators.",
+    "I write a short note on what the evidence supports and what it does not. Then I offer a version of the position that is still firm but sticks to what we can defend. I explain that regulators and opponents will check our claims, and one weak claim can discredit the rest. In one case leadership chose the narrower version, and it held up when an agency official questioned it."
+   ],
+   [
+    "A comment deadline is five days away and you just learned about the proposed rule. How do you plan the week?",
+    "How you prioritize under a hard deadline.",
+    "Quickly picks the provisions that matter most, asks key teams for input early, keeps the comment focused, and checks whether an extension is being sought.",
+    "On day one I read the summary and key sections and pick the two or three issues that matter most to us. I send short questions to the teams who hold the data, due on day three. Days three and four are for drafting and review. Day five is final sign-off and filing, with a few hours of buffer. I also check whether others are asking for an extension, but I do not plan on getting one."
+   ],
+   [
+    "A legislative staffer asks you a question in a meeting that you cannot answer. What do you say?",
+    "Whether you stay honest and reliable under pressure.",
+    "Admits not knowing, does not guess, commits to a specific follow-up date, and delivers on it.",
+    "I say I do not know and do not want to guess, and that I will get back to them by a set day. Then I write the question down word for word. Once a staffer asked how many small firms a provision would cover. I sent the estimate and its source two days later, and that follow-up led to a second meeting."
+   ],
+   [
+    "Two teams inside your organization disagree on the position to take on a proposed rule. How do you handle it?",
+    "Whether you can build internal agreement or get a clear decision.",
+    "Sets out each side's concerns fairly, looks for common ground, finds the decision maker, and records the final position and the reasoning.",
+    "I meet each team separately to understand their concern and the facts behind it. Then I write a one-page note setting out both views fairly, the areas of agreement and the real choice left. Often the disagreement is narrower than it looked. If not, I take the note to the person who owns the decision and ask for a call by a set date, so the comment is not delayed."
+   ],
+   [
+    "A new study comes out that undercuts one of your organization's main arguments. What do you do?",
+    "Whether you engage honestly with evidence that goes against you.",
+    "Reads the study carefully, judges its method and relevance, briefs leadership quickly, and adjusts the argument if the study holds up.",
+    "I read the study the same day, including the methods and data, not just the summary. I write a short note for leadership on what it found, how strong it is and how it bears on our position. If it is solid, I suggest how to adjust our argument rather than ignore it, because opponents will cite it. If it has real flaws, I describe them carefully and stick to facts."
+   ],
+   [
+    "You have 10 minutes with a congressional staffer to explain a complex regulatory issue. How do you prepare?",
+    "Whether you can make a complex issue clear and memorable in a short meeting.",
+    "One clear ask, a concrete example of impact in the member's district, a one-page leave-behind, and answers ready for likely questions.",
+    "I decide the one thing I want them to remember and the one thing I want them to do. I find an example from their district, like a local employer affected by the rule. I bring a one-page leave-behind with the facts and a contact. I practice a two-minute version, so most of the time goes to their questions. Afterward I send a short thank-you with anything I promised."
+   ],
+   [
+    "Tell me about a policy position you helped shape that changed because of feedback.",
+    "Whether you listen to others and refine your work.",
+    "A specific example, what the feedback was, how they weighed it, and how the final position improved.",
+    "I drafted a position supporting a new reporting requirement. Our member companies pointed out that the format would force small firms to buy new software. I checked with three of them, and the cost was real. We kept our support but asked the agency to allow a simpler format for firms under a size threshold. The final rule included a similar option."
+   ],
+   [
+    "Describe a time you worked with people who strongly disagreed with your organization.",
+    "Whether you can work respectfully across differences to reach workable outcomes.",
+    "A real case with respect for the other side, a focus on shared interests, and a concrete result, even a small one.",
+    "On a data rule I worked with an advocacy group that opposed most of our positions. We met monthly and agreed to keep the conversation to facts. We still disagreed on the main provision, but we found we both wanted clearer definitions. We sent the agency a joint letter on that point. It showed staff that the request was not just industry asking for less."
+   ],
+   [
+    "How do you keep track of regulatory and legislative developments in your area?",
+    "Whether you have a reliable system for following a fast-moving field.",
+    "Specific sources such as the Federal Register and agency sites, alerts, a tracker with dates and owners, and regular short summaries for colleagues.",
+    "I set alerts on the Federal Register and the agency sites that matter to us, and on bill trackers for the key committees. Each week I update a tracker with deadlines, status and owners. Every Friday I send the team a short summary of five items at most. When something urgent comes up, like a new comment period, it goes out the same day."
+   ],
+   [
+    "Tell me about a time your analysis was used in a way you did not intend.",
+    "How you handle your work being misread or misquoted.",
+    "Acts quickly to correct the record through the right channels, stays factual, and changes how they write to make future work harder to misread.",
+    "A figure from my brief was quoted as the cost per household, when it was the cost per affected household, a much smaller group. I told my manager and our communications team that day. We sent a correction to the outlet, which updated the story. Since then I put the unit next to every number in a brief and add a line on what the number does not mean."
+   ]
+  ]
+ },
+ "public-health": {
+  "heading": "Public health questions",
+  "qs": [
+   [
+    "What is the difference between incidence and prevalence, and when would you use each?",
+    "Whether you understand the basic measures of disease frequency.",
+    "Incidence is new cases over a period among people at risk; prevalence is all existing cases at a point in time. Incidence for risk and causes, prevalence for burden.",
+    "Incidence counts new cases in a population at risk over a period, so it tells you about risk and is used to study causes. Prevalence counts everyone who has the condition at a point in time, so it shows burden and helps plan services. A chronic disease people live with for years can have low incidence and high prevalence, so mixing them up leads to wrong plans."
+   ],
+   [
+    "When would you choose a case-control study over a cohort study?",
+    "Whether you understand the main observational study designs and their tradeoffs.",
+    "Case-control for rare outcomes or long delays between exposure and disease, cohort for rare exposures and incidence. Notes recall bias and control selection as risks.",
+    "For a rare disease, a cohort would need to follow a huge number of people to get enough cases, so a case-control study is more efficient. You start with people who have the disease and compare their past exposures with similar people who do not. The risks are recall bias and a poor choice of controls. A cohort is better when the exposure is rare or when you need incidence over time."
+   ],
+   [
+    "What is a QALY, and how is it used in a cost-effectiveness analysis?",
+    "Whether you understand the basics of health economic evaluation.",
+    "Explains that a QALY combines length and quality of life, describes cost per QALY gained as an incremental ratio, and notes its limits and fairness debates.",
+    "A QALY, or quality-adjusted life year, combines how long people live with their quality of life, where one year in full health counts as one. In a cost-effectiveness analysis we compare a new treatment with current care and divide the extra cost by the extra QALYs. Decision makers compare that cost per QALY gained with a threshold. Its limits include how quality weights are set and concerns about fairness."
+   ],
+   [
+    "How would you explain to the public that a risk factor doubles the risk of a disease?",
+    "Whether you can communicate relative and absolute risk clearly.",
+    "Gives absolute numbers alongside the relative risk, uses natural frequencies such as 2 in 1,000, avoids alarm, and says what people can do.",
+    "Doubling sounds frightening, so I give the absolute numbers too. For example: if 2 in 1,000 people normally get the disease over ten years, with this risk factor it would be about 4 in 1,000. I use whole numbers of people rather than percentages and keep the time period clear. Then I say what people can do about it and where to get more information."
+   ],
+   [
+    "Local clinics report a sudden rise in cases of an illness. What are your first steps?",
+    "Whether you know the basic steps of investigating a possible outbreak.",
+    "Confirms the rise is real, verifies diagnoses, sets a case definition, describes cases by time, place and person, and works with the health department.",
+    "First I check whether the rise is real and not a change in testing or reporting. I confirm the diagnoses with the lab and agree on a case definition. Then I describe cases by time, place and person, often with a simple chart of cases by day. That usually suggests a source to test. Throughout, I keep the health department and clinicians informed, so control steps can start early."
+   ],
+   [
+    "A health plan asks whether a new drug is worth covering. How do you approach it?",
+    "Whether you can structure a practical cost-effectiveness and budget question.",
+    "Clarifies the decision, compares with current care, reviews outcome evidence, estimates cost per QALY and budget impact, and tests key assumptions.",
+    "First I ask who would get it and what they get now, since that is the comparison. I review the trial evidence on outcomes and side effects. Then I build a simple model of costs and QALYs over a fitting time horizon. I also estimate budget impact, because a drug can be cost-effective and still unaffordable if many members qualify. I show which assumptions change the answer most."
+   ],
+   [
+    "A news story claims a common food causes cancer, based on one observational study. Your manager asks for your view. What do you say?",
+    "Whether you can judge a single study calmly and explain it to non-specialists.",
+    "Reads the study itself, checks design, size and confounding, compares it with the wider evidence, and gives a balanced, plain summary.",
+    "I read the study itself, not just the article. I check how big it was, how food intake was measured and what was adjusted for, since people who eat a lot of one food often differ in other ways too. Then I look at what other studies and reviews have found. I tell my manager whether it changes anything, usually not on its own, and how to phrase it if the public asks."
+   ],
+   [
+    "A program evaluation shows a smaller effect than the funders expected. How do you report it?",
+    "Whether you report unwelcome findings honestly and usefully.",
+    "Presents the results accurately with their uncertainty, looks for reasons, avoids spin, and suggests what could improve the program.",
+    "I present the result as it is, with the confidence interval. In one evaluation, clinic visits rose 6% against an expected 15%. I looked at why and found uptake was low in two of the five sites, where staff turnover was high. I showed results by site and suggested focusing on implementation there. The funders were disappointed but used the findings to change how the program was run."
+   ],
+   [
+    "A community group says your health survey misses their members. How do you respond?",
+    "Whether you take coverage gaps and community concerns seriously.",
+    "Listens, checks the data for undercoverage, works with the group on outreach or oversampling, and reports the limitation openly.",
+    "I meet them to understand who is missed and why, for example language barriers or no fixed address. Then I check our sample against census figures for their area. If they are right, I work with them on outreach, translated materials or an oversample in the next round. In the current report I state the gap plainly, so readers do not overgeneralize."
+   ],
+   [
+    "A decision committee asks whether your cost-effectiveness result could be wrong. How do you answer?",
+    "Whether you understand and can explain uncertainty in a health economic model.",
+    "Explains sensitivity analysis, shows which inputs matter most, gives the chance the treatment is cost-effective at the threshold, and names evidence gaps.",
+    "I say yes, and show how much. I vary each key input and show which ones could change the conclusion, often the price and the size of the treatment effect. I also run a probabilistic analysis. In one model the treatment was cost-effective in about 70% of simulations at the committee's threshold. I name the evidence gap behind most of the doubt and what study would close it."
+   ],
+   [
+    "Tell me about a time you worked with clinicians or community partners on a study.",
+    "Whether you collaborate well with people outside your field.",
+    "A specific project, respect for partners' expertise and time, clear roles, and results shared back with them.",
+    "On a diabetes screening study I worked with nurses at four clinics. I asked them early what data they could collect without slowing visits, and we cut the form from 20 items to 8. I sent short monthly updates and shared results with them before anyone else. Data completeness was over 90%, which I put down to them being part of the design."
+   ],
+   [
+    "Describe a time you had to balance scientific standards with a tight deadline.",
+    "How you keep work rigorous while still delivering on time.",
+    "Clear judgment on what could be simplified and what could not, honest labeling of limits, and follow-up work when time allowed.",
+    "A state agency needed vaccination coverage estimates in two weeks for a funding decision. I used existing survey data instead of new collection and flagged that small counties had wide intervals. I would not drop the nonresponse adjustment, since that would bias the result. We delivered on time with clear caveats, and I finished a fuller analysis a month later."
+   ],
+   [
+    "What draws you to population health work rather than individual clinical care?",
+    "Whether your motivation fits work aimed at whole populations and policy.",
+    "A specific reason tied to population-level impact, an example from their own experience, and a realistic view of the slow pace of policy work.",
+    "In my first job I analyzed hospital admissions for asthma and saw that a few neighborhoods accounted for a large share of them. A change in housing inspections there could help more people than any single treatment. That is what draws me. I also know policy moves slowly, and I am comfortable with work where the result shows up years later."
+   ],
+   [
+    "Tell me about a time you protected sensitive health data when someone wanted it shared quickly.",
+    "Whether you follow data protection rules even when it is inconvenient.",
+    "Follows data agreements and privacy rules, finds a safe alternative such as aggregate or de-identified data, and involves the privacy officer.",
+    "A partner asked for patient-level records to speed up a joint report. Our data agreement did not allow it. I explained why and offered aggregate tables instead, with small counts suppressed so no one could be identified. I checked the plan with our privacy officer. The partner got what they needed in two days, and no identifiable data left our system."
+   ]
+  ]
+ },
+ "chemist": {
+  "heading": "Chemist questions",
+  "qs": [
+   [
+    "How would you validate an analytical method before it is used for routine testing?",
+    "Whether you know what method validation covers and why each part matters.",
+    "A written protocol with acceptance criteria set in advance, covering accuracy, precision, specificity, linearity, range and detection limits.",
+    "I write the protocol first, with acceptance criteria, so the data cannot move the goalposts. For my last HPLC assay I ran spiked recovery at three levels, six repeat injections for precision, a second analyst on another day, and a five-point linearity series. I also checked that known impurities did not interfere. QA signed the report before the method went live."
+   ],
+   [
+    "You are about to use a chemical you have not handled before. What do you check first?",
+    "Whether you read the safety data sheet and plan controls before you start.",
+    "The safety data sheet: hazards, PPE, handling and storage, incompatibilities, spill and first aid steps, plus the lab's own procedures and waste rules.",
+    "I read the safety data sheet before I open the bottle. I look at the hazard statements, the PPE section, what it is incompatible with, and what to do after a spill or exposure. Last year that showed me a reagent reacts with water, so I set up under nitrogen in the hood with the spill kit nearby. I also check our lab procedure and where the waste goes."
+   ],
+   [
+    "What makes a lab notebook entry good enough to defend a result years later?",
+    "Whether you document work so someone else could follow it and trust it.",
+    "Entries made at the time, enough detail to repeat the work, lot numbers and raw data, errors struck with one line and initialed, and signatures where required.",
+    "I write as I work, not at the end of the day. Each entry has the date, the purpose, reagents with lot numbers, instrument IDs, actual amounts weighed and any deviation. If I make a mistake, I strike it with one line, initial and date it, and never erase. Once a patent attorney asked about an experiment from four years earlier, and my notebook answered every question."
+   ],
+   [
+    "A result comes back out of specification. Walk me through your investigation.",
+    "Whether you follow a fair, documented process instead of retesting until it passes.",
+    "Prompt reporting, all samples and solutions kept, a check for lab error first, each step documented, and no retest that replaces the first result without a proven cause.",
+    "I tell my supervisor the same day and keep everything: the sample, standards and solutions. Then I check lab causes, such as calculations, system suitability, standard expiry and the instrument log. Once the balance had drifted out of calibration, which we proved and documented. If no lab error is found, it goes to a full investigation with QA. I never retest until it passes."
+   ],
+   [
+    "Your reaction yield drops from 80% to 45% when you repeat it at ten times the scale. How do you find out why?",
+    "How you troubleshoot a scale-up problem in a methodical way.",
+    "A side-by-side look at heat transfer, mixing, addition rates and reagent lots, with one variable changed at a time and every attempt recorded.",
+    "First I compare the two runs line by line in my notebook: reagent lots, addition times, temperatures and stirring. At larger scale, heat and mixing are the usual suspects. On one project the exotherm during addition was much bigger at 10 grams, so the temperature spiked. We slowed the addition and added cooling, and the yield came back to 76%."
+   ],
+   [
+    "A colleague is pouring a volatile solvent on the open bench instead of in the fume hood. What do you do?",
+    "Whether you speak up about safety with peers, politely and at once.",
+    "A calm word in the moment, a reminder of the procedure, and a report to the lab manager if it keeps happening or someone is exposed.",
+    "I say something right then, in a friendly way: that solvent needs to be in the hood, can I help you move it. Most people just forgot. Once a new student did it twice in one week, so I asked the lab manager to go over hood use at our group meeting without naming him. Nobody got hurt, and it stopped."
+   ],
+   [
+    "The HPLC you depend on fails on the morning a batch of results is due. What do you do?",
+    "How you handle instrument trouble under time pressure without cutting corners.",
+    "A quick check of basic causes, an early and honest message about the delay, a qualified backup instrument if one exists, and no results from a failed system.",
+    "I check the simple things first: mobile phase, leaks, the pressure trace and the guard column. If it is not fixed within an hour, I tell the person waiting on results and give a new estimate. Once a check valve failed, and we moved the samples to a second qualified system after it passed system suitability. The results were a day late, but they were valid."
+   ],
+   [
+    "A project lead asks you to drop an outlier from a data set so the trend looks cleaner. How do you respond?",
+    "Your data integrity when someone senior wants a neater answer.",
+    "No exclusion without a documented cause or a test the procedure allows, an offer to rerun the sample, and a clear reason why this protects the project.",
+    "I say I can only remove a point if there is a documented reason, like a known pipetting error, or if it fails the outlier test our procedure allows. Otherwise it stays in the report. I offer to rerun the sample in triplicate. The last time this came up, the point repeated, and it turned out to be an early sign of a stability problem we needed to know about."
+   ],
+   [
+    "You ran a computational screen of 5,000 compounds, but you have time to test only a few in the lab. How do you choose?",
+    "How you connect computational results with lab work when time is limited.",
+    "Criteria beyond the top score, a check of the model against known actives, a spread of chemical types, and a plan to learn from the first round.",
+    "I do not just take the top ten scores, because docking scores are noisy. First I check that the model ranks a few known actives well. Then I keep compounds we can buy or make, remove reactive groups, and pick about 20 across different scaffolds. After the first assays, I compare the results with the predictions and adjust the model before the next round."
+   ],
+   [
+    "A waste container in your lab is almost full and nobody is sure what has gone into it. What do you do?",
+    "Whether you handle chemical waste by the rules instead of guessing.",
+    "Stop adding to it, ask everyone who used it, label what is known, and call environmental health and safety, since waste rules vary by site and state.",
+    "I stop anyone from adding more and tape a note on it. Then I ask everyone who used it that week what went in, and write it down. If we still cannot identify the contents, I call our environmental health and safety office, because unknown waste needs special handling. Afterward I put a log sheet on each container so it does not happen again."
+   ],
+   [
+    "Tell me about an experiment that failed. What did you change afterward?",
+    "How you treat failed work and whether you learn from it.",
+    "A specific failure, an honest account of their own part, what the data showed, and a lasting change in how they work.",
+    "I spent three weeks on a coupling reaction that never went above 10% yield. I kept tweaking conditions without checking the starting material. When I finally ran an NMR, it had partly decomposed in storage. Now I check the purity of any reagent older than six months before a new series, and I set a point where I stop and rethink instead of tweaking."
+   ],
+   [
+    "How do you explain a complex analytical result to someone without a chemistry background?",
+    "Whether you can make findings clear to people who are not chemists.",
+    "A plain headline, what it means for their decision, how confident the lab is, and no jargon they would have to look up.",
+    "I start with what they need to decide, then give the result in one sentence. I once told a sales manager the batch was pure enough to ship, but one impurity was close to the limit, so we should test the next three batches before promising a customer anything. I bring one simple chart, not raw chromatograms, and I say how sure we are."
+   ],
+   [
+    "Describe a time you shared an instrument or lab space with a busy team. How did you make it work?",
+    "How you cooperate on shared equipment and plan ahead.",
+    "A booking system or clear rules, open communication, some flexibility, a clean bench left behind, and friction raised early before it grows.",
+    "Our group of eight shared one NMR. People jumped the queue, and long runs blocked everyone. I proposed a shared calendar with short slots by day and long runs overnight, and the group agreed in one meeting. Waiting time dropped and the arguments stopped. I also made a point of leaving the instrument clean and logging any problem I saw."
+   ],
+   [
+    "What do you do to keep your lab skills current as methods and instruments change?",
+    "Whether you keep learning in a field where tools change often.",
+    "Specific habits such as reading journals, training on new instruments, courses or meetings, and putting something new to use in real work.",
+    "I read two or three journals in my area each month and keep a short list of methods worth trying. Last year I took a vendor course on mass spec data processing and used it to cut our impurity identification time by about a day per sample. I also go to local chemistry society meetings, which is a cheap way to hear how other labs work."
+   ]
+  ]
+ },
+ "professor": {
+  "heading": "Professor and lecturer questions",
+  "qs": [
+   [
+    "How do you design a new course from scratch?",
+    "Whether you plan a course backward from what students should be able to do.",
+    "Learning outcomes first, assessments that show those outcomes, then readings and activities that prepare for them, with each part lined up.",
+    "I start with four to six outcomes, written as things students can do by the end. Then I decide how I will see that they can do them: a project, exams, short papers. Only then do I pick readings and plan sessions. When I built a research methods course, I cut two favorite topics because they served no outcome, and the course got better."
+   ],
+   [
+    "How do you design assessments that are fair and actually measure learning?",
+    "Your grasp of assessment design, grading criteria and fairness.",
+    "Assessments tied to outcomes, rubrics shared in advance, a mix of low-stakes and larger work, and steps to keep grading consistent across graders.",
+    "Each assessment maps to a course outcome, and students see the rubric when the assignment goes out. I mix weekly low-stakes quizzes with two larger projects, so one bad day does not decide a grade. With 120 students and two TAs, we grade a few papers together first to calibrate. If a question confuses people, I fix it for next term."
+   ],
+   [
+    "How would you teach an introductory class of 250 students?",
+    "Whether you can keep a large class active, organized and fair.",
+    "Short lecture blocks with active learning, a clear structure, a coordinated TA team, quick feedback tools, and ways for students to get help.",
+    "I break each class into blocks of about 15 minutes with a question in between, using a quick poll. Students talk to a neighbor before I show the answer. I meet my TAs every week so sections stay consistent, and I hold office hours right after class. In my last intro course, attendance stayed above 80% through the whole term."
+   ],
+   [
+    "What is your research agenda for the next few years, and how will you fund it?",
+    "Whether you have a focused, realistic research plan and a way to support it.",
+    "Two or three clear questions that build on past work, planned papers, realistic funding targets, and a place for students in the work.",
+    "My work asks how small farms change their water use during droughts. Over the next three years I plan two papers from my dissertation data and a new field study in two counties. I am applying to one federal grant and two foundation programs, and I have a small internal grant for pilot data. Each project has a role for two undergraduate assistants."
+   ],
+   [
+    "How do you mentor undergraduates who want to get involved in research?",
+    "Your approach to mentoring and to opening research to more students.",
+    "An open way in, small real first tasks, regular meetings, attention to students who may not ask, and help with next steps like posters or grad school.",
+    "I post open spots each fall, so it is not only the students who know to ask. New students start with a small, real task, like coding interviews, and meet with me or a grad student every week. When ready, they present a poster at our campus symposium. Of the 12 undergraduates I have mentored, five presented at a conference."
+   ],
+   [
+    "A student emails late at night before the exam saying they are overwhelmed and cannot take it. What do you do?",
+    "How you balance care, fairness and your institution's policies.",
+    "A kind reply, the official route for a makeup or incomplete, a referral to counseling or the dean of students, and the same options for every student.",
+    "I reply first thing in the morning, kindly, and explain what our policy allows, usually a makeup exam arranged through the dean of students. I include the counseling center's contact details. If the message sounded like a crisis, I would contact the campus support team right away instead of waiting. Every student in that spot gets the same options."
+   ],
+   [
+    "You notice that two students handed in nearly identical essays. How do you handle it?",
+    "Whether you follow academic integrity procedures fairly and calmly.",
+    "Evidence gathered first, the institution's integrity process followed, no assumption of guilt in talks with students, and the matter kept confidential.",
+    "I compare the essays and note exactly what matches. Then I follow our integrity policy, which at my last school meant meeting each student separately before filing anything. One said she had shared a draft with her roommate for feedback. I reported it through the official process, because outcomes should not depend on which professor you have."
+   ],
+   [
+    "Midway through the term, a feedback survey shows that half the class feels lost. What do you change?",
+    "Whether you use student feedback to adjust your teaching during the term.",
+    "A close look at what exactly is unclear, an open reply to the class, concrete changes, and a later check that the changes helped.",
+    "I read the comments and look for a pattern. In one statistics course, students were lost on how the topics connected, not on any single topic. I told the class what I had heard, added a five-minute recap at the start of each session and a weekly worked example. Three weeks later a short poll showed the share who felt lost had dropped to about a fifth."
+   ],
+   [
+    "Your department asks you to teach a required course outside your specialty. How do you prepare?",
+    "Whether you are flexible and can teach well outside your comfort zone.",
+    "A willing answer, early preparation, help from colleagues who have taught it, and honesty with students where that fits.",
+    "I say yes and start early. I ask the last instructor for the syllabus, the slides and what went badly, and I read the two most used textbooks. When I took over a survey course in an area I had not studied since grad school, I sat in on a colleague's class and stayed a week ahead in my prep. My evaluations that term were close to my usual ones."
+   ],
+   [
+    "A graduate student you advise has made little progress on their thesis for six months. What do you do?",
+    "How you mentor a struggling student with honesty and support.",
+    "A private, direct talk about what is in the way, a written plan with small deadlines, regular check-ins, and a referral to campus support if needed.",
+    "I ask to meet, say plainly what I have noticed, and then mostly listen. Often a research problem feels too big, or something outside school is going on. With one student, we split the next chapter into six two-week goals and met every other Friday. I also mentioned the counseling and writing centers. She finished that chapter in three months."
+   ],
+   [
+    "A grant deadline, a full teaching week and a committee report all land at once. How do you handle it?",
+    "How you balance research, teaching and service when they collide.",
+    "Clear priorities, protected time, an honest talk with colleagues about what can move, and no shortcuts on the teaching students depend on.",
+    "I list everything with its real deadline and what happens if it slips. Teaching cannot move, so those hours stay. The grant has a fixed date, so I block two mornings for it. I ask the committee chair if the report can wait a week, and usually it can. The next term I started grant drafts a month earlier, which removed most of the crunch."
+   ],
+   [
+    "Describe a class session that went badly. What did you do next?",
+    "Whether you reflect honestly on your teaching and improve it.",
+    "A specific example, ownership instead of blaming students, and a concrete change that worked the next time.",
+    "I once planned a discussion on a dense theory reading, and almost nobody had read it closely. The room was quiet for 20 minutes. I owned it: the reading was too long and had no guide. Next time I cut it to the key ten pages and added three questions students answered before class. The discussion the following week was one of the best that term."
+   ],
+   [
+    "How do you support students who arrive with very different levels of preparation?",
+    "Whether you help all students succeed, not only the best prepared.",
+    "Clear expectations, no assumed hidden knowledge, varied ways to take part, early outreach to students who struggle, and links to campus resources.",
+    "I explain things that are often assumed, like what office hours are for and how to read a journal article. A short ungraded quiz in week one shows me who needs a refresher, and I share optional review materials. I email anyone who misses two assignments in a row. Several first-generation students told me that email was what got them to come in."
+   ],
+   [
+    "How have you worked with colleagues on curriculum or department decisions?",
+    "Whether you are a good department citizen who can work through disagreement.",
+    "A real example of service, listening to other views, use of evidence, and support for a group decision even when it was not their first choice.",
+    "I served on our curriculum committee when we redesigned the major. Two colleagues strongly disagreed about a required theory course. I gathered data on who took it and how they did in later classes, and we used that to agree on a shorter version. It was not exactly what I wanted, but the plan passed with full support and has run for three years."
+   ]
+  ]
+ },
+ "employee-relations": {
+  "heading": "Employee relations questions",
+  "qs": [
+   [
+    "How do you plan and run a workplace investigation from complaint to conclusion?",
+    "Whether you know the steps of a fair and thorough workplace investigation.",
+    "Prompt intake, interim steps if needed, a neutral investigator, a written plan, interviews with all sides, a finding based on evidence, and a clear close-out.",
+    "I meet the person who complained within a day or two and decide if interim steps are needed, like a schedule change. Then I write a plan: allegations, witnesses, documents and interview order. I interview the complainant, then witnesses, then the accused employee, who gets a full chance to respond. I weigh the evidence against policy, write a report and close the loop with both."
+   ],
+   [
+    "What does good documentation look like in an employee relations case?",
+    "Whether your records are factual, complete and able to hold up later.",
+    "Dated, factual notes of what was said and done, no labels or opinions, documents attached, decisions with reasons, and secure storage under company policy.",
+    "I write what people said and did, with dates and quotes where I can, not my opinion of them. Instead of 'he was hostile', I write that he raised his voice and what he said. I finish interview notes the same day. The report explains how I reached the finding. Files go in a restricted system, because a case can come back two years later."
+   ],
+   [
+    "Why does consistency with past cases matter, and how do you check it?",
+    "Whether you understand the fairness and legal risk of treating similar cases alike.",
+    "Similar conduct gets similar outcomes, past cases are checked before deciding, and any real difference is written down with the reason.",
+    "If two people break the same rule and get different discipline, it looks unfair and can be used as evidence of bias. Before I recommend an outcome, I search our case log for similar conduct over the past few years. Last spring a manager wanted to fire someone for a first attendance issue, but past cases got a written warning. We followed that and wrote down why."
+   ],
+   [
+    "What do you tell a manager about retaliation after an employee files a complaint?",
+    "Whether you understand retaliation risk in general terms and can coach managers on it.",
+    "Retaliation can be unlawful even if the complaint is not upheld. No adverse change without HR review, normal treatment of the employee, and legal advice on hard cases.",
+    "I tell them retaliation is often the bigger risk, even if the complaint is not upheld. In general, any action that could discourage someone from complaining can count, like a sudden schedule change, a poor review or being left out of meetings. I ask them to check with me before any change that affects that employee. Rules vary by state, so counsel advises on hard cases."
+   ],
+   [
+    "An employee reports harassment but asks you to keep it completely confidential. What do you say?",
+    "How you handle confidentiality honestly when the company has a duty to act.",
+    "No promise of full confidentiality, a clear reason why the company may need to act, sharing only on a need-to-know basis, and protection from retaliation.",
+    "I thank them for coming forward and say honestly that I cannot promise total confidentiality, because the company may have to look into it. I promise to share only with people who need to know, and I explain that retaliation is not allowed. Once an employee feared her manager would find out. We set up interim steps first, and then she felt safe to go ahead."
+   ],
+   [
+    "A senior manager who brings in a lot of revenue is accused of bullying by three team members. How do you proceed?",
+    "Whether you apply the same standards regardless of seniority or value to the business.",
+    "The same process as for anyone, an investigator independent enough to resist pressure, possibly outside help, and leaders told the facts, not asked for an outcome.",
+    "Same process as any other case. Because he is senior, I ask whether someone outside his reporting line, or an outside investigator, should run it so nobody feels pressure. I brief our HR leader early. In a similar case the findings were partly upheld, and the manager got a final written warning and coaching. His team's survey scores improved the next year."
+   ],
+   [
+    "Two witnesses give opposite accounts of a meeting, and there is no recording. How do you reach a finding?",
+    "How you weigh conflicting evidence and judge credibility fairly.",
+    "A search for corroboration, consistency, plausibility and motive, other evidence like messages, and a finding on the balance of evidence that is explained.",
+    "I look for anything that supports one account: emails sent right after, who else was there, and whether each story stays the same across interviews. In one case a third person had messaged a friend during the meeting about what was said. If nothing tips it, I can find the claim not substantiated, which is not the same as saying it did not happen, and I explain that to both."
+   ],
+   [
+    "A manager wants to fire an employee today for poor performance, but nothing is in writing. What do you advise?",
+    "Whether you slow down a risky decision in a way that protects everyone.",
+    "Questions about past feedback, a check for recent complaints or leave, consistency with past cases, and usually a written improvement plan first. Rules vary by state.",
+    "I ask what the employee has been told so far, what the gap is, and whether anything else is going on, like a recent complaint or medical leave. With no paper trail, firing today is risky and would surprise the employee. In most cases I suggest a written plan with clear goals and 30 to 60 days to improve. The manager is often frustrated, so I explain the reason."
+   ],
+   [
+    "An employee posts online complaining about pay and working conditions, and their manager wants them disciplined. What do you do?",
+    "Whether you know some employee speech may be protected and when to involve legal counsel.",
+    "No quick discipline. A look at what was said and at company policy, a check on whether it could be protected activity, and legal counsel before any action.",
+    "I ask the manager to wait and send me the post. Talking with coworkers about pay and working conditions can be protected under federal labor law, even online, while threats or harassment usually are not. I compare the post with our policy and take it to legal counsel before any discipline. In one case we decided no action was right, and I explained why to the manager."
+   ],
+   [
+    "During an interview, the employee you are investigating gets angry and walks out. What do you do?",
+    "How you stay calm and fair when an interview goes off track.",
+    "Calm, no chasing, a record of what happened, an offer to continue later, and a clear message that the process goes on and they deserve to be heard.",
+    "I do not follow them or raise my voice. I write down what happened and when. Later that day I send a short, calm message offering another time and explaining that I want their side before I reach any conclusion. Once a supervisor did this, came back the next morning and apologized. His account in the second interview changed my view of one allegation."
+   ],
+   [
+    "Tell me about a finding you made that leadership did not like. How did you handle it?",
+    "Whether you stand by the evidence under pressure.",
+    "A real case, a finding grounded in evidence, a clear explanation to leaders, and openness to new facts but not to pressure.",
+    "I once found that a well-liked director had made repeated comments about an employee's age. The VP wanted it called a misunderstanding. I walked her through the evidence: four witnesses and two emails. I said I would look at any new facts, but I could not change the finding without them. The finding stood, and the director got a written warning and training."
+   ],
+   [
+    "How do you stay neutral when you feel sympathy for one side in a case?",
+    "Whether you can manage your own bias during sensitive cases.",
+    "Awareness of their own reaction, the same questions for both sides, notes kept to facts, and a second reviewer when they are too close to it.",
+    "I notice the feeling and name it to myself. Then I stick to the plan: the same questions for both sides, notes written as facts, and a finding tied to policy. If I know someone in the case well, I ask a colleague to review my report or take the case. Sympathy is normal, but the person on the other side deserves the same fair process."
+   ],
+   [
+    "Describe how you built trust with employees who did not trust HR.",
+    "How you earn credibility with skeptical employees.",
+    "Being visible, listening, following through on small promises, honesty about what HR can and cannot do, and closing the loop on concerns.",
+    "At a warehouse I supported, people said HR only protected managers. I started spending two hours on the floor each week, across all shifts, and just listened. When I promised to look into a scheduling problem, I came back within a week with an answer, even when it was no. After a few months, people raised problems earlier, when they were easier to fix."
+   ],
+   [
+    "How do you coach a manager who keeps getting complaints about how they speak to their team?",
+    "Whether you can change manager behavior through coaching, not only discipline.",
+    "Specific examples, a private and direct talk, practical changes, follow-up meetings, and documentation and escalation if nothing improves.",
+    "I share specific examples, without naming who raised them, and ask how the manager sees it. Most do not realize the effect they have. With one supervisor, we agreed on three changes, like giving criticism in private, and met every two weeks for two months. The complaints stopped. I also told him plainly that if they continued, it would move to formal discipline."
+   ]
+  ]
+ },
+ "health-coach": {
+  "heading": "Health coach and dietitian questions",
+  "qs": [
+   [
+    "What is motivational interviewing, and how do you use it with clients?",
+    "Whether you know the basics of motivational interviewing and use them in sessions.",
+    "A collaborative style that draws out the client's own reasons to change through open questions, reflections and summaries, instead of lecturing.",
+    "It is a way of talking that helps people find their own reasons to change, instead of me telling them what to do. I ask open questions, reflect back what I hear and summarize. A client once said he should walk more. I asked what would make it worth it, and he said keeping up with his grandkids. He started with ten minutes after dinner."
+   ],
+   [
+    "How do you help a client set goals they can actually reach?",
+    "Whether you set small, specific goals that the client chooses and can track.",
+    "Small, specific goals the client picks, with a clear what, when and how often, a confidence check, and a regular review to adjust.",
+    "I ask what one change they want to try this week, then make it specific: what, when and how often. Then I ask how confident they are on a scale of 1 to 10. If it is below 7, we make it smaller. One client wanted to cook every night. We settled on two home-cooked dinners a week, which she rated a 9. A month later she was cooking four nights."
+   ],
+   [
+    "Where are the limits of your role, and when do you send a client to their doctor?",
+    "Whether you know your scope of practice and refer clients for medical care.",
+    "No diagnosing or prescribing, awareness that rules vary by state and credential, and a referral to the doctor for symptoms, medications or medical diets.",
+    "As a coach, I do not diagnose, prescribe or change anyone's medication. Medical nutrition therapy belongs to registered dietitians, who are licensed in many states, working with the doctor. When a client mentioned dizziness after cutting back on meals, I asked her to call her doctor that day, and we paused the plan until she had. With consent, I keep the doctor informed."
+   ],
+   [
+    "A client asks what you think of a popular diet they saw online. How do you answer?",
+    "Whether you give balanced, evidence-based guidance without hype or judgment.",
+    "Curiosity about why it appeals, a fair view of what is and is not known, a focus on what the client can keep up, and a doctor check for medical conditions.",
+    "I ask what draws them to it, because that tells me what they want. Then I share what is generally known in plain words, including what is not known. I steer us toward what they could keep doing for a year, not a month. If they have a condition like diabetes or take medication, I ask them to talk to their doctor before any big change."
+   ],
+   [
+    "A client has seen no change on the scale in a month and says they want to quit. What do you do?",
+    "How you support a discouraged client without blame.",
+    "Room for the frustration, a look at other progress, a review of what was hard, a plan adjusted together, and a doctor check if something seems off.",
+    "I let them say how frustrated they are without jumping in. Then we look at what did change: one client was sleeping better and had walked 15 times that month. We talk about what was hard and pick one adjustment together. If the lack of change seems unusual for what they are doing, I suggest they check with their doctor. She stayed with the program."
+   ],
+   [
+    "During a session, a client mentions skipping meals and making themselves vomit. What do you do?",
+    "Whether you recognize possible eating disorder signs and refer the client right away.",
+    "A calm, caring reply without judgment, a clear statement that this needs medical care, a referral to their doctor or a specialist, and a stop to weight goals.",
+    "I stay calm and thank them for telling me. I say this is serious and needs care beyond what I can offer, and that I want to help them reach their doctor or an eating disorder specialist. I stop any weight-loss goals right away. If they seem in immediate danger, I follow our emergency procedure. Then I note it in the file and follow up on the appointment."
+   ],
+   [
+    "A client with type 2 diabetes asks you exactly how many carbs to eat each day. How do you respond?",
+    "Whether you stay within your scope on medical nutrition questions.",
+    "No number on the spot. A coach refers to the doctor or a registered dietitian; a dietitian advises only within their license and with the care team.",
+    "As a coach, I explain that a specific number for someone with diabetes is a medical decision. It should come from their doctor or a registered dietitian who knows their full picture and medications. I help them write down questions for that visit. Once they have a plan, I help with the daily part: shopping lists, cooking and noting how they feel."
+   ],
+   [
+    "A client keeps canceling sessions at the last minute. How do you handle it?",
+    "How you address missed sessions with respect and curiosity.",
+    "A friendly, direct talk about what gets in the way, a schedule or format that fits better, and the cancellation policy applied the same way for all.",
+    "I bring it up at our next session without blame and ask what has been getting in the way. One client worked rotating shifts, so a fixed Tuesday slot never worked. We switched to 20-minute phone check-ins she could book the day before, and she did not miss one in two months. I still explain our cancellation policy and apply it the same way for everyone."
+   ],
+   [
+    "A client says they are eating 'perfectly', but their food log shows otherwise. What do you say?",
+    "Whether you can raise a gap without shame or argument.",
+    "Curiosity, not judgment, a shared look at the log, and a focus on patterns and next steps instead of on being caught out.",
+    "I do not point out the gap like a referee. I ask them to walk me through two days in the log and say what they notice. Usually they spot it themselves, like snacking late after hard workdays. Then we talk about that moment, not about eating perfectly. One client saw that most of her snacking came on days she skipped lunch, so we worked on lunch."
+   ],
+   [
+    "Your employer's wellness program wants you to promote a sponsor's supplement to clients. How do you respond?",
+    "Whether you protect clients from claims you cannot support.",
+    "Concerns raised with the employer, no health claims beyond the evidence, the sponsorship disclosed, and supplement questions sent to a doctor or pharmacist.",
+    "I tell my manager I can mention the sponsor, but I will not make health claims I cannot back up, and clients should know it is sponsored. Supplements can interact with medications, so I tell clients to ask their doctor or pharmacist first. At my last job we agreed to list the product on a resource sheet with a clear note that it was a sponsor."
+   ],
+   [
+    "Tell me about a client who made a lasting change. What made it work?",
+    "Whether you can describe real, client-led progress and what drove it.",
+    "A specific client, their own goals and reasons, small steps, how setbacks were handled, and credit given to the client.",
+    "A 58-year-old client with high blood pressure wanted to cook at home more. We started with one new recipe a week and a shopping list she wrote herself. She had a hard month when her mother was ill, so we kept check-ins short. A year later she still cooks most nights, and her doctor was pleased at her checkup. The change was hers. I helped her keep going."
+   ],
+   [
+    "How do you work with clients whose culture, budget or schedule makes standard advice hard to follow?",
+    "Whether you fit guidance to the client's real life instead of one ideal plan.",
+    "Questions about what the client eats now, respect for food traditions, low-cost practical options, and a plan built around their actual week.",
+    "I start by asking what they eat now and what their family cooks, instead of handing over a standard plan. One client worked two jobs and shopped mostly at a corner store. We looked at what it sold: canned beans, frozen vegetables, eggs. We built three quick meals from those. Advice that ignores someone's budget or food traditions just does not get used."
+   ],
+   [
+    "Describe a time you worked with a client's doctor or care team.",
+    "Whether you work well with other health professionals.",
+    "Client consent first, short and clear updates, respect for the doctor's role, and the coaching plan adjusted to follow medical advice.",
+    "With the client's written consent, I sent her doctor a one-page update every quarter: her goals, what she was doing and any concerns she had raised. When her medication changed, the doctor's office let us know, and we adjusted her activity plan to fit their advice. Keeping it to one page meant the doctor actually read it."
+   ],
+   [
+    "How do you keep your knowledge accurate when nutrition advice in the news changes so often?",
+    "Whether you rely on trustworthy sources and keep learning.",
+    "Credible sources such as professional bodies, government guidelines and peer-reviewed research, required continuing education, and caution with trends.",
+    "I rely on professional organizations, government guidelines and peer-reviewed reviews, not social media. I complete the continuing education my credential requires each year and pick at least one course on a topic clients ask about. When a new trend comes up, I check what the research shows before I discuss it, and I am honest when the answer is that nobody knows yet."
+   ]
+  ]
+ },
+ "travel-coordinator": {
+  "heading": "Travel coordinator questions",
+  "qs": [
+   [
+    "How do you check a booking request against the travel policy before it goes for approval?",
+    "Whether you know how policy limits and approvals work in practice.",
+    "Checks on fare class, hotel rate caps, advance booking and preferred suppliers, a short note on any exception, and the right approver.",
+    "I check the fare class, the hotel against our nightly cap for that city, how far ahead it was booked, and whether we used a preferred airline or hotel. If something is outside policy, I write one line on why, like no hotel under the cap near the client site, and send it to the approver the policy names. I don't approve exceptions myself, and I keep the note with the booking."
+   ],
+   [
+    "What does duty of care mean for a travel coordinator, and how do you know where your travelers are?",
+    "Your grasp of the employer's responsibility for travelers' safety.",
+    "Current itineraries in one place, contact details, risk alerts for destinations, a fast way to reach people, and a clear plan for who does what in an emergency.",
+    "To me it means the company takes reasonable steps to keep travelers safe, and I am part of that. Every booking goes through our agency or tool, so I can pull a list of who is in a city within minutes. I keep mobile numbers and emergency contacts current. When an alert comes in, I check who is affected and message them first, then tell security or HR as our plan says."
+   ],
+   [
+    "A traveler needs a visa for a country you have not booked before. How do you work out how much time you need?",
+    "Whether you rely on official sources instead of guesses or old emails.",
+    "The destination's embassy or consulate site as the source, a check on passport validity and blank pages, and a buffer because processing times change.",
+    "I go to the embassy or consulate website for that country and the State Department's country page, not forums. Processing times vary by country and season, so I add a buffer on top of what they state. I also check the passport's expiry date and blank pages. Last spring I started a visa for a sales trip six weeks ahead, and the appointment wait alone took three of them."
+   ],
+   [
+    "A trip is canceled after the flight and hotel are already paid. What do you do?",
+    "Your knowledge of refunds, credits and fare rules.",
+    "Hotel canceled before its deadline, fare rules checked for refund or credit, any airline credit logged with its expiry, and a refund requested if the airline canceled.",
+    "First I cancel the hotel, because most rates have a cancellation deadline and missing it costs a night. Then I check the fare rules. A nonrefundable ticket often becomes a credit, so I log it with the traveler's name and expiry date so it actually gets used. If the airline canceled the flight itself, I ask for a refund rather than accepting a voucher by default."
+   ],
+   [
+    "A traveler's flight is canceled at 10 p.m. and they have a 9 a.m. client meeting in another city. What do you do?",
+    "How you solve a disruption fast and keep the traveler informed.",
+    "Rebooking options checked at once, including other airlines, airports or driving, a hotel if needed, and one clear message to the traveler and their manager.",
+    "I call the airline or our agency's after-hours line while the traveler waits at the desk, so we work both at once. I look at early flights on other airlines, nearby airports and a rental car if the drive is short enough. Once something is confirmed, I book an airport hotel if needed and send the traveler one message with the new plan. Then I tell their manager the meeting is still on."
+   ],
+   [
+    "A senior executive asks you to book a fare outside policy and skip the approval step. How do you handle it?",
+    "Whether you apply the policy evenly, even under pressure.",
+    "Polite and firm: hold or book the fare, route it through the exception process with a one-line reason, and let the approver decide.",
+    "I tell them I can get it done, and that I need to log it as an exception so finance sees why. Most of the time there is a good reason, like a long overnight flight, and the approver signs off within the hour. If they push back, I don't argue. I explain that unapproved bookings get flagged in audits and that the note protects them too. I never quietly skip the step."
+   ],
+   [
+    "A traveler's passport expires in four months and the trip is in three weeks. What do you check?",
+    "Whether you know passport validity rules differ by destination.",
+    "Entry rules for the destination and any transit country, checked on official sources, and an early renewal plan if the passport falls short.",
+    "Many countries want a passport to stay valid for some months after you leave, often six, but it varies, so I check the official entry rules for the destination and any country we connect through. If it falls short, I tell the traveler that day and look at expedited renewal on the State Department site. If it can't be done in time, I tell the manager now, not at check-in."
+   ],
+   [
+    "A traveler calls at midnight because the hotel has no record of their reservation. What do you do?",
+    "How you stay calm and fix a problem with the traveler on the line.",
+    "The confirmation sent at once, a request to the night manager, a nearby room if needed, and the cost difference recovered later.",
+    "I send the traveler the confirmation number and booking email and ask them to show it to the night manager. If the hotel is full, I ask the manager to find a room nearby, which they often will when it's their error. If not, I book the closest option in policy myself. The next day I contact the hotel or agency to refund the first booking and cover any difference."
+   ],
+   [
+    "A storm or unrest is reported in a city where three of your travelers are staying. What are your first steps?",
+    "Whether you act fast on traveler safety and follow the company plan.",
+    "A quick list of who is there, direct contact with each person, the company's emergency plan followed, and regular updates to the right people.",
+    "I pull the list of who is in that city from our booking data, then message and call each traveler to confirm they are safe and where they are. I follow our emergency plan, which means telling security and their managers. If they need to leave, I look at flights out and hold seats. I check in with them at set times until things settle, so no one is forgotten."
+   ],
+   [
+    "You booked flights and rooms for a group of 25, and the event moves a week later. How do you manage the changes?",
+    "How you organize a large change without losing track of anyone.",
+    "One master list, hotel contract terms and change fees checked first, rebooking in a set order, and a confirmation sent to each traveler.",
+    "I start with the hotel contract, because group blocks often have date-change and attrition terms that cost more than the flights. Then I work from one spreadsheet with every traveler, ticket number and fare rule. I rebook in batches, mark each row when it's confirmed, and send each person their new itinerary. At the end I check the list twice so no one is left on the old dates."
+   ],
+   [
+    "Tell me about a time a traveler was angry about a problem with their itinerary.",
+    "How you handle frustration without getting defensive.",
+    "Listening first, owning what was yours to fix, a quick solution, and a change to the process so it does not happen again.",
+    "A sales director landed and found his rental car was booked for the wrong day. He was angry, and fairly so, because I had entered the date wrong. I said so, found a car at another counter within 20 minutes and covered the difference from the trip budget. After that I started reading every itinerary back against the request before sending it."
+   ],
+   [
+    "How do you keep track of 40 or more active trips at once so nothing slips?",
+    "Your system for organizing many details under time pressure.",
+    "One source of truth, dated reminders for deadlines like visas and hotel cancellations, and a daily check of the next few days of travel.",
+    "Every trip goes in one tracker with the traveler, dates, status and the next deadline, like a visa appointment or a hotel cancellation date. Each morning I check all travel for the next 72 hours: flights confirmed, hotels paid, cars booked. I set reminders for airline credits that are about to expire. If I'm out, a coworker can open the tracker and pick it up."
+   ],
+   [
+    "Describe a time you lowered travel costs without making the trip harder for the traveler.",
+    "Whether you balance cost and the traveler's comfort.",
+    "A specific saving with a number, the method used, and evidence that travelers were not worse off.",
+    "Our team flew to Chicago every month and usually booked about a week ahead. I moved those trips to three weeks ahead and set up one preferred hotel near the office with a negotiated rate. Over six months we spent about 18% less on those trips. Travelers liked it, because they got the same hotel each time and their confirmations earlier."
+   ],
+   [
+    "A traveler keeps booking outside the company tool and sends you receipts afterward. What do you do?",
+    "How you get people to follow process without damaging the relationship.",
+    "A private, friendly talk about why the tool matters, help with whatever makes it hard, and escalation only if it keeps happening.",
+    "I ask them why, because usually there is a reason, like the tool not showing a hotel they need. I explain that bookings outside the tool mean I can't find them if something goes wrong, which is the real point. Then I fix what I can, such as adding that hotel. If it keeps happening, I mention it to their manager with the safety reason, not as a complaint."
+   ]
+  ]
+ },
+ "program-coordinator": {
+  "heading": "Program coordinator questions",
+  "qs": [
+   [
+    "How do you track spending on a grant so there are no surprises near the end of the year?",
+    "Whether you know how to follow a grant budget against its terms.",
+    "Budget versus actual by line each month, a check that costs are allowed under the grant terms, and early talks with finance and the funder about changes.",
+    "I keep a sheet with each budget line, what we planned, what we spent and what is committed. I match it to finance's report every month. Before paying for a new kind of cost, I check the grant terms to see if it's allowed. If a line is running about 10% ahead or behind, I raise it early, because moving money between lines often needs the funder's approval."
+   ],
+   [
+    "How do you keep participant records accurate and private?",
+    "Your care with personal data and record keeping.",
+    "One secure system, access only for people who need it, regular checks for gaps, and the organization's privacy rules and funder requirements followed.",
+    "All records go in one system, not on personal laptops or loose spreadsheets. Only staff who work with participants have access. I enter attendance within a day, and once a month I check for missing fields like intake dates. If we need to share data with a funder, I follow our privacy policy and the consent forms people signed, and send it securely, not by plain email."
+   ],
+   [
+    "Walk me through how you plan a one-day training event for 60 people.",
+    "Whether you can organize an event from start to finish.",
+    "A timeline built back from the date, venue and accessibility checks, registration, speaker and material deadlines, a run sheet for the day, and a follow-up survey.",
+    "I work back from the date. Eight weeks out I book the room and check accessibility. Six weeks out I confirm speakers and open registration. Two weeks out I collect slides, order food with dietary needs in mind and send reminders. On the day I follow a run sheet with times and names. Afterward I send a short survey and the slides within two days, while people still care."
+   ],
+   [
+    "How do you measure whether a program is actually working?",
+    "Whether you know the difference between activity counts and outcomes.",
+    "Outputs like attendance tracked, outcomes tied to the program's goals, a baseline to compare against, and simple tools people will really fill in.",
+    "Attendance tells me people came, not that anything changed. So I track outputs, like 120 people trained, and outcomes, like how many got a job or passed a test within three months. I take a baseline at intake so we can compare. I keep surveys to three to five questions, because long forms come back half empty. Then I share the results with staff, not just the funder."
+   ],
+   [
+    "Halfway through the grant year, one budget line is 80% spent and another has barely been touched. What do you do?",
+    "How you handle a budget problem before it becomes a compliance issue.",
+    "The cause found, the program director and finance told, the grant terms checked on moving funds, and the funder asked before any change that needs approval.",
+    "First I find out why. Maybe we bought supplies early, or a staff position sat empty for months. I bring it to the program director and finance with the numbers and a proposed fix. If the fix means moving money between lines, I read the grant terms, because many funders need written approval for that. I don't move funds first and explain later."
+   ],
+   [
+    "A speaker cancels the morning of a workshop with 40 people registered. What do you do?",
+    "How you adapt on the day without losing the room.",
+    "A quick look at backup options, a clear message to participants, and a plan that still gives people something useful.",
+    "I call the speaker to see if they can join by video, since that saves the day more often than you'd think. If not, I ask a staff member who knows the topic to lead a shorter session or a discussion. I tell participants at the start what changed and offer the original session at a later date. Then I add a backup presenter to my event checklist."
+   ],
+   [
+    "A funder report is due Friday and a partner has not sent their numbers. How do you handle it?",
+    "How you manage a reporting deadline that depends on others.",
+    "Early, specific reminders, a direct call, a clear fallback, and honest contact with the funder before the deadline if it is truly at risk.",
+    "I call the partner, not just email, and ask exactly what they need from me to finish. I offer to take the numbers by phone if that helps. If they still can't make it, I tell my director by Wednesday. We then decide whether to submit with a clearly marked estimate or ask the funder for a short extension before the deadline, not after it."
+   ],
+   [
+    "Attendance at a weekly program session drops from 30 to 12 over a month. What do you do?",
+    "Whether you look for causes and act on them.",
+    "Talking to people who stopped coming, checking practical barriers like time or transport, testing one change and watching the numbers.",
+    "I call a few people who stopped coming and ask why. Once it turned out the bus schedule had changed and the 6 p.m. start no longer worked. We moved it to 6:30 and sent text reminders the day before. Within three weeks we were back to about 25. If the reason had been the content, I would have taken it to the program director."
+   ],
+   [
+    "A participant asks you for another participant's phone number. What do you say?",
+    "Whether you protect personal information without being cold.",
+    "No sharing without consent, a friendly explanation, and an offer to pass their details along so the other person can decide.",
+    "I say I can't share anyone's contact details, because people gave them to us for the program only. Then I offer to pass their number on, so the other person can reach out if they want to. Most people are fine with that. It keeps the trust of everyone in the group, including the person asking."
+   ],
+   [
+    "Your program director and a partner organization give you different instructions about the schedule. What do you do?",
+    "How you handle conflicting directions without picking a side on your own.",
+    "Both requests written down, the conflict raised quickly with the director, and the people with authority deciding before anything is announced.",
+    "I don't pick one and hope. I write both versions down, including what each one affects, like room bookings or staff time. Then I take it to my director the same day and ask who should decide. Usually a short call between the director and the partner settles it. I only send the schedule to participants once it's agreed, so they don't get two versions."
+   ],
+   [
+    "Tell me about a tracking system you set up that other people actually used.",
+    "Whether you build tools that make the team's work easier.",
+    "A real problem, a simple tool, getting people to use it, and a visible result.",
+    "Our case notes were in four different spreadsheets, so no one knew who had finished intake. I built one shared sheet with drop-down fields and a column for the next step. I sat with each coordinator for 15 minutes to set it up with their own cases. Within a month, missing intake forms went from about 20 to 3, and our funder report took a day instead of a week."
+   ],
+   [
+    "How do you keep volunteers informed and coming back?",
+    "How you manage people you do not pay or supervise directly.",
+    "Clear roles, schedules sent early, specific thanks, and a quick way for volunteers to raise problems.",
+    "I send the schedule two weeks ahead with a short note on what each role does, so nobody arrives unsure. I text a reminder the day before. After each event I thank people by name for something specific. Every few months I ask what would make it easier. One group asked for shorter shifts, and we kept more of them once we cut shifts to three hours."
+   ],
+   [
+    "Describe a time a mistake of yours reached a participant or a funder. What did you do?",
+    "Whether you own errors and fix the process behind them.",
+    "Quick ownership, a direct fix, an honest note to the people affected, and a change that stops it happening again.",
+    "I once sent a quarterly report with last quarter's attendance numbers in one table. The funder's program officer noticed. I called her that afternoon, said it was my error and sent the corrected report within the hour. Then I added a second-person check on every report before it goes out. It takes ten minutes per report, and we haven't had a repeat."
+   ],
+   [
+    "Three programs need your attention in the same week. How do you decide what comes first?",
+    "How you prioritize when everything feels urgent.",
+    "Fixed deadlines and anything affecting participants first, an honest talk with the director about trade-offs, and clear updates on what will wait.",
+    "I list everything with its real deadline. Funder deadlines and anything that affects participants that week come first, like an event or a stipend payment. Internal tasks can usually move a few days. If two things truly clash, I ask my director which matters more instead of guessing, and I tell people what will be late and when they will get it."
+   ]
+  ]
+ },
+ "construction-laborer": {
+  "heading": "Construction worker questions",
+  "qs": [
+   [
+    "What do you check at the start of a shift before you begin work?",
+    "Whether daily safety checks and PPE are a habit for you.",
+    "PPE in good shape, tools and ladders inspected, the day's hazards from the toolbox talk, and a look at what changed on site since yesterday.",
+    "I put on my hard hat, safety glasses, vest, gloves and boots, and check none of it is damaged. I look over my tools, cords and any ladder I'll use. At the toolbox talk I listen for what's happening that day, like a crane lift or a new trench. Then I walk my work area, because things change overnight, and I report anything off to the foreman before starting."
+   ],
+   [
+    "How do you stay safe working near heavy equipment like an excavator or a loader?",
+    "Your awareness of blind spots and swing areas around machines.",
+    "Staying out of blind spots and the swing radius, eye contact with the operator before getting close, and never walking behind a moving machine.",
+    "I assume the operator can't see me unless we have made eye contact. I stay out of an excavator's swing radius and never walk behind equipment that's backing up. If I need to get close, I signal and wait for the operator to stop and give me the okay. I wear my vest, and I never stand between a machine and a wall or a truck."
+   ],
+   [
+    "When should you stop work, and how do you do it?",
+    "Whether you will speak up when something is unsafe.",
+    "Stopping when there is a clear hazard, making the area safe, telling the foreman right away, and restarting only once the hazard is fixed.",
+    "If I see something that could hurt someone, like a trench wall cracking or a load swinging over people, I stop and tell the people near me to step back. Then I tell the foreman right away. On the sites I've worked, anyone could stop work for safety, and I've done it twice. We start again only when the problem is fixed, not when it's just been talked about."
+   ],
+   [
+    "How do you use a set of plans to find where something goes?",
+    "Whether you can read basic plans and layout marks.",
+    "The right sheet and the latest revision, written dimensions used instead of measuring the drawing, reference points, and questions when something is unclear.",
+    "First I make sure I have the latest set, since old revisions cause rework. I find the right sheet, like the foundation plan, and read the written dimensions instead of measuring off the paper. I measure from the gridlines or control points the surveyor marked. If two numbers don't add up, I ask the foreman before cutting or pouring, because concrete is hard to undo."
+   ],
+   [
+    "What did you take away from OSHA 10 or OSHA 30 training?",
+    "Your general knowledge of construction safety training.",
+    "A basic grasp of common hazards like falls and struck-by, workers' rights, real examples from site work, and awareness that some states and employers require the card.",
+    "I did the OSHA 10 for construction. The big points for me were the main causes of serious injuries: falls, being struck by objects, electrical hazards and getting caught in or between things. It also covered my right to raise safety concerns. Some states and many employers require the card, but for me the value was learning what to look for on a site every day."
+   ],
+   [
+    "The concrete truck shows up early and the forms are not fully braced. What do you do?",
+    "Whether you resist pressure to rush when the work is not ready.",
+    "No pour until the forms are checked, a quick word with the foreman, and help getting the bracing finished fast.",
+    "I tell the foreman right away that the forms aren't ready. A form that blows out during a pour is dangerous and costs far more than waiting. I jump in to finish the bracing with the crew. The driver can usually wait a little, and if not, the foreman decides what happens with the load. I don't start placing concrete in forms I'm not sure about."
+   ],
+   [
+    "You see a coworker working near a roof edge without being tied off. What do you do?",
+    "Whether you look out for others even when it is awkward.",
+    "Speaking up at once in a calm way, getting the person back from the edge, and telling the foreman if it continues or equipment is missing.",
+    "I tell him right then to step back from the edge and tie off. I keep it calm, not a lecture, something like: hey, clip in before you go back out. If he says there's no anchor or harness available, I tell the foreman so it gets fixed. A fall from a roof can kill someone, so I'd rather be annoying for a minute than see that happen."
+   ],
+   [
+    "You are the signal person for a crane lift and lose sight of the operator. What do you do?",
+    "Whether you know a lift stops when communication is lost.",
+    "The stop signal given, the load held until contact is back, and a move to a better spot or a second signal person added.",
+    "I give the stop signal and call stop on the radio if we're using one. The load should not move while the operator and I can't see or hear each other. Then I move to a spot where we can see each other, or the foreman puts a second signal person in place. Only someone qualified as a signal person for that site and lift should be doing this job."
+   ],
+   [
+    "It is 95 degrees and the crew is pouring concrete all afternoon. How do you handle the heat?",
+    "Whether you know how to prevent heat illness for yourself and others.",
+    "Water often, breaks in the shade, watching for signs like dizziness or confusion, and acting fast when someone shows them.",
+    "I start drinking water before I'm thirsty and keep a jug close. We rotate the hardest jobs and take short breaks in the shade. I watch my crew too. If someone gets dizzy, sick or confused, I get them out of the sun, cool them down and tell the foreman, and we call 911 if it looks serious. Heat can drop a strong person fast."
+   ],
+   [
+    "Your foreman asks you to run a skid steer you have never been trained on. What do you say?",
+    "Whether you will turn down an unsafe task politely and offer a way forward.",
+    "An honest no to running it untrained, a clear reason, and a request for training or for a trained operator.",
+    "I tell him I haven't been trained on that machine and I'm not comfortable running it yet. I offer to do something else, like spotting or hand work, while a trained operator runs it. Then I ask if I can get trained, because I'd like to run it later. Most foremen respect that more than someone who tips a machine on day one."
+   ],
+   [
+    "You find a frayed sling or a cracked ladder in the gang box. What do you do?",
+    "Whether you take damaged equipment out of use.",
+    "Tagging it out of service, setting it apart so no one grabs it, and telling the foreman so it gets replaced.",
+    "I don't use it and I don't put it back. I tag it do not use, set it apart from the good gear and tell the foreman so a replacement gets ordered. A frayed sling can fail under load, and a cracked ladder can fold under you. It takes two minutes, and the next person who reaches into that box won't get hurt."
+   ],
+   [
+    "Tell me about a day the work fell behind schedule. What did you do?",
+    "How you help the crew catch up without cutting corners.",
+    "Pitching in where needed, staying organized, honesty about what can be done safely, and no skipped safety steps to save time.",
+    "We were setting forms for a footing and the lumber delivery came three hours late. I staged the next section's materials while we waited, so we could move straight on. When the lumber came, we split into two teams. We finished about an hour past the normal end of the day. We didn't skip bracing or checks to make it up, because rushing that part only makes a longer day later."
+   ],
+   [
+    "How do you learn a new task, like tying rebar or rigging a load, from an experienced worker?",
+    "Whether you are coachable and learn safely.",
+    "Watching first, asking questions, doing it under supervision, and admitting when you are not sure yet.",
+    "I watch them do it a few times and ask why they do each step, not just how. Then I do it while they watch and correct me. On my last job a rebar worker showed me a faster tie, and it took me about a week to get quick at it. If I'm not sure about something like a rigging hitch, I ask before the load goes up, not after."
+   ],
+   [
+    "How do you keep up a steady pace through a long, physical day without getting hurt?",
+    "Whether you know how to work hard and stay safe all day.",
+    "Good lifting habits, help or equipment for heavy loads, water and breaks, and steady work rather than rushing.",
+    "I lift with my legs and keep loads close, and if something is heavy or awkward, I get a second person or a dolly instead of being a hero. I drink water all day and eat at lunch, even when we're busy. I keep a steady pace instead of rushing in the morning and fading by three. That way I'm still careful at the end of the shift, when I'm tired and mistakes are easier to make."
+   ]
+  ]
+ },
+ "automotive-sales": {
+  "heading": "Automotive sales questions",
+  "qs": [
+   [
+    "Walk me through how you run a test drive.",
+    "Whether you follow the dealership's test drive process.",
+    "A valid license checked and copied, the store's rules on insurance and ride-alongs followed, a planned route, and the drive used to show what matters to the buyer.",
+    "I ask for the driver's license, check it's valid and not expired, and copy or scan it as our policy says. Some stores also ask for proof of insurance. I ride along unless our policy says otherwise, and I use a set route with highway, city streets and a parking lot. On the way I show the features they said mattered, like lane assist, and I let them drive quietly for a while."
+   ],
+   [
+    "How does a trade-in appraisal work, in general terms?",
+    "Your basic understanding of how a trade value is set.",
+    "Condition, mileage, history report, local market data and reconditioning costs considered, with the appraiser or used car manager setting the final number.",
+    "The used car manager or appraiser looks at the car's condition, mileage, options and history report, and drives it. They compare what similar cars are selling for at auction and locally, then take off what it will cost to recondition it. My job is to collect good information, like service records, and explain the number honestly. I don't promise a value before the appraisal."
+   ],
+   [
+    "A customer asks what interest rate they will get on a loan. How do you answer?",
+    "Whether you explain financing honestly without promising rates.",
+    "No promised rate, a clear explanation that it depends on credit and the lender, and a hand-off to the finance office for real numbers.",
+    "I tell them honestly that I can't promise a rate. It depends on their credit, the loan term, the car and the lender who approves it. If there's a manufacturer offer on that model, I can show them the advertised terms. Then I explain that the finance manager will give them real numbers once they apply. I'd rather they hear that now than feel misled later."
+   ],
+   [
+    "An internet lead asks about a specific car at 9 p.m. How do you follow up?",
+    "Whether you know how to answer and follow up on leads.",
+    "A fast, direct answer to the question asked, a clear next step, everything logged in the CRM, and a steady follow-up plan that respects the customer's time.",
+    "If our store allows after-hours replies, I answer that night. If not, first thing in the morning. I answer exactly what they asked, like whether the blue one is still in stock and its price, and suggest a time to see it. I log everything in the CRM. If I don't hear back, I follow up by call and text over the next few days, then slow down, so I'm helpful, not a pest."
+   ],
+   [
+    "A customer says the same car is $1,500 cheaper at a dealer across town. What do you do?",
+    "How you handle a price objection without bluffing or panicking.",
+    "Asking to see the offer, comparing the full out-the-door price and equipment, and bringing it to the manager honestly.",
+    "I ask if they can show me the quote, and I look at it with them. Often the cars differ in trim or options, or the other price leaves out fees. If it's truly the same car, I take it to my sales manager and see what we can do. I also remind them what we offer, like our service department being closer. If we can't match, I tell them so plainly."
+   ],
+   [
+    "A couple arrives for a test drive, and the only license they have expired last month. What do you do?",
+    "Whether you follow the license rule even when it costs you a drive today.",
+    "No drive on an expired license, a friendly explanation, and other ways to keep the visit useful, like a sit-in walkthrough or a booked drive later.",
+    "I tell them kindly that I can't let anyone drive on an expired license, because it's against our policy and our insurance. Then I keep the visit useful. I walk them through the car, let them sit in it, pair a phone and price it out. I offer to book a drive once the license is renewed. Most people understand, and some come back the same week."
+   ],
+   [
+    "A customer only wants to talk about the monthly payment. How do you keep the deal clear and honest?",
+    "Whether you explain total cost instead of hiding it in a payment.",
+    "Price, term, down payment and trade shown together, an explanation of how a longer term changes total cost, and the customer left to decide.",
+    "I ask what payment they're comfortable with, because that's a real limit. But I show it next to the price, the term, the down payment and the trade value. If the payment only fits with a longer loan, I show what they would pay in total over that term. Then they choose. People trust you more when they see the whole picture, and they come back for the next car."
+   ],
+   [
+    "A customer's trade-in appraisal comes in $3,000 below what they saw online. How do you handle it?",
+    "How you explain a disappointing number without losing trust.",
+    "Acknowledging the gap, explaining what the appraisal found, showing local market comparisons, and asking for a second look if there is new information.",
+    "I say I understand, because $3,000 is real money. Then I explain what the appraiser found, like tires that need replacing or past damage on the history report. I show what similar cars sell for locally. Online tools give estimates before anyone has seen the car. If they have service records we missed, I take them to the manager for a second look."
+   ],
+   [
+    "At delivery, the customer notices a scratch on the bumper. What do you do?",
+    "How you handle a problem at the most important moment of the sale.",
+    "Owning it instead of brushing it off, a clear written plan to fix it, and a proper handover that keeps the customer's trust.",
+    "I look at it with them and say they're right. I don't tell them it's nothing. I ask the detail team if it can be buffed out right then. If not, I write up a repair promise with a date, signed by my manager, so they have it on paper. Then I finish the handover properly. Since then I walk around every car myself before the customer arrives."
+   ],
+   [
+    "A customer who bought last week calls upset because the check engine light came on. What do you do?",
+    "How you take care of customers after the sale.",
+    "Calm listening, a fast service appointment, follow-through until it is fixed, and staying the customer's main contact.",
+    "I listen first and say I'm sorry it happened. Then I walk over to service, book them the soonest slot, and ask about a loaner or a ride if our store offers one. I call them after the visit to make sure it's fixed. Often it's something simple, but they don't know that yet. How I handle this call decides whether they buy from me again."
+   ],
+   [
+    "Tell me about a month when you were behind your sales target. What did you change?",
+    "How you respond to a slow month with action, not excuses.",
+    "A look at where deals were lost, more follow-up and prospecting, and specific changes with a result.",
+    "Two years ago I was at 6 cars by the 20th with a target of 12. I went through my CRM and found 15 people who had driven a car and not heard from me in over a week. I called every one. Four came back in and two bought. I finished at 10. Since then I block an hour each day for follow-up, even on busy days."
+   ],
+   [
+    "How do you keep up with new models, trims and features, including EVs and hybrids?",
+    "Whether you keep learning about the product you sell.",
+    "Manufacturer training, driving the cars, knowing how features work in daily use, and honest answers when you do not know something.",
+    "I finish the manufacturer training modules when a new model comes in, and I drive every new trim myself. For EVs I learned how home and public charging work in plain terms, because that's the first thing buyers ask. If a customer asks something I'm not sure of, like exact charging times, I say I'll check and get back to them that day, rather than guess."
+   ],
+   [
+    "Describe a time you steered a customer to a cheaper car because it fit them better.",
+    "Whether you put the customer's needs ahead of a bigger commission.",
+    "Listening to how the customer will use the car, a recommendation that fits, and the long-term result of that honesty.",
+    "A young couple came in for a large SUV, but they had one child and a long commute. I showed them a smaller crossover with better fuel economy and the safety features they wanted, about $7,000 less. They bought it. A year later they sent her parents to me, and they bought two cars. A smaller sale that fits beats a big one they regret."
+   ],
+   [
+    "How do you use the slow hours on the showroom floor?",
+    "Whether you stay productive without a customer in front of you.",
+    "Follow-up calls, CRM updates, learning the inventory, and reaching out to past customers instead of waiting for walk-ins.",
+    "I work my CRM first: calls and texts to recent leads and people who drove a car but didn't buy. Then I check new arrivals so I know what's on the lot. I also send short notes to past buyers about a service reminder or a model they asked about. Walk-ins are a bonus. Most of my sales come from people I followed up with."
+   ]
+  ]
  }
 }

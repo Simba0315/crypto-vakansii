@@ -384,7 +384,7 @@ MORE_ROLES = [
     ("Head of data and analytics", "data-leader", r"(head|director|vp|vice president),? (of )?(data(?! cent)|analytics|data science|data engineering|business intelligence|insights)\b|(data(?! cent)|data science|data engineering) (director|lead|manager)\b|chief data|\bcdo\b|data science manager|(data|business) analytics manager",
      "data and analytics leaders", "leads a company’s data teams and decides which questions and systems they work on first"),
     ("GIS and mapping specialist", "gis", r"\bgis\b|geospatial|cartograph|\bmapping\b|\bmaps?\b (engineer|data|operations|quality|analyst)|geodata|\bhd maps?\b|location (data|intelligence)",
-     "GIS specialists", "makes and analyses maps and location data, for navigation, logistics, cities or self-driving cars"),
+     "GIS specialists", "makes and analyzes maps and location data, for navigation, logistics, cities or self-driving cars"),
     ("Economist", "economist", r"economist|econometric|economic (analyst|research|researcher|policy|advisor|adviser|consultant|modeler|modeling|development|impact|scientist)|economics (research|team|lead|manager|director|associate)|\bmacro\b (research|strategist|analyst|economist)|market design|mechanism design",
      "economists", "studies how markets, prices and policies work and what a change will do to them"),
     # IT, cloud and enterprise systems
@@ -438,7 +438,7 @@ MORE_ROLES = [
     ("OT and product security engineer", "ot-security", r"\bot (security|cyber)|operational technology|\bics\b|industrial (control|cyber)|scada|product cybersecurity|vehicle (security|cybersecurity)|automotive (security|cybersecurity)|embedded security|hardware security",
      "OT security engineers", "protects factories, power systems, vehicles and devices from hacking"),
     ("Intelligence analyst", "intelligence-analyst", r"^(?!.*\b(business|deal|market|competitive|threat|sales|revenue|customer) intelligence\b).*(intelligence (analyst|officer|specialist|lead|manager|operations|collection|planner|researcher)|(all[- ]source|geospatial|signals|imagery|open[- ]source|human|counter) intelligence|\bgeoint\b|\bsigint\b|\bosint\b|\bhumint\b|\bimint\b|targeting (analyst|officer|specialist)|counterintelligence|\bcounter[- ]?terror|fusion (center|analyst)|intel (analyst|specialist|operations)|geopolitical)",
-     "intelligence analysts", "collects and analyses information about threats, people and events, and writes assessments for decision makers", "nt"),
+     "intelligence analysts", "collects and analyzes information about threats, people and events, and writes assessments for decision makers", "nt"),
     ("Law enforcement and public safety", "law-enforcement", r"law enforcement|police|sheriff|corrections (officer|specialist)|correctional|probation|parole|detective|trooper|border (patrol|protection)|customs and border|special agent|public safety|emergency (dispatch|communications)|crime scene|forensic (scientist|examiner|accountant)|court (officer|liaison)",
      "law enforcement and public safety staff", "works in policing and public safety, or for a company as the contact for police and courts"),
     # product and projects
@@ -949,7 +949,7 @@ MORE_ROLES = [
     ("Bioinformatics scientist", "bioinformatics", r"bioinformat|computational (biolog|chemist|scientist|genomics)|genomic|biostatistic|systems biolog|\bomics\b|proteomic|transcriptomic|single[- ]cell|sequencing|\bngs\b|\bcrispr\b|gene (editing|therapy)|protein (design|engineering|science)|drug discovery|cheminformatic|structural biolog",
      "bioinformatics scientists", "analyses biological data such as DNA, proteins and cells with code, to help find new medicines", "nt"),
     ("Chemist", "chemist", r"\bchemist\b|chemistry|analytical (chemist|scientist|development|sciences|method)|formulation|polymer|electrochemist|organic (chemist|synthesis)|synthetic chemist|materials chemist|spectroscop|chromatograph",
-     "chemists", "makes and analyses chemical compounds and materials, in a lab or on a computer", "nt"),
+     "chemists", "makes and analyzes chemical compounds and materials, in a lab or on a computer", "nt"),
     ("Biologist", "biologist", r"biologist|biology|microbiolog|cell (biolog|culture|line)|molecular biolog|immunolog|virolog|genetic|neurobiolog|physiolog|zoolog|botan|ecologist|plant (biolog|scientist|breeder|breeding|pathologist)|entomolog|toxicolog|pharmacolog",
      "biologists", "studies living things, from cells and genes to animals and plants, usually through lab experiments", "nt"),
     ("Process development scientist", "process-development", r"process development|\bcmc\b|bioprocess|upstream (process|development|manufacturing)|downstream (process|development|manufacturing)|cell culture|fermentation|purification|formulation (scientist|development)|scale[- ]up|tech(nology)? transfer|\bmsat\b|biomanufacturing|\bgmp\b|cgmp|\bcqv\b",

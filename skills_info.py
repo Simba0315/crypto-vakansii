@@ -476,7 +476,7 @@ INFO = {
     "CPQ": ("sales", "software that builds price quotes from a product list and the rules"),
     "CRM": ("sales", "the system that keeps every customer, contact and deal"),
     "DocuSign": ("sales", "tools for signing contracts online"),
-    "Gong": ("sales", "software that records and analyses sales calls"),
+    "Gong": ("sales", "software that records and analyzes sales calls"),
     "Highspot": ("sales", "software that keeps sales material and training in one place"),
     "MEDDIC": ("sales", "a checklist for qualifying large sales deals"),
     "Outreach": ("sales", "software that sends and tracks sales emails and calls in sequences"),
