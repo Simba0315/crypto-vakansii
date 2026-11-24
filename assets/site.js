@@ -168,6 +168,9 @@
   /* ---------- flags: a country is never shown without one ---------- */
   // Chrome and Edge on Windows have no flag pictures and print the two letters instead; there the icon becomes a small badge with the code
   var flagsOk = (function () {
+    // only Windows lacks flag pictures: elsewhere the canvas test (which loads the emoji font, about 260 ms of a phone's main thread
+    // on the home page, Lighthouse 24 Nov 2026) is skipped
+    if (!/Windows/.test(navigator.userAgent)) return true;
     try {
       var c = document.createElement('canvas').getContext('2d'); c.font = '16px sans-serif';
       return c.measureText('\uD83C\uDDFA\uD83C\uDDF8').width < c.measureText('\uD83C\uDDFA').width * 1.6;
@@ -2147,7 +2150,10 @@
    Where the text is wider than the field, use the longest shorter wording that fits: "…, e.g. vesting", then the part before the example,
    then the list cut at a comma. The full text comes back on a wide screen. */
 (function () {
-  var cv = document.createElement('canvas').getContext('2d');
+  // Sizes come from a ResizeObserver, which reports them after the browser's own layout. Reading clientWidth on load forced a layout
+  // of the whole page: about 250 ms of a phone's main thread on the home page (24 Nov 2026).
+  if (!window.ResizeObserver) return;
+  var cv = null;            // made on first need: most placeholders fit
   function variants(t) {
     var out = [t], m = t.match(/^(.*?)[,:]?\s+(?:for example|e\.g\.)\s+(.+)$/i);
     if (m) {
@@ -2160,25 +2166,30 @@
     for (var k = w.length - 1; k >= 2; k--) out.push(w.slice(0, k).join(' ') + '…');
     return out;
   }
-  function fit() {
-    Array.prototype.forEach.call(document.querySelectorAll('input[placeholder],input[data-ph]'), function (inp) {
-      if (!inp.offsetParent) return;
-      var full = inp.getAttribute('data-ph') || inp.getAttribute('placeholder');
-      if (!inp.getAttribute('data-ph')) inp.setAttribute('data-ph', full);
-      var cs = getComputedStyle(inp); cv.font = cs.font;
-      var room = inp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-      if (room < 60) return;
-      var v = variants(full), pick = v[v.length - 1];
+  function fitOne(inp, room) {
+    var full = inp.getAttribute('data-ph') || inp.getAttribute('placeholder');
+    if (!full || room < 60) return;
+    if (!inp.getAttribute('data-ph')) inp.setAttribute('data-ph', full);
+    var cs = getComputedStyle(inp), pick = full;
+    if (full.length * parseFloat(cs.fontSize) * 0.62 > room) {        // may not fit: measure the wordings
+      if (!cv) cv = document.createElement('canvas').getContext('2d');
+      cv.font = cs.font;
+      var v = variants(full); pick = v[v.length - 1];
       for (var i = 0; i < v.length; i++) if (cv.measureText(v[i]).width <= room) { pick = v[i]; break; }
-      if (inp.getAttribute('placeholder') !== pick) inp.setAttribute('placeholder', pick);
+    }
+    if (inp.getAttribute('placeholder') !== pick) inp.setAttribute('placeholder', pick);
+  }
+  var ro = new ResizeObserver(function (entries) { entries.forEach(function (en) { fitOne(en.target, en.contentRect.width); }); });
+  function watch() {
+    Array.prototype.forEach.call(document.querySelectorAll('input[placeholder],input[data-ph]'), function (inp) {
+      if (!inp.hasAttribute('data-ph-w')) { inp.setAttribute('data-ph-w', ''); ro.observe(inp); }
     });
   }
-  var t;
-  function soon() { clearTimeout(t); t = setTimeout(fit, 120); }
-  window.addEventListener('resize', soon);
-  window.addEventListener('load', soon);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon);
-  document.addEventListener('DOMContentLoaded', soon);
+  watch();
+  window.addEventListener('load', watch);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {     // the web font changes the widths: measure again
+    Array.prototype.forEach.call(document.querySelectorAll('input[data-ph-w]'), function (inp) { ro.unobserve(inp); ro.observe(inp); });
+  });
 })();
 
 /* ---------- the site's own visit statistics (POST /api/public/ev in server/src/worker.js; the owner's page /stats/) ----------
