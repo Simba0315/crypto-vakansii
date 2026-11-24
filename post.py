@@ -16,6 +16,7 @@ file on the data branch next to the jobs database.
 """
 import base64, datetime, hashlib, hmac, html, json, os, re, sys, time, urllib.parse, urllib.request
 from pathlib import Path
+import jobsdb
 
 ROOT = Path(__file__).parent
 CFG = json.loads((ROOT / "config.json").read_text())
@@ -100,7 +101,7 @@ def fresh(jobs):
 def run(dry=False):
     cfg_file = ROOT / "channels.json"
     ch = json.loads(cfg_file.read_text()) if cfg_file.exists() else {}
-    jobs = json.loads((ROOT / "data" / "jobs.json").read_text())
+    jobs = jobsdb.load(ROOT / "data" / "jobs.json")
     jobs = jobs if isinstance(jobs, list) else list(jobs.values())
     state = json.loads(STATE.read_text()) if STATE.exists() else {}
     cut = (datetime.date.today() - datetime.timedelta(days=KEEP_DAYS)).isoformat()

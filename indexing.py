@@ -16,6 +16,7 @@ an owner of the site in Search Console. Without the secret nothing is sent.
 """
 import base64, json, os, subprocess, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
+import jobsdb
 
 ROOT = Path(__file__).parent
 JOBS = ROOT / "data" / "jobs.json"
@@ -74,7 +75,7 @@ def choose(jobs, prev, n=PER_RUN):
 
 
 def load():
-    db = json.loads(JOBS.read_text())
+    db = jobsdb.load(JOBS)                         # one record at a time, see jobsdb.py
     return list(db.values()) if isinstance(db, dict) else db
 
 

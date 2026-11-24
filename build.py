@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
+import jobsdb
 # Perks read here from the posting text, beside collect.PERKS (whose list is part of the collector's rules, collect.RULES, so a new perk
 # there would make the collector parse every posting again). LinkedIn has collections for both (checked 20 Nov 2026).
 BUILD_PERKS = [("Tuition assistance", "tuition-assistance",
@@ -2392,7 +2393,7 @@ def main():
     LAP_NOW[0] = time.time()
     if OUT.exists(): shutil.rmtree(OUT)
     OUT.mkdir()
-    db = json.loads((ROOT / "data" / "jobs.json").read_text())
+    db = jobsdb.load(ROOT / "data" / "jobs.json")   # one record at a time, see jobsdb.py
     jobs = list(db.values())
     for j_ in jobs:                              # a feed that escaped its text twice ("Health &amp;amp; Safety") showed a literal "&amp;" on the page
         if "&amp;" in (j_.get("desc") or ""): j_["desc"] = DOUBLE_ESC.sub(r"&\1;", j_["desc"])

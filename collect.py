@@ -18,6 +18,7 @@ from collections import defaultdict
 from html.parser import HTMLParser
 from pathlib import Path
 from net import get_bytes, get_json, get_text, post_json
+import jobsdb
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data" / "jobs.json"
@@ -2168,7 +2169,7 @@ def main():
     rest = [s for s in sources if s["name"] not in hourly]
     random.Random(int(time.time() // 3600)).shuffle(rest)
     sources = [s for s in sources if s["name"] in hourly] + rest
-    db = json.loads(DATA.read_text()) if DATA.exists() else {}
+    db = jobsdb.load(DATA) if DATA.exists() else {}      # one record at a time: the plain read needed 4x the 2 GB file (jobsdb.py)
     renamed = rename_records(db)
     if renamed: print(f"{renamed:,} records took their company's new name")
     used_slugs = {j["slug"] for j in db.values()}

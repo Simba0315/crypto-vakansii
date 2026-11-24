@@ -49,6 +49,21 @@ jobs:
       HRN_SERVER_ON: ${{ secrets.HRN_SERVER != '' }}
     steps:
       - uses: actions/checkout@v4
+      # Since 23 Nov 2026 01:47 UTC (about 645,000 open jobs) the build outgrew the runner's 16 GB of memory: the runner was
+      # killed during "Build site" ("The hosted runner lost communication with the server") and nothing was uploaded.
+      # 24 GB of swap on the runner's spare disk (/mnt) lets it finish; it is slower only while it pages.
+      # First step since 24 Nov 2026: at 2.16 GB the database itself no longer fitted when read, and from 23 Nov 12:50 UTC every run
+      # died half a minute in, in "Note the open jobs" ("The runner has received a shutdown signal"), long before this step ran.
+      # The scripts now read it one record at a time (jobsdb.py); the swap is the margin for every step, not only the build.
+      - name: More swap for the build
+        run: |
+          sudo swapoff -a || true
+          sudo rm -f /mnt/swapfile
+          sudo fallocate -l 24G /mnt/hrn.swap
+          sudo chmod 600 /mnt/hrn.swap
+          sudo mkswap /mnt/hrn.swap > /dev/null
+          sudo swapon /mnt/hrn.swap
+          free -g
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -122,18 +137,6 @@ jobs:
           if [ "$HRN_SERVER_ON" = "true" ] && [ -n "$switched" ]; then echo "HRN_RECORDS=1" >> "$GITHUB_ENV"; echo "SWITCHED=1" >> "$GITHUB_ENV"
           elif [ "$HRN_SERVER_ON" = "true" ]; then echo "HRN_RECORDS=both" >> "$GITHUB_ENV"
           fi
-      # Since 23 Nov 2026 01:47 UTC (about 645,000 open jobs) the build outgrew the runner's 16 GB of memory: the runner was
-      # killed during "Build site" ("The hosted runner lost communication with the server") and nothing was uploaded.
-      # 24 GB of swap on the runner's spare disk (/mnt) lets the build finish; it is slower only while it pages.
-      - name: More swap for the build
-        run: |
-          sudo swapoff -a || true
-          sudo rm -f /mnt/swapfile
-          sudo fallocate -l 24G /mnt/hrn.swap
-          sudo chmod 600 /mnt/hrn.swap
-          sudo mkswap /mnt/hrn.swap > /dev/null
-          sudo swapon /mnt/hrn.swap
-          free -g
       - name: Build site
         run: python3 build.py
       # The build adds this month's figures to data/reports.json; past months in it must never be lost, so it is saved again.
