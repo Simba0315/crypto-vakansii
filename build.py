@@ -1620,6 +1620,18 @@ AI_TAGS = ("AI", "LLM", "Machine Learning", "PyTorch", "TensorFlow", "LangChain"
 ALL_OPEN = [0]          # every open job on the site, set once the jobs are read: "this field is 2.1% of all open jobs"
 
 
+MIX_ = [0.0]          # share of the open jobs in technology work (engineering, security, product, data and research, design), set in main()
+
+
+def mix_note(tech_tail, other_tail):
+    """The caveat under figures counted here. Until mid-November 2026 most jobs on the site were at technology companies and the pages said
+    so; by 24 Nov the largest fields were healthcare and technicians, and "Most employers here are technology companies" had become
+    untrue on eight kinds of page. The sentence now follows the open jobs of the day."""
+    if MIX_[0] >= 0.5:
+        return f"{100 * MIX_[0]:.0f}% of the jobs here are in technology work, so {tech_tail}"
+    return f"The jobs here are the ones employers publish on their own careers pages ({100 * MIX_[0]:.0f}% of them in technology work), so {other_tail}"
+
+
 def faq_for(label, jobs, first=None, extra=()):
     """Questions people actually ask about a set of jobs, answered from today's data. Returns (html, json-ld)."""
     if len(jobs) < 5: return "", ""
@@ -1658,7 +1670,7 @@ def faq_for(label, jobs, first=None, extra=()):
         qa.append((f"What is the median salary of {label}?" if " pay " in f" {label} " else f"What do {label} pay?",
                    f"The median advertised salary is {money(median(mids))}, based on {len(mids):,} open roles that publish a yearly US-dollar range. The middle half of those roles advertise between "
                    f"{money(mids[len(mids) // 4])} and {money(mids[min(len(mids) - 1, 3 * len(mids) // 4)])}. These are advertised ranges, not verified pay. "
-                   "Most employers here are technology companies, so the figures run above the wider market for the same work."))
+                   + mix_note("the figures run above the wider market for the same work.", "the figures can differ from the wider market for the same work.")))
     # What Google's "People also ask" asks about a field (checked 15 Nov 2026 for "data analyst jobs": "Is it hard to get a data analyst
     # job?", "Will AI replace data analysts?", "Is a data analyst still worth it in 2026?"), answered with today's counts, never opinion.
     yrs = sorted(j["years"] for j in jobs if j.get("years"))
@@ -2563,6 +2575,7 @@ def main():
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
     ALL_OPEN[0] = len(active)
+    MIX_[0] = sum(1 for j in active if j["cat"] in ("engineering", "security", "product", "data-research", "design")) / max(len(active), 1)
     global LIST_PAGES
     LIST_PAGES = int(os.environ.get("HRN_PAGE_CAP") or 1)      # owner, 14 Nov: no Cloudflare yet, so the 70 MiB of second pages goes to more jobs; the search shows the rest
     archived = [j for j in jobs if not j["active"]]
@@ -3392,7 +3405,7 @@ def main():
                             + " How easy a job is also depends on the skills you already have, so compare the skills each posting names."))
             if pay_all_:
                 qa_.append((f"How rare is a ${k_}K salary?", f"Among the {len(pay_all_):,} open jobs on {SITE} that state a yearly US-dollar range, {len(rich):,} ({100 * len(rich) / len(pay_all_):.0f}%) start at ${k_}K or more. "
-                            f"Most employers here are technology companies, so the share across all US jobs is lower."))
+                            + mix_note("the share across all US jobs is lower.", "the share across all US jobs can differ.")))
             if len(rr_) >= 3:
                 qa_.append((f"What careers make over ${k_},000 a year?", "By open postings today: " + ", ".join(f"{rlow(nm_)} ({c_:,}" + (f", median {money(m_)})" if m_ else ")") for c_, _, nm_, m_, _ in rr_[:6]) + ". The full ranking is in the table above."))
             qa_.append((f"How much is ${k_}K a year per hour and per month?", f"${k_},000 a year is ${k_ * 1000 / 2080:,.2f} an hour at 40 hours a week for 52 weeks, ${k_ * 1000 / 12:,.0f} a month and ${k_ * 1000 / 52:,.0f} a week, before tax."))
@@ -4075,7 +4088,7 @@ def main():
         if us_p and len(mids_p) >= 30:
             b70 = sum(1 for x in mids_p if x < 70000)
             pl_qa.append((f"Is $70,000 a good salary in {short}?", f"{100 * b70 / len(mids_p):.0f}% of the {len(mids_p):,} open jobs in {name} here that state a yearly range advertise less than $70,000 at the midpoint; "
-                          f"the median is {money(median(mids_p))}. Most employers on {SITE} are technology companies, so these figures run above the city’s overall pay, and rent decides how far $70,000 goes."))
+                          f"the median is {money(median(mids_p))}. " + mix_note("these figures run above the city’s overall pay, and rent decides how far $70,000 goes.", "these figures can differ from the city’s overall pay, and rent decides how far $70,000 goes.")))
         rr_p = role_rows(js, 10)
         if len(rr_p) >= 3:
             pl_qa.append((f"What jobs are in high demand in {short}?", "By open postings today: " + ", ".join(f"{rlow(nm_)} ({c_:,})" for c_, _, nm_, _, _ in rr_p[:6])
@@ -4362,7 +4375,7 @@ def main():
     co_lead = f"{m:,} employers have open roles today, each read from its own careers page." + (f" {names(top_open)} have the most." if len(top_open) > 1 else "")
     if top_new: co_lead += f" {names(top_new)} posted the most new ones in the last 7 days."
     page("companies/", f"Companies Hiring Now ({MONTH_YEAR}): {m:,} employers | {SITE}",
-         "Companies with open roles: startups, scale-ups and public companies across software, AI, fintech and crypto.",
+         f"Companies hiring now: {m:,} employers with open roles today" + (f", led by {', '.join(c for c, _ in top_open[:2])} and {top_open[2][0]}" if len(top_open) > 2 else "") + ", from startups to public companies in every field, each read from its own careers page.",      # it named four fields only (24 Nov 2026)
          crumbs(("Companies", "")) + f'<h1>Companies <span class="hl">hiring now</span>, {MONTH_YEAR}</h1><p class="lead">{co_lead}</p>'
          + nums([(f"{m:,}", "employers with open roles"), (f"{n:,}", "open jobs today"),
                  (f"{sum(1 for k_ in fresh_n.values() if k_):,}", "employers posted new roles in the last 7 days"), (f"{WEEKNEW:,}", "roles posted in the last 7 days")])
@@ -4721,7 +4734,7 @@ def main():
                        + ". The table above ranks every job title with at least 20 postings that state pay."))
     if all_m:
         sal_qa.append(("Is $70,000 a good yearly salary?", f"Among the {len(all_m):,} open jobs on {SITE} that state a yearly US-dollar range, {100 * below70 / len(all_m):.0f}% advertise less than $70,000 at the midpoint. "
-                       "Most employers here are technology companies, so this share runs lower than across all US jobs; whether $70,000 is enough depends mostly on where you live."))
+                       + mix_note("this share runs lower than across all US jobs; whether $70,000 is enough depends mostly on where you live.", "this share can differ from all US jobs; whether $70,000 is enough depends mostly on where you live.")))
     if common_t:
         sal_qa.append(("What are the most common job titles?", "By open postings today: " + ", ".join(f"{rlow(nm_)} ({k_:,})" for _, _, nm_, _, k_ in common_t) + "."))
     sal_qa.append(("What are the levels of job titles?", "From the bottom: intern, junior or associate, the plain title (mid-level), senior, then lead, staff or principal for experts and manager, "
@@ -4838,8 +4851,8 @@ def main():
                            f"across {g_n:,} people employed in the United States. {g_note}".strip()))
         if not gov_ or median(mids) > gov_[3]: sal_qa.insert(1, (f"Why is this {label} salary higher than on other sites?",
                           "Salary surveys and government wage figures average what people in the job are paid at every kind of employer, in every part of the country. "
-                          f"This page counts only open postings that print a pay range ({len(mids):,} today), and those come mostly from technology companies in large US cities, "
-                          f"which pay above the wider market and are also the employers most likely to print a range. Read the figure as what such employers offer for an open {label} role today, "
+                          f"This page counts only open postings that print a pay range ({len(mids):,} today). The employers that print one are often larger companies and those in states "
+                          f"that require it, such as California, Colorado, New York and Washington. Read the figure as what such employers offer for an open {label} role today, "
                           "not as the average for the occupation."))
         if best_c:
             sal_qa.insert(2, (f"Which companies advertise the highest {label} pay?", ", ".join(f"{k} ({money(m_)})" for m_, k in best_c) + ", by the median of their open postings that state pay (three postings or more)."))
@@ -6107,7 +6120,7 @@ def main():
                     "put the skills the postings ask for near the top. The entry-level example on this page is written that way." if len(ent_l) >= 3 else
                     "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number, and the skills the postings ask for near the top."))
         if len(mids_) >= 30:
-            qa_.append((f"Is {art(psn)} {psn} a high salary?", f"Today’s {low} postings that state a yearly range advertise a median of {money(median(mids_))}. Most employers here are technology companies, so this runs above the wider market."))
+            qa_.append((f"Is {art(psn)} {psn} a high salary?", f"Today’s {low} postings that state a yearly range advertise a median of {money(median(mids_))}. " + mix_note("this runs above the wider market.", "this can differ from the wider market.")))
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"resume/examples/{slug_r}/", (f"{tcase(rname)} Resume Examples: Entry-Level, Mid & Senior ({TODAY[:4]})" if n_ex == 3 else f"{tcase(rname)} Resume Example ({TODAY[:4]})") + f" | {SITE}",
@@ -6398,7 +6411,7 @@ def main():
         ent_n = sum(1 for j in rj if j.get("entry"))
         jd_qa += [(f"What does {art(psn)} {psn} do?", (f"{art(psn).capitalize()} {psn} {does}. " if does else "") + (f"Postings for this work name {', '.join(t for t, _ in top_[:3])} most often." if top_ else "")),
                   (f"Is {art(psn)} {psn} an IT job?", f"It sits in {fn.lower()} on {SITE}. " + ("Yes: the work is built around software and data." if fs in ("engineering", "data-research", "security") else
-                   "Not in the narrow sense: it is its own field, though most postings here are at technology companies.")),
+                   "Not in the narrow sense: it is its own field, though it often uses software and data.")),
                   (f"Can I become {art(psn)} {psn} with no experience?", f"{ent_n:,} of today’s {n_:,} postings ({pc_(ent_n, n_)}%) are junior roles or internships"
                    + (f", and the median posting asks for {y_med} years" if y_med else "") + f". The steps, with today’s figures, are on the how-to-become page for this work."),
                   (f"Can I learn {low} work in three months?", "Enough to start on the skills postings name first" + (f" ({', '.join(t for t, _ in top_[:2])})" if top_ else "")
@@ -7917,7 +7930,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     best_pay = sal_by_tag[:3]
     grow = [(t, k, a_) for t, k, a_ in week_tag[:5] if k]
     sk_qa = [(f"What skills are most in demand in {TODAY[:4]}?", "By the number of open postings that name them today: " + ", ".join(f"{t} ({k:,})" for t, k in top_sk[:8])
-              + f". Counted on {fdate(TODAY)} from {n:,} open jobs read from employers’ own careers pages. Most employers here are technology companies, so tools of that trade lead the list."),
+              + f". Counted on {fdate(TODAY)} from {n:,} open jobs read from employers’ own careers pages. " + mix_note("tools of that trade lead the list.", "the list mixes the tools of many trades.")),
              ("Which skill pays the most?", ("By median advertised pay among skills with at least 30 postings that state a yearly US-dollar range: " + ", ".join(f"{t} ({money(m_)})" for t, m_, _ in best_pay)
               + ". These are advertised ranges, and the roles that ask for a skill differ, so this compares postings, not people.") if best_pay else "Too few postings state pay today to rank skills by it."),
              ("Which soft skills do employers want most?", ("In the " + f"{full_n:,} postings read for this, the workplace skills named most often are " + ", ".join(f"{nm.lower()} ({pc_(k, full_n)}%)" for nm, k in soft_rows[:5])
@@ -10750,7 +10763,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if len(rm_) >= 3: hr_blk += section(f"Remote jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(rm_):,} of them can be done from home. The newest:</p>" + job_links(rm_) + f'<p class="note">All remote work: <a href="{P}/remote/">remote jobs</a>.</p>')
         if len(en_) >= 3: hr_blk += section(f"Entry-level jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(en_):,} junior roles and internships. The newest:</p>" + job_links(en_))
         qa_[1:1] = [(f"Is ${lo_} an hour good pay?", f"Among the {len(all_h):,} open jobs on {SITE} that state pay in US dollars, {100 * below_ / max(1, len(all_h)):.0f}% start below ${lo_} an hour. "
-                     f"Most employers here are technology companies, so that share is not the share across all US jobs. For comparison, the US federal minimum wage is $7.25 an hour; many states and cities set a higher one."),
+                     + mix_note("that share is not the share across all US jobs.", "that share is not the share across all US jobs.") + " For comparison, the US federal minimum wage is $7.25 an hour; many states and cities set a higher one."),
                     (f"How can I make ${lo_} an hour?", f"{len(js_):,} open jobs pay it today, most in " + ", ".join(f"{c_.lower()} ({k_:,})" for c_, k_ in cats_) + f". {len(en_):,} of them are entry-level, "
                      f"{len(rm_):,} are remote and {len(nd_):,} say no degree is required. Each job links to the employer's own page to apply."),
                     (f"What jobs pay ${lo_} an hour without a degree?", (f"{len(nd_):,} open postings at this pay say no degree is required, for example " + ", ".join(f"{t_} ({k_})" for t_, k_ in nd_t) + "." if nd_ and nd_t else
@@ -10789,7 +10802,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                               + "".join(f'<tr><td><a href="{P}/categories/{fs_}/">{e(fn_)}</a></td><td data-l="Jobs with pay stated">{k_:,}</td><td data-l="Typical start">${m_:,.2f} an hour</td>'
                                         f'<td data-l="A year at 2,080 hours">{dollars(m_ * 2080)}</td><td data-l="Remote">{r_:,}</td></tr>' for fs_, fn_, k_, m_, r_ in fld_hr)
                               + '</table></div><p class="note">“Typical start” is the median of the lowest pay each posting states, as an hourly rate or a yearly salary divided by 2,080. '
-                              'Pay is the figure before tax. Most employers here are technology companies, so the rates are not those of every job in the country.</p>', label="By field")
+                              'Pay is the figure before tax. ' + e(mix_note("the rates are not those of every job in the country.", "the rates are not those of every job in the country.")) + '</p>', label="By field")
         hub_qa = [("How is an hourly rate turned into a yearly salary?", "Multiply it by 2,080: 40 hours a week for 52 weeks. $25 an hour is $52,000 a year; a yearly salary divided by 2,080 gives the hourly rate."),
                   ("Which jobs are listed under each rate?", f"Every open job that states its pay in US dollars: {hr_total:,} today. A job is placed by the lowest pay its posting states, as an hourly rate or as a yearly salary divided by 2,080.")]
         hub_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
