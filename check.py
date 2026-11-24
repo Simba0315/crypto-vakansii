@@ -72,6 +72,9 @@ for rel in sample:
     # empty alt="" too (24 Nov 2026): Bing Site Scan reports it as "Alt attribute for images is missing", and the owner wants every image named
     if re.search(r'<img[^>]*\balt=""', h): fails[t]["img with empty alt"] += 1
     if re.search(r"<img(?![^>]*\btitle=)", h): fails[t]["img without title"] += 1
+    # code that reached the page as text: an f-string without its "f" printed "{fdate(TODAY)}" on 4,626 pages of a local build (24 Nov 2026)
+    if re.search(r"\{(?:fdate|money|e|len|round|art|tcase|rlow|TODAY|SITE|P)\b[^}]{0,40}\}", re.sub(r"<script.*?</script>|<style.*?</style>", "", h, flags=re.S)):
+        fails[t]["code printed as text ({...})"] += 1
     for href in set(re.findall(r'href="(/[^"]*)"', h)):
         if not exists(href):
             fails[t]["broken internal link"] += 1; broken[href] += 1

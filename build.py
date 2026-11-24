@@ -1644,19 +1644,21 @@ def faq_for(label, jobs, first=None, extra=()):
     # job?", "Will AI replace data analysts?", "Is a data analyst still worth it in 2026?"), answered with today's counts, never opinion.
     yrs = sorted(j["years"] for j in jobs if j.get("years"))
     ent = sum(1 for j in jobs if j.get("entry"))
-    if n_ >= 20 and (len(yrs) >= 10 or ent):
+    # a company page asks its own "Is it hard to get hired at <company>?" (extra): a second, generic one read as a repeat (24 Nov 2026)
+    if n_ >= 20 and (len(yrs) >= 10 or ent) and not any(q_.startswith("Is it hard to get") for q_, _ in qa):
         one_ = (art(label[:-5]) + " " + label[:-1]) if label.endswith(" jobs") else f"one of the {label}"     # "data analyst jobs" -> "a data analyst job"
         qa.append((f"Is it hard to get {one_}?",
                    f"{ent:,} of the {n_:,} open {label} ({100 * ent / n_:.0f}%) are for beginners: junior roles and internships."
                    + (f" Of the {len(yrs):,} postings that state experience, the median asks for {yrs[len(yrs) // 2]} {'year' if yrs[len(yrs) // 2] == 1 else 'years'}." if len(yrs) >= 10 else "")
-                   + f" {n_co:,} {'company is' if n_co == 1 else 'companies are'} hiring" + (f" and {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days" if new7 else "") + ". Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
+                   + ((f" {n_co:,} companies are hiring" + (f" and {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days" if new7 else "") + ".") if n_co > 1 else
+                      (f" {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days." if new7 else "")) + " Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
     ai_ = Counter(t for j in jobs for t in j.get("tags", []) if t in AI_TAGS)
     k_ai = sum(1 for j in jobs if any(t in AI_TAGS for t in j.get("tags", [])))
     if n_ >= 20:
         qa.append((f"How is AI changing {label}?",
                    f"{k_ai:,} of the {n_:,} open {label} ({100 * k_ai / n_:.0f}%) ask for AI or machine-learning skills"
                    + (", most often " + ", ".join(t for t, _ in ai_.most_common(3)) + "." if ai_ else ".")
-                   + f" Employers still list {n_:,} such roles today at {n_co:,} {'company' if n_co == 1 else 'companies'}. Counted from the postings' own text on {fdate(TODAY)}."))
+                   + (f" Employers still list {n_:,} such roles today at {n_co:,} companies." if n_co > 1 else "") + f" Counted from the postings' own text on {fdate(TODAY)}."))
     # "What are the 5 skills of customer service?", "What jobs can I get with Python?" (People also ask, 15 Nov 2026)
     sk_ = Counter(t for j in jobs for t in j.get("tags", []))
     if n_ >= 20 and len(sk_) >= 3:
@@ -6442,8 +6444,10 @@ def main():
         titles_ = [t for t, _ in Counter(j["title"] for j in begin).most_common(30) if len(t) <= 50][:5]
         lines_ = [ln.strip() for ln in (d["exp"][0]["text"] if d["exp"] else "").split("\n") if ln.strip()][:2]
         certs_ = Counter(m.strip() for j in rj for m in set(CERT_RX.findall(j.get("desc") or j.get("excerpt") or "")))
-        certs_ = Counter({c: k for c, k in certs_.items() if k >= 2})            # one mention is noise ("CPA" once in a data analyst posting)
         with_text = sum(1 for j in rj if j.get("desc"))
+        # one mention is noise ("CPA" once in a data analyst posting); since 24 Nov 2026 also under 2% of the postings read in full
+        # (the data analyst page listed "CFA, Six Sigma, PMP", each in a handful of finance-team postings among 1,500)
+        certs_ = Counter({c: k for c, k in certs_.items() if k >= max(2, 0.02 * with_text)})
         k_ai = sum(1 for j in rj if any(t in AI_TAGS for t in j["tags"]))
         steps = ("<ol class=\"steps\">"
                  f"<li><b>Know what the work is.</b> {e(art(psn).capitalize())} {e(psn)} {e(does)}." + (f" Beginner postings today use titles like {e('; '.join(titles_))}." if titles_ else "") + "</li>"
@@ -6451,7 +6455,7 @@ def main():
                     "<li><b>Learn the duties, not only the tools.</b> Postings for this work describe what you will do more than which software you will use: read ten of them and list the duties that repeat.</li>")
                  + "<li><b>Build proof you can show.</b> Two or three results with a number, from a job, a course project or volunteer work. The kind of line a recruiter looks for: "
                  + (f"“{e(lines_[0])}”." if lines_ else "a result with a number.") + (f" {e(PROOF_AT[fs])}" if fs in PROOF_AT else "")
-                 + (f" Certifications the postings name: {e(', '.join(c for c, _ in certs_.most_common(3)))}." if certs_ else "") + "</li>"
+                 + (f" Certifications the postings name: {e(', '.join(f'{c} ({round(100 * k / max(with_text, 1))}% of the postings read in full)' if i == 0 else f'{c} ({round(100 * k / max(with_text, 1))}%)' for i, (c, k) in enumerate(certs_.most_common(3))))}." if certs_ else "") + "</li>"
                  + f'<li><b>Write the resume and the letter.</b> Start from the <a href="{P}/resume/examples/{slug_r}/">{e(low)} resume example</a> and the <a href="{P}/cover-letter-examples/{slug_r}/">cover letter example</a>, and replace every line with your own.</li>'
                  + f'<li><b>Apply where beginners are hired.</b> {len(begin):,} of today’s {n_:,} open {e(low)} jobs are junior or intern roles or ask for two years of experience or less. '
                  + f'<a href="{P}/roles/{slug_r}/">See the open jobs</a> and check each one with the <a href="{P}/tools/resume-match/">resume match checker</a> before you apply.</li></ol>')
