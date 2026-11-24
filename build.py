@@ -981,9 +981,16 @@ def write(path, content, sitemap=True):
     if f.suffix == ".html" and "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
         content = IMG_NO_TITLE.sub(lambda m: m.group(0)[:-1].rstrip("/").rstrip() + f' title="{m.group(1)}">', content)
+    if f.suffix == ".html" and "1 " in content:
+        # "median 1 years", "asks for 1 years" (job description pages, 24 Nov 2026): twenty phrases put a count before "years"; one place
+        # makes "1" singular instead of a condition in each of them
+        content = ONE_PLURAL.sub(lambda m: m.group(0)[:-1], content)
     f.write_text(content, encoding="utf-8")
     if sitemap:
         URLS.append(path)
+
+
+ONE_PLURAL = re.compile(r"(?<![\d.,/$£€-])\b1 (?:years|days|weeks|months)\b")
 
 
 def mincss(s):
