@@ -809,3 +809,35 @@ What it shows: the answers cite small and new sites next to the big ones, so siz
 have indexed, and Bing has no page of this site. “Companies hiring the most” is answered from sites with less data than /insights/companies-hiring-the-most/.
 
 Perplexity answered one question without an account on 18 Nov; the next one replied “Sign up and repeat your request”. It stays unchecked until someone signs in to it in the built-in browser.
+
+## Pages Search Console shows, and what was done to each (log started 24 Nov 2026)
+
+The owner's instruction of 24 Nov 2026: take the pages that already get impressions and clicks in Search Console, read Google's first
+page and its AI answer, ChatGPT, Perplexity and Claude for their query, improve the page, and keep this log so the next session knows
+which pages were done. One entry per page, newest at the bottom.
+
+Search Console, web search, data 19–21 Nov 2026 (read 24 Nov; the property has data only from 19 Nov): 23 clicks, 9,670 impressions,
+CTR 0.2%, average position 28.2. Google News 0 impressions, Discover no data, no special search appearances (no job rich results yet).
+By section: /locations/ 307 pages, 2,390 impressions, 11 clicks (position about 6 on long location queries); /glossary/ 79 pages,
+2,147 impressions, 0 clicks (most at 40–80, a few in the top 10); /companies/ 1,208; /how-to-hire/ 802 (positions 50–85);
+/roles/ 542; /skills/ 316; /cv-examples/ 296; /cover-letter-examples/ 211.
+Top queries by impressions: "entry level jobs" 269 (position 5.9, shown with /locations/dublin/entry-level/ 178 and
+/locations/lithuania/entry-level/ 68, not with /entry-level/), "rolling basis meaning" 61 + "rolling basis" 49 + ten other wordings
+(all on /glossary/rolling-basis/, 209 impressions, position 9), "hybrid work" 40 (31.7), "hire android developers" 39 (87),
+"zipcar careers" 20 (15.5), "program manager jobs" 16 (15.3), "remote jobs" 15 (18.6), "new grad meaning" 13 (6.0),
+"reference title meaning" 10 (8.1), "work from home jobs" 8 (9.1), "marketing jobs" 8 (8.8).
+Next candidates in this order: /glossary/new-grad/ (position 8.7), /entry-level/ against the location entry-level pages,
+/glossary/reference/ (42), /glossary/hybrid/ (41.7), /glossary/cv/ (68), /glossary/gross-and-net-pay/ (56), the /how-to-hire/ pages.
+
+### /glossary/rolling-basis/ — "rolling basis meaning" (24 Nov 2026)
+- Search Console: 209 impressions, 0 clicks, position 9; twelve wordings of the same question.
+- Google (gl=us): we are 4th. Above us Reddit r/gradadmissions, Yale SOM's career blog, Pioneer Academics (admissions); below Quora,
+  Law Insider, Princeton Review, Facebook answers. Google rewrote our title to "Rolling basis: What It Means in a Job Search".
+  AI Overview cites Yale and Pioneer Academics: one-line general definition, continuous review, earlier decisions, shrinking
+  places, separate priority deadlines, examples from college admissions and hiring.
+- ChatGPT (search on): cites only Yale SOM; covers interviews starting before the deadline, hiring before the listing closes,
+  and names "rolling admissions" and "rolling deadline".
+- Gaps on our page: nothing on rolling admission / rolling deadline / priority deadline, no example sentences, no "first come,
+  first served" answer. Done: title now starts with the query ("Rolling Basis Meaning: How Rolling Applications Work"); new sections
+  "Rolling basis, rolling admission and rolling deadline" and "Example sentences and what they mean" (four real posting phrasings);
+  three new questions (first come first served, same as rolling admission, priority deadline). Perplexity and Claude not read yet.
