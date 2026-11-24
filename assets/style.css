@@ -4081,3 +4081,45 @@ main.srch #fwrap>.fgroup{display:flex;align-items:center;gap:8px}
 .hbco textarea{width:100%;font:13px/1.45 ui-monospace,Menlo,monospace;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--bg);color:var(--text);margin:4px 0 10px;resize:vertical}
 .hbco .flabel{display:block;margin:12px 0 2px;font-weight:650}
 .hbco .adv-list li{margin:4px 0}
+
+/* ---------- v3, 24 Nov 2026: calmer pages (owner: "дизайн хороший можно улучшить", reference adapty.io) ----------
+   A warm off-white page with white cards on it, one thin warm line, larger corners, quiet link rows instead of underlined soups,
+   a grid of tiles drawn as one card of rows instead of thirty boxes, a plain coloured label over a section title, more air.
+   Light theme only: the dark tokens and the dark surfaces keep their own rules. */
+:root{--bg:#fafaf9;--line:#e8e6e0;--line2:#d8d5cc;--radius:16px}
+h1{font-weight:700;letter-spacing:-.03em;line-height:1.08}
+.sec{margin-top:88px}
+.sec-head h2{letter-spacing:-.028em}
+/* the label over a section title: coloured text, no pill and no dot */
+.sec-label{padding:0;border:0;background:none;border-radius:0;gap:0;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--ac)}
+.sec-label::before{display:none}
+.kpanel.ink .sec-label{background:none;color:var(--pop)}
+/* rows of related links: quiet text, underline only on hover */
+.lrow{padding:12px 0;font-size:14.5px}
+.lrow>b{font-weight:600;color:var(--text)}
+.lrow>div{gap:6px 22px}
+.lrow a{color:var(--muted);text-decoration:none}
+.lrow a:hover{background:none;color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:1.5px;text-underline-offset:3px}
+/* a grid of tiles: one white card of rows */
+.tiles{gap:0 36px;padding:6px 26px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+.tiles li{border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;box-shadow:none}
+.tiles li:hover{border-color:var(--line);box-shadow:none}
+.tiles li:hover a{color:var(--ac)}
+.tiles+.tiles,.tgroup+.tiles{margin-top:0}
+.tiles-more{display:inline-flex;align-items:center;gap:6px;margin:14px 0 0;padding:8px 16px;border:1px solid var(--line2);border-radius:999px;background:var(--card);font:600 14px/1.2 inherit;color:var(--text);cursor:pointer}
+.tiles-more:hover{border-color:var(--text)}
+.tiles.cut>li.cut-x{display:none}
+/* cards and panels: one corner, one line, no heavy shadow */
+.khero,.lhero{border-radius:24px}
+.pic,.panel,.card,.tablewrap,.qa,.kpanel:not(.ink){border-radius:20px}
+/* the footer: quiet link rows, and the wordmark drawn large at the very bottom, filled with dots a slow green light passes over
+   (the owner liked the big drawn wordmark at the foot of adapty.io; this is our own: our wordmark as a mask, CSS only) */
+footer .pop a,footer .fask a{color:#c9c7bd;text-decoration:none}
+footer .pop a:hover,footer .fask a:hover{color:var(--pop);text-decoration:underline;text-underline-offset:3px}
+.fbig{display:block;width:100%;aspect-ratio:271.18/39.76;margin:44px 0 -6px;-webkit-mask:var(--wm) center/100% auto no-repeat;mask:var(--wm) center/100% auto no-repeat;
+  background-color:#15201a;background-image:radial-gradient(circle,rgba(95,212,134,.95) 0 1.15px,transparent 1.5px),
+  linear-gradient(105deg,#13261b 0%,#13261b 30%,#1f9d55 46%,#9ff0bb 50%,#1f9d55 54%,#13261b 70%,#13261b 100%);
+  background-size:7px 7px,250% 100%;background-position:0 0,120% 0;animation:fbig 12s linear infinite}
+@keyframes fbig{from{background-position:0 0,120% 0}to{background-position:0 0,-120% 0}}
+@media (prefers-reduced-motion:reduce){.fbig{animation:none;background-position:0 0,50% 0}}
+@media (max-width:560px){.fbig{margin-top:32px;background-size:5px 5px,250% 100%}}

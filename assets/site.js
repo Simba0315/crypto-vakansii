@@ -2244,3 +2244,17 @@
     if (name) send('btn', { a: name.slice(0, 60) });
   }, true);
 })();
+
+/* ---------- long grids of tiles (companies, places, fields): the first 12 shown, the rest behind "Show all N" (the links stay in the page) ---------- */
+(function () {
+  [].forEach.call(document.querySelectorAll('ul.tiles'), function (ul) {
+    var items = ul.children;
+    if (items.length <= 15 || ul.closest('[data-dirg]') || ul.classList.contains('cut')) return;
+    ul.classList.add('cut');
+    for (var i = 12; i < items.length; i++) items[i].classList.add('cut-x');
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'tiles-more'; b.textContent = 'Show all ' + items.length;
+    b.addEventListener('click', function () { ul.classList.remove('cut'); b.remove(); });
+    ul.parentNode.insertBefore(b, ul.nextSibling);
+  });
+})();
