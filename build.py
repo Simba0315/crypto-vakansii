@@ -968,7 +968,10 @@ def ava(name, cls=""):
     (small_logos) except in the large square."""
     letter = next((c for c in name if c.isalnum()), "?").upper()
     slug = slugify(name)
-    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="{e(name)} logo" title="{e(name)} logo" loading="lazy">' if slug in LOGOS else ""
+    # width and height as the file is (72 px copy, 96 px original): the square fixes the size on screen, the attributes satisfy
+    # Lighthouse's "image elements do not have explicit width and height" (13,251 of 16,874 images in a sample, 24 Nov 2026)
+    px_ = 96 if "lg" in cls else LOGO_S
+    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="{e(name)} logo" title="{e(name)} logo" width="{px_}" height="{px_}" loading="lazy">' if slug in LOGOS else ""
     return f'<span class="ava{" " + cls if cls else ""}{" has" if img else ""}" aria-hidden="true">{e(letter)}{img}</span>'      # no hue: the logo covers the square, and a square without a logo is hidden
 
 
@@ -7427,7 +7430,7 @@ def main():
          "Some listings stay up after the job is filled. A site that reads the employer’s own careers page every hour, as this one does, drops a job at the next reading "
          "after the employer takes it down. On any other site, check that the job is still on the employer’s own careers page before you spend time on it."),
     ]
-    bs_qh, bs_ld = qa_sec("Questions", bs_qa, label="Questions", sid="questions")
+    bs_qh, bs_ld = qa_sec("Questions about the best job search sites", bs_qa, label="Questions", sid="questions")
     bs_rows = [(f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])}</a>', fact_(x, "Who pays"), fact_(x, "Account needed to apply"), fact_(x, "Where you apply"), fact_(x, "Kinds of jobs")) for x in VS]
     bs_rows.append((f'<a href="{P}/jobs/">{e(us_)}</a>', compare_sites.US_ANSWERS["Who pays"], compare_sites.US_ANSWERS["Account needed to apply"],
                     compare_sites.US_ANSWERS["Where you apply"], compare_sites.US_ANSWERS["Kinds of jobs"]))
@@ -7795,7 +7798,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             used.add(sid); toc.append(f'<li><a href="#{sid}">{txt}</a></li>')
             return f'<h2 id="{sid}">{m_.group(1)}</h2>'
         if '<section class="sec"' not in body: body = re.sub(r"<h2>(.*?)</h2>", add_id, body)
-        art_ = (crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
+        art_ = (crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · by the <a href="{P}/about/">{SITE} team</a> · first published {fdate(PUBLISHED)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
                 f'{top_}{body}{links}</article>')
         if len(toc) >= 3:
             art_ = (f'<div class="has-toc"><div class="toc-main">{art_}</div><aside class="toc" aria-label="On this page"><p>On this page</p>'
@@ -9051,7 +9054,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + section("The short answer, [[by what you need]]", bc_short, label="Short answer")
          + section(f"Free plans [[side by side]], {bc_when}", bc_table + '<p class="note">' + (f'Not in the table: {e(bc_list([{"name": n_} for n_ in BC.LEFT_OUT]))}, whose pages did not open for our reader on {bc_when}. ' if BC.LEFT_OUT else e(bc_later_s.strip()) + " ")
                    + '“Not stated” means the builder’s own pages do not say.</p>', sid="table", label="The table")
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in bc_qa) + "</dl>", label="Questions")
+         + section("Questions about [[free resume builders]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in bc_qa) + "</dl>", label="Questions")
          + kcta("This site’s builder", "Make yours here, [[free]]", f'{RB_TPLS.capitalize()} one-column templates that screening software can read, a score with fixes as you type, your old resume imported from Word or PDF, '
                 'and a PDF or Word download at the end. Everything stays in your browser.',
                 go("resume/", "Open the resume builder") + f'<a href="{P}/resume/examples/">See resume examples</a>')
@@ -9173,7 +9176,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    "<div><dt>What the free post does not include</dt><dd>A free post usually sits below the paid ones, runs for a shorter time, or has a cap on applications. The limits are in the column “Free posting”.</dd></div>"
                    f'<div><dt>Your own careers page first</dt><dd>A posting on your own careers page costs nothing and is what job search engines read. {e(SITE)} reads employers’ careers pages every hour and lists the jobs free.</dd></div></dl>',
                    sid="choose", label="Before you pay")
-         + section("Questions", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in js_qa) + "</dl>", label="Questions")
+         + section("Questions about [[posting a job for free]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in js_qa) + "</dl>", label="Questions")
          + kcta("This site", "Post a job here, [[free for 30 days]]", f'{n:,} open jobs from {m:,} employers are listed here, read from their own careers pages every hour. A standard listing costs nothing; a boost keeps a job above the free ones.',
                 go("post-a-job/", "Post a job") + f'<a href="{P}/pricing/#employers">Prices for employers</a>')
          + section("Sources", js_src + f'<p class="note">Read on {js_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
@@ -9334,13 +9337,15 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         page(f"glossary/{sl}/", gt_ + (f" | {SITE}" if len(gt_) + len(SITE) + 3 <= 65 else ""),
              gd_,
              crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(GM["title"] if GM else term)}</h1>'
+             # who wrote it, visibly (owner's page standard, E-E-A-T; 24 Nov 2026): the About page says a small independent team runs the site
+             f'<p class="stamp">Job search glossary, {len(GT)} terms · by the <a href="{P}/about/">{SITE} team</a> · figures counted {fdate(TODAY)} from open postings</p>'
              f'<div class="gl-top"><div class="gl-card"><span class="gl-k">Definition</span>'
              f'<p class="gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
              + (f'<p class="gl-fig"><span class="gl-k">Today’s figure</span>{e(fig)} <span class="note">Counted on {fdate(TODAY)} from open postings.</span></p>' if fig else "")
              + f'</div><div class="gl-card gl-tip"><h2 class="gl-k">What to do about it</h2><p>{e(tip)}</p>'
              + ('<div class="gl-next">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>" if links else "") + "</div></div>"
              + g_more
-             + (section("Related terms", '<p class="rel chips">' + "".join(f'<a href="{P}/glossary/{gslug(o_)}/">{e(o_)}</a>' for o_ in gl_rel_[term]) + "</p>") if gl_rel_[term] else "")
+             + (section(f"Terms related to {term[0].lower() + term[1:] if not term[:2].isupper() else term}", '<p class="rel chips">' + "".join(f'<a href="{P}/glossary/{gslug(o_)}/">{e(o_)}</a>' for o_ in gl_rel_[term]) + "</p>") if gl_rel_[term] else "")
              + f'<div class="gl-pager"><a href="{P}/glossary/{gslug(prev_[0])}/"><small>← Previous term</small>{e(prev_[0])}</a>'
                f'<a href="{P}/glossary/"><small>Glossary</small>All {len(GT)} terms</a>'
                f'<a href="{P}/glossary/{gslug(next_[0])}/"><small>Next term →</small>{e(next_[0])}</a></div>', head=ld_)

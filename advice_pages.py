@@ -8,6 +8,22 @@ from the open postings on every build and a tool on this site that does the job.
 Each article: a short answer first (for search engines and AI answers), a formula, examples for different kinds of work, a block
 of today's figures, mistakes, questions (FAQPage markup), a tool and the next reads. build.py renders them under /guides/<slug>/.
 """
+import re
+
+# the heading over each article's questions: its own key, not a bare "Questions" (owner's page standard, 24 Nov 2026)
+FAQ_H = {
+    "tell-me-about-yourself": "Questions about “Tell me about yourself”", "strengths-and-weaknesses": "Questions about strengths and weaknesses",
+    "questions-to-ask-in-an-interview": "Questions about asking questions in an interview", "salary-expectations": "Questions about salary expectations",
+    "negotiate-salary": "Questions about negotiating a salary offer", "why-do-you-want-to-work-here": "Questions about “Why do you want to work here?”",
+    "where-do-you-see-yourself-in-5-years": "Questions about “Where do you see yourself in 5 years?”",
+    "why-are-you-leaving-your-job": "Questions about reasons for leaving a job", "employment-gap": "Questions about gaps in a resume",
+    "thank-you-email-after-interview": "Questions about thank-you emails after an interview", "star-method": "Questions about the STAR method",
+    "how-long-to-hear-back": "Questions about hearing back after applying", "how-to-write-a-resume": "Questions about writing a resume",
+    "how-to-write-a-cover-letter": "Questions about writing a cover letter", "how-to-get-a-job-with-no-experience": "Questions about getting a job with no experience",
+    "highest-paying-jobs": "Questions about the highest-paying jobs", "accept-or-decline-a-job-offer": "Questions about accepting or declining a job offer",
+    "job-interview-tips": "Questions about preparing for a job interview", "jobs-for-teens": "Questions about jobs for teens",
+    "phone-and-video-interview-tips": "Questions about phone and video interviews", "how-to-find-a-job": "Questions about finding a job fast",
+}
 
 ARTICLES = []
 
@@ -37,7 +53,9 @@ def render(a, ctx, e, P):
         u, name, why = a["tool"]
         h += f'<div class="adv-tool"><div><b>{e(name)}</b><p>{e(why)}</p></div><a class="btn primary" href="{P}/{u}">Open it, free</a></div>'
     if a.get("faq"):
-        h += '<h2>Questions</h2><dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(x)}</dd></div>" for q, x in a["faq"]) + "</dl>"
+        # a heading with the article's own key, not a bare "Questions" (owner's page standard: every H2 carries a key or a question; 24 Nov 2026)
+        faq_h = a.get("faq_h") or FAQ_H.get(a["slug"]) or "Questions about " + re.split(r"[:,]", a["title"])[0].strip().lower()
+        h += f'<h2>{e(faq_h)}</h2><dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(x)}</dd></div>" for q, x in a["faq"]) + "</dl>"
     h += (f'<div class="adv-jobs"><p>Practice is easier with a real posting in front of you.</p><a class="btn ghost" href="{P}/jobs/">'
           f'Find a job to practise on: {ctx["n"]:,} open now</a></div>')
     return h
