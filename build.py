@@ -1900,6 +1900,23 @@ def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
             f'<p class="note">We keep your address and this search until you unsubscribe, and a note of each letter for 30 days. <a href="{P}/privacy/#alerts">How alerts handle your address</a></p></form>')
 
 
+def tidy_list_desc(desc, jobs):
+    """The meta description of a list page, as Google shows it under the title (24 Nov 2026). Search Console: the location pages stand at
+    positions 5 to 9 for "entry level jobs", "virtual assistant jobs", "work from home jobs" and "marketing jobs" (searchers in Dublin,
+    Lithuania, Bulgaria, France) with no clicks, and their line read "83 open roles: Entry-level jobs in Dublin at companies. Updated
+    hourly. Collected from … updated every hour": a placeholder left unfilled and the same promise twice. Now the companies are named
+    and the line leads with what was searched: "Entry-level jobs in Dublin: 83 open now at Designer Group, Stripe and Google." The
+    closing sentence about the hourly check is added once, by fit_desc."""
+    if " at companies" in desc and jobs:
+        top = [c for c, _ in Counter(j.get("company", "") for j in jobs if j.get("company")).most_common(3)]
+        if top:
+            desc = desc.replace(" at companies", " at " + (top[0] if len(top) == 1 else ", ".join(top[:-1]) + " and " + top[-1]), 1)
+    m_ = re.match(r"^([\d,]+) open roles?: (.+?) at (.+?)\.(.*)$", desc)
+    if m_:
+        desc = f"{m_.group(2)}: {m_.group(1)} open now at {m_.group(3)}.{m_.group(4)}"
+    return re.sub(r"\s*Updated hourly\.", "", desc).replace(", updated hourly.", ".").strip()
+
+
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live="", faq_extra=(),
             stats=False, pics="", tail="", links=()):
     """A page that is a list of jobs. The order on its first page (sections review, 17 Nov 2026): the trail, the heading, one
@@ -1907,6 +1924,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     that narrow the list), `pics` (charts: above the list on wide screens, under it on phones, where the list must come first),
     the list, `hub` and `after`, the questions, and `tail` (what may be long and is read last: a company's closed jobs)."""
     jobs = order(jobs)
+    desc = tidy_list_desc(desc, jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
     rows = collapse(jobs)
     total = len(rows)

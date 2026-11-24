@@ -901,3 +901,14 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   "who pays / account / where you apply" table; /vs/compare/ to put up to five sites and this one in one table, shareable by address.
   Not compared: Monster and CareerBuilder ("waf blocked"), Adzuna (human check), Hired (part of LHH since June 2024).
 - Largest gap still open: Google for Jobs, Ladders, Craigslist and Levels.fyi, which the answers also name, have no page yet.
+
+### Location and skill list pages — "entry level jobs", "virtual assistant jobs", "work from home jobs", "marketing jobs" (24 Nov 2026, later)
+- Search Console, 19–22 Nov: 40 clicks, 14.2K impressions in all. "entry level jobs" 634 impressions at 5.5 (on /locations/dublin/entry-level/ 441 at 5.2,
+  /locations/lithuania/entry-level/ 167 at 5.7, /skills/arabic/entry-level/ 24); "virtual assistant jobs" 119 at 8.2 and "work from home jobs" 58 at 9.1
+  (both on /locations/bulgaria/remote/); "marketing jobs" 19 at 9.1 (/locations/france|bulgaria|sweden/marketing/). Google shows the local page to
+  people searching from those countries. Page 1, yet 0 clicks.
+- Cause found in the snippet: the meta description of every such list read "83 open roles: Entry-level jobs in Dublin at companies. Updated hourly.
+  Collected from official company career pages and updated every hour…" (an unfilled "at companies" and the hourly promise twice).
+- Done: `tidy_list_desc` in build.py, used by every list page: it names the top three employers of the list and leads with what was searched
+  ("Entry-level jobs in Dublin: 83 open now at Designer Group, Stripe and Google."), the hourly sentence once. Check the CTR of these pages again on 1 Dec.
+
