@@ -75,6 +75,7 @@ EOF
   )
 fi
 grep -q '^ADMIN_TOKEN=' "$envf" || printf 'ADMIN_TOKEN="%s"\n' "$(openssl rand -hex 32)" >> "$envf"
+grep -q '^STATS_KEY=' "$envf" || printf 'STATS_KEY="%s"\n' "$(openssl rand -hex 12)" >> "$envf"     # the key of the statistics page (/stats/?key=...)
 chown root:hrnapi "$envf"; chmod 640 "$envf"
 
 # 4. services
@@ -119,3 +120,4 @@ sleep 1
 if curl -fsS --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/api/health" >/dev/null; then echo "https://$DOMAIN/api/health answers through nginx"; else echo "warning: /api/health does not answer through nginx yet"; fi
 mail=$(grep -q '^SMTP_PASS=' "$envf" && echo on || echo "off: add the mailbox password with api-secret.sh SMTP_PASS (HOSTING.md)")
 echo "ready. mail: $mail. The admin token is in $envf (sudo grep ^ADMIN_TOKEN= $envf)."
+sk=$(grep '^STATS_KEY=' "$envf" | cut -d= -f2- | tr -d '"'); site=$(grep '^SITE_URL=' "$envf" | cut -d= -f2- | tr -d '"'); echo "statistics: ${site:-https://jobseveryhour.com}/stats/?key=$sk"

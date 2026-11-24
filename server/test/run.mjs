@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import worker, { md5, phpJson, gatewaySign, webhookSignatureOk, PRODUCTS, companyKey, sendMail, reconcileOrders, siteDomain, freeMail, throwawayMail, hiringSystem, lookalike, brandIn, domainAge, screenPosting,
-  recheckLinks, AI_MONTHLY, AI_BOUNDS, aiWorstMonthUsd } from '../src/worker.js';
+  recheckLinks, AI_MONTHLY, AI_BOUNDS, aiWorstMonthUsd, sourceOf, deviceOf, pageName } from '../src/worker.js';
 import { D1 } from './d1.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -111,8 +111,8 @@ globalThis.fetch = async (input, init = {}) => {
 const newEnv = (extra = {}) => ({ DB: new D1().applySchema(path.join(here, '../schema.sql')), SITE_URL: SITE, SITE_ORIGINS: SITE, API_URL: API,
   CRYPTOMUS_MERCHANT: 'merchant-1', CRYPTOMUS_API_KEY: KEY, ADMIN_TOKEN: 'admin-secret', GITHUB_TOKEN: 'gh', GITHUB_REPO: 'o/r', ...extra });
 let ipCounter = 0;
-async function call(env, method, p, { token, data, ip, raw, origin, isolate = worker, ctx, ua } = {}) {
-  const headers = { 'CF-Connecting-IP': ip || '10.0.0.' + (++ipCounter % 250) };
+async function call(env, method, p, { token, data, ip, raw, origin, isolate = worker, ctx, ua, more } = {}) {
+  const headers = { 'CF-Connecting-IP': ip || '10.0.0.' + (++ipCounter % 250), ...(more || {}) };
   if (ua) headers['User-Agent'] = ua;
   if (token) headers.Authorization = 'Bearer ' + token;
   if (origin) headers.Origin = origin;
@@ -3265,6 +3265,40 @@ await smtpServer.close();
   eq(await one(env, 'SELECT reminded_at FROM jobs WHERE id = ?', id), 0, 'Reminder: renewing starts a new term, with a letter of its own');
   await env.DB.prepare("UPDATE jobs SET expires_at = ?, status = 'closed' WHERE id = ?").bind(soon, id).run();
   await worker.scheduled({}, env); eq(ending().length, 1, 'Reminder: a closed job gets none');
+}
+
+/* ---- 40. The site's own visit statistics: anonymous visits, sources, clicks on Apply, the owner's report ---- */
+{
+  const env = newEnv({ STATS_KEY: 'stats-key-1' }), CHROME = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36';
+  const send = (data, extra = {}) => call(env, 'POST', '/api/public/ev', { raw: JSON.stringify(data), ua: CHROME, ...extra });
+  eq([sourceOf('www.google.com', ''), sourceOf('chatgpt.com', ''), sourceOf('', ''), sourceOf('', 'telegram'), sourceOf('simba0315.github.io', ''), sourceOf('jobseveryhour.com', '', 'jobseveryhour.com'), sourceOf('t.co', '')],
+    ['Google', 'ChatGPT', 'Прямой заход / закладка', 'Telegram', 'simba0315.github.io', 'Внутренний переход', 'X (Twitter)'], 'Stats: sources are named, an unknown site by its host');
+  eq([deviceOf(CHROME), deviceOf('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148')], [{ os: 'Windows', device: 'Компьютер' }, { os: 'iOS / iPadOS', device: 'Телефон' }], 'Stats: device and system from the browser description');
+  eq([pageName('/'), pageName('/job/staff-engineer-stripe/'), pageName('/glossary/rolling-basis/')], ['Главная', 'Вакансия: staff-engineer-stripe', 'Глоссарий: rolling-basis'], 'Stats: pages are named for the report');
+  let r = await send({ v: 'aaaa1111bbbb', k: 'pv', p: '/jobs/' });
+  eq([r.status, await one(env, 'SELECT COUNT(*) FROM events')], [204, 0], 'Stats: a page from a visit that never started is not counted');
+  r = await send({ v: 'aaaa1111bbbb', k: 'visit', p: '/job/staff-engineer-stripe/', r: 'https://www.google.com/', l: 'en-US', m: 'browser' }, { more: { 'CF-IPCountry': 'US' } });
+  eq([r.status, await one(env, "SELECT src || '|' || country || '|' || device || '|' || entry FROM visits WHERE id = 'aaaa1111bbbb'"), await one(env, "SELECT COUNT(*) FROM events WHERE kind = 'pv'")],
+    [204, 'Google|US|Компьютер|/job/staff-engineer-stripe/', 1], 'Stats: a visit keeps its source, country, device and entry page, and its first page counts');
+  await send({ v: 'aaaa1111bbbb', k: 'visit', p: '/jobs/' });
+  eq(await one(env, 'SELECT COUNT(*) FROM visits'), 1, 'Stats: a visit starts once');
+  await send({ v: 'aaaa1111bbbb', k: 'apply', p: '/job/staff-engineer-stripe/', a: 'Stripe', b: 'boards.greenhouse.io' });
+  await send({ v: 'aaaa1111bbbb', k: 'search', p: '/jobs/', a: 'rust' }); await send({ v: 'aaaa1111bbbb', k: 'pick', p: '/jobs/', a: 'rust', b: '/job/rust-dev-acme/' });
+  await send({ v: 'cccc2222dddd', k: 'visit', p: '/', r: 'https://simba0315.github.io/lol-mmr-guide/', u: { source: 'x' } });
+  await send({ v: 'eeee3333ffff', k: 'visit', p: '/', r: '' }, { ua: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' });
+  await send({ v: 'bad id!', k: 'visit', p: '/' }); await send({ v: 'gggg4444hhhh', k: 'visit', p: 'https://evil.example/' }); await send({ v: 'iiii5555jjjj', k: 'nope', p: '/' });
+  eq(await one(env, 'SELECT COUNT(*) FROM visits'), 2, 'Stats: crawlers, bad ids, pages that are not paths and unknown kinds are not counted');
+  eq((await call(env, 'GET', '/api/admin/stats')).status, 403, 'Stats: the report is the owner’s only');
+  eq((await call(env, 'GET', '/api/admin/stats?key=wrong')).status, 403, 'Stats: a wrong key is refused');
+  r = await call(env, 'GET', '/api/admin/stats?key=stats-key-1');
+  const b = r.body;
+  eq([r.status, b.totals.visits, b.totals.pageviews, b.totals.applies, b.totals.apply_visits, b.totals.searches], [200, 2, 2, 1, 1, 1], 'Stats: the key opens the report with the totals');
+  eq([b.sources.find((x) => x.k === 'Google'), b.sources.find((x) => x.k === 'simba0315.github.io').c, b.apply_company[0], b.searches[0], b.picks[0].k, b.countries.find((x) => x.k === 'US').n],
+    [{ k: 'Google', n: 1, c: 1 }, 0, { k: 'Stripe', n: 1 }, { k: 'rust', n: 1, c: 1 }, 'rust → Вакансия: rust-dev-acme', 1], 'Stats: sources with the clicks they brought, companies, searches and what was picked');
+  eq((await call(env, 'GET', '/api/admin/stats', { token: ADMIN })).status, 200, 'Stats: the owner’s token opens it too');
+  await env.DB.exec("UPDATE visits SET day = '2020-01-01'; UPDATE events SET day = '2020-01-01'");
+  await worker.scheduled({}, env);
+  eq([await one(env, 'SELECT COUNT(*) FROM visits'), await one(env, 'SELECT COUNT(*) FROM events')], [0, 0], 'Stats: rows older than the time kept are deleted by the cron');
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');

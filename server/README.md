@@ -728,6 +728,24 @@ and without one the browser sends no preflight.
   days with zeros for days without visitors), and the owner's `/api/admin/overview` and `/api/admin/review`. Another account
   cannot read them, and `export.json` does not carry them.
 
+## The site's own visit statistics (24 Nov 2026)
+
+The owner asked for statistics "like cryptobubbles": anonymous, no cookies, kept on our server. The pages report to
+`POST /api/public/ev` (the visit counter at the end of `assets/site.js`); the owner reads `GET /api/admin/stats?from=&to=` on the
+page `/stats/` (`assets/stats.js`, in Russian, noindex, not linked).
+
+- A visit is a random id a tab keeps in sessionStorage. It is reported only after the first move of the mouse, scroll, wheel, key,
+  touch or 15 seconds with the tab in view; every other report for an id that never started a visit is dropped. Crawlers (by their
+  user agent) and `navigator.webdriver` browsers send nothing. The owner's browser leaves itself out when it opens `/stats/`.
+- `visits`: day, source (named: Google, Bing, ChatGPT, Perplexity, Telegram, a referring site by its host, direct), referring host,
+  entry page, country (Cloudflare's `CF-IPCountry`), device, system, browser or installed app, language, utm. `events`: page views,
+  clicks on Apply (company, employer host), site searches and the job opened from the results, buttons, links out, job alerts asked
+  for, resumes downloaded. No IP address, no user agent, nothing typed into a form. Both are deleted after `STATS_DAYS` (400) by the cron.
+- One address may send `EV_PER_HOUR` (600) reports an hour, counted under the salted hash as for `/hit`; the answer is always 204.
+- The report opens with the owner's token, the session of an `ADMIN_EMAILS` account, or `?key=STATS_KEY`. `api-setup.sh` adds a
+  random `STATS_KEY` to `/etc/hrn-api/api.env` when it is missing and prints the page's address at the end:
+  `statistics: https://jobseveryhour.com/stats/?key=...`. Tested in section 40.
+
 ## Cron
 
 The trigger in `wrangler.toml` runs every ten minutes. Besides settling payments and tidying up, each run opens the link to apply

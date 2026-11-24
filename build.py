@@ -8304,6 +8304,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "Limits on how often something can be done (signing in, signing up, asking for a link, posting, reporting) are counters kept under the IP address, "
           "the email address or a hash of them, and are deleted when their time is over: mostly an hour, a day for the limit on confirmation letters to one address. "
           "The web server’s own log (IP address, page, time) is kept for 14 days for security.</p>"
+        + h2p("Counting visits", "visits")
+        + "<p>To know which pages help people and where they come from, the pages report visits to our own server; no other company sees them. "
+          "There are no cookies for it and nothing that follows you from one visit to the next: a tab keeps a random number until it is closed. "
+          "A visit is counted only after you move the mouse, scroll, touch the screen or stay 15 seconds. What is kept: the pages opened, the site you came from "
+          "(its address only), the language of the browser, the country as our network provider (Cloudflare) reports it, whether it is a phone or a computer and which system, "
+          "clicks on “Apply” (the company and the employer’s site), the words searched on this site and the job opened from the results, buttons pressed and links to other sites. "
+          "The rows hold no IP address and nothing you type into a form or a tool; how many reports one address may send is limited like the other limits above. These rows are deleted after 400 days.</p>"
         + h2p("The record of letters we send")
         + "<p>For every letter the site sends (an alert, a confirmation link, a new password link, a sign-in notice) we keep for 30 days: the address, the time, what kind of letter it was, "
           "and the answer of the mail server. Never the subject or the text.</p>"
@@ -10637,6 +10644,20 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              'Одобренная вакансия выходит на сайт при ближайшем обновлении, работодатель получает письмо.</p>'
              f'<div id="adm" data-api="{e(CFG["api_url"])}" data-site="{e(P)}"><noscript><div class="banner">Нужен JavaScript.</div></noscript></div>'
              f'<script src="{P}/admin.js?v={adm_v}" defer></script>', head='<meta name="robots" content="noindex">', sitemap=False)
+        # The owner's statistics (owner, 24 Nov 2026: "как в криптобабле"): visits, sources, clicks on Apply, searches, in Russian. It reads
+        # GET /api/admin/stats with ?key=<STATS_KEY> or the owner's sign-in (assets/stats.js); noindex, not linked, not in the sitemap.
+        st_v = hashlib.md5((ROOT / "assets" / "stats.js").read_bytes()).hexdigest()[:8]
+        page("stats/", f"Statistics | {SITE}", "The owner’s statistics of the site: visits, where they came from, clicks on Apply and searches.",
+             '<style>.st-muted{color:var(--muted,#667);font-size:14px}.st-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 18px}'
+             '.st-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 22px}.st-tiles div{border:1px solid var(--line,#e3e5ee);border-radius:12px;padding:12px 14px}'
+             '.st-tiles span{display:block;font-size:13px;color:var(--muted,#667)}.st-tiles b{font-size:24px}.st-card{border:1px solid var(--line,#e3e5ee);border-radius:12px;padding:14px 16px;margin:0 0 14px}'
+             '.st-card h3{margin:0 0 4px;font-size:17px}.st-tw{overflow-x:auto}.st-t{width:100%;border-collapse:collapse;font-size:14px}.st-t th{text-align:left;font-weight:600;color:var(--muted,#667);padding:6px 8px;border-bottom:1px solid var(--line,#e3e5ee)}'
+             '.st-t td{padding:5px 8px;border-bottom:1px solid var(--line,#eef0f5);white-space:nowrap}.st-t td.st-k{position:relative;white-space:normal;min-width:220px;word-break:break-word}'
+             '.st-bar{position:absolute;left:0;top:3px;bottom:3px;background:rgba(80,110,240,.12);border-radius:4px;z-index:0}.st-k span:last-child{position:relative}'
+             '.st-days{display:flex;align-items:flex-end;gap:3px;height:120px;margin:8px 0}.st-days span{flex:1;background:#5b7cf5;border-radius:3px 3px 0 0;min-width:2px}</style>'
+             + crumbs(("Account", "account/"), ("Statistics", "")) + '<h1>Статистика Jobs Every Hour</h1>'
+             f'<div id="st" data-api="{e(CFG["api_url"])}" data-site="{e(P)}"><noscript><div class="banner">Нужен JavaScript.</div></noscript></div>'
+             f'<script src="{P}/stats.js?v={st_v}" defer></script>', head='<meta name="robots" content="noindex">', sitemap=False)
     lap('The brand (owner, 15 Nov 2026: "a corporate design of our ow')
     # The brand (owner, 15 Nov 2026: "a corporate design of our own, like Indeed and other brands"). brand.py defines three
     # directions and draws every logo file; /brand/ is the guide, /brand/directions/ shows all three (not indexed), and the
@@ -11073,7 +11094,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     csv_out("categories", ["category", "open_roles", "remote_roles", "median_advertised_salary_usd", "source"],
             [[CAT[cs], len(by_cat[cs]), sum(j["remote"] for j in by_cat[cs]), medn(by_cat[cs]), f"{FULL}/jobs/{cs}/"] for cs in CAT if by_cat[cs]])
     csv_out("locations", ["location", "open_roles", "source"], [[name.removeprefix("the "), len(js), f"{FULL}/locations/{slug}/"] for name, slug, js in places])
-    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "map.js", "explorer.js"):
+    for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "stats.js", "map.js", "explorer.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
     # The home page carries the styles it uses in the page itself, and the whole file comes after the first paint (PageSpeed, phone,

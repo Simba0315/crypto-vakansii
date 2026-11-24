@@ -51,7 +51,7 @@ export function productionEnv(vars, { serverDir }) {
     COMPANY_SITES: companySites(vars.COMPANY_SITES_FILE || '/srv/hrn/app/logos.json'),
     PLUS_LIVE: '0',
   };
-  for (const k of ['ADMIN_TOKEN', 'ADMIN_EMAILS', 'GITHUB_TOKEN', 'GITHUB_REPO', 'LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_REDIRECT_URL', 'ANTHROPIC_API_KEY', 'TALENT_DB', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URL']) if (vars[k]) env[k] = vars[k];
+  for (const k of ['ADMIN_TOKEN', 'STATS_KEY', 'ADMIN_EMAILS', 'GITHUB_TOKEN', 'GITHUB_REPO', 'LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_REDIRECT_URL', 'ANTHROPIC_API_KEY', 'TALENT_DB', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URL']) if (vars[k]) env[k] = vars[k];
   if (vars.PAYMENTS_LIVE === '1') {
     for (const k of ['CRYPTOMUS_MERCHANT', 'CRYPTOMUS_API_KEY']) if (vars[k]) env[k] = vars[k];
     if (vars.PLUS_LIVE === '1') env.PLUS_LIVE = '1';

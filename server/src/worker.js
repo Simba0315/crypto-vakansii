@@ -36,6 +36,7 @@
               SITE_NAME      optional: the name in letters and pages (Jobs Every Hour)
    Secrets    CRYPTOMUS_MERCHANT, CRYPTOMUS_API_KEY   payment gateway (merchant id and payment API key)
               ADMIN_TOKEN                             owner-only endpoints (/api/admin/...). Not set: every one of them is refused.
+              STATS_KEY                               optional: opens the owner's statistics (/api/admin/stats?key=..., the page /stats/?key=...)
               GITHUB_TOKEN                            optional: fine-grained token with Actions: write on GITHUB_REPO
               LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET   optional: the LinkedIn app behind Sign In with LinkedIn. Without them (or
                                                       without LINKEDIN_REDIRECT_URL) /api/auth/linkedin/... answers 409 "not configured".
@@ -3114,6 +3115,133 @@ async function receipt(env, user, id) {
 }
 
 /* ---------------------------------------------------------------- router */
+/* ---------------------------------------------------------------- the site's own visit statistics (owner, 24 Nov 2026: "like cryptobubbles")
+   Anonymous and without cookies. The pages (assets/site.js) report a visit only after the first move of the mouse, scroll, key, touch
+   or 15 seconds on an open tab, so scripts that load pages without a person mostly never start one. A visit is a random id the tab
+   keeps in sessionStorage (gone when the tab closes); nothing ties two visits of one person together.
+   POST /api/public/ev  { v: visit id, k: kind, p: path, a, b, r: referrer, u: utm, l: language, m: how it was opened }
+     kinds: visit (starts it: the entry page, where it came from, utm, language), pv (a page), apply (a click on Apply: a = company,
+     b = the employer's host), search (a = the words), pick (a search result opened: a = the words, b = the page), btn (a button or a
+     setting: a = its name), out (a link to another site: a = its host), alert (job alerts asked for), resume (a resume downloaded).
+   Stored: visits (one row each: day, source, referring host, entry page, country from Cloudflare's CF-IPCountry, device, system, how it
+   was opened, language, utm) and events (visit, day, time, kind, page, a, b). No IP address, no user agent, no account. Rows older than
+   STATS_DAYS are deleted by the cron. One address may send EV_PER_HOUR reports an hour (counted under the salted hash, as for /hit).
+   The answer is always 204, whatever was sent.
+   GET /api/admin/stats?from=YYYY-MM-DD&to=YYYY-MM-DD: the owner's report (the page /stats/). Opened with the owner's token, the session
+   of an ADMIN_EMAILS account, or ?key=STATS_KEY (made at random by api-setup.sh) so the page can be kept as a bookmark. */
+const STATS_DAYS = 400, EV_PER_HOUR = 600;
+const EV_KINDS = new Set(['visit', 'pv', 'apply', 'search', 'pick', 'btn', 'out', 'alert', 'resume']);
+const SOURCES = [
+  [/(^|\.)google\.[a-z.]+$|^(www\.)?google$/, 'Google'], [/(^|\.)bing\.com$/, 'Bing'], [/(^|\.)yandex\.[a-z.]+$|(^|\.)ya\.ru$/, 'Yandex'], [/(^|\.)duckduckgo\.com$/, 'DuckDuckGo'],
+  [/(^|\.)search\.yahoo\.com$|(^|\.)yahoo\.com$/, 'Yahoo'], [/(^|\.)ecosia\.org$/, 'Ecosia'], [/(^|\.)search\.brave\.com$/, 'Brave Search'], [/(^|\.)baidu\.com$/, 'Baidu'], [/(^|\.)naver\.com$/, 'Naver'],
+  [/(^|\.)(chatgpt\.com|chat\.openai\.com|openai\.com)$/, 'ChatGPT'], [/(^|\.)perplexity\.ai$/, 'Perplexity'], [/(^|\.)claude\.ai$/, 'Claude'], [/(^|\.)gemini\.google\.com$/, 'Gemini'],
+  [/(^|\.)copilot\.microsoft\.com$/, 'Copilot'], [/(^|\.)(t\.me|telegram\.org|web\.telegram\.org)$/, 'Telegram'], [/(^|\.)reddit\.com$/, 'Reddit'], [/(^|\.)(x\.com|t\.co|twitter\.com)$/, 'X (Twitter)'],
+  [/(^|\.)(facebook\.com|fb\.com|m\.facebook\.com|l\.facebook\.com)$/, 'Facebook'], [/(^|\.)(linkedin\.com|lnkd\.in)$/, 'LinkedIn'], [/(^|\.)(youtube\.com|youtu\.be)$/, 'YouTube'],
+  [/(^|\.)instagram\.com$/, 'Instagram'], [/(^|\.)news\.ycombinator\.com$/, 'Hacker News'], [/(^|\.)github\.com$/, 'GitHub'], [/(^|\.)vk\.com$/, 'VK'], [/(^|\.)(threads\.net|bsky\.app)$/, 'Threads / Bluesky'],
+];
+const UTM_SOURCES = { google: 'Google', bing: 'Bing', chatgpt: 'ChatGPT', 'chatgpt.com': 'ChatGPT', openai: 'ChatGPT', perplexity: 'Perplexity', telegram: 'Telegram', tg: 'Telegram', reddit: 'Reddit', x: 'X (Twitter)', twitter: 'X (Twitter)', linkedin: 'LinkedIn', facebook: 'Facebook' };
+export function sourceOf(refHost, utmSource, siteHost) {
+  const h = String(refHost || '').toLowerCase().replace(/^www\./, ''), u = String(utmSource || '').toLowerCase().trim();
+  if (h && siteHost && (h === siteHost || h.endsWith('.' + siteHost))) return u ? UTM_SOURCES[u] || u : 'Внутренний переход';
+  if (h) { for (const [re, name] of SOURCES) if (re.test(h)) return name; return h; }
+  if (u) return UTM_SOURCES[u] || u;
+  return 'Прямой заход / закладка';
+}
+export function deviceOf(ua) {
+  const s = String(ua || '');
+  const os = /Windows/.test(s) ? 'Windows' : /iPhone|iPad|iPod/.test(s) ? 'iOS / iPadOS' : /Android/.test(s) ? 'Android' : /Mac OS X|Macintosh/.test(s) ? 'macOS' : /CrOS/.test(s) ? 'ChromeOS' : /Linux/.test(s) ? 'Linux' : 'Другое';
+  const device = /iPad|Tablet|(Android(?!.*Mobile))/.test(s) ? 'Планшет' : /Mobi|iPhone|iPod|Android/.test(s) ? 'Телефон' : 'Компьютер';
+  return { os, device };
+}
+const evText = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f]+/g, ' ').trim().slice(0, max) : '');
+const evPath = (v) => { const s = evText(v, 300); return s.startsWith('/') ? s.split('#')[0] : ''; };
+async function ev(env, req) {
+  if (CRAWLER.test(req.headers.get('User-Agent') || '')) return null;
+  const who = await ipHash(env, req);
+  if (!(await allowed(env, 'ev:' + who, EV_PER_HOUR, 3600))) return null;
+  let b; try { b = await body(req, 4000); } catch { return null; }
+  const v = typeof b.v === 'string' && /^[a-z0-9]{8,32}$/.test(b.v) ? b.v : '', k = EV_KINDS.has(b.k) ? b.k : '', p = evPath(b.p), t = now(), day = isoDay(t);
+  if (!v || !k || !p) return null;
+  if (k === 'visit') {
+    let ref = ''; try { ref = b.r ? new URL(evText(b.r, 500)).hostname.toLowerCase().replace(/^www\./, '') : ''; } catch {}
+    const u = b.u && typeof b.u === 'object' ? b.u : {}, utm = [evText(u.source, 60), evText(u.medium, 60), evText(u.campaign, 80)].filter(Boolean).join(' / ');
+    let site = ''; try { site = new URL(env.SITE_URL || '').hostname.replace(/^www\./, ''); } catch {}
+    const { os, device } = deviceOf(req.headers.get('User-Agent'));
+    const country = /^[A-Z]{2}$/.test(req.headers.get('CF-IPCountry') || '') && req.headers.get('CF-IPCountry') !== 'XX' ? req.headers.get('CF-IPCountry') : '';
+    const how = ['browser', 'app', 'embed'].includes(b.m) ? b.m : 'browser', lang = evText(b.l, 12).toLowerCase().split('-')[0];
+    const r = await db(env, 'INSERT INTO visits (id, day, ts, src, ref, entry, country, device, os, app, lang, utm) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',
+      v, day, t, sourceOf(ref, u.source, site), ref, p, country, device, os, how, lang, utm).run();
+    if (r.meta.changes) await db(env, "INSERT INTO events (visit, day, ts, kind, path, a, b) VALUES (?, ?, ?, 'pv', ?, '', '')", v, day, t, p).run();
+    return null;
+  }
+  // every other report belongs to a visit that was started (a person moved, scrolled or stayed); the rest is dropped
+  if (!(await db(env, 'SELECT 1 AS x FROM visits WHERE id = ? AND ts > ?', v, t - 2 * DAY).first())) return null;
+  await db(env, 'INSERT INTO events (visit, day, ts, kind, path, a, b) VALUES (?, ?, ?, ?, ?, ?, ?)', v, day, t, k, p, evText(b.a, 200), evText(b.b, 300)).run();
+  return null;
+}
+/* What a page is, for the report: "Вакансия: senior-engineer-acme", "Компания: stripe", "Главная". */
+export function pageName(p) {
+  const s = String(p || '/').split('?')[0], seg = s.split('/').filter(Boolean), first = seg[0] || '';
+  const NAMES = { '': 'Главная', jobs: 'Все вакансии', remote: 'Удалённая работа', new: 'Новые вакансии', companies: 'Компании', salaries: 'Зарплаты', resume: 'Конструктор резюме', tools: 'Инструменты',
+    glossary: 'Глоссарий', insights: 'Исследования', internships: 'Стажировки', 'entry-level': 'Без опыта', 'my-jobs': 'Мои вакансии', account: 'Аккаунт', employers: 'Работодателям', post: 'Разместить вакансию',
+    trends: 'Тренды', categories: 'Категории', 'how-to-hire': 'Как нанять', 'interview-questions': 'Вопросы на собеседовании', for: 'Для вас', crypto: 'Крипто-вакансии', search: 'Поиск', about: 'О сайте', pricing: 'Цены' };
+  if (first === 'job') return 'Вакансия: ' + (seg[1] || '');
+  if (first === 'company') return 'Компания: ' + (seg[1] || '');
+  const base = NAMES[first] || first;
+  return seg.length > 1 ? base + ': ' + seg.slice(1).join('/') : base;
+}
+async function statsAllowed(env, req, url) {
+  const given = (req.headers.get('Authorization') || '').replace(/^Bearer /, ''), key = url.searchParams.get('key') || '';
+  if (env.ADMIN_TOKEN && given && sameText(await sha256(given), await sha256(String(env.ADMIN_TOKEN)))) return true;
+  if (env.STATS_KEY && key && sameText(await sha256(key), await sha256(String(env.STATS_KEY)))) return true;
+  return isModerator(env, await currentUser(env, req, false));
+}
+async function statsReport(env, req, url) {
+  if (!(await statsAllowed(env, req, url))) throw bad('forbidden', 'Not allowed.', 403);
+  const t = now(), dayRe = /^\d{4}-\d{2}-\d{2}$/;
+  let to = url.searchParams.get('to') || isoDay(t), from = url.searchParams.get('from') || isoDay(t - 6 * DAY);
+  if (!dayRe.test(to)) to = isoDay(t); if (!dayRe.test(from) || from > to) from = isoDay(t - 6 * DAY);
+  const all = async (sql, ...args) => (await db(env, sql, ...args).all()).results;
+  const rows = (list, key = 'k') => list.map((r) => ({ k: r[key] === '' || r[key] == null ? '—' : r[key], n: r.n, ...(r.c != null ? { c: r.c } : {}) }));
+  const V = 'FROM visits WHERE day BETWEEN ? AND ?', E = 'FROM events WHERE day BETWEEN ? AND ?';
+  const visits = await db(env, 'SELECT COUNT(*) AS n ' + V, from, to).first('n');
+  const pv = await db(env, "SELECT COUNT(*) AS n " + E + " AND kind = 'pv'", from, to).first('n');
+  const applies = await db(env, "SELECT COUNT(*) AS n " + E + " AND kind = 'apply'", from, to).first('n');
+  const applyVisits = await db(env, "SELECT COUNT(DISTINCT visit) AS n " + E + " AND kind = 'apply'", from, to).first('n');
+  const searches = await db(env, "SELECT COUNT(*) AS n " + E + " AND kind = 'search'", from, to).first('n');
+  const alerts = await db(env, "SELECT COUNT(*) AS n " + E + " AND kind = 'alert'", from, to).first('n');
+  const resumes = await db(env, "SELECT COUNT(*) AS n " + E + " AND kind = 'resume'", from, to).first('n');
+  // the sources with the clicks on Apply they brought (a visit counts once however many jobs it opened)
+  const sources = await all("SELECT v.src AS k, COUNT(*) AS n, SUM(CASE WHEN EXISTS (SELECT 1 FROM events e WHERE e.visit = v.id AND e.kind = 'apply') THEN 1 ELSE 0 END) AS c FROM visits v WHERE v.day BETWEEN ? AND ? GROUP BY v.src ORDER BY n DESC LIMIT 60", from, to);
+  const pages = (list) => list.map((r) => ({ k: pageName(r.k) + ' ' + r.k, n: r.n, ...(r.c != null ? { c: r.c } : {}) }));
+  const out = {
+    from, to, totals: { visits, pageviews: pv, applies, apply_visits: applyVisits, searches, alerts, resumes },
+    by_day: await all('SELECT day AS k, COUNT(*) AS n ' + V + ' GROUP BY day ORDER BY day', from, to),
+    sources: rows(sources),
+    referrers: rows(await all("SELECT ref AS k, COUNT(*) AS n " + V + " AND ref != '' GROUP BY ref ORDER BY n DESC LIMIT 60", from, to)),
+    entries: pages(await all('SELECT entry AS k, COUNT(*) AS n ' + V + ' GROUP BY entry ORDER BY n DESC LIMIT 60', from, to)),
+    source_entry: (await all('SELECT src, entry, COUNT(*) AS n ' + V + ' GROUP BY src, entry ORDER BY n DESC LIMIT 60', from, to)).map((r) => ({ k: r.src + ' → ' + pageName(r.entry), n: r.n })),
+    countries: rows(await all('SELECT country AS k, COUNT(*) AS n ' + V + ' GROUP BY country ORDER BY n DESC LIMIT 80', from, to)),
+    utm: rows(await all("SELECT utm AS k, COUNT(*) AS n " + V + " AND utm != '' GROUP BY utm ORDER BY n DESC LIMIT 40", from, to)),
+    apply_company: rows(await all("SELECT a AS k, COUNT(*) AS n " + E + " AND kind = 'apply' GROUP BY a ORDER BY n DESC LIMIT 60", from, to)),
+    apply_host: rows(await all("SELECT b AS k, COUNT(*) AS n " + E + " AND kind = 'apply' GROUP BY b ORDER BY n DESC LIMIT 40", from, to)),
+    apply_source: rows(await all("SELECT v.src AS k, COUNT(*) AS n FROM events e JOIN visits v ON v.id = e.visit WHERE e.day BETWEEN ? AND ? AND e.kind = 'apply' GROUP BY v.src ORDER BY n DESC LIMIT 40", from, to)),
+    apply_page: pages(await all("SELECT path AS k, COUNT(*) AS n " + E + " AND kind = 'apply' GROUP BY path ORDER BY n DESC LIMIT 60", from, to)),
+    pageviews: pages(await all("SELECT path AS k, COUNT(*) AS n " + E + " AND kind = 'pv' GROUP BY path ORDER BY n DESC LIMIT 120", from, to)),
+    sections: rows(await all("SELECT CASE WHEN instr(substr(path, 2), '/') > 0 THEN substr(path, 2, instr(substr(path, 2), '/') - 1) ELSE substr(path, 2) END AS k, COUNT(*) AS n " + E + " AND kind = 'pv' GROUP BY k ORDER BY n DESC LIMIT 40", from, to)).map((r) => ({ ...r, k: pageName('/' + (r.k === '—' ? '' : r.k) + '/') })),
+    searches: rows(await all("SELECT s.a AS k, COUNT(*) AS n, SUM(CASE WHEN EXISTS (SELECT 1 FROM events p WHERE p.visit = s.visit AND p.kind = 'pick' AND p.a = s.a) THEN 1 ELSE 0 END) AS c FROM events s WHERE s.day BETWEEN ? AND ? AND s.kind = 'search' GROUP BY s.a ORDER BY n DESC LIMIT 80", from, to)),
+    picks: (await all("SELECT a, b, COUNT(*) AS n " + E + " AND kind = 'pick' GROUP BY a, b ORDER BY n DESC LIMIT 60", from, to)).map((r) => ({ k: r.a + ' → ' + pageName(r.b), n: r.n })),
+    buttons: rows(await all("SELECT a AS k, COUNT(*) AS n " + E + " AND kind = 'btn' GROUP BY a ORDER BY n DESC LIMIT 80", from, to)),
+    outbound: rows(await all("SELECT a AS k, COUNT(*) AS n " + E + " AND kind = 'out' GROUP BY a ORDER BY n DESC LIMIT 40", from, to)),
+    alerts_from: pages(await all("SELECT path AS k, COUNT(*) AS n " + E + " AND kind = 'alert' GROUP BY path ORDER BY n DESC LIMIT 30", from, to)),
+    devices: rows(await all('SELECT device AS k, COUNT(*) AS n ' + V + ' GROUP BY device ORDER BY n DESC', from, to)),
+    systems: rows(await all('SELECT os AS k, COUNT(*) AS n ' + V + ' GROUP BY os ORDER BY n DESC', from, to)),
+    opened: rows(await all('SELECT app AS k, COUNT(*) AS n ' + V + ' GROUP BY app ORDER BY n DESC', from, to)).map((r) => ({ ...r, k: { browser: 'Браузер', app: 'Установленное приложение', embed: 'Виджет на другом сайте' }[r.k] || r.k })),
+    languages: rows(await all('SELECT lang AS k, COUNT(*) AS n ' + V + ' GROUP BY lang ORDER BY n DESC LIMIT 30', from, to)),
+  };
+  return out;
+}
+
 async function route(env, req, url, ctx) {
   const path = url.pathname.replace(/\/+$/, ''), m = req.method, seg = path.split('/').slice(2);     // /api/<seg...>
   if (path === '/api/health') return { ok: true };
@@ -3121,6 +3249,8 @@ async function route(env, req, url, ctx) {
   if (path === '/api/public/transparency.json' && m === 'GET') return transparency(env);
   if (path === '/api/report' && m === 'POST') return report(env, req);
   if (path === '/api/public/hit' && m === 'POST') return hit(env, req);
+  if (path === '/api/public/ev' && m === 'POST') return ev(env, req);
+  if (path === '/api/admin/stats' && m === 'GET') return statsReport(env, req, url);
   if (path === '/api/public/products' && m === 'GET') {
     // billing: every product is one payment for a stated time; nothing renews by itself and no card or wallet is kept (a promise: /promise/)
     // Plus and the single AI passes are listed only while they are on sale (PLUS_LIVE; the passes need the AI key as well)
@@ -3504,7 +3634,8 @@ export default {
     await step('sessions', () => db(env, 'DELETE FROM sessions WHERE expires_at < ?', t).run());
     await step('resets', () => db(env, 'DELETE FROM resets WHERE expires_at < ?', t).run());
     await step('confirms', () => db(env, 'DELETE FROM confirms WHERE expires_at < ?', t).run());
-    await step('hits', () => db(env, 'DELETE FROM hit_seen WHERE day < ?', isoDay(t)).run());      // who was counted on days gone by: the hashes are kept for the day only
+    await step('hits', () => db(env, 'DELETE FROM hit_seen WHERE day < ?', isoDay(t)).run());
+    await step('stats', () => env.DB.batch([db(env, 'DELETE FROM events WHERE day < ?', isoDay(t - STATS_DAYS * DAY)), db(env, 'DELETE FROM visits WHERE day < ?', isoDay(t - STATS_DAYS * DAY))]));   // the visit statistics keep STATS_DAYS days      // who was counted on days gone by: the hashes are kept for the day only
     await step('states', () => db(env, 'DELETE FROM oauth_states WHERE expires_at < ?', t).run());
     await step('claims', () => db(env, 'DELETE FROM domain_claims WHERE expires_at < ?', t).run());
     await step('sign-ins', () => db(env, 'DELETE FROM signin_states WHERE expires_at < ?', t).run());

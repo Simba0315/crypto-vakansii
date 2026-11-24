@@ -2180,3 +2180,67 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon);
   document.addEventListener('DOMContentLoaded', soon);
 })();
+
+/* ---------- the site's own visit statistics (POST /api/public/ev in server/src/worker.js; the owner's page /stats/) ----------
+   Anonymous and without cookies: a random id for this tab in sessionStorage (gone when the tab closes), nothing else. A visit is
+   reported only after the first move of the mouse, scroll, key, touch, or 15 seconds with the tab in view, so scripts that load pages
+   without a person mostly never start one. Reported: the page, where the visit came from (the referring site and utm), the language,
+   clicks on Apply (company and the employer's host), searches and the result opened, buttons, links to other sites, job alerts asked
+   for, resumes downloaded. Never what is typed into a form or a tool. The owner's browser leaves itself out once it opens /stats/.
+   What it means for visitors is on the privacy page ("Counting visits"). */
+(function () {
+  var a = document.getElementById('hsign'), api = a ? (a.getAttribute('data-api') || '').replace(/\/+$/, '') : '';
+  if (!api || !navigator.sendBeacon || /bot|crawl|spider|headless|lighthouse|pagespeed/i.test(navigator.userAgent) || navigator.webdriver) return;
+  var ss, v, started;
+  try { if (localStorage.getItem('hrn_nostats') === '1') return; ss = window.sessionStorage; v = ss.getItem('hrn_v'); started = ss.getItem('hrn_vs') === '1'; } catch (e) { return; }
+  if (!v || !/^[a-z0-9]{8,32}$/.test(v)) {
+    v = ''; var r = new Uint8Array(10); (window.crypto || window.msCrypto).getRandomValues(r);
+    for (var i = 0; i < r.length; i++) v += ('0' + r[i].toString(16)).slice(-2);
+    try { ss.setItem('hrn_v', v); ss.setItem('hrn_vs', ''); } catch (e) {}
+    started = false;
+  }
+  var path = location.pathname, queue = [], q = new URLSearchParams(location.search), words = (q.get('q') || '').trim().slice(0, 100);
+  function beacon(d) { try { navigator.sendBeacon(api + '/api/public/ev', JSON.stringify(d)); } catch (e) {} }
+  function send(k, extra) {
+    var d = { v: v, k: k, p: path };
+    for (var x in extra) if (extra[x]) d[x] = String(extra[x]).slice(0, 200);
+    if (started) beacon(d); else queue.push(d);
+  }
+  function start() {
+    if (started) return;
+    started = true;
+    try { ss.setItem('hrn_vs', '1'); } catch (e) {}
+    var u = {}; ['source', 'medium', 'campaign'].forEach(function (n) { var x = q.get('utm_' + n); if (x) u[n] = x.slice(0, 60); });
+    var app = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone ? 'app' : 'browser';
+    beacon({ v: v, k: 'visit', p: path, r: document.referrer || '', u: u, l: navigator.language || '', m: app });
+    setTimeout(function () { queue.forEach(beacon); queue = []; }, 400);       // the visit first, then what happened before it began
+    ['mousemove', 'scroll', 'wheel', 'keydown', 'touchstart', 'pointerdown'].forEach(function (n) { removeEventListener(n, start, true); });
+  }
+  if (started) beacon({ v: v, k: 'pv', p: path });
+  else {
+    ['mousemove', 'scroll', 'wheel', 'keydown', 'touchstart', 'pointerdown'].forEach(function (n) { addEventListener(n, start, { capture: true, passive: true }); });
+    var timer = null, arm = function () { if (!document.hidden && !timer && !started) timer = setTimeout(start, 15000); };
+    document.addEventListener('visibilitychange', function () { if (document.hidden && timer) { clearTimeout(timer); timer = null; } else arm(); });
+    arm();
+  }
+  if (words) send('search', { a: words });
+  document.addEventListener('submit', function (e) { if (e.target && e.target.matches && e.target.matches('form.alertf')) send('alert'); }, true);
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('a, button, [role="button"], [data-ev]') : null;
+    if (!t) return;
+    var co = document.querySelector('.jhead .js a');
+    if (t.id === 'apply' || t.hasAttribute('data-apply')) {
+      var h = ''; try { h = new URL(t.href).hostname.replace(/^www\./, ''); } catch (x) {}
+      return send('apply', { a: t.getAttribute('data-company') || (co ? co.textContent.trim() : ''), b: h });
+    }
+    if (/^rb-(print2?|doc2?)$/.test(t.id || '')) return send('resume', { a: t.id });
+    if (t.tagName === 'A' && t.href) {
+      var url; try { url = new URL(t.href, location.href); } catch (x) { return; }
+      if (url.host && url.host !== location.host && /^https?:$/.test(url.protocol)) return send('out', { a: url.hostname.replace(/^www\./, '') });
+      if (words && /\/job\/[^/]+\/?$/.test(url.pathname)) send('pick', { a: words, b: url.pathname });
+      if (!t.hasAttribute('data-ev') && !/\bbtn\b/.test(t.className || '')) return;
+    }
+    var name = t.getAttribute('data-ev') || t.getAttribute('aria-label') || (t.textContent || '').replace(/\s+/g, ' ').trim() || t.id;
+    if (name) send('btn', { a: name.slice(0, 60) });
+  }, true);
+})();

@@ -584,3 +584,32 @@ CREATE TABLE IF NOT EXISTS work_links (
   expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS work_links_user ON work_links (user_id);
+
+-- The site's own visit statistics (ev and statsReport in src/worker.js): anonymous, no cookies, no IP address, no user agent.
+-- A visit is a random id a browser tab keeps until it is closed; it starts after the first move, scroll, touch or 15 seconds on the page.
+CREATE TABLE IF NOT EXISTS visits (
+  id TEXT PRIMARY KEY,
+  day TEXT NOT NULL,                                -- YYYY-MM-DD, UTC
+  ts INTEGER NOT NULL,
+  src TEXT NOT NULL DEFAULT '',                     -- where it came from, named for the report (Google, ChatGPT, a site's host, direct)
+  ref TEXT NOT NULL DEFAULT '',                     -- the referring host only
+  entry TEXT NOT NULL DEFAULT '',                   -- the first page
+  country TEXT NOT NULL DEFAULT '',                 -- two letters, from Cloudflare's CF-IPCountry
+  device TEXT NOT NULL DEFAULT '',
+  os TEXT NOT NULL DEFAULT '',
+  app TEXT NOT NULL DEFAULT '',                     -- browser | app (installed) | embed
+  lang TEXT NOT NULL DEFAULT '',
+  utm TEXT NOT NULL DEFAULT ''                      -- source / medium / campaign
+);
+CREATE INDEX IF NOT EXISTS visits_day ON visits (day);
+CREATE TABLE IF NOT EXISTS events (
+  visit TEXT NOT NULL,
+  day TEXT NOT NULL,
+  ts INTEGER NOT NULL,
+  kind TEXT NOT NULL,                               -- pv | apply | search | pick | btn | out | alert | resume
+  path TEXT NOT NULL,
+  a TEXT NOT NULL DEFAULT '',
+  b TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS events_day ON events (day, kind);
+CREATE INDEX IF NOT EXISTS events_visit ON events (visit, kind);
