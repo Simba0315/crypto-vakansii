@@ -2607,6 +2607,8 @@ def main():
         j["bump"] = bump_stamp(j.get("bumped") or (bought.get("bump") or {}).get("at", "")) if j["active"] else 0
         j["cover"] = (j.get("cover") or (bought.get("premium") or {}).get("cover", "")) if j["premium"] else ""
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
+        # "Remote- USA", "Dublin-Dublin, UNAVAILABLE, IE": a dash glued to the word before it and a hiring system's placeholder (24 Nov 2026)
+        j["location"] = re.sub(r",\s*UNAVAILABLE\b", "", re.sub(r"(?<=[A-Za-z])- (?=\w)", " - ", j["location"]))
         j["title"] = tidy_job_title(calm_title(j["title"]))
         # "Associate RVP, Provider Sales" was a junior role in the lists and on its page (24 Nov 2026): collect.level() knows
         # "Associate VP" and "Associate Director" but not the regional and managing variants. Mended here, not in collect.py, whose
