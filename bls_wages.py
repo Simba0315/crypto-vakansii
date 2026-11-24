@@ -139,6 +139,14 @@ ROLE = {
     "production-planner": "43-5061",
     "executive-assistant": "43-6011",
     "production-supervisor": "51-1011",
+    # 24 Nov 2026: kinds of work that got example pages of their own; each is counted inside one of the categories above
+    "nodejs-developer": "15-1252", "dotnet-developer": "15-1252", "ruby-developer": "15-1252", "kotlin-developer": "15-1252",
+    "cross-platform-mobile": "15-1252", "desktop-developer": "15-1252", "junior-software-engineer": "15-1252", "compiler-engineer": "15-1252",
+    "react-developer": "15-1254", "javascript-developer": "15-1254", "angular-vue-developer": "15-1254",
+    "sql-developer": "15-1243", "reporting-analyst": "15-2051",
+    "bookkeeper": "43-3031", "cost-accountant": "13-2011", "fund-accountant": "13-2011",
+    "benefits-specialist": "13-1141", "employee-relations": "13-1071",
+    "vulnerability-management": "15-1212", "ciso": "11-3021", "coo": "11-1021",
 }
 
 # what a reader must know about the match
@@ -149,6 +157,10 @@ NOTE = {
     "sales-representative": "The category covers people who sell services, in every industry except advertising, insurance, financial services and travel.",
     "structural-engineer": "Structural engineers are counted among civil engineers.",
     "manufacturing-engineer": "Manufacturing engineers are counted among industrial engineers.",
+    "reporting-analyst": "The government has no separate category for reporting analysts; business intelligence work is counted under this one.",
+    "sql-developer": "The government counts database developers with database architects.",
+    "ciso": "Chief information security officers are counted among computer and information systems managers.",
+    "coo": "Chief operating officers are counted among general and operations managers; chief executives are a separate category.",
 }
 
 

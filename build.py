@@ -6918,7 +6918,10 @@ def main():
                  + ([("How long postings stay up", f"Half of today’s open postings have been up more than {age_med} days" + (f"; postings that closed since we started tracking stayed up a median of {cl_med} days" if cl_med is not None else ""))] if age_med is not None else []))
         pay_step = ((f"Today’s {len(mids_):,} {e(low)} postings that state a yearly US-dollar range offer {money(mids_[len(mids_) // 4])} to {money(mids_[3 * len(mids_) // 4])} for the middle half. "
                      f"Three quarters of them offer more than the lower figure.") if len(mids_) >= 20 else
-                    "Few postings for this work state pay, so look at what similar roles near you advertise and at what your own team earns.")
+                    ((lambda g_: f"Fewer than 20 of today’s postings state a yearly US-dollar range, too few for a figure. The US government’s median for {e(g_[0].lower())}, the closest occupation it counts, is ${g_[3]:,} a year "
+                                 f"({bls_wages.PERIOD}; the lowest tenth earn under ${g_[2]:,}, the top tenth over ${g_[4]:,}): compare it with what similar roles near you advertise and what your own team earns.")
+                     (bls_wages.OCC[bls_wages.ROLE[slug_r]]) if slug_r in bls_wages.ROLE else
+                     "Fewer than 20 of today’s postings state a yearly US-dollar range, too few for a figure, so look at what similar roles near you advertise and at what your own team earns."))
         steps = ('<ol class="steps">'
                  f'<li><b>Set the pay range first.</b> {pay_step} {paid_pct}% of the postings state pay; in several US states and EU countries the law requires it.'
                  + (f' <a href="{P}/salaries/{slug_r}/">See {e(low)} pay in detail</a>.' if has_sal else "") + "</li>"

@@ -1992,6 +1992,15 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             ]),
         ]),
     "RSU (restricted stock units)": dict(
+        # figures read on IRS Publication 15 (2026), "What's New" and Section 7, 24 Nov 2026; stock is not named there, hence "many employers"
+        sections=[
+            ("A worked example: the tax on one vest", [
+                "Say 400 units vest on a day the share trades at $50. That is $20,000 of income, taxed like salary in the year it vests.",
+                "Many employers withhold federal income tax on vesting shares at the flat rate for supplemental wages, 22% in 2026, or 37% on supplemental wages above $1 million in a year (IRS Publication 15, 2026). Here that is $4,400.",
+                "Social security takes 6.2% until your 2026 wages reach $184,500 ($1,240 here) and Medicare 1.45% with no limit ($290). Together about $5,930, so roughly 119 of the 400 shares are kept back or sold to pay it and about 281 reach your account.",
+                "If your top federal rate is 32%, the 22% withheld leaves 10 points, about $2,000 on this vest, to pay when you file, plus any state income tax. Put that money aside when the shares arrive, or ask payroll to withhold more.",
+            ]),
+        ],
         qa=[
             ("Do RSUs pay dividends or give voting rights?", "Not before they vest: until then you hold a promise of shares, not shares. Some companies pay a cash amount equal to the dividends on unvested units, called dividend equivalents; the plan document says whether yours does."),
         ]),

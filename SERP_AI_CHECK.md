@@ -955,3 +955,11 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   list no longer holds Dublin, Ohio internships under the Irish flag; the last-working-day tool states this month's date and the next eleven;
   the reference page answers "reference title" (the referee's own job title, not yours).
 
+### RSU, residency CV, Node.js hiring (24 Nov 2026, night)
+- /glossary/rsu/ (88 impressions at 80): the top results explain RSU tax with a worked vest (Carta, NerdWallet, Bankrate, none readable by us). Our example uses
+  only figures read on IRS Publication 15 (2026): the 22% flat rate on supplemental wages (37% above $1M), social security 6.2% to $184,500, Medicare 1.45%.
+  Publication 15 does not name stock in its supplemental-wage section, so the page says "many employers withhold … at" that rate.
+- /cv-examples/fellowship-residency/ ("cv for residency example" 22 at 22.7): the searcher wants a doctor's CV; the example was a "Fellow" at "Example Company".
+  Now hospital posts, rotations, a sepsis audit, a first-author paper, teaching, a medical degree.
+- /how-to-hire/nodejs-developer/ ("hire node js developer" 25 at 90 and variants): skills read "Agile, SQL, Jira" because the work was not counted as technical.
+

@@ -6245,7 +6245,7 @@
    "Mentored 5 junior statisticians and co-authored 12 papers with clinical teams"
   ],
   "entry_title": "Graduate Statistician",
-  "tech": false
+  "tech": true
  },
  "reporting-analyst": {
   "title": "Reporting Analyst",
@@ -6817,7 +6817,7 @@
    "Worked with engineering to fix 95% of critical findings within 14 days"
   ],
   "entry_title": "Security Operations Analyst",
-  "tech": false
+  "tech": true
  },
  "product-owner": {
   "title": "Product Owner",
@@ -7015,7 +7015,7 @@
    "Worked with standards bodies on 2 published specifications"
   ],
   "entry_title": "Cryptography Research Intern",
-  "tech": false
+  "tech": true
  },
  "industrial-security": {
   "title": "Industrial Security Specialist",
@@ -7059,7 +7059,7 @@
    "Worked with plant managers to patch 80% of critical devices within planned shutdowns"
   ],
   "entry_title": "OT Security Analyst",
-  "tech": false
+  "tech": true
  },
  "law-enforcement": {
   "title": "Law Enforcement Liaison",
@@ -7478,5 +7478,289 @@
   ],
   "entry_title": "Operations Associate (Crypto Exchange)",
   "tech": false
+ },
+ "react-developer": {
+  "title": "React Developer",
+  "plain": "component design, state management, accessibility, web performance, testing",
+  "lines": [
+   "Rebuilt the account pages in {front:React} with {lang:TypeScript}; load time on a mid-range phone fell from 3.8 s to 1.4 s",
+   "Built a shared library of 35 components used by 4 product teams",
+   "Moved state for 20 screens to one store and ended a class of bugs that caused 15 tickets a month",
+   "Wrote 400 component tests; visual bugs reaching production fell by 60%"
+  ],
+  "entry": [
+   "Built a recipe app with 6 screens in {front:React} during a 12-week bootcamp",
+   "Fixed 25 interface bugs in a {front:React} app as a front-end intern",
+   "Rebuilt the website of a local charity, cutting its page weight from 4 MB to 900 KB"
+  ],
+  "senior": [
+   "Led a team of 5 front-end engineers on a web app with 1M monthly users",
+   "Owned the move of 120 legacy pages to {front:React} over 9 months with no downtime",
+   "Mentored 4 junior developers and set code review rules adopted by 3 teams"
+  ],
+  "entry_title": "Junior Front-End Developer",
+  "tech": true
+ },
+ "nodejs-developer": {
+  "title": "Node.js Developer",
+  "plain": "API design, asynchronous code, databases, testing, monitoring",
+  "lines": [
+   "Built 12 REST endpoints in Node.js with {lang:TypeScript} that serve 900 requests a second",
+   "Cut the slowest API response from 2.4 s to 300 ms by rewriting 8 queries in {rel:PostgreSQL}",
+   "Moved background jobs to a queue on {queue:Kafka} and ended nightly timeouts",
+   "Raised test coverage of the order service from 35% to 82%"
+  ],
+  "entry": [
+   "Built a chat server in Node.js with 3 rooms for a 10-week course project",
+   "Wrote 15 API endpoints as a back-end intern",
+   "Built a booking form backend for a local gym used by 200 members"
+  ],
+  "senior": [
+   "Led a team of 6 back-end engineers on 14 services",
+   "Owned the split of a Node.js monolith into 5 services in {cloud:AWS}",
+   "Mentored 3 engineers and cut average code review time from 2 days to 6 hours"
+  ],
+  "entry_title": "Junior Back-End Developer",
+  "tech": true
+ },
+ "dotnet-developer": {
+  "title": ".NET Developer",
+  "plain": "ASP.NET Core APIs, Entity Framework, SQL Server, unit testing, cloud deployment",
+  "lines": [
+   "Built 20 ASP.NET Core endpoints in {lang:C#} for a billing system handling $40M a year",
+   "Cut report generation time from 6 minutes to 40 seconds by tuning 10 Entity Framework queries",
+   "Moved 3 Windows services to containers in {cloud:Azure}, cutting hosting cost by 35%",
+   "Raised unit test coverage from 20% to 75% on the payments module"
+  ],
+  "entry": [
+   "Built a task tracker with ASP.NET Core and {lang:C#} in a 10-week course",
+   "Fixed 30 bugs in an internal {lang:C#} tool as a software intern",
+   "Built an inventory app for a school library with 5,000 books"
+  ],
+  "senior": [
+   "Led a team of 5 .NET developers",
+   "Owned the upgrade of 40 projects from .NET Framework to .NET 8 in 8 months",
+   "Mentored 4 developers; 2 moved to senior roles within 2 years"
+  ],
+  "tech": true
+ },
+ "ruby-developer": {
+  "title": "Ruby Developer",
+  "plain": "Rails applications, background jobs, database tuning, testing, code review",
+  "lines": [
+   "Built 18 Rails features in {lang:Ruby} for a marketplace with 300,000 users",
+   "Cut the slowest page from 3 s to 450 ms by fixing 12 N+1 queries in {rel:PostgreSQL}",
+   "Moved 9 slow tasks to background jobs and halved request timeouts",
+   "Raised test coverage of the checkout code from 48% to 90%"
+  ],
+  "entry": [
+   "Built a book-swap web app with 4 models in {lang:Ruby} during a 12-week bootcamp",
+   "Shipped 10 small Rails fixes as a web development intern",
+   "Built a volunteer sign-up site used by 120 people at a community centre"
+  ],
+  "senior": [
+   "Led a team of 5 Rails developers",
+   "Owned the upgrade of a 200,000-line Rails app across 2 major versions",
+   "Mentored 3 developers and wrote the team style guide used in 4 repositories"
+  ],
+  "entry_title": "Junior Rails Developer",
+  "tech": true
+ },
+ "javascript-developer": {
+  "title": "JavaScript Developer",
+  "plain": "front-end development, browser APIs, performance, testing, accessibility",
+  "lines": [
+   "Rewrote the search page in {lang:JavaScript}; results appear in 200 ms instead of 1.5 s",
+   "Built an interactive pricing calculator used by 50,000 visitors a month",
+   "Fixed 80 accessibility issues and passed an outside WCAG 2.2 AA audit",
+   "Cut the main script bundle from 1.2 MB to 380 KB"
+  ],
+  "entry": [
+   "Built 5 small browser games in {lang:JavaScript} in a 10-week course",
+   "Built 3 landing pages as a web development intern",
+   "Made a quiz site for a school club used by 300 students"
+  ],
+  "senior": [
+   "Led a team of 4 front-end developers",
+   "Owned the front-end performance budget for a site with 2M monthly visits",
+   "Mentored 5 junior developers through their first 6 months"
+  ],
+  "entry_title": "Junior Web Developer",
+  "tech": true
+ },
+ "kotlin-developer": {
+  "title": "Kotlin Developer",
+  "plain": "Android apps, coroutines, app architecture, testing, release management",
+  "lines": [
+   "Built 9 Android screens in {mobile:Kotlin} for an app with 500,000 monthly users",
+   "Cut app start time from 2.8 s to 1.1 s",
+   "Raised the crash-free rate from 97.5% to 99.6% in 6 months",
+   "Moved 15 network calls to coroutines and ended a class of freezes"
+  ],
+  "entry": [
+   "Built a habit tracker app in {mobile:Kotlin} with 4 screens in a 10-week course",
+   "Fixed 20 bugs in an Android app as a mobile intern",
+   "Built a schedule app for a local sports league used by 150 players"
+  ],
+  "senior": [
+   "Led a team of 4 Android engineers",
+   "Owned the move of 60 screens to a modern UI toolkit over 10 months",
+   "Mentored 3 engineers and set up weekly releases with 2 rollbacks a year"
+  ],
+  "entry_title": "Junior Android Developer",
+  "tech": true
+ },
+ "angular-vue-developer": {
+  "title": "Front-End Developer (Angular and Vue)",
+  "plain": "single-page apps, component libraries, forms, state management, testing",
+  "lines": [
+   "Built 25 screens in {front:Angular} for an internal tool used by 1,500 staff",
+   "Moved a 60-page app to {front:Vue} 3 with no downtime",
+   "Cut form errors by 40% with inline validation on 12 forms",
+   "Wrote 300 unit and end-to-end tests for the booking flow"
+  ],
+  "entry": [
+   "Built a to-do app in {front:Vue} with 5 views in a 10-week course",
+   "Built 4 admin pages in {front:Angular} as a front-end intern",
+   "Built an events calendar for a student society used by 500 members"
+  ],
+  "senior": [
+   "Led a team of 5 front-end developers",
+   "Owned the component library used by 6 apps",
+   "Worked with design and back-end leads to ship 3 major releases a year on time"
+  ],
+  "tech": true
+ },
+ "cross-platform-mobile": {
+  "title": "Cross-Platform Mobile Developer",
+  "plain": "shared mobile code, native modules, app store releases, offline support, testing",
+  "lines": [
+   "Built an iOS and Android app in {mobile:Flutter} from 1 codebase, reaching 200,000 downloads",
+   "Cut release time from 2 weeks to 3 days with automated store builds",
+   "Added offline mode for 8 screens; support tickets about lost data fell by 70%",
+   "Wrote 2 native modules for payments and the camera"
+  ],
+  "entry": [
+   "Built a weather app in {mobile:Flutter} for iOS and Android in a 10-week course",
+   "Fixed 15 bugs in a {mobile:React Native} app as a mobile intern",
+   "Built a booking app for a local barber used by 300 customers"
+  ],
+  "senior": [
+   "Led a team of 5 mobile engineers on 2 apps",
+   "Owned the move of 2 native apps to one shared codebase, cutting feature cost by 40%",
+   "Mentored 3 developers and set up a release checklist used for 50 releases"
+  ],
+  "entry_title": "Junior Mobile Developer",
+  "tech": true
+ },
+ "sql-developer": {
+  "title": "SQL Developer",
+  "plain": "query tuning, stored procedures, data modelling, ETL, reporting",
+  "lines": [
+   "Rewrote 25 slow queries in {rel:PostgreSQL}; the nightly batch fell from 5 hours to 50 minutes",
+   "Built 40 stored procedures for billing used by 3 applications",
+   "Designed a data model of 60 tables for a new claims system",
+   "Built ETL jobs that load 2M rows a day with checks on every load"
+  ],
+  "entry": [
+   "Built a database of 12 tables for a library system in a 10-week course",
+   "Wrote 30 reporting queries as a database intern",
+   "Built a member database for a sports club with 400 members"
+  ],
+  "senior": [
+   "Led a team of 4 database developers",
+   "Owned the data model of a system with 800 tables",
+   "Worked with application teams to cut database load by 45%"
+  ],
+  "entry_title": "Junior Database Developer",
+  "tech": true
+ },
+ "desktop-developer": {
+  "title": "Desktop Application Developer",
+  "plain": "desktop UI, native platform APIs, installers and updates, performance, testing",
+  "lines": [
+   "Built a desktop app in {lang:C++} for Windows and macOS used by 80,000 people",
+   "Cut memory use from 1.1 GB to 400 MB on large files",
+   "Built an auto-update system that reached 95% of users within 7 days",
+   "Fixed 120 crash reports and raised the crash-free rate to 99.5%"
+  ],
+  "entry": [
+   "Built a note-taking desktop app in {lang:Python} in a 10-week course",
+   "Fixed 20 bugs in a desktop tool as a software intern",
+   "Built a scoring app for a local chess club with 60 members"
+  ],
+  "senior": [
+   "Led a team of 5 desktop engineers",
+   "Owned the release process for 3 desktop products on 2 platforms",
+   "Mentored 3 engineers and cut build time from 40 to 12 minutes"
+  ],
+  "entry_title": "Junior Desktop Developer",
+  "tech": true
+ },
+ "compiler-engineer": {
+  "title": "Compiler Engineer",
+  "plain": "compiler optimisation, code generation, intermediate representations, testing, performance analysis",
+  "lines": [
+   "Added 6 optimisation passes in {lang:C++} that sped up benchmarks by 14% on average",
+   "Wrote a code generator for a new chip target used by 2 product teams",
+   "Fixed 90 compiler bugs found by a fuzzing setup I built",
+   "Cut compile time of a 3M-line codebase by 25%"
+  ],
+  "entry": [
+   "Built a compiler for a small language with 12 features in a university course",
+   "Fixed 10 bugs in an open-source compiler during a summer internship",
+   "Gave 2 talks on parsing to a student programming club of 40 people"
+  ],
+  "senior": [
+   "Led a team of 5 compiler engineers",
+   "Owned the optimisation roadmap of a compiler used by 200 internal teams",
+   "Worked with hardware teams to support 2 new chip generations on launch day"
+  ],
+  "entry_title": "Compiler Engineering Intern",
+  "tech": true
+ },
+ "junior-software-engineer": {
+  "title": "Software Engineer",
+  "plain": "writing and testing code, code review, debugging, version control, documentation",
+  "lines": [
+   "Shipped 30 small features in {lang:Python} in my first year, each with tests",
+   "Fixed 60 bugs from the support queue, 90% within 2 days",
+   "Wrote the onboarding guide that cut setup time for new engineers from 3 days to 1",
+   "Reviewed about 10 pull requests a week"
+  ],
+  "entry": [
+   "Built a budget tracker in {lang:Python} with 5 features in a 12-week bootcamp",
+   "Wrote 20 automated tests for a web app as a software intern",
+   "Built a website for a local food bank used by 500 visitors a month"
+  ],
+  "senior": [
+   "Led a team of 3 engineers on a new feature",
+   "Owned a service handling 100,000 requests a day",
+   "Mentored 2 interns, both offered full-time roles"
+  ],
+  "entry_title": "Software Engineering Graduate",
+  "tech": true
+ },
+ "open-source": {
+  "title": "Open Source Engineer",
+  "plain": "maintaining projects, code review, community support, release management, documentation",
+  "lines": [
+   "Maintained an open-source library in {lang:Go} with 8,000 stars and 120 contributors",
+   "Reviewed and merged about 40 community pull requests a month",
+   "Cut open issues from 600 to 150 in 6 months with triage rules",
+   "Shipped 12 releases a year with written upgrade notes"
+  ],
+  "entry": [
+   "Made 15 merged contributions to 4 open-source projects during university",
+   "Fixed 8 issues in an open-source tool as a summer intern",
+   "Wrote documentation for a community project used by 2,000 people"
+  ],
+  "senior": [
+   "Led the maintainer team of 6 for a project used by 50,000 companies",
+   "Owned the roadmap for 3 major versions and the move to a foundation",
+   "Worked with 3 companies to fund 2 full-time maintainers"
+  ],
+  "entry_title": "Open Source Contributor",
+  "tech": true
  }
 }
