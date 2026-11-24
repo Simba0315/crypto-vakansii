@@ -111,14 +111,25 @@ def city_of(location):
         first = re.split(r",| - | – |\(", p)[0].strip()
         first = re.sub(r"\s+(office|hq|headquarters|metro area|area)$", "", first)
         key = ALIAS.get(first) or _NAME.get(first)
+        # "Dublin, OH", "OH-Dublin-Cardinal Place", "London, KY": a US state written beside a city of another country is the
+        # American town of that name (24 Nov 2026: Cardinal Health's Dublin, Ohio internships were drawn on Dublin, Ireland).
+        # "Munich, DE", "Bengaluru, IN": the two letters are the city's own country.
+        if key and CITIES[key][1] != "US":
+            st_ = _US_ST.search(part)
+            if st_ and st_.group(1) != CITIES[key][1]: continue
         if key: return key
     return None
+
+
+_US_ST = re.compile(r"(?:^|[,\s(-])(?-i:(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC))(?![\w.])"
+                    r"|\b(ohio|california|virginia|pennsylvania|kentucky|texas|new hampshire|connecticut)\b", re.I)
 
 
 def test():
     assert city_of("San Francisco, CA") == "san-francisco" and city_of("New York City, NY; Remote") == "new-york"
     assert city_of("Remote - US; Hybrid- Fremont, CA") == "fremont" and city_of("Bengaluru, Karnataka, India") == "bengaluru"
     assert city_of("Cambridge, MA") is None and city_of("Remote") is None and city_of("SF office") == "san-francisco"
+    assert city_of("Dublin, OH") is None and city_of("OH-Dublin-Cardinal Place") is None and city_of("Dublin OH") is None and city_of("Dublin, Ireland") == "dublin"
     for k, (nm, cc, la, lo) in CITIES.items():
         assert -90 <= la <= 90 and -180 <= lo <= 180 and len(cc) == 2, k
         assert not (cc == "US" and not (18 <= la <= 50 and -160 <= lo <= -66)), k            # US points fall inside the US

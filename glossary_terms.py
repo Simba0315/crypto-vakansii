@@ -1954,6 +1954,8 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
         ],
         qa=[
             ("What does \"Reference\" mean in a job posting?", "A line such as \"Reference: 48213\" or \"Job ref\" is the employer’s code for the opening, not a person. Quote it in your application or email so it reaches the right hiring team."),
+            # Search Console 24 Nov 2026: "reference title meaning", 10 impressions at 8.1
+            ("What does \"reference title\" mean on an application form?", "It asks for the job title of the person you list as a reference, such as \"Engineering Manager\" or \"Head of Sales\", as it was when they worked with you. Forms usually ask next for the company and how you know them (\"Relationship\": your manager, colleague or client). It is not your own title and not the title of the job you are applying for."),
         ]),
     "Salary range": dict(
         sections=[
@@ -1968,6 +1970,30 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
                 "Search for \"equity options\" and most results are about trading. Those are listed contracts to buy (a call) or sell (a put) a stock at a set price before a date; FINRA notes that a standard contract covers 100 shares and the buyer pays a premium for it.",
                 "Stock options in a job offer are different: your employer grants them, they cannot be traded, and you earn the right to use them over time through vesting.",
             ]),
+        ]),
+    # second pass the same day (Search Console: gross and net pay 136 impressions at 56, contract 80 at 54, RSU 88 at 80): Rippling
+    # "Gross vs net pay" and Paycor's glossary entry (worked example, formulas), AIHR "Contract employee" (contract employee vs contractor)
+    "Gross and net pay": dict(
+        sections=[
+            ("A worked example and the formulas", [
+                "A $50,000 salary paid every two weeks is 26 pay periods, so gross pay is $1,923.08 a period. Take out $200 of pre-tax deductions, $300 of taxes and $50 of post-tax deductions and net pay is $1,373.08.",
+                "The formulas: for a salary, gross pay is the annual salary divided by the pay periods; for hourly work, the rate times the hours. Net pay is gross pay minus pre-tax deductions, then taxes, then post-tax deductions, in that order.",
+                "In the US the employee’s share of Social Security is 6.2% up to a yearly wage limit and Medicare is 1.45%, plus 0.9% on wages above a high-earner threshold; income tax is on top and depends on the W-4 and the state.",
+            ]),
+        ],
+        qa=[
+            ("What is the difference between gross pay and gross income?", "Gross pay is what one paycheck shows before deductions. Gross income is everything you earned in the year from all sources, before tax: wages, freelance work, interest and the rest."),
+        ]),
+    "Contract": dict(
+        sections=[
+            ("Contract employee or independent contractor", [
+                "A contract employee is employed by the company, or by an agency, for a fixed term: on payroll, with tax withheld, working the way the employer directs. An independent contractor is self-employed and decides how, when and where the work is done.",
+                "The difference matters for tax, benefits and how easily the work can end, so check which one an ad means: \"12-month contract, W-2\" is the first; \"1099\" or \"freelance\" is the second.",
+            ]),
+        ]),
+    "RSU (restricted stock units)": dict(
+        qa=[
+            ("Do RSUs pay dividends or give voting rights?", "Not before they vest: until then you hold a promise of shares, not shares. Some companies pay a cash amount equal to the dividends on unvested units, called dividend equivalents; the plan document says whether yours does."),
         ]),
 }
 for _t, _a in _ADD_24NOV.items():

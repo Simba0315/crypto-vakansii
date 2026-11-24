@@ -11,6 +11,7 @@ from collections import defaultdict
 from html import escape as _e
 
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+MONTHS_LONG = "January February March April May June July August September October November December".split()
 EXTRA = ["resume/", "for-you/", "my-jobs/"]                             # the three big tools that live on their own pages: shown first, on the hub and on the home page
 DATA_FILES = {}                                                        # data file path -> text, filled by build_tools() and written by build.py
 TILES = {}                                                             # page path -> ready tile, filled by build_tools() so the home page can show the same tiles
@@ -1513,6 +1514,17 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          ["compare-offers", "take-home-pay", "salary-converter"], ["salaries/"])
 
     # ------------------------------------------------------------ 26. last working day
+    # Search Console 24 Nov 2026: "last working day of this month", 10 impressions at 8 for this page. The date is written into the page
+    # (built every hour), with the next eleven months below it, Monday to Friday and before public holidays.
+    def _last_weekday(y_, m_):
+        d_ = (datetime.date(y_ + (m_ == 12), m_ % 12 + 1, 1) - datetime.timedelta(days=1))
+        while d_.weekday() >= 5: d_ -= datetime.timedelta(days=1)
+        return d_
+    _lwd = [_last_weekday(today.year + (today.month - 1 + k) // 12, (today.month - 1 + k) % 12 + 1) for k in range(12)]
+    _wd = lambda d_: f"{'Monday Tuesday Wednesday Thursday Friday'.split()[d_.weekday()]}, {MONTHS_LONG[d_.month - 1]} {d_.day}, {d_.year}"
+    _lwd_tbl = ('<h3>The last working day of each month</h3><div class="tablewrap"><table><thead><tr><th>Month</th><th>Last Monday-to-Friday</th></tr></thead><tbody>'
+                + "".join(f"<tr><td>{MONTHS_LONG[d_.month - 1]} {d_.year}</td><td>{_wd(d_)}</td></tr>" for d_ in _lwd)
+                + "</tbody></table></div><p>Public holidays are not taken out: if the last weekday of a month is a holiday where you work, the working day before it is the last one.</p>")
     tool("last-working-day", "seekers", "Last working day calculator",
          "The day you give notice and your notice period in weeks, months or working days give your last working day, with weekends skipped.",
          "Last Working Day Calculator by Notice Period",
@@ -1537,8 +1549,11 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<li><strong>Last working day:</strong> the day the notice ends, or the last Monday-to-Friday before it when it ends on a weekend.</li></ul>"
          "<p><strong>Public holidays are not known to this page.</strong> A holiday inside the period does not change the calendar date for weeks and months, but it shortens the days you actually work, "
          "and with a notice period counted in working days it can push the date later. The “working days left” are Mondays to Fridays with no holidays or vacation taken off. "
-         "This is date arithmetic, not legal advice: how notice is counted, and whether it must end on a particular day such as the end of a month, is set by your contract and the law where you work.</p>",
-         [("How do I count two weeks’ notice?",
+         "This is date arithmetic, not legal advice: how notice is counted, and whether it must end on a particular day such as the end of a month, is set by your contract and the law where you work.</p>" + _lwd_tbl,
+         [("What is the last working day of this month?",
+           f"{_wd(_lwd[0])} is the last Monday-to-Friday of {MONTHS_LONG[_lwd[0].month - 1]} {_lwd[0].year}; next month’s is {_wd(_lwd[1])}. "
+           "Public holidays are not taken out, so check that the day is not a holiday where you work. The table on this page lists the next twelve months."),
+          ("How do I count two weeks’ notice?",
            "Count 14 calendar days from the start of the notice period. If you give notice on a Monday and the period starts the next day, it ends on the Monday two weeks later, which leaves ten working days."),
           ("Does the day I give notice count?",
            "That depends on your contract and the rules where you work. A common way to count is from the day after notice is given, which is the setting this calculator starts with. Switch it to “the day you give notice” if yours counts that day as day one."),

@@ -935,3 +935,23 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
 - Open: Node.js page lists "Agile, SQL, Jira" as top skills and has no pay (too few postings with a range); Android page: one employer holds about half
   of the postings. Role-specific sections the helper found (native vs cross-platform, project prices for web, Rust tooling) need sourced text.
 
+### Second pass the same day: gross and net pay, contract, RSU, /cv-examples/, list titles outside the US (24 Nov 2026)
+- Search Console 19–22 Nov: gross and net pay 136 impressions at 56, contract 80 at 54, RSU 88 at 80, /cv-examples/ 106 at 34; list pages at 5–9:
+  /locations/united-states/skills/nlp/ 294, /skills/ 208, /locations/europe/ 190, /locations/united-states/ 189, /remote/ 165, /roles/cybersecurity/ 106.
+- Claude's search (helper): gross vs net is payroll vendors (ADP, Paychex, QuickBooks, Gusto, Rippling, Paycor) with worked examples and formulas;
+  contract is Upwork, AIHR, HR glossaries; RSU is Carta, NerdWallet, Bankrate, Motley Fool (none could be read); CV examples is Enhancv, Toptal,
+  Reed, university careers pages.
+- Done: gross and net pay: a worked example and the formulas (Rippling), US payroll rates; contract: contract employee vs independent contractor
+  (AIHR); RSU: dividends and voting before vesting (no figures until a source can be read); /cv-examples/: four questions (length from Enhancv UK);
+  list titles of places outside the US no longer quote a US-dollar range; every list and topic description ends on a whole sentence.
+
+### Generic queries where list pages stand 5–15 with no clicks (24 Nov 2026, evening)
+- Search Console, 28 days: "entry level jobs" 634 impressions at 5.5 (/locations/dublin/entry-level/ 441 at 5.2, /locations/lithuania/entry-level/ 167 at 5.7),
+  "virtual assistant jobs" 119 at 8.2 and "work from home jobs" 58 at 9.1 (/locations/bulgaria/remote/), "graphic design jobs" (/locations/turkey/design/),
+  "sales jobs" (/locations/amsterdam/sales-bd/), "program manager jobs" 21 at 15.6 (/roles/program-manager/), "last working day of this month" 10 at 8
+  (/tools/last-working-day/), "reference title meaning" 10 at 8.1 (/glossary/reference/). All with 0 clicks.
+- What the top results do for "<work> jobs" and "jobs in <place>" (Indeed, LinkedIn, Glassdoor): the count, then employers and titles, then pay.
+- Done: role and place descriptions lead with the searched words, the count, three employers and pay or the work hiring most; the Dublin entry-level
+  list no longer holds Dublin, Ohio internships under the Irish flag; the last-working-day tool states this month's date and the next eleven;
+  the reference page answers "reference title" (the referee's own job title, not yours).
+

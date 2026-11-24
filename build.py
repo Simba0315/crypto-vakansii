@@ -117,6 +117,13 @@ def countries_of(loc):
     if loc in _geo_cache: return _geo_cache[loc]
     found = []
     for part in re.split(r";|\||/| or | and |•", loc):
+        # "OH-Dublin-Cardinal Place", "Dublin OH": a state's two letters before a hyphen or after a space, with no comma. Cardinal Health
+        # and Labcorp internships in Dublin, Ohio stood on the Dublin (Ireland) entry-level page under the Irish flag (24 Nov 2026), the
+        # page that Google shows at 5th for "entry level jobs" in Ireland. Written as "Dublin, OH", the rules below read them.
+        m_st = re.match(r"\s*([A-Z]{2})-(?=[A-Z][a-z])", part)
+        if m_st and US_ABBR.search(", " + m_st.group(1)): part = part[m_st.end():] + ", " + m_st.group(1)
+        m_st = re.search(r"(?<=[a-z]) ([A-Z]{2})\s*$", part)
+        if m_st and US_ABBR.search(", " + m_st.group(1)): part = part[:m_st.start()] + ", " + m_st.group(1)
         named = [(c, nm) for c, nm, rx, _ in COUNTRIES if re.search(rx, part, re.I)]
         province = bool(CA_PROVINCE.search(part))
         if province and ("CA", "Canada") not in named: named.append(("CA", "Canada"))
@@ -138,6 +145,7 @@ def countries_of(loc):
     return found
 
 
+assert countries_of("OH-Dublin-Cardinal Place") == countries_of("Dublin OH") == [("US", "United States")] and countries_of("Munich DE") == [("DE", "Germany")] and countries_of("Dublin, Ireland") == [("IE", "Ireland")], countries_of("Dublin OH")
 assert countries_of("Tbilisi, Georgia") == [("GE", "Georgia (country)")] and countries_of("Atlanta, Georgia") == [("US", "United States")], countries_of("Tbilisi, Georgia")
 
 
@@ -1080,15 +1088,26 @@ def fit_desc(d):
     d = " ".join(d.split())
     if len(d) < 125:
         base = d.rstrip(".")
-        for tail in (f". Collected from official company career pages and updated every hour on {SITE}.",
-                     f". From the employer's own career page, updated every hour on {SITE}.",
-                     f". Updated every hour on {SITE}."):
+        tails_ = (f". Collected from official company career pages and updated every hour on {SITE}.",
+                  f". From the employer's own career page, updated every hour on {SITE}.", f". Updated every hour on {SITE}.")
+        if re.search(r"every hour|hourly", base, re.I):        # the line already says it (/new/, company lists): "Updated every hour" twice read as a slip
+            tails_ = ()
+        for tail in tails_:
             if len(base + tail) <= 160:
                 return base + tail
         d = base + "."
     if len(d) <= 160: return d
     k = max(d.rfind(m_, 0, 161) for m_ in (". ", "! ", "? "))
-    if k >= 79: return d[:k + 1]
+    if k >= 60:         # 60, not 79 (24 Nov 2026): "Quantitative researcher jobs: 31 open now at Crypto.com, Keyrock and GSR." is 73 long and was cut inside the next sentence
+        if k + 1 >= 110: return d[:k + 1]
+        return fit_desc(d[:k + 1])          # a short first sentence (roles, how to become): it gets the closing sentence that fits
+    # 24 Nov 2026: 813 of the 10,700 other pages (interview questions, roles, how to hire, cover letters) still ended on "…" inside a
+    # word, because their first sentence alone runs past 160. Cut at the last clause that fits (a semicolon, a colon, a comma or a dash)
+    # and close it with a full stop; only a line with no such pause loses a word.
+    c_ = max(d.rfind(m_, 0, 158) for m_ in ("; ", ": ", ", ", " – ", " — ", " ("))
+    if c_ >= 70:
+        head_ = re.sub(r"\s+(?:and|or|with|to|of|for|in|at|the|a|an)$", "", d[:c_].rstrip(" ,;:–—"))
+        return head_ + "." if len(head_) >= 109 else fit_desc(head_ + ".")
     return d[:157].rsplit(" ", 1)[0].rstrip(",.;:–—") + "…"
 
 
@@ -1932,6 +1951,31 @@ def tidy_list_desc(desc, jobs):
     return re.sub(r"\s*Updated hourly\.", "", desc).replace(", updated hourly.", ".").strip()
 
 
+def place_desc(name, js, rr):
+    """The search line of a country, region or city page (24 Nov 2026). It read "21 jobs in Lithuania. Startups and established companies
+    hiring now.": the same words on every place, nothing a searcher could not guess. Now it names the employers and the work hiring most,
+    as the top results for "jobs in <place>" do (Indeed: "Apply to Software Engineer, Analyst ...")."""
+    top = [c for c, _ in Counter(j.get("company", "") for j in js if j.get("company")).most_common(3)]
+    who = (" at " + (top[0] if len(top) == 1 else ", ".join(top[:-1]) + " and " + top[-1])) if top else ""
+    d_ = f"Jobs in {name}: {len(js):,} open now{who}."
+    if len(rr) >= 3:
+        d_ += f" Most openings: {rlow(rr[0][2])}, {rlow(rr[1][2])} and {rlow(rr[2][2])}."
+    return d_
+
+
+def role_desc(name, rj, mids, what):
+    """The search line of a kind-of-work page (24 Nov 2026). It read "319 open roles for sales leaders, straight from employers' careers
+    pages. A person in this job leads a company's or region's sales organisation and answers…": 32 of these lines were cut inside a word
+    and none named an employer or a wage. The top results for "<work> jobs" (Indeed, LinkedIn, Glassdoor) open with the count, the
+    employers and the pay, so the line does too; the plain-English meaning follows when it fits (fit_desc keeps whole sentences)."""
+    top = [c for c, _ in Counter(j.get("company", "") for j in rj if j.get("company")).most_common(3)]
+    who = (" at " + (top[0] if len(top) == 1 else ", ".join(top[:-1]) + " and " + top[-1])) if top else ""
+    pay = f", most paying {money(mids[len(mids) // 4])}–{money(mids[3 * len(mids) // 4])} a year" if len(mids) >= 15 else ""
+    head = f"{name[:1].upper() + name[1:]} jobs: {len(rj):,} open now{who}{pay}."
+    if len(head) > 150 and pay: head = f"{name[:1].upper() + name[1:]} jobs: {len(rj):,} open now{who}."
+    return head + (f" A person in this job {what}." if what else "")
+
+
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live="", faq_extra=(),
             stats=False, pics="", tail="", links=()):
     """A page that is a list of jobs. The order on its first page (sections review, 17 Nov 2026): the trail, the heading, one
@@ -1990,6 +2034,10 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             if sym_l and "$" not in title:
                 lm_l = sorted(m_ for j in jobs if (m_ := local_mid(j.get("salary"), sym_l)))
                 pay_l = f", {sym_l}{lm_l[len(lm_l) // 4] / 1000:,.0f}K–{sym_l}{lm_l[3 * len(lm_l) // 4] / 1000:,.0f}K" if len(lm_l) >= 10 else ""
+            # 24 Nov 2026: the same for every other place outside the US: "Jobs in India (17,483 open, $110K–$210K)" and "Jobs in Europe
+            # ($85K–$185K)" quoted the few postings that state US dollars, which is not what people there are paid. No local range: the month.
+            elif m_pl and "$" not in title and PLACE_CODE.get(m_pl.group(1), "") != "US":
+                pay_l = ""
             page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open{pay_l or ', ' + MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld, cls="lp")
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
@@ -3655,7 +3703,7 @@ def main():
         sk_q = next((t for t, s_ in SKILL_ROLE.items() if s_ == slug_r and t not in OPEN and t not in ("SAP", "Salesforce", "Workday", "Oracle", "HubSpot", "Zendesk", "Snowflake", "Databricks")), None)
         r_title = (lambda t1, t2: t1 if len(t1) <= 65 else t2)(f"{sk_q} Jobs ({len(rj):,} open{pay_r}): {tcase(rname)}", f"{sk_q} Jobs ({len(rj):,} open{pay_r})") if sk_q else f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r})"
         listing(f"roles/{slug_r}/", f"{sk_q} jobs" if sk_q else f"{rname} jobs", f"{r_title} | {SITE}",
-                f"{roles(len(rj), 'open role')} for {many}, straight from employers’ careers pages." + (f" A person in this job {w_}." if w_ else "") + " Remote filter, salary data, updated hourly.",
+                role_desc(sk_q or rname, rj, mids_r, w_),
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
                 trail=(("Categories", "categories/"),), feed=True, stats=True, extra=fam_line + rel(REL["role:" + slug_r], ("roles/", "All roles")), pics=mini_pics(rj) + secs[0], faq=f"{low} jobs",
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
@@ -3994,7 +4042,7 @@ def main():
                               f"led by {', '.join(c_ for c_, _ in cos_p.most_common(2))} and {cos_p.most_common(3)[2][0]}, and apply on each employer’s own page. Set a free alert on this page so new jobs reach you while they are fresh."))
         co_link = ((f"locations/{slug}/companies/", f"All {len(co_in[slug]):,} companies hiring in {short}"),) if slug in co_in else ()      # beside the page's main action
         listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {name} ({len(js):,} open) | {SITE}",
-                f"{roles(len(js), 'job')} in {name}. Startups and established companies hiring now.",
+                place_desc(name, js, rr_p),
                 js, intro_for(js, "", f" in {e(name)}", hub=True), trail=(("Locations", "locations/"),), stats=True, links=co_link, extra=rel(REL["place:" + slug], ("locations/", "All locations")), pics=hub_sections(f"roles in {name}", js, "places")[0], faq=f"jobs in {name}", faq_extra=pl_qa, feed=True,
                 hub=hub_sections(f"roles in {name}", js, "places")[1], list_title=f"Newest jobs in {name}",
                 after=every_list(f"Every list of jobs in {short}", REL["place:" + slug], (("Ways to work", r"^locations/[^/]+/(?:remote|part-time|entry-level|internships|contract)/$"),
@@ -4722,7 +4770,7 @@ def main():
         top_jobs = diverse_pairs(sorted(group, key=lambda x: -x[1][1]), 20)
         # People type "average <job> salary" and writers quote the answer: the page states it in words, as questions, and for search engines.
         best_c = sorted(((median([(lo + hi) / 2 for _, (lo, hi) in v]), k) for k, v in comp.items() if len(v) >= 3), reverse=True)[:3]
-        sal_qa = [(f"What is the average {label} salary?", f"{money(mean_)} a year on average and {money(median(mids))} at the median, across {len(mids):,} open {label} postings at companies that state pay "
+        sal_qa = [(f"What is the average {label} salary?", f"{money(mean_)} a year on average and {money(median(mids))} at the median, across {len(mids):,} open {label} postings that state pay "
                    f"({MONTH_YEAR}). The median is the better guide: a few very high offers pull the average up."),
                   ("What is the typical range?", f"The middle half of the postings offer {money(pct(.25))} to {money(pct(.75))} a year. A quarter offer less and a quarter offer more."),
                   ("Where do these figures come from?", "From the pay ranges employers print in their own job postings, read from their careers pages every hour. The midpoint of each range is counted. "
@@ -4785,7 +4833,7 @@ def main():
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in sal_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         if role:      # a kind of work, so the page can also be read as an occupation with its pay
             sal_ld += ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Occupation", "name": label,
-                "description": f"Advertised pay for {label} roles at companies, from {len(mids):,} open job postings that state a yearly range in US dollars.",
+                "description": f"Advertised pay for {label} roles, from {len(mids):,} open job postings that state a yearly range in US dollars.",
                 "mainEntityOfPage": {"@type": "WebPage", "url": f"{FULL}/salaries/{slug}/", "lastReviewed": TODAY},
                 "estimatedSalary": [{"@type": "MonetaryAmountDistribution", "name": "base", "currency": "USD", "duration": "P1Y",
                                      "percentile25": round(pct(.25)), "median": round(median(mids)), "percentile75": round(pct(.75))}]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -4796,7 +4844,7 @@ def main():
                                    f"{label} Salary: {money(median(mids))} Median ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})",
                                    f"{label} Salary: {money(median(mids))} Median", f"{label} Salary") if len(c) <= 65), f"{label} Salary")
         page(f"salaries/{slug}/", t_pick,
-             f"The average {label} salary at companies is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
+             f"The average {label} salary is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
              f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}, '
@@ -4814,7 +4862,7 @@ def main():
                         ("salaries/", "All salaries")) if (rel_s := sal_related(slug, group)) else "")
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
              + cite(f"salaries/{slug}/", f"{label} salaries",
-                    f"The median advertised salary for {label} roles at companies is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
+                    f"The median advertised salary for {label} roles is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
                     f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld, cls="sal")
     lap('a skill that shares its address with a field or a kind of wo')
     # a skill that shares its address with a field or a kind of work ("Payroll", "Procurement") leaves /salaries/<slug>/ to that page,
@@ -6103,7 +6151,13 @@ def main():
          + nums([(f"{cv_n}", "CV examples in UK format"), (f"{n_fields(cv_dir)}", "fields of work"), (f"{cv_uk:,}", "open jobs in the UK today"), ("Free", "to open in the builder, with no account")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example accountant or designer" aria-label="Find a CV example"></p>'
          f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/resume/">builder</a> works for any job.</p>'
-         + dir_sec(f"[[{cv_n} CV examples]] by field of work", cv_html, ("resume/examples/", "US resume examples"), "The number next to a name is how many jobs of that kind are open in the United Kingdom today."), cls="hub")
+         + dir_sec(f"[[{cv_n} CV examples]] by field of work", cv_html, ("resume/examples/", "US resume examples"), "The number next to a name is how many jobs of that kind are open in the United Kingdom today.")
+         # 24 Nov 2026 ("cv examples" 106 impressions at 34): the pages above it answer the questions this one had no answer to
+         + section("CV questions people ask", '<dl class="qa">' + "".join(f"<div><dt>{q_}</dt><dd>{a_}</dd></div>" for q_, a_ in (
+             ("How long should a CV be?", "Two A4 pages is the usual length in the UK. One page is enough for a school leaver or a recent graduate, and the personal statement at the top runs three to five lines."),
+             ("What is the difference between a CV and a resume?", f'In the UK, Ireland and most of Europe a CV is the document a US reader calls a resume: about two pages of experience, education and skills. In the US a CV is the long academic record used for research and teaching posts. <a href="{P}/glossary/cv/">More on the word CV</a>.'),
+             ("Can I use these CV examples for jobs in Ireland?", "Yes. Employers in Ireland read the same two-page format as in the UK."),
+             ("What if my job is not in the list?", f'Open the closest example in the <a href="{P}/resume/">free builder</a> and change the title and every line: the layout works for any job.'))) + "</dl>"), cls="hub")
     rex_html = kind_dir(rex_dir, "resume/examples", ("job", "jobs"))
     page("resume/examples/", f"Resume Examples for {len(rex_data)} Kinds of Work | {SITE}",
          f"{len(rex_data)} resume examples, each with the skills employers name in today’s open postings for that work. Open any of them in the free resume builder.",
@@ -8700,7 +8754,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     fy_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in fy_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("for-you/", f"Jobs That Match Your Skills and Pay | {SITE}",
-         f"Say what work you want, your experience, where you live and the pay you need. {n:,} open jobs are checked against your answers and the ones that fit are listed first, with the reason.",
+         f"Jobs picked for you: say the work, your level, where you live and the pay you need, and {n:,} open jobs are sorted by fit, each with the reason.",
          crumbs(("For you", "")) + f'<h1>Answer five questions and see the jobs that <span class="hl">fit you</span></h1>'
          f'<p class="lead">Reading {n:,} postings to find the twenty worth applying to takes days. Say what work you want, how much experience you have, where you live and what you need to earn. '
          'Every open job is checked against your answers, and next to each one you see what fits and what does not.</p>'

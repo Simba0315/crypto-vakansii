@@ -4248,3 +4248,14 @@ main.srch #fwrap .fx-chips .flabel{position:absolute;width:1px;height:1px;margin
   main.srch #fwrap .fx-chips>*,main.srch #fwrap .fx-chips .filters label{flex:none}
   main.srch #fwrap .fx-chips .filters{flex-wrap:nowrap}
 }
+/* ---------- 24 Nov 2026: phone tap targets. Playwright on an iPhone 13 size found 60 footer links 16px tall and up to 200 links of
+   "Every list of ..." 20px tall, 7px apart: under the 24px that WCAG 2.5.8 and Google's mobile check ask for. On touch screens each
+   becomes a 32px row; the text and the spacing between columns stay as they were. */
+@media (pointer:coarse),(max-width:700px){
+  .fcols ul{gap:0}
+  .fcols ul a{display:inline-flex;align-items:center;min-height:34px}
+  .xl li{margin:0}
+  .xl a{display:inline-block;padding:7px 0;border-bottom:0;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+  .xl a:hover{text-decoration-color:var(--ac)}
+  .steps a,.khero dt a,.lhero dt a{padding:4px 0}
+}
