@@ -48999,5 +48999,1429 @@
     "I book at least four user calls a month and protect that time like a sprint event. I also listen to two support calls a week and read every piece of feedback tagged to our area. Every couple of sprints a developer joins a call with me. After one of those, a developer rewrote an error message on the spot because she heard a user read it aloud and get confused."
    ]
   ]
+ },
+ "claims-adjuster": {
+  "heading": "Claims adjuster questions",
+  "qs": [
+   [
+    "A homeowner reports water damage. How do you decide whether the policy covers it?",
+    "Whether you read the policy in order instead of guessing from the type of loss.",
+    "Declarations, insuring agreement, exclusions, conditions and endorsements read in order, the cause of loss confirmed, and a reservation of rights if coverage is unclear.",
+    "I start with the declarations page to confirm the policy was in force and who is insured. Then I read the insuring agreement, the exclusions that fit, like gradual leaks or flood, and any endorsements. I confirm the cause on site. Once a stain looked like a sudden pipe burst, but the plumber found a slow leak over months, which that policy excluded. If coverage is unclear, I send a reservation of rights letter."
+   ],
+   [
+    "What is a reserve, and when do you change one?",
+    "Whether you see a reserve as an honest estimate that moves with the facts.",
+    "The expected total cost of the claim, set early on the best facts available and updated as soon as new information changes the picture, not at closing.",
+    "A reserve is my best estimate of what the claim will cost in the end. I set it early from the first facts and change it as soon as something material changes. On an auto injury claim I raised the reserve the same week the MRI showed a herniated disc, instead of waiting for the demand letter. Big late jumps in reserves surprise management and make the numbers hard to trust."
+   ],
+   [
+    "How do you take a recorded statement from a claimant?",
+    "Whether you get a fair, usable statement that will hold up later.",
+    "Permission on the record, date, time and names stated, open questions in time order, no leading, and a closing question about anything missed.",
+    "I tell the person why I am recording and get their permission on the recording. I state the date, time, claim number and everyone present. Then I ask open questions in time order, like where were you going and what did you see first. I don't lead or argue. At the end I ask if they want to add anything. A 20-minute statement done this way rarely needs a second call."
+   ],
+   [
+    "What is subrogation, and what do you do early on a claim to protect it?",
+    "Whether you spot recovery chances and keep the evidence that makes them possible.",
+    "Recovering paid amounts from the party who caused the loss, plus early steps: identify that party, preserve the failed part, send notice and document everything.",
+    "Subrogation is when we pay our insured and then recover that money from whoever caused the loss. On a kitchen fire I saw that a new dishwasher had started it. I told the insured to keep the unit, had it tagged and stored, and notified the manufacturer before anything was thrown away. The recovery came a year later and also returned the insured's $1,000 deductible."
+   ],
+   [
+    "Which signs make you look harder at a claim for possible fraud?",
+    "Whether you know common fraud indicators and handle them by the book.",
+    "Indicators like recent policy changes, late reporting, shifting stories or pressure to settle fast, treated as reasons to check facts and refer to the SIU, not as proof.",
+    "I watch for a policy bought or increased shortly before the loss, a story that changes between calls, missing receipts for expensive items, or strong pressure to settle fast. None of these proves fraud. When I saw three of them on an $18,000 electronics theft claim, I documented the facts and referred it to our special investigations unit, then kept handling the file fairly while they looked."
+   ],
+   [
+    "An insured is angry that their claim is partly denied and threatens to call the state insurance department. What do you do?",
+    "How you stay calm and clear when a customer escalates.",
+    "Listening first, the policy language explained in plain words, the decision put in writing, and respect for their right to complain to the regulator.",
+    "I let them finish, then walk through the exact policy wording that limits the payment and show what we are paying and why. I send the same explanation in a letter that quotes the policy section. I tell them they have every right to contact the department, and I note the call in the file. If a complaint does come in, a clear letter and a complete file usually answer it quickly."
+   ],
+   [
+    "You have 140 open files and five new losses come in after a storm. How do you organize your week?",
+    "How you prioritize a heavy caseload without missing required deadlines.",
+    "Fast first contact on new losses, unlivable homes first, deadlines checked against state rules, which vary, and an early word to the supervisor if the load is too much.",
+    "On day one I call all five new insureds, because first contact sets the tone and states set their own deadlines for acknowledging claims. Anyone who can't live in their home gets help with temporary housing that day. Then I check my diary for open files due this week and block two afternoons for inspections. If I see I will fall behind, I tell my supervisor by Wednesday, not Friday."
+   ],
+   [
+    "A contractor's estimate for a roof is $9,000 higher than yours. How do you handle it?",
+    "How you settle a scope or price dispute on facts instead of splitting the difference.",
+    "A line-by-line comparison, a joint reinspection if needed, agreement on scope before price, and clear notes on what changed and why.",
+    "I ask for the contractor's itemized estimate and compare it with mine line by line. Usually the gap is scope, not price. On one claim he had included tearing off a second layer of shingles that I had missed. We met on the roof, I confirmed it and revised my estimate. Two other items were upgrades the policy did not cover, and I explained that in writing. We settled $4,000 below his first number."
+   ],
+   [
+    "Both drivers in an auto claim say the other one ran the red light. How do you decide liability?",
+    "How you gather evidence and reach a fair liability decision.",
+    "Statements from both drivers and witnesses, the police report, photos, damage patterns and any video, with fault rules that vary by state applied to the evidence.",
+    "I take recorded statements from both drivers and any witnesses, get the police report and look at where each car is damaged. I also ask nearby businesses for camera footage right away, because it is often recorded over. On one claim a gas station video showed our insured entered on yellow. Where it stays unclear, I apply the state's fault rules, which differ by state, and explain the split in writing."
+   ],
+   [
+    "A claimant's attorney sends a policy limits demand with a 10-day deadline. What do you do?",
+    "Whether you treat time-limited demands seriously and involve the right people.",
+    "The deadline calendared at once, the supervisor told, damages and liability reviewed quickly, missing records requested in writing, and claims counsel involved early.",
+    "I put the deadline in my diary the same hour and tell my supervisor, because missing a time-limited demand can expose our insured beyond the policy limits. I review the medical records and liability to judge whether the claim is worth the limits. If records are missing, I ask for them in writing before the deadline. I involve our claims counsel early and keep the insured informed in writing."
+   ],
+   [
+    "Tell me about a claim you had to deny. How did you deliver the news?",
+    "How you give a hard answer clearly and with respect.",
+    "A phone call before the letter, the policy reason in plain words, what the person can still do, and a letter that quotes the exact policy language.",
+    "A homeowner had mold from a leak that had gone on for more than a year, and the policy excluded long-term seepage. I called her before the letter went out, explained the exclusion in plain words and went over the photos that showed the slow leak. I told her she could send more information if she disagreed. The letter quoted the exact wording. She was not happy, but she said she understood."
+   ],
+   [
+    "Describe a time you found a mistake in your own estimate after payment. What happened?",
+    "Whether you own errors and fix them quickly.",
+    "Quick disclosure to the supervisor, a correction in the file, a call to the insured, and a changed habit so it does not happen again.",
+    "After paying a water claim I noticed I had measured one bedroom at 10 by 12 instead of 12 by 14, so the insured was underpaid about $600 for flooring. I told my supervisor the same day, issued a supplement and called the insured to explain. Since then I photograph my measurements with the tape in the frame, so I can recheck them at my desk."
+   ],
+   [
+    "How do you keep good relationships with appraisers and contractors without losing objectivity?",
+    "Whether you can work closely with vendors and still make neutral decisions.",
+    "Prompt, professional contact, no gifts or favors beyond company policy, the same review standard for every vendor, and decisions based on the file.",
+    "I return calls within a day and give clear assignments, so vendors like working with me. I turn down gifts beyond what our policy allows. I review every estimate the same way, whoever wrote it. Once a body shop I trusted sent a bill with labor hours that looked high, and I questioned it like any other. They corrected it, and we still work together."
+   ],
+   [
+    "How do you keep your adjuster licenses and policy knowledge current?",
+    "Whether you take licensing and continuing education seriously.",
+    "Renewal dates and continuing education tracked for each state license, since rules vary by state, plus reading new endorsements and claim guidelines as they come out.",
+    "I hold licenses in three states, and each has its own renewal date and continuing education rules, so I track them in one spreadsheet with reminders 90 days out. I take courses on the lines I handle most, like a recent one on hail damage to roofs. When the company issues a new endorsement, I read it that week and note how it changes what I check on a claim."
+   ]
+  ]
+ },
+ "mortgage-loan-officer": {
+  "heading": "Mortgage loan officer questions",
+  "qs": [
+   [
+    "How do you explain debt-to-income ratio to a first-time buyer?",
+    "Whether you understand DTI and can explain it in plain words.",
+    "Monthly debt payments divided by gross monthly income, which debts count, and that the acceptable limit depends on the loan program and the lender.",
+    "I say it is the share of your monthly income before taxes that goes to debt payments. We add the new house payment with taxes and insurance, plus car loans, student loans and minimum card payments. If you earn $6,000 a month and those payments total $2,400, your DTI is 40%. Then I explain that the limit depends on the loan program and our guidelines, and we look at it together."
+   ],
+   [
+    "What are the main differences between conventional, FHA and VA loans?",
+    "Whether you know the major loan types well enough to match them to a borrower.",
+    "Conventional loans are not government backed, FHA loans are insured by the FHA and allow lower down payments, VA loans are for eligible veterans and service members.",
+    "A conventional loan is not backed by the government and usually needs mortgage insurance with less than 20% down. An FHA loan is insured by the Federal Housing Administration and allows a lower down payment, with its own insurance premiums. A VA loan is guaranteed by the Department of Veterans Affairs for eligible veterans and service members and often needs no down payment. I compare total cost for each borrower."
+   ],
+   [
+    "A borrower asks what a rate lock is and whether they should lock today. What do you tell them?",
+    "Whether you explain rate locks accurately without predicting the market.",
+    "A lock holds a quoted rate for a set period, the period should cover closing, extensions may cost money, and no promises about where rates will go.",
+    "I explain that a lock is our agreement to hold a specific rate and points for a set number of days, as long as the loan details stay the same. If closing slips past the lock, extending it may cost money. I don't predict rates. I show the lock periods we offer and suggest one that covers their closing date with a few days to spare. When to lock is their decision."
+   ],
+   [
+    "What does NMLS licensing mean for your work as a loan officer?",
+    "Whether you understand the licensing basics that let you originate loans.",
+    "A unique NMLS ID shown on documents, registration for bank employees or a state license for others, education and testing where required, and yearly renewal.",
+    "Every loan originator has a unique NMLS ID that goes on applications and disclosures. I work for a nonbank lender, so I need a state license in each state where I originate. That meant pre-licensing education, the national test and a background check, and I renew every year with continuing education. Rules differ by state, so before helping a borrower in a new state I confirm my license covers it."
+   ],
+   [
+    "A borrower's credit report shows a late payment from six months ago that they say was a bank error. What do you do?",
+    "How you handle a credit issue with documents instead of assumptions.",
+    "A written explanation, proof from the creditor or bank, a check of how the guidelines treat it, and no promises until underwriting reviews it.",
+    "I ask the borrower for a letter of explanation and any proof, like the bank's letter admitting the autopay error. If the creditor agrees it was their mistake, the borrower asks them to correct it with the credit bureaus, and I check with our processor whether a rapid rescore makes sense. I don't promise approval. I send the full package to underwriting and tell the borrower what we are waiting on."
+   ],
+   [
+    "Two weeks before closing, the appraisal comes in $15,000 below the purchase price. How do you help the buyer?",
+    "How you guide a borrower through a low appraisal calmly and with options.",
+    "A clear explanation of what it means for the loan, realistic options like renegotiating or more cash down, a review of the report for errors, and quick updates to both agents.",
+    "I call the buyer the same day and explain that the loan is based on the lower value, so keeping the same terms takes $15,000 more in cash. Then we go over options: the seller lowers the price, they split the gap, the buyer adds cash, or they use any contingency in the contract. If the report has factual errors, I request a reconsideration of value. I update both agents that afternoon."
+   ],
+   [
+    "A self-employed applicant's income dropped last year. How do you approach the application?",
+    "How you handle harder income files honestly and early.",
+    "Full tax returns reviewed up front, income calculated the way the guidelines require, the effect explained, and a realistic price range before they make an offer.",
+    "I ask for two years of personal and business tax returns at the start, not after they find a house. If income fell from $90,000 to $70,000, the guidelines look closely at the decline and may require the lower figure. I calculate qualifying income that way and tell them what price range it supports. It is better they hear a lower number from me now than from underwriting after an offer."
+   ],
+   [
+    "A real estate agent who sends you a lot of business asks you to adjust a borrower's numbers so the deal works. What do you do?",
+    "Whether you keep loan files honest under pressure from referral partners.",
+    "A firm no, no changes to income, assets or occupancy, a search for legitimate options, and a report to compliance if the pressure continues.",
+    "I say no and keep it simple: I won't change income, assets or how the borrower plans to use the home, because that is mortgage fraud and it puts the borrower at risk too. Then I look for honest options, like a different program, a co-borrower or a lower price. If the agent keeps pushing, I tell my manager and compliance. Losing one referral source is better than losing my license."
+   ],
+   [
+    "A borrower stops returning calls, you still need their bank statements, and closing is in ten days. What do you do?",
+    "How you keep a file moving when the borrower goes quiet.",
+    "Contact through more than one channel, an exact list of what is missing and why it matters, help from the buyer's agent, and an early warning about the closing date.",
+    "I send a short email and a text with the exact items missing: two months of checking statements, all pages. I explain that underwriting can't clear the loan without them and that the rate lock ends on the 28th. I also call the buyer's agent, who often knows what is going on. Once a borrower was simply traveling. We got the documents in two days and closed on time."
+   ],
+   [
+    "A borrower asks whether they should use their 401(k) for the down payment. How do you answer?",
+    "Whether you stay inside your role when a question touches taxes or financial planning.",
+    "How the lender would treat and document the funds, a clear note that tax effects are a question for a tax professional, and the decision left to the borrower.",
+    "I explain what the lender needs: if they withdraw or borrow from the 401(k), we document where the money came from, and I check how our guidelines treat any loan repayment. I don't tell them whether it is a good idea, because there can be taxes and penalties that depend on their situation. I suggest they talk to a tax professional or their plan administrator before deciding."
+   ],
+   [
+    "Tell me about a loan that almost did not close. What did you do?",
+    "How you solve problems and communicate under deadline pressure.",
+    "A specific problem, the steps taken, honest updates to everyone involved, and what the person changed afterward.",
+    "Four days before closing, the title search found an old contractor's lien on the seller's property. I called the title company and the seller's agent that morning. The seller paid it off and the title company had the release two days later. I kept the buyer updated each afternoon, and we closed on the original date. Since then I order title the day the purchase contract comes in."
+   ],
+   [
+    "How do you build a steady flow of borrowers without relying on one or two agents?",
+    "Whether you can build your own pipeline in a referral-driven business.",
+    "A mix of sources such as past clients, several agents and builders, regular follow-up, and marketing that goes through the company's compliance review.",
+    "I keep in touch with past clients twice a year with a short, useful note, like when it might make sense to review their loan. I work with about eight agents, not two, and I run a monthly homebuyer class at the local library. Every flyer or post goes through our compliance review first. About a third of my loans last year came from past clients and people they sent me."
+   ],
+   [
+    "How do you keep a borrower informed during a 30-day loan process?",
+    "Whether you update borrowers before they have to chase you.",
+    "A set update rhythm, milestones in plain words, same-day news when something changes, and the borrower's preferred channel.",
+    "At application I ask whether they want updates by text or email, and I send one every Monday even if nothing changed. I explain the milestones in order: disclosures, appraisal, underwriting, conditions, clear to close. When something changes, like an extra condition, I tell them that day. Most borrowers stop calling to check once they know a Monday update is coming."
+   ],
+   [
+    "What do you do when you think a borrower would be better off not buying right now?",
+    "Whether you put the borrower's long-term interest ahead of a quick loan.",
+    "Honest numbers, a clear explanation of the risk, a plan to get ready, and respect for the borrower's own decision.",
+    "I show them the numbers plainly. Last spring a couple qualified, but the payment would have left them with almost no savings after closing. I showed them what paying off a $300 car payment and six more months of saving would do. They waited, paid off the car and bought in the fall with a cushion. They have since sent two friends to me."
+   ]
+  ]
+ },
+ "hr-coordinator": {
+  "heading": "HR coordinator questions",
+  "qs": [
+   [
+    "What goes on your onboarding checklist for a new hire?",
+    "Whether you can run onboarding so nothing falls through the cracks.",
+    "Steps before day one, on day one and in the first weeks: forms, systems access, equipment, policies, benefits information and a check-in, each with an owner.",
+    "Before day one: signed offer, background check if the role needs it, equipment ordered, accounts requested and a welcome email. On day one: I-9, W-4, any state tax form, direct deposit and the handbook acknowledgment. In the first 30 days: benefits enrollment before the deadline, required training and a check-in with the manager. Each item has an owner and a date in our tracker."
+   ],
+   [
+    "When does the Form I-9 need to be completed, in general terms?",
+    "Whether you know the basic I-9 timing and handle it without overstepping.",
+    "Section 1 by the employee by the first day of work, Section 2 by the employer within three business days of the start, and no telling employees which documents to bring.",
+    "The new hire completes Section 1 no later than their first day of work. We examine their documents and complete Section 2 within three business days of the start date. I send the list of acceptable documents ahead of time but never tell people which ones to bring. I keep I-9s apart from personnel files and check our tracker every Friday so none is late."
+   ],
+   [
+    "How do you keep personnel files confidential?",
+    "Whether you protect employee records and know who may see them.",
+    "Access limited to people with a business need, medical information kept separately, secure storage, and a check with HR leadership or counsel on access requests.",
+    "Paper files stay in a locked cabinet, and in our HRIS only HR and payroll see the full record. Medical notes and leave paperwork go in a separate confidential file. When a manager asked to see an employee's whole file, I gave him the performance documents he needed and nothing else. If an employee or a lawyer asks for copies, I check with my manager, since access rules vary by state."
+   ],
+   [
+    "How do you keep data in the HRIS accurate?",
+    "Whether you treat HR data as something payroll and benefits depend on.",
+    "Changes only from approved requests, a second check on pay data, regular audits against payroll, and fixes to the cause of errors, not only the record.",
+    "Every change needs an approved form or ticket, and pay changes get a second person's review before payroll runs. Each month I compare a report of active employees with payroll and the benefits carrier file. Last quarter that found 11 people with the wrong work location, which affected their state tax withholding. We fixed them and added work location to the new hire checklist."
+   ],
+   [
+    "A manager wants a new hire to start Monday, but the background check is not back. What do you do?",
+    "Whether you follow the hiring process when a manager pushes to skip a step.",
+    "A check of company policy, a call to the screening vendor, a clear explanation to the manager, and escalation to HR leadership instead of a quiet exception.",
+    "I call the screening company first to see what is holding it up. Often it is a county court search. Then I tell the manager where it stands and what our policy says. If the offer depends on the check, the start date moves unless HR leadership approves an exception in writing. Once I moved a start date by three days, and the manager was fine once he knew the reason."
+   ],
+   [
+    "An employee asks you for a copy of a coworker's offer letter to compare pay. How do you respond?",
+    "Whether you protect other employees' records while staying helpful.",
+    "A polite refusal to share someone else's documents, no discouraging employees from talking about pay, and a route to the right person for their own pay question.",
+    "I reply that I can't share another employee's documents, the same way I would not share theirs. I don't tell them they can't talk about pay with coworkers, because that is their choice. I offer to set up a conversation with their manager or HR business partner about how their own pay was set. Then I let my manager know, in case a pay concern is coming."
+   ],
+   [
+    "Three people start on the same day and one laptop has not arrived. How do you handle day one?",
+    "How you solve practical onboarding problems without spoiling a new hire's first day.",
+    "An early equipment check, a heads-up to IT and the manager, a loaner or a schedule that starts with non-computer tasks, and follow-up until it arrives.",
+    "I check equipment two days before each start, so I would know on Thursday, not Monday. I tell IT and the manager and ask for a loaner. If none is free, I rearrange the person's day: paperwork, a building tour and team meetings in the morning, then shadowing a teammate in the afternoon. I tell the new hire honestly what happened and follow up with IT until the laptop arrives."
+   ],
+   [
+    "A manager asks you to quietly change an employee's start date in the system to last month. What do you do?",
+    "Whether you keep records accurate when asked to change them without a reason.",
+    "A question about the reason, no change without approval and documents, and a route to HR leadership or payroll if the change has a real basis.",
+    "I ask what is behind it. Sometimes there is a real reason, like a contractor who was hired as an employee, and then I need approval and documents before I touch the record. A start date affects pay, benefits eligibility and length of service, so I never change it on a verbal request. If it is not a real correction, I politely say no and tell my manager about the request."
+   ],
+   [
+    "During a routine paperwork call, an employee says their manager keeps making comments about their religion. What do you do?",
+    "Whether you recognize a possible complaint and route it correctly.",
+    "Careful listening, notes of what was said, no promise of full secrecy, a mention that retaliation is not allowed, and a same-day report to the HR manager.",
+    "I stop the paperwork and listen. I write down what they say, with dates and examples. I tell them I need to share this with our HR manager so it can be looked into, and that the company does not allow retaliation for raising it. I don't promise to keep it secret, because I can't. I pass it to my HR manager the same day and leave the investigation to them."
+   ],
+   [
+    "Open enrollment, 20 new hires and a payroll audit all land in the same month. How do you plan?",
+    "How you plan around HR's busy peaks so routine work does not slip.",
+    "One calendar of fixed deadlines, a list of what can wait, batched repeat tasks, and an early talk with the manager about priorities or help.",
+    "First I put every fixed deadline on one calendar: the enrollment window, the start dates and the audit dates. Then I group the 20 new hires into two orientation days instead of 20 separate sessions. I prepare the audit files in the first week, before enrollment questions peak. In week one I tell my manager which tasks could slip, like filing, so we agree on what waits."
+   ],
+   [
+    "Tell me about a time you found an error in an employee's paperwork after it had been processed. What did you do?",
+    "Whether you own and fix mistakes in records quickly.",
+    "A quick correction, a word with whoever is affected, notes on what changed, and a process change to stop it happening again.",
+    "A week before a new hire's first payday, I noticed two digits swapped in her direct deposit account number. I called her that day, had her confirm the right number in writing and updated it with payroll before the cutoff. She was paid on time. After that we had new hires enter their own bank details in the self-service portal instead of on a paper form."
+   ],
+   [
+    "How do you handle the same question from 40 employees during a busy week?",
+    "Whether you answer repeat questions efficiently and still kindly.",
+    "One clear written answer or FAQ, a shared place to find it, patience with each person, and a fix for whatever caused the confusion.",
+    "When 40 people asked how to find their W-2 online, I wrote a five-step guide with screenshots and posted it on the intranet. I replied to each person with the link and a short personal line. The questions dropped off within a day. Then I suggested we email the guide every January, so people have it before they need it."
+   ],
+   [
+    "Which HR systems have you used, and how do you learn a new one quickly?",
+    "Whether you can pick up the HR tools a team already uses.",
+    "Specific systems named, an example of learning one, use of vendor training and test entries, and a short guide that helps the next person.",
+    "I have used Workday and BambooHR, plus Greenhouse for hiring. When my last company moved to a new HRIS, I took the vendor training and practiced in the test site with ten fake employees before touching real data. Then I wrote a two-page guide for the most common tasks, like address changes, and the team still uses it."
+   ],
+   [
+    "What does good service to employees look like in an HR coordinator role?",
+    "Whether you see HR coordination as service to people, not only paperwork.",
+    "Quick, accurate replies, clear next steps, respect for privacy, and follow-through until the request is closed.",
+    "It means people get a reply within one business day, even if the answer is that I am checking. I tell them exactly what happens next and when. I keep their information private and close the loop when it is done. At my last job I kept a simple request log, and we cut the average time to close a request from four days to two."
+   ]
+  ]
+ },
+ "benefits-specialist": {
+  "heading": "Benefits specialist questions",
+  "qs": [
+   [
+    "How do you run open enrollment so employees make informed choices?",
+    "Whether you can plan and run open enrollment from start to finish.",
+    "Early, clear communication, plan changes explained, help sessions, reminders before the deadline, and a check that elections reach payroll and carriers correctly.",
+    "I start six weeks out with a short summary of what changed, like a higher deductible on one plan. Then I hold live sessions, record one for the night shift and send reminders at two weeks and two days. After the window closes, I check elections against payroll deductions and the carrier files. Last year that check found 14 dependents missing from a carrier file before January 1."
+   ],
+   [
+    "What counts as a qualifying life event, and how do you handle a mid-year change request?",
+    "Whether you know when employees can change benefits outside open enrollment.",
+    "Common events like marriage, birth, adoption or loss of other coverage, a check of the plan's deadline and proof rules, and a change that fits the event.",
+    "Common events are marriage, divorce, birth or adoption, and losing other coverage, like a spouse's job ending. When someone asks, I check the plan document for the deadline and the proof needed, like a marriage certificate. The change has to fit the event and the plan's rules. If they miss the plan's deadline, I explain that they usually wait for open enrollment."
+   ],
+   [
+    "How would you explain COBRA to an employee who is leaving?",
+    "Whether you can explain COBRA accurately in plain, general terms.",
+    "Continued group health coverage after events like leaving the job, usually at the full cost plus a fee, with notices and deadlines from the plan or its administrator.",
+    "I explain that COBRA may let them and their covered family keep the same group health coverage for a limited time after they leave. They usually pay the full premium, including the part we used to pay, plus a small administrative fee. Our administrator mails the election notice with the deadlines. I tell them to read it closely and compare other options, like a spouse's plan or the marketplace."
+   ],
+   [
+    "How would you explain a 401(k) employer match and vesting to a new hire?",
+    "Whether you understand 401(k) basics and can explain them without giving advice.",
+    "The match formula from the plan, the difference between their own money and employer money, the vesting schedule, and no personal investment advice.",
+    "I use our plan's numbers. We put in 50 cents for each dollar they save, on up to 6% of their pay. Their own contributions are always theirs. Our match vests over three years, so if they leave after one year, they keep only part of it. I show them where this is in the plan summary. If they ask what to invest in, I point them to the plan's education tools or a financial advisor."
+   ],
+   [
+    "An employee's claim was denied by the health insurer and they come to you upset. What do you do?",
+    "How you help employees with insurer problems while staying within your role.",
+    "Listening, a look at the explanation of benefits, a call to the carrier with permission, help with the appeal steps, and privacy for health details.",
+    "I ask them to show me the explanation of benefits and read the denial reason with them. Often it is a coding issue or a missing prior authorization. With their permission I call our carrier rep. In one case the provider had used the wrong code, and a resubmission fixed it. If it is a real denial, I explain the plan's appeal steps and deadlines. I keep health details out of email."
+   ],
+   [
+    "A new hire missed the enrollment deadline by two days and wants coverage. How do you respond?",
+    "Whether you apply plan rules consistently and explain them kindly.",
+    "A check of the dates and plan rules, no exceptions the plan does not allow, a clear explanation, and the next chance to enroll.",
+    "I check the hire date and the plan's enrollment window first, in case our notice went out late or the window started on a different date. If the deadline really passed, I can't make an exception the plan does not allow, because that causes problems with the carrier and is unfair to others. I explain this kindly and tell them about the next open enrollment and the life events that would let them enroll sooner."
+   ],
+   [
+    "An employee asks whether to pick the high-deductible plan with an HSA or the PPO. What do you tell them?",
+    "Whether you help employees compare plans without making the choice for them.",
+    "A side-by-side of premiums, deductibles and out-of-pocket maximums, worked examples for low and high use, and the decision left to the employee.",
+    "I don't choose for them, but I make the comparison easy. I show the yearly premiums, deductibles and out-of-pocket maximums for both, plus any HSA contribution from the company. Then we run two examples: a year with a few doctor visits and a year with a surgery. Seeing both totals side by side usually makes the choice clearer. For tax questions about the HSA, I suggest a tax professional."
+   ],
+   [
+    "A manager asks you why an employee has been on leave for three weeks and what is wrong with them. How do you reply?",
+    "Whether you protect medical information while giving managers what they need.",
+    "Only what the manager needs, such as the expected return date, no medical details, a short reminder about confidentiality, and help planning the work.",
+    "I reply that the employee is on approved leave and give the expected return date, which is what the manager needs to plan. I don't share the reason or any medical details, and I explain briefly that leave and medical information is confidential. Then I offer to talk through how to cover the work, like a temporary assignment. If the manager keeps pressing, I bring in my HR manager."
+   ],
+   [
+    "Payroll finds that an employee has had the wrong medical deduction for four months. What do you do?",
+    "How you investigate and fix a benefits deduction error fairly.",
+    "The cause found in elections, carrier and payroll records, a fair correction agreed with payroll, a written explanation to the employee, and a process fix.",
+    "I compare the employee's election, the carrier enrollment and the payroll setup to find where it broke. In one case a plan change never reached payroll, so we under-deducted $45 a month. I worked out the total with payroll, explained it to the employee in writing and offered to spread the catch-up over several paychecks, following our policy and state wage rules. Then we added a payroll check after enrollment."
+   ],
+   [
+    "An employee asks you whether they qualify for FMLA leave. How do you handle it?",
+    "Whether you handle leave requests through the process instead of guessing.",
+    "Eligibility checked against the rules, the required notices sent on time, state leave laws checked too, and the leave administrator or counsel asked about unclear cases.",
+    "I start the process instead of answering off the cuff. I check whether they meet the eligibility rules, such as time with the company and hours worked, and whether the reason may qualify. Then I send the required notices and certification forms on time. Many states have their own leave laws with different rules, so I check ours as well. If something is unclear, I ask our leave administrator or counsel."
+   ],
+   [
+    "Tell me about a time you explained a complicated benefit to someone who was confused or worried.",
+    "Whether you can make benefits clear to people under stress.",
+    "A specific example, plain words without jargon, a written follow-up, and a check that the person understood.",
+    "An employee whose wife was expecting their first child was worried about the cost of the birth. I sat down with him and walked through the deductible and the out-of-pocket maximum: the most they would pay in network that year was $4,000. I wrote the numbers on one page for him to take home and reminded him to add the baby within the plan's deadline. He did, and it was done in a day."
+   ],
+   [
+    "Describe a time you found a problem with a benefits carrier or vendor. How did you resolve it?",
+    "How you manage vendors and hold them to what they agreed.",
+    "A clear record of the problem, escalation through the account manager, a fix with dates, and follow-up until employees were made whole.",
+    "After a carrier change, 30 employees got ID cards with the wrong group number, and two were turned away at the pharmacy. I sent the carrier a list of every affected person and asked for corrected cards and a system fix within 48 hours. I called our account manager daily until it was done. I also gave employees a temporary coverage letter and helped the two get their money back."
+   ],
+   [
+    "How do you keep up with changes in benefits rules and plan options?",
+    "Whether you keep your knowledge current in a field where rules change often.",
+    "Regular sources such as broker updates, Department of Labor and IRS guidance and professional groups, plus checking unclear changes with the broker or counsel.",
+    "I read our broker's compliance updates each month and the Department of Labor and IRS news on benefits. I keep a list of yearly changes, like new contribution limits, and update our employee guides when they are announced. I am working toward a benefits certification. When a change is unclear for our plans, I ask the broker or our counsel instead of guessing."
+   ],
+   [
+    "How do you handle the sensitive personal information you see in benefits work?",
+    "Whether you can be trusted with employees' health and financial details.",
+    "Need-to-know sharing, secure systems instead of email for medical details, no casual talk, and quick reporting of any mistake.",
+    "I see diagnoses, family situations and salaries, and I treat all of it as need-to-know. I use our secure portal instead of regular email for anything medical, and I lock my screen when I step away. Once I sent an enrollment file to the wrong internal address. I reported it to my manager and our privacy officer within the hour, and it was deleted the same day."
+   ]
+  ]
+ },
+ "chef-cook": {
+  "heading": "Chef and cook questions",
+  "qs": [
+   [
+    "How do you keep hot food and cold food safe while it sits on the line during service?",
+    "Whether you understand temperature control for food that is being held.",
+    "Hot food kept hot and cold food kept cold, temperatures checked with a probe thermometer on a schedule and logged, and food out of range reported to the chef.",
+    "I keep hot food in the steam table at 135°F or above and cold food in the reach-in at 41°F or below, or the temperature our local code sets. I probe every pan when it goes out and every two hours after that, and write it on the log. If something has dropped out of range and I cannot tell for how long, I tell the chef and we throw it out."
+   ],
+   [
+    "How do you prevent cross-contamination between raw meat and ready-to-eat food?",
+    "Your habits for keeping raw proteins away from food that will not be cooked again.",
+    "Raw meat stored below ready-to-eat food, separate boards and knives or cleaning and sanitizing between tasks, and hand washing with a glove change when switching.",
+    "Raw proteins go on the bottom shelves of the walk-in, under produce and cooked food, so nothing can drip down. I use color-coded boards, red for raw meat and green for vegetables. If I switch tasks on the same station, I wash, rinse and sanitize the surface and change gloves. Last month I caught a new cook slicing tomatoes on the chicken board, and we started that prep over."
+   ],
+   [
+    "What do you do in the kitchen when an order comes in flagged with a food allergy?",
+    "Whether you treat allergy orders as a separate, careful process.",
+    "Checking every ingredient including sauces and labels, clean tools and surfaces, fresh gloves, no shared fryer or grill, and asking the chef when unsure.",
+    "I read the ticket and check every ingredient, including sauces, marinades and anything someone else prepped, against the label or the recipe book. I wash my hands, change gloves and use clean pans and utensils on a sanitized surface. Nothing goes in the shared fryer. If I am not sure about one item, I ask the chef before cooking, not after. Then I hand the plate to the server myself."
+   ],
+   [
+    "What does FIFO mean in a walk-in, and how do you keep it working during a busy week?",
+    "Whether you rotate stock and label food so older product is used first.",
+    "First in, first out: new deliveries go behind older stock, everything is labeled with the item and date, and expired or unlabeled food is thrown out.",
+    "FIFO means first in, first out. When a delivery comes in, I move the older product forward and put the new cases behind it. Every container I prep gets a label with the item, the date and my initials. On Mondays I check dates in the walk-in and pull anything past its use-by date. At my last job that cut our weekly spoilage from about three cases to one."
+   ],
+   [
+    "What does your mise en place look like before a dinner service, and how do you decide how much to prep?",
+    "How you organize your station and plan prep for the expected volume.",
+    "A station set the same way every time with everything in reach, and prep based on par levels, booked covers and recent sales.",
+    "I start from the prep list and the par sheet, then check how many covers are booked. On a Friday with 180 covers I prep to par plus a little extra on the fast movers. My station is set the same way every night: proteins in the lowboy, sauces left to right in plating order, towels and tongs in the same spot. If I have to look for something during service, my setup was wrong."
+   ],
+   [
+    "The printer keeps firing, you are three tickets behind, and the expo is calling for a table that is not ready. What do you do?",
+    "How you stay organized and communicate when you fall behind on the line.",
+    "Staying calm, reading the rail, giving the expo honest times, firing in order, and asking another station for help before the window falls apart.",
+    "I stop for two seconds and read the rail so I know what I have. I tell the expo the real time on that table, like four minutes, not a guess. Then I fire in order and group the same items where I can. If I am still behind, I ask the cook next to me to drop the fries or plate the sides. On a 220-cover Saturday that kept our ticket times under 15 minutes."
+   ],
+   [
+    "A plate comes back because the guest says the steak is overcooked. How do you handle it?",
+    "Whether you can take a sent-back plate without ego and fix it fast.",
+    "No arguing, a new steak fired right away with priority, a thermometer check, and a look at why it happened so it is not repeated.",
+    "I do not argue with the plate. I fire a new steak right away and tell the expo the time, usually about eight minutes for a medium-rare strip. I check the new one with a thermometer to be sure. Then I look at what went wrong. Last time it was a section of the grill that was too hot after a rush, so I moved the steaks to the cooler side."
+   ],
+   [
+    "Halfway through service you notice the walk-in cooler reads 48°F. What do you do?",
+    "Whether you act fast on an equipment problem that puts food safety at risk.",
+    "Telling the chef at once, checking food temperatures, moving the riskiest food, writing down times and readings, and letting the chef decide what to discard.",
+    "I tell the chef right away. I check whether the door was left open or the fan is iced up, then probe a few items like the dairy and raw chicken. We move the most sensitive food to the reach-ins and the other cooler. I write down the time I found it and the readings. The chef decides what is thrown out based on how long it was warm, and the manager calls the repair company."
+   ],
+   [
+    "During prep you find out the delivery is two cases of chicken short for a banquet of 150. What do you do?",
+    "How you solve a supply problem early instead of hiding it.",
+    "Telling the chef early, counting what is on hand, offering options like another supplier or a menu swap, and never quietly cutting portions.",
+    "I tell the chef as soon as I know, not at plating time. I count what we have and work out how many portions it covers. Then I bring options: a run to the restaurant supply store, borrowing from a sister kitchen, or switching some plates to the pork we have in stock. For a 150-person wedding once, we had the extra chicken in the kitchen within an hour."
+   ],
+   [
+    "You see a coworker taste a sauce with a spoon and put the same spoon back in the pot. What do you do?",
+    "Whether you speak up about food safety with a coworker.",
+    "Speaking up right away and calmly, a clean spoon, the chef deciding about the sauce, and going to the chef if it happens again.",
+    "I say something right then, quietly: grab a clean spoon, that one goes in the dish pit. Then I let the chef decide about the sauce. Most of the time it is a habit, not carelessness, so I show them the cup of tasting spoons we keep on the station. If it keeps happening, I tell the chef, because one sick guest is worse than one awkward talk."
+   ],
+   [
+    "Tell me about the last new dish you had to learn quickly. How did you get it right?",
+    "How you learn a new dish fast and keep it consistent.",
+    "Reading the recipe, a test plate for the chef, asking about plating and portion, and a station set up so the dish is fast to put out.",
+    "Last month the chef added a seared scallop special the afternoon before service. I read the recipe, asked him to walk me through the plating and portion, and made one test plate for feedback. I set up the parts in plating order and weighed the first few portions. We sold 40 that night, and I only had to adjust the sauce once, after the first plate."
+   ],
+   [
+    "Tell me about a time a dish you made did not come out right. What did you do?",
+    "Whether you own mistakes and fix them before they reach a guest.",
+    "A real example, catching it before it left the kitchen, telling the chef, and changing a habit so it does not happen again.",
+    "At a hotel banquet I salted a batch of soup for 80 twice because I did not mark the pot after seasoning. I tasted it before it went up, and it was too salty to serve. I told the chef right away. We stretched it with unsalted stock and cream, and it went out fine. Since then I put a piece of tape on the lid as soon as a pot is seasoned."
+   ],
+   [
+    "How do you keep up your pace and your standards on a double shift?",
+    "Whether you can handle long hours on your feet without letting quality slip.",
+    "Practical habits like water, a real meal, good shoes, prep done early, and the same checks on the last plate as the first.",
+    "I drink water all day and eat a real meal at family meal, not just bites from the line. I wear good shoes and change socks between shifts. I do as much prep as I can before the first service so the second one is easier. And I keep the same rules on the last plate as the first: taste it, check the temperature, wipe the rim. Twelve-hour Saturdays are normal for me."
+   ],
+   [
+    "How do you take feedback from a chef who is blunt with you in the middle of a rush?",
+    "Whether you can take direct criticism during service and keep working.",
+    "Taking the note without arguing in the moment, fixing the plate, and talking it through after service if something needs clearing up.",
+    "During service I say yes, chef, fix it and move on. A rush is not the time to discuss it. If I think the note was unfair or I did not understand it, I ask after close when things are calm. One chef told me sharply that my plating was sloppy. After service he showed me what he wanted, and within a week I was getting it right every time."
+   ]
+  ]
+ },
+ "food-service-worker": {
+  "heading": "Food service worker questions",
+  "qs": [
+   [
+    "When do you wash your hands during a shift, and how do you do it?",
+    "Whether you know when and how to wash your hands in food service.",
+    "Washing at the hand sink with soap and warm water for about 20 seconds: at the start, after the restroom, trash or raw food, after touching the face, and before new gloves.",
+    "I wash at the start of my shift, after the restroom, after taking out trash or touching raw food, after touching my face or phone, and every time before I put on new gloves. I use the hand sink only, never the prep sink, with soap and warm water, and scrub for about 20 seconds before drying with a paper towel. On a breakfast shift that can be 15 times or more."
+   ],
+   [
+    "Do gloves replace hand washing? When do you change them?",
+    "Whether you know gloves are not a substitute for clean hands.",
+    "Gloves go on clean hands and get changed when torn or dirty, when switching tasks, after raw food, and after touching money, trash or the face.",
+    "No. Gloves go on after I wash my hands, not instead of it. I change them when they tear, when I switch from raw food to ready-to-eat food, after I touch trash, money or my face, and when I have been on one task for a long time. At the deli station I go through several pairs an hour at lunch, and that is normal."
+   ],
+   [
+    "What is the difference between cleaning and sanitizing a surface?",
+    "Whether you know the two steps and why both are needed.",
+    "Cleaning removes food and dirt; sanitizing reduces germs to a safe level. Clean first, then sanitize at the right strength, checked with test strips.",
+    "Cleaning takes off the food, grease and dirt with soap and water. Sanitizing kills most of the germs that are left, and it only works well on a surface that is already clean. So I wash, rinse, then sanitize. I check the sanitizer bucket with a test strip at the start of the shift and change it when it gets cloudy or tests weak, usually every couple of hours."
+   ],
+   [
+    "A customer asks if the cookies have nuts in them. How do you answer?",
+    "Whether you handle allergen questions carefully and never guess.",
+    "No guessing: checking the label or ingredient list, asking a cook or supervisor, and being honest about shared equipment.",
+    "I never guess. I check the label or the ingredient binder we keep at the register. If the cookies are baked in house, I ask the cook about the recipe and whether they were baked on the same trays as anything with nuts. If I cannot be sure, I tell the customer I cannot promise they are nut-free. Last week that happened with a muffin, and the customer thanked me for being honest."
+   ],
+   [
+    "The lunch line is 30 people long and the hot food pan is almost empty. What do you do?",
+    "How you keep service moving and food stocked during a rush.",
+    "Calling for a refill early, swapping whole pans instead of adding new food on top of old, keeping portions steady, and telling people about the wait.",
+    "I call back to the kitchen for a new pan before the old one runs out, ideally when it is a third full. When the new pan comes, I swap the whole pan instead of pouring fresh food on top of the old. I keep the same portion size even when the line is long. If there is a wait, I tell people it will be about two minutes, so they can choose something else."
+   ],
+   [
+    "You notice the salad bar feels warm and its thermometer reads higher than it should. What do you do?",
+    "Whether you act on a temperature problem instead of ignoring it.",
+    "Telling the supervisor right away, checking the food with a probe, moving food to a working unit, and letting the supervisor decide what to throw out.",
+    "I tell my supervisor right away and check the food itself with a probe thermometer. If it is above 41°F, or the temperature our local code sets, I move it to the walk-in or a working unit and put a sign on the bar. The supervisor decides what gets thrown out based on how long it was warm. I write down the time and the readings on the temperature log."
+   ],
+   [
+    "A student in the dining hall tells you the food made them sick last time. What do you do?",
+    "How you handle a possible foodborne illness report calmly and correctly.",
+    "Listening without arguing, taking it seriously, getting the details, and passing it to the manager who handles reports.",
+    "I listen and do not argue or promise anything. I say I am sorry they felt sick and that I want to pass it on properly. I write down what they ate, when they ate it, and how they can be reached. Then I give it to my manager right away, because the manager decides whether the health department needs to know. I do not guess about the cause."
+   ],
+   [
+    "A coworker comes in with vomiting and diarrhea because they cannot afford to miss a shift. What do you do?",
+    "Whether you know sick workers should not handle food and will speak up.",
+    "Telling the person kindly that they should not work with food while sick, and telling the supervisor so they can be sent home.",
+    "I tell them kindly that they should not work with food with those symptoms, because it can make dozens of people sick. Then I tell the supervisor, who decides whether to send them home. I understand the money worry, so I offer to swap a shift with them later in the week. Keeping a whole dining hall healthy matters more than one shift."
+   ],
+   [
+    "You drop a tray of plates in the dining room during a busy meal. What do you do?",
+    "How you handle breakage safely while service goes on.",
+    "Keeping people away from the glass, a broom and wet floor sign, a quick and safe cleanup, and checking that no food near it was contaminated.",
+    "First I make sure nobody is hurt and ask people to step around it. I put out a wet floor sign and use the broom and dustpan, never my hands, for broken china. If any pieces flew toward the serving line, I tell the supervisor so we can check and replace food that may have glass in it. It takes about five minutes, then I go back to clearing tables."
+   ],
+   [
+    "A catered lunch for 200 starts in one hour and the van with the hot food has not arrived. What do you do?",
+    "How you stay useful and calm when an event is running late.",
+    "Telling the lead right away, finishing everything that can be set without the food, and keeping the client informed through the lead.",
+    "I tell the event lead right away and let them call the kitchen or the driver. While we wait, I finish everything that does not need the food: tables, linens, chafing dishes, utensils, drinks and signs. I light the chafing fuel only when the food is close so it is not wasted. Last fall the van came 20 minutes late, and because the room was ready we still served on time."
+   ],
+   [
+    "Tell me about a time a customer was angry that their order was wrong. What did you do?",
+    "How you stay calm and fix a problem with an upset customer.",
+    "Staying calm, apologizing, fixing the order quickly, and calling a supervisor if the person stays abusive.",
+    "At a hospital coffee shop a visitor got a sandwich with cheese he had asked us to leave off, and he started yelling at the counter. I kept my voice low, said sorry and remade it right away, ahead of the line. He calmed down once he saw it was being fixed. If someone keeps yelling or uses insults, I call my supervisor to take over."
+   ],
+   [
+    "Tell me about a time you noticed something unsafe in a kitchen or serving area and spoke up.",
+    "Whether you act on safety problems even when it is not your task.",
+    "A specific example, fixing it or speaking up, telling the right person, and what changed afterward.",
+    "At my last job a coworker propped the walk-in door open with a milk crate during a delivery and left it for almost an hour. I closed it, checked the thermometer, and told the shift lead. The readings were still fine. After that the lead set a rule that the door closes between trips. Nobody got in trouble, and it did not happen again."
+   ],
+   [
+    "Which part of food service do you like best: the serving line, prep, dish or catering events?",
+    "Whether you know the work and where you will do your best.",
+    "An honest preference with a reason, plus a willingness to work any station when the team needs it.",
+    "I like the serving line best because I enjoy talking with people, and I am fast and steady with portions. I have also done dish and prep, and I do not mind them. At my last job I covered dish two days a week when we were short. I would rather the team run smoothly than stick to one station."
+   ],
+   [
+    "How do you use the slow time between meal periods?",
+    "Whether you find useful work without being told.",
+    "Cleaning and sanitizing, restocking, checking dates and labels, and helping prep for the next meal.",
+    "Between breakfast and lunch I clean and sanitize my station, restock cups, lids and napkins, and check dates on what is in the cooler. Then I ask the cook what prep I can help with, like cutting fruit or setting up the salad bar. I keep a short list in my head so I am not standing around. On a slow day that is about an hour of work."
+   ]
+  ]
+ },
+ "janitor-cleaner": {
+  "heading": "Janitor and cleaner questions",
+  "qs": [
+   [
+    "Why should you never mix bleach with ammonia or other cleaners?",
+    "Whether you know that mixing chemicals can create toxic gas.",
+    "Bleach mixed with ammonia or acid cleaners can release toxic gases. One product at a time, labeled bottles, and rinsing between products.",
+    "Bleach mixed with ammonia, or with acid cleaners like some toilet bowl cleaners, can give off toxic gases that hurt your lungs. So I never mix chemicals, I use one product at a time, and I rinse the surface before switching. I keep every product in its labeled bottle. If someone mixes something by mistake, I get everyone out, open doors if it is safe, and call my supervisor."
+   ],
+   [
+    "What do you look for on a safety data sheet before using a new chemical?",
+    "Whether you know how to read a safety data sheet and use it.",
+    "The hazards, the protective gear needed, first aid steps, safe storage, and spill cleanup, plus knowing where the sheets are kept.",
+    "I check the hazards first, then what gear I need, like gloves or goggles. I read the first aid section so I know what to do if it splashes in my eyes, and how to clean up a spill and store it. Our binder of sheets is in the supply closet on the second floor, and I know where it is before I open any new product. If something is unclear, I ask my supervisor."
+   ],
+   [
+    "How do you mop a busy hallway without someone slipping?",
+    "Whether you know how to keep people safe around wet floors.",
+    "Signs out before starting, mopping one half at a time to leave a dry path, low-traffic times when possible, and signs left until the floor is fully dry.",
+    "I put wet floor signs at both ends of the hallway before I start. I mop one side at a time so people have a dry path, and I try to do it when traffic is low, like after 7 p.m. in an office. I wring the mop well so I do not leave puddles. The signs stay out until the floor is fully dry, not just mostly dry, and then I pick them up myself."
+   ],
+   [
+    "Walk me through how you clean a public restroom.",
+    "Whether you clean in an order that avoids spreading germs.",
+    "Sign out and gloves on, trash and restocking, top to bottom and clean to dirty, separate cloths for toilets, the label's contact time, and floors last.",
+    "I put out the closed sign and put on gloves. I empty the trash and restock paper and soap first. Then I go from top to bottom and from cleaner areas to dirtier ones: mirrors, sinks and counters, then toilets and urinals with their own color of cloth. I let the disinfectant sit for the time on the label. The floor is last, working toward the door. A six-stall restroom takes me about 20 minutes."
+   ],
+   [
+    "You find a used needle in a trash can while emptying it. What do you do?",
+    "Whether you handle sharps safely and follow procedure.",
+    "Not touching it with bare hands, not pushing the trash down, using the sharps procedure and container, and reporting it.",
+    "I stop and do not reach in or push the bag down. I tell my supervisor and follow our sharps procedure: heavy gloves and tongs, and the needle goes into a sharps container, never the regular trash. I never try to recap it. Then I write down where it was found. That is also why I always hold trash bags away from my body and never press them down with my hands."
+   ],
+   [
+    "Someone reports a spill of an unknown liquid in a hallway. What do you do?",
+    "Whether you are careful with a spill you cannot identify.",
+    "Blocking off the area, not touching it until it is identified, checking with the supervisor, and using the right kit and gear.",
+    "I block the area with cones or wet floor signs so nobody walks through it. I do not touch it or smell it up close until I know what it is. I ask around and call my supervisor. If it turns out to be a chemical, we check the safety data sheet and use the spill kit and gloves. If it is just coffee, I clean it up and dry the floor. Either way, the signs stay until it is dry."
+   ],
+   [
+    "You are behind schedule with four floors left and one hour until the building opens. What do you do?",
+    "How you set priorities when there is not enough time.",
+    "Restrooms, trash, break rooms and entrances first, telling the supervisor what will be skipped, and writing it down for the next shift.",
+    "I do what matters most first: restrooms, trash, break rooms and the lobby, because those affect health and are what people see first. Vacuuming low-traffic offices and dusting can wait a night. I text my supervisor so they know what will be skipped. I write it down so it is done first the next shift. It has happened maybe twice in a year, usually after an event on a floor."
+   ],
+   [
+    "While cleaning an office at night, you see a laptop left open and papers on a desk. What do you do?",
+    "Whether you respect privacy and property in the places you clean.",
+    "Cleaning around private things without reading them, putting anything moved back exactly, and following the client's rules on reporting.",
+    "I clean around them and do not read anything or touch the laptop. If I have to move papers to dust, I put them back exactly where they were. Some clients want open offices or unlocked cabinets reported, so I follow the building's rule and note it on the shift log. People trust us with their spaces at night, and that trust is a big part of the job."
+   ],
+   [
+    "A client in a home you clean asks you to also clean the oven, which is not on the work order. What do you say?",
+    "How you handle extra requests outside the agreed work.",
+    "Being polite, checking with the office about scope and cost, and not doing unapproved work that delays the rest of the day.",
+    "I say I am happy to check. I call or text the office to see if it can be added today and if there is an extra charge. If they approve and I have the time, I do it. If not, I tell the client the office will call to schedule it. Once I did an oven without asking and ran 45 minutes late for my next house, so now I always check first."
+   ],
+   [
+    "During your rounds you notice a loose handrail in a stairwell. What do you do?",
+    "Whether you report safety hazards instead of walking past them.",
+    "Reporting it right away with the exact location, marking the hazard if possible, and following up to make sure it was fixed.",
+    "I report it right away to my supervisor or the building engineer, with the exact stairwell and floor, and a photo if that is allowed. If it looks like it could fail, I put a cone or caution tape at the top until maintenance comes. I write it on my shift log. The next night I check whether it was fixed, and if not, I report it again."
+   ],
+   [
+    "How do you make sure your work is consistent when no one is checking it?",
+    "Whether you keep your own standards on night or solo shifts.",
+    "Working from a checklist, a last walk-through, and treating each area as if the client will inspect it in the morning.",
+    "I work from a checklist for each floor and tick things off as I go. Before I leave, I do a last walk-through and look at what people notice: mirrors, sink counters, trash cans and the corners of the floors. I clean as if the client will walk in first thing, because sometimes they do. At my last building we went 11 months without a single complaint ticket."
+   ],
+   [
+    "Tell me about a time a client or tenant complained about your cleaning. How did you respond?",
+    "How you take criticism and fix the problem.",
+    "Listening, no excuses, a quick fix, and a change in routine so it does not happen again.",
+    "An office manager said the conference room tables were sticky in the mornings. I did not argue. I found out the polish I was using left a film, so I switched to the right cleaner and wiped the tables twice that week. I left a note asking her to tell me if it was better. She said it was, and later she asked for me by name."
+   ],
+   [
+    "Which kind of building do you prefer to clean: offices, hotels, schools or homes? Why?",
+    "Whether you know what each setting demands and where you fit best.",
+    "An honest answer with a reason, a clear picture of what that setting demands, and flexibility to work elsewhere.",
+    "I prefer offices on the night shift. I like working on my own with a clear route, and I know what each floor needs. I have also cleaned hotel rooms, about 14 rooms a shift, which is faster and more detailed. I have done summer deep cleans in schools too. I can work anywhere, but offices are where I am most efficient."
+   ],
+   [
+    "How do you look after your body in a job with a lot of lifting, bending and walking?",
+    "Whether you work safely so you stay healthy and reliable.",
+    "Lifting with the legs, using carts and the right tools, asking for help with heavy loads, and reporting even small injuries.",
+    "I lift with my legs and keep loads close to my body. I use the cart and long-handled tools instead of bending over all night. For anything heavy, like full trash bins or furniture, I ask a coworker or use a dolly. I stretch before my shift. In six years I have not missed work from an injury, and I report even small strains so they are written down."
+   ]
+  ]
+ },
+ "hotel-guest-services": {
+  "heading": "Hotel and guest services questions",
+  "qs": [
+   [
+    "The hotel is oversold and a guest with a confirmed reservation arrives after the last room is gone. How do you handle it?",
+    "Whether you know how to relocate a guest with care and follow hotel policy.",
+    "An apology away from the line, the truth told plainly, a comparable nearby room and transport arranged per policy, and a follow-up.",
+    "I apologize and explain it quietly, away from the line. Following our policy, I have already called nearby hotels earlier in the evening, so a comparable room is ready. We pay for that night and the taxi, and I offer to bring them back the next day with a note to the manager. Last summer I relocated three guests in one night, and two of them came back to stay with us."
+   ],
+   [
+    "A caller says he is a guest's husband and asks for her room number. What do you do?",
+    "Whether you protect guest privacy and safety.",
+    "Never giving out a room number or confirming who is staying, and offering to connect the call or take a message instead.",
+    "I do not give out room numbers or even confirm that someone is staying with us. I say I can connect the call if there is a guest by that name, or take a message. If he comes to the desk, the same rule applies. A guest's safety can depend on it. If he gets pushy or upset, I tell the manager on duty and, if needed, security."
+   ],
+   [
+    "A guest at the desk says she lost her key card and asks for a new one. What do you check first?",
+    "Whether you follow room key security.",
+    "Checking photo ID against the registration before making a key, never saying the room number out loud, and making a new key that cancels the old one.",
+    "I ask for her photo ID and check it against the name on the room. If she is not on the registration, I do not make a key, even if she knows the room number. I write the number on the key sleeve instead of saying it out loud in the lobby. I make a new key that cancels the old one, in case the lost card was stolen. It takes a minute, and most guests thank us for it."
+   ],
+   [
+    "How do you offer a room upgrade without sounding pushy?",
+    "Whether you can upsell politely and honestly.",
+    "Listening first, offering one upgrade that fits the guest with the price said clearly, and taking a no without pressure.",
+    "I listen first. If a guest mentions it is their anniversary or that they will work in the room, I offer one upgrade that fits, like a king with a view or a room with a desk, and I say the price per night clearly. I ask once. If they say no, I move on with a smile. At my last hotel I upsold about four rooms a week that way, and nobody complained of being pushed."
+   ],
+   [
+    "What does a good check-in include, from hello to handing over the keys?",
+    "Whether you know the steps of a smooth, accurate check-in.",
+    "A warm greeting, confirming dates, room type and rate, ID and payment with the hold explained, the key facts of the stay, and a question about special requests.",
+    "I greet the guest by name if I have it and confirm the dates, room type and rate. I check ID and the card for incidentals and explain the hold amount. I tell them the three things they will want: Wi-Fi, breakfast hours and checkout time. Then I ask if they need anything, like extra pillows or a late checkout. A smooth check-in takes me about three minutes."
+   ],
+   [
+    "A guest calls the front desk at 2 a.m. to complain about loud noise from the next room. What do you do?",
+    "How you handle a noise complaint fairly and calmly.",
+    "Apologizing, contacting the noisy room or sending security, calling the guest back, and offering a room move if the noise does not stop.",
+    "I apologize and tell the guest I am on it. I call the noisy room first and ask politely to keep it down. If it continues, security goes up to knock. Then I call the guest back within about 15 minutes to see if it stopped. If not, I offer a room move, and I note it so the manager can decide about a gesture in the morning."
+   ],
+   [
+    "A guest arrives at noon and asks to check in early, but no rooms of that type are ready. What do you do?",
+    "How you balance a guest request with what housekeeping can deliver.",
+    "An honest time, asking housekeeping for a priority room, storing luggage, and contacting the guest when the room is ready.",
+    "I ask housekeeping if a room can be done first and give the guest an honest time, like 1:30 instead of 3. I store their bags, give them the Wi-Fi password and point them to the restaurant or the pool. I take their cell number and text them when the room is ready. If another room type is ready now, I offer it at the same rate if my manager approves."
+   ],
+   [
+    "A guest is upset about a charge on the bill they say they did not make. How do you handle it?",
+    "Whether you look into billing disputes fairly and calmly.",
+    "Listening, going through the folio and the source of the charge, adjusting within your authority, and explaining clearly.",
+    "I listen and go through the folio with them line by line. If it is a restaurant charge, I pull up the signed check. If it is the minibar, I ask housekeeping when it was recorded. If it looks like our mistake, I take it off within my limit and apologize. If it is above my limit, I call the manager. Last month a $40 minibar charge turned out to belong to another room."
+   ],
+   [
+    "A housekeeper tells you a guest has had the Do Not Disturb sign up for three days. What do you do?",
+    "Whether you follow welfare check rules and take guest safety seriously.",
+    "Checking the guest's notes, calling the room, then a manager and security checking in person per policy, with respect for privacy.",
+    "I check the notes first to see if the guest asked not to be disturbed during a long stay. Then I call the room. If there is no answer, I tell the manager on duty, and the manager and security do a welfare check in person, following our policy. Most of the time the guest is fine and just wants privacy. Once in a while a guest needs help, so we do not skip it."
+   ],
+   [
+    "During the evening rush, with eight people in line, a family asks for a crib, extra towels and a late checkout. What do you do?",
+    "How you handle several requests at a busy time without losing track.",
+    "Writing requests down, sending them to the right department at once, giving a realistic time, and confirming they were done.",
+    "I write all three down while they talk. Late checkout I can answer right away, so I give them noon or 1 p.m. based on how full we are. The crib and towels go to housekeeping through the system at once, with the room number, and I tell the family about 20 minutes. Once the line clears, I call the room to confirm everything arrived."
+   ],
+   [
+    "Tell me about a time you turned around a guest's bad experience.",
+    "How you recover a stay after something went wrong.",
+    "A specific story, listening and taking ownership, a fix that fits the problem, and a follow-up.",
+    "A guest's air conditioning broke on a 95-degree night, and she came down furious. I apologized, moved her to a room on another floor within ten minutes, and sent up water and fruit. The next morning I called to check on her and, with my manager's approval, took one night off her bill. She mentioned me by name in her review."
+   ],
+   [
+    "How do you keep your patience at the end of a long shift with a demanding guest?",
+    "Whether you stay friendly and professional when you are tired.",
+    "Practical ways to stay calm, not taking it personally, and knowing when to ask a coworker or manager for help.",
+    "I remind myself the guest does not know it is my ninth hour, and the problem is real to them. I slow down, listen and repeat back what they need. If I feel myself getting short, I ask a coworker to cover for two minutes or bring in the manager. Then I write a clear handover for the next shift so nothing gets lost."
+   ],
+   [
+    "Tell me about a time you made a mistake with a reservation. What happened?",
+    "Whether you own errors and fix them before they reach the guest.",
+    "An honest example, how it was caught and fixed, and a change in routine to prevent it.",
+    "I once booked a guest for the wrong dates, Friday to Sunday instead of Thursday to Saturday. I caught it when I ran the arrivals report the day before. I called him, fixed the booking and kept the same rate. Since then I read the dates back to every caller before I end the call. It adds ten seconds and has saved me more than once."
+   ],
+   [
+    "What does good teamwork between the front desk and housekeeping look like to you?",
+    "Whether you work well with the department that gets rooms ready.",
+    "Early, accurate updates on arrivals and room status, respect for housekeepers' time, and quick action on problems they report.",
+    "It means I tell housekeeping early which guests are arriving early or have special needs, so they can plan. I keep the room status accurate and never send a guest to a room that has not been inspected. On a heavy day with 180 departures, I bring them coffee and thank them. When they flag a problem, like a broken lamp, I put in the maintenance request right away."
+   ]
+  ]
+ },
+ "mental-health-counselor": {
+  "heading": "Mental health technician and counselor questions",
+  "qs": [
+   [
+    "A patient on the unit is pacing, shouting and moving toward a staff member. How do you de-escalate?",
+    "Whether you know the basics of verbal de-escalation and keep everyone safe.",
+    "A calm voice, space and a clear exit, one person talking, listening for the need behind the anger, and calling for the team early as the unit's protocol says.",
+    "I keep my voice low and stand at an angle, about two arm lengths away, with the door behind me. One person talks, so I ask others to step back. I use the patient's name and ask what happened. Once a man was angry about a missed phone call to his mother. I offered to set up the call in 10 minutes, and he sat down. If it escalates, I call for the team as our protocol says."
+   ],
+   [
+    "A client says, almost in passing, that sometimes they wish they would not wake up. What do you do?",
+    "Whether you take passing comments about death seriously and act on them.",
+    "Asking directly about suicidal thoughts, staying with the person, following the safety protocol, telling the clinician or supervisor at once, and documenting.",
+    "I do not let it pass. I sit down and ask plainly: are you thinking about killing yourself? Asking does not put the idea in their head. I ask if they have a plan or access to means. Then I follow our safety protocol, which here means staying with them and telling the nurse or clinician on duty at once. I write down their exact words and what I did."
+   ],
+   [
+    "How do you explain confidentiality and its limits to a new client?",
+    "Whether you set clear expectations about privacy from the first meeting.",
+    "Plain words at the first session: what stays private, the general exceptions such as serious risk of harm or abuse, that rules vary by state, and a check the client understood.",
+    "In the first session I say that what they tell me stays private, with a few exceptions. If I believe they or someone else is in serious danger, or a child or vulnerable adult is being harmed, I have to act. A court can also order records. I explain that the exact rules depend on state law and our policy, and I give them the written notice. Then I ask them to say it back in their own words."
+   ],
+   [
+    "What goes into a useful progress note after a session or a shift?",
+    "Whether your documentation is factual, timely and useful to the next person.",
+    "Objective observations, the client's own words in quotes, what you did and how they responded, any risk and the action taken, written promptly in the setting's format.",
+    "I write what I saw and heard, not my opinion. So I write that the patient stayed in his room for 3 hours and said “I don't see the point,” not that he seemed depressed. I note what I did, how he responded, any risk and who I told. I use our format, often DAP or SOAP, and finish my notes before I leave, because memory fades by the next day."
+   ],
+   [
+    "A client arrives at group clearly under the influence. How do you handle it?",
+    "How you protect the group while treating the client with respect.",
+    "A private, calm talk, a safety and medical check, following program policy on taking part, no shaming, and a note and handoff to the clinician.",
+    "I do not confront them in front of the group. I ask them to step out with me and check that they are safe, including whether they drove. If they seem very sedated, I get medical help. Our policy was that they could not join group that day, so I said that calmly and told them we wanted them back tomorrow. I told the clinician and documented what I saw."
+   ],
+   [
+    "A mother calls and asks how her adult son is doing on the unit. What do you say?",
+    "Whether you protect privacy while staying kind to worried families.",
+    "Not confirming anything without a signed release, explaining why kindly, offering to pass on a message, and checking the release in the chart per policy.",
+    "Without a signed release I cannot even confirm he is here, so I say that kindly: I'm sorry, privacy rules mean I can't share whether someone is a patient. I take her name and number and offer to pass on a message. Then I check the chart. If he has signed a release for his mother, I share only what it allows. I note the call either way."
+   ],
+   [
+    "A patient refuses to attend group and says the whole program is useless. What do you do?",
+    "How you engage a resistant patient without a power struggle.",
+    "Curiosity about the reason, respect for the patient's choice, a small next step, and letting the treatment team know, instead of arguing or forcing.",
+    "I ask what makes it feel useless instead of arguing. One woman told me group made her relive her trauma in front of strangers. That was fair. We agreed she would sit in for 15 minutes and only listen. I passed her concern to her therapist, who adjusted her plan. A week later she was speaking in group. Forcing her would have ended that."
+   ],
+   [
+    "During a routine safety check you find a patient's room and bathroom empty. What do you do?",
+    "Whether you act fast and follow procedure when a patient may be missing.",
+    "An immediate alert to the charge nurse, a search as the protocol says, following the missing patient procedure, and exact times in the notes.",
+    "I tell the charge nurse right away, not after looking around for 10 minutes. Then I follow our missing patient procedure: we check the unit, the common areas and the exits, and call security if the patient is not found. I give the time I last saw them and what they were wearing. Afterward I document the times and actions exactly as they happened."
+   ],
+   [
+    "A client tells you their partner hits their young child. How do you handle it?",
+    "Whether you know your mandated reporting duty and follow the process.",
+    "Staying calm and supportive, no promise of secrecy, telling the supervisor, reporting as state law and agency policy require, and documenting.",
+    "I stay calm and thank them for telling me. I do not promise to keep it secret, because I explained the limits at intake and I remind them now. I tell my supervisor the same day, and we make the report the way our state law and agency policy require. When it is safe, I involve the client in the call. I document what they said and what we did."
+   ],
+   [
+    "A client you have seen for months sends you a friend request on social media. What do you do?",
+    "Whether you hold professional boundaries without hurting the relationship.",
+    "Declining the request, explaining the boundary warmly in person, following agency policy, and raising it in supervision.",
+    "I do not accept it, and I bring it up at our next session instead of ignoring it. I say I value our work, and keeping it in this room is part of what makes it safe. Our agency does not allow social media contact with clients, so I mention that too. I raise it in supervision. Most clients take it well when it is said warmly."
+   ],
+   [
+    "Tell me about a time you noticed a change in a patient before anyone else did. What did you do?",
+    "Whether you observe closely and pass on what you see.",
+    "A specific change, why it mattered, quick reporting to the nurse or clinician, and a clear outcome.",
+    "On a night shift a patient who usually chatted with me at every check gave away his headphones and snacks to others. It seemed small, but giving away belongings can be a warning sign. I told the charge nurse within minutes. The clinician did a risk assessment and he was moved to closer observation. He later said he had been planning to hurt himself that night."
+   ],
+   [
+    "Tell me about a hard session or shift that stayed with you afterward. What did you do about it?",
+    "How you handle the emotional weight of the work and use supervision.",
+    "Honesty about the impact, use of supervision or debriefs, steady self-care habits, and keeping the effect away from other clients.",
+    "A teenager I had worked with for 6 weeks relapsed and was readmitted. I kept replaying what I could have done differently. I asked my supervisor for a debrief, and she helped me see what was mine and what was not. I also kept my usual walk after shifts. Talking about it early is what keeps me fair to the next client."
+   ],
+   [
+    "Describe a time you disagreed with a nurse or clinician about a patient's care. How did you handle it?",
+    "How you speak up for a patient while respecting the team.",
+    "Raising the concern privately with facts, respecting roles and the final decision, and going up the chain of command if safety is at stake.",
+    "A nurse wanted to take a patient off close observation because he seemed calm. I had heard him tell another patient he was saving pills. I asked to speak with her privately and told her exactly what I heard. She called the psychiatrist, and his room was searched. If she had disagreed, I would have gone to the charge nurse, because safety comes first."
+   ],
+   [
+    "How do you work with a client whose choices or values you personally disagree with?",
+    "Whether you can stay nonjudgmental and focused on the client's goals.",
+    "Awareness of their own reactions, focus on the client's goals, respect for the client's right to choose, and supervision if feelings start to affect the work.",
+    "I notice my reaction and keep it out of the session. One client planned to go back to a partner I thought was bad for her. My job was not to decide for her, so we worked on a safety plan and her own goals. When my frustration grew, I took it to supervision. She came back to us 4 months later because she trusted we would not judge her."
+   ]
+  ]
+ },
+ "clinical-research-coordinator": {
+  "heading": "Clinical research coordinator questions",
+  "qs": [
+   [
+    "Walk me through how you obtain informed consent from a new participant.",
+    "Whether you treat consent as a process, not just a signature.",
+    "The current IRB-approved form, a private setting, a plain explanation, time for questions, a check of understanding, signing before any study procedure, and a note.",
+    "First I check that I have the current IRB-approved version. I meet the person somewhere private and go through the purpose, visits, risks, and that joining is voluntary and they can leave at any time. I offer to let them take it home. I ask them to explain the study back to me. They sign before any study procedure, get a copy, and I write a note on how consent went."
+   ],
+   [
+    "What is a protocol deviation, and what do you do when you find one?",
+    "Whether you recognize deviations and report them instead of hiding them.",
+    "Any departure from the approved protocol, told to the PI promptly, logged, reported to the sponsor and IRB under their rules, with a fix to prevent repeats.",
+    "It is any time we did not follow the approved protocol, like a visit outside the window or a missed lab. When I find one, I tell the PI the same day and log it. Then I check what the sponsor and our IRB require, because their reporting rules differ. Once a visit fell 4 days out of window, so we added reminder calls a week ahead for every participant."
+   ],
+   [
+    "A participant mentions a new rash at a study visit. How do you handle it?",
+    "Whether you know the basics of recording and reporting adverse events.",
+    "Records it as a possible adverse event, has the investigator assess it, checks whether it is serious, and follows protocol and sponsor reporting timelines.",
+    "I ask when it started, what it looks like and whether they took anything new. I tell the investigator before the participant leaves, because judging seriousness and any link to the study drug is their call, not mine. I record it in the source and the AE log. If it meets the protocol's definition of serious, I follow the much shorter reporting timeline for that."
+   ],
+   [
+    "What does Good Clinical Practice mean in your day-to-day work?",
+    "Whether you see GCP as daily habits, not just a training certificate.",
+    "Participant safety and rights first, following the protocol, accurate and traceable data, proper consent, and current training and records.",
+    "For me it means three habits. Participant safety and rights come before enrollment numbers. I do exactly what the protocol says, and when we cannot, I report it. And every data point traces back to a source someone could check years later. I keep my GCP training current, and I only do tasks the PI has delegated to me on the delegation log."
+   ],
+   [
+    "What makes a good source document, and how do you correct a mistake in one?",
+    "Whether your records would hold up at a monitor visit or an audit.",
+    "Records that show who wrote what and when, legible, made at the time and accurate. Corrections with a single line, initials, date and reason, never hiding the original.",
+    "A good source document shows who recorded what and when, it is readable, and it was written at the time, not rebuilt later. To fix an error on paper, I draw one line through it so it stays readable, write the correct value, and add my initials, the date and the reason. I never use correction fluid. In an electronic system, the audit trail does this job."
+   ],
+   [
+    "A good candidate for your study speaks limited English. How do you approach consent?",
+    "Whether you include people fairly while following consent rules.",
+    "An IRB-approved translated form or the IRB's approved short form process, a qualified interpreter rather than a relative, and full documentation.",
+    "I do not skip them, and I do not ask a family member to translate. I check what our IRB allows. If there is an approved translated consent form, I use it with a qualified medical interpreter. If not, I follow the IRB's short form process, which often needs a witness. Last year this let us enroll 6 Spanish-speaking participants we would have missed."
+   ],
+   [
+    "Halfway through the study, your site has enrolled 40% of its target. What do you do?",
+    "How you improve recruitment without bending eligibility.",
+    "Finding where candidates drop off, working with clinicians and referral sources, using only IRB-approved materials, and keeping the PI and sponsor informed.",
+    "I look at the screening log to see where people drop out. At one site most were lost because study visits were only on weekday mornings. With the PI's approval we added two late afternoon slots, and I met the clinic nurses so they knew the criteria. Any new flyer went to the IRB first. We reached 85% of target by the end."
+   ],
+   [
+    "A monitor visit is in three days and you find missing signatures in the regulatory binder. What do you do?",
+    "Whether you fix gaps honestly instead of backdating.",
+    "Gets missing signatures dated today, writes a note to file where needed, never backdates, tells the PI and the monitor, and adds a routine check.",
+    "I list every gap and take it to the PI that day. Missing signatures are signed now with today's date, never backdated. Where needed I write a note to file explaining what happened. I tell the monitor at the start of the visit instead of hoping they miss it. Then I add a monthly binder check to my calendar so it does not happen again."
+   ],
+   [
+    "An investigator asks you to enroll a patient who misses one eligibility criterion by a small margin. What do you say?",
+    "Whether you protect the protocol under pressure from senior staff.",
+    "A respectful no, an explanation that eligibility cannot be waived, and options such as rescreening if the protocol allows it or asking the sponsor about the criterion.",
+    "I say I can't enroll them, and I explain why: eligibility is set by the protocol, and enrolling someone outside it is a deviation that can put the patient and the data at risk. Then I offer options. Some protocols allow rescreening later. If the criterion keeps excluding good candidates, the PI can raise it with the sponsor. I keep it about the protocol, not about who is right."
+   ],
+   [
+    "A participant tells you they want to leave the study. How do you handle it?",
+    "Whether you respect a participant's right to withdraw.",
+    "Accepting the decision without pressure, explaining follow-up and data options as the consent form describes, telling the PI, and documenting per protocol.",
+    "I thank them and make clear it will not affect their regular care. I ask, without pressure, if they want to share why, because sometimes it is a fixable problem like parking costs. I explain the options in the consent form, such as a final safety visit. I tell the PI, record the date and reason in the source, and complete the withdrawal steps the protocol lists."
+   ],
+   [
+    "The sponsor needs 60 open data queries resolved by tomorrow. How do you approach it?",
+    "How you meet data deadlines without cutting corners.",
+    "Sorting queries by type and effort, answering only from source, sending medical questions to the investigator, and flagging any that cannot be closed honestly.",
+    "I sort them first. Many are quick, like a missing date that is in the source. I clear those first, always checking the source rather than my memory. Queries that need a medical judgment go to the investigator as one short list. If some cannot be answered by tomorrow, I tell the sponsor which ones and why, instead of guessing to close them."
+   ],
+   [
+    "Tell me about a time you caught an error before it reached the sponsor or the IRB.",
+    "Whether you check your own work and the systems around you.",
+    "A specific error, how it was found, how it was fixed with proper documentation, and a change that stops it from happening again.",
+    "Before a continuing review submission I compared our enrollment count with the screening log. The tracker showed 23 participants, but the log showed 25. Two people consented on a busy clinic day had never been added. I fixed the tracker, told the PI and submitted the right number. Now I reconcile the two logs on the first of every month."
+   ],
+   [
+    "How do you keep several studies on track when each has its own visit schedule?",
+    "Whether your organization holds up when the workload grows.",
+    "One calendar or tracking system, visit windows worked out in advance, a weekly review, and handoff notes so nothing depends on memory.",
+    "I put every participant's visit windows into one calendar as soon as they enroll, not one visit at a time. Each Monday I review the next two weeks across all studies, which was 5 studies at my last site. I prepare kits and lab requisitions two days ahead. I also keep a one-page summary for each study so a colleague can cover if I am out."
+   ],
+   [
+    "Describe a time you had to tell a principal investigator something they did not want to hear.",
+    "Whether you speak up clearly to senior people when it matters.",
+    "Facts in hand, a prompt and private conversation, a focus on participant safety and compliance, and follow-through.",
+    "Our PI wanted to delay reporting a deviation until after a sponsor meeting. I asked for 10 minutes with him and showed him the IRB's reporting deadline and the sponsor's. I said a late report would look worse than the deviation itself. He agreed, and we submitted it that afternoon. I kept it short and factual, and I offered to draft the report."
+   ]
+  ]
+ },
+ "healthcare-administrator": {
+  "heading": "Healthcare administrator questions",
+  "qs": [
+   [
+    "How do you make sure the clinic has enough staff for every shift, including when people call out?",
+    "Whether you plan coverage ahead instead of reacting every morning.",
+    "A schedule built from patient volume and published early, a clear call-out process, cross-trained staff or a per diem list, and tracking of overtime.",
+    "I build the schedule from expected patient volume by day, not from habit, and publish it four weeks out. Call-outs go to one phone number by 6 a.m. so I hear early. I cross-trained two front desk staff to room patients, which covered most gaps. For the rest I keep a short list of per diem staff. I review overtime every two weeks to spot burnout."
+   ],
+   [
+    "What does HIPAA mean in practice for the front desk and the back office?",
+    "Whether you turn privacy rules into everyday habits.",
+    "Access limited to what each job needs, private screens and conversations, identity checks, regular training, and a clear way to report possible breaches to the privacy officer.",
+    "At the front desk it means screens turned away from the waiting room, quiet voices at check-in, and verifying identity before giving out information. In the back office, people see only what their job needs. Everyone gets training at hire and every year. When something goes wrong, staff tell the privacy officer at once, and we assess it under our policy and the law."
+   ],
+   [
+    "Claim denials have gone up for three months in a row. How do you find and fix the cause?",
+    "Whether you go to the root cause of revenue problems.",
+    "Sorting denials by reason and payer, tracing each back to the step that caused it, fixing that step with training or checks, and tracking the rate monthly.",
+    "I pull the denial report and sort it by reason code and payer. At my last clinic most denials were for eligibility, so the problem started at scheduling, not billing. We added an insurance check two days before each visit and trained the front desk on it. I tracked the denial rate monthly, and within a quarter it was back to its old level."
+   ],
+   [
+    "Walk me through how you handle a formal patient complaint.",
+    "Whether you resolve complaints fairly and learn from them.",
+    "Quick acknowledgment, listening, facts from staff and records, a clear reply, any formal steps the payer or state requires, and fixing the process behind it.",
+    "I call the patient within one business day and mostly listen. Then I get the facts from staff and the record. I reply with what we found and what we will change. If the complaint is about clinical care, I bring in the medical director. Some complaints have formal steps under payer or state rules, so I check those. Every month I review complaints for patterns."
+   ],
+   [
+    "About one in five appointments at your clinic end in a no-show. What would you try first?",
+    "Whether you tackle no-shows through causes and data, not just penalties.",
+    "Finding who misses and why, reminders and easy rescheduling, a waitlist to fill gaps, and measuring the effect before trying anything stricter.",
+    "First I find out who misses and why. I sort no-shows by visit type, how far ahead they were booked and day of week. Often it is new patients booked far out. I add text reminders two days and two hours before, with a way to cancel by reply, and keep a short-notice waitlist to fill gaps. I check the numbers after 60 days before trying anything stricter."
+   ],
+   [
+    "A senior physician regularly runs 45 minutes behind and patients are complaining. What do you do?",
+    "How you raise operational problems with physicians tactfully.",
+    "Data on the delays, a private and respectful talk, looking for causes in the schedule template or support, and a shared plan with a follow-up date.",
+    "I bring two weeks of data, not stories, and ask for a private conversation. With one doctor the cause was new patient visits booked in 15-minute slots. We changed them to 30 minutes and moved his refill requests to a nurse. His average delay dropped to about 10 minutes. If the talk had gone nowhere, I would have involved the medical director."
+   ],
+   [
+    "Next year's budget is cut by 8% while patient volume is expected to grow. How do you approach it?",
+    "Whether you can make tradeoffs without hurting safety or quality.",
+    "A review of every cost line, protection for safety and core staffing, savings in supplies, contracts and scheduling, and clinical leaders involved in the choices.",
+    "I go through every line with finance and mark what is fixed, what is safety-critical and what is flexible. I protect clinical staffing first. At one practice we closed most of the gap by renegotiating a supply contract and turning regular overtime into planned part-time shifts. I share the options with clinical leaders before deciding, so the cuts make sense to them."
+   ],
+   [
+    "A staff member posts a photo from the clinic, and a patient's name is visible on a screen behind them. What do you do?",
+    "Whether you handle a privacy incident quickly and by the book.",
+    "Getting the post removed, telling the privacy officer, a breach assessment under policy and law, any required notices, discipline per policy, and retraining.",
+    "I ask the employee to take it down right away and keep a copy of what was posted for the record. I report it to our privacy officer the same day. They decide, under our policy and the law, whether it counts as a breach and whether the patient must be notified. HR handles any discipline under our policy. Then I remind the whole team about photos in clinical areas."
+   ],
+   [
+    "Two of your three medical assistants resign in the same month. How do you keep the clinic running?",
+    "How you protect patient care during a staffing crisis.",
+    "Short-term cover from agency or float staff, a safely trimmed schedule, fast hiring, support for the remaining staff, and finding out why people left.",
+    "First I protect the remaining assistant from burning out, so I bring in agency staff and trim the schedule where it is safe. I post both jobs that week and ask the team for referrals. I also hold exit conversations with both people. At my last job that showed our pay was below nearby clinics, and the raise cost less than constant turnover."
+   ],
+   [
+    "Your practice is switching to a new electronic health record system. How do you lead the change?",
+    "Whether you can run a big operational change with clinicians on board.",
+    "Clinical champions, training before go-live, a lighter schedule in the first weeks, extra support on site, and a clear way to report and fix problems.",
+    "I pick a doctor and a nurse as champions to test workflows and speak for their colleagues. Everyone is trained before go-live, with practice logins. For the first two weeks we cut the schedule by about a quarter and have vendor support on site. We meet for 15 minutes each morning to log problems and assign fixes. The old system stays read-only for lookups."
+   ],
+   [
+    "Tell me about a decision you made that clinical staff did not like. How did you handle it?",
+    "Whether you can hold a decision and still keep people's trust.",
+    "An open explanation of the reason, listening to concerns, adjusting details where it makes sense, and following up on how it worked.",
+    "I moved lunch breaks to staggered times so the phones were answered all day. The nurses hated losing their shared lunch. I explained that we were missing about 40 calls a day at noon, and I asked them to help design the rotation. They chose the groups themselves. After a month missed calls had dropped sharply, and I shared that number with them."
+   ],
+   [
+    "Describe a time you used data to change how a clinic or department ran.",
+    "Whether you base operational changes on evidence.",
+    "A clear problem, the data gathered, the change made, and a measured result, explained simply.",
+    "Patients complained about long waits at check-in. I timed check-in for two weeks and found it averaged 12 minutes, mostly because of paper forms. We moved the forms to a link sent with the reminder text. Two months later check-in averaged about 5 minutes, and front desk complaints fell. I posted the before and after numbers for the staff."
+   ],
+   [
+    "How do you build trust with physicians and nurses when you are not a clinician yourself?",
+    "Whether you can lead clinical people without clinical authority.",
+    "Respect for clinical judgment, time spent on the floor, quick follow-through on their problems, and asking before changing anything that touches care.",
+    "I spend time on the floor, not just in my office. In my first month I shadowed each role for half a day and asked what slowed them down. They named a broken printer and a slow fax line. I fixed both within a week. Small wins like that earn trust for bigger changes. I never change anything that touches patient care without asking the clinical leads first."
+   ],
+   [
+    "Tell me about a time a conflict between staff members started to affect patients. What did you do?",
+    "How you deal with team conflict before it harms care.",
+    "Acting quickly, hearing both sides privately, a focus on behavior and patient impact, clear expectations, and follow-up.",
+    "Two front desk staff stopped speaking, and patients noticed the tension at check-in. I met each one privately to hear their side, then both together. The issue was who covered the phone during breaks. We wrote a simple coverage schedule, and I made clear that how they treat each other in front of patients is part of the job. I checked in weekly for a month."
+   ]
+  ]
+ },
+ "rehab-therapist": {
+  "heading": "Physical and occupational therapist questions",
+  "qs": [
+   [
+    "How do you structure the evaluation of a new patient?",
+    "Whether your evaluation is thorough and leads to a clear plan.",
+    "History and the patient's own goals, a screen for red flags, standardized tests and functional measures, and a plan of care with goals and frequency.",
+    "I start with the history, the referral, and what the patient wants to get back to. I screen for red flags that need a doctor first. Then I test what matters for their goals: strength, range of motion, balance, and a real task like standing up from a chair or getting dressed. I use at least one standardized measure so I can retest it. I finish with a plan we agree on."
+   ],
+   [
+    "How do you write a goal that is actually measurable?",
+    "Whether your goals are functional, specific and testable.",
+    "A functional task, a measurable level such as distance, time or amount of help, the conditions, and a target date, written so any therapist could test it.",
+    "I tie it to something the patient does in daily life and make it testable. Instead of improve balance, I write: patient will walk 150 feet with a cane on level ground without loss of balance within 4 weeks. An OT goal might be: patient will put on a shirt independently, sitting at the edge of the bed, within 3 weeks. Anyone on the team could check it."
+   ],
+   [
+    "What does your documentation need to show for a payer to keep covering therapy?",
+    "Whether you know the general basis of documenting medical necessity.",
+    "The need for skilled care, objective measures, progress toward functional goals, and why therapy should continue, following each payer's own rules, which vary.",
+    "It has to show that the patient needs a therapist's skills, not just supervised exercise. In each progress note I record objective measures, like gait speed or how much help they need with toileting, compared with the start. I link them to the goals and explain what is left and why. The exact rules differ by payer, so I check each plan's requirements."
+   ],
+   [
+    "During a session, when do you stop or change an exercise?",
+    "Whether you recognize warning signs and keep patients safe.",
+    "Stopping for chest pain, unusual shortness of breath, dizziness, confusion or sharp new pain, checking vital signs against facility limits, alerting the team, and documenting.",
+    "I stop for chest pain, unusual shortness of breath, dizziness, new confusion, or sharp pain that differs from normal effort. I check vital signs against our facility's limits and get the nurse or doctor if anything is off. For milder problems I change the exercise by reducing range or load. Once a patient's heart rate kept climbing during a walk, so we stopped and I called his nurse."
+   ],
+   [
+    "A patient after knee replacement says therapy hurts too much and wants to skip today. What do you do?",
+    "How you balance pain, motivation and recovery.",
+    "Listening and assessing the pain, checking for warning signs, working with nursing on pain control timing, adjusting the session, and explaining why movement matters.",
+    "I ask where it hurts and how it compares with yesterday, and I look at the knee for anything unusual. If the pain seems expected, I talk with the nurse about timing pain medication before our session. I explain that bending the knee now is what lets them climb stairs later. Then I offer a shorter session. Most patients agree once they feel heard."
+   ],
+   [
+    "A patient keeps skipping the home exercise program you gave them. How do you respond?",
+    "Whether you look for the reason instead of blaming the patient.",
+    "Curious questions about barriers, a shorter program tied to daily routines, clear handouts or videos, and checking understanding with a teach-back.",
+    "I ask what gets in the way, without judgment. One man had 8 exercises on a sheet and could not remember how to do them. We cut it to the 3 that mattered most, linked them to brushing his teeth and making coffee, and I filmed him doing them on his phone. He started doing them most days, and his range of motion began to improve again."
+   ],
+   [
+    "A stroke patient's family wants you to push walking every session, but the patient is not ready. How do you handle it?",
+    "How you manage family expectations while keeping care safe.",
+    "Listening to the family, explaining the plan and the safety reasons in plain words, showing small gains, and giving them a useful role.",
+    "I meet with them and listen first, because their hope is a strength. Then I explain that he cannot yet control his trunk while sitting, and walking now would risk a fall. I show them his progress in sitting balance with numbers from last week. I give them tasks they can help with, like practicing reaching while seated. Families usually relax once they see a path."
+   ],
+   [
+    "Insurance approves 8 visits, but you think the patient needs more. What do you do?",
+    "Whether you advocate for patients within payer rules.",
+    "Planning the visits for the most impact, documenting need clearly, requesting more visits through the payer's process, and building a strong home program.",
+    "I plan the 8 visits with the end in mind and teach the home program early. I document objective progress and what still limits function. Before the last visits I request more, with that evidence, through the payer's process. If it is denied, I explain the appeal options and make sure the patient leaves able to keep progressing at home."
+   ],
+   [
+    "A patient with a high fall risk insists on going home alone. What do you do?",
+    "Whether you respect a patient's choice while reducing risk.",
+    "Respect for the patient's right to choose, a clear explanation of risks, equipment and home changes, the case manager involved, and documentation.",
+    "It is their choice, so my job is to make home as safe as possible. I explain the risks plainly and listen to why home matters. I recommend a walker, grab bars and a shower chair, and we practice getting up from the floor. I ask the case manager about home health visits and a medical alert device. I document my recommendations and the patient's decision."
+   ],
+   [
+    "You have 12 patients today and two urgent new evaluations get added. How do you prioritize?",
+    "How you manage a heavy caseload safely and fairly.",
+    "Priority by medical need and discharge timing, clear communication with the team, shorter or moved visits for stable patients, and no skipped documentation.",
+    "I look at who is going home soonest and who has a safety question, like a patient who needs clearance to walk before discharge. Those come first, along with the new evaluations. I tell the charge nurse and my lead which visits move to tomorrow. Stable patients may get a shorter session that day. I still finish every note before I leave."
+   ],
+   [
+    "Tell me about a patient whose progress stalled. What did you change?",
+    "Whether you reassess and adapt instead of repeating the same plan.",
+    "Retesting, looking for new causes or barriers, changing the approach or referring back when needed, and showing the result.",
+    "A woman with shoulder pain stopped improving after 4 weeks at the same range of motion. I retested and saw she was guarding because she feared the pain. I spent time explaining that hurt does not always mean harm, and we graded the movements in small steps. Within 3 weeks she could reach a high shelf. If she had not improved, I would have sent her back to her doctor."
+   ],
+   [
+    "How do you work with nurses, doctors and the other therapy discipline on a shared patient?",
+    "Whether you coordinate care instead of working alone.",
+    "Clear updates in notes and huddles, safety recommendations shared at once, goals aligned with other disciplines, and asking others for input.",
+    "I share safety changes right away, like telling nursing a patient now needs two people to transfer. In team meetings I keep updates short: function now, goal, barrier. With the PT or OT on the same patient, we avoid repeating tests and split goals, so one of us takes walking and the other takes dressing. I also ask nurses how the patient manages at night."
+   ],
+   [
+    "Tell me about a time you trained a family member to help with care at home.",
+    "Whether you can teach caregivers safely and clearly.",
+    "Simple steps, a demonstration, practice with feedback, a teach-back, written or video reminders, and a check on how it goes after discharge.",
+    "A man was taking his wife home after a hip fracture. I showed him how to help her from bed to chair, then had him do it three times while I watched. He kept bending his own back, so we practiced with his knees bent until it felt natural. I gave him a one-page sheet with photos and called the next week. They had managed every transfer safely."
+   ],
+   [
+    "Tell me about a time a patient's own goal changed your treatment plan.",
+    "Whether your care is built around what matters to the patient.",
+    "Asking what matters to the patient, adapting goals and activities to it, and showing how that improved effort or outcome.",
+    "An 80-year-old man with Parkinson's did not care about my balance goals. He wanted to get back to his garden. So we practiced kneeling and getting up, carrying a watering can and stepping over a hose. He came to every session after that. His balance scores improved, but what he talked about was picking tomatoes in July."
+   ]
+  ]
+ },
+ "estimator": {
+  "heading": "Cost estimator questions",
+  "qs": [
+   [
+    "How do you do a quantity takeoff, and how do you make sure nothing is missed?",
+    "Whether you have a method for measuring quantities from drawings.",
+    "Works through the drawings by trade or CSI division, marks items as counted, reads the specs and addenda, and has a second person check the big totals.",
+    "I go sheet by sheet in CSI division order and color each item on the plan as I count it, so gaps stand out. Then I read the specs and every addendum, because a lot of scope hides there. On a 40,000 square foot school, the spec called for a floor sealer the drawings never showed. A second estimator checks my largest quantities before I price them."
+   ],
+   [
+    "What is the difference between contingency and escalation in an estimate?",
+    "Whether you know what each allowance covers and why they are kept apart.",
+    "Contingency covers unknowns in scope and risk. Escalation covers prices rising over time. Each has its own basis and its own line.",
+    "Contingency is for things we expect but cannot define yet, like design gaps or unknown site conditions. Escalation is for prices rising between the estimate date and when we actually buy. On a job that bids now but buys steel in 18 months, I carry escalation on that package with the index and rate written down, and keep contingency as a separate line."
+   ],
+   [
+    "In plain terms, how does earned value tell you whether a project is on track?",
+    "Whether you understand earned value well enough to explain it to a project team.",
+    "Compares planned value, earned value and actual cost. Cost variance shows over or under budget for work done. Schedule variance shows ahead or behind plan.",
+    "Earned value compares three numbers: the budget for work we planned to finish by now, the budget for work actually done, and what that work really cost. If we earned $500,000 of work but spent $560,000, we are $60,000 over on cost. If we planned $600,000 by now, we are also behind. I explain it with real dollars like that, so superintendents trust it."
+   ],
+   [
+    "How do you level subcontractor bids before recommending one?",
+    "Whether you compare scope, not just the bottom line.",
+    "A side-by-side sheet of each bidder's scope, exclusions and qualifications, with plug prices for missing items, so every bid is compared on the same scope.",
+    "I put every bid in one spreadsheet with the scope items down the side. Then I read each bid's exclusions and add a plug price for anything left out. On a recent drywall package, the lowest number excluded firestopping. Once I added it back, that bidder was second, not first. I call bidders to clear up anything vague before I recommend one."
+   ],
+   [
+    "The design is about 30% complete and the owner wants a firm price next week. What do you do?",
+    "How you price an incomplete design without hiding the risk.",
+    "A written basis of estimate with assumptions, allowances for undefined scope, a fitting contingency, and an honest talk about what firm can mean at this stage.",
+    "I give a number, but with a written basis of estimate: which drawings I used, what I assumed, and allowances for items not designed yet, like site utilities. I carry a higher contingency than I would at final design. Then I tell the owner plainly that a firm price at 30% rests on those assumptions, and I offer to update it at the 60% set."
+   ],
+   [
+    "Halfway through the job, the cost report shows concrete running 12% over budget. What do you do?",
+    "Whether you look for the cause and the forecast, not just the number.",
+    "Checks coding and quantities first, finds the cause with the field, updates the cost to complete, and reports early with options to recover.",
+    "First I make sure it is real. I look for miscoded costs and compare installed quantities with the budget. Then I walk it with the superintendent. On one job the cause was waste from a pump that kept breaking down. I updated the forecast to complete, flagged it in the monthly report, and we changed pump suppliers. Waiting until month end would have cost more."
+   ],
+   [
+    "One subcontractor's bid is 25% below the other three. How do you handle it?",
+    "How you deal with a price that looks too good.",
+    "Treats it as a likely scope gap or error, reviews scope with the bidder, and checks capacity and track record before relying on it.",
+    "A gap that big usually means a missed item or a math error. I call the bidder and walk through the scope line by line without sharing the other prices. If they stand by it, I check their workload, bonding and past jobs with us. Once a bidder found they had priced one floor instead of two. Holding them to it would have hurt the job later."
+   ],
+   [
+    "Your project manager wants the estimate cut by $200,000 so the bid wins. What do you say?",
+    "Whether you keep the estimate honest under pressure to win.",
+    "Separates real savings from wishful cuts, offers value engineering or scope options, and has leadership approve any risk taken on fee or contingency.",
+    "I say I will look for savings, but I will not lower quantities that are real. I go back through the big packages for better sub prices, alternate materials or a different sequence. If we still need to cut, that is a fee or contingency decision, and the people who own that risk should make it in writing. Winning a job at a loss is not a win."
+   ],
+   [
+    "A change order request comes in from the field as one lump sum with no backup. How do you price it?",
+    "Whether you build change order prices from quantities, labor and markups.",
+    "Confirms the work is outside the contract, asks for labor, material and equipment detail, checks it against contract rates and an independent estimate.",
+    "First I check that the work is really a change and not already in the contract. Then I ask the sub for labor hours, material quantities, equipment and the rates they used. I build my own estimate for the same work. On a recent $48,000 request, the hours were fair but the markup was above what the contract allowed. We settled at $41,500 with the backup on file."
+   ],
+   [
+    "The monthly forecast shows the project finishing on time, but the superintendent says it will be three weeks late. What do you do?",
+    "How you reconcile the schedule with what the field sees.",
+    "Takes the field seriously, checks schedule logic and progress inputs, updates the forecast, and reports the delay and its cost impact openly.",
+    "I sit down with the superintendent and the schedule together and find where we differ. Often progress was reported too generously, or the field changed a sequence that never reached the schedule. I update it with real dates, rerun the critical path, and add the cost of three more weeks of general conditions to the forecast. The PM and owner hear about it that week."
+   ],
+   [
+    "Tell us about an estimate that turned out wrong. What did you change afterward?",
+    "Whether you learn from misses and fix the process, not just the number.",
+    "Owns the mistake, names the specific cause, and describes a lasting change such as a checklist item, a review step or better historical data.",
+    "Early on I underestimated a parking garage by about 6% because I used a productivity rate from a flat slab job for post-tensioned decks. We won the job and lost most of the fee on those decks. After that I started keeping productivity rates by building type in our cost database, and a senior estimator now reviews any rate I borrow from a different kind of job."
+   ],
+   [
+    "Three bids are due in the same week. How do you decide where your time goes?",
+    "How you plan and set priorities when bid dates collide.",
+    "Ranks by size, win chance and due date, starts subcontractor outreach early, asks for help or passes on a bid, and protects review time before each deadline.",
+    "I list the three with due dates, size and how likely we are to win. Sub outreach goes out for all of them on day one, because that takes the longest. I do my own takeoffs on the biggest job first. If I cannot do all three well, I tell my chief estimator early so we can share the work or pass on one. A rushed bid is a risky bid."
+   ],
+   [
+    "Describe a time you had to tell an owner or executive that a project would cost more than planned.",
+    "How you deliver bad cost news clearly and early.",
+    "Brings the news early with the cause, the size, a forecast and options, in plain language and without blame.",
+    "On a hospital renovation, hidden asbestos added about $310,000. I did not wait for the monthly meeting. I called the owner's rep the day testing confirmed it, gave a rough range, and within a week sent a priced breakdown and two resequencing options. They were not happy, but they said hearing it early let them go to their board before the money was spent."
+   ],
+   [
+    "Which estimating and cost tools have you used, and how do you check what they produce?",
+    "Your hands-on tool experience and whether you check output before trusting it.",
+    "Names tools honestly and describes checks like verifying scales, comparing cost per square foot with past jobs, and spot-checking quantities by hand.",
+    "I have done takeoffs in Bluebeam and On-Screen Takeoff and kept cost reports in Excel and Procore. Software is only as good as the scale you set, so I check one known dimension on every sheet. When an estimate is done, I compare its cost per square foot with three similar past jobs. If it is far off, I find out why before it goes out."
+   ]
+  ]
+ },
+ "plumber-pipefitter": {
+  "heading": "Plumber and pipefitter questions",
+  "qs": [
+   [
+    "How do you read an isometric drawing before you start cutting pipe?",
+    "Whether you can turn an isometric drawing into a correct pipe run.",
+    "Knows isos show the run in 3D, reads dimensions, elevations, fittings, valves and flow direction, checks the bill of materials, and confirms tie-in points.",
+    "An iso shows the pipe in three dimensions on a flat sheet, so I first find the north arrow and the start and end points. Then I follow the run and note each fitting, valve, elevation change and flow direction. I check the bill of materials against the drawing. Before cutting, I walk the real route. On one retrofit, a 4 inch line hit a beam the drawing did not show."
+   ],
+   [
+    "How do you pressure test a new piping system?",
+    "Whether you know the general steps for testing piping safely and correctly.",
+    "Isolates and caps the system, uses the medium, pressure and time set by local code or the engineer, watches a calibrated gauge, checks joints, records the result.",
+    "I isolate the new section, cap the open ends, and valve off or remove anything that cannot take the pressure. The test medium, pressure and hold time come from the local code or the engineer's spec, so I check those first. I use a calibrated gauge, hold the pressure and walk every joint. Air tests store a lot of energy, so I keep people clear. Then I record it and get it signed off."
+   ],
+   [
+    "What do you do if you smell gas when you arrive at a job?",
+    "Whether you know the basic safety steps for a suspected gas leak.",
+    "Leaves the area and gets others out, avoids switches, phones and flames inside, and calls the gas utility or 911 from a safe distance.",
+    "I do not touch light switches or start any tools, and nothing that could make a spark or a flame. I get everyone out of the building and walk well away. Then I call the gas utility or 911 from outside, at a safe distance. I do not go back in until the utility or fire department says it is safe. Only then do we find and repair the leak."
+   ],
+   [
+    "How do you know which plumbing code and permit rules apply on a job?",
+    "Whether you understand that code and permit rules depend on where the work is.",
+    "Knows that codes like the IPC or UPC are adopted and amended locally, checks with the local authority, and gets permits and inspections as required there.",
+    "It depends on where the job is. Some places use the International Plumbing Code, others the Uniform Plumbing Code, and many states and cities add their own changes. So I check with the local building department on what applies and what needs a permit. When I worked across two counties, a few rules differed between them, so I kept notes for both."
+   ],
+   [
+    "You arrive at a house where a pipe has burst and water is spreading across the basement. What are your first steps?",
+    "How you set priorities in an emergency repair.",
+    "Stops the water at the nearest valve or main, stays clear of electrical hazards, drains the lines, then finds the break, repairs it and documents the damage.",
+    "First I shut off the water at the nearest valve or the main. If water is near outlets or the panel, I stay out of it and get the power shut off safely, by the utility or an electrician if needed. Then I open low faucets to drain the lines and find the break. Last winter a frozen pipe split behind a wall, and I took photos for the owner's insurance before cutting it out."
+   ],
+   [
+    "A customer asks you to skip the permit to save money and time. What do you say?",
+    "Whether you follow permit rules when a customer pushes back.",
+    "Explains politely how the permit protects the customer through inspection, insurance and resale, and does not do work that needs a permit without one.",
+    "I explain that the permit is there for them. An inspector checks the work, and unpermitted work can cause trouble with insurance or when they sell the house. I also tell them what the permit actually costs in their town, which is often less than they fear. If they still want to skip it on work that needs one, I politely pass on the job."
+   ],
+   [
+    "Your foreman asks you to cut into an existing steam line for a tie-in. What do you check first?",
+    "Whether you confirm isolation and zero energy before opening a line.",
+    "Confirms the line is isolated, locked and tagged out, drained, depressurized and cooled, verifies it personally, and follows the site's lockout procedure.",
+    "Before anything gets cut, I confirm the line is isolated with valves locked and tagged under the site's lockout procedure, and I put my own lock on. Then I check that it is drained, depressurized and cool by opening a bleed valve and reading the gauge myself. Steam can burn you badly even at low pressure. If anything does not check out, I stop and talk to the foreman."
+   ],
+   [
+    "The drawings route a drain line through a steel beam. What do you do?",
+    "Whether you solve field conflicts without compromising the structure.",
+    "Does not cut or drill structural members without the engineer's approval, raises the conflict through the foreman or an RFI, and suggests a practical reroute.",
+    "I would not cut or drill the beam. That needs the structural engineer's approval. I tell my foreman, take photos with measurements, and suggest a reroute, like dropping below the beam if we can keep enough slope. The foreman sends it up as an RFI. On a recent job the answer came back in two days, and we worked on another floor while we waited."
+   ],
+   [
+    "Your pressure test held at the end of the day but dropped by the next morning. How do you find out why?",
+    "How you troubleshoot a failed test step by step.",
+    "Checks temperature change and the gauge first, then test caps, plugs and valves, then isolates sections and checks joints until the leak is found.",
+    "First I ask if the temperature dropped overnight, because that alone can lower the reading, especially on an air test. Then I check the easy things: the gauge, the test plugs and any valve left open. If those are fine, I split the system into sections and test each one. On one job it was a single fitting I had not fully pressed. Soap solution found it in ten minutes."
+   ],
+   [
+    "A restaurant kitchen drain clogs every few weeks in the same spot. How do you find the cause?",
+    "Whether you look for the root cause instead of clearing the same clog again and again.",
+    "Runs a camera to check slope, sags or damage, checks the grease interceptor and how staff handle grease, then proposes a lasting fix.",
+    "Clearing it again only buys a few weeks. I run a camera through the line to look for a sag, a broken section or roots. I also check the grease interceptor and ask the staff how they get rid of grease. At one diner the camera showed a 15 foot belly holding grease, so we replaced that section with proper slope, and the calls stopped."
+   ],
+   [
+    "Tell us about a time you found a problem in your own work after it was installed.",
+    "Whether you own your mistakes and fix them properly.",
+    "Admits the mistake quickly, tells the foreman or customer, fixes it right even if it costs time, and explains what was learned.",
+    "On a new house I found a drain run I had installed with too little slope, after the drywall crew had started. I told my foreman right away, we opened that section and I redid it. It cost me half a day. Now I check slope with a level on every run before I call for inspection, not just the ones that look off."
+   ],
+   [
+    "How do you teach a first-year apprentice on your crew?",
+    "Whether you can pass on skills and safety habits.",
+    "Starts with safety, explains the why, lets the apprentice do the work under supervision, gives specific feedback, and adds responsibility step by step.",
+    "I start with safety and how to use each tool right. Then I show a task once, explain why we do it that way, and let them do the next one while I watch. If they make a mistake, they fix it themselves. My last apprentice soldered practice joints on scrap for a week before touching a customer's line. By the end of the year he was running small jobs on his own."
+   ],
+   [
+    "Describe a time a customer was upset about the cost of a repair. How did you handle it?",
+    "How you talk with customers about price and stay professional.",
+    "Listens, explains the work and the price in plain terms, gives options where they exist, and stays calm and honest.",
+    "A homeowner was angry that a new water heater cost more than the price she saw online. I explained what was included: the permit, a new expansion tank, haul-away of the old unit and labor. I also gave her a cheaper repair option and how long it would likely last. She chose the replacement and later called us back for her bathroom."
+   ],
+   [
+    "Which piping materials and joining methods have you worked with most?",
+    "Your hands-on range across piping systems.",
+    "Names materials and methods honestly, such as soldered or press copper, PEX, threaded steel, grooved pipe, plastic solvent welding or welding.",
+    "Most of my work has been residential and light commercial: soldered and press copper, PEX with crimp and expansion fittings, PVC and ABS for drains, and threaded black iron for gas. I have done some grooved steel in a school mechanical room. I have not welded pipe yet, and that is one reason I want to work on bigger commercial jobs."
+   ]
+  ]
+ },
+ "staff-engineer": {
+  "heading": "Staff engineer questions",
+  "qs": [
+   [
+    "What goes into a good design document, and how do you get people to actually read it?",
+    "Whether you can write a design doc that leads to a decision.",
+    "Problem, goals and non-goals, the design, alternatives with tradeoffs, risks and rollout, kept short, with named reviewers and a decision date.",
+    "I start with the problem and what success looks like, then goals and non-goals, because non-goals settle many arguments early. Then the design, two or three alternatives with honest tradeoffs, risks, and how we roll it out and back. I keep it under six pages, name four reviewers and set a date to decide. Comments after that date go into a follow-up."
+   ],
+   [
+    "How do you make a build-or-buy decision for something like a feature flag system?",
+    "Whether you weigh total cost and focus, not just license price.",
+    "Compares the full cost of building and running it against vendor cost, lock-in and fit, and asks whether it is core to the business.",
+    "First I ask whether it is core to what makes our product different. Feature flags usually are not. Then I compare real costs: a vendor at maybe $40,000 a year against two engineers spending a quarter to build it and part of their time running it for years. I also check data handling, an exit path and whether the SDKs fit our stack. In a case like this, I would usually buy."
+   ],
+   [
+    "How would you lead a migration off an old system without stopping feature work?",
+    "Whether you can plan a long migration that teams can absorb alongside their roadmap.",
+    "Small steps behind a compatibility layer, tooling that does most of the work, clear milestones, a tracking dashboard, and an end date for the old path.",
+    "I avoid a big bang. We put an adapter in front of the old system so traffic can move one service at a time. My team builds the tooling and migrates the first two services ourselves to find the sharp edges. Then each team gets a short guide, a dashboard shows who is done, and we agree a date after which new code cannot use the old path. At my last job, 60 services moved in three quarters."
+   ],
+   [
+    "Walk us through how you handle a major incident and the postmortem that follows.",
+    "Whether you stay calm during an incident and drive real fixes after it.",
+    "Clear roles, mitigation before root cause, regular status updates, then a blameless postmortem with a timeline, contributing factors and tracked action items.",
+    "During the incident I make sure someone is incident commander and someone handles updates, so engineers can focus. We mitigate first, for example by rolling back, and find the root cause later. Within a week we write a blameless postmortem: timeline, what made it worse, what helped. Each action item gets an owner and a date, and I review them monthly, because untracked items quietly die."
+   ],
+   [
+    "Two senior engineers disagree strongly on an architecture choice and ask you to decide. What do you do?",
+    "How you settle technical disagreements while keeping both people engaged.",
+    "Gets the tradeoffs written down, finds what would change each mind, decides by a set date with reasons, and makes it safe to disagree and commit.",
+    "I ask each of them to write one page on their option, including its weak points. Often the real disagreement is about one assumption, like expected traffic, and we can test it. If not, I decide by an agreed date and write down why, including what would make us revisit it. I tell the engineer whose option lost before the announcement, and I credit the parts of their thinking we kept."
+   ],
+   [
+    "A team wants to adopt a new database you think is a poor fit for their workload. How do you handle it?",
+    "Whether you influence decisions with evidence instead of authority.",
+    "Asks what problem they are solving, raises specific concerns with evidence, suggests a small test, and respects the team's ownership if the risk is contained.",
+    "I start by asking what is pushing them toward it, because they may know something I do not. Then I share my specific concerns, for example that their access pattern needs joins it handles badly, and that nobody else here knows how to run it. I suggest a two-week spike with their real queries. If it holds up and they will own it on call, I support it."
+   ],
+   [
+    "Leadership asks for a new platform capability by a date you believe is not possible. What do you do?",
+    "How you push back on timelines with options rather than a flat no.",
+    "Explains why with concrete estimates and risks, then offers options like smaller scope, phased delivery or more people, and lets leaders choose.",
+    "I do not just say no. I break the work down, show where the time goes and name the riskiest parts. Then I give options: what we can ship by that date with a smaller scope, what the full version needs, and what a phased plan looks like. Last year that turned an impossible March date into a March pilot for two customers and a full launch in June."
+   ],
+   [
+    "You find that a critical service has no clear owner and its on-call pages have doubled in six months. What do you do?",
+    "Whether you notice and fix organizational gaps, not only code problems.",
+    "Gathers data on impact, makes the risk visible to leadership, proposes an owner and a stabilization plan, and avoids quietly becoming the permanent owner.",
+    "First I gather the facts: page counts, incidents and which teams depend on the service. I take that to the engineering directors with a clear ask: a named owning team and a few weeks of stabilization work. I might lead the first fixes myself, like the three alerts causing most pages. But I would not quietly own it forever, or the gap comes back when I move on."
+   ],
+   [
+    "You notice three teams are building their own versions of the same internal tool. What do you do?",
+    "How you spot duplicated effort and steer teams toward a shared solution.",
+    "Talks to each team to learn their needs, checks whether one shared tool truly fits, and proposes a path with a clear owner instead of forcing a merge.",
+    "I talk to each team first, because the three tools may solve different problems. If the needs overlap, I write a short proposal: one shared tool, which team owns it, and what the other two get in return, like their must-have features first. Once two teams had separate deploy scripts. We merged them into one, and each team saved about a week of work per quarter."
+   ],
+   [
+    "A design you wrote gets strong pushback from a team whose help you need. How do you respond?",
+    "Whether you treat objections as information and can still move forward.",
+    "Meets them directly, separates real flaws from preferences, changes the design where they are right, and agrees on how to settle what remains.",
+    "I set up a call instead of replying comment by comment. I ask for their top three concerns and look for the ones that are real risks. Last time, they showed my design doubled the load on their cache, and they were right, so I changed it. For the remaining points we agreed on a load test we would both accept. That team ended up backing the design."
+   ],
+   [
+    "Without a manager assigning your work, how do you decide which problems deserve your time?",
+    "How you choose the work with the most impact at the staff level.",
+    "Ties choices to business goals and engineers' pain, balances urgent issues with long-term work, and checks priorities with leadership regularly.",
+    "I keep a list of problems ranked by impact on company goals and on engineers' daily pain, like slow builds. Each quarter I review it with my director so we agree. I keep roughly a third of my time for unplanned work, such as incidents or helping a stuck team. If something is neither on the list nor urgent, I hand it to someone else, often as a growth project."
+   ],
+   [
+    "Tell us about a time you changed technical direction across several teams you did not manage.",
+    "Whether you can lead broad change through influence.",
+    "A specific example with the problem, how each team's buy-in was earned, how resistance was handled, and a measurable result.",
+    "Our services used four different ways to call each other, and debugging across them took hours. I wrote a proposal for one standard, then met each of the six team leads to hear objections before the review. Two teams needed streaming support, so we added it. We migrated in two quarters, and tracing a failing request went from hours to minutes."
+   ],
+   [
+    "How do you help senior engineers on other teams grow toward staff level?",
+    "Whether you multiply your impact by growing other engineers.",
+    "Gives real ownership of meaningful problems, coaches on writing and influence, gives specific feedback, and sponsors people by making their work visible.",
+    "I look for problems that stretch them and hand over real ownership, not just tasks. I review their design docs closely and give specific feedback on the writing, since that is often the gap. I also sponsor them: I mention their work in leadership reviews and suggest them to lead the next project. Two engineers I worked with this way were promoted to staff last year."
+   ],
+   [
+    "Tell us about a technical decision you made that turned out to be wrong.",
+    "Whether you admit mistakes and correct course without ego.",
+    "A real decision, why it seemed right then, how the problem was noticed, how it was fixed, and what changed in how decisions get made.",
+    "I pushed us to split a monolith into microservices too early. A year later we had 12 services, three engineers and constant deploy problems. I said in our planning meeting that it was my call and it was wrong for our size. We merged eight of them back. Now every design doc I write says what would tell us the decision was wrong, and we check it six months later."
+   ]
+  ]
+ },
+ "data-entry": {
+  "heading": "Data entry questions",
+  "qs": [
+   [
+    "How do you check your own data entry for accuracy?",
+    "Whether you know the common ways to catch entry errors.",
+    "Names methods like double entry, spot checks against the source, field validation and batch totals, and uses them before submitting.",
+    "For key fields like amounts and account numbers, I use whatever check the system offers, like double entry, where a second keying must match the first. For a batch, I add up the totals on the source forms and compare them with the system total. Then I spot-check about one record in 20 against the paper. If I find an error, I check more, because one error can point to a pattern."
+   ],
+   [
+    "Which matters more in data entry, speed or accuracy, and how do you balance them?",
+    "Whether you understand that fixing errors costs more than typing carefully.",
+    "Accuracy first, since a wrong record causes real problems later. Speed comes from practice, touch typing and shortcuts, not from rushing.",
+    "Accuracy comes first. A wrong address or invoice amount can mean a lost package or a wrong payment, and fixing it later takes far longer than typing it right. I type about 65 words per minute, and that speed came from touch typing and the 10-key pad, not from rushing. When I am tired and errors creep in, I slow down instead of pushing through."
+   ],
+   [
+    "What do you do when a source document is hard to read or part of it is missing?",
+    "Whether you avoid guessing and follow a process for unclear data.",
+    "Never guesses. Looks for the value in other records, flags the item, follows up with the sender or supervisor, and keeps the record on hold.",
+    "I do not guess. First I look for the same information elsewhere, like an address on an earlier form from the same customer. If I still cannot read it, I mark the record as pending with a note on which field is unclear and send it to my supervisor or the sender. Last month I had 14 smudged forms in one batch, and all were confirmed by phone within two days."
+   ],
+   [
+    "How do you protect sensitive information like Social Security numbers or medical details while you work?",
+    "Whether you understand basic data privacy and security habits.",
+    "Opens only what the task needs, locks the screen, keeps papers secure, shares nothing outside approved channels, and follows policy and laws like HIPAA where they apply.",
+    "I only open the records my task needs and lock my screen whenever I step away, even for a minute. Paper forms stay in a locked drawer or go in the shred bin, never the regular trash. I never email personal data or copy it to my own devices. At a medical billing job I completed HIPAA training, and I still ask when I am not sure whether something is allowed."
+   ],
+   [
+    "You notice the same customer is in the system three times with slightly different addresses. What do you do?",
+    "How you handle possible duplicate records.",
+    "Does not delete or merge on a hunch. Compares identifiers, follows the merge process or flags it, and notes which record is current.",
+    "I would not delete anything on my own. I compare details like account number, phone and email to see if they really are one person. If they match, I follow our merge process, or flag them to whoever owns customer data if I do not have that permission. I note which address is newest and where it came from, so the right one survives the merge."
+   ],
+   [
+    "Halfway through a batch of 500 records, you realize you have been entering dates in the wrong format. What do you do?",
+    "Whether you own mistakes and fix them in an orderly way.",
+    "Stops, tells the supervisor, finds every affected record, fixes them carefully, and checks the result before moving on.",
+    "I stop right away so the problem does not grow. I tell my supervisor what happened and how many records are affected, about 250 in this case. Then I list the affected records and fix them, or ask whether IT can do a bulk correction safely in one step. Afterward I spot-check the fixes and add the date format to my notes for that form."
+   ],
+   [
+    "Your supervisor asks you to finish 2,000 records by the end of the day, which usually takes two days. What do you do?",
+    "How you handle an unrealistic deadline without giving up accuracy.",
+    "Gives an honest estimate, asks which records matter most, suggests help from others or extra hours, and does not skip checks.",
+    "I tell my supervisor straight away that at my usual pace with checks, I can do about 1,000 today. Then I ask which records are most urgent so those go first. I might suggest splitting the batch with a coworker, or staying an extra hour if that is allowed. What I would not do is skip the accuracy checks, because then we would spend tomorrow fixing errors."
+   ],
+   [
+    "A form is missing a required field, and the system will not save the record without it. What do you do?",
+    "Whether you avoid entering fake values to get past a required field.",
+    "Never enters placeholder or made-up data. Holds the record, notes what is missing, and gets the real value from the right person.",
+    "I do not type a fake value like all zeros just to get past the screen, because bad data spreads into reports and mailings. I put the form in a pending pile, log what is missing, and contact the sender or my supervisor. Once, 30 forms from one branch all missed the same field. It turned out they were using an old version of the form."
+   ],
+   [
+    "The system freezes, and you are not sure whether your last 30 entries were saved. What do you do?",
+    "How you recover from technical problems without creating duplicates or gaps.",
+    "Checks which records actually saved before re-entering anything, avoids duplicates, reports the problem, and keeps track of where the work stopped.",
+    "I note the last source document I finished so I know where I was. Once the system is back, I search for those 30 records, or ask IT whether the problem was widespread. I re-enter only the ones that are missing, so we do not end up with duplicates. I also tell my supervisor, in case other people lost work at the same time."
+   ],
+   [
+    "You find errors in records a coworker entered last week. How do you handle it?",
+    "Whether you correct data errors respectfully and through the proper process.",
+    "Confirms against the source, tells the coworker privately and kindly, follows the correction process, and involves the supervisor if errors affect customers or repeat.",
+    "First I make sure I am right by comparing with the source documents. Then I tell my coworker privately that five zip codes do not match the forms. Usually it is a simple slip and they fix it. If the errors affect payments or customers, or keep happening, I tell my supervisor too, because correct data matters more than avoiding an awkward talk."
+   ],
+   [
+    "How do you stay focused and accurate during a long day of repetitive entry?",
+    "Your habits for keeping quality steady over a full shift.",
+    "Specific habits such as short regular breaks, a good workstation setup, checking work at set points, and switching tasks when possible.",
+    "I take a short break every hour to stand up and rest my eyes, and I set up my chair and screen so I am not straining. I check a few records at the end of each batch, so if my accuracy slips, I notice it early. At my last job my accuracy on quality audits stayed at 99.5%, and I think the breaks are a big part of that."
+   ],
+   [
+    "Tell us about a time you found a mistake in your own work after it had been submitted.",
+    "Whether you take responsibility and report errors quickly.",
+    "Reports it quickly, fixes it, explains the impact honestly, and describes a change that keeps it from happening again.",
+    "I once keyed an invoice for $1,250 as $12,500. I caught it the next morning when I reviewed my batch totals. I told my supervisor right away, before the payment went out, and we corrected it. Since then I compare batch totals with the source totals before I submit, not after. It takes five minutes and has caught two more mistakes since."
+   ],
+   [
+    "Which tools and shortcuts help you work faster without losing accuracy?",
+    "Your practical experience with common data entry tools.",
+    "Names real tools and habits, like spreadsheet shortcuts, the 10-key pad, templates or validation lists, and explains how each saves time or prevents errors.",
+    "I use the 10-key pad for numbers and Excel shortcuts like Ctrl+D to fill down and Ctrl plus an arrow key to jump through large sheets. I like validation lists, since picking a state from a list avoids typos. In our order system I learned the tab order of each screen, so I rarely touch the mouse. Those habits took me from about 120 to 160 records an hour."
+   ],
+   [
+    "Describe a time you suggested a change that made entry easier or cut down on errors.",
+    "Whether you notice process problems and speak up about them.",
+    "A specific problem, a practical suggestion, how it was raised, and a result, even a small one.",
+    "Our team kept mistyping product codes because the paper order form had the code and the item name in different columns. I suggested putting the code right next to the name. My supervisor tried it at one branch first. Over the next month, code errors from that branch dropped by about half, and the new form went out to all branches."
+   ]
+  ]
  }
 }
