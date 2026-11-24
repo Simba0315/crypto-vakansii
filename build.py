@@ -3533,7 +3533,11 @@ def main():
         # the figures stand in the row of numbers when there is one, so the paragraph names the employers instead of repeating them
         row_ = len(js) >= 20 and len({j["company"] for j in js}) >= 3
         lt_ = (lab_[0].upper() + lab_[1:] + ", newest first") if " posted in the last " in lab_ else f"Newest {lab_}"
-        listing(path, h1, COMBO_TITLE.get(path) or f"{h1} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
+        # a place's remote list is found by "work from home jobs" as much as by "remote jobs" (Search Console, 22 Nov 2026: "work from home
+        # jobs" 58 impressions and "virtual assistant jobs" 119 at 8-9 on /locations/bulgaria/remote/): its title carries both, as /remote/ does
+        wfh_ = re.fullmatch(r"locations/[^/]+/remote/", path) and h1.startswith("Remote jobs in ")
+        listing(path, h1, COMBO_TITLE.get(path) or (f"Remote & Work From Home Jobs in {h1[len('Remote jobs in '):]} ({len(js):,} open) | {SITE}" if wfh_ else f"{h1} ({len(js):,} open) | {SITE}"),
+                f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
                 js, intro_for(js, pre, post, hub=row_), trail=trail, per=50, max_pages=3, more=qs, faq=lab_, stats=row_, pics=gl_, hub=tl_, list_title=lt_ if len(js) >= 20 else "",
                 after=COMBO_AFTER.get(path, ""), faq_extra=COMBO_QA.get(path, ()))
 
