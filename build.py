@@ -4852,6 +4852,8 @@ def main():
         return [s_ for s_ in dict.fromkeys(out_) if s_ != slug and s_ in SAL_ALL][:k]
 
     def salary_page(slug, label, group, back, role=False, psn=None):
+        # the work's name inside a sentence: "the average data analyst salary", not "Data Analyst" (24 Nov 2026); headings keep the label
+        lt_ = rlow(by_role[slug][0]) if role and slug in by_role else label
         by_loc = defaultdict(list)
         for j, r in group:
             for ps in j["places"]: by_loc[PLACE_NAME[ps]].append((j, r))
@@ -4895,7 +4897,7 @@ def main():
             g_t, g_n, g_lo, g_med, g_hi = gov_
             g_note = bls_wages.NOTE.get(slug, "")
             g_src = f'<a href="{bls_wages.SOURCE}" rel="noopener">US Bureau of Labor Statistics</a>'
-            gov_lead = f" For comparison, the US government’s median for {e(g_t)}, the closest occupation it counts, is ${g_med:,} ({bls_wages.PERIOD})."
+            gov_lead = f" For comparison, the US government’s median for {e(g_t.lower())}, the closest occupation it counts, is ${g_med:,} ({bls_wages.PERIOD})."
             gov_html = section(f"{label} pay: job postings and government figures", '<div class="tablewrap"><table><tr><th></th><th>Advertised in open postings here</th><th>US government figure, all employers</th></tr>'
                                + f"<tr><td>Lowest tenth earn or are offered under</td><td>{money(pct(.1))}</td><td>${g_lo:,}</td></tr><tr><td><b>Median</b></td><td><b>{money(median(mids))}</b></td><td><b>${g_med:,}</b></td></tr>"
                                + f"<tr><td>Top tenth earn or are offered over</td><td>{money(pct(.9))}</td><td>${g_hi:,}</td></tr><tr><td>Counted</td><td>{len(mids):,} postings</td><td>{g_n:,} people employed</td></tr></table></div>"
@@ -4955,14 +4957,14 @@ def main():
                                    f"{label} Salary: {money(median(mids))} Median ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')})",
                                    f"{label} Salary: {money(median(mids))} Median", f"{label} Salary") if len(c) <= 65), f"{label} Salary")
         page(f"salaries/{slug}/", t_pick,
-             f"The average {label} salary is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
+             f"The average {lt_} salary is {money(mean_)} a year and the median {money(median(mids))}; the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
              f"Counted from {len(mids):,} open job postings that state pay.",
              crumbs(("Salaries", "salaries/"), (label, "")) + f'<h1>{e(label)} salary: <span class="hl">{money(median(mids))} median</span></h1>'
-             f'<p class="lead">The median advertised {e(label)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}, '
+             f'<p class="lead">The median advertised {e(lt_)} salary is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}, '
              f'counted from {len(mids):,} open roles that publish a yearly US-dollar range. Advertised ranges, not verified pay.{gov_lead}</p>'
              + act_row("tools/offer-check/", "Check an offer against these figures", [back] if isinstance(back, tuple) else ()) + stats + pics
              + gov_html + cut
-             + (section(f"What changes the pay of {label} work", '<ul class="ticks">' + "".join(f"<li><b>{e(x['label'])}.</b> {e(x['text'])}</li>" for x in sm_["factors"]) + "</ul>"
+             + (section(f"What changes the pay of {lt_} work", '<ul class="ticks">' + "".join(f"<li><b>{e(x['label'])}.</b> {e(x['text'])}</li>" for x in sm_["factors"]) + "</ul>"
                         + '<p class="note">General reasons, not figures: the figures on this page are counted from today’s postings.</p>') if sm_ else "")
              + (section(f"Skills that pay more for {label} roles", '<div class="tablewrap"><table><tr><th>Skill</th><th>Median with it</th><th>Above the median</th><th>Postings</th></tr>'
                                 + "".join(f'<tr><td><a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a></td><td>{money(median(mids) + d)}</td><td>+{money(d)}</td><td>{k:,}</td></tr>' for d, t, k in prem)
