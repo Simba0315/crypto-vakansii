@@ -1082,7 +1082,7 @@ MORE = {
                 "Many HR departments will only confirm your title and dates; the personal view comes from the managers and colleagues you name.",
             ]),
             ("How to choose and prepare references", [
-                "Pick two or three people who saw your work closely and recently, ideally including a manager, and ask them before you give their names.",
+                "Most employers ask for three. Pick people who saw your work closely and recently, ideally including a manager, and ask them before you give their names.",
                 "Send each one the job description and remind them of the projects they saw, so their answers fit the role.",
                 "You do not have to name your current manager; most employers accept a former manager or a senior colleague until you have an offer.",
                 "Leave “references available on request” off your resume: it takes space and is assumed.",
@@ -1942,6 +1942,10 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             ("What is an example of hybrid work?", "A posting that says \"hybrid, three days a week in our London office\": you work Tuesday to Thursday at the office and Monday and Friday from home, with the team in the office on the same days for meetings. Another common form is one fixed office week a month and the rest at home."),
         ]),
     "CV": dict(
+        # Google US "cv meaning", 24 Nov 2026 evening: People also ask "What else can CV stand for?" and "What does CV mean in anime?"
+        extend={"What CV means": [
+            "CV has other meanings outside job applications. In tech job titles it often means computer vision, so a CV engineer builds software that reads images and video. In medicine it stands for cardiovascular, and in anime credits it means character voice: the voice actor who plays the role.",
+        ]},
         sections=[
             ("Who needs a full CV, and how long it runs", [
                 "A full curriculum vitae is what academia, research and some medical and legal posts ask for. It lists everything: publications, grants, talks, teaching and committees, and it can run past ten pages.",
@@ -1952,6 +1956,10 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             ("What should a CV include?", "Contact details, a short profile, work experience with results, education and skills. An academic CV adds publications, grants, conference talks, teaching and service."),
         ]),
     "Reference": dict(
+        # Google US "job references", 24 Nov 2026 evening: the AI answer (UC Davis, Indeed, Harvard Law School) gives the list's layout
+        extend={"How to choose and prepare references": [
+            "Give them as a separate reference list with the same header as your resume. For each person write the full name, job title, company, phone and email, and how you worked together, for example \"Former manager, 2022 to 2025\".",
+        ]},
         sections=[
             ("Kinds of references", [
                 "Professional references are managers, colleagues or clients who saw your work. Personal or character references know you outside work and speak to your reliability. Academic references are teachers or supervisors, common for students and new graduates.",
@@ -1963,12 +1971,21 @@ _ADD_24NOV = {          # "sections" are added after the term's own (at most 4 i
             # Search Console 24 Nov 2026: "reference title meaning", 10 impressions at 8.1
             ("What does \"reference title\" mean on an application form?", "It asks for the job title of the person you list as a reference, such as \"Engineering Manager\" or \"Head of Sales\", as it was when they worked with you. Forms usually ask next for the company and how you know them (\"Relationship\": your manager, colleague or client). It is not your own title and not the title of the job you are applying for."),
         ]),
+    # Google US "graduate programme", 24 Nov 2026 evening: People also ask "Is 28 too old for a grad scheme?"
+    "Graduate program": dict(
+        qa=[
+            ("Is there an age limit for graduate programs?", "Usually not. Programs set rules on when you graduated or how much work experience you have, not on your age, so people who studied later or are changing careers can apply. Read the eligibility section: a graduation window, such as the last two years, is the limit that counts."),
+        ]),
     "Salary range": dict(
         sections=[
             ("The midpoint and salary bands", [
                 "The midpoint is the figure halfway between the lowest and the highest pay: add the two and divide by two, so $80K to $100K has a midpoint of $90K.",
                 "A salary range is the pay for one job. A salary band is a wider bracket an employer uses for several jobs at the same level, so one band can hold several ranges.",
             ]),
+        ],
+        # Google US "salary range", 24 Nov 2026 evening: People also ask "How to answer salary range?"
+        qa=[
+            ("How do I answer when asked for my salary range?", "Give a range, not one number, and make its bottom a figure you would accept, because offers often land near the bottom of what you say. Base it on pay for the same title, level and location, and say whether you mean base pay or base plus bonus."),
         ]),
     "Equity and stock options": dict(
         sections=[
@@ -2047,10 +2064,18 @@ MORE.setdefault("Independent contractor (1099)", dict(
         ("What it means for a job offer", [
             "To compare a contract rate with a salary, count what the client does not pay: both halves of Social Security and Medicare, paid leave, a health plan and a retirement match. A contract rate that looks high often comes out close to a salary once those are added.",
         ]),
+        # US Department of Labor, Fact Sheet #13 (2026), read 24 Nov 2026: the final rule announced 19 Nov 2026
+        ("The Department of Labor's test (November 2026 rule)", [
+            "For minimum wage and overtime, the question is decided under the Fair Labor Standards Act, not the tax code. On 19 November 2026 the US Department of Labor announced a final rule that rescinds its 2024 rule and asks whether the worker is in business for themselves as a matter of economic reality.",
+            "The test has five factors. Two are core: how much control the worker has over the work, and whether they can make a profit or a loss through their own initiative or investment. The other three are the skill the work needs, how permanent the relationship is, and whether the work is part of an integrated unit of production.",
+            "The same test applies under the Family and Medical Leave Act and the Migrant and Seasonal Agricultural Worker Protection Act. The rule takes effect 60 days after it is published in the Federal Register. Tax status still follows the IRS rules above.",
+        ]),
     ],
     qa=[
         ("Does a contract that says \"independent contractor\" make me one?", "No. Under IRS rules what matters is whether the business has the right to control the details of how you work, not the title in the contract."),
         ("Which tax form does an independent contractor get?", "Form 1099-NEC from each business that paid them, instead of the W-2 an employee gets."),
         ("Who pays Social Security and Medicare for a contractor?", "The contractor, as self-employment tax on their net earnings."),
         ("Do independent contractors work for only one client?", "Usually not: most work for several clients, which is one of the signs that they run their own business."),
+        # IRS "Self-employed individuals tax center" and "Independent contractor defined", read 24 Nov 2026
+        ("What is the difference between self-employed and an independent contractor?", "An independent contractor is one kind of self-employed person. The IRS counts you as self-employed if you run a business as a sole proprietor or an independent contractor, are a partner in a business, or are otherwise in business for yourself, gig work included. Either way you pay self-employment tax, and you must file a return once net earnings reach $400."),
     ]))

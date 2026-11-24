@@ -971,3 +971,18 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
 - "what is an exit interview": Coursera, Indeed, SHRM-type pages; we are not on page 1. Added "Can an exit interview be used against you?".
 - "hybrid work meaning": Webex, Microsoft, Workday, Cambridge; not on page 1. Added "What is an example of hybrid work?".
 
+
+### Google US, 24 Nov 2026 night: independent contractor, salary range, cv meaning, job references, graduate programme
+- "independent contractor": we are not on page 1. People also ask: what working as one means (already on the page), "What is the difference between
+  self-employed and an independent contractor?" (added from the IRS "Self-employed individuals tax center" and "Independent contractor defined", both read
+  that day: a contractor is one kind of self-employed person, $400 filing line), W-2 vs 1099 (already answered). Added a section on the Labor Department's
+  final rule announced 19 Nov 2026 from its Fact Sheet #13 (2026): economic reality test, 5 factors, 2 core (control; profit or loss), also FMLA and MSPA,
+  in force 60 days after Federal Register publication. The DOL news release returned 403 to the helper; nothing was taken from it.
+- "salary range": AI overview cites Indeed, Reddit, Oyster, Robert Half; organic Indeed, Payscale, SHRM, Oyster, BLS, Glassdoor, Harvard HR. Added
+  "How do I answer when asked for my salary range?" (People also ask "How to answer salary range?").
+- "cv meaning": AI overview cites Columbia GSAS, UNO, Indeed; People also ask "What else can CV stand for?", "What does CV mean in anime?". Added the other
+  meanings (computer vision in tech titles, cardiovascular, character voice) to "What CV means".
+- "job references": AI overview (UC Davis, Indeed, Harvard Law School) says most employers ask for 3; our page said "two or three" — now "three", plus how
+  to lay out the reference list (name, title, company, phone, email, how you worked together).
+- "graduate programme": UNDP, Deutsche Bank, JPMorganChase, Novo Nordisk, GSK, Mastercard; People also ask "Is 28 too old for a grad scheme?" — added
+  "Is there an age limit for graduate programs?" (the graduation window is the limit, not age).
