@@ -987,13 +987,15 @@ def write(path, content, sitemap=True):
     if f.suffix == ".html" and "1 " in content:
         # "median 1 years", "asks for 1 years" (job description pages, 24 Nov 2026): twenty phrases put a count before "years"; one place
         # makes "1" singular instead of a condition in each of them
-        content = ONE_PLURAL.sub(lambda m: m.group(0)[:-1], content)
+        content = ONE_PLURAL.sub(lambda m: "1 " + ONE_WORD[m.group(1)], content)
     f.write_text(content, encoding="utf-8")
     if sitemap:
         URLS.append(path)
 
 
-ONE_PLURAL = re.compile(r"(?<![\d.,/$£€-])\b1 (?:years|days|weeks|months)\b")
+ONE_WORD = {"years": "year", "days": "day", "weeks": "week", "months": "month", "companies": "company", "employers": "employer", "roles": "role",
+            "jobs": "job", "postings": "posting", "countries": "country", "cities": "city", "openings": "opening"}
+ONE_PLURAL = re.compile(r"(?<![\d.,/$£€-])\b1 (" + "|".join(ONE_WORD) + r")\b")      # "54 open roles at 1 companies" too (24 Nov 2026)
 
 
 def mincss(s):
@@ -3690,7 +3692,7 @@ def main():
         sr_ = SKILL_ROLE.get(t)
         listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {t} ({len(js):,} open) | {SITE}" if sr_ else f"{t} Jobs ({len(js):,} open) | {SITE}",
                 (f"Jobs that ask for {t}: {len(js):,} open now at companies." if sr_ else f"{t} jobs: {len(js):,} open now at companies.")
-                + ((lambda pl_: f" {t}: {pl_[:1].lower() + pl_[1:] if not pl_[:2].isupper() else pl_}")(skills_info.plain(t)) if t in skills_info.INFO else ""), js,       # the searched words first, then what the skill is (24 Nov 2026)
+                + ((lambda pl_: f" {t}: {pl_ if len(pl_.split()[0]) > 1 and pl_.split()[0].isupper() else pl_[:1].lower() + pl_[1:]}")(skills_info.plain(t)) if t in skills_info.INFO else ""), js,       # the searched words first, then what the skill is (24 Nov 2026)
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, stats=True,
                 extra=(f'<p class="note">{NEWSK_N[t]:,} of these were posted in the last three days: <a href="{P}/new/skills/{tslug(t)}/">new {e(t)} jobs</a>.</p>' if t in NEWSK_N else "")
@@ -8730,7 +8732,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             + (f"<h2 class='h2s'>Questions and requests about your data</h2><p>Write to {mail_a('privacy')}. As nothing about you is stored on our side, there is usually nothing to see or erase; we answer every request within 30 days.</p>" if MAIL.get("privacy") else ""))
          + ("<h2 class='h2s'>Changes</h2><p>This page was updated when job alerts and accounts were switched on. If anything else is added (payments, paid tools), this page will say so before it goes live.</p>" if api_on else
             "<h2 class='h2s'>Changes</h2><p>If paid accounts or email alerts are added, this page will be updated before they go live.</p>"), cls="sp docp")
-    page("terms/", f"Terms of use | {SITE}", f"The terms for using {SITE}: what the site is, how accurate the listings are, where you apply, how job descriptions are used and how to get a listing removed.",
+    page("terms/", f"Terms of use | {SITE}", f"Terms of use for {SITE}: what the site is, how accurate listings are, where you apply, how descriptions are used and how to remove a listing.",
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
          "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically every hour. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
@@ -10476,7 +10478,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in map_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
         '<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">')
     page("map/", f"Jobs Map: {map_total:,} Open Jobs in {len(map_keys)} Cities | {SITE}",
-         f"A world map of {map_total:,} open jobs in {len(map_keys)} cities, read from employers’ own careers pages every hour. Search a job or a skill and see where it is hiring; no account needed.",
+         f"Jobs map: {map_total:,} open jobs in {len(map_keys)} cities, read from employers’ own careers pages every hour. Search a job or skill to see where it hires.",
          crumbs(("Jobs map", "")) + '<h1>Jobs on a map: <span class="hl">see where they are hiring</span></h1>'
          f'<p class="lead">{map_total:,} open jobs in {len(map_keys)} cities, each read from the employer’s own careers page within the last hour. '
          'Type a job or a skill to count the dots again; click a dot for the newest jobs there.</p>'
