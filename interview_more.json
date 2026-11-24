@@ -47842,5 +47842,1162 @@
     "On a team move I trusted the furniture vendor's desk plan and never walked the space with their drawings. Monday morning, 12 desks had no power. We set up temporary seats in a meeting room and the electrician finished by Wednesday. Since then I walk every floor with the drawings a week before a move and test power and network at sample desks."
    ]
   ]
+ },
+ "project-coordinator": {
+  "heading": "Project coordinator questions",
+  "qs": [
+   [
+    "What does a project coordinator do day to day?",
+    "Whether you understand the role as support that keeps a plan moving.",
+    "Tracking tasks and dates, running meetings and notes, updating the plan and chasing what is late, so the project manager can decide.",
+    "I keep the plan and the task list current, book and run the regular meetings, write the notes and actions, and follow up on anything late. I prepare the weekly status report and keep documents where people can find them. The project manager makes the calls; I make sure they have up-to-date facts to make them."
+   ],
+   [
+    "How do you keep track of tasks across several projects at once?",
+    "Whether you have a system, not just a good memory.",
+    "One place for every task with an owner and a date, a fixed weekly review, and a way to see what is due across projects.",
+    "Everything goes into one tracker, Smartsheet in my last job, with an owner, a due date and a status. Every Monday I filter for what is due in the next two weeks across all projects and send each owner a short list. Anything that slips twice goes to the project manager the same day."
+   ],
+   [
+    "A task owner has missed two deadlines in a row. What do you do?",
+    "How you follow up without blaming and when you escalate.",
+    "A direct, private check on what is blocking them, a new date they agree to, and telling the project manager if the critical path is at risk.",
+    "I ask the person privately what is in the way; often it is a dependency or a priority clash. We agree a new date they believe in, and I note it in the tracker. If the task is on the critical path or the new date moves a milestone, I tell the project manager that day with the impact, not just the delay."
+   ],
+   [
+    "What goes into a good weekly status report?",
+    "Whether you write for busy readers.",
+    "Overall status in one line, progress against milestones, risks and issues with owners, decisions needed, all on one page.",
+    "One line of overall status with a color, then milestones with planned and forecast dates, the top risks and issues each with an owner and next step, and the decisions we need from the reader. I keep it to one page and send it on the same day every week, so people know when to look."
+   ],
+   [
+    "What is a RAID log, and how do you keep it useful?",
+    "Whether you know a standard project tool and keep it alive.",
+    "Risks, assumptions, issues and dependencies, each with an owner, a date and an action, reviewed every week.",
+    "It lists risks, assumptions, issues and dependencies. Each entry gets an owner, a date and the next action, and I review the log in the weekly meeting so it does not turn into a list nobody reads. Closed items stay in it with the date they closed, which helps at the lessons-learned review."
+   ],
+   [
+    "How do you take meeting notes that people actually use?",
+    "Whether your notes drive action.",
+    "Decisions and actions with owners and dates, sent within a day, not a transcript.",
+    "I write down decisions and actions, not who said what. Each action gets one owner and a date. I send the notes the same day with the actions at the top, and the next meeting starts with those actions."
+   ],
+   [
+    "Two project managers ask you for urgent work at the same time. How do you decide?",
+    "How you handle competing priorities without choosing sides.",
+    "Asking for the real deadline and impact of each, being open about the clash, and letting the managers or your lead decide if both truly collide.",
+    "I ask each for the real deadline and what happens if it slips. Often one can wait a day. If both are truly urgent, I tell them both about the clash and ask them, or my lead, to set the order. I do not quietly pick one and let the other find out later."
+   ],
+   [
+    "What is the critical path?",
+    "Whether you know which tasks set the end date.",
+    "The longest chain of dependent tasks; a delay on it moves the finish date, while tasks off it have slack.",
+    "It is the longest chain of tasks that depend on each other from start to finish. Any delay on it moves the end date, while tasks off it have some slack. That is why I check the critical path tasks first every week and flag slips on them at once."
+   ],
+   [
+    "Which project tools have you used, and how quickly do you learn a new one?",
+    "Whether you can work in their tools and ramp up fast.",
+    "The tools you really used and for what, and a concrete example of learning a new one.",
+    "I have used Microsoft Project for schedules, Jira for team tasks and Smartsheet for tracking across projects, plus Excel for budgets. In my last job the team moved to Asana; I set up our project templates in the first week by working through their guides and one sample project."
+   ],
+   [
+    "A stakeholder asks for a change in scope halfway through. What do you do?",
+    "Whether you know scope changes go through a process.",
+    "Logging the request, working out its effect on time, cost and other work with the project manager, and getting a decision before work starts.",
+    "I write the request down and log it as a change request, even if it sounds small. With the project manager I work out what it does to the dates, the cost and other tasks, and we take that to the person who can approve it. Work starts only after a recorded yes."
+   ],
+   [
+    "How do you help track a project budget?",
+    "Whether you can keep numbers accurate and timely.",
+    "Recording costs as they come, comparing with the plan each month, and raising a variance early with a reason.",
+    "I log invoices and hours against the budget lines as they come in and reconcile with finance each month. When a line runs more than 10% over plan, I note the reason and tell the project manager before the monthly review, not after."
+   ],
+   [
+    "How do you schedule a meeting across four time zones?",
+    "Whether you think about people as well as calendars.",
+    "Finding the overlap, rotating the inconvenient slot, sending an agenda, and recording for those who cannot join.",
+    "I find the hours that overlap for everyone, and if one region always gets the early or late slot, I rotate it. The invite has the agenda and the time in each zone. I record the meeting and send short notes for anyone who could not join."
+   ],
+   [
+    "Tell me about a time a project was at risk of missing a deadline.",
+    "How you act under pressure and what you learn.",
+    "A real example: what you noticed early, what you did, the result, and what you changed afterwards.",
+    "On an office move, the furniture delivery slipped two weeks, which would have pushed the move date. I found it in my weekly supplier check, told the project manager the same day and lined up a second supplier for the desks we needed first. We moved on time with part of the order. Since then I check supplier dates two weeks earlier."
+   ],
+   [
+    "Where do you want to be in three years?",
+    "Whether you see a path and will stay long enough to grow.",
+    "A realistic step, such as project manager or a certification, tied to what this role teaches.",
+    "I want to run smaller projects on my own within two or three years. In this role I want to learn how the project managers plan and handle stakeholders, and I am working toward the CAPM certification as a first step toward the PMP."
+   ]
+  ]
+ },
+ "insurance-agent": {
+  "heading": "Insurance agent questions",
+  "qs": [
+   [
+    "How would you explain the difference between term and whole life insurance to a first-time buyer?",
+    "Whether you can explain the two main life insurance products in plain words.",
+    "Term covers a set period at a lower premium; whole life lasts for life and builds cash value at a higher cost. The choice follows the client's need, not the commission.",
+    "I say term is like renting coverage: it protects you for 10, 20 or 30 years, and it costs less. Whole life is like owning: it lasts your whole life and builds cash value, but the premium is much higher. Then I ask what they need it for. A couple with a 25-year mortgage and two young kids usually needs a lot of term, not a small whole life policy."
+   ],
+   [
+    "A client asks why raising the deductible lowers the premium. How do you explain it?",
+    "Whether you understand how deductibles and premiums trade off.",
+    "The client takes on more of each loss, so the insurer charges less. A good answer adds a check that the client could really pay the higher deductible tomorrow.",
+    "I tell them the deductible is the part of a claim they pay first, and the premium is what they pay to keep the policy. If they agree to pay the first $1,000 of a claim instead of $500, the insurer pays less on small claims, so it charges less. Then I ask one question: could you pay $1,000 next week without trouble? If not, the savings are not worth it."
+   ],
+   [
+    "What do you need to do to keep your license active, and how do you stay on top of it?",
+    "Whether you know that agents are licensed by each state and must keep up continuing education.",
+    "Each state licenses agents and sets its own continuing education hours and renewal dates, and selling in another state needs a license there too. A tracking habit matters most.",
+    "Each state licenses agents and sets its own rules, so I check the insurance department website for every state where I hold a license. I keep a spreadsheet with renewal dates and the continuing education hours I still need, including any ethics hours. I book courses three months before each deadline. Last cycle I finished with two months to spare."
+   ],
+   [
+    "What is errors and omissions insurance, and why does an agent need it?",
+    "Whether you understand your own professional liability.",
+    "E&O covers claims that an agent's mistake or bad advice cost a client money. A strong answer also names the habits that prevent claims: notes, signed declinations, clear records.",
+    "E&O protects me if a client says my mistake cost them money, for example if I forgot to add a new car and they had an accident in it. Many agencies and carriers require it. But the policy is the backup. The real protection is my notes: I document every coverage I offer, and if a client turns down umbrella coverage, I get it in writing. In five years I have had one complaint, and my notes closed it in a day."
+   ],
+   [
+    "A client wants the cheapest auto policy with state minimum limits, but owns a home and has savings. What do you do?",
+    "Whether you advise on real risk while respecting the client's choice.",
+    "An explanation of what minimum limits leave exposed, a quote at higher limits to compare, and the client's decision recorded in writing.",
+    "I show two quotes side by side: state minimum and much higher limits. For one client last month the difference was $22 a month. I explain that if they cause a serious accident, anything above the limit can come out of their savings or their home. If they still want the minimum, that is their choice, and I note in the file that higher limits were offered and declined."
+   ],
+   [
+    "A client calls angry because a claim was denied for damage they believed was covered. How do you handle it?",
+    "How you handle an upset client when the answer may not be the one they want.",
+    "Listening first, reading the policy and the denial letter, an honest explanation, and help asking for a review when there is a real case.",
+    "First I let them tell me the whole story without interrupting. Then I pull the policy and the denial letter and read the exact exclusion with them. Last year a homeowner's water damage claim was denied because the leak had gone on for months. I explained why, but I also asked the adjuster to look again at one part that was sudden, and that part was paid. I never promise what I can't deliver."
+   ],
+   [
+    "A prospect asks you to backdate a policy so a loss from last week is covered. What do you say?",
+    "Your ethics when a client asks for something that is fraud.",
+    "A clear, calm no, a short explanation that it is fraud, and help with what is possible now, such as cover starting today.",
+    "I say no, plainly. Coverage starts when the policy is bound, and changing the date to cover a known loss is fraud. It could cost me my license and cost them far more. Then I help with what I can: I bind a policy today so the next loss is covered, and I check whether a policy they already have might respond. It happened to me once, and that client came back a year later for his business cover."
+   ],
+   [
+    "A client's renewal premium went up 30%, and they want to cancel today. What do you do?",
+    "How you keep a client by doing the work, not by arguing.",
+    "Finding out why the rate rose, reviewing or shopping the coverage, and making sure there is no gap in coverage before anything is canceled.",
+    "I ask them to give me two days before canceling. I look at what drove the increase: a claim, a new driver, or a rate change across the state. Then I check discounts like bundling or a higher deductible, and quote other carriers where I can. Last spring I brought a 30% increase down to 12% with another carrier. If they still leave, I make sure the new policy starts before the old one ends."
+   ],
+   [
+    "A small business owner says they don't need general liability because they work from home. How do you respond?",
+    "Whether you can find a risk a business owner has missed.",
+    "Questions about clients, contracts and site visits, a plain example of a claim, and a note that a homeowners policy often limits or excludes business activity.",
+    "I ask questions before I argue. Do clients ever come to the house? Do your contracts ask for proof of insurance? Do you visit client sites? A bookkeeper I worked with said no to all three, then remembered her biggest client wanted a certificate of insurance. I also explain that a homeowners policy often limits or excludes business activity, so she should not count on it."
+   ],
+   [
+    "You find out you entered the wrong garaging address on a client's auto policy six months ago. What do you do?",
+    "Whether you own your mistakes quickly and fix them properly.",
+    "Telling the client and the carrier right away, correcting the policy, explaining any premium change, and telling the agency so E&O can be notified if needed.",
+    "I fix it the same day. I call the client, tell them what happened and what it means, then send the correction to the carrier. If the premium changes, I explain the amount before they see a bill. I tell my agency manager too, in case it needs to be reported to our E&O carrier. A wrong address can cause a problem with a claim, so waiting is the worst choice."
+   ],
+   [
+    "Tell me about a month when you were far behind your sales goal. What did you change?",
+    "How you respond to a slow month with a plan instead of excuses.",
+    "A real number, a look at where the pipeline broke, specific changes in daily activity, and the result, good or bad.",
+    "In my second year I was at 9 policies against a goal of 25 by the middle of the month. My numbers showed I was quoting fine but not following up. I blocked two hours every morning for calls on open quotes and asked for referrals at every client review. I finished at 21. I missed the goal, but the follow-up habit stayed, and the next quarter I was over."
+   ],
+   [
+    "How have you built your own book of clients without relying on leads from the agency?",
+    "Whether you can bring in your own business.",
+    "Steady sources like referrals, yearly reviews, community groups and partners such as mortgage brokers, with numbers that show it worked.",
+    "Most of my new business comes from people I already insure. I do a yearly review with every client, and at the end I ask who else might want one. I also built a relationship with two mortgage brokers who send me home buyers who need a quote fast. Last year about 40 of my 110 new policies came from referrals and those two partners."
+   ],
+   [
+    "Tell me about a time you talked a client out of buying more coverage than they needed.",
+    "Whether you put the client's interest ahead of your commission.",
+    "A concrete case where you advised less, the reason, and what it did for trust and for keeping the client.",
+    "A retired couple came in wanting a large whole life policy because a friend had one. Their kids were grown, the house was paid off, and their main worry was funeral costs. I suggested a much smaller final expense policy. The commission was a fraction of what it could have been. A year later they moved their home and auto to me and sent me their daughter."
+   ],
+   [
+    "Why do you want to sell insurance rather than another product?",
+    "Whether you understand what the job is really like and still want it.",
+    "A real reason tied to helping people at bad moments, plus awareness of the hard parts: rejection, licensing, commission pay and paperwork.",
+    "Two years ago my neighbor's house flooded, and her agent walked her through every step of the claim. I saw what a good agent is worth on the worst day of someone's life. I also know the hard parts: lots of no's, licensing exams, and pay that depends on results. I passed my property and casualty exam on the first try, and I like the steady work of building a book."
+   ]
+  ]
+ },
+ "receptionist": {
+  "heading": "Receptionist questions",
+  "qs": [
+   [
+    "How do you transfer a call so the caller isn't left confused or cut off?",
+    "Whether you can use a business phone system with care for the caller.",
+    "A warm transfer when possible: tell the caller, brief the colleague, and come back on the line if no one picks up. Give the direct number in case the call drops.",
+    "I tell the caller who I am putting them through to and why. When I can, I do a warm transfer: I speak to my colleague first and give them the name and the reason for the call. If no one answers, I come back on the line and offer voicemail or a message. I also give the caller the direct extension, so if the call drops they don't start over. At my last job I handled about 80 calls a day this way."
+   ],
+   [
+    "What should a good visitor sign-in process include?",
+    "Whether you understand the security side of the front desk.",
+    "Name, company, host, time in and out, a badge, a host who comes to collect the visitor, and a record that shows who is in the building in an emergency.",
+    "Every visitor signs in with their name, company, who they are seeing and the time. They get a dated badge, and I call the host to come down instead of sending the visitor up alone. When they leave, they sign out and hand the badge back. My last office had about 40 visitors a day, and during a fire drill the list showed us exactly who was still in the building."
+   ],
+   [
+    "How do you protect confidential information at a front desk where people can overhear you?",
+    "Whether you keep private details private in a busy, open space.",
+    "Low voices, no names or reasons for visits said aloud, screens and papers out of view, identity checks on the phone, and awareness of rules like HIPAA in a clinic.",
+    "In the clinic where I worked, I never said out loud why a patient was there. I asked people to check their form instead of reading it back to them. My screen faced away from the waiting room, and I turned papers face down. On the phone I confirmed name and date of birth before saying anything about an appointment. I treated even the fact that someone had an appointment as private."
+   ],
+   [
+    "What do you set up before you leave the front desk for lunch or a meeting?",
+    "Whether you know how to keep the desk covered when you step away.",
+    "A named cover person briefed on expected visitors, phones forwarded or set to a clear greeting, deliveries planned for, and nothing confidential left on the desk.",
+    "I ask my cover person 15 minutes ahead and give them the list of expected visitors and any deliveries due. I forward the main line to their phone, or, if no one is free, switch to the greeting that says when I'll be back. I lock my screen and put the visitor log away. When I return, I check for messages before anything else."
+   ],
+   [
+    "A visitor arrives for a meeting, but the host isn't answering and isn't in the building. What do you do?",
+    "How you handle a missing host without leaving a guest stranded.",
+    "A comfortable seat, a drink, several ways to reach the host or their team, and regular updates so the visitor doesn't feel forgotten.",
+    "I seat the visitor, offer water or coffee, and tell them I'm finding their host. I try the host's phone, then a message, then their manager or team. Once a host had the meeting in his calendar on the wrong day. I found a colleague who could meet the visitor for 20 minutes, and the host called them that afternoon. I check on the visitor every five minutes so they know I haven't forgotten them."
+   ],
+   [
+    "A caller is angry because nobody returned their call from yesterday. How do you handle it?",
+    "How you calm an upset caller and make sure the follow-up really happens.",
+    "An apology without blaming colleagues, the details taken down and read back, a real time for the callback, and a check that it happened.",
+    "I say I'm sorry they had to call twice and that I'll make sure it reaches the right person today. I take their name, number and what it's about, and read it back. Then I walk the message over or send it directly, not just to voicemail. I tell the caller when to expect the call, and if I don't hear it happened by then, I chase it myself."
+   ],
+   [
+    "Someone without an appointment insists on going straight to an employee's desk. What do you do?",
+    "Whether you hold to security rules politely under pressure.",
+    "Polite but firm: no access without the host's OK, a call to the employee, a seat to wait in, and security if the person refuses or becomes threatening.",
+    "I say, kindly, that I need to let the employee know first, and I ask them to take a seat. I call the employee and tell them who is here. If the employee says no or isn't available, I offer to take a message. Once a man got loud and tried to walk past. I stayed behind the desk, kept my voice calm, and called building security, who arrived in two minutes."
+   ],
+   [
+    "A delivery driver needs a signature for a package addressed to someone who is out today. What do you do?",
+    "Whether you follow office rules for accepting and tracking deliveries.",
+    "Knowing whether you may sign, logging the package, storing it safely and telling the recipient. Items marked personal or needing ID may need the person themselves.",
+    "If our policy lets me sign for the team, I sign, then log the time, carrier and tracking number. I put the box in the locked mail room and email the person so they see it when they're back. If it's marked personal or needs ID, I ask the driver to redeliver. In my last job I logged about 30 packages a day, and the log settled every “where is my box” question."
+   ],
+   [
+    "A hotel guest arrives at 11 p.m., and you can't find their reservation. How do you handle it?",
+    "How you solve a problem for a tired guest under pressure.",
+    "Calm searching by other names, dates and booking sources, a room if one is free, and if the hotel is full, help finding a nearby room while the guest waits comfortably.",
+    "I stay calm and search again by last name, confirmation number and booking site, since third-party bookings sometimes arrive late or under another name. Once I found one under the company that paid. If there truly is no booking and we have a room, I check them in at a fair rate. If we are full, I call nearby hotels and don't let them leave until they have a bed."
+   ],
+   [
+    "The phone is ringing, a visitor is waiting, and a courier is at the desk, all at once. How do you handle it?",
+    "How you set priorities when everything arrives at the same moment.",
+    "A quick sign to everyone that they've been seen, a short hold on the phone, the person in front of you served first, and nothing dropped.",
+    "I give the visitor a smile and a nod so they know I've seen them. I answer the phone with a short greeting and ask if I can put them on hold for a moment. If the courier needs no signature, I point to the drop spot. Then I help the visitor and go back to the caller within a minute. On busy mornings I took around 120 calls, and this order kept anyone from being forgotten."
+   ],
+   [
+    "Tell me about a mistake you made at the front desk and how you fixed it.",
+    "Whether you own and fix errors quickly.",
+    "A real, specific mistake, a quick fix, honesty with the people affected, and a change in habit so it doesn't happen again.",
+    "I once booked two patients into the same 9:00 slot because I didn't refresh the schedule. I saw it when both arrived. I apologized, asked the nurse if one could be seen at 9:20, and offered the other a coffee. Both were seen within 30 minutes. Since then I refresh the schedule and read back every booking before I hang up."
+   ],
+   [
+    "How do you stay friendly and patient on your 80th call of the day?",
+    "Whether you can keep a warm tone through a long, repetitive day.",
+    "Real habits: short resets between rushes, treating each caller as the first, and noticing when tiredness starts to show in your voice.",
+    "I remind myself that it may be my 80th call, but it is often the caller's only one. I keep water at the desk, stand up for a minute between rushes, and smile when I answer, because people can hear it. At my last job our desk took about 300 calls a day, and my manager used my calls as examples when training new hires."
+   ],
+   [
+    "Why do you want to work at a front desk rather than in a back office role?",
+    "Whether you enjoy being the first person visitors and callers meet.",
+    "Real enjoyment of people and variety, plus awareness of the hard parts: constant interruptions, difficult visitors and being tied to the desk.",
+    "I like being the first person people meet. At the dental office where I worked, many patients were nervous, and a calm hello made a difference. I also like that no two hours are the same. I know it means constant interruptions and staying at the desk, and I'm fine with that. I'd find a quiet back office job too slow."
+   ],
+   [
+    "Tell me about a time you helped a visitor or caller with something outside your job.",
+    "Whether you go a step further without overstepping.",
+    "A specific case of extra help, kept within what you were allowed to do, and the result for the person and for the company.",
+    "An older visitor came to our law firm by mistake for a hearing test. I looked up the clinic, saw it was three blocks away, called them to say she would be a few minutes late, and printed a map for her. Two weeks later her son sent a thank-you card to the office. It took me ten minutes."
+   ]
+  ]
+ },
+ "administrative-assistant": {
+  "heading": "Administrative assistant questions",
+  "qs": [
+   [
+    "How do you manage an executive's calendar so double bookings don't happen?",
+    "Whether you have a system for managing someone else's calendar.",
+    "Rules agreed with the manager, holds and buffers, a weekly look ahead, and one person controlling invites so conflicts are caught early.",
+    "First I agree on rules with the manager: which meetings I can accept, which need her OK, and protected time for focused work. I add 15-minute buffers between meetings in different buildings. Every Friday I review the next two weeks and flag conflicts. With one VP I managed about 30 meetings a week this way, and double bookings almost stopped."
+   ],
+   [
+    "What do you check before you submit an expense report for someone?",
+    "Whether you know where expense reports usually go wrong.",
+    "A receipt for every item, amounts that match the card, policy limits, a business purpose, the right cost codes, and submission before the deadline.",
+    "I match every line to a receipt and to the card statement. I check each item against the policy, like meal limits and whether alcohol is allowed. I add the business purpose and the right cost center, because that is where most reports get sent back. For my last manager that was about 6 reports a month, and none came back last year."
+   ],
+   [
+    "How do you book business travel for an executive?",
+    "Whether you know what good travel planning covers.",
+    "Following the travel policy, knowing the person's preferences, leaving time for delays, one itinerary with all confirmations, and a plan for changes.",
+    "I start with the travel policy and the person's preferences: aisle or window, airline programs, a hotel near the meeting. I book flights with time to spare before the first meeting, and avoid the last flight of the day. Then I send one itinerary with all confirmation numbers, addresses and contacts. For a three-city trip last spring I also noted a backup flight for each leg."
+   ],
+   [
+    "How would you set up a shared filing system so a team can find documents quickly?",
+    "Whether you can organize files so other people can use them.",
+    "A simple folder structure, clear naming rules with dates, access set by role, a short written guide, and regular archiving of old files.",
+    "I keep the folders simple: by client or project, then by year. Every file name starts with the date in year-month-day order, so files sort by themselves. I write the rules on one page and pin it in the shared drive. Access is set by role, so HR files stay private. When I set this up for a team of 12, questions about where to find a contract went from daily to almost never."
+   ],
+   [
+    "Two executives want the same conference room at the same time. What do you do?",
+    "Whether you can settle a scheduling clash fairly.",
+    "Checking who booked first, looking at other rooms and times, offering options to both sides, and letting whoever sets priorities decide if no one will move.",
+    "I check the booking system to see who reserved it first. Then I look at what each meeting needs: one might fit in a smaller room or work on video. I go to both executives with options, not a decision. Once a client meeting and a team meeting clashed, and the team was happy to move to a smaller room down the hall. If neither will move, I ask the office manager to decide."
+   ],
+   [
+    "Your manager's flight is canceled late at night, and they need to be in Chicago for a 9 a.m. meeting. What do you do?",
+    "How you handle a travel problem quickly and calmly.",
+    "Fast rebooking through the agency or airline, options like a nearby airport, updates to the hotel and car, and a heads-up to the meeting host if timing slips.",
+    "I call the travel agency or the airline right away, because seats on the next flights go fast. If nothing gets in before 9, I look at nearby airports and the first morning flights. I update the hotel and car service, then text my manager the new plan with confirmation numbers. If arrival looks tight, I let the meeting host know and offer to move the start to 10."
+   ],
+   [
+    "An invoice you were asked to process shows a different bank account from the vendor's usual one. What do you do?",
+    "Whether you notice the warning signs of payment fraud.",
+    "Not paying it, checking with the vendor on a phone number already on file rather than one on the invoice, and telling finance and the manager.",
+    "I don't process it. A changed bank account is a common sign of invoice fraud. I call the vendor on the number we already have on file, not one from the email or the invoice, and ask if they changed banks. I also tell my manager and finance. At my last company this stopped a fake invoice for $18,000 that came from a spoofed email."
+   ],
+   [
+    "Three people ask you for urgent work on the same afternoon. How do you decide what comes first?",
+    "How you set priorities between several people you support.",
+    "Asking about real deadlines, judging impact, being open about what will wait, and asking the manager to decide when two urgent tasks truly clash.",
+    "I ask each person when they actually need it and what happens if it is late. Usually one is due today, and the others can wait until tomorrow morning. I tell everyone honestly when they will get it. If two really are due at the same time, I ask my manager to choose instead of guessing. Last month this kept a board packet, a travel booking and a room setup all on time."
+   ],
+   [
+    "A senior leader asks you to send an email to the whole company within the hour, and you spot a factual error in it. What do you do?",
+    "Whether you speak up about errors to senior people.",
+    "Telling the leader quickly and privately with the fix ready, not sending it as is, and not changing it without approval.",
+    "I message the leader right away: the email says open enrollment ends on the 12th, but the HR calendar says the 15th, should I change it? I include the fix so it takes them five seconds to say yes. I don't change it on my own, and I don't send it as is. A quick question is much better than a correction email to 400 people."
+   ],
+   [
+    "While ordering supplies, you see the office is spending twice what it did last year. What do you do?",
+    "Whether you notice costs and act on them.",
+    "Finding the cause in the real orders, looking for waste or better prices, and bringing a short proposal with numbers to the manager.",
+    "First I go through the orders to see what changed. Once I found we were buying printer toner from three vendors at different prices, and two teams kept their own stock. I suggested one vendor, one monthly order and one supply closet. Spending dropped by about 30% the next quarter, and nobody ran out of anything."
+   ],
+   [
+    "Tell me about a time you supported several managers at once. How did you keep all of them well served?",
+    "Whether you can serve several people without dropping anything.",
+    "A clear system for tracking requests, regular check-ins with each person, honest timing, and an example of a clash that was handled well.",
+    "At my last job I supported four directors. I kept one shared task list so each could see where their requests stood. I met each of them for ten minutes on Monday to plan the week. When two wanted travel and a report on the same day, I told both what I could finish by when, and they agreed. In two years none of them had to chase me twice."
+   ],
+   [
+    "What have you done to make a routine office task faster or easier?",
+    "Whether you improve processes instead of just repeating them.",
+    "A specific routine task, what was changed, the template or tool used, and a measurable result such as time saved.",
+    "Setting up each new hire took me most of a day: desk, laptop, badge, accounts and a welcome email. I made a checklist and a set of email templates, and asked IT to start the accounts from one form. Setup went down to about two hours, and new hires had everything on day one. We brought on around 25 people that year."
+   ],
+   [
+    "Tell me about a time you handled confidential information as an assistant.",
+    "Whether you can be trusted with sensitive information.",
+    "A real example handled quietly: limited access, no talk with colleagues, secure storage, and knowing when to say you can't discuss something.",
+    "I scheduled interviews for a director role while the current director was still in the job. I used plain calendar titles, kept the files in a folder only HR and my manager could open, and booked rooms on another floor. When a coworker asked why candidates were visiting, I said I couldn't discuss it. The change was announced three weeks later, and nothing had leaked."
+   ],
+   [
+    "Why do you want to be an administrative assistant, and what kind of manager do you work best with?",
+    "Whether you value the work itself and would fit how the team operates.",
+    "A real reason for liking organized work and helping others succeed, plus an honest picture of the working style that suits you.",
+    "I like making things run smoothly for other people. When a trip goes perfectly or a meeting starts on time with everything ready, I know I helped make that happen. I work best with a manager who shares priorities and lets me run the details. At my last job my manager and I had a 15-minute check-in each morning, and that was all we needed."
+   ]
+  ]
+ },
+ "pharmacist": {
+  "heading": "Pharmacist questions",
+  "qs": [
+   [
+    "Walk me through how you verify a new prescription before it leaves the pharmacy.",
+    "Whether you have a complete, repeatable final check.",
+    "Patient identity and allergies, a valid prescriber and complete order, a profile review for interactions and duplicates, a dose that fits the patient, and product matched to label.",
+    "I start with the patient: name, date of birth and allergies. Then I confirm the prescriber is valid and the order is complete. I check the drug, dose and directions against the profile for interactions, duplicate therapy, and fit with age and kidney function. Last I match the product to the label and the NDC. If anything is off, it waits until I've called."
+   ],
+   [
+    "A patient on warfarin asks if they can take ibuprofen for back pain. What do you tell them?",
+    "Your knowledge of a common, serious interaction and how you explain it.",
+    "A clear warning that NSAIDs raise bleeding risk with warfarin, a safer option to discuss with the prescriber, and the signs of bleeding to watch for.",
+    "I tell them ibuprofen and other NSAIDs raise the risk of bleeding with warfarin, including stomach bleeding, so I don't recommend it without their prescriber's okay. For occasional pain, acetaminophen is usually the safer choice, but I ask them to tell the clinic that manages their warfarin about regular use. I also go over warning signs, like black stools or unusual bruising."
+   ],
+   [
+    "How do you keep controlled substance records and stock accurate?",
+    "Your grasp of the general rules for storing, counting and documenting controlled drugs.",
+    "Secure storage, complete records of every receipt and dispense, regular counts, prompt investigation of gaps, and reporting losses as federal and state rules require.",
+    "Our Schedule II stock stays locked, and every bottle in or out is recorded. We count on a set schedule and any time something looks off. Once a count was 30 tablets short; we recounted, checked the invoices and found a receiving entry typed wrong. If it had been a real loss, I would report it as federal and state rules require. State rules differ, so I follow ours exactly."
+   ],
+   [
+    "What do you cover when you counsel a patient on a new prescription?",
+    "Whether your counseling is complete and checks that the patient understood.",
+    "Purpose, how and when to take it, common and serious side effects, what to avoid, missed doses, storage, and a teach-back to confirm understanding.",
+    "I cover what the medicine is for, how and when to take it, common side effects and the serious ones that need a call, and anything to avoid, like alcohol. I explain what to do after a missed dose. Then I ask them to tell me back how they'll take it. Last week teach-back showed a patient wasn't shaking his inhaler, so we practiced it at the counter."
+   ],
+   [
+    "An opioid prescription looks altered: the quantity seems to be written over. What do you do?",
+    "How you handle a possible forgery calmly and by the book.",
+    "No fill until verified, a call to the prescriber using a number you look up yourself, a check of the state monitoring program, and documentation.",
+    "I don't fill it until it's verified. I call the prescriber's office using a number I look up myself, not the one on the paper, and ask what they wrote. I also check the state prescription monitoring program. Once an office told me they wrote 20 tablets, not 80. I didn't fill the altered paper, told the patient calmly that I couldn't, and followed our policy and state rules on reporting."
+   ],
+   [
+    "A prescriber insists on a dose you believe is too high for a patient with poor kidney function. How do you handle it?",
+    "Whether you can push back on a prescriber with facts and still protect the patient.",
+    "A call prepared with lab values, a reference and a suggested dose; no dispensing if harm is likely; documentation and escalation when needed.",
+    "I call with the facts ready: the patient's latest kidney function, the dosing reference and a suggested adjusted dose. Most prescribers change it once they see the numbers. If one still insists and I believe the dose could cause harm, I don't dispense it as written. I document the conversation, tell the patient there is a delay without alarming them, and involve my manager if needed."
+   ],
+   [
+    "You learn that a prescription you verified yesterday went out with the wrong strength. What do you do?",
+    "How you respond to your own error: patient first, then honesty, then the fix.",
+    "Fast contact with the patient, the correct medicine supplied, the prescriber told if a dose was taken, an error report, and a change that stops it happening again.",
+    "I call the patient right away to ask whether they've taken any, and get them the correct strength the same day. If they took a dose, I tell the prescriber so they can judge the risk. I tell the patient plainly that it was our mistake. Then I file the error report and look at the cause. Once two strengths sat side by side on the shelf, so we separated them and added a warning tag."
+   ],
+   [
+    "It is 15 minutes before closing, 40 prescriptions are in the queue and a patient asks for a full consultation. What do you do?",
+    "Whether you keep safety and counseling first when time is short.",
+    "Time for the patient, the queue sorted by urgency, honest pickup times for the rest, and no shortcuts in verification.",
+    "I give the patient the time they need, because counseling is part of the job. I ask a technician to sort the queue: people waiting in the store and urgent medicines like antibiotics first. Anyone picking up tomorrow gets a message that it will be ready in the morning. I don't speed up my checks to beat the clock. A missed error costs far more than staying a little late."
+   ],
+   [
+    "A patient at the counter says they cannot afford their medicine and will skip it. How do you help?",
+    "Whether you look for a workable option before the patient walks away.",
+    "Questions about cost, a check for generics, covered alternatives and assistance programs, a call to the prescriber, and a clear plan if nothing works that day.",
+    "I ask what they can manage and look at the options: a generic, a covered alternative on their plan, or a manufacturer program. Last month a patient's inhaler was $280. I called the prescriber, who switched to the plan's preferred inhaler, and the copay dropped to $25. If nothing works that day, I explain the risk of skipping it and make sure they leave with a plan."
+   ],
+   [
+    "A nurse calls to ask whether a tablet can be crushed for a patient with a feeding tube. How do you answer?",
+    "Whether you check the dosage form before giving an answer.",
+    "A check for extended-release, enteric-coated or hazardous products, a reference before answering, and a suitable alternative arranged with the prescriber.",
+    "I check the product first. Extended-release, enteric-coated and some hazardous drugs should not be crushed, because it changes how the drug works or exposes staff to it. If it can't be crushed, I look for a liquid form or another option and contact the prescriber to change the order. If I'm not certain, I check a reference before I answer, not after, and I note what I advised."
+   ],
+   [
+    "Tell me about a time you caught a serious error before it reached a patient.",
+    "Your attention to detail and whether you fix the cause, not only the single error.",
+    "A specific catch, how it was noticed, the prescriber contacted, and a change in process that protects the next patient.",
+    "A pediatric antibiotic prescription came in with a dose about ten times what I expected for the child's weight. I checked the weight on file, called the prescriber, and found a misplaced decimal point. The order was corrected before it left. Afterward we made weight a required field for every pediatric prescription in our store."
+   ],
+   [
+    "How do you supervise pharmacy technicians so the work is fast and still safe?",
+    "How you lead a team and build a culture where people speak up.",
+    "Clear roles, coaching instead of silent fixes, welcome for questions, and checks added where errors cluster.",
+    "I make sure every technician knows what they can do and what needs me. When someone makes a mistake, I show them the check that would have caught it instead of quietly fixing it. I thank people who stop to ask, because I want questions, not guesses. After we added a second NDC scan at filling, errors caught at my check fell from about 12 a month to 4."
+   ],
+   [
+    "Tell me about a time you felt pressure to work faster than was safe. What did you do?",
+    "Whether you protect patient safety under pressure from speed metrics.",
+    "A calm refusal to skip safety steps, data on the real cause of delays, and a fix that improves speed without cutting checks.",
+    "During flu season our district pushed for shorter wait times. I told my manager I wouldn't skip steps in verification, and showed that most delays came from insurance rejections, not my checks. We moved one technician to work rejections each morning. Wait times dropped from about 25 minutes to 15, and we didn't cut a single safety step."
+   ],
+   [
+    "How do you keep up with new drugs, recalls and safety alerts?",
+    "Whether you have a steady habit of staying current.",
+    "Regular reading of FDA safety alerts and recall notices, a trusted reference for new drugs, continuing education spread over the year, and quick action on recalls.",
+    "I read FDA safety alerts and our wholesaler's recall notices each morning before we open. When we first stock a new drug, I read the prescribing information and our reference. I spread my continuing education across the year instead of rushing before renewal. Last year a recall for a blood pressure medicine came in; we pulled 3 bottles and called 11 patients that day."
+   ]
+  ]
+ },
+ "pharmacy-technician": {
+  "heading": "Pharmacy technician questions",
+  "qs": [
+   [
+    "A prescription says 1 tablet twice daily, quantity 60, and an inhaler has 200 puffs at 2 puffs four times a day. What days' supply do you enter for each?",
+    "Whether you can calculate days' supply correctly and know why it matters.",
+    "30 days for the tablets and 25 days for the inhaler, plus an understanding that a wrong days' supply causes refill and insurance problems.",
+    "For the tablets, 60 divided by 2 a day is 30 days. For the inhaler, 2 puffs four times a day is 8 puffs a day, and 200 divided by 8 is 25 days. Getting it wrong causes trouble: too long and the patient can't refill when they run out, too short and the plan may flag it. For insulin or eye drops, I check the plan's rules and ask the pharmacist."
+   ],
+   [
+    "What are look-alike, sound-alike drugs, and how do you keep from mixing them up?",
+    "Your awareness of a common source of dispensing errors.",
+    "Real examples, reading the full name and strength, barcode scanning, separate shelving or tall man lettering, and asking when a drug doesn't fit the patient.",
+    "They are drugs with names or packaging that are easy to confuse, like hydroxyzine and hydralazine, or Celebrex and Celexa. I read the whole name and strength, not just the first letters, and I always scan the barcode. Our store keeps some pairs apart with warning tags. If a drug doesn't seem to fit, like a blood pressure drug for someone with itching, I ask the pharmacist."
+   ],
+   [
+    "A claim is rejected as refill too soon. What does that mean, and what do you do?",
+    "Whether you understand a common insurance rejection and how to resolve it.",
+    "Knows the plan sees supply left, checks the last fill and days' supply, asks for an override for a dose change or vacation, and keeps the patient informed.",
+    "It means the plan thinks the patient should still have medicine left. I check the last fill date and days' supply, since a wrong days' supply is a common cause. If the doctor raised the dose, I make sure the new directions are entered and ask the plan for an override. For a vacation supply, I call the plan, because the rules differ by plan. Then I tell the patient when to expect an answer."
+   ],
+   [
+    "Which tasks do you always leave to the pharmacist, even when the pharmacy is busy?",
+    "Whether you know the limits of a technician's role.",
+    "Final verification, counseling and any clinical question go to the pharmacist, with awareness that some tasks depend on state law and training.",
+    "The final check, patient counseling and any clinical question go to the pharmacist. If a patient asks whether a cold medicine is safe with their blood pressure pills, I get the pharmacist, even if the line is long. Some tasks, like taking a new prescription by phone or giving vaccines, depend on state law and my training, so I follow our state's rules and store policy. When I'm not sure, I ask."
+   ],
+   [
+    "A patient says their pills look different from last month and they are worried. What do you do?",
+    "Whether you treat a patient's concern as a possible error.",
+    "Takes it seriously, checks the fill and NDC, looks for a manufacturer change, and has the pharmacist confirm before the patient leaves.",
+    "I take it seriously, because sometimes it is an error. I look up the fill and the NDC and check whether we changed manufacturers. If it's the same drug from a new maker, the pharmacist confirms it and explains it to the patient. Once the patient was right: the bottle held the wrong strength. We fixed it on the spot and the pharmacist filed a report."
+   ],
+   [
+    "Insurance rejects a prescription for prior authorization and the patient is upset at the counter. What do you do?",
+    "How you handle an upset patient and a slow insurance process at the same time.",
+    "A plain explanation, the request sent to the prescriber at once, a check on cash price and alternatives with the pharmacist, and a follow-up so the patient isn't left chasing.",
+    "I explain in plain words that the plan wants the doctor to confirm why this drug is needed before it pays. I send the request to the prescriber's office right away and say it can take a few days. I check the cash price and ask the pharmacist whether a covered alternative is worth suggesting to the doctor. Then I set a reminder to follow up, so the patient doesn't have to chase us."
+   ],
+   [
+    "You notice a coworker skipping the barcode scan to go faster. What do you do?",
+    "Whether you will speak up about a safety shortcut.",
+    "A private word first with the reason the scan matters, and a report to the pharmacist if it keeps happening.",
+    "I mention it to them privately first, because they may not see the risk. The scan is what catches the wrong bottle when two look alike. If it keeps happening, I tell the pharmacist in charge. An awkward talk is better than a patient getting the wrong drug. On my last team, one quiet word was enough."
+   ],
+   [
+    "The phones are ringing, the drive-through line is long and the pharmacist asks you to count a controlled substance order. How do you prioritize?",
+    "How you keep accuracy on high-risk tasks when everything feels urgent.",
+    "Full attention on the controlled count, help asked for the phones and window, and an open talk with the pharmacist about what can wait.",
+    "Controlled counts need full attention, so I don't do them while answering phones. I ask another technician to cover the drive-through, and callers get a quick hold or a promise of a callback. If I'm alone, I tell the pharmacist so we decide together what waits. A wrong count on a controlled drug takes much longer to fix than a two-minute wait."
+   ],
+   [
+    "A prescription comes in with directions you have never seen for that drug. What do you do?",
+    "Whether you flag unusual orders instead of changing or ignoring them.",
+    "Makes no assumptions, flags it to the pharmacist with a clear note, and leaves the decision and the prescriber call to the pharmacist.",
+    "I don't change anything myself. I flag it to the pharmacist with a note on what looks unusual. Last month I saw methotrexate written for daily use, when I was used to seeing it once a week. The pharmacist called the prescriber, and it was a mistake. My job is to notice and speak up; the pharmacist decides."
+   ],
+   [
+    "At pickup, the patient's name matches the bag but the date of birth does not. What do you do?",
+    "Whether you use patient identifiers every time.",
+    "Stops the handoff, confirms two identifiers, looks for another patient with the same name, and never hands over a bag that doesn't match.",
+    "I stop and don't hand it over. I ask for the date of birth again and check the address. If it still doesn't match, there may be two patients with the same name, so I look for the right bag. Once we had two Maria Garcias with prescriptions ready on the same day. Checking two identifiers every time kept the bags from being swapped."
+   ],
+   [
+    "Tell me about a mistake you made while filling a prescription and what you changed afterward.",
+    "Whether you own your mistakes and learn from them.",
+    "A real mistake, told plainly, reported to the pharmacist, and a specific habit changed afterward.",
+    "I once picked 10 mg tablets when the order was 20 mg. The barcode scan caught it, but it showed me I was reading labels too fast. I told the pharmacist and slowed down on that step. Now I check the strength twice: once on the order and once on the bottle. I haven't had that mismatch since."
+   ],
+   [
+    "A patient is rude to you because their prescription is not ready. How do you handle it?",
+    "How you stay calm and helpful with frustrated customers.",
+    "Listens without arguing, finds the specific reason for the delay, gives a real time, and takes a visible step to fix it.",
+    "I stay calm and let them finish, then say I understand it's frustrating. I find out exactly why it isn't ready, like a missing refill authorization, and tell them clearly. Then I give a real time. Last week a man was angry about a two-hour wait. Once I told him we were waiting on his doctor and called the office while he watched, he calmed down."
+   ],
+   [
+    "Why pharmacy technician work, and what certification or training do you have or plan to get?",
+    "Your motivation and whether you know the training path for the role.",
+    "Specific reasons, current state registration or certification, a next skill to learn, and awareness that requirements vary by state.",
+    "I like detailed work where accuracy matters, and I like helping people with something stressful. I'm registered with the state board and passed the national certification exam last year. Next I want to learn sterile compounding, which needs extra training. Requirements differ by state, so I check the board's rules before I take on anything new."
+   ],
+   [
+    "How do you stay accurate through a long, busy shift?",
+    "Whether you have habits that protect accuracy when you are tired or rushed.",
+    "The same routine for every fill, no distractions during counts, real breaks, and a track record to back it up.",
+    "I keep the same routine for every fill: read the order, pick, scan, count, then compare the label to the bottle. I don't talk while I count. I take my break even on busy days, because I make more mistakes when I'm tired. At my last job I filled about 250 prescriptions a day, and no error of mine reached a patient in my last review period."
+   ]
+  ]
+ },
+ "medical-coder": {
+  "heading": "Medical coder and biller questions",
+  "qs": [
+   [
+    "What is the difference between ICD-10-CM, CPT and HCPCS Level II codes?",
+    "Whether you know the main code sets and how they work together on a claim.",
+    "ICD-10-CM for diagnoses, CPT for procedures and services, HCPCS Level II for supplies, equipment, drugs and some services, and diagnoses that support each service.",
+    "ICD-10-CM codes describe the diagnosis, the reason for the visit. CPT codes describe what the provider did, like an office visit or a procedure. HCPCS Level II codes cover items and services CPT doesn't, such as supplies, equipment, ambulance rides and many injected drugs. On a claim they work together: the diagnosis has to support the need for each service billed."
+   ],
+   [
+    "When would you use modifier 25 or modifier 59?",
+    "Whether you understand two common modifiers and the documentation they need.",
+    "25 for a significant, separately documented visit on the same day as a procedure, 59 for a distinct service normally bundled, both backed by the note and payer rules.",
+    "Modifier 25 goes on a visit when the provider did a significant, separately documented evaluation on the same day as a procedure, not just the usual check before it. Modifier 59 marks a service as distinct from one it is normally bundled with, like a different site or session. Both need clear documentation. Some payers want the more specific X modifiers instead, so I check their rules."
+   ],
+   [
+    "Why is upcoding fraud and not just an aggressive billing choice?",
+    "Whether you understand the legal and ethical line in coding.",
+    "Billing above what the record supports gets paid for work not done and can bring repayment, penalties and exclusion. Code what is documented and query when unclear.",
+    "Upcoding means billing a higher level than the record supports, like a level 5 visit when the note shows a level 3. The insurer pays for work that wasn't done, which is a false claim. With federal programs it can bring repayment, heavy penalties and exclusion. I code only what the documentation supports, and if a note seems incomplete, I query the provider instead of guessing up."
+   ],
+   [
+    "What does HIPAA mean for your daily work as a coder and biller?",
+    "Whether you protect patient information in everyday tasks.",
+    "Access only to what the task needs, secure handling of records, identity checks before discussing accounts, and fast reporting of a possible breach.",
+    "I open only the records I need for the claims I'm working on, even if the system lets me see more. I never send patient details to a personal email, and I lock my screen when I step away. Before I discuss an account by phone, I verify who I'm talking to. If I see a possible breach, like a fax sent to the wrong number, I report it to our privacy officer the same day."
+   ],
+   [
+    "A claim is denied for lack of medical necessity. How do you work it?",
+    "Whether you can find the real cause of a denial and act on it.",
+    "Reads the denial code and payer policy, checks codes against the chart, corrects and resubmits or appeals with records, and fixes repeat causes at the source.",
+    "I read the denial code and the payer's coverage policy for that service. Sometimes the claim carries a less specific diagnosis than the chart documents, so I correct the code and resubmit. If the coding was right, I gather the notes that show why the service was needed and appeal before the deadline. When the same denial repeats, I tell the team so it stops at the source."
+   ],
+   [
+    "The note supports a level 3 office visit, but the doctor selected level 4. What do you do?",
+    "Whether you code from the documentation and handle a provider respectfully.",
+    "A neutral query showing what the note supports, an honest addendum only if the work was really done, coding to the supported level, and compliance involved if pressured.",
+    "I don't just bill the level 4. I send the doctor a short, neutral query showing what the note documents and what a level 4 would need. Sometimes the doctor did more and didn't write it down, and an honest, dated addendum fixes that. If the note stays the same, I code the level it supports. If someone pushes me to bill higher anyway, I take it to compliance."
+   ],
+   [
+    "An outpatient note says rule out pneumonia. How do you code it?",
+    "Whether you know how to code uncertain diagnoses in the outpatient setting.",
+    "No code for a diagnosis written as probable, suspected or rule out in outpatient care; signs and symptoms coded instead; inpatient rules differ; a query when vague.",
+    "For outpatient visits, I don't code a diagnosis written as rule out, probable or suspected. I code the signs and symptoms instead, like cough and fever, until a result confirms it. Inpatient rules are different, so I always check the setting first. If the note is just vague, I send the provider a query rather than guess."
+   ],
+   [
+    "A patient calls, upset about a bill they thought insurance would cover. What do you do?",
+    "How you explain billing to patients and find errors on your side.",
+    "Listens, reviews the claim and explanation of benefits during the call, explains in plain words, fixes any error, and offers payment options when the balance is correct.",
+    "I listen first, then pull up the claim and the explanation of benefits while they're on the line. Often it's the deductible, and I explain how that works in plain words. Sometimes it's our error. Last month a claim went out with an old insurance ID, so I fixed it and resubmitted, and the patient's balance went to zero. If the balance is correct, I explain payment plans and any financial help we offer."
+   ],
+   [
+    "You have 120 claims in your queue, and some are close to the payer's filing deadline. How do you plan your day?",
+    "How you prioritize work so money is not lost to missed deadlines.",
+    "Deadline first, then dollar value, similar problems grouped, deadlines tracked by payer, and a clear record of what went out.",
+    "I sort the queue by filing deadline first, then by amount. Claims that expire this week come first, because a missed deadline usually means the money is gone. Deadlines differ by payer, so I track each one. Then I group similar problems, like the same missing modifier, and fix them together. At the end of the day my log shows what went out and what still waits."
+   ],
+   [
+    "You notice one provider's notes are often copied from earlier visits. What do you do?",
+    "Whether you see compliance risk in documentation and raise it the right way.",
+    "Codes only what is documented for that visit, collects examples, and raises it with a supervisor or compliance as a training need, not an accusation.",
+    "Copied notes can make a visit look more complex than it was, and auditors see that as a risk. I code only what is clearly documented for that day. I collect a few examples and take them to my supervisor or compliance as a training need, not an accusation. At my last clinic this led to a short session on documentation, and the next quarter's audit scores improved."
+   ],
+   [
+    "How do you keep up with yearly code changes and payer rule updates?",
+    "Whether you have a routine for staying current in a field that changes every year.",
+    "Knows the annual update cycles, reviews changes before they take effect, reads payer bulletins, and keeps up continuing education for the credential.",
+    "New ICD-10-CM codes take effect each October and CPT changes each January, so I review the update lists before those dates and flag the codes our clinic uses most. I read payer bulletins monthly, since their rules change between code updates. My credential needs continuing education, and I choose courses in our specialty. Last year that caught 3 deleted codes before they caused rejections."
+   ],
+   [
+    "Tell me about a time you found a pattern of coding errors and fixed it at the source.",
+    "Whether you look past single claims to the cause of repeat problems.",
+    "A pattern found in data, the root cause traced, a practical fix agreed with the people involved, and a result that can be measured.",
+    "Our orthopedic clinic had many denials because codes didn't say left or right. I pulled two months of denials, about 60 claims, and saw most came from one note template. I showed the providers and IT a simple fix: a required left or right field. Within a month those denials almost stopped, and I corrected and resubmitted the old ones."
+   ],
+   [
+    "How do you work when you code remotely against daily production targets?",
+    "Whether you can work alone with steady quality and keep data secure at home.",
+    "A set routine, a private workspace, accuracy kept ahead of speed, and questions asked instead of guesses.",
+    "I keep set hours and work in a room with a door, so no one sees patient data on my screen. I track my daily count and my accuracy. Our team goal was 95% accuracy, so I don't chase speed at the cost of errors. When I'm stuck on a chart, I ask our coding lead instead of guessing. I check in with the team on chat every morning."
+   ],
+   [
+    "What do you do when a provider ignores or pushes back on your queries?",
+    "How you work with providers who see queries as a burden.",
+    "Short, neutral, specific queries, a brief talk showing how the gaps affect claims, and patience rather than pressure.",
+    "I keep queries short, neutral and specific, so they don't read as criticism. If a provider pushes back, I ask for ten minutes to show one example and explain how the missing detail affects the claim. One surgeon ignored my queries for a month. After I showed him that 8 of his claims were denied for the same missing detail, he started answering within a day."
+   ]
+  ]
+ },
+ "bookkeeper": {
+  "heading": "Bookkeeper questions",
+  "qs": [
+   [
+    "Walk me through how you reconcile a bank account at month end.",
+    "Whether you know the reconciliation steps and what to do with differences.",
+    "Start from the statement balance, match cleared items, list outstanding checks and deposits in transit, record bank fees, and explain every difference before signing off.",
+    "I start with the ending balance on the bank statement and the ledger balance on the same date. I tick off every deposit and payment that cleared, then list outstanding checks and deposits in transit. Bank fees and interest I record in the books. Last month I was off by $45, and it was a check entered as $512 instead of $467. I fix it, note it, and save the reconciliation."
+   ],
+   [
+    "What is the difference between accrual and cash accounting, and when does it matter?",
+    "Whether you understand when revenue and expenses are recorded under each method.",
+    "Cash records money when it moves; accrual records revenue when earned and expenses when incurred. A good answer gives an example, like an unpaid bill at month end.",
+    "Under cash basis I record income when the money arrives and expenses when I pay them. Under accrual I record revenue when we earn it and expenses when we incur them, even if no cash has moved. A $3,000 utility bill for March that we pay in April goes into March as an accrued expense. Accrual gives a truer picture of each month."
+   ],
+   [
+    "A debit card charge of $1,280 shows up with no receipt and no description. Where does it go while you find out what it was?",
+    "Whether you park unknown items properly and clear them instead of guessing.",
+    "A suspense or uncategorized account, a note of who to ask, and a habit of clearing that account before the close so it does not grow.",
+    "I post it to our suspense account with the date, amount and the vendor name from the statement, so the bank still reconciles. Then I ask the cardholder for the receipt. If I hear nothing in two days, I ask their manager. I clear the suspense account before every close. I don't want it to become a drawer where things get forgotten."
+   ],
+   [
+    "What are the main steps of your month-end close, in order?",
+    "Whether you can run a close in a sensible order.",
+    "All transactions recorded, bank and card accounts reconciled, receivables and payables reviewed, accruals and depreciation posted, trial balance checked, then reports.",
+    "First I make sure every invoice, bill and payment for the month is entered. Then I reconcile bank, credit card and loan accounts. I review the receivables and payables aging, post accruals, prepaid amortization and depreciation, and check that the subledgers match the general ledger. Then I run the statements and look for anything that changed a lot from last month."
+   ],
+   [
+    "A new hire asks you why paying a vendor bill is a debit to accounts payable. How do you explain it?",
+    "Whether you understand debits and credits well enough to teach them.",
+    "Liabilities increase with credits and decrease with debits. Paying the bill reduces what we owe, so accounts payable is debited and cash is credited.",
+    "I tell them that when the bill arrived, we credited accounts payable because we owed more. Paying it means we owe less, so we debit accounts payable and credit cash, which goes down. I draw a quick T-account for both and show that the debits and credits are equal. Once they see that, it usually clicks."
+   ],
+   [
+    "A vendor emails asking you to change their bank details before the next payment. What do you do?",
+    "Whether you recognize a common payment fraud and follow controls.",
+    "No change based on the email alone. A call to the vendor on a number already on file, approval for the change, and a record of it.",
+    "I don't change anything from the email. I call the vendor on the phone number we already have on file, not one in the message, and confirm with someone I know there. If it is real, I get a signed form and my manager approves the change. Once a request like this came from an address one letter off from the real domain. The call caught it."
+   ],
+   [
+    "You find that last month's rent payment was recorded twice, and that month is already closed. How do you fix it?",
+    "Whether you correct closed periods properly and tell the right people.",
+    "A correcting entry in the open period, or a reopen only with approval, a clear memo, and a heads-up to whoever already used the reports.",
+    "I check with the controller how we handle closed periods. Usually I post a correcting entry in the current month with a memo pointing to the duplicate, rather than reopening the closed month. If the amount is material, they may decide to reopen it. Either way, I tell the people who got last month's reports, because rent expense was overstated by $4,500."
+   ],
+   [
+    "A manager asks you to record a large purchase next month instead of this one so their budget looks better. What do you say?",
+    "Whether you keep the books accurate under pressure from a colleague.",
+    "A polite no, an explanation of why the expense belongs in the month it happened, and escalation to the controller if they insist.",
+    "I tell them I can't move it, because the expense belongs in the month we received the goods. I offer to add a note to the budget report explaining the one-time purchase, which usually solves their real worry. If they push, I bring in my supervisor. Once entries go where people want them instead of where they belong, nobody can trust the reports."
+   ],
+   [
+    "Accounts receivable shows a customer owing $8,400 for over 120 days. What do you do?",
+    "Whether you follow up on old receivables and know when to involve others.",
+    "Check the invoices and any disputes, contact the customer, involve the account owner, and raise a possible reserve or write-off with the controller.",
+    "First I check whether the invoices are right and whether the customer disputed anything, since old balances are often a missing credit memo. Then I call their payables contact and send a statement. I also tell the salesperson who owns the account. If they can't or won't pay, I bring it to the controller to decide on a reserve or write-off. I don't write it off on my own."
+   ],
+   [
+    "You notice a coworker's expense reports include the same hotel receipt in two different months. What do you do?",
+    "Whether you handle a possible error or fraud calmly and through the right channel.",
+    "Facts checked first, no assumption of bad intent, and a report to the supervisor or controller rather than confronting the coworker or ignoring it.",
+    "I pull both reports and receipts to make sure it is really the same stay, with the same dates and amount. If it is, I bring it to my supervisor with copies, without accusing anyone. It may be an honest mistake, like a report sent twice. It is not my job to decide that, but it is my job to make sure it gets looked at and the $640 is recovered if it was paid twice."
+   ],
+   [
+    "Tell me about a time a bank rule in your accounting software put transactions in the wrong account.",
+    "Whether you review automated categorization instead of trusting it.",
+    "Noticing it through a regular review, fixing the rule and the past entries, and adding a check so it is caught sooner next time.",
+    "A rule I set up for Amazon charges sent everything to office supplies, including a $2,300 laptop and some resale stock. I noticed when supplies expense tripled compared with the month before. I split the rule by amount and reviewed three months of entries to move the wrong ones. Now I compare each category with last month before the close."
+   ],
+   [
+    "Tell me about a time you found your own error after the monthly reports had already gone out.",
+    "Whether you own your mistakes and fix them quickly.",
+    "Prompt disclosure, a clear correction, the impact explained, and a change to the process so it does not happen again.",
+    "I once coded a $6,200 equipment purchase as office supplies, so it hit the monthly report as an expense instead of an asset. I found it two days later while updating the fixed asset list. I told my manager that day, posted the correction and sent a revised report with a short note. Since then I check every large purchase against our capitalization policy before the close."
+   ],
+   [
+    "How do you keep your entries accurate when you are posting hundreds of transactions a week?",
+    "Whether you have habits that catch errors before they reach the reports.",
+    "Batch totals, reconciling often instead of once a month, a close checklist, and reviewing work at a set time rather than trusting memory.",
+    "I enter in batches and compare the batch total to the source documents before posting. I reconcile the main bank account weekly, not only at month end, so errors are small and fresh. I keep a close checklist and tick it off every month. And I review my own entries the next morning, because I catch more with fresh eyes than at the end of a long day."
+   ],
+   [
+    "Describe a time you cleaned up books that someone else had left in a mess.",
+    "Whether you can bring disorganized books back to a reliable state step by step.",
+    "A plan that starts with bank reconciliations, fixes the oldest problems first, logs every change, and agrees the result with the owner or outside accountant.",
+    "A small contractor hired me after their bookkeeper left, and nothing had been reconciled for seven months. I started with the bank and credit card accounts, month by month from the oldest, and kept a log of every correcting entry. Then I cleared the uncategorized account and merged duplicate vendors. It took six weeks, and their CPA accepted the year-end numbers without changes."
+   ]
+  ]
+ },
+ "property-manager": {
+  "heading": "Property manager questions",
+  "qs": [
+   [
+    "A tenant pays rent five days late. How do you decide whether to charge a late fee and how much?",
+    "Whether you follow the lease and local law instead of improvising fees.",
+    "Check the lease terms and any grace period, confirm the fee is allowed where the property is, apply it the same way to everyone, and document it.",
+    "I go by the lease, which sets the due date, any grace period and the fee. Late fee rules vary by state and sometimes by city, so our leases are reviewed by counsel and I never charge more than the lease allows. I apply the fee the same way to every tenant, send a written notice and note it in the ledger. If a tenant warns me about a problem early, I ask the owner about a payment plan."
+   ],
+   [
+    "Three requests come in on a Monday morning: no heat in one unit, a dripping faucet and a broken mailbox lock. How do you prioritize them?",
+    "Whether you can sort maintenance by safety, habitability and risk of damage.",
+    "Emergencies first, meaning safety, habitability or active damage, then urgent items, then routine ones, with every tenant told when to expect someone.",
+    "No heat comes first, especially in winter, because it is a habitability issue and can lead to frozen pipes. I get a technician out that day and tell the tenant when to expect them. The mailbox lock is next, since mail security matters, and I schedule it within a day or two. The faucet goes into the routine queue for that week. Every tenant gets a reply with a time frame."
+   ],
+   [
+    "Walk me through a move-out inspection and how you decide what to deduct from the security deposit.",
+    "Whether you separate damage from normal wear and tear and document deductions.",
+    "Compare with the move-in report and photos, deduct only for damage beyond normal wear and tear, itemize costs, and follow the state's deadline and notice rules.",
+    "I walk the unit with the move-in checklist and photos and take new dated photos of every room. Faded paint and worn carpet from normal use are wear and tear, not deductions. A hole in the wall or a burned countertop is damage. I itemize each deduction with the invoice or estimate and return the balance. Deposit rules and deadlines vary by state, so I follow the ones for that property."
+   ],
+   [
+    "What does fair housing mean in your day-to-day work as a property manager?",
+    "Whether you apply fair housing rules consistently in screening, showings and requests.",
+    "The same criteria and process for every applicant, no steering, careful ads, and a proper process for accommodation requests. State and local laws may protect more groups.",
+    "It means every applicant gets the same written screening criteria, the same application and the same answers. I don't steer people toward or away from units, and our ads describe the property, not who should live there. Accommodation requests, like an assistance animal in a no-pets building, go through our process, not an automatic no. Many states and cities protect more groups than federal law does."
+   ],
+   [
+    "A tenant has paid only half the rent for two months and stopped answering calls. What do you do?",
+    "Whether you follow a fair, documented process before anything legal.",
+    "Written notice as the lease and law require, an attempt at a payment plan, everything documented, the owner updated, and eviction only through counsel and the courts.",
+    "I send a written notice the way the lease requires and try other channels, like email and a note at the door. If I reach them, I ask what happened and whether a payment plan could work, with the owner's approval. Everything goes in the tenant file. If nothing changes, the owner and our attorney decide the next steps. I never change locks or shut off utilities. The court process is the only route."
+   ],
+   [
+    "An owner wants a big rent increase on every renewal in the building. How do you handle it?",
+    "Whether you balance owner goals with market data, vacancy risk and local rules.",
+    "Comparable rents, the real cost of turnover and vacancy, any local rent rules and notice periods, and a recommendation backed by numbers.",
+    "I pull current rents for comparable units nearby and show the owner where we stand. Then I estimate what turnover costs: a vacant month, cleaning, paint and leasing fees. Often a $75 raise with most tenants staying beats a $250 raise with several moving out, and I show that math. I also check any local rent rules and the notice period required before renewal offers go out."
+   ],
+   [
+    "A leak from an upstairs unit is coming through the ceiling below at 11 p.m. on a Saturday. What do you do?",
+    "Whether you can run an after-hours emergency calmly.",
+    "Stop the water first, protect people and property, get the emergency vendor out, document everything, and notify the owner and insurer as needed.",
+    "First I make sure the water to that unit is shut off, either by the tenant or our on-call tech at the valve. I call our emergency plumber, and a water mitigation company if it is spreading. I tell both tenants what is happening and take photos and video. The next morning I update the owner, start an insurance claim if needed and plan repairs. The ceiling can wait a day; the leak cannot."
+   ],
+   [
+    "Two tenants in the same building complain about each other's noise every week. How do you deal with it?",
+    "Whether you handle disputes between tenants fairly and through the lease.",
+    "Listening to both, checking the lease and house rules, a written reminder to the right party, and a record of each complaint, without taking sides on hearsay.",
+    "I talk to each tenant separately and ask for dates and times. Then I check the lease and our quiet hours rule. If the facts point to one unit, I send a polite written reminder that cites the rule. If both have a point, I suggest simple fixes like rugs or felt pads. I log every complaint, so if it keeps happening, we have a record to act on under the lease."
+   ],
+   [
+    "A vendor you have used for years sends an invoice 30% higher than their quote. What do you do?",
+    "Whether you protect the owner's money and manage vendors firmly.",
+    "The invoice compared with the quote and work order, an explanation requested, payment of what was approved, and new bids if overruns keep happening.",
+    "I compare the invoice to the quote and the work order and ask the vendor what changed. Sometimes there is a real reason, like a hidden pipe problem, but they should have called me before doing extra work. If someone on site approved it, I find that out first. Otherwise I pay the approved amount and discuss the rest. If overruns keep happening, I get new bids for the next job."
+   ],
+   [
+    "An applicant has a low credit score but strong income and good references. How do you decide?",
+    "Whether you apply written screening criteria the same way to everyone.",
+    "The written criteria applied as to anyone else, only the alternatives the policy allows, a written notice if denied, and the reason kept in the file.",
+    "I go back to our written screening criteria, because every applicant has to be judged the same way. If our policy allows an alternative for a low score, like a qualified guarantor, I offer it exactly as I would to anyone else. If the application doesn't meet the criteria, I send the written notice the law requires when a credit report was used. I document the reason either way."
+   ],
+   [
+    "Tell me about a time you had to give a property owner bad news.",
+    "Whether you keep owners informed early and honestly.",
+    "Early contact, the facts and costs, options with their risks, and a recommendation instead of hiding the problem until the monthly report.",
+    "At a 40-unit building, an inspection found the roof needed replacing two years earlier than planned. I called the owner that day instead of waiting for the monthly report. I sent three bids, explained what a patch would buy us and what it would risk, and recommended replacing it before winter. They weren't happy about the cost, but they said they valued hearing it early with options."
+   ],
+   [
+    "How do you keep track of lease renewals, inspections and compliance dates across several properties?",
+    "Whether you have a reliable system for dates that carry legal or financial risk.",
+    "One system for all dates, reminders well ahead of deadlines, a weekly review, and notes others can follow if you are out.",
+    "Everything with a date goes into our property management software: lease ends, renewal notice dates, fire inspections, boiler certificates and insurance renewals. I set reminders 90 and 30 days ahead. Every Monday I review the next month for all six of my properties. I keep notes in the system, not in my head, so my backup can see what is due if I'm out sick."
+   ],
+   [
+    "Tell me about a time you calmed down an angry tenant and solved the problem.",
+    "Whether you stay calm with upset people and fix the real issue.",
+    "Listening first, admitting what went wrong, a clear next step with a time frame, and following through until it is done.",
+    "A tenant came into the office shouting because his air conditioning had been out for four days and two vendor visits had failed. I let him finish, agreed four days was too long, and called a different HVAC company while he was there. They came the next morning. I brought him a portable unit that night and, with the owner's approval, credited part of his rent. He renewed six months later."
+   ],
+   [
+    "Tell me about a property you took over from another manager. What did you do first?",
+    "Whether you learn a property methodically before changing things.",
+    "A review of leases against the rent roll, open work orders, vendors and budget, a walk of the property, then priorities agreed with the owner.",
+    "When I took over a 60-unit complex, I spent the first two weeks checking every lease against the rent roll and walking every vacant unit. I found eight tenants on expired leases at old rents and 30 open work orders, some months old. I cleared the urgent repairs first, then sent renewal offers. By the third month, open work orders were under ten and the owner had a clear list of capital needs."
+   ]
+  ]
+ },
+ "hr-generalist": {
+  "heading": "HR generalist questions",
+  "qs": [
+   [
+    "When does a new hire's Form I-9 have to be completed, and what do you watch for?",
+    "Whether you know the basic I-9 timing and avoid common document mistakes.",
+    "Section 1 by the first day of work, Section 2 within three business days, original documents the employee chooses from the lists, and secure storage.",
+    "The employee completes Section 1 no later than their first day of work. We complete Section 2 within three business days of the start date after examining their original documents. I let the employee choose which documents to show from the lists, because asking for a specific one can be discrimination. I keep I-9s apart from personnel files and check the current USCIS instructions."
+   ],
+   [
+    "An employee asks if they qualify for FMLA leave to care for a parent. How do you work it out?",
+    "Whether you know how FMLA eligibility is checked and that state leave laws may also apply.",
+    "A check of employer coverage, the employee's length of service and hours, the reason for leave, and any state leave law, then the required notices on time.",
+    "I confirm we are a covered employer and that their worksite meets the size rule, then check their length of service and the hours they worked in the past year. Caring for a parent with a serious health condition is a qualifying reason. I also check our state's leave law, since some states cover more people or reasons. Then I send the eligibility notice and certification form on time."
+   ],
+   [
+    "What makes good documentation of an employee's performance problem?",
+    "Whether you know how to document performance so it is fair and holds up later.",
+    "Specific facts, dates and examples, the expectation that was missed, the support offered, the consequences, and the employee's response, written at the time.",
+    "Good documentation is specific and written when it happens. Instead of 'bad attitude', it says that on March 3 and March 10 the client report was two days late and the client complained. It states the expectation, the help we offered, like a weekly check-in, and what happens if it doesn't improve. The employee reads it, can add comments and signs to show they received it."
+   ],
+   [
+    "An employee tells you a coworker keeps making sexual comments to her. What are your first steps?",
+    "Whether you know how to take a harassment complaint and start a fair investigation.",
+    "Taking it seriously, written notes, honesty about confidentiality limits, protection from retaliation, interim steps if needed, and a prompt, impartial investigation.",
+    "I thank her for telling me and take notes on what happened, when, where and who saw it. I explain that I'll keep it as private as I can, but I can't promise full secrecy because we have to investigate. I tell her retaliation is not allowed. Then I decide with my manager or counsel whether we need interim steps, like separate schedules, and start the investigation right away."
+   ],
+   [
+    "A manager wants to fire someone for poor performance tomorrow, but nothing is documented. What do you advise?",
+    "Whether you can push back on a risky termination and offer a better path.",
+    "Questions about the facts, a check for risk such as a recent complaint or leave, a documented improvement plan unless the conduct is serious, and legal advice if unsure.",
+    "I ask what happened and what the employee has been told. If nothing is in writing, they may not know there is a problem, and a sudden firing looks unfair. I also check whether the person recently complained, took leave or asked for an accommodation, because that raises the risk of a retaliation claim. Usually I suggest a written improvement plan with clear goals. Serious misconduct is handled differently."
+   ],
+   [
+    "An employee asks you to promise to keep something confidential before telling you what it is. What do you say?",
+    "Whether you are honest about the limits of confidentiality in HR.",
+    "No blanket promise. HR keeps things as private as possible but must act on issues like harassment, safety or legal violations.",
+    "I tell them I'll keep it as private as I can and share it only with people who need to know, but I can't promise total secrecy before I hear it. If it involves harassment, safety or something illegal, I have to act. Most people still go ahead. Being honest at the start is better than breaking a promise later."
+   ],
+   [
+    "You discover a new employee has been paid below their offer letter rate for three pay periods. What do you do?",
+    "Whether you fix pay errors quickly, honestly and in line with wage rules.",
+    "The correct rate confirmed, payroll fixed, the back pay paid promptly, the employee told directly, and the cause found. Timing rules vary by state.",
+    "I compare the offer letter to the payroll setup and confirm the error with payroll. Then I tell the employee before they find it themselves, apologize and say when the difference will be paid. We pay it in the next run, or sooner if state rules require. Last time the gap was $1.50 an hour, about $360 in total. Now a second person checks every new pay rate."
+   ],
+   [
+    "During the review cycle, two managers gave very different raises to people in the same role with similar ratings. What do you do?",
+    "Whether you spot pay consistency risks and raise them before raises are final.",
+    "A look at the data and the reasons, a check for any pattern linked to a protected group, a talk with the managers, and a flag to HR leadership before letters go out.",
+    "I put the numbers side by side with ratings, start dates and current pay. Sometimes there is a good reason, like one person already being high in the range. If not, I ask each manager how they decided. If I see a pattern, like women or older workers getting less, I raise it with my HR manager before any letters go out. Fixing it now is much easier than after a complaint."
+   ],
+   [
+    "A manager posts a job ad that says 'recent graduates only'. What do you do?",
+    "Whether you catch discriminatory language in hiring before it causes harm.",
+    "The age discrimination risk explained, the ad pulled or edited quickly, and a rewrite around the skills and experience level the job really needs.",
+    "I ask the manager to let me edit the ad right away. 'Recent graduates only' can screen out older applicants, which creates an age discrimination risk. I ask what they really need, usually someone at entry level who learns quickly, and we rewrite the ad around those skills. Then I check the manager's other open ads for similar wording."
+   ],
+   [
+    "An employee has called in sick three Mondays in a row, and their manager wants to start discipline. What do you advise?",
+    "Whether you consider leave laws and policy before discipline for absences.",
+    "The attendance policy and any state or local sick leave law checked, a thought for FMLA or an accommodation, and a private talk with the employee first.",
+    "I first check our attendance policy and whether a state or local sick leave law protects those days, since many places have one and the rules vary. A pattern like this can also point to a health condition, so FMLA or an accommodation might apply. I suggest the manager have a private, neutral talk and ask if anything is going on. If it is protected leave, we can't count it against them."
+   ],
+   [
+    "Tell me about a time you disagreed with a manager about how to handle an employee issue.",
+    "Whether you can influence managers while staying firm on policy and law.",
+    "A specific case, the facts and risk explained calmly, an alternative offered, and the outcome, without giving in just to avoid conflict.",
+    "A manager wanted to cut an employee's hours right after she complained about scheduling. I explained that even with other reasons, the timing would look like retaliation. I asked him to write down the business reason and wait until the complaint was resolved. He was annoyed but agreed. Two weeks later the complaint was settled, and her hours stayed the same."
+   ],
+   [
+    "How do you keep up with changes in employment law in the states where your employees work?",
+    "Whether you have a reliable way to stay current on rules that vary by state.",
+    "Named sources like state labor department sites and employment counsel updates, a tracker by state with effective dates, and a check with counsel before acting.",
+    "I get updates from our employment law firm and from the labor departments in the four states where we have people. I keep a simple tracker of changes, like new sick leave rules or minimum wage dates, with the effective date and what we need to update. Each quarter I review it with my manager. When something is unclear, I ask counsel before we change a policy."
+   ],
+   [
+    "Tell me about a time you made a mistake in an employee's benefits or leave paperwork.",
+    "Whether you own errors that affect people's pay or coverage and fix them fast.",
+    "Quick disclosure to the employee, a fix with the carrier or payroll, fair handling of any cost, and a change to the process.",
+    "I once missed adding a new employee's spouse to the medical plan, and they found out at a doctor's office. I called the carrier that afternoon, and since the signed election form was on file, they backdated the coverage. I called the employee to apologize and explain. Since then I check every enrollment against the carrier's confirmation within a week."
+   ],
+   [
+    "How do you handle a week when a dozen employees need answers from you about benefits, leave and payroll at once?",
+    "Whether you can manage a heavy flow of employee questions without dropping any.",
+    "Every request tracked, sorted by urgency and impact, a quick reply with a time frame, and an FAQ for questions that repeat.",
+    "I log every question in our ticket system so nothing lives only in my inbox. Pay problems and urgent leave go first, because they affect people's money and health. Everyone gets a reply the same day saying when I'll have an answer. If I get the same question five times, like during open enrollment, I write a short FAQ and send it to everyone."
+   ]
+  ]
+ },
+ "real-estate-agent": {
+  "heading": "Real estate and leasing agent questions",
+  "qs": [
+   [
+    "Walk me through how you price a home using comparable sales.",
+    "Whether you can build a price from market evidence, not from what the seller hopes.",
+    "Recent nearby sales of similar homes, adjusted for differences, plus active and pending listings as competition and expired ones as a warning.",
+    "For a three-bedroom ranch last spring I pulled sales within a mile from the past six months, same size range and age. Four were close matches. I adjusted for a finished basement and a newer roof, then checked the six active listings it would compete with. The range came to $340,000 to $355,000. We listed at $349,000 and had two offers in the first week."
+   ],
+   [
+    "A seller gets four offers in one weekend. How do you handle them fairly?",
+    "Whether you protect your seller and treat every buyer the same way.",
+    "Every offer goes to the seller, compared on net proceeds and terms, not price alone, and every buyer's agent gets the same deadline and information.",
+    "I put all four in a side-by-side sheet: price, financing, down payment, contingencies, closing date and what the seller nets after costs. The highest price had the weakest financing, so the second offer was stronger. When my seller asked for best and final offers, I sent every agent the same deadline in writing. I don't share one buyer's terms with another unless the seller approves."
+   ],
+   [
+    "A buyer asks whether a neighborhood is safe and what kind of people live there. How do you answer?",
+    "Whether you know how fair housing rules shape what an agent can say about an area.",
+    "No opinions about who lives there or whether it is a good area. Point the buyer to objective sources and talk about the property, not the people.",
+    "I tell them I can't steer anyone toward or away from an area, so I don't describe places by who lives there. I give them sources to check themselves: the police department's crime map, the school district's website, and a drive through at different times of day. Federal law sets the baseline and many states and cities protect more groups, so I stick to facts about the home."
+   ],
+   [
+    "What do you check before you approve a rental applicant?",
+    "Whether you screen tenants thoroughly and the same way for everyone.",
+    "Written criteria applied to every applicant: identity, income, rental history, credit and, where the law allows, background, with consent on file.",
+    "We have written criteria from the owner, and I apply them to everyone in the same order. I verify identity, confirm income with pay stubs or an employer call, and call the last two landlords about payment and the condition they left. Then credit and, where local law allows it, a background check, with signed consent. Rules on criminal history and application fees vary by state and city, so I check ours."
+   ],
+   [
+    "A seller wants to list 10% above what the comparables support. What do you do?",
+    "Whether you can tell a client an unwelcome truth and still keep the listing.",
+    "The comparables shown plainly, what overpricing usually costs, and a written plan with a date to review the price if the market says no.",
+    "I show them the same sales a buyer's agent and the appraiser will use. Then I explain that a home priced too high gets fewer showings early, when interest is highest, and often sells for less in the end. If they still want to test the higher price, we agree in writing to review it after two weeks or 15 showings without an offer. Last year that review led to a cut and a sale within a month."
+   ],
+   [
+    "The appraisal comes in $12,000 below the contract price. What happens next?",
+    "Whether you know the options when an appraisal gap threatens a deal.",
+    "Checks the contract deadline, then lays out the options: challenge with better comparables, renegotiate the price, the buyer covers the gap, or a split.",
+    "First I check the appraisal contingency date, because that sets how much time we have. Then I read the report for errors and look for sales the appraiser missed, in case the lender will accept a reconsideration. If the value stands, the lender lends on the lower figure, so someone has to close the gap. On my last one the seller came down $6,000 and the buyer brought $6,000 more in cash."
+   ],
+   [
+    "Two applicants both meet the criteria for the same apartment. How do you decide who gets it?",
+    "Whether you follow a consistent, documented rule instead of a gut feeling.",
+    "A written rule, usually the first complete application that meets the criteria, applied every time and documented, so the choice can be explained.",
+    "Our policy is first complete qualified application, with time stamps. Last month the second applicant was friendlier and offered to sign a longer lease, but the first one applied an hour earlier with everything in place, so she got the unit. I wrote down the times in the file and told the second applicant about a similar unit opening the next month. Gut feelings are how fair housing complaints start."
+   ],
+   [
+    "A buyer you are working with wants to make an offer on your own listing. How do you handle it?",
+    "Whether you understand dual agency and protect both clients.",
+    "Knows dual agency is banned in some states and allowed with written consent in others, follows brokerage policy, and offers to refer one side out.",
+    "First I check what our state and my brokerage allow, because some states ban dual agency and others allow it only with written consent from both sides. If it's allowed, I explain to both that I can't advise either of them against the other on price. In my last case the buyer preferred her own advocate, so I referred her to a colleague in my office and kept the seller."
+   ],
+   [
+    "The seller tells you the basement flooded two years ago and asks you to keep it quiet. What do you do?",
+    "Whether your honesty holds when the client asks you to hide something.",
+    "A clear refusal, an explanation that known material defects must be disclosed, and a way to present it well, such as repair records.",
+    "I tell the seller I can't hide a defect I know about, and that it belongs on the disclosure form. What exactly the form requires varies by state, but hiding water damage is the kind of thing buyers sue over after closing. I ask for the repair invoices and any waterproofing warranty, because a fixed problem with paperwork scares buyers far less than a surprise. If the seller still refuses, I take it to my broker."
+   ],
+   [
+    "Your listing has had 20 showings and no offers in a month. What do you do?",
+    "Whether you diagnose a stalled listing with evidence before you talk to the seller.",
+    "Reads showing feedback, compares new sales and competing listings, and comes to the seller with a specific change to price, condition or marketing.",
+    "Twenty showings means the marketing works and buyers are coming, so the price or the house is the problem. I collect feedback from every buyer's agent and check what sold nearby since we listed. On a listing like this last fall, eight agents mentioned the dated kitchen. I showed the seller the feedback and two newer sales, and we cut the price by $10,000. It went under contract nine days later."
+   ],
+   [
+    "A caller you have never met wants to see a vacant listing tonight. How do you handle it?",
+    "Whether you take your own safety seriously when meeting strangers at empty properties.",
+    "Verifies identity before the showing, tells someone where they are going, keeps daylight or a colleague where possible, and stays near the exit.",
+    "I ask for their full name and number, and for a photo of their ID or a lender preapproval before I book. I suggest meeting at the office first or showing it in the morning. If it has to be tonight, I bring a colleague, share my location with the office, and walk behind the client in the house. Real buyers rarely mind. The one caller who refused all of that never called back."
+   ],
+   [
+    "Tell me about a deal that fell apart close to closing. What did you do?",
+    "How you handle a setback and what you change afterward.",
+    "Fast, honest communication with the client, a quick plan to recover, and a specific lesson the candidate now applies on every deal.",
+    "A buyer's loan was denied eight days before closing because he changed jobs. I called my seller that hour, not by email, and we put the house back on the market the same day. A backup buyer from the first open house signed two weeks later. Since then I ask buyers up front not to change jobs or open new credit before closing, and I check in with the lender every week."
+   ],
+   [
+    "How do you keep track of deadlines when you have several deals under contract at once?",
+    "Whether you have a system that prevents missed contingency dates.",
+    "Every date from the contract goes into one calendar with reminders, plus a checklist per file and regular check-ins with lender, title and the other agent.",
+    "The day a contract is signed, I enter every date into my calendar: inspection, appraisal, loan approval, final walk-through and closing, each with a reminder three days ahead. Each file has a checklist, and every Monday I email the lender and title company on each open deal. Last spring I had seven under contract at once and didn't miss a date."
+   ],
+   [
+    "How would you find your first ten clients in a market where you know few people?",
+    "Whether you have a realistic plan to build a pipeline on commission.",
+    "Specific, steady activity: hosting open houses, following up every lead within a day, and a simple system to track contacts over months.",
+    "I would ask agents in the office if I can host open houses at their listings, two every weekend, and follow up with every visitor within a day. I would also join one local group, like the chamber of commerce, and show up regularly. When I moved two years ago, that brought 11 clients in my first nine months. Most came from open houses."
+   ]
+  ]
+ },
+ "physician-assistant": {
+  "heading": "Physician assistant questions",
+  "qs": [
+   [
+    "A 52-year-old comes in with chest pain. How do you build your differential?",
+    "Whether you think about dangerous causes first and narrow the list with history and exam.",
+    "Life threats first, such as heart attack, pulmonary embolism, aortic dissection and pneumothorax, with an early ECG, then common causes as evidence allows.",
+    "Vitals and an ECG come first, within minutes. Then I list what could kill him today: heart attack, pulmonary embolism, aortic dissection, collapsed lung. The history narrows it: when it started, what it feels like, what makes it worse, risk factors. Reflux or a strained muscle moves up only after the dangerous causes are reasonably ruled out. If one stays possible, I bring in the physician early."
+   ],
+   [
+    "When do you bring your supervising or collaborating physician into a case?",
+    "Whether you know the limits of your role and escalate at the right time.",
+    "Knows that scope and supervision rules vary by state and practice agreement, and escalates for instability, uncertainty, cases outside their experience or policy.",
+    "It depends on the state and our practice agreement, so I learn those rules first in any new job. Beyond that, I call the physician when a patient is unstable, when I'm not sure of the diagnosis, when a case is outside what I've managed before, or when the plan isn't working. Last month a patient's headache didn't fit any pattern I knew, and the physician saw her before she left."
+   ],
+   [
+    "What goes into a good note for a clinic visit?",
+    "Whether your documentation is clear, complete and useful to the next clinician.",
+    "A clear structure such as SOAP, the reasoning behind the assessment, the plan, what the patient was told, and when to follow up, written the same day.",
+    "I use SOAP. The subjective part has the complaint in the patient's words and the pertinent negatives. Objective has vitals, exam and results. The assessment shows my reasoning, not just a diagnosis code, so the next clinician sees why I thought what I thought. The plan lists tests, treatment, what I told the patient, warning signs to return for, and the follow-up date. I finish notes the same day."
+   ],
+   [
+    "How do you explain a new diagnosis and plan to a patient so they actually follow it?",
+    "Whether you can turn a medical plan into something a patient understands and acts on.",
+    "Plain words, a few key points, written instructions, and teach-back to confirm understanding, plus asking about barriers like cost or schedule.",
+    "Last week I diagnosed high blood pressure in a 48-year-old truck driver. I kept it to three points: what the numbers mean, the one pill to take each morning, and a recheck in four weeks. Then I asked him to tell me the plan in his own words. He mixed up the timing, so I explained it again. I also asked what might get in the way, and he mentioned cost, so we picked a generic."
+   ],
+   [
+    "A patient insists on antibiotics for what looks like a viral cold. What do you do?",
+    "Whether you hold to good prescribing while keeping the patient's trust.",
+    "Listens to the worry behind the request, explains why antibiotics will not help, offers a symptom plan, and gives clear reasons to come back.",
+    "I ask what worries them most. Often it's missing work or a past infection that turned bad. I explain that antibiotics don't work on viruses and can cause side effects like diarrhea. Then I give them a plan for the symptoms and tell them exactly what should bring them back, such as trouble breathing or getting worse after getting better. Most patients accept that once they feel heard."
+   ],
+   [
+    "A lab calls with a critical potassium result for a patient who went home two hours ago. What do you do?",
+    "Whether you act quickly and safely on a critical result after the visit.",
+    "Reaches the patient promptly, asks about symptoms, considers whether the result could be wrong, arranges a repeat or emergency care, informs the physician, documents.",
+    "I call the patient right away and ask about weakness, palpitations or other symptoms. I check the lab comment for hemolysis, but I don't assume it's an error. With symptoms or a very high value, I send them to the emergency department. Without, I arrange an urgent repeat. Either way I tell my supervising physician and document every call. Last time the repeat was normal."
+   ],
+   [
+    "At the end of a rushed visit, the patient mentions chest pain on the stairs. You are 40 minutes behind. What do you do?",
+    "Whether you put patient safety ahead of the schedule.",
+    "Stops and assesses the new symptom now, with vitals and an ECG as needed, involves the physician if concerning, and lets the front desk manage the delay.",
+    "The schedule waits. I sit back down and ask about the pain: when it happens, how long it lasts, what eases it. We get vitals and an ECG. Last time this happened, the ECG was abnormal and I brought in the physician, who sent the patient to the emergency department. I asked the front desk to tell my next patients I was running late and to offer to reschedule anyone who couldn't wait."
+   ],
+   [
+    "A patient says they would rather see the doctor than a PA. How do you respond?",
+    "Whether you can handle doubts about your role calmly and without ego.",
+    "Respects the request, briefly explains the PA role and the team, and offers the physician or a later appointment without taking it personally.",
+    "I tell them that's completely fine. I explain in one or two sentences that I'm a physician assistant, licensed to examine, diagnose and treat, and that I work with Dr. Patel on the same team. Then I offer two options: I start the visit and bring her in if needed, or the front desk books her next opening. Most choose to stay. The ones who don't usually see me next time."
+   ],
+   [
+    "After a patient leaves, you realize you forgot to order a test you meant to order. What do you do?",
+    "Whether you own mistakes openly and fix them quickly.",
+    "Contacts the patient, explains honestly, arranges the test, tells the supervising physician, documents, and follows the practice's reporting process.",
+    "I call the patient the same day and say plainly that I meant to order a test and missed it. Last year it was a thyroid panel for a woman with fatigue. I ordered it that afternoon, told my supervising physician, and wrote an addendum to the note. I also changed my habit: I now read the plan back to myself before the patient leaves the room. Patients forgive honesty far more than surprises."
+   ],
+   [
+    "A patient arrives speaking little English and brings her 12-year-old son to interpret. What do you do?",
+    "Whether you know to use a qualified interpreter and why family members are a poor substitute.",
+    "Uses a qualified medical interpreter by phone, video or in person, explains why children should not interpret, and documents the interpreter used.",
+    "I thank the son and tell the mother, through a phone interpreter, that we have professional interpreters at no cost to her. Children can miss medical terms, and a mother may not share everything in front of her son. The phone line took two minutes to connect. In the note I recorded the interpreter's ID number and the language. Her son waited outside for the exam."
+   ],
+   [
+    "Tell me about a case where your first diagnosis turned out to be wrong.",
+    "Whether you reflect honestly on your clinical reasoning and learn from it.",
+    "A specific case, what led them astray, how it was caught, and a concrete change in how they work, without blaming others.",
+    "A 30-year-old came in with back pain after moving furniture, and I called it a muscle strain. She returned three days later with a fever, and her urine showed a kidney infection. I had anchored on the furniture story and skipped a urine test. Now, for back pain, I ask about fever and urinary symptoms every time, even when the cause seems obvious."
+   ],
+   [
+    "Tell me about a time you disagreed with your supervising physician about a plan.",
+    "How you raise a clinical concern with someone senior and work it out.",
+    "Raises it privately and with evidence, listens to the physician's reasoning, and puts the patient's safety first, whatever the outcome.",
+    "The physician wanted to start a patient on a new medication, and I had noticed in the chart that her kidney function had dropped. I asked to talk for two minutes outside the room and showed him the lab trend. He had not seen it, and we chose a different drug. Another time I was the one missing context, and I said so. The point is the patient, not who was right."
+   ],
+   [
+    "How do you keep your clinical knowledge current?",
+    "Whether you have a steady habit of learning, not just meeting minimum requirements.",
+    "Regular, specific sources, continuing education beyond what certification needs, and learning tied to real cases seen in practice.",
+    "I complete the CME I need to keep my NCCPA certification, but most of my learning comes from my own cases. When a patient raises a question I can't answer well, I note it and read the current guideline that evening. I also join our monthly case review with the physicians. Last year that habit changed how early I screen adults for diabetes."
+   ],
+   [
+    "You have 24 patients booked and 60 results in your inbox. How do you get through the day safely?",
+    "Whether you can manage a heavy workload without letting anything unsafe slip.",
+    "Triages the inbox for abnormal and urgent items first, uses short gaps during the day, asks for help before falling behind, and does not skip documentation.",
+    "Before the first patient I scan the inbox for abnormal and critical results and handle those first. Normal results go out in batches between visits with a short template message. I chart during the visit where I can, so notes don't pile up. If I'm more than 30 minutes behind by noon, I tell the office manager so they can move a few routine visits. Nothing abnormal waits until tomorrow."
+   ]
+  ]
+ },
+ "product-owner": {
+  "heading": "Product owner questions",
+  "qs": [
+   [
+    "Write a user story for a password reset feature, with acceptance criteria.",
+    "Whether you can write a clear, testable story from the user's point of view.",
+    "A story that names the user, the need and the reason, and criteria that are specific and testable, covering the main path and key failure cases.",
+    "As a registered user who forgot my password, I want to reset it by email so that I can get back into my account without calling support. Criteria: the reset link arrives within five minutes; it works once and expires after one hour; an unknown email gets the same message as a known one; the new password meets our existing rules; other sessions are signed out after the reset."
+   ],
+   [
+    "How do you decide the order of the product backlog?",
+    "Whether you order work by value and risk rather than by who asks loudest.",
+    "A clear basis: value to users and the business, cost of delay, risk and learning, dependencies and size, with reasons visible to stakeholders.",
+    "I look at the value to users and the business, what it costs us to wait, risk, and effort from the developers' estimates. Items that teach us something important or remove a big risk often go near the top even if they're small. Last quarter a quick pricing test went ahead of a larger reporting feature because it answered a question blocking three other items. I share the reasons so stakeholders can challenge them."
+   ],
+   [
+    "What is the difference between acceptance criteria and the definition of done?",
+    "Whether you understand two quality checks that people often mix up.",
+    "Acceptance criteria are specific to one item. The definition of done is a shared quality standard that applies to every item, such as tested, reviewed and documented.",
+    "Acceptance criteria belong to one story and say what it must do, like the reset link expires after one hour. The definition of done applies to every item the team delivers: code reviewed, tests passing, documentation updated, deployed to staging. A story is done only when it meets both. On my last team we added an accessibility check to the definition of done after a release failed an audit."
+   ],
+   [
+    "What makes a sprint review useful?",
+    "Whether you know the sprint review is a working session, not a status presentation.",
+    "Working product shown to real stakeholders, honest discussion of what was and was not done, and feedback that changes the backlog.",
+    "We show working software, not slides, and the stakeholders try it themselves where possible. I say plainly what we didn't finish and why. Then we talk about what we learned and what should come next, and I update the backlog in the room. At one review a sales lead tried the new export and pointed out that customers needed CSV, not PDF. That changed the next sprint."
+   ],
+   [
+    "A vice president asks you to add a feature to the current sprint. What do you say?",
+    "Whether you can say no to a senior stakeholder and still protect the sprint goal and the relationship.",
+    "Understands the urgency first, protects the sprint goal, offers the next sprint or a trade, and involves the developers in any change to the sprint backlog.",
+    "I ask what is driving the request and what happens if it waits two weeks. Usually it can wait, and I offer to put it at the top of the backlog for the next sprint. If it truly can't, I talk to the developers, since the sprint backlog is theirs, about whether it fits without hurting the sprint goal. Something else comes out, and I tell the vice president plainly what that costs."
+   ],
+   [
+    "On the last day of the sprint, a story meets every acceptance criterion except one small one. Do you accept it?",
+    "Whether you hold the line on done, even when bending it feels harmless.",
+    "No partial credit: the story goes back to the backlog, the gap is fixed or rewritten as a new item, and the team discusses why it slipped.",
+    "No. A story that misses a criterion isn't done, even if the gap looks small. Last time it was an error message that didn't show on mobile. We left the story out of the increment, the fix took half a day in the next sprint, and in the retrospective we agreed to test on mobile earlier. If a criterion turns out not to matter, I remove it openly instead of quietly accepting the story."
+   ],
+   [
+    "Two department heads each say their feature must come first. How do you decide?",
+    "Whether you can make a priority call between stakeholders and explain it.",
+    "Gets the evidence behind each request, compares them on the same basis, makes the call as product owner, and explains the reasoning to both.",
+    "I meet each one and ask for the evidence: how many customers, how much revenue, what happens if it waits. Then I compare both on the same terms. Last year support's request would cut about 300 tickets a month, while marketing's was for a campaign that could move. Support's went first. I told marketing why in person and gave them a date for theirs, which we hit."
+   ],
+   [
+    "Halfway through the sprint, the developers tell you the sprint goal is at risk. What do you do?",
+    "Whether you respond to bad news with scope decisions, not pressure.",
+    "Learns what changed, works with the developers to renegotiate scope while keeping the goal, informs stakeholders early, and cancels only if the goal is obsolete.",
+    "I thank them for telling me early and ask what changed. Last spring an outside API was slower than anyone expected. We kept the goal, which was letting users book online, but moved the reschedule option to the next sprint. I told the stakeholders that same day. Pushing the team to work late would have hidden the problem until the end of the sprint."
+   ],
+   [
+    "Sales promised a customer a feature by next month without asking you. What do you do?",
+    "Whether you handle an outside commitment calmly and protect the team's plan.",
+    "Learns what exactly was promised and why, checks with developers what is realistic, agrees a clear answer with sales, and fixes the process so it does not recur.",
+    "First I talk to the salesperson to learn what exactly the customer was told and what the deal is worth. Then I ask the developers for a rough size. Last time the full feature would take three months, but a smaller version covered the customer's real need in four weeks. Sales and I went back to the customer together. Afterward we agreed that any date promise goes through me first."
+   ],
+   [
+    "The developers ask for a sprint to pay down technical debt. How do you decide?",
+    "Whether you weigh invisible technical work against features fairly.",
+    "Takes the request seriously, asks what the debt costs in speed, bugs or risk, and plans it into the backlog, often as a steady share of each sprint.",
+    "I ask them to show me the cost: how much slower changes are, how many bugs come from that area, what could break. On my last team the payments code caused about half our production bugs. We didn't take a whole sprint, but we agreed to spend about a fifth of every sprint on it for a quarter. Bugs in that area fell, and so did the time to ship small changes."
+   ],
+   [
+    "The team keeps stopping mid-sprint to ask you what stories mean. What do you change?",
+    "Whether you prepare backlog items well before the sprint starts.",
+    "Better backlog refinement: stories discussed with the developers ahead of time, clear acceptance criteria, examples, and the product owner reachable during the sprint.",
+    "That tells me the stories reach planning before they are ready. I set up a weekly refinement session where the developers question the next sprint's stories while there is still time to find answers. I add examples and mockups to the criteria. Questions during the sprint are still welcome, and I sit with the team most mornings, but within a few sprints they dropped to one or two a week."
+   ],
+   [
+    "Tell me about a feature you pushed for that users barely used. What did you do next?",
+    "Whether you measure outcomes and admit when you were wrong.",
+    "Owns the decision, finds out why with data and user conversations, then improves, changes or removes it, and adjusts how ideas are tested first.",
+    "I pushed for saved searches in our scheduling app. Three months after release, fewer than 3% of users had saved one. I called eight users, and most didn't know the feature existed or why they'd want it. We moved the button next to the results and added an email alert, and use roughly tripled. Now I test interest with a simple prototype before we build the full thing."
+   ],
+   [
+    "Tell me about a time the developers pushed back on a story you wrote.",
+    "How you handle disagreement with the team and use their expertise.",
+    "Listens to the technical concern, looks for a smaller or different way to deliver the same value, and changes the story when they are right.",
+    "I wrote a story for real-time notifications, and the developers estimated it at three sprints. I asked what made it big. Real-time meant new infrastructure. Then I asked what users actually needed: to know about a change within a few minutes. A check every two minutes did that in four days. I learned to describe the problem in stories, not the solution, and to let the team suggest how."
+   ],
+   [
+    "How do you stay close to real users when the team is busy delivering?",
+    "Whether you keep direct contact with users instead of relying only on stakeholders.",
+    "A regular habit, such as a set number of user conversations each month, joining support calls, reading feedback, and sharing what they learn with the team.",
+    "I book at least four user calls a month and protect that time like a sprint event. I also listen to two support calls a week and read every piece of feedback tagged to our area. Every couple of sprints a developer joins a call with me. After one of those, a developer rewrote an error message on the spot because she heard a user read it aloud and get confused."
+   ]
+  ]
  }
 }

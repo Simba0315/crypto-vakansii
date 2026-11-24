@@ -110,6 +110,8 @@
 | Удалёнка по местам `/locations/<место>/remote/` | Заголовок «Remote & Work From Home Jobs in …», как у `/remote/` (запросы «work from home jobs» и «virtual assistant jobs» на позициях 8–9 приводят на Болгарию) | Search Console |
 | Как стать `/how-to-become/…` (373) | Первый вопрос «What does a … do?» (описание работы и навыки, которые чаще всего просят сегодня); вопрос о дипломе больше не стоит дважды (было на 58 страницах) | Локальная сборка: повторов 0, вопрос «what does» на всех 372 |
 | Словарь: elevator pitch, relocation | Пример питча и что в нём не говорить; стоит ли отвечать «да» на «готовы переехать?» и сколько времени дают на переезд | Выдача Google (позиции 26 и 10,5) |
+| Вопросы на интервью: 13 профессий | Свои вопросы (по 14) у project coordinator, insurance agent, receptionist, administrative assistant, pharmacist, pharmacy technician, medical coder, bookkeeper, property manager, HR generalist, real estate agent, physician assistant, product owner — раньше там были только общие вопросы. Каждый: что проверяют, что показать, пример ответа | interview_bank.test(): 8 080 вопросов без повторов; ответы по медицине, праву и fair housing прочитаны перед добавлением |
+| Компании: Zipcar | Своя доска Zipcar на Workday сейчас пустая (0 вакансий); страница говорит, что Zipcar входит в Avis Budget Group, и ведёт на её вакансии | Проверено запросом к Workday 24.11 |
 
 | Раздел | Адрес | Страниц | Обход глазами | Что исправлено при обходе |
 |---|---|---|---|---|

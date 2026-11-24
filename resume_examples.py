@@ -2063,7 +2063,9 @@ UK2US = {"optimisation": "optimization", "optimisations": "optimizations", "opti
  "parallelised": "parallelized", "monetised": "monetized", "incentivised": "incentivized", "itemised": "itemized", "memorised": "memorized",
  "reorganised": "reorganized", "systematised": "systematized", "visualised": "visualized", "optimised": "optimized", "organising": "organizing",
  "specialise": "specialize", "apologised": "apologized", "colouring": "coloring", "favourite": "favorite", "neighbours": "neighbors", "neighbour": "neighbor",
- "memorise": "memorize", "summarising": "summarizing", "summarises": "summarizes", "behaviours": "behaviors", "modernise": "modernize"}
+ "memorise": "memorize", "summarising": "summarizing", "summarises": "summarizes", "behaviours": "behaviors", "modernise": "modernize",
+ "organises": "organizes", "customises": "customizes", "customise": "customize", "counselling": "counseling", "counsellor": "counselor",
+ "counsellors": "counselors", "enrols": "enrolls", "enrol": "enroll", "decentralised": "decentralized"}
 _UK_RX = re.compile(r"\b(" + "|".join(sorted(UK2US, key=len, reverse=True)) + r")\b", re.I)
 US2UK = {us_: uk_ for uk_, us_ in UK2US.items() if us_ not in ("program", "programs", "license", "licenses")}
 _US_RX = re.compile(r"\b(" + "|".join(sorted(US2UK, key=len, reverse=True)) + r")\b", re.I)

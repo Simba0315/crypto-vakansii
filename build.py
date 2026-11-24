@@ -2026,6 +2026,9 @@ def tidy_list_desc(desc, jobs):
 # Company names that were a Workday employing entity's code plus the name (24 Nov 2026): Google showed "United States 7 Zipcar Careers" at
 # 15th for "zipcar careers". discover_ats.clean_name now strips these codes for new boards; jobs already read keep the old name in
 # data/jobs.json, so the name is mended here and the old company address hands over to the new one (write_renamed_companies).
+# a brand that hires through its parent's careers site (25 Nov 2026: Zipcar's own Workday board had 0 openings while "zipcar careers"
+# brought searchers; Avis Budget Group, its owner since 2013, posts on its own board): an empty brand page points to the parent's jobs
+CO_PARENT = {"Zipcar": "Avis Budget Group"}
 CO_RENAME = {"United States 7  Zipcar": "Zipcar", "1US0 PerkinElmer U.S": "PerkinElmer", "253B AllianceBernstein": "AllianceBernstein",
              "ICH0102 InnovaCare Management Services": "InnovaCare Management Services", "3II MPM Innovation": "MPM Innovation", "Arktura BV 1": "Arktura"}
 
@@ -4538,7 +4541,10 @@ def main():
         lead = (((f"{e(c)} has {roles(len(act), 'open role')} right now" + (f", {rem_c:,} of them remote" if rem_c else "") + ". ")
                  + (f"Most are in {', '.join(cats_txt[:-1]) + ' and ' + cats_txt[-1] if len(cats_txt) > 1 else cats_txt[0]}. " if cats_txt else "")
                  + (f"{e(c)} posted these roles here itself; each apply link was checked when the role was published." if all(j.get("direct") for j in act)
-                    else f"Every role here is read from {e(c)}’s own careers page and was checked on {fdate(TODAY, False)}.")) if act else "No open roles right now. Past openings are below.")
+                    else f"Every role here is read from {e(c)}’s own careers page and was checked on {fdate(TODAY, False)}.")) if act else
+                ("No open roles right now. Past openings are below."
+                 + (f' {e(c)} is part of <a href="{P}/companies/{slugify(CO_PARENT[c])}/">{e(CO_PARENT[c])}</a>, which has {roles(OPEN[CO_PARENT[c]], "open role")} today.'
+                    if OPEN.get(CO_PARENT.get(c, ""), 0) else "")))
         closed = section(f"Closed jobs at {c}", f'<ul class="jobs">{"".join(card(j) for j in arc[:200])}</ul>', sid="closed") if arc else ""
         careers_link = f'<a href="{FULL}/companies/{slug}/">Open roles at {c}</a>'
         embed = (f'<details class="embed"><summary>Work at {e(c)}? Link your careers page to this list</summary>'
