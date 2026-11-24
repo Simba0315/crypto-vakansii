@@ -3498,7 +3498,8 @@ def main():
         if len(rj) >= 5:
             row_r, kw_r = list_parts(f"Remote {name} jobs", rj)
             listing(f"remote/{s}/", f"Remote {name} jobs", f"Remote {name} Jobs ({len(rj):,} open) | {SITE}",
-                    f"{roles(len(rj), 'remote ' + name + ' job')} at companies. Work from anywhere, updated hourly.",
+                    f"Remote {name} jobs: {len(rj):,} open now at companies. " + (f"{sum(1 for j in rj if j.get('anywhere')):,} are open to any country; the rest name where you must live."
+                    if any(j.get("anywhere") for j in rj) else "Each names the countries or time zones it hires in."),        # "Work from anywhere" was untrue of most (24 Nov 2026)
                     rj, intro_for(rj, f"remote {e(name)} ", row=row_r), trail=(("Remote", "remote/"),), faq=f"remote {name} jobs", links=((f"jobs/{s}/", f"All {name} jobs"),), **kw_r)
     rcats = "".join(tile(f"remote/{s}/", CAT[s], c) for s in CAT if (c := sum(j["remote"] for j in by_cat[s])) >= 5)
     lap('the remote hub also answers "remote jobs in my field", "remo')
