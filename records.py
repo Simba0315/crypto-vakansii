@@ -240,7 +240,7 @@ class Store:
                 b.NOW, b.TODAY = self.ctx["now"], self.ctx["today"]
                 b.VALID_TO = (datetime.date.fromisoformat(b.TODAY) + datetime.timedelta(days=30)).isoformat()
             keep = b.write
-            b.write = lambda path, content, sitemap=True: out.__setitem__("html", content)       # page() hands the page to write(); keep it instead
+            b.write = lambda path, content, sitemap=True: out.__setitem__("html", b.finish_html(content) if hasattr(b, "finish_html") else content)       # page() hands the page to write(); keep it instead, with the same last touches
             try:
                 b.job_page(j, {})
             finally:

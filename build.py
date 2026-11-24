@@ -978,16 +978,23 @@ def ava(name, cls=""):
 IMG_NO_TITLE = re.compile(r'<img\b(?![^>]*\btitle=)[^>]*\balt="([^"]+)"[^>]*>')
 
 
-def write(path, content, sitemap=True):
-    f = OUT / path / "index.html" if not path.endswith((".html", ".xml", ".txt", ".json", ".svg", ".csv")) else OUT / path
-    f.parent.mkdir(parents=True, exist_ok=True)
-    if f.suffix == ".html" and "<img" in content:
+def finish_html(content):
+    """The last touches every HTML page gets, written to a file here or built on request by serve.py from a job record (records.py
+    hands job_page()'s output here too; until 24 Nov 2026 those pages skipped both touches)."""
+    if "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
         content = IMG_NO_TITLE.sub(lambda m: m.group(0)[:-1].rstrip("/").rstrip() + f' title="{m.group(1)}">', content)
-    if f.suffix == ".html" and "1 " in content:
+    if "1 " in content:
         # "median 1 years", "asks for 1 years" (job description pages, 24 Nov 2026): twenty phrases put a count before "years"; one place
         # makes "1" singular instead of a condition in each of them
         content = ONE_PLURAL.sub(lambda m: "1 " + ONE_WORD[m.group(1)], content)
+    return content
+
+
+def write(path, content, sitemap=True):
+    f = OUT / path / "index.html" if not path.endswith((".html", ".xml", ".txt", ".json", ".svg", ".csv")) else OUT / path
+    f.parent.mkdir(parents=True, exist_ok=True)
+    if f.suffix == ".html": content = finish_html(content)
     f.write_text(content, encoding="utf-8")
     if sitemap:
         URLS.append(path)
