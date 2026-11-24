@@ -67,7 +67,7 @@
     '.more[hidden]{display:none}.more{display:block;width:100%;padding:11px;border:0;border-bottom:1px solid var(--line);background:var(--hov);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
     '@media(prefers-reduced-motion:reduce){.tick .run{animation:none;flex-wrap:wrap;width:auto;padding:0 14px}}';
   function row(j, logos) {
-    var mark = j.logo && logos ? '<img class="lg" src="' + esc(j.logo) + '" alt="" loading="lazy">' : '<span class="lt">' + esc((String(j.company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span>';
+    var mark = j.logo && logos ? '<img class="lg" src="' + esc(j.logo) + '" alt="' + esc(j.company) + ' logo" loading="lazy">' : '<span class="lt">' + esc((String(j.company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span>';
     return '<a class="r" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + mark + '<span class="t">' + esc(j.title) + '</span>' +
       '<span class="c">' + esc([j.company, j.location || (j.remote ? 'Remote' : '')].filter(Boolean).join(' · ')) + '</span>' +
       '<span class="m">' + (j.salary ? '<b>' + esc(j.salary) + '</b>' : '') + esc(age(j.posted)) + '</span></a>';

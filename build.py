@@ -825,9 +825,9 @@ GRAD = ""
 _WM = re.search(r'width="(\d+)" height="(\d+)"', (ROOT / "assets" / "brand" / f"{brand.APPLIED}-logo.svg").read_text())
 WM_W, WM_H = (int(_WM.group(1)), int(_WM.group(2))) if _WM else (271, 40)
 # the wordmark: light file on light pages, dark file on dark ones (style.css swaps them); the link carries the name
-LOGO = (f'<img class="wm-l" src="{P}/brand/{brand.APPLIED}-logo.svg?v=WMV" alt="" width="{WM_W}" height="{WM_H}">'
-        f'<img class="wm-d" src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="" width="{WM_W}" height="{WM_H}">')
-LOGO_DARK = f'<img src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="" width="{WM_W}" height="{WM_H}">'
+LOGO = (f'<img class="wm-l" src="{P}/brand/{brand.APPLIED}-logo.svg?v=WMV" alt="{e(SITE)}" width="{WM_W}" height="{WM_H}">'
+        f'<img class="wm-d" src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="{e(SITE)}" width="{WM_W}" height="{WM_H}">')
+LOGO_DARK = f'<img src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="{e(SITE)}" width="{WM_W}" height="{WM_H}">'
 LOGO_V = hashlib.md5((ROOT / "assets" / "brand" / f"{brand.APPLIED}-logo.svg").read_bytes()).hexdigest()[:8]
 LOGO, LOGO_DARK = LOGO.replace("WMV", LOGO_V), LOGO_DARK.replace("WMV", LOGO_V)
 ICON_THEME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg>'
@@ -959,7 +959,7 @@ def ava(name, cls=""):
     (small_logos) except in the large square."""
     letter = next((c for c in name if c.isalnum()), "?").upper()
     slug = slugify(name)
-    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="" loading="lazy">' if slug in LOGOS else ""
+    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="{e(name)} logo" loading="lazy">' if slug in LOGOS else ""
     return f'<span class="ava{" " + cls if cls else ""}{" has" if img else ""}" aria-hidden="true">{e(letter)}{img}</span>'      # no hue: the logo covers the square, and a square without a logo is hidden
 
 
@@ -3010,7 +3010,7 @@ def main():
                  '<span class="wl"><b>Senior Data Engineer</b><span>Spotify · Remote</span></span><span class="wl"><b>Product Designer</b><span>Monzo · London</span></span>'
                  '<span class="wl"><b>DevOps Engineer</b><span>GitLab · Remote</span></span></span>'
                  '<span class="tbody"><b>A list of jobs for your site</b><span>For a blog, a community or a company site: paste a short code once and the list stays fresh by itself.</span><i><u>Make yours</u></i></span></a>'
-                 f'<a class="tcard" href="{P}/hiring-badge/"><span class="tprev center" aria-hidden="true"><img src="{P}/hiring-badge.svg" alt="" width="220" height="48" loading="lazy"></span>'
+                 f'<a class="tcard" href="{P}/hiring-badge/"><span class="tprev center" aria-hidden="true"><img src="{P}/hiring-badge.svg" alt="Hiring badge" width="220" height="48" loading="lazy"></span>'
                  '<span class="tbody"><b>A “we’re hiring” badge with a live number</b><span>A small picture that shows how many roles are open today, for a footer, a post or a project page.</span><i><u>Get the badge</u></i></span></a>'
                  f'<a class="tcard" href="{P}/board/"><span class="tprev tv" aria-hidden="true"><span class="tvh"><b>Fresh on the board</b><span>2 / 4 · 19:34</span></span>'
                  '<span class="tvr"><em>1D</em>Data Engineer<span>itD Tech</span></span><span class="tvr"><em>1D</em>Account Executive<span>Staffbase</span></span>'
@@ -10812,7 +10812,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # to them how to place it"): the badge, its code with copy buttons and where to paste it on the common site builders. Filled in the
     # browser from the company's own page here, so no extra page per company is built; an unknown slug leaves the panel hidden.
     hb_co = ('<section class="feat hbco" id="hb-co" hidden aria-live="polite"><h2 id="hb-co-h">Your company’s hiring badge</h2>'
-             '<p class="hbc-pic"><a id="hb-co-a" href="#"><img id="hb-co-img" alt="" height="28"></a></p>'
+             '<p class="hbc-pic"><a id="hb-co-a" href="#"><img id="hb-co-img" alt="Company logo" height="28"></a></p>'
              '<p class="note">It shows how many of your roles are open today and links to your company page here, where every Apply button goes to your own application page.</p>'
              '<span class="flabel">1. Copy the code</span><textarea id="hb-co-html" rows="3" readonly aria-label="HTML for your company badge"></textarea>'
              '<span class="flabel">Markdown, for a GitHub README or docs</span><textarea id="hb-co-md" rows="2" readonly aria-label="Markdown for your company badge"></textarea>'

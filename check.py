@@ -69,6 +69,8 @@ for rel in sample:
     heads = [int(x) for x in re.findall(r"<h([1-6])[\s>]", h.split("<footer")[0])]
     if any(b - a > 1 for a, b in zip(heads, heads[1:])): fails[t]["heading level skipped"] += 1
     if re.search(r"<img(?![^>]*\balt=)", h): fails[t]["img without alt"] += 1
+    # empty alt="" too (24 Nov 2026): Bing Site Scan reports it as "Alt attribute for images is missing", and the owner wants every image named
+    if re.search(r'<img[^>]*\balt=""', h): fails[t]["img with empty alt"] += 1
     for href in set(re.findall(r'href="(/[^"]*)"', h)):
         if not exists(href):
             fails[t]["broken internal link"] += 1; broken[href] += 1

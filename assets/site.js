@@ -18,7 +18,7 @@
   function avatar(company, logo, guess) {
     var letter = (String(company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     // the small copy of the logo (build.small_logos: 72 px, 1 to 2 KB) for these 28 to 42 px squares
-    var img = logo ? '<img src="' + P + '/logos/s/' + logo + '.png" alt="" loading="lazy">' : guess ? '<img src="' + P + '/logos/s/' + slugOf(company) + '.png" alt="" loading="lazy" onerror="this.remove()">' : '';
+    var img = logo ? '<img src="' + P + '/logos/s/' + logo + '.png" alt="' + esc(company) + ' logo" loading="lazy">' : guess ? '<img src="' + P + '/logos/s/' + slugOf(company) + '.png" alt="' + esc(company) + ' logo" loading="lazy" onerror="this.remove()">' : '';
     return '<span class="ava' + (logo || guess ? ' has' : '') + '" style="--h:' + hue(company) + '" aria-hidden="true">' + esc(letter) + img + '</span>';
   }
   function hue(name) { var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360; return h; }
