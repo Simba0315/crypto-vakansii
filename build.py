@@ -9413,7 +9413,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     et_n = Counter(j.get("etype", "") for j in active)
     gfig = {   # a figure counted from today's postings, where the term has one
         "Remote": f"{sum(1 for j in active if j['remote']):,} of the {n_act:,} open jobs here are remote ({pc_(sum(1 for j in active if j['remote']), n_act)}%).",
-        "Hybrid": f"{sum(1 for j in active if j.get('hybrid')):,} of the {n_act:,} open jobs here are hybrid.",
+        # Google's "Is hybrid 2 or 3 days a week?" (People also ask, 24 Nov 2026): the office days today's postings state (stage 10 above)
+        "Hybrid": f"{sum(1 for j in active if j.get('hybrid')):,} of the {n_act:,} open jobs here are hybrid."
+                  + ((lambda t2_: f" {n_od:,} postings say how many days a week to be in the office: {pc_(t2_[0][1], n_od)}% ask for {t2_[0][0]} day{'s' if t2_[0][0] > 1 else ''} and {pc_(t2_[1][1], n_od)}% for {t2_[1][0]}.")(od_.most_common(2))
+                     if n_od >= 50 and len(od_) >= 2 else ""),
         "Contract": f"{et_n.get('Contract', 0):,} of today’s open jobs are marked as contract work." + ctr_len_note(active),
         "Internship": f"{et_n.get('Internship', 0):,} internships are open today.",
         "Full-time and part-time": f"{et_n.get('Full-time', 0):,} open jobs are marked full-time and {et_n.get('Part-time', 0):,} part-time; the rest do not say.",

@@ -73,7 +73,7 @@ TERMS = [
     ("Hiring system", "Another name for an applicant tracking system: the software that publishes jobs and collects applications.",
      "This site reads jobs straight from these systems, which is why the listings are current.", [("methodology/", "How it works")]),
     ("Hybrid", "Part of the week in the office and part at home.",
-     "Ask how many office days are required and whether the team keeps the same days.", [("hybrid/", "Hybrid jobs"), ("jobs-near-me/", "Jobs near me")]),
+     "Ask how many office days are required and whether the team keeps the same days.", [("hybrid/", "Hybrid jobs"), ("guides/office-days-in-hybrid-jobs/", "Office days in hybrid jobs"), ("jobs-near-me/", "Jobs near me")]),
     ("Internship", "A short placement, usually paid, for students and recent graduates.",
      "Apply early: many summer internships open in the autumn of the year before.", [("internships/", "Internships"), ("summer/", "Summer jobs and internships")]),
     ("Job description", "The text of a posting: what the job is, what it asks for and what it offers.",
@@ -934,7 +934,7 @@ MORE = {
         ],
         qa=[
             ("What is the difference between hybrid and remote work?", "Remote work needs no regular office visits; hybrid work needs you in an office on some days, so you must live near one."),
-            ("How many days a week is hybrid?", "There is no standard: each employer sets its own policy, from one day a month to most of the week. Always ask for the exact number and whether it is enforced."),
+            ("How many days a week is hybrid?", "There is no standard: each employer sets its own policy, from one day a month to most of the week. “Today’s figure” on this page counts what today’s postings ask for. Always ask for the exact number and whether it is enforced."),
             ("Can I negotiate a hybrid schedule?", "Often, before you accept. Ask for fewer office days or specific days in writing, especially if you have a long commute or caring duties."),
             ("Are hybrid jobs better than remote jobs?", "It depends on you: hybrid gives in-person time for learning and relationships, remote saves commuting and widens where you can live. Many people decide by the commute."),
         ],
