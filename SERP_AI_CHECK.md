@@ -866,3 +866,13 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   7.1K, 20 clicks): titles and descriptions for those pages, in that project.
 - Why Bing is slow for new sites in general: it crawls few pages of a new, little-linked domain and waits for links and IndexNow
   signals; a site with hundreds of thousands of generated pages gets the most cautious treatment. Check again on 1 Dec 2026.
+
+### /glossary/new-grad/ — "new grad meaning" (24 Nov 2026)
+- Search Console: "new grad meaning" 13 impressions at position 6.0 (page 49 impressions, position 8.7).
+- Google (gl=us): not in the top 10. Top: Reddit r/cscareerquestionsEU, ZipRecruiter (three answer pages), Collins, Facebook answers,
+  learnstreaks, OPM Students & Recent Graduates, Hacker News. AI Overview: recent degree and little full-time experience, usually
+  6–12 months, the federal Recent Graduates Program (two years, six for some veterans), nursing = first year of licensure.
+- Perplexity: graduation-date window in the posting, new grad vs entry level vs internship, cites fresherify, slategit, carir.
+  Claude: the same, plus anecdotes (Blind, climbtheladder) that some count up to two years; check the posting's window.
+- Done: section "How employers write the graduation window" (date-range phrasings, nursing, the federal Pathways rule) and the
+  question "Is a new grad role the same as an internship?". ChatGPT not asked for this one.
