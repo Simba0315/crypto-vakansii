@@ -4123,3 +4123,37 @@ footer .pop a:hover,footer .fask a:hover{color:var(--pop);text-decoration:underl
 @keyframes fbig{from{background-position:0 0,120% 0}to{background-position:0 0,-120% 0}}
 @media (prefers-reduced-motion:reduce){.fbig{animation:none;background-position:0 0,50% 0}}
 @media (max-width:560px){.fbig{margin-top:32px;background-size:5px 5px,250% 100%}}
+
+/* ---- the filters' own menus (assets/fsel.js, 24 Nov 2026): a pill opens a panel in the site's style instead of the system list ---- */
+main.srch #fwrap .fx-n{display:none}
+.fx{display:inline-flex;align-items:center;gap:8px;height:40px;max-width:240px;padding:0 36px 0 16px;border:1px solid var(--line2);border-radius:999px;cursor:pointer;
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23807b70' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 15px center/10px auto;
+  font-family:inherit;font-size:14px;font-weight:550;line-height:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color .15s,background-color .15s}
+.fx:hover{border-color:var(--text)}
+.fx:focus-visible{outline:0;border-color:var(--text);box-shadow:0 0 0 3px var(--hl)}
+.fx[aria-expanded=true]{border-color:var(--text);box-shadow:0 0 0 3px color-mix(in srgb,var(--text) 10%,transparent)}
+.fx.on{background-color:var(--hl);border-color:var(--ac);color:var(--hl-ink)}
+.fx-loc{padding-left:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23807b70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z'/%3E%3Ccircle cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23807b70' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat,no-repeat;background-position:left 14px center,right 15px center;background-size:16px 16px,10px auto}
+.fx-pop{position:fixed;z-index:60;min-width:240px;max-width:min(360px,calc(100vw - 16px));max-height:min(420px,calc(100vh - 140px));overflow:auto;padding:6px;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px -18px rgba(16,24,40,.35),0 2px 6px rgba(16,24,40,.06)}
+.fx-pop.fx-wide{width:320px}
+.fx-pop[hidden]{display:none}
+.fx-q{position:sticky;top:-6px;z-index:1;display:block;width:100%;height:42px;margin:-6px -6px 6px;width:calc(100% + 12px);padding:0 14px 0 38px;border:0;border-bottom:1px solid var(--line);border-radius:16px 16px 0 0;font-family:inherit;font-size:14.5px;font-weight:500;color:var(--text);
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23807b70' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat left 14px center/16px}
+.fx-q:focus{outline:0}
+.fx-o{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:38px;padding:8px 12px;border:0;border-radius:10px;background:none;font-family:inherit;font-size:14.5px;font-weight:500;line-height:1.3;color:var(--text);text-align:left;cursor:pointer}
+.fx-o:hover,.fx-o:focus-visible{outline:0;background:var(--bg2)}
+.fx-o.sel{font-weight:650}
+.fx-o.sel::after{content:"";flex:none;width:16px;height:16px;background:var(--ac);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat}
+.fx-o[hidden],.fx-g[hidden]{display:none}
+.fx-city{font-weight:600;color:var(--ac)}
+.fx-g{margin:10px 12px 4px;font-size:11.5px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+/* a phone: the panel is a sheet from the bottom of the screen */
+.fx-pop.sheet{top:auto!important;left:0!important;right:0;bottom:0;width:auto;max-width:none;max-height:72vh;border-radius:20px 20px 0 0;padding:6px 6px calc(10px + env(safe-area-inset-bottom))}
+.fx-pop.sheet .fx-q{border-radius:20px 20px 0 0}
+.fx-pop.sheet .fx-o{min-height:46px;font-size:15.5px}
+.fx-pop .fx-q,.fx-pop .fx-q:focus{border:0;border-bottom:1px solid var(--line);box-shadow:none;outline:0}
+/* the filter row on a phone sat 76px below its place, over the first lines of the list: the desktop rule (sticky, top:76px) left its
+   "top" behind when the phone rule made the row position:relative */
+@media(max-width:860px){main.srch #fwrap{top:auto}}
