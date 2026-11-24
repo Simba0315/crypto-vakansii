@@ -4945,7 +4945,7 @@ def main():
                          [(pfl(slug) + e(name.removeprefix("the ")), len(js), f"locations/{slug}/") for name, slug, js in sorted(places, key=lambda x: -len(x[2]))[:8]])
                   + "</div>")
     page("trends/", f"Job Market {TODAY[:4]}: hiring trends from {n:,} open roles | {SITE}",
-         "Which skills, companies, roles and cities are hiring right now. Live numbers from open job postings, updated daily.",
+         "Hiring trends this week: which skills, companies, roles and cities are hiring most and which are growing, counted from every open job posting and recounted every hour.",
          crumbs(("Hiring trends", "")) + "<h1>Hiring trends</h1>"
          f'<p class="lead">Live numbers from {n:,} open roles at {m:,} companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
          '<p class="plain"><b>In plain words:</b> the job market in numbers, counted from the jobs that are open today: which skills employers ask for, who is hiring, where.</p>'
@@ -9187,10 +9187,17 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             gt_ = f"{term}: {lead_}" if len(f"{term}: {lead_}") <= 62 and len(lead_.split()) >= 4 else f"{term} Meaning: Plain Definition and What to Do"
         if len(gt_) > 65 and "?" in gt_: gt_ = gt_[:gt_.index("?") + 1]          # "What Is an ATS (Applicant Tracking System)?"
         d_lc_ = d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:]
+        # 24 Nov 2026: a term's description ended on "From the employer's own career page, updated every hour" (fit_desc's tail for job
+        # lists, added to any line under 125 characters), which says nothing about a word. Now: the definition, then today's figure and
+        # the tip where they fit, so the line is about the term and needs no tail; a "desc" in glossary_more.json wins.
+        gd_ = (GM or {}).get("desc") or f"{term}: {d_lc_}"
+        for add_ in (gfig.get(term, ""), tip):
+            if add_ and add_ not in gd_ and len(gd_) + 1 + len(add_) <= 160: gd_ = gd_.rstrip() + " " + add_
+        if len(gd_) < 125:
+            for fill_ in (" Explained in plain English, with what to do about it in a job search.", " Its plain-English meaning and what to do about it.", " What it means and what to do."):
+                if len(gd_) + len(fill_) <= 160: gd_ = gd_.rstrip() + fill_; break
         page(f"glossary/{sl}/", gt_ + (f" | {SITE}" if len(gt_) + len(SITE) + 3 <= 65 else ""),
-             # 22 Nov: a long definition lost its end to the 160-character cut ("...not on a…" for rolling basis, position 6.5);
-             # without the prefix the whole definition fits
-             (f"{term}, explained in plain English: {d_lc_}" if len(f"{term}, explained in plain English: {d_lc_}") <= 160 or len(f"{term}: {d_lc_}") > 160 else f"{term}: {d_lc_}"),
+             gd_,
              crumbs(("Glossary", "glossary/"), (term, "")) + f'<h1>{e(GM["title"] if GM else term)}</h1>'
              f'<div class="gl-top"><div class="gl-card"><span class="gl-k">Definition</span>'
              f'<p class="gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
