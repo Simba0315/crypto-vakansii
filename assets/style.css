@@ -4280,3 +4280,7 @@ footer .fask a{text-decoration:underline;text-decoration-thickness:1px;text-deco
   main.srch .fx-bar,main.srch .fx-chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
   main.srch .fx-bar.at-end,main.srch .fx-chips.at-end{-webkit-mask-image:none;mask-image:none}
 }
+/* the sticky Apply bar of a job page steps aside while the page's own Apply button is on screen (site.js) */
+.mbar{transition:transform .2s ease,visibility .2s}
+.mbar.off{transform:translateY(110%);visibility:hidden}
+@media (prefers-reduced-motion:reduce){.mbar{transition:none}}

@@ -2451,7 +2451,7 @@ def job_page(j, active_by_cat):
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
             + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}"></p>' if j.get("cover") and j["active"] else "")
             + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{thline}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
-            + (f'<div class="mbar"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
+            + (f'<div class="mbar off"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
@@ -2554,6 +2554,7 @@ def tidy_job_title(t):
     t2 = t
     for rx in REQ_CODE: t2 = rx.sub("", t2)
     t2 = re.sub(r"\s*\|\s*", ", ", t2).strip(" ,-–")
+    t2 = re.sub(r"(?<=[A-Za-z])- (?=\w)", " - ", t2)            # "Provider Sales- West": a dash glued to the word before it
     return t2 if len(t2) >= 3 else t
 
 

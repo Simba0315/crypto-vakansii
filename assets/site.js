@@ -478,6 +478,13 @@
     var open = header.classList.toggle('open');
     menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  /* ---------- job page on a phone: the sticky Apply bar only while the page's own Apply button is out of view (24 Nov 2026: since the
+     button moved to the top on phones, both showed at once on the first screen) ---------- */
+  (function () {
+    var own = document.getElementById('apply'), bar = document.querySelector('.mbar');
+    if (!own || !bar || !window.IntersectionObserver) return;
+    new IntersectionObserver(function (en) { bar.classList.toggle('off', en[0].isIntersecting); }).observe(own);
+  })();
   /* ---------- job page: where the posting comes from, and a ready question for an AI assistant ---------- */
   (function () {
     var apply = $('apply'), h1 = document.querySelector('.jhead h1'), co = document.querySelector('.jhead .js a');

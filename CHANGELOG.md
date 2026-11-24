@@ -2,6 +2,7 @@
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
+- 2026-11-24 18:30 UTC — Job pages on phones: the sticky "Apply on company site" bar shows only once the page's own Apply button has scrolled away (both showed on the first screen since the button moved to the top); a dash glued to the word before it in a job title is spaced ("Provider Sales - West").
 - 2026-11-24 18:24 UTC — Search page on phones: the filter bar and the row of chips, which scroll sideways, fade at the right edge while there is more to the right ("Any le…" was a hard cut that did not say the row goes on); the fade goes away at the end of the row.
 - 2026-11-24 18:18 UTC — Job locations read as written by a person: "Remote- USA" -> "Remote - USA", and a hiring system's placeholder "UNAVAILABLE" ("Dublin-Dublin, UNAVAILABLE, IE") is dropped.
 - 2026-11-24 18:02 UTC — Salary pages write the work's name in lower case inside sentences ("The average data analyst salary is …", "What changes the pay of software engineer work", "the US government's median for software developers"); titles and headings that start with it keep their capitals, and skills such as Python keep theirs.
