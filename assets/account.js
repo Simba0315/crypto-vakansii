@@ -603,7 +603,7 @@
           c.status === 'rejected' ? '<p class="acc-job-s"><b>Not accepted' + (c.reason ? ':</b> ' + esc(c.reason) + '.' : '.</b>') + '</p>' :
           ownNotLive(c) ? '<p class="acc-job-s">This is your company’s page. It goes on the site with your first live job; what you save here is shown on it from that moment.</p>' : '') +
         (ok ? '<form class="claim-page" data-id="' + esc(c.id) + '" novalidate>' +
-          '<div class="logo-up"><span class="logo-prev" aria-hidden="true">' + (c.page && c.page.logo ? '<img src="' + esc(c.page.logo) + '" alt="Company logo">' : esc(c.company.charAt(0))) + '</span><div><p class="fld-l">Company logo</p>' +
+          '<div class="logo-up"><span class="logo-prev" aria-hidden="true">' + (c.page && c.page.logo ? '<img src="' + esc(c.page.logo) + '" alt="Company logo" title="Company logo">' : esc(c.company.charAt(0))) + '</span><div><p class="fld-l">Company logo</p>' +
           fileBtn('logo_file', 'image/png,image/jpeg,image/webp', c.page && c.page.logo ? 'Change the logo' : 'Upload a logo') + '<p class="hint">PNG, JPG or WebP, square, up to 150 KB.</p></div></div>' +
           '<label class="fld"><span class="fld-l">About the company (shown on its page)</span><textarea name="about" rows="4" maxlength="1000">' + esc((c.page && c.page.about) || '') + '</textarea></label>' +
           '<div class="acc-two"><label class="fld"><span class="fld-l">Places where you hire, one per line (up to 10)</span><textarea name="locations" rows="3" placeholder="Berlin&#10;London&#10;Remote, Europe">' + esc(((c.page && c.page.locations) || []).join('\n')) + '</textarea></label>' +
@@ -967,7 +967,7 @@
           return;
         }
         var rd = new FileReader();
-        rd.onload = function () { f._logo = rd.result; var pv = f.querySelector('.logo-prev'); if (pv) pv.innerHTML = '<img src="' + rd.result + '" alt="Company logo">'; };
+        rd.onload = function () { f._logo = rd.result; var pv = f.querySelector('.logo-prev'); if (pv) pv.innerHTML = '<img src="' + rd.result + '" alt="Company logo" title="Company logo">'; };
         rd.readAsDataURL(file);
       });
       submit(f, function (v) {
