@@ -4182,3 +4182,8 @@ main.srch #fwrap .fx-n{display:none}
 .near a:hover{background:none;color:var(--ac);text-decoration:underline;text-underline-offset:4px}
 /* the sources under a comparison: a long address breaks instead of running off a phone screen */
 .vs-src a{overflow-wrap:anywhere}
+/* links inside tables and in the glossary index: plain ink, the underline only on hover (the rows were a wall of underlines) */
+.tablewrap td a{text-decoration:none;font-weight:500}
+.tablewrap td a:hover{color:var(--ac);text-decoration:underline;text-underline-offset:3px}
+.qa.gl-index dt a{text-decoration:none}
+.qa.gl-index dt a:hover{color:var(--ac);text-decoration:underline;text-underline-offset:3px}
