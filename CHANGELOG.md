@@ -1,6 +1,5 @@
 # Changelog
 
-
 One line per improvement run, newest first: date and time, what changed, why, which pages.
 
 - 2026-11-24 ~09:45 UTC — The site's own statistics, like cryptobubbles: anonymous visits without cookies (counted after a first move, scroll, touch or 15 s), sources, entry pages, countries, clicks on Apply by company and source, site searches and what was opened, buttons, links out, alerts, resume downloads; the owner's page /stats/ (Russian) reads GET /api/admin/stats; the privacy page says what is counted. The server part goes live when api-setup.sh is run on the server.
