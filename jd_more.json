@@ -839,6 +839,26 @@
    "Working knowledge of basic accounting, accounts receivable and month-end close steps"
   ]
  },
+ "bioinformatics": {
+  "duties": [
+   "Build and maintain pipelines that process genomic, transcriptomic and proteomic data",
+   "Analyze DNA and RNA sequencing and protein data to find disease targets and biomarkers",
+   "Apply statistical and machine learning methods to find patterns in large biological data sets",
+   "Work with lab scientists to design experiments and interpret results in biological context",
+   "Integrate public databases with internal data, keeping analyses reproducible and well documented",
+   "Present findings in reports, figures and meetings to research and drug discovery teams"
+  ],
+  "must": [
+   "Master’s or doctoral degree in bioinformatics, computational biology, genetics or a related field",
+   "Strong programming and statistics skills for analyzing high-throughput biological data",
+   "Solid understanding of molecular biology, genetics and genomics",
+   "Experience writing reproducible code and running analyses on computing clusters or the cloud"
+  ],
+  "nice": [
+   "Publications in genomics, computational biology or drug discovery research",
+   "Experience with single-cell, spatial or multi-omics data analysis"
+  ]
+ },
  "biologist": {
   "duties": [
    "Design and run lab experiments on cells, tissues, microorganisms, plants or animals to answer research questions",
@@ -1158,6 +1178,26 @@
    "Ability to speak a second language common among local patients, such as Spanish"
   ]
  },
+ "casino": {
+  "duties": [
+   "Deal table games, manage chips and payouts and enforce game rules and house procedures",
+   "Set and adjust odds and betting lines and manage risk exposure on sporting events",
+   "Verify customer identity and age and follow anti-money laundering and responsible gaming rules",
+   "Watch play and wagers for cheating, collusion, bonus abuse and suspicious betting patterns",
+   "Answer customer questions about accounts, deposits, withdrawals, bets and promotions",
+   "Keep accurate records and reports for state gaming regulators and internal audits"
+  ],
+  "must": [
+   "High school diploma or equivalent; bachelor’s degree for odds, risk and compliance roles",
+   "State gaming license or work permit, including a background check; rules vary by state",
+   "Strong math, accuracy and calm customer service under pressure",
+   "Knowledge of anti-money laundering, responsible gaming and game integrity rules"
+  ],
+  "nice": [
+   "Knowledge of sports, statistics and pricing models for odds compiling roles",
+   "Dealer school training in table games such as blackjack, craps or roulette"
+  ]
+ },
  "cfo": {
   "duties": [
    "Lead the annual budget, forecasts and long-range financial plan with the CEO and department heads",
@@ -1236,6 +1276,46 @@
   "nice": [
    "Fluency in written Spanish or another language our customers use",
    "Experience writing or updating help center articles and saved replies"
+  ]
+ },
+ "chef-cook": {
+  "duties": [
+   "Prepare, cook and plate dishes to recipe and presentation standards for each service",
+   "Prep ingredients by cleaning, cutting and portioning and make sauces, stocks and bases",
+   "Follow food safety rules for cooking and holding temperatures, labeling, storage and allergen cross-contact",
+   "Keep stations, equipment and storage areas clean, organized and stocked before, during and after service",
+   "Receive deliveries, rotate stock and help track inventory, waste and food costs",
+   "Create menus and specials and train and supervise kitchen staff in chef roles"
+  ],
+  "must": [
+   "Culinary school training or equivalent kitchen experience",
+   "Food handler or food protection manager certificate as required; state and local rules vary",
+   "Knife skills and knowledge of cooking methods, food safety and allergens",
+   "Ability to stand for long shifts, lift heavy items and work evenings, weekends and holidays"
+  ],
+  "nice": [
+   "Experience in high-volume, banquet or catering kitchens",
+   "Knowledge of special diets, plant-based cooking or a particular cuisine"
+  ]
+ },
+ "chemist": {
+  "duties": [
+   "Synthesize, purify and characterize new compounds and materials following lab procedures",
+   "Run analytical tests such as chromatography, spectroscopy and mass spectrometry to confirm identity and purity",
+   "Design experiments, record methods and results in lab notebooks and analyze the data",
+   "Develop and validate analytical methods that meet quality and regulatory requirements",
+   "Model molecules and reactions with computational chemistry methods where the project calls for it",
+   "Handle, store and dispose of chemicals safely under OSHA, hazardous waste and company safety rules"
+  ],
+  "must": [
+   "Bachelor’s degree in chemistry or a closely related field; advanced degree for research roles",
+   "Hands-on skill with common lab techniques and analytical instruments",
+   "Thorough knowledge of lab safety, chemical hygiene and hazardous waste handling",
+   "Careful documentation and clear reporting of results to scientists and managers"
+  ],
+  "nice": [
+   "Experience working under good laboratory practice or good manufacturing practice rules",
+   "Background in organic, analytical, polymer or computational chemistry"
   ]
  },
  "chief-of-staff": {
@@ -1338,6 +1418,26 @@
    "Background in account renewals, upselling or contract negotiation"
   ]
  },
+ "clinical-informatics": {
+  "duties": [
+   "Gather needs from physicians, nurses and pharmacists and turn them into clear specifications for software teams",
+   "Design and test clinical workflows, order sets, documentation templates and decision support rules",
+   "Review new features for patient safety risks, alert fatigue and usability before release",
+   "Train clinicians on electronic health record changes and collect their feedback after launch",
+   "Analyze clinical data and quality measures to find gaps in care and track improvement",
+   "Keep systems in line with HIPAA privacy rules, interoperability standards and regulatory reporting needs"
+  ],
+  "must": [
+   "Clinical degree such as MD, RN or PharmD, licensed where required; state rules vary",
+   "Understanding of clinical workflows, patient safety and health data privacy rules",
+   "Ability to translate between clinicians and technical teams in plain language",
+   "Strong analytical, testing and project coordination skills"
+  ],
+  "nice": [
+   "Board certification in clinical informatics or a nursing informatics credential",
+   "Knowledge of health data exchange standards and clinical terminologies"
+  ]
+ },
  "clinical-research": {
   "duties": [
    "Coordinate study start-up, including site feasibility, budgets and submissions to the institutional review board (IRB)",
@@ -1356,6 +1456,26 @@
   "nice": [
    "Clinical research certification such as CCRP, CCRC or CCRA",
    "Advanced degree such as PharmD, MD, PhD or MSN for medical affairs roles"
+  ]
+ },
+ "clinical-research-coordinator": {
+  "duties": [
+   "Screen, recruit and enroll eligible participants according to study inclusion and exclusion criteria",
+   "Obtain and document informed consent following FDA rules, good clinical practice and IRB approvals",
+   "Schedule study visits, collect samples and record vital signs and other protocol procedures",
+   "Enter data into case report forms accurately and resolve queries from sponsors and monitors",
+   "Report adverse events and protocol deviations to investigators, sponsors and the IRB on time",
+   "Maintain regulatory binders, drug accountability logs and site files ready for monitoring visits and audits"
+  ],
+  "must": [
+   "Bachelor’s degree in a life science, nursing or health field, or equivalent experience",
+   "Working knowledge of good clinical practice, informed consent and human subjects protection rules",
+   "Careful record keeping and strong organization across several studies at once",
+   "Clear, caring communication with patients, families, investigators and sponsors"
+  ],
+  "nice": [
+   "Clinical research coordinator certification from a recognized professional body",
+   "Phlebotomy training or clinical experience such as nursing or medical assisting"
   ]
  },
  "cloud-engineer": {
@@ -1736,6 +1856,26 @@
   "nice": [
    "Professional Engineer (PE) license; when one is needed varies by state and employer",
    "Experience with SCADA, DCS or building automation systems and industrial network security practices"
+  ]
+ },
+ "coo": {
+  "duties": [
+   "Turn the CEO’s strategy into operating plans, goals and budgets for each function",
+   "Lead operations, supply chain, customer service and other functions through their department heads",
+   "Set performance metrics, review results and hold leaders accountable for meeting targets",
+   "Design processes, organization structure and systems that let the company scale efficiently",
+   "Oversee risk, legal compliance and major vendor contracts with finance and legal leaders",
+   "Partner with the CEO and board on senior hiring, major decisions and investor updates"
+  ],
+  "must": [
+   "Bachelor’s degree in business, engineering or a related field, or equivalent experience",
+   "Proven record leading large teams and running complex operations at a senior level",
+   "Strong financial judgment, including budgeting, forecasting and cost control",
+   "Clear decision making and communication with executives, board members and staff"
+  ],
+  "nice": [
+   "Master’s degree in business administration",
+   "Experience scaling a company through rapid growth, acquisitions or restructuring"
   ]
  },
  "corporate-governance": {
@@ -2298,6 +2438,26 @@
    "Master’s degree in a relevant engineering or science field"
   ]
  },
+ "defi": {
+  "duties": [
+   "Research protocols, tokens and liquidity pools to assess yields, risks and market structure",
+   "Design and test lending, exchange and incentive mechanisms with engineers and economists",
+   "Monitor on-chain activity, liquidity, collateral levels and oracle prices for anomalies and threats",
+   "Review smart contract designs and audit findings to identify economic and security risks",
+   "Manage protocol treasury positions and governance proposals within approved risk limits",
+   "Explain protocol features, risks and updates to users, partners and the community in clear terms"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, economics, computer science or mathematics, or equivalent experience",
+   "Deep understanding of blockchains, smart contracts, wallets, decentralized exchanges and lending markets",
+   "Strong quantitative skills for modeling yields, liquidation risk and incentive design",
+   "Awareness of US securities, commodities and anti-money laundering rules that apply to crypto"
+  ],
+  "nice": [
+   "Ability to read and write smart contract code",
+   "Experience in market making, derivatives or lending in traditional or crypto markets"
+  ]
+ },
  "delivery-driver": {
   "duties": [
    "Load and secure parcels, groceries or meals in route order, keeping hot and cold items separate",
@@ -2616,6 +2776,26 @@
   "nice": [
    "Experience creating content for online courses, e-learning products or blended learning programs",
    "Familiarity with accessibility practices for digital learning materials, such as captions and alt text"
+  ]
+ },
+ "education-program-manager": {
+  "duties": [
+   "Plan learning programs for students, customers or the public with clear goals and target audiences",
+   "Develop or oversee course content and materials with subject matter experts and instructional designers",
+   "Manage partnerships with schools, nonprofits, instructors and vendors, including agreements and budgets",
+   "Build program schedules, coordinate logistics and recruit, train and support instructors and volunteers",
+   "Measure enrollment, completion and learning outcomes and use the results to improve programs",
+   "Report results to leadership, funders and partners in clear written updates and presentations"
+  ],
+  "must": [
+   "Bachelor’s degree in education, communications or a related field, or equivalent experience",
+   "Strong project management, budgeting and organization skills",
+   "Knowledge of how people learn and how to evaluate program results",
+   "Clear communication with learners, partners, instructors and leadership"
+  ],
+  "nice": [
+   "Teaching, training or instructional design experience",
+   "Experience writing grants or running programs funded by grants"
   ]
  },
  "ehs": {
@@ -3018,6 +3198,26 @@
    "Knowledge of accessibility needs and event permit rules, which vary by state and city"
   ]
  },
+ "exchange-operations": {
+  "duties": [
+   "Review and onboard new tokens, checking technical integration, legal risk and market readiness",
+   "Monitor deposits and withdrawals across blockchains and resolve stuck, delayed or failed transactions",
+   "Watch order books and trade activity for wash trades, spoofing, manipulation and other abuse",
+   "Run identity verification, sanctions screening and suspicious activity reviews under anti-money laundering rules",
+   "Reconcile customer balances, hot and cold wallets and bank accounts every day",
+   "Coordinate incident response for outages, network upgrades and forks with engineering and support teams"
+  ],
+  "must": [
+   "Bachelor’s degree in finance, business, computer science or a related field, or equivalent experience",
+   "Solid understanding of blockchains, wallets, exchange order books and transaction flows",
+   "Knowledge of US anti-money laundering, sanctions and money transmitter rules; state rules vary",
+   "Calm, accurate work under pressure, including on-call or shift schedules"
+  ],
+  "nice": [
+   "Certification in anti-money laundering or fraud investigation",
+   "Experience in market surveillance, payments or brokerage operations"
+  ]
+ },
  "executive-assistant": {
   "duties": [
    "Manage complex calendars for one or more executives, resolving conflicts and protecting time for priorities",
@@ -3356,6 +3556,26 @@
   "nice": [
    "Experience delivering software under DO-178C or NASA software engineering requirements",
    "Active US security clearance or the ability to obtain one"
+  ]
+ },
+ "food-service-worker": {
+  "duties": [
+   "Prepare simple foods, salads, sandwiches and beverages following recipes and portion guides",
+   "Serve customers at counters, lines and stations with friendly, efficient service",
+   "Set up, stock and break down serving areas, buffets and catering events",
+   "Wash dishes, utensils and equipment and clean and sanitize work and dining areas",
+   "Follow food safety rules for hand washing, temperatures, labeling, allergens and storage",
+   "Take orders and payments, handle cash accurately and answer questions about menu items"
+  ],
+  "must": [
+   "Food handler card where state or local rules require it; rules vary",
+   "Ability to follow food safety, sanitation and portion control procedures",
+   "Friendly, reliable customer service and teamwork in a fast-paced setting",
+   "Ability to stand for full shifts, lift heavy trays and boxes and work early, late or weekend shifts"
+  ],
+  "nice": [
+   "Previous work in a cafeteria, restaurant, school or hospital kitchen",
+   "Ability to communicate with customers in a second language"
   ]
  },
  "forward-deployed-engineer": {
@@ -4098,6 +4318,26 @@
    "Background in telehealth, digital health products or clinical research settings"
   ]
  },
+ "healthcare-administrator": {
+  "duties": [
+   "Oversee daily operations of a clinic, practice or department, including staffing, scheduling and patient flow",
+   "Prepare and manage budgets, track expenses and review billing and collections performance",
+   "Hire, train, schedule and evaluate administrative and support staff",
+   "Keep the organization compliant with HIPAA, OSHA, licensing and accreditation requirements",
+   "Work with physicians and clinical leaders to improve patient access, service quality and efficiency",
+   "Negotiate with vendors and manage contracts, supplies, equipment and facility needs"
+  ],
+  "must": [
+   "Bachelor’s degree in health administration, business or a related field, or equivalent experience",
+   "Working knowledge of healthcare regulations, privacy rules, accreditation and insurance reimbursement",
+   "Strong leadership, budgeting and communication skills with clinical and nonclinical staff",
+   "State administrator license for nursing homes or assisted living where required; rules vary by state"
+  ],
+  "nice": [
+   "Master’s degree in health administration, public health or business administration",
+   "Professional certification in healthcare or medical practice management"
+  ]
+ },
  "help-desk": {
   "duties": [
    "Answer employee calls, chats and tickets about IT problems and log each request in the ticketing system",
@@ -4136,6 +4376,26 @@
   "nice": [
    "Certified food protection manager credential from an accredited program",
    "Responsible alcohol service training where the venue serves drinks; state rules vary"
+  ]
+ },
+ "hotel-guest-services": {
+  "duties": [
+   "Check guests in and out, verify identification and process payments, deposits and room charges",
+   "Answer calls, emails and in-person requests about reservations, amenities and local information",
+   "Make, change and cancel reservations and assign rooms based on availability and guest preferences",
+   "Coordinate with housekeeping, maintenance and food service to resolve guest issues quickly",
+   "Handle complaints calmly and offer solutions within property policy to keep guests satisfied",
+   "Balance cash drawers, complete end-of-shift reports and follow security and privacy procedures"
+  ],
+  "must": [
+   "High school diploma or equivalent",
+   "Warm, professional communication in person, by phone and in writing",
+   "Basic computer and cash handling skills with careful attention to detail",
+   "Ability to work evenings, weekends, overnights and holidays as scheduled"
+  ],
+  "nice": [
+   "Ability to speak a second language with international guests",
+   "Prior experience in a hotel, resort, residence or other hospitality setting"
   ]
  },
  "hr-business-partner": {
@@ -5358,6 +5618,26 @@
    "Experience with automation, robotics or PLC-controlled equipment in a production setting"
   ]
  },
+ "market-maker": {
+  "duties": [
+   "Quote continuous bid and ask prices across assigned markets while keeping spreads competitive",
+   "Manage inventory and hedge positions to keep market risk within set limits",
+   "Build and tune pricing and quoting models using market data and statistics",
+   "Monitor fills, profit and loss and exchange connectivity in real time and respond to issues",
+   "Meet liquidity obligations under agreements with exchanges and token issuers",
+   "Review performance after each session and improve strategies with engineers and researchers"
+  ],
+  "must": [
+   "Bachelor’s degree in mathematics, statistics, finance, computer science or a related quantitative field",
+   "Strong probability, statistics and mental math skills under time pressure",
+   "Understanding of order books, derivatives, hedging and market microstructure",
+   "Knowledge of rules against market manipulation such as spoofing and wash trades"
+  ],
+  "nice": [
+   "Programming ability for building, testing and monitoring quoting strategies",
+   "Experience with options, futures or crypto derivatives markets"
+  ]
+ },
  "marketing-analyst": {
   "duties": [
    "Track campaign performance across paid search, social, email and display channels against agreed goals",
@@ -5538,6 +5818,26 @@
    "Experience with hydraulic or pneumatic systems testing"
   ]
  },
+ "medical-coder": {
+  "duties": [
+   "Review physician notes, operative reports and test results to assign accurate diagnosis and procedure codes",
+   "Apply ICD diagnosis codes, CPT and HCPCS procedure codes and payer guidelines to each patient encounter",
+   "Submit clean claims to Medicare, Medicaid and commercial insurers and fix rejections before they delay payment",
+   "Review denials and remittance advice, then file corrected claims or appeals within payer deadlines",
+   "Query providers when documentation is unclear or incomplete to support the codes billed",
+   "Post payments, follow up on unpaid accounts and answer patient questions about their bills"
+  ],
+  "must": [
+   "High school diploma plus a medical coding or billing certificate program, or equivalent experience",
+   "Professional coding credential such as CPC or CCS, or ability to earn one soon after hire",
+   "Working knowledge of medical terminology, anatomy and insurance billing rules",
+   "Understanding of HIPAA privacy rules and careful handling of patient health information"
+  ],
+  "nice": [
+   "Specialty coding experience in areas such as surgery, cardiology or risk adjustment",
+   "Experience with prior authorizations, payer contracts and patient financial counseling"
+  ]
+ },
  "medical-director": {
   "duties": [
    "Set clinical standards, care protocols and quality policies for the company’s medical programs and products",
@@ -5556,6 +5856,46 @@
   "nice": [
    "Experience with FDA submissions, clinical trials or drug safety reporting at a biotech company",
    "Graduate degree in business or public health, such as an MBA or MPH"
+  ]
+ },
+ "medical-science-liaison": {
+  "duties": [
+   "Build scientific relationships with physicians, researchers and key opinion leaders in an assigned territory",
+   "Discuss clinical data, disease state science and the company’s medicines in fair, balanced exchanges",
+   "Respond to unsolicited medical information requests in line with FDA rules and company compliance policy",
+   "Share field insights from experts with medical affairs, clinical development and strategy teams",
+   "Support company-sponsored and investigator-initiated studies, including site identification and enrollment",
+   "Deliver scientific presentations at advisory boards, medical meetings and internal training sessions"
+  ],
+  "must": [
+   "Advanced clinical or scientific degree such as a PharmD, PhD or MD",
+   "Deep knowledge of the therapeutic area and ability to interpret clinical trial data",
+   "Understanding of FDA rules separating scientific exchange from product promotion",
+   "Willingness to travel often within the assigned territory"
+  ],
+  "nice": [
+   "Clinical practice, research or publication record in the relevant therapeutic area",
+   "Prior medical affairs experience at a drug, biotech or device company"
+  ]
+ },
+ "medical-writer": {
+  "duties": [
+   "Write clinical study reports, protocols, investigator brochures and other documents for drug and device programs",
+   "Prepare regulatory submission documents that meet FDA requirements and international ICH guidelines",
+   "Draft manuscripts, abstracts and posters for peer-reviewed journals and medical conferences",
+   "Interpret statistical tables and clinical data and present results in clear, balanced language",
+   "Create training materials, educational content and plain-language summaries for clinicians and patients",
+   "Coordinate reviews with clinicians, statisticians and regulatory teams, resolving comments and checking facts against sources"
+  ],
+  "must": [
+   "Bachelor’s degree in life sciences, pharmacy, nursing or a related scientific field",
+   "Excellent scientific writing, editing and referencing skills in American English",
+   "Ability to read and accurately summarize clinical study data and medical literature",
+   "Familiarity with good publication practice and FDA and ICH document standards"
+  ],
+  "nice": [
+   "Advanced degree such as a PhD, PharmD or MD",
+   "Background in a therapeutic area such as oncology, neurology or infectious disease"
   ]
  },
  "mental-health": {
@@ -6478,6 +6818,26 @@
    "Experience with renewable generation, battery storage or grid interconnection studies"
   ]
  },
+ "prediction-markets": {
+  "duties": [
+   "Draft clear contract terms, resolution sources and settlement rules for event markets",
+   "Review proposed markets for legal, ethical and integrity issues before listing",
+   "Monitor trades and positions for manipulation, insider activity and other market abuse",
+   "Resolve and settle markets promptly using official results and handle disputes fairly",
+   "Support liquidity and pricing by working with market makers and analyzing order flow",
+   "Keep records and filings required by the CFTC and answer customer questions about contracts and payouts"
+  ],
+  "must": [
+   "Bachelor’s degree in economics, finance, statistics or a related field, or equivalent experience",
+   "Strong grasp of probability, pricing and how order books work",
+   "Knowledge of CFTC rules for event contracts and exchange market surveillance",
+   "Precise writing and close attention to detail when defining outcomes"
+  ],
+  "nice": [
+   "Background in sports, politics, weather or economic data",
+   "Experience in market surveillance, compliance or derivatives exchange operations"
+  ]
+ },
  "pricing": {
   "duties": [
    "Analyze price elasticity and customer demand to recommend list prices for new and existing products",
@@ -6516,6 +6876,26 @@
   "nice": [
    "Privacy certification such as CIPP/US, CIPM or CIPT",
    "Familiarity with the EU GDPR and other international data protection laws"
+  ]
+ },
+ "process-development": {
+  "duties": [
+   "Translate lab procedures into robust processes that can run at pilot and manufacturing scale",
+   "Design experiments to study how key parameters affect yield, purity and product quality",
+   "Identify critical process parameters and set operating ranges based on data and risk assessment",
+   "Transfer processes to manufacturing sites and contract manufacturers with clear batch records and reports",
+   "Troubleshoot scale-up problems, deviations and failed batches and recommend corrective actions",
+   "Write development reports and support regulatory filings under good manufacturing practice requirements"
+  ],
+  "must": [
+   "Bachelor’s, master’s or doctoral degree in chemical engineering, chemistry, biochemistry or related field",
+   "Hands-on skill with lab and pilot equipment for reactions, cell culture, fermentation or purification",
+   "Working knowledge of design of experiments, statistics and process scale-up principles",
+   "Understanding of good manufacturing practice and quality by design concepts"
+  ],
+  "nice": [
+   "Experience with process analytical technology or continuous manufacturing",
+   "Background preparing chemistry, manufacturing and controls sections for regulatory submissions"
   ]
  },
  "process-improvement": {
@@ -6818,6 +7198,26 @@
    "Project management certification such as PMP or CAPM"
   ]
  },
+ "professor": {
+  "duties": [
+   "Teach undergraduate or graduate courses, preparing syllabi, lectures, assignments and exams",
+   "Advise and mentor students on coursework, research projects, theses and careers",
+   "Conduct research and publish results in peer-reviewed journals, books and conference proceedings",
+   "Apply for grants and manage funded projects, budgets and research assistants",
+   "Grade student work fairly and give timely, useful feedback that supports learning",
+   "Serve on department and campus committees and help develop the curriculum"
+  ],
+  "must": [
+   "Doctoral degree in the field for tenure-track roles; master’s degree may qualify for lecturer positions",
+   "Record of effective teaching or strong potential as a teacher",
+   "Research and publication record suited to the institution’s expectations",
+   "Clear communication with students from diverse backgrounds and with varied learning needs"
+  ],
+  "nice": [
+   "Experience teaching online or hybrid courses",
+   "Record of grant funding or professional practice in the field"
+  ]
+ },
  "program-coordinator": {
   "duties": [
    "Schedule program activities, meetings, trainings and events, and keep shared calendars and participant lists current",
@@ -6996,6 +7396,26 @@
   "nice": [
    "Master of Public Administration or a related graduate degree",
    "Experience managing grants, contracts or community programs"
+  ]
+ },
+ "public-health": {
+  "duties": [
+   "Design and run studies that measure disease patterns, risk factors and health outcomes in populations",
+   "Analyze survey, claims, registry and surveillance data using statistical and epidemiological methods",
+   "Build cost-effectiveness and budget impact models to estimate the value of treatments and programs",
+   "Evaluate public health programs and policies and recommend changes based on the evidence",
+   "Write reports, manuscripts and value dossiers for health agencies, payers and decision makers",
+   "Present findings clearly to policymakers, community groups, clinicians and nontechnical audiences"
+  ],
+  "must": [
+   "Master’s degree in public health, epidemiology, health economics, biostatistics or a related field",
+   "Strong grounding in study design, biostatistics and economic evaluation methods",
+   "Ability to analyze large data sets with statistical software and explain the results",
+   "Clear writing and presentation skills for technical and general audiences"
+  ],
+  "nice": [
+   "Doctoral degree in epidemiology, health economics or health services research",
+   "Certified in Public Health credential or experience with health technology assessment"
   ]
  },
  "public-relations": {
@@ -7436,6 +7856,26 @@
   "nice": [
    "CFA charter or progress toward it, or a graduate degree in a quantitative field",
    "Deep knowledge of one sector, such as technology, energy, health care or digital assets"
+  ]
+ },
+ "research-program-manager": {
+  "duties": [
+   "Plan research programs with scientists, setting milestones, deliverables and resource needs",
+   "Build and track program budgets, grants and spending against funder and institutional rules",
+   "Coordinate partners, collaborators and vendors, including contracts, data sharing and material transfer agreements",
+   "Schedule lab space, equipment and staff time so experiments run without delays",
+   "Track progress, risks and decisions and report status to leadership and funders",
+   "Prepare grant applications, progress reports and compliance documents with the research team"
+  ],
+  "must": [
+   "Bachelor’s degree in science, engineering or a related field, or equivalent experience",
+   "Strong project planning, budgeting and risk management skills",
+   "Enough scientific background to understand research goals and work closely with scientists",
+   "Clear writing and communication with researchers, partners, funders and leadership"
+  ],
+  "nice": [
+   "Project management certification or formal training in program management",
+   "Knowledge of federal grant rules and research compliance requirements"
   ]
  },
  "research-scientist": {
@@ -9276,6 +9716,26 @@
   "nice": [
    "Securities licenses where the role covers registered products; requirements depend on the firm",
    "Existing network among funds, market makers or institutional desks"
+  ]
+ },
+ "visual-merchandiser": {
+  "duties": [
+   "Build window displays, dress mannequins and set fixtures following brand guidelines and planograms",
+   "Plan product placement and adjacencies so customers find items easily and buy more",
+   "Select the product mix and quantities for each store using sales data, trends and seasonal plans",
+   "Refresh displays for new launches, promotions, holidays and seasonal changes on schedule",
+   "Analyze sales, sell-through and store traffic to measure display results and adjust layouts",
+   "Train store teams on display standards and visit stores to check consistency"
+  ],
+  "must": [
+   "Bachelor’s degree in visual merchandising, fashion, design or retail, or equivalent experience",
+   "Strong eye for color, composition, lighting and brand presentation",
+   "Ability to read sales reports and turn data into display and product decisions",
+   "Ability to lift, climb ladders, stand for long hours and work early or late shifts"
+  ],
+  "nice": [
+   "Portfolio of store displays, windows or retail layouts",
+   "Carpentry, sign making or prop building skills for custom displays"
   ]
  },
  "vp-engineering": {
