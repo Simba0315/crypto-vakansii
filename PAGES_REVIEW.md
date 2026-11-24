@@ -65,7 +65,8 @@
 | Вакансии `/job/…`: названия | Без кодов заявок «(R6043)», «#1463» (1,7% вакансий в выборке; Google просит их не писать), «|» в названии → запятая, и компания больше не теряется из заголовка | Выборка 3 000 страниц |
 | Карта сайта | 48 629 адресов: нет отсутствующих, закрытых от индекса, переадресаций и страниц с другим canonical | Скрипт проверки |
 | Вакансии: описание в выдаче | «Splunk Engineer at SpaceX — Washington, DC. Pay: $135K - $160K. Skills: Python, Machine Learning and Linux. Apply on the company site.» вместо «… Engineering role. Apply on the company site.» | Выборка 2 000 страниц: обрывов 0 |
-| Вакансии: уровень | «Associate RVP», «Associate Regional Vice President» и т. п. — руководящие, а не начальные: ушли из списков для начинающих | Локальная сборка |
+| Вакансии: уровень | «Associate RVP», «Associate Regional Vice President» и т. п. — руководящие, а не начальные: ушли из списков для начинающих; рекрутеры выпускников («Early Career & University Recruiter») больше не считаются начинающими | Локальная сборка |
+| Льготы `/perks/…` (10) | Описание: «Jobs with visa sponsorship: 1,061 open now at Anthropic, Wayve and n8n…» вместо «1,061 jobs where the posting mentions…» | Локальная сборка |
 | Списки part-time, contract | Описание с заглавной буквы | Аудит |
 | Руководства, словарь: заголовки | Заголовок больше не обрывается на «… field by» и «… Plain Definition and» (3 страницы) | Проход по всем заголовкам |
 | Переезд `/relocate/…` (13) | Описание без «0 open jobs mention visa sponsorship» | Локальная сборка: Бразилия |

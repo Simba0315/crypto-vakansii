@@ -2526,6 +2526,7 @@ def calm_title(t):
     return re.sub(r"[A-Za-z]+(?:'[A-Za-z]+)?", fix, t)
 
 ASSOC_SENIOR = re.compile(r"(?i)associate (?:rvp|avp|svp|evp|regional vice president|area vice president|managing director|general manager|head|dean|chief)\b")
+FOR_JUNIORS = re.compile(r"(?i)\b(?:early[- ]career|university|campus|graduate|new grad|intern(?:ship)?)s?\b[^,]*?\b(?:recruit\w*|sourcer|program manager|programs? lead|coordinator|talent partner)\b")
 REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
             re.compile(r"\s*[\(\[]\s*\d{5,}\s*[\)\]]"),                                                    # "(123456)", never a year
             re.compile(r"\s*[,–-]?\s*#\d{3,}\s*$"),                                                         # ", #1463"
@@ -2597,6 +2598,7 @@ def main():
         # "Associate VP" and "Associate Director" but not the regional and managing variants. Mended here, not in collect.py, whose
         # rules hash decides when every record is read again.
         if j["level"] == "Junior" and ASSOC_SENIOR.match(j["title"]): j["level"] = "Lead"
+        elif j["level"] in ("Junior", "Intern") and FOR_JUNIORS.search(j["title"]): j["level"] = ""      # "Early Career & University Recruiter", "Intern Program Coordinator" hire juniors, are not ones
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["pool"] = bool(POOL_RX.search(j["title"]))
         j["usd"] = usd_range(j["salary"])
@@ -5430,7 +5432,8 @@ def main():
                      ("Do remote jobs sponsor visas?", f"Rarely, since a remote job is done from where you already live: {rem_v:,} of the {len(pj):,} postings that mention sponsorship are remote. "
                       "Sponsorship matters when the job is on site or hybrid in another country.")]
         listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {tcase(name)} ({len(pj):,} open) | {SITE}",
-                f"{roles(len(pj), 'job')} where the posting mentions {name.lower()}. Updated hourly.", pj,
+                f"Jobs with {name[0].lower() + name[1:]}: {len(pj):,} open now at companies, each posting naming it in its own text."
+                + (f" {name}: {PERK_INFO[name][0][:1].lower() + PERK_INFO[name][0][1:]}" if name in PERK_INFO else ""), pj,       # like places and skills (24 Nov 2026)
                 (f"<strong>{e(name)}</strong>: {e(PERK_INFO[name][0])} " if name in PERK_INFO else "") + intro_for(pj, "", f" that mention {e(name.lower())} in the posting", row=row_p) + " We read this from the job text, so check the details with the employer.",
                 trail=(("Perks", "perks/"),), feed=True, faq=f"jobs with {name[0].lower() + name[1:]}", faq_extra=pk_qa, stats="rest" if row_p else False, pics=gl_p, hub=tl_p,
                 list_title=f"Newest jobs with {name[0].lower() + name[1:]}" if len(pj) >= 20 else "", links=(("perks/", "All perks"),),
