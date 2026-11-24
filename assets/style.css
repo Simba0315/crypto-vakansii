@@ -4161,3 +4161,24 @@ main.srch #fwrap .fx-n{display:none}
    in the left column too, so the sticking title slid over it (owner's screenshot, 24 Nov 2026). Everything after the title now sits in
    the right column. */
 @media(min-width:901px){main.home #faq>:not(.sec-head){grid-column:2}main.home #faq>.sec-head{grid-row:1/span 3}}
+
+/* ---- v3, batch 2 (24 Nov 2026, the owner's "все страницы"): the job page on a phone, the job page's side cards, quieter inline links ---- */
+/* A phone showed the whole side column (the tools, the cards and the 800px list of facts) before the job's own text, which began two
+   screens down. Now: the Apply button and "Opens …" on top, then the job, then the tools; the bar at the foot keeps Apply in reach. */
+@media(max-width:860px){
+  .cols:has(>aside.side #apply){gap:0}
+  .cols>aside.side:has(#apply){display:contents}
+  .cols>aside.side:has(#apply)>*{order:2;margin-top:14px}
+  .cols>aside.side:has(#apply)>#apply{order:-2;width:100%;margin-top:0}
+  .cols>aside.side:has(#apply)>.note.goes{order:-1;margin:8px 0 22px;text-align:center}
+  .cols:has(>aside.side #apply)>article{order:0;margin-bottom:16px}
+}
+/* side cards: a title in plain ink with an arrow, not an underlined green link */
+.rmbox b{text-decoration:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rmbox b::after{content:"\203A";font-size:18px;line-height:1;color:var(--faint)}
+.rmbox:hover b{color:var(--ac)}
+/* "Near you, Vietnam: …" on the home page and the hubs: quiet links, underline on hover */
+.near a{text-decoration:none;font-weight:600}
+.near a:hover{background:none;color:var(--ac);text-decoration:underline;text-underline-offset:4px}
+/* the sources under a comparison: a long address breaks instead of running off a phone screen */
+.vs-src a{overflow-wrap:anywhere}
