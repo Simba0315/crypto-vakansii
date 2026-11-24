@@ -1036,16 +1036,23 @@ def fit_title(t):
     if " | " in t2:
         left, brand = t2.rsplit(" | ", 1)
         if len(left) <= 65: return left           # a title that names a place or a figure keeps it; the brand gives way first
-        head_ = re.split(r" — |: ", left)[0]
+        head_ = re.split(r" — |: |(?<=\?) ", left)[0]          # "Does a Senior title pay more?" ends at its question mark (24 Nov 2026)
         if len(head_) >= 12: left = head_
         if len(left) + len(brand) + 3 <= 65: return f"{left} | {brand}"
         # The brand gives way before a word of the key does (18 Nov 2026): cutting to make room for it left 270 titles without
         # the word people search for ("12 Sales Leader and VP of Sales Interview | Brand", "How to Become a Sales Development | Brand").
         if len(left) > 65:
             left = re.sub(r" \([^)]*$", "", left[:66].rsplit(" ", 1)[0])           # never a count or a year cut out of its bracket
-            left = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|&))+$", "", left.rstrip(" ,-–—:&("))
+            left = re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|by|or|&))+$", "", left.rstrip(" ,-–—:&("), flags=re.I)
         return left
-    return t2 if len(t2) <= 70 else t2[:68].rsplit(" ", 1)[0].rstrip(" ,-–—:&(")
+    if len(t2) <= 70: return t2
+    # a long title with no brand: end at its question mark or colon when the first part says enough ("Does a Senior title pay more?",
+    # "OPT (Optional Practical Training) Meaning"), never on "… field by" or "… Definition and" (24 Nov 2026, three titles)
+    for sep_, keep_ in (("? ", "?"), (": ", ""), (" — ", "")):
+        i_ = t2.find(sep_)
+        if 20 <= i_ <= 66: return t2[:i_] + keep_
+    cut_ = t2[:68].rsplit(" ", 1)[0].rstrip(" ,-–—:&(")
+    return re.sub(r"(?: (?:and|at|in|of|for|the|with|to|a|an|by|or|&))+$", "", cut_, flags=re.I)
 
 
 def iq_title(n, name):
@@ -3566,7 +3573,7 @@ def main():
                       "Every job here links to the employer’s own careers page, so you apply where the company itself takes applications.")]
         c_mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in crypto if j["usd"]]
         crypto_pay_ = (f" The median advertised salary is {money(median(c_mids_))}, and {round(100 * sum(1 for j in crypto if j['remote']) / len(crypto))}% of the jobs are remote." if len(c_mids_) >= 15 else "")
-        listing("crypto/", "Crypto jobs", f"Crypto Jobs: {len(crypto):,} Web3 & Blockchain Roles, {new7_c:,} New This Week | {SITE}",
+        listing("crypto/", "Crypto jobs", f"Crypto Jobs: {len(crypto):,} Web3 & Blockchain Roles" + (f", {new7_c:,} New This Week" if new7_c else "") + f" | {SITE}",
                 f"{roles(len(crypto), 'open job')} at crypto, web3 and blockchain companies: exchanges, wallets, infrastructure and DeFi. Remote and on-site, with pay where the employer states it. Updated hourly.",
                 # sections review, batch 4. The order was: two pictures, tiles of fields, the employers, four columns of links, and only
                 # then the jobs (the fifth screen of a desktop, the twelfth of a phone). Now: the count in the first sentence, the other
@@ -7179,7 +7186,9 @@ def main():
                                 + (f"<div><dt>Median pay stated in {'pounds' if cur_ == '£' else 'euros'}</dt><dd>{cur_}{median(lm_):,.0f}</dd></div>" if len(lm_) >= 10 else "") + "</dl>")
         city_row = ('<p class="rel chips">' + "".join(f'<a href="{P}/locations/{p_}/">{e(PLACE_NAME.get(p_, p_))}<b>{k_:,} jobs</b></a>' for p_, k_ in cities_) + "</p>") if cities_ else ""
         page(f"relocate/{slug}/", f"Jobs in {nm[0].upper() + nm[1:]} for Foreigners: {len(both):,} Visa & Relocation Jobs | {SITE}",
-             f"Moving to {nm} for a job: {len(visa_):,} open jobs mention visa sponsorship and {len(relo_):,} relocation support today. The employers, the kinds of work, the pay and the official visa site.",
+             f"Moving to {nm} for a job: " + (f"{len(visa_):,} open jobs mention visa sponsorship and {len(relo_):,} relocation support today." if visa_ and relo_ else
+                                               f"{len(relo_):,} open jobs offer relocation support today." if relo_ else f"{len(visa_):,} open jobs mention visa sponsorship today." if visa_ else "who offers visa sponsorship or relocation today.")
+             + " The employers, the kinds of work, the pay and the official visa site.",      # no "0 open jobs mention …" (24 Nov 2026)
              crumbs(("Relocation guides", "relocate/"), (cname_.get(c, c), "")) + f'<h1>Work and relocate to {flg}{e(nm)}: <span class="hl">{len(both):,} jobs that help you move</span></h1>'
              f'<p class="lead">Today’s open jobs in {flg}{e(nm)} that mention visa sponsorship or help with relocation, counted from employers’ own careers pages: who offers it, for which work, what it pays, and where to read the official rules.</p>'
              + facts_
