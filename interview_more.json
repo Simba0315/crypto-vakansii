@@ -51847,5 +51847,1429 @@
     "I work my CRM first: calls and texts to recent leads and people who drove a car but didn't buy. Then I check new arrivals so I know what's on the lot. I also send short notes to past buyers about a service reminder or a model they asked about. Walk-ins are a bonus. Most of my sales come from people I followed up with."
    ]
   ]
+ },
+ "react-developer": {
+  "heading": "React developer questions",
+  "qs": [
+   [
+    "A useEffect that fetches data runs in an endless loop and keeps hitting the API. How do you find and fix the cause?",
+    "Whether you understand how React compares effect dependencies between renders.",
+    "Spots an object, array or function recreated on every render in the dependency list, or state the effect both sets and depends on, and fixes the dependencies instead of silencing the linter.",
+    "After a refactor, a dashboard sent about 40 requests a second. The effect depended on a filters object built inline in the parent, so it was a new object on every render, and the effect set state that re-rendered the parent. I changed the dependencies to the two primitive values the effect actually used, and the loop stopped. The exhaustive-deps lint rule now stays on."
+   ],
+   [
+    "A table of 2,000 rows lags on every keystroke in the search box above it. How do you approach it?",
+    "Whether you measure render cost before reaching for memoization.",
+    "Profiles first with the React DevTools Profiler, then applies memo, stable props, useDeferredValue or list virtualization depending on what the profile shows.",
+    "I record a profile in React DevTools first. In one app every keystroke re-rendered all 2,000 rows because the parent passed a new onSelect function each time. I wrapped the row in React.memo, made the handler stable with useCallback and used useDeferredValue for the filter text. A keystroke went from about 300 ms to under 20 ms. If that had not been enough, I would have virtualized the list."
+   ],
+   [
+    "Two sibling components need the same value, and someone keeps two copies in sync with useEffect. What would you change?",
+    "Whether you know when to lift state up instead of syncing copies.",
+    "Moves the state to the closest common parent or derives it, deletes the syncing effects, and only reaches for context or a store when passing props gets deep.",
+    "Syncing copies with effects costs an extra render and leaves moments where one copy is stale. I move the state to the nearest common parent and pass the value and a setter down. In one checkout form this removed two effects and a flicker where the total showed the old price for one frame. If the props had to pass through five layers, I would consider context, but not before."
+   ],
+   [
+    "A user types fast in a search field and sometimes sees results for an older query. Why does that happen and how do you fix it?",
+    "Whether you can handle race conditions when fetching data in effects.",
+    "Explains that responses can arrive out of order, and fixes it with an AbortController or ignore flag in the effect cleanup, or a library like TanStack Query that caches by query key.",
+    "The request for \"re\" can come back after the one for \"react\" and overwrite the newer results. In the effect I create an AbortController, pass its signal to fetch and abort in the cleanup, so only the latest request can set state. On a larger project we moved to TanStack Query, which keys the cache by the search term and handles this for us."
+   ],
+   [
+    "A child component loses what the user typed every time its parent re-renders. What are the likely causes?",
+    "Whether you know how React decides to keep or reset component state.",
+    "Names a component defined inside another component's body, a key that changes on every render, or a condition that swaps the element type at that position.",
+    "The most common cause I have seen is a component declared inside the parent's function, so each render creates a new component type and React remounts it. On one settings page that wiped a half-filled form every time a toast appeared. Moving the inner component to module level fixed it. I also check for keys built from Math.random() or from indexes in lists that reorder."
+   ],
+   [
+    "How would you organize server data, global UI state and form state in a mid-sized React app?",
+    "Whether you pick the right tool for each kind of state instead of one global store.",
+    "Keeps server data in a cache like TanStack Query or framework loaders, small global UI state in context or a small store, and form state local, with reasons for each.",
+    "Server data goes in TanStack Query, because caching, refetching and loading states are already solved there. The theme and the current user go in context, or Zustand if they change often. Form state stays in the form, usually with React Hook Form. On my last project this let us delete about 1,500 lines of Redux code that only mirrored API responses."
+   ],
+   [
+    "When would you use useLayoutEffect instead of useEffect, and what does it cost?",
+    "Whether you know when effects run relative to the browser paint.",
+    "useLayoutEffect runs after React updates the DOM but before paint, so it suits measuring layout to avoid a visible jump. It blocks painting and does not run during server rendering.",
+    "I use useLayoutEffect when I must measure something, like a tooltip's height, and position it before the user sees it. It runs before the browser paints, so heavy work there makes the page feel slow. In a popover component, switching to it removed a one-frame flicker at the wrong position. Everything else stays in useEffect."
+   ],
+   [
+    "What changed about batching state updates in React 18, and how can it affect existing code?",
+    "Whether you know automatic batching and what it changes in practice.",
+    "With createRoot, React 18 batches updates inside promises, timeouts and native event handlers too, not only React events. flushSync opts out when a DOM read must see the update.",
+    "Before React 18, two setState calls after an await or inside a setTimeout caused two renders. With createRoot they are batched into one, as in click handlers. After our upgrade, one test that counted renders failed, and one function read the DOM right after setState and expected the new value. For that rare case I wrapped the update in flushSync."
+   ],
+   [
+    "In development your effect runs twice and sends two analytics events. Is that a bug, and what do you do?",
+    "Whether you understand what StrictMode does in development and why.",
+    "Knows that StrictMode in React 18 and later mounts, unmounts and remounts components in development to expose missing cleanup, and fixes the effect instead of removing StrictMode.",
+    "It is StrictMode in React 18 and later. In development it mounts each component, unmounts it and mounts it again, to show effects that do not clean up. Production is not affected. For a subscription or a timer I add a proper cleanup. For a page-view event I leave it, because the double call only happens in development and we do not send dev events to the real analytics project."
+   ],
+   [
+    "What can and cannot go inside a React Server Component, for example in the Next.js App Router?",
+    "Whether you understand the split between server and client components.",
+    "They run only on the server, can be async, read data directly and ship no JavaScript, but cannot use state, effects or browser APIs. Props passed to client components must be serializable.",
+    "In the App Router, components are server components by default. They can be async, query the database directly and add nothing to the client bundle, but they cannot use useState, useEffect or window. When I need interactivity, I make a small component with the \"use client\" directive and pass it serializable props. On one product page this cut the JavaScript we shipped by about 40%."
+   ],
+   [
+    "Tell us about a bug you shipped to production in a React app. How was it found, and what changed afterward?",
+    "Whether you own mistakes and improve the process after them.",
+    "A specific bug, how it was noticed, how it was fixed or rolled back, and a lasting change such as a test, a lint rule or a review habit.",
+    "During a cleanup I removed type=\"button\" from a shared IconButton. Buttons inside a form default to submit, so on the address page every icon click saved a half-filled address. It ran for about two hours before a support ticket flagged it. I reverted, added a test for the button inside a form, and now I search all usages before changing a shared component's defaults."
+   ],
+   [
+    "How do you review a React pull request, and what do you look for beyond style?",
+    "Whether your code reviews catch real problems and stay respectful.",
+    "Runs the change, checks effects and cleanup, state placement, loading and error states, accessibility, tests and bundle impact, and writes clear comments marked as blocking or optional.",
+    "I run the branch and try the unhappy paths: slow network, an empty list, an error from the API. In the code I look at effects and their cleanup, where state lives, labels and keyboard access, and new dependencies that grow the bundle. Formatting is Prettier's job. I mark which comments block the merge, and if a thread passes three replies, I suggest a short call."
+   ],
+   [
+    "Describe a major React upgrade you did, such as 17 to 18 or 18 to 19. How did you plan it?",
+    "How you plan risky upgrades without stopping feature work.",
+    "Reads the release notes, checks third-party libraries first, uses the official codemods, works in small steps behind tests, and keeps feature work going.",
+    "We moved a 200-component app from React 17 to 18. First I checked our libraries; two were not compatible, so we upgraded them on their own. Then I switched to createRoot in a branch, fixed the effects that the StrictMode double mount exposed, and ran our tests and a manual pass of the main flows. It shipped in two weeks alongside feature work, with no rollback."
+   ],
+   [
+    "What does your testing strategy for a React app look like, and what do you deliberately not test?",
+    "Whether you test what users see rather than implementation details.",
+    "Component tests with React Testing Library that query by role and label, mocked APIs with a tool like MSW, a few end-to-end tests for key flows, and no tests of internal state.",
+    "Most of my tests use React Testing Library and find elements by role and label, the way a user would. I mock the API with MSW so components get realistic responses. About 10 Playwright tests cover sign-up, checkout and other paths that touch money. I do not test internal state or large snapshots, because they break on every refactor without catching real bugs."
+   ]
+  ]
+ },
+ "nodejs-developer": {
+  "heading": "Node.js developer questions",
+  "qs": [
+   [
+    "After a release, API latency jumps from 50 ms to 2 seconds for everyone, and one CPU core sits at 100%. How do you find what is blocking the event loop?",
+    "Whether you can find and remove synchronous work that blocks the event loop.",
+    "Measures event loop delay, takes a CPU profile under load, looks for sync crypto, fs or zlib calls, huge JSON or bad regex, and moves heavy work off the main thread.",
+    "I take a CPU profile with node --cpu-prof under load. In one case a new endpoint called bcrypt's hashSync with a cost of 12 on every login, which blocked the loop for about 250 ms each time. Switching to the async hash, which runs in the libuv thread pool, brought p95 latency back to 60 ms. For CPU-heavy work like PDF generation, I use worker threads or a queue."
+   ],
+   [
+    "Your Node process crashed in production with an unhandled promise rejection. What happened, and how do you prevent it?",
+    "Whether you know how Node treats unhandled rejections and how to handle async errors.",
+    "Knows that since Node 15 an unhandled rejection exits the process by default, finds the missing await or catch, and adds a process handler that logs and exits cleanly.",
+    "Since Node 15, an unhandled rejection crashes the process by default. In our case a fire-and-forget call to send a welcome email had no catch, so when the mail provider timed out, the whole API restarted. I added a catch with logging, turned on the typescript-eslint no-floating-promises rule, and added an unhandledRejection handler that logs and shuts down cleanly."
+   ],
+   [
+    "Memory on a Node service grows by about 100 MB a day until the container is killed. How do you track down the leak?",
+    "Your method for finding memory leaks in a long-running Node process.",
+    "Compares heap snapshots taken hours apart, looks for growing maps, caches, listeners or timers, fixes the cause with limits or cleanup, and confirms with memory metrics.",
+    "I take two heap snapshots a few hours apart, with --inspect or v8.writeHeapSnapshot, and compare them in Chrome DevTools. Last time the growth was a plain object used as a cache keyed by request ID that was never cleared. I replaced it with an LRU cache capped at 10,000 entries, and memory stayed flat at about 300 MB for a week."
+   ],
+   [
+    "One client is hitting your public API at 500 requests a second. How do you add rate limiting?",
+    "Whether you can design rate limiting that works across several server instances.",
+    "Picks an algorithm like token bucket or sliding window, keeps counters in Redis or at the gateway when there are several instances, limits per key and returns 429 with Retry-After.",
+    "With several instances, in-memory counters do not work, so I keep them in Redis or set the limit at the API gateway. I limit per API key with a sliding window, for example 100 requests a minute, and return 429 with a Retry-After header. For one partner we raised the limit in their plan instead of blocking them. A dashboard shows who hits the limit."
+   ],
+   [
+    "How do you make a Node service shut down gracefully when Kubernetes sends SIGTERM?",
+    "Whether you avoid dropped requests and broken jobs during deploys.",
+    "Handles SIGTERM, fails readiness, stops new connections with server.close, lets in-flight work finish, closes pools and consumers, and forces exit before the grace period ends.",
+    "On SIGTERM I first make the readiness probe fail so no new traffic arrives, then call server.close and let in-flight requests finish. After that I close the database pool and the queue consumer. A timer forces exit after 25 seconds, before the default 30-second grace period ends. This took our 502 errors during deploys from a few hundred per release to zero."
+   ],
+   [
+    "A route has to process a 2 GB CSV upload. How do you design it so the server does not run out of memory?",
+    "Whether you use streams and backpressure instead of loading everything into memory.",
+    "Streams the upload instead of buffering it, parses row by row with stream.pipeline, writes in batches, and moves long processing to a background job with progress status.",
+    "I never read the whole file into memory. The request body streams to object storage, then a background worker reads it as a stream, parses it with a streaming CSV parser and inserts rows in batches of 1,000. I connect the steps with stream.pipeline so errors and backpressure are handled. Memory stayed under 150 MB for a 2 GB file, and users saw a progress bar."
+   ],
+   [
+    "What runs in the libuv thread pool and what does not, and why does it matter for performance?",
+    "Whether you know what actually runs off the main thread in Node.",
+    "File system calls, dns.lookup, zlib and some crypto like pbkdf2 and scrypt use the pool of 4 threads by default. Network sockets do not. UV_THREADPOOL_SIZE can raise the pool size.",
+    "Network I/O does not use the thread pool; the operating system notifies libuv through epoll or kqueue. File system calls, dns.lookup, zlib and crypto functions like pbkdf2 do, and the pool has 4 threads by default. I once saw slow logins because pbkdf2 calls queued behind file reads. Raising UV_THREADPOOL_SIZE to 16 helped, and so did caching those reads."
+   ],
+   [
+    "In what order do process.nextTick, promise callbacks and setImmediate run, and when does that matter?",
+    "Whether you understand microtasks and event loop phases in Node.",
+    "nextTick callbacks and promise callbacks run before the loop moves on, setImmediate runs in the check phase after I/O, and recursive nextTick or microtasks can starve I/O.",
+    "process.nextTick callbacks run right after the current operation, usually before promise callbacks, and both run before the event loop moves on. setImmediate runs in the check phase, after I/O callbacks. I prefer setImmediate for yielding, because a recursive nextTick can starve I/O. I saw that once in a retry helper that kept a socket from ever being read."
+   ],
+   [
+    "When would you use worker threads, child processes or the cluster module in Node?",
+    "Whether you pick the right tool for parallel work in Node.",
+    "Worker threads for CPU-heavy JavaScript in a small pool, child processes for running other programs or isolating crashes, and cluster or more containers to use more cores for HTTP.",
+    "Worker threads are for CPU-heavy JavaScript like image resizing, with a small pool rather than one worker per request. Child processes are for running other programs, like ffmpeg, or when a crash must stay isolated. To use more cores for HTTP in Kubernetes, I run more pods with one process each instead of cluster. On a resize service, a pool of 4 workers tripled throughput."
+   ],
+   [
+    "How do you handle configuration and secrets in a Node service, and what does the --env-file flag change?",
+    "Whether you handle config safely and fail fast on bad values.",
+    "Reads config from environment variables, validates it at startup with a schema, keeps secrets in a secret manager, and knows Node 20.6 and later can load .env files with --env-file.",
+    "All config comes from environment variables, validated at startup with a zod schema, so a missing DATABASE_URL stops the service at boot instead of at the first request. Locally I use a .env file, and since Node 20.6 I load it with --env-file instead of the dotenv package. In production, secrets come from AWS Secrets Manager and never sit in the image or the repo."
+   ],
+   [
+    "Tell us about an incident in a Node service that you caused. What did you change afterward?",
+    "Whether you own production mistakes and fix the process, not just the bug.",
+    "A concrete incident, how it was detected, the fix, and a lasting change such as a test, an alert, a timeout or a review rule.",
+    "I added a call to a third-party tax API without a timeout. When their service slowed down, our requests piled up, the connection pool filled and checkout failed for about 20 minutes. I added a 3-second timeout with AbortSignal.timeout, a fallback rate and an alert on pool usage. Our review checklist now asks about a timeout on every new outbound call."
+   ],
+   [
+    "How did you plan a Node.js upgrade across major versions, for example from 18 to 22?",
+    "How you handle runtime upgrades safely, since Node majors reach end of life on a fixed schedule.",
+    "Follows the LTS schedule, adds the new version to CI first, checks native modules and deprecations, tests in staging under load, and rolls out one service at a time.",
+    "Node 18 reached end of life in April 2025, so we moved 12 services to Node 22. I added Node 22 to the CI matrix first, which showed two native modules that needed new versions. We updated the base Docker image in staging, ran load tests to compare latency, then rolled out one service at a time over three weeks. Only one service needed a code change."
+   ],
+   [
+    "How do you review a pull request for a Node API? What do you look for?",
+    "Whether your reviews catch reliability and security problems.",
+    "Input validation, awaited promises and error handling, timeouts on outbound calls, N+1 queries, personal data in logs, and tests, with comments marked as blocking or optional.",
+    "I check that every input is validated, every promise is awaited or handled, and outbound calls have timeouts. I look for N+1 queries, missing indexes for new filters and logs that print tokens or emails. If the change touches money or auth, I run the tests locally. I mark which comments block the merge, and I approve quickly when the code is good."
+   ],
+   [
+    "How do you test a Node API, and where do you draw the line between unit and integration tests?",
+    "Whether your tests give confidence without being slow or brittle.",
+    "Unit tests for pure logic, HTTP-level integration tests against a real database in a container, stubbed external APIs, and as few mocks of your own code as possible.",
+    "Pure logic, like pricing rules, gets fast unit tests. For routes I run integration tests over HTTP with supertest against a real Postgres started by Testcontainers, because a mocked database once hid a bug for us. External APIs are stubbed with nock. The suite has about 600 tests and runs in under 3 minutes in CI, so people actually run it."
+   ]
+  ]
+ },
+ "javascript-developer": {
+  "heading": "TypeScript and JavaScript developer questions",
+  "qs": [
+   [
+    "A teammate typed an API response as any, and a renamed field caused a crash in production. How would you type it instead?",
+    "Whether you know the difference between any and unknown and validate data at the edges.",
+    "Uses unknown at boundaries so the compiler forces a check, validates with a schema library like zod or a type guard, and infers the type from the schema.",
+    "any turns off checking, so the code still compiled after the backend renamed userName to username. I typed the response as unknown, which forces a check before use, and parsed it with a zod schema. The TypeScript type is inferred from the schema, so there is one definition. Now a changed field fails at the boundary with a clear error instead of showing undefined in the UI."
+   ],
+   [
+    "You have a union type for an API result that is either success or error. How do you narrow it, and how do you make sure every case is handled?",
+    "Whether you can use discriminated unions and exhaustiveness checks.",
+    "Adds a literal field like status to each variant, narrows with switch or if, and assigns to never in the default branch so a new variant fails to compile.",
+    "I give each variant a literal field, like status: 'success' or status: 'error', and switch on it. TypeScript narrows the type in each branch, so data only exists where it should. In the default branch I assign the value to a variable of type never. When a teammate added a 'pending' state, the compiler pointed to the four places we had not handled."
+   ],
+   [
+    "A quantity of 0 shows as missing, and an ID check fails for some records. Which equality and coercion bugs do you look for?",
+    "Whether you can spot coercion bugs with falsy values and mixed types.",
+    "Checks for truthy tests that drop 0 or an empty string, || defaults that replace valid falsy values, and comparisons between strings and numbers, fixed with ??, === and explicit conversion.",
+    "The zero bug was a check written as if (item.qty), which treats 0 as missing, plus qty || 1 further down. I changed them to an undefined check and ??. The ID bug came from comparing a number from the API with a string from the URL using ===, which is correctly false. I convert the URL value with Number once, at the edge, and the eqeqeq lint rule keeps == out."
+   ],
+   [
+    "A method passed as a callback loses this and throws \"Cannot read properties of undefined\". Why, and how do you fix it?",
+    "Whether you understand that this is set by how a function is called.",
+    "Explains that passing a method detaches it from its object, so this is undefined in strict code, and fixes it with an arrow function, bind or a class field arrow.",
+    "this is decided by how a function is called, not where it is written. Passing this.save to promise.then or array.map calls it without an object, and class bodies are strict mode, so this is undefined. I fix it with an arrow function at the call site or a class field defined as an arrow. I avoid bind inside code that runs often, because it creates a new function each time."
+   ],
+   [
+    "Your package works with require but breaks when imported from an ES module, or the other way around. How do you handle ESM and CommonJS?",
+    "Whether you understand the practical differences between ESM and CommonJS in Node.",
+    "Knows the type field and .mjs or .cjs extensions set the format, uses the exports field with import and require conditions, and knows newer Node versions can require ESM.",
+    "The format depends on the type field in package.json and on the .mjs or .cjs extension. For a library I publish both builds and map them in the exports field with import and require conditions, plus types. I watch for two copies of the package holding separate state. Since Node 20.19 and 22.12, require can load an ES module that has no top-level await."
+   ],
+   [
+    "A loop that awaits one API call per item takes 40 seconds for 200 items. How would you speed it up without overloading the API?",
+    "Whether you can run async work concurrently with limits and handle partial failures.",
+    "Replaces sequential awaits with limited concurrency using a limiter or batches, uses Promise.allSettled so one failure does not sink the rest, and respects the API's rate limit.",
+    "Each call took about 200 ms, and awaiting them one by one added up. I ran them with a concurrency limit of 10 using p-limit and Promise.allSettled, so one failed item did not reject the whole batch. The job went from 40 seconds to about 4. I picked 10 after checking the API's rate limit, and failed items are logged and retried once."
+   ],
+   [
+    "What does turning on strictNullChecks change in a TypeScript project, and how would you enable it in a large existing codebase?",
+    "Whether you know what the strict flags catch and how to adopt them gradually.",
+    "Knows null and undefined stop fitting every type, plans a gradual rollout by folder with error tracking, and avoids mass fixes with any or the ! operator.",
+    "With strictNullChecks, null and undefined no longer fit into every type, so the compiler finds places that can crash. In a 300-file app turning it on gave about 1,200 errors. We fixed them folder by folder, tracked the count in CI so it could only go down, and did not allow new non-null assertions without a reason. We found three real crashes along the way."
+   ],
+   [
+    "What does the satisfies operator do in TypeScript, and when is it better than a type annotation?",
+    "Whether you know newer TypeScript features and how type inference works.",
+    "satisfies checks a value against a type but keeps the narrower inferred type, while an annotation widens it to the declared type. It was added in TypeScript 4.9.",
+    "With an annotation like const routes: Record<string, Route>, TypeScript forgets which keys exist, so a typo like routes.hmoe compiles. With satisfies Record<string, Route>, the object is still checked, but the type keeps the exact keys, so the typo fails. It came in TypeScript 4.9. I use it for config objects and lookup tables where I want both checking and autocomplete."
+   ],
+   [
+    "How do microtasks and tasks interact when you mix setTimeout, promises and async/await in the browser, and when has that surprised you?",
+    "Whether you understand microtasks versus tasks in practice.",
+    "Code after await and promise callbacks run as microtasks before the next task such as setTimeout, and the browser cannot paint until the microtask queue is empty.",
+    "Code after an await runs as a microtask, so it runs before any setTimeout callback, even one with a 0 ms delay. The browser also cannot paint until the microtask queue is empty. I hit this when a loop chained 10,000 promises to process data, and the spinner never appeared. Splitting the work into chunks with setTimeout, so the browser could paint between them, fixed it."
+   ],
+   [
+    "How do you choose between a Map and a plain object, or a Set and an array, in JavaScript?",
+    "Whether you pick data structures for behavior and performance, not habit.",
+    "Map for dynamic or non-string keys and frequent changes with no prototype keys, Set for fast membership checks, plain objects for fixed shapes and JSON.",
+    "For a fixed shape, like a user record sent as JSON, I use an object. For a lookup filled at runtime, I use a Map: keys can be any type, size is built in, and a key like constructor cannot clash with the prototype. For membership checks I use a Set. Replacing array.includes over 50,000 IDs with a Set cut a sync job from 9 seconds to under 1."
+   ],
+   [
+    "Tell us about a bug you shipped that TypeScript did not catch. Why did it slip through?",
+    "Whether you understand the limits of static types and learn from mistakes.",
+    "A real case such as unchecked JSON, a type assertion, array index access or a time zone issue, plus a concrete step that prevents the same class of bug.",
+    "I wrote items[0].price in a cart summary, and TypeScript allowed it because index access is typed as always defined by default. An empty cart crashed the page for about 30 minutes. I added a guard and a test for the empty cart, and we turned on noUncheckedIndexedAccess. It flagged 40 more places, and two of them were real bugs."
+   ],
+   [
+    "How did you migrate a JavaScript codebase to TypeScript, or how would you plan it?",
+    "Whether you can plan a gradual migration without freezing feature work.",
+    "Starts with allowJs, converts shared modules and API clients first, requires new files in TypeScript, tracks progress, and limits any with clear rules.",
+    "We had about 400 JavaScript files. I turned on allowJs so both could live together, then converted shared utilities and API clients first, because everything depends on them. New files had to be TypeScript. We tracked the remaining JS files and converted them when we touched them. It took five months alongside feature work, and any was allowed only with a comment."
+   ],
+   [
+    "When you review TypeScript code, which patterns make you ask for changes?",
+    "Whether your reviews keep the type system honest.",
+    "as casts on outside data, any without a reason, unneeded non-null assertions, generic types nobody can read, and floating promises, each explained calmly.",
+    "I push back on as casts on data from outside, any without a comment, and the ! operator where a simple check would do. I ask to simplify generic types that take five minutes to read, because someone else has to maintain them. A floating promise blocks the merge for me. I explain the reason in each comment and link to our guidelines, so it does not feel personal."
+   ],
+   [
+    "How do you decide what to test in a TypeScript codebase when the types already catch a lot?",
+    "Whether you balance types and tests instead of duplicating effort.",
+    "Skips tests the compiler already proves, focuses on business logic, edge cases and integration points, and keeps a small set of end-to-end tests for key flows.",
+    "I do not write tests that only check a function gets a string; the compiler does that. Tests go to business logic, edge cases like empty input or time zones, and the integration with the API. We use Vitest, and about 1,500 tests run in 40 seconds. A few Playwright tests cover login and payment. A bug that reaches production gets a test first, then the fix."
+   ]
+  ]
+ },
+ "angular-vue-developer": {
+  "heading": "Angular and Vue developer questions",
+  "qs": [
+   [
+    "In an Angular component with OnPush, the data changes but the view does not update. What do you check?",
+    "Whether you understand Angular change detection with OnPush.",
+    "Knows OnPush reacts to new input references, events, the async pipe and signals, finds mutated objects or updates from outside Angular, and fixes them with immutable updates or signals.",
+    "With OnPush, Angular rechecks a component when an input reference changes, an event fires inside it, the async pipe emits or a signal it reads changes. In our case a service mutated an array with push, so the reference stayed the same. I changed it to create a new array and later moved that state to a signal. markForCheck is my last resort, for third-party callbacks."
+   ],
+   [
+    "In Vue 3, a value changes but the template keeps showing the old one. What are the common causes?",
+    "Whether you understand how Vue 3 reactivity tracks changes.",
+    "Destructuring a reactive object, reassigning a variable that held reactive(), or changing nested data in a shallowRef, fixed with toRefs, ref or replacing the whole value.",
+    "The most common cause I see is destructuring a reactive object, which copies plain values; toRefs fixes that. Props destructured from defineProps stay reactive only since Vue 3.5. Another cause is reassigning a variable that held reactive(), so the template keeps the old object, which is why I prefer ref. With shallowRef, a nested change is not tracked, so I replace the value."
+   ],
+   [
+    "A component subscribes to an observable in ngOnInit, and memory grows as users navigate. How do you fix it, and how do you clean up in Vue?",
+    "Whether you clean up subscriptions and watchers to avoid leaks.",
+    "Uses the async pipe, toSignal or takeUntilDestroyed in Angular, and in Vue knows watchers made synchronously in setup stop on their own while others need manual cleanup.",
+    "Each visit added a subscription to an interval that never ended. In Angular I prefer the async pipe or toSignal, and for manual subscriptions takeUntilDestroyed, added in Angular 16. In Vue, watchers created synchronously in setup stop on unmount, but one created in an async callback, or a window listener, needs cleanup in onUnmounted. After the fix, memory stayed flat over 50 navigations."
+   ],
+   [
+    "A component deep in the tree needs to tell a distant component that the cart changed. How do you set up the communication?",
+    "Whether you choose the right communication pattern for the distance between components.",
+    "Inputs and outputs or props and emits for parent and child, a shared service with signals or a store like Pinia or NgRx for distant parts, and no global event bus.",
+    "For parent and child I use inputs and outputs in Angular, or props and emits in Vue. For distant parts I put the cart in shared state: a service with a signal in Angular, a Pinia store in Vue. The header reads the count, and the product page calls addItem. I avoid global event buses, because in one Vue 2 app nobody could tell who listened to a cart-updated event."
+   ],
+   [
+    "The first load of your Angular or Vue app downloads 3 MB of JavaScript. How do you use lazy loading to fix it?",
+    "Whether you can split bundles by route and measure the result.",
+    "Lazy loads routes with loadComponent or loadChildren in Angular and dynamic imports in Vue Router, defers heavy widgets, and checks the result with a bundle analyzer.",
+    "I look at the bundle analyzer first. In one Angular app the admin area and a charting library were in the main bundle. I moved admin routes to loadChildren and the chart into a @defer block, which Angular has had since version 17. In Vue I use dynamic imports for routes and defineAsyncComponent for heavy widgets. The initial bundle went from 3 MB to about 900 KB."
+   ],
+   [
+    "A Vue watcher or an Angular effect updates state and keeps triggering itself until the page freezes. How do you untangle it?",
+    "Whether you can avoid reactive loops and prefer derived state.",
+    "Replaces the watcher or effect with a computed value for derived data, keeps raw input separate from output, and uses watch or effect only for side effects like API calls.",
+    "Usually the watcher sets a value it also watches. In a Vue form, a watcher rounded a price and wrote it back, which fired the watcher again. I replaced it with a computed value for display and kept the raw input separate. In Angular I use computed signals for derived values and keep effect for side effects, like saving to localStorage, not for setting other signals."
+   ],
+   [
+    "What do Angular signals change compared with change detection driven by Zone.js?",
+    "Whether you follow how Angular is moving toward signals and zoneless apps.",
+    "Zone.js patches async APIs and triggers broad checks, while signals tell Angular exactly which value changed and which views read it, which makes zoneless apps possible.",
+    "Zone.js patches browser APIs and tells Angular that something async happened, so it checks the tree, or the OnPush parts that are marked. Signals say exactly which value changed and which views read it. With signals and zoneless change detection, stable since Angular 20.2, the app does less work and drops Zone.js. I build new features with signals first."
+   ],
+   [
+    "How do the Options API and the Composition API compare in Vue 3, and when would you move a component over?",
+    "Whether you know both Vue APIs and can judge when a migration pays off.",
+    "Both are supported in Vue 3. The Composition API groups logic by feature and allows composables and better TypeScript. Migrate when logic is shared or a component is hard to follow.",
+    "Both are fully supported in Vue 3, so I do not rewrite working components just to switch. I move a component to script setup when its logic is reused elsewhere or it has grown to 500 lines spread across data, methods and watch. Then I pull the shared parts into composables, like useOrderFilters. TypeScript also works much better with the Composition API."
+   ],
+   [
+    "How does dependency injection scope work in Angular, and what goes wrong when a service is provided in the wrong place?",
+    "Whether you understand the injector hierarchy and service lifetimes in Angular.",
+    "providedIn root gives one app-wide instance. Providing it in a component or a lazy route creates new instances, which splits state by accident or isolates it on purpose.",
+    "providedIn: 'root' gives one instance for the whole app. If someone also lists the service in a component's providers, that component and its children get their own copy. We had a cart service that showed 0 items in the header because a feature component provided it again. Removing that provider fixed it. I do provide services per component on purpose, for example for a wizard's state."
+   ],
+   [
+    "What is the difference between switchMap, mergeMap, concatMap and exhaustMap in RxJS, and where have you used each?",
+    "Whether you can pick the right RxJS flattening operator for real cases.",
+    "switchMap cancels the previous inner observable, concatMap queues in order, mergeMap runs in parallel, and exhaustMap ignores new triggers while one is running.",
+    "I use switchMap for type-ahead search, so an older request is canceled when the user keeps typing. concatMap fits saves that must happen in order, like autosave of a document. mergeMap runs things in parallel, for example loading 20 thumbnails. exhaustMap ignores clicks while a request runs, which is how we stopped duplicate orders when users double-clicked Pay."
+   ],
+   [
+    "Tell us about an Angular or Vue major version upgrade you did. What broke and how did you handle it?",
+    "How you plan big framework upgrades and deal with breaking changes.",
+    "Uses official tools like ng update or the Vue migration build, upgrades step by step, deals with third-party libraries first, and keeps tests passing throughout.",
+    "I led a Vue 2 to Vue 3 migration of about 150 components. We used the migration build, @vue/compat, to run the app on Vue 3 with warnings, then fixed them module by module. The hardest part was a UI library with no Vue 3 version, which we replaced. Filters and the global event bus also had to go. It took four months alongside feature work, with two weeks of testing in staging."
+   ],
+   [
+    "Describe a production bug you caused in an Angular or Vue app and what you changed afterward.",
+    "Whether you own mistakes and leave the code safer.",
+    "A specific bug, how users were affected, the fix, and a lasting change such as a test, a lint rule or a review habit.",
+    "I put v-if on a component holding a multi-step form. When a background refresh briefly set the data to null, the form unmounted and users lost what they had typed. About 200 users hit it in one day before support flagged it. I kept the form mounted and showed a loading overlay instead, added a test for a refresh during editing, and now I check what unmounts when data reloads."
+   ],
+   [
+    "What do you look for when you review an Angular or Vue pull request?",
+    "Whether your reviews catch framework-specific problems early.",
+    "Subscriptions and watchers cleaned up, no heavy functions in templates, state in the right place, props not mutated, accessibility, tests and bundle size of new imports.",
+    "In Angular I check for manual subscriptions without takeUntilDestroyed, functions called in templates, which run on every change detection pass, and services provided in the wrong place. In Vue I look for watchers that should be computed values and props mutated in a child. In both I check keyboard access and the size of new libraries. I say which comments block the merge."
+   ],
+   [
+    "How do you test Angular or Vue components, and how much do you rely on end-to-end tests?",
+    "Whether your testing strategy is balanced and focused on behavior.",
+    "Unit tests for services and stores, component tests through the DOM with Testing Library or Vue Test Utils, mocked HTTP, and a small set of end-to-end tests.",
+    "Services, stores and pure functions get unit tests with Vitest or Jest. I test components through the DOM with Testing Library, clicking and reading text like a user would, with HTTP mocked. About 15 Playwright tests cover login, search and checkout and run on every merge. I keep end-to-end tests few, because each one is slow and flaky ones quickly lose the team's trust."
+   ]
+  ]
+ },
+ "sql-developer": {
+  "heading": "SQL developer questions",
+  "qs": [
+   [
+    "A monthly sales report that ran in 4 seconds now takes 3 minutes after the orders table grew to 40 million rows. How do you find the cause?",
+    "Your method for diagnosing a query that slowed down as data grew.",
+    "Measure first, read the actual execution plan, check indexes, statistics and predicates, and test one change at a time against realistic data.",
+    "First I capture the actual execution plan and the reads, not just the time. In one case the plan showed a full scan of orders because the filter wrapped order_date in a function, so the index could not be used. I rewrote it as a plain date range, added an index on order_date that included the columns the report needed, and the report dropped to 6 seconds."
+   ],
+   [
+    "In an execution plan, one operator shows 12 estimated rows and 2 million actual rows. What does that tell you and what do you check?",
+    "Whether you can read a plan and spot a bad row estimate.",
+    "The optimizer planned for a tiny input. Likely causes are stale statistics, a hidden column in a function or conversion, or a table variable. Fix the estimate before reaching for hints.",
+    "It means the optimizer planned for a tiny input, so it likely chose nested loops and a small memory grant. I check when statistics were last updated, whether the predicate hides the column in a function or implicit conversion, or uses a table variable, since older SQL Server versions guess one row for those. A full-scan statistics update once turned a nested loop over 2 million rows into a hash join."
+   ],
+   [
+    "A stored procedure is fast for most customers but takes minutes for your largest one, and recompiling it helps for a while. What is going on?",
+    "Whether you understand plan caching and parameter sensitivity.",
+    "A plan compiled for one parameter value is reused for very different data sizes. Names fixes like recompiling, optimizing for a value or splitting the procedure, with their costs.",
+    "This is parameter sniffing. The plan is compiled for the first value passed, say a customer with 50 orders, and reused for a customer with 3 million. In SQL Server I confirm it by comparing the compiled parameter values in the cached plan with the slow call. The fix depends on call volume: OPTION (RECOMPILE) for a report run a few times a day, OPTIMIZE FOR, or a separate path for the largest customers."
+   ],
+   [
+    "Two nightly jobs keep failing with deadlock errors on the same tables. How do you investigate and fix it?",
+    "How you diagnose deadlocks instead of only adding retries.",
+    "Captures the deadlock graph, finds the resources and lock order, then fixes access order, indexing or transaction length. Retries are a safety net, not the fix.",
+    "In SQL Server I pull the deadlock graph from the system_health extended events session. In one case job A updated invoices then payments, while job B did payments then invoices. I changed B to touch the tables in the same order and added an index so its update stopped scanning and locking extra rows. Deadlocks went from about 3 a week to none, and I kept a retry for the rare one."
+   ],
+   [
+    "A revenue report shows totals three times higher than finance expects after you joined orders to shipments. What happened and how do you fix it?",
+    "Whether you catch row multiplication from one-to-many joins.",
+    "Recognizes that the join multiplies rows, checks the grain of each table, and aggregates before joining or uses EXISTS instead of summing duplicated rows.",
+    "An order with three shipments appears three times after the join, so its amount is summed three times. I check the grain by counting rows per order_id on each side. The fix is to aggregate shipments per order in a CTE first, then join, or use EXISTS if I only need to know the order shipped. I also add a check that the report total matches the orders table alone."
+   ],
+   [
+    "You need to add a NOT NULL column to a 200-million-row production table that is used around the clock. How do you do it safely?",
+    "Whether you can change a large live table without long locks or downtime.",
+    "Knows the engine and version matter, adds the column nullable or with a fast default, backfills in batches, enforces NOT NULL last, and rehearses with a rollback plan.",
+    "It depends on the engine. In PostgreSQL 11 and later, and SQL Server 2012 Enterprise and later, adding a column with a constant default is a quick metadata change. Otherwise I add it as nullable, backfill in batches of 10,000 rows with short pauses, then enforce NOT NULL. I rehearse on a restored copy of production, run it in a quiet hour and keep a rollback script ready."
+   ],
+   [
+    "When do you reach for a window function instead of GROUP BY? Give a report where it made the query simpler.",
+    "Whether you know how to keep detail rows while computing aggregates.",
+    "Window functions keep each row while adding running totals, ranks or comparisons, which removes self-joins. A strong answer mentions partitions and the default frame.",
+    "When I need the detail rows and an aggregate side by side. For one sales report I needed each order plus the customer's running total and rank in the month. With GROUP BY that took a self-join; with SUM() OVER (PARTITION BY customer_id ORDER BY order_date) it was one pass. I set the frame to ROWS UNBOUNDED PRECEDING, because the default RANGE frame lumps orders with the same date together."
+   ],
+   [
+    "How do you decide the key columns and included columns for a new index on a busy table?",
+    "Whether you design indexes around real queries and their write cost.",
+    "Starts from the queries: equality columns first, then range columns, included columns to cover the output, and a check for overlapping indexes and write cost.",
+    "I start from the queries, not the table. For WHERE status = 'open' AND created_at > a date, I put status first, then created_at, and include the few columns the query returns so it never goes back to the base table. Before adding it I look for an existing index with the same leading columns, because every index slows writes. On one table with 9 indexes I dropped 3 that had no reads in a month."
+   ],
+   [
+    "Why can NOT IN with a subquery return no rows at all, and what do you use instead?",
+    "Whether you understand how NULL behaves in filters.",
+    "Explains that one NULL in the subquery makes NOT IN unknown for every row, and uses NOT EXISTS or filters out NULLs.",
+    "If the subquery returns even one NULL, x NOT IN (...) is unknown for every row, because comparing anything to NULL is unknown, so nothing comes back. I hit this when a list of excluded customers had one row with a NULL customer_id and the report went empty. I switched to NOT EXISTS with a correlated subquery, which handles NULLs the way people expect and usually gets an anti-join plan."
+   ],
+   [
+    "A report reading live order data shows a summary and a detail section that do not add up. How can isolation levels cause that, and what would you change?",
+    "Whether you know how isolation levels affect consistency in reports.",
+    "Separate statements under read committed can see different moments. Fixes include snapshot isolation, one statement, or a replica or snapshot copy. Warns against NOLOCK.",
+    "Under read committed each statement sees data as of its own start, so the summary and the detail can run seconds apart and disagree. In SQL Server I would run the report under snapshot isolation so every statement sees one point in time; in PostgreSQL, repeatable read does the same. I would not add NOLOCK, because it can skip or double count rows while pages move."
+   ],
+   [
+    "Tell me about a time a script you ran changed production data you did not mean to change. What do you do differently now?",
+    "Your honesty about mistakes and the safeguards you built after one.",
+    "A real, owned mistake, fast communication and recovery, and lasting habits like transactions, row-count checks and a second reviewer for data fixes.",
+    "Early on I ran an UPDATE on the customer table with a WHERE clause on the wrong column, and 4,200 rows got the wrong region. I told my lead within minutes, and we restored the old values from the previous night's backup into a side table and fixed them. Since then every data fix runs inside a transaction, I check the row count before committing, and a second person reads the script."
+   ],
+   [
+    "How do you review another developer's stored procedure or report query before it goes to production?",
+    "What you look for in SQL code review beyond style.",
+    "Correctness on edge cases, the plan on realistic data volume, set-based logic, transaction and error handling, safe dynamic SQL, and a respectful tone.",
+    "I read it for correctness first: NULL handling, join grain and date boundaries like the end of the month. Then I run it on a copy with production-sized data and look at the plan and reads. I flag cursors that could be set-based, dynamic SQL built by string concatenation, and transactions with no error handling. Where I am unsure, I write the comment as a question."
+   ],
+   [
+    "How do you test SQL code like stored procedures and report queries?",
+    "Whether you test database code with the same care as application code.",
+    "Repeatable tests on known data with tricky cases, a framework like tSQLt or pgTAP run in CI, and reconciliation of report totals against the source.",
+    "I keep small fixture datasets with the tricky cases: NULLs, duplicates, month boundaries and a customer with zero orders. For SQL Server procedures I use tSQLt, and pgTAP on PostgreSQL, run in CI against a database in a container. For reports I also reconcile totals with the source system; one check caught a 0.4% gap from orders placed around midnight UTC."
+   ],
+   [
+    "A junior developer on your team writes cursors for almost everything. How do you help them move to set-based SQL?",
+    "How you mentor someone toward set-based thinking.",
+    "Pairs on a real case, shows before and after numbers, explains the way of thinking, gives practice, and follows up in later reviews.",
+    "I pick one of their real procedures and we rewrite it together. In one case a cursor that updated prices row by row took 25 minutes for 300,000 rows, and the set-based UPDATE with a join took 9 seconds. Seeing the numbers did more than any rule. Then I ask them to describe the result they want before writing a loop, and I review their next few procedures closely."
+   ]
+  ]
+ },
+ "dotnet-developer": {
+  "heading": ".NET and C# developer questions",
+  "qs": [
+   [
+    "An ASP.NET Core endpoint stalls under load and the thread pool keeps growing. You find .Result calls on async methods. What is happening and how do you fix it?",
+    "Whether you understand sync over async and thread pool starvation.",
+    "Blocking on tasks ties up threads the async work needs, causing starvation in ASP.NET Core and deadlocks in UI apps. The fix is async all the way up.",
+    "Each .Result blocks a thread pool thread while the async call needs another thread to finish, so under load the pool runs dry and requests queue. ASP.NET Core has no synchronization context, so it is starvation rather than the classic deadlock you get in WinForms or old ASP.NET. I made the call chain async all the way up, and p95 latency went from 8 seconds back to 120 ms."
+   ],
+   [
+    "A page listing 50 orders with their customers takes 2 seconds, and the SQL log shows 51 queries. What is wrong and how do you fix it in EF Core?",
+    "Whether you can spot and fix N+1 queries in EF Core.",
+    "Identifies lazy loading or queries in a loop, fixes with a projection or Include, knows when split queries help, and confirms with the logged SQL.",
+    "That is an N+1: one query for orders, then one per order for its customer, usually from lazy loading or a query inside a loop. I replace it with a projection, a Select into a small DTO with the customer name, which becomes one SQL join. If I need full entities I use Include, and AsSplitQuery when several collections would multiply rows. Then I check the log to confirm it is one query."
+   ],
+   [
+    "A background worker using EF Core gets slower and uses more memory every hour it runs. What do you look at?",
+    "Whether you know how change tracking and DbContext lifetime affect memory.",
+    "A long-lived DbContext tracking every entity it loaded. Fixes: a new context per batch, AsNoTracking for reads, ChangeTracker.Clear, sensible batch sizes.",
+    "My first suspect is one DbContext kept alive for the whole job, so the change tracker holds every entity it ever loaded and each SaveChanges gets slower. I create a new context per batch of 1,000 rows through IDbContextFactory, use AsNoTracking for read-only queries, and call ChangeTracker.Clear if a context must live longer. In one worker memory went from 3 GB to a flat 200 MB."
+   ],
+   [
+    "A singleton service takes a scoped DbContext in its constructor, and you start seeing errors about a disposed context under load. Explain and fix it.",
+    "Whether you understand DI lifetimes and captive dependencies.",
+    "Explains the captive dependency, knows scope validation catches it in Development, and fixes it by making the consumer scoped or creating a scope per operation.",
+    "The singleton captures the first DbContext and keeps it, so it is shared across requests and threads, which DbContext does not support. ASP.NET Core catches this at startup in Development through scope validation, so I keep ValidateScopes on in integration tests too. The fix is to make the consumer scoped, or inject IServiceScopeFactory and create a scope for each unit of work."
+   ],
+   [
+    "Memory in a long-running .NET service grows about 100 MB a day, and a dump shows thousands of objects kept alive through an event. How did that happen?",
+    "Whether you can trace a leak from event subscriptions with dump tools.",
+    "Short-lived objects subscribe to a long-lived publisher and never unsubscribe. Uses dumps and GC roots to prove it, and unsubscribes in Dispose.",
+    "A publisher holds a reference to every subscriber through the event's delegate list. If short-lived objects subscribe to a singleton's event and never unsubscribe, they can never be collected. I take two dumps with dotnet-dump a few hours apart, compare type counts, and run gcroot on a leaked object to see the chain. The fix was unsubscribing in Dispose and making sure those objects were really disposed."
+   ],
+   [
+    "How do you set up configuration so the same build runs in development, staging and production with different settings and secrets?",
+    "Whether you know the .NET configuration system and keep secrets out of source control.",
+    "Layered appsettings per environment, environment variables, user secrets locally, a vault in production, and typed options validated at startup.",
+    "I build once and let configuration layer: appsettings.json, then the file matching ASPNETCORE_ENVIRONMENT, like appsettings.Staging.json, then environment variables, which win. Secrets sit in user secrets locally and Azure Key Vault in production, never in the repo. I bind sections to options classes with ValidateDataAnnotations and ValidateOnStart, so a missing setting fails the deploy, not the first request."
+   ],
+   [
+    "When do you choose a record over a class in C#, and what surprised you about record equality?",
+    "Whether you understand value equality and its limits in C# records.",
+    "Records fit immutable data with value equality. Knows equality is member by member, so collection properties compare by reference, and that entities need identity instead.",
+    "I use records for DTOs, messages and small value objects where two instances with the same data should be equal. The surprise is that equality is member by member, so a List property is compared by reference, and two records with equal lists are not equal. I avoid records for EF Core entities, because an entity needs identity, not value equality."
+   ],
+   [
+    "What is the practical difference between passing IQueryable and IEnumerable around in an EF Core app?",
+    "Whether you know where a LINQ query actually runs.",
+    "IQueryable is translated to SQL; IEnumerable runs in memory on loaded rows. Calling ToList or AsEnumerable too early loads too much. Careful about exposing IQueryable.",
+    "With IQueryable, Where and Select still become SQL, so filtering happens in the database. Once it is IEnumerable, everything after runs in memory on rows already loaded. I once found a repository returning IEnumerable of all invoices, and the caller filtered to 20 in C# after loading 600,000 rows. I also avoid returning IQueryable from public APIs, since callers can build queries that do not translate."
+   ],
+   [
+    "How do you use CancellationToken in an ASP.NET Core API, and what happens if you ignore it?",
+    "Whether you stop wasted work when a request is abandoned.",
+    "Takes the token in actions, passes it to EF Core and HttpClient calls, treats cancellation as normal rather than an error, and links tokens for timeouts.",
+    "I take a CancellationToken parameter in the action, which ASP.NET Core binds to the request's abort token, and pass it to every async call: EF Core queries, HttpClient and so on. If I ignore it, a user who closes the page still costs us a full 10-second report query. I do not log OperationCanceledException as an error, and for timeouts I use a linked token source."
+   ],
+   [
+    "Why is creating a new HttpClient for every request a problem, and how do you manage HttpClient in a modern .NET service?",
+    "Whether you know HttpClient lifetime pitfalls like socket exhaustion and stale DNS.",
+    "A client per call can exhaust sockets; one static client ignores DNS changes. IHttpClientFactory or a pooled connection lifetime solves both, with timeouts and retries.",
+    "Creating and disposing one per request leaves sockets in TIME_WAIT, and under load we ran out of ports. One static client fixes that but never sees DNS changes. I use IHttpClientFactory with typed clients, which pools and rotates handlers, or a shared client with SocketsHttpHandler and PooledConnectionLifetime of a few minutes. Retries and timeouts come from Microsoft.Extensions.Http.Resilience."
+   ],
+   [
+    "Tell me about a bug you shipped to production in a .NET service. How was it found and what did you change afterward?",
+    "Your ownership of mistakes and the changes that followed.",
+    "A specific bug, owned plainly, quick mitigation, a clear root cause, and a lasting change such as a test, an analyzer rule or an alert.",
+    "I shipped a change that parsed dates with the server's culture, and on one server set to en-GB about 300 orders got day and month swapped. Support found it the next morning. I fixed it with CultureInfo.InvariantCulture, wrote a script to correct the rows and added tests for both cultures. We also turned on analyzer rule CA1305 so culture-less parsing gets flagged in the build."
+   ],
+   [
+    "What do you look for when reviewing a C# pull request, beyond the formatting the analyzers already catch?",
+    "What you focus on in a .NET code review.",
+    "Behavior over style: async misuse, disposal, EF Core query shape, exception handling, DI lifetimes, tests that prove the change, and comments that teach.",
+    "Formatting is the build's job, so I spend my time on behavior. I look for async void outside event handlers, blocking calls on tasks, IDisposable objects never disposed, EF queries that load more than they need, and catch blocks that swallow exceptions. I check that a test fails without the change. I mark which comments block the merge and which are only suggestions."
+   ],
+   [
+    "How do you test an ASP.NET Core API that uses EF Core and calls two external services?",
+    "How you balance unit and integration tests in a .NET service.",
+    "Unit tests for business rules, integration tests through WebApplicationFactory with a real database in a container, and stubbed HTTP for the external services.",
+    "Business rules get plain xUnit tests with no framework involved. For the API I use WebApplicationFactory and run the real database in a container with Testcontainers, because the EF Core in-memory provider hides translation and constraint errors. External services are replaced with WireMock.Net, including timeout and 500 cases. About 40 integration tests run in CI in under 2 minutes."
+   ],
+   [
+    "A junior developer wraps every method in try/catch and logs the exception. How do you coach them?",
+    "How you mentor on error handling without discouraging people.",
+    "Shows the real effect on logs and callers, explains global exception handling, gives a simple rule for when to catch, and follows up in later reviews.",
+    "I pair with them on one of their pull requests and show what happens: the same error is logged four times, and the caller thinks the call worked. Then I show our global exception handler, which logs once with the request details. The rule I give is to catch only where you can do something useful, like retry or return a clear 404. In later reviews I point out what they got right, too."
+   ]
+  ]
+ },
+ "ruby-developer": {
+  "heading": "Ruby on Rails developer questions",
+  "qs": [
+   [
+    "The orders index page makes 201 queries for 100 orders. How do you fix it, and how do you keep it from coming back?",
+    "Whether you can fix N+1 queries and prevent them from returning in Rails.",
+    "Reads the log or uses Bullet, picks includes, preload or eager_load with care, checks the SQL, and adds strict_loading or a test against regressions.",
+    "The log shows one query for orders, then one per order for the customer and one for line items. I add includes(:customer, :line_items), which brings it down to 3 queries. If a where clause references an included table, includes switches to one big JOIN like eager_load, so I check the SQL. To stop regressions I turn on strict_loading for those associations and run Bullet in development and tests."
+   ],
+   [
+    "You need to add a column with a default and a new index to a users table with 50 million rows in PostgreSQL. How do you write the migrations so the site stays up?",
+    "Whether you can change big tables in Rails without blocking traffic.",
+    "Knows a constant default is fast on PostgreSQL 11 and later, builds the index concurrently outside a transaction, and keeps backfills out of migrations.",
+    "On PostgreSQL 11 and later, adding a column with a constant default is fast, so that part is fine. The index is the risk, because a normal CREATE INDEX blocks writes. I use add_index with algorithm: :concurrently and disable_ddl_transaction! in its own migration. Any backfill runs as a batched job, not inside the migration. We also use the strong_migrations gem, which flags unsafe steps."
+   ],
+   [
+    "A Sidekiq job that emails invoices sometimes sends the same invoice twice. Why can that happen and how do you fix it?",
+    "Whether you design background jobs to be safe to run more than once.",
+    "Knows jobs can run more than once through retries or restarts, and makes the job idempotent with a recorded state and a lock, passing ids rather than objects.",
+    "Sidekiq retries a job that raised an error, so if the email went out and a later line failed, the retry sends it again. A worker killed during a deploy can also run a job twice. I make the job idempotent: it locks the invoice row, checks emailed_at, sends, then sets emailed_at. I pass the invoice id, not the object, so the job reads fresh data. Duplicate emails went to zero."
+   ],
+   [
+    "The User model has 15 callbacks, and creating a user in a test now sends emails and calls Stripe. How do you untangle it?",
+    "Whether you can refactor callback-heavy models safely.",
+    "Keeps callbacks that only touch the model's own data, moves side effects into explicit objects the controller calls, and protects behavior with tests first.",
+    "I keep callbacks that only normalize the model's own data, like downcasing the email. Side effects such as emails, Stripe customers and analytics events move into a plain Ruby object like Users::SignUp that the controller calls. I write tests around the current behavior first, then move one callback at a time. Afterward User.create in tests stopped calling Stripe, and model specs ran 3 times faster."
+   ],
+   [
+    "How would you upgrade an app from Rails 6.1 to Rails 8 without a long-lived branch?",
+    "Whether you can plan a framework upgrade in small, safe steps.",
+    "One minor version at a time, deprecations fixed first, dual booting so CI runs both versions, and new framework defaults switched on one by one.",
+    "I go one minor version at a time: 7.0, 7.1, 7.2, then 8.0, checking the Ruby version each needs, since Rails 8 requires Ruby 3.2. Before each step I fix deprecation warnings. We dual-boot with a second Gemfile so CI runs both versions and work merges to main daily. After each bump I run rails app:update and turn on the new framework defaults one by one."
+   ],
+   [
+    "An admin export of all users to CSV works in development but times out in production with a memory spike. How do you fix it?",
+    "Whether you can process large record sets in Rails without loading them all.",
+    "Uses find_each or in_batches, selects only needed columns, and moves large exports to a background job that delivers a file instead of a long request.",
+    "User.all.each loads all 800,000 records as Active Record objects. I switch to find_each, which loads 1,000 at a time, and select only the columns the CSV needs. For an export this big I move it to a background job that writes the file to S3 through Active Storage and emails the admin a download link, so no web request runs for minutes."
+   ],
+   [
+    "When does the difference between after_save and after_commit matter, and what bug can the wrong one cause?",
+    "Whether you understand transactions and callback timing in Active Record.",
+    "after_save runs inside the transaction, so a job enqueued there can run before the commit or after a rollback. after_commit fires only once the data is saved.",
+    "after_save runs inside the database transaction. If I enqueue a job there, a fast worker can look for the record before it is committed and get RecordNotFound, or the transaction rolls back and the job runs anyway. after_commit only fires once the data is really saved. I fixed exactly this in a signup flow where about 1 in 200 welcome email jobs failed."
+   ],
+   [
+    "How do you use fragment caching in Rails views, and how do you make sure the cache expires when data changes?",
+    "Whether you understand key-based cache expiration in Rails.",
+    "Caches partials by record so updated_at drives expiry, uses touch: true for nested records, avoids manual expiry, and measures the gain.",
+    "I wrap partials in cache with the record, so the entry is tied to its id and updated_at, and a change makes the old entry stale without manual expiry. For a product page with nested variants I add touch: true on the variant's belongs_to, so editing a variant bumps the product. Old entries just age out of the cache store. That cut render time on our catalog page from 900 ms to about 150 ms."
+   ],
+   [
+    "Where can SQL injection still happen in a Rails app that uses Active Record?",
+    "Whether you know the unsafe Active Record patterns.",
+    "Strings built with interpolation in where, find_by_sql or Arel.sql. Fixes with hash conditions, placeholders and allowlists, and runs Brakeman in CI.",
+    "Active Record escapes values in hash conditions and placeholders, but not in SQL strings I build myself. A where clause with params interpolated into the string is open, and so is anything passed to find_by_sql or wrapped in Arel.sql with user input inside. I use where(name: params[:name]) or a ? placeholder, and an allowlist for sort columns. Brakeman runs in CI and has caught two cases like this for us."
+   ],
+   [
+    "Your app runs on Puma with 5 threads per worker. What code becomes unsafe, and how do you size the database pool?",
+    "Whether you understand threads, shared state and connections in Rails.",
+    "Names shared mutable state like class-level caches, uses per-request storage, sets the pool to at least the thread count, and does the total connection math.",
+    "Anything shared across requests becomes risky: class variables, memoized class-level hashes, or a global client that is not thread safe. I keep request data in instance variables or CurrentAttributes, which Rails resets for each request. The pool in database.yml must be at least the thread count, so 5. With 6 servers running 4 Puma workers each, that is 120 connections, and I check that against max_connections."
+   ],
+   [
+    "Tell me about a bug you shipped in a Rails app that reached users. What happened and what did you change afterward?",
+    "Your ownership of mistakes and what you learned from one.",
+    "A specific bug, owned plainly, a clear fix for the data and the people affected, and a lasting change in code or process.",
+    "I added a default scope to hide archived projects, and it also filtered a nightly billing query, so about 60 archived but still paying accounts were not invoiced for a month. Finance noticed the dip. I replaced the default scope with an explicit active scope, billed the missed month after support contacted those customers, and added a spec that checks billing covers every account with a subscription."
+   ],
+   [
+    "What do you look for when reviewing a Rails pull request?",
+    "What you focus on in a Rails code review.",
+    "Query count and indexes, migration safety, authorization scoping, side effects hidden in callbacks, and tests for failure cases. Style is left to tools.",
+    "I check the queries first: N+1s, missing indexes on new foreign keys, and migrations that lock a big table. Then authorization: does the controller scope records to the current account, or can someone change an id in the URL and see another customer's data? I look for side effects hidden in callbacks and for tests of the failure case, not only the happy path. Style I leave to RuboCop."
+   ],
+   [
+    "How do you structure tests in a Rails app so the suite stays fast and still catches real bugs?",
+    "How you balance speed and coverage in a Rails test suite.",
+    "Many fast model and service tests, request specs for controllers, a few system tests for critical flows, lean factories, and parallel runs in CI.",
+    "Most tests are model and service tests, using build or build_stubbed when they do not need the database. Controllers get request specs. Only the flows that make money, signup, checkout and billing, get browser system tests, about 25 of them. I keep factories lean so one create does not insert ten records. With the parallel_tests gem our 4,000 specs run in about 6 minutes on CI."
+   ],
+   [
+    "A developer new to Rails puts all the business logic in controllers. How do you help them?",
+    "How you mentor someone on structuring Rails code.",
+    "Pairs on a real feature, shows where logic belongs with a small refactor and tests, and avoids adding patterns the team does not need.",
+    "I pick their latest feature, a 120-line create action, and we refactor it together. Validations move to the model, the multi-step process becomes a small service object, and the controller just calls it and renders. We write tests for the service first, so they see why it is easier to test. I keep it simple and skip patterns we will not use. Their next pull request already looked different."
+   ]
+  ]
+ },
+ "kotlin-developer": {
+  "heading": "Kotlin developer questions",
+  "qs": [
+   [
+    "Your Kotlin code crashes with a NullPointerException on a value from a Java library, even though the compiler never complained. Why, and how do you prevent it?",
+    "Whether you understand platform types at the Java boundary.",
+    "Explains platform types and why the compiler cannot check them, declares explicit nullable types at the boundary, and uses nullability annotations on Java code.",
+    "Values from Java without nullability annotations are platform types, so Kotlin lets me treat them as non-null and the check only happens at runtime. Once a Java SDK returned null for a missing header and we assigned it to a String. Now I declare String? explicitly where Java values enter our code and wrap that library in a small Kotlin class. On our own Java code we add @Nullable and @NonNull, which Kotlin reads."
+   ],
+   [
+    "An Android screen starts a network call in GlobalScope, and after users rotate the phone you see crashes and duplicate requests. What do you change?",
+    "Whether you understand structured concurrency and lifecycle-aware scopes.",
+    "Moves work to viewModelScope or lifecycleScope, knows GlobalScope is never canceled automatically, and collects state only while the UI is visible.",
+    "GlobalScope is not tied to anything, so the call keeps running after the screen is gone and then touches a dead view. I move the call into the ViewModel and launch it in viewModelScope, which survives rotation and is canceled when the ViewModel is cleared. The UI collects state with repeatOnLifecycle, so it only listens while visible. That removed the crashes and about half the requests."
+   ],
+   [
+    "You cancel a coroutine that processes a large file, but it keeps running for another 30 seconds. Why, and how do you fix it?",
+    "Whether you know coroutine cancellation is cooperative.",
+    "Cancellation is checked at suspension points, so CPU loops need ensureActive or yield, blocking calls need care, and CancellationException must not be swallowed.",
+    "Coroutine cancellation is cooperative. A loop doing CPU work or blocking reads never reaches a suspension point, so it never notices. I add ensureActive() inside the loop, or yield() if other work should get a turn, and run blocking IO on Dispatchers.IO. I also look for catch (e: Exception) around suspending calls, because that can swallow CancellationException; I rethrow it."
+   ],
+   [
+    "A data class used as a key in a HashMap can no longer be found after you change one of its properties. What went wrong?",
+    "Whether you understand how data classes build equals and hashCode.",
+    "equals and hashCode come from primary constructor properties, so a mutable var key changes its hash. Keeps keys immutable and uses copy() for changes.",
+    "A data class builds equals and hashCode from its primary constructor properties. If one of them is a var and I change it after putting the object in a HashMap, its hash changes and the map looks in the wrong bucket. I keep data classes used as keys immutable, all val, and make changes with copy(). Properties declared in the class body are not part of equals at all, which caused a different bug for us once."
+   ],
+   [
+    "How would you model the state of a screen that can be loading, showing data, or showing an error?",
+    "Whether you use sealed types to make invalid states impossible.",
+    "A sealed type with one class per state, an exhaustive when without else, and a clear reason it beats separate boolean flags.",
+    "I use a sealed interface UiState with Loading as a data object, Success holding the list and Error holding a message. A when over it needs no else branch, so if I add a new state, every place that handles it fails to compile until I update it. Before, we had isLoading, data and error as separate fields, and one bug showed a spinner on top of an error because two flags were true at once."
+   ],
+   [
+    "You wrote a Kotlin library that Java code in the same project must call. What do you do so the API is pleasant to use from Java?",
+    "Whether you know the annotations that shape Kotlin APIs for Java callers.",
+    "Uses @JvmOverloads, @JvmStatic, @JvmField or @JvmName where useful, @Throws for checked exceptions, and a Java-friendly wrapper for suspend functions.",
+    "Java has no default arguments, so I add @JvmOverloads to generate the overloads. Companion functions get @JvmStatic, so Java calls Config.load() instead of Config.Companion.load(). If a function throws an IOException that Java should catch, I add @Throws, since Kotlin has no checked exceptions. Suspend functions are awkward from Java, so I expose a CompletableFuture version for those."
+   ],
+   [
+    "You add a Kotlin entity to a Spring Boot app with JPA, and lazy loading stops working or Hibernate complains about a missing constructor. What is the cause?",
+    "Whether you know how Kotlin defaults clash with Java frameworks.",
+    "Kotlin classes are final and have no no-arg constructor by default. Uses the kotlin-spring and kotlin-jpa plugins, opens entities, and avoids data classes for entities.",
+    "Kotlin classes and methods are final by default, but Hibernate needs to subclass entities for lazy proxies, and JPA needs a no-arg constructor. The Kotlin compiler plugins fix this: kotlin-jpa generates no-arg constructors, and I configure allOpen for @Entity next to kotlin-spring. I also avoid data classes for entities, because generated equals and toString can touch lazy associations."
+   ],
+   [
+    "When do you use a Flow instead of a suspend function, and how do StateFlow and SharedFlow differ in practice?",
+    "Whether you can pick the right coroutine type for a stream of values.",
+    "A suspend function for one result, Flow for a stream, StateFlow for current state with an initial value, SharedFlow for events with configurable replay.",
+    "A suspend function returns one result, like loading a profile. A Flow is for a stream, like changes from a Room query. StateFlow always has a current value and skips emissions equal to it, which fits screen state. SharedFlow needs no initial value and lets me set replay, so I used it for one-off events like a snackbar, with replay 0 so the message does not show again after rotation."
+   ],
+   [
+    "How do you decide between let, apply, also, run and with, and when do they hurt readability?",
+    "Whether you use scope functions with judgment rather than by habit.",
+    "Knows which return the object and which return the lambda result, and this versus it. Uses each for a clear job and avoids deep nesting.",
+    "apply returns the object and uses this, so I use it to configure a builder or an Intent. let returns the lambda result, which is handy with ?. on a nullable value. also returns the object, good for logging on the side. run and with return the result and use this. They hurt when nested: I once reviewed three levels of let with it shadowed, and a plain if with named vals was much clearer."
+   ],
+   [
+    "What are value classes good for in Kotlin, and what limitation have you run into?",
+    "Whether you know value classes and their trade-offs.",
+    "Type safety for wrapped values like IDs, usually without allocation. Knows they are boxed when nullable or generic, and that function names get mangled for Java.",
+    "I use them to stop mixing up IDs: UserId and OrderId both wrap a Long, but the compiler will not let me pass one where the other is expected, and usually no extra object is allocated. The limits: they are boxed when used as a nullable or generic type, and functions taking them get mangled names, so Java callers cannot use them easily. For our Java-facing API we kept a plain Long."
+   ],
+   [
+    "Tell me about a crash or bug you shipped in a Kotlin app. What happened and what did you change afterward?",
+    "Your ownership of mistakes and the safeguards you added.",
+    "A specific bug, owned plainly, a quick fix for users, and a lasting change like a lint rule, a test or a review habit.",
+    "I used !! on an intent extra I was sure would be there, and an older deep link opened the screen without it. Crashlytics showed about 1,200 crashes the day after release. We shipped a hotfix that shows an error screen instead, and I added the detekt rule against !! for new code plus a test that opens the screen from each entry point."
+   ],
+   [
+    "What do you look for when reviewing Kotlin code from a developer who mostly wrote Java before?",
+    "Whether you can spot Java habits in Kotlin and explain better idioms.",
+    "Overuse of !! and nullable types, mutable collections, utility classes, blocking calls in coroutines, and comments that teach the idiom with an example.",
+    "The common Java habits: !! to quiet the compiler, everything nullable just in case, MutableList where List would do, and static-style utility classes where an extension function reads better. In coroutine code I look for Thread.sleep or other blocking calls on the main dispatcher. I explain the idiom in the comment with a short example, because the code usually works and the goal is to make it safer."
+   ],
+   [
+    "How do you test code that uses coroutines and Flows?",
+    "Whether you can write fast, reliable tests for asynchronous Kotlin code.",
+    "Uses runTest with virtual time, injects dispatchers instead of hardcoding them, sets the main dispatcher on Android, and tests Flow emissions in order.",
+    "I use runTest from kotlinx-coroutines-test, which skips delays with virtual time, so a test of a 30-second retry runs in milliseconds. Classes take a CoroutineDispatcher in the constructor instead of hardcoding Dispatchers.IO, so tests can pass a test dispatcher. On Android I call Dispatchers.setMain in a JUnit rule. For Flows I use Turbine to check each emission in order."
+   ],
+   [
+    "How would you help a team of Java developers move a backend service to Kotlin step by step?",
+    "How you lead a gradual migration and teach a team along the way.",
+    "Starts small with tests and new code, mixes Kotlin and Java in one module, agrees on conventions early, teaches through pairing, and avoids a big rewrite.",
+    "We started with tests and new classes only, since Kotlin and Java live in the same module without trouble. I ran three short sessions on null safety, data classes and coroutines, and we agreed on ktlint and a style guide from day one. Existing files were converted only when someone was already changing them. After 6 months about 40% of the code was Kotlin, and no release slipped because of it."
+   ]
+  ]
+ },
+ "ciso": {
+  "heading": "CISO questions",
+  "qs": [
+   [
+    "How do you report security risk to the board?",
+    "Whether you can turn technical risk into business terms a board can act on.",
+    "Risk tied to business impact, a few clear measures with trends, what is being done, and the decision or funding needed. No tool names or raw alert counts.",
+    "I give the board one page and about ten minutes. I show our top five risks in business terms, like a ransomware outage stopping order processing for days, with the trend since last quarter and what we are doing about each. Then I say what I need from them, such as approval for a backup project. Counts of blocked attacks stay out; they say nothing about risk."
+   ],
+   [
+    "How would you build a security program against a framework such as the NIST Cybersecurity Framework?",
+    "Whether you use a framework as a planning tool rather than a checklist.",
+    "An honest baseline, a target profile set by business risk, gaps turned into a prioritized roadmap with owners and costs, and regular reassessment.",
+    "I start with a baseline: where we are today across the framework's functions, scored honestly with the teams who own each area. Then I agree a target with leadership based on our real risks, not top maturity everywhere. The gaps become a two-year roadmap with owners and costs. At my last company the baseline took eight weeks, and we reassessed every year."
+   ],
+   [
+    "You have a fixed budget and ten funding requests. How do you decide what gets funded?",
+    "How you set security spending by risk, not by vendor pressure.",
+    "Requests ranked by risk removed per dollar, basics like identity, backups and patching before new tools, and a written record of what stays unfunded and why.",
+    "I rank each request by how much risk it removes for the money and how soon. Basics usually win: phishing-resistant MFA, tested backups and an asset inventory come before a new detection product. Last year I funded six of eleven requests and wrote down the risk we were accepting for the other five. The CFO and CEO signed that list, so the choice was shared, not hidden."
+   ],
+   [
+    "What is your role in deciding whether and how a security incident is disclosed?",
+    "Whether you know disclosure is a joint decision with legal, not a call you make alone.",
+    "Follows the incident response plan, brings in legal early, gives accurate facts with clear unknowns, and lets legal own regulatory and contract obligations.",
+    "My job is to give legal and the executive team accurate facts fast: what happened, what data is involved and what we still do not know. Legal decides what the law and our contracts require, and we follow the incident plan we practiced. In one case I called our general counsel within the first hour, so every notice and deadline was tracked from the start. I never guess about scope in writing."
+   ],
+   [
+    "The CEO wants to skip MFA for the executive team because it slows them down. What do you do?",
+    "How you hold a security line with senior leaders without starting a fight.",
+    "Understands the friction, offers easier options like passkeys or hardware keys, explains why executives are prime targets, and records any accepted risk.",
+    "I ask what exactly is slow. Usually it is repeated prompts on a phone. I offer hardware keys or passkeys, which are faster than codes, and set up each executive in person. I also explain that executive accounts are the most targeted in the company. If the CEO still says no, I record it as an accepted risk that he signs, and it appears in the next board risk report."
+   ],
+   [
+    "At 2 a.m. you learn ransomware has encrypted several file servers. What are your first steps?",
+    "Whether you lead calmly through a major incident using the plan.",
+    "Activates the incident plan, contains the spread, protects backups, brings in legal and leadership, keeps a timed log, and avoids rushed decisions on payment.",
+    "I open the incident plan and start a call with IT, the security lead and legal. The first goal is containment: isolate affected network segments and make sure backups are offline and safe. I brief the CEO within the hour with what we know and what we don't. We call our response retainer and insurer as the plan says. Someone keeps a timed log from the start, because later decisions depend on it."
+   ],
+   [
+    "A major acquisition closes next month and you have had no access to the target's systems. How do you handle the integration?",
+    "How you manage security risk you inherit from an acquired company.",
+    "Treats the new company as untrusted at first, gets an early inventory, limits network links, checks for signs of compromise, and integrates in phases.",
+    "I treat the new company as untrusted until we know more. Before day one, I ask for their asset list, identity setup and recent incidents. On day one there is no open network link; we connect only what people need through controlled access. In the first 30 days we run a compromise assessment and fix MFA and admin accounts. Full integration follows a phased plan, not one weekend."
+   ],
+   [
+    "Your security team lost 40% of its people this year. What do you do about it?",
+    "Whether you can find and fix a people problem on your own team.",
+    "Talks to people who left and who stayed, finds causes like on-call load or pay, fixes the top ones, and tracks whether retention improves.",
+    "I read the exit notes and hold one-on-ones with everyone who stayed. In one team the cause was clear: three analysts carried all the night alerts. We tuned noisy alerts, cut volume by about half, moved to a fair on-call rotation and fixed two salaries that were below market. Over the next year we lost one person instead of five."
+   ],
+   [
+    "An auditor finds that a business unit has run unapproved cloud accounts for two years. What do you do?",
+    "How you handle shadow IT without pushing people to hide more.",
+    "Gets the accounts listed and secured first, learns why people went around the process, and fixes the process so the safe path is the easy one.",
+    "First I get the accounts listed and checked: who has access, what data is there, and whether anything is exposed publicly. Then I sit with the business unit lead to learn why they went around IT. Last time it was a six-week approval wait. We brought the accounts under central billing and logging, and cut approval for standard requests to three days."
+   ],
+   [
+    "The board asks whether you can promise the company will not be breached. How do you answer?",
+    "Whether you set honest expectations about risk with the board.",
+    "No promise of zero breaches. Explains prevention, detection and recovery, and the level of risk the company has chosen to accept.",
+    "I tell them no one can promise that, and they should be wary of anyone who does. What I can promise is that we know our most important systems, we have cut the most likely attack paths, and we can detect and recover quickly. I show our last tabletop exercise, where we restored core systems in 18 hours against a 24-hour goal. Then we discuss how much risk they are willing to accept."
+   ],
+   [
+    "Tell me about a security project you stopped. Why did you stop it?",
+    "Whether you can admit a wrong bet and move money and people elsewhere.",
+    "A specific project, the evidence it was not working, how the decision was explained, and what was done with the freed budget and time.",
+    "We spent nine months rolling out a data loss prevention tool that raised thousands of alerts a week, and almost none were real. I stopped it, explained to the CFO what we had learned and moved the rest of the budget to protecting our three most sensitive systems. That work was smaller and actually reduced risk. Stopping early saved about a year of license fees."
+   ],
+   [
+    "Describe a time you disagreed with the CIO or CTO on a security decision.",
+    "How you work with technology leaders as a peer, not a blocker.",
+    "A real disagreement, an effort to understand both goals, a solution or open escalation, and a working relationship that stayed intact.",
+    "Our CTO wanted to give developers standing admin rights in production to ship faster. I agreed speed mattered, so instead of a flat no we built just-in-time access: admin rights for two hours with approval in chat and full logging. It took one sprint to build. Deploys stayed fast, standing admin accounts dropped from 60 to 4, and he presented it at the next all-hands."
+   ],
+   [
+    "How do you build support with business leaders who see security as a cost center?",
+    "Whether you can win support from people outside security.",
+    "Learns each leader's goals, shows how security helps them, like faster customer security reviews, and shows up before problems, not only during them.",
+    "I meet each business leader once a quarter and ask about their plans, not ours. In sales, security questionnaires were slowing deals, so we built a trust page and a library of standard answers. Review time dropped from three weeks to about five days. After that, the head of sales argued for my budget at the planning meeting."
+   ],
+   [
+    "What did you change in your security program after a real incident you led?",
+    "Whether you learn from incidents and change the program, not just close tickets.",
+    "A specific incident, a blameless review, concrete changes in process or controls, and a later check that the changes held.",
+    "A vendor's stolen password let an attacker into our support system, and our review showed we had no list of third-party accounts. We built one, put every vendor login behind our single sign-on and made access expire after 90 days unless renewed. We tested it in a tabletop six months later. Keeping the review blameless meant people told us the real story, which is how we found the gap."
+   ]
+  ]
+ },
+ "enterprise-architect": {
+  "heading": "Enterprise architect questions",
+  "qs": [
+   [
+    "How do you build current-state and target-state maps, and what do you do with the gap between them?",
+    "Whether you can show where systems are, where they should go, and plan the path.",
+    "A current state checked against real data and interviews, a target tied to business strategy, and transition steps with costs and dependencies, not one big leap.",
+    "For the current state I pull from the CMDB, contracts and network data, then check it in interviews, because the CMDB is usually wrong somewhere. The target state comes from the business plan for the next three to five years. The gap becomes a roadmap of transition states, each stable on its own. At my last company we had four steps over three years, and each could pause safely if funding changed."
+   ],
+   [
+    "What is business capability mapping, and how do you use it?",
+    "Whether you understand capabilities as a stable view of what the business does.",
+    "Capabilities describe what the business does, not who or how. Used to map systems against them, spot duplication and gaps, and guide investment.",
+    "A capability map lists what the business does, like manage customer orders or pay suppliers, apart from org charts and systems. I map our applications onto it. At a retailer this showed seven systems supporting pricing and none supporting returns analysis well. That picture let leaders decide where to consolidate and where to invest without arguing about whose system was better."
+   ],
+   [
+    "What goes into an architecture decision record, and why write them at all?",
+    "Whether you document decisions so later teams know what was chosen and why.",
+    "Context, the decision, options considered, consequences and status. Kept short, stored with the work, and superseded by a new record rather than rewritten.",
+    "Each record has the context, the decision, the options we rejected and why, and the consequences we accept. Most fit on one page, and we keep them in the repository next to the code. A year later, when someone asked why we chose a message queue over direct API calls, the answer took two minutes to find. When a decision changes, a new record supersedes the old one."
+   ],
+   [
+    "How do you plan the retirement of a legacy system that many others depend on?",
+    "Whether you can retire old systems safely instead of letting them linger for years.",
+    "Maps every dependency and data flow, moves functions in stages, keeps required records accessible, sets a firm switch-off date and confirms nothing breaks.",
+    "First I map every interface, report and batch job that touches it. On one mainframe we found 140, and 30 were no longer used. We moved the rest in waves, starting with read-only consumers. Records the company had to keep went to a searchable archive. We set a switch-off date, ran the old system read-only for a month as a fallback, then turned it off and canceled the license."
+   ],
+   [
+    "Two teams want to buy different tools that do the same job. How do you handle it?",
+    "How you reduce duplication without simply overruling teams.",
+    "Learns each team's real needs, compares options against standards and total cost, picks one or a justified exception, and records the decision.",
+    "I get both teams in one room and list what each needs, separating must-haves from preferences. Usually most of it overlaps. We compare the two tools on those needs, three-year cost and fit with our identity and data standards. Last time we picked one, and the other team's key feature went into the contract terms. The choice went into a decision record so the next team didn't restart the debate."
+   ],
+   [
+    "A business leader has already signed a contract for a SaaS product that does not fit your architecture. What do you do?",
+    "How you respond when you were brought in too late.",
+    "Makes the deal work safely, covering identity, data and integration, then fixes the intake process so architecture is consulted earlier next time.",
+    "The contract is signed, so arguing about it helps no one. I focus on making it safe and useful: single sign-on, where the data lives and how it connects to our customer records. Then I talk with procurement about why we were not involved. We added a short architecture check for any software above a set dollar amount, and it takes two days, not two months."
+   ],
+   [
+    "Leadership asks for a cloud migration plan for 300 applications. Where do you start?",
+    "Whether you can sort a large portfolio into a practical migration plan.",
+    "An inventory with business value, technical condition and dependencies, a decision per app such as retire, rehost, rework or replace, and waves grouped by dependency.",
+    "I start with the inventory: owner, business value, dependencies and technical condition for each app. Then each one gets a decision: retire, keep, move as is, rework or replace with SaaS. In one portfolio about 15% could simply be retired. We grouped the rest into waves by dependency, so apps that talk to each other move together, and picked an easy first wave to build the team's skills."
+   ],
+   [
+    "A delivery team ignores the standards your architecture board approved. How do you respond?",
+    "How you enforce standards while keeping teams on your side.",
+    "Finds out why, checks whether the standard is wrong or unclear, offers help or a fair exception, and escalates only if real risk remains.",
+    "I talk to the team lead before raising it anywhere. Often the standard is unclear or the approved option is hard to use. Once a team skipped our logging standard because the library broke their build. We fixed the library, and they adopted it within a sprint. If a team simply refuses and there is real risk, I take it to the governance board with the facts, not a complaint."
+   ],
+   [
+    "Your target architecture is approved, but next year's budget is cut by a third. What do you change?",
+    "How you reprioritize a roadmap under real constraints.",
+    "Keeps the steps with the most business value and risk reduction, delays others, makes sure each step still ends in a stable state, and shows leaders the tradeoffs.",
+    "I rank each roadmap step by business value and the risk of waiting. Security fixes and the one platform losing vendor support stay. A data platform upgrade moves a year. I check that what remains still leaves us in a stable state, not half-migrated. Then I show leadership a one-page view of what we deferred and what that delay costs."
+   ],
+   [
+    "An executive wants a big new platform, and you think a smaller change would solve the problem. What do you do?",
+    "Whether you can push back with evidence on an oversized solution.",
+    "Clarifies the business problem, shows options with costs and time to value, recommends the right size, and respects the decision once it is made.",
+    "I ask what problem the platform should solve and how we will know it worked. In one case the goal was a single customer view, and a new platform was quoted at two years. I showed a second option: a shared customer data service over our existing systems, in five months. I laid out both with costs and risks. The executive chose the smaller one and kept the platform as a later option."
+   ],
+   [
+    "Tell me about an architecture decision you made that turned out to be wrong.",
+    "Whether you own mistakes and change course early.",
+    "A specific decision, the signals that it was wrong, how quickly it was corrected, and what changed in how decisions are made.",
+    "I pushed for microservices on a team of six developers. Within a year they spent more time on deployments and service calls than on features. I said so in our review, and we merged nine services back into two. Now I check team size and operational skills before recommending that pattern, and that check is part of our decision record template."
+   ],
+   [
+    "How do you explain an architecture choice to executives who are not technical?",
+    "Whether you can make architecture matter to the people who fund it.",
+    "Starts from business outcomes, uses one simple picture and cost or risk terms, avoids jargon, and states the decision needed.",
+    "I start with what the business gets: faster product launches, lower cost or less risk. I use one simple diagram with boxes they recognize, like orders and customers, not server names. For a CFO I add a three-year cost comparison. I end with the decision I need from them and by when. If they need a glossary, I have already lost them."
+   ],
+   [
+    "Describe a time you won over engineering teams who saw architecture as an ivory tower.",
+    "Whether you work alongside delivery teams instead of handing down diagrams.",
+    "Spends time with teams, solves their real problems, makes standards easy to follow with templates or tools, and earns trust through results.",
+    "When I joined, teams called the architecture board the place ideas go to die. I started joining sprint reviews and pairing on design problems. I replaced a 40-page standards document with a starter template that had logging, security and deployment built in. Within six months most new services used it, and teams started asking for reviews early."
+   ],
+   [
+    "How do you keep your technical judgment current while working mostly at a strategic level?",
+    "Whether your advice stays grounded in how systems are really built today.",
+    "Hands-on proofs of concept, regular time with engineering teams, reading incident reviews, and testing new tools before recommending them.",
+    "I keep a small hands-on habit: I build a proof of concept for any pattern before I recommend it. Last quarter I spent two weeks testing event streaming on a real workload before we added it to our standards. I also read our incident reviews every month, because they show where the architecture is weak. And I sit with one delivery team each sprint."
+   ]
+  ]
+ },
+ "vulnerability-management": {
+  "heading": "Vulnerability management questions",
+  "qs": [
+   [
+    "Why is a CVSS score not enough to decide what to patch first?",
+    "Whether you know a severity score is not the same as real risk.",
+    "CVSS rates technical severity, not likelihood. Priority also weighs known exploitation, such as CISA's KEV list, exposure, asset value and existing controls.",
+    "CVSS tells me how bad a flaw could be, not whether anyone is using it or whether it matters here. I also check whether it is on CISA's Known Exploited Vulnerabilities list, whether the system faces the internet and what the asset does for the business. A 7.5 on an exposed VPN that attackers are actively using goes ahead of a 9.8 on an isolated lab server."
+   ],
+   [
+    "How do you know your scanners cover everything they should?",
+    "Whether you tie scanning to a real asset inventory.",
+    "Compares scan results with asset sources like the CMDB, cloud accounts and endpoint agents, tracks coverage as a metric, and closes the gaps.",
+    "I compare what the scanner sees with every other source: the CMDB, cloud account inventories, endpoint agent lists and network data. Anything in one list and missing from the scan is a gap. At my last job this found about 12% of servers that were never scanned, mostly in a cloud account no one had registered. I report coverage monthly next to findings, because a clean report on half the estate means nothing."
+   ],
+   [
+    "How would you set patching timelines, or SLAs, for different kinds of vulnerabilities?",
+    "Whether you can design remediation targets that are risk-based and achievable.",
+    "Tiers based on exploitation and exposure, agreed with system owners, shortest for exploited and internet-facing flaws, then tracked and reported openly.",
+    "I set the tiers with system owners, not alone. Actively exploited flaws on internet-facing systems get the shortest window, measured in days. Critical issues inside the network get a few weeks, and lower ones fit the normal monthly cycle. We review the targets once a year against what teams actually achieve. A target no one can meet just teaches people to ignore it."
+   ],
+   [
+    "When would you accept a vulnerability exception, and what compensating controls would you expect?",
+    "Whether you manage exceptions with discipline rather than as a quiet back door.",
+    "A business reason, a named owner, an expiry date, and compensating controls like segmentation or extra monitoring, approved at the right level of risk authority.",
+    "I accept one when a patch would break something critical and no fix is ready, for example a medical device the vendor has not certified on a new version. The owner signs it, it expires in 90 days, and we add controls: the device goes on its own network segment, unneeded ports are blocked and unusual traffic raises an alert. Each exception is reviewed before it expires, never renewed by default."
+   ],
+   [
+    "A critical flaw in a widely used library is announced on Friday afternoon. What do you do?",
+    "How you respond quickly to a high-profile vulnerability.",
+    "Checks for exploitation and exposure, finds affected systems through inventories and software lists, fixes internet-facing ones first, and shares regular status.",
+    "First I read the advisory and check whether exploitation has been seen. Then I find where the library is used: scanner results, software bills of materials and code search. Internet-facing systems go first. I open one channel with the owning teams, post status every few hours and track each system to fixed or mitigated. During Log4Shell it turned up in places our inventory missed, so I also ask vendors directly."
+   ],
+   [
+    "A system owner says they cannot patch for three months because of a release freeze. How do you respond?",
+    "How you negotiate when patching clashes with business plans.",
+    "Understands the freeze, judges the real risk, looks for a small patch window or mitigations, and documents any exception with an expiry date.",
+    "I ask what the freeze protects and whether a single security patch could go in with testing. Often it can. If the flaw is actively exploited and the system faces the internet, I take it to their director with the risk spelled out. If the freeze holds, we add mitigations like a firewall rule or turning off the affected feature, and log a time-limited exception with the owner's name on it."
+   ],
+   [
+    "The monthly report shows 20,000 open findings. How do you make that number useful?",
+    "Whether you can turn a noisy backlog into focused work.",
+    "Groups findings by fix, ranks by risk, gives each team a short list with owners, and reports trends for the riskiest items instead of raw totals.",
+    "Most of those findings share a few fixes. I group them by remediation, since one browser update might close 6,000. Then I rank by exploitation, exposure and asset importance and send each team its own short list. Leaders get the trend for the riskiest findings and how long they stay open, not a raw total. A short, accurate list gets fixed; a huge one gets ignored."
+   ],
+   [
+    "A scan shows a critical finding, but the server team says it is a false positive. What do you do?",
+    "How you check findings fairly, without blind trust in tools or in teams.",
+    "Reviews the evidence together, verifies the version or setting directly, tunes the scanner if it is wrong, and records the result so it does not return.",
+    "I ask for the evidence and look at it with them: the installed package version, the configuration and how the scanner detected it. Sometimes the scanner reads a version string, but the vendor backported the fix. If it is a false positive, I mark it with the proof and tune the check so it stops coming back. If it is real, I show them exactly why, and we agree on a fix date."
+   ],
+   [
+    "You find hundreds of devices on the network that are not in any asset inventory. What do you do next?",
+    "Whether you treat unknown assets as a risk and drive ownership.",
+    "Identifies what the devices are and who owns them, scans and prioritizes them, adds them to inventory, and fixes the process that let them go unrecorded.",
+    "I identify them first: what they are, where they sit and what services they expose. Most turn out to be printers, cameras or test machines. I find owners through the network team and facilities, scan anything exposed and fix the worst issues right away. Then I add them to the inventory and work with IT so new devices are registered at setup. Unknown devices are the ones nobody patches."
+   ],
+   [
+    "A vendor has not released a patch for an actively exploited flaw in a product you rely on. What do you do?",
+    "How you manage risk when no fix exists yet.",
+    "Applies vendor workarounds, cuts exposure, adds monitoring for signs of exploitation, follows the vendor closely, and keeps risk owners informed.",
+    "I apply the vendor's published workaround if there is one and cut exposure, for example by limiting the management interface to a few IP addresses or taking it off the internet. I ask the detection team to watch for the known indicators. I check the vendor's status daily and tell the system owner and security leadership where we stand. When the patch ships, it goes in on the fastest track."
+   ],
+   [
+    "Tell me about a time you got a team that had ignored patching for months to start fixing things.",
+    "How you influence teams you do not manage.",
+    "Understands their workload, makes fixing easier with short and clear lists or automation, shares credit for progress, and escalates only when needed.",
+    "One infrastructure team had over 3,000 open findings and saw our reports as noise. I sat with their lead and learned they patched every server by hand. We helped them set up automated patching for one server group as a pilot. It worked, they extended it, and their critical findings fell by about 70% in a quarter. I made sure their director heard about it from me."
+   ],
+   [
+    "Describe a time a metric you reported turned out to be misleading.",
+    "Whether you check your own numbers and correct them openly.",
+    "A specific metric, how the flaw was found, how it was corrected and explained to leaders, and what better measure replaced it.",
+    "We reported a falling count of critical findings for three months. Then I noticed a scanner credential had expired, so many servers were scanned only from the outside and showed fewer issues. I told my manager the same day and reissued the report with a note. We added the authenticated scan success rate as a metric, so a coverage drop now shows up before it hides findings."
+   ],
+   [
+    "How do you work with the security operations and threat intelligence teams?",
+    "Whether you connect vulnerability work to real attacker activity.",
+    "Uses threat intelligence to adjust priorities, shares exposure data with operations, and agrees a fast path for flaws being exploited right now.",
+    "I meet the threat intelligence team weekly, and they tell me which flaws they see attackers using, especially against our industry. That moves items up my list. I give the security operations team a list of our unpatched exposed systems, so they can watch them closely. For urgent flaws we have an agreed playbook, so nobody has to invent the process at night."
+   ],
+   [
+    "What part of your vulnerability work have you automated, and what did it change?",
+    "Whether you cut repetitive work so your time goes to judgment calls.",
+    "A specific automation, like ticket creation or grouping findings, with a measured result and clear limits on what still needs a person.",
+    "I wrote a script that pulled scanner results, grouped them by fix and opened one ticket per team in their own queue, with the asset owner taken from the CMDB. Tickets closed themselves when the next scan showed the fix. Before that I spent about two days a month building spreadsheets. I still review exceptions and anything actively exploited by hand, because those need judgment."
+   ]
+  ]
+ },
+ "intelligence-analyst": {
+  "heading": "Intelligence analyst questions",
+  "qs": [
+   [
+    "Walk me through the intelligence cycle and where it most often breaks down.",
+    "Whether you understand the full process from requirements to feedback.",
+    "Direction, collection, processing, analysis, dissemination and feedback, with honest examples of weak points like vague requirements or missing feedback.",
+    "It starts with requirements from the decision maker, then collection, processing, analysis and production, and dissemination, with feedback closing the loop. In my experience it breaks most at the start and the end. A vague ask, like anything on threats, wastes collection effort. And without feedback you never learn whether a report helped. Now I ask every customer what decision the product will support."
+   ],
+   [
+    "How do you judge the reliability of a source and express confidence in an assessment?",
+    "Whether you separate source reliability, information credibility and analytic confidence.",
+    "Rates the source's track record and access apart from the information itself, seeks independent corroboration, and states a confidence level with the reasons.",
+    "I judge the source and the information separately. A source with a strong track record can still pass on something secondhand. I look for corroboration from independent sources, not three outlets repeating one report. Then I state confidence as low, moderate or high and say why, for example: moderate, because two independent sources agree but we lack direct access."
+   ],
+   [
+    "What analytic biases do you watch for in your own work, and how do you guard against them?",
+    "Whether you know common thinking traps and use methods to check them.",
+    "Names biases like confirmation bias, anchoring and mirror imaging, and uses methods such as competing hypotheses, a key assumptions check or a devil's advocate.",
+    "Confirmation bias is the one I watch most, along with anchoring on the first explanation. Once I was sure an outage was an attack. I ran a quick analysis of competing hypotheses, listing the evidence against each option, and the data fit a failed update better. Now I do a key assumptions check on any assessment that goes to leadership, and I ask a colleague to argue the other side."
+   ],
+   [
+    "How do you write a bottom-line-up-front assessment for a senior decision maker?",
+    "Whether you can lead with the judgment and keep it brief.",
+    "Opens with the key judgment and confidence, then evidence, implications and gaps, in plain language with no buildup.",
+    "The first sentence is the judgment and how confident I am, for example: we assess with moderate confidence that the group will target our payment systems in the next quarter. Next come two or three lines of evidence, then what it means for us and what we recommend. Gaps go at the end. If the reader stops after the first paragraph, they still have what they need."
+   ],
+   [
+    "A senior leader asks you to make an assessment sound more certain than the evidence supports. What do you do?",
+    "Whether you protect analytic integrity under pressure.",
+    "Keeps the stated confidence, explains what the evidence does and does not show, and offers what would raise confidence and how soon.",
+    "I explain what the evidence shows and why I set confidence at that level. I don't change the judgment to please anyone, but I do offer something useful: what collection could raise confidence and how soon. Once a director wanted a firm yes on a supplier risk. I kept moderate confidence, added the two checks that would settle it, and we had an answer in a week."
+   ],
+   [
+    "You receive a single dramatic report that an adversary is planning a major move. How do you handle it?",
+    "How you avoid overreacting to single-source reporting.",
+    "Checks the source and its access, seeks corroboration, flags it promptly with clear caveats if urgent, and updates as new information arrives.",
+    "I first check where it came from and whether the source could know this. Then I look for anything that confirms or contradicts it. If the stakes are high, I don't sit on it. I send a short note saying it is single-source and unconfirmed, with low confidence, and what we are doing to check it. Two days later I send an update, even if the answer is that it was wrong."
+   ],
+   [
+    "Two reliable sources give you conflicting information. How do you write it up?",
+    "Whether you present disagreement honestly instead of hiding it.",
+    "Lays out both accounts, weighs each source's access and record, says which is more likely and why, and names what would resolve it.",
+    "I don't average them or quietly pick one. I show both accounts, what access each source has and how each has performed before. Then I give my judgment on which is more likely and at what confidence. I also say what information would settle it. Decision makers can handle uncertainty; they get misled when it is hidden."
+   ],
+   [
+    "A business unit asks for intelligence support, but the request is vague. What do you do?",
+    "Whether you turn vague asks into clear intelligence requirements.",
+    "Meets the requester, learns the decision they face and its timing, writes specific questions, and agrees on format and deadline.",
+    "I ask for 20 minutes and focus on one question: what decision are you trying to make, and by when? A request for everything on a region became three questions about staff safety, a key supplier and local permits before a facility opening in six weeks. I wrote those down, they confirmed them, and the final product was four pages instead of forty."
+   ],
+   [
+    "During a cyber incident, leaders want to know within the hour who is behind the attack. How do you respond?",
+    "How you handle pressure for fast attribution.",
+    "Shares what is known with honest confidence, separates observed activity from attribution, focuses on what helps the response now, and updates as evidence builds.",
+    "I tell them what we can say now: the tools and techniques we see and whether they resemble known groups, at low confidence. I explain that firm attribution takes longer and is rarely needed to contain the attack. What helps right away is how the attacker got in and what that kind of attacker usually does next. I give an update every few hours as evidence builds."
+   ],
+   [
+    "You discover that a key judgment in an assessment you sent last week was wrong. What do you do?",
+    "Whether you correct errors quickly and openly.",
+    "Tells readers promptly, issues a clear correction with what changed and why, checks the effect on decisions, and learns from the cause.",
+    "I tell my manager first, then send a correction to everyone who got the original, the same day if possible. It says what changed, why, and whether it affects any decision they made. Once I had misread a date in a source document, which shifted a timeline by a month. The correction took ten minutes to write. Leaving it uncorrected would have cost us credibility."
+   ],
+   [
+    "Tell me about an assessment you wrote that changed a decision.",
+    "Whether your work has real impact and you can show it.",
+    "A specific product, the decision it supported, how it was delivered and received, and the outcome, including what was learned.",
+    "I assessed the risk of a planned staff trip to a city with rising unrest. My judgment, at moderate confidence, was that protests around an upcoming election were likely to disrupt travel. Leadership moved the trip by three weeks and set up a check-in plan. Protests did close roads around the original dates. The feedback was that the one-page format made the decision easy."
+   ],
+   [
+    "How do you handle sensitive or restricted information in your daily work?",
+    "Whether you follow handling rules and need-to-know without exception.",
+    "Follows handling rules strictly, shares only on a need-to-know basis, uses approved systems, reports mistakes at once, and writes releasable versions when needed.",
+    "I treat handling rules as part of the job, not paperwork. I share only with people who need the information and are approved for it, and only on approved systems. When I write for a wider audience, I produce a version without sensitive sources. Once I noticed a file shared to the wrong folder, and I reported it right away so it could be fixed. Speed matters more than embarrassment."
+   ],
+   [
+    "Describe a time a colleague challenged your analysis. How did you respond?",
+    "Whether you welcome peer review and change your view when the evidence warrants it.",
+    "Listens without getting defensive, rechecks evidence and assumptions, changes or keeps the judgment for stated reasons, and credits the challenge.",
+    "A colleague said I had leaned too heavily on one forum post in an assessment about a ransomware group. I went back and found she was right: two other sources I cited traced back to that same post. I cut my confidence from moderate to low and rewrote the key judgment. Now I trace where each source got its information before I count it as corroboration."
+   ],
+   [
+    "How do you keep up with the threats or the region you cover?",
+    "Whether you maintain expertise with a steady, structured routine.",
+    "A regular routine of trusted and primary sources, peer networks and information-sharing groups, plus a habit of reviewing past judgments.",
+    "I start each day with a set list of sources and spend about 30 minutes on them, logging anything relevant. Each week I read one longer piece of primary material, like a court filing or a detailed technical report. I'm active in an industry information-sharing group, which often gives early warning. Once a quarter I review my old judgments to see which held up and why."
+   ]
+  ]
+ },
+ "fund-accountant": {
+  "heading": "Fund accountant questions",
+  "qs": [
+   [
+    "Walk me through the steps you follow to calculate a fund's daily NAV.",
+    "Whether you know the NAV process from start to finish.",
+    "Trades captured and matched, portfolio priced, income and expenses accrued, cash and positions reconciled, NAV movement checked against a benchmark, then review and sign-off.",
+    "I start by checking that all trades are booked and match the broker and custodian. Then I price the portfolio from approved sources, book income and expense accruals, and reconcile cash and positions. I divide net assets by shares outstanding and compare the move to the benchmark. If a fund moves 1.5% when its index moved 0.2%, I find out why before release."
+   ],
+   [
+    "How do you accrue management fees and other fund expenses, and how do you check the accruals are right?",
+    "Whether you understand expense accruals and how they affect NAV.",
+    "Daily accruals from the fee terms in the fund documents, budgets for fixed costs, and true-ups when invoices arrive, with every variance explained.",
+    "I accrue management fees daily from the rate and basis in the fund documents, usually net assets. For audit, legal and admin fees I set an annual budget and accrue it evenly. When an invoice arrives I true up and explain any gap. Last year a legal invoice came in $40,000 over budget, so I flagged it to the controller and we booked the true-up with a clear note."
+   ],
+   [
+    "How do you price a security that rarely trades, and what do you do when a price looks stale?",
+    "Whether you follow the valuation policy for hard-to-value assets.",
+    "Daily stale price checks, a second source or broker quote, escalation to the pricing team or valuation committee under the policy, and the decision documented.",
+    "We run a stale price report every day. If a bond shows the same price for five days, I check a second vendor and ask for a broker quote. If the sources disagree, I do not pick one myself. I send it to the pricing team with the evidence, and the valuation committee decides under the fund's policy. I keep the support on file for the auditors."
+   ],
+   [
+    "How does a capital call work in a private equity fund, and how do you record it?",
+    "Whether you understand capital calls and distributions in private funds.",
+    "Calls split by each investor's commitment under the partnership agreement, receivables until cash arrives, called and unfunded capital tracked, distributions per the waterfall.",
+    "The manager decides how much to call, and each investor pays their share based on commitments in the limited partnership agreement. I prepare the notices, book a receivable for each investor and clear it when the cash arrives. Then I update called and unfunded commitments. Distributions go the other way and follow the waterfall, which I check with the controller before anything is sent."
+   ],
+   [
+    "Fifteen minutes before the NAV deadline, cash at the custodian does not match your books by $250,000. What do you do?",
+    "How you handle a break under time pressure.",
+    "A fast check of likely causes, an early and honest call to the supervisor about a possible delay, no plug entries, and a root-cause fix afterward.",
+    "I look first at the usual causes: an unsettled trade, a late wire or a fee the custodian took. If I cannot find it in ten minutes, I tell my supervisor and we decide together whether to delay the NAV. I never book a plug to make it balance. Once this turned out to be a subscription wire posted to the wrong account, and we fixed it with the custodian that day."
+   ],
+   [
+    "The portfolio manager disagrees with the price you used for a thinly traded bond and asks you to use their number. How do you respond?",
+    "Your independence from the investment team on valuation.",
+    "Polite but firm: ask for the support behind their price, apply the valuation policy, take it to the pricing committee, and never change a price just because someone asked.",
+    "I ask what their price is based on, like a recent trade or a dealer quote, because they may know something useful. But I cannot change a price on their word alone. I send their evidence and ours to the valuation committee under the pricing policy. Last year a manager's quote turned out to be right, and the committee approved it with documentation. That is how it should work."
+   ],
+   [
+    "You find an error in a NAV that was published three days ago. What do you do?",
+    "How you handle NAV errors and their correction.",
+    "Immediate escalation, the impact measured per share for each day, the fund's NAV error policy followed on restating and compensation, and a control added.",
+    "I tell my supervisor straight away, before I try to fix anything. Then I recalculate each affected day to measure the impact per share. The fund's NAV error policy decides whether we restate and compensate investors, so I give the controller the numbers they need. One time it was a dividend booked twice, worth 0.02% of NAV. We added a duplicate check to the daily review."
+   ],
+   [
+    "A company in the fund announces a spin-off, and the new shares are not in the pricing feed on the effective date. How do you handle it?",
+    "Whether you can process corporate actions correctly.",
+    "Terms read from the source notice, new position and cost basis split booked, a price from an approved source, and the position reconciled to the custodian.",
+    "I read the terms in the custodian notice and the company announcement, so I know the ratio and the dates. I book the new shares and split the cost basis using our agreed method. If the feed has no price, I ask the pricing team for an approved source, often the when-issued price. Then I reconcile the new position to the custodian the next morning."
+   ],
+   [
+    "The auditors will test the fund's Level 3 investments next month. How do you prepare?",
+    "How you organize audit support for fair value measurements.",
+    "One schedule per asset with method, key inputs, sources and committee approval, checked with the valuation team and ready before the request arrives.",
+    "I build one schedule with every Level 3 position, its valuation method, the key inputs and where each input came from. I attach the committee minutes and any third-party valuation reports. Then I check with the valuation team that the inputs match their models. For a fund with 20 private holdings this takes a few days, so I start well before the request lands."
+   ],
+   [
+    "You notice one investor is charged the standard management fee, but a side letter gives them a lower rate. What do you do?",
+    "Whether you check fees against the fund documents and correct errors properly.",
+    "The side letter read and confirmed, the overcharge calculated for each period, the controller informed, and the correction made as the documents and policy require.",
+    "I read the side letter and confirm the rate and the start date. Then I calculate the difference for every period since it applied, which was about $18,000 in one case. I took it to the controller with the calculation, and we agreed the correction and a credit to the investor's capital account. I also added side letter terms to our fee setup checklist."
+   ],
+   [
+    "Tell me about a month end when several NAVs were due and one fund had a serious problem. How did you manage it?",
+    "How you prioritize when deadlines collide.",
+    "Clean funds finished first, early warning to the supervisor about the fund at risk, help requested where useful, and no review steps skipped to save time.",
+    "Last March I had five funds due, and one had a $300,000 unexplained break in the morning. I finished the four clean funds first so they went out on time. I told my supervisor at 10 a.m. that the fifth might be late. A colleague helped me trace it to a missed FX trade. That fund went out two hours late but correct, and the client knew in advance."
+   ],
+   [
+    "Tell me about a manual process in fund accounting that you automated or improved.",
+    "Whether you improve processes instead of just repeating them.",
+    "A specific process, what changed, how it was tested and controlled before use, and a measured result such as time saved or fewer errors.",
+    "We reconciled cash for 30 funds by hand in Excel every morning. I built a macro that matched the custodian files to our ledger and listed only the breaks. We ran both methods side by side for a month before switching. It cut the task from three hours to about 40 minutes, and the controller approved it as part of our procedures."
+   ],
+   [
+    "Describe a time you found an error made by a colleague or another team. How did you handle it?",
+    "How you raise problems without blame.",
+    "The facts checked first, a private and factual conversation, escalation when clients are affected, and a process fix rather than blame.",
+    "A colleague had set up a new share class with the wrong fee rate. I checked my numbers twice, then showed her privately with the fund documents. She fixed it that day and we told our supervisor together, since it had been live for two NAVs. The impact was small. We then added a second reviewer to every new share class setup."
+   ],
+   [
+    "What draws you to fund accounting rather than corporate accounting or audit?",
+    "Whether you understand and want the daily rhythm of fund work.",
+    "A real interest in markets and investors, comfort with daily deadlines and detail, and an honest view of the routine parts of the job.",
+    "I spent two years in audit, and the funds were the files I liked most. Every number connects to a market price or an investor's money. I like that the work has a daily result: the NAV is right and on time, or it is not. I know much of it is reconciliation, and I am fine with that. That is where the errors get caught."
+   ]
+  ]
+ },
+ "investor-relations": {
+  "heading": "Investor relations questions",
+  "qs": [
+   [
+    "How do you prepare for a quarterly earnings call?",
+    "Whether you can run the full earnings process.",
+    "A timeline covering the release, script, Q&A with the hard questions, finance and legal review, rehearsals with executives, and a review after the call.",
+    "I start about four weeks out with a timeline. I draft the press release and script with finance, and build a Q&A document with the 40 or so questions I expect, including the hard ones. Legal and the disclosure committee review everything. We rehearse twice with the CEO and CFO. After the call I review the questions we got and what the analysts wrote."
+   ],
+   [
+    "What does Regulation FD mean for your daily work?",
+    "Whether you understand the rule against selective disclosure.",
+    "Material nonpublic information goes to everyone at once through public channels, never to some investors first, with care in private meetings and legal involved if something slips.",
+    "In simple terms, we cannot share material nonpublic information with some investors or analysts before the public. So in one-on-one meetings I only discuss what is already public. Someone from IR joins every meeting with executives. If something material slips out, I go to legal right away, because the rule expects prompt public disclosure."
+   ],
+   [
+    "How do you think about whether a company should give guidance, and how it should be framed?",
+    "Whether you understand the trade-offs of issuing guidance.",
+    "Transparency weighed against the cost of missing, ranges with stated assumptions, the same metrics each quarter, and the decision left to the CFO and board with legal review.",
+    "Guidance helps investors model the business, but missing it costs trust. I prefer ranges built on assumptions the finance team believes in, stated clearly. I want the same metrics every quarter, so we never look like we are hiding a weak one. The final call belongs to the CFO and the board, with legal reviewing the wording and the forward-looking statement language."
+   ],
+   [
+    "What is your process when a short seller publishes a report about your company?",
+    "Whether you respond together with legal instead of reacting alone.",
+    "A fast review of each claim with legal, the CFO and communications, no comment before that, one approved message if any, and the same words to every investor.",
+    "First I read the full report and list each claim. Then legal, the CFO and our communications lead meet the same day to decide whether we respond and what we can say. I do not comment to anyone before that. If we respond, it is one approved public statement, and every investor call uses the same words. I also log what investors ask, so management sees what worries them."
+   ],
+   [
+    "During a one-on-one meeting, your CFO starts to hint at next quarter's numbers before they are public. What do you do?",
+    "Whether you would act in the moment to prevent selective disclosure.",
+    "A polite interruption that steers back to public information, a private talk with the CFO afterward, and a same-day call to legal if anything material was said.",
+    "I step in politely and steer us back to what we said on the call. After the meeting I talk with the CFO privately. If I think anything material was said, I call our general counsel that day, because we may need to make it public. It happened once with a hint about margins. Legal judged it not material, but we agreed on a short prep before every meeting."
+   ],
+   [
+    "An analyst's model is well above your guidance, and consensus is drifting up. What do you do?",
+    "How you manage expectations without giving out new information.",
+    "Pointing back to public guidance and disclosed assumptions, never confirming or correcting numbers privately, and raising with the CFO and legal whether a public update is needed.",
+    "I can point the analyst to what we said publicly, like our guidance range and the assumptions behind it. I cannot tell them their number is too high, because that would be private guidance. If many analysts are far from our view, I raise it with the CFO and legal, and they decide whether a public update is needed. That keeps everyone on the same information."
+   ],
+   [
+    "The company will miss its guidance this quarter. How do you prepare investors and management?",
+    "How you deliver bad news clearly and consistently.",
+    "Timing and disclosure agreed with finance and legal, a plain reason and plan, prepared answers to hard questions, and one message for all investors.",
+    "I work with the CFO and legal on how and when to disclose it, in a press release or on the earnings call. Then we write a plain reason for the miss and what management is doing about it. I prepare answers to the hardest questions, like whether this is a one-off. On the day, everyone hears the same story. In my experience, investors take a miss better than a vague explanation."
+   ],
+   [
+    "A journalist calls you about a rumor that the company is being acquired. What do you say?",
+    "Whether you follow the company's policy on rumors and the media.",
+    "No comment on market rumors under company policy, no off-the-record hints, and a quick handoff to communications and legal.",
+    "I follow our policy, which is that we do not comment on market rumors or speculation. I say that and nothing else, even off the record. Then I tell our communications lead and legal about the call right away, because unusual interest can mean a leak. Whether we say anything more is their decision, not mine."
+   ],
+   [
+    "Sell-side coverage of your company dropped from eight analysts to five this year. What would you do?",
+    "How you think about analyst coverage and reaching new investors.",
+    "Finding out why, serving the remaining analysts well, reaching new brokers through conferences and non-deal roadshows, and tracking the results.",
+    "I would first ask the analysts who dropped us why, since it is often a broker cutting costs. I make sure the five who stay get fast answers and good access. Then I look at conferences and non-deal roadshows with brokers that cover our peers, to win new coverage. I track it each quarter, along with whether our shareholder base is getting broader."
+   ],
+   [
+    "The CEO wants to add a new adjusted profit measure to the earnings release. What do you check?",
+    "Whether you handle non-GAAP measures with care.",
+    "A clear reason for the measure, a reconciliation to the closest GAAP figure, no more weight than GAAP, consistent use over time, and review by finance and legal.",
+    "I ask why we need it and whether investors already ask for it. Then I make sure finance reconciles it to the nearest GAAP number in the release, and that it does not get more weight than GAAP. We should report it the same way every quarter. Legal and the audit committee review it first. A new metric that shows up in a bad quarter loses trust fast."
+   ],
+   [
+    "Tell me about an investor day or roadshow you organized. What would you do differently?",
+    "How you plan large investor events and learn from them.",
+    "Concrete scope and logistics, coordination of executives and content, legal review of slides, feedback gathered, and an honest lesson learned.",
+    "I organized our first investor day, with 120 guests and a webcast. I worked with five business leaders on their slides and ran two rehearsals. Legal reviewed every slide for forward-looking statements. Feedback was good, but the sessions ran 40 minutes late and the Q&A got cut short. Next time I would book fewer speakers and protect the Q&A time."
+   ],
+   [
+    "Tell me about a time you had to tell senior management something investors were saying that they did not want to hear.",
+    "Whether you bring honest investor feedback back to leadership.",
+    "Specific feedback delivered with evidence and without softening, plus a practical suggestion for what management could say or show differently.",
+    "After a roadshow, 12 of 15 investors told me our capital spending plan was unclear. The CEO thought it was well explained. I put their questions in a one-page note, without names, and showed how often the topic came up. He agreed to add a capital allocation slide to the next earnings deck, and the questions dropped off."
+   ],
+   [
+    "Describe a time you had to explain a complicated accounting change or one-off item to investors.",
+    "Whether you can make complex financial topics clear.",
+    "Plain language, a simple bridge from old to new numbers agreed with finance, material published for everyone, and a check that people understood.",
+    "When we adopted a new revenue accounting standard, reported revenue shifted between quarters. I worked with the controller on a simple bridge showing old and new numbers side by side. We published it with the release and held a short call for analysts. Then I checked the updated models, and most were right. Only two analysts needed a follow-up call."
+   ],
+   [
+    "Why investor relations, and which background do you bring to it: finance, communications or the sell side?",
+    "Whether you understand that IR sits between finance and communication.",
+    "A clear reason for choosing IR, an honest view of their own strengths and gaps, and how they cover the weaker side.",
+    "I spent six years as a sell-side analyst, so I know what investors need to build a model. I have less experience with media and crisis communication, so I work closely with our communications team and took a disclosure training course. What I like about IR is being the person who explains the company honestly to the people who own it."
+   ]
+  ]
+ },
+ "medical-writer": {
+  "heading": "Medical writer questions",
+  "qs": [
+   [
+    "How is a clinical study report organized, in general terms?",
+    "Whether you know the ICH E3 structure for clinical study reports.",
+    "Synopsis, ethics and investigators, study plan and methods, study patients, efficacy and safety results, discussion and conclusions, then tables and appendices.",
+    "Most sponsors follow ICH E3. It starts with a title page and synopsis, then ethics, the investigators and the study plan. Next come the methods, the patients who took part, efficacy results and safety results, then discussion and conclusions. Tables, listings and appendices such as the protocol follow. For my last CSR I built the shell from the sponsor template before the data arrived."
+   ],
+   [
+    "How do you write a plain-language summary of a trial's results for patients?",
+    "Whether you can write for a lay reader without changing the meaning.",
+    "Short sentences and everyday words, benefits and harms given equal weight, no promotion, a reading level check, and review by lay readers where possible.",
+    "I write for someone with no science background. I use short sentences, explain words like placebo, and show numbers as plain counts, like 12 out of 100 people. I report side effects with the same weight as benefits, and I never promote the drug. Then I check the reading level and, when possible, ask a patient panel to read it before review."
+   ],
+   [
+    "How do you handle referencing and avoid plagiarism in your documents?",
+    "Whether you cite sources correctly and write in your own words.",
+    "A reference manager, every claim checked against the primary source, the required citation style, own wording or marked quotes, and a similarity check before submission.",
+    "I keep every source in a reference manager and check each claim against the original paper, not someone else's summary of it. I write in my own words, and when exact wording matters I quote and cite it. Before submission I run a similarity check. Once it flagged a methods paragraph I had paraphrased too closely, so I rewrote it from scratch."
+   ],
+   [
+    "How do you work with medical, legal and regulatory review on promotional or educational material?",
+    "Whether you understand the review process and why it exists.",
+    "Each claim annotated to its reference, respect for each reviewer's role, every comment answered and tracked, and no changes after approval without a new review.",
+    "I annotate every claim with its reference and the exact page, so reviewers can check it fast. Medical checks the science, legal the wording and regulatory the label. I answer each comment in the review system, not in side emails. After approval, nothing changes without a new review. On my last project this kept us to two review rounds."
+   ],
+   [
+    "The primary endpoint was not met, but the study team wants the discussion to focus on a positive secondary endpoint. What do you do?",
+    "Whether you report results honestly when the team wants a better story.",
+    "The primary result stated plainly and first, secondary results described with their limits, and any disagreement taken to the medical lead and statistician.",
+    "I write the primary result first and plainly: the study did not meet its primary endpoint. The secondary result can go in, described as a secondary finding with its limits. If the team pushes for more, I take it to the medical lead and the statistician and refer to the protocol. Readers need to see what was planned and what was found."
+   ],
+   [
+    "Two reviewers give you opposite comments on the same paragraph. How do you resolve it?",
+    "How you handle conflicting feedback without guessing.",
+    "Both reviewers brought together or the document owner asked to decide, a choice based on data and guidance, and the decision recorded.",
+    "I do not quietly pick one comment. I send both comments to both reviewers in one message and suggest wording that might work for each. If they still disagree, I set up a 15-minute call or ask the document owner to decide. I record the decision in the comment log, so the next review round does not reopen it."
+   ],
+   [
+    "A key author sends comments a week after the deadline, and the submission date is fixed. What do you do?",
+    "How you protect a timeline while respecting the authors.",
+    "Quick sorting of the comments, accuracy fixes always taken in, a clear talk with the lead about what else fits, and the rest recorded for later.",
+    "I read the comments the same day and sort them into accuracy fixes, important clarifications and style. Accuracy fixes go in no matter what. For the rest, I tell the project lead what we can do without missing the date. On a recent clinical summary, 30 late comments came in and 8 really mattered. We took those and logged the rest for the next version."
+   ],
+   [
+    "You notice a number in the draft report text does not match the statistical tables. What do you do?",
+    "Your attention to data accuracy and checking against the source.",
+    "The source tables checked first, the text corrected or a query sent to the statistician, and the whole document searched for the same error.",
+    "I check the number against the final tables and listings, because they are the source. If my text is wrong, I fix it and search the whole document for the same number. If the tables look wrong, I query the statistician with the table number. Once a patient count was off by 2 in the synopsis, and we found the same error in three other places."
+   ],
+   [
+    "A sales manager asks you to write a slide saying the drug is safer than a competitor's, based on one small study. How do you respond?",
+    "Whether you keep claims within the evidence and the rules.",
+    "A clear explanation that the claim needs strong evidence and formal review, accurate alternative wording offered, and no unsupported claims written.",
+    "I explain that a comparative safety claim needs strong evidence, usually head-to-head data, and one small study is not enough. I offer wording that describes what the study actually found, with its limits. Anything I write goes through medical, legal and regulatory review anyway. I would rather have that talk now than see the slide rejected a week before the meeting."
+   ],
+   [
+    "You are asked to write a training module for nurses in a therapy area you know little about. How do you start?",
+    "How you get up to speed on unfamiliar science.",
+    "Reading from reliable sources such as guidelines and the label, time with experts, learning objectives set first, and review by a clinical expert.",
+    "I start with recent review articles, treatment guidelines and the product label. Then I book an hour with a medical science liaison or a nurse who works in the area. I write the learning objectives before the content, so I know what nurses need to do differently. A clinical expert reviews the draft. For an oncology module last year, this took about a week before I wrote a word."
+   ],
+   [
+    "Tell me about a document you wrote under a tight regulatory timeline. How did you manage it?",
+    "How you plan and deliver under submission pressure.",
+    "Key messages agreed early, fixed review rounds and comment deadlines, risks raised as soon as they appear, and a concrete outcome.",
+    "I wrote a clinical summary for a submission with six weeks to go. I agreed the key messages with the team in week one, so reviews were about accuracy, not direction. I set two review rounds with fixed dates and a comment deadline. When the safety data came late, I told the lead the same day and drafted around placeholders. We submitted on time."
+   ],
+   [
+    "Describe a time you pushed back on an expert's wording.",
+    "Whether you can disagree with senior experts respectfully.",
+    "A concern based on accuracy, guidance or clarity, a suggested alternative, and respect for the expert's final say on the science.",
+    "A principal investigator wanted to call a result a breakthrough in an abstract. I explained that the journal and our policy avoid that kind of word, and that the data speak better on their own. I offered a sentence with the actual effect size, and he agreed. On the science I defer to the expert, but on clear and fair wording it is my job to speak up."
+   ],
+   [
+    "Tell me about a month when several of your documents were due at once. How did you organize your work?",
+    "How you plan and prioritize several documents at the same time.",
+    "All deadlines and review dates in one plan, protected writing time, early warning when something slips, and honest talk about capacity.",
+    "Last spring I had a study report, a manuscript and a congress poster due within four weeks. I put every review date in one calendar and worked backward. I kept mornings for writing and afternoons for reviews and calls. When the poster data came late, I told the lead and moved the manuscript by a week with the authors' agreement. Everything else landed on time."
+   ],
+   [
+    "Why medical writing, and which kinds of documents do you most want to write?",
+    "Whether your interest fits the type of medical writing this role covers.",
+    "A specific reason, an honest preference among regulatory, publication and education work, and willingness to do the parts they enjoy less.",
+    "I did a PhD in immunology and enjoyed writing the papers more than running the experiments. I like regulatory documents most, because the structure is strict and accuracy matters. I am also happy to write patient materials, since turning a complex result into plain words is a skill I want to keep. Formatting and QC are not exciting, but I do them carefully."
+   ]
+  ]
+ },
+ "bioinformatics": {
+  "heading": "Bioinformatics scientist questions",
+  "qs": [
+   [
+    "Walk me through the main steps of a bulk RNA-seq differential expression analysis.",
+    "Whether you know the standard RNA-seq workflow.",
+    "Read QC, alignment or pseudoalignment, gene counts, sample-level QC, normalization, a count-based model with covariates, multiple testing correction, then interpretation.",
+    "I start with read QC and trim adapters if needed. Then I align to the reference genome or use pseudoalignment and get gene-level counts. I check the samples with PCA and correlation plots to find outliers. For differential expression I use a count-based model like DESeq2 or edgeR, with known covariates in the design. Then I correct for multiple testing and look at pathways."
+   ],
+   [
+    "What are batch effects, and how do you deal with them?",
+    "Whether you can spot and handle technical variation in data.",
+    "Technical variation explained, prevention through study design, detection with PCA, and batch included in the model rather than blindly removed.",
+    "Batch effects are differences caused by processing, like the date, the lab or the sequencing run, not by biology. The best fix is design: spread conditions across batches. To find them I color a PCA plot by batch. If batch is known, I include it as a covariate in the model. Once all treated samples ran on one day, so batch and treatment could not be separated, and I told the team so."
+   ],
+   [
+    "You test 20,000 genes for differential expression. Why can't you use p < 0.05 directly?",
+    "Whether you understand multiple testing correction.",
+    "Many tests produce many false positives by chance, so the false discovery rate is controlled, for example with Benjamini-Hochberg, and effect size is also considered.",
+    "If I test 20,000 genes at 0.05, I expect about 1,000 to look significant by chance even if nothing changed. So I control the false discovery rate, usually with Benjamini-Hochberg, and report adjusted p-values. I also look at effect size, because a tiny change can be significant with enough samples and still not matter biologically."
+   ],
+   [
+    "How do you make an analysis pipeline reproducible?",
+    "Whether you build pipelines that others can rerun and trust.",
+    "Version control with review, a workflow manager, pinned software in containers or environments, recorded reference versions and parameters, and automated tests.",
+    "All code goes in Git, with reviewed pull requests. I write the pipeline in a workflow manager such as Nextflow or Snakemake. Software runs in containers with pinned versions, and every run records the genome and annotation versions. Small test data runs automatically on each change. Last year a colleague reran a two-year-old analysis and got the same results."
+   ],
+   [
+    "A biologist asks you to remove three samples because they do not show the expected result. What do you do?",
+    "Whether you protect the integrity of an analysis under pressure.",
+    "Samples removed only for documented technical reasons, QC checked objectively, results shown both ways if unclear, and every exclusion recorded.",
+    "I explain that I can only remove samples for a technical reason, like low read depth or a failed QC metric. I check the QC for those three samples. If they pass, they stay. If the case is unclear, I run the analysis with and without them and show both results. I write down every exclusion and the reason in the analysis report."
+   ],
+   [
+    "Your differential expression results show thousands of significant genes, far more than expected. What do you check?",
+    "How you debug a surprising result before believing it.",
+    "Sample labels and metadata, the design matrix, confounding with batch or depth, normalization and outliers, all checked before anything is reported.",
+    "First I check that the sample labels and metadata are right, since one swapped label can do this. Then I look at the design matrix and whether condition is confounded with batch or sequencing depth. I check the PCA for outliers. Once this happened because the control samples came from a different tissue prep. We reported it as a confound, not a finding."
+   ],
+   [
+    "A scientist asks for a quick single-cell analysis for a leadership meeting in two days. How do you handle it?",
+    "How you balance speed with honest caveats.",
+    "Scope narrowed to the one question that matters, a standard workflow, limitations stated on the slides, and a proper analysis planned afterward.",
+    "I ask what single question leadership needs answered and focus on that. I use our standard workflow for QC, clustering and cell type annotation, with no custom steps. On every slide I note that the analysis is preliminary and what has not been checked. Then I schedule the full analysis for the next few weeks. A fast answer is fine if everyone knows how firm it is."
+   ],
+   [
+    "A pipeline that ran fine last month now gives different results on the same data. What do you do?",
+    "Whether you can trace changes in code, software or reference data.",
+    "Code, software versions, references and parameters compared using logs and version control, the cause found and fixed, and a check added.",
+    "I compare the run logs and the Git history for both runs. Common causes are a changed package version, a new annotation release or a different parameter. In one case a container was rebuilt without a pinned version and a tool updated silently. I pinned it, reran both jobs to confirm, and added a check that fails if versions change without review."
+   ],
+   [
+    "A collaborator sends you patient sequencing data to your personal email. What do you do?",
+    "Whether you follow data protection rules for patient data.",
+    "Files not opened or forwarded, a switch to the approved secure transfer under a data agreement, and the privacy or compliance team informed per the SOP.",
+    "I do not open or forward the files. I reply that we need to use the approved secure transfer and confirm a data agreement covers it. Then I tell our data protection or compliance team, as our SOP says, because it may need to be logged. It is not about blame. Patient data has rules, and they protect both the patients and the project."
+   ],
+   [
+    "Your team wants to use a newly published tool that claims better accuracy. How do you decide whether to adopt it?",
+    "Whether you evaluate methods with evidence before using them.",
+    "A benchmark against the current tool on data with a known answer, checks on maintenance and license, and a team decision before switching.",
+    "I read the paper and check whether its benchmarks look like our data. Then I run it next to our current tool on a dataset where we know the answer, like spike-in controls. I also check whether it is maintained and whether the license allows our use. If it is clearly better, I propose the switch with the results and update the pipeline under version control."
+   ],
+   [
+    "Tell me about a time you explained a statistical result to biologists who disagreed with it.",
+    "Whether you communicate analysis clearly to non-specialists.",
+    "A plain explanation with simple plots, real listening to their biological knowledge, a joint check of the data, and an honest outcome.",
+    "A team expected a gene to go up, and my results showed no change. I showed them the normalized counts per sample in a simple plot, so they could see the spread. They pointed out that two samples came from a different time point, which I had missed in the metadata. We fixed the design and reran. The gene still did not change, but now everyone trusted the result."
+   ],
+   [
+    "Describe a piece of code you wrote that other people now rely on.",
+    "Whether you write maintainable code for a team, not just for yourself.",
+    "A specific tool with documentation, tests and code review, evidence that others use it, and a plan for maintaining it.",
+    "I wrote an internal package that builds QC reports for RNA-seq runs. I added documentation, example data and tests, and every change goes through a pull request. Now about 15 scientists use it for each new dataset. When someone finds a bug, they open an issue and we fix it in a tagged release, so older reports stay reproducible."
+   ],
+   [
+    "Tell me about an analysis that turned out to be wrong. What happened, and what did you change?",
+    "Whether you own mistakes and improve your process.",
+    "An honest account of the error, a quick correction and clear communication, and a concrete change that prevents it from happening again.",
+    "I once used the wrong genome annotation version for a variant analysis, and two gene names were off. A colleague noticed a week after I shared the results. I told the team the same day, reran everything and sent a corrected report listing the changes. Since then my pipelines write the reference version into every output, and the report fails if it is missing."
+   ],
+   [
+    "Why do you want to work on drug discovery data rather than academic research?",
+    "Whether you understand and want the pace and goals of industry work.",
+    "Motivation tied to real medicines, comfort with team priorities and deadlines, and an honest view of what they give up compared with academic freedom.",
+    "In my postdoc I spent three years on one question. I enjoyed it, but I want my analysis to feed decisions on real medicines. I like working with chemists and biologists who need an answer this month. I know I will have less freedom to follow side questions, and I am fine with that. Seeing a target I helped choose enter a drug program would mean a lot."
+   ]
+  ]
  }
 }

@@ -656,7 +656,7 @@ MORE_ROLES = [
     ("Finance manager", "finance-manager", r"finance (manager|director|lead|business partner|partner|associate|specialist|generalist|operations|analyst)|(head|vp|director|senior director),? (of )?finance|\bfp&a\b (manager|lead|director)|strategic finance|finance (&|and) (strategy|operations|accounting)",
      "finance managers", "runs the numbers for a business unit or a whole small company: budgets, forecasts, spending and reporting", "nt"),
     ("Procurement and spend analyst", "spend-analyst", r"spend (analyst|management|analytics|manager)|procurement (analyst|operations)|sourcing analyst|vendor management (analyst|office|specialist)|\bvmo\b|cost (reduction|optimization|savings)",
-     "procurement and spend analysts", "analyses what a company spends with its suppliers and finds where it can buy for less", "nt"),
+     "procurement and spend analysts", "analyzes what a company spends with its suppliers and finds where it can buy for less", "nt"),
     # legal, compliance and public sector
     ("Contract manager", "contract-manager", r"contracts? (manager|specialist|administrator|administration|negotiator|analyst|lead|director|coordinator|associate|management|officer|operations)|contracting (officer|specialist|manager)|subcontract|commercial contracts|contract (review|lifecycle)|\bclm\b",
      "contract managers", "drafts, negotiates and tracks a company’s contracts with customers and suppliers"),
@@ -947,7 +947,7 @@ MORE_ROLES = [
     ("Research associate and lab technician", "lab-technician", r"research (associate|assistant|technician)|lab(oratory)? (associate|technician|assistant|specialist|manager|operations|coordinator|tech|analyst|supervisor|support)|scientist (i|ii|iii|1|2|3)\b|associate scientist|staff scientist|senior scientist|principal scientist|bench scientist",
      "research associates and lab technicians", "runs experiments and keeps a laboratory working: samples, instruments, records and safety", "nt"),
     ("Bioinformatics scientist", "bioinformatics", r"bioinformat|computational (biolog|chemist|scientist|genomics)|genomic|biostatistic|systems biolog|\bomics\b|proteomic|transcriptomic|single[- ]cell|sequencing|\bngs\b|\bcrispr\b|gene (editing|therapy)|protein (design|engineering|science)|drug discovery|cheminformatic|structural biolog",
-     "bioinformatics scientists", "analyses biological data such as DNA, proteins and cells with code, to help find new medicines", "nt"),
+     "bioinformatics scientists", "analyzes biological data such as DNA, proteins and cells with code, to help find new medicines", "nt"),
     ("Chemist", "chemist", r"\bchemist\b|chemistry|analytical (chemist|scientist|development|sciences|method)|formulation|polymer|electrochemist|organic (chemist|synthesis)|synthetic chemist|materials chemist|spectroscop|chromatograph",
      "chemists", "makes and analyzes chemical compounds and materials, in a lab or on a computer", "nt"),
     ("Biologist", "biologist", r"biologist|biology|microbiolog|cell (biolog|culture|line)|molecular biolog|immunolog|virolog|genetic|neurobiolog|physiolog|zoolog|botan|ecologist|plant (biolog|scientist|breeder|breeding|pathologist)|entomolog|toxicolog|pharmacolog",
