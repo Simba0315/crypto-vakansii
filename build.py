@@ -2164,7 +2164,9 @@ IMMEDIATE_RX = re.compile(r"\b(?:start(?:ing)? immediately|immediate start|hirin
 FAIR_CHANCE_RX = re.compile(r"\barrest (?:and|or) conviction records?\b|\bfair chance (?:ordinance|initiative|act|laws?|hiring|employer)\b|"
                             r"\bsecond[- ]chance (?:employer|hiring)\b|\bjustice[- ]involved\b|\bformerly incarcerated\b|"
                             r"\bconsider(?:s|ed)? (?:qualified )?(?:applicants|candidates) with (?:criminal|conviction|arrest)", re.I)
-NO_EXPERIENCE_RX = re.compile(r"\b(?:no (?:prior |previous |relevant |work )?experience (?:is |are )?(?:required|necessary|needed)|experience (?:is )?not required)\b", re.I)
+# "Experience is not required" counts only at the start of a sentence: "Automotive experience is not required", "prior C++ experience is not
+# required" and "Formal management experience is not required" put a Director, HR and an Engineering Manager on /no-experience-jobs/ (24 Nov 2026)
+NO_EXPERIENCE_RX = re.compile(r"\bno (?:prior |previous |relevant |work )?experience (?:is |are )?(?:required|necessary|needed)\b|(?:^|[.!?;:]\s+|\n)experience (?:is )?not required\b", re.I)
 # The steps of hiring a posting names in its own text, in the order they usually come (company pages: "How hiring works at …")
 HIRE_STEPS = [("A call with a recruiter", re.compile(r"recruiter (?:screen|call|phone)|phone screen|initial (?:call|screen|conversation)|intro(?:ductory)? call", re.I)),
               ("A conversation with the hiring manager", re.compile(r"hiring manager (?:call|interview|screen|conversation)", re.I)),
@@ -2680,6 +2682,7 @@ def main():
     # before the first page is written, so that the footer of every page links each list that exists. Until then /government-jobs/ had no
     # link from any other page but its own, /nonprofit-jobs/ and /job-posting-sites/ one, /temporary/ and /no-experience-jobs/ two.
     imm_jobs, noexp_jobs, fair_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX), says_so(active, FAIR_CHANCE_RX)
+    noexp_jobs = [j for j in noexp_jobs if j["level"] not in ("Senior", "Lead") and (j.get("years") or 0) < 2]      # a senior title or "3+ years" is not "no experience"
     HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
         ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
         ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
@@ -3686,8 +3689,8 @@ def main():
                        "Internships are often paid by the hour or month; the hourly pay pages list jobs by the rate they state."))
     listing("entry-level/", "Entry-level jobs & internships", f"Entry-Level Jobs & Internships: {len(jr):,} Open, Updated Hourly | {SITE}",
             # 22 Nov: position 5.7 for "entry level jobs" with 0 clicks; the old line said nothing a searcher could act on
-            (f"{len(jr):,} entry-level jobs and internships open now at " + (lambda t_: ", ".join(t_[:-1]) + " and " + t_[-1] if len(t_) > 1 else "".join(t_))([c_ for c_, _ in Counter(j["company"] for j in jr).most_common(3)])
-             + ". Many need no experience. From company career pages, updated hourly."), jr,
+            (f"Entry-level jobs and internships: {len(jr):,} open now at " + (lambda t_: ", ".join(t_[:-1]) + " and " + t_[-1] if len(t_) > 1 else "".join(t_))([c_ for c_, _ in Counter(j["company"] for j in jr).most_common(3)])
+             + "."), jr,      # "Many need no experience" was not counted anywhere (24 Nov 2026); fit_desc adds the closing sentence
             intro_for(jr, "entry-level ", row=True), stats="rest",
             extra=labrow("Narrow by", [f'<a href="{P}/internships/">Internships</a>', f'<a href="{P}/remote/entry-level/">Remote entry-level jobs</a>',
                                        f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>'])
