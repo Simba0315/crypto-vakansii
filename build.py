@@ -2548,6 +2548,19 @@ def summer_parts(js):
 
 
 HOURS_PARTS = {"temporary/": temp_parts, "weekend/": weekend_parts, "summer/": summer_parts}
+# The line under the title in search results (25 Nov 2026): these lists began with a bare number ("13,500 open jobs whose posting names a fixed
+# term or a season"); now with the words searched, who hires most, and what the page answers (fit_desc drops the second sentence if too long).
+HOURS_DESC = {"temporary/": "How long they last, seasons and pay, from the postings.",
+              "weekend/": "Weekend schedules, differentials and pay by field, from the postings.",
+              "summer/": "Pay, lengths and federal hours rules for teens.",
+              "night-shift/": "Night differentials and pay by title, from the postings."}
+
+
+def lead_desc(h1, js, more):
+    """"Weekend jobs: 9,881 open now at A, B and C. <what the page answers>" for a list's meta description."""
+    top = [c_ for c_, _ in Counter(j["company"] for j in js).most_common(3)]
+    who = (", ".join(top[:-1]) + " and " + top[-1]) if len(top) > 1 else "".join(top)
+    return f"{h1}: {len(js):,} open now at {who}. {more}"
 NO_WORDS = re.compile(r"(?!x)x")          # matches nothing: the lists with no words to take out first
 
 
@@ -4446,7 +4459,7 @@ def main():
                                         + ". Ask whether the hourly rate in the posting already includes the differential or comes on top of it."),)
         title_h = (f"Felon-Friendly Jobs ({len(js_):,} Fair Chance Jobs) | {SITE}" if p_ == "fair-chance-jobs/" else
                    f"{tcase(h_) if p_ in HOURS_PARTS or p_ == 'night-shift/' else h_} ({len(js_):,} open) | {SITE}")      # title case as on /part-time/ (25 Nov 2026)
-        listing(p_, h_, title_h, f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
+        listing(p_, h_, title_h, lead_desc(h_, js_, HOURS_DESC[p_]) if p_ in HOURS_DESC else f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
                 (plain_h + " " if plain_h else "") + intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
                 links=(("jobs/", "Search every job"),), **kw_h)
     lap('Hybrid: some days at home, some in the office (FlexJobs show')
@@ -6065,7 +6078,9 @@ def main():
                 plain_e, add_e, first_e, more_e = contract_parts(ej)
                 kw_e = dict(kw_e); kw_e["after"] = add_e + kw_e.get("after", ""); kw_e["faq_first"] = first_e; kw_e["faq_extra"] = more_e
                 kw_e["links"] = (("salaries/", "What each job pays"),) + ((("remote/contract/", "Remote contract jobs"),) if sum(1 for j in remote if j.get("etype") == "Contract") >= 20 else ())
-            listing(path, h1, f"{tcase(h1)}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
+            listing(path, h1, f"{tcase(h1)}{yr} ({len(ej):,} open) | {SITE}",
+                    lead_desc(h1, ej, "W-2 or 1099, how long contracts last and what they pay, from the postings.") if et == "Contract" else
+                    f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
                     (plain_e + " " if plain_e else "") + intro_for(ej, f"{et.lower()} ", row=row_e), trail=(("All jobs", "jobs/"),), faq=h1[0].lower() + h1[1:], **kw_e)
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
                                 ("Part-time", "remote/part-time/", "Remote part-time jobs", "work from home for fewer hours than a full week"),
