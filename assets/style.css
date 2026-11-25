@@ -4569,3 +4569,28 @@ main.srch .shero .searchbar.wide{max-width:none}
 /* glossary term (v4): the byline and the two cards stand inside the first panel (they were under it, on the page) */
 .phero .gl-card.gl-tip{border-color:var(--line);background:var(--card)}
 .phero .khero-t+.gl-top,.phero .stamp+.gl-top{margin-top:26px}
+
+/* ---- the recommended plan (/post-a-job/, /pricing/): a light card with an ink frame. Panels are light everywhere and dark is for the
+   footer only (the owner, 17 Nov 2026); this card was the last ink block on the sales pages ---- */
+.tier.best,main.kp .tier.best{border:2px solid var(--text);border-top-width:2px;background:var(--card);color:var(--text)}
+:root[data-theme=dark] main.kp .tier.best{border:2px solid var(--text);background:var(--card)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) main.kp .tier.best{border:2px solid var(--text);background:var(--card)}}
+.tier.best .tn,.tier.best .td,.tier.best .tp small{color:var(--muted)}
+.tier.best .btn,.tier.best .btn[disabled],.tier.best .btn[disabled]:hover{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}
+.tier.best .btn:not([disabled]):hover{background:var(--btn-h);border-color:var(--btn-h);color:var(--btn-h-ink)}
+.tier.best .ticks li,main.kp .tier.best ul.ticks li{border-top-color:var(--line)}
+.tier.best .ticks li::before,main.kp .tier.best ul.ticks li::before{background:var(--hl);color:var(--hl-ink)}
+.tier.best s.was{color:var(--faint)}
+main.kp .tier.best .tsoon{border-color:var(--line2);color:var(--muted)}
+.tchip,main.kp .tchip{background:var(--green-soft);color:var(--green)}
+
+/* ---- a strip of company logos under a first panel (dLocal's customer strip, with the companies whose jobs we list): grey until pointed at ---- */
+.klogos{margin:40px 0 0;text-align:center}
+.klogos>p{margin:0 0 16px;font-size:14px;color:var(--faint)}
+.klogos .logorow{justify-content:center;gap:14px 34px}
+.klogos .logorow a{color:var(--muted);font-weight:600}
+.klogos .logorow a:hover{color:var(--text)}
+.klogos .ava img{filter:grayscale(1);opacity:.8;transition:filter .2s,opacity .2s}
+.klogos a:hover .ava img{filter:none;opacity:1}
+.klogos+.sec{margin-top:clamp(64px,7vw,96px)}
+@media (max-width:700px){.klogos .logorow{gap:12px 20px}.klogos .logorow a span{font-size:14px}}

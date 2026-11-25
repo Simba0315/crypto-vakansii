@@ -3585,6 +3585,11 @@ def main():
                         for t_, xs, k_ in p_groups if xs)
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
     logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS][:10]
+    # v4 (design night, 25 Nov 2026): dLocal's strip of customer logos under the first panel, done with the companies whose jobs we list
+    def logo_strip(lead):
+        return (f'<div class="klogos"><p>{e(lead)}</p><div class="logorow">'
+                + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
+                + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos):,} more</a></div></div>') if logo_cos else ""
     lap('one real, open listing taken apart: what a visitor can read ')
     # one real, open listing taken apart: what a visitor can read on every job page
     aj = next((j for j in latest if not j.get("tg") and j["salary"] and j["remote"] and j.get("years") and j["location"] and len(j["title"]) <= 46 and j.get("usd") and j["cat"] in CATMED
@@ -11537,6 +11542,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                f'There are {n:,} open roles from {m:,} companies here, sorted by date. A standard listing is free. '
                'A boost keeps a job above the free ones for 30 days instead of letting it slide down as new roles arrive. One payment, in crypto; nothing renews.',
                f'<p class="kact">{go("account/", "Post a job — free") if app_url else go("#how", "How posting will work")}<a href="#prices">See the prices</a></p>', after=emp_trust)
+         + logo_strip("The jobs listed here today come from the careers pages of")
          + section("Why jobs [[slide out of sight]]", pain_html, sub="Counted today from this site’s own list of open jobs.", label="The problem")
          + section("Three ways to list a job, [[the first one free]]", emp_tiers
                    + kmore("Standard, Standard boost and Premium boost, side by side", emp_pt) + f'<p class="note">“Our advice” is ours, for a role that has to be seen this month; it is not a count of sales. '
