@@ -628,6 +628,8 @@ FT_RX, OTHER_TYPE_RX = re.compile(r"\bfull[- ]time\b", re.I), re.compile(r"\bpar
 # "Employment type: Part-time", "Job Type: Contract", Workday's "Time Type: Full time" in the text of the posting
 ET_LABEL = re.compile(r"\b(?:employment|job|position|work|role|worker|time|contract|engagement)[ _-]?type\s*[:–-]?\s*(full[- ]?time|part[- ]?time|contractor|contract|"
                       r"temporary|fixed[- ]term|freelance|seasonal|internship|intern)\b", re.I)
+FT_POS_RX = re.compile(r"\bfull[- ]time\s+(?:position|role|job|opportunity|employment opportunity|salaried position|exempt position|permanent position|w-?2 position)\b"
+                       r"|\b(?:this|the|a)\s+(?:is\s+a\s+)?full[- ]time,?\s+(?:permanent|exempt|salaried|regular)\b", re.I)
 ET_LABEL_LD = (("full", "FULL_TIME"), ("part", "PART_TIME"), ("contract", "CONTRACTOR"), ("freelance", "CONTRACTOR"), ("temporary", "TEMPORARY"),
                ("fixed", "TEMPORARY"), ("seasonal", "TEMPORARY"), ("intern", "INTERN"))
 
@@ -640,6 +642,10 @@ def etype_ld(j, full):
     m = ET_LABEL.search(re.sub(r"<[^>]+>", " ", full))
     if m: return next(v for k, v in ET_LABEL_LD if m.group(1).lower().startswith(k))
     if FT_RX.search(full[:4000]) and not OTHER_TYPE_RX.search(j["title"] + " " + full[:4000]): return "FULL_TIME"
+    # further down, only a sentence about this job itself ("The salary range for this full-time position", "This is a full-time,
+    # exempt role"), never "benefits for full-time employees", and only when the whole text names no other kind of work
+    # (owner, 25 Nov 2026: Search Console still listed employmentType as missing on 9 pages; about 1% more jobs get it this way)
+    if FT_POS_RX.search(re.sub(r"<[^>]+>", " ", full)) and not OTHER_TYPE_RX.search(j["title"] + " " + full): return "FULL_TIME"
     return None
 
 
