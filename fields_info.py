@@ -471,6 +471,50 @@ FIELDS = {
 }
 
 
+# The job-list categories with no field page of their own are the page for their search ("engineering jobs"): the same parts as a field
+# (build.py writes /jobs/<cat>/ with field_parts after the field pages). Their kinds of work are the roles mostly inside the category.
+CAT_FIELDS = {
+    "engineering": dict(
+        key="Engineering", h1="Engineering jobs", q="engineering jobs", cats=(),
+        ooh=("architecture-and-engineering", "computer-and-information-technology"),
+        occ=("Software Developers, Quality Assurance Analysts, and Testers", "Electrical and Electronics Engineers", "Mechanical Engineers", "Civil Engineers", "Industrial Engineers",
+             "Aerospace Engineers", "Architectural and Engineering Managers"),
+        ask=(("ask for a degree in engineering or computer science", r"degree in (engineering|computer science|electrical|mechanical)|\bB\.?S\.? in|bachelor'?s (degree )?in (engineering|computer)"),
+             ("name a security clearance", r"security clearance|\bclearance\b|\bTS/SCI\b"), ("are senior, staff or principal roles", r"\bsenior\b|\bsr\.?\b|\bstaff\b|principal")),
+        steps=(("Choose the branch before the title", "Engineering postings split by branch: software, electrical, mechanical, civil, industrial, aerospace and more. Employers search by the branch and its tools, so lead your resume with yours and use its words."),
+               ("Earn the degree for the branch", "Most engineer titles ask for a bachelor's degree in that branch; the Bureau of Labor Statistics names it as the usual first step for civil, mechanical, electrical and software roles. A Professional Engineer (PE) license matters for work signed off for the public."),
+               ("Build proof outside class", "Internships, co-ops, student teams and personal projects show you can finish real work. Engineering interviews ask you to walk through one project: the requirement, the trade-offs, the test and what failed."),
+               ("Apply at the level you have reached", "Titles run from engineer I or junior to senior, staff and principal. Read the years asked and the scope (a feature, a system, several teams) and apply where your last role fits; the count open to beginners is in the table above.")),
+        faq=(("What careers are in engineering?", "The large branches are civil, mechanical, electrical and electronic, chemical, industrial and software engineering, with aerospace, biomedical, environmental and materials engineering among the smaller ones. Software and hardware each also have a field page of their own here."),
+             ("Do engineers need a license?", "Only some do. A Professional Engineer (PE) license, issued by each state after a degree, an exam and supervised experience, is needed to sign off designs for the public, mostly in civil, structural and building work. Software and most company engineering jobs do not ask for one.")),
+    ),
+    "manufacturing": dict(
+        key="Manufacturing", h1="Manufacturing jobs", q="manufacturing jobs", cats=(),
+        ooh=("production", "installation-maintenance-and-repair"),
+        occ=("Assemblers and Fabricators", "Machinists and Tool and Die Makers", "Welders, Cutters, Solderers, and Brazers", "Quality Control Inspectors",
+             "Industrial Machinery Mechanics, Machinery Maintenance Workers, and Millwrights", "Industrial Engineers"),
+        ask=(("state an hourly rate", None), ("name a shift (nights, weekends, rotating)", r"\bshifts?\b|\bnights?\b|weekend|rotating"), ("are technician roles", r"technician")),
+        steps=(("Start on the production floor", "Assembler, production associate, machine operator and material handler jobs often need no experience; the employer trains on its own line and safety rules. Postings state the shift and the hourly rate."),
+               ("Learn to read prints and measure", "Blueprint reading, calipers and micrometers, and basic shop math move you from operator to setup, inspection and machining. Community colleges and many employers teach them in short courses."),
+               ("Add a certificate the plant uses", "Welding certificates (AWS), forklift certification, Six Sigma and lean training, or OSHA safety cards are among those manufacturing postings name. They widen the jobs you can apply for."),
+               ("Move into maintenance or quality", "Maintenance technicians keep the machines running, and quality inspectors and engineers check the parts; both usually pay more than line work. The pay table above shows what each kind of work advertises today.")),
+        faq=(("Do manufacturing jobs pay well?", "It depends on the job: the Bureau of Labor Statistics put production occupations at a median of $46,990 in May 2025, below the $50,980 of all occupations, while machinists earned $59,620 and industrial machinery mechanics $64,100."),
+             ("What is the outlook for manufacturing jobs?", "The Bureau of Labor Statistics projects production occupations to show little or no change from 2025 to 2035, with about 867,700 openings a year as workers leave, and maintenance and repair jobs to grow faster than average.")),
+    ),
+    "consulting": dict(
+        key="Consulting", h1="Consulting jobs", q="consulting jobs", cats=(),
+        ooh=("business-and-financial", "computer-and-information-technology"),
+        occ=("Management Analysts", "Computer Systems Analysts", "Project Management Specialists", "Market Research Analysts"),
+        ask=(("mention travel", r"\btravel"), ("mention clients", r"\bclients?\b|client.facing"), ("are implementation or solutions roles", r"implementation|solutions?")),
+        steps=(("Know the three kinds of consulting", "Strategy and management consultants advise leaders on decisions; technology consultants choose and set up systems; implementation and solutions consultants put a software product to work at a customer. The kinds of work above show which hire most here."),
+               ("Practise case questions", "Consulting interviews use cases: a client's profit fell, a launch is late, what do you look at first? Practise breaking a problem into parts and estimating quickly out loud."),
+               ("Bring the system or the industry you know", "Technology and implementation consultants are hired for a system (Salesforce, Workday, SAP, a cloud platform) or an industry they know well. Name the systems you set up and for whom."),
+               ("Ask about travel and billable hours", "Client work can mean travel and a target share of billable hours, called utilization. The share of postings that mention travel is above; ask about both before you accept.")),
+        faq=(("What does a consultant do?", "A consultant is brought in, from a firm or a software vendor, to solve one problem for a client: a strategy question, a new system, a process that does not work. The work comes as projects with set deliverables and many client conversations."),
+             ("Do you need an MBA to work in consulting?", "Not for most jobs listed here. Strategy firms often hire MBAs as consultants, while technology and implementation consulting hire for a system or an industry; the Bureau of Labor Statistics names a bachelor's degree as typical for management analysts.")),
+    ),
+}
+
 # job-list categories with no field page of their own (/jobs/engineering/ is the search "engineering jobs"): the field pages they overlap,
 # linked from them so a reader of "engineering jobs" reaches software, hardware and IT
 NEAR = {"engineering": ("software-development", "hardware-engineering", "cloud-devops-it", "ai-machine-learning", "security"),
@@ -481,7 +525,7 @@ NEAR = {"engineering": ("software-development", "hardware-engineering", "cloud-d
 def check():
     """Every field names known BLS groups and occupations, and no two fields share a sentence of their own text."""
     seen = {}
-    for fs, f in FIELDS.items():
+    for fs, f in list(FIELDS.items()) + list(CAT_FIELDS.items()):
         for g in f["ooh"]: assert g in OOH, (fs, g)
         for c in f["cats"]: assert c not in NEAR, (fs, c)
         for o in f["occ"]: assert o in OCC, (fs, o)
@@ -490,7 +534,7 @@ def check():
             for s_ in [s.strip() for s in t.replace("?", ".").split(". ") if len(s.strip()) > 40]:
                 assert s_ not in seen or seen[s_] == fs, (fs, seen.get(s_), s_)
                 seen[s_] = fs
-    for c, fs_ in NEAR.items(): assert all(x in FIELDS for x in fs_), c
+    for c, fs_ in NEAR.items(): assert all(x in FIELDS for x in fs_) and c in CAT_FIELDS, c
     return len(FIELDS)
 
 

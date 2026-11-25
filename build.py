@@ -4364,12 +4364,15 @@ def main():
 
     lap('Listings')
     # Listings
+    CAT_LATER = []
     for s, name in CAT.items():
         js = by_cat[s]
         if not js: continue
         mids_c = sorted((lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]])
         pay_c = f", {money(mids_c[len(mids_c) // 4])}–{money(mids_c[3 * len(mids_c) // 4])}" if len(mids_c) >= 15 else ""     # the pay range in the title, as the top results show it
-        listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open{pay_c}) | {SITE}",
+        if s in fields_info.CAT_FIELDS:          # the page for its own search, drawn with the field pages' parts once they exist (below)
+            CAT_LATER.append((s, name, js))
+        else: listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open{pay_c}) | {SITE}",
                 f"{roles(len(js), name + ' job')} at companies. Remote and on-site roles, updated hourly.",
                 js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, stats=True, extra=sponsor_line("category:" + s) + rel(REL["cat:" + s], ("categories/", "All categories"))
                 + labrow("Fields", [f'<a href="{P}/categories/{fs_}/">{e(fn_)} <b>{len(js_f):,}</b></a>' for fs_, fn_, _, _, js_f in fam_rows if fs_ in fields_info.NEAR.get(s, ())]),
@@ -5103,13 +5106,16 @@ def main():
          + section(f"All [[{len(by_role)} roles]], A to Z", '<ul class="tiles" id="rolelist">' + "".join(tile(f"roles/{s_}/", nm, len(js_)).replace("<li>", f'<li data-n="{e(nm.lower())}">', 1) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: kv[1][0].lower())) + "</ul>",
                    ("categories/", "The same roles by field"), sid="all", sub="The number on each tile is how many jobs are open today.", label="A to Z")
          + roles_qa[0], head=roles_qa[1], cls="hub")
-    def field_parts(fs, fn, fd, live, js_):
+    ent_ok = lambda js_: sum(1 for j in js_ if j.get("entry")) >= 20       # a field's entry-level list exists from 20 (the version loop below)
+
+    def field_parts(fs, fn, fd, live, js_, F_=None, ent_url=None):
         """What only this field's page has (fields_info.py; the owner, 19-25 Nov 2026: every field its own page, made for the words people
         search and better than the first results and the AI answers for them). The search check of 25 Nov 2026 (SERP_AI_CHECK.md) found
         the answers give the kinds of work, pay, titles open to beginners, remote work outside the US, licences and skills, and how to
         start. So: an opening answer, pay by kind of work beside the government's median, what the postings ask for, how to get in, the
         government's outlook, links out, and the questions those answers raise. Every figure is counted here or quoted with its source."""
-        F_ = fields_info.FIELDS.get(fs) or {}
+        F_ = F_ or fields_info.FIELDS.get(fs) or {}
+        ent_url = ent_url or (f"categories/{fs}/entry-level/" if ent_ok(js_) else "")
         low_f = rlow(fn)
         key_, q_ = F_.get("key") or tcase(fn), F_.get("q") or f"{low_f} jobs"
         one_ = q_[:-5] + " job" if q_.endswith(" jobs") else q_
@@ -5192,7 +5198,7 @@ def main():
                            + labrow("How to become", [f'<a href="{P}/how-to-become/{s_}/">{e(by_role[s_][0])}</a>' for s_ in guide_])
                            + labrow("Interview questions", [f'<a href="{P}/interview-questions/{s_}/">{e(by_role[s_][0])}</a>' for s_ in guide_])
                            + labrow("Resume examples", [f'<a href="{P}/resume/examples/{s_}/">{e(by_role[s_][0])}</a>' for s_ in guide_], ("resume/", "Free resume builder"))
-                           + (f'<p class="kact">{go(f"categories/{fs}/entry-level/", f"See the {ent_:,} open to beginners")}</p>' if ent_ >= 20 else ""),      # the entry-level list exists from 20
+                           + (f'<p class="kact">{go(ent_url, f"See the {ent_:,} open to beginners")}</p>' if ent_url else ""),
                            label="Getting in", sub="What today’s postings ask for, then the steps, then a guide for each of the biggest kinds of work.")
         # the government's view: the outlook of the field's occupation groups and the schooling each occupation asks for at the start
         gov_ = ""
@@ -5277,6 +5283,20 @@ def main():
             if by_cat.get(cs_):
                 SAME_QUERY["field " + fs].extend([f"categories/{fs}/", f"jobs/{cs_}/"])
                 SAME_QUERY["field remote " + fs].extend([f"categories/{fs}/remote/", f"remote/{cs_}/"])
+    # The job lists with no field page of their own (/jobs/engineering/, /jobs/manufacturing/, /jobs/consulting/) are the pages for their
+    # own searches: the same parts as a field page (fields_info.CAT_FIELDS). Their kinds of work are the roles with most of their jobs here.
+    for s, name, js in CAT_LATER:
+        ids_ = {j["id"] for j in js}
+        live_c = sorted(((s_, nm, len(rj)) for s_, (nm, rj) in by_role.items() if s_ not in BROAD
+                         and (k_ := sum(1 for j in rj if j["id"] in ids_)) >= 20 and k_ >= 0.5 * len(rj)), key=lambda x: -x[2])
+        fp_ = field_parts(s, name, skills_info.CATEGORIES.get(s, rlow(name) + " work"), live_c, js, F_=fields_info.CAT_FIELDS[s],
+                          ent_url=f"jobs/{s}/junior/" if (OUT / "jobs" / s / "junior" / "index.html").exists() else "")
+        hs_ = hub_sections(f"{name} roles", js)
+        listing(f"jobs/{s}/", fp_["h1"], f"{fp_['key']} Jobs ({len(js):,} open) | {SITE}", fp_["desc"], js, fp_["lead"], trail=(("All jobs", "jobs/"),), feed=True, stats="rest",
+                extra=sponsor_line("category:" + s) + rel(REL["cat:" + s], ("categories/", "All categories"))
+                + labrow("Fields", [f'<a href="{P}/categories/{fs_}/">{e(fn_)} <b>{len(js_f):,}</b></a>' for fs_, fn_, _, _, js_f in fam_rows if fs_ in fields_info.NEAR.get(s, ())]),
+                pics=hs_[0], faq=fp_["q"], faq_extra=fp_["qa"], hub=fp_["hub"] + hs_[1] + fp_["how"] + fp_["gov"] + fp_["links"], accent=CAT_ACCENT.get(s),
+                list_title=f"Newest {fp_['q']}", after=alert_form(f"new {name} jobs", cat=s))
     lap('Companies hiring in each place (Wellfound\'s "startups hiring')
     # Companies hiring in each place (Wellfound's "startups hiring in <city>"): every employer with open jobs there, most jobs first.
     # Written for places with 20 employers or more; the place's own page links to it.
