@@ -5291,8 +5291,8 @@ def main():
                 rc_ = re.compile(rx_, re.I)
                 k_ = sum(1 for j in full_ if rc_.search(job_text(j)))
                 if k_: cells_.append((pct_(k_, len(full_)), e(lab_)))        # "0%" says the words were not found, not that nobody asks
-        ask_ = (nums(cells_, src=False) + f'<p class="note">Counted on {fdate(TODAY, False)} from the postings’ own words: what a posting asks for, among the {len(full_):,} {q_} we hold in full text; '
-                f'what a job is, from the titles of all {n_:,}.</p>') if cells_ else ""
+        ask_ = (nums(cells_, src=False) + f'<p class="note">Counted on {fdate(TODAY, False)} from the postings’ own words: what a posting asks for, in {len(full_):,} of today’s {q_} read in full'
+                + (" (the first 4,000)" if len(full_) >= 4000 else "") + f'; what a job is, from the titles of all {n_:,}.</p>') if cells_ else ""
         steps_ = F_.get("steps", ())
         guide_ = [s_ for s_, _, _ in big_ if has_rex(s_)][:4]        # the career guides exist for these kinds of work only (not "Analyst", "Bilingual")
         how_ = ""
