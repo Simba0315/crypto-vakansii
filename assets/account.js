@@ -193,6 +193,9 @@
           ['Promotion in one click' + from, 'Pick one of your jobs from a list. One payment, nothing renews.'], ['Your company page', 'Your logo, your text and your open jobs.']]
         : [['Resumes', 'Up to ten versions, open in the builder on any device.'], ['Saved jobs and applications', 'What you save on your phone is on your computer too.'],
           ['Job alerts', 'New jobs for your search by email: within the hour, daily or weekly.'], ['Free', 'We do not ask for a phone number and do not sell your data.']];
+      // what the server of 25 Nov 2026 adds, said only where it answers with it
+      if (emp && pub.pay_links === 'on') why.splice(3, 0, ['A payment link for your accountant', 'They pay without an account, and the receipt is on the same page.']);
+      if (!emp && pub.talent === 'on' && pub.two_step === 'on') why.splice(3, 0, ['You decide who sees your resume', 'Open to offers, only by its link or hidden from your employer; you see which companies looked.']);
       var who = function (r, name, what) { return '<button type="button" data-role="' + r + '" aria-pressed="' + (ROLE === r) + '"><b>' + name + '</b><span>' + what + '</span></button>'; };
       var seg = function (m, name) { return '<button type="button" role="tab" data-mode="' + m + '" aria-selected="' + (mode === m) + '">' + name + '</button>'; };
       root.innerHTML = '<div class="acc-gate"><div class="acc-pitch"><p class="acc-lbl"><i></i>Free account</p>' +
