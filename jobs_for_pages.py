@@ -183,10 +183,17 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
          f'<p class="stamp">{label} · figures recounted {when} from <b>{n_all:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
          f'<p class="lead"><b>Short answer:</b> {e(short_answer(a, fig))}</p><p class="lead">{e(a["lead"])}</p>')
     if note_of(a): h += f'<div class="adv-short"><p>{e(note_of(a))}</p></div>'
-    ths = ["Open jobs", "Median advertised pay", "Remote", "For beginners"] + [EXTRA[k]["th"] for k in fig["extras"]]
+    # 26 Nov 2026, ChatGPT (temporary chat, search on) "best jobs for introverts that pay well": its table is the national median of each
+    # job (BLS, May 2025), and it names this site among the places to search. The government median beside the advertised one, where
+    # this site matches the kind of work to an occupation the BLS counts.
+    import bls_wages
+    gov = lambda slug: (bls_wages.OCC.get(bls_wages.ROLE.get(slug, "")) or (None, 0, 0, None))[3]
+    has_gov = sum(1 for r in fig["rows"] if gov(r["slug"])) >= 3
+    ths = ["Open jobs", "Median advertised pay"] + (["US median pay (government)"] if has_gov else []) + ["Remote", "For beginners"] + [EXTRA[k]["th"] for k in fig["extras"]]
     top = fig["rows"][0]["n"]
     def tr(r):
-        cells = [f'<span class="bar"><i style="width:{max(3, round(100 * r["n"] / top))}%"></i></span>{r["n"]:,}', r["pay"], f'{r["remote"]}%', f'{r["entry"]:,}'] + r["cells"]
+        cells = ([f'<span class="bar"><i style="width:{max(3, round(100 * r["n"] / top))}%"></i></span>{r["n"]:,}', r["pay"]] + ([f'${gov(r["slug"]):,}' if gov(r["slug"]) else "–"] if has_gov else [])
+                 + [f'{r["remote"]}%', f'{r["entry"]:,}'] + r["cells"])
         return (f'<tr><th scope="row"><a href="{P}/roles/{r["slug"]}/">{e(r["name"])}</a><span>{e(r["why"])}</span></th>'
                 + "".join(f'<td data-l="{t}">{c}</td>' for t, c in zip(ths, cells)) + "</tr>")
     h += (f'<h2>{"Kinds of work graduates move into" if a["group"] == "degree" else "Kinds of work that fit"}, with what is open today</h2>'
@@ -195,7 +202,8 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
           + "".join(tr(r) for r in fig["rows"]) + "</tbody></table></div>"
           '<p class="note">Open jobs: postings open today whose title matches that kind of work; a posting can match two, and the total above counts it once. '
           f'Median advertised pay: the median of the middle of each stated yearly US-dollar range, shown when at least {PAY_MIN} postings state one; a dash means fewer do. '
-          'Remote: the share of the postings marked remote. For beginners: postings with a junior or intern title. '
+          + (f'US median pay: the US Bureau of Labor Statistics median for the occupation it counts this work under ({bls_wages.PERIOD}, all employers); a dash means it has no matching occupation. ' if has_gov else "")
+          + 'Remote: the share of the postings marked remote. For beginners: postings with a junior or intern title. '
           + "".join(e(EXTRA[k]["note"]) + " " for k in fig["extras"]) + f'Counted {when} from employers’ own careers pages and recounted on every update.</p>')
     h += cuts(a, fig, e, P)
     if fig.get("skills") or fig.get("quals"):

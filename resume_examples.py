@@ -2081,8 +2081,10 @@ def us(s):
 
 
 def uk(s):
-    """American spelling to British for the UK CV pages: "optimization" -> "optimisation", "center" -> "centre"."""
-    return _US_RX.sub(lambda m: _same_case(m.group(1), US2UK[m.group(1).lower()]), s)
+    """American spelling to British for the UK CV pages: "optimization" -> "optimisation", "center" -> "centre". The example figures are
+    invented, and a UK CV states money in pounds (the page's own rule; 26 Nov 2026 the data analyst CV read "had cost about $18K a month"),
+    so a dollar sign before a figure becomes a pound sign."""
+    return re.sub(r"\$(?=\d)", "£", _US_RX.sub(lambda m: _same_case(m.group(1), US2UK[m.group(1).lower()]), s))
 
 
 def line_problem(ln):

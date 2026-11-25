@@ -1076,7 +1076,15 @@
     });
     var none = $('cnone'); if (none) none.hidden = shown > 0;
   };
-  var cfilterNow = function () { cfiltered(); if (cstate !== 'done' && (cfilter.value.trim() || (cfield && cfield.value))) cload(cfiltered); };
+  /* The directory shows its first tiles behind one "Show all N employers" button (the tiles block below); filtering or sorting opens the
+     whole list, or a match past the first tiles would stay hidden (26 Nov 2026: two buttons stood in a row under the list). */
+  var cuncut = function () {
+    if (!clist || !clist.classList.contains('cut')) return;
+    clist.classList.remove('cut');
+    var nb = clist.nextElementSibling; if (nb && nb.classList.contains('tiles-more')) nb.remove();
+    if (cmore && cstate !== 'done') cmore.hidden = false;
+  };
+  var cfilterNow = function () { cuncut(); cfiltered(); if (cstate !== 'done' && (cfilter.value.trim() || (cfield && cfield.value))) cload(cfiltered); };
   if (cfilter) cfilter.addEventListener('input', cfilterNow);
   if (cfilter && cfield) cfield.addEventListener('change', cfilterNow);
   /* companies page: sort by open roles, roles posted in the last 7 days, or name (buttons are hidden until this script runs) */
@@ -1087,6 +1095,7 @@
       var b = ev.target.closest('button'); if (!b) return;
       var k = b.getAttribute('data-s');
       csort.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      cuncut();
       cload(function () {
         if (csort.querySelector('[aria-pressed="true"]') !== b) return;      // another button was pressed while the list loaded
         var items = Array.prototype.slice.call(clist.children);
@@ -2424,8 +2433,15 @@
     ul.classList.add('cut');
     for (var i = 12; i < items.length; i++) items[i].classList.add('cut-x');
     var b = document.createElement('button');
-    b.type = 'button'; b.className = 'tiles-more'; b.textContent = 'Show all ' + items.length;
-    b.addEventListener('click', function () { ul.classList.remove('cut'); b.remove(); });
+    /* The companies directory carries the first employers in the page and loads the rest on demand (#cmore): one button opens both. */
+    var cm = ul.id === 'clist' ? document.getElementById('cmore') : null;
+    var total = items.length + (cm && !cm.hidden ? +(cm.getAttribute('data-n') || '0').replace(/,/g, '') : 0);
+    if (cm) cm.hidden = true;
+    b.type = 'button'; b.className = 'tiles-more'; b.textContent = 'Show all ' + total.toLocaleString('en-US') + (cm ? ' employers' : '');
+    b.addEventListener('click', function () {
+      ul.classList.remove('cut'); b.remove();
+      if (cm && total > items.length) { cm.hidden = false; var mb = document.getElementById('cmorebtn'); if (mb) mb.click(); }
+    });
     ul.parentNode.insertBefore(b, ul.nextSibling);
   });
 })();

@@ -2114,6 +2114,37 @@ for _t, _a in _ADD_24NOV.items():
         _secs = [(h_, list(ps_) + _a.get("extend", {}).get(h_, [])) for h_, ps_ in MORE[_t]["sections"]]
         MORE[_t] = dict(MORE[_t], sections=_secs + _a.get("sections", []), qa=list(MORE[_t]["qa"]) + _a.get("qa", []))
 
+# 26 Nov 2026, ChatGPT (temporary chat, search on) "what is an ATS applicant tracking system and how does it affect job seekers?": it cites
+# TechTarget, dol.gov, Colorado State's career centre and skima.ai, names Workday, Greenhouse, Lever, Ashby and iCIMS, and covers the
+# stages an application goes through, a table of myths against reality, and questions on LinkedIn applications and keyword searches.
+# The page had the stages only as prose and none of the myths or those questions. (The share of today's jobs by hiring system is
+# counted in build.py.)
+_ADD_26NOV = {
+    "Applicant tracking system (ATS)": dict(
+        sections=[
+            ("What happens to your application in an ATS, step by step", [
+                "1. You apply on the company’s careers page, or through a job board that passes the application on.",
+                "2. The ATS parses your resume into fields: name, contact details, job titles, employers, dates, education and skills.",
+                "3. The knock-out questions the employer set, such as work authorization, location or a required licence, are checked; a wrong answer can end the application here.",
+                "4. A recruiter searches or sorts the applicants, often by keywords or by how closely they match the posting.",
+                "5. A person reads the applications that come up and moves some to the next stage, and the ATS sends the emails: an interview invitation, a status update or a rejection.",
+            ]),
+            ("Common ATS myths", [
+                "Myth: an ATS rejects most resumes on its own. In practice most systems organize and search applications; automatic rejections come from the knock-out questions an employer set, not from the software judging your resume.",
+                "Myth: you need a special ATS template or hundreds of keywords. A clean one-column resume with the posting’s own words, where they are true for you, is enough; stuffing words a person will read does more harm than good.",
+                "Myth: an ATS cannot read a PDF. Most read a text-based PDF exported from a word processor; a scanned PDF or an image is what fails. Follow the posting if it asks for a format.",
+                "Myth: every ATS uses AI to rank you. Many rely on plain search and filters; some add AI matching, and the employer chooses whether to turn it on.",
+            ]),
+        ],
+        qa=[
+            ("Does applying through LinkedIn bypass the ATS?", "Usually not. A posting that sends you to the company’s site puts you straight into its ATS, and many “Easy Apply” applications are passed to the employer’s ATS too. Either way the recruiter sees the resume you sent, so tailor it the same way."),
+            ("Can a recruiter see my resume if it does not match the keywords?", "Yes. A keyword search only decides which applications come up first in that search; your application stays in the system and can still be opened, unless a knock-out question already closed it. Matching the posting’s words makes it come up more often."),
+        ]),
+}
+for _t, _a in _ADD_26NOV.items():
+    if _t in MORE:
+        MORE[_t] = dict(MORE[_t], sections=list(MORE[_t]["sections"]) + _a.get("sections", []), qa=list(MORE[_t]["qa"]) + _a.get("qa", []))
+
 # a term that had only its one-line definition (independent contractor, position 22 for its own name)
 MORE.setdefault("Independent contractor (1099)", dict(
     title="Independent Contractor (1099): Meaning, Taxes and Status",

@@ -7,6 +7,7 @@ Two tools read a data file instead: the salary checker loads data/salary-groups.
 """
 import datetime, json
 import state_tax                        # state income tax on wages: figures, sources and the sum (take-home pay pages)
+import bls_wages                        # US government wage figures (the median hourly wage of all US jobs)
 from collections import defaultdict
 from html import escape as _e
 
@@ -416,10 +417,19 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          # (Calculator.net, Omni, The Calculator Site), and "35 an hour is how much a year" is a related search of its own.
          ex=("Hourly to salary table: $10 to $100 an hour",
              "<p>A full-time year of 40 hours a week for 52 weeks is 2,080 paid hours. Before tax:</p>"
-             '<div class="tablewrap"><table class="rkt"><tr><th>Per hour</th><th>Per week</th><th>Every two weeks</th><th>Per month</th><th>Per year</th></tr>'
-             + "".join(f"<tr><td><strong>${h_}</strong></td><td>${h_ * 40:,}</td><td>${h_ * 80:,}</td><td>${h_ * 2080 / 12:,.0f}</td><td><strong>${h_ * 2080:,}</strong></td></tr>"
+             '<div class="tablewrap"><table class="rkt"><tr><th>Per hour</th><th>Per week</th><th>Every two weeks</th><th>Twice a month</th><th>Per month</th><th>Per year</th></tr>'
+             + "".join(f"<tr><td><strong>${h_}</strong></td><td>${h_ * 40:,}</td><td>${h_ * 80:,}</td><td>${h_ * 2080 / 24:,.0f}</td><td>${h_ * 2080 / 12:,.0f}</td><td><strong>${h_ * 2080:,}</strong></td></tr>"
                        for h_ in (10, 12, 15, 17, 18, 20, 22, 25, 28, 30, 35, 40, 45, 50, 60, 75, 100))
              + "</table></div>"
+             # 26 Nov 2026, ChatGPT (temporary chat, search on) "hourly to salary calculator - how much is $25 an hour a year?" (it cites
+             # prospyrmed.com): the yearly pay at 20 to 40 hours a week and "twice a month" beside every two weeks. And the scale the first
+             # results lack: the median hourly wage of all US jobs, from the government's figures.
+             + "<p>Part-time, 52 weeks a year, before tax:</p>"
+             '<div class="tablewrap"><table class="rkt"><tr><th>Per hour</th><th>20 hours a week</th><th>25 hours</th><th>30 hours</th><th>35 hours</th><th>40 hours</th></tr>'
+             + "".join(f"<tr><td><strong>${h_}</strong></td>" + "".join(f"<td>${h_ * w_ * 52:,}</td>" for w_ in (20, 25, 30, 35, 40)) + "</tr>" for h_ in (15, 18, 20, 22, 25, 30))
+             + "</table></div>"
+             + f'<p class="note">For scale: the median hourly wage of all {bls_wages.ALL_JOBS["employed"] / 1e6:,.1f} million US jobs is ${bls_wages.ALL_JOBS["median"]:,.2f} '
+               f'(${bls_wages.ALL_JOBS["y_median"]:,} a year), and a quarter of them pay ${bls_wages.ALL_JOBS["p75"]:,.2f} an hour or more (US Bureau of Labor Statistics, {bls_wages.PERIOD}).</p>'
              f'<p class="note">Paid for more than 40 hours in some weeks? The <a href="{P}/tools/overtime-pay/">overtime pay calculator</a> adds time and a half. '
              f'What is left after tax: the <a href="{P}/tools/take-home-pay/">take-home pay calculator</a>. Jobs by rate: <a href="{P}/jobs-that-pay/">jobs that pay $15 to $100 an hour</a>.</p>'))
 
@@ -703,7 +713,12 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
               + _sel("tone", "Tone", [("direct", "Direct", True), ("warm", "Warm"), ("formal", "Formal")]) + "</div>"
               + '<div class="tl-actions">' + _clear(True) + "</div>"
               + _private(" The letter is assembled inside your browser and is never sent anywhere.") + "</div>"
-              + paper("cover-letter.txt", '<button class="btn ghost" type="button" data-print>Print</button>') + "</div>"),
+              # 26 Nov 2026, ChatGPT (temporary chat, search on) "free cover letter generator without sign up" compares six small tools by
+              # "AI / no sign-up / PDF or Word" and warns that many ask for an account at the download. Word and PDF here, in the browser
+              # (site.js data-doc / data-pdf, as on the resignation letters), no account.
+              + paper("cover-letter.txt", '<button class="btn ghost" type="button" data-doc="tl-paper" data-name="cover-letter">Word</button>'
+                      '<button class="btn ghost" type="button" data-pdf="tl-paper" data-name="cover-letter">PDF</button>'
+                      '<button class="btn ghost" type="button" data-print>Print</button>') + "</div>"),
          "How the letter is put together",
          "<p>The letter has up to six short parts: a greeting, the job you are applying for, who you are, one result, why this company, and a closing line with your contact details. "
          "Each part is built from one or two fields. A field you leave empty drops its sentence, and the three things a letter cannot do without (job title, company, your name) appear in [brackets] until you fill them in.</p>"
@@ -712,7 +727,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "<p>A pasted posting is read in your browser by plain rules: the title from its first lines or a “Title:” label, the company from a “Company:” label or “at Acme”, and the skills from this site’s list. "
          "A skill reaches the letter only when you tap it, because the letter must say what is true of you.</p>",
          [('Can it write a cover letter from a job description?', 'It can start one. Paste the posting: the job title and company are filled in and the skills it names appear as buttons. Tap the ones you really have, add one result and one reason for choosing this company, and the letter is ready to edit. Nothing is sent anywhere.'),
-          ('Is there a free cover letter generator with no sign-up?', 'This one: fill in a few facts about you and the job, pick a tone, and copy, download or print the letter. No account, no email, and nothing is uploaded.'),
+          ('Is there a free cover letter generator with no sign-up?', 'This one: fill in a few facts about you and the job, pick a tone, and copy the letter, download it as a Word file or as text, or save it as a PDF. No account, no email, no watermark, and nothing is uploaded.'),
           ('Can I use ChatGPT to write a cover letter?', 'Yes, as a first draft. Then make it yours: replace general claims with your own results and numbers, use the posting’s words and cut it to under 250 words. A letter that could go to any company reads as generated. This generator builds every sentence from the facts you type, so nothing is invented.'),
           ("Is this cover letter written by AI?",
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated, guessed or sent to a server, so the letter contains only facts you typed."),
@@ -994,8 +1009,24 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "A break in the dates is a question a reader may ask, not a fault.</p>"
          "<p><strong>Can a hiring system read it?</strong> A separate list that does not change the score. It looks for an email address and a phone number; the headings Experience, Education and Skills under their usual names; "
          "at least one date range it can read; three or more lines that look like columns or a table (a tab or three spaces between words, or a line that begins or ends with a vertical bar); and icons, emoji or broken characters. "
-         "It sees only the text, so a picture, a text box or a page header in your file shows up here only as something missing. To test a PDF, copy all its text and paste it in.</p>",
-         [('Is this an ATS resume checker?', 'Yes, as far as text can show it. It checks that an applicant tracking system can find your email, phone, standard headings and dates, and it looks for columns, tables, icons and broken characters. No public tool can run the software a particular employer uses, so none can promise that a resume will pass.'),
+         "It sees only the text, so a picture, a text box or a page header in your file shows up here only as something missing. To test a PDF, copy all its text and paste it in.</p>"
+         # 26 Nov 2026, ChatGPT (temporary chat, search on) "free resume checker ATS - which is best and what does it check?": it compares
+         # Jobscan, Resume Worded, SkillSyncer, Enhancv and Teal and lists the eight things such checkers look at. Which of the eight this
+         # page checks, which the match checker does, and which none of our tools does, so nobody expects more than it gives.
+         "<h3>What ATS resume checkers look at, and where this site checks it</h3><div class=\"tablewrap\"><table><tr><th>Check</th><th>What it looks for</th><th>On this site</th></tr>"
+         + "".join(f"<tr><td><b>{a_}</b></td><td>{b_}</td><td>{c_}</td></tr>" for a_, b_, c_ in (
+             ("Keywords", "The words of one job description", f'<a href="{P}/tools/resume-match/">Resume match checker</a>'),
+             ("Hard skills", "Tools, software and qualifications", "Here (the skills list against your jobs) and in the match checker"),
+             ("Soft skills", "Communication, leadership, teamwork", "Not checked: a list of them proves little"),
+             ("Formatting", "Columns, tables, icons, broken characters", "Here, in “Can a hiring system read it?”"),
+             ("Section headings", "Experience, Education, Skills under their usual names", "Here"),
+             ("Work history", "Job titles, employers and dates it can read", "Here (dates and gaps)"),
+             ("Achievements", "Numbers and results in your lines", "Here (the numbers check)"),
+             ("Contact details", "Email and phone", "Here"),
+             ("Spelling and grammar", "Typos and grammar", "Not checked: use your word processor’s checker")))
+         + f'</table></div><p class="note">Other free checkers, their limits and prices, read on their own pages: <a href="{P}/vs/jobscan/">Jobscan and its free alternatives compared</a>.</p>',
+         [('Does a high ATS score mean my resume will pass?', 'No. Every checker uses its own formula, and an employer’s system is set up by that employer: its knock-out questions, the filters a recruiter uses and the person who reads the result decide. A score tells you what to fix, not whether you will be called.'),
+          ('Is this an ATS resume checker?', 'Yes, as far as text can show it. It checks that an applicant tracking system can find your email, phone, standard headings and dates, and it looks for columns, tables, icons and broken characters. No public tool can run the software a particular employer uses, so none can promise that a resume will pass.'),
           ('Is 80% a good ATS score?', 'There is no single ATS score. An employer’s applicant tracking system stores resumes and lets recruiters search them; the percentages people quote come from third-party checkers, each with its own formula. On this site the resume match checker scores the keyword overlap with one posting (75 and above is labelled a strong match), and this review scores how well the page reads on a first skim, out of 10.'),
           ('How do I check if my resume is good?', 'Three questions cover most of it: does the top third show your title, years and strongest skills; does every line under a job say what changed, with a number; and does it use the words of the posting you apply to. This review checks the first two; the resume match checker checks the third against a real posting.'),
           ("How is the resume score calculated?",
