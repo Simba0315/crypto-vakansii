@@ -609,6 +609,85 @@ SITES = {
     "YMCA of Greater Oklahoma City": "ymcaokc.org",
     "South College": "south.edu",
     "Jacent Strategic Merchandising": "jacent.com",
+    "WME": "wmeagency.com",
+    "Hyster-Yale Materials Handling": "hyster-yale.com",
+    "CNM Central New Mexico Community College": "cnm.edu",
+    "Chatham Financial": "chathamfinancial.com",
+    "Evolent Health": "evolent.com",
+    "Endicott College": "endicott.edu",
+    "Covetrus": "covetrus.com",
+    "APEX Fintech Services": "apexfintechsolutions.com",
+    "Associated Electric Cooperative": "aeci.org",
+    "Choate Construction": "choateco.com",
+    "Manhattan": "manh.com",
+    "Blue Mountain Resorts Limited Partnership": "bluemountain.ca",
+    "Guggenheim Securities": "guggenheimpartners.com",
+    "Canada Pension Plan Investment Board": "cppinvestments.com",
+    "Fenwick & West": "fenwick.com",
+    "Pasadena Hospital Association, LTD dba Huntington Health": "huntingtonhealth.org",
+    "SJC San Juan College": "sanjuancollege.edu",
+    "Volaris": "volarisgroup.com",
+    "Bernalillo County": "bernco.gov",
+    "Roswell Park Comprehensive Cancer": "roswellpark.org",
+    "Acxiom": "acxiom.com",
+    "Harris Computer": "harriscomputer.com",
+    "King & Spalding": "kslaw.com",
+    "Bristow": "bristowgroup.com",
+    "MICA": "mica.edu",
+    "Bentley University": "bentley.edu",
+    "GNW": "genworth.com",
+    "LendingClub": "lendingclub.com",
+    "Modivcare": "modivcare.com",
+    "Globe Life": "globelifeinsurance.com",
+    "Nueces County": "nuecesco.com",
+    "ONU": "onu.edu",
+    "Risepoint": "risepoint.com",
+    "AMN Healthcare": "amnhealthcare.com",
+    "KANTAR Kantar": "kantar.com",
+    "CCRC Child Care Resource Center": "ccrcca.org",
+    "Underwriters Laboratories": "ul.org",
+    "World Economic Forum Geneva": "weforum.org",
+    "NiSource": "nisource.com",
+    "Multnomah County": "multco.us",
+    "Deer Valley Resort": "deervalley.com",
+    "BCBST": "bcbst.com",
+    "Intrum": "intrum.com",
+    "Cerence AI": "cerence.com",
+    "Privilege Underwriters": "pureinsurance.com",
+    "Jotun": "jotun.com",
+    "Sugarbush Mountain Resort": "sugarbush.com",
+    "Walker & Dunlop": "walkerdunlop.com",
+    "Crystal Mountain": "crystalmountainresort.com",
+    "Adams State University": "adams.edu",
+    "Oakland County": "oakgov.com",
+    "Macquarie University": "mq.edu.au",
+    "Toyota Tsusho America": "taiamerica.com",
+    "BMC": "bmc.org",
+    "Global Partners": "globalp.com",
+    "Caliber Collision": "caliber.com",
+    "Cedarhurst": "cedarhurstliving.com",
+    "Benchmark Resorts": "benchmarkresortsandhotels.com",
+    "DUAL North America": "dualgroup.com",
+    "Haier": "haier.com",
+    "Ubiquiti": "ui.com",
+    "Innodata Inc.": "innodata.com",
+    "Fashion Nova": "fashionnova.com",
+    "Modern Animal": "modernanimal.com",
+    "Crisp & Green": "crispandgreen.com",
+    "American Income Life": "ailife.com",
+    "Simtra BioPharma Solutions": "simtrabps.com",
+    "QUI Tequila": "quitequila.com",
+    "Big Bowl": "bigbowl.com",
+    "Arbor Lodging": "arborlodging.com",
+    "QSL Management": "qslmanagement.com",
+    "Better Health": "betterhealthgroup.com",
+    "Global Pacific Support": "globalpacificsupport.com",
+    "The Swift Group": "theswiftgroup.com",
+    "J Rose Logistics": "jroselogistics.com",
+    "Triple T Hospitality": "triplethospitality.com",
+    "Pediatrics Plus": "pediatricsplus.com",
+    "Ensemble Hospitality": "ensemblehospitality.com",
+    "Children's Home Healthcare": "childrenshomehealthcare.com",
 }
 
 ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|ashbyprd\.com|myworkdayjobs\.com|myworkday\.com|workday\.com|"
@@ -621,11 +700,11 @@ ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|
                        r"hubspot|hsforms|wix\.com|wixstatic|parastorage|wixapps|wix-code|squarespace|shopify|webflow|website-files|wordpress\.(?:com|org)|"
                        r"wp\.com|gravatar|typekit|fontawesome|adobe\.com|apple\.com|microsoft\.com|mozilla\.org|cloudinary\.com|imgix|b-cdn\.net|"
                        r"sharethis|addthis|zdassets|zendesk|intercom|drift|recaptcha|bing\.com|yahoo|vimeo|wistia|pinterest|enable-javascript)", re.I)
-DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wordpress-logo|/wp-admin/|wix\.com/favicon|/universal/default-favicon|"
+DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wp\.com/i/webclip|wordpress-logo|/wp-admin/|wix\.com/favicon|/universal/default-favicon|"
                           r"website-files\.com/img/(?:favicon|webclip)|webflow\.com/img/(?:favicon|webclip)|/img/webclip\.png|"
                           r"logo-default\.png|isteam/ip/static|weebly\.com/favicon|squarespace\.com/favicon|shopify\.com/favicon|"
                           r"hubspot.*favicon|godaddy|default[-_]?favicon|favicon[-_]default|placeholder|/img/v1\.1/favicons/)", re.I)   # the last: JazzHR's own
-CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|captcha|px-captcha|_incapsula_resource|"
+CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|px-captcha|_incapsula_resource|captcha-delivery|"
                        r"pardon our interruption|access denied|request unsuccessful|are you a robot|bot detection|ddos-guard|sgcaptcha)", re.I)
 PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
                     r"bodis|afternic|dan\.com|domain parking|is parked free)", re.I)
@@ -678,7 +757,11 @@ def label_of(host):
 
 
 def blocked(status, text):
-    return status in (0, 401, 403, 405, 406, 409, 429, 451, 503, 520, 521, 522, 523, 525, 526) or bool(CHALLENGE.search(text[:6000]))
+    """A refusal or a bot check, which is left alone. The word captcha alone counts only on a short page: a whole home page that
+    loads Google's reCAPTCHA for its contact form, or a Wix site (its list of modules names "captcha"), is not a check
+    (26 Nov 2026: veg.com, fnb-online.com, trilon.com were skipped as blocked)."""
+    if status in (0, 401, 403, 405, 406, 409, 429, 451, 503, 520, 521, 522, 523, 525, 526) or CHALLENGE.search(text[:6000]): return True
+    return len(text) < 20000 and bool(re.search(r"(?<!re)captcha", text[:6000], re.I))
 
 
 def home(domain):
@@ -818,30 +901,83 @@ def icon_links(text, page_url):
 TMP = Path(os.environ.get("HRN_LOGO_TMP", "/tmp")) / "hrn_logo_tmp"
 
 
+QL_SCALE = []          # how many picture pixels Quick Look draws for one SVG pixel (0.64 on this Mac), measured once
+
+
+def ql_render(data):
+    TMP.mkdir(parents=True, exist_ok=True)
+    name = hashlib.md5(data).hexdigest()
+    src = TMP / f"{name}.svg"; src.write_bytes(data)
+    out = TMP / f"{name}.svg.png"
+    try:
+        subprocess.run(["qlmanage", "-t", "-s", "192", "-o", str(TMP), str(src)], capture_output=True, timeout=20)
+        return out.read_bytes() if out.exists() else b""
+    finally:
+        src.unlink(missing_ok=True); out.unlink(missing_ok=True)
+
+
+def svg_sized(data):
+    """(SVG drawn to fill 192 px, (w, h) of the drawn part). Quick Look draws an SVG at its own width and height, scaled by
+    QL_SCALE, in the corner of a 192 px white picture: a favicon.svg that says width="16" came out as a speck in the corner, a
+    192 px one as two thirds of the picture (26 Nov 2026: Scout Motors, AdaptHealth, Mejuri). So the root gets the size that fills
+    192 px, and the drawn part is cut out afterwards."""
+    from PIL import Image, ImageChops
+    if not QL_SCALE:
+        png = ql_render(b'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 10 10"><rect width="10" height="10" fill="red"/></svg>')
+        try:
+            im = Image.open(io.BytesIO(png)).convert("RGB")
+            box = ImageChops.difference(im, Image.new("RGB", im.size, "white")).getbbox()
+            QL_SCALE.append(box[2] / 300 if box else 0.64)
+        except Exception:
+            QL_SCALE.append(0.64)
+    text = data.decode("utf-8", "replace")
+    m = re.search(r"<svg\b[^>]*>", text, re.I)
+    if not m: return data, None
+    tag = m.group(0)
+    num = lambda a: (re.search(r'\s' + a + r'\s*=\s*["\']\s*([\d.]+)\s*(?:px)?\s*["\']', tag) or [None, None])[1]
+    w, h = num("width"), num("height")
+    vb = re.search(r'\bviewBox\s*=\s*["\']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)', tag, re.I)
+    if vb: vw, vh = float(vb.group(1)), float(vb.group(2))
+    elif w and h:
+        vw, vh = float(w), float(h)
+        tag = tag[:4] + f' viewBox="0 0 {w} {h}"' + tag[4:]
+    else: return data, None
+    if vw <= 0 or vh <= 0: return data, None
+    side = 192 / QL_SCALE[0]
+    tw, th = (side, side * vh / vw) if vw >= vh else (side * vw / vh, side)
+    tag = re.sub(r'\s(width|height)\s*=\s*["\'][^"\']*["\']', "", tag)
+    tag = tag[:4] + f' width="{tw:.0f}" height="{th:.0f}"' + tag[4:]
+    return (text[:m.start()] + tag + text[m.end():]).encode("utf-8"), (round(tw * QL_SCALE[0]), round(th * QL_SCALE[0]))
+
+
 def converted(data, kind):
-    """The picture as PNG bytes through macOS tools: an SVG drawn at 192 px by Quick Look (on white), a WebP read by sips."""
+    """The picture as PNG bytes through macOS tools: an SVG drawn to fill 192 px by Quick Look (on white), a WebP read by sips."""
+    if kind == "svg":
+        from PIL import Image
+        sized, drawn = svg_sized(data)
+        png = ql_render(sized)
+        if not png or not drawn: return png
+        im = Image.open(io.BytesIO(png)); im.load()
+        buf = io.BytesIO(); im.crop((0, 0, min(drawn[0], im.width), min(drawn[1], im.height))).save(buf, "PNG")
+        return buf.getvalue()
     TMP.mkdir(parents=True, exist_ok=True)
     name = hashlib.md5(data).hexdigest()
     src = TMP / f"{name}.{kind}"; src.write_bytes(data)
+    out = TMP / f"{name}.png"
     try:
-        if kind == "svg":
-            subprocess.run(["qlmanage", "-t", "-s", "192", "-o", str(TMP), str(src)], capture_output=True, timeout=20)
-            out = TMP / f"{name}.svg.png"
-        else:
-            out = TMP / f"{name}.png"
-            subprocess.run(["sips", "-s", "format", "png", str(src), "--out", str(out)], capture_output=True, timeout=20)
-        got = out.read_bytes() if out.exists() else b""
-        out.unlink(missing_ok=True)
-        return got
+        subprocess.run(["sips", "-s", "format", "png", str(src), "--out", str(out)], capture_output=True, timeout=20)
+        return out.read_bytes() if out.exists() else b""
     finally:
-        src.unlink(missing_ok=True)
+        src.unlink(missing_ok=True); out.unlink(missing_ok=True)
 
 
 def load_image(data):
     from PIL import Image
     head = data[:600].lstrip().lower()
-    if head.startswith(b"<svg") or (head.startswith(b"<?xml") and b"<svg" in data[:3000].lower()): data = converted(data, "svg")
+    if head.startswith(b"<svg") or (head[:1] == b"<" and b"<svg" in data[:3000].lower() and b"<html" not in data[:3000].lower()):
+        data = converted(data, "svg")          # also one that opens with <?xml, a <!DOCTYPE svg or an editor's comment
     elif data[:4] == b"RIFF" and data[8:12] == b"WEBP": data = converted(data, "webp")
+    elif data[4:12] in (b"ftypavif", b"ftypavis"): data = converted(data, "avif")          # Pillow here has no AVIF; sips reads it
     im = Image.open(io.BytesIO(data))
     if im.format == "ICO":
         sizes = sorted(im.info.get("sizes") or [im.size], key=lambda s: -s[0])
@@ -1008,7 +1144,7 @@ def main():
             last[r["name"]], line_of[r["name"]] = r, i            # the latest word on each company counts
         for r in last.values():
             old = line_of[r["name"]] < since
-            again = (r["name"] in SITES and not r.get("site_tried")) or (retry and old and (any("no usable icon" in t for t in r.get("tried", [])) or r.get("ats") == "workday"))
+            again = (r["name"] in SITES and not r.get("site_tried")) or (retry and old and (any("no usable icon" in t or ": blocked 200" in t for t in r.get("tried", [])) or r.get("ats") == "workday"))
             if r.get("ok") or not again: done.add(r["name"])      # a failure is tried again once a hand-checked site is added
     have = {f.stem for f in OUT.glob("*.png")}
     allc = companies()
