@@ -172,6 +172,16 @@ Handbook, read 25 Nov), what its postings ask for (regexes counted in the build)
 build.py draws them. `python3 fields_info.py` fails when two fields share a sentence: write new text for each field, never copy one.
 The research behind it is the last section of `SERP_AI_CHECK.md`.
 
+Links to the page that keeps a search (26 Nov 2026, the linking pass): `one_page_per_query()` decides which page of a group with the same
+title words stays open to search; every link must lead to that page, not to the copy. `same_as(src, dst)` in build.py makes every page
+written after the call link `dst` instead of `src` (finish_html), and crosslinks.py leaves the copies out of its blocks. Pairs are named
+where their pages are made: the field job lists and their remote lists, a kind of work named like a field's search (`ROLE_FIELD`,
+/roles/bilingual/ -> /categories/languages/), the crypto role lists named like the role page, a chain named like a skill page. A pair
+found only at the end is mended in one pass over the pages and printed ("links mended after the build, name these where the pages are
+made"): add it where the pages are made. A skill named like a field (`SKILL_FIELD`, /skills/ai/) is a different search: its pages say
+"Jobs that ask for AI skills" and link the field page, which links them back. Check after a build: `python3 inlinks.py site` (orphans,
+pages linked only from the header or footer, links to copies or redirects) and `python3 seo_audit.py site`.
+
 ## The owner's taste (screenshots of 14 Nov 2026 — follow it in every new block)
 
 He sends what he likes; keep these, and build new blocks the same way:

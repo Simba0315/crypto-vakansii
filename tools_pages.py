@@ -2763,7 +2763,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          f'<p class="lead" id="dirnone" hidden>No tool with these words. The <a href="{P}/help/">help page</a> answers questions about this site.</p>'
          + '<div class="pillrow" role="navigation" aria-label="Groups of tools">' + "".join(f'<a href="#{sid_}">{e(h_)}</a>' for h_, sid_ in jump) + "</div>"
          + section("Start here: [[resume, matching, tracking]]", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>"
-                   + '<p class="note">How each works, with a real example and other tools compared: ' + " · ".join(f'<a href="{P}/{u}">{e(SITE_PAGES[u][0])}</a>' for u in ("resume-tailor/", "ai-job-match/", "job-application-tracker/")) + "</p>",
+                   + '<p class="note">How each works, with a real example and other tools compared: ' + " · ".join(f'<a href="{P}/{u}">{e(SITE_PAGES[u][0])}</a>' for u in ("resume-tailor/", "ai-job-match/", "job-application-tracker/"))
+                   + f'. For the interview: <a href="{P}/interview-practice/">practise out loud for free</a>, with AI interview practice tools compared.</p>',
                    sid="start", label="The three most used").replace("<section ", "<section data-dirg ", 1)
          + seekers
          + part("For employers and recruiters", group("employers"), "employers", n_emp)

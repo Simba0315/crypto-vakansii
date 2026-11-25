@@ -483,23 +483,43 @@ def query_key(title):
 
 
 def one_page_per_query():
-    """Runs when every page is written. Returns how many pages now name another page as canonical."""
+    """Runs when every page is written, before crosslinks.py: decides which page of each group keeps the search and returns
+    {page that gives it up: the page that keeps it}. Links must lead to the page that keeps it (owner, 26 Nov 2026: "никакой
+    каннибализации", the site grows by its links): CAT_HOME holds the pairs known while the pages are made (set_cat_home, the crypto
+    lists), so finish_html wrote those links right. A pair found only here gets the same rule now, and the pages already written are
+    mended in one pass; the build says which, so the pair can be named where its pages are made and the pass is not needed."""
     rank = {s_: i for i, s_ in enumerate(SAME_QUERY_ORDER)}
-    moved = 0
+    moved = {}
     for key, paths in SAME_QUERY.items():
         paths = [p_ for p_ in dict.fromkeys(paths) if (OUT / p_ / "index.html").exists()]
         if len(paths) < 2: continue
         paths.sort(key=lambda p_: (rank[p_.split("/", 1)[0]], len(p_), p_))
-        keep = paths[0]
-        for p_ in paths[1:]:
-            f = OUT / p_ / "index.html"
-            page_ = f.read_text(encoding="utf-8")
-            own = f'<link rel="canonical" href="{e(FULL + "/" + p_)}">'
-            if own not in page_: continue
-            f.write_text(page_.replace(own, f'<link rel="canonical" href="{e(FULL + "/" + keep)}">', 1), encoding="utf-8")
-            if p_ in URLS: URLS.remove(p_)
-            moved += 1
+        for p_ in paths[1:]: moved[p_] = paths[0]
+    late = {p_: k_ for p_, k_ in moved.items() if CAT_HOME.get(p_.rstrip("/")) != k_}
+    if late:
+        print("one page per query: links mended after the build, name these where the pages are made: " + ", ".join(f"/{p_} -> /{k_}" for p_, k_ in sorted(late.items())))
+        for p_, k_ in late.items(): same_as(p_.rstrip("/"), k_)
+        for dir_, _, files_ in os.walk(OUT):
+            if "index.html" not in files_ or os.path.relpath(dir_, OUT).split(os.sep, 1)[0] == "job": continue
+            f = Path(dir_) / "index.html"
+            t_ = f.read_text(encoding="utf-8")
+            if any(f'/{p_}"' in t_ for p_ in late):
+                f.write_text(CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], t_), encoding="utf-8")
     return moved
+
+
+def name_canonicals(moved):
+    """The pages that give up a search name the page that keeps it as canonical and leave the sitemap. Returns how many."""
+    n_ = 0
+    for p_, keep in moved.items():
+        f = OUT / p_ / "index.html"
+        page_ = f.read_text(encoding="utf-8")
+        own = f'<link rel="canonical" href="{e(FULL + "/" + p_)}">'
+        if own not in page_: continue
+        f.write_text(page_.replace(own, f'<link rel="canonical" href="{e(FULL + "/" + keep)}">', 1), encoding="utf-8")
+        if p_ in URLS: URLS.remove(p_)
+        n_ += 1
+    return n_
 ORG_LD = [""]
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js", "fsel.js"))).hexdigest()[:8]   # cache-busting version
 VC = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("compare.js", "compare.css"))).hexdigest()[:8]     # the comparison table's own files (/vs/compare/)
@@ -1059,7 +1079,9 @@ def h1b_block(c, slug):
               f'each filing offers, made yearly, for full-time positions. Filed under {"the employer name" if len(names_) == 1 else "the employer names"} '
             + ", ".join(f"“{e(n_)}”" for n_ in names_) + (", checked by hand against the company" if d.get("how") == "checked by hand" else
                                                          ", matched to the company by name and place" if d.get("how") == "name" else ", matched by the trade name the employer filed under")
-            + f'.</p><p class="note">{h1b_source()}</p>')
+            + f'.</p><p class="note">{h1b_source()}</p>'
+            # the employers that file the most and today's postings that offer sponsorship are on one page (26 Nov 2026: 41 links led there)
+            + f'<p class="note">Today’s jobs that mention sponsorship, and the employers that file the most H-1B applications: <a href="{P}/perks/visa-sponsorship/">jobs with visa sponsorship</a>.</p>')
     sec_ = section(f"{c} [[H-1B visa filings]]", body, sid="h1b", label="H-1B")
     return sec_.replace('<section class="sec hsec"', '<section class="sec hsec kpanel soft h1bp"', 1)
 
@@ -1181,27 +1203,48 @@ IMG_NO_TITLE = re.compile(r'<img\b(?![^>]*\btitle=)[^>]*\balt="([^"]+)"[^>]*>')
 # job pages' category row and trail, the search page and the rankings linked the copy). The copy's own canonical tag is left alone.
 CAT_HOME = {}
 CAT_HOME_RX = [None]
+CAT_HOME_PRE = [()]          # the first parts of the addresses in CAT_HOME ("/jobs/", "/roles/"): a page with none of them is left alone
+ROLE_FIELD = {}              # a kind of work named like a field's search ("Bilingual" beside the field "Bilingual jobs"): role slug -> field slug
 
 
-def set_cat_home(fam_rows):
+def same_as(src, dst):
+    """From now on every link to the page src ("crypto/roles/trader", no slash at the end) leads to dst ("roles/trader/"): the page with
+    the same search words that one_page_per_query() keeps. Pages written before the call keep their links; one_page_per_query() mends those."""
+    CAT_HOME[src] = dst
+    # only an address from the site's root (href="/jobs/sales-bd/" or the full address in markup), never a deeper one that ends the same way
+    CAT_HOME_RX[0] = re.compile(r'(?<!canonical" href="' + re.escape(FULL) + r'/)(?:(?<=href="' + re.escape(P) + r'/)|(?<=' + re.escape(FULL) + r'/))('
+                                + "|".join(map(re.escape, sorted(CAT_HOME, key=len, reverse=True))) + r')/(?=")')
+    CAT_HOME_PRE[0] = tuple({"/" + k_.split("/", 1)[0] + "/" for k_ in CAT_HOME})
+
+
+def set_cat_home(fam_rows, by_role=None):
     """Fills CAT_HOME for the fields whose page exists (a field with no open kind of work has none, and a link to it would be broken),
-    and for their remote lists where the field's own remote list exists (20 remote jobs, as the field loop writes it)."""
+    and for their remote lists where the field's own remote list exists (20 remote jobs, as the field loop writes it).
+    A kind of work whose title is the field's search (26 Nov 2026: /roles/bilingual/ "Bilingual Jobs" beside the field page
+    /categories/languages/ "Bilingual Jobs", built for that search) answers the same query: the field page keeps it (one_page_per_query),
+    and links to the role's page, its remote and its entry-level list lead to the field's, as links to the field's job lists do."""
     live = {f[0]: f[4] for f in fam_rows}
-    CAT_HOME.clear()
+    CAT_HOME.clear(); ROLE_FIELD.clear(); CAT_HOME_RX[0] = None; CAT_HOME_PRE[0] = ()
     for fs, f_ in fields_info.FIELDS.items():
         if fs not in live: continue
+        rem_ = sum(1 for j in live[fs] if j["remote"]) >= 20
+        ent_ = sum(1 for j in live[fs] if j["entry"]) >= 20
         for cs in f_["cats"]:
-            CAT_HOME["jobs/" + cs] = f"categories/{fs}/"
-            if sum(1 for j in live[fs] if j["remote"]) >= 20: CAT_HOME["remote/" + cs] = f"categories/{fs}/remote/"
-    # only an address from the site's root (href="/jobs/sales-bd/" or the full address in markup), never a deeper one that ends the same way
-    CAT_HOME_RX[0] = (re.compile(r'(?<!canonical" href="' + re.escape(FULL) + r'/)(?:(?<=href="' + re.escape(P) + r'/)|(?<=' + re.escape(FULL) + r'/))('
-                                 + "|".join(map(re.escape, CAT_HOME)) + r')/(?=")') if CAT_HOME else None)
+            same_as("jobs/" + cs, f"categories/{fs}/")
+            if rem_: same_as("remote/" + cs, f"categories/{fs}/remote/")
+        fk_ = query_key(f"{f_['key']} Jobs")
+        for s_, (nm_, _) in (by_role or {}).items():
+            if query_key(f"{nm_} Jobs") != fk_: continue
+            ROLE_FIELD[s_] = fs
+            same_as(f"roles/{s_}", f"categories/{fs}/")
+            if rem_: same_as(f"roles/{s_}/remote", f"categories/{fs}/remote/")
+            if ent_: same_as(f"roles/{s_}/entry-level", f"categories/{fs}/entry-level/")
 
 
 def finish_html(content):
     """The last touches every HTML page gets, written to a file here or built on request by serve.py from a job record (records.py
     hands job_page()'s output here too; until 24 Nov 2026 those pages skipped both touches)."""
-    if CAT_HOME_RX[0] and ("/jobs/" in content or "/remote/" in content):
+    if CAT_HOME_RX[0] and any(k_ in content for k_ in CAT_HOME_PRE[0]):
         content = CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], content)
     if "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
@@ -3662,7 +3705,7 @@ def main():
             for j in by_role[s_][1]:
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
-    set_cat_home(fam_rows)
+    set_cat_home(fam_rows, by_role)
     fam_show = sorted(fam_rows, key=lambda f: -len(f[4]))      # by open jobs, so the order follows the jobs as sources grow (owner, 15 Nov: "IT first")
     # The footer's four biggest fields link the page that answers their search (25 Nov 2026: "Sales & Business Development" went to
     # /jobs/sales-bd/, whose canonical is /categories/sales/, on every page). one_page_per_query() decides that only once every page is
@@ -4244,6 +4287,14 @@ def main():
     for j in active:
         for t in j["tags"]: by_tag[t].append(j)
     tslug = lambda t: TAG_SLUG.get(t, slugify(t))
+    # A skill named like a field's search (26 Nov 2026: /skills/ai/ "AI Jobs" beside the field page /categories/ai-machine-learning/ "AI
+    # Jobs"; the skills Customer service and Web3 too, where postings name them). They are two searches: the field page holds the work itself (AI
+    # engineers, researchers, annotators), the skill page every posting that asks for the skill (a marketer who uses AI tools, a support
+    # agent at a crypto exchange). So the skill's pages say "Jobs that ask for AI skills" in the title and the heading, both stay open to search,
+    # and each links the other. skill -> (field slug, field heading, open jobs in the field)
+    SKILL_FIELD = {t: (fs, f_["h1"], len(fam_js)) for t in by_tag for fs, f_ in fields_info.FIELDS.items()
+                   for fs2, _, _, _, fam_js in fam_rows if fs2 == fs and query_key(f"{f_['key']} Jobs") == query_key(f"{t} Jobs") and tslug(t) not in by_role}
+    sf_h1 = lambda t, pre="": f"{pre}{'j' if pre else 'J'}obs that ask for {t} skills" if t in SKILL_FIELD else ""
     CMP = [t for t, _ in sorted(by_tag.items(), key=lambda kv: -len(kv[1]))[:14]]      # skills that get head-to-head comparison pages
     cmp_path = lambda a, b: "compare/{}-vs-{}/".format(*[tslug(x) for x in sorted((a, b), key=CMP.index)])
     cmp_links = lambda t: labrow("Compare with", [f'<a href="{P}/{cmp_path(t, o)}">{e(o)}</a>' for o in CMP if o != t], ("compare/", "Any two skills")) if t in CMP else ""
@@ -4265,8 +4316,8 @@ def main():
         combos.append((path, h1, js, trail, qs, pre, post))
         for k, label in keys: REL[k].append((path, label, len(js)))
     for t, js in by_tag.items():
-        add(f"remote/skills/{tslug(t)}/", f"Remote {t} jobs", [j for j in js if j["remote"]], (("Remote", "remote/"),),
-            f"remote=1&skills={quote(t)}", "remote ", f" mentioning {e(t)}", [("tag:" + t, f"Remote {t} jobs"), ("remote", f"Remote {t}")])
+        add(f"remote/skills/{tslug(t)}/", sf_h1(t, "Remote ") or f"Remote {t} jobs", [j for j in js if j["remote"]], (("Remote", "remote/"),),
+            f"remote=1&skills={quote(t)}", "remote ", f" mentioning {e(t)}", [("tag:" + t, f"Remote, asking for {t}" if t in SKILL_FIELD else f"Remote {t} jobs"), ("remote", f"Remote {t}")])
         here_t = by_place(js)
         for name, slug, _ in big_places:
             short = name.removeprefix("the ")
@@ -4343,7 +4394,7 @@ def main():
     add("remote/new/", "Remote jobs posted in the last 3 days", [j for j in remote if (j["posted"] or "") >= cut3], (("Remote", "remote/"),), "remote=1&age=3", "remote ", " posted in the last three days", [("remote", "Last 3 days")])
     add("remote/entry-level/", "Remote entry-level jobs", [j for j in remote if j["entry"]], (("Remote", "remote/"),), "remote=1&entry=1", "remote entry-level ", "", [("remote", "Entry-level")])
     for t, js in by_tag.items():
-        add(f"skills/{tslug(t)}/entry-level/", f"Entry-level {t} jobs", [j for j in js if j["entry"]], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
+        add(f"skills/{tslug(t)}/entry-level/", sf_h1(t, "Entry-level ") or f"Entry-level {t} jobs", [j for j in js if j["entry"]], (("Skills", "skills/"), (t, f"skills/{tslug(t)}/")),
             f"entry=1&skills={quote(t)}", "entry-level ", f" mentioning {e(t)}", [("tag:" + t, "Entry-level")])
     for perk_name, perk_slug in (("Visa sponsorship", "visa-sponsorship"), ("Relocation support", "relocation")):
         pk = [j for j in active if perk_name in j.get("perks", [])]
@@ -4625,6 +4676,9 @@ def main():
         for s_, (nm, rj) in by_role.items():
             if s_ in BROAD or s_.endswith("-speaking"): continue
             own = s_ in ("blockchain-engineer", "smart-contract-engineer") or rlow(nm).startswith("crypto")       # the name already says crypto ("Crypto crypto custody ..." otherwise)
+            # such a list carries the role page's own words ("Blockchain engineer jobs" twice): the role page keeps the search
+            # (one_page_per_query), so the crypto hub and the lists beside it link the role page (26 Nov 2026: 48 links led to the copies)
+            if own: same_as(f"crypto/roles/{s_}", f"roles/{s_}/")
             cadd(croles, f"crypto/roles/{s_}/", (f"{nm} jobs" if own else f"Crypto {rlow(nm)} jobs"), [j for j in rj if j.get("crypto")],
                  "{n} for " + rlow(nm).replace("{", "").replace("}", "") + " work at crypto and web3 companies: exchanges, wallets, infrastructure and DeFi.", f"{e(rlow(nm))} ", least=10, label=nm, skip="roles", up=((f"roles/{s_}/", f"All {rlow(nm)} jobs"),))
         for name, slug, pj in places:
@@ -4652,6 +4706,7 @@ def main():
         ctext = {j["id"]: " ".join((j["title"], j.get("excerpt") or "", j.get("desc") or "")) for j in crypto}
         for nm_c, sl_c, rx_c, what_c in CHAINS:
             rx_ = re.compile(rx_c, re.I if nm_c not in ("Base", "XRP Ledger", "Sui", "TON", "Optimism") else 0)
+            if nm_c in by_tag and tslug(nm_c) not in by_role and nm_c not in SKILL_FIELD: same_as(f"crypto/chains/{sl_c}", f"skills/{tslug(nm_c)}/")      # "Ethereum jobs" is the skill page's search too, and it holds every Ethereum job
             cadd(cchains, f"crypto/chains/{sl_c}/", f"{nm_c} jobs", [j for j in crypto if rx_.search(ctext[j["id"]])],
                  "{n} at crypto and web3 companies whose postings name " + nm_c + ", " + what_c.replace("{", "").replace("}", "") + ".", "", f" that name {e(nm_c)}", least=10, label=nm_c, proper=True)
         cchains.sort(key=lambda x: -x[2])
@@ -4839,16 +4894,20 @@ def main():
     NEWSK_N = {t: len(fj) for t, fj in new_sk}
     for t, js in by_tag.items():
         sr_ = SKILL_ROLE.get(t)
-        listing(f"skills/{tslug(t)}/", f"Jobs that ask for {t}" if sr_ else f"{t} jobs", f"Jobs That Ask for {tcase(t)} ({len(js):,} open) | {SITE}" if sr_ else f"{tcase(t)} Jobs ({len(js):,} open) | {SITE}",
-                (f"Jobs that ask for {t}: {len(js):,} open now at companies." if sr_ else f"{t} jobs: {len(js):,} open now at companies.")
+        sf_ = SKILL_FIELD.get(t)          # (field slug, field heading, its open jobs) when "<skill> jobs" is a field page's search
+        h1_s = sf_h1(t) or (f"Jobs that ask for {t}" if sr_ else f"{t} jobs")
+        listing(f"skills/{tslug(t)}/", h1_s, f"Jobs That Ask for {tcase(t)} Skills ({len(js):,} open) | {SITE}" if sf_ else f"Jobs That Ask for {tcase(t)} ({len(js):,} open) | {SITE}" if sr_ else f"{tcase(t)} Jobs ({len(js):,} open) | {SITE}",
+                (f"{h1_s}: {len(js):,} open now at companies." if sr_ or sf_ else f"{t} jobs: {len(js):,} open now at companies.")
                 + ((lambda pl_: f" {t}: {pl_ if len(pl_.split()[0]) > 1 and pl_.split()[0].isupper() else pl_[:1].lower() + pl_[1:]}")(skills_info.plain(t)) if t in skills_info.INFO else ""), js,       # the searched words first, then what the skill is (24 Nov 2026)
                 (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "") + intro_for(js, "", f" mentioning {e(t)}", hub=True),
                 trail=(("All jobs", "jobs/"),), feed=True, stats=True,
                 extra=(f'<p class="note">{NEWSK_N[t]:,} of these were posted in the last three days: <a href="{P}/new/skills/{tslug(t)}/">new {e(t)} jobs</a>.</p>' if t in NEWSK_N else "")
                       + (f'<p class="note">Looking for jobs whose work is {e(t)} itself? See <a href="{P}/roles/{sr_}/">{len(by_role[sr_][1]):,} {e(rlow(by_role[sr_][0]))} jobs</a>.</p>' if sr_ else "")
+                      + (f'<p class="note">This list is every posting that asks for {e(t)}, whatever the work. Jobs whose work is {e(t)} itself are on the field page: '
+                         f'<a href="{P}/categories/{sf_[0]}/">{sf_[2]:,} {e(rlow(sf_[1]))}</a>.</p>' if sf_ else "")
                       + (f'<p class="note">Looking for jobs at {e(SKILL_CO[t][0])} itself? See <a href="{P}/companies/{tslug(t)}/">{roles(SKILL_CO[t][1], "open job")} at {e(SKILL_CO[t][0])}</a>.</p>' if t in SKILL_CO else "")
                       + sponsor_line("skill:" + tslug(t)) + rel(REL["tag:" + t], ("skills/", "All skills")) + cmp_links(t), pics=hub_sections(f"{t} roles", js, "skills,who")[0], hub=hub_sections(f"{t} roles", js, "skills,who")[1], list_title=f"Newest {t} jobs",
-                faq=f"jobs that ask for {t}" if sr_ else f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
+                faq=f"jobs that ask for {t} skills" if sf_ else f"jobs that ask for {t}" if sr_ else f"{t} jobs", faq_first=((f"What is {t}?", f"{skills_info.plain(t)} {len(js):,} open roles on {SITE} ask for it as of {fdate(TODAY)}.") if t in skills_info.INFO else None),
                 after=skill_more(t, js) + section(f"Companies hiring for {t}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in Counter(j["company"] for j in js).most_common(12)) + "</ul>",
                               (f"salaries/{tslug(t)}/", f"{t} salaries") if sum(1 for j in js if j["usd"]) >= 30 else None))
     lap('Which kinds of work sit close to each other: two roles are n')
@@ -5412,10 +5471,12 @@ def main():
         # a kind of work in several fields ("Technician": hardware, trades, retail) is explained on the first of them only, and the others name
         # that field: no two field pages carry the same sentence (owner, 25 Nov 2026: each field a page of its own)
         role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">'
-                                                   + (e(roles_info.what(s_)) if first_fam.get(s_, fs) == fs else f"Explained under {e(rlow(fam_name[first_fam[s_]]))}.") + "</span></a></li>" for s_, nm, c in live) + "</ul>"
+                                                   + (e(roles_info.what(s_)) if first_fam.get(s_, fs) == fs else f"Explained under {e(rlow(fam_name[first_fam[s_]]))}.") + "</span></a></li>" for s_, nm, c in live
+                                                   if ROLE_FIELD.get(s_) != fs) + "</ul>"      # a kind of work that is this page's own search (Bilingual) would link the page itself
         rank_ = (labrow("Ranking", [f'<a href="{P}/insights/companies-hiring-{fs}/">Companies hiring for {e(low_f)} jobs, with remote roles and pay</a>'], ("insights/", "All rankings"))
                  if len({j["company"] for j in js_}) >= 8 else "")
-        others = rank_ + labrow("Other categories", [f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs], ("categories/", "All categories"))
+        others = rank_ + labrow("Other categories", ([f'<a href="{P}/tech/">All tech jobs together</a>'] if fs in TECH_FAMS and tech_js else [])      # /tech/ was linked from the footer only
+                                + [f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs], ("categories/", "All categories"))
         secs = hub_sections(f"{low_f} roles", js_, "roles")       # a noun at the end: "Where software development roles are"
         vers = []
         for vslug, vname, vjs in (("remote", "Remote", [j for j in js_ if j["remote"]]), ("entry-level", "Entry-level", [j for j in js_ if j["entry"]])):
@@ -5429,6 +5490,8 @@ def main():
                     f"{vname} {vq_}: {len(vjs):,} open now at companies. The work: {', '.join(rlow(x) for x in names_[:4])} and more.",
                     vjs, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(vjs, f"{vname.lower()} ", "", hub=True), trail=(("Categories", "categories/"), (fn, f"categories/{fs}/")), per=50, max_pages=2, more=False,
                     stats=True, list_title=f"Newest {vname.lower()} {vq_}", faq=f"{vname.lower()} {vq_}")
+        # the skill named like this field (/skills/ai/ beside the AI field): a different list, every posting that asks for it (SKILL_FIELD)
+        vers += [f'<a href="{P}/skills/{tslug(t_)}/">Jobs in any field that ask for {e(t_)} skills ({len(by_tag[t_]):,})</a>' for t_, sf_ in SKILL_FIELD.items() if sf_[0] == fs]
         vers_line = labrow("Narrower lists", vers)
         fp_ = field_parts(fs, fn, fd, live, js_)
         listing(f"categories/{fs}/", fp_["h1"], f"{fp_['key']}" + ("" if re.search(r"\b(Jobs|Internships)\b", fp_["key"]) else " Jobs") + f" ({len(js_):,} open) | {SITE}", fp_["desc"],
@@ -5827,6 +5890,25 @@ def main():
     PLACE_LIVE = {slug for _, slug, _ in places}
     PLACE_SLUG = {v: k for k, v in PLACE_NAME.items()}
     SKILL_OF_SLUG = {tslug(t_): t_ for t_ in by_tag if tslug(t_) not in by_role}      # a skill with a company's name (see SKILL_CO)
+    # Employers next to each other (26 Nov 2026, linking pass): the directory shows the 500 largest in its markup and the rest only with a
+    # script, so an employer with one or two open jobs was linked from its own job pages alone (11 of 915 in the local build had no other
+    # link). Every employer is filed under the field most of its open jobs are in and, there, ordered by open jobs; each page links the
+    # six above and the six below it, so every company page is linked from about twelve others of its trade and size.
+    co_main = {}
+    for c_, js_c in companies.items():
+        k_ = Counter(j["cat"] for j in js_c if j["active"])
+        if k_: co_main[c_] = k_.most_common(1)[0][0]
+    co_ring = defaultdict(list)
+    for c_, cat_ in co_main.items(): co_ring[cat_].append(c_)
+    co_pos = {}
+    for cat_, cs_ in co_ring.items():
+        cs_.sort(key=lambda x: (-OPEN[x], x.lower()))
+        for i_, c_ in enumerate(cs_): co_pos[c_] = i_
+    def co_next(c_):
+        cs_ = co_ring.get(co_main.get(c_), [])
+        if len(cs_) < 2: return []
+        lo_ = max(0, min(co_pos[c_] - 6, len(cs_) - 13))
+        return [x for x in cs_[lo_:lo_ + 13] if x != c_][:12]
     for c, js in companies.items():
         slug = slugify(c)
         act, arc = order([j for j in js if j["active"]]), order([j for j in js if not j["active"]])
@@ -5957,6 +6039,11 @@ def main():
         if sim:
             overview += section(f"Companies like {c}", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(o)}/", o, OPEN[o], True) for _, _, o in sim) + "</ul>"
                                 '<p class="note">Based on the skills they hire for.</p>', sid="similar")
+        near_ = [o for o in co_next(c) if o not in {x for _, _, x in sim}]
+        if near_:
+            overview += section(f"Other employers hiring for {rlow(CAT[co_main[c]])} jobs" if co_main[c] != OTHER[0] else "Other employers of about this size",
+                                '<p class="rel chips">' + "".join(f'<a href="{P}/companies/{slugify(o)}/">{e(o)}<b>{OPEN[o]:,}</b></a>' for o in near_) + "</p>"
+                                '<p class="note">Employers whose open jobs are mostly in the same field, with about as many open roles; the number is their open jobs today.</p>', sid="near")
         # design, step 3 (19 Nov 2026): the company's first screen in the same framed panel as the lists and the key pages
         head_html = ('<div class="khero chero"><div class="khero-t">' + crumbs(("Companies", "companies/"), (c, "")) + '<p class="sec-label">Company</p>'
                      + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at <span class="hl">{e(c)}</span></h1><span class="js">{lead}</span>'
@@ -6287,6 +6374,23 @@ def main():
         out_ += [c_ for c_, _ in Counter(j["cat"] for j in js_).most_common(2)]
         return [s_ for s_ in dict.fromkeys(out_) if s_ != slug and s_ in SAL_ALL][:k]
 
+    kit_field = {}
+    for fs_, fn_, _, live_, _ in fam_rows:
+        for s_, _, _ in live_: kit_field.setdefault(s_, (fs_, (fields_info.FIELDS.get(fs_) or {}).get("q") or f"{rlow(fn_)} jobs"))
+    def role_kit(slug_r, low, here):
+        """Every page about one kind of work links all the others (Upwork's "Resources to help you hire"), as chips. Pages that exist
+        only: a salary page needs 20 postings with pay, the four guides (questions, how to become, description, how to hire) 20 open postings.
+        The last chip is the field the work belongs to, named by its search ("All healthcare jobs", 26 Nov 2026), so the 2,600 pages
+        about a kind of work lead to the field page that answers the broader search."""
+        big = len(by_role[slug_r][1]) >= 20
+        fk_ = kit_field.get(slug_r) if not ROLE_FIELD.get(slug_r) else None
+        items = [("roles", f"roles/{slug_r}/", "Open jobs"), ("salary", f"salaries/{slug_r}/", "Salary"), ("resume", f"resume/examples/{slug_r}/", "Resume example"),
+                 ("cv", f"cv-examples/{slug_r}/", "CV example (UK)"), ("letter", f"cover-letter-examples/{slug_r}/", "Cover letter"), ("iq", f"interview-questions/{slug_r}/", "Interview questions"),
+                 ("become", f"how-to-become/{slug_r}/", become_label(slug_r)), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
+        items = [(k, u, t) for k, u, t in items if k != here and (k != "salary" or (OUT / u / "index.html").exists()) and (big or k not in ("iq", "become", "jd", "hire"))]
+        if fk_: items.append(("field", f"categories/{fk_[0]}/", f"All {fk_[1]}"))
+        return section(f"Everything about {low} work", '<div class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for _, u, t in items) + "</div>")
+
     def salary_page(slug, label, group, back, role=False, psn=None):
         # the work's name inside a sentence: "the average data analyst salary", not "Data Analyst" (24 Nov 2026); headings keep the label
         lt_ = rlow(by_role[slug][0]) if role and slug in by_role else label
@@ -6429,6 +6533,7 @@ def main():
              + (section("Related salaries", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/salaries/{s_}/">{e(SAL_ALL[s_])} salary</a>' for s_ in rel_s) + "</p>",
                         ("salaries/", "All salaries")) if (rel_s := sal_related(slug, group)) else "")
              + section(f"Questions about {label} pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in sal_qa) + "</dl>")
+             + (role_kit(slug, lt_, "salary") if role and slug in by_role and has_rex(slug) else "")      # a kind of work's salary page linked none of its other pages (26 Nov 2026)
              + cite(f"salaries/{slug}/", f"{label} salaries",
                     f"The median advertised salary for {label} roles is {money(median(mids))} a year, and the middle half of postings offer {money(pct(.25))} to {money(pct(.75))}. "
                     f"Counted from {len(mids):,} open job postings that state pay, {MONTH_YEAR}."), head=sal_ld, cls="sal")
@@ -7584,16 +7689,6 @@ def main():
     MED_PAY = f'<a href="{P}/glossary/median/">median</a> advertised pay'
     FREE_RB = "Free, with no account."      # said next to the button that opens the resume builder (the owner: where something is free, the word is visible)
 
-    def role_kit(slug_r, low, here):
-        """Every page about one kind of work links all the others (Upwork's "Resources to help you hire"), as chips. Pages that exist
-        only: a salary page needs 20 postings with pay, the four guides (questions, how to become, description, how to hire) 20 open postings."""
-        big = len(by_role[slug_r][1]) >= 20
-        items = [("roles", f"roles/{slug_r}/", "Open jobs"), ("salary", f"salaries/{slug_r}/", "Salary"), ("resume", f"resume/examples/{slug_r}/", "Resume example"),
-                 ("cv", f"cv-examples/{slug_r}/", "CV example (UK)"), ("letter", f"cover-letter-examples/{slug_r}/", "Cover letter"), ("iq", f"interview-questions/{slug_r}/", "Interview questions"),
-                 ("become", f"how-to-become/{slug_r}/", become_label(slug_r)), ("jd", f"job-descriptions/{slug_r}/", "Job description"), ("hire", f"how-to-hire/{slug_r}/", "How to hire")]
-        items = [(k, u, t) for k, u, t in items if k != here and (k != "salary" or (OUT / u / "index.html").exists()) and (big or k not in ("iq", "become", "jd", "hire"))]
-        return section(f"Everything about {low} work", '<div class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for _, u, t in items) + "</div>")
-
     def kind_dir(dir_, base, unit, by_name=False, frag="", zero=True):
         """The directory of one of the seven hubs: a card per field (its icon and name as the heading, as on /categories/), in it the kinds
         of work, each with the figure that belongs to the family (open jobs, questions, companies hiring). `unit`: (one, many).
@@ -7776,7 +7871,8 @@ def main():
                        "<li><b>Every line: action, tool, result.</b> “Built a churn dashboard in Tableau from SQL data; weekly reporting went from two days to one hour.” A verb first, the tool the posting names, one number.</li>"
                        + (f"<li><b>Lead the skills line with what postings ask for.</b> For this work today: {', '.join(e(t) for t, _ in top_[:5])}. Only the ones you really have.</li>" if top_ else "")
                        + "<li><b>Send it as a PDF unless the form asks for Word.</b> Name the file with your name and the role.</li></ol>"
-                       f'<p class="note">Check it before you send: the <a href="{P}/tools/resume-review/">resume checker</a> and the <a href="{P}/tools/resume-match/">match against a posting</a>.</p>')
+                       f'<p class="note">Check it before you send: the <a href="{P}/tools/resume-review/">resume checker</a>, the <a href="{P}/tools/resume-match/">match against a posting</a> '
+                       f'and <a href="{P}/resume-tailor/">how to tailor a resume to each job</a>.</p>')
         if top_:
             qa_.insert(0, (f"What are the top 3 skills for {art(psn)} {psn}?", "By today’s postings for this work: " + ", ".join(f"{t} ({pc_(k, len(rj))}%)" for t, k in top_[:3]) + "."))
         if soft_:
@@ -7806,7 +7902,8 @@ def main():
              + levels_ + how_
              + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + role_kit(slug_r, low, "resume")
-             + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_, cls="kw")
+             + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a> · '
+               f'<a href="{P}/job-application-tracker/">a free tracker for the jobs you apply to</a></p>', head=ld_, cls="kw")
     write("data/resume-examples.json", json.dumps({k_: {f_: v_ for f_, v_ in d_.items() if f_ != "groups"} for k_, d_ in rex_data.items()}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     cv_dir = defaultdict(list)
 
@@ -8536,7 +8633,8 @@ def main():
              f"{n_q} {low} interview questions to prepare for, each with why it is likely to come up (from today’s {n_:,} open {low} postings) and what a good answer shows.",
              crumbs(("Interview questions", "interview-questions/"), (rname, "")) + f'<h1>{e(rname)} interview questions: <span class="hl">{n_q} to prepare for</span></h1>'
              f'<p class="lead">Each question says why it is likely to come up, from what today’s {n_:,} open {e(low)} postings ask for, and what a good answer shows. '
-             f'Prepare a real example for each, then practise it with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>'
+             f'Prepare a real example for each, then practise it with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>. '
+             f'The card below reads each question aloud; <a href="{P}/interview-practice/">free interview practice</a> sets it beside AI interview practice tools.</p>'
              + facts_
              # The page's one action is the "Practise out loud" card. site.js puts it in front of the first list of questions; this empty
              # list stands where the action belongs, under the figures, so the card is there and the questions follow at once (the card
@@ -9020,6 +9118,10 @@ def main():
     # A meta description of 140-160 characters (the page standard): the first of the wordings that lands in that range, else the longest that
     # fits. The one-size wording gave 116-144 characters once fit_desc cut its last sentence (25 Nov 2026).
     desc_pick = lambda *c: next((x for x in c if 140 <= len(x) <= 160), max((x for x in c if len(x) <= 160), key=len, default=c[-1]))
+    # a site whose product one of the explainer pages compares (the resume tailor, job match and tracker tables name Jobright, HiringCafe
+    # and Jobscan): its comparison links that page (26 Nov 2026, the explainers had 4 links each)
+    VS_TOOL = {"jobright": (("ai-job-match/", "AI job match tools compared, Jobright among them"), ("resume-tailor/", "resume tailors compared")),
+               "hiringcafe": (("ai-job-match/", "job match tools compared, HiringCafe among them"), ("job-application-tracker/", "job application trackers compared"))}
     VS_OWN = {"jobscan"}                # sites whose /vs/ page is built further down, with more than the shared rows (Jobscan: its resume scans too)
     for x in VS:
         if x["slug"] in VS_OWN: continue
@@ -9042,7 +9144,9 @@ def main():
                '<div><h2>Where ' + e(ours) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in x["us_better"]) + "</ul></div></div>"
              + section(f"Questions about {x['name']} and {ours}", '<dl class="qa">' + "".join(f"<div><dt>{e(q_t)}</dt><dd>{e(a_t)}</dd></div>" for q_t, a_t in vs_qa) + "</dl>")
              + section("Sources", vs_src(x) + f'<p class="note">Facts about {e(ours)} are from this site on {fdate(TODAY)}. A fact that is wrong or out of date can be reported from the <a href="{P}/about/">About page</a>; it is corrected or removed.</p>')
-             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/vs/compare/?sites={x["slug"]},{CMP_US}">compare {e(x["name"])} with more sites in one table</a> · <a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
+             + f'<p class="note cmpl">More: <a href="{P}/vs/{x["slug"]}/alternatives/">{e(x["name"])} alternatives</a> · <a href="{P}/vs/compare/?sites={x["slug"]},{CMP_US}">compare {e(x["name"])} with more sites in one table</a> · '
+               + "".join(f'<a href="{P}/{u_}">{e(t_)}</a> · ' for u_, t_ in VS_TOOL.get(x["slug"], ()))
+               + f'<a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>', head=ld_)
     lap('"<site> vs <site>" and "<site> alternatives": the owner aske')
     # "<site> vs <site>" and "<site> alternatives": the owner asked for compare pages "with all websites" (as Indeed's compare pages),
     # and people search these between the big names. Only the facts compare_sites.py holds with a source, side by side; no verdict.
@@ -10915,7 +11019,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div id="rb-demand" class="no-print" aria-live="polite"></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
          f'<div class="rb-notes no-print"><p class="note">Not sure how to start? <a href="{P}/resume/examples/">Open a resume example for your kind of work</a> and replace it line by line.</p>'
-         f'<p class="note">Which builders charge for the download? <a href="{P}/free-resume-builders/">We read the pricing pages of {len(builders_check.BUILDERS)} of them</a>.</p></div></div>'
+         f'<p class="note">Which builders charge for the download? <a href="{P}/free-resume-builders/">We read the pricing pages of {len(builders_check.BUILDERS)} of them</a>.</p>'
+         f'<p class="note">Applying to one job? <a href="{P}/resume-tailor/">Tailor the resume to that posting</a>, free and with nothing uploaded; or let <a href="{P}/ai-job-match/">job match</a> sort today’s jobs by how well they fit you.</p></div></div>'
          + '<div class="no-print">' + section("How to make a resume here, [[in four steps]]", rb_steps, label="Four steps")
          + section("What makes a resume [[get read]]", '<div class="feats">'
          '<div class="feat"><h3>One page, plain layout</h3><p>Screening software reads simple single-column text best. That is the layout you get here.</p></div>'
@@ -11129,7 +11234,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                '<div><h2>Where ' + e(SITE) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in js_x["us_better"]) + "</ul></div></div>"
              + js_qh
              + section("Sources", '<ul class="vs-src">' + "".join(f'<li><a href="{e(u_)}" rel="nofollow noopener">{e(n_)}</a>, {e(w_)}</li>' for n_, u_, w_ in js_src_) + "</ul>"
-                       + f'<p class="note">More: <a href="{P}/vs/jobscan/alternatives/">Jobscan alternatives</a> · <a href="{P}/free-resume-builders/">free resume builders compared</a> · '
+                       + f'<p class="note">More: <a href="{P}/vs/jobscan/alternatives/">Jobscan alternatives</a> · <a href="{P}/resume-tailor/">resume tailors compared, Jobscan among them</a> · '
+                         f'<a href="{P}/ai-job-match/">AI job match tools compared</a> · <a href="{P}/job-application-tracker/">free job application tracker</a> · <a href="{P}/free-resume-builders/">free resume builders compared</a> · '
                          f'<a href="{P}/resume/">free resume builder</a> · <a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>'),
              head=js_ld)
 
@@ -11271,7 +11377,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + ce_qh
          + section("Sources", '<ul class="vs-src">' + "".join(f'<li><b>{e(x["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in x["sources"]) + "</li>" for x in CE.ENGINES)
                    + f'</ul><p class="note">Each site read on the date under its name in the table, the latest {ce_when}. Sites change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected. '
-                     f'Side by side with the job sites: <a href="{P}/vs/compare/?sites=hiringcafe,secretjobs,drivetube,google-for-jobs,{CMP_US}">compare these engines in one table</a> · <a href="{P}/vs/">all comparisons</a>.</p>', sid="sources", label="Sources"),
+                     f'Side by side with the job sites: <a href="{P}/vs/compare/?sites=hiringcafe,secretjobs,drivetube,google-for-jobs,{CMP_US}">compare these engines in one table</a> · <a href="{P}/vs/">all comparisons</a>. '
+                     f'Tools that sort jobs by how well they fit you, HiringCafe and Jobright among them: <a href="{P}/ai-job-match/">AI job match compared</a>.</p>', sid="sources", label="Sources"),
          head=ce_ld, cls="hub sp frb")
 
     lap('Glossary: the words of a job search in plain English, one pa')
@@ -13523,7 +13630,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'The full list, in plain words, is on the <a href="{P}/promise/">promise page</a>.</p></div></div>'
          '<p class="sec-label">Contacts</p><div class="kcontact"><div>'
          f'<h2 class="h2s">How to contact {e(SITE)}</h2><p>' + (f"Write to us: {contact}." if contact else "Contact details will be published on this page shortly.")
-         + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>.</p></div>'
+         + f' For corrections or removal of a listing, see the <a href="{P}/terms/">terms</a>. Communities, bootcamps and career services: <a href="{P}/partners/">partner with us</a>. '
+           f'Investors: <a href="{P}/investors/">the facts for investors and partners</a>. Press: logos and figures in the <a href="{P}/media-kit/">media kit</a>.</p></div>'
          + ('<div class="tablewrap"><table><tr><th>About</th><th>Address</th></tr>'
             + "".join(f"<tr><td>{what}</td><td>{mail_a(k)}</td></tr>" for k, what in [
                 ("jobs", "Posting, correcting or removing a job"), ("partners", "Widgets, the API, job channels and communities"),
@@ -13808,9 +13916,15 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     lap('every narrow page linked up, down and across (crosslinks.py)')
     # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
     import crosslinks
-    n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")], fix=lambda b_: CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], b_) if CAT_HOME_RX[0] else b_)
+    same_ = one_page_per_query()          # first: the cross-link blocks leave out the pages that give up their search and link the one that keeps it
+    # every kind of work's field (26 Nov 2026): "Remote account executive jobs" links up to "Remote sales jobs" as well as to all remote jobs
+    field_of_ = defaultdict(list)
+    for fs_, _, _, live_, _ in fam_rows:
+        for s_, _, _ in live_: field_of_[s_].append(fs_)
+    n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")], fix=lambda b_: CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], b_) if CAT_HOME_RX[0] else b_,
+                              same={**{k_ + "/": v_ for k_, v_ in CAT_HOME.items()}, **same_}, field_of=field_of_)
     print(f"cross-links: {n_x:,} pages got links up, down or across ({n_l:,} narrow-to-broad pairs)")
-    n_same = one_page_per_query()
+    n_same = name_canonicals(same_)
     print(f"one page per query: {n_same:,} list pages name a fuller page with the same words as canonical")
     job_mod = {f"job/{j['slug']}/": (j.get("last_seen") if j["active"] else j.get("closed")) or TODAY for j in jobs}      # a closed job's page last changed the day it closed
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'

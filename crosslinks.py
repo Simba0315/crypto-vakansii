@@ -36,20 +36,29 @@ def low(title):
     return title[0].lower() + title[1:] if title.split(" ", 1)[0] in ("Jobs", "Remote", "Entry-level", "Companies") else title
 
 
-def parents(u, have):
-    """[(broader page, group the narrower one belongs to on it)] for a page address, only pages that exist."""
+def parents(u, have, field_of=None):
+    """[(broader page, group the narrower one belongs to on it)] for a page address, only pages that exist. field_of: kind of work ->
+    the fields it belongs to (build.py), so a kind of work's remote and entry-level lists link up to their field's."""
     p = u.strip("/").split("/")
     out = []
     add = lambda parent, group: out.append((parent, group)) if parent in have and parent != u else None
-    if p[0] == "locations" and len(p) == 4 and p[2] == "skills":           # locations/london/skills/python/
+    fields = (field_of or {}).get(p[1], ()) if len(p) > 1 else ()
+    if p[0] == "categories" and len(p) == 3 and p[2] in ("remote", "entry-level"):      # categories/sales/remote/ (26 Nov 2026)
+        add(f"categories/{p[1]}/", "remote" if p[2] == "remote" else "level")
+        add(f"{p[2]}/", "kind")
+    elif p[0] == "locations" and len(p) == 4 and p[2] == "skills":           # locations/london/skills/python/
         add(f"locations/{p[1]}/", "skills"); add(f"skills/{p[3]}/", "places")
     elif p[0] == "locations" and len(p) == 3:                              # locations/london/finance/  or  .../remote/
         add(f"locations/{p[1]}/", "remote" if p[2] == "remote" else "kind")
         add("remote/" if p[2] == "remote" else f"jobs/{p[2]}/", "places")
     elif p[0] == "roles" and len(p) == 3 and p[2] == "entry-level":        # roles/accountant/entry-level/ (20 Nov 2026: one link, from its role)
-        add(f"roles/{p[1]}/", "level"); add("entry-level/", "roles")
+        add(f"roles/{p[1]}/", "level")
+        for f_ in fields: add(f"categories/{f_}/entry-level/", "roles")    # and from its field's entry-level list, beside the others of the field
+        add("entry-level/", "roles")
     elif p[0] == "roles" and len(p) == 3:                                  # roles/data-analyst/london/  or  .../remote/
         add(f"roles/{p[1]}/", "remote" if p[2] == "remote" else "places")
+        if p[2] == "remote":
+            for f_ in fields: add(f"categories/{f_}/remote/", "roles")
         add("remote/" if p[2] == "remote" else f"locations/{p[2]}/", "roles")
     elif p[0] == "skills" and len(p) == 3:                                 # skills/sql/entry-level/
         add(f"skills/{p[1]}/", "level")
@@ -88,9 +97,13 @@ def parents(u, have):
     return out
 
 
-def run(site, urls, fix=None):
+def run(site, urls, fix=None, same=None, field_of=None):
+    """same: {page that names another as canonical: that page} (build.one_page_per_query and its CAT_HOME): such a page is left out of
+    the lists of narrower pages and of neighbours, and a link up to it goes to the page that keeps its search, whose block then lists
+    the narrower pages instead (26 Nov 2026: /jobs/design/senior/ is now listed on /categories/design-creative/)."""
     site = Path(site)
-    have = set(urls)
+    same = same or {}
+    have = set(urls) | set(same.values())
     info = {}
 
     def meta(u):
@@ -103,9 +116,16 @@ def run(site, urls, fix=None):
             info[u] = (re.sub(r"\s+", " ", name), int(c.group(1).replace(",", "")) if c else 0)
         return info[u]
 
-    up = {u: parents(u, have) for u in urls}
+    up = {}
+    for u in urls:
+        ps, seen = [], {u, same.get(u)}
+        for parent, group in parents(u, have, field_of):
+            parent = same.get(parent, parent)
+            if parent not in seen and parent in have: seen.add(parent); ps.append((parent, group))
+        up[u] = ps
     down = defaultdict(lambda: defaultdict(list))
     for u, ps in up.items():
+        if u in same: continue                          # a copy of another page is not listed: the page it names is
         for parent, group in ps:
             down[parent][group].append(u)
     a = lambda u: f'<a href="/{u}">{html.escape(meta(u)[0])}</a>' + (f' <span>{meta(u)[1]:,}</span>' if meta(u)[1] else "")
@@ -113,8 +133,10 @@ def run(site, urls, fix=None):
     for parent, groups in down.items():                 # broad page: its narrower pages
         title = meta(parent)[0]
         body = ""
+        # a field page links its remote and entry-level lists in its own first screen: not a second time at its foot
+        own_ = (site / parent / "index.html").read_text(encoding="utf-8") if parent.startswith("categories/") and (site / parent / "index.html").exists() else ""
         for g in ("skills", "kind", "roles", "places", "chains", "level", "remote", "pages"):
-            xs = sorted(groups.get(g, ()), key=lambda u: -meta(u)[1])[:60]
+            xs = sorted((x for x in groups.get(g, ()) if f'href="/{x}"' not in own_), key=lambda u: -meta(u)[1])[:60]
             if xs: body += f'<h3>{GROUP[g]}</h3><ul class="xl">' + "".join(f"<li>{a(u)}</li>" for u in xs) + "</ul>"
         if body and parent not in OWN_DIR: blocks[parent] += f'<section class="sec xlinks"><div class="sec-head"><h2>Narrow down {html.escape(low(title))}</h2></div>{body}</section>'
     for u, ps in up.items():                            # narrow page: up to its broader pages, across to its neighbours
@@ -123,14 +145,17 @@ def run(site, urls, fix=None):
         # Neighbours by size in the first group that has any, six above and six below (part 7, linking, 20 Nov 2026): the twelve largest
         # gave every small page no link from its neighbours, and a page whose first group holds only itself (a role's remote list)
         # showed none at all. Now each narrow page is linked from the pages next to it.
+        # 26 Nov 2026: the nearest group first (a kind of work's remote list beside the others of its field), and when it holds fewer
+        # than twelve, the next group fills the row (the remote lists of every field), so a small field's pages keep twelve neighbours
         sib = []
         for parent_, group_ in ps:
             members = sorted(down[parent_][group_], key=lambda x: (-meta(x)[1], x))
-            if len(members) > 1:
+            if len(members) > 1 and u in members:
                 k_ = members.index(u)
                 lo_ = max(0, min(k_ - 6, len(members) - 13))
-                sib = [x for x in members[lo_:lo_ + 13] if x != u][:12]
-                break
+                sib += [x for x in members[lo_:lo_ + 13] if x != u and x not in sib]
+                if len(sib) >= 12: break
+        sib = sib[:12]
         body = '<ul class="xl">' + "".join(f"<li>{a(p)}</li>" for p in ups) + "</ul>"
         if sib: body += f'<h3>Next to it</h3><ul class="xl">' + "".join(f"<li>{a(x)}</li>" for x in sib) + "</ul>"
         blocks[u] += f'<section class="sec xlinks"><div class="sec-head"><h2>More like {html.escape(meta(u)[0])}</h2></div>{body}</section>'
