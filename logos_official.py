@@ -699,6 +699,7 @@ SITES = {
     "Chainguard": "chainguard.dev",
     "Epirus": "epirusinc.com",
     "True Anomaly": "trueanomaly.space",
+    "Kong": "konghq.com",
 }
 
 ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|ashbyprd\.com|myworkdayjobs\.com|myworkday\.com|workday\.com|"
@@ -716,10 +717,10 @@ DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wp\.com/i/webclip|jupiter
                           r"logo-default\.png|isteam/ip/static|weebly\.com/favicon|squarespace\.com/favicon|shopify\.com/favicon|"
                           r"hubspot.*favicon|godaddy|default[-_]?favicon|favicon[-_]default|placeholder|/img/v1\.1/favicons/)", re.I)   # the last: JazzHR's own
 # icons that unrelated sites serve byte for byte (26 Nov 2026: a gears favicon.ico on ccres.org, ccsww.org and compassconnections.org)
-DEFAULT_ICON_MD5 = {"1db747255c64a30f9236e9d929e986ca"}
+DEFAULT_ICON_MD5 = {"1db747255c64a30f9236e9d929e986ca", "c30c7d42707a47a3f4591831641e50dc"}   # gears; the Next.js default favicon.ico
 CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|px-captcha|_incapsula_resource|captcha-delivery|"
                        r"pardon our interruption|access denied|request unsuccessful|are you a robot|bot detection|ddos-guard|sgcaptcha)", re.I)
-PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|domainmarket\.com|[a-z0-9-]+\.(?:com|net|org|co|io) is for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
+PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|location\.href=.?/lander|domainmarket\.com|[a-z0-9-]+\.(?:com|net|org|co|io) is for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
                     r"bodis|afternic|dan\.com|domain parking|is parked free)", re.I)
 SUFFIX = re.compile(r"\b(inc|llc|l\.l\.c|ltd|limited|corp|corporation|company|co|plc|gmbh|ag|sa|s\.a|bv|nv|pty|pvt|private|lp|llp|pc|pllc|the)\b\.?", re.I)
 
@@ -1096,6 +1097,8 @@ def board_logo(src, page_text):
         urls = [u for u in urls if u.startswith("http")]
     elif ats == "paylocity":
         urls = ["https://recruiting.paylocity.com" + u for u in re.findall(r'"LogoUrl":"(/Recruiting/Jobs/GetLogoFileById[^"]+)"', page_text)]
+    elif ats == "greenhouse":                                              # the logo on its Greenhouse board
+        urls = [H.unescape(u) for u in re.findall(r'(https://[^"\'\s]*greenhouse[^"\'\s]*/logos/[^"\'\s]+)', page_text)]
     for u in urls[:2]:
         st, final, ctype, data = curl(H.unescape(u), binary=True, limit=3_000_000)
         if st != 200 or len(data) < 300: continue
@@ -1144,8 +1147,12 @@ def work(item):
             res.update(ok=True, site=d, how=how, icon=iu)
             return res
         tried.append(f"{d}: no usable icon ({'; '.join(why[:4])})")
-    if not btext and (src.get("ats") or "").lower() in ("workable", "paylocity") and src.get("token"):
-        btext = declared_site(src["ats"].lower(), src["token"])[1]
+    ats = (src.get("ats") or "").lower()
+    if not btext and ats in ("workable", "paylocity") and src.get("token"):
+        btext = declared_site(ats, src["token"])[1]
+    elif not btext and ats in ("greenhouse", "breezy", "jazzhr", "pinpoint", "bamboohr") and src.get("token"):
+        bst, _, _, btext = curl(BOARD_PAGE[ats].format(t=src["token"]))    # its board's own logo, even when its site was known
+        btext = btext if bst == 200 else ""
     if btext or (src.get("ats") or "").lower() == "workday":
         im, iu = board_logo(src, btext)
         if im is not None:
