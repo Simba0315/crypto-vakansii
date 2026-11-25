@@ -234,7 +234,7 @@ class Live:
         for slug, rec, descr, closed in self.con.execute("SELECT slug, rec, descr, closed FROM live"):    # row by row: the texts are 450 MB
             n += 1
             if closed: batch.append(json.dumps({"delete": {"_id": slug}}) + "\n")
-            else: batch.append(json.dumps({"index": {"_id": slug}}) + "\n" + json.dumps(search_engine.doc(json.loads(rec), descr), ensure_ascii=False) + "\n")
+            else: batch.append(json.dumps({"index": {"_id": slug}}) + "\n" + json.dumps(search_engine.doc(json.loads(rec), descr, build.PLACE_CODE, build.TODAY), ensure_ascii=False) + "\n")
             if len(batch) >= 500: flush()
         flush()
         if n: log(f"search index {target}: {n} live jobs put back" + (f", {failed} failed" if failed else ""))
@@ -243,7 +243,7 @@ class Live:
         if not search_engine.URL or not self.write: return
         try:
             if closed: search_engine.call("DELETE", f"/{search_engine.ALIAS}/_doc/{rec['slug']}", timeout=5)
-            else: search_engine.call("PUT", f"/{search_engine.ALIAS}/_doc/{rec['slug']}", search_engine.doc(rec, descr), timeout=5)
+            else: search_engine.call("PUT", f"/{search_engine.ALIAS}/_doc/{rec['slug']}", search_engine.doc(rec, descr, build.PLACE_CODE, build.TODAY), timeout=5)   # the place codes: flags and "remote open to my country"
         except Exception as ex:
             if closed and " 404" in str(ex): return                 # already gone from the index (a new index was loaded): nothing to remove
             log(f"search: {rec['slug']}: {type(ex).__name__}: {ex}")
