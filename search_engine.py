@@ -119,10 +119,12 @@ SKIP = {"a", "an", "and", "or", "not", "the", "of", "in", "at", "for", "to", "wi
         "positions", "vacancy", "vacancies", "opening", "openings", "career", "careers", "hiring", "work"}
 
 
-def query(q, remote=False, limit=20, offset=0, fuzzy=False, cap=50):
+def query(q, remote=False, limit=20, offset=0, fuzzy=False, cap=50, facets=True):
     """The search request: every word must be found, in any field; the whole phrase in the title ranks first. "remote" in the
     words is the remote filter. fuzzy: forgive a typo (one in a word of 5-8 letters, two from 9), for the second try when the
-    words as typed find nothing. Returns None when there is nothing to look for."""
+    words as typed find nothing. facets=False leaves out the counts by field, level and company: the site's own search box
+    (/api/search?all=1) does not show them, and on 25 Nov 2026 they took 2.3 to 3.5 of the 3 seconds that request is given
+    ("warehouse", "software engineer": 503), against 0.3 to 0.5 s without them. Returns None when there is nothing to look for."""
     words = [w for w in WORD.findall(q)][:12]
     if any(w.lower() == "remote" for w in words): remote, words = True, [w for w in words if w.lower() != "remote"]
     words = [w for w in words if w.lower() not in SKIP]
@@ -131,7 +133,7 @@ def query(q, remote=False, limit=20, offset=0, fuzzy=False, cap=50):
                              "prefix_length": 1, "max_expansions": 30}} for w in words]
     filt = [{"term": {"active": True}}] + ([{"term": {"remote": True}}] if remote else [])
     phrase = " ".join(words)
-    return {"size": max(1, min(int(limit), cap)), "from": max(0, min(int(offset), 1000)), "_source": ["slug"], "track_total_hits": True,
+    body = {"size": max(1, min(int(limit), cap)), "from": max(0, min(int(offset), 1000)), "_source": ["slug"], "track_total_hits": True,
             "query": {"bool": {"must": must, "filter": filt,
                                "should": [{"match_phrase": {"title": {"query": phrase, "boost": 8}}},
                                           {"match": {"title": {"query": phrase, "operator": "and", "boost": 4}}},
@@ -139,6 +141,8 @@ def query(q, remote=False, limit=20, offset=0, fuzzy=False, cap=50):
             "aggs": {"remote": {"filter": {"term": {"remote": True}}}, "hybrid": {"filter": {"term": {"hybrid": True}}},
                      "cat": {"terms": {"field": "cat", "size": 12}}, "level": {"terms": {"field": "level", "size": 8}},
                      "company": {"terms": {"field": "company.raw", "size": 10}}}}
+    if not facets: del body["aggs"]
+    return body
 
 
 FEW = 10          # the words as typed find fewer jobs than this: try them forgiving typos too
@@ -151,17 +155,17 @@ def prefer_fuzzy(exact, forgiving):
     return exact == 0 or (exact < FEW and forgiving >= max(20, 10 * exact))
 
 
-def search(q, remote=False, limit=20, offset=0, timeout=1.5, cap=50):
+def search(q, remote=False, limit=20, offset=0, timeout=1.5, cap=50, facets=True):
     """(total, [slugs], facets) from OpenSearch: the words as typed first; when they find nothing or only a few, the same words
     forgiving typos (facets["fuzzy"] then says so, and facets["exact"] how many jobs the words as typed found). Raises OSError
     when it is not there or does not answer in time."""
     if not URL: raise OSError("HRN_OPENSEARCH is not set")
-    body = query(q, remote, limit, offset, cap=cap)
+    body = query(q, remote, limit, offset, cap=cap, facets=facets)
     if body is None: return 0, [], {}
     r, fuzzy = call("POST", f"/{ALIAS}/_search", body, timeout=timeout), False
     exact = r["hits"]["total"]["value"]
     if exact < FEW:
-        rf = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True, cap=cap), timeout=timeout)
+        rf = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True, cap=cap, facets=facets), timeout=timeout)
         if prefer_fuzzy(exact, rf["hits"]["total"]["value"]): r, fuzzy = rf, True
     a = r.get("aggregations", {})
     facets = {"fuzzy": fuzzy, "exact": exact if fuzzy else r["hits"]["total"]["value"], "remote": a.get("remote", {}).get("doc_count", 0), "hybrid": a.get("hybrid", {}).get("doc_count", 0)}
@@ -181,6 +185,7 @@ def _test():
     assert c["query"]["bool"]["must"][0]["multi_match"]["query"] == "c++" and c["query"]["bool"]["must"][0]["multi_match"]["fuzziness"] == 0
     assert query(".NET engineer")["query"]["bool"]["must"][0]["multi_match"]["query"].lower() == ".net"
     assert query("c++", fuzzy=True)["query"]["bool"]["must"][0]["multi_match"]["fuzziness"] == 0      # no typo forgiven in C++, C#, .NET
+    assert "aggs" in query("nurse") and "aggs" not in query("nurse", facets=False)          # the site's search box asks without the counts
     d = doc({"slug": "a", "active": True, "title": "T", "usd": [100, 200], "tags": ["Go"], "posted": "2026-11-01"}, "<p>Build &amp; ship</p>")
     assert d["pay_mid"] == 150 and d["body"].strip() == "Build & ship" and d["posted"] == "2026-11-01"
     assert prefer_fuzzy(0, 0) and prefer_fuzzy(2, 6246) and prefer_fuzzy(1, 20)

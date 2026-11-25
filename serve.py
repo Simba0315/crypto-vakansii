@@ -218,7 +218,7 @@ class Handler(SimpleHTTPRequestHandler):
                 # For the site's own search box: every match, best first, as slugs only (up to 5,000); the page applies its
                 # filters to them. Lucene only: without it the page keeps its own word matching.
                 try:
-                    total, slugs, facets = search_engine.search(one("q"), limit=5000, cap=5000, timeout=3)
+                    total, slugs, facets = search_engine.search(one("q"), limit=5000, cap=5000, timeout=3, facets=False)
                 except OSError:
                     return self.send_json(503, {"error": "search engine unavailable"})
                 return self.send_json(200, {"q": one("q"), "total": total, "slugs": slugs, "fuzzy": bool(facets.get("fuzzy")), "exact": facets.get("exact", total), "engine": "lucene"},
