@@ -8729,6 +8729,17 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     ages = [age_days(j) for j in active]
     age_cols = [("0–7 d", sum(a_ <= 7 for a_ in ages)), ("8–30", sum(7 < a_ <= 30 for a_ in ages)), ("31–60", sum(30 < a_ <= 60 for a_ in ages)), ("61–90", sum(60 < a_ <= 90 for a_ in ages)),
                 ("91–180", sum(90 < a_ <= 180 for a_ in ages)), ("180+", sum(a_ > 180 for a_ in ages))]
+    # Two answered questions (25 Nov 2026: one of the shortest guides, 450 words and none answered; "how long do job postings stay up"
+    # and "should I apply to a job posted 30 days ago" are what people ask): the quartiles and the share past 30 days, from today's ages.
+    ages_s = sorted(ages)
+    old30 = sum(a_ > 30 for a_ in ages)
+    age_qa = [("How long do job postings stay open?", f"Of the {n:,} postings open here today, half were posted less than {int(median(ages))} days ago, a quarter less than {ages_s[len(ages_s) // 4]} days, "
+               f"and a quarter more than {ages_s[3 * len(ages_s) // 4]} days ago. {long_all:,} ({pc_(long_all, n)}%) have been open {LONG_OPEN} days or more: often a role hired for all year, "
+               "a call for resumes, or a posting nobody took down. The age is counted from the date the employer posted it."),
+              ("Is it worth applying to a job posted 30 days ago?", f"Often, yes: {old30:,} of the {n:,} open postings here ({pc_(old30, n)}%) are older than 30 days and still listed by the employer. "
+               "Check first that the employer’s own page still has it (the job page here asks it for you), then apply. A posting open for months is worth a short note to the recruiter asking whether the role is being filled now.")]
+    age_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in age_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     guide("how-long-jobs-stay-open", "How long a job posting stays open, and what an old one means",
           f"Half of open postings are younger than {int(median(ages))} days; {pc_(long_all, n)}% have been open {LONG_OPEN} days or more. What an old posting tells you and how to check it.", "Reading postings",
           f"Half of the {n:,} open postings are younger than {int(median(ages))} days. {long_all:,} of them, {pc_(long_all, n)}%, have been open for {LONG_OPEN} days or more. An old posting is not always a dead one, and the difference can be checked.",
@@ -8736,9 +8747,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           f"<h2>Why some postings never close</h2><p>Three reasons account for most of them. Some employers hire for the same title all year and keep one posting for it. Some postings are an invitation to send a resume for the future, "
           f"with no opening behind it; we mark those “talent pool”. And some are simply forgotten. A posting that is {LONG_OPEN} days old carries a mark on this site so you can decide before spending an evening on it.</p>"
           f"<h2>How to check one</h2><p>Open the job page and press “Check with the employer right now”. Your browser asks the employer’s own hiring system whether the job is still there and shows the answer. "
-          f"Today {closed_today_h:,} postings were closed by employers; their pages stay online, marked as closed.</p>",
+          f"Today {closed_today_h:,} postings were closed by employers; their pages stay online, marked as closed.</p>"
+          + "<h2>Questions about old postings</h2><dl class=\"qa\">" + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in age_qa) + "</dl>",
           '' + mini([(lb, v_, f"{v_:,}") for lb, v_ in age_cols]),
-          (("insights/long-open-roles/", "Where postings linger"), ("new/", "Jobs posted in the last 3 days"), ("guides/is-this-job-still-open/", "Is this job still open?")))
+          (("insights/long-open-roles/", "Where postings linger"), ("new/", "Jobs posted in the last 3 days"), ("guides/is-this-job-still-open/", "Is this job still open?")), extra_head=age_ld)
 
     lap('3. who states the pay')
     # 3. who states the pay
@@ -8881,6 +8893,26 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         js_ = [j for j in active if j["level"] == lv]
         mids_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"]]
         lvl_rows.append((lab_, what_, len(js_), median(mids_) if len(mids_) >= 30 else 0))
+    # Two answered questions (25 Nov 2026: 466 words and none answered; "junior vs senior" and "what comes after senior" are what people
+    # ask): the years each level asks for, read from the postings that name a number, beside the pay the page already shows.
+    lv_y = {lv: sorted(j["years"] for j in active if j.get("years") and j["level"] == lv) for lv in ("Junior", "Senior", "Lead")}
+    lv_pay = {lv: md_ for lv, (_, _, _, md_) in zip(("Intern", "Junior", "", "Senior", "Lead"), lvl_rows)}
+    lv_k = {lv: k_ for lv, (_, _, k_, _) in zip(("Intern", "Junior", "", "Senior", "Lead"), lvl_rows)}
+    my_ = lambda lv: lv_y[lv][len(lv_y[lv]) // 2]
+    yr_ = lambda v: f"{v} year{'' if v == 1 else 's'}"
+    lv_qa = []
+    if len(lv_y["Junior"]) >= 20 and len(lv_y["Senior"]) >= 20:
+        lv_qa.append(("What is the difference between a junior and a senior job?", "Experience and how much the employer expects you to do alone. "
+                      f"Of today’s open postings that name a number of years, junior ones ask for {yr_(my_('Junior'))} at the median ({len(lv_y['Junior']):,} postings) "
+                      f"and senior ones for {yr_(my_('Senior'))} ({len(lv_y['Senior']):,} postings)."
+                      + (f" Senior postings advertise a median of {money(lv_pay['Senior'])} a year against {money(lv_pay['Junior'])} for junior ones, "
+                         f"{round(100 * (lv_pay['Senior'] / lv_pay['Junior'] - 1))}% more." if lv_pay["Junior"] and lv_pay["Senior"] else "")))
+    if lv_k["Lead"] >= 20:
+        lv_qa.append(("What comes after senior?", f"Lead, then staff and principal for experts, or director for people who run a team of teams. {lv_k['Lead']:,} open jobs here carry one of those words"
+                      + (f" and ask for {yr_(my_('Lead'))} of experience at the median" if len(lv_y["Lead"]) >= 20 else "")
+                      + (f"; they advertise a median of {money(lv_pay['Lead'])} a year." if lv_pay["Lead"] else ".")))
+    lv_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in lv_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>") if lv_qa else ""
     guide("job-levels-explained", "Intern, junior, senior, lead: what the level in a job title means",
           "What each level in a job title means in plain words, how many open jobs carry it and what they advertise as pay, counted from today’s postings.", "Reading postings",
           f"A level in a title is the employer’s shorthand for how much experience it wants. Half of the postings do not use one. This is what each means, with today’s counts and pay.",
@@ -8888,9 +8920,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           + bars_([(lab_, md_, money(md_), "salaries/") for lab_, _, _, md_ in lvl_rows if md_])
           + '<h2>What each level means</h2><dl class="qa">' + "".join(f"<div><dt>{e(lab_)} · {k:,} open jobs</dt><dd>{e(what_[0].upper() + what_[1:])}.</dd></div>" for lab_, what_, k, _ in lvl_rows) + "</dl>"
           + f"<h2>Titles differ between companies</h2><p>A “senior” at one company is a “staff” at another, and banks call most people “vice president”. Read the years of experience and the tasks in the posting, not only the word. "
-            f"The <a href=\"{P}/salaries/\">salary pages</a> show the pay ladder for each kind of work.</p>",
+            f"The <a href=\"{P}/salaries/\">salary pages</a> show the pay ladder for each kind of work.</p>"
+          + ("<h2>Questions about job levels</h2><dl class=\"qa\">" + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in lv_qa) + "</dl>" if lv_qa else ""),
           '' + mini([(lab_.split(",")[0], md_, money(md_)) for lab_, _, _, md_ in lvl_rows if md_]),
-          (("salaries/", "Salary data by role and level"), ("guides/entry-level-jobs/", "Where beginners are hired"), ("glossary/", "Glossary of job-search terms")))
+          (("salaries/", "Salary data by role and level"), ("guides/entry-level-jobs/", "Where beginners are hired"), ("glossary/", "Glossary of job-search terms")), extra_head=lv_ld)
 
     lap('7–9. how-to guides')
     # 7–9. how-to guides
@@ -8971,6 +9004,23 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         cnames_ = {c: nm for c, nm, _, _ in COUNTRIES}
         cnames_["US"] = "United States"
         dw_ = lambda d_: f"{d_} day{'s' if d_ > 1 else ''}"
+        # What the three ways of working advertise, and two answered questions (25 Nov 2026: the guide was one of the shortest, 522 words
+        # with no question answered; "do hybrid jobs pay less than remote" is asked beside "how many days is hybrid"). Yearly US-dollar
+        # ranges only (an hourly rate is left out, as on /salaries/); a job marked both remote and hybrid counts as hybrid.
+        ymid_ = lambda js__: sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js__ if j.get("usd") and not usd_hourly(j.get("salary")))
+        wpay_ = [(lab_, u_, ymid_(js__)) for lab_, u_, js__ in (("Hybrid", "hybrid/", hyb_), ("Remote", "remote/", [j for j in remote if not j.get("hybrid")]),
+                                                                ("On site", "", [j for j in active if not j["remote"] and not j.get("hybrid")]))]
+        wpay_ok = all(len(v_) >= 30 for _, _, v_ in wpay_)
+        od_top = od_.most_common(3)
+        od_qa = [("How many days a week is hybrid work?", f"Most often {dw_(od_top[0][0])}: {pc_(od_top[0][1], n_od)}% of the {n_od:,} open postings that name a number of office days ask for it"
+                  + "".join(f", then {dw_(d_)} ({pc_(k_, n_od)}%)" for d_, k_ in od_top[1:]) + f". Counted from the full text of {len(all_desc):,} open postings; a range such as 2 to 3 days counts as its lower figure. "
+                  "Five days a week is an office job, whatever the posting calls it.")]
+        if wpay_ok:
+            od_qa.append(("Do hybrid jobs pay less than remote jobs?", "By the yearly US-dollar ranges the open postings here state, the median is "
+                          + ", ".join(f"{money(v_[len(v_) // 2])} for {lab_.lower()} jobs ({len(v_):,} postings)" for lab_, _, v_ in wpay_)
+                          + ". The three groups hold different mixes of work and level, so compare the same role and level before reading much into the gap."))
+        od_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in od_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         guide("office-days-in-hybrid-jobs", "How many days in the office: what hybrid job postings ask for",
               f"{n_od:,} open postings say how many days a week to be in the office, and {pc_(top_d[1], n_od)}% of them ask for {dw_(top_d[0])}. The full count, where hybrid jobs are and what to ask before you apply.", "Remote work",
               f"{len(hyb_):,} of the {n:,} open jobs here are hybrid: some days at home, some in the office. {n_od:,} of the {len(all_desc):,} postings with a full description say how many office days a week they expect, and {pc_(top_d[1], n_od)}% of those ask for {dw_(top_d[0])}.",
@@ -8984,9 +9034,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 "<li><b>Is it in the contract?</b> A policy can change next year; a term in your contract is harder to change.</li>"
                 "<li><b>What does the commute cost?</b> Count the time and the fare for the days asked, and ask whether the employer pays any of it.</li>"
                 "<li><b>What if you move?</b> Ask whether the role could become remote later, and what happens if it cannot.</li></ol>"
-              + f"<p>The <a href=\"{P}/tools/remote-work-savings/\">remote work savings</a> tool puts a figure on the days you would commute.</p>",
+              + f"<p>The <a href=\"{P}/tools/remote-work-savings/\">remote work savings</a> tool puts a figure on the days you would commute.</p>"
+              + ("<h2>What hybrid, remote and on-site jobs advertise</h2><p>The median of the yearly US-dollar ranges stated in today’s open postings of each kind. "
+                 "The groups hold different mixes of work and level, so this is not the price of a day at home.</p>"
+                 + bars_([(lab_, v_[len(v_) // 2], f"{money(v_[len(v_) // 2])} · {len(v_):,} postings", u_ or "jobs/") for lab_, u_, v_ in wpay_]) if wpay_ok else "")
+              + "<h2>Questions about office days</h2><dl class=\"qa\">" + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in od_qa) + "</dl>",
               '' + mini([(f"{d_} days", k, f"{pc_(k, n_od)}%") for d_, k in od_.most_common(4)]),
-              (("hybrid/", "All hybrid jobs"), ("remote/", "Remote jobs"), ("glossary/hybrid/", "Hybrid, explained")))
+              (("hybrid/", "All hybrid jobs"), ("remote/", "Remote jobs"), ("glossary/hybrid/", "Hybrid, explained")), extra_head=od_ld)
 
     lap('11. what postings ask for besides tools: the situations of t')
     # 11. what postings ask for besides tools: the situations of the interview question pages, counted over every full description
