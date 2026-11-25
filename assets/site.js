@@ -752,23 +752,22 @@
     // opens on "jobs based on your preferences" (checked 20 Nov 2026). Counted here from the jobs index; nothing is sent anywhere.
     // Without answers, the jobs saved here say it instead (LinkedIn picks jobs "based on your profile, preferences and activity such
     // as applies, searches and saves"): the kinds of work most saved, home or office as most of them, the newest jobs not saved yet.
-    var fits = fitTest(get('hrn_profile', null)), mine = get('hrn_jobs', {}), how = 'fit your answers', href = P + '/for-you/';
-    if (fits || Object.keys(mine).length >= 2) load().then(function (rows) {
-      if (!fits) {
-        var by = {}; rows.forEach(function (j) { by[j[0]] = j; });
-        var kept = Object.keys(mine).map(function (k) { return by[k]; }).filter(Boolean);
-        if (kept.length < 2) return;
-        var cats = {}; kept.forEach(function (j) { cats[j[5]] = (cats[j[5]] || 0) + 1; });
-        var top = Object.keys(cats).sort(function (x, y) { return cats[y] - cats[x]; }).filter(function (c) { return cats[c] >= 2 || kept.length < 4; }).slice(0, 2);
-        var rem = kept.filter(function (j) { return j[4]; }).length * 2 > kept.length;
-        if (!top.length) return;
-        fits = function (j) { return !mine[j[0]] && !j[22] && top.indexOf(j[5]) >= 0 && (!rem || j[4]); };
-        how = 'are like the jobs you saved'; href = P + '/jobs/?cat=' + encodeURIComponent(top[0]) + (rem ? '&remote=1' : '');
-      }
-      var fit = rows.filter(fits).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
+    // The jobs are asked of the server (the list of every job, 22 MB, was downloaded for this until 25 Nov 2026)
+    var fq = fitQuery(get('hrn_profile', null)), mine = get('hrn_jobs', {}), saved = Object.keys(mine), how = 'fit your answers', href = P + '/for-you/';
+    (fq ? Promise.resolve(fq) : saved.length >= 2 ? rowsOf(saved).then(function (kept) {
+      if (kept.length < 2) return null;
+      var cats = {}; kept.forEach(function (j) { cats[j[5]] = (cats[j[5]] || 0) + 1; });
+      var top = Object.keys(cats).sort(function (x, y) { return cats[y] - cats[x]; }).filter(function (c) { return cats[c] >= 2 || kept.length < 4; }).slice(0, 2);
+      var rem = kept.filter(function (j) { return j[4]; }).length * 2 > kept.length;
+      if (!top.length) return null;
+      how = 'are like the jobs you saved'; href = P + '/jobs/?cat=' + encodeURIComponent(top[0]) + (rem ? '&remote=1' : '');
+      return 'np=1&cat=' + encodeURIComponent(top.slice().sort().join(',')) + (rem ? '&remote=1' : '');
+    }) : Promise.resolve(null)).then(function (qs) { return qs ? listOf(qs) : null; }).then(function (got) {
+      if (!got) return;
+      var fit = got.rows.filter(function (j) { return !mine[j[0]]; }).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
       if (fit.length < 3 || tabs.querySelector('[data-tab="fy"]')) return;
       var t = document.createElement('a'); t.href = href; t.setAttribute('data-tab', 'fy'); t.textContent = 'For you';
-      t.setAttribute('data-more', 'See all ' + fit.length.toLocaleString('en-US') + ' that ' + how);
+      t.setAttribute('data-more', 'See all ' + got.total.toLocaleString('en-US') + ' that ' + how);
       var ul = document.createElement('ul'); ul.className = 'jobs'; ul.setAttribute('data-panel', 'fy');
       ul.innerHTML = fit.slice(0, Math.max(5, (box.querySelector('[data-panel="0"]') || { children: [] }).children.length)).map(card).join('');
       var first = tabs.querySelector('a[data-tab]');
@@ -1210,33 +1209,31 @@
     var num = function (x) { return Number(x).toLocaleString('en-US'); };
     function tileOf(slug) { return document.querySelector('[data-place="' + slug + '"]'); }
     function show(slug, name, how, wider) {
-      load().then(function (rows) {
-        var got = rows.filter(function (j) { return j[14].indexOf(slug) >= 0 && (!et || j[19] === et) && !j[22]; });
-        if (!got.length && wider) return wider();            // nothing in the country today: the part of the world it is in
-        var codes = got.length ? got[0][24].slice(0, 1) : [];
+      // the place's jobs and their summary from the server (the list of every job, 22 MB, was downloaded for this until 25 Nov 2026)
+      listOf('loc=' + encodeURIComponent(slug) + (et ? '&etype=' + encodeURIComponent(et) : '') + '&np=1&sum=1').then(function (got) {
+        var n = got.total, rows = got.rows;
+        if (!n && wider) return wider();            // nothing in the country today: the part of the world it is in
+        var codes = rows.length ? rows[0][24].slice(0, 1) : [];
         head.innerHTML = (et ? esc(et) + ' jobs in ' : 'Jobs in ') + (tileOf(slug) && tileOf(slug).querySelector('.fl') ? tileOf(slug).querySelector('.fl').outerHTML : flags(codes)) + esc(name) +
-          ' <span class="pill">' + num(got.length) + '</span>';
-        list.innerHTML = got.slice(0, 20).map(function (j) { return card(j); }).join('') ||
+          ' <span class="pill">' + num(n) + '</span>';
+        list.innerHTML = rows.slice(0, 20).map(function (j) { return card(j); }).join('') ||
           '<li class="job"><span class="js" style="padding:16px">No ' + (et ? esc(et.toLowerCase()) + ' ' : '') + 'jobs in ' + esc(name) + ' today. The lists below cover other places and work from home.</span></li>';
-        more.innerHTML = got.length > 20 ? '<a href="' + P + '/jobs/?loc=' + slug + (et ? '&etype=' + encodeURIComponent(et) : '') + '">All ' + num(got.length) + ' in ' + esc(name) + '</a>' : '';
-        // a short summary of the place (plan item 1.13, 20 Nov 2026: the page gave only a count and twenty jobs): counted from the
-        // same rows as the list, in the browser
+        more.innerHTML = n > 20 ? '<a href="' + P + '/jobs/?loc=' + slug + (et ? '&etype=' + encodeURIComponent(et) : '') + '">All ' + num(n) + ' in ' + esc(name) + '</a>' : '';
+        // a short summary of the place (plan item 1.13, 20 Nov 2026: the page gave only a count and twenty jobs): counted by the server
+        // over the same jobs as the list
         var sum = document.getElementById('nearme-sum');
         if (!sum) { sum = document.createElement('p'); sum.id = 'nearme-sum'; sum.className = 'note'; head.parentNode.insertBefore(sum, head.nextSibling); }
-        sum.innerHTML = summary(got); sum.hidden = !sum.innerHTML;
+        sum.innerHTML = summary(got.sum, n); sum.hidden = !sum.innerHTML;
         if (how && note) note.textContent = how;
         box.hidden = false; freshen(list);
       }).catch(function () {});
     }
-    function summary(got) {
-      if (got.length < 10) return '';
-      var d = new Date(Date.now() - 7 * 864e5), cut = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-      var rem = 0, pay = 0, fresh = 0, cos = {};
-      got.forEach(function (j) { if (j[4]) rem++; if (j[8]) pay++; if (j[16] >= cut) fresh++; cos[j[2]] = (cos[j[2]] || 0) + 1; });
-      var top = Object.keys(cos).sort(function (a, b) { return cos[b] - cos[a]; }).slice(0, 3).filter(function (c) { return cos[c] >= 2; });
-      var pc = function (k) { return Math.round(100 * k / got.length) + '%'; };
-      var parts = [rem ? num(rem) + ' can be done from home (' + pc(rem) + ')' : '', pay ? num(pay) + ' state the pay (' + pc(pay) + ')' : '', fresh ? num(fresh) + ' posted in the last 7 days' : '',
-              top.length ? 'most from ' + top.map(function (c) { return esc(c) + ' (' + num(cos[c]) + ')'; }).join(', ') : ''].filter(Boolean);     // a nought says nothing
+    function summary(S, n) {
+      if (!S || n < 10) return '';
+      var top = (S.top || []).filter(function (c) { return c[1] >= 2; });
+      var pc = function (k) { return Math.round(100 * k / n) + '%'; };
+      var parts = [S.remote ? num(S.remote) + ' can be done from home (' + pc(S.remote) + ')' : '', S.pay ? num(S.pay) + ' state the pay (' + pc(S.pay) + ')' : '', S.fresh ? num(S.fresh) + ' posted in the last 7 days' : '',
+              top.length ? 'most from ' + top.map(function (c) { return esc(c[0]) + ' (' + num(c[1]) + ')'; }).join(', ') : ''].filter(Boolean);     // a nought says nothing
       return parts.length ? parts.join(' · ') + '.' : '';
     }
     function km(a, b, c, d) {
@@ -1468,6 +1465,8 @@
       if (c) { var s = c.getAttribute('data-skill'); if (profile.skills.indexOf(s) < 0) profile.skills.push(s); chips.forEach(function (x) { x.setAttribute('aria-pressed', profile.skills.indexOf(x.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); run(); }
       skillIn.value = '';
     });
+    var bigOk = false;                    // the visitor asked to score every job (a phone waits for this; see heavyOk)
+    count.addEventListener('click', function (ev) { if (ev.target && ev.target.id === 'fy-all') { bigOk = true; run(); } });
     var run = function () {
       if (!profile.roles) profile.roles = [];
       drawRoles();
@@ -1479,6 +1478,19 @@
         count.innerHTML = '<p class="fy-n">Answer any question and the jobs that fit are listed here.</p><p class="note">Until then, these are the newest postings.</p>';
         if (jump) jump.hidden = true;
         loadHead().then(function (h) { if (asked) return; extra = new Map(); found = collapse(h.rows.filter(function (j) { return !mute.c[j[2]] && !hidden[j[0]]; }), extra).slice(0, 30); shown = 30; render(); }).catch(function () {});
+        return;
+      }
+      if (!bigOk && !heavyOk()) {
+        // a phone: scoring every job against every answer needs the list of every job (22 MB), so it waits for a tap; meanwhile the
+        // server lists the newest jobs in the visitor's fields, place and pay (fitQuery)
+        why = new Map(); nFull = 0; gap.hidden = true;
+        count.innerHTML = '<p class="fy-n">Your answers are saved.</p><p class="note">Below: the newest jobs in your fields, place and pay. To score every open job against all your answers, ' +
+          'this page downloads the whole list (about 22 MB), so on a phone it waits for you. <button class="btn sm" type="button" id="fy-all">Check every open job</button></p>';
+        var fq = fitQuery(profile);
+        (fq ? listOf(fq) : listOf('np=1')).then(function (g) {
+          if (bigOk || answers().n !== asked) return;
+          extra = new Map(); found = g.rows.filter(function (j) { return !mute.c[j[2]] && !hidden[j[0]]; }); shown = 30; render();
+        }).catch(function () {});
         return;
       }
       count.innerHTML = '<p class="fy-n">Checking every open job…</p>';
@@ -1757,7 +1769,8 @@
       else if (ev.target.classList.contains('nt')) { rec.note = ev.target.value; store(); }
     });
     draw();
-    if (Object.keys(jobs).length) load().then(function (index) { openSet = {}; index.forEach(function (j) { openSet[j[0]] = 1; }); draw(); }).catch(function () {});
+    // which saved jobs are still open: asked of the server by slug (the list of every job, 22 MB, was downloaded for this until 25 Nov 2026)
+    if (Object.keys(jobs).length) rowsOf(Object.keys(jobs)).then(function (rows) { openSet = {}; rows.forEach(function (j) { openSet[j[0]] = 1; }); draw(); }).catch(function () {});
     var hiddenNote = $('mj-hidden'), hiddenCount = Object.keys(hidden).length, mutedCos = Object.keys(mute.c);
     if (hiddenNote && (hiddenCount || mutedCos.length || mute.w.length)) {
       hiddenNote.innerHTML = [hiddenCount ? hiddenCount + (hiddenCount === 1 ? ' job' : ' jobs') : '', mutedCos.length ? 'these companies: ' + mutedCos.map(esc).join(', ') : '',
@@ -1806,15 +1819,11 @@
     }
 
     var searches = get('hrn_searches', []);
-    var drawSearches = function (index) {
+    var drawSearches = function (counts) {           // counts: the new jobs of each saved search, as the server counted them
       $('ss-empty').hidden = searches.length > 0;
       $('ss-list').innerHTML = searches.map(function (s, i) {
-        var fresh = '';
-        if (index) {
-          var f = parse(s.qs), n = 0;
-          for (var k = 0; k < index.length; k++) if (index[k][16] > s.seen && match(index[k], f)) n++;
-          fresh = n ? '<span class="pill ok">' + n + ' new</span>' : '<span class="pill">No new jobs</span>';
-        }
+        var fresh = '', n = counts ? counts[i] : null;
+        if (n != null) fresh = n ? '<span class="pill ok">' + n.toLocaleString('en-US') + ' new</span>' : '<span class="pill">No new jobs</span>';
         return '<li class="trow" data-i="' + i + '"><span class="ava keep" aria-hidden="true">⌕</span><div class="main"><a class="tt ss-open" href="' + P + '/jobs/?' + esc(s.qs) + '">' + esc(s.label) + '</a>' +
           '<span class="js">Saved search</span></div><div class="ctl">' + fresh + '<button class="unsave ss-del" type="button">Remove</button></div></li>';
       }).join('');
@@ -1827,15 +1836,11 @@
       else if (ev.target.classList.contains('ss-open')) { searches[i].seen = today(); set('hrn_searches', searches); }
     });
     var follows = get('hrn_follow', {}), fkeys = Object.keys(follows);
-    var drawFollows = function (index) {
+    var drawFollows = function (counts) {           // counts: company -> [new, open], as the server counted them
       $('fc-empty').hidden = fkeys.length > 0;
       $('fc-list').innerHTML = fkeys.map(function (k) {
-        var fresh = '';
-        if (index) {
-          var n = 0, total = 0;
-          for (var i = 0; i < index.length; i++) if (slugOf(index[i][2]) === k) { total++; if (index[i][16] > follows[k].seen) n++; }
-          fresh = (n ? '<span class="pill ok">' + n + ' new</span>' : '') + '<span class="pill">' + total + ' open</span>';
-        }
+        var fresh = '', c = counts && counts[k];
+        if (c) fresh = (c[0] ? '<span class="pill ok">' + c[0].toLocaleString('en-US') + ' new</span>' : '') + '<span class="pill">' + c[1].toLocaleString('en-US') + ' open</span>';
         return '<li class="trow" data-k="' + esc(k) + '">' + avatar(follows[k].name, '', true) + '<div class="main"><a class="tt" href="' + P + '/companies/' + esc(k) + '/">' + esc(follows[k].name) + '</a>' +
           '<span class="js">Company you follow</span></div><div class="ctl">' + fresh + '<button class="unsave fc-del" type="button">Unfollow</button></div></li>';
       }).join('');
@@ -1846,7 +1851,16 @@
       var k = ev.target.closest('.trow').getAttribute('data-k');
       delete follows[k]; fkeys = Object.keys(follows); set('hrn_follow', follows); drawFollows(null);
     });
-    if (searches.length || fkeys.length) load().then(function (index) { if (searches.length) drawSearches(index); if (fkeys.length) drawFollows(index); }).catch(function () {});
+    // the counts come from the server, one small request each (the list of every job, 22 MB, was downloaded for them until 25 Nov 2026)
+    var countOf = function (qs) { return listOf(qs + '&count=1').then(function (g) { return g.total; }, function () { return null; }); };
+    if (searches.length) Promise.all(searches.map(function (s) {
+      var qs = (s.qs || '').split('&').filter(function (x) { return x && !/^(?:sort|after|count)=/.test(x); }).join('&');
+      return countOf((qs ? qs + '&' : '') + 'after=' + Number(s.seen || 0));
+    })).then(drawSearches);
+    if (fkeys.length) Promise.all(fkeys.slice(0, 40).map(function (k) {
+      var co = 'co=' + encodeURIComponent(follows[k].name || '');
+      return Promise.all([countOf(co + '&after=' + Number(follows[k].seen || 0)), countOf(co)]);
+    })).then(function (all) { var out = {}; all.forEach(function (c, i) { if (c[1] != null) out[fkeys[i]] = [c[0] || 0, c[1]]; }); drawFollows(out); });
   }
 })();
 
@@ -1979,7 +1993,7 @@
 })();
 
 /* job page: how this job fits the visitor's "For you" answers (kept in this browser as hrn_profile), the way Hirify scores a job.
-   Without answers it invites the visitor to give them once; nothing is sent anywhere. */
+   Without answers it invites the visitor to give them once. The answers are never sent anywhere; only this job's row is asked of our server. */
 (function () {
   var H = window.HRN, save = document.getElementById('save'), anchor = document.querySelector('.rmbox') || document.getElementById('apply');
   if (!H || !save || !anchor) return;
@@ -1992,9 +2006,8 @@
     anchor.parentNode.insertBefore(box, anchor.nextSibling);
     return;
   }
-  H.load().then(function (rows) {
-    var j = null;
-    for (var i = 0; i < rows.length; i++) if (rows[i][0] === slug) { j = rows[i]; break; }
+  H.rowsOf([slug]).then(function (rows) {          // this one job's row from the server (it was found in the list of every job, 22 MB)
+    var j = rows[0] || null;
     if (!j) return;
     var bits = [], ok = 0, n = 0, k = function (v) { return '$' + Math.round(v / 1000) + 'K'; };
     if (cats.length) { n++; if (cats.indexOf(j[5]) >= 0) { ok++; bits.push([1, 'Your kind of work']); } else bits.push([0, 'Another kind of work than you chose']); }

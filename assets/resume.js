@@ -648,6 +648,8 @@
       return '<li><a href="' + H.base + '/jobs/?skills=' + encodeURIComponent(t) + '">' + H.esc(t) + '</a>: <b>+' + nf(gain[t]) + '</b> open jobs would ask for ' + (need === 1 ? 'a skill' : need + ' of the skills') + ' in this resume' + med(gainPay[t]) + '</li>';
     }).join('') + '</ol><p class="note">Counted now from every open job: the jobs that ask for all but one of your skills, plus this one. Learn it only if it fits the work you want.</p></div>';
   }
+  var demandOk = false;                 // on a phone the count waits for a tap: it reads the list of every open job (22 MB; site.js heavyOk)
+  if (demand) demand.addEventListener('click', function (ev) { if (ev.target && ev.target.id === 'rbd-go') { demandOk = true; drawDemand(); } });
   function drawDemand() {
     if (!demand || !H.load) return;
     var text = [data.title, data.summary, data.skills].concat(data.exp.map(function (x) { return x.role + ' ' + x.text; }), data.proj.map(function (x) { return x.name + ' ' + x.text; })).join('\n');
@@ -655,6 +657,11 @@
     (pats ? Promise.resolve(pats) : fetch(H.base + '/data/skills.json').then(function (r) { return r.json(); }).then(function (p) { pats = p; return p; })).then(function (p) {
       var mine = []; p.forEach(function (x) { try { if (new RegExp(x[1], 'i').test(text)) mine.push(x[0]); } catch (e) {} });
       if (!mine.length) { demand.innerHTML = '<p class="note">No skill that employers name in postings was found in this resume yet. Write the tools and methods you use by their names.</p>'; return; }
+      if (!demandOk && H.heavyOk && !H.heavyOk()) {
+        demand.innerHTML = '<p class="note">How many open jobs ask for the ' + mine.length + (mine.length === 1 ? ' skill' : ' skills') + ' in this resume, and which one skill would add the most: counted from every open job, ' +
+          'which means downloading the whole list (about 22 MB). <button class="btn sm" type="button" id="rbd-go">Count them</button></p>';
+        return;
+      }
       return H.load().then(function (all) {
         var per = {}, need = Math.min(3, mine.length), fit = 0, gain = {}, gainPay = {};
         mine.forEach(function (t) { per[t] = 0; });

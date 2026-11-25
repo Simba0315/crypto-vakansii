@@ -65,7 +65,9 @@
     if (!ev.target.closest || !ev.target.closest('.mp-close')) return;
     picked = -1; panel.hidden = true; map.resize();
   });
-  var ready = H.load().then(function (r) { rows = r; });
+  // the list of every job (22 MB) is fetched only when it is needed: words typed in the box, or a city opened. The dots and the counts
+  // without words come from data/map.json.
+  var asked = null, ready = { then: function (fn) { if (!asked) asked = H.load().then(function (r) { rows = r; }); return asked.then(fn); } };
   // the dots go on as soon as the map style is in (style.load), not after every base-map tile (load)
   Promise.all([fetch(P + '/data/map.json').then(function (r) { return r.json(); }), new Promise(function (ok) { if (map.isStyleLoaded()) ok(); else map.once('style.load', ok); })]).then(function (got) {
     M = got[0];

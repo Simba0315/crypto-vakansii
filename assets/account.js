@@ -334,10 +334,10 @@
       box.innerHTML = part('Jobs that fit you', '<p class="acc-sub">Answer five questions on <a href="' + esc(D.site) + '/for-you/">For you</a>: the newest jobs that fit your answers then show here.</p>');
       box.hidden = false; return;
     }
-    H.load().then(function (rows) {
-      var fit = rows.filter(H.fitTest(p)).sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
+    H.listOf(H.fitQuery(p)).then(function (got) {      // asked of the server (the list of every job, 22 MB, was downloaded for this until 25 Nov 2026)
+      var fit = got.rows.slice().sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
       box.innerHTML = part('Jobs that fit you', fit.length
-        ? '<p class="acc-sub">' + fit.length.toLocaleString('en-US') + ' open jobs fit your answers on For you. The newest:</p><ul class="jobs">' + fit.slice(0, 5).map(function (j) { return H.card(j); }).join('') + '</ul>' +
+        ? '<p class="acc-sub">' + got.total.toLocaleString('en-US') + ' open jobs fit your answers on For you. The newest:</p><ul class="jobs">' + fit.slice(0, 5).map(function (j) { return H.card(j); }).join('') + '</ul>' +
           '<p><a href="' + esc(D.site) + '/for-you/">See all of them, or change your answers</a></p>'
         : '<p class="acc-sub">No open job fits all your answers today. <a href="' + esc(D.site) + '/for-you/">Loosen one of them on For you</a>.</p>');
       box.hidden = false;
