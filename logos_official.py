@@ -705,6 +705,8 @@ SITES = {
     "Epirus": "epirusinc.com",
     "True Anomaly": "trueanomaly.space",
     "Kong": "konghq.com",
+    "Hawkins": "hawkinsinc.com",
+    "Nimble Robotics": "nimble.ai",
 }
 
 ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|ashbyprd\.com|myworkdayjobs\.com|myworkday\.com|workday\.com|"
