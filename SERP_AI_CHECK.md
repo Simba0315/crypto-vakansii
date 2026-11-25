@@ -1141,5 +1141,11 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   dol.gov, Indeed, ZipRecruiter, SummerJobs.com, seasonaljobs.dol.gov; "apply February to April" without a count, the FLSA hours for 14 and 15 (as ours), the
   $7.25 federal minimum and the $4.25 youth minimum for the first 90 days; added to "What do summer jobs pay?" from DOL Fact Sheet #32 (read 25 Nov: under 20,
   first 90 consecutive calendar days, no displacing other staff). jobseveryhour.com is cited in none of the four.
-- Titles of the four lists in title case, as /part-time/ ("Temporary and Seasonal Jobs (…)"). Not done in this pass: Google's and Bing's first pages and AI
-  answers and Perplexity for these queries; compare the live counts after the deploy.
+- Bing (US, 25 Nov ~06:50 UTC), no Copilot answer shown, only the "AI Mode" button. "contract jobs": ads (JobAssist, JobHire.AI, FlexJobs, NurseRecruiter),
+  then Indeed (138,958), Abbott, We Work Remotely, videos. "temporary jobs": Indeed (259,000; and "short term temporary" 107,000), Monster, Adecco,
+  UW Jobs, Randstad, FlexJobs, LinkedIn. "weekend jobs": Indeed (119,000; "weekend only" 63,000), Snagajob, Monster, Amazon hiring, Randstad, Indeed Flex.
+  "summer jobs": Indeed (36,000; "summer seasonal" 35,000), SummerJobs.com, CoolWorks, Snagajob, ZipRecruiter ("$13-$20/hr Summer Jobs (NOW HIRING) Nov
+  2026"), LinkedIn. Every first result is a list of jobs with the count and, at ZipRecruiter, the hourly range in the title, as ours ("Weekend Jobs (… open,
+  $18–$28 an hour)"); none answers the questions on the page. jobseveryhour.com is not in the first results of any of the four.
+- Titles of the four lists in title case, as /part-time/ ("Temporary and Seasonal Jobs (…)"). Not done in this pass: Google's first page and AI answer and
+  Perplexity for these queries; compare the live counts after the deploy.
