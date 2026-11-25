@@ -1025,8 +1025,9 @@ def h1b_qa(c, slug):
     top_ = [r_[0] for r_ in d["roles"][:3]]
     return (f"Does {c} sponsor H-1B visas?",
             f"US Department of Labor records hold {ys[0][1]:,} H-1B Labor Condition {'Application' if ys[0][1] == 1 else 'Applications'} from {c} certified in fiscal year {ys[0][0]}"
-            + (f" and {ys[1][1]:,} in fiscal year {ys[1][0]}" if len(ys) > 1 else "") + "; "
-            + (f"the job filed most often was {top_[0]}. " if len(top_) == 1 else f"the jobs filed most often were {', '.join(top_[:-1])} and {top_[-1]}. ")
+            + (f" and {ys[1][1]:,} in fiscal year {ys[1][0]}" if len(ys) > 1 else "")
+            # a company may hold filings but no job titles for the latest year (Happy Cog, 25 Nov 2026: top_[-1] stopped the hourly build)
+            + ("; " + (f"the job filed most often was {top_[0]}. " if len(top_) == 1 else f"the jobs filed most often were {', '.join(top_[:-1])} and {top_[-1]}. ") if top_ else ". ")
             + H1B_WHAT.replace("the company", c) + " Ask the recruiter whether the role you want can be sponsored.")
 
 
