@@ -4984,3 +4984,46 @@ main.kw .rexgrid>div>p:has(>a.btn.primary)>.btn.ghost{flex:1 1 0;justify-content
 /* the hiring guides open with five figures in a column beside the contents: smaller figures so "80 days" keeps to its cell */
 .has-toc .khero .nums dd{font-size:clamp(24px,2.3vw,30px)}
 .has-toc .khero .nums>div{padding:18px 18px 16px}
+
+/* ---- tools (/tools/ and each /tools/<tool>/): the cards take the 24 px corner and one hairline; "Open the tool" is a text link with
+   its arrow in a circle (it was a green underline); the three wide cards lose the green bar between picture and text; the row of
+   other tools are pills without underlines; on a tool page the form and the result are white cards of the same family, the result
+   without its green top rule, and "In plain words" a white card in the panel (it was a green bar on the left) ---- */
+.tcard,.twide{border-color:var(--line);border-radius:24px}
+.tcard:hover,.twide:hover{border-color:var(--text);box-shadow:0 24px 44px -34px rgba(14,14,12,.4)}
+.twide .tprev{border-right:1px solid var(--line)}
+@media(max-width:820px){.twide .tprev{border-right:0;border-bottom:1px solid var(--line)}}
+.tbody{padding:18px 22px 20px}
+.tbody>i{display:inline-flex;align-items:center;gap:8px;width:fit-content}
+.tbody>i u{text-decoration:none;color:var(--text)}
+.tbody>i::after{content:"\2192";display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:var(--text);color:var(--bg);font-size:12px;font-style:normal;line-height:1}
+.tcard:hover .tbody>i u,.twide:hover .tbody>i u{background:none;color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+a.feat h2,a.feat h3{text-decoration:none}
+a.feat h2::after,a.feat h3::after{content:" \2192";color:var(--faint);font-weight:500}
+a.feat:hover h2,a.feat:hover h3{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+main .tsub a{text-decoration:none}
+main .tsub a:not(.all):not([aria-current]){color:var(--muted)}
+main .tsub a:hover{color:var(--text)}
+.phero .plain,main.sp .khero .plain.tl-plain{border-left:0}
+main:has(>.tl) .phero .plain{max-width:80ch;margin:24px 0 0;padding:16px 20px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--muted)}
+main:has(>.tl) .phero .plain b{color:var(--text)}
+main .tl .card.tl-form{padding:24px 26px;border-color:var(--line);border-radius:24px}
+main .tl-in,main .tl select,main .tl textarea{border-color:var(--line2);border-radius:12px}
+main .tl-board{margin-top:16px;padding:20px 26px 24px;border:1px solid var(--line);border-top-width:1px;border-radius:24px;box-shadow:none}
+main .tl-board-h{padding-bottom:12px}
+main .tl-board-h span::before{content:"";display:inline-block;width:8px;height:8px;margin:0 9px 1px 0;border-radius:50%;background:var(--ac)}
+main .tl-priv{margin:12px 4px 0}
+@media(max-width:700px){main .tl .card.tl-form{padding:18px 16px;border-radius:20px}main .tl-board{padding:16px 18px 20px;border-radius:20px}}
+main .phero+.tsub{margin:20px 0 14px}
+/* the matching page (/for-you/) opens with the panel; on a phone it stays short so the first question's choices show on the first screen */
+@media(max-width:700px){
+  main.fyp .phero{padding-bottom:20px}
+  main.fyp .phero h1{font-size:27px}
+  main.fyp .phero .lead{font-size:15.5px;line-height:1.5}
+  main.fyp .phero .plain{margin-top:14px;padding-top:12px;font-size:14px}
+  main.fyp .phero+.note{margin:12px 0 0;font-size:13px}
+}
+/* two text boxes side by side where only one has a row above it ("Open a PDF or Word file"): the other box took that row's place and
+   stretched it, so the resume box started 300 px down, under an empty gap (resume match, resume review…); the box without the row
+   now spans both rows and the two start together */
+main .tl-grid>.tl-f>.tl-l+textarea:last-child{grid-row:span 2;height:100%}

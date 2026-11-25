@@ -1256,7 +1256,9 @@ FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover lette
                "companies": "Companies", "jobs-for": "Jobs for…", "trends": "Trends", "reports": "Reports", "open-hiring-index": "Open hiring index",
                "privacy": "Privacy", "terms": "Terms", "methodology": "Methodology", "safety": "Safety", "promise": "Our promise", "status": "Status",
                "help": "Help", "job-posting-sites": "For employers", "job-search-engines": "Compared", "free-resume-builders": "Compared",
-               "how-long-job-postings-stay-open": "Insight", "internships": "Internships", "jobs-near-me": "Near you", "my-jobs": "Your tracker"}
+               "how-long-job-postings-stay-open": "Insight", "internships": "Internships", "jobs-near-me": "Near you", "my-jobs": "Your tracker",
+               # v4, pass 2 (26 Nov 2026): the matching page and the three pages that explain a tool open with the panel too
+               "for-you": "Jobs for you", "resume-tailor": "Explained", "ai-job-match": "Explained", "job-application-tracker": "Explained"}
 FRAME_ARTICLE = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)'
                            r'((?:<div class="adv-short"><span>[^<]*</span><p>.*?</p></div>)?)(<p class="lead">.*?</p>)', re.S)
 FRAME_TOOL = re.compile(r'^(<div class="crumbs">.*?</div>)(<nav class="tsub".*?</nav>)(<h1[^>]*>.*?</h1>)(<p class="lead">.*?</p>)((?:<p class="plain">.*?</p>)?)', re.S)
@@ -1275,7 +1277,7 @@ def frame_first(path, body):
     seg = path.strip("/").split("/")
     if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
     lab_ = FRAME_LABEL[seg[0]]
-    if lab_.endswith(" example") and (len(seg) == 1 or seg == ["resume", "examples"]): lab_ += "s"     # the hub of examples: "CV examples"
+    if lab_.endswith((" example", " tool")) and (len(seg) == 1 or seg == ["resume", "examples"]): lab_ += "s"     # a hub: "CV examples", "Free tools"
     lab = f'<p class="sec-label">{lab_}</p>'
     if (m := FRAME_ARTICLE.match(body)):                 # guides and "jobs for": the panel opens the article
         pre, cr, h1, stamp, short, lead = (g or "" for g in m.groups())
@@ -1290,7 +1292,11 @@ def frame_first(path, body):
     m = FRAME_RX.match(body)
     if not m: return body
     pre, cr, h1, plain, lead, nums = (g or "" for g in m.groups())
+    if not plain and seg[0] == "for-you" and (m2 := FRAME_PLAIN_AFTER.match(body, m.end())):     # "In plain words" under the opening there
+        plain, end_ = m2.group(1), m2.end()
+        return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div>{nums}</div>' + body[end_:]
     return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div>{nums}</div>' + body[m.end():]
+FRAME_PLAIN_AFTER = re.compile(r'(<p class="plain">.*?</p>)', re.S)
 
 
 # Design, step 5 (19 Nov 2026): every titled section of a page carries a small label above its heading, as the hub pages and dLocal's

@@ -2652,7 +2652,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     list_ld = _ld({"@context": "https://schema.org", "@type": "ItemList", "name": f"Free tools on {SITE}", "numberOfItems": len(TOOLS),
                    "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": t["name"], "url": f"{FULL}/tools/{t['slug']}/"} for i, t in enumerate(TOOLS)]})
     page("tools/", "Free Tools for Job Seekers & Recruiters" + brand, hub_desc,
-         crumbs(("Tools", "")) + "<h1>Free tools for a job search and for hiring</h1>"
+         crumbs(("Tools", "")) + '<h1>Free tools <span class="lt">for a job search and for hiring</span></h1>'
          f'<p class="lead">{len(TOOLS) + len(EXTRA)} tools, from a resume builder to pay calculators, for things that come up along the way: whether your pay is fair, how well a resume fits a posting, which of two offers is worth more, why a vacancy gets no replies. '
          f"They run in your browser with no account, and the salary figures come from the {n_paid:,} open postings here that publish a pay range.</p>"
          + '<dl class="nums">' + "".join(f"<div><dt>{b_}</dt><dd>{a_}</dd></div>" for a_, b_ in (
@@ -2666,7 +2666,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                    sid="start", label="The three most used").replace("<section ", "<section data-dirg ", 1)
          + seekers
          + part("For employers and recruiters", group("employers"), "employers", n_emp)
-         + section("Templates and examples to copy", '<div class="feats">'
+         + section("Templates and examples [[to copy]]", '<div class="feats">'
                    f'<a class="feat" href="{P}/resume/examples/"><h3>Resume examples</h3><p>A written example for each kind of work, with the skills today’s postings name.</p></a>'
                    f'<a class="feat" href="{P}/cover-letter-examples/"><h3>Cover letter examples</h3><p>A letter for each kind of work that leads with results, ready to copy.</p></a>'
                    f'<a class="feat" href="{P}/resignation-letters/"><h3>Resignation letters</h3><p>Two weeks notice, effective immediately, by email and 15 more situations.</p></a>'
@@ -2676,13 +2676,13 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                    f'<a class="feat" href="{P}/job-descriptions/"><h3>Job description templates</h3><p>For employers: a template per role with what today’s postings ask and pay.</p></a>'
                    f'<a class="feat" href="{P}/how-to-hire/"><h3>How to hire…</h3><p>For employers: who else is hiring each role, what they pay, and six steps.</p></a>'
                    f'<a class="feat" href="{P}/map/"><h3>Jobs map</h3><p>Every city with open jobs on one map. Search a skill and see where it is hiring.</p></a>'
-                   f'<a class="feat" href="{P}/vs/"><h3>Compared with other job sites</h3><p>Fair, sourced comparisons with Indeed, LinkedIn and others.</p></a></div>')
+                   f'<a class="feat" href="{P}/vs/"><h3>Compared with other job sites</h3><p>Fair, sourced comparisons with Indeed, LinkedIn and others.</p></a></div>', label="Templates")
          + section("How these tools work", '<div class="feats">'
                    '<div class="feat"><h3>Nothing leaves your browser</h3><p>Every calculation and text check runs on your device. Nothing is uploaded, and “Clear” erases what a tool remembers.</p></div>'
                    f'<div class="feat"><h3>The salary figures have a source</h3><p>They come from {n_paid:,} open roles that publish a yearly US-dollar range. No figure is shown for fewer than {MIN_SAMPLE} postings.</p></div>'
                    '<div class="feat"><h3>The method is on the page</h3><p>Arithmetic and fill-in templates, not AI. Under each tool you can read how its result is calculated.</p></div></div>')
          + section("Questions about the tools", faq_html)
-         + section("More on this site", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")])),
+         + section("More [[on this site]]", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")]), label="More"),
          head=assets + list_ld + faq_ld + crumbs_ld([("Tools", "")]), cls="hub tlhub")
 
     return [(f"tools/{t['slug']}/", t["name"], t["card"]) for t in TOOLS]
