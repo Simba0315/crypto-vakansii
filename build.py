@@ -12314,6 +12314,9 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     write("favicon.svg", f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{MARK}</svg>', sitemap=False)
     if (ROOT / "assets" / "brand" / "favicon.ico").exists():        # made by "python3 og.py --icons"; asked for by name by browsers and Googlebot
         shutil.copyfile(ROOT / "assets" / "brand" / "favicon.ico", OUT / "favicon.ico")
+    if (ROOT / "assets" / "brand" / "apple-touch-icon.png").exists():     # iOS and many crawlers ask the root for these by name (404 until 25 Nov 2026)
+        for icon_ in ("apple-touch-icon.png", "apple-touch-icon-precomposed.png"):
+            shutil.copyfile(ROOT / "assets" / "brand" / "apple-touch-icon.png", OUT / icon_)
     write("hiring-badge.svg", f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-label="We\'re hiring — {e(SITE)}">'
           f'<rect width="220" height="48" rx="10" fill="#121110"/><g transform="translate(13 11) scale(.82)">{brand.mark_dark()}</g>'
           '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
