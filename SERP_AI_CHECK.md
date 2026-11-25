@@ -1130,5 +1130,16 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
 - /night-shift/: "no nights" no longer counts; the opening defines the shifts; "Do night shifts pay more?" adds OPM: General Schedule staff get 10% for
   regularly scheduled work between 6 p.m. and 6 a.m. "Are there remote night shift jobs?" stood twice (the page's own and the generic one): faq_for now
   drops a repeated question on every list. Every list: "in demand in 2026? … here;  The median" when nothing was new in seven days now reads "here. The median".
+- ChatGPT (search on, the owner's session in the built-in browser, 25 Nov ~06:50 UTC). "contract jobs how long do they last W-2 or 1099": cites irs.gov,
+  dol.gov, mykelly.com, apollotechnical.com; a table of "typical durations" by kind of contract with no source, W-2 against 1099, and "what to check in a
+  listing" (6-month or 12-month contract, extension possible, contract-to-hire, W-2 only, 1099 only, C2C): our /contract/ counts each of these in today's
+  postings. "temporary and seasonal jobs how long ... benefits": Indeed, ZipRecruiter, Express Pros (average assignment about 16 weeks), Kelly, Randstad;
+  benefits table, ACA 30 hours, agency against direct employer, temp-to-hire, "Is the position W-2 or 1099?" among questions to ask; added to /temporary/:
+  "Is a temporary job W-2 or 1099?" with the counts. "weekend jobs ... paid more": dol.gov, jobcube.com (median hourly pay by kind of weekend work),
+  Indeed, ZipRecruiter, Snagajob; "$1-$3 an hour, 10-15%" differentials without a source; added to /weekend/: "Weekend pay by field" (median hourly by
+  field from 10 postings; the title table was already there) beside the differential the postings name. "summer jobs when to apply, how old, pay":
+  dol.gov, Indeed, ZipRecruiter, SummerJobs.com, seasonaljobs.dol.gov; "apply February to April" without a count, the FLSA hours for 14 and 15 (as ours), the
+  $7.25 federal minimum and the $4.25 youth minimum for the first 90 days; added to "What do summer jobs pay?" from DOL Fact Sheet #32 (read 25 Nov: under 20,
+  first 90 consecutive calendar days, no displacing other staff). jobseveryhour.com is cited in none of the four.
 - Titles of the four lists in title case, as /part-time/ ("Temporary and Seasonal Jobs (…)"). Not done in this pass: Google's and Bing's first pages and AI
-  answers, ChatGPT and Perplexity for these queries (Claude's web search only); compare the live counts after the deploy.
+  answers and Perplexity for these queries; compare the live counts after the deploy.

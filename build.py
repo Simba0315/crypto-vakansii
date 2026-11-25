@@ -2379,6 +2379,7 @@ def temp_parts(js):
     durs = term_lengths(js, r"assignment|contract|position|role|job|engagement|project|season|placement|post")
     len_s, len_m = term_summary(durs, k, "temporary and seasonal jobs")
     cth = sum(1 for j in js if CTH_RX.search(job_text(j)))
+    forms = Counter(nm_ for j in js for nm_, rx_, _ in TAX_FORMS if rx_.search(TAX_NOT.sub(" ", job_text(j))))
     plain = ("<strong>A temporary job</strong> ends on a date or with a season set in advance: a fixed-term post, seasonal work or a temp assignment."
              + (f" The postings that state a length run {len_m} at the median." if len_m else ""))
     after = ""
@@ -2402,6 +2403,10 @@ def temp_parts(js):
           ("Do temporary workers get overtime?", "Yes, in non-exempt work: the minimum wage and overtime of the Fair Labor Standards Act (at least time and a half for hours over 40 in a workweek) "
            "do not depend on whether a job is temporary. One exception touches seasonal work: employees of an amusement or recreational establishment that operates no more than seven months "
            "a year, or meets a receipts test, can be exempt from both under section 13(a)(3) of the Act; some states do not recognise that exemption.")]
+    qa.append(("Is a temporary job W-2 or 1099?", "If you work as an employee, of the company or of the staffing agency that places you, you are paid on a W-2 with income tax, Social Security "
+               "and Medicare withheld. A posting that calls the work 1099 treats you as self-employed, and the same test decides as for any contract: how much control "
+               "the payer has over the work, not the label."
+               + (f" Of the {k:,} open temporary and seasonal postings here, {forms['W-2']:,} name W-2 and {forms['1099']:,} name 1099; the rest do not say, so ask." if forms['W-2'] + forms['1099'] >= 5 else " Few postings here say which, so ask.")))
     if cth >= 3:
         qa.append(("Can a temporary job become permanent?", f"Sometimes, and some postings say so: {cth:,} of the {k:,} here name temp-to-hire, temp-to-perm or a possible conversion to a "
                    "permanent job. We have no count of how many temps are kept on, so ask the employer or the agency how often it happens."))
@@ -2453,6 +2458,15 @@ def weekend_parts(js):
         after += section("The weekend differential [[postings name]]", '<div class="tablewrap"><table><tr><th>How it is stated</th><th>Postings</th><th>Median</th><th>Range</th></tr>' + "".join(cells_)
                          + f'</table></div><p class="note">Read from the text of the {k:,} open weekend postings: the amount next to “weekend differential” or “weekend premium”. '
                            'Most postings name none; ask for the weekend rate before you accept.</p>', sid="differential", label="Differential")
+    by_f = defaultdict(list)
+    for j in js:
+        if j["cat"] != OTHER[0] and (h_ := usd_hourly(j.get("salary"))): by_f[j["cat"]].append((h_[0] + h_[1]) / 2)
+    f_rows = sorted(((CAT[c_], sorted(v_)) for c_, v_ in by_f.items() if len(v_) >= 10), key=lambda x: -x[1][len(x[1]) // 2])[:10]
+    if len(f_rows) >= 3:
+        after += section("Weekend pay [[by field]]", '<div class="tablewrap"><table><tr><th>Field</th><th>Weekend postings with an hourly rate</th><th>Median hourly pay</th><th>Middle half</th></tr>'
+                         + "".join(f"<tr><td>{e(nm_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td><td>${v_[len(v_) // 4]:,.2f} to ${v_[3 * len(v_) // 4]:,.2f}</td></tr>" for nm_, v_ in f_rows)
+                         + '</table></div><p class="note">The middle of each posting’s hourly range, for fields with ten or more open weekend postings that state one, highest median first.</p>',
+                         sid="pay-fields", label="Pay by field")
     ti_ = [(t_, c_) for t_, c_ in Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in (only if len(only) >= 20 else js)).most_common(10)
            if c_ >= 2 and 3 <= len(t_) <= 60][:5]
     fld_ = [(CAT[c_], n_) for c_, n_ in Counter(j["cat"] for j in js if j["cat"] != OTHER[0]).most_common(4)]
@@ -2521,7 +2535,9 @@ def summer_parts(js):
            "from June 1 to Labor Day (7 p.m. for the rest of the year). In a school week the limits are 3 hours a day and 18 a week. A state law with tighter limits applies instead."),
           ("What do summer jobs pay?", pay_said(js, "summer jobs and internships")
            + (f" Internships here pay ${hl_i[len(hl_i) // 2]:,.2f} an hour at the median, the other summer jobs ${hl_r[len(hl_r) // 2]:,.2f}." if len(hl_i) >= 10 and len(hl_r) >= 10 else "")
-           or "Few of these postings state pay today, so ask for the rate in the first call."),
+           + (" " if pay_said(js, "summer jobs and internships") else "Few of these postings state pay today, so ask for the rate in the first call. ")
+           + "The federal minimum wage is $7.25 an hour; federal law lets an employer pay a worker under 20 at least $4.25 an hour for the first 90 consecutive calendar days "
+             "of a job, but not by displacing other staff, and a state or city minimum that makes no exception for young workers comes first."),
           ("How long is a summer job?", (len_s + " " if len_s else "") + "Most run through the summer break; the dates in the posting are the ones that count."),
           ("Where do young people work in the summer?", "In July 2026, 21.3 million people aged 16 to 24 were employed in the United States, 53.8% of that age group. A quarter of them (25%) worked "
            "in leisure and hospitality, such as restaurants, hotels and parks, and 18% in shops, by the Bureau of Labor Statistics count published in August 2026.")]
