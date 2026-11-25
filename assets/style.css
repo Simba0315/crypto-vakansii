@@ -172,7 +172,7 @@ p a:hover,.lead a:hover,.note a:hover,dd a:hover{text-decoration-color:var(--tex
 .pill.ok{background:var(--green-soft);color:var(--green);font-weight:600}
 .pill.sal{font-family:var(--mono);font-weight:600;background:transparent;color:var(--text);padding-left:0}
 .pill.acc{background:var(--hl);color:var(--hl-ink);font-weight:700}
-.pill.urg,.job .pill.urg{background:#fff0dc;color:#8a4300;font-weight:700}      /* "Urgently hiring", a badge an employer buys: warm, so it is not read as the green "Featured" */
+.pill.urg,.job .pill.urg{background:var(--amber-soft);color:var(--amber);font-weight:700}      /* "Urgently hiring", a badge an employer buys: warm, so it is not read as the green "Featured" */
 .pill.perk{background:var(--green-soft);color:var(--green)}
 a.pill:hover{color:var(--text);text-decoration:underline;text-underline-offset:3px}
 /* in a list the tags are plain words, not boxes */

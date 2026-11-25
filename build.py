@@ -1044,7 +1044,9 @@ def ava(name, cls=""):
     # width and height as the file is (72 px copy, 96 px original): the square fixes the size on screen, the attributes satisfy
     # Lighthouse's "image elements do not have explicit width and height" (13,251 of 16,874 images in a sample, 24 Nov 2026)
     px_ = 96 if "lg" in cls else LOGO_S
-    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="{e(name)} logo" title="{e(name)} logo" width="{px_}" height="{px_}" loading="lazy">' if slug in LOGOS else ""
+    # the large square opens a job or company page, in the first screen: loaded at once, not lazily (QA 25 Nov 2026: on a phone the
+    # framed panel showed an empty white square until the logo arrived)
+    img = f'<img src="{P}/logos/{"" if "lg" in cls else "s/"}{slug}.png" alt="{e(name)} logo" title="{e(name)} logo" width="{px_}" height="{px_}"{"" if "lg" in cls else ' loading="lazy"'}>' if slug in LOGOS else ""
     return f'<span class="ava{" " + cls if cls else ""}{" has" if img else ""}" aria-hidden="true">{e(letter)}{img}</span>'      # no hue: the logo covers the square, and a square without a logo is hidden
 
 
@@ -3829,7 +3831,7 @@ def main():
             f'</aside></div></div></div>'
             f'<div class="wrap0 hero-logos"><p>Read from the career pages of</p><div class="logorow">'
             + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
-            + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos)} more</a></div></div></section>')
+            + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos):,} more</a></div></div></section>')
     plus_band = ""
     if CFG.get("plus", {}).get("live"):
         plus_band = (f'<div class="band"><div><h2>Get the email when a matching job appears</h2><p>Plus watches your saved searches and helps with the resume and cover letter for each posting. One payment, nothing renews.</p></div>'
