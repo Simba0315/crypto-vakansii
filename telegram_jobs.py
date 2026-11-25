@@ -16,8 +16,10 @@ A Telegram post never says that the job is filled, so a job stays open TG_DAYS d
 
 English only (the owner, 15 Nov 2026: "the site is international, the jobs must be in English"): a post written in Russian is
 skipped. Measured that day: of 127 jobs posted in 3 days in 29 IT job channels, 1 was in English, and the English channels
-mostly repeat large companies we already read from their own boards. So every channel in channels_tg.json is "off" for now;
-the Russian-language ones are kept for a Russian section, should there ever be one.
+mostly repeat large companies we already read from their own boards. So the Russian-language channels in channels_tg.json are
+"off", kept for a Russian section should there ever be one. 26 Nov 2026: about 40 English job channels were checked; the only
+active one whose posts name companies we do not read yet is cryptojobslist (62K subscribers; 4 jobs a month from Paradex,
+Toobit, KCEX and the like), so it is on. remotejobss (163K) posts a template ("Replace with job title") and gives nothing.
 
     python3 telegram_jobs.py --test            parser checks on saved posts (tests/telegram/)
     python3 telegram_jobs.py <channel>         read one channel and print what would be taken

@@ -185,5 +185,10 @@
   "name": "SEO Vacancies | SEO Jobs",
   "lang": "ru",
   "off": true
+ },
+ {
+  "channel": "cryptojobslist",
+  "name": "CryptoJobsList",
+  "lang": "en"
  }
 ]
