@@ -4959,3 +4959,28 @@ main.kw .rexwhy ul.ticks li{border-radius:14px}
 @media(min-width:1000px){main.kw .rexside>.rexprev{display:grid;grid-template-columns:96px minmax(0,1fr);gap:18px;align-items:center;padding:12px 18px 12px 12px;border-radius:20px}main.kw .rexside>.rexprev figcaption{margin:0;font-size:14px}}
 main.kw .rexgrid>div>p>a.btn.primary{flex:1 1 100%;justify-content:space-between}
 main.kw .rexgrid>div>p:has(>a.btn.primary)>.btn.ghost{flex:1 1 0;justify-content:center;white-space:nowrap}
+
+/* ---- the job alert sign-up under the lists (places, skills, companies, roles…): a light panel with the label pill and the two-weight
+   heading, the field and the choice as pills beside the button (it was a white box with a bold line and square fields) ---- */
+.alertf{position:relative;margin:56px 0;padding:34px 40px 30px;border:0;border-radius:28px;background:var(--bg2)}
+.alertf .sec-label{margin:0 0 14px}
+.alertf h2.tw{max-width:none;margin:0 0 10px;font-size:clamp(24px,2.6vw,32px);font-weight:400;line-height:1.12;letter-spacing:-.035em}
+.alertf h2.tw b{font-weight:700}
+.alertf>p:not(.sec-label):not(.note):not(.alertf-hp){max-width:64ch;margin:0 0 20px;color:var(--muted)}
+.alertf-row{gap:10px 12px}
+.alertf-row label{font-size:14px;font-weight:600;color:var(--muted)}
+.alertf-row input[type=email]{height:48px;padding:0 20px;border:1px solid var(--line2);border-radius:999px}
+.alertf-row input[type=email]:focus{border-color:var(--text);outline:2px solid color-mix(in srgb,var(--ac) 35%,transparent);outline-offset:1px}
+.alertf-row select{height:48px;border-radius:999px}
+.alertf-row .btn{height:48px;margin:0;padding:0 24px}
+.alertf>.note{margin:14px 0 0}
+@media(max-width:700px){
+  .alertf{margin:40px -10px;padding:24px 20px 22px;border-radius:24px}
+  .alertf-row label{flex-basis:100%;margin-top:2px}
+  .alertf-row input[type=email]{flex:1 1 100%}
+  .alertf-row select{flex:none}
+  .alertf-row .btn{flex:1 1 0;padding:0 16px}
+}
+/* the hiring guides open with five figures in a column beside the contents: smaller figures so "80 days" keeps to its cell */
+.has-toc .khero .nums dd{font-size:clamp(24px,2.3vw,30px)}
+.has-toc .khero .nums>div{padding:18px 18px 16px}

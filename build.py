@@ -1274,7 +1274,6 @@ FRAME_RX = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<di
 def frame_first(path, body):
     seg = path.strip("/").split("/")
     if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
-    if len(seg) == 1 and seg[0] in ("locations",): return body
     lab_ = FRAME_LABEL[seg[0]]
     if lab_.endswith(" example") and (len(seg) == 1 or seg == ["resume", "examples"]): lab_ += "s"     # the hub of examples: "CV examples"
     lab = f'<p class="sec-label">{lab_}</p>'
@@ -1307,7 +1306,15 @@ SEC_LABELS = [(re.compile(r"^questions|questions about|people ask", re.I), "Ques
               (re.compile(r"^everything about", re.I), "Directory"), (re.compile(r"^sources\b", re.I), "Sources"),
               (re.compile(r"side by side|\bvs\.?\b", re.I), "Compared"),
               (re.compile(r"^prepare\b|portfolio|linkedin profile|professional development", re.I), "Career"),
-              (re.compile(r"^words to|overused|^before and after|^which word|^turn your", re.I), "Wording")]
+              (re.compile(r"^words to|overused|^before and after|^which word|^turn your", re.I), "Wording"),
+              # v4, pass 2 (26 Nov 2026): the hiring guides, skills, companies, tools and widgets pages
+              (re.compile(r"^what to look for", re.I), "Screening"), (re.compile(r"^what you compete with", re.I), "Market"),
+              (re.compile(r"^which role do you need", re.I), "Roles"), (re.compile(r"take-home task", re.I), "Test task"),
+              (re.compile(r"^interview scorecard", re.I), "Scorecard"), (re.compile(r"^the first 90 days", re.I), "First 90 days"),
+              (re.compile(r"^jobs you can get with", re.I), "Kinds of work"), (re.compile(r"^test your\b", re.I), "Test"),
+              (re.compile(r"^more comparisons|\bin detail$", re.I), "Compared"), (re.compile(r"^closed jobs at", re.I), "Archive"),
+              (re.compile(r"^internships and first jobs", re.I), "First jobs"), (re.compile(r"^what the marks", re.I), "Marks"),
+              (re.compile(r"^paycheck calculators", re.I), "Calculators"), (re.compile(r"^more ways to use|^other platforms", re.I), "More")]
 SEC_PLAIN = re.compile(r'<section class="sec"((?: id="[^"]*")?)><div class="sec-head( has-sub)?"><h2>(.*?)</h2>', re.S)
 
 
@@ -2090,7 +2097,7 @@ def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
     hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc), ("q", q), ("remote", "1" if remote else ""), ("sal", str(sal) if sal else "")) if v)
     if search: hid = "".join(f'<input type="hidden" name="{k}" value="">' for k in ("q", "cat", "loc", "remote", "sal"))
     return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-labelledby="{uid}-h">'
-            f'<h2 id="{uid}-h">Free job alerts: {e(what)}</h2>'
+            f'<p class="sec-label">Alerts</p><h2 class="tw" id="{uid}-h">Free job alerts: <b>{e(what)}</b></h2>'
             '<p>New jobs by email, once a day or once a week, at most 20 in a letter. We send a link to confirm first, and every letter can be stopped in one click.</p>'
             f'<div class="alertf-row"><label for="{uid}-e">Your email</label><input id="{uid}-e" type="email" name="email" required autocomplete="email" maxlength="254">'
             f'<label for="{uid}-f">How often</label><select id="{uid}-f" name="freq"><option value="daily">Daily</option><option value="weekly">Weekly</option></select>'
