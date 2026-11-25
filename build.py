@@ -9706,6 +9706,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<a class="feat" href="{P}/widgets/remote-jobs/"><h3>Remote jobs widget</h3><p>A box of remote jobs for a blog, newsletter or community page.</p></a>'
                    f'<a class="feat" href="{P}/widgets/careers-page/"><h3>Careers page widget</h3><p>Your own company’s jobs, with search, read from Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor.</p></a>'
                    f'<a class="feat" href="{P}/widgets/embed-job-listings/"><h3>Embed job listings</h3><p>The script and the frame version, and what each can list.</p></a></div>', label="By purpose")
+         + section("Or start from [[your hiring system]]", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/widgets/{x}/">{n_} jobs widget</a>' for x, n_ in (("greenhouse", "Greenhouse"), ("lever", "Lever"), ("ashby", "Ashby"), ("recruitee", "Recruitee"), ("smartrecruiters", "SmartRecruiters"), ("teamtailor", "Teamtailor"))) + "</p>", label="By hiring system")
          + section("Your own company’s jobs, [[straight from your hiring system]]",
                    '<p>If your company posts jobs through Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor, the widget can read your public job board directly in the visitor’s browser. '
                    'Pick your system in the builder and type the name of your board. New roles appear and closed ones disappear by themselves, and a click on a job opens your own application page.</p>'
@@ -9864,6 +9865,31 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
           ("Does the list copy jobs onto my site?", "No. The jobs stay on this site and in the employer’s hiring system; your page only shows a live view of them, and each click opens the job’s own page."),
           ("Does it cost anything?", "No. It is free, with no account. The code keeps a small link back to this site.")]),
     ]
+    # One page per hiring system (WIDGET_RESEARCH, open item 2, 25 Nov 2026): people search "greenhouse job board embed", "lever jobs embed".
+    # The facts are the same for all six (own-board mode); only the address of the board and the system's name differ.
+    SYSTEMS = [
+        ("greenhouse", "Greenhouse", "boards.greenhouse.io/<b>name</b> (or job-boards.greenhouse.io/<b>name</b>)", "name"),
+        ("lever", "Lever", "jobs.lever.co/<b>name</b>", "name"),
+        ("ashby", "Ashby", "jobs.ashbyhq.com/<b>name</b>", "name"),
+        ("recruitee", "Recruitee", "<b>name</b>.recruitee.com", "name"),
+        ("smartrecruiters", "SmartRecruiters", "jobs.smartrecruiters.com/<b>Name</b>, with the capital letters as in the address", "Name"),
+        ("teamtailor", "Teamtailor", "<b>name</b>.teamtailor.com", "name"),
+    ]
+    SYS_NAMES = {x[1] for x in SYSTEMS}
+    for sslug, sname, saddr, sex in SYSTEMS:
+        tok = f"{sslug}:{sex}"
+        scode = e(f'<div data-hrn-jobs="{sslug}:your-board-name" data-layout="careers" data-search="1" data-company="Your company name"><a href="{FULL}/jobs/">Jobs on {SITE}</a></div>\n<script src="{FULL}/widget.js" async></script>')
+        cap = " A very large board shows its newest 500 roles." if sslug == "smartrecruiters" else ""
+        USES.append((sslug, f"{sname} jobs widget", f"Show your {sname} jobs on your own website", "careers", scode, None,
+            f"Shows the open roles of your {sname} job board on your own site, with a search box and a filter by team. Paste two lines once; the list stays current.",
+            f"In plain words: your open roles live in {sname}, the hiring system your team uses. This box shows the same roles on your own website, so visitors do not need to find the {sname} page, and nobody retypes anything.",
+            "How to set it up", [f"Find the name of your board. It is the part marked in bold in your {sname} jobs address: {saddr}.",
+                                 f"Write it into the code as <code>{tok}</code>, and your company name into <code>data-company</code>.",
+                                 "Paste the code into a block of your careers page that accepts HTML. Roles you open or close in " + sname + " change on your page by themselves."],
+            [(f"Does it show the roles I open and close in {sname}?", f"Yes. The visitor’s browser reads your public {sname} job board each time the page opens, so a new role appears and a closed one disappears without you touching the page.{cap}"),
+             (f"Do I need an account here or a {sname} key?", f"No. The widget reads the same public board that anyone can open in a browser, so it needs no {sname} login, no key and no account on this site."),
+             (f"How is this different from the box {sname} offers itself?", "Your hiring system has its own way to show its board on another site. This widget is another way to show the same public list, with a search box, a filter by team, light and dark colors and your accent color. Use whichever fits your page."),
+             ("Do you keep a copy of my company’s jobs?", "No. In this mode the browser reads your board directly. Nothing passes through our servers and we keep no copy.")]))
     for uslug, uname, uh1, ulay, ucode, ualt, ulead, uplain, uhead, ulist, ufaq in USES:
         u_faq = ufaq + [("Is this widget free?", "Yes. There is no plan and no account. The snippet keeps a small link back to this site.")]
         u_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -9883,7 +9909,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              + section("The code", code_, sid="code", label="Copy and paste")
              + section("What your visitors [[will see]]", f'<div {pv} data-hrn-base="{P}"><a href="{P}/jobs/">Jobs on {e(SITE)}</a></div>'
                        + ('<p class="note">Layout preview with the newest jobs on this site. With your board name in the code, it lists your own roles.</p>' if ulay == "careers" else ""), sid="preview", label="Live preview")
-             + section(f"Questions about [[the {uname.lower()}]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{a_ if '<a ' in a_ else e(a_)}</dd></div>" for q_, a_ in u_faq) + "</dl>", label="Questions")
+             + section(f"Questions about [[the {uname if uname.split()[0] in SYS_NAMES else uname.lower()}]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{a_ if '<a ' in a_ else e(a_)}</dd></div>" for q_, a_ in u_faq) + "</dl>", label="Questions")
              + section("More ways to use it", '<p class="rel" style="margin:0">' + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in USES if x[0] != uslug)
                        + "".join(f'<a href="{P}/widgets/{x[0]}/">{e(x[1])}</a>' for x in PLATFORMS[:4]) + f'<a href="{P}/widgets/">All options</a></p>')
              + f'<script src="{P}/widget.js?v={V}" defer></script>'
