@@ -9046,7 +9046,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         # ranges only (an hourly rate is left out, as on /salaries/); a job marked both remote and hybrid counts as hybrid.
         ymid_ = lambda js__: sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js__ if j.get("usd") and not usd_hourly(j.get("salary")))
         wpay_ = [(lab_, u_, ymid_(js__)) for lab_, u_, js__ in (("Hybrid", "hybrid/", hyb_), ("Remote", "remote/", [j for j in remote if not j.get("hybrid")]),
-                                                                ("On site", "", [j for j in active if not j["remote"] and not j.get("hybrid")]))]
+                                                                ("On-site", "", [j for j in active if not j["remote"] and not j.get("hybrid")]))]
         wpay_ok = all(len(v_) >= 30 for _, _, v_ in wpay_)
         od_top = od_.most_common(3)
         od_qa = [("How many days a week is hybrid work?", f"Most often {dw_(od_top[0][0])}: {pc_(od_top[0][1], n_od)}% of the {n_od:,} open postings that name a number of office days ask for it"
