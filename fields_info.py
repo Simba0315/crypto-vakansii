@@ -160,7 +160,7 @@ OCC = {
 
 FIELDS = {
     "hardware-engineering": dict(
-        key="Hardware Engineering", h1="Hardware engineering jobs", q="hardware engineering jobs", cats=(),
+        key="Hardware Engineering", h1="Hardware engineering and technician jobs", q="hardware engineering jobs", cats=(),
         ooh=("architecture-and-engineering", "production"),
         occ=("Computer Hardware Engineers", "Electrical and Electronics Engineers", "Mechanical Engineers", "Aerospace Engineers", "Industrial Engineers",
              "Electrical and Electronic Engineering Technologists and Technicians", "Mechanical Engineering Technologists and Technicians", "Quality Control Inspectors"),
@@ -217,7 +217,7 @@ FIELDS = {
         occ=("Sales Engineers", "Sales Managers", "Wholesale and Manufacturing Sales Representatives", "Securities, Commodities, and Financial Services Sales Agents", "Retail Sales Workers"),
         ask=(("mention commission, OTE or bonus", r"commission|\bOTE\b|on.target earnings|\bbonus"), ("ask for a CRM (Salesforce, HubSpot)", r"salesforce|hubspot|\bcrm\b"), ("are SDR or BDR roles", r"\bSDR\b|\bBDR\b|sales development|business development rep")),
         steps=(("Start as an SDR or BDR", "Sales development and business development representatives book meetings for account executives. These are the usual first sales jobs at software and service companies, and many ask for no sales experience."),
-               ("Learn one CRM well", "Postings name Salesforce or HubSpot more than any other tool. Free courses from both vendors exist; being able to log calls, manage a pipeline and pull a report is a real advantage in the first weeks."),
+               ("Learn one CRM well", "Salesforce and HubSpot are the CRMs sales postings name; the share is in the row above. Free courses from both vendors exist; being able to log calls, manage a pipeline and pull a report is a real advantage in the first weeks."),
                ("Put numbers on your resume", "Sales is hired on results: quota attained, meetings booked, deals closed, revenue. Even retail or student jobs give numbers (sales per shift, upsells). Lead every line with one."),
                ("Read the pay plan before the title", "A sales offer has a base salary and variable pay; the two together at 100% of quota are called OTE (on-target earnings). Ask what share of reps hit quota last year and whether commission is capped.")),
         faq=(("Do sales jobs pay commission?", "Most business sales jobs pay a base salary plus commission or a bonus, stated together as OTE (on-target earnings). Retail sales jobs usually pay an hourly rate, sometimes with a small commission. The count of postings here that mention commission or OTE is above."),
@@ -233,7 +233,8 @@ FIELDS = {
                ("Get in through an apprenticeship or helper job", "A registered apprenticeship pays you while you learn on the job and in class; apprenticeship.gov lists programs by trade and state. Helper and trainee jobs are the other door and often lead to one."),
                ("Earn the license your state asks for", "Electricians and plumbers need a state or local license, earned with documented hours and an exam; HVAC work with refrigerants needs EPA Section 608 certification. The posting names the level it wants (apprentice, journeyman, master)."),
                ("Keep a record of hours and tools", "Licensing boards count your supervised hours, and many employers ask you to bring basic hand tools. A log of hours, jobs and equipment you can run is your resume in the trades.")),
-        faq=(("Do you need college for skilled trades?", "No. The Bureau of Labor Statistics names a high school diploma as the usual first step for electricians, plumbers, carpenters and welders; the training happens in an apprenticeship or a trade school program that takes months to a few years."),
+        faq=(("What trade makes $100,000 a year?", "In the Bureau of Labor Statistics' tables for May 2025, elevator and escalator installers and repairers have a median above it, $109,910, and electrical power-line installers and repairers come close at $95,320. Electricians ($63,190) and plumbers ($63,800) have medians far lower, so $100,000 in those trades is well above typical pay."),
+             ("Do you need college for skilled trades?", "No. The Bureau of Labor Statistics names a high school diploma as the usual first step for electricians, plumbers, carpenters and welders; the training happens in an apprenticeship or a trade school program that takes months to a few years."),
              ("What is the job outlook for skilled trades?", "The Bureau of Labor Statistics projects construction and extraction jobs and installation, maintenance and repair jobs to grow faster than the average from 2025 to 2035, with about 587,000 and 569,000 openings a year. Electricians had a median of $63,190 in May 2025.")),
     ),
     "internships-entry-level": dict(
@@ -254,10 +255,11 @@ FIELDS = {
         occ=("Software Developers, Quality Assurance Analysts, and Testers", "Web Developers and Digital Designers", "Computer Systems Analysts", "Database Administrators and Architects", "Computer and Information Research Scientists"),
         ask=(("ask for Python", r"\bpython\b"), ("ask for JavaScript or TypeScript", r"javascript|typescript|\breact\b|node\.js"), ("ask for cloud experience (AWS, Azure, GCP)", r"\baws\b|azure|\bgcp\b|google cloud")),
         steps=(("Pick a lane: frontend, backend, mobile or systems", "Postings are written for a stack, not for programming in general. Choose the lane whose languages you already use, and search those words (React, Go, Kotlin, C++) next to the title."),
-               ("Show code that runs", "A public repository with a working project, tests and a short README is what hiring teams open first. Contributions to open source and a deployed app count more than certificates in this field."),
+               ("Show code that runs", "A public repository with a working project, tests and a short README is what many hiring teams open first. Contributions to open source and a deployed app count more than certificates in this field."),
                ("Practise the interview format", "Most software interviews include coding problems, a system design talk for mid-level and senior roles, and a review of your past work. Practise out loud and in a shared editor, as the interview runs."),
                ("Check where a remote role may be done from", "Many remote software jobs are limited to one country for tax and payroll reasons. The location line of each posting here says where; jobs open worldwide are marked.")),
-        faq=(("Do you need a degree to be a software developer?", "The Bureau of Labor Statistics names a bachelor's degree, usually in computer science, as the typical first step, and many postings ask for one \"or equivalent experience\". Portfolios and earlier jobs often stand in for it at startups."),
+        faq=(("What exactly do software developers do?", "They design, write, test and maintain the programs behind websites, apps, devices and company systems. Much of the work is reading and changing existing code, reviewing colleagues' changes and finding faults; writing new programs is only part of it."),
+             ("Do you need a degree to be a software developer?", "The Bureau of Labor Statistics names a bachelor's degree, usually in computer science, as the typical first step, and many postings ask for one \"or equivalent experience\". Portfolios and earlier jobs often stand in for it at startups."),
              ("What is the job outlook for software development?", "The Bureau of Labor Statistics projects computer and information technology occupations to grow faster than the average from 2025 to 2035, with about 280,000 openings a year. Software developers, QA analysts and testers had a median of $134,040 in May 2025.")),
     ),
     "accounting-finance": dict(
@@ -267,8 +269,8 @@ FIELDS = {
         ask=(("name CPA or CFA", r"\bCPA\b|\bCFA\b|\bCMA\b|\bACCA\b"), ("ask for Excel", r"\bexcel\b"), ("name an ERP (NetSuite, SAP, Oracle, QuickBooks)", r"netsuite|\bsap\b|oracle|quickbooks|workday financials")),
         steps=(("Decide between accounting and finance", "Accounting records and checks what happened: bookkeeping, payables, tax, audit. Finance plans what happens next: budgets, forecasts, analysis, investment. First jobs are staff accountant and financial analyst respectively."),
                ("Get the right degree and the license that goes with it", "Accountant and analyst postings usually ask for a bachelor's degree in accounting or finance. The CPA license (state-issued, with an exam and an experience requirement) opens audit and senior accounting roles; the CFA is the analyst's credential."),
-               ("Be quick in Excel and one ERP", "Postings in this field ask for Excel more than for anything else, and often for NetSuite, SAP, Oracle or QuickBooks. Lookups, pivot tables and a clean month-end reconciliation are what a first-week test covers."),
-               ("Time your search to the calendar", "Public accounting firms hire graduates in waves for busy season (January to April); company finance teams hire all year. Tax roles add seasonal contracts in the same months.")),
+               ("Be quick in Excel and one ERP", "Postings in this field name Excel (the share is above) and often NetSuite, SAP, Oracle or QuickBooks. Lookups, pivot tables and a clean month-end reconciliation are what a first-week test covers."),
+               ("Time your search to the calendar", "Public accounting firms recruit graduates months ahead of their start dates and add seasonal staff for busy season (January to April); company finance teams hire all year.")),
         faq=(("Is accounting or finance better paid?", "By the Bureau of Labor Statistics' figures for May 2025, accountants and auditors had a median of $83,680 and financial analysts $103,570; financial managers reached $166,570. The table above shows what today's postings advertise for each kind of work."),
              ("Can you work in finance without a degree?", "Bookkeeping, accounts payable and receivable, and payroll clerks often start without one: the Bureau of Labor Statistics names some college and no degree for bookkeeping, accounting and auditing clerks. Accountant and analyst roles usually ask for a bachelor's.")),
     ),
@@ -320,7 +322,7 @@ FIELDS = {
                ("Grow into success, technical or team lead roles", "The next steps are customer success manager (keeping accounts), technical support and support engineer (fixing product problems), and team lead. Each is a separate list here.")),
         faq=(("What jobs can I get with customer service experience?", "Customer success, account management and inside sales use the same skills with customers; technical support and support engineering add product knowledge; team lead, quality and workforce planning roles lead toward management. Each is its own kind of work here, with its own list."),
              ("Can I do customer service from home?", "Yes, many support jobs are remote, but most are limited to one country and some to certain states, and many ask for a quiet room and a set internet speed. The remote share of today's postings is above, and each location line names where."),
-             ("Do customer service jobs need experience?", "Often not: representatives usually start with a high school diploma and training from the employer, by the Bureau of Labor Statistics' description. Bilingual applicants are paid more in many postings.")),
+             ("Do customer service jobs need experience?", "Often not: representatives usually start with a high school diploma and training from the employer, by the Bureau of Labor Statistics' description. Some postings pay bilingual staff more.")),
     ),
     "cloud-devops-it": dict(
         key="IT", h1="IT, cloud and DevOps jobs", q="IT jobs", cats=(),
@@ -332,14 +334,14 @@ FIELDS = {
                ("Build a lab you can talk about", "Set up a small network, a Linux server, a cloud account with infrastructure written as code. Interviewers ask how you would find and fix a fault; a lab gives you real stories."),
                ("Move toward cloud, DevOps or security", "Administrators move into cloud engineering, site reliability and DevOps, or into security. These roles ask for scripting (Bash, Python), Linux and automation tools such as Kubernetes and Terraform.")),
         faq=(("Can you get an IT job without a degree?", "Yes, for support roles: the Bureau of Labor Statistics says computer support specialists may need a degree, a certificate or only some courses, depending on the employer. Administrator and cloud roles more often ask for a bachelor's degree or equivalent experience."),
-             ("Which IT certification should I get first?", "For support roles, CompTIA A+ is the one postings name most; Network+ and Security+ follow for networking and security. For cloud roles, an associate-level AWS or Azure certification. The count of today's postings naming a certification is above.")),
+             ("Which IT certification should I get first?", "For support roles, CompTIA A+ is the usual first one; Network+ and Security+ follow for networking and security. For cloud roles, an associate-level AWS or Azure certification. The count of today's postings naming a certification is above.")),
     ),
     "data-analytics": dict(
         key="Data Analytics", h1="Data and analytics jobs", q="data analytics jobs", cats=("data-research",),
         ooh=("math", "business-and-financial"),
         occ=("Data Scientists", "Operations Research Analysts", "Mathematicians and Statisticians", "Management Analysts", "Market Research Analysts", "Database Administrators and Architects"),
         ask=(("ask for SQL", r"\bsql\b"), ("ask for Python or R", r"\bpython\b|\bR\b(?= |,)"), ("ask for Tableau, Power BI or Looker", r"tableau|power bi|looker")),
-        steps=(("Learn SQL first", "SQL is named in more data postings than any other skill. Querying, joining and grouping a real dataset is the first thing an analyst test checks; spreadsheets come second, then a BI tool such as Tableau or Power BI."),
+        steps=(("Learn SQL first", "Querying, joining and grouping a real dataset is the first thing an analyst test checks; the row above shows how many of today's data postings name SQL. Spreadsheets come next, then a BI tool such as Tableau or Power BI."),
                ("Build three small projects with public data", "Pick questions a business would ask (which customers leave, which product sells where), answer them with SQL and a chart, and write the finding in two sentences. Put them where a hiring manager can open them."),
                ("Choose analyst, engineer or scientist", "Analysts answer questions; data engineers build the pipelines the data flows through; data scientists build models. Pay and the skills asked for rise in that order; the table above shows today's medians."),
                ("Bring the business to the interview", "Data interviews add a case: a metric fell, what do you check? Practise explaining a result to someone who does not read code; that is most of the job.")),
@@ -351,7 +353,7 @@ FIELDS = {
         ooh=("management", "business-and-financial", "media-and-communication"),
         occ=("Advertising, Promotions, and Marketing Managers", "Market Research Analysts", "Public Relations Specialists", "Public Relations and Fundraising Managers", "Writers and Authors"),
         ask=(("ask for SEO or paid ads", r"\bSEO\b|\bSEM\b|\bPPC\b|google ads|paid (search|social|media)"), ("ask for analytics (Google Analytics, HubSpot)", r"google analytics|\bGA4\b|hubspot|marketo"), ("ask for a portfolio", r"portfolio|writing samples?")),
-        steps=(("Pick a channel and go deep", "Marketing jobs are written for a channel: SEO, paid ads, email, social, content, product marketing, events. A specialist in one channel is hired before a generalist; the job titles above show which channels hire most."),
+        steps=(("Pick a channel and go deep", "Marketing jobs are written for a channel: SEO, paid ads, email, social, content, product marketing, events. A specialist in one channel matches more of these postings than a generalist; the job titles above show which channels hire most."),
                ("Show campaigns with results", "A portfolio of two or three pieces with numbers (traffic, sign-ups, cost per lead, open rate) beats a long list of tools. Your own blog, a club or a small business count."),
                ("Learn the measuring tools", "Postings name Google Analytics, ad platforms, HubSpot or Marketo, and spreadsheets. Showing how you measured a campaign is what separates a marketer from a content writer."),
                ("Start as coordinator or specialist", "Marketing coordinator, assistant and specialist are the entry titles; managers usually have three to five years in one channel. Agencies hire beginners in larger numbers than in-house teams.")),
@@ -363,7 +365,7 @@ FIELDS = {
         ooh=("legal", "business-and-financial"),
         occ=("Lawyers", "Paralegals and Legal Assistants", "Compliance Officers"),
         ask=(("ask for a JD or bar admission", r"\bJ\.?D\.?\b|juris doctor|bar admission|admitted to (practice|the bar)|member of the .*bar"), ("name AML, KYC or a regulator", r"\bAML\b|\bKYC\b|\bSEC\b|\bFINRA\b|\bFCA\b|\bGDPR\b|\bHIPAA\b"), ("are contract or term roles", r"\bcontract\b|fixed.term|temporary")),
-        steps=(("Know the three doors", "Lawyers need a law degree (JD) and admission to a state bar; paralegals usually an associate's degree or a paralegal certificate; compliance and risk roles a bachelor's degree and knowledge of the rules of one industry."),
+        steps=(("Know the three doors", "Lawyers need a law degree (JD) and admission to a state bar in almost every state; paralegals usually an associate's degree or a paralegal certificate; compliance and risk roles a bachelor's degree and knowledge of the rules of one industry."),
                ("Pick in-house, firm or government", "Law firms bill clients by the hour; in-house legal teams work for one company and its contracts, privacy and employment questions; government legal jobs are posted on public careers sites. Postings here are mostly in-house."),
                ("Learn the industry's rules", "Compliance jobs are tied to a regulator: anti-money-laundering (AML and KYC) in finance and crypto, HIPAA in health, GDPR for data. Naming the rules you worked under matters more than the job title."),
                ("Show writing and judgement", "Legal interviews test how you read a contract or a rule and explain the risk in plain words. Bring a short writing sample if the posting asks for one.")),
@@ -379,7 +381,7 @@ FIELDS = {
                ("Get the license your state asks for", "Public school teachers need a state teaching license, usually after a bachelor's degree and a teacher preparation program; the Bureau of Labor Statistics describes the routes. Corporate trainers need no license."),
                ("Build a sample lesson or course", "For instructional design and training roles, a short course built in an authoring tool (Articulate, Captivate) or a lesson plan with materials is the portfolio hiring teams ask for."),
                ("Look at the calendar", "Schools hire most for the autumn term in spring and summer; companies hire all year. Tutoring and online teaching jobs are often part-time and paid by the hour.")),
-        faq=(("Do you need a teaching license for education jobs?", "For public school teaching, yes, in every state. Tutors, corporate trainers, instructional designers and many private and online teaching roles do not need one; the Bureau of Labor Statistics names some college for tutors and a bachelor's for training specialists."),
+        faq=(("Do you need a teaching license for education jobs?", "For most public school teaching, yes: states license their teachers, with alternative routes for career changers. Tutors, corporate trainers, instructional designers and many private and online teaching roles do not need one; the Bureau of Labor Statistics names some college for tutors and a bachelor's for training specialists."),
              ("What do teachers earn?", "The Bureau of Labor Statistics put the median for high school teachers at $72,040 and for kindergarten and elementary teachers at $63,820 in May 2025. Training and development specialists, who teach inside companies, had $69,280.")),
     ),
     "hr-recruiting": dict(
@@ -387,7 +389,7 @@ FIELDS = {
         ooh=("business-and-financial", "management"),
         occ=("Human Resources Specialists", "Compensation, Benefits, and Job Analysis Specialists", "Training and Development Specialists", "Human Resources Managers"),
         ask=(("name SHRM or HRCI certification", r"\bSHRM\b|\bPHR\b|\bSPHR\b|\bHRCI\b|\bCIPD\b"), ("ask for an HR system (Workday, ADP, Greenhouse)", r"workday|\bADP\b|greenhouse|lever|bamboohr|successfactors|\bHRIS\b"), ("are recruiting roles", r"recruit|talent acquisition|sourcer")),
-        steps=(("Choose recruiting or people operations", "Recruiters and sourcers find and hire people; HR generalists, business partners and people operations handle what happens after: pay, benefits, policies, employee relations. Recruiting is the quicker way in."),
+        steps=(("Choose recruiting or people operations", "Recruiters and sourcers find and hire people; HR generalists, business partners and people operations handle what happens after: pay, benefits, policies, employee relations. Recruiting is often the quicker way in."),
                ("Start as coordinator or assistant", "Recruiting coordinator and HR assistant are the usual first titles. The Bureau of Labor Statistics names a bachelor's degree for HR specialists; coordinators often start with less."),
                ("Learn one HR system", "Postings name Workday, ADP, Greenhouse or another applicant tracking or HR system. Knowing how a hire moves through one of them is a real advantage in the first month."),
                ("Add a certification when you have experience", "The SHRM-CP and SHRM-SCP (Society for Human Resource Management) and the PHR and SPHR (HR Certification Institute) are the credentials postings name. They show up in senior and generalist roles more than in recruiting.")),
@@ -412,7 +414,7 @@ FIELDS = {
         occ=("Computer and Information Research Scientists", "Data Scientists", "Software Developers, Quality Assurance Analysts, and Testers"),
         ask=(("ask for PyTorch or TensorFlow", r"pytorch|tensorflow|\bjax\b"), ("mention LLMs or generative AI", r"\bLLMs?\b|large language model|generative ai|\bgenai\b|\bRAG\b"), ("ask for a PhD", r"\bPh\.?D\b|doctorate")),
         steps=(("Know which AI job you mean", "Research scientists invent methods and usually hold a PhD; machine learning and AI engineers build and ship models and products; data annotators and AI trainers rate and correct model output. Pay and entry rules differ for each."),
-               ("Learn Python and one framework", "AI engineering postings ask for Python and PyTorch most, then TensorFlow; work with large language models adds retrieval (RAG), evaluation and serving. Build one project end to end and publish it."),
+               ("Learn Python and one framework", "AI engineering postings ask for Python and a framework such as PyTorch or TensorFlow; work with large language models adds retrieval (RAG), evaluation and serving. Build one project end to end and publish it."),
                ("Show results, not certificates", "A model you trained with its evaluation, a paper, or an application in use counts more than a course certificate. Write the dataset, the metric and the result."),
                ("Look at AI roles outside engineering", "AI trainers, evaluators, product managers and applied AI or solutions roles need domain knowledge more than research: a lawyer, a doctor or a teacher can rate model output in their field.")),
         faq=(("Can you get an AI job without programming?", "Yes, some: AI trainer, data annotator, model evaluator, AI product and solutions roles need domain knowledge and clear writing more than code. Building and training models needs programming, usually Python."),
@@ -428,7 +430,7 @@ FIELDS = {
                ("Pick the work, then the language", "The language is an addition to a job: support, sales, recruiting, compliance, translation and localization. Choose the work you would do anyway, then filter by the language."),
                ("Ask about language pay", "Some employers pay a bilingual differential; customer service postings mention it most. Ask whether it applies and whether the language is used daily.")),
         faq=(("Do bilingual jobs pay more?", "Often, when the second language is used on the job: many customer service and healthcare postings state a bilingual differential. The Bureau of Labor Statistics put the median for interpreters and translators at $60,170 in May 2025."),
-             ("Which languages are most in demand?", "By today's postings here, the counts per language are in the list of kinds of work above, largest first. In US postings Spanish leads; European employers ask most for German and French.")),
+             ("Which languages are most in demand?", "The list of kinds of work above counts today's postings per language, largest first, and the row above gives the share asking for Spanish, German or French, and Asian languages.")),
     ),
     "writing-translation": dict(
         key="Writing", h1="Writing, editing and translation jobs", q="writing jobs", cats=(),
@@ -436,7 +438,7 @@ FIELDS = {
         occ=("Technical Writers", "Writers and Authors", "Editors", "Interpreters and Translators", "Public Relations Specialists"),
         ask=(("ask for writing samples or a portfolio", r"writing samples?|portfolio|clips"), ("mention SEO", r"\bSEO\b"), ("are freelance or contract", r"freelance|\bcontract\b|per (word|article)")),
         steps=(("Choose the kind of writing", "Technical writers explain products (manuals, API docs, help centres); content and copywriters write to attract and sell; editors improve others' text; translators and localization specialists carry it into other languages."),
-               ("Keep three samples ready", "Every writing posting asks for samples. Keep three short, published or polished pieces that match the job: a how-to for technical writing, a landing page or article for content, a before-and-after edit."),
+               ("Keep three samples ready", "Writing postings usually ask for samples. Keep three short, published or polished pieces that match the job: a how-to for technical writing, a landing page or article for content, a before-and-after edit."),
                ("Learn the tools of the trade", "Technical writing postings name docs-as-code tools, Markdown and help-centre software; content postings name SEO and a content management system; translation postings name CAT tools. Write the ones you know."),
                ("Start with contract work if you must", "Many writing jobs are freelance or contract; they build the portfolio that permanent roles ask for. The count of contract postings here is above.")),
         faq=(("What writing jobs pay the most?", "Among writing occupations, technical writers had the highest median in the Bureau of Labor Statistics' May 2025 figures, $90,390, against $76,910 for writers and authors and $77,920 for editors. Technical writing postings here state their own ranges in the pay table."),
@@ -460,8 +462,8 @@ FIELDS = {
         occ=("Graphic Designers", "Web Developers and Digital Designers", "Art Directors", "Industrial Designers", "Special Effects Artists and Animators"),
         ask=(("ask for a portfolio", r"portfolio"), ("ask for Figma", r"\bfigma\b"), ("ask for Adobe Creative Cloud", r"adobe|photoshop|illustrator|after effects|indesign|premiere")),
         steps=(("Choose product, brand or motion", "Product and UX designers shape how apps and sites work; graphic and brand designers make identities, ads and print; motion and video designers animate. Postings ask for different tools and portfolios for each."),
-               ("Make the portfolio the resume", "Nearly every design posting asks for a portfolio link. Three case studies that show the problem, your options and the result beat twenty finished images."),
-               ("Learn the tools the postings name", "Product design postings ask for Figma most; brand and graphic roles for Adobe Illustrator, Photoshop and InDesign; motion roles for After Effects. The share of postings naming each is above."),
+               ("Make the portfolio the resume", "Design postings usually ask for a portfolio link; the share is above. Three case studies that show the problem, your options and the result beat twenty finished images."),
+               ("Learn the tools the postings name", "Product design postings name Figma; brand and graphic roles Adobe Illustrator, Photoshop and InDesign; motion roles After Effects. The share of today's postings naming them is above."),
                ("Start in-house, agency or freelance", "Agencies hire juniors in larger numbers and show you many clients; in-house teams give depth in one product; freelance work builds the portfolio. The Bureau of Labor Statistics names a bachelor's degree as typical for graphic designers.")),
         faq=(("What design jobs pay the most?", "Among design occupations in the Bureau of Labor Statistics' May 2025 figures, art directors had a median of $114,850 and special effects artists and animators $102,030; graphic designers had $62,960. Product designers in today's postings here advertise more; see the table above."),
              ("Do design jobs require a degree?", "The Bureau of Labor Statistics names a bachelor's degree as typical for graphic and industrial designers, but hiring is decided by the portfolio; many product designers come from other fields.")),
@@ -469,17 +471,26 @@ FIELDS = {
 }
 
 
+# job-list categories with no field page of their own (/jobs/engineering/ is the search "engineering jobs"): the field pages they overlap,
+# linked from them so a reader of "engineering jobs" reaches software, hardware and IT
+NEAR = {"engineering": ("software-development", "hardware-engineering", "cloud-devops-it", "ai-machine-learning", "security"),
+        "manufacturing": ("skilled-trades", "hardware-engineering", "logistics-transport"),
+        "consulting": ("product-project", "customer-service", "cloud-devops-it", "accounting-finance")}
+
+
 def check():
     """Every field names known BLS groups and occupations, and no two fields share a sentence of their own text."""
     seen = {}
     for fs, f in FIELDS.items():
         for g in f["ooh"]: assert g in OOH, (fs, g)
+        for c in f["cats"]: assert c not in NEAR, (fs, c)
         for o in f["occ"]: assert o in OCC, (fs, o)
         assert f["key"] and f["h1"] and f["q"] and len(f["steps"]) >= 3 and f["faq"], fs
         for t in [x for s in f["steps"] for x in s] + [x for qa in f["faq"] for x in qa]:
             for s_ in [s.strip() for s in t.replace("?", ".").split(". ") if len(s.strip()) > 40]:
                 assert s_ not in seen or seen[s_] == fs, (fs, seen.get(s_), s_)
                 seen[s_] = fs
+    for c, fs_ in NEAR.items(): assert all(x in FIELDS for x in fs_), c
     return len(FIELDS)
 
 

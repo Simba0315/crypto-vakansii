@@ -1250,15 +1250,16 @@ Done on every field page (`fields_info.py`, `field_parts()` in build.py):
 - One page per search: /jobs/<category>/ lists that are the same field (healthcare, marketing, finance, data and research, design,
   operations, supply chain, retail, product; sales, support, legal, HR, education and security already) name the field page as canonical,
   and every link to them on the site leads to the field page (the footer, the job pages' category row and trail, the search page, rankings).
-- Google (gl=us, 25 Nov, six queries; results are set to New York by the IP, the AI answer was still "thinking" each time): the first page is Indeed's
+- Google (gl=us, 25 Nov, eight queries; results are set to New York by the IP, the AI answer was still "thinking" each time): the first page is Indeed's
   local list, Built In, ZipRecruiter, LinkedIn, Glassdoor, SimplyHired, employers' own careers sites (NYC Health + Hospitals, Northwell, Burlington,
   Capital One) and niche boards (Health eCareers, SalesJobs.com). People also ask: healthcare: "What are different types of healthcare jobs?", "What is
   the best job in healthcare?", "What's the easiest healthcare job to get?"; sales: "What is the best paying sales job?", "Can you make $500,000 a year
   in sales?"; retail: "What types of jobs are in retail?", "What exactly is a retail job?"; IT: "What jobs are there in IT?", "Which IT skill is most
   in demand?"; marketing: "What careers are in marketing?", "What are 5 careers in marketing?"; customer service: "What jobs can I get with
-  customer service?", "What is the job for customer service?"; on four of them "What jobs pay $4000 a week without a
+  customer service?", "What is the job for customer service?"; software development: "What exactly do software developers do?", "Is AI
+  replacing software developers?"; skilled trades: "What are examples of skilled trades?", "What trade makes $100,000 a year?"; on four of them "What jobs pay $4000 a week without a
   degree?". Done: every field page asks "What are the different types of <field> jobs?" and "What is the best paying <field> job?"; healthcare, retail,
-  marketing and customer service ask Google's own wording of their questions.
+  marketing, customer service, software development and the skilled trades ask Google's own wording of their questions.
 - Next: ask the 25 queries again once Google and Bing have the new pages; Google's AI answer (it did not finish loading tonight).
 
 ## ChatGPT in a temporary chat, with Bing: the section queries, 26 Nov 2026 (night)

@@ -5146,3 +5146,11 @@ span.bar i,td.salbar .bar i{min-width:3px;border-radius:0 4px 4px 0;background:v
 .vtip em{color:var(--faint)}
 @media (prefers-reduced-motion:reduce){.vtip,.vc-c i,.hbars .hb i,span.bar i{transition:none}}
 @media (forced-colors:active){.vc-c i,.hbars .hb i,span.bar i,.st-m i,.pb-t i,.prange i,.vsr i{background:CanvasText;forced-color-adjust:none}}
+
+/* ---- the field pages (/categories/<field>/, 25 Nov 2026): the government's outlook is a light panel like the job alert sign-up; the
+   framed panels of the key pages (main.kp .kpanel) were not drawn on list pages ---- */
+main.lp .kpanel{margin:56px 0;padding:34px 40px 30px;border-radius:28px}
+main.lp .kpanel.soft{background:var(--bg2)}
+main.lp .kpanel .sec-head{margin-top:0}
+main.lp .kpanel .tablewrap{background:var(--card)}
+@media(max-width:700px){main.lp .kpanel{margin:40px -10px;padding:24px 20px 22px;border-radius:24px}}

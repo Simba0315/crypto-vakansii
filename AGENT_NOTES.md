@@ -165,6 +165,13 @@ the titles it catches (the test loop is in the commit that added the file). The 
 Logos: a company without an official logo is shown with no picture at all (`.ava:not(.has)` in `style.css`); never bring the
 letter squares back.
 
+Field pages since 25 Nov 2026 (the owner asked four times for each field to be its own page): `fields_info.py` holds, per field, the words
+of its search (title key, heading), the /jobs/<category>/ lists that are the same field (they name the field page as canonical and every
+link to them is rewritten to it in `finish_html`, see `CAT_HOME`), the BLS occupation groups and occupations (Occupational Outlook
+Handbook, read 25 Nov), what its postings ask for (regexes counted in the build), four steps and its own questions. `field_parts()` in
+build.py draws them. `python3 fields_info.py` fails when two fields share a sentence: write new text for each field, never copy one.
+The research behind it is the last section of `SERP_AI_CHECK.md`.
+
 ## The owner's taste (screenshots of 14 Nov 2026 — follow it in every new block)
 
 He sends what he likes; keep these, and build new blocks the same way:
