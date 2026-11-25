@@ -2065,7 +2065,7 @@ def direct_and_paid(db, used_slugs, indexed, stats):
         if not_words(d.get("text")):                 # held back, and its page taken down below like a deleted one (25 Nov 2026)
             junk.add(str(d.get("id", ""))); continue
         j = norm(str(d.get("company", "")).strip(), "direct", d.get("id", ""), d.get("title"), d.get("url"), d.get("location"), bool(d.get("remote")), "",
-                 d.get("posted"), str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""))
+                 d.get("posted"), str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""), hybrid=bool(d.get("hybrid")))   # hybrid: set by a moderator (26 Nov 2026)
         j["desc"] = direct_desc(d.get("text"))      # the employer's own words, whole and escaped: short texts are kept too (clean_html drops anything under 200 characters)
         j.pop("_crypto")
         if not j["title"] or not j["company"] or not str(j["url"]).startswith("https://"): continue

@@ -13184,9 +13184,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         # because the owner reads Russian; it is not linked from the public pages and not in the sitemap, and the API checks who asks.
         adm_v = hashlib.md5((ROOT / "assets" / "admin.js").read_bytes()).hexdigest()[:8]
         page("admin/", f"Moderation | {SITE}", "The moderator’s page of the site: jobs waiting for review, company page claims and reports.",
-             crumbs(("Account", "account/"), ("Moderation", "")) + '<h1>Модерация</h1>'
-             '<p class="lead">Здесь всё, что ждёт вашего решения: вакансии на проверке, заявки на страницу компании и жалобы. '
-             'Одобренная вакансия выходит на сайт при ближайшем обновлении, работодатель получает письмо.</p>'
+             # the opening as one framed light panel with a label, the headline in two weights (the design of 25-26 Nov 2026)
+             '<div class="khero phero adm-hero"><div class="khero-t">' + crumbs(("Account", "account/"), ("Moderation", "")) +
+             '<p class="sec-label">Только для владельца сайта</p><h1>Модерация <span class="lt">сайта</span></h1>'
+             '<p class="lead">Здесь всё, что ждёт вашего решения: вакансии на проверке, заявки на страницу компании и жалобы, а ниже размещённые вакансии, заказы и все аккаунты. '
+             'Одобренная вакансия выходит на сайт при ближайшем обновлении, работодатель получает письмо.</p></div></div>'
              f'<div id="adm" data-api="{e(CFG["api_url"])}" data-site="{e(P)}"><noscript><div class="banner">Нужен JavaScript.</div></noscript></div>'
              f'<script src="{P}/admin.js?v={adm_v}" defer></script>', head='<meta name="robots" content="noindex">', sitemap=False)
         # The owner's statistics (owner, 24 Nov 2026: "как в криптобабле"): visits, sources, clicks on Apply, searches, in Russian. It reads

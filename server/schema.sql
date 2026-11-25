@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
   seeking TEXT NOT NULL DEFAULT '',                 -- a job seeker's status for employers: '' (not said) | active | open (open to offers) | not
   seeking_at INTEGER NOT NULL DEFAULT 0,            -- when it was last set
   two_step INTEGER NOT NULL DEFAULT 0,              -- 1: a sign-in with the password also asks for a code sent to the address (login_codes)
+  ban_reason TEXT NOT NULL DEFAULT '',              -- why the owner banned it, as he wrote it on /admin/ ('' for an account not banned, or banned before 26 Nov 2026)
   created_at INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_linkedin ON users (linkedin_sub) WHERE linkedin_sub != '';   -- one LinkedIn identity, one account: a second attachment fails
@@ -204,10 +205,12 @@ CREATE TABLE IF NOT EXISTS jobs (
   posted_by TEXT NOT NULL DEFAULT '',
   recruiter_name TEXT NOT NULL DEFAULT '',
   reminded_at INTEGER NOT NULL DEFAULT 0,       -- when the letter "this job leaves the site soon" went out for its present term; 0: not yet
+  hybrid INTEGER NOT NULL DEFAULT 0,            -- 1: part at home, part in the office (never together with remote)
   created_at INTEGER NOT NULL,
   expires_at INTEGER NOT NULL
 );
 -- column: jobs reminded_at INTEGER NOT NULL DEFAULT 0
+-- column: jobs hybrid INTEGER NOT NULL DEFAULT 0
 CREATE INDEX IF NOT EXISTS jobs_user ON jobs (user_id);
 CREATE INDEX IF NOT EXISTS jobs_company ON jobs (company_key);
 CREATE INDEX IF NOT EXISTS jobs_status ON jobs (status, checked_at);
@@ -629,6 +632,7 @@ CREATE INDEX IF NOT EXISTS events_visit ON events (visit, kind);
 -- column: users seeking TEXT NOT NULL DEFAULT ''
 -- column: users seeking_at INTEGER NOT NULL DEFAULT 0
 -- column: users two_step INTEGER NOT NULL DEFAULT 0
+-- column: users ban_reason TEXT NOT NULL DEFAULT ''
 -- column: talent visibility TEXT NOT NULL DEFAULT 'all'
 -- column: talent share TEXT NOT NULL DEFAULT ''
 -- column: orders share TEXT NOT NULL DEFAULT ''
@@ -664,3 +668,18 @@ CREATE TABLE IF NOT EXISTS login_codes (
   expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS login_codes_user ON login_codes (user_id);
+
+-- What was done by hand under /api/admin/ to a job's text or to an account (the owner, 18 Nov 2026: block an account and edit a job
+-- from the moderation page), so it can be read back: who, when, what. actor: the moderator's address, or "owner token" for a request
+-- with ADMIN_TOKEN. action: job_edit (target: the job; detail: {"fields": [{"field", "from", "to"}]}) | ban | unban (target: the
+-- account; detail: {"reason"}). Rows are only added.
+CREATE TABLE IF NOT EXISTS admin_log (
+  id TEXT PRIMARY KEY,
+  at INTEGER NOT NULL,
+  actor TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target TEXT NOT NULL,
+  detail TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS admin_log_target ON admin_log (target, at);
+CREATE INDEX IF NOT EXISTS admin_log_at ON admin_log (at);

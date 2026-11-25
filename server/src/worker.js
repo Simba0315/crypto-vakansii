@@ -1763,7 +1763,7 @@ async function readJob(env, user, b, existing, dry) {
   if (existing && existing.posted_by !== kind && !(existing.posted_by === AS_UNVERIFIED && kind === '')) throw bad('company_url', 'This job was posted ' + (recruiter ? 'for your own company' : 'as a recruiter, for another company') + ', and an edit cannot change that. Post it as a new job instead.', 422);
   const etype = ETYPES.includes(b.etype) ? b.etype : '', salary = line(b.salary, 60) || '', t = now();
   const j = { company: outside && here ? here.name : held ? held.name : company, company_key: key, company_url: companyUrl.origin, title, title_key: titleKey(title), apply_url: apply.href,
-    apply_host: existing ? existing.apply_host : '', location: line(b.location, 120) || '', remote: b.remote ? 1 : 0, salary, etype, description,
+    apply_host: existing ? existing.apply_host : '', location: line(b.location, 120) || '', remote: b.remote ? 1 : 0, hybrid: b.hybrid && !b.remote ? 1 : 0, salary, etype, description,
     posted_by: kind, recruiter_name: recruiter ? user.linkedin_name : '', reasons: [] };
   const screen = screenPosting({ title, description, company, applyUrl: apply.href, accountDomain: home, salary });
   if (!existing && !dry) await bump(env, 'screened', t).run();
@@ -1810,7 +1810,7 @@ async function readJob(env, user, b, existing, dry) {
   if (age !== null && age < YOUNG_DOMAIN_DAYS) j.reasons.push(home + ' was registered ' + Math.floor(age) + ' days ago');
   return j;
 }
-const jobView = (j, t) => ({ id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, location: j.location, remote: !!j.remote, salary: j.salary, etype: j.etype,
+const jobView = (j, t) => ({ id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, location: j.location, remote: !!j.remote, hybrid: !!j.hybrid, salary: j.salary, etype: j.etype,
   description: j.description, status: j.status === 'live' && j.expires_at <= t ? 'expired' : j.status, posted: isoDay(j.created_at), until: isoDay(j.expires_at),
   page: '/job/' + jobSlug(j.title, j.company) + '/', review_reason: j.status === 'review' ? j.review_reason : '', reject_reason: j.status === 'rejected' ? j.reject_reason : '',
   posted_by: postedBy(j), recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '' });
@@ -1820,7 +1820,7 @@ async function previewJob(env, req, user) {
   await limit(env, 'preview:' + user.id, POSTS_PER_HOUR, 3600);
   const j = await readJob(env, user, await body(req), null, true);
   return { ok: true, confirmed: user.confirmed_at > 0, review: j.reasons.length > 0, reasons: j.reasons, posted_by: j.posted_by || 'employer',
-    job: { company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, location: j.location, remote: !!j.remote, salary: j.salary, etype: j.etype, description: j.description } };
+    job: { company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, location: j.location, remote: !!j.remote, hybrid: !!j.hybrid, salary: j.salary, etype: j.etype, description: j.description } };
 }
 /* A job goes live at once only for a trusted account (see trusted) and only when nothing about it asks for a person's look; any other
    job is stored as "review" with the reasons, shown to nobody, and waits for the owner (the admin endpoints below).
@@ -1839,9 +1839,9 @@ async function createJob(env, req, user) {
     : 'You can post ' + perDay + (perDay === 1 ? ' job a day until your account is trusted' : ' jobs a day') + '. Please come back tomorrow.', 429);
   if (!recruiter && !unverified) j.company = await claimCompany(env, user, j.company, j.company_key);      // a recruiter or an employer not verified yet takes no company name
   const id = rid('j_', 6), status = j.reasons.length ? 'review' : 'live';
-  const made = await db(env, 'INSERT INTO jobs (id, user_id, company, company_key, company_url, title, title_key, slug, apply_url, apply_host, location, remote, salary, etype, description, status, review_reason, ' +
-    'held_at, approved_at, checked_at, created_at, expires_at, posted_by, recruiter_name) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM jobs d WHERE ' + DUPLICATE + ') AND ' + room,
-    id, user.id, j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype, j.description, status,
+  const made = await db(env, 'INSERT INTO jobs (id, user_id, company, company_key, company_url, title, title_key, slug, apply_url, apply_host, location, remote, hybrid, salary, etype, description, status, review_reason, ' +
+    'held_at, approved_at, checked_at, created_at, expires_at, posted_by, recruiter_name) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM jobs d WHERE ' + DUPLICATE + ') AND ' + room,
+    id, user.id, j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.hybrid, j.salary, j.etype, j.description, status,
     clip(j.reasons.join('; '), 500), status === 'review' ? t : 0, status === 'live' ? t : 0, t, t, t + FREE_JOB_DAYS * DAY, j.posted_by, j.recruiter_name, ...duplicateOf(user.id, j, '', t), user.id, t, cap).run();
   if (!made.meta.changes) throw (await db(env, 'SELECT 1 AS x FROM jobs d WHERE ' + DUPLICATE, ...duplicateOf(user.id, j, '', t)).first()) ? bad('duplicate', SAME_JOB, 409) : full;
   if (!user.company && !recruiter && !unverified) await db(env, 'UPDATE users SET company = ? WHERE id = ?', j.company, user.id).run();
@@ -1893,18 +1893,18 @@ async function updateJob(env, req, user, id, action) {
       // What was bought for it before stays switched off.
       const recruiter = j.posted_by === AS_RECRUITER, cap = j.posted_by !== '' || !trusted(user, t) ? NEW_LIVE_JOBS : 1e9;
       const reasons = clip(['sent again after it was not accepted (“' + old.reject_reason + '”)', ...j.reasons].join('; '), 500);
-      const sent = await db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
+      const sent = await db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, hybrid = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
         "status = 'review', review_reason = ?, reject_reason = '', held_at = ?, ended_at = 0, expires_at = ? WHERE id = ? AND status = 'rejected' " +
         "AND (SELECT COUNT(*) FROM jobs c WHERE c.user_id = ? AND c.id != ? AND c.status IN ('live', 'review') AND c.expires_at > ? AND (? = 0 OR c.posted_by = 'recruiter')) < ?",
-        j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype, j.description, j.recruiter_name, j.posted_by,
+        j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.hybrid, j.salary, j.etype, j.description, j.recruiter_name, j.posted_by,
         reasons, t, t + FREE_JOB_DAYS * DAY, id, user.id, id, t, recruiter ? 1 : 0, cap).run();
       if (!sent.meta.changes) throw bad('limit', recruiter ? RECRUITER_ROOM : NO_ROOM, 429);
       await bump(env, 'held', t).run();
       return { job: jobView(await db(env, 'SELECT * FROM jobs WHERE id = ?', id).first(), t) };
     }
-    await env.DB.batch([db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
+    await env.DB.batch([db(env, 'UPDATE jobs SET company = ?, company_key = ?, company_url = ?, title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, hybrid = ?, salary = ?, etype = ?, description = ?, recruiter_name = ?, posted_by = ?, ' +
       "held_at = CASE WHEN ? = 1 AND status = 'live' THEN ? ELSE held_at END, status = CASE WHEN ? = 1 AND status = 'live' THEN 'review' ELSE status END, review_reason = CASE WHEN ? = 1 THEN ? ELSE review_reason END " +
-      "WHERE id = ? AND status IN ('live', 'review', 'closed')", j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.salary, j.etype,
+      "WHERE id = ? AND status IN ('live', 'review', 'closed')", j.company, j.company_key, j.company_url, j.title, j.title_key, jobSlug(j.title, j.company), j.apply_url, j.apply_host, j.location, j.remote, j.hybrid, j.salary, j.etype,
       j.description, j.recruiter_name, j.posted_by, why, t, why, why, clip(j.reasons.join('; '), 500), id), holdPlacements(env, id, t)]);
   }
   await requestRebuild(env);
@@ -2096,7 +2096,7 @@ async function exportForSite(env) {
   }
   const jobs = rows.map((j) => {
     const d = direct[j.id] || {}, u = (k) => (d[k] || {}).until || '';
-    return { id: j.id, company: j.company, company_url: j.company_url, title: j.title, url: j.apply_url, location: j.location, remote: !!j.remote, salary: j.salary, etype: j.etype,
+    return { id: j.id, company: j.company, company_url: j.company_url, title: j.title, url: j.apply_url, location: j.location, remote: !!j.remote, hybrid: !!j.hybrid, salary: j.salary, etype: j.etype,
       text: j.description, posted: isoDay(j.created_at), featured_until: u('featured'), premium_until: u('premium'), urgent_until: u('urgent'), bumped: (d.bump || {}).at || '',
       cover: (d.premium || {}).cover || '', logo: logoOf.get(j.company_key) || '',
       // who posted it: "employer" (an account tied to the company's own domain) or "recruiter" (a person with a LinkedIn identity, whose
@@ -3720,13 +3720,25 @@ async function route(env, req, url, ctx) {
 const settleReports = (env, id, t) => [             // a job taken off the site for good: the open reports about it were right, and the account loses its trust
   db(env, 'UPDATE users SET upheld_reports = upheld_reports + 1 WHERE id = (SELECT user_id FROM jobs WHERE id = ?) AND EXISTS (SELECT 1 FROM reports WHERE job_id = ? AND decided_at = 0)', id, id),
   db(env, "UPDATE reports SET decision = 'upheld', decided_at = ? WHERE job_id = ? AND decided_at = 0", t, id)];
-// what a moderator's session may do under /api/admin/: read the overview, the queue, the counts and the list of accounts, decide jobs,
-// claims and reports. Bans, credits and erasing a person's data stay with the owner's token.
+// what a moderator's session may do under /api/admin/: read the overview, the queue, the counts, the list of accounts, one job and the
+// log of what was done by hand; decide jobs (and edit one before deciding it), claims and reports. Bans and their lifting, credits and
+// erasing a person's data stay with the owner's token.
 const moderation = (seg, m) => {
   const [, what, id, act] = seg;
-  if (m === 'GET') return ['overview', 'review', 'audience', 'claims', 'reports', 'accounts'].includes(what) && !id;
-  return m === 'POST' && !!id && ((what === 'jobs' && ['approve', 'reject', 'remove'].includes(act)) || (what === 'claims' && ['approve', 'reject'].includes(act)) || (what === 'reports' && act === 'decide'));
+  if (m === 'GET') return (['overview', 'review', 'audience', 'claims', 'reports', 'accounts', 'log'].includes(what) && !id) || (what === 'jobs' && !!id && !act);
+  return m === 'POST' && !!id && ((what === 'jobs' && ['approve', 'reject', 'remove', 'edit'].includes(act)) || (what === 'claims' && ['approve', 'reject'].includes(act)) || (what === 'reports' && act === 'decide'));
 };
+/* What this version of the admin API can do beyond the first one, named in GET review (features): the moderation page (assets/admin.js)
+   draws a control only when the server it talks to names it, so a page built before the server is updated keeps working as it was.
+   job_edit: GET jobs/ID and POST jobs/ID/edit; ban_reason: a ban takes { reason }, the list of accounts gives it back with the day;
+   unban: POST accounts/ID/unban; log: GET log; hybrid: a job's hybrid flag. */
+const ADMIN_FEATURES = ['job_edit', 'ban_reason', 'unban', 'log', 'hybrid'];
+// a job's text as the moderator edits it (EDITABLE: what the edit may change) and the log of what was done by hand (admin_log)
+const EDITABLE = ['title', 'location', 'salary', 'description', 'apply_url', 'remote', 'hybrid'];
+const adminJob = (j, t) => ({ id: j.id, title: j.title, company: j.company, company_url: j.company_url, location: j.location, salary: j.salary, description: j.description, apply_url: j.apply_url,
+  remote: !!j.remote, hybrid: !!j.hybrid, etype: j.etype, status: j.status === 'live' && j.expires_at <= t ? 'expired' : j.status, page: '/job/' + jobSlug(j.title, j.company) + '/', posted_by: postedBy(j) });
+const logRow = (env, t, actor, action, target, detail) => db(env, 'INSERT INTO admin_log (id, at, actor, action, target, detail) VALUES (?, ?, ?, ?, ?, ?)', rid('l_'), t, actor, action, target, JSON.stringify(detail));
+const logView = (l) => { let d = {}; try { d = JSON.parse(l.detail) || {}; } catch {} return { at: new Date(l.at * 1000).toISOString(), by: l.actor, action: l.action, target: l.target, ...d }; };
 // The letters a decision sends to the account it is about, after the change is stored; a letter that does not go changes nothing.
 const tell = async (env, ctx, to, subject, text, kind) => { try { if (to && !/@invalid$/.test(to)) await later(ctx, sendMail(env, to, subject, text, { kind })); } catch {} };
 async function admin(env, req, seg, m, ctx) {
@@ -3734,8 +3746,9 @@ async function admin(env, req, seg, m, ctx) {
   const owner = !!env.ADMIN_TOKEN && sameText(await sha256(given), await sha256(String(env.ADMIN_TOKEN)));
   // Not the owner's token: the session of one of the owner's accounts (ADMIN_EMAILS) is taken for the moderation routes and nothing
   // else. Erasing a person's data, bans, credits and whatever is added here later stay with the token.
-  if (!owner && !(isModerator(env, await currentUser(env, req, false)) && moderation(seg, m))) throw bad('forbidden', 'Not allowed.', 403);
-  const t = now(), id = seg[2] || '';
+  const me = owner ? null : await currentUser(env, req, false);
+  if (!owner && !(isModerator(env, me) && moderation(seg, m))) throw bad('forbidden', 'Not allowed.', 403);
+  const t = now(), id = seg[2] || '', by = owner ? 'owner token' : me.email;      // by: who did it, for admin_log
   if (seg[1] === 'review' && m === 'GET') {
     const rows = (await db(env, 'SELECT j.*, u.domain, u.domain_proof, u.email, u.created_at AS account_created, u.confirmed_at, u.approved_jobs, u.upheld_reports, u.linkedin_sub, u.linkedin_name, u.linkedin_email, u.linkedin_at, ' +
       "(SELECT COUNT(*) FROM jobs a WHERE a.user_id = j.user_id AND a.posted_by = 'recruiter' AND a.approved_at != 0) AS recruiter_approved, " +
@@ -3743,10 +3756,13 @@ async function admin(env, req, seg, m, ctx) {
       "(SELECT COUNT(*) FROM placements p WHERE p.target = 'direct:' || j.id AND p.held = 1 AND p.cancelled = 0) AS held_placements " +
       "FROM jobs j JOIN users u ON u.id = j.user_id WHERE j.status = 'review' ORDER BY j.held_at, j.created_at LIMIT 200").all()).results;
     const hits = await hitsOf(env, 'j.status = ?', 'review', t);            // a job that was on the site before it was held: how many saw it and clicked through
-    return { jobs: rows.map((j) => ({ ...hits(j.id), id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, apply_host: j.apply_host, location: j.location, salary: j.salary,
+    // the edits a moderator made to the jobs that wait (admin_log), newest first
+    const edits = {};
+    for (const l of (await db(env, "SELECT l.* FROM admin_log l JOIN jobs j ON j.id = l.target WHERE l.action = 'job_edit' AND j.status = 'review' ORDER BY l.at DESC, l.rowid DESC").all()).results) (edits[l.target] = edits[l.target] || []).push(logView(l));
+    return { features: ADMIN_FEATURES, jobs: rows.map((j) => ({ ...hits(j.id), id: j.id, company: j.company, company_url: j.company_url, title: j.title, apply_url: j.apply_url, apply_host: j.apply_host, location: j.location, salary: j.salary,
       description: j.description, reason: j.review_reason, posted: isoDay(j.created_at), held: isoDay(j.held_at || j.created_at), open_reports: j.open_reports, report_reasons: j.report_reasons || '',
       held_placements: j.held_placements, posted_by: postedBy(j), recruiter: j.posted_by === AS_RECRUITER ? j.recruiter_name : '',
-      page: '/job/' + jobSlug(j.title, j.company) + '/', remote: !!j.remote, etype: j.etype,      // page: where the job will be on the site
+      page: '/job/' + jobSlug(j.title, j.company) + '/', remote: !!j.remote, hybrid: !!j.hybrid, etype: j.etype, edits: edits[j.id] || [],      // page: where the job will be on the site
       // email: the account's address, for the person who decides; email_domain: the company domain the account is tied to ('' for a
       // recruiter or an employer on a free mailbox); proved_by: how (see proofsOf)
       account: { id: j.user_id, email: j.email, email_domain: domainOf(j), age_days: Math.floor((t - j.account_created) / DAY), confirmed: j.confirmed_at > 0,
@@ -3787,6 +3803,55 @@ async function admin(env, req, seg, m, ctx) {
       (j.bought ? '\nWhat you bought for this job is switched off. If you paid for it, reply to this letter and it is refunded.\n' : ''), 'job_rejected');
     return { ok: true };
   }
+  // One job as the moderator edits it, with every edit made to it by hand (newest first).
+  if (seg[1] === 'jobs' && id && !seg[3] && m === 'GET') {
+    const j = await db(env, 'SELECT j.*, u.email FROM jobs j JOIN users u ON u.id = j.user_id WHERE j.id = ?', id).first();
+    if (!j) throw bad('not_found', 'No job with this id.', 404);
+    const edits = (await db(env, "SELECT * FROM admin_log WHERE action = 'job_edit' AND target = ? ORDER BY at DESC, rowid DESC LIMIT 50", id).all()).results.map(logView);
+    return { job: { ...adminJob(j, t), email: j.email, edits } };
+  }
+  /* The moderator's own edit of a job (the owner, 18 Nov 2026: "edit a job in place from the moderation page"): its title, place, pay,
+     text, link to apply, and whether it is remote or hybrid. The rules are the employer's own form's (readJob, run as the account that
+     posted it: the lengths, links in the text, the screen, the link to apply on the company's domain or a hiring system, the same job
+     twice, and the link opened again when it or the title changed); the pay and the place, which the form cuts to their length, are
+     refused here when too long instead. The company, its site and who posted it stay. The job keeps its status: one that waits stays
+     in the queue to be approved or rejected as before, a live one stays live (a person has just read it) and the site shows the new
+     text after its next update. Each changed field goes to admin_log, before and after, with who changed it and when; an edit that
+     changes nothing writes nothing. reasons: what the checks would say about the job as it now reads, for the moderator to see. */
+  if (seg[1] === 'jobs' && seg[3] === 'edit' && m === 'POST') {
+    const old = await db(env, "SELECT * FROM jobs WHERE id = ? AND status IN ('review', 'live', 'closed')", id).first();
+    if (!old) throw bad('not_found', 'No job with this id is live, closed or waiting for review.', 404);
+    const b = await body(req), sent = {};
+    for (const k of EDITABLE) if (k in b) sent[k] = b[k];
+    if (!Object.keys(sent).length) throw bad('nothing', 'Send what to change: ' + EDITABLE.join(', ') + '.');
+    for (const k of ['remote', 'hybrid']) if (k in sent && typeof sent[k] !== 'boolean') throw bad(k, k + ' is true or false.');
+    if (sent.remote && sent.hybrid) throw bad('remote', 'A job is remote or hybrid, not both.');
+    if ('salary' in sent && sent.salary !== '' && line(sent.salary, 60) === null) throw bad('salary', 'Write the pay in 60 characters at most.');
+    if ('location' in sent && sent.location !== '' && line(sent.location, 120) === null) throw bad('location', 'Write the place in 120 characters at most.');
+    const poster = await db(env, 'SELECT * FROM users WHERE id = ?', old.user_id).first();
+    if (!poster) throw bad('not_found', 'The account that posted this job is gone.', 404);
+    const next = { ...jobView(old, t), ...sent };
+    if (sent.hybrid) next.remote = false;                       // one switched on switches the other off
+    if (sent.remote) next.hybrid = false;
+    const j = await readJob(env, poster, next, old);
+    const before = { title: old.title, location: old.location, salary: old.salary, description: old.description, apply_url: old.apply_url, remote: !!old.remote, hybrid: !!old.hybrid };
+    const after = { title: j.title, location: j.location, salary: j.salary, description: j.description, apply_url: j.apply_url, remote: !!j.remote, hybrid: !!j.hybrid };
+    const changed = Object.keys(before).filter((k) => before[k] !== after[k]);
+    if (changed.length) {
+      const done = await env.DB.batch([db(env, "UPDATE jobs SET title = ?, title_key = ?, slug = ?, apply_url = ?, apply_host = ?, location = ?, remote = ?, hybrid = ?, salary = ?, description = ? WHERE id = ? AND status IN ('review', 'live', 'closed')",
+        j.title, j.title_key, jobSlug(j.title, old.company), j.apply_url, j.apply_host, j.location, j.remote, j.hybrid, j.salary, j.description, id),
+        logRow(env, t, by, 'job_edit', id, { fields: changed.map((k) => ({ field: k, from: before[k], to: after[k] })) })]);
+      if (!done[0].meta.changes) throw bad('not_found', 'No job with this id is live, closed or waiting for review.', 404);
+      if (old.status === 'live') await requestRebuild(env);
+    }
+    return { ok: true, changed, reasons: j.reasons, job: adminJob(await db(env, 'SELECT * FROM jobs WHERE id = ?', id).first(), t) };
+  }
+  // What was done by hand, newest first: edits of jobs, bans and their lifting (admin_log), with the job or the account they were about.
+  if (seg[1] === 'log' && !id && m === 'GET') {
+    const rows = (await db(env, "SELECT l.*, j.title, j.company, u.email FROM admin_log l LEFT JOIN jobs j ON l.action = 'job_edit' AND j.id = l.target " +
+      "LEFT JOIN users u ON l.action IN ('ban', 'unban') AND u.id = l.target ORDER BY l.at DESC, l.rowid DESC LIMIT 200").all()).results;
+    return { log: rows.map((l) => ({ ...logView(l), ...(l.action === 'job_edit' ? { title: l.title || '', company: l.company || '' } : { email: l.email || '' }) })) };
+  }
   if (seg[1] === 'reports' && !id && m === 'GET') {
     const rows = (await db(env, 'SELECT r.id, r.job_id, r.slug, r.reason, r.note, r.created_at, r.decision, r.decided_at, j.title, j.company, j.status AS job_status FROM reports r LEFT JOIN jobs j ON j.id = r.job_id ' +
       'ORDER BY r.decided_at != 0, r.created_at DESC LIMIT 200').all()).results;
@@ -3808,7 +3873,8 @@ async function admin(env, req, seg, m, ctx) {
     const one = (sql) => db(env, sql).first('n');
     // page, company_page: where the job and its company are on the site (they appear with the site's next update after the job goes
     // live); email: the account that posted it. The owner approved a job on 18 Nov 2026 and found no way from this page to either.
-    const jobs = (await db(env, 'SELECT j.id, j.company, j.title, j.apply_url, j.status, j.created_at, j.expires_at, j.user_id, u.email FROM jobs j JOIN users u ON u.id = j.user_id ORDER BY j.created_at DESC LIMIT 50').all()).results
+    const jobs = (await db(env, "SELECT j.id, j.company, j.title, j.apply_url, j.status, j.created_at, j.expires_at, j.user_id, u.email, (SELECT COUNT(*) FROM admin_log l WHERE l.action = 'job_edit' AND l.target = j.id) AS edits " +
+      'FROM jobs j JOIN users u ON u.id = j.user_id ORDER BY j.created_at DESC LIMIT 50').all()).results
       .map((j) => ({ ...j, status: j.status === 'live' && j.expires_at <= t ? 'expired' : j.status, until: j.status === 'live' ? isoDay(j.expires_at) : '',
         page: '/job/' + jobSlug(j.title, j.company) + '/', company_page: '/companies/' + slugify(j.company) + '/' }));
     const hits = await hitsOf(env, 'j.created_at >= ?', jobs.length ? jobs[jobs.length - 1].created_at : 0, t);
@@ -3825,7 +3891,7 @@ async function admin(env, req, seg, m, ctx) {
     // which side of the site the account has used so far: by what it did, not by its address (a job seeker may sign up from a work mailbox)
     const sideOf = (u) => { const hires = u.jobs > 0 || u.pages > 0 || !!u.company, seeks = u.resumes > 0; return hires && seeks ? 'both' : hires ? 'employer' : seeks ? 'job seeker' : 'nothing yet'; };
     const q = '%' + String(new URL(req.url).searchParams.get('q') || '').trim().toLowerCase().replace(/[%_]/g, '').slice(0, 80) + '%';
-    const rows = (await db(env, 'SELECT u.id, u.email, u.company, u.domain, u.domain_proof, u.confirmed_at, u.created_at, u.banned, u.plus_until, u.linkedin_sub, u.approved_jobs, u.upheld_reports, ' +
+    const rows = (await db(env, 'SELECT u.id, u.email, u.company, u.domain, u.domain_proof, u.confirmed_at, u.created_at, u.banned, u.banned_at, u.ban_reason, u.plus_until, u.linkedin_sub, u.approved_jobs, u.upheld_reports, ' +
       "(SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status != 'removed') AS jobs, " +
       "(SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'live' AND j.expires_at > ?) AS jobs_live, " +
       "(SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status = 'review') AS jobs_review, " +
@@ -3840,6 +3906,7 @@ async function admin(env, req, seg, m, ctx) {
     return { total: Number(await db(env, 'SELECT COUNT(*) AS n FROM users').first('n')), paid_usd: Number(sum.usd) || 0, paid_orders: Number(sum.n) || 0,
       accounts: rows.map((u) => ({ id: u.id, email: u.email, company: u.company, email_domain: domainOf(u), proved_by: proofsOf(u), side: sideOf(u),
         created: isoDay(u.created_at), confirmed: u.confirmed_at > 0, banned: !!u.banned, plus_until: u.plus_until > t ? isoDay(u.plus_until) : '',
+        banned_on: u.banned && u.banned_at ? isoDay(u.banned_at) : '', ban_reason: u.banned ? u.ban_reason : '', moderator: adminEmails(env).includes(String(u.email).toLowerCase()),
         jobs: u.jobs, jobs_live: u.jobs_live, jobs_review: u.jobs_review, approved_jobs: u.approved_jobs, upheld_reports: u.upheld_reports, company_pages: u.pages, resumes: u.resumes,
         paid_usd: Number(u.paid_usd) || 0, paid_orders: u.paid_orders, last_paid: u.last_paid ? isoDay(u.last_paid) : '', last_signin: u.last_signin ? isoDay(u.last_signin) : '' })) };
   }
@@ -3918,8 +3985,17 @@ async function admin(env, req, seg, m, ctx) {
   if (seg[1] === 'jobs' && seg[3] === 'remove' && m === 'POST') { await env.DB.batch([...settleReports(env, id, t), ...takeDown(env, 'id = ?', id, t)]); await requestRebuild(env); return { ok: true }; }
   // everything of this account goes: sessions, reset and confirmation links, the browsers it was known by, jobs, what it bought, the
   // company names it held; the reports about its jobs are settled as upheld. /api/admin/accounts/<id>/ban is the same endpoint.
+  // { reason } (3 to 300 characters, may be left out) is kept with the account and in admin_log. An account that does not exist is
+  // answered 404, and one of the owner's own moderator accounts (ADMIN_EMAILS) is not banned from here: one click on the wrong row would
+  // end the owner's own session. jobs_taken_down: how many of its jobs were on the site, waiting or closed and are now removed.
   if ((seg[1] === 'users' || seg[1] === 'accounts') && seg[3] === 'ban' && m === 'POST') {
-    await env.DB.batch([db(env, 'UPDATE users SET banned_at = CASE WHEN banned = 0 THEN ? ELSE banned_at END, banned = 1 WHERE id = ?', t, id), db(env, 'DELETE FROM sessions WHERE user_id = ?', id),
+    const b = await body(req), reason = b.reason == null || b.reason === '' ? '' : line(b.reason, 300, 3);
+    if (reason === null) throw bad('reason', 'Give the reason in 3 to 300 characters, or none.');
+    const u = await db(env, "SELECT u.email, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id AND j.status IN ('live', 'review', 'closed')) AS jobs FROM users u WHERE u.id = ?", id).first();
+    if (!u) throw bad('not_found', 'No such account.', 404);
+    if (adminEmails(env).includes(String(u.email).toLowerCase())) throw bad('moderator', 'This is one of the owner’s own moderator accounts (ADMIN_EMAILS), so it is not banned from here.', 409);
+    await env.DB.batch([db(env, 'UPDATE users SET banned_at = CASE WHEN banned = 0 THEN ? ELSE banned_at END, banned = 1, ban_reason = ? WHERE id = ?', t, reason, id), db(env, 'DELETE FROM sessions WHERE user_id = ?', id),
+      logRow(env, t, by, 'ban', id, { reason }),
       db(env, 'DELETE FROM resets WHERE user_id = ?', id), db(env, 'DELETE FROM confirms WHERE user_id = ?', id), db(env, 'DELETE FROM devices WHERE user_id = ?', id),
       db(env, 'DELETE FROM oauth_states WHERE user_id = ?', id), db(env, 'DELETE FROM domain_claims WHERE user_id = ?', id),      // its LinkedIn identity stays on it, so it cannot be attached to a new account
       db(env, "UPDATE reports SET decision = 'upheld', decided_at = ? WHERE decided_at = 0 AND job_id IN (SELECT id FROM jobs WHERE user_id = ?)", t, id),
@@ -3927,7 +4003,19 @@ async function admin(env, req, seg, m, ctx) {
       db(env, 'DELETE FROM company_claims WHERE user_id = ?', id),
       // its resume leaves the database, and its open requests to people are withdrawn (they would otherwise still reach someone)
       db(env, 'UPDATE talent SET paused = 1 WHERE user_id = ?', id), db(env, "UPDATE talent_requests SET status = 'expired', answered_at = ? WHERE employer_id = ? AND status = 'sent'", t, id)]);
-    await requestRebuild(env); return { ok: true };
+    await requestRebuild(env); return { ok: true, jobs_taken_down: Number(u.jobs) || 0 };
+  }
+  // A ban lifted (the owner's token, like the ban): the account can sign in again and post. What the ban took stays taken: its jobs
+  // stay removed (it may post them again; the same title waits DUPLICATE_DAYS from the ban), its company names and claims are free for
+  // anyone, its resume stays out of the database until it puts it back. { reason } may be given for the log.
+  if ((seg[1] === 'users' || seg[1] === 'accounts') && seg[3] === 'unban' && m === 'POST') {
+    const b = await body(req), reason = b.reason == null || b.reason === '' ? '' : line(b.reason, 300, 3);
+    if (reason === null) throw bad('reason', 'Give the reason in 3 to 300 characters, or none.');
+    const u = await db(env, 'SELECT banned FROM users WHERE id = ?', id).first();
+    if (!u) throw bad('not_found', 'No such account.', 404);
+    if (!u.banned) throw bad('not_banned', 'This account is not banned.', 409);
+    await env.DB.batch([db(env, "UPDATE users SET banned = 0, ban_reason = '' WHERE id = ? AND banned = 1", id), logRow(env, t, by, 'unban', id, { reason })]);
+    return { ok: true };
   }
   throw bad('not_found', 'Not found.', 404);
 }

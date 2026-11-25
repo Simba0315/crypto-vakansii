@@ -3568,6 +3568,138 @@ await smtpServer.close();
   ok(ex.sign_in.two_step === false && Array.isArray(ex.resume_opened_by) && Array.isArray(ex.resumes_opened), 'Accounts: the export carries two-step sign-in and who opened the resume');
 }
 
+/* ---- 43. The moderation page, 26 Nov 2026 (the owner, 18 Nov: block an account and edit a job right from /admin/): a moderator edits
+   a job before deciding it, under the rules of the employer's own form, and every edit is logged with who, when, before and after;
+   a ban carries its reason, shows in the list of accounts and can be lifted, and both stay with the owner's token ---- */
+{
+  const box = mailbox(), env = newEnv({ ADMIN_EMAILS: 'owner@example.com, second@example.com', ...box });
+  const mod = await fresh(env, 'owner@example.com'), hr = await fresh(env, 'hr@orbit.dev'), other = await fresh(env, 'someone@else.dev'), ORBIT = employer('orbit.dev', 'Orbit Labs');
+  const unconfirmed = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'second@example.com', password: PASS } })).body.token;
+  const as = (who, method, p, data) => call(env, method, '/api/admin/' + p, { token: who, data });
+  const row = (id) => env.DB.prepare('SELECT title, location, salary, description, apply_url, apply_host, remote, hybrid, status FROM jobs WHERE id = ?').bind(id).first();
+  const logs = () => one(env, 'SELECT COUNT(*) FROM admin_log');
+
+  let r = await as(mod, 'GET', 'review');
+  ok(['job_edit', 'ban_reason', 'unban', 'log', 'hybrid'].every((f) => r.body.features.includes(f)), 'Admin page: the queue names what this server can do, so the page draws only those controls');
+  const j1 = (await call(env, 'POST', '/api/jobs', { token: hr, data: ORBIT('Senior Rust Engineer', { remote: false }) })).body.job.id;
+  r = await as(mod, 'GET', 'jobs/' + j1);
+  eq([r.status, r.body.job.title, r.body.job.location, r.body.job.salary, r.body.job.remote, r.body.job.hybrid, r.body.job.status, r.body.job.email, r.body.job.edits],
+    [200, 'Senior Rust Engineer', 'Berlin', '$140K - $170K', false, false, 'review', 'hr@orbit.dev', []], 'Edit: the moderator reads a waiting job as it is');
+  eq([(await as(hr, 'GET', 'jobs/' + j1)).status, (await as(undefined, 'GET', 'jobs/' + j1)).status, (await as(ADMIN, 'GET', 'jobs/' + j1)).status, (await as(mod, 'GET', 'jobs/j_nope')).status],
+    [403, 403, 200, 404], 'Edit: ... the employer’s session and no token cannot read it there; the owner’s token can; an unknown job is 404');
+
+  // success: the place, the pay, the text and hybrid; the job still waits, and the log says who changed what and when
+  const TEXT = GOOD.description + ' The team meets in Berlin two days a week.';
+  r = await as(mod, 'POST', 'jobs/' + j1 + '/edit', { location: 'Berlin, Germany', salary: '€90K – €110K', description: TEXT, hybrid: true });
+  eq([r.status, r.body.changed, r.body.job.status, r.body.job.hybrid, r.body.job.remote], [200, ['location', 'salary', 'description', 'hybrid'], 'review', true, false], 'Edit: a moderator’s session saves the place, the pay, the text and hybrid; the job still waits');
+  let j = await row(j1);
+  eq([j.location, j.salary, j.description, j.hybrid, j.status], ['Berlin, Germany', '€90K – €110K', TEXT, 1, 'review'], 'Edit: ... and they are stored');
+  const l1 = await env.DB.prepare('SELECT * FROM admin_log WHERE target = ?').bind(j1).first(), d1 = JSON.parse(l1.detail);
+  eq([l1.actor, l1.action, Math.abs(l1.at - Math.floor(Date.now() / 1000)) < SLACK, d1.fields.map((f) => [f.field, f.from, f.to])],
+    ['owner@example.com', 'job_edit', true, [['location', 'Berlin', 'Berlin, Germany'], ['salary', '$140K - $170K', '€90K – €110K'], ['description', GOOD.description, TEXT], ['hybrid', false, true]]],
+    'Edit: the log keeps who changed it, when, and each field before and after');
+  const q = (await as(mod, 'GET', 'review')).body.jobs.find((x) => x.id === j1);
+  eq([q.hybrid, q.edits.length, q.edits[0].by, q.edits[0].fields.map((f) => f.field)], [true, 1, 'owner@example.com', ['location', 'salary', 'description', 'hybrid']], 'Edit: the queue shows the job as edited, with its edits');
+  let n = await logs();
+  r = await as(mod, 'POST', 'jobs/' + j1 + '/edit', { location: 'Berlin, Germany', hybrid: true });
+  eq([r.status, r.body.changed, await logs()], [200, [], n], 'Edit: an edit that changes nothing writes nothing');
+
+  // validation: the rules of the employer's own form, plus the pay and the place refused when too long; nothing is stored or logged
+  const REFUSED = [
+    [{ title: 'Dev' }, 400, 'title', 'a title under 4 characters'], [{ title: 'x'.repeat(121) }, 400, 'title', 'a title over 120 characters'],
+    [{ description: 'Too short to be a job.' }, 400, 'description', 'a text under 80 characters'],
+    [{ description: GOOD.description + ' https://a.dev https://b.dev https://c.dev' }, 400, 'description', 'three links in the text'],
+    [{ description: GOOD.description + ' A registration fee of $49 is required before you start.' }, 422, 'rejected', 'a text the screen turns down'],
+    [{ apply_url: 'http://orbit.dev/jobs/senior-rust-engineer' }, 400, 'apply_url', 'a link to apply that is not https'],
+    [{ apply_url: 'https://other-company.dev/jobs/1' }, 422, 'apply_url', 'a link to apply off the company’s domain'],
+    [{ apply_url: 'https://orbit.dev/jobs/no-such-page' }, 422, 'apply_url', 'a link to apply that does not open'],
+    [{ salary: '$'.repeat(61) }, 400, 'salary', 'pay over 60 characters'], [{ location: 'B'.repeat(121) }, 400, 'location', 'a place over 120 characters'],
+    [{ remote: true, hybrid: true }, 400, 'remote', 'remote and hybrid at once'], [{ hybrid: 'yes' }, 400, 'hybrid', 'a flag that is not true or false'],
+    [{}, 400, 'nothing', 'nothing to change'], [{ company: 'Someone Else', company_url: 'https://else.dev' }, 400, 'nothing', 'only fields an edit here does not change'],
+  ];
+  const kept = JSON.stringify(await row(j1));
+  n = await logs();
+  for (const [data, status, error, what] of REFUSED) { r = await as(mod, 'POST', 'jobs/' + j1 + '/edit', data); eq([r.status, r.body.error], [status, error], 'Edit refused: ' + what); }
+  eq([JSON.stringify(await row(j1)), await logs()], [kept, n], 'Edit refused: none of those changed the job or wrote to the log');
+  eq((await as(mod, 'POST', 'jobs/j_nope/edit', { title: 'Senior Rust Engineer II' })).status, 404, 'Edit refused: a job that does not exist');
+
+  // who may edit: a moderator's session and the owner's token; not the employer's own session here, another account, an owner's
+  // address nobody confirmed, or no token
+  const TRY = { title: 'Senior Rust Engineer II' };
+  eq([(await as(hr, 'POST', 'jobs/' + j1 + '/edit', TRY)).status, (await as(other, 'POST', 'jobs/' + j1 + '/edit', TRY)).status, (await as(unconfirmed, 'POST', 'jobs/' + j1 + '/edit', TRY)).status,
+    (await as(undefined, 'POST', 'jobs/' + j1 + '/edit', TRY)).status, (await as('f'.repeat(64), 'POST', 'jobs/' + j1 + '/edit', TRY)).status, (await row(j1)).title],
+    [403, 403, 403, 403, 403, 'Senior Rust Engineer'], 'Edit: the employer’s session, another account, an unconfirmed owner’s address, no token and a made-up one are refused');
+  // a new link to apply is opened like the employer's own, and its host kept for the daily recheck
+  world.pages['https://boards.greenhouse.io/orbit/jobs/7'] = '<html><h1>Senior Rust Engineer</h1></html>';
+  r = await as(ADMIN, 'POST', 'jobs/' + j1 + '/edit', { apply_url: 'https://boards.greenhouse.io/orbit/jobs/7' });
+  j = await row(j1);
+  eq([r.status, r.body.changed, j.apply_url, j.apply_host], [200, ['apply_url'], 'https://boards.greenhouse.io/orbit/jobs/7', 'boards.greenhouse.io'], 'Edit: the owner’s token changes the link to apply; the page is opened and its host kept');
+  eq((await env.DB.prepare('SELECT actor FROM admin_log WHERE target = ? ORDER BY at DESC, rowid DESC').bind(j1).first()).actor, 'owner token', 'Edit: an edit with the owner’s token is logged as his');
+
+  // then approved as before; the site gets the edited job, hybrid included
+  r = await as(mod, 'POST', 'jobs/' + j1 + '/approve'); eq([r.status, await statusOf(env, j1)], [200, 'live'], 'Edit: the edited job is approved as before');
+  let ex = (await exportedJobs(env)).find((x) => x.id === j1);
+  eq([ex.location, ex.salary, ex.hybrid, ex.remote, ex.url], ['Berlin, Germany', '€90K – €110K', true, false, 'https://boards.greenhouse.io/orbit/jobs/7'], 'Edit: the site gets the job as edited, hybrid included');
+  // a live job edited stays live, and the site is asked to update
+  await env.DB.exec("DELETE FROM meta WHERE k IN ('rebuild_at', 'rebuild_wanted')");
+  const calls = world.githubCalls;
+  r = await as(mod, 'POST', 'jobs/' + j1 + '/edit', { title: 'Senior Rust Engineer, Platform', remote: true });
+  ex = (await exportedJobs(env)).find((x) => x.id === j1);
+  eq([r.status, await statusOf(env, j1), world.githubCalls, ex.title, ex.remote, ex.hybrid], [200, 'live', calls + 1, 'Senior Rust Engineer, Platform', true, false], 'Edit: a live job stays live after a moderator’s edit, and the site is asked to update; remote switches hybrid off');
+  r = await as(mod, 'GET', 'overview');
+  eq(r.body.recent_jobs.find((x) => x.id === j1).edits, 3, 'Overview: each recent job says how many times it was edited here');
+  r = await as(mod, 'GET', 'jobs/' + j1);
+  eq([r.body.job.edits.length, r.body.job.edits[0].fields.map((f) => f.field), r.body.job.edits[0].by], [3, ['title', 'remote', 'hybrid'], 'owner@example.com'], 'Edit: one job’s edits, newest first, with hybrid switched off by remote');
+
+  // the employer's own form has no hybrid box: its edit keeps the flag, and "remote" ticked there switches it off
+  await env.DB.prepare('UPDATE jobs SET hybrid = 1, remote = 0 WHERE id = ?').bind(j1).run();
+  r = await call(env, 'PATCH', '/api/jobs/' + j1, { token: hr, data: { salary: '€95K – €115K' } });
+  eq([r.status, r.body.job.hybrid, r.body.job.remote], [200, true, false], 'Hybrid: the employer’s own edit keeps it');
+  r = await call(env, 'PATCH', '/api/jobs/' + j1, { token: hr, data: { remote: true } });
+  eq([r.body.job.hybrid, r.body.job.remote], [false, true], 'Hybrid: ... and "remote" ticked in the employer’s form switches it off');
+
+  // a waiting job is edited, then turned down as before; a job turned down is the employer's to send again, not edited here
+  await nextDay(env);
+  const j2 = (await call(env, 'POST', '/api/jobs', { token: hr, data: ORBIT('Platform Engineer') })).body.job.id;
+  r = await as(mod, 'POST', 'jobs/' + j2 + '/edit', { salary: '$120K' }); eq([r.status, r.body.changed], [200, ['salary']], 'Edit: another waiting job');
+  r = await as(mod, 'POST', 'jobs/' + j2 + '/reject', { reason: 'The company does not hire for this role.' }); eq([r.status, await statusOf(env, j2)], [200, 'rejected'], 'Edit: an edited job is turned down as before');
+  eq((await as(mod, 'POST', 'jobs/' + j2 + '/edit', { salary: '$130K' })).status, 404, 'Edit refused: a job that was turned down');
+
+  // the log of what was done by hand
+  r = await as(mod, 'GET', 'log');
+  eq([r.status, r.body.log.length, r.body.log.every((l) => l.action === 'job_edit' && l.company === 'Orbit Labs' && l.title && l.by && l.at)], [200, 4, true], 'Log: the moderator reads every edit, with the job it was about, who and when');
+  eq([(await as(hr, 'GET', 'log')).status, (await as(ADMIN, 'GET', 'log')).status], [403, 200], 'Log: another account cannot read it; the owner’s token can');
+
+  // bans: a reason, the day and the reason in the list of accounts, the log, and lifted again; all with the owner's token only
+  const hrId = await one(env, "SELECT id FROM users WHERE email = 'hr@orbit.dev'"), modId = await one(env, "SELECT id FROM users WHERE email = 'owner@example.com'");
+  eq([(await as(mod, 'POST', 'accounts/' + hrId + '/ban', { reason: 'Asked people to pay for training.' })).status, (await as(mod, 'POST', 'accounts/' + hrId + '/unban')).status, await one(env, 'SELECT banned FROM users WHERE id = ?', hrId)],
+    [403, 403, 0], 'Ban: a moderator’s session can neither ban nor lift a ban: both stay with the owner’s token');
+  eq([(await as(ADMIN, 'POST', 'accounts/' + hrId + '/ban', { reason: 'x' })).body.error, (await as(ADMIN, 'POST', 'accounts/u_nobody/ban', { reason: 'Spam.' })).status, await one(env, 'SELECT banned FROM users WHERE id = ?', hrId)],
+    ['reason', 404, 0], 'Ban refused: a reason of one letter; an account that does not exist');
+  r = await as(ADMIN, 'POST', 'accounts/' + modId + '/ban', { reason: 'By mistake.' });
+  eq([r.status, r.body.error, await one(env, 'SELECT banned FROM users WHERE id = ?', modId)], [409, 'moderator', 0], 'Ban refused: one of the owner’s own moderator accounts');
+  const up = await one(env, "SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN ('live', 'review', 'closed')", hrId);
+  r = await as(ADMIN, 'POST', 'accounts/' + hrId + '/ban', { reason: 'Asked people to pay for training.' });
+  eq([r.status, r.body.jobs_taken_down, up > 0, await one(env, "SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status IN ('live', 'review', 'closed')", hrId)], [200, up, true, 0], 'Ban: the owner’s token bans with a reason and says how many jobs came down');
+  let accs = (await as(mod, 'GET', 'accounts')).body.accounts, a = accs.find((x) => x.email === 'hr@orbit.dev');
+  eq([a.banned, a.banned_on, a.ban_reason, a.moderator, accs.find((x) => x.email === 'owner@example.com').moderator], [true, new Date().toISOString().slice(0, 10), 'Asked people to pay for training.', false, true],
+    'Ban: the list of accounts shows the day and the reason, and which accounts are the owner’s own');
+  eq((await call(env, 'POST', '/api/auth/login', { data: { email: 'hr@orbit.dev', password: PASS } })).status, 401, 'Ban: the account cannot sign in');
+  const lb = (await as(mod, 'GET', 'log')).body.log.find((l) => l.action === 'ban');
+  eq([lb.by, lb.reason, lb.email], ['owner token', 'Asked people to pay for training.', 'hr@orbit.dev'], 'Log: the ban, with who, why and which account');
+  r = await as(ADMIN, 'POST', 'accounts/' + hrId + '/unban', { reason: 'Checked with the company: a real job.' });
+  eq(r.status, 200, 'Unban: the owner’s token lifts the ban');
+  a = (await as(mod, 'GET', 'accounts')).body.accounts.find((x) => x.email === 'hr@orbit.dev');
+  eq([a.banned, a.banned_on, a.ban_reason], [false, '', ''], 'Unban: the list of accounts shows it as not banned');
+  eq([(await call(env, 'POST', '/api/auth/login', { data: { email: 'hr@orbit.dev', password: PASS } })).status, await one(env, "SELECT COUNT(*) FROM jobs WHERE user_id = ? AND status = 'removed'", hrId) >= up],
+    [200, true], 'Unban: it signs in again; the jobs the ban took down stay down');
+  eq([(await as(ADMIN, 'POST', 'accounts/' + hrId + '/unban')).body.error, (await as(ADMIN, 'POST', 'accounts/u_nobody/unban')).status], ['not_banned', 404], 'Unban refused: an account that is not banned; one that does not exist');
+  const lu = (await as(mod, 'GET', 'log')).body.log[0];
+  eq([lu.action, lu.by, lu.reason, lu.email], ['unban', 'owner token', 'Checked with the company: a real job.', 'hr@orbit.dev'], 'Log: and the lifting, newest first');
+  r = await as(ADMIN, 'POST', 'users/' + (await one(env, "SELECT id FROM users WHERE email = 'someone@else.dev'")) + '/ban');
+  eq([r.status, await one(env, "SELECT banned FROM users WHERE email = 'someone@else.dev'"), await one(env, "SELECT ban_reason FROM users WHERE email = 'someone@else.dev'")], [200, 1, ''], 'Ban: without a reason, as before');
+}
+
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
 { const r = await call(newEnv(), 'GET', '/api/public/products'); ok(r.body.products.length > 0 && r.body.products.every((p) => p.billing === 'one-time' && p.renews === false), 'every product is one payment and renews nothing, and the list says so'); }
 

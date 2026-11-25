@@ -191,7 +191,8 @@ signed-in account:
   token (`Authorization: Bearer <session>`) is taken under `/api/admin/` for the moderation routes only:
   `GET overview`, `GET review`, `GET audience`, `POST jobs/ID/approve`, `POST jobs/ID/reject { reason }`, `POST jobs/ID/remove`,
   `GET claims`, `POST claims/ID/approve`, `POST claims/ID/reject { reason }`, `GET reports`, `POST reports/ID/decide { decision }`.
-  Everything else there (`erase`, `users|accounts/ID/ban`, `talent`, `talent/credits`, whatever is added later) answers 403 to a
+  Since 26 Nov 2026 also `GET jobs/ID`, `POST jobs/ID/edit` and `GET log` (next section).
+  Everything else there (`erase`, `users|accounts/ID/ban`, `accounts/ID/unban`, `talent`, `talent/credits`, whatever is added later) answers 403 to a
   session and stays with `ADMIN_TOKEN`, which works for every route as before. Not set: nothing changes. An address nobody confirmed
   counts for nothing. The start line in the log says how many moderators there are, never who.
 - `GET /api/admin/claims` now carries `account.email` for each claim, and `GET /api/admin/review`, for each job, `account.email` (the moderator has to see who posted), `page` (where the job will
@@ -210,6 +211,42 @@ signed-in account:
   account's cap of jobs on the site or waiting. It still cannot be closed, published again as it is, or approved (409, 409, 404).
 - `GET /api/claims`: each claim has `page`: for a verified claim `{ about, website, logo, locations }` (what its company page says now;
   `logo` is the image's address or `''`), for one that waits or was turned down `null`.
+
+## Editing a job and blocking an account from the moderation page (26 Nov 2026; tested in section 43)
+
+The owner asked on 18 Nov 2026 to block an account and to edit a job right from `/admin/`. What the server adds for that:
+
+- `GET review` names what this version can do: `features: ["job_edit", "ban_reason", "unban", "log", "hybrid"]`. The page
+  (`assets/admin.js`) draws a control only when the server names it, so a page built before the server is updated keeps working.
+  Each job in the queue also carries `hybrid` and `edits` (the edits made to it here, newest first).
+- `GET jobs/ID` (a moderator's session or the token): the job as it is edited (`title`, `location`, `salary`, `description`,
+  `apply_url`, `remote`, `hybrid`, `status`, the account's `email`) with its `edits`.
+- `POST jobs/ID/edit { title?, location?, salary?, description?, apply_url?, remote?, hybrid? }` (a moderator's session or the token),
+  for a job that is live, closed or waiting. The rules of the employer's own form (`readJob`, run as the account that posted it: the
+  lengths, at most two links in the text, the screen, the link to apply on the company's domain or a hiring system, the same job
+  twice, and the link opened again when it or the title changed); the pay over 60 characters and the place over 120 are refused (the
+  form cuts them). `remote` and `hybrid` are true or false, never both true; one switched on switches the other off. The company,
+  its site and who posted the job do not change here, and neither does its status: a waiting job is then approved or rejected as
+  before, a live one stays live and the site is asked to update. Answers `{ ok, changed, reasons, job }`: `changed` names the fields
+  that changed (none: nothing is written), `reasons` what the checks would say about the job as it now reads.
+- `jobs.hybrid` (0/1): set here; the employer's own form keeps it on an edit, and its "remote" box switches it off. `export.json`
+  carries `hybrid`, and `collect.py` and `live.py` pass it to the site.
+- `admin_log`: one row per edit, ban and unban: who (`actor`: the moderator's address, or `owner token`), when, and what
+  (`job_edit`: each field before and after; `ban` and `unban`: the reason). `GET log` (a moderator's session or the token) gives the
+  last 200 with the job or the account they were about; `GET overview` gives each recent job's number of `edits`.
+- `POST accounts/ID/ban { reason? }` (the token only, as before; `users/ID/ban` is the same): the reason, 3 to 300 characters, is kept
+  in `users.ban_reason` and the log; a ban with no reason still works. An unknown account is 404; one of the owner's own moderator
+  accounts (`ADMIN_EMAILS`) is 409 `moderator`. Answers `jobs_taken_down`. `GET accounts` gives each account `banned_on`,
+  `ban_reason` and `moderator`.
+- `POST accounts/ID/unban { reason? }` (the token only): the account can sign in and post again; what the ban took stays taken (its
+  jobs stay removed, and the same title waits 30 days from the ban; its company names and claims are free; its resume stays out of
+  the database until it puts it back). Not banned: 409 `not_banned`; unknown: 404.
+- Bans stay with the token on purpose (ROADMAP 149): the page asks for the owner's key once, keeps it in that browser tab only
+  (sessionStorage) and sends it only with a ban or an unban. Letting the owner's signed-in session ban without the key is one line in
+  `moderation()` and is the owner's decision.
+
+Database: `users.ban_reason`, `jobs.hybrid` (both listed as `-- column:` lines, so an existing database gets them at start) and the
+table `admin_log` (created by `schema.sql`).
 
 ## Posting as easy as on Indeed: unverified employers, the work-email link, LinkedIn as a sign-in (15 Nov 2026; tested in section 37)
 
