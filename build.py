@@ -1305,10 +1305,10 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
 {"" if compact else f'<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">'}
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
-<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav">
-<a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Career help</a><a class="nl" href="{P}/post-a-job/">For employers</a>{NAV_PLUS}<a class="nl only-m" href="{P}/remote/">Remote jobs</a><a class="nl only-m" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m" href="{P}/post-a-job/">Post a job</a></nav>
+<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav"{f' data-n="{ALL_OPEN[0]}"' if ALL_OPEN[0] else ""}>
+<a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Career help</a><a class="nl" href="{P}/post-a-job/">For employers</a>{NAV_PLUS}<a class="nl only-m" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m nl-cta" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button>{ACCT_HEAD}<a class="btn" href="{P}/post-a-job/">Post a job</a>
-<button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false"></button></div></div></header>
+<button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav"></button></div></div></header>
 <!--email_off-->{hero}<main class="wrap{" " + cls if cls else ""}" id="main">{body}</main>
 {MINI_FOOT if compact else FULL_FOOT()}<!--/email_off-->
 </body></html>""", sitemap)

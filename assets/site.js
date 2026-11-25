@@ -651,91 +651,194 @@
     a.parentNode.insertBefore(b, a.nextSibling);
   });
 
-  /* ---------- header menus under Resume, Tools and Pricing: built here, so the pages themselves carry no extra bytes.
-     Wide screens: a panel under the header on hover, on ArrowDown or on a tap of the arrow; Escape closes it.
-     The phone menu lists the same links under each item. The links are also in the footer of every page. ---------- */
+  /* ---------- header menus (rebuilt 25 Nov 2026, the owner: "can the menu be better?"). Built here, so the pages carry no extra bytes.
+     Each menu is its hub link plus a small button that opens a panel of grouped links (the disclosure pattern: Enter or Space on the
+     button, ArrowDown on either opens it and moves into it, arrows move inside, Escape closes it and gives the focus back to the button).
+     Wide screens: the panel spans the window under the header and also opens on mouse hover; the jobs panel has a search box and
+     the count of open jobs the build wrote on the nav (data-n). Phones: the same panel is a section of the menu that opens in place.
+     The section of the page is marked on its menu (the hub or any link of its panel), and the mark steps aside while a panel is open. */
   (function () {
     var nav = $('nav');
     if (!nav || !header) return;
-    var M = {
-      '/jobs/': ['Find jobs', [
-        ['/jobs/', 'All jobs', 'Search every open job, checked every hour.'],
-        ['/remote/', 'Remote jobs', 'Work from home, by country and kind of work.'],
-        ['/new/', 'New this week', 'Jobs posted in the last seven days.'],
-        ['/for-you/', 'Jobs that fit you', 'Five questions; the jobs that match, with the reasons.'],
-        ['/tech/', 'Tech jobs', 'Engineering, data, product and design.'],
-        ['/entry-level/', 'Entry-level jobs', 'Internships and first jobs.'],
-        ['/categories/', 'All categories', '25 fields and every kind of work in them.'],
-        ['/jobs-near-me/', 'Jobs near me', 'Open jobs in your city.'],
-        ['/my-jobs/', 'My jobs', 'Saved jobs, applications and searches.']]],
-      '/resume/': ['Resume and letters', [
-        ['/resume/', 'Resume builder', 'A one-page resume in your browser, no account.'],
-        ['/resume/examples/', 'Resume examples', 'A written example for each kind of work.'],
-        ['/cover-letter-examples/', 'Cover letter examples', 'A letter for each kind of work, ready to copy.'],
-        ['/resume-words/', 'Resume words', 'What to write instead of “managed” or “helped”.'],
-        ['/resignation-letters/', 'Resignation letters', 'From two weeks notice to effective immediately.'],
-        ['/tools/resume-review/', 'Resume review', 'A score out of 10 and what to fix first.'],
-        ['/tools/resume-match/', 'Resume match', 'Your resume against a posting, word by word.']]],
-      '/tools/': ['Career help', [
-        ['/interview-questions/', 'Interview questions', 'What to prepare for each job, and what a good answer shows.'],
-        ['/how-to-become/', 'How to become…', 'Skills, pay and beginner jobs, career by career.'],
-        ['/career-quiz/', 'Career quiz', 'Seven plain questions: the fields that fit you.'],
-        ['/map/', 'Jobs map', 'Every city with open jobs on one map.'],
-        ['/relocate/', 'Relocation guides', 'Jobs abroad with visa or relocation help, by country.'],
-        ['/guides/', 'Guides', 'The job market explained with today’s numbers.'],
-        ['/glossary/', 'Glossary', 'Hiring words in plain English.'],
-        ['/ahead/', 'Helpers in your browser', 'Chance a job is still open, skill GPS, interview practice out loud and more.'],
-        ['/tools/', 'All free tools', 'Offer check, raise calculator, letters and more.']]],
-      '/post-a-job/': ['For employers', [
-        ['/account/?as=employer', 'Employer sign in', 'Your jobs, their views and clicks, promotion and billing.'],
-        ['/post-a-job/', 'Post a job', 'Free, with paid options to stand out.'],
-        ['/pricing/#employers', 'Pricing for employers', 'Every plan and what it includes.'],
-        ['/how-to-hire/', 'How to hire…', 'Who else is hiring each role, and what they pay.'],
-        ['/job-descriptions/', 'Job description templates', 'A template per role, with today’s figures.'],
-        ['/widgets/', 'Jobs for your website', 'A widget with your jobs or any list.'],
-        ['/api/', 'Data for developers', 'Every open job as free JSON.']]]
+    var I = {     // line icons, 24 x 24, drawn like the field icons of build.py (ICON)
+      search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+      clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+      home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10M10 20v-5h4v5"/>',
+      target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+      mark: '<path d="M6 3h12v18l-6-4-6 4z"/>',
+      bag: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+      half: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',
+      swap: '<path d="M4 8h15l-3-3M20 16H5l3 3"/>',
+      globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>',
+      doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>',
+      cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+      moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+      sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+      cap: '<path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/>',
+      sprout: '<path d="M12 21v-9"/><path d="M12 12c0-3.5-2.5-6-7-6 0 3.5 2.5 6 7 6zM12 14c0-3 2.2-5 7-5 0 3-2.2 5-7 5z"/>',
+      steps: '<path d="M3 20h5v-5h5v-5h5V5h3"/>',
+      code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/>',
+      gov: '<path d="M3 21h18M5 21v-9M10 21v-9M14 21v-9M19 21v-9M2 10l10-6 10 6z"/>',
+      grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+      coin: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-2.8.8-2.8 2s1.1 1.6 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>',
+      pen: '<path d="M4 20l4-1L19 8l-3-3L5 16l-1 4z"/><path d="M14 7l3 3"/>',
+      mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+      text: '<path d="M4 6h16M4 11h16M4 16h9"/>',
+      exit: '<path d="M10 4H5v16h5"/><path d="M14 8l4 4-4 4M18 12H9"/>',
+      check: '<circle cx="12" cy="12" r="9"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+      cols: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M6 9h3M6 13h3M15 9h3M15 13h3"/>',
+      chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+      trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+      compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+      map: '<path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
+      plane: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+      book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+      spark: '<circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',
+      tool: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+      key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+      plus: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/>',
+      tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+      users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+      win: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/>'
     };
-    var wideQ = window.matchMedia('(min-width: 981px)'), cur = null, timer = 0;
-    var panel = document.createElement('div');
-    panel.className = 'navpanel'; panel.id = 'navpanel'; panel.hidden = true;
-    header.appendChild(panel);
+    // hub path: [card, columns]. A column is a list of groups [heading, links]; a link is [path, name, icon, one short line or nothing].
+    // The card is the search box (jobs) or the menu's main action, which is also a link in a group for the phone menu.
+    var M = {
+      '/jobs/': [{ search: 1 }, [
+        [['Search', [['/jobs/', 'All jobs', 'search', 'Every job, checked every hour'], ['/new/', 'New jobs', 'clock', 'Posted in the last 3 days'],
+          ['/jobs-near-me/', 'Jobs near me', 'pin', 'Open jobs in your city'], ['/remote/', 'Remote jobs', 'home', 'Work from home, by country']]],
+         ['For you', [['/for-you/', 'Jobs that fit you', 'target', 'Five questions, your matches'], ['/my-jobs/', 'My jobs', 'mark', 'Saved jobs and applications']]]],
+        [['Schedule and type', [['/jobs/?etype=Full-time', 'Full-time', 'bag'], ['/part-time/', 'Part-time', 'half'], ['/hybrid/', 'Hybrid', 'swap'],
+          ['/work-from-anywhere/', 'Work from anywhere', 'globe'], ['/contract/', 'Contract', 'doc'], ['/temporary/', 'Temporary, seasonal', 'cal'],
+          ['/night-shift/', 'Night shift', 'moon'], ['/weekend/', 'Weekend', 'sun']]]],
+        [['Experience', [['/internships/', 'Internships', 'cap'], ['/entry-level/', 'Entry-level', 'sprout'], ['/no-experience-jobs/', 'No experience', 'steps']]],
+         ['By field', [['/tech/', 'Tech jobs', 'code'], ['/government-jobs/', 'Government jobs', 'gov'], ['/categories/', 'All categories', 'grid'], ['/salaries/', 'Salaries by title', 'coin']]]]]],
+      '/resume/': [{ h: '/resume/', t: 'Resume builder', p: 'A one-page resume in your browser, no account.', a: 'Start a resume' }, [
+        [['Write', [['/resume/', 'Resume builder', 'pen', 'A one-page resume, no account'], ['/resume/examples/', 'Resume examples', 'doc', 'A written example for each kind of work'],
+          ['/cover-letter-examples/', 'Cover letter examples', 'mail', 'A letter for each kind of work, ready to copy'],
+          ['/resignation-letters/', 'Resignation letters', 'exit', 'From two weeks notice to effective immediately'],
+          ['/resume-words/', 'Resume words', 'text', 'What to write instead of “managed”']]]],
+        [['Check', [['/tools/resume-review/', 'Resume review', 'check', 'A score out of 10 and what to fix first'],
+          ['/tools/resume-match/', 'Resume match', 'cols', 'Your resume against a posting, word by word']]]]]],
+      '/tools/': [{ h: '/tools/', t: 'Free tools', p: 'Offer check, raise calculator, letters and more. They run in your browser.', a: 'See all tools' }, [
+        [['Prepare', [['/tools/', 'All free tools', 'tool', 'Offer check, raise calculator and more'], ['/interview-questions/', 'Interview questions', 'chat', 'What to prepare for each job'],
+          ['/career-quiz/', 'Career quiz', 'compass', 'Seven plain questions, the fields that fit'], ['/how-to-become/', 'How to become…', 'trend', 'Skills, pay and first jobs, career by career'],
+          ['/ahead/', 'Helpers in your browser', 'spark', 'Skill GPS, interview practice out loud']]]],
+        [['Learn', [['/guides/', 'Guides', 'book', 'The job market with today’s numbers'], ['/relocate/', 'Relocation guides', 'plane', 'Jobs abroad with visa or relocation help'],
+          ['/map/', 'Jobs map', 'map', 'Every city with open jobs on one map'], ['/glossary/', 'Glossary', 'text', 'Hiring words in plain English']]]]]],
+      '/post-a-job/': [{ h: '/post-a-job/', t: 'Post a job', p: 'Free, with paid options to stand out.', a: 'Start posting' }, [
+        [['Hire', [['/post-a-job/', 'Post a job', 'plus', 'Free, with paid options to stand out'], ['/account/?as=employer', 'Employer sign in', 'key', 'Your jobs, views, clicks and billing'],
+          ['/pricing/#employers', 'Pricing for employers', 'tag', 'Every plan and what it includes']]]],
+        [['Resources', [['/how-to-hire/', 'How to hire…', 'users', 'Who else hires each role, and the pay'], ['/job-descriptions/', 'Job description templates', 'doc', 'A template per role, with today’s figures'],
+          ['/widgets/', 'Jobs for your website', 'win', 'A widget with your jobs or any list'], ['/api/', 'Data for developers', 'code', 'Every open job as free JSON']]]]]]
+    };
+    var here = location.pathname.slice(P.length) || '/';
+    var svg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + '</svg>'; };
+    var cardHtml = function (c) {
+      if (c.search) {
+        var n = +nav.getAttribute('data-n') || 0;
+        return '<div class="np-card"><p class="np-k"><i></i>Checked every hour</p>' +
+          (n ? '<p class="np-n"><b>' + n.toLocaleString('en-US') + '</b> open jobs</p>' : '<p class="np-n"><b>Every open job</b></p>') +
+          '<form class="np-f" action="' + P + '/jobs/" method="get" role="search">' +
+          '<input type="search" name="q" placeholder="Job title or skill" aria-label="What: job title, skill or company" autocomplete="off">' +
+          '<input type="search" name="where" placeholder="City or remote" aria-label="Where: city, country or remote" autocomplete="off">' +
+          '<button class="btn" type="submit">Search jobs</button></form></div>';
+      }
+      return '<div class="np-card"><p class="np-t">' + esc(c.t) + '</p><p class="np-p">' + esc(c.p) + '</p><a class="btn sm" href="' + P + c.h + '">' + esc(c.a) + '</a></div>';
+    };
+    var panel = function (m, id) {
+      var p = document.createElement('div');
+      p.className = 'np'; p.id = id; p.hidden = true;
+      p.innerHTML = '<div class="np-in">' + cardHtml(m[0]) + '<div class="np-cols' + (m[1].length > 2 ? ' np-c3' : '') + '">' + m[1].map(function (col, ci) {
+        return '<div class="np-col">' + col.map(function (g, gi) {
+          var gid = id + '-' + ci + gi;
+          return '<div class="np-g"><p class="np-h" id="' + gid + '">' + esc(g[0]) + '</p><ul aria-labelledby="' + gid + '">' + g[1].map(function (x) {
+            return '<li' + (x[0] === m[0].h ? ' class="np-m"' : '') + '><a href="' + P + x[0] + '"' + (x[3] ? ' class="np-d"' : '') + (x[0] === here ? ' aria-current="page"' : '') + '>' +
+              '<span class="np-i">' + svg(x[2]) + '</span><span class="np-x"><b>' + esc(x[1]) + '</b>' + (x[3] ? '<small>' + esc(x[3]) + '</small>' : '') + '</span></a></li>';
+          }).join('') + '</ul></div>';
+        }).join('') + '</div>';
+      }).join('') + '</div></div>';
+      return p;
+    };
+    var wideQ = window.matchMedia('(min-width: 1041px)'), cur = null, via = '', timer = 0, all = [];      // style.css: the drawer up to 1,040 px
+    var later = function (f, ms) { clearTimeout(timer); timer = setTimeout(f, ms); };
     var close = function () {
       clearTimeout(timer);
       if (!cur) return;
-      cur.setAttribute('aria-expanded', 'false'); cur = null; panel.hidden = true;
+      cur.b.setAttribute('aria-expanded', 'false'); cur.a.classList.remove('on'); cur.p.hidden = true; nav.classList.remove('np-on');
+      cur = null; via = '';
     };
-    var show = function (a, key) {
+    var open = function (t, how) {
       clearTimeout(timer);
-      if (cur === a) return;
-      if (cur) cur.setAttribute('aria-expanded', 'false');
-      var m = M[key];
-      panel.innerHTML = '<div class="wrap"><p class="np-h">' + esc(m[0]) + '</p><ul>' + m[1].map(function (x) {
-        return '<li><a href="' + P + x[0] + '"><b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></a></li>';
-      }).join('') + '</ul></div>';
-      panel.hidden = false; cur = a; a.setAttribute('aria-expanded', 'true');
+      if (cur === t) { if (how !== 'hover') via = how; return; }
+      t.p.classList.toggle('np-sw', !!cur);        // from one open menu to the next: no fade, so the page never shows between them
+      close();
+      cur = t; via = how;
+      t.p.hidden = false; t.b.setAttribute('aria-expanded', 'true'); t.a.classList.add('on'); nav.classList.add('np-on');
     };
+    var links = function (t) { return Array.prototype.filter.call(t.p.querySelectorAll('a'), function (x) { return x.offsetParent !== null; }); };
+    var mouse = function (ev) { return ev.pointerType === 'mouse' && wideQ.matches; };
     Array.prototype.forEach.call(nav.querySelectorAll('a.nl'), function (a) {
-      var key = (a.getAttribute('href') || '').slice(P.length);
-      if (!M[key]) return;
-      a.classList.add('hasmenu'); a.setAttribute('aria-haspopup', 'true'); a.setAttribute('aria-expanded', 'false'); a.setAttribute('aria-controls', 'navpanel');
-      a.addEventListener('mouseenter', function () { if (!wideQ.matches) return; clearTimeout(timer); timer = setTimeout(function () { show(a, key); }, cur ? 0 : 120); });
-      a.addEventListener('mouseleave', function () { clearTimeout(timer); timer = setTimeout(close, 260); });
-      a.addEventListener('keydown', function (ev) {
-        if (ev.key !== 'ArrowDown' || !wideQ.matches) return;
-        ev.preventDefault(); show(a, key);
-        var first = panel.querySelector('a'); if (first) first.focus();
+      var key = (a.getAttribute('href') || '').slice(P.length), m = M[key];
+      if (!m || a.classList.contains('only-m')) return;
+      var name = a.textContent.trim(), t = { a: a, p: panel(m, 'np-' + key.replace(/\W/g, '')), m: m }, b = t.b = document.createElement('button');
+      b.type = 'button'; b.className = 'nlb'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', t.p.id); b.setAttribute('aria-label', name + ' menu');
+      b.innerHTML = '<span class="nlb-t">' + esc(name) + '</span>';
+      a.classList.add('hasmenu');
+      a.parentNode.insertBefore(b, a.nextSibling);
+      b.parentNode.insertBefore(t.p, b.nextSibling);
+      all.push(t);
+      var enter = function (ev) { if (mouse(ev)) later(function () { open(t, 'hover'); }, cur ? 0 : 120); };
+      var leave = function (ev) { if (mouse(ev) && (via === 'hover' || !cur)) later(close, 260); };
+      [a, b].forEach(function (el) {
+        el.addEventListener('pointerenter', enter);
+        el.addEventListener('pointerleave', leave);
+        el.addEventListener('keydown', function (ev) {
+          if (ev.key !== 'ArrowDown') return;
+          ev.preventDefault(); open(t, 'key');
+          var l = links(t); if (l[0]) l[0].focus();
+        });
       });
-      var sub = document.createElement('div');       // the phone menu: the same links, under the item
-      sub.className = 'navsub';
-      sub.innerHTML = M[key][1].filter(function (x) { return x[0] !== key; }).map(function (x) { return '<a href="' + P + x[0] + '">' + esc(x[1]) + '</a>'; }).join('');
-      a.parentNode.insertBefore(sub, a.nextSibling);
+      t.p.addEventListener('pointerenter', function (ev) { if (mouse(ev)) clearTimeout(timer); });
+      t.p.addEventListener('pointerleave', function (ev) { if (mouse(ev) && via === 'hover') later(close, 260); });
+      t.p.addEventListener('focusin', function () { if (cur === t && via === 'hover') via = 'focus'; });      // typing in its search box: the panel stays when the mouse wanders off
+      b.addEventListener('click', function () { if (cur === t && via !== 'hover') close(); else open(t, 'click'); });
+      t.p.addEventListener('keydown', function (ev) {         // arrows move between the links of the open panel
+        if ((ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') || ev.target.tagName !== 'A') return;
+        var l = links(t), i = l.indexOf(ev.target);
+        if (i < 0) return;
+        ev.preventDefault();
+        if (ev.key === 'ArrowUp' && i === 0) b.focus(); else if (l[i + (ev.key === 'ArrowDown' ? 1 : -1)]) l[i + (ev.key === 'ArrowDown' ? 1 : -1)].focus();
+      });
+      var inside = function (el) { return el && (el === a || el === b || t.p.contains(el)); };
+      [a, b, t.p].forEach(function (el) {
+        el.addEventListener('focusout', function (ev) {        // the focus left the menu (Tab past its last link): a wide panel closes
+          if (cur !== t || !wideQ.matches || inside(ev.relatedTarget)) return;
+          setTimeout(function () { if (cur === t && !inside(document.activeElement) && !t.p.matches(':hover') && !a.matches(':hover') && !b.matches(':hover')) close(); }, 0);
+        });
+      });
     });
-    panel.addEventListener('mouseenter', function () { clearTimeout(timer); });
-    panel.addEventListener('mouseleave', function () { clearTimeout(timer); timer = setTimeout(close, 260); });
-    panel.addEventListener('focusout', function (ev) { if (!panel.contains(ev.relatedTarget) && ev.relatedTarget !== cur) close(); });
-    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && cur) { var a = cur; close(); a.focus(); } });
-    document.addEventListener('click', function (ev) { if (cur && !panel.contains(ev.target) && ev.target !== cur) close(); });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Escape') return;
+      if (cur) { var t = cur; close(); t.b.focus(); return; }
+      if (menuBtn && header.classList.contains('open')) { header.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); menuBtn.focus(); }
+    });
+    document.addEventListener('click', function (ev) { if (cur && wideQ.matches && !nav.contains(ev.target)) close(); });
+    if (menuBtn) menuBtn.addEventListener('click', function () { if (!header.classList.contains('open')) close(); });
     if (wideQ.addEventListener) wideQ.addEventListener('change', close);
+    // the section of this page: the top link or panel link with the longest match (a top link wins a tie; ? and # links are not places)
+    var best = null, len = 1;
+    Array.prototype.forEach.call(nav.querySelectorAll('a.nl:not(.only-m)'), function (a) {
+      var h = (a.getAttribute('href') || '').slice(P.length);
+      if (h.length > len && here.indexOf(h) === 0) { best = a; len = h.length; }
+    });
+    all.forEach(function (t) {
+      t.m[1].forEach(function (col) { col.forEach(function (g) { g[1].forEach(function (x) {
+        if (!/[?#]/.test(x[0]) && x[0].length > len && here.indexOf(x[0]) === 0) { best = t.a; len = x[0].length; }
+      }); }); });
+    });
+    if (best) best.setAttribute('aria-current', best.getAttribute('href') === location.pathname ? 'page' : 'true');
   })();
   document.addEventListener('keydown', function (ev) {
     if (ev.key === '/' && !/input|textarea|select/i.test((ev.target && ev.target.tagName) || '')) {
@@ -807,13 +910,6 @@
       rec.onend = rec.onerror = function () { mic.classList.remove('on'); };
       try { rec.start(); } catch (e) { mic.classList.remove('on'); }
     });
-  });
-
-  /* ---------- current section in the menu ---------- */
-  var here = location.pathname.replace(P, '');
-  document.querySelectorAll('#nav a.nl').forEach(function (a) {
-    var path = (a.getAttribute('href') || '').replace(P, '');
-    if (path.length > 1 && here.indexOf(path) === 0) a.setAttribute('aria-current', 'page');
   });
 
   /* ---------- follow a company ---------- */

@@ -57,7 +57,7 @@ header.site .wrap{display:flex;align-items:center;gap:18px;height:60px}
 nav{display:flex;align-items:center;gap:0;font-size:14.5px;font-weight:500;margin-left:auto}
 nav a.nl{padding:8px 11px;border-radius:4px;color:var(--muted);white-space:nowrap}
 @media(max-width:1440px){nav a.nl{padding:8px 7px}}
-nav a.nl:hover{color:var(--text);background:var(--bg2)}
+nav a.nl:hover{color:var(--text);background-color:var(--bg2)}
 nav a.nl.plus{color:var(--text);font-weight:700}
 nav a.only-m{display:none}
 .hact{display:flex;align-items:center;gap:6px}
@@ -77,7 +77,10 @@ nav a.only-m{display:none}
 .btn.ghost[aria-pressed=true]{background:var(--hl);color:var(--hl-ink);border-color:var(--hl)}
 .btn[disabled],.btn[disabled]:hover{opacity:.5;cursor:not-allowed;background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
 .hact .btn{padding:8px 14px}
-@media(max-width:980px){
+/* the full row needs about 1,040 px (logo, six menus, search, Sign in, Post a job); below that the menu is the drawer (was 980 px,
+   where Post a job was cut off at the right edge until 25 Nov 2026). site.js (header menus) uses the same width. */
+@media(max-width:1200px){header.site .wrap{gap:12px}nav a.nl{padding:8px 6px}}
+@media(max-width:1040px){
   .burger{display:inline-flex}
   nav{display:none;position:absolute;left:0;right:0;top:100%;margin:0;padding:8px 16px 16px;flex-direction:column;align-items:stretch;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
   header.site.open nav{display:flex}
@@ -436,7 +439,8 @@ label.rl{display:block;font-size:13px;color:var(--muted);margin-bottom:10px}
 .skip:focus{left:0}
 
 /* Current menu item, pulse chip, phone apply bar, quick search, board entrance */
-nav a.nl[aria-current=page]{color:var(--text);box-shadow:inset 0 -3px 0 var(--ac)}
+/* the section of the page: a 2px green rule under the word (an open menu is a grey tint instead; the two never look alike) */
+nav a.nl[aria-current]{color:var(--text);background-image:linear-gradient(var(--ac),var(--ac));background-repeat:no-repeat;background-origin:content-box;background-size:100% 2px;background-position:0 calc(100% + 3px)}
 .chip.pulse{border-color:var(--text)}
 .mbar{display:none}
 @media(max-width:860px){
@@ -1434,27 +1438,75 @@ td.salbar .bar{width:min(220px,26vw);margin:0 0 0 12px}
 .filters.xlv{margin-top:10px;align-items:center}
 .filters.xlv .note{margin:0 4px 0 0}
 
-/* header menus (built by site.js): a panel under the header on wide screens, links under each item in the phone menu */
-nav a.nl.hasmenu::after{content:"";display:inline-block;width:6px;height:6px;margin-left:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-3px) rotate(45deg);opacity:.55}
-nav a.nl.hasmenu[aria-expanded=true]{color:var(--text);background:var(--bg2)}
-.navpanel{position:absolute;left:0;right:0;top:100%;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 22px 40px -28px rgba(0,0,0,.35)}
-.navpanel[hidden]{display:none}
-header.site .navpanel .wrap{display:grid;grid-template-columns:180px minmax(0,1fr);gap:28px;height:auto;align-items:start;padding-top:20px;padding-bottom:24px}
-.np-h{margin:10px 0 0;font:600 12px var(--mono);color:var(--muted)}
-.navpanel ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 16px}
-.navpanel a{display:block;padding:10px 12px;border-radius:6px}
-.navpanel a:hover,.navpanel a:focus-visible{background:var(--bg2)}
-.navpanel b{display:block;font-weight:650;font-size:15px;color:var(--text)}
-.navpanel a:hover b{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
-.navpanel span{display:block;margin-top:3px;font-size:13.5px;line-height:1.4;color:var(--muted)}
-.navsub{display:none}
-@media(max-width:980px){
-  .navpanel{display:none!important}
-  nav a.nl.hasmenu::after{display:none}
-  nav a.nl.hasmenu{border-bottom:0}
-  header.site.open nav{max-height:calc(100vh - 56px);max-height:calc(100dvh - 56px);overflow-y:auto;overscroll-behavior:contain}      /* the phone menu is long: it scrolls by itself */
-  .navsub{display:flex;flex-wrap:wrap;gap:2px 16px;padding:0 12px 12px;border-bottom:1px solid var(--line)}
-  .navsub a{padding:5px 0;font-size:14.5px;color:var(--muted);text-decoration:underline;text-decoration-color:var(--ac);text-underline-offset:3px}
+/* header menus (built by site.js; rebuilt 25 Nov 2026): each menu is its hub link plus a small button that opens a panel of grouped
+   links. Wide screens: the panel spans the window under the header, a card on the left (the jobs search box with the count of open
+   jobs, or the menu's main action) and columns of links under small headings; a link with a short line has its icon in a box, a dense
+   list has the bare icon. Phones: the button is the row, the same panel opens in place as a section of the menu. */
+nav a.nl.hasmenu{padding-right:2px;border-radius:4px 0 0 4px}
+.nlb{display:inline-flex;align-items:center;justify-content:center;width:19px;height:38px;margin:0 2px 0 0;padding:0;border:0;border-radius:0 4px 4px 0;background:none;color:var(--muted);font:inherit;cursor:pointer}
+.nlb::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.7;transition:transform .15s}
+.nlb[aria-expanded=true]::after{transform:translateY(2px) rotate(-135deg);opacity:1}
+.nlb-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.nlb:hover,nav a.nl.hasmenu:hover+.nlb,nav a.nl.on,nav a.nl.on+.nlb{color:var(--text);background-color:var(--bg2)}
+nav a.nl.hasmenu:has(+.nlb:hover){color:var(--text);background-color:var(--bg2)}
+.np{position:absolute;left:0;right:0;top:100%;background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);box-shadow:0 30px 50px -34px rgba(14,14,12,.45);font-size:14.5px;font-weight:400;animation:np-in .14s ease-out}
+@keyframes np-in{from{opacity:0;transform:translateY(-4px)}}
+.np.np-sw{animation:none}
+@media(prefers-reduced-motion:reduce){.np{animation:none}.nlb::after{transition:none}}
+.np-in{display:grid;grid-template-columns:clamp(220px,21vw,262px) minmax(0,1fr);gap:clamp(24px,3.4vw,48px);max-width:1180px;margin:0 auto;padding:26px 20px 30px}
+.np-cols{display:grid;grid-template-columns:repeat(2,minmax(0,340px));gap:0 clamp(14px,2.2vw,32px);align-items:start}
+.np-cols.np-c3{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr)}
+.np-g+.np-g{margin-top:20px}
+.np-h{margin:0 0 6px;padding:0 10px;font:600 12.5px/1.4 var(--mono);letter-spacing:.01em;color:var(--faint)}
+.np ul{list-style:none;margin:0;padding:0}
+.np li a{display:flex;align-items:center;gap:11px;padding:7px 10px;border-radius:8px;color:var(--text);line-height:1.3}
+.np li a:hover,.np li a:focus-visible{background:var(--bg2)}
+.np li a.np-d{align-items:flex-start;gap:12px;padding:8px 10px}
+.np-i{display:inline-flex;flex:none;align-items:center;justify-content:center;color:var(--muted)}
+.np-d .np-i{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+.np svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.np li a:hover .np-i,.np li a:focus-visible .np-i{color:var(--ac)}
+.np-x{min-width:0}
+.np-x b{display:block;font-weight:600}
+.np-x small{display:block;margin-top:2px;font-size:13px;line-height:1.35;color:var(--muted)}
+.np-d .np-x{padding-top:1px}
+.np li a[aria-current] b{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.np-m{display:none}
+.np-card{align-self:start;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.np-k{display:flex;align-items:center;gap:7px;margin:0 0 8px;font-size:13px;font-weight:600;color:var(--muted)}
+.np-k i{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+.np-n{margin:0 0 16px;font-size:14.5px;color:var(--muted)}
+.np-n b{display:block;margin-bottom:2px;font:800 30px/1.05 var(--display);letter-spacing:-.03em;color:var(--text)}
+.np-f{display:grid;gap:8px}
+.np-f input[type=search]{padding:9px 12px;font-size:14.5px;background:var(--bg)}
+.np-f .btn{width:100%;margin-top:2px}
+.np-t{margin:0 0 6px;font:750 19px/1.2 var(--display);letter-spacing:-.02em;color:var(--text)}
+.np-p{margin:0 0 16px;font-size:14px;line-height:1.45;color:var(--muted)}
+@media(min-width:1041px){nav.np-on a.nl[aria-current]:not(.on){background-image:none;color:var(--muted)}}     /* the page's mark steps aside while another menu is open */
+@media(max-width:1040px){
+  nav a.nl.hasmenu{display:none}
+  .nlb{justify-content:space-between;width:auto;height:auto;min-height:50px;margin:0;padding:0 10px 0 12px;border-bottom:1px solid var(--line);border-radius:0;font-size:16px;font-weight:500;color:var(--text);text-align:left}
+  .nlb-t{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+  nav a.nl{color:var(--text)}
+  .nlb[aria-expanded=true]{border-bottom-color:transparent}
+  nav a.nl[aria-current],nav a.nl.hasmenu[aria-current]+.nlb{background-image:none;box-shadow:inset 3px 0 0 var(--ac)}
+  .np{position:static;border:0;box-shadow:none;background:none;animation:none}
+  .np-in{display:block;padding:0 0 12px;border-bottom:1px solid var(--line)}
+  .np-card{display:none}
+  .np-cols,.np-cols.np-c3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .np-g,.np-g+.np-g{margin-top:10px}
+  .np-h{padding:4px 12px}
+  .np li a,.np li a.np-d{align-items:center;min-height:44px;padding:8px 12px;font-size:15.5px}
+  .np-d .np-i{width:auto;height:auto;border:0;background:none}
+  .np-x small{display:none}
+  .np-m{display:list-item}
+  nav a.nl.nl-cta{margin-top:16px;padding:13px;border:0;border-radius:8px;background:var(--btn);color:var(--btn-ink);text-align:center;font-weight:600}
+  nav a.nl.nl-cta:hover{background-color:var(--btn-h);color:var(--btn-h-ink)}
+}
+@media(max-width:560px){
+  .np-cols,.np-cols.np-c3{display:block}
+  .np-c3 ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:4px}      /* the jobs menu: short names, two to a row */
+  .np-c3 li a,.np-c3 li a.np-d{gap:9px;padding:8px;font-size:15px}
 }
 
 /* resume builder: score and target job */
