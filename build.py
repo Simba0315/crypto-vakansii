@@ -24,6 +24,7 @@ import roles_info
 import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
 import geo_cities                       # where the cities in postings are, for the jobs map
+import search_engine                    # a row of results, the same here (the first page of /jobs/) as from the server
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 import compare_sites                    # sourced facts for "Jobs Every Hour vs <job site>" (/vs/)
@@ -3794,6 +3795,21 @@ def main():
     top_skills = [t for t, _ in skill_counts.most_common(18)]
     skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
     group = lambda label, inner, cls="": f'<div class="fgroup{" " + cls if cls else ""}"><span class="flabel">{label}</span>{inner}</div>'
+    # the City box's suggestions: the first part of each posting's place line, most frequent first (the page used to count these
+    # from the list of every job, which it no longer downloads)
+    city_n = Counter()
+    for j in active:
+        for part in re.split(r"[;|·]| / |\bor\b", j["location"] or ""):
+            c_ = re.sub(r"\b(?:remote|hybrid|on-?site|office)\b.*$", "", re.sub(r"\(.*?\)", "", part.split(",")[0]), flags=re.I).strip()
+            if 2 < len(c_) < 30 and not re.search(r"\d", c_): city_n[c_] += 1
+    city_opts = "".join(f'<option value="{e(c_)}">' for c_, k_ in city_n.most_common(600) if k_ >= 3)
+    # the first page of results, as the server would answer it with no filter: the newest 50 roles, each with its other postings
+    same_n, first_rows, seen_ = Counter((j["company"], j["title"]) for j in active), [], set()
+    for j in order(active):
+        if (j["company"], j["title"]) in seen_: continue
+        seen_.add((j["company"], j["title"]))
+        first_rows.append(search_engine.row(search_engine.doc(j, "", PLACE_CODE, TODAY), same_n[(j["company"], j["title"])] - 1, slugify(j["company"]) in LOGOS, NOW))
+        if len(first_rows) == search_engine.PAGE: break
     search = (crumbs(("All jobs", "")) + '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (one page per query, 18 Nov 2026)
               f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="A title, or a sentence: remote nurse jobs this week" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
@@ -3803,7 +3819,7 @@ def main():
               + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option value="Lead">Lead and above</option><option value="Exec">Director and above</option></select>')
               + group("Location", f'<div class="floc"><select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
                       '<input type="search" id="city" list="city-list" placeholder="Any city, e.g. Leeds" aria-label="City" autocomplete="off"></div>'
-                      '<datalist id="city-list"></datalist>'
+                      f'<datalist id="city-list">{city_opts}</datalist>'
                       '<label class="check" id="f-rc-w" hidden style="margin-top:8px"><input type="checkbox" id="f-rc"> <span id="f-rc-l">Hide remote jobs closed to my country</span></label>', "f-loc")
               + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
@@ -3827,14 +3843,21 @@ def main():
               '<div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select>'
               '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'
-              '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p></div>'
+              '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p>'
+              # when the search does not answer: say so and offer the lists that need no search (assets/app.js shows it)
+              f'<div class="srch-down" id="srch-down" hidden><p class="lead" id="srch-down-t">Search is not answering right now.</p>'
+              f'<p class="kact"><a href="{P}/new/">New this week</a><a href="{P}/remote/">Remote jobs</a><a href="{P}/locations/">Jobs by place</a><a href="{P}/companies/">Companies</a></p>'
+              '<ul class="srch-cats">' + "".join(f'<li><a href="{P}/jobs/{s}/">{e(CAT[s])}</a></li>' for s in sorted((s for s in CAT if by_cat[s]), key=lambda s: (s == OTHER[0], -len(by_cat[s])))) + '</ul></div></div>'
               '<aside class="pane" id="pane" aria-label="Job preview"><p class="pane-empty">Select a job to preview it here.</p></aside></div>'
               + alert_form("new jobs for this search", search=True)
               + '<datalist id="sugg">' + "".join(f'<option value="{e(x)}">' for x in dict.fromkeys(top_skills + [rlow(nm) for nm, s_, _ in ROLES if s_ in by_role] + [c for c, _ in comp_items[:200]])) + "</datalist>"
-              + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript><script src="{P}/app.js?v={V}" defer></script><script src="{P}/fsel.js?v={V}" defer></script>')
+              + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript>'
+              # the first screen comes with the page: the newest jobs, one row per role, in the rows the server answers searches with
+              # (search_engine.row). Filters and words go to the server (/api/search?list=1); no list of every job is downloaded.
+              + '<script type="application/json" id="srch-first">' + json.dumps({"total": n, "jobs": first_rows}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>'
+              + f'<script src="{P}/app.js?v={V}" defer></script><script src="{P}/fsel.js?v={V}" defer></script>')
     page("jobs/", f"All Jobs: {n:,} Open Roles, Filter by Title, Place and Pay | {SITE}",
-         "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search,
-         head=f'<link rel="preload" href="{P}/data/head.json" as="fetch" crossorigin><link rel="preload" href="{P}/data/index.json" as="fetch" crossorigin>', cls="srch")
+         "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search, cls="srch")
 
     lap('Long-tail landing pages: skill x remote, skill x place, cate')
     # Long-tail landing pages: skill x remote, skill x place, category x place, place x remote, category x level

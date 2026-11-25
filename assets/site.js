@@ -60,6 +60,49 @@
     if (!headCache) headCache = fetch(P + '/data/head.json').then(function (r) { return r.json(); }).then(function (d) { return { rows: expand(d), total: d.n }; });
     return headCache;
   }
+  // A row as the server sends it (search_engine.row: /api/search?list=1, and the first page inside /jobs/) -> the row above:
+  // [slug, title, company, place, flags, field, level, skills, pay, posted yyyymmdd, top of the pay in USD, places, perks, type,
+  //  exact time in minutes, country codes, has a logo, other postings of the same role]
+  function fromApi(a) {
+    var f = a[4], pi = a[9];
+    return [a[0], a[1], a[2], a[3], f & 1, a[5], a[6], a[7], a[8], pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', a[6] === 'Intern' || a[6] === 'Junior' ? 1 : 0,
+      f & 2 ? 1 : 0, hue(a[2]), a[10], a[11], f & 4 ? 1 : 0, pi, '', a[12], a[13], f & 8 ? 1 : 0, a[16] ? slugOf(a[2]) : '', f & 16 ? 1 : 0, a[14], a[15], f & 32 ? 1 : 0, f & 64 ? 1 : 0];
+  }
+  // The open jobs among these slugs, as rows, from the server (60 to a request): for a page that needs a few jobs, not every job.
+  // A slug that is missing from the answer is a job that is closed (or never was).
+  function rowsOf(slugs) {
+    var parts = [];
+    slugs = slugs.filter(function (s) { return /^[a-z0-9][a-z0-9-]*$/.test(s); });
+    for (var i = 0; i < slugs.length; i += 60) parts.push(slugs.slice(i, i + 60).sort());
+    return Promise.all(parts.map(function (part) {
+      return fetch(P + '/api/search?list=1&ids=' + encodeURIComponent(part.join(','))).then(function (r) { if (!r.ok) throw new Error('search answered ' + r.status); return r.json(); })
+        .then(function (d) { return d.jobs.map(fromApi); });
+    })).then(function (all) { return [].concat.apply([], all); });
+  }
+  // One page of a list from the server (/api/search?list=1, search_engine.py), as rows: {total, rows, more, sum}. qs is written like the
+  // search page's own address, plus np (no talent pools), onsite, sk (any of these skills), co (one company), after (yyyymmdd), count, sum.
+  function listOf(qs) {
+    return fetch(P + '/api/search?list=1' + (qs ? '&' + qs : '')).then(function (r) { if (!r.ok) throw new Error('search answered ' + r.status); return r.json(); })
+      .then(function (d) { return { total: d.total, rows: (d.jobs || []).map(fromApi), more: !!d.more, sum: d.sum || null }; });
+  }
+  // the For you answers (hrn_profile) as a list's address: the jobs fitTest() keeps (null without answers)
+  function fitQuery(p) {
+    p = p || {};
+    var cats = p.cats || [], skills = p.skills || [], pay = Number(p.pay) || 0, out = ['np=1'];
+    if (!cats.length && !skills.length && !p.where && !pay) return null;
+    if (cats.length) out.push('cat=' + encodeURIComponent(cats.slice().sort().join(',')));
+    if (p.where === 'remote') out.push('remote=1'); else if (p.where === 'hybrid') out.push('hybrid=1'); else if (p.where === 'office') out.push('onsite=1');
+    if (pay >= 1000) out.push('sal=' + pay, 'nosal=1');                  // a job that does not say its pay stays in, as in fitTest()
+    if (skills.length) out.push('sk=' + encodeURIComponent(skills.slice().sort().join(',')));
+    return out.join('&');
+  }
+  // The list of every open job (data/index.json: 22 MB to download, about 450 MB of memory once read) is fetched only where nothing
+  // smaller can answer, and on a phone, a small device or a metered connection only when the visitor asks for it.
+  function heavyOk() {
+    var c = navigator.connection || {};
+    if (c.saveData || /(^|-)2g$/.test(c.effectiveType || '') || (navigator.deviceMemory && navigator.deviceMemory < 4)) return false;
+    return !(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(max-width: 760px)').matches));
+  }
   function doneSet() {             // the jobs the visitor applied to (any status after "saved"), only when "leave out jobs I applied to" is on
     if (!get('hrn_hide_applied', false)) return null;
     var mine = get('hrn_jobs', {}), o = {};
@@ -336,7 +379,7 @@
       return !skills.length || j[7].some(function (t) { return skills.indexOf(t) >= 0; });
     };
   }
-  window.HRN = { fitTest: fitTest, readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  window.HRN = { fitTest: fitTest, readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, fromApi: fromApi, rowsOf: rowsOf, listOf: listOf, fitQuery: fitQuery, heavyOk: heavyOk, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
      the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */

@@ -1,5 +1,9 @@
-/* Job search page: filters, sorting, shareable URLs and saved searches. Uses the shared helpers from site.js. */
-(async function () {
+/* Job search page: filters, sorting, shareable URLs and saved searches. Uses the shared helpers from site.js.
+   The list comes from the server: the page sends its own address to /api/search?list=1 (Lucene on our server, search_engine.py) and
+   gets 50 rows back, best or newest first, one row per role; "Show more" asks for the next 50. With no filter the first screen is in
+   the page itself (#srch-first), so nothing is waited for. Until 25 Nov 2026 the page downloaded every open job (22 MB, 450 MB of a
+   browser's memory) and filtered here; a phone took seconds or closed the tab. */
+(function () {
   var root = document.getElementById('search');
   if (!root || !window.HRN) return;
   var H = window.HRN;
@@ -19,9 +23,9 @@
   var fReal = $('f-real'), fTi = $('f-ti'), fNosal = $('f-nosal'), xwords = $('xwords'), xcos = $('xcos'), fHybrid = $('f-hybrid');
   var xlBoxes = Array.prototype.slice.call(document.querySelectorAll('.f-xl'));
   var xlOf = function () { return xlBoxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }); };
-  var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search');
-  list.setAttribute('aria-busy', 'true');      // until the first results the empty list is drawn as rows still loading (style.css, main.srch); render() takes the mark off
-  var ftoggle = $('ftoggle'), fwrap = $('fwrap'), keepShown = false;
+  var list = $('results'), count = $('count'), more = $('more'), skillbar = $('skills'), saveBtn = $('save-search'), down = $('srch-down');
+  list.setAttribute('aria-busy', 'true');      // until the first results the empty list is drawn as rows still loading (style.css, main.srch); show() takes the mark off
+  var ftoggle = $('ftoggle'), fwrap = $('fwrap');
   if (ftoggle && fwrap) ftoggle.addEventListener('click', function () {
     var open = fwrap.classList.toggle('open'); ftoggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
@@ -41,9 +45,11 @@
   var paintChips = function () { chips.forEach(function (c) { c.setAttribute('aria-pressed', skills.indexOf(c.getAttribute('data-skill')) >= 0 ? 'true' : 'false'); }); };
   paintChips();
 
-  // First paint comes from a small file with the newest jobs; the full index replaces it as soon as it has arrived.
-  var jobs = [], full = false, allTotal = 0, waiting = false;
-  var shown = 50, found = [], extra = new Map(), total = 0;
+  // The first page with no filter came with the page: the newest roles, in the rows the server answers with (search_engine.row)
+  var first = null;
+  try { first = JSON.parse(($('srch-first') || {}).textContent || 'null'); } catch (e) {}
+  if (first && first.jobs) { first.more = first.jobs.length >= 50; first.without = {}; } else first = null;
+  var found = [], extra = new Map(), total = 0, got = 0, asked = 0, ctl = null, slow;
   var query = function () {
     var p = new URLSearchParams();
     if (q.value.trim()) p.set('q', q.value.trim());
@@ -85,48 +91,81 @@
     if (skills.length) parts.push(skills.join(' + '));
     return parts.join(' · ') || 'All jobs';
   };
-  var render = function () {
-    list.innerHTML = found.slice(0, shown).map(function (j) { return H.card(j, extra.get(j[0]) || 0); }).join('');
-    list.removeAttribute('aria-busy');
+  // what the visitor keeps out of every list, in this browser: companies and title words go to the server with the search; jobs marked
+  // "Not interested" and, when asked, jobs already applied to are taken out of the rows here
+  var muted = function () { return Object.keys(H.mute.c).length > 0 || H.mute.w.length > 0; };
+  var keep = function (j) {
+    var hid = H.get('hrn_hidden', {}), done = H.parse('').done;
+    if (hid[j[0]] || (done && done[j[0]]) || H.mute.c[j[2]]) return false;
+    var low = j[1].toLowerCase();
+    for (var w = 0; w < H.mute.w.length; w++) if (low.indexOf(H.mute.w[w]) >= 0) return false;
+    return true;
+  };
+  // The address asked of the server: the page's own, keys in one order and the words in lower case, so one search is one answer
+  // in the caches (nginx keeps each answer 2 minutes, serve.py one minute)
+  var apiUrl = function (qs, offset) {
+    var p = new URLSearchParams(qs), out = new URLSearchParams(), keys = [];
+    out.set('list', '1');
+    p.forEach(function (_, k) { if (keys.indexOf(k) < 0) keys.push(k); });
+    keys.sort().forEach(function (k) { var v = p.get(k); out.set(k, k === 'q' ? v.toLowerCase().replace(/\s+/g, ' ').trim() : v); });
+    Object.keys(H.mute.c).sort().forEach(function (c) { out.append('xc', c); });
+    H.mute.w.slice().sort().forEach(function (w) { out.append('xw', w); });
+    if (offset) out.set('offset', String(offset));
+    return H.base + '/api/search?' + out.toString();
+  };
+  var ask = function (qs, offset) {
+    if (ctl) try { ctl.abort(); } catch (e) {}
+    ctl = window.AbortController ? new AbortController() : null;
+    var my = ++asked;
+    return fetch(apiUrl(qs, offset), ctl ? { signal: ctl.signal } : {}).then(function (r) {
+      if (!r.ok) throw new Error('search answered ' + r.status);
+      return r.json();
+    }).then(function (d) {
+      if (my !== asked) throw { stale: true };
+      if (!d || !Array.isArray(d.jobs)) throw new Error('search answered without jobs');
+      return d;
+    }, function (err) { if (my !== asked) throw { stale: true }; throw err; });
+  };
+  var paintCount = function () {
     count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
-    more.hidden = found.length <= shown; H.decorate(list);
   };
-  // Words go to the site's search engine (Lucene, on our server) when it is there: it reads the whole text of each posting, forgives a
-  // typo and knows synonyms, and sends back every match, best first. The filters on this page then apply to those matches as before.
-  // Until it answers, and wherever it is not (offline, an old copy of the site), the words are matched here, in titles and tags.
-  var LUC = { q: '', ranks: null, capped: false, fuzzy: false }, lucOK = !!window.fetch, lucAsked = '';
-  var lucFor = function (text_) {
-    if (!lucOK || !text_) return null;
-    if (LUC.q === text_ && LUC.ranks) return LUC;
-    if (lucAsked !== text_) {
-      lucAsked = text_;
-      fetch(H.base + '/api/search?all=1&q=' + encodeURIComponent(text_)).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
-        if (!d || !Array.isArray(d.slugs)) throw 0;
-        var ranks = new Map(); d.slugs.forEach(function (s_, i) { ranks.set(s_, i); });
-        LUC = { q: text_, ranks: ranks, capped: d.total > d.slugs.length, fuzzy: !!d.fuzzy, exact: d.exact || 0 };
-        if (q.value.trim() === text_) { keepShown = false; run(); }
-      }).catch(function () { lucOK = false; });
+  // rows of an answer into the list: a new list, or the next page under the rows already there ("Show more")
+  var show = function (d, append) {
+    clearTimeout(slow);
+    var rows = [], fresh = [];
+    if (!append) { found = []; got = 0; extra = new Map(); }
+    d.jobs.forEach(function (a) { var j = H.fromApi(a); rows.push(j); if (keep(j)) { fresh.push(j); if (a[17]) extra.set(j[0], a[17]); } });
+    found = found.concat(fresh); got += rows.length; total = d.total;
+    var html = fresh.map(function (j) { return H.card(j, extra.get(j[0]) || 0); }).join('');
+    if (append) list.insertAdjacentHTML('beforeend', html); else list.innerHTML = html;
+    list.removeAttribute('aria-busy'); if (down) down.hidden = true; more.disabled = false; more.textContent = 'Show more';
+    paintCount();
+    more.hidden = !d.more; H.decorate(list);
+    if (append) return;
+    if (pane && wide.matches) {                      // show the first result next to the list
+      var firstRow = list.querySelector('.job > a');
+      current = '';
+      if (firstRow) preview(firstRow); else pane.innerHTML = '<p class="pane-empty">No job selected.</p>';
     }
-    return null;
+    relax(d);
   };
+  // The search did not answer (the server is down or busy, or the connection dropped): say so, keep the filters, and offer the lists
+  // that need no search. Never the list of every job instead: that was 22 MB.
+  var fail = function (err) {
+    if (err && (err.stale || err.name === 'AbortError')) return;
+    clearTimeout(slow);
+    found = []; got = 0; list.innerHTML = ''; list.removeAttribute('aria-busy'); more.hidden = true; more.disabled = false; hint.hidden = true;
+    count.textContent = navigator.onLine === false ? 'You are offline.' : 'Search is not answering right now.';
+    if (down) {
+      $('srch-down-t').innerHTML = (navigator.onLine === false ? 'No connection, so this search cannot be listed. ' : 'Our search is not answering for a moment, so this search cannot be listed. ') +
+        '<button class="linkbtn" type="button" data-retry="1">Try again</button> or browse the lists below.';
+      down.hidden = false;
+    }
+    if (pane) pane.innerHTML = '<p class="pane-empty">No job selected.</p>';
+  };
+  if (down) down.addEventListener('click', function (ev) { if (ev.target.getAttribute && ev.target.getAttribute('data-retry')) run(); });
   var run = function () {
-    var qs = query(), f = H.parse(qs);
-    if (!full && qs) { paintApplied(); waiting = true; count.textContent = 'Searching all jobs…'; return; }   // filters need the whole index
-    var L = f.words.length && !f.titles ? lucFor(q.value.trim()) : null;
-    if (L && L.capped && !L.fuzzy) L = null;         // a word in thousands of jobs: the titles and tags here find them as well; a typo
-                                                     // they cannot find, so the engine's 5,000 best matches for the closest spelling stay
-    var rows;
-    if (L) {
-      var fw = Object.assign({}, f, { words: [] });
-      rows = jobs.filter(function (j) { return L.ranks.has(j[0]) && H.match(j, fw); });
-    } else rows = jobs.filter(function (j) { return H.match(j, f); });
-    if (f.sort === 'sal') rows = rows.slice().sort(function (a, b) { return (b[13] || 0) - (a[13] || 0); });
-    else if (L && f.sort === 'rel') rows = rows.slice().sort(function (a, b) { return L.ranks.get(a[0]) - L.ranks.get(b[0]); });
-    else if (f.sort === 'rel' && f.words.length) {                 // title matches first, then the rest, newest first inside each group
-      var score = function (j) { var t = j[1].toLowerCase(), n = 0; f.words.forEach(function (w) { if (t.indexOf(w) >= 0) n++; }); return n === f.words.length ? 2 : n ? 1 : 0; };
-      rows = rows.map(function (j, i) { return [score(j), i, j]; }).sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; }).map(function (x) { return x[2]; });
-    }
-    total = full ? rows.length : Math.max(allTotal, rows.length); extra = new Map(); found = H.collapse(rows, extra);
+    var qs = query();
     var active = [cat, lvl, loc, city, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     if (fwrap) {                                  // the filter bar: a chosen filter is a filled pill, "Clear all" shows only when one is chosen,
@@ -136,28 +175,20 @@
       var hid = [perk, etype].filter(function (el) { return el.value; }).length + [fReal, fTi].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
       if (mfs) mfs.setAttribute('data-n', hid ? String(hid) : '');
     }
-    if (!keepShown) shown = 50;
-    render();
-    if (pane && wide.matches) {                      // show the first result next to the list
-      var open = keepShown && current ? Array.prototype.filter.call(list.querySelectorAll('.job > a'), function (a) { return a.getAttribute('href') === current; })[0] : null;
-      if (open) open.parentNode.classList.add('sel');   // the full index arrived: leave the job the visitor is reading alone
-      else {
-        var firstRow = list.querySelector('.job > a');
-        current = '';
-        if (firstRow) preview(firstRow); else pane.innerHTML = '<p class="pane-empty">No job selected.</p>';
-      }
-    }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
     if (qs) H.set('hrn_lastq', { qs: qs, label: describe() });
     saveBtn.textContent = 'Save this search'; saveBtn.disabled = false;
     paintApplied();
-    relax(rows.length, qs);
-    if (L && L.fuzzy && rows.length) {               // the engine found nothing for the words as typed and forgave a typo
-      hint.innerHTML = (L.exact ? 'Only ' + L.exact + (L.exact === 1 ? ' job matches “' : ' jobs match “') + H.esc(q.value.trim()) + '” as typed'
-        : 'Nothing for “' + H.esc(q.value.trim()) + '” as typed') + ': showing ' + (L.capped ? 'the ' + L.ranks.size.toLocaleString('en-US') + ' best matches' : 'jobs') + ' for the closest spelling.'; hint.hidden = false;
+    hint.hidden = true; hint.innerHTML = '';
+    if (!qs && first && !muted()) {                  // nothing chosen: the first page that came with the page, no request at all
+      if (ctl) try { ctl.abort(); } catch (e) {}
+      asked++; show(first, false); return;
     }
+    list.setAttribute('aria-busy', 'true'); more.hidden = true;
+    clearTimeout(slow); slow = setTimeout(function () { count.textContent = 'Searching…'; }, 400);
+    ask(qs, 0).then(function (d) { show(d, false); }, fail);
   };
-  // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each.
+  // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each (the server counts them).
   var hint = document.createElement('p'); hint.className = 'relax'; hint.hidden = true; list.parentNode.insertBefore(hint, list);
   // Applied filters as chips: one click on a chip removes that filter; "Clear all" removes every one.
   var applied = document.createElement('p'); applied.className = 'applied'; applied.hidden = true; list.parentNode.insertBefore(applied, hint);
@@ -184,79 +215,27 @@
     else if (boxes[k]) boxes[k].checked = false; else if (sels[k]) sels[k].value = '';
     paintChips(); run();
   });
-  // "Did you mean": a word of the query that no job contains is swapped for the closest word that jobs do contain (one typo for
-  // short words, two for long ones; the more common word wins a tie). Shown only when the corrected search finds something.
-  var vocab = null, autoFixed = '';
-  var dist = function (a, b, lim) {               // edit distance with swapped neighbours counted as one edit, stops early past `lim`
-    var m = a.length, n = b.length, d = [], i, k;
-    for (i = 0; i <= m; i++) { d[i] = [i]; }
-    for (k = 1; k <= n; k++) d[0][k] = k;
-    for (i = 1; i <= m; i++) {
-      var low = 99;
-      for (k = 1; k <= n; k++) {
-        var c = a[i - 1] === b[k - 1] ? 0 : 1;
-        d[i][k] = Math.min(d[i - 1][k] + 1, d[i][k - 1] + 1, d[i - 1][k - 1] + c);
-        if (i > 1 && k > 1 && a[i - 1] === b[k - 2] && a[i - 2] === b[k - 1]) d[i][k] = Math.min(d[i][k], d[i - 2][k - 2] + 1);
-        if (d[i][k] < low) low = d[i][k];
-      }
-      if (low > lim) return lim + 1;
+  // A typo: the server found nothing (or only a few) for the words as typed and listed the closest spelling instead; nothing at all:
+  // the filters that stand in the way, with what is left without each.
+  var relax = function (d) {
+    var words = q.value.trim();
+    if (d.fuzzy && total) {
+      hint.innerHTML = (d.exact ? 'Only ' + d.exact + (d.exact === 1 ? ' job matches “' : ' jobs match “') + H.esc(words) + '” as typed' : 'Nothing for “' + H.esc(words) + '” as typed') +
+        ': showing jobs for the closest spelling.';
+      hint.hidden = false; return;
     }
-    return d[m][n];
-  };
-  var suggest = function (words) {
-    if (!vocab) {
-      vocab = new Map();
-      jobs.forEach(function (j) { (j[1] + ' ' + j[2] + ' ' + j[7].join(' ')).toLowerCase().split(/[^a-z0-9+#.]+/).forEach(function (w) { if (w.length > 2) vocab.set(w, (vocab.get(w) || 0) + 1); }); });
-    }
-    var hays = jobs.map(function (j) { return j[17] || (j[17] = (j[1] + ' ' + j[2] + ' ' + j[3] + ' ' + j[7].join(' ')).toLowerCase()); }), changed = false;
-    var out = words.map(function (w) {
-      if (w.length < 4 || hays.some(function (h) { return h.indexOf(w) >= 0; })) return w;
-      var lim = w.length > 6 ? 2 : 1, best = '', bd = lim + 1, bn = 0;
-      vocab.forEach(function (n, v) {
-        if (Math.abs(v.length - w.length) > lim) return;
-        var x = dist(w, v, lim);
-        if (x < bd || (x === bd && n > bn)) { best = v; bd = x; bn = n; }
-      });
-      if (best && bd <= lim) { changed = true; return best; }
-      return w;
-    });
-    return changed ? out.join(' ') : '';
-  };
-  var relax = function (n, qs) {
-    hint.hidden = true; hint.innerHTML = '';
-    if (n || !full || !qs) return;
-    var mean = '', p0 = H.parse(qs);
-    if (p0.words.length) {
-      var fix = suggest(p0.words);
-      if (fix) {
-        var p1 = new URLSearchParams(qs); p1.set('q', fix);
-        var f1 = H.parse(p1.toString()), c1 = 0;
-        for (var i1 = 0; i1 < jobs.length; i1++) if (H.match(jobs[i1], f1)) c1++;
-        if (c1 && !autoFixed) {                       // show the corrected search right away, and say so
-          autoFixed = q.value.trim(); q.value = fix; run();
-          hint.innerHTML = 'Showing jobs for “' + H.esc(fix) + '”. <button class="linkbtn" type="button" data-orig="1">Search for “' + H.esc(autoFixed) + '” instead</button>';
-          hint.hidden = false; return;
-        }
-      }
-    }
-    var p = new URLSearchParams(qs), names = { q: 'the words “' + q.value.trim() + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), city: city.value.trim(), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
-      remote: 'Remote', hybrid: 'Hybrid', xl: 'the levels left out', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'Fresh openings only', skills: skills.join(' + ') }, out = [];
-    p.forEach(function (_, k) {
-      if (!names[k] || (k === 'q' && mean)) return;           // a spelling fix is the better way out than dropping the words
-      var p2 = new URLSearchParams(qs); p2.delete(k);
-      var f2 = H.parse(p2.toString()), c = 0;
-      for (var i = 0; i < jobs.length; i++) if (H.match(jobs[i], f2)) c++;
-      if (c) out.push([c, k, names[k]]);
-    });
-    if (!out.length && !mean) return;
+    if (total || !d.without) return;
+    var names = { q: 'the words “' + words + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), city: city.value.trim(), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
+      remote: 'Remote', hybrid: 'Hybrid', xl: 'the levels left out', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'Fresh openings only', skills: skills.join(' + ') };
+    var out = Object.keys(d.without).filter(function (k) { return names[k] && d.without[k] > 0; }).map(function (k) { return [d.without[k], k, names[k]]; });
+    if (!out.length) return;
     out.sort(function (a, b) { return b[0] - a[0]; });
-    hint.innerHTML = mean + (out.length ? 'Nothing fits all of that. ' : '') + out.slice(0, 4).map(function (x) {
+    hint.innerHTML = 'Nothing fits all of that. ' + out.slice(0, 4).map(function (x) {
       return '<button class="linkbtn" type="button" data-drop="' + x[1] + '">Without ' + H.esc(x[2]) + ': ' + x[0].toLocaleString('en-US') + (x[0] === 1 ? ' job' : ' jobs') + '</button>';
     }).join(' ');
     hint.hidden = false;
   };
   hint.addEventListener('click', function (ev) {
-    if (ev.target.getAttribute && ev.target.getAttribute('data-orig')) { q.value = autoFixed; autoFixed = '\u0000'; run(); return; }   // keep the visitor's own spelling this time
     var fixQ = ev.target.getAttribute && ev.target.getAttribute('data-q');
     if (fixQ) { q.value = fixQ; run(); return; }
     var k = ev.target.getAttribute && ev.target.getAttribute('data-drop'); if (!k) return;
@@ -266,10 +245,10 @@
     run();
   });
   var timer;
-  // typing a query switches to "best match" unless the visitor picked a sort order themselves
-  q.addEventListener('input', function () { autoFixed = ''; if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 140); });
+  // typing a query switches to "best match" unless the visitor picked a sort order themselves; the server is asked once typing pauses
+  q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 300); });
   sort.addEventListener('change', function () { sortTouched = true; });
-  var ctimer; city.addEventListener('input', function () { clearTimeout(ctimer); ctimer = setTimeout(run, 250); });
+  var ctimer; city.addEventListener('input', function () { clearTimeout(ctimer); ctimer = setTimeout(run, 400); });
   [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fHybrid, fEntry, fCrypto, fAny, fReal, fTi, fNosal].concat(xlBoxes).forEach(function (el) { if (el) el.addEventListener('change', run); });
   // words and companies the visitor never wants to see: remembered in this browser, applied to every list
   var drawMuted = function () {
@@ -288,7 +267,7 @@
     xtimer = setTimeout(function () {
       H.mute.w = xwords.value.toLowerCase().split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 1; }).slice(0, 20);
       H.saveMute(); run();
-    }, 250);
+    }, 400);
   });
   skillbar.addEventListener('click', function (ev) {
     var c = ev.target.closest('.chipbtn'); if (!c) return;
@@ -296,7 +275,13 @@
     if (i >= 0) skills.splice(i, 1); else skills.push(s);
     paintChips(); run();
   });
-  more.addEventListener('click', function () { shown += 50; render(); });
+  more.addEventListener('click', function () {                // the next 50 rows of the same search
+    more.disabled = true;
+    ask(query(), got).then(function (d) { show(d, true); }, function (err) {
+      if (err && (err.stale || err.name === 'AbortError')) return;
+      more.disabled = false; more.textContent = 'Could not load more. Try again';
+    });
+  });
   var clearBtn = $('fclear');
   if (clearBtn) clearBtn.addEventListener('click', function () {
     [cat, lvl, loc, city, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
@@ -339,7 +324,8 @@
     return { v: o.value, names: names.filter(function (x, i, a) { return x.length > 1 && a.indexOf(x) === i; }) };
   });
   var rxEsc = function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
-  var cityNames = [];               // the cities in today's postings, filled once the full list has arrived (suggestions under the City box)
+  // the cities in today's postings (the build counts them into the City box's suggestions)
+  var cityNames = Array.prototype.map.call(($('city-list') || { options: [] }).options, function (o) { return o.value.toLowerCase(); });
   var smart = function () {
     var text = ' ' + q.value + ' ', took = false;
     var take = function (rx, fn) { if (rx.test(text)) { text = text.replace(rx, ' '); fn(); took = true; } };
@@ -402,8 +388,8 @@
     }
     return took;
   };
-  var form = $('qform'); if (form) form.addEventListener('submit', function (ev) { ev.preventDefault(); smart(); run(); });
-  q.addEventListener('change', function () { if (smart()) run(); });
+  var form = $('qform'); if (form) form.addEventListener('submit', function (ev) { ev.preventDefault(); clearTimeout(timer); smart(); run(); });
+  q.addEventListener('change', function () { if (smart()) { clearTimeout(timer); run(); } });
   saveBtn.addEventListener('click', function () {
     var all = H.get('hrn_searches', []), qs = query();
     if (!all.some(function (s) { return s.qs === qs; })) all.unshift({ qs: qs, label: describe(), seen: H.today() });
@@ -411,27 +397,6 @@
     saveBtn.textContent = 'Saved to My jobs ✓'; saveBtn.disabled = true;
   });
   if (!sortTouched && q.value.trim()) sort.value = 'rel';
-  var whole = H.load();
-  whole.catch(function () {});
-  var headP = H.loadHead();
-  headP.catch(function () {});
-  if (!query()) {
-    try { var hd = await headP; if (!full) { jobs = hd.rows; allTotal = hd.total; run(); } } catch (e) {}
-  } else count.textContent = 'Searching all jobs…';
-  try { jobs = await whole; }
-  catch (e) { if (!jobs.length) { count.textContent = 'Could not load the list. Please reload the page.'; list.removeAttribute('aria-busy'); } return; }
-  full = true;
-  (function () {                    // suggestions for the City box: the first part of each posting's place line, most frequent first
-    var cnt = {};
-    jobs.forEach(function (j) { (j[3] || '').split(/[;|·]| \/ |\bor\b/).forEach(function (part) {
-      var c = part.split(',')[0].replace(/\(.*?\)/g, '').replace(/\b(?:remote|hybrid|on-?site|office)\b.*$/i, '').trim();
-      if (c.length > 2 && c.length < 30 && !/\d/.test(c)) cnt[c] = (cnt[c] || 0) + 1;
-    }); });
-    var top = Object.keys(cnt).filter(function (c) { return cnt[c] >= 3; }).sort(function (a, b) { return cnt[b] - cnt[a]; }).slice(0, 600);
-    cityNames = top.map(function (c) { return c.toLowerCase(); });
-    var dl = $('city-list'); if (dl) dl.innerHTML = top.map(function (c) { return '<option value="' + H.esc(c) + '">'; }).join('');
-  })();
-  // keep the visitor's place: same order, same number of rows, unless they were waiting for results
   // Near you: one click narrows the list to the visitor's country (taken from the time zone, or the place they picked on the home page)
   fetch(H.base + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
     var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
@@ -453,5 +418,5 @@
   var wh = new URLSearchParams(location.search).get('where');          // the "where" field of the home page search
   if (wh) q.value = (q.value + ' in ' + wh).trim();
   if (q.value) smart();              // a query typed on the home page arrives here as text: read the filters out of it
-  keepShown = !waiting && !query(); run(); keepShown = false;
+  run();
 })();
