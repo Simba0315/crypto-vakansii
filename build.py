@@ -5117,10 +5117,14 @@ def main():
         for vslug, vname, vjs in (("remote", "Remote", [j for j in js_ if j["remote"]]), ("entry-level", "Entry-level", [j for j in js_ if j["entry"]])):
             if len(vjs) < 20: continue
             vers.append(f'<a href="{P}/categories/{fs}/{vslug}/">{vname} {e(low_f)} jobs ({len(vjs):,})</a>')
-            listing(f"categories/{fs}/{vslug}/", f"{vname} {low_f} jobs", f"{vname} {tcase(fn)} Jobs ({len(vjs):,} open) | {SITE}",
-                    f"{len(vjs):,} open {vname.lower()} jobs in {low_f}: {', '.join(rlow(x) for x in names_[:4])} and more. Read from employers’ own careers pages and checked against them.",
+            # the search words first, as on the field's own page: "Remote Sales Jobs", "Entry-level IT Jobs" (25 Nov 2026)
+            vkey_ = (fields_info.FIELDS.get(fs) or {}).get("key") or tcase(fn)
+            vq_ = (fields_info.FIELDS.get(fs) or {}).get("q") or f"{low_f} jobs"
+            vt_ = f"{vname} {vkey_}" + ("" if re.search(r"\b(Jobs|Internships)\b", vkey_) else " Jobs")
+            listing(f"categories/{fs}/{vslug}/", f"{vname} {low_f} jobs", f"{vt_} ({len(vjs):,} open) | {SITE}",
+                    f"{vname} {vq_}: {len(vjs):,} open now at companies. The work: {', '.join(rlow(x) for x in names_[:4])} and more.",
                     vjs, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(vjs, f"{vname.lower()} ", "", hub=True), trail=(("Categories", "categories/"), (fn, f"categories/{fs}/")), per=50, max_pages=2, more=False,
-                    stats=True, list_title=f"Newest {vname.lower()} {low_f} jobs", faq=f"{vname.lower()} {low_f} jobs")
+                    stats=True, list_title=f"Newest {vname.lower()} {vq_}", faq=f"{vname.lower()} {vq_}")
         vers_line = labrow("Narrower lists", vers)
         fp_ = field_parts(fs, fn, fd, live, js_)
         listing(f"categories/{fs}/", fp_["h1"], f"{fp_['key']} Jobs ({len(js_):,} open) | {SITE}", fp_["desc"],
