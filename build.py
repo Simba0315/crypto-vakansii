@@ -2920,7 +2920,7 @@ def job_page(j, active_by_cat):
         pills.append('<span class="pill src" title="Read from the public page of a Telegram job channel; not checked with the employer">From a Telegram channel</span>' if j.get("tg") else
                      f'<span class="pill ok src" title="Read from {e(SOURCE_NAME[ats]) + ", the hiring system the employer itself uses" if ats in SOURCE_NAME else "the employer’s own careers site"}, and re-checked every hour">✓ Employer’s own posting</span>')
     if j.get("urgent"): pills.append('<span class="pill urg">Urgently hiring</span>')
-    if not j["active"]: pills.append('<span class="pill">Closed</span>')
+    # (a closed job says so in its label, its facts row and its banner; the "Closed" pill was a fourth time)
     # v4: the pay, the workplace and the level are in the facts row under the title now, not repeated as pills
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
     if j["pool"]: pills.append('<span class="pill warn">Talent pool</span>')
@@ -2969,7 +2969,8 @@ def job_page(j, active_by_cat):
                     f'<a class="rmbox" href="{P}/tools/resume-match/?job={j["slug"]}"><b>Check my resume for this job</b><span>See which of its words your resume is missing</span></a></div>')
         banner = ""
     else:
-        apply_btn = f'<a class="btn primary lg go" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs<i aria-hidden="true"></i></a>'
+        apply_btn = (f'<a class="btn primary lg go" href="{P}/jobs/">Search the open jobs<i aria-hidden="true"></i></a>' if j["cat"] == OTHER[0] else
+                     f'<a class="btn primary lg go" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs<i aria-hidden="true"></i></a>')
         help_box = ""
         banner = f'<div class="banner">This job closed{" on " + fdate(j["closed"]) if j.get("closed") else ""}. The page stays here for reference; open roles of the same kind are one click away.</div>'
     head += crumbs_ld([(CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], "")])
@@ -2977,8 +2978,10 @@ def job_page(j, active_by_cat):
     rest = [x for x in SIM["cat"].get(j["cat"], []) if x["id"] != j["id"] and x["company"] != j["company"]][:3 - len(same)]
     # a closed job (v4, the owner's backlog): five open jobs of the same kind, so the page still leads somewhere; open jobs keep three
     similar = same + rest if j["active"] else [x for x in SIM["cat"].get(j["cat"], []) if x["company"] != j["company"]][:5]
-    sim = (section(f"Similar [[{CAT[j['cat']]} jobs]]" if j["active"] else f"Open [[{CAT[j['cat']]} jobs]] like this one", f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>',
-                   (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs"), label="More like this" if j["active"] else "Still open") if similar else "")
+    other_ = j["cat"] == OTHER[0]                    # "Other" is no kind of work to name: "Open Other jobs" read badly
+    sim = (section(f"Similar [[{CAT[j['cat']]} jobs]]" if j["active"] else "Open jobs [[like this one]]" if other_ else f"Open [[{CAT[j['cat']]} jobs]] like this one",
+                   f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>', ("jobs/", "All open jobs") if other_ else (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs"),
+                   label="More like this" if j["active"] else "Still open") if similar else "")
     loc_ = j["location"]
     placeless = bool(re.match(r"\s*(remote|hybrid|distributed|anywhere|worldwide|global|in-office|multiple|blank)", loc_, re.I))
     where = ((f" ({e(loc_)})" if placeless else f" in {e(loc_)}") if loc_ else "") + (" (remote)" if j["remote"] and "remote" not in loc_.lower() else " (hybrid)" if j.get("hybrid") and "hybrid" not in loc_.lower() else "")

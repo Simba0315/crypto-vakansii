@@ -4598,3 +4598,6 @@ main.kp .tier.best .tsoon{border-color:var(--line2);color:var(--muted)}
    the +N mark and the count; three columns, names wrap between words and keep two lines */
 main.hub #clist{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}
+/* the dark theme draws a marker line under .hl with a stronger selector; a panel heading keeps only its bold words there too */
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .khero h1 .hl{background:none}}
+:root[data-theme=dark] .khero h1 .hl{background:none}
