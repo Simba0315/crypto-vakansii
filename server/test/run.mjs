@@ -3390,6 +3390,184 @@ await smtpServer.close();
   r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'featured' }, { token: fourth }); eq(r.status, 200, 'Coupon: ... so the account can still use it');
 }
 
+/* ---- 42. The accounts of 25 Nov 2026 (PLAN_RU.md part 2, items 1, 2, 4, 9, 10): two-step sign-in, the password changed with the old one,
+   the job seeker's status, a resume only by link, who opened a resume, and a payment link for someone else ---- */
+{
+  const box = mailbox(), env = newEnv({ ...box, PAY_MODE: 'test', TALENT_DB: 'on' }), ADM = { Authorization: 'Bearer admin-secret' };
+  const products = (await call(env, 'GET', '/api/public/products')).body;
+  eq([products.pay_links, products.two_step], ['on', 'on'], 'Accounts: the products list tells the page that payment links and two-step sign-in are here');
+
+  // two-step sign-in
+  const tok = await fresh(env, 'eve@gmail.com');
+  let r = await call(env, 'GET', '/api/me', { token: tok });
+  eq([r.body.user.two_step, r.body.user.has_password, r.body.user.seeking], [false, true, ''], 'Two-step: off to start with; the account has a password; no status');
+  const unconf = (await call(env, 'POST', '/api/auth/signup', { data: { email: 'unconf@gmail.com', password: PASS } })).body.token;
+  eq((await call(env, 'PUT', '/api/me/security', { token: unconf, data: { two_step: true } })).body.error, 'confirm_email', 'Two-step: needs a confirmed address (the code goes there)');
+  r = await call(env, 'PUT', '/api/me/security', { token: tok, data: { two_step: true } });
+  eq([r.status, r.body.user.two_step], [200, true], 'Two-step: switched on from Settings');
+  const sent = box.outbox.length;
+  r = await call(env, 'POST', '/api/auth/login', { data: { email: 'eve@gmail.com', password: PASS } });
+  const code = box.outbox.at(-1);
+  eq([r.status, r.body.step, r.body.token, /^[a-f0-9]{64}$/.test(r.body.ticket), r.body.sent_to, box.outbox.length - sent, code.kind, code.to], [200, 'code', undefined, true, 'ev•••@gmail.com', 1, 'signin_code', 'eve@gmail.com'],
+    'Two-step: the right password gives no session, only a ticket, and a code goes to the address');
+  ok(code.text.includes(r.body.code) && code.subject.startsWith(r.body.code) && /^\d{6}$/.test(r.body.code), 'Two-step: the letter carries the six digits');
+  ok(!JSON.stringify(await env.DB.prepare('SELECT * FROM login_codes').all()).includes(r.body.code), 'Two-step: the code is stored only as a hash');
+  const wrong = String((Number(r.body.code) + 1) % 1000000).padStart(6, '0');
+  let c = await call(env, 'POST', '/api/auth/login/code', { data: { ticket: r.body.ticket, code: wrong } });
+  eq([c.status, c.body.error, c.body.tries_left], [400, 'code', 4], 'Two-step: a wrong code is refused (400, so the page does not think the session ended) and says how many tries are left');
+  c = await call(env, 'POST', '/api/auth/login/code', { data: { ticket: 'f'.repeat(64), code: r.body.code } });
+  eq(c.body.error, 'code_gone', 'Two-step: the code works only with the ticket of its own sign-in');
+  c = await call(env, 'POST', '/api/auth/login/code', { data: { ticket: r.body.ticket, code: r.body.code.slice(0, 3) + ' ' + r.body.code.slice(3) } });
+  eq([c.status, /^[a-f0-9]{64}$/.test(c.body.token), c.body.user.email], [200, true, 'eve@gmail.com'], 'Two-step: the right code (spaces allowed) opens the session');
+  c = await call(env, 'POST', '/api/auth/login/code', { data: { ticket: r.body.ticket, code: r.body.code } });
+  eq(c.body.error, 'code_gone', 'Two-step: a code works once');
+  r = await call(env, 'POST', '/api/auth/login', { data: { email: 'eve@gmail.com', password: PASS } });
+  for (let i = 0; i < 5; i++) c = await call(env, 'POST', '/api/auth/login/code', { data: { ticket: r.body.ticket, code: String((Number(r.body.code) + 1 + i) % 1000000).padStart(6, '0') } });
+  eq(c.body.error, 'code_gone', 'Two-step: five wrong codes end the ticket');
+  c = await call(env, 'POST', '/api/auth/login/code', { data: { ticket: r.body.ticket, code: r.body.code } });
+  eq(c.body.error, 'code_gone', 'Two-step: ... and then not even the right code works');
+  r = await call(env, 'POST', '/api/auth/login', { data: { email: 'eve@gmail.com', password: 'wrong-password' } });
+  eq([r.status, r.body.step], [401, undefined], 'Two-step: a wrong password gets no code');
+  const before = box.outbox.length;
+  r = await call(env, 'POST', '/api/auth/link/request', { data: { email: 'eve@gmail.com' } });
+  eq([r.status, r.body.token, r.body.two_step, box.outbox.length - before, box.outbox.at(-1).text.includes('#signin=')], [200, undefined, true, 1, false], 'Two-step: no sign-in link is made for such an account; the letter says to sign in with the password and a code');
+  r = await call(env, 'PUT', '/api/me/security', { token: tok, data: { two_step: false, password: 'wrong-password' } });
+  eq([r.status, r.body.error], [403, 'current'], 'Two-step: switching it off needs the current password (403, not 401: the session stays)');
+  r = await call(env, 'PUT', '/api/me/security', { token: tok, data: { two_step: false, password: PASS } });
+  eq([r.body.user.two_step, box.outbox.at(-1).kind, box.outbox.at(-1).subject], [false, 'security', 'Two-step sign-in is off'], 'Two-step: off with the password, and the address is told');
+  r = await call(env, 'POST', '/api/auth/login', { data: { email: 'eve@gmail.com', password: PASS } });
+  ok(r.status === 200 && /^[a-f0-9]{64}$/.test(r.body.token), 'Two-step: once off, the password alone signs in again');
+
+  // the password, changed with the current one
+  const other = r.body.token;
+  r = await call(env, 'POST', '/api/auth/password', { token: tok, data: { current: 'not-my-password', password: 'brand new secret' } });
+  eq([r.status, r.body.error, (await call(env, 'GET', '/api/me', { token: tok })).status], [403, 'current', 200], 'Password: a wrong current password is refused, and the session stays');
+  r = await call(env, 'POST', '/api/auth/password', { token: tok, data: { current: PASS, password: 'short' } });
+  eq(r.body.error, 'password', 'Password: the new one needs 8 characters');
+  r = await call(env, 'POST', '/api/auth/password', { token: tok, data: { current: PASS, password: PASS } });
+  eq(r.body.error, 'password', 'Password: the new one must differ from the current one');
+  r = await call(env, 'POST', '/api/auth/password', { token: tok, data: { current: PASS, password: 'brand new secret' } });
+  eq([r.status, (await call(env, 'GET', '/api/me', { token: tok })).status, (await call(env, 'GET', '/api/me', { token: other })).status, box.outbox.at(-1).kind],
+    [200, 200, 401, 'password_changed'], 'Password: changed; this browser stays signed in, every other one is signed out, and the address is told');
+  eq([(await call(env, 'POST', '/api/auth/login', { data: { email: 'eve@gmail.com', password: PASS } })).status, (await call(env, 'POST', '/api/auth/login', { data: { email: 'eve@gmail.com', password: 'brand new secret' } })).status],
+    [401, 200], 'Password: the old one no longer works, the new one does');
+  await env.DB.prepare("UPDATE users SET pass_hash = '', pass_salt = '' WHERE email = 'eve@gmail.com'").run();
+  r = await call(env, 'POST', '/api/auth/password', { token: tok, data: { current: '', password: 'brand new secret' } });
+  eq([r.status, r.body.error, (await call(env, 'GET', '/api/me', { token: tok })).body.user.has_password], [409, 'no_password', false], 'Password: an account made with Google has none to give; it sets one with the link');
+  eq((await call(env, 'PUT', '/api/me/security', { token: tok, data: { two_step: true } })).body.error, 'no_password', 'Two-step: needs a password to be the first step');
+
+  // the job seeker's status
+  const jane = await fresh(env, 'jane.roe@gmail.com');
+  r = await call(env, 'PATCH', '/api/me', { token: jane, data: { seeking: 'maybe' } });
+  eq([r.status, r.body.error], [400, 'seeking'], 'Status: only the three statuses');
+  r = await call(env, 'PATCH', '/api/me', { token: jane, data: { seeking: 'open' } });
+  eq([r.body.user.seeking, r.body.user.seeking_since.length], ['open', 10], 'Status: "open to offers" is kept, with the day it was set');
+
+  // a resume only by link, blocked companies, who opened it
+  const consent = (await call(env, 'GET', '/api/talent/profile', { token: jane })).body.consent_text;
+  const RES = { name: 'Jane Roe', title: 'Senior Rust Engineer', email: 'jane.roe@gmail.com', summary: 'Rust engineer, 8 years.', skills: 'Rust, Go', exp: [{ role: 'Senior Rust Engineer', org: 'Initech', dates: '2019 - 2026', text: 'Payments core.' }], edu: [] };
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES, consent: true, consent_text: consent, roles: ['engineering'], places: ['remote'], visibility: 'everyone' } });
+  eq([r.status, r.body.error], [400, 'visibility'], 'Visibility: "all" or "link", nothing else');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { resume: RES, consent: true, consent_text: consent, roles: ['engineering'], places: ['remote'] } });
+  const prof = r.body.profile, key = /#cv=([a-f0-9]{32})$/.exec(prof.share_url)[1];
+  eq([prof.visibility, prof.as_employers_see.seeking, prof.views, prof.viewers], ['all', 'open', { companies: 0, shown_7: 0, shown_30: 0 }, []], 'Visibility: everyone who searches to start with; the status is on the card; nobody has opened it yet');
+  ok(prof.share_url === SITE + '/account/#cv=' + key, 'Visibility: the resume has its own link');
+  const acme = await fresh(env, 'hr@acme.dev'), globex = await fresh(env, 'hr@globex.dev');
+  await env.DB.prepare("UPDATE users SET company = 'Acme' WHERE email = 'hr@acme.dev'").run();
+  r = await call(env, 'GET', '/api/talent/search?q=rust', { token: acme });
+  eq([r.body.total, r.body.views, r.body.results[0].seeking], [1, 'on', 'open'], 'Status: employers who search see it');
+  eq([(await call(env, 'GET', '/api/talent/search?q=rust&seeking=open', { token: acme })).body.total], [1], 'Status: the filter "open to offers" finds the person');
+  await call(env, 'PATCH', '/api/me', { token: jane, data: { seeking: 'not' } });
+  eq((await call(env, 'GET', '/api/talent/search?q=rust&seeking=open', { token: acme })).body.total, 0, 'Status: ... and not once the person says "not looking"');
+  const pid = r.body.results[0].id;
+  r = await call(env, 'GET', '/api/talent/' + pid, { token: acme });
+  eq([r.status, r.body.candidate.name, r.body.candidate.headline, r.body.asked], [200, '', 'Senior Rust Engineer', ''], 'Views: an employer opens one resume, still without the name');
+  await call(env, 'GET', '/api/talent/' + pid, { token: acme });
+  eq((await call(env, 'GET', '/api/talent/' + pid, { token: jane })).body.error, 'employer_only', 'Views: a job seeker cannot open resumes');
+  let mine = (await call(env, 'GET', '/api/talent/profile', { token: jane })).body.profile;
+  eq([mine.views.companies, mine.viewers[0].company, mine.viewers[0].domain, mine.viewers[0].times, mine.viewers[0].via, mine.views.shown_7], [1, 'Acme', 'acme.dev', 2, 'search', 2],
+    'Views: the person sees which company opened it, how often, and how many times it was among search results');
+  // only by link
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { visibility: 'link' } });
+  eq([r.body.profile.visibility, (await call(env, 'GET', '/api/talent/search?q=rust', { token: globex })).body.total], ['link', 0], 'Only by link: the resume leaves search');
+  r = await call(env, 'GET', '/api/cv/' + key);
+  eq([r.status, r.body.candidate.name, r.body.candidate.headline, r.body.can_contact, r.body.signed_in], [200, '', 'Senior Rust Engineer', false, false], 'Only by link: anyone with the link sees it, without the name or contacts');
+  ok(!JSON.stringify(r.body).match(/jane\.roe|Initech/), 'Only by link: ... and without the address or the employer names');
+  r = await call(env, 'GET', '/api/cv/' + key, { token: globex });
+  eq([r.body.can_contact, r.body.asked, r.body.credits], [true, '', 0], 'Only by link: a company account that opens it may ask to contact');
+  mine = (await call(env, 'GET', '/api/talent/profile', { token: jane })).body.profile;
+  eq([mine.views.companies, (mine.viewers.find((v) => v.domain === 'globex.dev') || {}).via], [2, 'link'], 'Views: a company that opened the link is listed too');
+  await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { blocked: ['globex.dev'] } });
+  eq([(await call(env, 'GET', '/api/cv/' + key, { token: globex })).status, (await call(env, 'GET', '/api/cv/' + key)).status], [404, 200], 'Blocked: a company the person hid from does not see it even with the link');
+  r = await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { new_link: true } });
+  const key2 = /#cv=([a-f0-9]{32})$/.exec(r.body.profile.share_url)[1];
+  eq([key2 !== key, (await call(env, 'GET', '/api/cv/' + key)).status, (await call(env, 'GET', '/api/cv/' + key2)).status], [true, 404, 200], 'Only by link: a new link, and the old one stops at once');
+  await call(env, 'PUT', '/api/talent/profile', { token: jane, data: { paused: true } });
+  eq((await call(env, 'GET', '/api/cv/' + key2)).status, 404, 'Only by link: a paused resume is not shown by its link either');
+  eq((await call(newEnv({ TALENT_DB: 'off' }), 'GET', '/api/cv/' + key2)).body.error, 'not_configured', 'Only by link: off with the resume database');
+  await call(env, 'DELETE', '/api/talent/profile', { token: jane });
+  eq([await one(env, 'SELECT COUNT(*) FROM talent_views'), await one(env, 'SELECT COUNT(*) FROM talent_shown')], [0, 0], 'Views: deleting the resume deletes who opened it and the counts');
+
+  // a payment link for someone else
+  const boss = await account(env, 'boss@acme.dev');
+  let o = (await call(env, 'POST', '/api/orders', { token: boss, data: { product: 'credits100' } })).body.order;
+  eq([o.can_share, o.share_key], [true, ''], 'Pay link: a payment to be made can be sent on; no link until asked for');
+  r = await call(env, 'POST', '/api/orders/' + o.id + '/share', { token: boss, data: { email: 'boss@acme.dev' } });
+  eq(r.body.error, 'email', 'Pay link: not to one’s own address');
+  eq((await call(env, 'POST', '/api/orders/' + o.id + '/share', { token: acme, data: {} })).status, 404, 'Pay link: only for the account’s own orders');
+  const mails = box.outbox.length;
+  r = await call(env, 'POST', '/api/orders/' + o.id + '/share', { token: boss, data: { email: 'Accounts@Acme.dev' } });
+  const inv = r.body.share_key, letter = box.outbox.at(-1);
+  eq([r.status, r.body.share_url, r.body.sent_to, box.outbox.length - mails, letter.to, letter.kind], [200, SITE + '/account/#invoice=' + inv, 'accounts@acme.dev', 1, 'accounts@acme.dev', 'pay_link'], 'Pay link: made, and sent to the accountant');
+  ok(letter.text.includes(SITE + '/account/#invoice=' + inv) && letter.text.includes('$100') && /Nothing renews/.test(letter.text) && /do not need an account/.test(letter.text), 'Pay link: the letter says what, how much, that nothing renews and that no account is needed');
+  eq((await call(env, 'POST', '/api/orders/' + o.id + '/share', { token: boss, data: {} })).body.share_key, inv, 'Pay link: asking again gives the same link');
+  r = await call(env, 'GET', '/api/invoice/' + inv);
+  eq([r.status, r.body.invoice.item, r.body.invoice.amount_usd, r.body.invoice.status, r.body.invoice.pay_url, r.body.invoice.asked_by, r.body.invoice.renewable], [200, '100 credits', 100, 'pending', o.pay_url, 'bo•••@acme.dev', false],
+    'Pay link: anyone with it sees the item, the price and the button to pay, without an account; the address of who asked is shortened');
+  eq((await call(env, 'GET', '/api/invoice/' + 'a'.repeat(32))).status, 404, 'Pay link: an unknown link finds nothing');
+  // the hour of the checkout runs out: a new one, at the same price, and the link moves to it
+  await env.DB.prepare('UPDATE orders SET created_at = created_at - 7200 WHERE id = ?').bind(o.id).run();
+  r = await call(env, 'GET', '/api/invoice/' + inv);
+  eq([r.body.invoice.status, r.body.invoice.renewable, r.body.invoice.pay_url], ['expired', true, ''], 'Pay link: when its checkout ran out, a new one can be made');
+  const [x1, x2] = await Promise.all([call(env, 'POST', '/api/invoice/' + inv + '/renew'), call(env, 'POST', '/api/invoice/' + inv + '/renew')]);
+  r = await call(env, 'GET', '/api/invoice/' + inv);
+  const newId = r.body.invoice.number;
+  eq([x1.status, x2.status, r.body.invoice.status, newId !== o.id, await one(env, 'SELECT share FROM orders WHERE id = ?', o.id), await one(env, "SELECT COUNT(*) FROM orders WHERE user_id = (SELECT id FROM users WHERE email = 'boss@acme.dev') AND status = 'pending'")],
+    [200, 200, 'pending', true, '', 1], 'Pay link: pressed twice at once, one new checkout is made; the link moves to it');
+  const back = await call(env, 'GET', new URL(r.body.invoice.pay_url).pathname);
+  eq([back.status, back.headers.get('Location')], [302, SITE + '/account/#invoice=' + inv], 'Pay link: after paying, the payer comes back to the same page');
+  r = await call(env, 'GET', '/api/invoice/' + inv);
+  eq([r.body.invoice.status, r.body.invoice.paid.length, r.body.invoice.pay_url, r.body.invoice.renewable, await one(env, 'SELECT SUM(remaining) FROM wallet_lots')], ['paid', 10, '', false, 100], 'Pay link: paid, with the receipt on the page, and the credits are in the account that asked');
+  eq((await call(env, 'POST', '/api/invoice/' + inv + '/renew')).body.invoice.status, 'paid', 'Pay link: nothing new is made for a paid one');
+  // made for someone else from the start; through the real gateway the checkout comes back to the link's page
+  const live = newEnv({ ...mailbox() }), lb = await account(live, 'boss@acme.dev');
+  o = (await call(live, 'POST', '/api/orders', { token: lb, data: { product: 'credits100', for_someone: true } })).body.order;
+  ok(/^[a-f0-9]{32}$/.test(o.share_key) && world.invoices[o.id].url_success === SITE + '/account/#invoice=' + o.share_key && world.invoices[o.id].url_return === SITE + '/account/#invoice=' + o.share_key,
+    'Pay link: an order made for someone else has its link at once, and the gateway sends the payer back to it');
+  const plain = (await call(live, 'POST', '/api/orders', { token: lb, data: { product: 'credits250' } })).body.order;
+  eq([world.invoices[plain.id].url_success, world.invoices[plain.id].url_return], [SITE + '/account/?order=' + plain.id, SITE + '/account/'], 'Pay link: an ordinary checkout still comes back to the account page');
+  await live.DB.prepare('UPDATE orders SET created_at = created_at - 3700 WHERE id = ?').bind(o.id).run();
+  r = await call(live, 'GET', '/api/invoice/' + o.share_key);
+  eq([r.body.invoice.status, r.body.invoice.renewable], ['checking', false], 'Pay link: a gateway checkout past its hour is checked with the gateway before anything new is made');
+  world.invoices[o.id].status = 'paid';
+  await live.DB.prepare('UPDATE orders SET checked_at = 0 WHERE id = ?').bind(o.id).run();
+  r = await call(live, 'GET', '/api/invoice/' + o.share_key);
+  eq(r.body.invoice.status, 'paid', 'Pay link: ... and a payment the gateway confirms late shows as paid');
+  // a link older than 30 days makes nothing new
+  o = (await call(env, 'POST', '/api/orders', { token: boss, data: { product: 'credits250', for_someone: true } })).body.order;
+  await env.DB.prepare('UPDATE orders SET created_at = created_at - 7200, share_at = share_at - 31 * 86400 WHERE id = ?').bind(o.id).run();
+  r = await call(env, 'GET', '/api/invoice/' + o.share_key);
+  eq([r.body.invoice.status, r.body.invoice.renewable, (await call(env, 'POST', '/api/invoice/' + o.share_key + '/renew')).status], ['expired', false, 410], 'Pay link: it lives 30 days');
+  // the account erased: its links stop
+  const accTok = await account(env, 'pay@acme.dev');
+  o = (await call(env, 'POST', '/api/orders', { token: accTok, data: { product: 'credits100', for_someone: true } })).body.order;
+  await worker.fetch(new Request(API + '/api/admin/erase', { method: 'POST', headers: { ...ADM, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'pay@acme.dev' }) }), env);
+  eq((await call(env, 'GET', '/api/invoice/' + o.share_key)).status, 404, 'Pay link: erasing an account ends its links');
+  // export: the new parts are in the person's file
+  const ex = (await call(env, 'GET', '/api/me/export', { token: boss })).body;
+  ok(ex.sign_in.two_step === false && Array.isArray(ex.resume_opened_by) && Array.isArray(ex.resumes_opened), 'Accounts: the export carries two-step sign-in and who opened the resume');
+}
+
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');
 { const r = await call(newEnv(), 'GET', '/api/public/products'); ok(r.body.products.length > 0 && r.body.products.every((p) => p.billing === 'one-time' && p.renews === false), 'every product is one payment and renews nothing, and the list says so'); }
 

@@ -431,6 +431,9 @@ async function userView(env, u) {
     // can_post: an account with a confirmed email may post a job (one not tied to a company domain: always looked at by a person first,
     // see AS_UNVERIFIED); verified: the account is tied to a company domain (its email, a confirmed work email, a DNS record or a file)
     can_post: u.confirmed_at > 0 && !u.banned, verified: !!domainOf(u), work_email: u.work_email || '',
+    // seeking: the job seeker's status for employers (SEEKING); two_step: a sign-in with the password asks for a code from the mail too;
+    // has_password: an account made with Google or LinkedIn has none until "Forgot password" sets one (then a new one needs no old one)
+    seeking: SEEKING.includes(u.seeking) ? u.seeking : '', seeking_since: SEEKING.includes(u.seeking) && u.seeking_at ? isoDay(u.seeking_at) : '', two_step: !!u.two_step, has_password: !!u.pass_hash,
     admin: isModerator(env, u) };      // admin: this account may moderate (review, claims, reports) from its own session
 }
 const bearer = (req) => (/^Bearer ([a-f0-9]{64})$/.exec(req.headers.get('Authorization') || '') || [])[1] || '';      // the session token of a request, or ''
@@ -480,13 +483,95 @@ async function login(env, req, ctx) {
   await limit(env, 'login:' + clientIp(req) + ':' + email, 10, 600);
   const user = email ? await db(env, 'SELECT * FROM users WHERE email = ?', email).first() : null;
   const p = await hashPassword(typeof b.password === 'string' ? b.password : '', user ? user.pass_salt : '00'.repeat(16));
-  if (!user || user.banned || !sameText(p.hash, user.pass_hash)) throw bad('credentials', 'Wrong email or password.', 401);
-  if (!(await knownDevice(env, req, user.id))) {
-    await later(ctx, sendMail(env, user.email, 'A new sign-in to your account', 'Your account at ' + env.SITE_URL + ' was just signed in to from a browser it has not been used in before (' +
-      new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC).\n\nIf that was you, there is nothing to do.\n\nIf it was not, open ' + env.SITE_URL + '/account/ and choose "Forgot password" to set a new one: ' +
-      'that signs out every browser.\n', { kind: 'device' }));
-  }
+  if (!user || user.banned || !user.pass_hash || !sameText(p.hash, user.pass_hash)) throw bad('credentials', 'Wrong email or password.', 401);
+  if (user.two_step && user.confirmed_at) return codeStep(env, user, ctx);          // the password is right; the code from the mail is the second step
+  await deviceNotice(env, req, user, ctx);
   return { token: await openSession(env, user.id), user: await userView(env, user) };
+}
+// From a browser this account has not been used in before, the owner of the address is told (see login).
+async function deviceNotice(env, req, user, ctx) {
+  if (await knownDevice(env, req, user.id)) return;
+  await later(ctx, sendMail(env, user.email, 'A new sign-in to your account', 'Your account at ' + env.SITE_URL + ' was just signed in to from a browser it has not been used in before (' +
+    new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC).\n\nIf that was you, there is nothing to do.\n\nIf it was not, open ' + env.SITE_URL + '/account/ and choose "Forgot password" to set a new one: ' +
+    'that signs out every browser.\n', { kind: 'device' }));
+}
+/* Two-step sign-in (PLAN_RU.md part 2, item 10; the owner, 25 Nov 2026). An account that switched it on in Settings signs in with its
+   password and then a code of six digits sent to its address: POST /api/auth/login answers { step: "code", ticket } instead of a
+   session, and POST /api/auth/login/code { ticket, code } opens the session. The code works CODE_MINUTES minutes and CODE_TRIES tries;
+   an account gets CODE_SENDS letters an hour. Only the hashes of the ticket and of the code bound to it are kept. Sign-in links by mail
+   are not sent to such an account (the link would be one step); Google and LinkedIn keep their own checks. */
+const CODE_MINUTES = 10, CODE_TRIES = 5, CODE_SENDS = 5;
+const maskEmail = (e) => { const [a, b] = String(e).split('@'); return (a.length <= 2 ? a.charAt(0) : a.slice(0, 2)) + '•••@' + b; };
+async function codeStep(env, user, ctx) {
+  await limit(env, 'code-send:' + user.id, CODE_SENDS, 3600);
+  const ticket = rid('', 32), code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, '0'), t = now();
+  await env.DB.batch([db(env, 'DELETE FROM login_codes WHERE user_id = ?', user.id),          // one open code per account: the newest letter is the one that works
+    db(env, 'INSERT INTO login_codes (ticket_hash, user_id, code_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)', await sha256(ticket), user.id, await sha256(ticket + ':' + code), t, t + CODE_MINUTES * 60)]);
+  await later(ctx, sendMail(env, user.email, code + ' is your sign-in code', 'Your sign-in code for ' + env.SITE_URL + ':\n\n    ' + code + '\n\nType it on the page where you signed in, within ' + CODE_MINUTES +
+    ' minutes. Your account asks for it because two-step sign-in is on.\n\nIf you did not just sign in, someone knows your password: open ' + env.SITE_URL + '/account/, choose "Forgot password" and set a new one.\n', { kind: 'signin_code' }));
+  const out = { step: 'code', ticket, sent_to: maskEmail(user.email), minutes: CODE_MINUTES, message: 'We sent a code of six digits to ' + maskEmail(user.email) + '. Type it here to sign in.' };
+  if (env.PAY_MODE === 'test') out.code = code;      // developer machines only: there is no mailbox to read the code from
+  return out;
+}
+async function loginCode(env, req, ctx) {
+  await limit(env, 'code-try:' + clientIp(req), 20, 600);
+  const b = await body(req), ticket = typeof b.ticket === 'string' && /^[a-f0-9]{64}$/.test(b.ticket) ? b.ticket : '', code = String(b.code == null ? '' : b.code).replace(/\D/g, ''), t = now();
+  const gone = bad('code_gone', 'This code does not work any more. Sign in again to get a new one.'), th = ticket ? await sha256(ticket) : '';
+  const row = th ? await db(env, 'SELECT * FROM login_codes WHERE ticket_hash = ? AND expires_at > ?', th, t).first() : null;
+  if (!row) throw gone;
+  if (code.length !== 6 || !sameText(await sha256(ticket + ':' + code), row.code_hash)) {
+    const r = await db(env, 'UPDATE login_codes SET tries = tries + 1 WHERE ticket_hash = ? RETURNING tries', th).first();
+    if (!r || r.tries >= CODE_TRIES) { await db(env, 'DELETE FROM login_codes WHERE ticket_hash = ?', th).run(); throw bad('code_gone', 'Too many wrong codes. Sign in again to get a new one.'); }
+    throw bad('code', 'This is not the code we sent. Check the newest letter and try again.', 400, { tries_left: CODE_TRIES - r.tries });
+  }
+  if (!(await db(env, 'DELETE FROM login_codes WHERE ticket_hash = ?', th).run()).meta.changes) throw gone;      // of two requests with the same code only one gets in
+  const user = await db(env, 'SELECT * FROM users WHERE id = ? AND banned = 0', row.user_id).first();
+  if (!user) throw gone;
+  await deviceNotice(env, req, user, ctx);
+  return { token: await openSession(env, user.id), user: await userView(env, user) };
+}
+/* The password, changed from Settings: the current one is asked for, so a browser someone left signed in is not enough to take the
+   account (PLAN_RU.md part 2: "смена пароля со старым паролем"). Every other session ends; the address gets a letter. An account with
+   no password (made with Google or LinkedIn) sets its first one with the link of "Forgot password". POST /api/auth/password { current, password } */
+async function changePassword(env, req, user, ctx) {
+  await limit(env, 'pass-change:' + user.id, 6, 3600);
+  const b = await body(req), current = typeof b.current === 'string' ? b.current : '', next = typeof b.password === 'string' ? b.password : '';
+  if (!user.pass_hash) throw bad('no_password', 'This account has no password yet. Ask for a link to set one: it goes to your address.', 409);
+  if (!sameText((await hashPassword(current, user.pass_salt)).hash, user.pass_hash)) throw bad('current', 'This is not your current password.', 403);
+  if (next.length < 8 || next.length > 200) throw bad('password', 'The new password must be at least 8 characters long.');
+  if (next === current) throw bad('password', 'The new password is the same as the current one.');
+  const p = await hashPassword(next), keep = await sha256(bearer(req));
+  await env.DB.batch([db(env, 'UPDATE users SET pass_hash = ?, pass_salt = ? WHERE id = ?', p.hash, p.salt, user.id),
+    db(env, 'DELETE FROM sessions WHERE user_id = ? AND token_hash != ?', user.id, keep), db(env, 'DELETE FROM resets WHERE user_id = ?', user.id), db(env, 'DELETE FROM login_codes WHERE user_id = ?', user.id)]);
+  await later(ctx, sendMail(env, user.email, 'Your password was changed', 'The password of your account at ' + env.SITE_URL + ' was just changed in Settings (' + new Date().toISOString().slice(0, 16).replace('T', ' ') +
+    ' UTC). Every other browser is signed out.\n\nIf it was not you, open ' + env.SITE_URL + '/account/ now and choose "Forgot password" to set a new one.\n', { kind: 'password_changed' }));
+  return { ok: true, message: 'Your new password is saved. Every other browser is signed out.' };
+}
+/* Settings that are the person's own: PATCH /api/me { seeking } and PUT /api/me/security { two_step, password }.
+   seeking: the status employers see on the resume in the resume database (LinkedIn "Open to work", hh.ru "ищу работу"): active (looking
+   actively), open (open to offers), not (not looking), '' (not said). Only employers who search the resume database see it.
+   two_step: on needs a confirmed address and a password; off needs the current password, and the address is told. */
+const SEEKING = ['active', 'open', 'not'];
+async function meChange(env, req, user) {
+  const b = await body(req);
+  if (b.seeking !== undefined) {
+    const v = String(b.seeking || '');
+    if (v && !SEEKING.includes(v)) throw bad('seeking', 'Choose one: looking actively, open to offers, or not looking.');
+    await db(env, 'UPDATE users SET seeking = ?, seeking_at = ? WHERE id = ?', v, v ? now() : 0, user.id).run();
+  }
+  return { user: await userView(env, await db(env, 'SELECT * FROM users WHERE id = ?', user.id).first()) };
+}
+async function security(env, req, user, ctx) {
+  await limit(env, 'security:' + user.id, 10, 3600);
+  const b = await body(req), on = b.two_step === true;
+  if (typeof b.two_step !== 'boolean') throw bad('two_step', 'Send two_step: true or false.');
+  if (on && !user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
+  if (on && !user.pass_hash) throw bad('no_password', 'Two-step sign-in is for signing in with a password. Set a password first: ask for a link in Settings.', 409);
+  if (!on && user.two_step && !sameText((await hashPassword(typeof b.password === 'string' ? b.password : '', user.pass_salt)).hash, user.pass_hash)) throw bad('current', 'This is not your current password.', 403);
+  await db(env, 'UPDATE users SET two_step = ? WHERE id = ?', on ? 1 : 0, user.id).run();
+  if (!on && user.two_step) await later(ctx, sendMail(env, user.email, 'Two-step sign-in is off', 'Two-step sign-in was just switched off for your account at ' + env.SITE_URL +
+    ': a sign-in now needs only the password.\n\nIf it was not you, open ' + env.SITE_URL + '/account/, choose "Forgot password", set a new one and switch two-step sign-in on again in Settings.\n', { kind: 'security' }));
+  return { user: await userView(env, await db(env, 'SELECT * FROM users WHERE id = ?', user.id).first()) };
 }
 /* Signing in with a link sent to the address, for someone who has no password at hand (hirehi.ru signs in by a code in the mail; 18 Nov 2026).
    Answered the same whether or not there is such an account. Opening the link proves the mailbox, so it also confirms the address.
@@ -498,7 +583,13 @@ async function linkRequest(env, req, ctx) {
   if (!email) throw bad('email', 'Enter a valid email address.');
   const out = { ok: true, message: 'If there is an account with this email, a sign-in link is on its way. It works for ' + LINK_MINUTES + ' minutes.' };
   const token = rid('', 32), t = now();
-  const user = (await allowed(env, 'link:' + email, 3, 3600)) ? await db(env, 'SELECT id FROM users WHERE email = ? AND banned = 0', email).first() : null;
+  const user = (await allowed(env, 'link:' + email, 3, 3600)) ? await db(env, 'SELECT id, two_step FROM users WHERE email = ? AND banned = 0', email).first() : null;
+  if (user && user.two_step) {      // a link would be one step: the account asks for the password and a code (codeStep)
+    await later(ctx, sendMail(env, email, 'About your sign-in link', 'Someone asked for a sign-in link for your account at ' + env.SITE_URL + '.\n\nYour account has two-step sign-in on, so it is not ' +
+      'opened by a link: sign in with your password, then type the code we send you. If you forgot the password, choose "Forgot password" on ' + env.SITE_URL + '/account/.\n', { kind: 'signin' }));
+    if (env.PAY_MODE === 'test') out.two_step = true;
+    return out;
+  }
   if (user) {
     await db(env, 'INSERT INTO signin_links (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)', await sha256(token), user.id, t, t + LINK_MINUTES * 60).run();
     await later(ctx, sendMail(env, email, 'Your sign-in link', 'Open this link within ' + LINK_MINUTES + ' minutes to sign in to your account at ' + env.SITE_URL + ':\n' + env.SITE_URL + '/account/#signin=' + token +
@@ -511,7 +602,7 @@ async function linkConfirm(env, req) {
   await limit(env, 'link-try:' + clientIp(req), 10, 600);
   const b = await body(req), token = typeof b.token === 'string' && /^[a-f0-9]{64}$/.test(b.token) ? b.token : '', t = now();
   const stale = bad('signin', 'This link does not work any more. Ask for a new one.'), hash = token ? await sha256(token) : '';
-  const row = hash ? await db(env, 'SELECT l.user_id FROM signin_links l JOIN users u ON u.id = l.user_id WHERE l.token_hash = ? AND l.expires_at > ? AND u.banned = 0', hash, t).first() : null;
+  const row = hash ? await db(env, 'SELECT l.user_id FROM signin_links l JOIN users u ON u.id = l.user_id WHERE l.token_hash = ? AND l.expires_at > ? AND u.banned = 0 AND u.two_step = 0', hash, t).first() : null;
   if (!row) throw stale;
   // deleting the row is what spends the link: of two requests at once only one finds it
   if (!(await db(env, 'DELETE FROM signin_links WHERE token_hash = ?', hash).run()).meta.changes) throw stale;
@@ -914,7 +1005,9 @@ const PAID_WITH = { wallet: 'prepaid credits', credit: 'prepaid credits', pass: 
   cryptomus: 'cryptocurrency, through Cryptomus', test: 'a test payment (no money moved)' };
 const orderView = (o) => ({ id: o.id, product: o.product, name: (PRODUCTS[o.product] || {}).name || o.product, label: o.label, amount_usd: o.amount_usd, credits: o.credits || 0, status: o.status,
   paid_with: ['wallet', 'pass', 'rerun'].includes(o.provider) ? o.provider : o.provider === 'credit' ? 'wallet' : 'crypto',
-  pay_url: o.status === 'pending' ? o.pay_url : '', created: isoDay(o.created_at), paid: o.paid_at ? isoDay(o.paid_at) : '', coupon: couponView(o) });
+  pay_url: o.status === 'pending' ? o.pay_url : '', created: isoDay(o.created_at), paid: o.paid_at ? isoDay(o.paid_at) : '', coupon: couponView(o),
+  // a payment link for someone else (an accountant): can_share says one can be made for this order, share_key is the one made (see shareOrder)
+  can_share: o.status === 'pending' && ['cryptomus', 'test'].includes(o.provider), share_key: /^[a-f0-9]{32}$/.test(o.share || '') ? o.share : '' });
 
 /* ---------------------------------------------------------------- promo codes (COUPONS above) */
 // the price after a percent off, in whole cents: 99 less 30% is 69.3; 9.99 less 30% is 6.99 (6.993 rounded to the cent)
@@ -1075,25 +1168,111 @@ async function createOrder(env, req, user) {
   }
   if (coupon) await couponFree(env, user, coupon.code, t);
   const amount = coupon ? priceAfter(product.usd, coupon.percent) : product.usd;
-  let provider, uuid = '', payUrl;
-  if (env.PAY_MODE === 'test') { provider = 'test'; payUrl = env.API_URL + '/api/dev/pay/' + id; }
-  else {
-    if (!env.CRYPTOMUS_MERCHANT || !env.CRYPTOMUS_API_KEY) throw bad('payments_off', 'Payments are not switched on yet.', 503);
-    const invoice = await gateway(env, '/v1/payment', {
-      amount: usdText(amount), currency: 'USD', order_id: id, lifetime: INVOICE_LIFETIME, additional_data: b.product,
-      url_callback: env.API_URL + '/api/webhooks/cryptomus', url_return: env.SITE_URL + '/account/', url_success: env.SITE_URL + '/account/?order=' + id,
-    });
-    provider = 'cryptomus'; uuid = String(invoice.uuid || ''); payUrl = String(invoice.url || '');
-    if (!payUrl) throw bad('gateway_error', 'The payment service did not return a payment page.', 502);
-  }
-  // with a code, the order is written only if no other order of the account took the code meanwhile (one statement, so two checkouts
-  // started at the same moment cannot both get the discount; the invoice of the one refused simply runs out unpaid)
-  const ins = await db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, provider_uuid, pay_url, created_at, coupon, full_usd) ' +
-    "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE ? = '' OR NOT EXISTS (" + COUPON_TAKEN + ')',
-    id, user.id, b.product, target.key, target.label, amount, 'pending', provider, uuid, payUrl, t, coupon ? coupon.code : '', product.usd,
-    coupon ? coupon.code : '', user.id, coupon ? coupon.code : '', t - INVOICE_LIFETIME - ORDER_GRACE).run();
+  // for_someone: true makes the order with its payment link for someone else (shareOrder): the checkout then comes back to that page
+  const share = b.for_someone === true ? rid('', 16) : '';
+  const page = await checkoutPage(env, id, amount, b.product, share ? invoiceUrl(env, share) : '');
+  const ins = await insertCheckout(env, { id, user_id: user.id, product: b.product, target: target.key, label: target.label, amount, page, t, coupon: coupon ? coupon.code : '', full: product.usd, share, share_at: share ? t : 0 });
   if (!ins.meta.changes) throw bad('coupon_used', 'This account has used the promo code ' + coupon.code + ' already. A code works once per account.', 409);
   return { order: orderView(await db(env, 'SELECT * FROM orders WHERE id = ?', id).first()) };
+}
+// The checkout page for an order: the gateway's invoice (or, on a developer machine, a page that marks it paid). back: where the
+// gateway sends the person afterwards; by default the account page, which waits for the confirmation (?order=).
+async function checkoutPage(env, id, amount, product, back) {
+  if (env.PAY_MODE === 'test') return { provider: 'test', uuid: '', url: env.API_URL + '/api/dev/pay/' + id };
+  if (!env.CRYPTOMUS_MERCHANT || !env.CRYPTOMUS_API_KEY) throw bad('payments_off', 'Payments are not switched on yet.', 503);
+  const invoice = await gateway(env, '/v1/payment', {
+    amount: usdText(amount), currency: 'USD', order_id: id, lifetime: INVOICE_LIFETIME, additional_data: product,
+    url_callback: env.API_URL + '/api/webhooks/cryptomus', url_return: back || env.SITE_URL + '/account/', url_success: back || env.SITE_URL + '/account/?order=' + id,
+  });
+  const url = String(invoice.url || '');
+  if (!url) throw bad('gateway_error', 'The payment service did not return a payment page.', 502);
+  return { provider: 'cryptomus', uuid: String(invoice.uuid || ''), url };
+}
+// with a code, the order is written only if no other order of the account took the code meanwhile (one statement, so two checkouts
+// started at the same moment cannot both get the discount; the invoice of the one refused simply runs out unpaid)
+const insertCheckout = (env, o) => db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, provider_uuid, pay_url, created_at, coupon, full_usd, share, share_at) ' +
+  "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE ? = '' OR NOT EXISTS (" + COUPON_TAKEN + ')',
+  o.id, o.user_id, o.product, o.target, o.label, o.amount, 'pending', o.page.provider, o.page.uuid, o.page.url, o.t, o.coupon, o.full, o.share, o.share_at,
+  o.coupon, o.user_id, o.coupon, o.t - INVOICE_LIFETIME - ORDER_GRACE).run();
+
+/* ---------------------------------------------------------------- a payment link for someone else (PLAN_RU.md part 2, item 9; Remote OK has it)
+   The employer is often not the one who pays: the accountant is. POST /api/orders/<id>/share { email? } gives a pending order a link,
+   <site>/account/#invoice=<key>, that anyone can open without an account: what the payment is for, the price, the button to the crypto
+   checkout, and the receipt once it is paid. With an email the link is sent there in a letter (PAY_MAIL_PER_DAY a day per account).
+   A checkout page lives an hour (INVOICE_LIFETIME); the link lives SHARE_DAYS days: when its page ran out unpaid, POST
+   /api/invoice/<key>/renew makes a new order for the same thing, at the same price (with the promo code, if the account may still use it),
+   and the link moves to it. Only one renewal at a time: the old order is locked by a statement that changes its key. */
+const SHARE_DAYS = 30, PAY_MAIL_PER_DAY = 10;
+const invoiceUrl = (env, key) => env.SITE_URL + '/account/#invoice=' + key;
+async function shareOrder(env, req, user, id, ctx) {
+  const o = await db(env, 'SELECT * FROM orders WHERE id = ? AND user_id = ?', id, user.id).first();
+  if (!o) throw bad('not_found', 'Order not found.', 404);
+  if (o.status !== 'pending' || !['cryptomus', 'test'].includes(o.provider)) throw bad('not_payable', 'Only a payment that is still to be made can be sent to someone else.', 409);
+  await limit(env, 'pay-link:' + user.id, 60, DAY);
+  const b = await body(req), email = b.email ? cleanEmail(b.email) : '';
+  if (b.email && !email) throw bad('email', 'Enter the email address of the person who pays.');
+  if (email && email === user.email) throw bad('email', 'This is your own address. Enter the address of the person who pays.');
+  if (!o.share) await db(env, "UPDATE orders SET share = ?, share_at = ? WHERE id = ? AND share = ''", rid('', 16), now(), o.id).run();
+  const key = await db(env, 'SELECT share FROM orders WHERE id = ?', o.id).first('share'), url = invoiceUrl(env, key);
+  if (email) {
+    await limit(env, 'pay-mail:' + user.id, PAY_MAIL_PER_DAY, DAY);
+    const p = PRODUCTS[o.product] || {}, who = user.company || domainOf(user) || user.email;
+    await later(ctx, sendMail(env, email, 'Payment request from ' + who + ': ' + (p.name || o.product) + ', $' + usdText(o.amount_usd),
+      user.email + (user.company ? ' (' + user.company + ')' : '') + ' asks you to pay for this on ' + (env.SITE_NAME || 'Jobs Every Hour') + ' (' + env.SITE_URL + '):\n\n' +
+      '    ' + (p.name || o.product) + (o.label && o.label !== p.name ? ' for ' + o.label : '') + '\n    $' + usdText(o.amount_usd) + ', one payment. Nothing renews and nothing more is charged.\n\n' +
+      'The payment page:\n' + url + '\n\nIt shows what the payment is for and takes it in cryptocurrency through Cryptomus. You do not need an account. ' +
+      'Once the payment is confirmed, the receipt is on the same page.\n\nIf you do not know ' + user.email + ', ignore this message.\n', { kind: 'pay_link' }));
+  }
+  return { share_key: key, share_url: url, sent_to: email };
+}
+// what the person with the link sees: pending (the checkout is open), checking (its hour ran out and the gateway is being asked whether
+// it was paid), expired (a new checkout can be made while the link lives), underpaid, paid (with the receipt)
+function invoiceState(o, t) {
+  if (o.status === 'paid' || o.status === 'refunded') return 'paid';
+  if (o.status === 'pending') return t - o.created_at < INVOICE_LIFETIME ? 'pending' : o.provider === 'cryptomus' ? 'checking' : 'expired';
+  return o.status === 'underpaid' ? 'underpaid' : 'expired';
+}
+async function invoiceView(env, o) {
+  const t = now(), p = PRODUCTS[o.product] || {}, u = (await db(env, 'SELECT email, company, domain FROM users WHERE id = ?', o.user_id).first()) || {}, state = invoiceState(o, t);
+  const until = o.share_at + SHARE_DAYS * DAY;
+  return { number: o.id, item: p.name || o.product, label: o.label && o.label !== p.name ? o.label : '', days: p.days || p.plusDays || (p.walletCredits ? WALLET_DAYS : 0), credits: p.walletCredits || 0,
+    amount_usd: o.amount_usd, coupon: couponView(o), company: u.company || u.domain || '', domain: u.domain || '', asked_by: u.email && !/@invalid$/.test(u.email) ? maskEmail(u.email) : '',
+    status: state, pay_url: state === 'pending' ? o.pay_url : '', renewable: state === 'expired' && until > t && !!u.email && !/@invalid$/.test(u.email), link_until: isoDay(until),
+    created: isoDay(o.created_at), paid: state === 'paid' ? isoDay(o.paid_at || o.created_at) : '', seller: (env.SITE_NAME || 'Jobs Every Hour') + ', ' + env.SITE_URL,
+    paid_with: state === 'paid' ? PAID_WITH[o.provider] || o.provider : '', note: 'One payment for a fixed period. Nothing renews and nothing more is charged.' };
+}
+const invoiceGone = () => bad('not_found', 'This payment link does not work any more. Ask the person who sent it for a new one.', 404);
+async function invoiceGet(env, req, key, ctx) {
+  await limit(env, 'invoice:' + clientIp(req), 120, 3600);
+  let o = /^[a-f0-9]{32}$/.test(key) ? await db(env, 'SELECT * FROM orders WHERE share = ?', key).first() : null;
+  if (!o) throw invoiceGone();
+  // a checkout whose hour ran out: the gateway is asked whether it was paid after all, before a new one can be made
+  if (o.status === 'pending' && o.provider === 'cryptomus' && now() - o.created_at > RECONCILE_AFTER && await allowed(env, 'inv-check:' + o.id, 30, 3600)) {
+    try { await reconcileOrder(env, o, 10, ctx); } catch {}
+    o = await db(env, 'SELECT * FROM orders WHERE id = ?', o.id).first();
+  }
+  return { invoice: await invoiceView(env, o) };
+}
+async function invoiceRenew(env, req, key, ctx) {
+  await limit(env, 'invoice-renew:' + clientIp(req), 10, 3600);
+  const o = /^[a-f0-9]{32}$/.test(key) ? await db(env, 'SELECT * FROM orders WHERE share = ?', key).first() : null, t = now();
+  if (!o) throw invoiceGone();
+  if (invoiceState(o, t) !== 'expired') return { invoice: await invoiceView(env, o) };                  // still payable, being checked, or paid: nothing to make
+  const user = await db(env, 'SELECT * FROM users WHERE id = ? AND banned = 0', o.user_id).first(), p = PRODUCTS[o.product];
+  if (o.share_at + SHARE_DAYS * DAY <= t || !user || /@invalid$/.test(user.email)) throw bad('link_old', 'This payment link has run out. Ask the person who sent it for a new one.', 410);
+  if (!p || !onSale(env, p)) throw bad('not_on_sale', 'This is not on sale any more.', 409);
+  const lock = 'renewing-' + rid('', 8);
+  if (!(await db(env, "UPDATE orders SET share = ?, status = CASE WHEN status = 'pending' AND provider != 'cryptomus' THEN 'expired' ELSE status END WHERE id = ? AND share = ?", lock, o.id, key).run()).meta.changes)
+    return invoiceGet(env, req, key, ctx);                                                                // another press made it a moment ago
+  try {
+    let coupon = '', amount = p.usd;
+    if (o.coupon) { try { const c = couponFor(o.coupon, t); if (couponCovers(c, o.product)) { await couponFree(env, user, c.code, t); coupon = c.code; amount = priceAfter(p.usd, c.percent); } } catch {} }
+    const id = rid('o_'), page = await checkoutPage(env, id, amount, o.product, invoiceUrl(env, key));
+    const ins = await insertCheckout(env, { id, user_id: user.id, product: o.product, target: o.target, label: o.label, amount, page, t, coupon, full: p.usd, share: key, share_at: o.share_at });
+    if (!ins.meta.changes) throw bad('coupon_used', 'The promo code of this payment was used meanwhile. Ask the person who sent the link for a new one.', 409);
+    await db(env, "UPDATE orders SET share = '' WHERE id = ?", o.id).run();
+  } catch (err) { await db(env, 'UPDATE orders SET share = ? WHERE id = ? AND share = ?', key, o.id, lock).run(); throw err; }
+  return invoiceGet(env, req, key, ctx);
 }
 
 /* Turns a paid order into what was bought: all of it or none of it, and only once however many times it is called.
@@ -2589,7 +2768,7 @@ async function claimStats(env, user, id, t) {
      credits come only from the owner (POST /api/admin/talent/credits). */
 export const TALENT_CONSENT = 'Let employers find my resume. I agree that Jobs Every Hour keeps my resume on its server and shows it to employers with a proved company account, ' +
   'without my name, email, phone or links unless I choose to show my name. An employer gets my name and contact details only if I accept its request. I can pause or delete it at any time.';
-const TALENT_LEVELS = ['entry', 'mid', 'senior', 'lead'], TALENT_REQUEST_DAYS = 14, TALENT_REQUESTS_PER_DAY = 20, TALENT_SEARCHES_PER_HOUR = 120, TALENT_PAGE = 20;
+const TALENT_LEVELS = ['entry', 'mid', 'senior', 'lead'], TALENT_VISIBILITY = ['all', 'link'], TALENT_REQUEST_DAYS = 14, TALENT_REQUESTS_PER_DAY = 20, TALENT_SEARCHES_PER_HOUR = 120, TALENT_PAGE = 20;
 const talentOn = (env) => { if (env.TALENT_DB !== 'on') throw NOT_CONFIGURED('The resume database is'); };
 const HIDDEN = '[hidden]';
 // what employers may read of free text before acceptance: no email address, web address, handle or phone number (9 digits or more; dates stay)
@@ -2614,8 +2793,9 @@ function readTalent(b, had) {
   const roles = lines(listOf('roles'), 5, 40, (x) => (Object.hasOwn(CATEGORIES, x) ? x : ''));
   const places = lines(listOf('places'), 10, 60, (x) => (/^[a-z0-9]+(?:-[a-z0-9]+){0,5}$/.test(x) ? x : ''));
   const blocked = lines(listOf('blocked'), 20, 100, (x) => { const u = publicUrl('https://' + x.toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^[^@]*@/, '').replace(/[/?#].*$/, '')); return u ? siteDomain(u.hostname) : ''; });
-  const flag = (k) => (pick(k, 0) === true || pick(k, 0) === 1 || pick(k, 0) === '1' ? 1 : 0);
-  return { resume, level, years, roles, places, blocked, show_name: flag('show_name'), show_employers: flag('show_employers'), paused: flag('paused'),
+  const flag = (k) => (pick(k, 0) === true || pick(k, 0) === 1 || pick(k, 0) === '1' ? 1 : 0), visibility = String(pick('visibility', 'all'));
+  if (!TALENT_VISIBILITY.includes(visibility)) throw bad('visibility', 'Choose who finds it: "all" (employers who search) or "link" (only people you give the link to).');
+  return { resume, level, years, roles, places, blocked, show_name: flag('show_name'), show_employers: flag('show_employers'), paused: flag('paused'), visibility,
     headline: clip(resume.title || (resume.exp[0] || {}).role || '', 160), skills: lines(resume.skills, 40, 60, (x) => x.toLowerCase()) };
 }
 // A person as employers see them: the full card only for the employer whose request they accepted (contact) or for themselves.
@@ -2624,14 +2804,23 @@ function talentCard(t, { contact = null, own = false } = {}) {
   return { id: t.pid, name: open || t.show_name ? r.name : '', headline: open ? t.headline : redact(t.headline), level: t.level, years: t.years, skills: t.skills.split('\n').filter(Boolean),
     roles: t.roles.split('\n').filter(Boolean), places: t.places.split('\n').filter(Boolean), summary: open ? r.summary : redact(r.summary),
     experience: r.exp.map((x) => ({ role: open ? x.role : redact(x.role), org: open || t.show_employers ? x.org : '', dates: x.dates, text: open ? x.text : redact(x.text) })),
-    education: r.edu.map((x) => ({ what: x.what, org: x.org, dates: x.dates })), updated: isoDay(t.updated_at), ...(contact ? { contact } : {}) };
+    education: r.edu.map((x) => ({ what: x.what, org: x.org, dates: x.dates })), updated: isoDay(t.updated_at), seeking: SEEKING.includes(t.seeking) ? t.seeking : '', ...(contact ? { contact } : {}) };
 }
 const talentSettings = (t) => ({ level: t.level, years: t.years, roles: t.roles.split('\n').filter(Boolean), places: t.places.split('\n').filter(Boolean), blocked: t.blocked.split('\n').filter(Boolean),
-  show_name: !!t.show_name, show_employers: !!t.show_employers, paused: !!t.paused, consented: isoDay(t.consented_at), updated: isoDay(t.updated_at) });
+  show_name: !!t.show_name, show_employers: !!t.show_employers, paused: !!t.paused, visibility: t.visibility || 'all', consented: isoDay(t.consented_at), updated: isoDay(t.updated_at) });
+const cvUrl = (env, key) => env.SITE_URL + '/account/#cv=' + key;
+/* The person's own view: the settings, the resume, what employers see, its own link (made the first time it is asked for), and who
+   opened it (talent_views) with how often it was among search results (talent_shown) in the last 7 and 30 days. */
 async function talentProfile(env, user) {
   const t = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first();
-  return { consent_text: TALENT_CONSENT, profile: t ? { ...talentSettings(t), resume: JSON.parse(t.resume), as_employers_see: talentCard(t),
-    requests: Number(await db(env, "SELECT COUNT(*) AS n FROM talent_requests WHERE candidate_id = ? AND status = 'sent'", user.id).first('n')) || 0 } : null };
+  if (!t) return { consent_text: TALENT_CONSENT, profile: null };
+  if (!t.share) { t.share = rid('', 16); await db(env, "UPDATE talent SET share = ? WHERE user_id = ? AND share = ''", t.share, user.id).run(); t.share = (await db(env, 'SELECT share FROM talent WHERE user_id = ?', user.id).first('share')) || t.share; }
+  const tt = now(), shown = async (days) => Number(await db(env, 'SELECT COALESCE(SUM(n), 0) AS n FROM talent_shown WHERE candidate_id = ? AND day >= ?', user.id, isoDay(tt - (days - 1) * DAY)).first('n')) || 0;
+  const viewers = (await db(env, 'SELECT v.*, (SELECT r.status FROM talent_requests r WHERE r.candidate_id = v.candidate_id AND r.employer_id = v.employer_id) AS asked FROM talent_views v WHERE v.candidate_id = ? ORDER BY v.last_at DESC, v.rowid DESC LIMIT 100', user.id).all()).results;
+  return { consent_text: TALENT_CONSENT, profile: { ...talentSettings(t), share_url: cvUrl(env, t.share), resume: JSON.parse(t.resume), as_employers_see: talentCard({ ...t, seeking: user.seeking }),
+    requests: Number(await db(env, "SELECT COUNT(*) AS n FROM talent_requests WHERE candidate_id = ? AND status = 'sent'", user.id).first('n')) || 0,
+    views: { companies: viewers.length, shown_7: await shown(7), shown_30: await shown(30) },
+    viewers: viewers.map((v) => ({ company: v.company, domain: v.domain, via: v.via, first: isoDay(v.first_at), last: isoDay(v.last_at), times: v.n, asked: v.asked || '' })) } };
 }
 async function talentSave(env, req, user) {
   if (!user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);
@@ -2645,15 +2834,18 @@ async function talentSave(env, req, user) {
   if (!had && (b.consent !== true || b.consent_text !== TALENT_CONSENT))
     throw bad('consent', 'Your resume is stored only after you tick “Let employers find my resume”: send consent: true with the consent text shown.', 400, { consent_text: TALENT_CONSENT });
   const x = readTalent(b, had), j = (a) => a.join('\n');
-  if (had) await db(env, 'UPDATE talent SET resume = ?, headline = ?, level = ?, years = ?, skills = ?, roles = ?, places = ?, show_name = ?, show_employers = ?, blocked = ?, paused = ?, updated_at = ? WHERE user_id = ?',
-    JSON.stringify(x.resume), x.headline, x.level, x.years, j(x.skills), j(x.roles), j(x.places), x.show_name, x.show_employers, j(x.blocked), x.paused, t, user.id).run();
-  else await db(env, 'INSERT INTO talent (user_id, pid, resume, headline, level, years, skills, roles, places, show_name, show_employers, blocked, paused, consent_text, consented_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    user.id, rid('t_', 8), JSON.stringify(x.resume), x.headline, x.level, x.years, j(x.skills), j(x.roles), j(x.places), x.show_name, x.show_employers, j(x.blocked), x.paused, TALENT_CONSENT, t, t).run();
+  // new_link: true makes a new link for "only by link"; the old one stops working at once
+  const share = !had || !had.share || b.new_link === true ? rid('', 16) : had.share;
+  if (had) await db(env, 'UPDATE talent SET resume = ?, headline = ?, level = ?, years = ?, skills = ?, roles = ?, places = ?, show_name = ?, show_employers = ?, blocked = ?, paused = ?, visibility = ?, share = ?, updated_at = ? WHERE user_id = ?',
+    JSON.stringify(x.resume), x.headline, x.level, x.years, j(x.skills), j(x.roles), j(x.places), x.show_name, x.show_employers, j(x.blocked), x.paused, x.visibility, share, t, user.id).run();
+  else await db(env, 'INSERT INTO talent (user_id, pid, resume, headline, level, years, skills, roles, places, show_name, show_employers, blocked, paused, visibility, share, consent_text, consented_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    user.id, rid('t_', 8), JSON.stringify(x.resume), x.headline, x.level, x.years, j(x.skills), j(x.roles), j(x.places), x.show_name, x.show_employers, j(x.blocked), x.paused, x.visibility, share, TALENT_CONSENT, t, t).run();
   return talentProfile(env, user);
 }
 // Deleting is for good: the resume and every request about it go at once; open requests give their employers the credit back.
 async function talentDelete(env, user) {
-  await env.DB.batch([talentRefund(env, 'r.candidate_id = ?', user.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ?', user.id), db(env, 'DELETE FROM talent WHERE user_id = ?', user.id)]);
+  await env.DB.batch([talentRefund(env, 'r.candidate_id = ?', user.id), db(env, 'DELETE FROM talent_requests WHERE candidate_id = ?', user.id), db(env, 'DELETE FROM talent WHERE user_id = ?', user.id),
+    db(env, 'DELETE FROM talent_views WHERE candidate_id = ?', user.id), db(env, 'DELETE FROM talent_shown WHERE candidate_id = ?', user.id)]);
   return { ok: true, deleted: true, message: 'Your resume is deleted from our server, with every request about it. Employers who were given your contact details earlier keep what they were given.' };
 }
 // gives back one credit for every open request matching the condition (on r), to the employer that sent it
@@ -2667,9 +2859,11 @@ async function talentSearch(env, user, url) {
   const own = talentEmployer(user);
   await limit(env, 'talent-search:' + user.id, TALENT_SEARCHES_PER_HOUR, 3600);
   const p = url.searchParams, tests = wordTests(cleanWords(p.get('q') || '')), skill = (p.get('skill') || '').trim().toLowerCase(), role = p.get('role') || '', place = p.get('place') || '';
-  const level = p.get('level') || '', years = Number(p.get('years')) || 0, offset = Math.max(0, Math.min(Number(p.get('offset')) || 0, 1000));
-  const rows = (await db(env, 'SELECT * FROM talent WHERE paused = 0 AND user_id != ? ORDER BY updated_at DESC LIMIT 5000', user.id).all()).results.filter((t) => {
+  const level = p.get('level') || '', years = Number(p.get('years')) || 0, offset = Math.max(0, Math.min(Number(p.get('offset')) || 0, 1000)), open = p.get('seeking') === 'open';
+  // a resume shown "only by link" is never in search; the person's status comes with it (open=1: only people looking or open to offers)
+  const rows = (await db(env, "SELECT t.*, u.seeking FROM talent t JOIN users u ON u.id = t.user_id WHERE t.paused = 0 AND t.visibility != 'link' AND t.user_id != ? ORDER BY t.updated_at DESC LIMIT 5000", user.id).all()).results.filter((t) => {
     if (t.blocked.split('\n').includes(own)) return false;                          // the person chose not to be seen by this company
+    if (open && !['active', 'open'].includes(t.seeking)) return false;
     if (skill && !t.skills.split('\n').includes(skill)) return false;
     if (role && !t.roles.split('\n').includes(role)) return false;
     if (place && !t.places.split('\n').includes(place) && !(place !== 'remote' && t.places.split('\n').includes('remote') && p.get('remote_ok') === '1')) return false;
@@ -2679,12 +2873,40 @@ async function talentSearch(env, user, url) {
     const r = JSON.parse(t.resume), hay = [t.headline, t.skills.replace(/\n/g, ' '), ...r.exp.map((x) => x.role), redact(r.summary)].join(' \n ');
     return tests.every((re) => re.test(hay));
   });
-  const credits = Number(await db(env, 'SELECT n FROM talent_credits WHERE user_id = ?', user.id).first('n')) || 0;
-  return { total: rows.length, credits, results: rows.slice(offset, offset + TALENT_PAGE).map((t) => talentCard(t)) };
+  const credits = Number(await db(env, 'SELECT n FROM talent_credits WHERE user_id = ?', user.id).first('n')) || 0, page = rows.slice(offset, offset + TALENT_PAGE), day = isoDay(now());
+  if (page.length) await env.DB.batch(page.map((t) => db(env, 'INSERT INTO talent_shown (candidate_id, day, n) VALUES (?, ?, 1) ON CONFLICT(candidate_id, day) DO UPDATE SET n = n + 1', t.user_id, day)));
+  return { total: rows.length, credits, views: 'on', results: page.map((t) => talentCard(t)) };
+}
+/* Opening one resume: from search (GET /api/talent/<pid>) or from its own link (GET /api/cv/<key>, no session needed). An employer that
+   opens one is written down for the person to see (talent_views: the company, its domain, when, how often); the page says so before. */
+async function talentSeen(env, user, t, via) {
+  const own = domainOf(user), at = now();
+  await db(env, 'INSERT INTO talent_views (candidate_id, employer_id, company, domain, via, first_at, last_at, n) VALUES (?, ?, ?, ?, ?, ?, ?, 1) ' +
+    'ON CONFLICT(candidate_id, employer_id) DO UPDATE SET last_at = excluded.last_at, n = n + 1, company = excluded.company', t.user_id, user.id, user.company || own, own, via, at, at).run();
+}
+async function talentAskedOf(env, user, t) { return (await db(env, 'SELECT status FROM talent_requests WHERE employer_id = ? AND candidate_id = ?', user.id, t.user_id).first('status')) || ''; }
+async function talentOpen(env, user, pid) {
+  const own = talentEmployer(user);
+  await limit(env, 'talent-open:' + user.id, TALENT_SEARCHES_PER_HOUR, 3600);
+  const t = await db(env, 'SELECT t.*, u.seeking FROM talent t JOIN users u ON u.id = t.user_id WHERE t.pid = ? AND t.paused = 0', String(pid)).first();
+  if (!t || t.user_id === user.id || t.blocked.split('\n').includes(own)) throw bad('not_found', 'No such resume.', 404);
+  await talentSeen(env, user, t, 'search');
+  return { candidate: talentCard(t), asked: await talentAskedOf(env, user, t) };
+}
+async function sharedCv(env, req, key) {
+  talentOn(env);
+  await limit(env, 'cv:' + clientIp(req), 120, 3600);
+  const user = await currentUser(env, req, false), own = user ? domainOf(user) : '';
+  const t = /^[a-f0-9]{32}$/.test(key) ? await db(env, 'SELECT t.*, u.seeking FROM talent t JOIN users u ON u.id = t.user_id WHERE t.share = ? AND t.paused = 0', key).first() : null;
+  if (!t || (own && t.blocked.split('\n').includes(own))) throw bad('not_found', 'This resume is not shared any more: its owner paused it, deleted it or made a new link.', 404);
+  const employer = !!(user && user.confirmed_at && own && user.id !== t.user_id);
+  if (employer) await talentSeen(env, user, t, 'link');
+  return { candidate: talentCard(t), signed_in: !!user, own: !!user && user.id === t.user_id, can_contact: employer, asked: employer ? await talentAskedOf(env, user, t) : '',
+    credits: employer ? Number(await db(env, 'SELECT n FROM talent_credits WHERE user_id = ?', user.id).first('n')) || 0 : 0 };
 }
 async function talentContact(env, req, user, pid, ctx) {
   const own = talentEmployer(user);
-  const b = await body(req), t = await db(env, 'SELECT * FROM talent WHERE pid = ? AND paused = 0', String(pid)).first();
+  const b = await body(req), t = await db(env, 'SELECT * FROM talent WHERE pid = ? AND paused = 0', String(pid)).first();      // "only by link": the pid is known only to those who opened the link
   if (!t || t.user_id === user.id || t.blocked.split('\n').includes(own)) throw bad('not_found', 'No such resume.', 404);
   const message = prose(b.message, 1000, 40), job = b.job_url ? publicUrl(b.job_url) : null;
   if (!message) throw bad('message', 'Write to the person in 40 to 1,000 characters: who you are, the job, and why them.');
@@ -2823,10 +3045,12 @@ async function myExport(env, user) {
   const talent = await db(env, 'SELECT * FROM talent WHERE user_id = ?', user.id).first(), sync = await db(env, 'SELECT data, updated_at FROM sync WHERE user_id = ?', user.id).first();
   return { exported: new Date(t * 1000).toISOString(), site: env.SITE_URL,
     account: { ...(await userView(env, user)), created: isoDay(user.created_at), confirmed: user.confirmed_at ? isoDay(user.confirmed_at) : '' },
-    sign_in: { password: !!user.pass_hash, google: (await all("SELECT email, name, created_at FROM identities WHERE user_id = ? AND provider = 'google'", user.id)).map((x) => ({ email: x.email, name: x.name, since: isoDay(x.created_at) })),
+    sign_in: { password: !!user.pass_hash, two_step: !!user.two_step, google: (await all("SELECT email, name, created_at FROM identities WHERE user_id = ? AND provider = 'google'", user.id)).map((x) => ({ email: x.email, name: x.name, since: isoDay(x.created_at) })),
       linkedin: user.linkedin_sub ? { name: user.linkedin_name, email: user.linkedin_email, since: isoDay(user.linkedin_at) } : null },
     alerts: user.confirmed_at ? (await all('SELECT * FROM alerts WHERE email = ?', user.email)).map((a) => ({ alert: describe(a), freq: a.freq, status: a.status, created: isoDay(a.created_at), letters: a.letters })) : [],
     resume_database: talent ? { ...talentSettings(talent), resume: JSON.parse(talent.resume), consent_text: talent.consent_text } : null,
+    resume_opened_by: (await all('SELECT company, domain, via, first_at, last_at, n FROM talent_views WHERE candidate_id = ?', user.id)).map((v) => ({ company: v.company, domain: v.domain, via: v.via, first: isoDay(v.first_at), last: isoDay(v.last_at), times: v.n })),
+    resumes_opened: (await all('SELECT first_at, last_at, n FROM talent_views WHERE employer_id = ?', user.id)).map((v) => ({ first: isoDay(v.first_at), last: isoDay(v.last_at), times: v.n })),
     requests_received: (await all('SELECT company, domain, message, job_url, status, created_at FROM talent_requests WHERE candidate_id = ?', user.id)).map((r) => ({ ...r, created_at: isoDay(r.created_at) })),
     requests_sent: (await all('SELECT status, created_at FROM talent_requests WHERE employer_id = ?', user.id)).map((r) => ({ status: r.status, sent: isoDay(r.created_at) })),
     jobs: (await all('SELECT * FROM jobs WHERE user_id = ?', user.id)).map((j) => jobView(j, t)),
@@ -2851,8 +3075,9 @@ function eraseSteps(env, u, email, t) {
     ...['sessions', 'resets', 'confirms', 'devices', 'oauth_states', 'domain_claims', 'company_claims', 'sync', 'ai_usage', 'talent', 'talent_credits', 'identities',
       'resumes', 'invite_prefs', 'invites', 'media', 'listing_media', 'work_links'].map((tb) => db(env, 'DELETE FROM ' + tb + ' WHERE user_id = ?', u.id)),
     db(env, 'DELETE FROM team_members WHERE owner_id = ?', u.id), ...takeDown(env, 'user_id = ?', u.id, t), db(env, 'UPDATE placements SET cancelled = 1 WHERE user_id = ?', u.id),
-    db(env, 'DELETE FROM companies WHERE user_id = ?', u.id),
-    db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', work_email = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '' WHERE id = ?", u.id));
+    db(env, 'DELETE FROM companies WHERE user_id = ?', u.id), db(env, 'DELETE FROM login_codes WHERE user_id = ?', u.id),
+    db(env, 'DELETE FROM talent_views WHERE candidate_id = ? OR employer_id = ?', u.id, u.id), db(env, 'DELETE FROM talent_shown WHERE candidate_id = ?', u.id), db(env, "UPDATE orders SET share = '' WHERE user_id = ?", u.id),
+    db(env, "UPDATE users SET email = 'erased-' || id || '@invalid', pass_hash = '', pass_salt = '', company = '', work_email = '', linkedin_sub = '', linkedin_name = '', linkedin_email = '', seeking = '', two_step = 0 WHERE id = ?", u.id));
   return steps;
 }
 async function deleteMe(env, req, user) {
@@ -3349,10 +3574,11 @@ async function route(env, req, url, ctx) {
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
       // for the pages to know which buttons to show: sign-in with LinkedIn, and the AI tools of Plus
       linkedin: env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET && env.LINKEDIN_REDIRECT_URL ? 'on' : 'off', ai: env.ANTHROPIC_API_KEY ? 'on' : 'off',
-      email_link: 'on', talent: env.TALENT_DB === 'on' ? 'on' : 'off', google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URL ? 'on' : 'off' };
+      email_link: 'on', talent: env.TALENT_DB === 'on' ? 'on' : 'off', pay_links: 'on', two_step: 'on', google: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URL ? 'on' : 'off' };
   }
   if (path === '/api/auth/signup' && m === 'POST') return signup(env, req, ctx);
   if (path === '/api/auth/login' && m === 'POST') return login(env, req, ctx);
+  if (path === '/api/auth/login/code' && m === 'POST') return loginCode(env, req, ctx);
   if (path === '/api/auth/logout' && m === 'POST') return logout(env, req);
   if (path === '/api/auth/confirm' && m === 'POST') return confirmEmail(env, req);
   if (path === '/api/auth/link/request' && m === 'POST') return linkRequest(env, req, ctx);
@@ -3375,15 +3601,21 @@ async function route(env, req, url, ctx) {
     const o = await db(env, "SELECT * FROM orders WHERE id = ? AND provider = 'test'", seg[2] || '').first();
     if (!o) throw bad('not_found', 'Order not found.', 404);
     await activate(env, o.id, {}, ctx);
-    return Response.redirect(env.SITE_URL + '/account/?order=' + o.id, 302);
+    return Response.redirect(/^[a-f0-9]{32}$/.test(o.share || '') ? invoiceUrl(env, o.share) : env.SITE_URL + '/account/?order=' + o.id, 302);
   }
   if (seg[0] === 'admin') return admin(env, req, seg, m, ctx);
   if (path === '/api/orders/quote' && m === 'POST') return quote(env, req, await currentUser(env, req, false));     // a promo code's price: no account needed
+  if (seg[0] === 'cv' && seg[1] && !seg[2] && m === 'GET') return sharedCv(env, req, seg[1]);                    // a resume shared "only by link": no account needed
+  if (seg[0] === 'invoice' && seg[1] && !seg[2] && m === 'GET') return invoiceGet(env, req, seg[1], ctx);          // a payment link for someone else: no account needed
+  if (seg[0] === 'invoice' && seg[1] && seg[2] === 'renew' && m === 'POST') return invoiceRenew(env, req, seg[1], ctx);
 
   const user = await currentUser(env, req), t = now();
   if (path === '/api/me' && m === 'GET') return { user: await userView(env, user) };
   if (path === '/api/me/export' && m === 'GET') return myExport(env, user);
   if (path === '/api/me' && m === 'DELETE') return deleteMe(env, req, user);
+  if (path === '/api/me' && m === 'PATCH') return meChange(env, req, user);
+  if (path === '/api/me/security' && m === 'PUT') return security(env, req, user, ctx);
+  if (path === '/api/auth/password' && m === 'POST') return changePassword(env, req, user, ctx);
   if (path === '/api/team' && m === 'GET') return url.searchParams.get('team') ? teamList(env, user, url.searchParams.get('team')) : teamList(env, user);
   if (path === '/api/team' && m === 'POST') return teamAdd(env, req, user, ctx);
   if (seg[0] === 'team' && seg[1] && m === 'DELETE') return teamDel(env, user, decodeURIComponent(seg[1]).toLowerCase(), url.searchParams.get('team') || '');
@@ -3397,6 +3629,7 @@ async function route(env, req, url, ctx) {
   if (seg[0] === 'alerts' && seg[1] && !seg[2] && m === 'PATCH') return myAlertChange(env, req, user, seg[1]);
   if (path === '/api/invites' && ['GET', 'PUT', 'DELETE'].includes(m)) return invitePrefs(env, req, user, m);
   if (seg[0] === 'orders' && seg[1] && seg[2] === 'receipt' && m === 'GET') return receipt(env, user, seg[1]);
+  if (seg[0] === 'orders' && seg[1] && seg[2] === 'share' && m === 'POST') return shareOrder(env, req, user, seg[1], ctx);
   if (path === '/api/auth/confirm/request' && m === 'POST') return confirmRequest(env, user, ctx);
   if (path === '/api/domain' && m === 'GET') {
     const claim = domainOf(user) ? null : await openClaim(env, user, t), link = domainOf(user) ? null : await db(env, 'SELECT email, expires_at FROM work_links WHERE user_id = ? AND expires_at > ?', user.id, t).first();
@@ -3446,6 +3679,7 @@ async function route(env, req, url, ctx) {
     if (seg[1] === 'requests' && seg[2] && (seg[3] === 'accept' || seg[3] === 'decline') && m === 'POST') return talentAnswer(env, user, seg[2], seg[3], ctx);
     if (path === '/api/talent/search' && m === 'GET') return talentSearch(env, user, url);
     if (path === '/api/talent/sent' && m === 'GET') return talentSent(env, user);
+    if (seg[1] && /^t_[a-f0-9]{16}$/.test(seg[1]) && !seg[2] && m === 'GET') return talentOpen(env, user, seg[1]);
     if (seg[1] && seg[2] === 'contact' && m === 'POST') return talentContact(env, req, user, seg[1], ctx);
     throw bad('not_found', 'Not found.', 404);
   }
@@ -3738,6 +3972,8 @@ export default {
     await step('alerts', () => db(env, "DELETE FROM alerts WHERE status = 'pending' AND created_at < ?", t - PENDING_DAYS * DAY).run());   // nobody confirmed them
     await step('job reminders', () => remindEnding(env, t));
     await step('sign-in links', () => db(env, 'DELETE FROM signin_links WHERE expires_at < ?', t).run());
+    await step('sign-in codes', () => db(env, 'DELETE FROM login_codes WHERE expires_at < ?', t).run());
+    await step('resume counts', () => db(env, 'DELETE FROM talent_shown WHERE day < ?', isoDay(t - 90 * DAY)).run());
     await step('reruns', () => rerunBoosts(env, t));          // the free re-run of a paid boost that brought fewer than RERUN_APPLIES clicks on Apply
     await step('rebuild', async () => { if ((await db(env, "SELECT v FROM meta WHERE k = 'rebuild_wanted'").first('v')) === '1') await requestRebuild(env, true); });
   },

@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS users (
   linkedin_email TEXT NOT NULL DEFAULT '',
   linkedin_at INTEGER NOT NULL DEFAULT 0,
   work_email TEXT NOT NULL DEFAULT '',              -- the work address confirmed by a link (domain_proof 'work_email'), for an account on a free mailbox
+  seeking TEXT NOT NULL DEFAULT '',                 -- a job seeker's status for employers: '' (not said) | active | open (open to offers) | not
+  seeking_at INTEGER NOT NULL DEFAULT 0,            -- when it was last set
+  two_step INTEGER NOT NULL DEFAULT 0,              -- 1: a sign-in with the password also asks for a code sent to the address (login_codes)
   created_at INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_linkedin ON users (linkedin_sub) WHERE linkedin_sub != '';   -- one LinkedIn identity, one account: a second attachment fails
@@ -110,6 +113,8 @@ CREATE TABLE IF NOT EXISTS orders (
   provider TEXT NOT NULL DEFAULT '',
   provider_uuid TEXT NOT NULL DEFAULT '',
   pay_url TEXT NOT NULL DEFAULT '',
+  share TEXT NOT NULL DEFAULT '',                   -- the key of a payment link for someone else (an accountant): <site>/account/#invoice=<key>; '' for none
+  share_at INTEGER NOT NULL DEFAULT 0,              -- when that link was made; it can make a new checkout for 30 days
   created_at INTEGER NOT NULL,
   paid_at INTEGER NOT NULL DEFAULT 0,
   checked_at INTEGER NOT NULL DEFAULT 0,
@@ -383,6 +388,8 @@ CREATE TABLE IF NOT EXISTS talent (
   show_employers INTEGER NOT NULL DEFAULT 0,
   blocked TEXT NOT NULL DEFAULT '',
   paused INTEGER NOT NULL DEFAULT 0,
+  visibility TEXT NOT NULL DEFAULT 'all',           -- all: found in search (except by blocked companies) | link: only through its own link
+  share TEXT NOT NULL DEFAULT '',                   -- the key of that link: <site>/account/#cv=<key>
   consent_text TEXT NOT NULL,
   consented_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -617,3 +624,43 @@ CREATE TABLE IF NOT EXISTS events (
 );
 CREATE INDEX IF NOT EXISTS events_day ON events (day, kind);
 CREATE INDEX IF NOT EXISTS events_visit ON events (visit, kind);
+
+-- ---------------------------------------------------------------- the accounts of 25 Nov 2026 (PLAN_RU.md part 2, items 1, 2, 4, 9, 10)
+-- column: users seeking TEXT NOT NULL DEFAULT ''
+-- column: users seeking_at INTEGER NOT NULL DEFAULT 0
+-- column: users two_step INTEGER NOT NULL DEFAULT 0
+-- column: talent visibility TEXT NOT NULL DEFAULT 'all'
+-- column: talent share TEXT NOT NULL DEFAULT ''
+-- column: orders share TEXT NOT NULL DEFAULT ''
+-- column: orders share_at INTEGER NOT NULL DEFAULT 0
+-- Who opened a resume of the resume database: one row per employer account and person, with the first and the last time and how many
+-- times (via: search | link). The person sees the company and its domain; the employer is told so before it opens one.
+CREATE TABLE IF NOT EXISTS talent_views (
+  candidate_id TEXT NOT NULL,
+  employer_id TEXT NOT NULL,
+  company TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  via TEXT NOT NULL DEFAULT 'search',
+  first_at INTEGER NOT NULL,
+  last_at INTEGER NOT NULL,
+  n INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (candidate_id, employer_id)
+);
+-- How many times a resume was among the results an employer was shown, a day (kept 90 days).
+CREATE TABLE IF NOT EXISTS talent_shown (
+  candidate_id TEXT NOT NULL,
+  day TEXT NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (candidate_id, day)
+);
+-- The second step of a sign-in with the password (users.two_step): a code of six digits sent to the address. Only hashes are kept: of
+-- the ticket the page holds, and of the code bound to that ticket. One open code per account; CODE_TRIES wrong tries end it.
+CREATE TABLE IF NOT EXISTS login_codes (
+  ticket_hash TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  tries INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS login_codes_user ON login_codes (user_id);

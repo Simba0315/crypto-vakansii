@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,432 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,498 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -358,6 +358,36 @@ sponsorship, Hiring Pass, resume search), no end date. Prices themselves do not 
 - The account page has a "Promo code" field with Apply under the boosts of Post a job and at the top of Promote; it shows the lower price
   and sends the code with the order.
 - Database: `orders.coupon` and `orders.full_usd`, added by `applySchema` on our server (`-- column:` lines); on D1 by hand.
+
+## The accounts of 25 Nov 2026 (PLAN_RU.md part 2, items 1, 2, 4, 9, 10; tested in section 42)
+
+The owner compares the account with hh.ru, Indeed and LinkedIn. What came of it on the server (the account page shows each part only
+when `/api/public/products`, `/api/me` or the profile carries its new field, so the page keeps working with an older server):
+
+- **Two-step sign-in.** `PUT /api/me/security { two_step: true }` (a confirmed address and a password needed; off needs `password`, the
+  current one, and the address is told). A sign-in with the password then answers `{ step: "code", ticket, sent_to }` and mails six
+  digits; `POST /api/auth/login/code { ticket, code }` opens the session. 10 minutes, 5 tries, 5 letters an hour per account; only hashes
+  are kept (`login_codes`). Sign-in links by mail are not sent to such an account. `products.two_step: "on"`.
+- **The password changed with the old one.** `POST /api/auth/password { current, password }`: a wrong current one is 403 `current` (not
+  401, so the page stays signed in); every other session ends; the address gets a letter. An account made with Google or LinkedIn has no
+  password (`me.has_password: false`) and sets its first one with the link of "Forgot password".
+- **The job seeker's status.** `PATCH /api/me { seeking: "active" | "open" | "not" | "" }` (`me.seeking`, `me.seeking_since`). Only
+  employers who search the resume database see it, on the card (`seeking`), and can keep to `?seeking=open` (looking or open to offers).
+- **Who finds the resume.** `PUT /api/talent/profile { visibility: "all" | "link", new_link, blocked }`: "link" takes it out of search;
+  its own link `<site>/account/#cv=<key>` (`profile.share_url`) opens it for anyone through `GET /api/cv/<key>` (no account; without the
+  name and contacts, as in search). A company in `blocked` sees it neither in search nor by the link. `new_link: true` ends the old link.
+- **Who opened it.** `GET /api/talent/<pid>` (an employer opening one resume from search) and the link, opened by a company account, are
+  written to `talent_views`; search results are counted a day in `talent_shown` (kept 90 days). The profile carries `views: { companies,
+  shown_7, shown_30 }` and `viewers: [{ company, domain, via, first, last, times, asked }]`. The employer is told before it opens one.
+- **A payment link for someone else.** `POST /api/orders/<id>/share { email? }` gives a pending order `<site>/account/#invoice=<key>`
+  and, with an address, mails it there (10 a day). `GET /api/invoice/<key>` (no account): the item, the price, who asked (shortened),
+  the button to the checkout, the receipt once paid. When the hour of the checkout ran out unpaid, `POST /api/invoice/<key>/renew` makes a
+  new order for the same thing at the same price and moves the link to it (30 days from the link; a gateway invoice past its hour is
+  asked about first). `POST /api/orders { ..., for_someone: true }` makes an order with its link at once, and its checkout comes back
+  to that page. `products.pay_links: "on"`; orders carry `can_share` and `share_key`.
+- Database: columns `users.seeking`, `users.seeking_at`, `users.two_step`, `talent.visibility`, `talent.share`, `orders.share`,
+  `orders.share_at` (`-- column:` lines, added by `applySchema`); tables `talent_views`, `talent_shown`, `login_codes`. Deleting an
+  account or its resume deletes its views and counts; the export lists them.
 
 ## The resume database (opt-in; off until `TALENT_DB=on`)
 
