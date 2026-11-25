@@ -6654,7 +6654,9 @@ def main():
     VISA_RX = [("H-1B (US)", re.compile(r"\bH-?1B\b")), ("OPT / STEM OPT (US)", re.compile(r"\b(?:STEM )?OPT\b")),
                ("TN (US, Canada and Mexico)", re.compile(r"\bTN (?:visa|status)\b")), ("E-3 (US, Australians)", re.compile(r"\bE-3\b")),
                ("Green card (US)", re.compile(r"green card", re.I)), ("Skilled Worker (UK)", re.compile(r"skilled worker (?:visa|route|sponsorship)", re.I)),
-               ("EU Blue Card", re.compile(r"blue card", re.I)), ("Relocation help", re.compile(r"relocation (?:support|assistance|package)", re.I))]
+               ("EU Blue Card", re.compile(r"blue card", re.I)), ("Relocation help", re.compile(r"relocation (?:support|assistance|package)", re.I)),
+               # 26 Nov 2026, Bing's AI answer to "jobs with visa sponsorship" names the seasonal H-2B (hotels, catering) and the farm H-2A visas
+               ("H-2B (US, seasonal non-farm)", re.compile(r"\bH-?2B\b")), ("H-2A (US, farm)", re.compile(r"\bH-?2A\b"))]
     def visa_kinds(pj):
         """Which visas the postings name, from the posting text (People also ask: "Which companies will sponsor me?", "What visa…?")."""
         txt_ = [(j, (j.get("desc") or "") + " " + (j.get("excerpt") or "")) for j in pj]
@@ -11035,6 +11037,17 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                             + f'</table></div><p class="note">Counted on {fdate(TODAY)} from the {n_ats:,} open jobs this site reads from {sum(len(v_) for v_ in ats_cos.values()):,} employers’ own hiring systems. '
                               f'It shows the systems these employers use, not the whole market: companies on systems we do not read yet (Taleo, SuccessFactors and others) are not counted. '
                               f'<a href="{P}/guides/how-we-check-jobs-every-hour/">How the jobs are read</a>.</p>', sid="systems", label="Today’s figures")
+            # 26 Nov 2026, Bing's AI answer to "what is an ats" quotes Jobscan: "over 98% of Fortune 500 companies use an ATS". Which systems
+            # the S&P 500 companies whose jobs this site reads use, from its own list of them (/companies/sp-500/)
+            sp_ats = Counter()
+            for c_, ls_l in CO_IN.items():
+                if any(l_ == "sp-500" for l_, _ in ls_l):
+                    k_c = Counter(str(j_.get("id", "")).split("-")[0] for j_ in co_open.get(c_, []))
+                    if k_c: sp_ats[k_c.most_common(1)[0][0]] += 1
+            if sum(sp_ats.values()) >= 10:
+                g_ats_q.append(("Which ATS do big companies use?", f"Of the {sum(sp_ats.values()):,} S&P 500 companies whose open jobs this site reads today, "
+                                + ", ".join(f"{v_:,} post them through {ats_name.get(k_, k_)}" for k_, v_ in sp_ats.most_common(4))
+                                + ". The other members of the index use systems this site does not read yet, or have no open jobs today."))
             top_a = ats_jobs.most_common(3)
             g_ats_q.append(("Which applicant tracking system is the most common?",
                         f"Among the employers whose jobs this site reads, {ats_name[top_a[0][0]]} carries the most open jobs today ({pc_(top_a[0][1], n_ats)}% of {n_ats:,}), then "
@@ -12475,6 +12488,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f"When a whole job board empties at once, the employer has usually moved to another hiring system, so those postings" + (f" ({SURV['moved']:,} of them)" if SURV["moved"] else "") + " are left out. "
              "The estimated shares multiply the daily chance of closing seen for postings of each age (up to 7 days, 8 to 30, 31 to 90, older); "
              f"while the record is short they reach only {reach} days ahead.")]
+        # 26 Nov 2026, Bing's AI answer to "how long do job postings stay open" (Indeed, searchsteward.com, reach.jobs) names the fastest and
+        # slowest closing roles; the table by field had them, the questions did not
+        if len(fld_tbl_rows) >= 6:
+            st_qa.append(("Which job postings close the fastest?", "By the median days a posting stayed up before it closed, measured here since " + since_s + ": "
+                          + ", ".join(f"{CAT[cs].lower()} ({md_} days)" for md_, cs, *_ in fld_tbl_rows[:3]) + " close quickest, and "
+                          + ", ".join(f"{CAT[cs].lower()} ({md_} days)" for md_, cs, *_ in fld_tbl_rows[-3:]) + " stay up longest. The table by field has the rest."))
         st_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@graph": [
             {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in st_qa]},
             {"@type": "Dataset", "name": "How long job postings stay open", "description": f"Daily closing rates of job postings by age, measured from hourly checks of employers’ careers pages since {since_s}.",
