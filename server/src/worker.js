@@ -99,6 +99,20 @@ export const TALENT_PACKS = {
   talent50: { name: 'Resume search: 50 contact requests', usd: 199, talentCredits: 50, target: 'none', group: 'employer' },
 };
 Object.assign(PRODUCTS, TALENT_PACKS);
+/* Promo codes (the owner, 25 Nov 2026: "добавь купон 30 процентов на наш сайт", for the deal listed on MicroLaunch: 30% off a Standard
+   boost, $69.30 instead of $99). A code takes its percent off one payment in crypto, and only the server works out what that comes to
+   (priceAfter): a price sent by the page is never read. What each field means:
+     percent           what comes off, 1 to 90
+     group, products   what it is good for: every product of that group (employer: the boosts, badges, spotlight, sponsorship, Hiring Pass
+                       and resume search), or only the product ids listed in products
+     until             the last day it works ('YYYY-MM-DD', UTC), or '' for no end
+   A code works once per account: an order with it that was paid (or refunded) uses it up, and so does one still waiting for its payment
+   (INVOICE_LIFETIME + ORDER_GRACE), so two checkouts cannot both get the discount; an invoice that ran out unpaid gives it back. Codes
+   are compared without case. Credits are not in the employer group, credits are never spent with a code (coupon_wallet), and a boost a
+   Hiring Pass pays for needs none (the code is then not used). */
+export const COUPONS = {
+  MICROLAUNCH30: { percent: 30, group: 'employer', until: '' },
+};
 const WALLET_DAYS = 365;                  // prepaid credits last this long after the top-up
 const RERUN_DAYS = 14, RERUN_APPLIES = 10;  // the free re-run: a paid boost with fewer clicks on Apply than this in its first days runs again
 const EXTEND_AFTER_DAYS = 14;             // a boost can be extended while it runs and this long after it ended
@@ -900,7 +914,60 @@ const PAID_WITH = { wallet: 'prepaid credits', credit: 'prepaid credits', pass: 
   cryptomus: 'cryptocurrency, through Cryptomus', test: 'a test payment (no money moved)' };
 const orderView = (o) => ({ id: o.id, product: o.product, name: (PRODUCTS[o.product] || {}).name || o.product, label: o.label, amount_usd: o.amount_usd, credits: o.credits || 0, status: o.status,
   paid_with: ['wallet', 'pass', 'rerun'].includes(o.provider) ? o.provider : o.provider === 'credit' ? 'wallet' : 'crypto',
-  pay_url: o.status === 'pending' ? o.pay_url : '', created: isoDay(o.created_at), paid: o.paid_at ? isoDay(o.paid_at) : '' });
+  pay_url: o.status === 'pending' ? o.pay_url : '', created: isoDay(o.created_at), paid: o.paid_at ? isoDay(o.paid_at) : '', coupon: couponView(o) });
+
+/* ---------------------------------------------------------------- promo codes (COUPONS above) */
+// the price after a percent off, in whole cents: 99 less 30% is 69.3; 9.99 less 30% is 6.99 (6.993 rounded to the cent)
+export const priceAfter = (usd, percent) => Math.round(Math.round(usd * 100) * (100 - percent) / 100) / 100;
+const cents = (n) => Math.round(n * 100) / 100;
+const usdText = (n) => (Number.isInteger(Number(n)) ? String(Number(n)) : Number(n).toFixed(2));      // 99 -> "99", 69.3 -> "69.30"
+const couponView = (o) => (o.coupon ? { code: o.coupon, full_usd: o.full_usd, off_usd: cents(o.full_usd - o.amount_usd) } : null);
+const couponCovers = (c, id) => Object.hasOwn(PRODUCTS, id) && (c.products ? c.products.includes(id) : PRODUCTS[id].group === c.group);
+// a promo code as it was typed: the code with its terms, or an error that says what is wrong with it
+function couponFor(raw, t = now()) {
+  const code = String(raw ?? '').trim().toUpperCase();
+  if (!code) throw bad('coupon_unknown', 'Enter a promo code.');
+  const c = /^[A-Z0-9_-]{1,40}$/.test(code) && Object.hasOwn(COUPONS, code) ? COUPONS[code] : null;
+  if (!c) throw bad('coupon_unknown', 'There is no such promo code. Check the spelling.');
+  if (c.until && isoDay(t) > c.until) throw bad('coupon_expired', 'The promo code ' + code + ' ended on ' + c.until + '.');
+  return { code, ...c };
+}
+const couponNotFor = (c, id) => bad('coupon_product', 'The promo code ' + c.code + ' is not for ' + ((PRODUCTS[id] || {}).name || 'this product') + ': it is for ' +
+  (c.products ? c.products.map((x) => PRODUCTS[x].name).join(', ') : c.group === 'employer' ? 'promotions for employers (boosts, badges, the spotlight, the Hiring Pass)' : 'other products') + '.');
+// once per account: refused when an order of this account with the code was paid, or still waits for its payment
+const COUPON_TAKEN = "SELECT 1 FROM orders WHERE user_id = ? AND coupon = ? AND (status IN ('paid', 'refunded') OR (status = 'pending' AND created_at > ?))";
+async function couponFree(env, user, code, t) {
+  const o = await db(env, COUPON_TAKEN.replace('SELECT 1', 'SELECT *') + ' ORDER BY created_at DESC LIMIT 1', user.id, code, t - INVOICE_LIFETIME - ORDER_GRACE).first();
+  if (!o) return;
+  if (o.status === 'pending') {
+    const mins = Math.max(1, Math.ceil((o.created_at + INVOICE_LIFETIME + ORDER_GRACE - t) / 60));
+    throw bad('coupon_pending', 'You have an order with the promo code ' + code + ' that waits for its payment: pay it from Billing, or try again in ' + mins + ' minutes, once its payment page has run out.', 409, { order: orderView(o) });
+  }
+  throw bad('coupon_used', 'This account has used the promo code ' + code + ' already. A code works once per account.', 409);
+}
+// what can be bought now (Plus and the single AI passes only while they are on sale; the passes need the AI key as well)
+const onSale = (env, p) => (p.group !== 'plus' || env.PLUS_LIVE === '1') && (p.group !== 'ai' || (env.PLUS_LIVE === '1' && !!env.ANTHROPIC_API_KEY));
+/* POST /api/orders/quote { coupon, product? }: what a promo code takes off, before anything is bought, so the page can show the price.
+   Open without an account (the price is the same for everyone); with one it also says whether this account may still use the code.
+   Without product it prices every product the code is good for. */
+async function quote(env, req, user) {
+  await limit(env, 'quote:' + clientIp(req), 60, 3600);
+  const b = await body(req), t = now(), c = couponFor(b.coupon, t);
+  let ids = Object.keys(PRODUCTS).filter((id) => couponCovers(c, id) && onSale(env, PRODUCTS[id]));
+  if (b.product != null && b.product !== '') {
+    const id = String(b.product);
+    if (!Object.hasOwn(PRODUCTS, id)) throw bad('product', 'Unknown product.');
+    if (!ids.includes(id)) throw couponNotFor(c, id);
+    ids = [id];
+  }
+  if (user) await couponFree(env, user, c.code, t);
+  const quotes = {};
+  for (const id of ids) {
+    const p = PRODUCTS[id], amount = priceAfter(p.usd, c.percent);
+    quotes[id] = { name: p.name, full_usd: p.usd, amount_usd: amount, off_usd: cents(p.usd - amount), text: '$' + usdText(amount) + ' instead of $' + usdText(p.usd) };
+  }
+  return { coupon: { code: c.code, percent: c.percent, until: c.until || '', once_per_account: true, pay: 'crypto' }, quotes };
+}
 
 /* ---------------------------------------------------------------- who acts for which company
    teamOf: this account and the accounts whose team it is in, on the same company domain (manage: only where it is an "owner" of the
@@ -976,6 +1043,9 @@ async function createOrder(env, req, user) {
   if ((product.group === 'employer' || product.group === 'credits') && !user.confirmed_at) throw bad('confirm_email', CONFIRM_FIRST, 403);      // nothing is sold to an address nobody has confirmed
   // an account that is only a recruiter (a LinkedIn identity, no company domain) speaks for no company, so it cannot put one in the spotlight or sponsor a page in its name
   if ((product.target === 'company' || product.target === 'page') && user.linkedin_sub && !domainOf(user)) throw bad('recruiter', 'A recruiter cannot buy a company spotlight, a Hiring Pass or a sponsorship in a company’s name: only the company itself can.', 403);
+  // a promo code: checked before anything else is looked at; the price comes from PRODUCTS and the code, never from the request
+  const coupon = b.coupon != null && String(b.coupon).trim() !== '' ? couponFor(b.coupon) : null;
+  if (coupon && !couponCovers(coupon, String(b.product))) throw couponNotFor(coupon, String(b.product));
   const target = await resolveTarget(env, user, product, b.target), t = now();
   if (product.own && target.key.startsWith('job:') && !(await claimedJobOf(env, user, target.key.slice(4)))) throw bad('claim_first', CLAIM_FIRST, 403);
   if (product.pass && !(await ownsCompany(env, user, target.key.slice(8))))
@@ -984,6 +1054,7 @@ async function createOrder(env, req, user) {
   const id = rid('o_');
   const viaWallet = b.pay === 'wallet' || b.use_credit === true, pass = await passFor(env, user, product, target.key, t);
   if (viaWallet && product.walletCredits) throw bad('credit', 'Credits buy everything except more credits.');
+  if (viaWallet && coupon && !pass) throw bad('coupon_wallet', 'A promo code takes money off a payment in crypto; credits are spent at the full price. Pay in crypto to use the code.');
   if (pass || viaWallet) {                                    // nothing to pay on a checkout page: it switches on now
     await db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, created_at, credits) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?)',
       id, user.id, b.product, target.key, target.label, 'pending', pass ? 'pass' : 'wallet', t, pass ? 0 : product.usd).run();
@@ -1002,19 +1073,26 @@ async function createOrder(env, req, user) {
     }
     return { order: orderView(await db(env, 'SELECT * FROM orders WHERE id = ?', id).first()) };
   }
+  if (coupon) await couponFree(env, user, coupon.code, t);
+  const amount = coupon ? priceAfter(product.usd, coupon.percent) : product.usd;
   let provider, uuid = '', payUrl;
   if (env.PAY_MODE === 'test') { provider = 'test'; payUrl = env.API_URL + '/api/dev/pay/' + id; }
   else {
     if (!env.CRYPTOMUS_MERCHANT || !env.CRYPTOMUS_API_KEY) throw bad('payments_off', 'Payments are not switched on yet.', 503);
     const invoice = await gateway(env, '/v1/payment', {
-      amount: String(product.usd), currency: 'USD', order_id: id, lifetime: INVOICE_LIFETIME, additional_data: b.product,
+      amount: usdText(amount), currency: 'USD', order_id: id, lifetime: INVOICE_LIFETIME, additional_data: b.product,
       url_callback: env.API_URL + '/api/webhooks/cryptomus', url_return: env.SITE_URL + '/account/', url_success: env.SITE_URL + '/account/?order=' + id,
     });
     provider = 'cryptomus'; uuid = String(invoice.uuid || ''); payUrl = String(invoice.url || '');
     if (!payUrl) throw bad('gateway_error', 'The payment service did not return a payment page.', 502);
   }
-  await db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, provider_uuid, pay_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    id, user.id, b.product, target.key, target.label, product.usd, 'pending', provider, uuid, payUrl, t).run();
+  // with a code, the order is written only if no other order of the account took the code meanwhile (one statement, so two checkouts
+  // started at the same moment cannot both get the discount; the invoice of the one refused simply runs out unpaid)
+  const ins = await db(env, 'INSERT INTO orders (id, user_id, product, target, label, amount_usd, status, provider, provider_uuid, pay_url, created_at, coupon, full_usd) ' +
+    "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE ? = '' OR NOT EXISTS (" + COUPON_TAKEN + ')',
+    id, user.id, b.product, target.key, target.label, amount, 'pending', provider, uuid, payUrl, t, coupon ? coupon.code : '', product.usd,
+    coupon ? coupon.code : '', user.id, coupon ? coupon.code : '', t - INVOICE_LIFETIME - ORDER_GRACE).run();
+  if (!ins.meta.changes) throw bad('coupon_used', 'This account has used the promo code ' + coupon.code + ' already. A code works once per account.', 409);
   return { order: orderView(await db(env, 'SELECT * FROM orders WHERE id = ?', id).first()) };
 }
 
@@ -1086,7 +1164,7 @@ async function paidLetter(env, orderId) {
     : lot ? p.walletCredits + ' credits are in your account, good until ' + isoDay(lot.expires_at) + '.'
       : p.plusDays ? 'Plus is on until ' + isoDay(o.plus_until) + '.' : p.aiPass ? 'It is in your account, to use within ' + AI_PASS_DAYS + ' days.'
         : p.talentCredits ? p.talentCredits + ' contact requests are in your account.' : 'It is on now.';
-  await sendMail(env, o.email, 'Payment received', 'We received your payment of $' + o.amount_usd + ' for:\n\n  ' + what + '\n\n' + state +
+  await sendMail(env, o.email, 'Payment received', 'We received your payment of $' + usdText(o.amount_usd) + (o.coupon ? ' (promo code ' + o.coupon + ', full price $' + usdText(o.full_usd) + ')' : '') + ' for:\n\n  ' + what + '\n\n' + state +
     (p.pass ? '\nThe Hiring Pass runs until ' + isoDay(o.paid_at + p.days * DAY) + ': Standard boosts of the company’s jobs are free meanwhile, and ' + p.pass + ' Premium boosts come with it.' : '') +
     '\n\nYour receipt is on the account page: ' + env.SITE_URL + '/account/\nOne payment for a fixed period. Nothing renews and nothing more is charged.\n', { kind: 'paid' });
 }
@@ -3109,7 +3187,7 @@ async function receipt(env, user, id) {
   const p = PRODUCTS[o.product] || {}, lot = p.walletCredits ? await db(env, 'SELECT * FROM wallet_lots WHERE order_id = ?', o.id).first() : null;
   return { receipt: { number: o.id, date: isoDay(o.paid_at || o.created_at), seller: (env.SITE_NAME || 'Jobs Every Hour') + ', ' + env.SITE_URL, buyer: { email: user.email, company: user.company || '' },
     item: (p.name || o.product) + (o.label && o.label !== p.name ? ': ' + o.label : ''), period_days: p.days || p.plusDays || (p.walletCredits ? WALLET_DAYS : p.aiPass ? AI_PASS_DAYS : 0),
-    amount_usd: o.amount_usd, credits: o.credits || 0, credits_bought: p.walletCredits || 0, credits_expire: lot ? isoDay(lot.expires_at) : '',
+    amount_usd: o.amount_usd, coupon: couponView(o), credits: o.credits || 0, credits_bought: p.walletCredits || 0, credits_expire: lot ? isoDay(lot.expires_at) : '',
     paid_with: o.provider === 'wallet' ? o.credits + ' prepaid credits' : PAID_WITH[o.provider] || o.provider, status: o.status, paid_at: o.paid_at ? new Date(o.paid_at * 1000).toISOString() : '',
     note: 'One payment for a fixed period. Nothing renews and nothing more is charged.' } };
 }
@@ -3253,9 +3331,8 @@ async function route(env, req, url, ctx) {
   if (path === '/api/admin/stats' && m === 'GET') return statsReport(env, req, url);
   if (path === '/api/public/products' && m === 'GET') {
     // billing: every product is one payment for a stated time; nothing renews by itself and no card or wallet is kept (a promise: /promise/)
-    // Plus and the single AI passes are listed only while they are on sale (PLUS_LIVE; the passes need the AI key as well)
-    const onSale = (p) => (p.group !== 'plus' || env.PLUS_LIVE === '1') && (p.group !== 'ai' || (env.PLUS_LIVE === '1' && !!env.ANTHROPIC_API_KEY));
-    return { products: Object.entries(PRODUCTS).filter(([, p]) => onSale(p)).map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || (p.walletCredits ? WALLET_DAYS : p.aiPass ? AI_PASS_DAYS : 0),
+    // Plus and the single AI passes are listed only while they are on sale (onSale: PLUS_LIVE; the passes need the AI key as well)
+    return { products: Object.entries(PRODUCTS).filter(([, p]) => onSale(env, p)).map(([id, p]) => ({ id, name: p.name, usd: p.usd, days: p.days || p.plusDays || (p.walletCredits ? WALLET_DAYS : p.aiPass ? AI_PASS_DAYS : 0),
       target: p.target, group: p.group, billing: 'one-time', renews: false, ...(p.walletCredits ? { credits: p.walletCredits } : {}), ...(p.pass ? { premium_boosts: p.pass } : {}),
       ...(p.guarantee ? { rerun: { applies: RERUN_APPLIES, days: RERUN_DAYS } } : {}), ...(p.own ? { listed_needs_claim: true } : {}) })),
       payments: env.PAY_MODE === 'test' ? 'test' : env.CRYPTOMUS_MERCHANT && env.CRYPTOMUS_API_KEY ? 'on' : 'off',
@@ -3290,6 +3367,7 @@ async function route(env, req, url, ctx) {
     return Response.redirect(env.SITE_URL + '/account/?order=' + o.id, 302);
   }
   if (seg[0] === 'admin') return admin(env, req, seg, m, ctx);
+  if (path === '/api/orders/quote' && m === 'POST') return quote(env, req, await currentUser(env, req, false));     // a promo code's price: no account needed
 
   const user = await currentUser(env, req), t = now();
   if (path === '/api/me' && m === 'GET') return { user: await userView(env, user) };

@@ -114,7 +114,9 @@ CREATE TABLE IF NOT EXISTS orders (
   paid_at INTEGER NOT NULL DEFAULT 0,
   checked_at INTEGER NOT NULL DEFAULT 0,
   activation TEXT NOT NULL DEFAULT '',
-  credits INTEGER NOT NULL DEFAULT 0                -- prepaid credits it was paid with (then amount_usd is 0: the money came with the top-up)
+  credits INTEGER NOT NULL DEFAULT 0,               -- prepaid credits it was paid with (then amount_usd is 0: the money came with the top-up)
+  coupon TEXT NOT NULL DEFAULT '',                  -- the promo code it was bought with (COUPONS in src/worker.js), '' for none
+  full_usd INTEGER NOT NULL DEFAULT 0               -- the list price of a checkout order; amount_usd is what was charged (less with a promo code, in cents)
 );
 CREATE INDEX IF NOT EXISTS orders_user ON orders (user_id, created_at);
 CREATE INDEX IF NOT EXISTS orders_open ON orders (status, created_at);
@@ -461,6 +463,8 @@ CREATE TABLE IF NOT EXISTS company_pages (
 -- column: team_members role TEXT NOT NULL DEFAULT 'member'
 -- column: company_pages logo TEXT NOT NULL DEFAULT ''
 -- column: company_pages locations TEXT NOT NULL DEFAULT ''
+-- column: orders coupon TEXT NOT NULL DEFAULT ''
+-- column: orders full_usd INTEGER NOT NULL DEFAULT 0
 
 -- Prepaid credits (1 credit = US$1): one lot per top-up, spent oldest-expiring first, each lot good for 12 months. A purchase paid with
 -- credits says how many in orders.credits. wallets.version changes with every top-up and every spend, so a spend planned on a balance

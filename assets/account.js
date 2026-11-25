@@ -16,6 +16,7 @@
   var D = JSON.parse(document.getElementById('acc-data').textContent);
   var hd = document.getElementById('acc-hd');                       // the page's own title and lead: read without JavaScript and while it loads
   var token = H.get('hrn_token', ''), me = null, pub = { products: [], payments: 'off' }, products = {}, S = {}, notice = '', noticeBad = false, saidAt = 0, fresh = false, usedLink = false;
+  var promo = null, paintPost = null;                               // a promo code that was applied: { code, percent, quotes: { product id: { amount_usd, full_usd } } }
   var ROLE = (function () { var q = ''; try { q = new URLSearchParams(location.search).get('as') || ''; } catch (e) {} return q === 'employer' || q === 'seeker' ? q : H.get('hrn_role', 'seeker'); })();
   if (ROLE !== 'employer') ROLE = 'seeker';
   H.set('hrn_role', ROLE);
@@ -120,7 +121,7 @@
     if (html) { var r = box.getBoundingClientRect(); if (r.top < 70 || r.top > window.innerHeight - 80) window.scrollTo(0, Math.max(0, window.scrollY + r.top - 90)); }
   }
   var fail = function (e) { say(esc(e.message), true); };
-  var money = function (n) { return '$' + Number(n).toLocaleString('en-US'); };
+  var money = function (n) { n = Number(n); return '$' + n.toLocaleString('en-US', n % 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : {}); };     // $99, $69.30
   var plural = function (n, one, many) { return n === 1 ? one : many; };
   function nice(d) {                                                 // 2026-12-17 -> Dec 17 (the year only when it is not this one)
     var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(d || '');
@@ -486,9 +487,9 @@
     var draft = { company: me.company || '', company_url: me.domain ? 'https://' + me.domain : '' };
     var boosts = products.featured ? '<fieldset class="fld acc-boost"><legend>How many people should see it</legend>' +
       '<label><input type="radio" name="boost" value="" checked><span><b>Free</b>30 days in the lists and in search</span></label>' +
-      '<label><input type="radio" name="boost" value="featured"><span><b>Standard boost · ' + money(products.featured.usd) + '</b>Highlighted and above the free jobs for ' + (products.featured.days || 30) + ' days</span></label>' +
-      (products.premium ? '<label><input type="radio" name="boost" value="premium"><span><b>Premium · ' + money(products.premium.usd) + '</b>Top of its lists, “Urgently hiring”, your logo and an invitation to matching job seekers</span></label>' : '') +
-      '</fieldset>' : '';
+      '<label><input type="radio" name="boost" value="featured"><span><b data-cost="featured" data-name="Standard boost">' + boostName('featured', 'Standard boost') + '</b>Highlighted and above the free jobs for ' + (products.featured.days || 30) + ' days</span></label>' +
+      (products.premium ? '<label><input type="radio" name="boost" value="premium"><span><b data-cost="premium" data-name="Premium">' + boostName('premium', 'Premium') + '</b>Top of its lists, “Urgently hiring”, your logo and an invitation to matching job seekers</span></label>' : '') +
+      '</fieldset>' + promoBox(false) : '';
     return head('Post a job', 'Post a job, <b>free for 30 days</b>', 'We check that the job is not on the site already and open your link to see that it is really there.') +
       (!me.confirmed ? '<p class="acc-quiet">You can fill the job in now: it is kept in this browser. Publishing opens once your email is confirmed.</p>' :
         !me.verified && !me.posts_as.length ? callout('<b>You can post now.</b> Jobs from a personal address (Gmail and the like) are read by a person before they go live, usually within a day. With your work email they go live without the wait.', '<a class="btn ghost sm" href="#hiring">Add my work email</a>', 'soft') : '') +
@@ -511,11 +512,44 @@
       '<p class="acc-btns"><button class="btn ghost" type="submit">Get the code to publish</button></p><div id="domain-out"></div></form></details>' +
       (pub.linkedin === 'on' && !me.linkedin ? '<p><button class="btn ghost li-start" type="button">Recruiter? Attach your LinkedIn profile</button></p>' : ''), 'hiring');
   }
+  /* ---------- promo codes: the server prices them (POST /api/orders/quote); the page only shows its answer and sends the code with the order ---------- */
+  var cut = function (id) { return promo && promo.quotes[id] || null; };
+  function priceHtml(id) {                                           // "$69.30 $99" with the old price struck through, while a code covers the product
+    var p = products[id], q = cut(id);
+    return (q ? money(q.amount_usd) + ' <s>' + money(p.usd) + '</s>' : money(p.usd)) + (!p.credits && p.days ? ' <small>for ' + p.days + ' days</small>' : '');
+  }
+  function boostName(id, name) { var q = cut(id); return esc(name) + ' · ' + (q ? money(q.amount_usd) + ' <s>' + money(q.full_usd) + '</s>' : money(products[id].usd)); }
+  function promoSaid() {
+    if (!promo) return '';
+    var f = promo.quotes.featured;
+    return '<b>' + esc(promo.code) + '</b>: ' + promo.percent + '% off' + (f ? '. Standard boost: <b>' + money(f.amount_usd) + '</b> instead of ' + money(f.full_usd) : '') + '. Once per account, when you pay in crypto.';
+  }
+  function promoBox(card) {
+    return '<div class="acc-inline acc-promo' + (card ? ' card' : ' flat') + '" data-promo><label class="fld"><span class="fld-l">Promo code</span><input type="text" data-promo-in autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="Optional" value="' + esc(promo ? promo.code : '') + '"></label>' +
+      '<button class="btn ghost" type="button" data-promo-go>Apply</button><p class="acc-promo-out" role="status">' + promoSaid() + '</p></div>';
+  }
+  function promoPaint(box, msg) {                                    // every price on the page, and the answer under the box that was used
+    Array.prototype.forEach.call(root.querySelectorAll('[data-price]'), function (el) { el.innerHTML = priceHtml(el.getAttribute('data-price')); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-cost]'), function (el) { el.innerHTML = boostName(el.getAttribute('data-cost'), el.getAttribute('data-name')); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-promo]'), function (b) {
+      var out = b.querySelector('.acc-promo-out'); if (promo) b.querySelector('[data-promo-in]').value = promo.code;
+      out.classList.toggle('bad', !!(msg && b === box)); if (msg && b === box) out.textContent = msg; else out.innerHTML = promoSaid();
+    });
+    if (paintPost) paintPost();
+  }
+  function promoApply(box) {
+    var input = box.querySelector('[data-promo-in]'), btn = box.querySelector('[data-promo-go]'), code = input.value.trim();
+    if (!code) { promo = null; promoPaint(box); return; }
+    btn.disabled = true;
+    api('POST', '/api/orders/quote', { coupon: code }).then(function (r) { promo = { code: r.coupon.code, percent: r.coupon.percent, quotes: r.quotes }; promoPaint(box); },
+      function (e) { promo = null; promoPaint(box, e.message); }).then(function () { btn.disabled = false; });
+  }
+  function withPromo(data) { if (data.pay !== 'wallet' && cut(data.product)) data.coupon = promo.code; return data; }
   function productCard(id, kind, fields) {
     var p = products[id]; if (!p) return '';
     var pl = (D.plans || {})[p.name], best = id === 'premium' || id === 'pass';
     return '<form class="acc-card' + (best ? ' best' : '') + '" data-product="' + id + '" data-kind="' + kind + '" novalidate>' + (id === 'premium' ? '<span class="pc-flag">Most chosen</span>' : id === 'pass' ? '<span class="pc-flag">Best value</span>' : '') +
-      '<p class="pname">' + esc(p.name) + '</p><p class="price">' + money(p.usd) + (!p.credits && p.days ? ' <small>for ' + p.days + ' days</small>' : '') + '</p>' +
+      '<p class="pname">' + esc(p.name) + '</p><p class="price" data-price="' + id + '">' + priceHtml(id) + '</p>' +
       (pl ? '<ul class="pc-inc">' + pl[0].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' + (pl[1] ? '<p class="pc-vs"><b>Elsewhere:</b> ' + esc(pl[1]) + '</p>' : '')
         : '<p class="what">' + esc(D.what[p.name] || '') + '</p>') + demo(id) + (fields || '') + err +
       '<div class="pc-act"><button class="btn ' + (best ? 'primary' : 'ghost') + '" type="submit"' + (pub.payments === 'off' ? ' disabled' : '') + '>' + (p.credits ? 'Buy credits' : 'Continue to payment') + '</button>' +
@@ -580,7 +614,7 @@
       D.categories.map(function (c) { return '<option value="category:' + esc(c[0]) + '">' + esc(c[1]) + ' jobs</option>'; }).join('') + '</optgroup><optgroup label="Skills">' +
       D.skills.map(function (s) { return '<option value="skill:' + esc(s[0]) + '">' + esc(s[1]) + ' jobs</option>'; }).join('') + '</optgroup></select></label>';
     return head('Promote', 'Get <b>more applicants</b>', 'Every price is one payment for a fixed time. Nothing renews, and no card is kept on file.') +
-      (pub.payments === 'off' ? callout('Paid placements are not on sale yet. Everything else in your account is free.', '', 'soft') : '') + testNote() +
+      (pub.payments === 'off' ? callout('Paid placements are not on sale yet. Everything else in your account is free.', '', 'soft') : '') + testNote() + promoBox(true) +
       part('For one job', jobCards + coverForm) +
       part('For your company', '<div class="card acc-pick">' + field('Company, as it is named on the site', 'company', 'type="text" id="pr-company" list="acc-companies" value="' + esc(me.company || '') + '" maxlength="80"') + '</div>' +
         '<div class="acc-grid">' + productCard('spotlight', 'company') + productCard('pass', 'company') + productCard('sponsor', 'company', pages) + '</div>') +
@@ -655,7 +689,7 @@
       }).join('') + '</div>', 'running') : '') +
       (S.orders.length ? part('Payments', '<div class="acc-list">' + S.orders.map(function (o) {
         return '<div class="acc-row"><div class="main">' + state(o.status) + ' <strong>' + esc(o.name) + '</strong><span class="js">' + (o.label && o.label !== o.name ? esc(o.label) + ' · ' : '') +
-          (o.amount_usd ? money(o.amount_usd) : o.credits ? o.credits + ' credits' : 'Included') + ' · ' + nice(o.created) + '</span></div><div class="ctl">' +
+          (o.amount_usd ? money(o.amount_usd) + (o.coupon ? ' with ' + esc(o.coupon.code) + ' (full price ' + money(o.coupon.full_usd) + ')' : '') : o.credits ? o.credits + ' credits' : 'Included') + ' · ' + nice(o.created) + '</span></div><div class="ctl">' +
           (o.pay_url ? '<a class="btn sm" href="' + esc(o.pay_url) + '">Pay now</a><button class="btn ghost sm" type="button" data-pay-copy="' + esc(o.pay_url) + '">Copy the link for whoever pays</button>' : '') +
           (o.status === 'paid' ? '<button class="btn ghost sm" type="button" data-receipt="' + esc(o.id) + '">Receipt</button>' : '') + '</div></div>';
       }).join('') + '</div><div id="receipt-out"></div>', 'payments') : '');
@@ -800,6 +834,7 @@
 
     /* employer: posting. What is typed is kept in this browser, so confirming the email (a new tab) or a reload loses nothing. */
     var jf = document.getElementById('acc-job');
+    paintPost = null;
     if (jf) {
       var draft = H.get('hrn_job_draft', null), pubBtn = document.getElementById('acc-publish');
       if (draft) Object.keys(draft).forEach(function (k) {
@@ -807,9 +842,10 @@
         if (el.type === 'checkbox') el.checked = !!draft[k]; else if (el.tagName) el.value = draft[k]; else Array.prototype.forEach.call(el, function (r) { r.checked = r.value === draft[k]; });
       });
       var paint = function () {
-        var b = (values(jf).boost || ''), p = products[b];
-        if (me.confirmed) pubBtn.textContent = p ? 'Publish and pay ' + money(p.usd) : 'Publish the job';
+        var b = (values(jf).boost || ''), p = products[b], q = cut(b);
+        if (me.confirmed) pubBtn.textContent = p ? 'Publish and pay ' + money(q ? q.amount_usd : p.usd) : 'Publish the job';
       };
+      paintPost = paint;
       var keep = function () { H.set('hrn_job_draft', values(jf)); paint(); };
       jf.addEventListener('input', keep); jf.addEventListener('change', keep); paint();
       var pasteGo = document.getElementById('job-paste-go'), pasteOut = document.getElementById('job-paste-out');
@@ -838,7 +874,7 @@
             (first ? ' Your company page is ready too: <a href="#company">add your logo and a few lines about ' + esc(j.company || 'the company') + '</a>.' : ''));
           var done = function () { location.hash = '#jobs'; return load(); };
           if (!boost) return done();
-          return api('POST', '/api/orders', { product: boost, target: { job_id: j.id } }).then(function (o) {
+          return api('POST', '/api/orders', withPromo({ product: boost, target: { job_id: j.id } })).then(function (o) {
             if (o.order.status === 'pending' && o.order.pay_url) { location.href = o.order.pay_url; return new Promise(function () {}); }
             return done();
           }, function (e2) { notice += ' The promotion was not ordered: ' + esc(e2.message); return done(); });
@@ -901,6 +937,10 @@
         return load();
       }, function (e) { b.disabled = false; fail(e); });
     });
+    on('[data-promo-go]', function (b) { promoApply(b.closest('[data-promo]')); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-promo-in]'), function (inp) {
+      inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); promoApply(inp.closest('[data-promo]')); } });
+    });
     on('[data-promote]', function (b) { S.pick = 'id:' + b.getAttribute('data-promote'); var sl = document.getElementById('pr-job'); if (sl) sl.value = S.pick; location.hash = '#promote'; });
     var prJob = document.getElementById('pr-job');
     if (prJob) {
@@ -941,7 +981,7 @@
         }
         var data = { product: form.getAttribute('data-product'), target: t };
         if (btn && btn.getAttribute('data-credit')) data.pay = 'wallet';
-        return api('POST', '/api/orders', data).then(function (r) {
+        return api('POST', '/api/orders', withPromo(data)).then(function (r) {
           if (r.order.status === 'pending' && r.order.pay_url) { location.href = r.order.pay_url; return new Promise(function () {}); }   // on to the checkout
           flash('<b>' + esc(r.order.name) + '</b> is on' + (r.order.label && r.order.label !== r.order.name ? ' for ' + esc(r.order.label) : '') + '.'); location.hash = '#billing';
           return load();
@@ -1019,7 +1059,7 @@
       api('GET', '/api/orders/' + b.getAttribute('data-receipt') + '/receipt').then(function (r) {
         var x = r.receipt, out = document.getElementById('receipt-out');
         out.innerHTML = '<div class="card acc-receipt"><h3 class="acc-h3">Receipt ' + esc(x.number) + '</h3><p>' + nice(x.date) + ' · ' + esc(x.seller) + '</p><p>To: ' + esc(x.buyer.email) + (x.buyer.company ? ', ' + esc(x.buyer.company) : '') + '</p>' +
-          '<p><strong>' + esc(x.item) + '</strong>' + (x.period_days ? ', ' + x.period_days + ' days' : '') + ': ' + money(x.amount_usd) + ', paid with ' + esc(x.paid_with) + '.</p><p class="note">' + esc(x.note) + '</p>' +
+          '<p><strong>' + esc(x.item) + '</strong>' + (x.period_days ? ', ' + x.period_days + ' days' : '') + ': ' + money(x.amount_usd) + (x.coupon ? ' (promo code ' + esc(x.coupon.code) + ', full price ' + money(x.coupon.full_usd) + ')' : '') + ', paid with ' + esc(x.paid_with) + '.</p><p class="note">' + esc(x.note) + '</p>' +
           '<p class="acc-btns"><button class="btn ghost sm" type="button" onclick="document.getElementById(\'acc\').classList.add(\'pr\');window.print()">Print</button></p></div>';
         out.scrollIntoView({ block: 'nearest' });
       }, fail);

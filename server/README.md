@@ -26,7 +26,7 @@ secret is set.
 ## Try it on this machine (no Cloudflare, no money)
 
 ```
-node --no-warnings server/test/run.mjs          # the test suite (1,346 tests), must end with "0 failed"; nothing in it leaves this machine
+node --no-warnings server/test/run.mjs          # the test suite (1,432 tests), must end with "0 failed"; nothing in it leaves this machine
 node --no-warnings server/dev.mjs               # API in test mode on http://localhost:8787
 HRN_API_URL=http://localhost:8787 python3 build.py   # builds the site with the account page pointing at it
 ```
@@ -337,6 +337,27 @@ deleting the account deletes the resumes, invitations, images and covers too (un
 `company_pages.locations`. On our own server there is nothing to do: `applySchema` (`src/d1.mjs`) adds a column that `schema.sql` lists
 as `-- column: TABLE NAME DEFINITION` when an older database lacks it. On Cloudflare D1, run those as `ALTER TABLE ... ADD COLUMN` by
 hand, then `schema.sql`.
+
+## Promo codes (25 Nov 2026; tested in section 41)
+
+The owner: "добавь купон 30 процентов на наш сайт", for the deal listed on MicroLaunch (30% off a Standard boost: $69.30 instead of $99).
+`COUPONS` in `src/worker.js` is the list: a code, its `percent`, what it is for (`group`, or `products` with product ids) and an optional
+last day (`until`, `YYYY-MM-DD`). Now: `MICROLAUNCH30`, 30% off every employer product (boosts, badge, bump, extension, spotlight,
+sponsorship, Hiring Pass, resume search), no end date. Prices themselves do not change.
+
+- `POST /api/orders/quote { coupon, product? }` gives the price before paying: `{ coupon: { code, percent, until, once_per_account, pay },
+  quotes: { featured: { name, full_usd: 99, amount_usd: 69.3, off_usd: 29.7, text: "$69.30 instead of $99" }, ... } }`. No account needed;
+  with a session it also refuses a code this account cannot use any more. 60 an hour per address.
+- `POST /api/orders { product, target, coupon }`: the server alone works out `amount_usd` (whole cents, `priceAfter`) and sends that to the
+  gateway; nothing the page sends about a price is read. The order keeps `coupon` and `full_usd`; the order, the list of orders, the receipt
+  and the "Payment received" letter show the code and the full price (`coupon: { code, full_usd, off_usd }`, `null` without one).
+- Refused, with a message for the person: `coupon_unknown` (400), `coupon_expired` (400), `coupon_product` (400: not for that product,
+  credits and Plus included), `coupon_wallet` (400: credits are spent at the full price), `coupon_used` (409: once per account) and
+  `coupon_pending` (409: an order with the code still waits for its payment; it carries that `order`). An invoice that ran out unpaid
+  gives the code back. A boost a Hiring Pass pays for is free anyway and does not use the code.
+- The account page has a "Promo code" field with Apply under the boosts of Post a job and at the top of Promote; it shows the lower price
+  and sends the code with the order.
+- Database: `orders.coupon` and `orders.full_usd`, added by `applySchema` on our server (`-- column:` lines); on D1 by hand.
 
 ## The resume database (opt-in; off until `TALENT_DB=on`)
 

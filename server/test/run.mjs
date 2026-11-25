@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import worker, { md5, phpJson, gatewaySign, webhookSignatureOk, PRODUCTS, companyKey, sendMail, reconcileOrders, siteDomain, freeMail, throwawayMail, hiringSystem, lookalike, brandIn, domainAge, screenPosting,
-  recheckLinks, AI_MONTHLY, AI_BOUNDS, aiWorstMonthUsd, sourceOf, deviceOf, pageName } from '../src/worker.js';
+  recheckLinks, AI_MONTHLY, AI_BOUNDS, aiWorstMonthUsd, sourceOf, deviceOf, pageName, COUPONS, priceAfter } from '../src/worker.js';
 import { D1 } from './d1.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -3299,6 +3299,90 @@ await smtpServer.close();
   await env.DB.exec("UPDATE visits SET day = '2020-01-01'; UPDATE events SET day = '2020-01-01'");
   await worker.scheduled({}, env);
   eq([await one(env, 'SELECT COUNT(*) FROM visits'), await one(env, 'SELECT COUNT(*) FROM events')], [0, 0], 'Stats: rows older than the time kept are deleted by the cron');
+}
+
+/* ---- 41. Promo codes (the owner, 25 Nov 2026: "add the 30% coupon to our site", for the MicroLaunch deal: a Standard boost for $69.30
+   instead of $99). The server alone works out the price; a code works once per account; wrong product, unknown and ended codes are refused. ---- */
+{
+  // the arithmetic: whole cents, rounded once
+  eq([priceAfter(99, 30), priceAfter(249, 30), priceAfter(499, 30), priceAfter(5, 30), priceAfter(9, 30)], [69.3, 174.3, 349.3, 3.5, 6.3], 'Coupon: 30% off each employer price, to the cent');
+  eq([priceAfter(9.99, 30), priceAfter(0.05, 50), priceAfter(19.99, 15), priceAfter(1, 33)], [6.99, 0.03, 16.99, 0.67], 'Coupon: an amount between two cents is rounded to the nearer cent');
+  ok(COUPONS.MICROLAUNCH30 && COUPONS.MICROLAUNCH30.percent === 30 && COUPONS.MICROLAUNCH30.group === 'employer', 'Coupon: MICROLAUNCH30 is 30% off the employer products');
+  const outbox = [], env = newEnv({ MAIL: { send: async (m) => { outbox.push(m); } }, MAIL_FROM: 'no-reply@site.test' }), token = await account(env), JOB = { job: SITE + '/job/staff-engineer-stripe/' };
+  const quoteOf = (data, opts = {}) => call(env, 'POST', '/api/orders/quote', { data, ...opts });
+  const buy = (data, tok = token) => call(env, 'POST', '/api/orders', { token: tok, data: { product: 'featured', target: JOB, ...data } });
+
+  // the price before paying, with no account
+  let r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'featured' });
+  eq([r.status, r.body.coupon.code, r.body.coupon.percent, r.body.quotes.featured], [200, 'MICROLAUNCH30', 30, { name: 'Standard boost', full_usd: 99, amount_usd: 69.3, off_usd: 29.7, text: '$69.30 instead of $99' }],
+    'Coupon: the quote for the Standard boost is $69.30 instead of $99');
+  r = await quoteOf({ coupon: '  microLaunch30 ' });
+  eq([r.status, r.body.coupon.code, r.body.quotes.premium.amount_usd, r.body.quotes.pass.amount_usd, r.body.quotes.bump.amount_usd], [200, 'MICROLAUNCH30', 174.3, 349.3, 3.5], 'Coupon: case and spaces do not matter; without a product every product it is good for is priced');
+  ok(Object.keys(r.body.quotes).every((id) => PRODUCTS[id].group === 'employer') && !r.body.quotes.credits100 && !r.body.quotes.plus30, 'Coupon: credits and Plus are not discounted');
+  r = await quoteOf({ coupon: 'MICROLAUNCH31', product: 'featured' }); eq([r.status, r.body.error], [400, 'coupon_unknown'], 'Coupon: an unknown code is refused');
+  ok(/no such promo code/.test(r.body.message), 'Coupon: the refusal says the code does not exist', r.body.message);
+  r = await quoteOf({ coupon: '', product: 'featured' }); eq([r.status, r.body.error], [400, 'coupon_unknown'], 'Coupon: an empty code is refused');
+  r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'credits100' }); eq([r.status, r.body.error], [400, 'coupon_product'], 'Coupon: a product it is not for is refused');
+  ok(/not for 100 credits/.test(r.body.message), 'Coupon: the refusal names the product', r.body.message);
+  r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'nope' }); eq([r.status, r.body.error], [400, 'product'], 'Coupon: an unknown product is refused');
+
+  // codes that ended, and codes for named products only
+  COUPONS.TEST_ENDED = { percent: 10, group: 'employer', until: '2020-01-01' }; COUPONS.TEST_BUMP = { percent: 50, products: ['bump'], until: '2999-12-31' };
+  r = await quoteOf({ coupon: 'test_ended', product: 'featured' }); eq([r.status, r.body.error], [400, 'coupon_expired'], 'Coupon: a code past its last day is refused');
+  r = await buy({ coupon: 'TEST_ENDED' }); eq([r.status, r.body.error], [400, 'coupon_expired'], 'Coupon: ... and so is an order with it');
+  r = await quoteOf({ coupon: 'TEST_BUMP' }); eq([r.status, Object.keys(r.body.quotes), r.body.quotes.bump.amount_usd], [200, ['bump'], 2.5], 'Coupon: a code for named products prices only those');
+  r = await buy({ coupon: 'TEST_BUMP' }); eq([r.status, r.body.error], [400, 'coupon_product'], 'Coupon: an order for another product with it is refused');
+  delete COUPONS.TEST_ENDED; delete COUPONS.TEST_BUMP;
+
+  // an order with the code: the server's price, whatever the page sends
+  const ordersBefore = await one(env, 'SELECT COUNT(*) FROM orders');
+  r = await buy({ product: 'credits100', target: undefined, coupon: 'MICROLAUNCH30' }); eq([r.status, r.body.error], [400, 'coupon_product'], 'Coupon: credits cannot be bought with it');
+  r = await buy({ coupon: 'NOPE-CODE' }); eq([r.status, r.body.error], [400, 'coupon_unknown'], 'Coupon: an order with an unknown code is refused');
+  r = await buy({ coupon: 'MICROLAUNCH30', pay: 'wallet' }); eq([r.status, r.body.error], [400, 'coupon_wallet'], 'Coupon: it is not taken with credits');
+  eq(await one(env, 'SELECT COUNT(*) FROM orders'), ordersBefore, 'Coupon: a refused code leaves no order behind');
+  r = await buy({ coupon: 'microlaunch30', amount_usd: 1, usd: 1, price: 1, full_usd: 1 });
+  const id = r.body.order && r.body.order.id, inv = world.invoices[id];
+  eq([r.status, r.body.order.status, r.body.order.amount_usd, r.body.order.coupon], [200, 'pending', 69.3, { code: 'MICROLAUNCH30', full_usd: 99, off_usd: 29.7 }], 'Coupon: the order costs $69.30, a price sent with it is ignored');
+  eq([inv.amount, inv.currency], ['69.30', 'USD'], 'Coupon: the invoice asks the gateway for 69.30 USD');
+  eq(await env.DB.prepare('SELECT amount_usd, coupon, full_usd FROM orders WHERE id = ?').bind(id).first(), { amount_usd: 69.3, coupon: 'MICROLAUNCH30', full_usd: 99 }, 'Coupon: the order keeps the code and the full price');
+
+  // while that invoice can still be paid, the code is taken; another account may use it
+  r = await buy({ coupon: 'MICROLAUNCH30' }); eq([r.status, r.body.error, r.body.order && r.body.order.id], [409, 'coupon_pending', id], 'Coupon: a second order while the first waits for its payment is refused, and points to it');
+  r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'featured' }, { token }); eq([r.status, r.body.error], [409, 'coupon_pending'], 'Coupon: the signed-in quote says so too');
+  r = await buy({}); eq([r.status, r.body.order.amount_usd, r.body.order.coupon], [200, 99, null], 'Coupon: an order without the code is the full price');
+  eq(world.invoices[r.body.order.id].amount, '99', 'Coupon: ... and so is its invoice');
+
+  // paid: the code is used up for this account
+  await call(env, 'POST', '/api/webhooks/cryptomus', { raw: signedWebhook({ type: 'payment', uuid: inv.uuid, order_id: id, amount: '69.30', status: 'paid', is_final: true }) });
+  r = await call(env, 'GET', '/api/orders/' + id, { token }); eq([r.body.order.status, r.body.order.amount_usd, r.body.order.coupon.code], ['paid', 69.3, 'MICROLAUNCH30'], 'Coupon: the discounted order is paid and switched on');
+  ok(outbox.some((m) => m.kind === 'paid' && m.text.includes('$69.30 (promo code MICROLAUNCH30, full price $99)')), 'Coupon: the letter names the price paid and the code', JSON.stringify(outbox.map((m) => m.text.slice(0, 120))));
+  r = await call(env, 'GET', '/api/orders/' + id + '/receipt', { token }); eq([r.body.receipt.amount_usd, r.body.receipt.coupon], [69.3, { code: 'MICROLAUNCH30', full_usd: 99, off_usd: 29.7 }], 'Coupon: the receipt shows the code and the full price');
+  r = await call(env, 'GET', '/api/orders', { token }); ok(r.body.orders.some((o) => o.id === id && o.coupon && o.coupon.code === 'MICROLAUNCH30'), 'Coupon: the list of orders shows the code');
+  r = await buy({ coupon: 'MICROLAUNCH30' }); eq([r.status, r.body.error], [409, 'coupon_used'], 'Coupon: reusing a code on the same account is refused');
+  ok(/once per account/.test(r.body.message), 'Coupon: the refusal says why', r.body.message);
+  r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'featured' }, { token }); eq([r.status, r.body.error], [409, 'coupon_used'], 'Coupon: the signed-in quote says it is used');
+  r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'featured' }); eq(r.status, 200, 'Coupon: the open quote still gives the price');
+  eq(await one(env, "SELECT COUNT(*) FROM orders WHERE coupon = 'MICROLAUNCH30' AND user_id = (SELECT id FROM users WHERE email = 'boss@acme.dev')"), 1, 'Coupon: one order of the account carries the code');
+
+  // an invoice that ran out unpaid gives the code back
+  const other = await account(env, 'cto@acme.dev');
+  r = await buy({ coupon: 'MICROLAUNCH30' }, other); eq([r.status, r.body.order.amount_usd], [200, 69.3], 'Coupon: another account can use the same code');
+  await env.DB.prepare("UPDATE orders SET status = 'expired', created_at = created_at - 7200 WHERE id = ?").bind(r.body.order.id).run();
+  r = await buy({ coupon: 'MICROLAUNCH30' }, other); eq([r.status, r.body.order.amount_usd], [200, 69.3], 'Coupon: after its invoice ran out unpaid, the code can be used again');
+  await env.DB.prepare('UPDATE orders SET created_at = created_at - 7200 WHERE id = ?').bind(r.body.order.id).run();
+  r = await buy({ coupon: 'MICROLAUNCH30' }, other); eq(r.status, 200, 'Coupon: ... and so after a pending one is past its payment time');
+
+  // two checkouts at the same moment: one gets the discount
+  const third = await account(env, 'cfo@acme.dev');
+  const both = await Promise.all([buy({ coupon: 'MICROLAUNCH30' }, third), buy({ coupon: 'MICROLAUNCH30' }, third)]);
+  eq(both.map((x) => x.status).sort(), [200, 409], 'Coupon: of two orders sent at once, only one gets the code');
+  eq(await one(env, "SELECT COUNT(*) FROM orders WHERE coupon = 'MICROLAUNCH30' AND user_id = (SELECT id FROM users WHERE email = 'cfo@acme.dev')"), 1, 'Coupon: ... and only one order is written with it');
+
+  // a boost a Hiring Pass pays for needs no code, and the code is not used up by it
+  const fourth = await account(env, 'vp@acme.dev'), uid = await one(env, "SELECT id FROM users WHERE email = 'vp@acme.dev'"), t = Math.floor(Date.now() / 1000);
+  await env.DB.prepare("INSERT INTO passes (id, user_id, order_id, company_key, company, starts_at, ends_at, premium_left) VALUES ('h_test', ?, 'o_pass', 'stripe', 'Stripe', ?, ?, 3)").bind(uid, t - 60, t + 86400).run();
+  r = await buy({ coupon: 'MICROLAUNCH30' }, fourth); eq([r.status, r.body.order.paid_with, r.body.order.amount_usd, r.body.order.coupon], [200, 'pass', 0, null], 'Coupon: a boost the Hiring Pass pays for is free and keeps no code');
+  r = await quoteOf({ coupon: 'MICROLAUNCH30', product: 'featured' }, { token: fourth }); eq(r.status, 200, 'Coupon: ... so the account can still use it');
 }
 
 ok(Object.values(PRODUCTS).every((p) => p.usd > 0 && p.name), 'every product has a name and a price');

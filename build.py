@@ -11058,6 +11058,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 ("What are credits?", "Prepaid dollars: 1 credit = $1, with a 10% bonus on a $500 top-up and 20% on $1,000. They last 12 months from the top-up and pay for every product here, "
                  "for employers and job seekers; a purchase paid with credits starts at once."),
                 ("What if a boost brings no one?", "If a Standard or Premium boost that was paid for gets fewer than 10 clicks on Apply in its first 14 days, it runs for 30 more days at no cost, by itself."),
+                *([("I have a promo code. Where do I enter it?", "In your employer account, under Post a job or Promote: type the code and press Apply, and the lower price shows before you pay. "
+                    "A code works once per account, on a payment in crypto (not with credits).")] if app_url else []),
                 ("Can I buy today?", (f"Posting a standard listing is open in the employer account, and paid products are bought from the same account. {PAY_WAIT} " if app_url else
                                       "Not yet. Payments are being connected; until then everything in the Free and Standard columns works as it does today. ")
                  + "Plus and the passes open when the AI service and payments are on.")]

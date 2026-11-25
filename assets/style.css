@@ -2562,6 +2562,15 @@ main.hub .cta2 a.btn{text-decoration:none}
 .acc-inline-t b{color:var(--text)}
 #acc .acc-inline.flat{margin:16px 0 4px;padding:0;border:0;background:none}
 #acc .acc-inline .acc-file{margin-top:31px}
+/* a promo code: a short field and Apply, its answer under them; a price it lowers shows the old one struck through */
+#acc .acc-promo .fld{flex:0 1 260px}
+#acc .acc-promo.flat{margin:4px 0 14px}
+#acc .acc-promo-out{flex:1 0 100%;margin:0;font-size:14px;line-height:1.5;color:var(--muted)}
+#acc .acc-promo-out b{color:var(--text)}
+#acc .acc-promo-out:empty{display:none}
+#acc .acc-promo-out.bad{color:var(--acc-bad);font-weight:600}
+#acc .acc-card .price s{font-size:.55em;font-weight:500;color:var(--muted)}
+#acc .acc-boost s{font-weight:500;color:var(--muted)}
 #acc .acc-boost{margin:8px 0 14px}
 #acc .acc-boost legend{padding:0;font-size:13.5px;color:var(--text)}
 #acc .acc-boost label{border-radius:14px}
