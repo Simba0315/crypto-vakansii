@@ -4521,3 +4521,32 @@ main.lp .sec-head.lst{margin-top:64px;margin-bottom:22px}
   .jfrow dt{margin-bottom:2px;font-size:11.5px}
   .jfrow dd{font-size:14.5px;white-space:nowrap}
 }
+
+/* ---- the search page: the trail, the label, the title and the box are one panel; the filter bar closes it ---- */
+main.srch .shero{margin:18px 0 0;padding:26px 40px 28px;border-radius:28px 28px 0 0}
+main.srch .shero .crumbs{margin:0 0 20px}
+main.srch .shero .sec-label{margin:0 0 14px}
+main.srch .shero .h1s{margin:0;font-size:clamp(32px,3.6vw,48px);line-height:1.04;letter-spacing:-.045em}
+main.srch .shero .searchbar.wide{max-width:880px;margin:24px 0 0;border-color:var(--line);background:var(--card)}
+main.srch .shero+#ftoggle+.sgrid{margin-top:0}
+@media (min-width:861px){
+  main.srch .shero+#ftoggle+.sgrid>#fwrap{margin:0 0 26px;padding:0 40px 26px;border:0;border-radius:0 0 28px 28px;background:var(--bg2)}
+}
+@media (max-width:860px){
+  main.srch .shero{margin:8px -10px 14px;padding:16px 20px 22px;border-radius:24px}
+  main.srch .shero .h1s{font-size:clamp(28px,8vw,34px)}
+  main.srch .shero .searchbar.wide{margin-top:16px}
+}
+
+/* ---- /jobs/ filters (the owner, 24 Nov 2026, and the backlog of 25 Nov): the box is as wide as the bar of filters under it, so the two
+   read as one control, as on Indeed's two-field bar; on a phone "All filters" opens the second row and the chips scroll beside it
+   (LinkedIn's row), instead of standing alone on a third row; the panel's ring is left out on this working page ---- */
+main.srch .shero::after,main.srch .shero::before{display:none}
+main.srch .shero .searchbar.wide{max-width:none}
+@media (max-width:860px){
+  main.srch #fwrap>.morefilters{order:1;flex:none}
+  main.srch #fwrap>.fx-chips{order:2;flex:1 1 0;min-width:0;margin:0 -20px 0 0;padding:0 20px 0 0}
+  main.srch #fwrap:has(.morefilters[open])>.morefilters{order:9;flex:1 1 100%}
+  main.srch #fwrap:has(.morefilters[open])>.fx-chips{flex-basis:100%;margin:0 -20px;padding:0 20px}
+  main.srch #fwrap .morefilters summary{height:40px;min-height:40px;padding:0 14px}
+}

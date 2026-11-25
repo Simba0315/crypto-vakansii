@@ -3946,8 +3946,10 @@ def main():
         seen_.add((j["company"], j["title"]))
         first_rows.append(search_engine.row(search_engine.doc(j, "", PLACE_CODE, TODAY), same_n[(j["company"], j["title"])] - 1, slugify(j["company"]) in LOGOS, NOW))
         if len(first_rows) == search_engine.PAGE: break
-    search = (crumbs(("All jobs", "")) + '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (one page per query, 18 Nov 2026)
-              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="A title, or a sentence: remote nurse jobs this week" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form>'
+    # v4 (design night, 25 Nov 2026): the trail, a label with today's count, the title and the box open the page as one framed panel
+    search = ('<div class="khero shero"><div class="khero-t">' + crumbs(("All jobs", "")) + f'<p class="sec-label">{n:,} open jobs · checked {EVERY}</p>'
+              '<h1 class="h1s">All jobs</h1>'          # "job search" is the home page's query; this page is the full list with filters (one page per query, 18 Nov 2026)
+              f'<form class="searchbar wide" id="qform">{ICON_SEARCH}<input type="search" id="q" list="sugg" placeholder="A title, or a sentence: remote nurse jobs this week" aria-label="Search jobs" autocomplete="off"><button class="btn primary">Search</button></form></div></div>'
               '<button class="btn ghost sm" id="ftoggle" type="button" aria-expanded="false">Filters</button>'
               '<div class="sgrid haspane" id="search"><aside id="fwrap" aria-label="Filters">'
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
