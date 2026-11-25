@@ -7,8 +7,13 @@ For each company, most open jobs first, without a logo yet:
      board or the name is a long, non-dictionary one). Never another company's site, never a guess from a short or generic name.
   2. the square icon that site publishes: apple-touch-icon, the icons in its web manifest, <link rel=icon> with sizes, or a
      favicon.ico with a 64 px or larger image. Never an SVG drawn by us, a generated picture or a builder's default icon.
-  3. otherwise the square logo the company uploaded to its own job board (Workable, Breezy, JazzHR, Pinpoint, BambooHR).
-Checks: at least 60 px, square, not blank, not an enlarged tiny favicon, not a website builder's or hiring system's default.
+     A Workable account's "url" and a Paylocity board's "LogoHref" count as the board's own link to the site (26 Nov 2026).
+  3. otherwise the square logo the company uploaded to its own job board (Workday, Workable, Paylocity, Greenhouse, Breezy, JazzHR,
+     Pinpoint, BambooHR).
+Checks: at least 60 px, square, not blank, not an enlarged tiny favicon, not a website builder's or hiring system's default, not one
+of the icons unrelated sites serve byte for byte (DEFAULT_ICON_MD5), not from a parked domain. An SVG icon is drawn by Quick Look to
+fill 192 px; WebP and AVIF icons are read through sips. Every new logo is still looked at on a contact sheet before it is committed
+(26 Nov 2026: about one in eight was left out by eye: other companies' or parent companies' marks, stock pictures, tiny word marks).
 Saved as assets/logos/<slug>.png (96 px) and assets/logos/s/<slug>.png (72 px), both quantized to a palette, about 2 to 5 KB.
 
 Polite: 4 companies at a time, one request at a time for each, 10 s timeouts, a User-Agent naming the site, and a site that answers
