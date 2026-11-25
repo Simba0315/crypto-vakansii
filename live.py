@@ -321,6 +321,7 @@ class Live:
                 dup += 1; continue          # the same job from another source (or the same link): two postings on one board are two jobs
             desc = j.pop("desc", "") or ""
             if desc: keep.append((j["id"], name, desc))       # kept beyond the live entry, which the next record replaces
+            j["salary"] = build.sane_pay(j.get("salary"))       # no "$90K - $1,100K" in a live entry either (25 Nov 2026)
             j.update(slug=self.slug_for(j), crypto=bool(src.get("crypto")), first_seen=today, first_seen_at=collect.utc_now(), last_seen=today,
                      active=True, pinned=False, featured=False, entry=j["level"] in ("Junior", "Intern"), pool=bool(build.POOL_RX.search(j["title"])),
                      usd=build.usd_range(j["salary"]), places=build.places_of(j["location"]) if j["location"] else [], live=True)

@@ -520,7 +520,7 @@ def usd_range(s):
         vals.append(v * 1000 if k else v)
     if len(vals) < 2: return None
     lo, hi = vals[0], vals[1]
-    return (lo, hi) if 30000 <= lo <= hi <= 1500000 else None
+    return (lo, hi) if 30000 <= lo <= hi <= min(900000, 3 * lo) else None       # the limits of sane_pay (25 Nov 2026: was 1,500,000 and no ratio)
 
 
 def local_mid(s, sym):
@@ -702,6 +702,25 @@ for _pay, _want in {"$152K - $239K": ("USD", 152000, 239000, "YEAR"), "£45K - �
     _v = pay_ld({"salary": _pay, "location": "London"})["value"]
     assert (pay_ld({"salary": _pay})["currency"], _v["minValue"], _v["maxValue"], _v["unitText"]) == _want, (_pay, _v)
 assert pay_ld({"salary": "$0 - $125 an hour"}) is None and pay_ld({"salary": "$150K - $180K", "location": "Toronto, ON"}) is None and pay_ld({"salary": "$50 - $60"}) is None
+
+
+def sane_pay(s):
+    """The pay a posting states, or "" when the range cannot be one person's pay (owner, 25 Nov 2026: the home page's "Highest paid
+    right now" showed "Desktop Support Technician $90K–$1,100K", "PMH Nurse Practitioner $100K–$1,500K", "Business Broker
+    $50K–$1,000K"): a top more than three times the bottom, a bottom of nothing, or a yearly US-dollar figure above $900K. Used when
+    the build reads the records and again on every job page (the server renders the pages of jobs found between uploads), so neither
+    the text nor baseSalary carries such a range. collect.tidy_pay is left as it is: any edit there changes its RULES fingerprint and
+    makes the hourly run parse every posting again."""
+    m = PAY_LD_RX.match((s or "").strip())
+    if not m: return s or ""
+    num = lambda v, k: float(v.replace(",", "")) * (1000 if k else 1)
+    lo = num(m.group(2), m.group(3))
+    hi = num(m.group(4), m.group(5)) if m.group(4) else lo
+    if lo <= 0 or hi > 3 * lo: return ""
+    if not m.group(6) and m.group(1).strip() in ("$", "US$", "USD") and hi > 900000: return ""
+    return s
+assert sane_pay("$90K - $1,100K") == sane_pay("$100K - $1,500K") == sane_pay("$50K - $1,000K") == sane_pay("$0 - $125 an hour") == sane_pay("$850K - $950K") == ""
+assert sane_pay("$152K - $239K") == "$152K - $239K" and sane_pay("SEK 554K - SEK 1,025K") == "SEK 554K - SEK 1,025K" and sane_pay("$38 - $55 an hour") == "$38 - $55 an hour" and sane_pay("") == ""
 
 
 US_STATE_CODE = dict(zip([x.replace("_", " ") for x in "alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois "
@@ -2790,6 +2809,7 @@ def job_indexable(j):
 
 def job_page(j, active_by_cat):
     canonical = f"{FULL}/job/{j['slug']}/"
+    j["salary"] = sane_pay(j.get("salary"))         # a record written before 25 Nov 2026, or a job live.py found, may hold an impossible range
     # the full description comes from the collector already reduced to a few plain tags; anything else falls back to the excerpt
     full = j.get("desc") or ""
     # a US-dollar estimate only makes sense for US roles, and intern pay is not comparable with salaried roles
@@ -3183,6 +3203,7 @@ def main():
         elif j["level"] in ("Junior", "Intern") and FOR_JUNIORS.search(j["title"]): j["level"] = ""      # "Early Career & University Recruiter", "Intern Program Coordinator" hire juniors, are not ones
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["pool"] = bool(POOL_RX.search(j["title"]))
+        j["salary"] = sane_pay(j["salary"])
         j["usd"] = usd_range(j["salary"])
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
@@ -3707,7 +3728,13 @@ def main():
     faq_html = '<div class="faq2">' + "".join(f'<details><summary>{e(q_)}</summary><p>{e(a_)}</p></details>' for q_, a_ in FAQ) + "</div>"
     faq_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in FAQ]}) + "</script>")
-    top_paid = diverse_pairs(sorted(((j, j["usd"]) for j in active if j["usd"]), key=lambda x: -x[1][1]), 8)
+    # "Highest paid right now": postings of the last seven days (owner, 14 Nov 2026), ranked by the middle of the range, not its top
+    # (25 Nov 2026: a "$90K–$1,100K" desk job led the list; such ranges are now dropped by sane_pay and usd_range)
+    # A week with fewer than eight such postings (a local sample, a quiet week) widens the window step by step rather than show a gap.
+    def paid_since(days_):
+        since_ = (datetime.date.today() - datetime.timedelta(days=days_)).isoformat()
+        return diverse_pairs(sorted(((j, j["usd"]) for j in active if j["usd"] and (j["posted"] or j.get("first_seen") or "") >= since_), key=lambda x: -(x[1][0] + x[1][1])), 8)
+    paid_days, top_paid = next(((d_, t_) for d_ in (7, 14, 30, 90) if len(t_ := paid_since(d_)) >= 8), (0, paid_since(36500)))
     pay_max = max((u[1] for _, u in top_paid), default=1) or 1
     paid_board = '<ol class="payrank">' + "".join(
         f'<li><a href="{P}/job/{j["slug"]}/"><span class="pr-n">{i}</span>{ava(j["company"])}'
@@ -3803,7 +3830,8 @@ def main():
             + section("Browse jobs [[by category]]", browse, ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.", label="Directory")
             + kpanel(section("The job market [[today]]", market_pics + pulse, ("insights/", "All rankings and charts"), sub="Counted from the open jobs on every update.", label="Market"))
             + anatomy
-            + section("[[Highest paid]] right now", paid_board, ("salaries/", "Salary data"), sub="Only jobs that state a yearly pay, converted to US dollars. The bar shows the range against the top one.", label="Pay")
+            + section("[[Highest paid]] right now", paid_board, ("salaries/", "Salary data"), label="Pay",
+                      sub=(f"Jobs posted in the last {paid_days} days" if paid_days else "Open jobs") + " that state a yearly pay in US dollars, by the middle of the range. The bar shows the range against the top one.")
             + kpanel(section("How ghost jobs are [[kept out]]", ghost, ("promise/", "What we will never do"), sub="Five rules every listing passes, and four habits of job sites you will not meet here.", label="No ghost jobs"), "card")
             + section("[[Free tools]], no sign-up", free_tabs, ("tools/", f"All {n_tools} tools"), sub="Nothing to sign up for: the tools work in your browser and send us nothing.", label="Free")
             + plus_band + band
