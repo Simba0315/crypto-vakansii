@@ -4348,3 +4348,51 @@ main.home #faq>.sec-head{z-index:2;background:var(--bg)}
 .toc{z-index:2;background:var(--bg)}
 .jstick{z-index:4}
 .pane .jfrow{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* ================= v4, design night 25–26 Nov 2026 (the owner: "не дизайн ничего"; references dlocal.com above all, ashbyhq.com) =================
+   dLocal's way of building a page, in our colours and type: the first screen is one framed light panel with a large corner, a small
+   soft-green label over each title, headlines in two weights, white cards with one hairline and a 24–28 px corner, pill buttons with
+   their arrow in a circle, and much more air between the parts. Panels stay light everywhere. */
+
+/* the label over a title: a small soft-green pill, as dLocal's "Solutions" (it was plain green text since 24 Nov) */
+.sec-label{display:inline-flex;align-items:center;width:fit-content;padding:5px 12px;border:0;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:12.5px;font-weight:650;letter-spacing:.01em;line-height:1.35}
+.sec-label::before{display:none}
+.kpanel.ink .sec-label{background:rgba(255,255,255,.08);color:var(--pop)}
+
+
+/* ---- every first-screen panel carries the brand's ring, drawn very faint in its corner (the "o" of the clock wordmark), so the
+   panels read as one family the way dLocal's heroes carry their own graphic; the content stands above it ---- */
+.khero{position:relative;overflow:hidden;isolation:isolate}
+.khero::after{content:"";position:absolute;z-index:-1;right:-120px;top:-150px;width:420px;height:420px;border-radius:50%;
+  border:46px solid color-mix(in srgb,var(--ac) 9%,transparent);pointer-events:none}
+.khero::before{content:"";position:absolute;z-index:-1;right:62px;top:42px;width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--ac) 30%,transparent);pointer-events:none}
+@media (max-width:700px){.khero::after{right:-200px;top:-210px;width:300px;height:300px;border-width:36px}.khero::before{display:none}}
+
+/* ---- section titles on every page: the two-weight heading (sec_labels) a little smaller on list pages, and the section's one link
+   is a pill with its arrow in a circle, as on the key pages (it was a pill with a plain arrow) ---- */
+main.lp .sec-head h2.tw{font-size:clamp(26px,3vw,38px)}
+.sec-head>a{display:inline-flex;align-items:center;gap:10px;padding:6px 7px 6px 18px;font-size:14.5px}
+.sec-head>a::after{content:"\2192";display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:var(--text);color:var(--bg);font-size:14px;line-height:1}
+.sec-head>a:hover{border-color:var(--text);background:var(--card);color:var(--text)}
+.guide h2.tw2{font-weight:400;letter-spacing:-.035em}
+.guide h2.tw2 b{font-weight:700}
+.sec-head.lst .sec-label{margin:0 0 12px}
+main.lp .sec-head.lst{margin-top:64px;margin-bottom:22px}
+.sec-head.lst h2.tw{margin:0;font-size:clamp(26px,3vw,38px);font-weight:400;line-height:1.08;letter-spacing:-.04em}
+.sec-head.lst h2.tw b{font-weight:700}
+
+/* ---- first-screen headings in two weights (dLocal: "Financial technology for [markets of the future]"): the green marker under the
+   key words of a panel heading becomes the bold part, the rest is set light; list headings set their common word light ("Python
+   [jobs in] London"). The home page has no panel heading and keeps its marker. ---- */
+.khero h1:has(.hl){font-weight:400}
+.khero h1 .hl,main.sp .khero h1 .hl{padding:0;background:none;font-weight:700}
+.khero h1 .lt,h1 .lt{font-weight:400}
+.lact a.btn.primary{gap:10px;padding:5px 5px 5px 18px}
+.lact a.btn.primary::after{content:"\2192";display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--btn-ink);color:var(--btn);font-size:14px;line-height:1}
+.lact a.btn.primary[href^="#"]::after{content:"\2193"}
+
+/* ---- the row of a page's own figures inside a first panel: larger figures and more air, as dLocal's "760+ · 1000+ · 60+" ---- */
+.khero .nums{border-radius:22px}
+.khero .nums>div{gap:6px;padding:22px 24px 20px}
+.khero .nums dd{font-size:clamp(26px,2.8vw,36px);letter-spacing:-.04em}
+@media(max-width:560px){.khero .nums>div{padding:14px 16px 13px}.khero .nums dd{font-size:24px}}

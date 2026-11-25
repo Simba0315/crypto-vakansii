@@ -1294,11 +1294,38 @@ def frame_first(path, body):
 # these keeps the plain look. Job pages are left as they are.
 SEC_LABELS = [(re.compile(r"^questions|questions about|people ask", re.I), "Questions"), (re.compile(r"^skills|skills asked|tech stack|tools and software", re.I), "Skills"),
               (re.compile(r"^who is hiring|^companies|employers|hiring for", re.I), "Employers"), (re.compile(r"^newest|newest first|^open jobs|^all .* jobs$", re.I), "Open jobs"),
-              (re.compile(r"\bpay\b|salar", re.I), "Pay"), (re.compile(r"^where|locations|by place|places", re.I), "Places"),
+              (re.compile(r"\bpay\b|salar|-paying\b", re.I), "Pay"), (re.compile(r"^where|locations|by place|places", re.I), "Places"),
               (re.compile(r"^every list|^narrow down|^more like|^related|^more for", re.I), "Directory"), (re.compile(r"alert", re.I), "Alerts"),
               (re.compile(r"^job titles|titles employers", re.I), "Titles"), (re.compile(r"^how |steps|^five steps|^six steps", re.I), "How to"),
-              (re.compile(r"tools$|^free tools", re.I), "Tools"), (re.compile(r"level", re.I), "Levels")]
+              (re.compile(r"tools$|^free tools", re.I), "Tools"), (re.compile(r"level", re.I), "Levels"),
+              # v4 (25 Nov 2026): the headings most often left without a label in a survey of the built pages
+              (re.compile(r"^everything about", re.I), "Directory"), (re.compile(r"^sources\b", re.I), "Sources"),
+              (re.compile(r"side by side|\bvs\.?\b", re.I), "Compared"),
+              (re.compile(r"^prepare\b|portfolio|linkedin profile|professional development", re.I), "Career"),
+              (re.compile(r"^words to|overused|^before and after|^which word|^turn your", re.I), "Wording")]
 SEC_PLAIN = re.compile(r'<section class="sec"((?: id="[^"]*")?)><div class="sec-head( has-sub)?"><h2>(.*?)</h2>', re.S)
+
+
+# v4 (design night, 25 Nov 2026): the labelled headings are set in two weights, as dLocal's ("Flexible [[payment solutions]] for every
+# need"): the words after the first link word ("for", "about", "in"…) are bold, or all but the opening word when there is none.
+# Questions and headings that hold markup stay as they are.
+GUIDE_H2 = re.compile(r'<h2 id="(s-[^"]+)">([^<]+)</h2>')
+TW_SPLIT = re.compile(r"^(.+?\b(?:for|about|at|in|of|by|with|from|hiring|near|like|than|to)\s+)(\S.*)$", re.I)
+
+
+def two_weight(h):
+    if "<" in h or "&lt;" in h or h.rstrip().endswith("?") or len(h.split()) < 4: return ""
+    if ": " in h:                                     # "Software Engineer pay: job postings and government figures"
+        a_, b_ = h.split(": ", 1)
+        return f"<b>{a_}</b>: {b_}"
+    m_ = TW_SPLIT.match(h)
+    if m_ and len(m_.group(2).split()) == 1 and len(m_.group(1).split()) >= 3:       # "Software engineer salary by level": the subject is first
+        head_, link_ = m_.group(1).rstrip().rsplit(" ", 1)
+        comma_ = "," if head_.endswith(",") else ""
+        return f"<b>{head_.rstrip(',')}</b>{comma_} {link_} {m_.group(2)}"
+    if m_ and len(m_.group(2).split()) <= 6: return f"{m_.group(1)}<b>{m_.group(2)}</b>"
+    first, rest = h.split(" ", 1)
+    return f"{first} <b>{rest}</b>"
 
 
 def sec_labels(path, body):
@@ -1307,9 +1334,13 @@ def sec_labels(path, body):
         text = re.sub(r"<[^>]+>", "", m.group(3))
         lab = next((l for rx, l in SEC_LABELS if rx.search(text)), "")
         if not lab: return m.group(0)
+        tw_ = two_weight(m.group(3))
         return (f'<section class="sec hsec"{m.group(1)}><div class="sec-head{m.group(2) or ""}"><div class="sec-ttl"><p class="sec-label">{lab}</p>'
-                f'<h2>{m.group(3)}</h2></div>')
-    return SEC_PLAIN.sub(one, body)
+                + (f'<h2 class="tw">{tw_}</h2></div>' if tw_ else f'<h2>{m.group(3)}</h2></div>'))
+    body = SEC_PLAIN.sub(one, body)
+    if '<article class="guide">' in body:            # the headings of a guide's article, in two weights as well
+        body = GUIDE_H2.sub(lambda m_: f'<h2 id="{m_.group(1)}" class="tw2">{t_}</h2>' if (t_ := two_weight(m_.group(2))) else m_.group(0), body)
+    return body
 
 
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls=""):
@@ -1872,10 +1903,11 @@ def list_label(path):
 
 
 def h1_marked(h1):
-    """The heading with its key word marked in green, as on the key pages: "Engineering <jobs>", "Internships in Paris"."""
-    m = re.search(r"\b(jobs|internships|roles)\b", h1, re.I)
+    """The heading in two weights (v4, 25 Nov 2026, after dLocal): the common word and the link word after it are set light, the
+    subject stays bold: "Engineering (jobs)", "(Internships in) Paris". It marked the common word in green before."""
+    m = re.search(r"\b(?:jobs|internships|roles)\b(?:\s+(?:in|at|for|with|near|from|by|that)\b)?", h1, re.I)
     if not m: return e(h1)
-    return e(h1[:m.start()]) + f'<span class="hl">{e(m.group(0))}</span>' + e(h1[m.end():])
+    return e(h1[:m.start()]) + f'<span class="lt">{e(m.group(0))}</span>' + e(h1[m.end():])
 
 
 def hub_stats(js, lead=False):
@@ -2172,7 +2204,10 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
                    + (hub_stats(jobs, stats == "rest") if stats else "") + list_save(h1, more, path if feed else "", links) + "</div>" + list_narrow(more, jobs))
         else: top = crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>"
         if n > 1: top = top.replace("</h1>", f", page {n}</h1>", 1)        # page 2 and later do not repeat the first page's heading word for word (one page per query, 18 Nov 2026)
-        the_list = ((f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
+        # v4: the list's title carries the "Open jobs" label and two weights, like the labelled sections of the page
+        tw_l = two_weight(e(list_title)) if list_title else ""
+        the_list = ((f'<div class="sec-head lst" id="list"><div class="sec-ttl"><p class="sec-label">Open jobs</p>{f"<h2 class={chr(34)}tw{chr(34)}>{tw_l}</h2>" if tw_l else f"<h2>{e(list_title)}</h2>"}</div></div>'
+                     if list_title and n == 1 and chunk else "")
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                     + pager_html(path, n, pages) + note)
         if pics and n == 1: the_list = f'<div class="lflow"><div class="lpics">{pics}</div><div class="llist">{the_list}</div></div>'
