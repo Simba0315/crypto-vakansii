@@ -1152,3 +1152,34 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   $18–$28 an hour)"); none answers the questions on the page. jobseveryhour.com is not in the first results of any of the four.
 - Titles of the four lists in title case, as /part-time/ ("Temporary and Seasonal Jobs (…)"). Not done in this pass: Google's first page and AI answer and
   Perplexity for these queries; compare the live counts after the deploy.
+
+### /vs/ and competitors, second pass: ChatGPT and Google on 25 Nov 2026 (night)
+
+ChatGPT with search on, the owner's session in the built-in browser (it is signed in, so earlier chats may shape an answer), each question in a
+new chat, about 30 s each, links read from the answer. Google (gl=us) asked once, for "jobscan alternatives".
+
+| Question (25 Nov 2026) | Named, in order | We are in | Points the answer covers | Done on our page |
+|---|---|---|---|---|
+| What are the best job search sites right now? | Indeed, LinkedIn Jobs, ZipRecruiter, Glassdoor, USAJOBS, Wellfound, Dice, FlexJobs, Handshake, Idealist; also CareerOneStop, Craigslist, Google Jobs, Snagajob (cites Money) | no | a table "job type → best websites" (any job, professional, remote, part-time, night and weekend, tech, government, internships); "you generally don't need to pay"; check the employer's own careers page | /best-job-search-sites/: table "Which site for which job" (one row a kind, every name to its comparison), first answer rewritten to name the sites by kind in 60 words; Craigslist, Google for Jobs, GovernmentJobs.com and Levels.fyi now have pages |
+| Is there a job search engine that reads jobs from company career pages (Greenhouse, Lever, Ashby, Workday) and removes closed jobs? | **Jobs Every Hour (first, "closest match")**, HiringCafe, JobDork, Drivetube (cites jobseveryhour.com three times, our guide how-we-check-jobs-every-hour) | **yes, first** | reads ATS feeds, how often, what happens to a closed job, the 3-day cutoff of Drivetube is "not the same as verifying a job closed" | /job-search-engines/: HiringCafe and Drivetube read again (Drivetube now 160,000+ career pages, was 140,000+ in the answer), Jobright, Jobscan's AI Job Match and Google for Jobs added, a read date per row, links to each /vs/ page; JobDork read and added (Ashby, Greenhouse and Lever boards, a filter for closed roles) |
+| What are the best alternatives to Indeed and ZipRecruiter for job seekers? | LinkedIn, Glassdoor, Google Jobs, FlexJobs, Wellfound, Dice, Snagajob, Handshake, Built In, USAJOBS; "career-page engines": Hidden Roles, Applydra, Hark | no | "Quick comparison: best for / cost to job seekers" | alternatives pages already have "price for job seekers"; Google for Jobs now has its page and is in every alternatives page |
+| Which job sites have no ghost jobs or expired listings? | **Jobs Every Hour (first, "best for listing freshness")**, Indeed, Hire & Job (hireandjob.com), USAJOBS (cites /methodology/ and the status page: "57% of open roles rechecked that day") | **yes, first** | listing-age table (0–7 days prioritize … 90+ caution), check the employer's page, ask the recruiter | – (the answer already takes its facts from our pages) |
+| What is the best free alternative to Jobscan for checking a resume against a job description? | SkillSyncer, ATSPrep, LoopCV, Jobalytics, Teal, Resume Worded | no | free limits per tool (2 scans a week, no account, top 5 keywords) | /vs/jobscan/: "Free Jobscan alternatives" table (SkillSyncer, ATSPrep, Teal, Jobalytics, each from its own page 25 Nov), question "What is the best free alternative to Jobscan?" answered in 50 words |
+| Where can I find entry level jobs with no experience? | Indeed, Handshake, LinkedIn, ZipRecruiter, Snagajob, WayUp, USAJOBS, CareerOneStop; National Labor Exchange (dol.gov) | no | titles that take beginners, search words ("no experience required", "will train"), apply on the employer's site | /entry-level/: "Which sites are best for entry-level jobs?" first in its questions, a row of those sites' comparisons under the jobs |
+| What are the best websites to find remote jobs in 2026? | We Work Remotely, Himalayas, Remote OK, Jobspresso, FlexJobs, Remote.co, Working Nomads, Wellfound, Upwork, LinkedIn; also Dynamite Jobs, Remotive, Jobgether (cites hrstacks.com) | no | "remote does not always mean worldwide", a table goal → site | /remote/: "Which websites are best for remote jobs?" (with the any-country warning) and a row of the seven remote boards' comparisons |
+| Where can employers post a job for free? | Indeed, LinkedIn, Wellfound, Handshake, PostJobFree, CareerOneStop, Dover, Hacker News; "mistaken for free": ZipRecruiter, Monster, Craigslist, Glassdoor | no | free limit per site; Google's JobPosting markup is free | Craigslist page states its $10–$75 fee; not done: PostJobFree and CareerOneStop on /job-posting-sites/ |
+| Glassdoor vs Indeed: which is better for job seekers? | Indeed for finding jobs, Glassdoor for research (cites Indeed's newsroom, Money) | no | goal → site table; the November 2026 integration | /vs/indeed-vs-glassdoor/ already had the one-login fact; nothing new |
+
+- Google, "jobscan alternatives" (gl=us, 25 Nov): AI Overview names SkillSyncer, Resume Worded, Teal, Rezi, Kickresume, then Jobalytics, Earnbetter,
+  Simplify, AIApply, ApplyArc (from r/resumes, hirekey.io). First results: Reddit r/resumes, SkillSyncer's own comparison page ("$14.95/month instead of
+  $49.95"), LifeShack, G2, JobWizard, applybuddy.ai, WahResume, jd2cv.uk, Sprad. People also ask: "Which is better, Teal or Jobscan?", "Is Jobscan worth the
+  money?", "Which ATS website is best?". Done: both questions on /vs/jobscan/ with the prices read that day.
+- Google, "job search engine that pulls jobs directly from company career pages" (gl=us, 25 Nov; the AI answer was still "thinking" and was not
+  read): SecretJobs ("career pages of 400,000+ companies", "8M+ open jobs", "Updated every hour"), Reddit r/jobsearchhacks, Runway (students, 200,000+
+  career sites), Career Hound, Chief Jobs (on LinkUp), HiddenRoles, Simplify. We are not in the first page. Done: SecretJobs, Runway and Career Hound
+  added to /job-search-engines/ from their own home pages (10 engines in the table besides this site).
+- New /vs/ pages from this pass (all facts read on the sites' own pages 25 Nov): Google for Jobs, Ladders (help centre: theladders.com answers "available
+  only in the United States and Canada"), Craigslist, Levels.fyi, GovernmentJobs.com, HiringCafe, Drivetube, Jobright, Jobscan (now with the job rows too).
+  LinkUp showed a human check again: listed under "Not compared yet".
+- Next: Hire & Job, Hidden Roles and WayUp (named above, no page); PostJobFree and CareerOneStop on /job-posting-sites/; ask the same nine
+  questions again after the deploy is indexed.

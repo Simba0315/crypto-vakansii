@@ -34,6 +34,8 @@ R13 = "2026-11-13"  # read by the research files
 R14 = "2026-11-14"  # read from the site's own page for this module
 R21 = "2026-11-21"  # read from the site's own page in a real browser (FlexJobs timed out for the reader on 14 Nov)
 R24 = "2026-11-24"  # the 16 sites added that day, read on their own pages (some in a real browser) or, for ZipRecruiter, its annual report
+R25 = "2026-11-25"  # the 9 sites AI answers name that had no page (Google for Jobs, Ladders, Craigslist, Levels.fyi, GovernmentJobs.com,
+                    # HiringCafe, Drivetube, Jobright, Jobscan), read in a real browser on their own pages and help centres
 
 QUESTIONS = [
     "Who pays",
@@ -1299,9 +1301,486 @@ SITES += [
     ),
 ]
 
+# 25 Nov 2026: the sites Google's AI answer, ChatGPT and Perplexity name for "best job search sites", "ziprecruiter alternatives" and
+# "a job search engine that reads company career pages" that had no page here (SERP_AI_CHECK.md, "/vs/"). Each read that day on its own
+# pages in a real browser. theladders.com answers "available only in the United States and Canada" outside them, so Ladders' facts come
+# from its own help centre (support.theladders.com). LinkUp showed a human check and is in SKIPPED.
+SITES += [
+    # ------------------------------------------------------------------ Google for Jobs
+    dict(
+        slug="google-for-jobs",
+        name="Google for Jobs",
+        url="https://www.google.com/search?q=jobs+near+me",
+        what="Google for Jobs is the job search inside Google Search: a jobs box that shows listings from the pages of employers and job sites "
+             "that carry Google's job posting markup. Job listing providers do not pay Google to appear.",
+        rows=_rows(
+            ("Who pays", "No one pays Google for a place: listing providers \"don't pay Google to appear in job search results and can't pay to "
+                         "influence their ranking\"."),
+            ("Price to post one job", "Nothing paid to Google. A job can appear when the employer's or job site's own page carries job posting "
+                                      "markup, on the same page as the job description."),
+            ("Where the jobs come from", "\"Jobs come directly from employers and career sites across the web\", from pages that carry job posting "
+                                         "markup."),
+            ("Where you apply", "On the site you pick under \"Apply\": the employer's own site or a job site that carries the job. Google does not "
+                                "allow job postings with no way to apply."),
+            ("Account needed to apply", "Not to search. Signing in to a Google Account only personalizes the results; you apply on the site you "
+                                        "pick."),
+            ("How fresh the listings are", "A closed job leaves when its site marks it expired or asks Google to remove it. Google says it may take "
+                                           "several days to find and crawl a newly published page."),
+            ("Kinds of jobs", "Jobs of every kind, found by your search words; the jobs box is not available in all languages or countries."),
+        ),
+        them_better=[
+            "Built into Google Search: one search shows jobs from employers and career sites across the web, with filters and saved jobs.",
+            "Listing providers cannot pay to rank higher: results are sorted by relevance.",
+            "Job alerts and results shaped by your earlier searches when you are signed in to a Google Account.",
+        ],
+        us_better=[
+            "Every job here is read from the employer's own careers page every hour and dropped at the next reading once it closes. Google "
+            "relies on each site to mark a closed job expired, and says crawling a new page can take several days.",
+            "Every Apply button here goes to the employer's own page. On Google, Apply lists the sites that carry the job, job boards included.",
+        ],
+        pick="Use Google for Jobs if you want one search across employers and job sites everywhere, use Jobs Every Hour if you want jobs read "
+             "every hour from employers' own careers pages and to apply there.",
+        sources=[
+            ("[what|Who pays|Price to post one job|Where the jobs come from|Where you apply|Account needed to apply|Kinds of jobs|them_better 1|"
+             "them_better 2|them_better 3|us_better 2|pick] \"Jobs come directly from employers and career sites across the web.\" \"Job "
+             "listing providers don't pay Google to appear in job search results and can't pay to influence their ranking.\" \"By default, job "
+             "results are sorted by relevance.\" To see jobs from one site: \"Under \"Apply,\" tap or click a job site.\" Saved jobs; "
+             "\"sign up for alerts\"; \"If you're signed in to your Google Account, personalization may also be based on your previous job "
+             "searches.\" \"This feature is not available in all languages or countries.\"",
+             "https://support.google.com/websearch/answer/7498276?hl=en", R25),
+            ("[what|Price to post one job|Where the jobs come from|Where you apply|How fresh the listings are|us_better 1|us_better 2] Job "
+             "posting structured data makes postings \"eligible to appear in a special user experience in Google Search results\", for "
+             "\"employers and job content site owners\"; \"The structured data must appear on the same page as the job description\". \"We "
+             "don't allow job postings that don't have a way to apply.\" Jobs no longer open \"must be expired\": validThrough in the past, or "
+             "removal through the Indexing API; \"it may take several days after publishing a page for Google to find and crawl it.\"",
+             "https://developers.google.com/search/docs/appearance/structured-data/job-posting", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ Ladders
+    dict(
+        slug="ladders",
+        name="Ladders",
+        url="https://www.theladders.com/",
+        what="Ladders is a job site for $100K+ careers in the US and Canada; it says it has over 10 million members and works with 22,000+ "
+             "verified recruiters and hiring managers.",
+        rows=_rows(
+            ("Who pays", "Job seekers, for Premium; a Basic account is free. The help pages we read give no employer prices."),
+            ("Price for job seekers", "Basic is free: search, previews of listings and your resume in its database. Premium is paid and renews "
+                                      "until auto-renew is turned off; a full refund only within 3 business days if Apply4Me was not used. The "
+                                      "help pages we read give no price."),
+            ("Where the jobs come from", "Employers post directly on Ladders, and its Job Analysts add jobs with a link to the hiring company's "
+                                         "website."),
+            ("Where you apply", "Three ways: Apply4Me (Premium: its team fills in the company's application for you), Easy Apply (your resume "
+                                "goes to the recruiter on Ladders) or Apply Manually on the employer's original posting."),
+            ("Account needed to apply", "Yes: Basic members see previews, and \"Full job details and application access are available with "
+                                        "Premium.\""),
+            ("Kinds of jobs", "Full-time professional jobs with a base salary of at least $80K, all in the US or Canada."),
+        ),
+        them_better=[
+            "Apply4Me on Premium: its team fills in job applications for you, 50 to 75 a month by plan, with a browser extension for other "
+            "job sites.",
+            "Every job pays a base salary of at least $80K, and 22,000+ verified recruiters can search the resumes in its database.",
+            "Free tools for all members: resume review, an ATS resume scan, company search and salary search.",
+        ],
+        us_better=[
+            "Full job details and applying are free here, with no account. Ladders shows Basic members previews; full details and applying need "
+            "Premium.",
+            "Plus here is one payment that never renews (not on sale yet). Ladders Premium renews until auto-renew is turned off, with a refund "
+            "only within 3 business days.",
+            "Every job here names its employer and is read from its own careers page every hour. Ladders lists some jobs with the company name "
+            "hidden.",
+        ],
+        pick="Use Ladders if you want $80K-plus roles only and will pay for Premium and Apply4Me, use Jobs Every Hour if you want full job "
+             "details and to apply on the employer's own page for free.",
+        sources=[
+            ("[what|them_better 2|them_better 3] \"Ladders is the leader in $100K+ careers, helping over 10 million members connect with "
+             "high-paying opportunities.\" \"We work with 22,000+ verified recruiters and hiring managers who are focused on sourcing "
+             "high-level talent across the U.S. and Canada.\" Members can use a \"free resume review\" and an \"ATS resume scan\"; company "
+             "search, job compensation search and salary insights.",
+             "https://support.theladders.com/en_us/how-is-ladders-different-than-other-career-sites-rky5IyFgxl", R25),
+            ("[Who pays|Price for job seekers|Account needed to apply|them_better 3|us_better 1|pick] \"A Basic membership with Ladders is "
+             "completely free.\" \"View previews of job listings during your search. Full job details and application access are available "
+             "with Premium.\" Your resume goes to a database \"searchable by 22,000+ verified recruiters\". Free for all members: Resume "
+             "Review, ATS Resume Scan, Company Search, Job Salary Search.",
+             "https://support.theladders.com/en_us/what-is-basic-membership-rygUkFxex", R25),
+            ("[Who pays|Price for job seekers|them_better 1|pick] Premium gives \"unlimited access to our curated 100k+ jobs database\". "
+             "Apply4Me: \"our expert team completes your application for you\", 50 credits on a 1-month plan, 60 on 3 months, 65 on 6 months, "
+             "75 on 12 months, and \"a browser extension that allows you to use this tool on other job sites\". The article names no price.",
+             "https://support.theladders.com/en_us/what-is-premium-membership-H1mlLyYgll", R25),
+            ("[Price for job seekers|us_better 2] Turning off auto-renew \"ensures you will not be charged again\"; fees are \"non-refundable\" "
+             "except a \"3-Day Refund Period\" (full refund within 3 business days if Apply4Me was not used) and a 7-day switch for longer "
+             "plans.", "https://support.theladders.com/en_us/what-is-your-cancellation-policy-HknJLytxel", R25),
+            ("[what|Where the jobs come from|Kinds of jobs|them_better 2|pick] \"Ladders posts full-time, professional positions on our site "
+             "with a base salary of at least $80K\", \"all located within the United States or Canada\". \"We have employers who post new "
+             "opportunities with Ladders directly on our site. We also have a team of Job Analysts who bring jobs to you with a link to the "
+             "hiring company's website.\"",
+             "https://support.theladders.com/en_us/what-kinds-of-jobs-are-posted-on-ladders-BydQI1Yxgl", R25),
+            ("[Where you apply|them_better 1] Three options: Apply4Me (\"our team will submit the application on your behalf\"), Easy Apply "
+             "(\"send your resume directly to the recruiter or job poster on Ladders\") and Apply Manually (\"redirect you to the employer's "
+             "original job posting\").", "https://support.theladders.com/en_us/how-do-i-apply-to-a-job-on-ladders-rkFapgLMll", R25),
+            ("[us_better 3] \"You may come across job listings on Ladders where the company name is not displayed.\"",
+             "https://support.theladders.com/en_us/why-are-some-companies-listed-as-confidential-on-ladders-BJ_tkLMxe", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ Craigslist
+    dict(
+        slug="craigslist",
+        name="Craigslist",
+        url="https://www.craigslist.org/",
+        what="Craigslist is a site of local classifieds; jobs is one of its posting types, beside community, services, housing, for sale, gigs "
+             "and resumes. A job posting costs $10 to $75 in the US, by area.",
+        rows=_rows(
+            ("Who pays", "Employers, a one-time fee for each job posting. Craigslist says it has no subscription fees."),
+            ("Price to post one job", "$10 to $75 in the US, by area ($0 to $75 in Canada), one time. A paid posting is live 30 days; a repost is a "
+                                      "new paid posting."),
+            ("Where the jobs come from", "Posters create them on the craigslist site of their area (\"create a posting\"); a posting appears about "
+                                         "15 minutes after it is confirmed."),
+            ("Where you apply", "You reply to the posting by the contact the poster chose: email through a craigslist relay address, phone or "
+                                "text, or chat."),
+            ("How fresh the listings are", "Paid postings are live for 30 days; all postings move down the list as new ones are published."),
+            ("Kinds of jobs", "Local jobs and gigs, searched by place."),
+            ("Payment methods", "Visa, Mastercard and American Express, paid when the posting is created."),
+        ),
+        them_better=[
+            "Local jobs and short gigs ($3 to $10 to post) in one place, searched by place.",
+            "Replies go through a relay address craigslist creates for each posting, so the poster's email stays hidden.",
+            "Employers can pay and post today, with a one-time fee and no subscription.",
+        ],
+        us_better=[
+            "A standard listing is free for 30 days here, posted in the employer account. A craigslist job posting costs $10 to $75 in the US, "
+            "by area.",
+            "Every job here is read from the employer's own careers page every hour, and you apply on the employer's own page. On craigslist you "
+            "reply to a posting by email, phone or chat.",
+        ],
+        pick="Use Craigslist if you want local jobs and gigs near you, use Jobs Every Hour if you want jobs read every hour from employers' own "
+             "careers pages and to apply there.",
+        sources=[
+            ("[what|Kinds of jobs] \"craigslist currently offers the following types of postings: community, services, housing, for sale, jobs, "
+             "gigs, and resumes.\"", "https://www.craigslist.org/about/help/posting/features/type", R25),
+            ("[what|Who pays|Price to post one job|Payment methods|them_better 1|them_better 3|us_better 1|pick] US: \"Job postings $10-75\", "
+             "\"Gigs $3-10\"; Canada: \"Job postings $0-75\". \"Fees vary depending on geographic location.\" \"Publishing your posting is a one "
+             "time charge. craigslist does not have any subscription fees, or additional charges.\" \"You can only pay for a posting via our "
+             "website or mobile app at the time that the posting is created.\"", "https://www.craigslist.org/about/help/faqs/fees", R25),
+            ("[Price to post one job|Payment methods] \"Job categories in US and parts of CA —$10-75 (fee varies by area)\"; \"Visa, MasterCard, "
+             "and American Express are accepted.\"", "https://www.craigslist.org/about/help/posting_fees", R25),
+            ("[Price to post one job|How fresh the listings are|us_better 1] \"Paid postings are live on the site for 30 days.\" \"All postings "
+             "move down the listings as new postings are published.\"", "https://www.craigslist.org/about/help/faqs/lifespan", R25),
+            ("[Price to post one job] \"There are no free reposts for paid postings. A repost is a new posting and must be paid for.\"",
+             "https://www.craigslist.org/about/help/posting/modify/repost", R25),
+            ("[Where the jobs come from] Choose the geographic location, click \"create a posting\", pick a type and category, publish; \"Paid "
+             "postings will show their price and require payment.\" \"Your posting should appear on craigslist about 15 minutes after "
+             "confirmation.\"", "https://www.craigslist.org/about/help/posting/create", R25),
+            ("[Where you apply|us_better 2|pick] The \"contact info\" box lets the poster choose \"how you would like to interact with other "
+             "craigslist users\": email and CL mail relay, phone/text, or chat.",
+             "https://www.craigslist.org/about/help/posting/features/contact-info", R25),
+            ("[Where you apply|them_better 2] \"craigslist creates a randomized custom email address for each posting.\"",
+             "https://www.craigslist.org/about/help/posting/features/contact-info/email/mail-relay", R25),
+            ("[Kinds of jobs|them_better 1|pick] \"You can search on craigslist using both text and categories. Results are based up location.\"",
+             "https://www.craigslist.org/about/help/searching/how-to-search", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ Levels.fyi
+    dict(
+        slug="levels-fyi",
+        name="Levels.fyi",
+        url="https://www.levels.fyi/",
+        what="Levels.fyi is a pay data site, started in 2017, that shows what work pays by company, level and location; its job board lists open "
+             "jobs beside its pay estimates. It says more than 3 million professionals use it each month.",
+        rows=_rows(
+            ("Who pays", "Employers, for pay data (plans from $800 a month), branding and its Talent Pool; job seekers only for optional coaching. "
+                         "The job board and salary data are free."),
+            ("Price for job seekers", "Free to search jobs and salaries. Paid help: negotiation coaching from $1,500, with a guaranteed raise or "
+                                      "a full refund, and resume review."),
+            ("Price to post one job", "Free: its jobs page offers \"Create a free Job Post\". Promoted listings are part of its paid employer "
+                                      "branding."),
+            ("Where you apply", "Off the site: on the two jobs we opened, \"Apply Now\" led to the job's posting on LinkedIn."),
+            ("Account needed to apply", "Not on Levels.fyi: its job pages and Apply Now links opened without signing in."),
+            ("How fresh the listings are", "Each listing shows its age; the pages we read showed jobs posted from 2 days to 7 months earlier."),
+            ("Kinds of jobs", "245,483 jobs at 10,000 hiring companies on its jobs page, with pay estimates; it began with tech and now covers "
+                              "100+ roles."),
+        ),
+        them_better=[
+            "Pay data by company and level: more than 1 million salaries shared, and a pay estimate beside each job.",
+            "Paid negotiation coaching with a guaranteed raise in year-one pay or a full refund (from $1,500).",
+            "Its Talent Pool lets companies come to you with the role and the pay upfront.",
+        ],
+        us_better=[
+            "Every job here is read from the employer's own careers page every hour and dropped when it closes. The Levels.fyi pages we read "
+            "showed listings up to 7 months old.",
+            "Every Apply button here goes to the employer's own page. On the Levels.fyi jobs we opened, Apply Now led to a LinkedIn posting.",
+        ],
+        pick="Use Levels.fyi if you want pay data by level beside each job, use Jobs Every Hour if you want jobs read every hour from employers' "
+             "careers pages and to apply on the employer's own page.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Kinds of jobs|them_better 1|them_better 2|them_better 3|pick] \"Levels.fyi is a compensation "
+             "data platform that shows what work pays at every company, level, and location\"; started in 2017; \"more than 3 million "
+             "professionals use Levels.fyi each month\"; \"we now cover more than 100 roles\". Under \"FREE FOR EVERYONE\": salary data "
+             "(\"more than 1 million salaries\") and the job board (\"open jobs alongside our total compensation estimates by level\"; \"join "
+             "the Talent Pool and let companies come to you with the role and pay upfront\"). Coaching: \"Packages start at $1,500, with a "
+             "guaranteed increase in year-one total compensation.\" Pay data for employers: \"Plans start at $800 a month.\"",
+             "https://www.levels.fyi/about", R25),
+            ("[Price for job seekers|them_better 2] Negotiation packages $1,500 (Standard, Startup), $2,450 (Premium), $5,000 (Leadership); \"If "
+             "we don't raise your offer by the guaranteed amount, we refund your entire coaching fee\".", "https://www.levels.fyi/services/", R25),
+            ("[Price to post one job|How fresh the listings are|Kinds of jobs|us_better 1] \"10,000 companies hiring\", \"245,483 total jobs\"; "
+             "\"Create a free Job Post\"; listings marked \"Promoted\" link to its employer branding page; ages from \"2 days ago\" to \"5 "
+             "months ago\" on the first page, and \"7 months ago\" in a search for software engineer.", "https://www.levels.fyi/jobs", R25),
+            ("[Who pays|Price to post one job] For employers: Talent Branding (\"Put your company in front of the 1 in 10 US tech professionals "
+             "who visit each month\"), Talent Pool and pay data; no prices on the page.", "https://www.levels.fyi/offerings/", R25),
+            ("[Where you apply|Account needed to apply|us_better 1|us_better 2|pick] Job pages opened without signing in: \"Software Engineer, "
+             "Growth\" at Slash (\"7 months ago\") and \"Software Engineer\" at Apple; on both, \"Apply Now\" links to the job on "
+             "linkedin.com.", "https://www.levels.fyi/jobs?jobId=03cds6p5s2sbf", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ GovernmentJobs.com
+    dict(
+        slug="governmentjobs",
+        name="GovernmentJobs.com",
+        url="https://www.governmentjobs.com/",
+        what="GovernmentJobs.com is a job site for public-sector jobs run by NEOGOV (Governmentjobs.com, Inc.); it says millions of job seekers "
+             "apply there to jobs from 2,000+ agencies nationwide.",
+        rows=_rows(
+            ("Who pays", "Government agencies, which buy NEOGOV's services on an annual basis to post their jobs. Its Access Membership for "
+                         "job seekers is free."),
+            ("Price for job seekers", "Free: one free profile to apply, and an Access Membership that \"will be free forever\"."),
+            ("Price to post one job", "No price is published: agencies buy its services on an annual basis."),
+            ("Where the jobs come from", "Federal, state, local, tribal and other government agencies post their own openings through NEOGOV's "
+                                         "services."),
+            ("Where you apply", "On GovernmentJobs.com: press Apply, fill in the steps each employer sets, then certify and submit."),
+            ("Account needed to apply", "Yes: its application guide starts with creating an account (email and password, or Google)."),
+            ("Kinds of jobs", "Government and public-sector jobs from 2,000+ agencies across the US."),
+        ),
+        them_better=[
+            "Public-sector jobs from 2,000+ agencies, with one profile to apply to many of them.",
+            "A free Access Membership: agencies can find your resume and contact you, and SalaryChecker compares public-sector pay across "
+            "agencies.",
+            "You follow the status of each application and schedule appointments in your account.",
+        ],
+        us_better=[
+            "No account needed to search or apply here. GovernmentJobs.com's application guide starts with creating an account.",
+            "Jobs from thousands of companies' own careers pages, read every hour. GovernmentJobs.com lists public-sector jobs.",
+        ],
+        pick="Use GovernmentJobs.com if you want a public-sector job, use Jobs Every Hour if you want jobs at companies, searched and applied for "
+             "with no account.",
+        sources=[
+            ("[what|Price for job seekers|Kinds of jobs|them_better 1] \"Join millions of job seekers applying to jobs from 2,000+ agencies "
+             "nationwide.\" \"Create one free profile and get matched to government jobs faster.\" \"Create your government resume once and "
+             "apply to thousands of public sector jobs nationwide in just a few clicks.\" Footer: \"Powered by NEOGOV\".",
+             "https://www.governmentjobs.com/", R25),
+            ("[what|Who pays|Price to post one job|Where the jobs come from|us_better 2|pick] \"This website is owned and operated by "
+             "Governmentjobs.com, Inc. (DBA \"NEOGOV\").\" \"Our Customers are organizations such as federal, state, local, tribal, or other "
+             "municipal government agencies\"; \"Our Customers use our Services to post job opportunities\"; \"the Services you purchase are "
+             "offered on an annual basis\".", "https://www.governmentjobs.com/home/companyinfo", R25),
+            ("[Who pays|Price for job seekers|them_better 2] \"Membership is FREE\"; \"Your Access Membership will be free forever.\" Make your "
+             "resume searchable by employers, get contacted by employers, and \"SalaryChecker, a tool that compares wages for public sector "
+             "positions at different agencies\".", "https://www.governmentjobs.com/AccessMembership", R25),
+            ("[Where you apply|Account needed to apply|them_better 3|us_better 1|pick] \"This guide describes how to apply for jobs using the "
+             "Government Jobs website.\" First step \"Create a New Account\": \"Select SIGN UP. Enter an email and password\", or \"Continue "
+             "with Google\". To apply: \"Select APPLY\"; \"The specific steps that you must complete are determined by the employer\"; "
+             "\"Proceed to Certify and Submit\". Also Check Application Status and Schedule an Appointment.",
+             "https://www.governmentjobs.com/home/applicationguide", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ HiringCafe
+    dict(
+        slug="hiringcafe",
+        name="HiringCafe",
+        url="https://hiringcafe.com/",
+        what="HiringCafe is a free job search engine run by SPICYHR INC. that says it collects jobs directly from company websites in real time; "
+             "its home page states over 5 million open jobs.",
+        rows=_rows(
+            ("Who pays", "No one, by its pages: \"Our product is free.\" It says that once people love it, \"we can deliver value for "
+                         "employers, too\"."),
+            ("Price for job seekers", "Free: job seekers \"search jobs, use filters, save searches, build boards, and explore opportunities "
+                                      "without paying\"."),
+            ("Price to post one job", "No price is shown: an \"Add jobs\" form and an \"Employers\" contact form."),
+            ("Where the jobs come from", "\"We collect jobs directly from company websites in real time and filter out external recruiting "
+                                         "agencies and fake consulting firms.\""),
+            ("Where you apply", "On the employer's site: the job page's Apply button reads \"Apply directly on employer's site\"."),
+            ("Account needed to apply", "Not to open a job and its Apply button: the job page we opened showed both without signing in."),
+            ("How fresh the listings are", "\"In real time\", it says, with systems that detect stale postings and duplicate roles; no reading "
+                                           "interval is stated."),
+            ("Kinds of jobs", "Jobs of every kind, \"over 5 million open jobs\", with filters for pay, benefits, licenses, security clearance, "
+                              "shifts, company stage and size."),
+        ),
+        them_better=[
+            "Far larger: it states over 5 million open jobs.",
+            "Many more filters (pay, benefits, clearance, shifts, company stage and size) and a Talent Agent that looks for jobs for you every "
+            "day.",
+            "A job tracker with saved searches and boards, and a 100K+ member Reddit community.",
+        ],
+        us_better=[
+            "A standard listing is free for 30 days in an employer account here. HiringCafe has only an \"Add jobs\" form and an employer "
+            "contact form, with no price.",
+            "Each job here is read again from the employer's careers page every hour, and a closed job keeps its page, marked closed. "
+            "HiringCafe says \"in real time\" and states no reading interval.",
+        ],
+        pick="Use HiringCafe if you want the largest search of jobs from company websites with many filters, use Jobs Every Hour if you want each "
+             "job read every hour from employers' careers pages and closed jobs marked as closed.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Where the jobs come from|How fresh the listings are|them_better 2|them_better 3|us_better 2|"
+             "pick] \"We collect jobs directly from company websites in real time and filter out external recruiting agencies and fake "
+             "consulting firms.\" FAQ: \"Job seekers can search jobs, use filters, save searches, build boards, and explore opportunities "
+             "without paying to access the core search experience.\" \"We keep improving systems that detect stale postings, duplicate "
+             "roles\". \"Our product is free.\" \"we believe that once people fall in love with our product, we can deliver value for "
+             "employers, too.\" The Talent Agent \"finds the most relevant jobs for you every day\"; \"100K+ member Reddit community\"; "
+             "\"HiringCafe, operated by SPICYHR INC.\"", "https://hiringcafe.com/about", R25),
+            ("[what|Price to post one job|Kinds of jobs|them_better 1|them_better 2|them_better 3|us_better 1] \"HiringCafe has over 5 million "
+             "open jobs\"; filters for salary, benefits and perks, licenses and certifications, security clearance, shifts and schedules, stage "
+             "and funding, size; links \"Add jobs\" (a form) and \"Employers\" (a contact form); \"Tracker\".", "https://hiringcafe.com/", R25),
+            ("[Where you apply|Account needed to apply] A job page opened without signing in shows \"Apply\", labelled \"Apply directly on "
+             "employer's site\".", "https://hiringcafe.com/job/account-manager-hanoi-booking-com-hanoi-hanoi-ub93wlrsabpkd46d", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ Drivetube
+    dict(
+        slug="drivetube",
+        name="Drivetube",
+        url="https://drivetube.ai/",
+        what="Drivetube is a job search site run by Drivetube AI (India and the US) with a free job board read from 160,000+ company career "
+             "pages, beside paid resume writing and application services.",
+        rows=_rows(
+            ("Who pays", "No one, for the job board: it is free. Job seekers pay only for optional services (community membership, resume "
+                         "writing, a managed application program)."),
+            ("Price for job seekers", "The job board is free with no account. Community membership from $39.99 for 3 months; resume writing "
+                                      "from $25.99, up to $179.99."),
+            ("Price to post one job", "No job posts: employers use Drivetube Hire, which matches a job description with candidates' resumes, "
+                                      "\"no job postings, no applications\"."),
+            ("Where the jobs come from", "\"aggregated ATS-by-ATS directly from 160,000+ real company career pages across 50+ ATS platforms\"."),
+            ("Where you apply", "\"Every listing links to the company's real application page.\""),
+            ("Account needed to apply", "No: \"Free, no account required\"."),
+            ("How fresh the listings are", "\"Only roles posted in the last 3 days.\""),
+            ("Kinds of jobs", "Jobs in the US, UK, Canada, Australia, India and Europe, with visa-sponsorship filters for members."),
+        ),
+        them_better=[
+            "It reads more career pages: 160,000+ across 50+ hiring systems, in the US, UK, Canada, Australia, India and Europe.",
+            "Paid help beside the free board: human resume writing from $25.99 and a managed program that tailors and fills in applications.",
+            "A free online resume profile that verified employers can find and send interview requests to.",
+        ],
+        us_better=[
+            "A job stays here for as long as the employer keeps it open, read every hour. Drivetube shows only roles posted in the last 3 days, "
+            "so an opening that is older and still open is not there.",
+            "Employers can post a standard listing free for 30 days here. Drivetube takes no job posts.",
+        ],
+        pick="Use Drivetube if you only want jobs posted in the last 3 days, from several countries, use Jobs Every Hour if you want every open "
+             "job on employers' careers pages, however long it has been open, read every hour.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Price to post one job|Where the jobs come from|Where you apply|Account needed to apply|How "
+             "fresh the listings are|Kinds of jobs|them_better 1|them_better 2|them_better 3|us_better 1|us_better 2|pick] \"a free verified "
+             "job board built from 160,000+ real company career pages\"; \"Verified job openings aggregated ATS-by-ATS directly from 160,000+ "
+             "real company career pages across 50+ ATS platforms\"; \"Only roles posted in the last 3 days.\" \"Every listing links to the "
+             "company's real application page\"; \"Covers the US, UK, Canada, Australia, India and Europe\"; \"Free, no account required\". "
+             "Drivetube Profile: \"Verified employers can discover the profile and send interview requests\". Community membership with "
+             "visa-sponsorship filters \"From $39.99 for 3 months\"; resume writing \"From ₹499.99 in India / $25.99 elsewhere, up to ₹15,999 "
+             "/ $179.99\"; Job Hunt Program with tailored resumes and autofill. Employers: Drivetube Hire, \"no job postings, no "
+             "applications\". Operated by Drivetube AI Private Limited (India) and Drivetube AI, LLC (US/Delaware).",
+             "https://drivetube.ai/docs/overview", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ Jobright
+    dict(
+        slug="jobright",
+        name="Jobright",
+        url="https://jobright.ai/",
+        what="Jobright is an AI job search tool from Santa Clara, California, launched in 2023, that matches US jobs to your resume, tailors "
+             "resumes and fills in applications; its home page states 8,000,000+ jobs.",
+        rows=_rows(
+            ("Who pays", "Job seekers, for Premium (the basic service is free); employers, $499 a month per active role for its AI recruiter."),
+            ("Price for job seekers", "A free basic service; Premium was \"$30/month\" by its own blog in June 2025. jobright.ai/pricing was "
+                                      "not found."),
+            ("Price to post one job", "No job posts: employers pay $499 a month per active role for an AI recruiter that finds and contacts "
+                                      "candidates; one role can be tried free."),
+            ("Where the jobs come from", "\"aggregated from LinkedIn, Indeed, company career pages, and more\"; its remote jobs page says "
+                                         "\"major job boards and 200K+ company career sites\"."),
+            ("Where you apply", "On the employer's site (\"Apply on Employer Site\"), or with its autofill (\"Apply With Autofill\")."),
+            ("Account needed to apply", "Yes: pressing Apply Now on a job page showed \"Sign Up to Apply\"."),
+            ("How fresh the listings are", "Its remote jobs page says \"Updated hourly\"; it says about 400,000 new listings are added every day."),
+            ("Kinds of jobs", "US jobs of every kind, \"Over 8 million live job postings\", with an H-1B filter."),
+        ),
+        them_better=[
+            "Far larger: its home page states 8,000,000+ jobs and 400,000+ new ones a day.",
+            "AI tools: a resume tailored to each job, autofill of applications on hiring systems, insider connections and a career coach chat.",
+            "An H-1B filter for jobs likely to sponsor a visa.",
+        ],
+        us_better=[
+            "No account needed to apply: every Apply button goes to the employer's own page. On Jobright, Apply Now asks you to sign up.",
+            "Every job here comes from the employer's own careers page. Jobright also takes listings from LinkedIn, Indeed and other job boards.",
+            "Free for job seekers, with nothing to renew. Jobright's Premium was $30 a month in June 2025, by its own blog.",
+        ],
+        pick="Use Jobright if you want AI to match, tailor and fill in applications across millions of US jobs, use Jobs Every Hour if you want "
+             "jobs from employers' own careers pages, free and with no account.",
+        sources=[
+            ("[what|Kinds of jobs|them_better 1|them_better 2] \"Total Jobs 8,000,000+\", \"Today's New Jobs 400,000+\", \"3,000,000 trusted "
+             "users\"; \"Get matched jobs, autofill applications, tailored resume, and recommended insider connections\"; \"Sign up for "
+             "free\".", "https://jobright.ai/", R25),
+            ("[what|Who pays|Price for job seekers|Where the jobs come from|How fresh the listings are|Kinds of jobs|them_better 2|them_better 3|"
+             "us_better 2|us_better 3|pick] Its own post \"Is Jobright Legit?\" (18 June 2025): launched in 2023, based in Santa Clara, "
+             "California; \"Over 8 million live job postings currently and ~400,000 fresh listings added every day, aggregated from LinkedIn, "
+             "Indeed, company career pages, and more.\" \"Our basic service is free, and many members upgrade to our Premium plans "
+             "($30/month)\". \"Jobright focuses on the U.S. market—complete with an H‑1B visa job filter\". Autofill on \"thousands of ATS "
+             "platforms\"; Orion, a 24/7 chat coach; insider connections.", "https://jobright.ai/blog/is-jobright-legit/", R25),
+            ("[Where the jobs come from|How fresh the listings are] \"Top U.S. 100% Remote Jobs (Updated Hourly)\"; \"Updated hourly from major "
+             "job boards and 200K+ company career sites.\"", "https://jobright.ai/remote-jobs", R25),
+            ("[Where you apply|Account needed to apply|us_better 1|pick] A job page shows \"Apply on Employer Site\", \"APPLY NOW\" and \"Apply "
+             "With Autofill\"; pressing APPLY NOW showed \"Sign Up to Apply\".", "https://jobright.ai/jobs/info/6b06f4902662686ad8e05974", R25),
+            ("[Who pays|Price to post one job] \"One flat monthly price per active role\": \"Jobright $499\"; \"Try your AI recruiter free\", "
+             "\"One role per trial\".", "https://jobright.ai/employers/pricing", R25),
+            ("[Price for job seekers] jobright.ai/pricing answered \"Page Not Found\".", "https://jobright.ai/pricing", R25),
+        ],
+    ),
+    # ------------------------------------------------------------------ Jobscan
+    dict(
+        slug="jobscan",
+        name="Jobscan",
+        url="https://www.jobscan.co/",
+        what="Jobscan is a resume scanner that compares your resume with a job posting and shows the missing keywords; it also matches jobs to "
+             "your resume from Greenhouse, Lever, Workable and 20+ other hiring systems.",
+        rows=_rows(
+            ("Who pays", "Job seekers, for Premium. The free plan includes 5 resume scans a month."),
+            ("Price for job seekers", "Free plan with 5 resume scans a month. Premium: $49.95 a month, or $89.95 every 3 months after a 7-day free "
+                                      "trial. Auto Apply credits cost extra, from $1.40 each."),
+            ("Where the jobs come from", "Its job matches come \"from Greenhouse, Lever, Workable, and 20+ ATS platforms\"."),
+            ("Where you apply", "On the company's site, or with Auto Apply, which fills in the application and sends it after you approve it."),
+            ("Account needed to apply", "Yes, for its job matches: \"Sign up free to find jobs based on your resume\"; Premium unlocks every Top "
+                                        "Match job."),
+            ("Payment methods", "\"any major credit card\", plus state and local sales tax."),
+        ),
+        them_better=[
+            "A full resume scanner: a match rate for each job, ATS and recruiter findings, AI rewriting and a LinkedIn optimizer (most on "
+            "Premium).",
+            "Auto Apply drafts each application from your resume and sends it only after you approve it (credits from $1.40).",
+            "A job tracker and a Chrome extension that saves jobs from other job boards.",
+        ],
+        us_better=[
+            "The resume match check here is free, with no limit and no account. Jobscan's free plan has 5 scans a month; unlimited scans cost "
+            "$49.95 a month.",
+            "You see and open every job here with no account. Jobscan's job matches need a sign-up, and Premium unlocks every Top Match job.",
+            "Plus here is one payment that never renews (not on sale yet). Jobscan Premium bills every month or every 3 months until cancelled.",
+        ],
+        pick="Use Jobscan if you want AI rewriting and a match rate for each job you apply to, use Jobs Every Hour if you want a free, unlimited "
+             "resume check and jobs from careers pages with no account.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Payment methods|them_better 1|us_better 1|us_better 3|pick] Free \"$0 forever\": \"5 Free "
+             "Resume Scans monthly\", Job Tracker, Resume Builder, Chrome Extension. Quarterly \"$29.98 per month\", \"Billed as $89.95 every 3 "
+             "months\", \"Try 7 Days Free\"; Monthly \"$49.95 per month\". Premium: \"Unlimited Resume Scans\", \"Unlimited AI "
+             "Optimizations\", \"Linkedin Optimizer\", \"AI Job Match\", \"2 free Auto Apply Credits a month\". \"You can purchase Jobscan with "
+             "any major credit card.\" Sales tax by billing address. \"You may cancel at any time\".", "https://app.jobscan.co/plan", R25),
+            ("[what|Where you apply|Account needed to apply|them_better 3|us_better 2|pick] AI Job Match: \"Upload your resume to find jobs "
+             "that fit your skills\"; \"apply on the company's site\"; \"AI Job Match is free to start. Sign up free to find jobs based on your "
+             "resume, and use the Job Tracker and the Chrome extension. Premium unlocks every Top Match job\"; \"Save from your matches or from "
+             "job boards with the Chrome extension.\" \"Trusted by 10M+ job seekers since 2013\".", "https://www.jobscan.co/job-search", R25),
+            ("[what|Price for job seekers|Where the jobs come from|Where you apply|them_better 2] \"Auto Apply currently matches you with jobs "
+             "from Greenhouse, Lever, Workable, and 20+ ATS platforms\"; \"Nothing is sent until you approve it\"; credits: 5 for $8.50, 10 for "
+             "$15.00, 25 for $35.00 ($1.40 a credit); Premium users get 2 a month.", "https://www.jobscan.co/auto-apply", R25),
+            ("[what|them_better 1] \"Jobscan checks your resume against the specific system screening it, shows you the keywords and skills you "
+             "are missing\"; \"We recommend a match rate score of 75%. However, many career counselors and Jobscan users see success even with "
+             "just a 65% match rate.\"", "https://www.jobscan.co/", R25),
+        ],
+    ),
+]
+
 # The kind of each site, for the "alternatives" pages (similar sites first) and the chips of the comparison tool. Our own label, not a
 # fact about the site: each one is backed by the site's "Kinds of jobs" or "what" above, or its own name (Remote OK, We Work Remotely).
-KINDS = {"general": "General job sites", "engine": "Job search engines", "tech": "Tech and startup jobs", "remote": "Remote jobs",
+KINDS = {"general": "General job sites", "engine": "Job search engines", "ai": "AI job search and resume tools", "tech": "Tech and startup jobs", "remote": "Remote jobs",
          "students": "Students and new graduates", "hourly": "Hourly and shift jobs", "government": "Government jobs",
          "nonprofit": "Nonprofit jobs", "crypto": "Crypto and web3 jobs"}
 KIND = {"indeed": "general", "linkedin-jobs": "general", "ziprecruiter": "general", "glassdoor": "general", "welcome-to-the-jungle": "general",
@@ -1310,7 +1789,10 @@ KIND = {"indeed": "general", "linkedin-jobs": "general", "ziprecruiter": "genera
         "we-work-remotely": "remote", "remote-ok": "remote", "flexjobs": "remote", "remotive": "remote", "himalayas": "remote",
         "remote-co": "remote", "working-nomads": "remote",
         "handshake": "students", "snagajob": "hourly", "usajobs": "government", "idealist": "nonprofit",
-        "cryptojobslist": "crypto", "web3-career": "crypto"}
+        "cryptojobslist": "crypto", "web3-career": "crypto",
+        # 25 Nov 2026
+        "google-for-jobs": "engine", "hiringcafe": "engine", "drivetube": "engine", "ladders": "general", "craigslist": "hourly",
+        "levels-fyi": "tech", "governmentjobs": "government", "jobright": "ai", "jobscan": "ai"}
 OUR_KIND = "engine"          # we read employers' careers pages and drop closed jobs: a job search engine, shown with the others of that kind
 # The sites people compare most; a pair with one of them is built for every other site (see pairs()).
 BIG = ("indeed", "linkedin-jobs", "ziprecruiter", "glassdoor")
@@ -1331,7 +1813,7 @@ def pairs(sites):
     for i, a in enumerate(sites):
         for b in sites[i + 1:]:
             same = a["kind"] == b["kind"]
-            big = (a["slug"] in BIG or b["slug"] in BIG) and "crypto" not in (a["kind"], b["kind"])
+            big = (a["slug"] in BIG or b["slug"] in BIG) and not {"crypto", "ai"} & {a["kind"], b["kind"]}     # "Indeed vs Jobscan" is no search
             first = a["slug"] in FIRST8 and b["slug"] in FIRST8
             if same or big or first:
                 out.append((a, b))
@@ -1346,6 +1828,8 @@ SKIPPED = [
     ("CareerBuilder", "the same block as Monster on 24 Nov 2026; its hiring site now sends visitors to Monster's.",
      "https://www.prweb.com/releases/bold-completes-acquisition-of-careerbuilder--monster-job-boards-302519807.html"),
     ("Adzuna", "every page asked us to prove we are human on 24 Nov 2026, so no fact could be checked.", "https://www.adzuna.com/"),
+    ("LinkUp", "its site asked our browser to prove it is human on 18 and 25 Nov 2026, so no fact could be checked; we do not go past "
+               "such checks.", "https://www.linkup.com/"),
     ("Hired", "no longer a job site of its own: it was folded into LHH Recruitment Solutions in June 2024, and hired.com now sends "
               "visitors to lhh.com.", "https://www.staffingindustry.com/news/global-daily-news/adecco-incorporating-hired-lhh-business"),
 ]
@@ -1382,6 +1866,17 @@ NOT_SOURCED = {
     "snagajob": ["Price to post one job", "Payment methods"],
     "usajobs": ["Who pays", "Price for job seekers", "Price to post one job", "How fresh the listings are", "Payment methods"],
     "idealist": [],
+    # read on 25 Nov 2026
+    "google-for-jobs": ["Price for job seekers", "Payment methods"],
+    "ladders": ["Price to post one job", "How fresh the listings are", "Payment methods",
+                "theladders.com answered \"Ladders is currently available only in the United States and Canada\"; read its help centre instead"],
+    "craigslist": ["Price for job seekers", "Account needed to apply", "the about and FAQ index pages state no figures"],
+    "levels-fyi": ["Where the jobs come from", "Payment methods"],
+    "governmentjobs": ["How fresh the listings are", "Payment methods"],
+    "hiringcafe": ["Payment methods"],
+    "drivetube": ["Payment methods"],
+    "jobright": ["Payment methods", "jobright.ai/pricing was a 404; the Premium price is from its own blog post of June 2025"],
+    "jobscan": ["Price to post one job", "How fresh the listings are", "Kinds of jobs"],
 }
 
 _TAG = re.compile(r"^\[([^\]]+)\]\s*")
@@ -1405,8 +1900,8 @@ def site(slug):
 def test():
     problems = []
     slugs = [s["slug"] for s in SITES]
-    if len(SITES) < 24 or len(set(slugs)) != len(slugs) or set(slugs) != set(KIND):
-        problems.append(f"expected 24+ unique sites, each with a kind, got {slugs}")
+    if len(SITES) < 33 or len(set(slugs)) != len(slugs) or set(slugs) != set(KIND):      # 8 (14 Nov), +16 (24 Nov), +9 (25 Nov)
+        problems.append(f"expected 33+ unique sites, each with a kind, got {slugs}")
     for s in SITES:
         p = s["slug"]
         for field in ("slug", "name", "url", "what", "rows", "them_better", "us_better", "pick", "sources"):
@@ -1423,7 +1918,7 @@ def test():
             keys.update(source_keys(fact))
             if not url.startswith("https://"):
                 problems.append(f"{p}: bad url {url!r}")
-            if date not in (R13, R14, R21, R24):
+            if date not in (R13, R14, R21, R24, R25):
                 problems.append(f"{p}: bad date {date!r}")
         rows = s["rows"]
         if len(rows) < 4:      # build.py gives such a site no page until a fourth fact is sourced
@@ -1457,6 +1952,8 @@ def test():
     assert "25,000 companies" in US_ANSWERS["Kinds of jobs"], US_ANSWERS["Kinds of jobs"]
     pp = pairs([s for s in SITES if len(s["rows"]) >= 4])
     assert any({a["slug"], b["slug"]} == {"indeed", "ziprecruiter"} for a, b in pp) and all(a["slug"] != b["slug"] for a, b in pp)
+    assert not any({a["slug"], b["slug"]} == {"indeed", "jobscan"} for a, b in pp)          # a resume tool is paired only with its own kind
+    assert {"jobscan", "jobright"} <= {s["slug"] for s in SITES if s["kind"] == "ai"}
     rows = sum(len(s["rows"]) for s in SITES)
     srcs = sum(len(s["sources"]) for s in SITES)
     print(f"OK: {len(SITES)} sites, {len(pp)} pairs, {rows} rows, {srcs} sources; "

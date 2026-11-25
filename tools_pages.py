@@ -247,6 +247,10 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "widgets/": ("Jobs widget and live badges", "Show live jobs on your own site with one line of code."),
         "contract/": ("Contract jobs", "Open contract roles, updated hourly."),
         "my-jobs/": ("Application tracker", "Save jobs, mark where each application stands and see which ones have gone quiet."),
+        # landing pages for the searches AI job tools answer (25 Nov 2026): what each tool does, a real example and other tools compared
+        "resume-tailor/": ("Resume tailor, explained", "How to tailor a resume to one posting for free, on a real example, beside Jobscan, Jobright and Teal."),
+        "ai-job-match/": ("Job match, explained", "How jobs are matched to your answers and resume, with the reason for each, beside Jobright and Jobscan."),
+        "job-application-tracker/": ("Job application tracker, explained", "Track saved jobs and applications with no sign-up, beside the trackers of other sites."),
     }
     TOOLS = []          # filled below, in the order they appear on the hub
 
@@ -290,7 +294,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
            "No, add only the ones that are true. Listing skills you do not have gets you into interviews you cannot pass. Where you do have the skill, use the posting’s exact word, because a search for “PostgreSQL” does not find “databases”."),
           ("Does this work like an applicant tracking system?",
            "Not exactly. Applicant tracking systems differ, and this tool does not copy any of them. It checks the part you control: whether the skills and terms the posting stresses appear in your resume, so that a keyword search or a quick read finds them.")],
-         ["resume-review", "resume-bullet-builder", "cover-letter"], ["resume/", "for-you/"])
+         ["resume-review", "resume-bullet-builder", "cover-letter"], ["resume-tailor/", "resume/", "for-you/"])
 
     # ------------------------------------------------------------ 1b. keywords of a job description (the Careerist study: one tool page per search phrase)
     tool("job-description-keywords", "seekers", "Job description keyword finder",
@@ -2656,8 +2660,9 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          + '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type what you need, for example salary, cover letter or LinkedIn" aria-label="Find a tool"></p>'
          f'<p class="lead" id="dirnone" hidden>No tool with these words. The <a href="{P}/help/">help page</a> answers questions about this site.</p>'
          + '<div class="pillrow" role="navigation" aria-label="Groups of tools">' + "".join(f'<a href="#{sid_}">{e(h_)}</a>' for h_, sid_ in jump) + "</div>"
-         + section("Start here: [[resume, matching, tracking]]", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>", sid="start",
-                   label="The three most used").replace("<section ", "<section data-dirg ", 1)
+         + section("Start here: [[resume, matching, tracking]]", '<div class="twides">' + "".join(wide(*TILE_TEXT[u]) for u in EXTRA) + "</div>"
+                   + '<p class="note">How each works, with a real example and other tools compared: ' + " · ".join(f'<a href="{P}/{u}">{e(SITE_PAGES[u][0])}</a>' for u in ("resume-tailor/", "ai-job-match/", "job-application-tracker/")) + "</p>",
+                   sid="start", label="The three most used").replace("<section ", "<section data-dirg ", 1)
          + seekers
          + part("For employers and recruiters", group("employers"), "employers", n_emp)
          + section("Templates and examples to copy", '<div class="feats">'

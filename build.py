@@ -4166,7 +4166,24 @@ def main():
     n104_ = sum(1 for j in remote if j["usd"] and j["usd"][0] >= 104000)
     n130_ = sum(1 for j in remote if j["usd"] and j["usd"][0] >= 130000)
     cats104_ = [CAT[c_].lower() for c_, _ in Counter(j["cat"] for j in remote if j["usd"] and j["usd"][0] >= 104000 and j["cat"] != OTHER[0]).most_common(3)]
-    rm_qa = []
+    # 25 Nov 2026, ChatGPT asked "best websites to find remote jobs" and "best sites for entry level jobs": both answers are a list of
+    # other job sites by kind, and the list pages here linked to none of the comparisons. A row of the sites compared on /vs/ (each
+    # from its own pages), and one table of them all, under the jobs.
+    vs_ok_ = {x["slug"]: x for x in compare_sites.SITES if len(x["rows"]) >= 4}
+    def vs_tiles(title_, slugs_, sub_):
+        xs_ = [vs_ok_[s_] for s_ in slugs_ if s_ in vs_ok_]
+        if len(xs_) < 3: return ""
+        good_ = lambda x: (lambda t_: "Good if you " + t_ if len(t_) <= 60 else compare_sites.KINDS[x["kind"]])(re.sub(r"^Use .*? if (you )?", "", x["pick"].split(", use ")[0]))
+        return section(title_, '<ul class="tiles">' + "".join(f'<li><a class="tile" href="{P}/vs/{x["slug"]}/"><span class="n">{e(x["name"])} compared</span>'
+                                                             f'<span class="c">{e(good_(x))}</span></a></li>' for x in xs_) + "</ul>"
+                       + f'<p class="note"><a href="{P}/vs/compare/?sites={",".join(x["slug"] for x in xs_[:4])},jobseveryhour">These sites and this one in one table</a> · '
+                         f'<a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>', sub=sub_)
+    vs_names_ = lambda slugs_: (lambda n_: ", ".join(n_[:-1]) + " and " + n_[-1] if len(n_) > 1 else "".join(n_))([vs_ok_[s_]["name"] for s_ in slugs_ if s_ in vs_ok_])
+    REMOTE_SITES = ("we-work-remotely", "himalayas", "remote-ok", "remotive", "remote-co", "working-nomads", "flexjobs")
+    rm_qa = [("Which websites are best for remote jobs?",
+              f"Remote-only job sites: {vs_names_(REMOTE_SITES)}, each compared below from its own pages; FlexJobs and Remotive charge job seekers for full access. "
+              f"LinkedIn and Indeed list remote roles too. This site has {len(remote):,} remote jobs read every hour from employers’ own careers pages, free and with no account. "
+              "Remote does not always mean any country: check where the employer accepts applicants.")]
     if best_rm:
         rm_qa.append(("What is the best remote job right now?", "By advertised pay, the remote kinds of work with the highest median today: " + ", ".join(f"{rlow(nm_)} ({money(m_)}, {c_:,} open)" for c_, _, nm_, m_, _ in best_rm)
                       + ". By number of openings: " + ", ".join(f"{rlow(nm_)} ({c_:,})" for c_, _, nm_, _, _ in rr_rm[:3]) + ". The best one is the one your skills already fit, so compare the skills each posting names."))
@@ -4183,6 +4200,7 @@ def main():
             pics=hub_sections("remote roles", remote)[0], list_title="All remote jobs, newest first",
             hub=(section("Remote jobs by category", f'<ul class="tiles">{rcats}</ul>', ("jobs/", "Search every job")) if rcats else "") + remote_more + hub_sections("remote roles", remote)[1],
             after=guide_row([("remote-jobs-by-field", "Which jobs can be done from home"), ("phone-and-video-interview-tips", "Phone and video interviews"), ("how-to-find-a-job", "How to find a job")], "Guides for remote work")
+                  + vs_tiles("Other remote job sites, [[compared]]", REMOTE_SITES, "Each one beside this site, every fact from its own pages with the date it was read.")
                   + every_list("Every list of remote jobs", REL["remote"], (("Kind of contract and level", r"^remote/(?!skills/)[^/]+/$"), ("By kind of work", r"^roles/"),
                              ("By place", r"^locations/"), ("By skill", r"^remote/skills/"), ("By pay", r"^salary/"), ("More", r"."))),
             feed=True, faq="remote jobs", faq_extra=rm_qa)
@@ -4311,9 +4329,15 @@ def main():
                              + '</table></div><p class="note">Median of the midpoints of advertised yearly US-dollar ranges; a kind of work needs 5 entry-level postings with pay.</p>')
     if len(nd_e) >= 3:
         ent_after += section("Entry-level jobs with no degree required", f"<p>{len(nd_e):,} of these postings say no degree is required. The newest:</p>" + job_links(nd_e))
+    ENTRY_SITES = ("handshake", "snagajob", "indeed", "linkedin-jobs", "ziprecruiter", "usajobs", "governmentjobs", "craigslist")
+    ent_after += vs_tiles("Other sites for a first job, [[compared]]", ENTRY_SITES, "Students, hourly work, government and the large general sites, each beside this one, from its own pages.")
     ent_after += guide_row([("entry-level-jobs", "Where beginners are hired"), ("how-to-get-a-job-with-no-experience", "A job with no experience"), ("how-to-find-a-job", "How to find a job"),
                             ("jobs-for-teens", "Jobs for teens"), ("job-levels-explained", "Job levels explained")], "Guides for a first job")
-    ent_qa = [("What counts as an entry-level job here?", "A job whose title marks it as an internship or a junior role: intern, junior, graduate, new grad and similar words. Many jobs with no level in the title are open to beginners too "
+    ent_qa = [("Which sites are best for entry-level jobs?",
+               "Handshake for students and new graduates, Snagajob for hourly work, USAJOBS and GovernmentJobs.com for public-sector jobs, and the large general sites Indeed, "
+               f"LinkedIn and ZipRecruiter, each compared below from its own pages. This site lists {len(jr):,} entry-level jobs and internships read every hour from employers’ "
+               "own careers pages, free and with no account; apply on the employer’s page."),
+              ("What counts as an entry-level job here?", "A job whose title marks it as an internship or a junior role: intern, junior, graduate, new grad and similar words. Many jobs with no level in the title are open to beginners too "
                "(associate and trainee roles, for example), which is why the kinds of work open to beginners, linked above, count more jobs.")]
     if rr_e:
         ent_qa.append(("What's the easiest entry-level job to get?", "By openings today: " + ", ".join(f"{rlow(nm_)} ({c_:,})" for c_, _, nm_, _, _ in rr_e[:4])
@@ -6091,9 +6115,11 @@ def main():
          '<div id="swipe" class="swipe" aria-live="polite"><p class="note">Loading the newest jobs…</p></div>'
          f'<p class="note swipe-foot"><a href="{P}/my-jobs/">My jobs</a> holds what you saved. <button class="linkbtn" type="button" id="swipe-reset">Show the jobs I passed on again</button></p>',
          '<meta name="robots" content="noindex">', sitemap=False)
-    page("my-jobs/", f"Job Application Tracker — free, no sign-up, no spreadsheet | {SITE}", "A free job application tracker in your browser: save jobs, mark where you applied, add notes, export to CSV. No account and no spreadsheet to maintain.",
+    # 25 Nov 2026: the search "job application tracker" now has its own page (/job-application-tracker/, the tool explained with an example and
+    # other trackers compared); this tool page carries its own name in the title so the two do not compete for the same words.
+    page("my-jobs/", f"My Jobs: Saved Jobs, Applications and Notes | {SITE}", "My jobs: the jobs you saved, where each application stands, your notes and saved searches, kept in this browser with no account. Export to CSV any time.",
          crumbs(("My jobs", "")) + '<h1>My jobs: your application tracker</h1><p class="lead">Saved jobs, applications, notes and searches in one place, so you know what you applied to and who answered. It is all kept in this browser; nothing is uploaded.</p>'
-         f'<p class="note">Want more to save? <a href="{P}/swipe/">Swipe through the newest jobs</a> one at a time.</p>'
+         f'<p class="note">Want more to save? <a href="{P}/swipe/">Swipe through the newest jobs</a> one at a time. New here? <a href="{P}/job-application-tracker/">How the tracker works, with an example</a>.</p>'
          '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-view" type="button" aria-pressed="false">Board view</button><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
          '<div class="mj-board" id="mj-board" hidden></div>'
          '<p class="note" id="mj-nudge" hidden></p>'
@@ -8085,7 +8111,12 @@ def main():
             seen_.add(url)
             out_.append(f'<li><a href="{e(url)}" rel="nofollow noopener">{e(re.sub(r"^https?://(www\.)?", "", url).rstrip("/")[:70])}</a>, read {fdate(date)}</li>')
         return '<ul class="vs-src">' + "".join(out_) + "</ul>"
+    # A meta description of 140-160 characters (the page standard): the first of the wordings that lands in that range, else the longest that
+    # fits. The one-size wording gave 116-144 characters once fit_desc cut its last sentence (25 Nov 2026).
+    desc_pick = lambda *c: next((x for x in c if 140 <= len(x) <= 160), max((x for x in c if len(x) <= 160), key=len, default=c[-1]))
+    VS_OWN = {"jobscan"}                # sites whose /vs/ page is built further down, with more than the shared rows (Jobscan: its resume scans too)
     for x in VS:
+        if x["slug"] in VS_OWN: continue
         ours = compare_sites.OUR_NAME
         table_ = ('<div class="tablewrap"><table class="vs-t"><tr><th></th><th>' + e(x["name"]) + "</th><th>" + e(ours) + "</th></tr>"
                   + "".join(f'<tr><th>{e(q_)}</th><td data-l="{e(x["name"])}">{e(a_)}</td><td data-l="{e(ours)}">{e(b_)}</td></tr>' for q_, a_, b_ in x["rows"]) + "</table></div>")      # data-l: whose answer a cell is, shown above it when a phone stacks the row
@@ -8093,7 +8124,9 @@ def main():
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in vs_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"vs/{x['slug']}/", f"{x['name']} vs {ours}: a Fair Comparison ({fdate(TODAY, False)}) | {SITE}",
-             f"{x['name']} and {ours} side by side: who pays, prices, where the jobs come from, where you apply and how fresh the listings are. Every fact about {x['name']} comes with its source.",
+             desc_pick(f"{x['name']} vs {ours}, side by side: who pays, where the jobs come from and where you apply. {len(x['rows'])} facts about {x['name']}, each with its source and date.",
+                       f"{x['name']} vs {ours}: who pays, where the jobs come from and where you apply. {len(x['rows'])} facts about {x['name']}, each with its source and date.",
+                       f"{x['name']} vs {ours}: who pays and where you apply. {len(x['rows'])} facts about {x['name']}, each read on its own pages, with the date."),
              crumbs(("Compared with other job sites", "vs/"), (x["name"], "")) + f'<h1>{e(x["name"])} vs {e(ours)}: <span class="hl">a fair comparison</span></h1>'
              f'<p class="lead">{e(x["what"])} Below, the two side by side. Every fact about {e(x["name"])} comes from its own pages or a named source, read on the date shown; where we could not check a fact, the row is left out.</p>'
              + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
@@ -8139,7 +8172,8 @@ def main():
             {"@type": "Question", "name": q_t, "acceptedAnswer": {"@type": "Answer", "text": a_t}} for q_t, a_t in pq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         src_ = dict(a_); src_["sources"] = a_["sources"] + b_["sources"]
         page(f"vs/{sl}/", f"{a_['name']} vs {b_['name']}: Who Pays, Where You Apply ({fdate(TODAY, False)}) | {SITE}",
-             f"{a_['name']} and {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:4]) + ". Every fact comes with its source and the date it was read.",
+             desc_pick(*[f"{a_['name']} vs {b_['name']}: " + ", ".join(q_.lower() for q_ in common[:k_]) + ". Every fact from the site’s own pages, with its date." for k_ in (5, 4, 3)],
+                       f"{a_['name']} vs {b_['name']} side by side: " + ", ".join(q_.lower() for q_ in common[:3]) + ". Every fact comes from the site’s own pages, with the date it was read."),
              crumbs(("Compared with other job sites", "vs/"), (f"{a_['name']} vs {b_['name']}", "")) + f'<h1>{e(a_["name"])} vs {e(b_["name"])}: <span class="hl">the facts side by side</span></h1>'
              f'<p class="lead">{e(a_["what"])} {e(b_["what"])} Below, what each one says about itself, with the source of every fact. The third column shows how {e(compare_sites.OUR_NAME)} works, for reference.</p>'
              + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
@@ -8255,12 +8289,14 @@ def main():
     bs_opt = [x for x in VS if re.search(r"Job seekers can buy", fact_(x, "Who pays"))]
     bs_acc = [x for x in VS if re.search(r"^Yes|sign in", fact_(x, "Account needed to apply", ""), re.I)]
     bs_remote = [x for x in VS if fact_(x, "Kinds of jobs", "").startswith("Remote")]
+    bs_kind = lambda k_: [x for x in VS if x["kind"] == k_]
     bs_qa = [
         ("What is the best job search site?",
-         "It depends on the search. By their own figures, Indeed and LinkedIn are the largest general job sites; Wellfound is built for startup jobs; "
-         + (names_(bs_remote) + " list remote work; " if bs_remote else "") + "CryptoJobsList and Web3.career list crypto and web3 jobs. "
-         f"{us_} reads {len(active):,} open jobs from {bs_cos:,} companies’ own careers pages every hour, free and with no account. "
-         "The table shows who pays and whether you need an account on each."),
+         "There is no single best one: it depends on the job. Indeed and LinkedIn are the largest general job sites by their own figures; Glassdoor adds company reviews; "
+         "Google for Jobs searches many sites at once. For government jobs use USAJOBS or GovernmentJobs.com, for students Handshake, for tech Dice, Wellfound or Built In, "
+         f"for hourly work Snagajob. {us_} reads {len(active):,} open jobs from {bs_cos:,} companies’ own careers pages every hour, free and with no account."),
+        ("Which job site is best for each kind of job?",
+         "By what each site says it is for: " + "; ".join(f"{cs_.KINDS[k_].lower()}: {names_(bs_kind(k_))}" for k_ in cs_.KINDS if bs_kind(k_)) + ". The table “Which site for which job” above lists them with links."),
         ("Which job search sites are free for job seekers?",
          "Most of these sites are paid for by employers. "
          + (f"{names_(bs_paid)} {'is' if len(bs_paid) == 1 else 'are'} paid for by job seekers through a membership. " if bs_paid else "")
@@ -8297,6 +8333,13 @@ def main():
          + nums([(f"{len(VS) + 1}", "job sites side by side"), (f"{sum(len(x['rows']) for x in VS)}", "facts about them, each with its source"),
                  (f"{len(active):,}", "open jobs here, read from employers’ own pages")], src=False)
          + act_row("jobs/", f"Search {len(active):,} open jobs here", note="Free, no account needed.")
+         # 25 Nov 2026: ChatGPT's answer to "best job search sites" ends with a table "job type → best websites"; Google's AI answer
+         # groups the same way. One row a kind, from each site's own description (compare_sites.KIND), this site in its own row.
+         + section("Which site for [[which job]]", '<div class="tablewrap"><table class="vs-t"><tr><th>Kind of job</th><th>Sites built for it</th></tr>'
+                   + "".join(f'<tr><th>{e(cs_.KINDS[k_])}</th><td data-l="Sites">' + ", ".join(f'<a href="{P}/vs/{x["slug"]}/">{e(x["name"])}</a>' for x in bs_kind(k_))
+                             + (f', <a href="{P}/jobs/">{e(us_)}</a> (this site)' if k_ == cs_.OUR_KIND else "") + "</td></tr>" for k_ in cs_.KINDS if bs_kind(k_))
+                   + '</table></div><p class="note">The kind is our label, taken from what each site says about itself; every name opens its comparison with sources.</p>',
+                   sid="by-job", label="By kind of job")
          + section("Which site for [[which search]]", bs_pick, sid="which", label="By what you need",
                    sub="Each site in a line, from its own description, with the main thing it does better than this one.")
          + section("Who pays, accounts and [[where you apply]]", bs_table, sid="table", label="Side by side")
@@ -8345,7 +8388,10 @@ def main():
                  '<button class="btn ghost" type="button" id="cmp-copy">Copy link to this table</button><button class="btn ghost" type="button" id="cmp-clear">Clear</button></div></div>')
     cmp_presets = [("Indeed vs ZipRecruiter vs Glassdoor", "indeed,ziprecruiter,glassdoor"), ("Indeed vs LinkedIn vs ZipRecruiter", "indeed,linkedin-jobs,ziprecruiter"),
                    ("Remote job sites", "we-work-remotely,remote-ok,flexjobs,remotive,himalayas"), ("Tech and startup jobs", "dice,built-in,wellfound,linkedin-jobs"),
-                   ("Job search engines", "simplyhired,jooble,talent-com"), ("Students, hourly and government jobs", "handshake,snagajob,usajobs,idealist")]
+                   ("Job search engines that read career pages", "hiringcafe,drivetube,google-for-jobs,simplyhired"),
+                   ("AI job search and resume tools", "jobright,jobscan,hiringcafe"), ("Job search engines", "simplyhired,jooble,talent-com"),
+                   ("Students, hourly and government jobs", "handshake,snagajob,usajobs,governmentjobs,craigslist"),
+                   ("Tech jobs and pay", "dice,built-in,levels-fyi,ladders")]
     cmp_presets = [(n_, ",".join(s_ for s_ in v_.split(",") if any(x["slug"] == s_ for x in VS))) for n_, v_ in cmp_presets]
     cmp_data = json.dumps({"sites": cmp_sites, "rows": CMP_ROWS, "max": CMP_MAX, "us": CMP_US, "def": CMP_DEFAULT, "miss": "Not stated on the pages we read",
                            "today": fdate(TODAY)}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
@@ -8364,7 +8410,7 @@ def main():
         ("Why are some cells empty?", "A cell says “Not stated on the pages we read” when the site’s own pages did not answer that question on the day we read them. We do not fill a gap with a guess."),
     ], label="Questions", sid="questions")
     page("vs/compare/", f"Compare Job Sites Side by Side ({len(VS) + 1} Sites) | {SITE}",
-         f"Compare job sites side by side: pick Indeed, ZipRecruiter, Glassdoor, LinkedIn and up to {CMP_MAX} of {len(VS)} sites, add {SITE}, and see who pays and where you apply.",
+         f"Compare job sites side by side: pick up to {CMP_MAX} of {len(VS)}, such as Indeed, ZipRecruiter, Glassdoor and LinkedIn, add {SITE}, and see who pays and where you apply.",
          crumbs(("Compared with other job sites", "vs/"), ("Compare job sites side by side", "")) + '<h1>Compare job sites <span class="hl">side by side</span></h1>'
          f'<p class="lead">Pick up to {CMP_MAX} job sites and see the same facts in one table: who pays, prices, where the jobs come from, where you apply and whether you need an account. '
          f'Every fact about another site comes from its own pages, with the date it was read; {e(cs_.OUR_NAME)} is in the table too, and you can take it out. The address keeps your choice, so the table can be shared.</p>'
@@ -8381,7 +8427,7 @@ def main():
     pairs_by = {}
     for sl, a_, b_ in site_pairs: pairs_by.setdefault(a_["slug"], []).append((sl, a_, b_))
     page("vs/", f"{SITE} Compared with Other Job Sites: {len(VS)} Fair Comparisons | {SITE}",
-         f"{SITE} side by side with {', '.join(x['name'] for x in VS[:4])} and {len(VS) - 4} more job sites, plus {len(site_pairs)} site-vs-site pages and a table to compare several at once. Every fact sourced.",
+         f"Job sites compared with {SITE}: {', '.join(x['name'].replace(' Jobs', '') for x in VS[:3])}, {VS[3]['name']} and {len(VS) - 4} more. Each fact comes from the site’s own pages, dated.",
          crumbs(("Compared with other job sites", "")) + f'<h1>{e(SITE)} compared with <span class="hl">{len(VS)} other job sites</span></h1>'
          '<p class="lead">Each comparison puts the facts side by side, says honestly where the other site is better, and links to the source of every fact about it. Pick the one you use now, '
          f'<a href="{P}/vs/compare/">compare several at once</a>, or see the <a href="{P}/best-job-search-sites/">best job search sites by what you need</a> and <a href="{P}/vs/jobscan/">Jobscan compared with the free resume check here</a>.</p>'
@@ -9646,7 +9692,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          f'<p class="lead">Reading {n:,} postings to find the twenty worth applying to takes days. Say what work you want, how much experience you have, where you live and what you need to earn. '
          'Every open job is checked against your answers, and next to each one you see what fits and what does not.</p>'
          '<p class="plain"><b>In plain words:</b> this page is a short form. Nothing you answer leaves your browser, there is no account, and you can skip any question.</p>'
-         f'<p class="note">Rather go through them one at a time? <a href="{P}/swipe/">Swipe through the newest jobs</a>: save or pass, with your answers counted on each card.</p>'
+         f'<p class="note">Rather go through them one at a time? <a href="{P}/swipe/">Swipe through the newest jobs</a>: save or pass, with your answers counted on each card. '
+         f'<a href="{P}/ai-job-match/">How the match works, beside AI job match tools</a>.</p>'
          '<div id="fy-root" class="fy"><div class="fy-form">'
          + ask(1, "What kind of work do you want?", "Pick one or several. Leave it empty to see every kind.", f'<div class="opts" id="fy-work">{fy_work}</div>' + fy_roles_html)
          + ask(2, "How much experience do you have?", "", f'<div class="opts one" id="fy-exp">{fy_exp}</div>')
@@ -9669,6 +9716,148 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<ul class="jobs" id="fy-list"></ul><p><button class="btn" id="fy-more" type="button" hidden>Show more</button></p></div></div>'
          '<a class="fy-jump" id="fy-jump" href="#fy-out" hidden></a>'
          + section("Questions about [[this page]]", fy_faq, label="Questions"), head=fy_ld, cls="sp fyp")
+    lap('Landing pages for the searches Jobright answers: resume tailor, AI job match, application tracker')
+    # Landing pages for the searches Jobright and its kind answer (owner's backlog, 25 Nov 2026: "resume tailor" / "AI resume tailor",
+    # "AI job match", "job application tracker"). The tools exist (/tools/resume-match/, /for-you/, /my-jobs/) but are app pages with
+    # little text; each landing page answers the search in its first 60 words, shows a real example from today's postings, compares the
+    # tool honestly with the ones AI answers name (facts from compare_sites.py and the pages read on 25 Nov 2026, dated) and links to the
+    # tool. None of the three tools uses AI, and each page says so.
+    lp_when = fdate(compare_sites.R25)
+    lp_f = lambda slug_, q_: next((t_ for q2_, t_, _ in VS_BY[slug_]["rows"] if q2_ == q_), "") if slug_ in VS_BY else ""
+    def lp_table(cols, rows):
+        return ('<div class="tablewrap"><table class="vs-t"><tr>' + "".join(f"<th>{e(c_)}</th>" for c_ in cols) + "</tr>"
+                + "".join("<tr><th>" + r_[0] + "</th>" + "".join(f'<td data-l="{e(cols[i_ + 1])}">{e(v_)}</td>' for i_, v_ in enumerate(r_[1:])) + "</tr>" for r_ in rows) + "</table></div>")
+    lp_vs = lambda slug_, nm_: f'<a href="{P}/vs/{slug_}/">{e(nm_)}</a>' if slug_ in VS_BY else e(nm_)
+    lp_src = lambda items: section("Sources", '<ul class="vs-src">' + "".join(f'<li><a href="{e(u_)}" rel="nofollow noopener">{e(re.sub(r"^https?://(www[.])?", "", u_).rstrip("/"))}</a>, read {lp_when}</li>' for u_ in items) + "</ul>"
+                                   + f'<p class="note">Facts about this site are from today’s build, {fdate(TODAY)}. Plans and prices of other tools change; each link opens the page we read.</p>', sid="sources", label="Sources")
+
+    # 1. Resume tailor: a real posting from today with the skills it names, and what the checker would list as missing
+    lp_big = Counter(j["company"] for j in active)
+    lp_job = next((j for j in sorted(active, key=lambda j: (-lp_big[j["company"]], j["company"], j["title"])) if 6 <= len(j.get("tags") or []) <= 12 and j.get("slug")), None)
+    if lp_job:
+        lp_tags = list(lp_job["tags"])[:8]
+        lp_have = lp_tags[:3]
+        lp_ex = (f'<p>Today’s posting <a href="{P}/job/{lp_job["slug"]}/">{e(lp_job["title"])} at {e(lp_job["company"])}</a> names {len(lp_tags)} skills. Take a resume whose skills line reads '
+                 f'“{e(", ".join(lp_have))}”: the checker finds those {len(lp_have)} and lists the other {len(lp_tags) - len(lp_have)} as missing.</p>'
+                 + lp_table(["Skill the posting names", "In the sample resume?", "What to do"],
+                            [(e(t_), "Yes" if t_ in lp_have else "Missing", "Keep it, in the posting’s own words" if t_ in lp_have else "Add it if you have it, in a bullet that shows where you used it") for t_ in lp_tags])
+                 + f'<p class="note">The sample resume is ours, made for this example; the posting and its skills are real, read from {e(lp_job["company"])}’s careers page. '
+                   f'<a href="{P}/tools/resume-match/?job={lp_job["slug"]}">Check your own resume against this posting</a>.</p>')
+    else:
+        lp_ex = ""
+    rt_rows = [
+        (f'<a href="{P}/tools/resume-match/">{e(SITE)}</a>', "Free, no limit", "No", "No: it lists the missing skills and words, you edit", "Nowhere: it runs in your browser"),
+        (lp_vs("jobscan", "Jobscan"), "5 scans a month free; Premium $49.95 a month", "Yes, a free account", "Yes, AI optimizations on Premium", "Into your Jobscan account"),
+        (lp_vs("jobright", "Jobright"), "Basic free; Premium $30 a month by its blog of June 2025", "Yes: “Sign Up to Apply”", "Yes, a resume tailored to each job", "Into your Jobright account"),
+        ('<a href="https://www.tealhq.com/pricing" rel="nofollow noopener">Teal</a>', "Top 5 keywords free; Teal+ $13 every 7 days or $29 every 30 days", "Yes", "Yes, on Teal+ (AI bullets, summaries)", "Into your Teal account"),
+        ('<a href="https://skillsyncer.com/pricing" rel="nofollow noopener">SkillSyncer</a>', "2 job match scans a week free; $14.95 a month", "Yes", "AI credits, 10 a week free", "Into your account"),
+    ]
+    rt_qa = [
+        ("What is a resume tailor?", "A tool that compares your resume with one job posting and shows what to change so the resume speaks to that job: the skills and words the posting asks for "
+         "that your resume lacks. AI resume tailors also rewrite the text for you; the free checker here shows the gaps and leaves the writing to you."),
+        ("Is there a free AI resume tailor?", f"Free plans exist with limits: Jobscan 5 scans a month, SkillSyncer 2 a week, Teal the top 5 keywords (their own pages, {lp_when}). "
+         "The checker here is free with no limit and no account, but it is not AI: it matches skills and repeated terms and does not rewrite."),
+        ("Should I tailor my resume for every job?", "For the jobs you want most, yes. Recruiters and applicant tracking systems search for the posting’s own words, so “PostgreSQL” "
+         "is found where “databases” is not. Add only skills you really have, and change the summary and the top bullets first."),
+        ("Do I need to upload my resume?", "Not here. You paste the text, and the comparison runs inside your browser; nothing is sent to a server. Most AI tailors keep your resume in their account."),
+        ("What match score should I aim for?", "On the checker here 75 and above is labelled a strong match and 50 to 74 partial. Jobscan recommends 75% for its own score. "
+         "Use the number to find gaps, not as a goal: an honest resume at 65 beats a stuffed one at 90."),
+    ]
+    rt_qh, rt_ld = qa_sec("Questions about tailoring a resume", rt_qa, label="Questions", sid="questions")
+    page("resume-tailor/", f"Resume Tailor: Match Your Resume to Any Job, Free ({TODAY[:4]}) | {SITE}",
+         "Tailor your resume to a job description for free: paste both and see the skills and words you are missing. No account, no AI rewriting, nothing uploaded.",
+         crumbs(("Tools", "tools/"), ("Resume tailor", "")) + '<h1>Resume tailor: <span class="hl">match your resume to one job</span>, free</h1>'
+         f'<p class="tldr"><strong>Paste your resume and the job description; the free checker lists the skills and words the posting asks for that your resume lacks, with a match score.</strong> '
+         'Add the ones you really have, in the posting’s own words. It needs no account, sends nothing anywhere, and has no limit. It does not rewrite your resume with AI; AI tailors such as Jobscan and Jobright do, mostly on paid plans.</p>'
+         + act_row("tools/resume-match/", "Tailor my resume to a posting", [("#example", "A real example"), ("#compare", "Compared"), ("resume/", "Resume builder")], note="Free, no account, nothing uploaded.")
+         + section("How it works, on a [[real posting]]", '<ol class="steps"><li>Copy the job description, or press “Check my resume for this job” on any job page here.</li>'
+                   '<li>Paste your resume. The checker looks for the skills this site tracks in postings and for the words the posting repeats.</li>'
+                   '<li>Read the missing list and add the ones that are true, where you used them. Check again.</li></ol>' + lp_ex, sid="example", label="Example")
+         + section("Resume tailors [[compared]]", lp_table(["Tool", "Price", "Account", "Rewrites with AI", "Where your resume goes"], rt_rows)
+                   + f'<p class="note">From each tool’s own pages, read {lp_when}. More: <a href="{P}/vs/jobscan/">Jobscan compared, with free alternatives</a>.</p>', sid="compare", label="Compared")
+         + rt_qh
+         + lp_src(["https://app.jobscan.co/plan", "https://jobright.ai/blog/is-jobright-legit/", "https://www.tealhq.com/pricing", "https://skillsyncer.com/pricing"])
+         + f'<p class="note cmpl">More: <a href="{P}/tools/resume-match/">resume match checker</a> · <a href="{P}/tools/resume-review/">resume checker</a> · <a href="{P}/ai-job-match/">job match</a> · '
+           f'<a href="{P}/job-application-tracker/">application tracker</a> · <a href="{P}/tools/">all tools</a></p>', head=rt_ld)
+
+    # 2. AI job match: the five answers of /for-you/, run on today's postings for one example
+    lp_cat = Counter(j["cat"] for j in active if j["remote"] and j["usd"] and j["cat"] != OTHER[0]).most_common(1)
+    lp_cat = lp_cat[0][0] if lp_cat else None
+    lp_floor = 120000
+    lp_in = [j for j in active if lp_cat and j["cat"] == lp_cat and j["remote"]]
+    lp_ok = [j for j in lp_in if j["usd"] and j["usd"][1] >= lp_floor]
+    lp_q = [j for j in lp_in if not j["usd"]]
+    lp_cos = [c_ for c_, _ in Counter(j["company"] for j in lp_ok).most_common(3)]
+    jm_ex = (f'<p>Example answers: <b>{e(CAT[lp_cat].lower())}</b>, <b>from home</b>, <b>at least ${lp_floor:,} a year</b>. Of today’s {n:,} open jobs, {len(lp_in):,} are remote {e(CAT[lp_cat].lower())} roles; '
+             f'{len(lp_ok):,} state pay that reaches ${lp_floor:,} and get a tick for pay' + (f", most at {e(', '.join(lp_cos))}" if lp_cos else "") + f'; {len(lp_q):,} state no pay and get a question mark. '
+             'Next to each job you see which answers it meets.</p>') if lp_cat else ""
+    jm_rows = [
+        (f'<a href="{P}/for-you/">{e(SITE)}</a>', "Your five answers (work, level, place, pay, skills); rules, not AI", "No", "Free", f"{n:,} from {m:,} companies’ careers pages"),
+        (lp_vs("jobright", "Jobright"), "AI: matched jobs, a resume tailored to each, autofill of applications", "Yes, to apply", "Basic free; Premium $30 a month (June 2025)", "8,000,000+ it states"),
+        (lp_vs("jobscan", "Jobscan"), "AI Job Match ranks jobs by fit to your resume", "Yes", "Free to start; Premium unlocks every Top Match job", "From Greenhouse, Lever, Workable and 20+ systems"),
+        (lp_vs("hiringcafe", "HiringCafe"), "Talent Agent looks for jobs for you every day", "No, to open jobs", "Free", "Over 5 million it states"),
+    ]
+    jm_qa = [
+        ("What is AI job match?", "A tool that compares jobs with your resume or answers and puts the closest fits first. Jobright and Jobscan use AI for it; the free match here uses five answers and plain rules, "
+         "and shows next to every job which answers it meets, so you can see why it was picked."),
+        ("Is there a free job match?", f"Yes. Answer five questions on For you and {n:,} open jobs are sorted by fit, free and with no account. Jobscan’s AI Job Match is free to start with a sign-up; "
+         "HiringCafe’s Talent Agent is free."),
+        ("Does it read my resume?", "Only if you paste it: the skills are found in your browser and nothing is uploaded. You can also pick skills by hand or skip the question."),
+        ("Why do some jobs have a question mark?", "The posting does not say: most often it states no pay. Such jobs stay in the list, below the ones that meet the answer, unless you hide them."),
+    ]
+    jm_qh, jm_ld = qa_sec("Questions about job matching", jm_qa, label="Questions", sid="questions")
+    page("ai-job-match/", f"AI Job Match: Jobs Matched to Your Resume, Free ({TODAY[:4]}) | {SITE}",
+         f"Job match, free: answer five questions or paste your resume and {n:,} open jobs are sorted by fit, the reason shown next to each. No account and no AI.",
+         crumbs(("Tools", "tools/"), ("Job match", "")) + '<h1>AI job match, <span class="hl">and a free match that shows why</span></h1>'
+         f'<p class="tldr"><strong>Answer five questions (the work, your level, where, the pay you need, your skills) and {n:,} open jobs are sorted by how well they fit, with a tick or a question mark for each answer.</strong> '
+         'It is free, needs no account and keeps your answers in your browser. It uses plain rules rather than AI, so every match shows its reason; Jobright and Jobscan match with AI after a sign-up.</p>'
+         + act_row("for-you/", "Match me with jobs", [("#example", "A real example"), ("#compare", "Compared"), ("swipe/", "Swipe through jobs")], note="Free, no account.")
+         + section("How it works, on [[today’s jobs]]", '<ol class="steps"><li>Pick the kind of work, your experience and where you want to work.</li><li>Say the pay you need, and add your skills or paste your resume.</li>'
+                   '<li>Every open job is checked against each answer: a tick when it meets it, a question mark when the posting does not say, left out when it contradicts it.</li></ol>' + jm_ex, sid="example", label="Example")
+         + section("Job matching tools [[compared]]", lp_table(["Tool", "How it matches", "Account", "Price", "Jobs it searches"], jm_rows)
+                   + f'<p class="note">From each tool’s own pages, read {lp_when}; the full comparisons are linked from each name.</p>', sid="compare", label="Compared")
+         + jm_qh
+         + lp_src(["https://jobright.ai/", "https://jobright.ai/blog/is-jobright-legit/", "https://www.jobscan.co/job-search", "https://hiringcafe.com/about"])
+         + f'<p class="note cmpl">More: <a href="{P}/for-you/">For you</a> · <a href="{P}/resume-tailor/">resume tailor</a> · <a href="{P}/job-application-tracker/">application tracker</a> · '
+           f'<a href="{P}/job-search-engines/">job search engines that read career pages</a> · <a href="{P}/tools/">all tools</a></p>', head=jm_ld)
+
+    # 3. Job application tracker: the stages of /my-jobs/ with a real job as the example row
+    lp_t = next((j for j in sorted(active, key=lambda j: j.get("posted") or "", reverse=True) if j.get("slug") and j["salary"]), None)
+    lp_new7 = sum(1 for j in active if (j.get("posted") or "") >= (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=7)).isoformat())
+    at_ex = ((f'<p>An example row, from one of the newest jobs here (posted {fdate(lp_t["posted"]) if lp_t.get("posted") else "recently"}): <a href="{P}/job/{lp_t["slug"]}/">{e(lp_t["title"])} at {e(lp_t["company"])}</a>.</p>'
+              + lp_table(["Job", "Stage", "Date", "Note", "Next step"],
+                         [(e(lp_t["title"]), "Applied", fdate(TODAY), e(lp_t["salary"]), "Follow up in about a week if no answer")]))
+             if lp_t else "")
+    at_rows = [
+        (f'<a href="{P}/my-jobs/">{e(SITE)}</a>', "Free", "No: kept in this browser", "Saved, applied, interviewing, offer, not moving forward; notes; board view; CSV export", "This browser; export to keep a copy"),
+        (lp_vs("jobscan", "Jobscan"), "Free plan includes the Job Tracker", "Yes", "Saved to Applied, Interview and Offer; a Chrome extension saves jobs from other boards", "Its account"),
+        (lp_vs("hiringcafe", "HiringCafe"), "Free", "Not stated on the pages we read", "Saved jobs and searches, boards, hidden companies", "Not stated"),
+    ]
+    at_qa = [
+        ("What is a job application tracker?", "A list of the jobs you saved and applied to, each with its stage (saved, applied, interview, offer), the date and your notes, so you know where you stand and when to follow up. "
+         "A spreadsheet works; a tracker fills the job’s details in for you."),
+        ("Is there a free job application tracker with no sign-up?", "Yes. My jobs on this site needs no account: press “Save job” or “Mark as applied” on any job, add notes, switch to a board view and export to CSV. "
+         "It is kept in this browser, so export it to keep a copy."),
+        ("How many applications should I track at once?", f"As many as you are waiting on. {lp_new7:,} of the {n:,} open jobs here were posted in the last 7 days; applying early and following up about a week later "
+         "are the two steps a tracker makes easy."),
+        ("Can I track jobs from other sites?", "Yes: add the job by hand with its link and notes. Jobscan’s Chrome extension saves jobs from other boards into its tracker after a sign-up."),
+    ]
+    at_qh, at_ld = qa_sec("Questions about tracking applications", at_qa, label="Questions", sid="questions")
+    page("job-application-tracker/", f"Job Application Tracker: Free, No Sign-Up ({TODAY[:4]}) | {SITE}",
+         "A free job application tracker with no sign-up: save jobs, mark where you applied, move them from applied to interview and offer, add notes and export to CSV.",
+         crumbs(("Tools", "tools/"), ("Job application tracker", "")) + '<h1>Job application tracker: <span class="hl">free, with no sign-up</span></h1>'
+         '<p class="tldr"><strong>Save a job, mark it applied, move it to interview or offer, and keep notes and dates in one list, free and with no account.</strong> '
+         'Press “Save job” or “Mark as applied” on any job here and it appears in My jobs, with a board view and a CSV export. It is kept in this browser: nothing is uploaded, and an export keeps a copy.</p>'
+         + act_row("my-jobs/", "Open my tracker", [("#example", "An example"), ("#compare", "Compared"), ("jobs/", "Find jobs to save")], note="Free, no account.")
+         + section("How it works, with a [[real job]]", '<ol class="steps"><li>Open a job and press “Save job”; press “Mark as applied” when you send the application.</li>'
+                   '<li>In My jobs, move each job from saved to applied, interviewing, offer or not moving forward, and add notes: who you spoke to, what they asked, when to follow up.</li>'
+                   '<li>Export to CSV whenever you want a copy in a spreadsheet.</li></ol>' + at_ex, sid="example", label="Example")
+         + section("Application trackers [[compared]]", lp_table(["Tracker", "Price", "Account", "What it keeps", "Where it is stored"], at_rows)
+                   + f'<p class="note">From each tool’s own pages, read {lp_when}.</p>', sid="compare", label="Compared")
+         + at_qh
+         + lp_src(["https://app.jobscan.co/plan", "https://www.jobscan.co/job-search", "https://hiringcafe.com/about"])
+         + f'<p class="note cmpl">More: <a href="{P}/my-jobs/">My jobs</a> · <a href="{P}/swipe/">swipe through jobs</a> · <a href="{P}/tools/job-search-calculator/">how many applications one offer takes</a> · '
+           f'<a href="{P}/resume-tailor/">resume tailor</a> · <a href="{P}/ai-job-match/">job match</a></p>', head=at_ld)
     write("data/skills.json", json.dumps([[n_, rx] for n_, rx in SKILLS if n_ in skill_counts], ensure_ascii=False), sitemap=False)
     write("data/skillinfo.json", json.dumps({t: skills_info.plain(t) for t in skill_counts if skills_info.plain(t)}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
 
@@ -9894,45 +10083,94 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
 
     lap('Jobscan compared with the free resume match checker here (the ')
     # Jobscan compared with the free resume match checker here (the owner's Reddit keyword file, 21 Nov 2026: "jobscan" about 27K
-    # searches a month). Jobscan scans a resume against a posting; its plan page was read in a browser on 22 Nov 2026, its builder,
-    # account and renewal facts come from builders_check.py (read for /free-resume-builders/). Only those facts are used.
+    # searches a month). Jobscan scans a resume against a posting and, since 2026, matches jobs to a resume from 20+ hiring systems. Its
+    # plan page, job match and Auto Apply pages were read in a browser on 25 Nov 2026 (compare_sites.py, "jobscan": the job-search rows,
+    # shared with /vs/compare/ and the alternatives pages); its builder, account and renewal facts come from builders_check.py. Only those
+    # facts are used. The generic /vs/<site>/ loop skips Jobscan (VS_OWN): this page carries both tables.
     js_b = next((b for b in BC.BUILDERS if b["name"] == "Jobscan"), None)
-    if js_b:
-        js_read = "Nov 22, 2026"
+    js_x = VS_BY.get("jobscan")
+    if js_b and js_x:
+        js_read = fdate(compare_sites.R25)
         js_rows = [
             ("Price", "Free plan; Premium $49.95 a month, or $89.95 every 3 months after a 7-day free trial", "Free"),
             ("Resume scans against a posting", "5 a month on the free plan, unlimited on Premium", "No limit: paste any posting, or press “Check my resume for this job” on a job page"),
+            ("Score it gives", "A match rate; it recommends 75% and says many users succeed with 65%", "A match score: 75 and above strong, 50 to 74 partial (skills 60%, repeated terms 40%)"),
             ("Account needed", js_b["signup"], "No"),
             ("Where your resume goes", "Into your Jobscan account", "Nowhere: the text is read inside your browser"),
             ("Resume builder", js_b["pdf"][1] + " (" + js_b["limits"] + ")", "Free PDF and Word download, no account"),
             ("Renewal", js_b["paid"], "Nothing to renew"),
-            ("Other tools", "AI optimizations, AI cover letter and bullet point generators, a LinkedIn optimizer, a job tracker and a Chrome extension (most on Premium)",
+            ("Other tools", "AI optimizations, AI cover letter and bullet point generators, a LinkedIn optimizer, a job tracker, a Chrome extension and Auto Apply (most on Premium)",
              f"Free cover letter builder, resume review, interview questions by kind of work, and {len(active):,} open jobs to check against"),
         ]
         js_table = ('<div class="tablewrap"><table class="vs-t"><tr><th></th><th>Jobscan</th><th>' + e(SITE) + "</th></tr>"
                     + "".join(f'<tr><th>{e(q_)}</th><td data-l="Jobscan">{e(a_)}</td><td data-l="{e(SITE)}">{e(b_)}</td></tr>' for q_, a_, b_ in js_rows) + "</table></div>")
+        js_jobs = ('<div class="tablewrap"><table class="vs-t"><tr><th></th><th>Jobscan</th><th>' + e(SITE) + "</th></tr>"
+                   + "".join(f'<tr><th>{e(q_)}</th><td data-l="Jobscan">{e(a_)}</td><td data-l="{e(SITE)}">{e(b_)}</td></tr>' for q_, a_, b_ in js_x["rows"]) + "</table></div>")
+        js_cos = len({j_["company"] for j_ in active})
         js_qa = [
             ("Is Jobscan free?", "Partly. Its free plan includes 5 resume scans a month; unlimited scans need Premium at $49.95 a month, or $89.95 every 3 months after a "
-             f"7-day free trial, by its own plan page on {js_read}. Its plans keep billing until canceled."),
-            ("Is there a free alternative to Jobscan?", "Yes. The resume match checker here shows which words of a job posting your resume is missing, with no limit, no account "
-             "and nothing uploaded. It does not rewrite your resume with AI, which Jobscan’s Premium does."),
-            ("Where is Jobscan better?", "It has more tools: AI rewriting, a LinkedIn optimizer, a job tracker and a Chrome extension that works on other job sites."),
-            ("Where is Jobs Every Hour better?", f"The check is free and unlimited, needs no account, and every one of the {len(active):,} open jobs here has a button that checks your resume against it."),
+             f"7-day free trial, by its own plan page on {js_read}. Auto Apply credits cost extra, and its plans keep billing until canceled."),
+            ("Is there a free alternative to Jobscan?", "Yes. The resume match checker here gives a match score and shows which skills and words of a job posting your resume is missing, "
+             "with no limit, no account and nothing uploaded. It does not rewrite your resume with AI, which Jobscan’s Premium does."),
+            ("What is a good Jobscan match rate?", f"Jobscan recommends a match rate of 75% and says many users succeed with 65%, adding that a higher score may mean keyword stuffing "
+             f"(its home page, {js_read}). The free checker here labels 75 and above a strong match and 50 to 74 partial; aim to use the posting’s own words for skills you really have."),
+            ("Does Jobscan have a job search?", f"Yes. Its AI Job Match ranks jobs from Greenhouse, Lever, Workable and 20+ other hiring systems by how well they fit your resume. It needs a free "
+             f"sign-up, and Premium unlocks every Top Match job. Here, {len(active):,} open jobs from {js_cos:,} companies’ careers pages are open to everyone, with no account."),
+            ("Where is Jobscan better?", " ".join(js_x["them_better"])),
+            ("Where is Jobs Every Hour better?", " ".join(js_x["us_better"])),
+            ("What are the alternatives to Jobscan?", "For the resume check: the free match checker and resume checker here, and the builders compared on the free resume builders page. "
+             "For AI job search: Jobright and the other sites on the Jobscan alternatives page, each described from its own pages."),
+        ]
+        # Free tools that check a resume against a posting. ChatGPT, asked "the best free alternative to Jobscan" on 25 Nov 2026, named
+        # SkillSyncer, ATSPrep, Teal, Jobalytics, LoopCV and Resume Worded with their free limits; each one here was read on its own page
+        # that day (LoopCV and Resume Worded not: resumeworded.com/pricing was a 404, LoopCV not opened). Words in quotes are theirs.
+        JS_ALT = [
+            ("Jobscan", "5 resume scans a month, with a match rate", "Yes, a free account", "$49.95 a month, or $89.95 every 3 months", "https://app.jobscan.co/plan"),
+            ("SkillSyncer", "“2 job match scans a week”, with a job match score and skills and keywords", "Yes: “Get started for free” opens a sign-up", "$14.95 a month, or $34.86 every 3 months", "https://skillsyncer.com/pricing"),
+            ("ATSPrep", "A score out of 100 with up to 41 checks, the top 3 fixes and every missing keyword for a job post; 3 rechecks a day", "No, for the first check; a free sign-in for PDF downloads",
+             "Pro $12 a month or $29 for 3 months (also shown as $4 a week)", "https://atsprep.com/"),
+            ("Teal", "The “Top 5” keywords of a job description; Teal+ unlocks all of them and a match score", "Yes (“No credit card required to start”)", "$13 every 7 days, $29 every 30 days, $79 every 90 days", "https://www.tealhq.com/pricing"),
+            ("Jobalytics", "A match rate between your resume and a posting, in a free Chrome extension", "Not stated", "No paid plan on its home page", "https://www.jobalytics.co/"),
+        ]
+        js_alt_t = ('<div class="tablewrap"><table class="vs-t"><tr><th>Tool</th><th>Free check against a posting</th><th>Account</th><th>Paid plan</th></tr>'
+                    + "".join(f'<tr><th><a href="{e(u_)}" rel="nofollow noopener">{e(n_)}</a></th><td data-l="Free">{e(f_)}</td><td data-l="Account">{e(a_)}</td><td data-l="Paid">{e(p_)}</td></tr>' for n_, f_, a_, p_, u_ in JS_ALT)
+                    + f'<tr><th><a href="{P}/tools/resume-match/">{e(SITE)}</a></th><td data-l="Free">A match score, the missing skills and repeated terms, and fixes; no limit</td><td data-l="Account">No; nothing is uploaded</td><td data-l="Paid">None for the check</td></tr>'
+                    + f'</table></div><p class="note">Each tool’s own page, read {js_read}. Prices and limits change; the link in each row opens the page we read.</p>')
+        js_qa.insert(1, ("What is the best free alternative to Jobscan?",
+                         "For a match against one posting: SkillSyncer gives 2 free scans a week, ATSPrep a free score and missing keywords with no account, Teal the top 5 keywords free, "
+                         f"Jobalytics a free Chrome extension (each from its own page, {js_read}). The resume match checker here has no limit, no account and uploads nothing."))
+        # Google's "People also ask" for "jobscan alternatives" (25 Nov 2026): "Is Jobscan worth the money?", "Which is better, Teal or Jobscan?"
+        js_qa[2:2] = [
+            ("Is Jobscan worth the money?", f"It depends on how many postings you check. The free plan covers 5 scans a month; Premium at $49.95 a month adds unlimited scans, AI rewriting "
+             f"and a LinkedIn optimizer. SkillSyncer’s Premium is $14.95 a month and Teal+ $29 every 30 days, by their own pages on {js_read}; the match check here costs nothing."),
+            ("Which is better, Teal or Jobscan?", "For a keyword match, Jobscan’s free plan gives 5 full scans a month; Teal’s free plan shows the top 5 keywords of a posting, and Teal+ "
+             "($13 a week, $29 every 30 days or $79 every 90 days) adds all keywords and a match score. Teal also has a free job tracker and resume builder."),
         ]
         js_qh, js_ld = qa_sec("Questions", js_qa, label="Questions", sid="questions")
+        js_src_ = [("app.jobscan.co/plan", "https://app.jobscan.co/plan", f"read {js_read}")] + [
+            (re.sub(r"^https?://(www\.)?", "", u_).rstrip("/"), u_, f"read {fdate(d_)}") for _, u_, d_ in js_x["sources"] if u_ != "https://app.jobscan.co/plan"] + [
+            (re.sub(r"^https?://(www\.)?", "", u_), u_, w_) for u_, w_ in js_b["sources"]]
         page("vs/jobscan/", f"Jobscan vs {SITE}: Free Resume Scans Compared ({TODAY[:4]}) | {SITE}",
-             f"Jobscan gives 5 free resume scans a month, then $49.95 a month. The resume match checker here is free with no limit and no account. Both side by side, every fact sourced.",
+             f"Jobscan gives 5 free resume scans a month, then $49.95 a month, and its job matches need a sign-up. The check here is free, unlimited, with no account.",
              crumbs(("Compared with other job sites", "vs/"), ("Jobscan", "")) + f'<h1>Jobscan vs {e(SITE)}: <span class="hl">a free resume match check</span></h1>'
              '<p class="lead">Jobscan compares your resume with a job posting and shows what is missing. Its free plan gives 5 resume scans a month; unlimited scans cost '
-             f'$49.95 a month, or $89.95 every 3 months after a 7-day trial (its own plan page, {js_read}). The resume match checker here does the core check, which words of the '
+             f'$49.95 a month, or $89.95 every 3 months after a 7-day trial (its own plan page, {js_read}). The resume match checker here does the core check, a match score and the words of the '
              'posting your resume lacks, free, with no account and no limit, inside your browser.</p>'
-             + act_row("tools/resume-match/", "Check my resume against a posting", note="Free, no account, nothing uploaded.")
-             + section("Side by [[side]]", js_table, sid="table", label="Compared")
+             + act_row("tools/resume-match/", "Check my resume against a posting", [("#table", "Resume tools"), ("#jobs", "Job search"), ("vs/jobscan/alternatives/", "Jobscan alternatives")],
+                       note="Free, no account, nothing uploaded.")
+             + f'<p class="vs-pick"><b>In short:</b> {e(js_x["pick"])}</p>'
+             + section("Resume scans, side by [[side]]", js_table, sid="table", label="Resume tools")
+             + section("Free [[Jobscan alternatives]] for a resume match", js_alt_t, sid="free-alternatives", label="Free alternatives",
+                       sub="The tools AI answers name for this, each with what its own page says is free.")
+             + section("As a job search: [[where the jobs come from]]", js_jobs
+                       + f'<p class="note">Jobscan’s job matches and this site both read jobs from companies’ hiring systems. The same rows for {len(VS)} job sites: '
+                         f'<a href="{P}/vs/compare/?sites=jobscan,jobright,hiringcafe,{CMP_US}">Jobscan beside Jobright, HiringCafe and this site</a>.</p>', sid="jobs", label="Job search")
+             + '<div class="vs-two"><div><h2>Where Jobscan is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in js_x["them_better"]) + "</ul></div>"
+               '<div><h2>Where ' + e(SITE) + ' is better</h2><ul class="ticks">' + "".join(f"<li>{e(t)}</li>" for t in js_x["us_better"]) + "</ul></div></div>"
              + js_qh
-             + section("Sources", '<ul class="vs-src"><li><a href="https://app.jobscan.co/plan" rel="nofollow noopener">app.jobscan.co/plan</a>, read ' + js_read + "</li>"
-                       + "".join(f'<li><a href="{e(u_)}" rel="nofollow noopener">{e(re.sub(r"^https?://(www\\.)?", "", u_))}</a>, {e(w_)}</li>' for u_, w_ in js_b["sources"]) + "</ul>"
-                       + f'<p class="note">More: <a href="{P}/free-resume-builders/">free resume builders compared</a> · <a href="{P}/resume/">free resume builder</a> · '
-                         f'<a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>'),
+             + section("Sources", '<ul class="vs-src">' + "".join(f'<li><a href="{e(u_)}" rel="nofollow noopener">{e(n_)}</a>, {e(w_)}</li>' for n_, u_, w_ in js_src_) + "</ul>"
+                       + f'<p class="note">More: <a href="{P}/vs/jobscan/alternatives/">Jobscan alternatives</a> · <a href="{P}/free-resume-builders/">free resume builders compared</a> · '
+                         f'<a href="{P}/resume/">free resume builder</a> · <a href="{P}/best-job-search-sites/">best job search sites</a> · <a href="{P}/vs/">all comparisons</a></p>'),
              head=js_ld)
 
     lap('Job posting sites for employers, compared from their own pri')
@@ -10033,7 +10271,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     ce_cell = lambda v_: e(v_) if v_ else '<span class="fb-u">Not stated</span>'
     ce_rows = [ce_us] + CE.ENGINES
     ce_table = ('<div class="tablewrap fbwrap"><table class="fbt"><thead><tr><th>Site</th>' + "".join(f"<th>{e(CE.COL_NAMES[k_])}</th>" for k_ in CE.COLS) + "</tr></thead><tbody>"
-                + "".join(f'<tr><th scope="row">' + (f'<b>{e(x["name"])}</b> (this site)' if x is ce_us else f'<a href="{e(x["url"])}" rel="nofollow noopener">{e(x["name"])}</a>' + (" (a tool for developers)" if x["kind"] == "tool" else ""))
+                + "".join(f'<tr><th scope="row">' + (f'<b>{e(x["name"])}</b> (this site)' if x is ce_us else f'<a href="{e(x["url"])}" rel="nofollow noopener">{e(x["name"])}</a>' + (" (a tool for developers)" if x["kind"] == "tool" else "")
+                                                     + f'<br><span class="src">Read {e(fdate(x["read"]))}</span>' + (f' · <a href="{P}/vs/{x["vs"]}/">compared here</a>' if x.get("vs") in VS_BY else ""))
                           + "</th>" + "".join(f"<td>{ce_cell(x[k_])}</td>" for k_ in CE.COLS) + "</tr>" for x in ce_rows) + "</tbody></table></div>")
     ce_not = "; ".join(f"{nm_}: {why_}" for nm_, why_ in CE.NOT_READ)
     ce_qa = [("Is there a job search engine that reads company career pages?",
@@ -10050,7 +10289,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               "Most companies keep their open jobs in a hiring system, a program that holds each opening and its application form and publishes the list that fills the company’s Careers page. "
               "A job search engine of this kind reads those lists itself instead of copying postings from another job board, so a job that is taken down disappears from it too."),
              ("How was this checked?",
-              f"On {ce_when} we opened each site’s own pages in a browser and wrote down only what they said; words in quotation marks are the site’s own. A fact the pages did not state is shown as “Not stated”. "
+              f"On the date under each name (the latest {ce_when}) we opened the site’s own pages in a browser and wrote down only what they said; words in quotation marks are the site’s own. A fact the pages did not state is shown as “Not stated”. "
               f"Named in answers to this question and not in the table: {ce_not}.")]
     ce_qh, ce_ld = qa_sec("Questions about job search engines", ce_qa)
     page("job-search-engines/", f"Job Search Engines That Read Company Career Pages ({TODAY[:4]}) | {SITE}",
@@ -10058,12 +10297,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Guides", "guides/"), ("Job search engines that read career pages", ""))
          + '<h1>Job search engines that read <span class="hl">company career pages</span></h1>'
          + f'<p class="tldr"><strong>Yes, they exist.</strong> {e(SITE)} reads the public job lists of {m:,} companies on {e(ce_sys_txt)} {EVERY}, lists {n:,} open jobs and marks a job closed when its company takes it down. '
-         + f'It is free and needs no account. The table sets it beside {len(CE.ENGINES)} others that say they read company career pages, each from its own pages on {ce_when}.</p>'
+         + f'It is free and needs no account. The table sets it beside {len(CE.ENGINES)} others that say they read company career pages, each from its own pages, read on the date shown (the latest {ce_when}).</p>'
          + '<p class="lead">Nothing here is a ranking. Each row repeats what the site itself says; the column that matters to you decides.</p>'
          + nums([(f"{n:,}", "open jobs here today"), (f"{m:,}", "companies whose own lists are read"), (f"{len(ce_sys)}", "hiring systems read"), ("1 hour", "between two readings of most lists")], src=False)
          + act_row("jobs/", f"Search {n:,} open jobs", [("#table", "The table"), ("guides/how-we-check-jobs-every-hour/", "How the hourly check works")], note="Free. No account.")
          + section(f"What each one reads, [[how often]] and what happens to a closed job", ce_table
-                   + f'<p class="note">Words in quotation marks are the site’s own, read on {ce_when}. “Not stated” means the pages we read do not say. Not in the table: {e(ce_not)}.</p>', sid="table", label="The table")
+                   + f'<p class="note">Words in quotation marks are the site’s own, read on the date under each name. “Not stated” means the pages we read do not say. Not in the table: {e(ce_not)}.</p>', sid="table", label="The table")
          + section("What sets them [[apart]]", '<dl class="qa">'
                    "<div><dt>How old a job may be</dt><dd>One site deletes every job three days after it was posted. Here a job stays for as long as the company keeps it open, and its page says how many days that has been.</dd></div>"
                    "<div><dt>What happens when a job closes</dt><dd>A job that only disappears leaves you guessing. Here the page of a closed job stays at its address and says it is closed, so a saved link never leads to nothing.</dd></div>"
@@ -10071,7 +10310,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    + "".join(f'<div><dt>{e(x["name"])} also has</dt><dd>{e(x["also"])}</dd></div>' for x in CE.ENGINES if x["also"]) + "</dl>", sid="apart", label="Differences")
          + ce_qh
          + section("Sources", '<ul class="vs-src">' + "".join(f'<li><b>{e(x["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in x["sources"]) + "</li>" for x in CE.ENGINES)
-                   + f'</ul><p class="note">Read on {ce_when}. Sites change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
+                   + f'</ul><p class="note">Each site read on the date under its name in the table, the latest {ce_when}. Sites change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected. '
+                     f'Side by side with the job sites: <a href="{P}/vs/compare/?sites=hiringcafe,drivetube,google-for-jobs,jobright,{CMP_US}">compare these engines in one table</a> · <a href="{P}/vs/">all comparisons</a>.</p>', sid="sources", label="Sources"),
          head=ce_ld, cls="hub sp frb")
 
     lap('Glossary: the words of a job search in plain English, one pa')
