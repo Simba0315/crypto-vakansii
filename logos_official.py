@@ -717,9 +717,9 @@ ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|
                        r"google|gstatic|googleapis|googletagmanager|doubleclick|cloudflare|cloudfront\.net|amazonaws\.com|azureedge\.net|akamai|"
                        r"fastly|jsdelivr|unpkg|w3\.org|ogp\.me|schema\.org|cookielaw|onetrust|cookiebot|hotjar|sentry|rollbar|sumologic|segment|"
                        r"hubspot|hsforms|wix\.com|wixstatic|parastorage|wixapps|wix-code|squarespace|shopify|webflow|website-files|wordpress\.(?:com|org)|"
-                       r"wp\.com|gravatar|typekit|fontawesome|adobe\.com|apple\.com|microsoft\.com|sharepoint\.com|msftauth|microsoftonline|mozilla\.org|cloudinary\.com|imgix|b-cdn\.net|"
+                       r"wp\.com|gravatar|typekit|fontawesome|adobe\.com|apple\.com|microsoft\.com|sharepoint\.com|msftauth|microsoftonline|mimecastprotect|mozilla\.org|cloudinary\.com|imgix|b-cdn\.net|"
                        r"sharethis|addthis|zdassets|zendesk|intercom|drift|recaptcha|bing\.com|yahoo|vimeo|wistia|pinterest|enable-javascript)", re.I)
-DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|namegulf|joomla-favicon|media/system/images/|gavick|wp\.com/i/webclip|jupiterx/lib/favicon|domainmarket\.com|wordpress-logo|/wp-admin/|wix\.com/favicon|/universal/default-favicon|"
+DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|gstatic\.com/images/branding|namegulf|joomla-favicon|media/system/images/|gavick|wp\.com/i/webclip|jupiterx/lib/favicon|domainmarket\.com|wordpress-logo|/wp-admin/|wix\.com/favicon|/universal/default-favicon|"
                           r"website-files\.com/img/(?:favicon|webclip)|webflow\.com/img/(?:favicon|webclip)|/img/webclip\.png|"
                           r"logo-default\.png|isteam/ip/static|weebly\.com/favicon|squarespace\.com/favicon|shopify\.com/favicon|"
                           r"hubspot.*favicon|godaddy|default[-_]?favicon|favicon[-_]default|placeholder|/img/v1\.1/favicons/)", re.I)   # the last: JazzHR's own
