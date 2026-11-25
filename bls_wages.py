@@ -167,7 +167,30 @@ NOTE = {
 }
 
 
+# All occupations together, national, all industries (series OEUN000000000000000000001 / 03 / 06-10 / 11-15, read from the
+# same service on 25 Nov 2026, May 2025 figures). Search check that day ("is $25 an hour good pay"): every answer compares a rate with the
+# national median, and the first results quote different, unsourced "averages"; the hourly-pay pages now quote these.
+ALL_JOBS = {"employed": 155495730, "mean": 33.54, "p10": 15.00, "p25": 18.07, "median": 24.51, "p75": 38.71, "p90": 61.81,
+            "y_p10": 31200, "y_p25": 37590, "y_median": 50980, "y_p75": 80520, "y_p90": 128560}        # the yearly figures: types 11, 12, 13, 14, 15
+ALL_READ = "2026-11-25"
+
+
+def all_jobs_place(rate):
+    """Where an hourly rate stands among all US jobs, in plain words: "more than half of all US jobs pay less"."""
+    a = ALL_JOBS
+    if rate < a["p10"]: return "fewer than one in ten US jobs pays less"
+    if rate < a["p25"]: return "more than one in ten US jobs pays less, but fewer than a quarter"
+    if rate < a["median"]: return "more than a quarter of US jobs pay less, but fewer than half"
+    if rate < a["p75"]: return f"more than half of all US jobs pay less; a quarter pay ${a['p75']:,.2f} or more"
+    if rate < a["p90"]: return f"more than three quarters of US jobs pay less; one in ten pays ${a['p90']:,.2f} or more"
+    return "more than nine in ten US jobs pay less"
+
+
 def check():
+    a = ALL_JOBS
+    assert a["p10"] < a["p25"] < a["median"] < a["p75"] < a["p90"] and a["median"] < a["mean"] and a["employed"] > 1e8
+    for k in ("p10", "p25", "median", "p75", "p90"): assert abs(a["y_" + k] - a[k] * 2080) < 10, k       # BLS: a year is 2,080 hours
+    assert all_jobs_place(25).startswith("more than half") and all_jobs_place(14).startswith("fewer than")
     for c, (t, emp, lo, med, hi) in OCC.items():
         assert t and emp > 0 and 0 < lo < med < hi, c
     for s, c in ROLE.items(): assert c in OCC, s

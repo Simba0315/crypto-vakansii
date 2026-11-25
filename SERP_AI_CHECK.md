@@ -1056,3 +1056,28 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
 - How-to-hire pages: 182 kinds of work had no "what to look for" section (credentials, skills to test, signs of a strong candidate, red flags, questions that reveal experience, and two questions), because the earlier fill (ai_fill.py hire) read only pages that existed locally; Android, data scientist, data analyst and the developer roles among them ("hire android developers" 50 impressions at 88). Helpers write them to the same rules and ai_fill.sec_problems() checks each; read before merging (licenses named only where they exist, FTC disclosure for influencer and affiliate work). The /roles/ pages get the matching "What <persons> do" section for the 107 that lacked it.
 - Per-role families filled tonight with helpers to the repo's own rules (ai_fill.py specs and checks): how to hire 182, roles 107, job descriptions 158, how to become 114, salary 236, interview questions 107, resume examples 5. The earlier generation read only pages in the local sample, which is why live pages for these kinds of work showed generic text.
 - 25 Nov 2026, owner asked about the job-posting warnings (screenshot): all six are warnings, not errors (0 critical, 42 valid). addressRegion, addressCountry and employmentType were fixed 20-22 Nov (etype_ld reads "Employment type: …" and "full-time" from the text; place parsing fills region and country); the report shows pages crawled before that. streetAddress, postalCode and baseSalary appear only when the employer writes them; never invented. Re-check on 1 Dec.
+
+### Hourly pay, part-time and internships: "is $25 an hour good pay", "how many hours is part time", "do internships have to be paid", "how long is an internship" (25 Nov 2026)
+- Read in Claude's web search (US results) on 25 Nov. "is $25 an hour good pay": AOL, CareerBuilder, SuperMoney, ZipRecruiter, SoFi, Inch Calculator and
+  several look-alike calculator sites; the answer compares $25 with "the national average" and gets two different, unsourced figures ($54,000 and
+  $45,000 a year) and adds take-home pay. "how much is $25 an hour after taxes": every first result is a calculator; the answer quotes $43,953-$43,962
+  for a single filer (federal tax and FICA). Our page had the yearly figure and the share of OUR jobs below the rate, nothing on all US jobs, no tax.
+  Done (all 7 /jobs-that-pay/<N>-an-hour/ pages): "Where $N an hour stands among all US jobs" (BLS OEWS May 2025, all occupations: p10 $15.00, p25 $18.07,
+  median $24.51, p75 $38.71, p90 $61.81, mean $33.54, 155.5 million jobs; read from api.bls.gov 25 Nov, `bls_wages.ALL_JOBS`), "$N an hour after taxes"
+  table (year, month, two weeks, week, hour; the same 2026 federal figures as the take-home calculator: $25 an hour keeps $43,962, which matches the
+  answer above), questions "How much is $N an hour after taxes?" and "… part-time?" (20 and 30 hours a week). Hub /jobs-that-pay/: "What is the average
+  hourly wage in the US?" and the BLS table with a link to the band each percentile falls in.
+- "how many hours is part time": ADP, Coursera, Glassdoor, Paycor, Rippling, Paylocity, FlexJobs, The Muse; "1 to 34", "15 to 34", "about 20" hours, no
+  source; the answer adds the ACA 30-hour line. Official pages read 25 Nov: dol.gov/general/topic/workhours/full-time (the FLSA does not define full-time or
+  part-time; the employer decides), bls.gov/cps/definitions.htm (part-time = usually fewer than 35 hours a week), irs.gov "Identifying full-time employees"
+  (30 hours a week or 130 a month), dol.gov overtime pay (over 40 hours in a workweek, time and a half; no federal premium for weekends) and vacation leave
+  (paid time off is a matter of agreement). Done on /part-time/: five questions answered from those pages and from the postings (weekly hours they name, the
+  hourly median, benefits named in the full texts we hold): how many hours, is 30 hours part-time, what it pays, benefits, overtime. The generic "How is AI
+  changing part-time jobs? … 2%" and "skills … dbt (0%)" are gone from every list where the share is that small (now 5% for AI, 2% for a skill).
+- "do internships have to be paid": university career centres, SHRM, QuickBooks, FindLaw, The Forage; the answer is the primary beneficiary test. Read 25 Nov:
+  DOL Fact Sheet #71 (updated January 2018), seven factors, nonprofits and public bodies. "how long is an internship": The Forage, PDX, Brandeis, Zippia;
+  "8-12 weeks", "10 to 12 weeks", no count. Done on /internships/: "Do internships have to be paid?" (the seven factors in plain words) and "How long is an
+  internship?" counted from the postings' own words ("12-week internship", "6 month placement"; local sample: 56 postings at 19 employers, median 12 weeks).
+  Fixed a wrong figure: the page said "Only 9 of the 726 internships state a figure" while its own filter row said "Pay stated 96": only yearly dollar ranges
+  were counted and interns are paid by the hour. Now every stated pay counts, with the median hourly rate.
+- Search Console, 25 Nov (coordinator): hubs "Discovered, not indexed" or "URL unknown" (/part-time/, /hybrid/, /internships/, /salaries/, the near-me pages, 23 of 26 guides …) now get links in the content of indexed pages (/remote/, /entry-level/, /new/, /jobs-that-pay/, /tech/, /how-to-hire/, /with-salary/, /resume/, /cover-letter-examples/, /resume-words/, /free-resume-builders/), and the guides are in sitemaps/core.xml. Check the same addresses in URL inspection on about 2 Dec.

@@ -1587,6 +1587,18 @@ def crumbs_ld(parts):
                                                                  ensure_ascii=False).replace("</", "<\\/") + "</script>")
 
 
+# Search Console, 25 Nov 2026: 23 of the 26 guides were "URL unknown to Google": they were linked only from /guides/ and from each
+# other. Indexed list and tool pages now link the guides that belong to them. Only guides that are always built (advice_pages and the
+# data guides written on every build) are named, so a link never leads nowhere.
+GUIDES_ALWAYS = {"remote-jobs-by-field", "entry-level-jobs", "job-levels-explained", "is-this-job-still-open", "how-to-read-a-job-posting", "follow-up-after-applying"}
+
+
+def guide_row(items, label="Guides"):
+    import advice_pages
+    ok_ = GUIDES_ALWAYS | {a_["slug"] for a_ in advice_pages.ARTICLES}
+    return labrow(label, [f'<a href="{P}/guides/{s_}/">{e(t_)}</a>' for s_, t_ in items if s_ in ok_])
+
+
 def labrow(label, items, more=None):
     """A labelled row: the label on the left, the links on the right, an optional "More" link last."""
     if not items: return ""
@@ -1729,16 +1741,18 @@ def faq_for(label, jobs, first=None, extra=()):
                       (f" {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days." if new7 else "")) + " Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
     ai_ = Counter(t for j in jobs for t in j.get("tags", []) if t in AI_TAGS)
     k_ai = sum(1 for j in jobs if any(t in AI_TAGS for t in j.get("tags", [])))
-    if n_ >= 20:
+    # 25 Nov 2026: "How is AI changing part-time jobs? 10 of the 587 (2%) ask for AI skills" and "Most often Machine Learning (2%), Jira
+    # (1%), dbt (0%)" said nothing and read as machine text on lists far from tech; both questions now need a real share behind them.
+    if n_ >= 20 and k_ai >= max(5, 0.05 * n_):
         qa.append((f"How is AI changing {label}?",
                    f"{k_ai:,} of the {n_:,} open {label} ({100 * k_ai / n_:.0f}%) ask for AI or machine-learning skills"
                    + (", most often " + ", ".join(t for t, _ in ai_.most_common(3)) + "." if ai_ else ".")
                    + (f" Employers still list {n_:,} such roles today at {n_co:,} companies." if n_co > 1 else "") + f" Counted from the postings' own text on {fdate(TODAY)}."))
     # "What are the 5 skills of customer service?", "What jobs can I get with Python?" (People also ask, 15 Nov 2026)
-    sk_ = Counter(t for j in jobs for t in j.get("tags", []))
+    sk_ = [(t, k) for t, k in Counter(t for j in jobs for t in j.get("tags", [])).most_common(5) if k >= max(3, 0.02 * n_)]
     if n_ >= 20 and len(sk_) >= 3:
         qa.append((f"What skills do {label} ask for?",
-                   "Most often " + ", ".join(f"{t} ({100 * k / n_:.0f}%)" for t, k in sk_.most_common(5)) + f" of the {n_:,} open postings, counted from their own text on {fdate(TODAY)}."))
+                   "Most often " + ", ".join(f"{t} ({100 * k / n_:.0f}%)" for t, k in sk_) + f" of the {n_:,} open postings, counted from their own text on {fdate(TODAY)}."))
     ti_ = Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in jobs)
     ti_ = [(t, k) for t, k in ti_.most_common(8) if k >= 2 and 3 <= len(t) <= 60][:5]
     if n_ >= 20 and len(ti_) >= 3:
@@ -1842,7 +1856,8 @@ def hub_sections(label, js, skip="", min_k=40, drop_tag=""):
     bars = lambda rows_: '<div class="hbars">' + "".join(
         f'<a href="{P}/{u}"><span class="hn">{e(nm)}</span><span class="hb"><i style="width:{max(3, round(100 * c / rows_[0][2]))}%"></i></span><span class="hc">{c:,} · {100 * c / k:.0f}%</span></a>' for u, nm, c in rows_) + "</div>"
     if "skills" not in skip:
-        sk = Counter(t for j in js for t in j["tags"] if t != drop_tag).most_common(7)
+        # a skill named in under 2% of the jobs is noise on the chart ("Figma 1 · 0%" on the part-time list, 25 Nov 2026)
+        sk = [(t, c) for t, c in Counter(t for j in js for t in j["tags"] if t != drop_tag).most_common(7) if c >= max(3, 0.02 * k)]
         if len(sk) >= 4: top.append(f'<div><h2 class="h2s">Skills asked for in {e(plc or label)}</h2>' + bars([(f"skills/{TAG_SLUG.get(t, slugify(t))}/", t, c) for t, c in sk]) + "</div>")
     if "roles" not in skip:
         # how many of this page's jobs each kind of work has: asked of the page's jobs, not of every role's whole set of jobs
@@ -2137,6 +2152,55 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
 
+PT_HOURS = re.compile(r"\b(\d{1,2})(?:\s*(?:-|–|to)\s*(\d{1,2}))?\s*(?:hours|hrs)\s*(?:per|a|each|/|every)\s*week", re.I)
+PT_BENEFITS = re.compile(r"health (?:insurance|benefits|coverage|care benefits)|medical,? dental|medical (?:insurance|benefits|coverage)|\b401\(?k\)?", re.I)
+
+
+def part_time_qa(ej):
+    """The questions people ask about part-time work, answered from the US government's own pages and from today's postings.
+    Search check, 25 Nov 2026 ("part time jobs", "how many hours is part time"): the first results (ADP, Coursera, Glassdoor, Paycor,
+    Paylocity) give "1 to 34", "15 to 34" or "about 20" hours without a source, and the answers add the 30-hour ACA line. The list page
+    asked only generic questions ("How is AI changing part-time jobs?"). Read on 25 Nov 2026: dol.gov/general/topic/workhours/full-time
+    (the FLSA does not define full-time or part-time; the employer decides), bls.gov/cps/definitions.htm (part-time: usually fewer than
+    35 hours a week), irs.gov "Identifying full-time employees" (30 hours a week or 130 a month), dol.gov overtime pay (over 40 hours in a
+    workweek, at least time and a half; no federal premium for weekends) and vacation leave (paid time off is a matter of agreement)."""
+    k = len(ej)
+    text = lambda j: (j["excerpt"] or "") + " " + re.sub(r"<[^>]+>", " ", j.get("desc") or "")
+    hw = []
+    for j in ej:
+        if (m_ := PT_HOURS.search(text(j))):
+            a_, b_ = int(m_.group(1)), int(m_.group(2) or m_.group(1))
+            if 4 <= a_ <= b_ <= 39: hw.append(((a_ + b_) / 2, f"{a_} to {b_} hours" if b_ > a_ else f"{a_} hours", j["company"]))
+    hours_ = ""
+    # only when several employers say it: one chain's "20-25 hours per week" on 23 of 26 postings is that chain's policy (local sample)
+    if len(hw) >= 10 and len({c_ for _, _, c_ in hw}) >= 3 and Counter(c_ for _, _, c_ in hw).most_common(1)[0][1] <= len(hw) / 2:
+        hv = sorted(h_ for h_, _, _ in hw)
+        hours_ = (f" Of the {k:,} open part-time postings here, {len(hw):,} name their weekly hours: the median is {hv[len(hv) // 2]:g} hours a week, and the ones named most are "
+                  + ", ".join(f"{t_} ({c_:,})" for t_, c_ in Counter(t_ for _, t_, _ in hw).most_common(3)) + ".")
+    full = [j for j in ej if j.get("desc")]
+    ben = sum(1 for j in full if PT_BENEFITS.search(text(j)))
+    ben_ = (f" Of the {len(full):,} part-time postings here whose full text we hold, {ben:,} ({100 * ben / len(full):.0f}%) mention health, dental or retirement benefits." if len(full) >= 20 else "")
+    hl = sorted((h_[0] + h_[1]) / 2 for j in ej if (h_ := usd_hourly(j.get("salary"))))
+    qa = [("How many hours is part-time?", "No US federal law sets a number. The Fair Labor Standards Act does not define full-time or part-time work; the US Department of Labor leaves it to the employer. "
+                                           "The Bureau of Labor Statistics counts people who usually work fewer than 35 hours a week as part-time, and for the health coverage rules of the "
+                                           "Affordable Care Act an employee who averages 30 hours a week or more (130 hours a month) counts as full-time." + hours_),
+          ("Is 30 hours a week part-time?", "By the Bureau of Labor Statistics line of 35 hours, yes. For employer health coverage under the Affordable Care Act, no: the IRS counts an average of "
+                                            "30 hours a week as full-time, and a large employer must offer coverage at that level or risk a payment. An employer's own policy can draw the line "
+                                            "anywhere else, so ask how it counts your hours.")]
+    if len(hl) >= 10:
+        med_ = hl[len(hl) // 2]
+        qa.append(("How much do part-time jobs pay?", f"{len(hl):,} of the {k:,} open part-time postings here state an hourly rate in US dollars: the median is ${med_:,.2f} an hour, and the middle half "
+                                                      f"pay ${hl[len(hl) // 4]:,.2f} to ${hl[3 * len(hl) // 4]:,.2f}. At the median, 20 hours a week is ${med_ * 20:,.0f} a week before tax. "
+                                                      "These are the middles of the ranges each employer wrote, not verified pay."))
+    qa += [("Do part-time jobs have benefits?", "No federal law requires paid vacation, sick days or holidays for any worker, part-time or full-time; the Department of Labor calls them a matter of "
+                                                "agreement between employer and employee. Health coverage is where hours count: a large employer must offer it to employees who average 30 hours a week "
+                                                "or more, so jobs under 30 hours often come without it. Some states and cities require paid sick leave, part-time workers included." + ben_),
+           ("Do part-time workers get overtime?", "Yes, by the same rule as everyone else. A non-exempt employee covered by the Fair Labor Standards Act gets at least one and a half times the regular "
+                                                  "rate for every hour over 40 in a workweek, whether the job is called part-time or full-time. Federal law asks no extra pay for weekends, holidays or "
+                                                  "nights as such; some states also count overtime by the day.")]
+    return tuple(qa)
+
+
 def intern_hub(path, h1, yr, ej):
     """The internships page: the plain meaning of the word, when the openings start, what they pay, who hires interns and where, then the list."""
     k = len(ej)
@@ -2151,7 +2215,6 @@ def intern_hub(path, h1, yr, ej):
     cnt = [(nm, sum(1 for j in ej if re.search(rx, blob(j), re.I)), what) for nm, rx, what in seasons]
     cnt = [(nm, c, w) for nm, c, w in cnt if c >= 5]
     named = sum(1 for j in ej if re.search(r"\bsummer\b|\bfall\b|\bautumn\b|\bwinter\b|\bspring\b|\bco-?op\b", blob(j), re.I))
-    paid = sum(1 for j in ej if j.get("usd"))
     new7 = sum(1 for j in ej if (j["posted"] or "") >= HUB["week"])
     plain = (f"<strong>An internship</strong> is a short job, mostly a few months, where a student or a recent graduate works on real tasks at a company to learn the trade. "
              f"{k:,} are open today. " + intro_for(ej, "internship ", "", hub=True))      # the other figures stand in the row under the paragraph
@@ -2160,9 +2223,35 @@ def intern_hub(path, h1, yr, ej):
         seas = section("When the internships start", '<div class="tablewrap"><table><tr><th>Season named in the posting</th><th>Open roles</th><th>What it usually means</th></tr>'
                        + "".join(f"<tr><td><strong>{e(nm)}</strong></td><td>{c:,}</td><td>{e(w)}</td></tr>" for nm, c, w in cnt)
                        + f'</table></div><p class="note">Counted from the words in the job title and text. {named:,} of the {k:,} internships name a season; the others name none. One posting can name two seasons.</p>')
+    # 25 Nov 2026: `paid` counted yearly US-dollar ranges only, and interns are mostly paid by the hour: the page said "Only 9 of the 726
+    # state a figure" while its own filter row said "Pay stated 96". Now every posting that states pay counts, and the hourly rates
+    # (or a yearly figure divided by 2,080) give the typical intern pay.
+    paid = sum(1 for j in ej if j.get("salary"))
+    ih_ = sorted((h_[0] + h_[1]) / 2 for j in ej if (h_ := usd_hourly(j.get("salary"))))
+    iy_ = sorted((j["usd"][0] + j["usd"][1]) / 2 / 2080 for j in ej if j.get("usd") and not usd_hourly(j.get("salary")))
+    i_all = sorted(ih_ + iy_)
+    i_pay = (f"{len(ih_):,} state an hourly rate and {len(iy_):,} a yearly figure in US dollars; together they pay ${i_all[len(i_all) // 2]:,.2f} an hour at the median, "
+             f"and the middle half ${i_all[len(i_all) // 4]:,.2f} to ${i_all[3 * len(i_all) // 4]:,.2f} an hour (a yearly figure is divided by 2,080 hours)" if len(i_all) >= 10 else "")
+    # How long they last, from the postings' own words ("12-week internship", "6 month paid internship", "a co-op of 16 weeks"). Search
+    # check, 25 Nov 2026 ("how long is an internship"): the first answers say "10 to 12 weeks" or "a few months" without a count.
+    num_ = r"(\d{1,2})(?:\s*(?:-|–|to)\s*(\d{1,2}))?"
+    dur_rx = re.compile(rf"\b{num_}[- ](week|month)s?(?:[- ]long)?,?\s+(?:(?:paid|full[- ]time|summer|fall|spring|winter|in[- ]person|on[- ]?site|hybrid|remote)\s+)*(?:internship|intern\b|co-?op|program|placement|rotation)"
+                        rf"|\b(?:internship|co-?op|program|placement)\s+(?:is|lasts|runs|of|will last|will run|spans|for)\s+(?:approximately\s+|about\s+|around\s+|up to\s+)?{num_}\s+(week|month)s?\b", re.I)
+    durs = []
+    for j in ej:
+        m_ = dur_rx.search(j["title"] + " . " + (j["excerpt"] or "") + " " + re.sub(r"<[^>]+>", " ", j.get("desc") or ""))
+        if m_:
+            g_ = m_.groups()
+            lo_, hi_, u_ = (g_[0], g_[1], g_[2]) if g_[0] else (g_[3], g_[4], g_[5])
+            lo_, hi_, u_ = int(lo_), int(hi_ or lo_), u_.lower()
+            if 0 < lo_ <= hi_ <= (52 if u_ == "week" else 12):
+                durs.append(((lo_ + hi_) / 2 * (1 if u_ == "week" else 52 / 12), f"{lo_}{'–' + str(hi_) if hi_ != lo_ else ''} {u_}{'s' if hi_ > 1 else ''}", j["company"]))
+    dur_c = Counter(t_ for _, t_, _ in durs).most_common(3)
+    i_dur = (f"{len(durs):,} of the {k:,} open internships here say how long they last; the median is {round(sorted(w_ for w_, _, _ in durs)[len(durs) // 2])} weeks, and the lengths named most are "
+             + ", ".join(f"{t_} ({c_:,})" for t_, c_ in dur_c) + "." if len(durs) >= 10 and len({c_ for _, _, c_ in durs}) >= 5 else "")
     pay_note = ""
     if paid:
-        pay_note = (f'<p class="note">{paid:,} of the {k:,} internships ({round(100 * paid / k)}%) state pay in the posting; the others do not say. '
+        pay_note = (f'<p class="note">{paid:,} of the {k:,} internships ({round(100 * paid / k)}%) state pay in the posting' + (f": {i_pay}" if i_pay else "") + '; the others do not say. '
                     f'Whether an internship pays is worth asking in the first call.</p>')
     glance, tail = hub_sections("internships", ej, skip="roles")
     qa = [("How many internships are open right now?", f"{k:,} at {n_co:,} companies as of {fdate(TODAY)}; {new7:,} were posted in the last seven days. The list is rebuilt every hour from the employers' own careers pages."),
@@ -2170,7 +2259,15 @@ def intern_hub(path, h1, yr, ej):
           ("Are there remote internships?", f"{r_:,} of the {k:,} ({round(100 * r_ / k)}%) are listed as remote; most are done on site, so check the place line of each job."),
           ("Do I need to be a student to apply?", "Many internships ask for a current student or a recent graduate, and the posting says so in its requirements. Some are open to career changers and to people returning to work. The requirements line of each job is the only place that decides it."),
           ("How early should I apply for a summer internship?", "Many large companies open summer roles in the autumn before and fill them over the winter, so applying in September to December gives the most choice. Postings that name a summer are listed in the table above."),
-          ("Are internships paid?", f"Only {paid:,} of the {k:,} open internships state a figure in the posting, so for most the answer comes in the first call. Ask before you accept a place, and ask what the pay covers." if paid else "The postings here do not state a figure, so ask in the first call."),
+          ("Are internships paid?", (f"{paid:,} of the {k:,} open internships here ({round(100 * paid / k)}%) state pay in the posting" + (f": {i_pay}. " if i_pay else ". ")
+                                     + "For the others the answer comes in the first call. Ask before you accept a place, and ask what the pay covers." if paid else "The postings here do not state a figure, so ask in the first call.")),
+          ("Do internships have to be paid?", "In the United States, a for-profit employer must pay an intern at least the minimum wage, and overtime where it applies, unless the intern rather than the employer "
+                                              "is the main beneficiary of the internship. The Labor Department’s Fact Sheet #71 lists seven factors the courts weigh: both sides understand there is no pay; "
+                                              "the training is like a school’s; it is tied to a course or academic credit; it fits the academic calendar; it lasts only as long as it teaches; "
+                                              "the intern’s work supports paid staff rather than replacing them; and no job is promised at the end. No single factor decides. "
+                                              "Unpaid internships are generally allowed at public bodies and nonprofit charities when the intern volunteers. Some states add rules of their own."),
+          ("How long is an internship?", (i_dur + " " if i_dur else "") + "Summer internships mostly run through the summer break; co-ops and placements outside the summer often last a whole term or six months. "
+                                         "The posting’s own dates are the ones that count."),
           ("Can an internship turn into a job?", "At some companies, yes, and the posting sometimes says so. We have no figures for how many interns are hired afterwards, so this site gives no percentage.")]
     own = section("Questions about internships", '<dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(a_)}</dd></div>" for q, a_ in qa) + "</dl>")
     ld_own = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -2782,9 +2879,9 @@ def main():
     NP_PAGE = len(np_) >= 20
     TYPE_NAMES = {"night-shift/": "Night shift jobs", "weekend/": "Weekend jobs", "summer/": "Summer jobs", "temporary/": "Temporary jobs",
                   "hiring-immediately/": "Jobs hiring immediately", "no-experience-jobs/": "No experience jobs", "fair-chance-jobs/": "Fair chance jobs"}
-    FOOT["types"] = ('<p class="pop"><span>Jobs by type:</span>' + "".join(f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in (
-        [("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
-        + [(p_, TYPE_NAMES.get(p_, h_)) for p_, h_, _, _ in HOURS] + ([("government-jobs/", "Government jobs")] if GOV_PAGE else []) + ([("nonprofit-jobs/", "Nonprofit jobs")] if NP_PAGE else []))) + "</p>")
+    TYPE_LINKS = ([("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
+                  + [(p_, TYPE_NAMES.get(p_, h_)) for p_, h_, _, _ in HOURS] + ([("government-jobs/", "Government jobs")] if GOV_PAGE else []) + ([("nonprofit-jobs/", "Nonprofit jobs")] if NP_PAGE else []))
+    FOOT["types"] = '<p class="pop"><span>Jobs by type:</span>' + "".join(f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in TYPE_LINKS) + "</p>"
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
     SPONSORS = [sp for sp in CFG.get("sponsors", []) + PAID.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
     spot_cos = [sp["company"] for sp in SPONSORS if sp.get("slot") in ("home", "spotlight", "companies")]
@@ -3615,6 +3712,8 @@ def main():
         ("remote/part-time/", "Part-time"), ("remote/contract/", "Contract"), ("salary/100k/remote/", "Paying $100K or more"), ("salary/200k/remote/", "Paying $200K or more"),
         ("insights/highest-paying-remote-jobs/", "The 40 best paid"), ("insights/companies-hiring-remotely/", "Companies with the most remote roles"))
         if not u.startswith("remote/") or (u == "remote/time-zones/" and len(tz_jobs) >= 30) or u in rem_et or u in {c_[0] for c_ in combos}]      # a remote list with too few jobs today has no page: no link to it
+    # 25 Nov 2026, Search Console: /hybrid/ was "Discovered, not indexed" with links only from the footer; /remote/ is indexed
+    if sum(1 for j in active if j.get("hybrid")) >= 20: rkinds.insert(1, f'<a href="{P}/hybrid/">Hybrid: some days at home</a>')
     remote_more = (section("Remote jobs by field", f'<ul class="tiles">{rfams}</ul>', ("categories/", "All categories")) if rfams else "")
     rr_rm = role_rows(remote, 30)
     best_rm = sorted((r_ for r_ in rr_rm if r_[3]), key=lambda r_: -r_[3])[:5]
@@ -3637,7 +3736,8 @@ def main():
             remote, intro_for(remote, "remote ", row=True), stats="rest", extra=labrow("Kind", rkinds) + rel(REL["remote"]),
             pics=hub_sections("remote roles", remote)[0], list_title="All remote jobs, newest first",
             hub=(section("Remote jobs by category", f'<ul class="tiles">{rcats}</ul>', ("jobs/", "Search every job")) if rcats else "") + remote_more + hub_sections("remote roles", remote)[1],
-            after=every_list("Every list of remote jobs", REL["remote"], (("Kind of contract and level", r"^remote/(?!skills/)[^/]+/$"), ("By kind of work", r"^roles/"),
+            after=guide_row([("remote-jobs-by-field", "Which jobs can be done from home"), ("phone-and-video-interview-tips", "Phone and video interviews"), ("how-to-find-a-job", "How to find a job")], "Guides for remote work")
+                  + every_list("Every list of remote jobs", REL["remote"], (("Kind of contract and level", r"^remote/(?!skills/)[^/]+/$"), ("By kind of work", r"^roles/"),
                              ("By place", r"^locations/"), ("By skill", r"^remote/skills/"), ("By pay", r"^salary/"), ("More", r"."))),
             feed=True, faq="remote jobs", faq_extra=rm_qa)
     lap('Crypto: the hub answers the search "crypto jobs" (and "web3 ')
@@ -3744,7 +3844,9 @@ def main():
     row_s, kw_s = list_parts("Jobs with salary listed", sal)
     listing("with-salary/", "Jobs with salary listed", f"Jobs With Salary Listed ({len(sal):,}) | {SITE}",
             "Jobs where the employer publishes the salary range up front.", sal, intro_for(sal, "", " with a published salary range", row=row_s),
-            links=(("salaries/", "What each job pays"), ("salary/100k/", "Jobs that pay $100K or more")), **kw_s)
+            links=(("salaries/", "What each job pays"), ("salary/100k/", "Jobs that pay $100K or more")),
+            after=guide_row([("salary-expectations", "Answering “What are your salary expectations?”"), ("negotiate-salary", "How to negotiate salary"), ("highest-paying-jobs", "The highest-paying jobs")],
+                            "Guides about pay"), **kw_s)
     jr = [j for j in active if j["entry"]]
     intern_e = [j for j in jr if j["level"] == "Intern"]
     gl_e, tl_e = hub_sections("entry-level roles", jr, min_k=20)
@@ -3763,6 +3865,8 @@ def main():
                              + '</table></div><p class="note">Median of the midpoints of advertised yearly US-dollar ranges; a kind of work needs 5 entry-level postings with pay.</p>')
     if len(nd_e) >= 3:
         ent_after += section("Entry-level jobs with no degree required", f"<p>{len(nd_e):,} of these postings say no degree is required. The newest:</p>" + job_links(nd_e))
+    ent_after += guide_row([("entry-level-jobs", "Where beginners are hired"), ("how-to-get-a-job-with-no-experience", "A job with no experience"), ("how-to-find-a-job", "How to find a job"),
+                            ("jobs-for-teens", "Jobs for teens"), ("job-levels-explained", "Job levels explained")], "Guides for a first job")
     ent_qa = [("What counts as an entry-level job here?", "A job whose title marks it as an internship or a junior role: intern, junior, graduate, new grad and similar words. Many jobs with no level in the title are open to beginners too "
                "(associate and trainee roles, for example), which is why the kinds of work open to beginners, linked above, count more jobs.")]
     if rr_e:
@@ -3776,8 +3880,9 @@ def main():
             (f"Entry-level jobs and internships: {len(jr):,} open now at " + (lambda t_: ", ".join(t_[:-1]) + " and " + t_[-1] if len(t_) > 1 else "".join(t_))([c_ for c_, _ in Counter(j["company"] for j in jr).most_common(3)])
              + "."), jr,      # "Many need no experience" was not counted anywhere (24 Nov 2026); fit_desc adds the closing sentence
             intro_for(jr, "entry-level ", row=True), stats="rest",
-            extra=labrow("Narrow by", [f'<a href="{P}/internships/">Internships</a>', f'<a href="{P}/remote/entry-level/">Remote entry-level jobs</a>',
-                                       f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>'])
+            extra=labrow("Narrow by", [f'<a href="{P}/internships/">Internships</a>', f'<a href="{P}/remote/entry-level/">Remote entry-level jobs</a>']
+                         + ([f'<a href="{P}/no-experience-jobs/">No experience required</a>'] if len(noexp_jobs) >= 20 else [])      # Search Console 25 Nov 2026: "Discovered, not indexed"
+                         + [f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>'])
                   # by field (21 Nov 2026): these 22 lists had two links each, from their field and from one guide
                   + labrow("By field", [f'<a href="{P}/categories/{fs_}/entry-level/">Entry-level {e(rlow(fn_))} jobs ({n_:,})</a>'
                                         for fs_, fn_, _, _, js_f in fam_rows if (n_ := sum(1 for j in js_f if j["entry"])) >= 20]),
@@ -4122,7 +4227,7 @@ def main():
                 tech_js, f"Software, AI, data, cloud, security, product and hardware: {len(tech_js):,} open jobs in {len(tech_fams)} tech categories. "
                 f"The rest of the site covers every other kind of work too.",
                 per=50, max_pages=3, more=False, feed=True,
-                stats="rest", extra=labrow("Category", [f'<a href="{P}/categories/{f[0]}/">{e(f[1])}</a>' for f in tech_fams], ("categories/", "All categories")) + tech_links,
+                stats="rest", extra=labrow("Category", [f'<a href="{P}/categories/{f[0]}/">{e(f[1])}</a>' for f in tech_fams] + [f'<a href="{P}/crypto/">Crypto and web3</a>'], ("categories/", "All categories")) + tech_links,
                 pics=mini_pics(tech_js), hub=section("Tech categories", '<div class="dir">' + "".join(dir_block(*f, top=6, tag="h3") for f in tech_fams) + "</div>"),
                 list_title="Newest tech jobs", faq="tech jobs")
     dir_html = '<div class="dir" id="dir">' + "".join(dir_block(*f) for f in fam_show) + dir_tail + "</div>"
@@ -4808,7 +4913,11 @@ def main():
     listing("new/", "New jobs", (f"New Jobs Posted Today: {len(day_):,} in 24 Hours, {len(fresh):,} in 3 Days" if day_ else f"New Jobs: {len(fresh):,} Posted in the Last 3 Days") + f" | {SITE}",
             f"{len(day_):,} jobs posted in the last 24 hours and {len(fresh):,} in the last three days, from employers’ own careers pages. Updated every hour.",
             fresh, intro_for(fresh, "", " posted in the last three days", row=list_parts("New jobs", fresh)[0]), feed=True, extra=new_top, **list_parts("New jobs", fresh)[1],
-            after=section("Questions about new jobs", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in new_qa) + "</dl>") + new_ld,
+            links=(("jobs-near-me/", "Jobs near me"), ("salaries/", "What each job pays")),       # both unknown to Google or not indexed on 25 Nov 2026; /new/ is indexed
+            after=labrow("Jobs by type", [f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in TYPE_LINKS])      # in the page, not only the footer (Search Console, 25 Nov 2026)
+                  + guide_row([("is-this-job-still-open", "Is this job still open?"), ("how-to-read-a-job-posting", "How to read a job posting"), ("follow-up-after-applying", "Following up after applying"),
+                             ("how-long-to-hear-back", "How long to hear back")], "Guides for applying")
+                  + section("Questions about new jobs", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in new_qa) + "</dl>") + new_ld,
             live=f' data-live="new" data-since="{cutoff}"')       # site.js adds the jobs found since this page was built (/api/latest)
 
     lap('Salaries')
@@ -5583,7 +5692,9 @@ def main():
                     kw_e["after"] = section("Part-time pay by job title", '<div class="tablewrap"><table><tr><th>Job title</th><th>Open postings with an hourly rate</th><th>Median hourly pay</th></tr>'
                                             + "".join(f"<tr><td>{e(t_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td></tr>" for t_, v_ in hr_rows)
                                             + '</table></div><p class="note">The middle of each posting’s hourly range, for titles with three or more open part-time postings that state one.</p>') + kw_e.get("after", "")
-            listing(path, h1, f"{h1}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
+                kw_e = dict(kw_e); kw_e["faq_extra"] = part_time_qa(ej)
+                kw_e["links"] = (("part-time-jobs-near-me/", "Part-time jobs near me"),) + ((("remote/part-time/", "Remote part-time jobs"),) if sum(1 for j in remote if j.get("etype") == "Part-time") >= 20 else ())
+            listing(path, h1, f"{tcase(h1)}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
                     intro_for(ej, f"{et.lower()} ", row=row_e), trail=(("All jobs", "jobs/"),), faq=h1[0].lower() + h1[1:], **kw_e)
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
                                 ("Part-time", "remote/part-time/", "Remote part-time jobs", "work from home for fewer hours than a full week"),
@@ -6500,7 +6611,9 @@ def main():
                  ("Free", "to copy, or to download as Word or PDF")]) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a job, for example nurse, accountant or designer" aria-label="Find an example"></p>'
          f'<p class="lead" id="dirnone" hidden>No example with these words. The <a href="{P}/tools/cover-letter/">cover letter builder</a> works for any job.</p>'
-         + dir_sec(f"[[{cl_n} cover letters]] by field of work", cl_html, ("tools/cover-letter/", "Cover letter builder"), "The number next to each name is how many jobs of that kind are open today."), cls="hub")
+         + dir_sec(f"[[{cl_n} cover letters]] by field of work", cl_html, ("tools/cover-letter/", "Cover letter builder"), "The number next to each name is how many jobs of that kind are open today.")
+         + guide_row([("how-to-write-a-cover-letter", "How to write a cover letter"), ("follow-up-after-applying", "Following up after applying"), ("thank-you-email-after-interview", "Thank-you email after an interview")],
+                     "Guides for applying"), cls="hub")
 
     lap('Job description templates for employers, one per kind of wor')
     # Job description templates for employers, one per kind of work (the Careerist/PeopleForce study: PeopleForce has none, and
@@ -7276,7 +7389,9 @@ def main():
          f"Hiring guides for {hh_n} kinds of work: who else is hiring, where, what they pay and offer, how long postings stay up, and six steps with free templates and tools.",
          crumbs(("For employers", "post-a-job/"), ("How to hire…", "")) + f'<h1>How to hire… <span class="hl">{hh_n} roles, with today’s competition</span></h1>'
          '<p class="lead">For employers: pick the work you are hiring for. Each guide counts, from today’s open postings, how many companies want the same people, what they pay and offer and how long postings stay up, then gives six steps with a free template or tool for each.</p>'
-         + nums([(f"{hh_n}", "roles with a hiring guide"), (f"{m:,}", "employers with open jobs today"), (f"{len(active):,}", "open postings counted"), ("Free", "to post a job here")]) +
+         + nums([(f"{hh_n}", "roles with a hiring guide"), (f"{m:,}", "employers with open jobs today"), (f"{len(active):,}", "open postings counted"), ("Free", "to post a job here")])
+         + labrow("Also for employers", [f'<a href="{P}/job-descriptions/">Job description templates</a>', f'<a href="{P}/job-posting-sites/">Where to post a job: sites compared</a>',
+                                         f'<a href="{P}/post-a-job/">Post a job free</a>']) +
          '<p class="dirfind"><input type="search" id="dirfilter" placeholder="Type a role, for example nurse, accountant or designer" aria-label="Find a guide"></p>'
          f'<p class="lead" id="dirnone" hidden>No guide with these words. The <a href="{P}/job-descriptions/">job description templates</a> cover the same roles.</p>'
          + dir_sec(f"Hiring guides for [[{hh_n} roles]]", hh_html, ("post-a-job/", "Post a job free"), "The number next to each role is how many companies are hiring for it today."), cls="hub")
@@ -9132,7 +9247,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          # Sections review, batch 5: the builder is the page's first screen. Above it stand the heading, one paragraph and the one
          # action (on a phone it jumps to the form, not to the row of download buttons); the bar of downloads is the top of the
          # tool; the notes and the Plus line moved under the tool. The action row is "no-print": it used to print into the PDF.
-         + '<div class="no-print">' + act_row("#rb-app", "Start your resume", [("resume/examples/", "Examples by job")]) + "</div>"
+         + '<div class="no-print">' + act_row("#rb-app", "Start your resume", [("resume/examples/", "Examples by job"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/employment-gap/", "Explaining a gap")]) + "</div>"
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF — free</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
          '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
          '<option value="developer">Developer</option><option value="executive">Executive</option><option value="timeline">Timeline</option><option value="minimal">Minimal</option><option value="accent">Accent</option></select></label>'
@@ -9259,7 +9374,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
            'side by side, with a link to every page we read. Nothing here is a ranking: pick the one that fits you.</p>'
          # Sections review, batch 5: the one action under the opening lines (the page had none above its last screen); the
          # builder of this site as a closing panel; the questions after the table they are about.
-         + act_row("resume/", "Open the free resume builder", [("#table", "The table"), ("#sources", "Every page we read")], note="No account, no watermark.")
+         + act_row("resume/", "Open the free resume builder", [("#table", "The table"), ("#sources", "Every page we read"), ("best-job-search-sites/", "Best job search sites")], note="No account, no watermark.")
          + section("The short answer, [[by what you need]]", bc_short, label="Short answer")
          + section(f"Free plans [[side by side]], {bc_when}", bc_table + '<p class="note">' + (f'Not in the table: {e(bc_list([{"name": n_} for n_ in BC.LEFT_OUT]))}, whose pages did not open for our reader on {bc_when}. ' if BC.LEFT_OUT else e(bc_later_s.strip()) + " ")
                    + '“Not stated” means the builder’s own pages do not say.</p>', sid="table", label="The table")
@@ -10971,7 +11086,22 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         all_h = [v for v, _ in hr_of.values()]
         below_ = sum(1 for v in all_h if v < lo_)
         nd_t = Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in nd_).most_common(5)
-        hr_blk = ""
+        # Search check, 25 Nov 2026 ("is $25 an hour good pay", Google US and Claude's search): the answers compare the rate with the
+        # national median and give the take-home pay, and the first results disagree on the "average" (one says $54,000 a year, another
+        # $45,000). The page now says where the rate stands among all US jobs by the BLS figures (bls_wages.ALL_JOBS), and what is left of
+        # it after federal tax, the same way /salary/100k/ does.
+        bj_ = bls_wages.ALL_JOBS
+        net_h = tools_pages.take_home_2026(yr_lo)[3]
+        hr_blk = section(f"[[${lo_} an hour]] after taxes: a year, a month, a week", '<div class="tablewrap"><table><tr><th>Per</th><th>Before tax</th><th>After federal tax, Social Security and Medicare</th></tr>'
+                         + "".join(f"<tr><td>{w_}</td><td>${yr_lo / d_:,.{c_}f}</td><td>${net_h / d_:,.{c_}f}</td></tr>" for w_, d_, c_ in (("Year", 1, 0), ("Month", 12, 0), ("Two weeks", 26, 0), ("Week", 52, 0), ("Hour", 2080, 2)))
+                         + f'</table></div><p class="note">Full-time, 40 hours a week for 52 weeks. After tax: a single filer in tax year 2026 with the standard deduction and no pre-tax contributions; '
+                           f'state and local income tax would come off as well. Your own figures: <a href="{P}/tools/take-home-pay/">take-home pay calculator</a>.</p>', sid="after-tax", label="After tax")
+        hr_blk += section(f"Where [[${lo_} an hour]] stands among all US jobs", '<div class="tablewrap"><table><tr><th>Share of US jobs paying less</th><th>An hour</th><th>A year</th></tr>'
+                          + "".join(f"<tr><td>{w_}</td><td>${bj_[k_]:,.2f}</td><td>{dollars(bj_['y_' + k_])}</td></tr>" for w_, k_ in (("10%", "p10"), ("25%", "p25"), ("Half (the median)", "median"), ("75%", "p75"), ("90%", "p90")))
+                          + f'</table></div><p><strong>${lo_} an hour:</strong> {e(bls_wages.all_jobs_place(lo_))}.</p>'
+                          f'<p class="note">US Bureau of Labor Statistics, Occupational Employment and Wage Statistics, {bls_wages.PERIOD}: all {bj_["employed"] / 1e6:,.1f} million jobs it counts, every occupation and industry, '
+                          f'before tax. The mean is ${bj_["mean"]:,.2f} an hour; the median is the better guide, because a few very high wages pull the mean up. '
+                          f'<a href="{bls_wages.SOURCE}" rel="noopener">BLS wage tables</a>.</p>', sid="all-us-jobs", label="All US jobs")
         if len(hrr_) >= 3:
             hr_blk += section(f"Which jobs pay {hr_label(lo_, hi_)}", '<div class="tablewrap rkwrap"><table class="rkt"><tr><th>Kind of work</th><th>Open jobs at this pay</th><th>Typical start</th><th>Remote</th></tr>'
                               + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td data-l="Open jobs at this pay">{c_:,}</td><td data-l="Typical start">${hmed_(h_):,.2f} an hour</td>'
@@ -10980,8 +11110,16 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if len(nd_) >= 3: hr_blk += section(f"Jobs that pay {hr_label(lo_, hi_)} without a degree", f"<p>{len(nd_):,} of the {len(js_):,} postings say no degree is required. The newest:</p>" + job_links(nd_))
         if len(rm_) >= 3: hr_blk += section(f"Remote jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(rm_):,} of them can be done from home. The newest:</p>" + job_links(rm_) + f'<p class="note">All remote work: <a href="{P}/remote/">remote jobs</a>.</p>')
         if len(en_) >= 3: hr_blk += section(f"Entry-level jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(en_):,} junior roles and internships. The newest:</p>" + job_links(en_))
-        qa_[1:1] = [(f"Is ${lo_} an hour good pay?", f"Among the {len(all_h):,} open jobs on {SITE} that state pay in US dollars, {100 * below_ / max(1, len(all_h)):.0f}% start below ${lo_} an hour. "
-                     + mix_note("that share is not the share across all US jobs.", "that share is not the share across all US jobs.") + " For comparison, the US federal minimum wage is $7.25 an hour; many states and cities set a higher one."),
+        qa_[1:1] = [(f"Is ${lo_} an hour good pay?", f"${lo_} an hour is {'above' if lo_ > bj_['median'] else 'below'} the median for all US jobs, ${bj_['median']:,.2f} an hour in the "
+                     f"Bureau of Labor Statistics figures for {bls_wages.PERIOD}: {bls_wages.all_jobs_place(lo_)}. Among the {len(all_h):,} open jobs on {SITE} that state pay in US dollars, "
+                     f"{100 * below_ / max(1, len(all_h)):.0f}% start below ${lo_} an hour. "
+                     + mix_note("that share is not the share across all US jobs.", "that share is not the share across all US jobs.") + " The same pay goes further where rent is lower. "
+                     "The US federal minimum wage is $7.25 an hour; many states and cities set a higher one."),
+                    (f"How much is ${lo_} an hour after taxes?", f"For full-time work, ${lo_} an hour is {dollars(yr_lo)} a year before tax. A single filer in 2026 keeps about {dollars(net_h)} a year "
+                     f"after federal income tax, Social Security and Medicare: {dollars(net_h / 12)} a month, or ${net_h / 2080:,.2f} an hour, with the standard deduction and no pre-tax contributions. "
+                     "State and local income tax, where there is one, comes off as well; the take-home pay calculator on this site adds it for each state."),
+                    (f"How much is ${lo_} an hour part-time?", f"At 20 hours a week, ${lo_} an hour is {dollars(lo_ * 20)} a week and {dollars(lo_ * 20 * 52)} a year; at 30 hours a week, "
+                     f"{dollars(lo_ * 30)} a week and {dollars(lo_ * 30 * 52)} a year, before tax and with no unpaid weeks."),
                     (f"How can I make ${lo_} an hour?", f"{len(js_):,} open jobs pay it today, most in " + ", ".join(f"{c_.lower()} ({k_:,})" for c_, k_ in cats_) + f". {len(en_):,} of them are entry-level, "
                      f"{len(rm_):,} are remote and {len(nd_):,} say no degree is required. Each job links to the employer's own page to apply."),
                     (f"What jobs pay ${lo_} an hour without a degree?", (f"{len(nd_):,} open postings at this pay say no degree is required, for example " + ", ".join(f"{t_} ({k_})" for t_, k_ in nd_t) + "." if nd_ and nd_t else
@@ -11021,7 +11159,19 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                                         f'<td data-l="A year at 2,080 hours">{dollars(m_ * 2080)}</td><td data-l="Remote">{r_:,}</td></tr>' for fs_, fn_, k_, m_, r_ in fld_hr)
                               + '</table></div><p class="note">“Typical start” is the median of the lowest pay each posting states, as an hourly rate or a yearly salary divided by 2,080. '
                               'Pay is the figure before tax. ' + e(mix_note("the rates are not those of every job in the country.", "the rates are not those of every job in the country.")) + '</p>', label="By field")
-        hub_qa = [("How is an hourly rate turned into a yearly salary?", "Multiply it by 2,080: 40 hours a week for 52 weeks. $25 an hour is $52,000 a year; a yearly salary divided by 2,080 gives the hourly rate."),
+        bj_ = bls_wages.ALL_JOBS
+        us_blk = section("Hourly pay [[across all US jobs]]", "<p>What the government counts for every occupation together, so a rate on this site can be read against the whole country. "
+                         f"Half of all US jobs pay less than ${bj_['median']:,.2f} an hour, half more.</p>"
+                         '<div class="tablewrap"><table><tr><th>Share of US jobs paying less</th><th>An hour</th><th>A year</th><th>Pages here</th></tr>'
+                         + "".join(f"<tr><td>{w_}</td><td>${bj_[k_]:,.2f}</td><td>{dollars(bj_['y_' + k_])}</td><td>"
+                                   + (lambda b_: f'<a href="{P}/jobs-that-pay/{b_[0]}-an-hour/">{e(hr_label(*b_))}</a>' if b_ and len(hr_jobs[b_[0]]) >= 20 else "–")(next((b_ for b_ in HR_BANDS if b_[0] <= bj_[k_] < (b_[1] or 10 ** 6)), None))
+                                   + "</td></tr>" for w_, k_ in (("10%", "p10"), ("25%", "p25"), ("Half (the median)", "median"), ("75%", "p75"), ("90%", "p90")))
+                         + f'</table></div><p class="note">US Bureau of Labor Statistics, Occupational Employment and Wage Statistics, {bls_wages.PERIOD}: {bj_["employed"] / 1e6:,.1f} million jobs, before tax. '
+                           f'<a href="{bls_wages.SOURCE}" rel="noopener">BLS wage tables</a>.</p>', label="Whole country")
+        hub_qa = [("What is the average hourly wage in the US?", f"The Bureau of Labor Statistics puts the mean at ${bj_['mean']:,.2f} and the median at ${bj_['median']:,.2f} an hour for all US jobs "
+                   f"({bls_wages.PERIOD}, {bj_['employed'] / 1e6:,.1f} million jobs). One in ten pays less than ${bj_['p10']:,.2f}, one in ten ${bj_['p90']:,.2f} or more. The median is the better guide: "
+                   "a few very high wages pull the mean up."),
+                  ("How is an hourly rate turned into a yearly salary?", "Multiply it by 2,080: 40 hours a week for 52 weeks. $25 an hour is $52,000 a year; a yearly salary divided by 2,080 gives the hourly rate."),
                   ("Which jobs are listed under each rate?", f"Every open job that states its pay in US dollars: {hr_total:,} today. A job is placed by the lowest pay its posting states, as an hourly rate or as a yearly salary divided by 2,080.")]
         hub_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hub_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -11034,8 +11184,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                      (f"{sum(1 for v_ in hr_jobs.values() for j in v_ if hr_of[j['id']][1] == 'h'):,}", "state an hourly rate, as the employer wrote it"),
                      (f"{sum(1 for v_ in hr_jobs.values() for j in v_ if hr_of[j['id']][1] == 'y'):,}", "state a yearly salary, divided here by 2,080 hours"),
                      (f"{len(hr_rows)}", "pay bands, each with its list of jobs")])
+             + labrow("More about pay", [f'<a href="{P}/salaries/">What each kind of work pays</a>']
+                      + ([f'<a href="{P}/salary/100k/">Jobs that pay $100K or more</a>'] if sum(1 for j in active if j["usd"] and j["usd"][0] >= 100000) >= 8 else [])
+                      + [f'<a href="{P}/guides/highest-paying-jobs/">The highest-paying jobs</a>', f'<a href="{P}/guides/negotiate-salary/">How to negotiate salary</a>', f'<a href="{P}/part-time/">Part-time jobs</a>'])
              + f'<figure class="pic hrp"><figcaption><b>Open jobs by starting hourly pay</b>Each job counted once, by the lowest pay its posting states. A bar opens the list.</figcaption>{hr_bars}</figure>'
-             + fld_blk
+             + fld_blk + us_blk
              + section("Hourly pay in [[a week, a month and a year]]", '<div class="tablewrap"><table><thead><tr><th>An hour</th><th>A week (40 h)</th><th>A month</th><th>A year (2,080 h)</th></tr></thead><tbody>'
                        + conv_rows + f'</tbody></table></div><p class="note">Any other rate or number of hours: the <a href="{P}/tools/salary-converter/">pay converter</a>.</p>', label="Conversion")
              + section("Questions about hourly pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hub_qa) + "</dl>"), head=hub_ld, cls="hub")
@@ -11170,6 +11323,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<p class="lead" id="dirnone" hidden>No page for this word yet. The free <a href="{P}/tools/resume-bullet-builder/">resume bullet builder</a> helps with any line.</p>'
          + "".join(section(f"[[{name_}]]", f'<ul class="tiles rwt">{"".join(rw_tile(y) for y in ws_)}</ul>', sub=f"{len(ws_)} {sub_}", sid=slugify(name_),
                            label=f"{len(ws_)} pages").replace("<section ", "<section data-dirg ", 1) for name_, sub_, ws_ in rw_lists if ws_)
+         + guide_row([("how-to-write-a-resume", "How to write a resume"), ("employment-gap", "Explaining an employment gap")], "Guides for your resume")
          + section("Write the [[whole line]]", f'<p>A strong resume line has three parts: an action verb, what you did it to, and a result with a number. '
                    f'The free <a href="{P}/tools/resume-bullet-builder/">resume bullet builder</a> helps you write one, and <a href="{P}/resume/examples/">resume examples for {len(rex_data)} kinds of work</a> show whole resumes written this way.</p>'
                    + act_row("tools/resume-bullet-builder/", "Open the resume bullet builder", [("resume/examples/", "Resume examples")]), label="Next step"), cls="hub rwhub")
@@ -11789,7 +11943,8 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     # the pages the site is built to rank with: the home page, one-level hubs (jobs/, salaries/, remote/ ...), every category, every
     # country and part of the world, every role; listed first and in a file of their own, so they are the first thing to read
     countryish = {slug_ for _, slug_, rule_ in PLACES if isinstance(rule_, str)}
-    is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles)/[a-z0-9-]+/", u) is not None
+    # and the guides (25 Nov 2026: 23 of 26 were "URL unknown to Google" while they sat among 10,500 addresses in pages.xml)
+    is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles|guides)/[a-z0-9-]+/", u) is not None
                          or (u.startswith("locations/") and u.count("/") == 2 and u.split("/")[1] in countryish))
     core_urls = [u for u in URLS if not u.startswith("job/") and is_core(u)]
     parts = [("sitemaps/core.xml", core_urls), ("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/") and not is_core(u)])]

@@ -196,20 +196,27 @@ jobs:
       - name: Redirects from the old address
         if: env.SWITCHED == '1' && steps.upload.outcome == 'success'
         run: python3 pages_redirect.py
+      # The GitHub Pages mirror must never stop the steps after it (25 Nov 2026: runs 45498670183 and 45539062970 uploaded the site to our
+      # server, then deploy-pages failed with "No artifacts named github-pages were found", and IndexNow and the Google Indexing API
+      # were skipped). The three mirror steps go on on error, and the steps below ask whether the site is live: on our server once
+      # SWITCHED, else on GitHub Pages.
       - uses: actions/configure-pages@v5
         if: env.SWITCHED != '1' || steps.upload.outcome == 'success'
+        continue-on-error: true
       - uses: actions/upload-pages-artifact@v3
         if: env.SWITCHED != '1' || steps.upload.outcome == 'success'
+        continue-on-error: true
         with:
           path: ${{ env.SWITCHED == '1' && 'pages_site' || 'site' }}
       - id: deploy
         if: env.SWITCHED != '1' || steps.upload.outcome == 'success'
+        continue-on-error: true
         uses: actions/deploy-pages@v4
       # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed.
       # Once a day (DAILY): sending the same addresses every hour is what IndexNow asks sites not to do. The list from build.py
       # holds the jobs first seen or closed yesterday and today, so nothing found between two daily runs is left out.
       - name: Tell search engines which pages changed
-        if: env.DAILY == 'true' && steps.deploy.outcome == 'success'
+        if: env.DAILY == 'true' && ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success'))
         continue-on-error: true
         run: |
           if [ -s data/indexnow.json ]; then
@@ -220,7 +227,7 @@ jobs:
       # that each address opens. Google allows 200 a day by default; at "quota exceeded" the script stops. The owner keeps the service
       # account's key as the secret GOOGLE_INDEXING_KEY (added 20 Nov 2026 on); without it the step sends nothing.
       - name: Tell Google about new jobs
-        if: steps.deploy.outcome == 'success' && (github.event_name != 'push' || env.STALE == 'true')
+        if: ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success')) && (github.event_name != 'push' || env.STALE == 'true')
         continue-on-error: true
         env:
           GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
@@ -238,7 +245,7 @@ jobs:
           print("any=" + ("true" if c.get("telegram") or (c.get("x") or {}).get("enabled") else "false"))
           PY
       - name: Post new jobs to the channels
-        if: github.event_name != 'push' && steps.channels.outputs.any == 'true' && steps.deploy.outcome == 'success'
+        if: github.event_name != 'push' && steps.channels.outputs.any == 'true' && ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success'))
         continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
